@@ -240,6 +240,58 @@ python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 -
 - Moved config files from root to scripts/
 - Fresh git repo (removed 240MB of data from history)
 
+## Future Enhancements
+
+### National Round Progression Maps
+**Goal:** Create national-level visualization of recursive bisection progression (rounds 1-6+)
+
+**Description:**
+Generate a series of national maps showing how the US is progressively divided:
+- Round 1: 2 regions (first bisection)
+- Round 2: 4 regions (second bisection)
+- Round 3: 8 regions
+- Round 4: 16 regions
+- Round 5: 32 regions
+- Round 6: 64 regions
+- Continue through later rounds as states complete their divisions
+
+**Implementation:**
+1. **Data Collection Phase:**
+   - Aggregate round data from all 50 states' `rounds/round_N_assignments.pkl` files
+   - Track which states have completed which rounds
+   - Handle states with different final round counts (1-district states vs 52-district California)
+
+2. **Visualization Script:**
+   - Create `scripts/pipeline/create_us_national_rounds_progression.py`
+   - Generate maps: `us_national_round_1_2020.png`, `us_national_round_2_2020.png`, etc.
+   - Use consistent color scheme across rounds
+   - Show state boundaries with districts/regions overlaid
+   - As states complete their final districts, show them fully divided in subsequent rounds
+
+3. **Pipeline Integration:**
+   - Add as post-processing step after `create_us_rounds_hierarchy.py`
+   - Run before demographic/political visualization (reuse tract loading logic)
+
+4. **Dashboard Integration:**
+   - Add to USA row, Rounds tab
+   - Show progressive sequence of national bisection
+   - Allow users to see national-level recursive division pattern
+
+**Benefits:**
+- Visualize national-level recursive bisection strategy
+- Understand how equal-population constraint affects regional divisions
+- Compare bisection patterns across geographic regions
+- Educational tool for understanding METIS recursive algorithm at scale
+
+**Files to Create:**
+- `scripts/pipeline/create_us_national_rounds_progression.py` - Main generation script
+- Update `web/dashboard.html` - Add USA Rounds view with progression maps
+- Update `run_complete_redistricting.py` - Add pipeline step
+
+**Estimated Complexity:** Medium (2-3 hours)
+- Similar to existing national map generation
+- Complexity in aggregating round data across states with different completion points
+
 ## Questions or Issues?
 
 Check `docs/archive/` for historical session notes and implementation details from previous development sessions.
