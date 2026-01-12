@@ -21,6 +21,8 @@ def main():
     parser.add_argument('--dpi', type=int, default=150, help='DPI for output maps')
     parser.add_argument('--print-only', action='store_true')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--run-analysis', action='store_true',
+                       help='Run per-state analysis (compactness, political, demographic)')
     args = parser.parse_args()
 
     state_code = args.state.upper()
@@ -86,6 +88,14 @@ def main():
         ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --year {args.year} --position {child_position} {flags_str}'.strip()),
         ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --year {args.year} --position {child_position} {flags_str}'.strip())
     ]
+
+    # Add optional analysis steps
+    if args.run_analysis:
+        compactness_script = Path(__file__).parent.parent / 'compactness' / 'visualize_compactness.py'
+        steps.append((
+            "Compactness",
+            f'{sys.executable} {compactness_script} --scope state --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
+        ))
 
     # Set up environment for child processes (inherit PARALLEL_MODE)
     env = os.environ.copy()

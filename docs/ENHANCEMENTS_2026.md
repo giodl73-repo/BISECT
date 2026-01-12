@@ -1137,72 +1137,154 @@ Pipeline Flow (Proposed):
 | `create_us_national_rounds_progression.py` | National round progression |
 | `generate_dashboard.py` | Depends on all outputs |
 
+### Revised Strategy: Scope-Based Architecture
+
+Instead of wrapper scripts + per-state calls, **refactor core scripts to handle both state and national scopes**:
+
+```python
+# Single script handles both cases
+python scripts/compactness/visualize_compactness.py \
+    --scope state \
+    --state-dir outputs/us_2020_v1/states/vermont \
+    --census-year 2020
+
+python scripts/compactness/visualize_compactness.py \
+    --scope national \
+    --output-dir outputs/us_2020_v1 \
+    --census-year 2020 \
+    --version v1
+```
+
+**Key Design Principles:**
+- **Single source of truth**: One script per visualization type, not wrapper + core
+- **Scope parameter**: `--scope {state|national}` determines execution mode
+- **Backward compatible**: Scripts default to state scope for existing usage
+- **National aggregation**: National scope does true aggregation, not looping
+
+**Benefits:**
+- Eliminates 4 wrapper scripts (run_*_analysis.py, run_*_visualization.py)
+- Reduces code duplication
+- More flexible for different use cases (e.g., single state testing)
+- Cleaner architecture
+
 ### Implementation Plan
 
-#### Phase 1: Preparation (1 hour)
-1. **Audit dependencies**
-   - Verify no hidden cross-state dependencies
-   - Confirm all required data files exist per-state
-   - Test one state through proposed flow manually
+#### Phase 1: Compactness Prototype (2 hours)
 
-2. **Test script execution**
-   - Run each analysis script individually on test state
-   - Verify outputs match batch-mode results
-   - Check file paths and directory structures work
+**Refactor `scripts/compactness/visualize_compactness.py`:**
 
-#### Phase 2: Add Per-State Orchestration (2 hours)
+```python
+def main():
+    parser = argparse.ArgumentParser(description='Visualize district compactness')
+
+    # Scope-based design
+    parser.add_argument('--scope', choices=['state', 'national'], default='state',
+                       help='Scope: state (single state) or national (all states)')
+    parser.add_argument('--census-year', type=str, required=True,
+                       help='Census year (2010, 2020)')
+
+    # State scope arguments
+    parser.add_argument('--state-dir', type=str,
+                       help='State directory (required if scope=state)')
+
+    # National scope arguments
+    parser.add_argument('--output-dir', type=str,
+                       help='Base output directory (required if scope=national)')
+    parser.add_argument('--version', type=str,
+                       help='Version (required if scope=national)')
+    parser.add_argument('--dpi', type=int, default=150,
+                       help='DPI for output maps')
+
+    args = parser.parse_args()
+
+    if args.scope == 'state':
+        if not args.state_dir:
+            parser.error("--state-dir required when scope=state")
+        visualize_state_compactness(args.state_dir, args.census_year)
+
+    elif args.scope == 'national':
+        if not args.output_dir or not args.version:
+            parser.error("--output-dir and --version required when scope=national")
+        visualize_national_compactness(args.output_dir, args.version, args.census_year, args.dpi)
+
+def visualize_state_compactness(state_dir, census_year):
+    """Existing per-state visualization logic"""
+    # ... current implementation ...
+
+def visualize_national_compactness(output_dir, version, census_year, dpi):
+    """National aggregation logic from create_us_national_compactness_map.py"""
+    # Load all 50 states
+    # Create national map
+    # ... implementation from create_us_national_compactness_map.py ...
+```
+
+**Test both scopes:**
+```bash
+# State scope
+python scripts/compactness/visualize_compactness.py \
+    --scope state \
+    --state-dir outputs/us_2020_v1/states/vermont \
+    --census-year 2020
+
+# National scope
+python scripts/compactness/visualize_compactness.py \
+    --scope national \
+    --output-dir outputs/us_2020_v1 \
+    --version v1 \
+    --census-year 2020
+```
+
+**Validate:**
+- State map identical to previous output
+- National map identical to create_us_national_compactness_map.py output
+
+#### Phase 2: Add to Per-State Pipeline (1 hour)
+
 Modify `scripts/pipeline/process_single_state.py`:
 
 ```python
 # Add optional analysis steps (controlled by --run-analysis flag)
 if args.run_analysis:
     steps.extend([
-        {
-            'name': 'Political analysis',
-            'script': 'scripts/political/analyze_districts.py',
-            'args': [state_dir, '--year', args.year],
-            'critical': False  # Don't break pipeline on failure
-        },
-        {
-            'name': 'Political visualization',
-            'script': 'scripts/political/visualize_partisan_lean.py',
-            'args': [state_dir, '--census-year', args.year],
-            'critical': False
-        },
-        {
-            'name': 'Demographic analysis',
-            'script': 'scripts/demographic/analyze_district_demographics.py',
-            'args': [state_dir, '--census-year', args.year],
-            'critical': False
-        },
-        {
-            'name': 'Demographic visualization',
-            'script': 'scripts/demographic/visualize_district_demographics.py',
-            'args': [state_dir, '--census-year', args.year],
-            'critical': False
-        },
-        {
-            'name': 'Compactness visualization',
-            'script': 'scripts/compactness/visualize_compactness.py',
-            'args': [state_dir, '--census-year', args.year],
-            'critical': False
-        }
+        ("Compactness", f'{sys.executable} scripts/compactness/visualize_compactness.py '
+                       f'--scope state --state-dir {state_dir} --census-year {args.year}')
     ])
 ```
 
-#### Phase 3: Enable in Main Pipeline (30 minutes)
 Modify `scripts/pipeline/run_complete_redistricting.py`:
+- Add `--run-analysis` flag to state processing
+- Replace batch wrapper with national scope call:
+  ```python
+  # OLD: python scripts/compactness/run_compactness_visualization.py ...
+  # NEW:
+  subprocess.run([
+      sys.executable, 'scripts/compactness/visualize_compactness.py',
+      '--scope', 'national',
+      '--output-dir', args.output_dir,
+      '--version', args.version,
+      '--census-year', args.year
+  ])
+  ```
 
-1. Add `--run-analysis` flag to state processing calls
-2. **Comment out** (don't delete) batch wrapper scripts:
-   - `run_political_analysis.py`
-   - `run_demographic_analysis.py`
-   - `run_demographic_visualization.py`
-   - `run_compactness_visualization.py`
-3. Keep all national scripts unchanged
+#### Phase 3: Apply Pattern to Other Scripts (3 hours)
 
-#### Phase 4: Testing & Validation (2-3 hours)
-1. **Test with 2-3 small states:**
+Once compactness prototype is validated, apply same pattern to:
+
+1. **Political Analysis:**
+   - Refactor `visualize_partisan_lean.py` with --scope parameter
+   - Merge logic from `create_us_national_political_map.py`
+
+2. **Demographic Visualization:**
+   - Refactor `visualize_district_demographics.py` with --scope parameter
+   - Merge logic from `create_us_national_demographic_map.py`
+
+3. **Metro Areas:**
+   - Refactor `create_metro_area_maps.py` to support --scope state (state metros only)
+   - Keep --scope national for all metros
+
+#### Phase 4: Testing & Validation (2 hours)
+
+1. **Test with small states:**
    ```bash
    python scripts/pipeline/run_complete_redistricting.py \
        --year 2020 --version v3_test \
@@ -1210,32 +1292,22 @@ Modify `scripts/pipeline/run_complete_redistricting.py`:
        --run-analysis
    ```
 
-2. **Validate outputs:**
-   - Analysis files exist in each state directory
-   - Output quality matches batch-mode results
-   - National maps still work with per-state inputs
-   - Check wall-clock time improvement
-
-3. **Full run:**
-   ```bash
-   python scripts/pipeline/run_complete_redistricting.py \
-       --year 2020 --version v3 --run-analysis
-   ```
+2. **Validate:**
+   - State-level outputs identical to batch mode
+   - National outputs identical to previous
+   - Performance improvement measurable
 
 #### Phase 5: Cleanup (30 minutes)
-**Only after validation succeeds:**
 
-1. Delete obsolete batch wrapper scripts:
-   - `scripts/political/run_political_analysis.py`
-   - `scripts/demographic/run_demographic_analysis.py`
-   - `scripts/demographic/run_demographic_visualization.py`
-   - `scripts/compactness/run_compactness_visualization.py`
+**Delete obsolete scripts (after validation):**
+- `scripts/compactness/run_compactness_visualization.py`
+- `scripts/compactness/create_us_national_compactness_map.py` (merged into visualize_compactness.py)
+- Similar deletions for political/demographic
 
-2. Remove commented batch calls from `run_complete_redistricting.py`
-
-3. Make `--run-analysis` the default (always run analysis per-state)
-
-4. Update documentation
+**Update documentation:**
+- Document new --scope parameter
+- Update pipeline docs
+- Add examples
 
 ### Performance Impact
 
