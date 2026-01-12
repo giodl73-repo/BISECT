@@ -249,12 +249,12 @@ See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhanceme
 - ✅ Enhancement 2: D/R Seat Totals (Jan 11, 2026)
 - ✅ Enhancement 3: National Maps (Jan 11, 2026)
 - ✅ Enhancement 5: National Round Progression Maps (Jan 12, 2026)
+- ✅ Enhancement 6: System Architecture Diagrams (Jan 12, 2026)
 
 **In Progress:**
 - 🚧 Enhancement 4: Urban Metro Area Maps
 
 **Planned:**
-- 📋 Enhancement 6: System Architecture Diagrams
 - 📋 Enhancement 7: Edge-Weighted Recursive Bisection
 - 📋 Enhancement 8: Block-Level Data Support (2000, 2010, 2020)
 

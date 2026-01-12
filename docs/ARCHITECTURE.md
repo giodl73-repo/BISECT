@@ -3,12 +3,171 @@
 This document explains the design of the redistricting system, key algorithms, and how components interact.
 
 ## Table of Contents
-1. [System Overview](#system-overview)
-2. [Data Flow](#data-flow)
-3. [Algorithm: Recursive Bisection](#algorithm-recursive-bisection)
-4. [Component Architecture](#component-architecture)
-5. [Key Design Decisions](#key-design-decisions)
-6. [Scalability](#scalability)
+1. [Visual Diagrams](#visual-diagrams)
+2. [System Overview](#system-overview)
+3. [Data Flow](#data-flow)
+4. [Algorithm: Recursive Bisection](#algorithm-recursive-bisection)
+5. [Component Architecture](#component-architecture)
+6. [Key Design Decisions](#key-design-decisions)
+7. [Scalability](#scalability)
+
+---
+
+## Visual Diagrams
+
+The following diagrams provide visual representations of the system architecture, pipeline flow, and data transformations. All diagrams are in Mermaid format and are version-controlled in `docs/diagrams/`.
+
+### System Overview
+
+High-level architecture showing components from data sources to final outputs:
+
+```mermaid
+graph TB
+    subgraph "Data Sources"
+        A1[Census TIGER/Line<br/>Tract Shapefiles]
+        A2[Census PL94-171<br/>Population Data]
+        A3[MIT Election Lab<br/>Presidential Results]
+        A4[Census DHC<br/>Demographics]
+    end
+
+    subgraph "Data Processing"
+        B1[Download Scripts<br/>scripts/data/]
+        B2[Process to Parquet<br/>Tract-Level Aggregates]
+        B3[Build Adjacency Graphs<br/>NetworkX Graph]
+    end
+
+    subgraph "Core Algorithm"
+        C1[METIS Library<br/>Graph Partitioning]
+        C2[Recursive Bisection<br/>src/apportionment/partition/]
+        C3[District Assignment<br/>Tract → District Mapping]
+    end
+
+    subgraph "Analysis & Metrics"
+        D1[Compactness<br/>Polsby-Popper, Reock]
+        D2[Political Analysis<br/>Partisan Lean]
+        D3[Demographics<br/>Race, Gender, Diversity]
+        D4[City Assignment<br/>Major Cities per District]
+    end
+
+    subgraph "Visualization"
+        E1[District Maps<br/>Individual & State-Level]
+        E2[Round Progression<br/>Bisection History]
+        E3[National Maps<br/>All 435 Districts]
+        E4[Analysis Maps<br/>Political, Demographic]
+    end
+
+    subgraph "Output"
+        F1[Web Dashboard<br/>Interactive Explorer]
+        F2[CSV Exports<br/>District Summaries]
+        F3[PNG Maps<br/>Publication Quality]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    A4 --> B1
+
+    B1 --> B2
+    B2 --> B3
+
+    B3 --> C2
+    C1 --> C2
+    C2 --> C3
+
+    C3 --> D1
+    C3 --> D2
+    C3 --> D3
+    C3 --> D4
+
+    C3 --> E1
+    C3 --> E2
+    C3 --> E3
+    D1 --> E4
+    D2 --> E4
+    D3 --> E4
+
+    E1 --> F1
+    E2 --> F1
+    E3 --> F1
+    E4 --> F1
+    D1 --> F2
+    D2 --> F2
+    D3 --> F2
+    E1 --> F3
+    E2 --> F3
+    E3 --> F3
+    E4 --> F3
+
+    style C2 fill:#90EE90
+    style F1 fill:#87CEEB
+```
+
+### Pipeline Flow
+
+Complete pipeline execution showing parallel/sequential modes and all phases:
+
+```mermaid
+graph TD
+    START[run_complete_redistricting.py] --> PARALLEL{Parallel or<br/>Sequential?}
+
+    PARALLEL -->|Parallel| P1[Process 4-8 States<br/>Simultaneously]
+    PARALLEL -->|Sequential| S1[Process States<br/>One at a Time]
+
+    P1 --> STATE[Per-State Processing]
+    S1 --> STATE
+
+    subgraph "State Processing (run_state_redistricting.py)"
+        STATE --> ST1[Load Tract Data<br/>& Adjacency Graph]
+        ST1 --> ST2[Recursive Bisection<br/>METIS Partitioning]
+        ST2 --> ST3[Create District Summary<br/>Population, Compactness]
+        ST3 --> ST4[Assign Cities to Districts]
+        ST4 --> ST5[Generate Maps<br/>Districts, Rounds, Individual]
+    end
+
+    ST5 --> CHECK{All 50 States<br/>Complete?}
+    CHECK -->|No| STATE
+    CHECK -->|Yes| AGG[Aggregation Phase]
+
+    subgraph "US Aggregation"
+        AGG --> AG1[Create US District Summary<br/>All 435 Districts]
+        AG1 --> AG2[Create US Rounds Hierarchy<br/>National Bisection Tree]
+        AG2 --> AG3[Create US National Maps<br/>Base, With Cities]
+        AG3 --> AG4[Create US Round Progression<br/>Rounds 1-6]
+    end
+
+    AG4 --> ANALYSIS[Analysis Phase]
+
+    subgraph "Political Analysis"
+        ANALYSIS --> PA1[Analyze Districts<br/>Partisan Lean per State]
+        PA1 --> PA2[Visualize Partisan Lean<br/>Maps with D/R Counts]
+        PA2 --> PA3[Create National Political Map<br/>All 435 Districts]
+    end
+
+    PA3 --> DEMO[Demographic Phase]
+
+    subgraph "Demographic Analysis"
+        DEMO --> DM1[Analyze Demographics<br/>Race, Gender per State]
+        DM1 --> DM2[Visualize Demographics<br/>Diversity, Majority Maps]
+        DM2 --> DM3[Create National Demographic Map<br/>All 435 Districts]
+    end
+
+    DM3 --> COMPACT[Compactness Phase]
+
+    subgraph "Compactness Visualization"
+        COMPACT --> CP1[Visualize Compactness<br/>Polsby-Popper, Reock Maps]
+    end
+
+    CP1 --> FINISH[Pipeline Complete<br/>Generate Dashboard]
+
+    style STATE fill:#FFE4B5
+    style AGG fill:#E0BBE4
+    style ANALYSIS fill:#B4E7CE
+    style DEMO fill:#FFDAB9
+    style COMPACT fill:#B0E0E6
+    style FINISH fill:#90EE90
+```
+
+**For additional diagrams** (Script Dependencies, Data Flow), see [`docs/diagrams/`](diagrams/).
 
 ---
 
