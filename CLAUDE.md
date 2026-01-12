@@ -242,55 +242,23 @@ python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 -
 
 ## Future Enhancements
 
-### National Round Progression Maps
-**Goal:** Create national-level visualization of recursive bisection progression (rounds 1-6+)
+See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhancements:
 
-**Description:**
-Generate a series of national maps showing how the US is progressively divided:
-- Round 1: 2 regions (first bisection)
-- Round 2: 4 regions (second bisection)
-- Round 3: 8 regions
-- Round 4: 16 regions
-- Round 5: 32 regions
-- Round 6: 64 regions
-- Continue through later rounds as states complete their divisions
+**Completed:**
+- ✅ Enhancement 1: Compactness Integration (Jan 10, 2026)
+- ✅ Enhancement 2: D/R Seat Totals (Jan 11, 2026)
+- ✅ Enhancement 3: National Maps (Jan 11, 2026)
 
-**Implementation:**
-1. **Data Collection Phase:**
-   - Aggregate round data from all 50 states' `rounds/round_N_assignments.pkl` files
-   - Track which states have completed which rounds
-   - Handle states with different final round counts (1-district states vs 52-district California)
+**In Progress:**
+- 🚧 Enhancement 4: Urban Metro Area Maps
 
-2. **Visualization Script:**
-   - Create `scripts/pipeline/create_us_national_rounds_progression.py`
-   - Generate maps: `us_national_round_1_2020.png`, `us_national_round_2_2020.png`, etc.
-   - Use consistent color scheme across rounds
-   - Show state boundaries with districts/regions overlaid
-   - As states complete their final districts, show them fully divided in subsequent rounds
+**Planned:**
+- 📋 Enhancement 5: National Round Progression Maps
+- 📋 Enhancement 6: System Architecture Diagrams
+- 📋 Enhancement 7: Edge-Weighted Recursive Bisection
+- 📋 Enhancement 8: Block-Level Data Support (2000, 2010, 2020)
 
-3. **Pipeline Integration:**
-   - Add as post-processing step after `create_us_rounds_hierarchy.py`
-   - Run before demographic/political visualization (reuse tract loading logic)
-
-4. **Dashboard Integration:**
-   - Add to USA row, Rounds tab
-   - Show progressive sequence of national bisection
-   - Allow users to see national-level recursive division pattern
-
-**Benefits:**
-- Visualize national-level recursive bisection strategy
-- Understand how equal-population constraint affects regional divisions
-- Compare bisection patterns across geographic regions
-- Educational tool for understanding METIS recursive algorithm at scale
-
-**Files to Create:**
-- `scripts/pipeline/create_us_national_rounds_progression.py` - Main generation script
-- Update `web/dashboard.html` - Add USA Rounds view with progression maps
-- Update `run_complete_redistricting.py` - Add pipeline step
-
-**Estimated Complexity:** Medium (2-3 hours)
-- Similar to existing national map generation
-- Complexity in aggregating round data across states with different completion points
+For implementation details, timelines, technical specifications, and status updates, refer to the comprehensive enhancement document.
 
 ## Questions or Issues?
 
