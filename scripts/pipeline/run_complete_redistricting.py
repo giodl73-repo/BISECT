@@ -1,0 +1,879 @@
+#!/usr/bin/env python3
+"""
+Master script to run the complete US redistricting pipeline.
+
+This orchestrates the entire process:
+1. Check for election data (for political analysis)
+2. Check for demographic data (for demographic analysis)
+3. Process all 50 states (sequential or parallel mode)
+4. Generate rounds_hierarchy.csv files
+5. Create US aggregate files
+6. Create US national maps
+7. Run political analysis on all states (analyze partisan lean)
+8. Run demographic analysis on all states (analyze demographics)
+
+Usage:
+  # Sequential mode (one state at a time)
+  python scripts/pipeline/run_complete_redistricting.py --workers 1
+
+  # Parallel mode (4-8 states at once)
+  python scripts/pipeline/run_complete_redistricting.py --workers 4
+
+  # With options
+  python scripts/pipeline/run_complete_redistricting.py --workers 4 --year 2020 --version v3 --dpi 150
+
+  # Skip political or demographic analysis
+  python scripts/pipeline/run_complete_redistricting.py --workers 4 --skip-political
+  python scripts/pipeline/run_complete_redistricting.py --workers 4 --skip-demographic
+
+Prerequisites for political analysis:
+  1. Download election data: python scripts/data/elections/download_election_data.py --year 2020
+  2. Process to parquet: python scripts/data/elections/process_election_data.py --year 2020
+
+Prerequisites for demographic analysis:
+  1. Download demographic data: python scripts/data/demographics/download_demographic_data_robust.py --year 2020
+  2. Process to parquet: python scripts/data/demographics/process_demographic_data.py --year 2020
+"""
+
+import argparse
+import subprocess
+import sys
+import os
+from pathlib import Path
+from datetime import datetime
+import time
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from tqdm import tqdm
+
+# Ensure we're running from project root
+script_dir = Path(__file__).parent
+project_root = script_dir.parent.parent
+
+# If data/ directory doesn't exist in current directory, change to project root
+if not Path('data').exists() and (project_root / 'data').exists():
+    os.chdir(project_root)
+    print(f"Changed working directory to project root: {project_root}\n")
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(project_root))
+
+# Import configuration files
+try:
+    from config_2020 import STATE_CONFIG_2020
+except ImportError:
+    STATE_CONFIG_2020 = None
+
+try:
+    from config_2010 import STATE_CONFIG_2010
+except ImportError:
+    STATE_CONFIG_2010 = None
+
+
+def check_prerequisites(state_code, year='2020'):
+    """Check if state has necessary data files."""
+    state_code_lower = state_code.lower()
+
+    tracts_file = Path(f'data/raw/{state_code_lower}_tracts_{year}.parquet')
+    places_file = Path(f'data/raw/{state_code_lower}_places_{year}.parquet')
+    graph_file = Path(f'data/adjacency/{state_code_lower}_adjacency_{year}.pkl')
+
+    missing = []
+    if not tracts_file.exists():
+        missing.append('tracts')
+    if not places_file.exists():
+        missing.append('places')
+    if not graph_file.exists():
+        missing.append('adjacency graph')
+
+    return missing
+
+
+def process_state_sequential(state_code, us_dir, state_config, year='2020', skip_existing=True,
+                             print_only=False, debug=False, position=1, dpi=150):
+    """
+    Process a single state through the full pipeline (sequential mode).
+    Uses ONLY 1 progress bar at the specified position.
+    """
+    config = state_config[state_code]
+    state_name = config['name']
+    num_districts = config['districts']
+
+    # Use states subdirectory for organization
+    states_dir = us_dir / 'states'
+    state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+    # Check if already processed
+    if not print_only:
+        states_dir.mkdir(parents=True, exist_ok=True)
+
+        if skip_existing and state_dir.exists():
+            # Check if all required output files exist
+            required_files = [
+                state_dir / 'final_assignments.pkl',
+                state_dir / 'district_summary.csv',
+                state_dir / 'district_cities.csv',
+                state_dir / 'maps'
+            ]
+            if all(f.exists() for f in required_files):
+                # Show skip quickly
+                with tqdm(total=1,
+                         desc=f"{state_name} [{num_districts}D] SKIPPED",
+                         unit="step",
+                         position=position,
+                         ncols=120,
+                         leave=False) as pbar:
+                    pbar.update(1)
+                    if debug:
+                        time.sleep(0.2)
+                return True
+
+        # Check prerequisites (only for multi-district states)
+        if num_districts > 1:
+            missing = check_prerequisites(state_code, year)
+            if missing:
+                print(f"ERROR: Missing data for {state_name}: {', '.join(missing)}")
+                return False
+
+    # Single-district states: simplified processing
+    if num_districts == 1:
+        with tqdm(total=1,
+                  desc=f"{state_name} [1D] At-Large",
+                  unit="step",
+                  ncols=120,
+                  position=position,
+                  leave=False) as pbar:
+            if debug:
+                time.sleep(0.3)
+            pbar.update(1)
+        return True
+
+    # Multi-district states: run full pipeline with ONE progress bar
+    scripts_dir = Path(__file__).parent
+
+    # Define all commands
+    flags = []
+    if print_only:
+        flags.append('--print-only')
+    if debug:
+        flags.append('--debug')
+    flags.append(f'--dpi {dpi}')
+    flags_str = ' '.join(flags)
+
+    # Pipeline steps - pass position 999 to hide child progress bars
+    steps = [
+        ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {year} --output-dir {state_dir} --position 999 {flags_str}'.strip(), 1800),
+        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --year {year} --position 999 {flags_str}'.strip(), 600),
+        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --year {year} --position 999 {flags_str}'.strip(), 300),
+        ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --year {year} --position 999 {flags_str}'.strip(), 600),
+        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --year {year} --position 999 {flags_str}'.strip(), 1800)
+    ]
+
+    # ONE progress bar for entire state pipeline
+    with tqdm(total=len(steps),
+              desc=f"{state_name} [{num_districts}D] Starting...",
+              unit="step",
+              ncols=120,
+              position=position,
+              leave=False) as pbar:
+
+        for i, (step_label, cmd, timeout_val) in enumerate(steps, 1):
+            # Update description with current step
+            pbar.set_description(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label}")
+
+            # Run command (capture output to hide child progress)
+            result = subprocess.run(cmd, shell=True, timeout=timeout_val, capture_output=True, text=True)
+
+            if result.returncode != 0:
+                pbar.set_description(f"{state_name} [{num_districts}D] FAILED at {step_label}")
+                print(f"\nERROR in {state_name} - {step_label}:")
+                print(result.stderr[-500:] if result.stderr else "No error output")
+                return False
+
+            pbar.update(1)
+
+        # Final description
+        pbar.set_description(f"{state_name} [{num_districts}D] DONE")
+
+    return True
+
+
+def process_state_worker(args):
+    """
+    Worker function to process a single state (parallel mode).
+    Runs in separate process with its own progress bar position.
+    """
+    state_code, us_dir, state_config, year, skip_existing, print_only, debug, position, dpi = args
+
+    config = state_config[state_code]
+    state_name = config['name']
+    num_districts = config['districts']
+
+    # Use states subdirectory for organization
+    states_dir = us_dir / 'states'
+    state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+    try:
+        # Check if already processed
+        if not print_only:
+            states_dir.mkdir(parents=True, exist_ok=True)
+
+            if skip_existing and state_dir.exists():
+                # Show skip quickly
+                with tqdm(total=1,
+                         desc=f"{state_name} [{num_districts}D] SKIP (exists)",
+                         unit="step",
+                         position=position,
+                         ncols=120,
+                         leave=False) as pbar:
+                    pbar.update(1)
+                    if debug:
+                        time.sleep(0.2)
+                return (state_code, True, "SKIPPED")
+
+            # Check prerequisites (only for multi-district states)
+            if num_districts > 1:
+                missing = check_prerequisites(state_code, year)
+                if missing:
+                    return (state_code, False, f"Missing: {', '.join(missing)}")
+
+        # Single-district states: simplified processing
+        if num_districts == 1:
+            with tqdm(total=1,
+                      desc=f"{state_name} [1D] At-Large",
+                      unit="step",
+                      ncols=120,
+                      position=position,
+                      leave=False) as pbar:
+                if debug:
+                    time.sleep(0.3)
+                pbar.update(1)
+            return (state_code, True, "SUCCESS")
+
+        # Multi-district states: run through single wrapper script
+        scripts_dir = Path(__file__).parent
+
+        # Build command
+        flags = []
+        if print_only:
+            flags.append('--print-only')
+        if debug:
+            flags.append('--debug')
+        flags_str = ' '.join(flags)
+
+        cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {year} --output-dir {state_dir} --position {position} --dpi {os.environ.get("DPI", str(dpi))} {flags_str}'.strip()
+
+        # Set up environment for child process
+        env = os.environ.copy()
+        env['TQDM_POSITION'] = str(position)
+        env['PARALLEL_MODE'] = '1'
+        env['DPI'] = str(dpi)
+
+        # Run the wrapper script with explicit environment
+        result = subprocess.run(cmd, shell=True, timeout=3600, env=env)
+
+        if result.returncode != 0:
+            return (state_code, False, f"Failed during processing")
+
+        return (state_code, True, "SUCCESS")
+
+    except Exception as e:
+        return (state_code, False, f"Exception: {str(e)}")
+
+
+def run_command(description, command, critical=True, print_only=False, pbar=None):
+    """Run a command and handle errors."""
+    def pwrite(msg):
+        if pbar:
+            pbar.write(msg)
+        else:
+            print(msg)
+
+    result = subprocess.run(command, shell=True)
+
+    if result.returncode != 0:
+        pwrite(f"\n[ERROR] {description} failed with exit code {result.returncode}")
+        if critical and not print_only:
+            pwrite("Stopping pipeline due to critical error.")
+            sys.exit(1)
+        elif not critical:
+            pwrite("Continuing despite error...")
+
+    return result.returncode == 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Run complete US redistricting pipeline')
+    parser.add_argument('--output-dir', type=str, help='Output directory (overrides year and version)')
+    parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
+                        help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
+    parser.add_argument('--workers', type=int, default=4,
+                        help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 4)')
+    parser.add_argument('--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
+                        help='DPI for output maps (default: 150). Higher = better quality but slower.')
+    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
+                        help='Election year for political analysis (default: 2020)')
+    parser.add_argument('--skip-political', action='store_true',
+                        help='Skip political analysis steps')
+    parser.add_argument('--skip-demographic', action='store_true',
+                        help='Skip demographic analysis steps')
+    parser.add_argument('--skip-states', action='store_true',
+                        help='Skip state processing (for post-processing only)')
+    parser.add_argument('--reprocess', action='store_true',
+                        help='Reprocess all states (do not skip already processed states)')
+    parser.add_argument('--print-only', action='store_true',
+                        help='Print commands without executing (debug mode)')
+    parser.add_argument('--debug', action='store_true',
+                        help='Enable debug mode with progress delays')
+    parser.add_argument('states', nargs='*',
+                        help='Specific state codes to process (default: all states)')
+    args = parser.parse_args()
+
+    # Get the scripts directory
+    scripts_dir = Path(__file__).parent
+
+    # Determine execution mode
+    mode = 'parallel' if args.workers > 1 else 'sequential'
+
+    # Select the correct STATE_CONFIG based on year
+    if args.year == '2020':
+        if STATE_CONFIG_2020 is None:
+            print("ERROR: config_2020.py not found. Cannot process 2020 data.")
+            sys.exit(1)
+        STATE_CONFIG = STATE_CONFIG_2020
+    elif args.year == '2010':
+        if STATE_CONFIG_2010 is None:
+            print("ERROR: config_2010.py not found. Cannot process 2010 data.")
+            sys.exit(1)
+        STATE_CONFIG = STATE_CONFIG_2010
+    elif args.year == '2000':
+        print("ERROR: 2000 census configuration not yet implemented.")
+        sys.exit(1)
+    else:
+        print(f"ERROR: Unknown year {args.year}")
+        sys.exit(1)
+
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    else:
+        output_dir = Path(f'outputs/us_{args.year}_{args.version}')
+
+    if not args.print_only and not args.skip_states:
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("\n" + "="*70)
+    print("US CONGRESSIONAL REDISTRICTING - COMPLETE PIPELINE")
+    print("="*70)
+    print(f"Census Year: {args.year}")
+    print(f"Output directory: {output_dir}")
+    print(f"Version: {args.version}")
+    print(f"Execution Mode: {mode.upper()}")
+    if mode == 'parallel':
+        print(f"Parallel Workers: {min(args.workers, 8)} (max 8 recommended)")
+    if args.print_only:
+        print("Mode: PRINT-ONLY (debug mode - no execution)")
+    print("="*70)
+    sys.stdout.flush()
+
+    # =========================================================================
+    # STEP 0: CHECK ELECTION DATA (for political analysis)
+    # =========================================================================
+    if not args.skip_political and not args.skip_states:
+        election_data_file = Path(f'data/processed/elections/{args.election_year}_president_tract.parquet')
+
+        if not election_data_file.exists():
+            print(f"\n[WARNING] Election data not found: {election_data_file}")
+            print(f"Run these commands to prepare election data:")
+            print(f"  python scripts/political/download_election_data.py --year {args.election_year}")
+            print(f"  python scripts/political/process_election_data.py --year {args.election_year}")
+            print(f"\nPolitical analysis will be skipped.")
+            args.skip_political = True
+            sys.stdout.flush()
+        else:
+            print(f"\nElection data found: {election_data_file}")
+            sys.stdout.flush()
+
+    # =========================================================================
+    # STEP 0B: CHECK DEMOGRAPHIC DATA (for demographic analysis)
+    # =========================================================================
+    if not args.skip_demographic and not args.skip_states:
+        demographic_data_file = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet')
+
+        if not demographic_data_file.exists():
+            print(f"\n[WARNING] Demographic data not found: {demographic_data_file}")
+            print(f"Run these commands to prepare demographic data:")
+            print(f"  python scripts/data/demographics/download_demographic_data_robust.py --year {args.year}")
+            print(f"  python scripts/data/demographics/process_demographic_data.py --year {args.year}")
+            print(f"\nDemographic analysis will be skipped.")
+            args.skip_demographic = True
+            sys.stdout.flush()
+        else:
+            print(f"\nDemographic data found: {demographic_data_file}")
+            sys.stdout.flush()
+
+    # =========================================================================
+    # STEP 1: PROCESS ALL 50 STATES
+    # =========================================================================
+    if not args.skip_states:
+        # Get list of states to process
+        if args.states:
+            states_to_process = [s.upper() for s in args.states]
+            invalid = [s for s in states_to_process if s not in STATE_CONFIG]
+            if invalid:
+                print(f"ERROR: Invalid state codes: {', '.join(invalid)}")
+                sys.exit(1)
+        else:
+            # Process all states (sorted by number of districts, descending)
+            states_to_process = sorted(
+                STATE_CONFIG.keys(),
+                key=lambda s: STATE_CONFIG[s]['districts'],
+                reverse=True
+            )
+
+        print(f"\nProcessing {len(states_to_process)} states in {mode} mode...")
+        print()
+        sys.stdout.flush()
+
+        # Track results
+        successful = []
+        failed = []
+        skipped_states = []
+        results = {}
+
+        if mode == 'sequential':
+            # SEQUENTIAL MODE: Process one state at a time
+            # USA-level progress bar at position 0
+            with tqdm(states_to_process,
+                      desc=f"USA Redistricting - {args.year} Census",
+                      unit="state",
+                      ncols=120,
+                      position=0,
+                      leave=True,
+                      dynamic_ncols=False,
+                      file=sys.stderr) as usa_pbar:
+
+                for state_code in usa_pbar:
+                    config = STATE_CONFIG[state_code]
+                    state_name = config['name']
+
+                    # Update USA progress bar
+                    usa_pbar.set_description(f"USA Redistricting - {args.year} Census: {state_name}")
+
+                    # Check if state will be skipped (before processing)
+                    will_skip = False
+                    if not args.print_only and not args.reprocess:
+                        states_dir = output_dir / 'states'
+                        state_dir = states_dir / state_name.lower().replace(' ', '_')
+                        if state_dir.exists():
+                            required_files = [
+                                state_dir / 'final_assignments.pkl',
+                                state_dir / 'district_summary.csv',
+                                state_dir / 'district_cities.csv',
+                                state_dir / 'maps'
+                            ]
+                            if all(f.exists() for f in required_files):
+                                will_skip = True
+                                skipped_states.append(state_code)
+
+                    # Process state at position 1 (below USA bar)
+                    success = process_state_sequential(
+                        state_code, output_dir, STATE_CONFIG,
+                        year=args.year,
+                        skip_existing=not args.reprocess,
+                        print_only=args.print_only,
+                        debug=args.debug,
+                        position=1,
+                        dpi=args.dpi
+                    )
+
+                    if success:
+                        if not will_skip:
+                            successful.append(state_code)
+                        usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
+                    else:
+                        failed.append(state_code)
+                        usa_pbar.set_postfix_str(f"✗ {len(failed)} failed")
+
+        else:
+            # PARALLEL MODE: Process multiple states at once
+            # Parent creates and manages all progress bars
+            start_time = time.time()
+
+            import select
+            import threading
+            from queue import Queue
+
+            # Create tqdm bars for each state at their assigned positions
+            state_bars = {}
+            for i, state_code in enumerate(states_to_process):
+                config = STATE_CONFIG[state_code]
+                state_name = config['name']
+                num_districts = config['districts']
+                bar = tqdm(total=1,
+                          desc=f"[{i+1}] {state_name} [{num_districts}D] Waiting...",
+                          unit="step",
+                          position=i + 1,
+                          ncols=120,
+                          leave=True,
+                          bar_format="{desc}",
+                          dynamic_ncols=False,
+                          file=sys.stderr)
+                state_bars[i + 1] = bar  # Position is i+1
+
+            # USA-level progress bar at position 0
+            usa_pbar = tqdm(total=len(states_to_process),
+                           desc=f"USA Redistricting (Parallel) - {args.year} Census",
+                           unit="state",
+                           ncols=120,
+                           position=0,
+                           leave=True,
+                           dynamic_ncols=False,
+                           file=sys.stderr)
+
+            # Start subprocess for each state
+            processes = {}
+            for i, state_code in enumerate(states_to_process):
+                config = STATE_CONFIG[state_code]
+                state_name = config['name']
+                num_districts = config['districts']
+                position = i + 1
+
+                states_dir = output_dir / 'states'
+                state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+                # Check if state output already exists
+                skip_state = False
+                if state_dir.exists():
+                    required_files = [
+                        state_dir / 'final_assignments.pkl',
+                        state_dir / 'district_summary.csv',
+                        state_dir / 'district_cities.csv',
+                        state_dir / 'maps'
+                    ]
+                    if all(f.exists() for f in required_files):
+                        skip_state = True
+                        skipped_states.append(state_code)
+                        # Update progress bar to show skip
+                        state_bars[position].set_description_str(f"[{position}] {state_name} - SKIPPED".ljust(120))
+                        state_bars[position].update(1)
+                        state_bars[position].refresh()
+                        usa_pbar.update(1)
+                        continue
+
+                # Build command
+                scripts_dir = Path(__file__).parent
+                flags = []
+                if args.print_only:
+                    flags.append('--print-only')
+                if args.debug:
+                    flags.append('--debug')
+                flags_str = ' '.join(flags)
+
+                cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {position} --dpi {args.dpi} {flags_str}'.strip()
+
+                # Set up environment
+                env = os.environ.copy()
+                env['PARALLEL_MODE'] = '1'
+                env['DPI'] = str(args.dpi)
+
+                # Start process (limit to max_workers at a time)
+                if len([p for p in processes.values() if p.poll() is None]) >= min(args.workers, 8):
+                    # Wait for a slot to open up
+                    while True:
+                        for state_code2, proc in list(processes.items()):
+                            if proc.poll() is not None:
+                                break
+                        if len([p for p in processes.values() if p.poll() is None]) < min(args.workers, 8):
+                            break
+                        time.sleep(0.1)
+
+                proc = subprocess.Popen(cmd, shell=True, env=env,
+                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                       text=True, bufsize=1)
+                processes[state_code] = proc
+
+                # Start thread to monitor this process's output
+                def monitor_output(proc, position, state_code):
+                    try:
+                        for line in proc.stdout:
+                            line = line.strip()
+                            if line.startswith("STATUS:"):
+                                # Parse: STATUS:position:message
+                                parts = line.split(":", 2)
+                                if len(parts) >= 3:
+                                    pos = int(parts[1])
+                                    msg = parts[2]
+                                    if pos in state_bars:
+                                        state_bars[pos].set_description_str(f"[{pos}] {msg}".ljust(120))
+                                        state_bars[pos].refresh()
+                    except:
+                        pass
+
+                thread = threading.Thread(target=monitor_output, args=(proc, position, state_code), daemon=True)
+                thread.start()
+
+            # Wait for all processes to complete
+            for state_code, proc in processes.items():
+                proc.wait()
+                config = STATE_CONFIG[state_code]
+                state_name = config['name']
+
+                if proc.returncode == 0:
+                    successful.append(state_code)
+                    results[state_code] = (True, "SUCCESS")
+                else:
+                    failed.append(state_code)
+                    results[state_code] = (False, f"Failed with code {proc.returncode}")
+                    print(f"\n[FAIL] {state_name}: exit code {proc.returncode}", file=sys.stderr)
+
+                usa_pbar.update(1)
+                usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
+
+            # Close all bars
+            usa_pbar.close()
+            for bar in state_bars.values():
+                bar.close()
+
+            # Clear visual space after closing many bars
+            print("\n" + "="*70, file=sys.stderr)
+            print("POST-PROCESSING", file=sys.stderr)
+            print("="*70, file=sys.stderr)
+
+        # Show brief summary
+        if failed:
+            print(f"\n[WARN] Failed states: {len(failed)}/{len(states_to_process)}", file=sys.stderr)
+            for s in failed:
+                state_name = STATE_CONFIG[s]['name']
+                print(f"  [FAIL] {state_name} ({s})", file=sys.stderr)
+            print(file=sys.stderr)
+
+    # =========================================================================
+    # STEP 2: POST-PROCESSING
+    # =========================================================================
+
+    pipeline_steps = []
+
+    # Create US aggregate files
+    if output_dir.exists() or args.print_only:
+        flags = []
+        if args.print_only:
+            flags.append('--print-only')
+        if args.debug:
+            flags.append('--debug')
+        flags_str = ' '.join(flags)
+        pipeline_steps.append({
+            'name': 'Create US aggregate files',
+            'command': f'{sys.executable} {scripts_dir}/create_us_aggregate.py --year {args.year} --version {args.version} --dpi {args.dpi} --output-dir {output_dir} --skip-maps {flags_str}'.strip(),
+            'critical': False
+        })
+
+    # Create US rounds hierarchy aggregate
+    if output_dir.exists() or args.print_only:
+        flags = []
+        if args.print_only:
+            flags.append('--print-only')
+        if args.debug:
+            flags.append('--debug')
+        flags_str = ' '.join(flags)
+        pipeline_steps.append({
+            'name': 'Create US rounds hierarchy',
+            'command': f'{sys.executable} {scripts_dir}/create_us_rounds_hierarchy.py --output-dir {output_dir} {flags_str}'.strip(),
+            'critical': False
+        })
+
+    # Create US national maps
+    national_map_script = scripts_dir / 'create_us_national_map.py'
+    if national_map_script.exists():
+        flags = []
+        if args.print_only:
+            flags.append('--print-only')
+        if args.debug:
+            flags.append('--debug')
+        flags_str = ' '.join(flags)
+        pipeline_steps.append({
+            'name': 'Create US national maps',
+            'command': f'{sys.executable} {scripts_dir}/create_us_national_map.py --year {args.year} --output-dir {output_dir} --dpi {args.dpi} {flags_str}'.strip(),
+            'critical': False
+        })
+
+    # Run political analysis on all states
+    if not args.skip_political and (output_dir.exists() or args.print_only):
+        political_scripts = scripts_dir.parent / 'political'
+        analyze_script = political_scripts / 'analyze_districts.py'
+        visualize_script = political_scripts / 'visualize_partisan_lean.py'
+
+        if analyze_script.exists() and visualize_script.exists():
+            # Get list of state directories
+            states_dir = output_dir / 'states'
+            if states_dir.exists() or args.print_only:
+                # Add step to run political analysis on all states
+                pipeline_steps.append({
+                    'name': 'Political analysis (all states)',
+                    'command': f'{sys.executable} {political_scripts}/run_political_analysis.py --census-year {args.year} --version {args.version} --election-year {args.election_year}'.strip(),
+                    'critical': False
+                })
+
+    # Create national political map (after political analysis completes)
+    if not args.skip_political and (output_dir.exists() or args.print_only):
+        pipeline_steps.append({
+            'name': 'Create national political map',
+            'command': f'{sys.executable} scripts/political/create_us_national_political_map.py --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
+            'critical': False
+        })
+
+    # Run demographic analysis on all states
+    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+        demographic_scripts = scripts_dir.parent / 'demographic'
+        demographic_script = demographic_scripts / 'run_demographic_analysis.py'
+
+        if demographic_script.exists():
+            # Get list of state directories
+            states_dir = output_dir / 'states'
+            if states_dir.exists() or args.print_only:
+                # Add step to run demographic analysis on all states
+                pipeline_steps.append({
+                    'name': 'Demographic analysis (all states)',
+                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_analysis.py --census-year {args.year} --version {args.version}'.strip(),
+                    'critical': False
+                })
+
+    # Run demographic visualization on all states
+    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+        demographic_scripts = scripts_dir.parent / 'demographic'
+        demographic_viz_script = demographic_scripts / 'run_demographic_visualization.py'
+
+        if demographic_viz_script.exists():
+            # Get list of state directories
+            states_dir = output_dir / 'states'
+            if states_dir.exists() or args.print_only:
+                # Add step to run demographic visualization on all states
+                pipeline_steps.append({
+                    'name': 'Demographic visualization (all states)',
+                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_visualization.py --census-year {args.year} --version {args.version} --dpi {args.dpi}'.strip(),
+                    'critical': False
+                })
+
+    # Create national demographic map (after demographic visualization completes)
+    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+        pipeline_steps.append({
+            'name': 'Create national demographic map',
+            'command': f'{sys.executable} scripts/demographic/create_us_national_demographic_map.py --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
+            'critical': False
+        })
+
+    # Run compactness visualization on all states
+    if output_dir.exists() or args.print_only:
+        compactness_scripts = scripts_dir.parent / 'compactness'
+        compactness_viz_script = compactness_scripts / 'run_compactness_visualization.py'
+
+        if compactness_viz_script.exists():
+            # Get list of state directories
+            states_dir = output_dir / 'states'
+            if states_dir.exists() or args.print_only:
+                # Add step to run compactness visualization on all states
+                pipeline_steps.append({
+                    'name': 'Compactness visualization (all states)',
+                    'command': f'{sys.executable} {compactness_scripts}/run_compactness_visualization.py --census-year {args.year} --version {args.version} --dpi {args.dpi}'.strip(),
+                    'critical': False
+                })
+
+    # Create national compactness map (after compactness visualization completes)
+    if output_dir.exists() or args.print_only:
+        pipeline_steps.append({
+            'name': 'Create national compactness map',
+            'command': f'{sys.executable} scripts/compactness/create_us_national_compactness_map.py --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
+            'critical': False
+        })
+
+    # Generate static dashboard with all district data
+    if output_dir.exists() or args.print_only:
+        dashboard_script = Path('scripts/web/generate_dashboard.py')
+        if dashboard_script.exists():
+            pipeline_steps.append({
+                'name': 'Generate static dashboard',
+                'command': f'{sys.executable} {dashboard_script} --year {args.year} --version {args.version} --output-dir {output_dir}'.strip(),
+                'critical': False
+            })
+
+    # Run post-processing steps with progress bars
+    if pipeline_steps:
+        # Create progress bars for each post-processing step at positions 0-3
+        step_bars = []
+        for i, step in enumerate(pipeline_steps):
+            bar = tqdm(total=1,
+                      desc=f"[{i}] {step['name']} - Waiting...",
+                      unit="step",
+                      position=i,
+                      ncols=120,
+                      leave=True,
+                      bar_format="{desc}",
+                      dynamic_ncols=False,
+                      file=sys.stderr)
+            step_bars.append(bar)
+
+        # Run each step (set TQDM_POSITION to suppress child banners)
+        for i, step in enumerate(pipeline_steps):
+            # Update bar to show starting
+            step_bars[i].set_description_str(f"[{i}] {step['name']} - Starting...".ljust(120))
+            step_bars[i].refresh()
+
+            env = os.environ.copy()
+            env['TQDM_POSITION'] = str(i)  # Pass position so child can report progress
+
+            # Use Popen to monitor output in real-time
+            proc = subprocess.Popen(step['command'], shell=True, env=env,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   text=True, bufsize=1)
+
+            # Monitor stdout for STATUS messages
+            for line in proc.stdout:
+                line = line.strip()
+                if line.startswith("STATUS:"):
+                    # Parse: STATUS:position:message
+                    parts = line.split(":", 2)
+                    if len(parts) >= 3:
+                        pos = int(parts[1])
+                        msg = parts[2]
+                        step_bars[i].set_description_str(f"[{i}] {msg}".ljust(120))
+                        step_bars[i].refresh()
+
+            proc.wait()
+
+            if proc.returncode == 0:
+                step_bars[i].set_description_str(f"[{i}] {step['name']} - COMPLETE".ljust(120))
+            else:
+                step_bars[i].set_description_str(f"[{i}] {step['name']} - FAILED".ljust(120))
+                if step['critical'] and not args.print_only:
+                    print(f"\n[ERROR] {step['name']} failed", file=sys.stderr)
+                    stderr_output = proc.stderr.read()
+                    print(stderr_output[-500:] if stderr_output else "", file=sys.stderr)
+                    return 1
+
+            step_bars[i].refresh()
+            step_bars[i].update(1)
+
+        # Close bars
+        for bar in step_bars:
+            bar.close()
+
+    # Brief final summary at position 3 (after the 3 post-processing steps at 0-2)
+    summary_bar = tqdm(total=1,
+                      desc=f"[3] Pipeline complete - Results in: {output_dir}",
+                      unit="step",
+                      position=3,
+                      ncols=120,
+                      leave=True,
+                      bar_format="{desc}",
+                      dynamic_ncols=False,
+                      file=sys.stderr)
+    summary_bar.update(1)
+    summary_bar.close()
+
+    return 0 if (not 'failed' in locals() or not failed) else 1
+
+
+if __name__ == '__main__':
+    # Required for multiprocessing on Windows
+    multiprocessing.freeze_support()
+    sys.exit(main())

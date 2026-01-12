@@ -1,0 +1,139 @@
+\begin{thebibliography}{10}
+
+\bibitem{ansolabehere2012mecubed}
+Stephen Ansolabehere, Maxwell Palmer, and Amanda Lee.
+\newblock Mecubed: The mit election data and science lab's election returns
+  dataset.
+\newblock {\em Massachusetts Institute of Technology}, 2012.
+
+\bibitem{balinski1982fair}
+Michel~L Balinski and H~Peyton Young.
+\newblock Fair representation: Meeting the ideal of one man, one vote.
+\newblock {\em Yale University Press}, 1982.
+
+\bibitem{chen2013unintentional}
+Jowei Chen and Jonathan Rodden.
+\newblock Unintentional gerrymandering: Political geography and electoral bias
+  in legislatures.
+\newblock {\em Quarterly Journal of Political Science}, 8(3):239--269, 2013.
+
+\bibitem{cho2006geographic}
+Wendy K~Tam Cho, James~G Gimpel, and Iris~S Hui.
+\newblock The geographic foundations of representation: A conceptual framework.
+\newblock {\em Political Geography}, 25(6):579--597, 2006.
+
+\bibitem{daley2021unrigging}
+David Daley.
+\newblock {\em Unrigging American Elections: Reform Past and Prologue}.
+\newblock Yale University Press, 2021.
+
+\bibitem{deford2019implementing}
+Daryl DeFord, Nicholas Eubank, and Jonathan Rodden.
+\newblock Implementing partisan symmetry: Problems and paradoxes.
+\newblock In {\em Political Analysis Workshop}, 2019.
+
+\bibitem{duchin2018gerrymandering}
+Moon Duchin et~al.
+\newblock Gerrymandering metrics: How to measure? what's the baseline?
+\newblock {\em arXiv preprint arXiv:1801.02064}, 2018.
+
+\bibitem{fifield2020automated}
+Benjamin Fifield, Michael Higgins, Kosuke Imai, and Alexander Tarr.
+\newblock Automated redistricting simulation using markov chain monte carlo.
+\newblock {\em Journal of Computational and Graphical Statistics},
+  29(4):715--728, 2020.
+
+\bibitem{garfinkel1970optimal}
+Robert~S Garfinkel and George~L Nemhauser.
+\newblock Optimal political districting by implicit enumeration techniques.
+\newblock {\em Management Science}, 16(8):B--495, 1970.
+
+\bibitem{hess1965nonpartisan}
+Sidney~W Hess, James~B Weaver, Harold~J Siegfeldt, John~N Whelan, and Peter~A
+  Zitlau.
+\newblock Nonpartisan political redistricting by computer.
+\newblock {\em Operations Research}, 13(6):998--1006, 1965.
+
+\bibitem{huntington1928method}
+Edward~V Huntington.
+\newblock The apportionment of representatives in congress.
+\newblock {\em Transactions of the American Mathematical Society},
+  30(1):85--110, 1928.
+
+\bibitem{karypis1995metis}
+George Karypis and Vipin Kumar.
+\newblock Metis--unstructured graph partitioning and sparse matrix ordering
+  system, version 2.0.
+\newblock 1995.
+
+\bibitem{karypis1998fast}
+George Karypis and Vipin Kumar.
+\newblock A fast and high quality multilevel scheme for partitioning irregular
+  graphs.
+\newblock In {\em SIAM Journal on scientific Computing}, volume~20, pages
+  359--392. SIAM, 1998.
+
+\bibitem{liu2016pear}
+Yan~Y Liu, Wendy K~Tam Cho, and Shaowen Wang.
+\newblock Pear: A massively parallel evolutionary computation approach for
+  political redistricting optimization and analysis.
+\newblock {\em Swarm and Evolutionary Computation}, 30:78--92, 2016.
+
+\bibitem{pegden2017computational}
+Wesley Pegden, Ariel~D Procaccia, and Dingli Yu.
+\newblock A computational approach to measuring vote elasticity and
+  competitiveness.
+\newblock {\em arXiv preprint arXiv:1705.09393}, 2017.
+
+\bibitem{polsby1991third}
+Daniel~D Polsby and Robert~D Popper.
+\newblock The third criterion: Compactness as a procedural safeguard against
+  partisan gerrymandering.
+\newblock {\em Yale Law \& Policy Review}, 9(2):301--353, 1991.
+
+\bibitem{rodden2019why}
+Jonathan Rodden.
+\newblock {\em Why Cities Lose: The Deep Roots of the Urban-Rural Political
+  Divide}.
+\newblock Basic Books, 2019.
+
+\bibitem{stephanopoulos2015partisan}
+Nicholas~O Stephanopoulos and Eric~M McGhee.
+\newblock Partisan gerrymandering and the efficiency gap.
+\newblock {\em The University of Chicago Law Review}, pages 831--900, 2015.
+
+\bibitem{census2020apportionment}
+{U.S. Census Bureau}.
+\newblock 2020 census apportionment results.
+\newblock
+  \url{https://www.census.gov/data/tables/2020/dec/2020-apportionment-data.html},
+  2021.
+
+\bibitem{census2020redistricting}
+{U.S. Census Bureau}.
+\newblock 2020 census redistricting data (public law 94-171) summary file.
+\newblock
+  \url{https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html},
+  2021.
+
+\bibitem{baker1962}
+{U.S. Supreme Court}.
+\newblock Baker v. carr, 369 u.s. 186, 1962.
+\newblock Established justiciability of redistricting cases.
+
+\bibitem{reynolds1964}
+{U.S. Supreme Court}.
+\newblock Reynolds v. sims, 377 u.s. 533, 1964.
+\newblock One person, one vote principle.
+
+\bibitem{shaw1993}
+{U.S. Supreme Court}.
+\newblock Shaw v. reno, 509 u.s. 630, 1993.
+\newblock Racial gerrymandering and compactness.
+
+\bibitem{rucho2019}
+{U.S. Supreme Court}.
+\newblock Rucho v. common cause, 588 u.s. \_\_\_, 2019.
+\newblock Partisan gerrymandering is non-justiciable.
+
+\end{thebibliography}
