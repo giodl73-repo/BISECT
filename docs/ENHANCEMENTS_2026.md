@@ -2,7 +2,7 @@
 
 ## Overview
 
-Eight enhancements to integrate into the main redistricting pipeline to provide more comprehensive analysis, visualization, and algorithmic improvements for congressional district generation.
+Nine enhancements to integrate into the main redistricting pipeline to provide more comprehensive analysis, visualization, and algorithmic improvements for congressional district generation.
 
 **Status Summary:**
 - ✅ Enhancement 1: Compactness Integration - **COMPLETED**
@@ -13,6 +13,7 @@ Eight enhancements to integrate into the main redistricting pipeline to provide 
 - ✅ Enhancement 6: System Architecture Diagrams - **COMPLETED**
 - 📋 Enhancement 7: Edge-Weighted Recursive Bisection - **PLANNED**
 - 📋 Enhancement 8: Block-Level Data Support - **PLANNED**
+- 📋 Enhancement 9: Per-State Analysis Refactoring - **PLANNED**
 
 ---
 
@@ -1058,6 +1059,269 @@ data/processed/tracts_from_blocks/
 
 ---
 
-**Date**: January 2026
-**Status**: Enhancements 1-3, 5 complete; 4 in progress; 6-8 planned
-**Order**: ✅ 1 → ✅ 2 → ✅ 3 → 🚧 4 → ✅ 5 → 📋 6 → 📋 7 → 📋 8
+## Enhancement 9: Per-State Analysis Refactoring 📋 PLANNED
+
+### Current State (Bottleneck)
+
+Currently, all analysis and visualization is done in **batch mode** after all 50 states complete:
+
+```
+Pipeline Flow (Current):
+├─ Phase 1: State Redistricting (Parallel)
+│   └─ Process all 50 states in parallel (4-8 hours)
+│
+└─ Phase 2: Post-Processing (Sequential Batch)
+    ├─ run_political_analysis.py → loops 50 states (100 min)
+    ├─ run_demographic_analysis.py → loops 50 states (150 min)
+    ├─ run_compactness_visualization.py → loops 50 states (50 min)
+    └─ National maps (30 min)
+```
+
+**Problems:**
+1. **Sequential bottleneck**: Analysis scripts run one after another, not in parallel
+2. **Delayed feedback**: Must wait for all 50 states before seeing any analysis
+3. **Duplicate work**: Each batch script loops through all states instead of per-state execution
+4. **No parallelization**: Analysis could overlap with subsequent state processing
+
+### Goal
+
+Move per-state visualizations to run immediately after each state completes, keeping only true national aggregations in post-processing:
+
+```
+Pipeline Flow (Proposed):
+├─ Phase 1: State Processing (Parallel)
+│   ├─ Redistricting
+│   ├─ Cities enrichment
+│   ├─ District summary
+│   ├─ Round maps
+│   ├─ District maps
+│   └─ [NEW] Per-State Analysis (in parallel)
+│       ├─ Political analysis
+│       ├─ Political visualization
+│       ├─ Demographic analysis
+│       ├─ Demographic visualization
+│       └─ Compactness visualization
+│
+└─ Phase 2: National Post-Processing (Parallel)
+    ├─ create_us_national_political_map.py
+    ├─ create_us_national_demographic_map.py
+    ├─ create_us_national_compactness_map.py
+    ├─ create_metro_area_maps.py
+    ├─ create_us_aggregate.py
+    ├─ create_us_rounds_hierarchy.py
+    └─ generate_dashboard.py
+```
+
+### Analysis: Scripts That Can Move to Per-State
+
+**Zero inter-state dependencies** (can run immediately after state completes):
+
+| Script | Current Phase | Can Move? | Input Dependencies |
+|--------|--------------|-----------|-------------------|
+| `analyze_districts.py` | Post-batch | ✅ YES | final_assignments.pkl, election data |
+| `visualize_partisan_lean.py` | Post-batch | ✅ YES | State dir, political CSV |
+| `analyze_district_demographics.py` | Post-batch | ✅ YES | final_assignments.pkl, demographic data |
+| `visualize_district_demographics.py` | Post-batch | ✅ YES | State dir, demographic CSV |
+| `visualize_compactness.py` | Post-batch | ✅ YES | district_summary.csv |
+
+**Must stay in post-processing** (require all 50 states):
+
+| Script | Why National-Only? |
+|--------|-------------------|
+| `create_us_national_political_map.py` | Combines all state political data |
+| `create_us_national_demographic_map.py` | Combines all state demographic data |
+| `create_us_national_compactness_map.py` | Combines all state compactness data |
+| `create_metro_area_maps.py` | Multi-state metro visualizations |
+| `create_us_aggregate.py` | National summary statistics |
+| `create_us_rounds_hierarchy.py` | National rounds metadata |
+| `create_us_national_rounds_progression.py` | National round progression |
+| `generate_dashboard.py` | Depends on all outputs |
+
+### Implementation Plan
+
+#### Phase 1: Preparation (1 hour)
+1. **Audit dependencies**
+   - Verify no hidden cross-state dependencies
+   - Confirm all required data files exist per-state
+   - Test one state through proposed flow manually
+
+2. **Test script execution**
+   - Run each analysis script individually on test state
+   - Verify outputs match batch-mode results
+   - Check file paths and directory structures work
+
+#### Phase 2: Add Per-State Orchestration (2 hours)
+Modify `scripts/pipeline/process_single_state.py`:
+
+```python
+# Add optional analysis steps (controlled by --run-analysis flag)
+if args.run_analysis:
+    steps.extend([
+        {
+            'name': 'Political analysis',
+            'script': 'scripts/political/analyze_districts.py',
+            'args': [state_dir, '--year', args.year],
+            'critical': False  # Don't break pipeline on failure
+        },
+        {
+            'name': 'Political visualization',
+            'script': 'scripts/political/visualize_partisan_lean.py',
+            'args': [state_dir, '--census-year', args.year],
+            'critical': False
+        },
+        {
+            'name': 'Demographic analysis',
+            'script': 'scripts/demographic/analyze_district_demographics.py',
+            'args': [state_dir, '--census-year', args.year],
+            'critical': False
+        },
+        {
+            'name': 'Demographic visualization',
+            'script': 'scripts/demographic/visualize_district_demographics.py',
+            'args': [state_dir, '--census-year', args.year],
+            'critical': False
+        },
+        {
+            'name': 'Compactness visualization',
+            'script': 'scripts/compactness/visualize_compactness.py',
+            'args': [state_dir, '--census-year', args.year],
+            'critical': False
+        }
+    ])
+```
+
+#### Phase 3: Enable in Main Pipeline (30 minutes)
+Modify `scripts/pipeline/run_complete_redistricting.py`:
+
+1. Add `--run-analysis` flag to state processing calls
+2. **Comment out** (don't delete) batch wrapper scripts:
+   - `run_political_analysis.py`
+   - `run_demographic_analysis.py`
+   - `run_demographic_visualization.py`
+   - `run_compactness_visualization.py`
+3. Keep all national scripts unchanged
+
+#### Phase 4: Testing & Validation (2-3 hours)
+1. **Test with 2-3 small states:**
+   ```bash
+   python scripts/pipeline/run_complete_redistricting.py \
+       --year 2020 --version v3_test \
+       --states "Vermont,Wyoming,Rhode Island" \
+       --run-analysis
+   ```
+
+2. **Validate outputs:**
+   - Analysis files exist in each state directory
+   - Output quality matches batch-mode results
+   - National maps still work with per-state inputs
+   - Check wall-clock time improvement
+
+3. **Full run:**
+   ```bash
+   python scripts/pipeline/run_complete_redistricting.py \
+       --year 2020 --version v3 --run-analysis
+   ```
+
+#### Phase 5: Cleanup (30 minutes)
+**Only after validation succeeds:**
+
+1. Delete obsolete batch wrapper scripts:
+   - `scripts/political/run_political_analysis.py`
+   - `scripts/demographic/run_demographic_analysis.py`
+   - `scripts/demographic/run_demographic_visualization.py`
+   - `scripts/compactness/run_compactness_visualization.py`
+
+2. Remove commented batch calls from `run_complete_redistricting.py`
+
+3. Make `--run-analysis` the default (always run analysis per-state)
+
+4. Update documentation
+
+### Performance Impact
+
+**Current (Sequential Bottleneck):**
+```
+State Redistricting: 4-8 hours (parallel)
+Post-Processing: 300+ minutes (sequential)
+  ├─ Political: 100 min
+  ├─ Demographic: 150 min
+  ├─ Compactness: 50 min
+  └─ National: 30 min
+────────────────────
+Total: 6-10 hours
+```
+
+**Proposed (Parallel Execution):**
+```
+State Redistricting + Analysis: 4-8 hours (parallel overlap)
+  └─ Analysis runs as each state completes
+National Post-Processing: 30 min (parallel)
+────────────────────
+Total: 4-9 hours
+Savings: 1-2 hours (analysis no longer adds sequential overhead)
+```
+
+### Benefits
+
+1. **Faster pipeline**: Eliminate 300-minute sequential bottleneck
+2. **Better feedback**: See state results as they complete
+3. **Cleaner architecture**: Per-state work stays with per-state processing
+4. **Better parallelism**: Analysis overlaps with subsequent states
+5. **Logical organization**: Related processing happens together
+
+### Files to Modify
+
+**Modified:**
+- `scripts/pipeline/process_single_state.py` - Add analysis steps
+- `scripts/pipeline/run_complete_redistricting.py` - Enable per-state analysis, remove batch calls
+
+**Deleted (after validation):**
+- `scripts/political/run_political_analysis.py`
+- `scripts/demographic/run_demographic_analysis.py`
+- `scripts/demographic/run_demographic_visualization.py`
+- `scripts/compactness/run_compactness_visualization.py`
+
+**Unchanged (core analysis scripts):**
+- `scripts/political/analyze_districts.py`
+- `scripts/political/visualize_partisan_lean.py`
+- `scripts/demographic/analyze_district_demographics.py`
+- `scripts/demographic/visualize_district_demographics.py`
+- `scripts/compactness/visualize_compactness.py`
+
+**Unchanged (national scripts):**
+- All `create_us_national_*.py` scripts
+- `create_metro_area_maps.py`
+- `generate_dashboard.py`
+
+### Risk Mitigation
+
+**Low-risk approach:**
+- Phased implementation with testing between phases
+- Keep old batch scripts until validated
+- Use test version flag (`v3_test`) to avoid overwriting production data
+- Per-state analysis marked as non-critical (won't break pipeline on failure)
+- Full rollback capability (remove `--run-analysis` flag)
+
+### Estimated Complexity
+
+**Medium-High** (4-6 hours)
+- Requires careful orchestration changes
+- Need thorough testing to ensure outputs match
+- Must verify no hidden dependencies
+- Performance validation important
+
+### Success Criteria
+
+- [ ] All per-state analysis runs successfully during state processing
+- [ ] Output quality matches current batch-mode results (byte-for-byte if possible)
+- [ ] National maps successfully aggregate per-state data
+- [ ] Pipeline completes 1-2 hours faster than current approach
+- [ ] No regressions in output quality or correctness
+- [ ] Dashboard shows all expected data
+- [ ] Code is cleaner and more maintainable
+
+---
+
+**Date**: January 12, 2026
+**Status**: Enhancements 1-6 complete; 7-9 planned
+**Order**: ✅ 1 → ✅ 2 → ✅ 3 → ✅ 4 → ✅ 5 → ✅ 6 → 📋 7 → 📋 8 → 📋 9
