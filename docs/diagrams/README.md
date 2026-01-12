@@ -46,6 +46,17 @@ Shows how data transforms from raw inputs to final outputs.
 - Final outputs (.csv, .png, .html)
 - Scripts that perform each transformation
 
+### 5. Recursive Bisection Concept (`recursive_bisection_concept.mmd`)
+Step-by-step explanation of how the recursive bisection algorithm works.
+
+**Shows:**
+- Geographic input (census tracts with population)
+- Conversion to adjacency graph (vertices and edges)
+- METIS graph partitioning with edge weights
+- The minimum cut operation
+- Resulting balanced partitions (before/after)
+- Recursive splitting process
+
 ## Viewing Diagrams
 
 ### In GitHub
@@ -71,6 +82,7 @@ mmdc -i system_overview.mmd -o system_overview.png -t default -b transparent
 mmdc -i pipeline_flow.mmd -o pipeline_flow.png -t default -b transparent
 mmdc -i script_dependencies.mmd -o script_dependencies.png -t default -b transparent
 mmdc -i data_flow.mmd -o data_flow.png -t default -b transparent
+mmdc -i recursive_bisection_concept.mmd -o recursive_bisection_concept.png -t default -b transparent
 ```
 
 ## Diagram Syntax
