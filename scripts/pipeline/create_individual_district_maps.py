@@ -293,7 +293,8 @@ def create_district_maps(
     output_dir: Path,
     num_districts: int = 52,
     debug: bool = False,
-    progress_bar = None
+    progress_bar = None,
+    position: int = 2
 ):
     """
     Create individual map for each district.
@@ -310,8 +311,8 @@ def create_district_maps(
     if debug:
         print(f"\nGenerating individual district maps in parallel...")
 
-    # Get position for stacked progress bars (use default of 2 if not provided)
-    position = progress_bar.pos if progress_bar else 2
+    # Position is now passed as parameter (999 in parallel mode)
+    # No need to derive from progress_bar
 
     # Prepare tasks for parallel execution
     tasks = [
@@ -530,7 +531,8 @@ if __name__ == '__main__':
         output_dir,
         num_districts=num_districts,
         debug=args.debug,
-        progress_bar=stage_pbar
+        progress_bar=stage_pbar,
+        position=args.position
     )
 
     # Close progress bars if they were created

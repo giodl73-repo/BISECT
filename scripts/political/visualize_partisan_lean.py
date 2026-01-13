@@ -609,9 +609,25 @@ def main():
     elif args.scope == 'national':
         if not args.output_dir or not args.version:
             parser.error("--output-dir and --version required when scope=national")
-        print("ERROR: National scope not yet implemented for political visualization")
-        print("Use create_us_national_political_map.py for now")
-        return 1
+
+        # Delegate to existing national map script for now
+        # TODO: Merge logic directly into this script
+        import subprocess
+        cmd = [
+            sys.executable,
+            str(Path(__file__).parent / 'create_us_national_political_map.py'),
+            '--year', args.election_year,
+            '--version', args.version,
+            '--output-dir', args.output_dir,
+            '--dpi', str(args.dpi)
+        ]
+        if args.force:
+            cmd.append('--force')
+        if args.position >= 0:
+            cmd.extend(['--position', str(args.position)])
+
+        result = subprocess.run(cmd)
+        return result.returncode
 
 
 

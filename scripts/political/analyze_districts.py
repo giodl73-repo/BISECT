@@ -256,11 +256,17 @@ def main():
                        help='Redistricting run directory (e.g., outputs/us_2020_v2)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2016'],
                        help='Election year (default: 2020)')
+    parser.add_argument('--census-year', type=str, default=None, choices=['2020', '2010', '2000'],
+                       help='Census year for tract boundaries (default: same as election year)')
     parser.add_argument('--output-dir', type=str, default=None,
                        help='Output directory (default: run_dir/political_analysis)')
     parser.add_argument('--force', action='store_true',
                        help='Force regeneration even if outputs exist')
     args = parser.parse_args()
+
+    # Default census year to election year if not specified
+    if args.census_year is None:
+        args.census_year = args.year
 
     run_dir = Path(args.run_dir)
 
@@ -331,7 +337,7 @@ def main():
 
         # Load tract file to get GEOID mapping
         import geopandas as gpd
-        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet')
+        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.census_year}.parquet')
         if not tracts_file.exists():
             raise FileNotFoundError(f"Tract file not found: {tracts_file}")
 
@@ -366,10 +372,10 @@ def main():
         project_root = script_dir.parent.parent
         sys.path.insert(0, str(project_root))
 
-        if args.year == '2020':
+        if args.census_year == '2020':
             from scripts.config_2020 import STATE_CONFIG_2020
             config = STATE_CONFIG_2020.get(state_code, {})
-        elif args.year == '2010':
+        elif args.census_year == '2010':
             from scripts.config_2010 import STATE_CONFIG_2010
             config = STATE_CONFIG_2010.get(state_code, {})
         else:

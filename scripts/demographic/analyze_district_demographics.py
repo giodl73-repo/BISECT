@@ -16,9 +16,9 @@ from pathlib import Path
 import pickle
 
 
-def load_demographic_data():
+def load_demographic_data(census_year='2020'):
     """Load processed demographic data."""
-    demo_file = Path('data/processed/demographics/2020_demographics_tract.parquet')
+    demo_file = Path(f'data/processed/demographics/{census_year}_demographics_tract.parquet')
     if not demo_file.exists():
         raise FileNotFoundError(f"Demographic data not found: {demo_file}\n"
                                f"Run process_demographic_data.py first.")
@@ -155,6 +155,8 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze demographic characteristics of districts')
     parser.add_argument('run_dir', type=str,
                        help='Redistricting run directory (e.g., outputs/us_2020_v1/states/california)')
+    parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010', '2000'],
+                       help='Census year (default: 2020)')
     parser.add_argument('--output-dir', type=str, default=None,
                        help='Output directory (default: run_dir/demographic_analysis)')
     parser.add_argument('--force', action='store_true',
@@ -214,7 +216,7 @@ def main():
 
         # Load tract file to get GEOID mapping
         import geopandas as gpd
-        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_2020.parquet')
+        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.census_year}.parquet')
         if not tracts_file.exists():
             raise FileNotFoundError(f"Tract file not found: {tracts_file}")
 
@@ -224,7 +226,7 @@ def main():
 
         # Load demographic data
         print("\nLoading demographic data...")
-        demo_df = load_demographic_data()
+        demo_df = load_demographic_data(args.census_year)
         print()
 
         # Load district assignments
@@ -238,8 +240,15 @@ def main():
         project_root = script_dir.parent.parent
         sys.path.insert(0, str(project_root))
 
-        from scripts.config_2020 import STATE_CONFIG_2020
-        config = STATE_CONFIG_2020.get(state_code, {})
+        if args.census_year == '2020':
+            from scripts.config_2020 import STATE_CONFIG_2020
+            config = STATE_CONFIG_2020.get(state_code, {})
+        elif args.census_year == '2010':
+            from scripts.config_2010 import STATE_CONFIG_2010
+            config = STATE_CONFIG_2010.get(state_code, {})
+        else:
+            config = {}
+
         num_districts = config.get('districts', 1)
         print(f"State has {num_districts} congressional districts")
 

@@ -90,7 +90,7 @@ def check_prerequisites(state_code, year='2020'):
 
 
 def process_state_sequential(state_code, us_dir, state_config, year='2020', skip_existing=True,
-                             print_only=False, debug=False, position=1, dpi=150):
+                             print_only=False, debug=False, position=1, dpi=150, run_analysis=True):
     """
     Process a single state through the full pipeline (sequential mode).
     Uses ONLY 1 progress bar at the specified position.
@@ -259,6 +259,8 @@ def process_state_worker(args):
             flags.append('--print-only')
         if debug:
             flags.append('--debug')
+        if run_analysis:
+            flags.append('--run-analysis')
         flags_str = ' '.join(flags)
 
         cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {year} --output-dir {state_dir} --position {position} --dpi {os.environ.get("DPI", str(dpi))} {flags_str}'.strip()
@@ -314,6 +316,10 @@ def main():
                         help='DPI for output maps (default: 150). Higher = better quality but slower.')
     parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
                         help='Election year for political analysis (default: 2020)')
+    parser.add_argument('--run-analysis', action='store_true', default=True,
+                        help='Run per-state analysis (political, demographic, compactness) during state processing (default: True)')
+    parser.add_argument('--skip-analysis', dest='run_analysis', action='store_false',
+                        help='Skip per-state analysis (use old batch post-processing instead)')
     parser.add_argument('--skip-political', action='store_true',
                         help='Skip political analysis steps')
     parser.add_argument('--skip-demographic', action='store_true',
@@ -322,6 +328,8 @@ def main():
                         help='Skip state processing (for post-processing only)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
+    parser.add_argument('--reset', action='store_true',
+                        help='Delete output directory before starting (fresh run, not incremental)')
     parser.add_argument('--print-only', action='store_true',
                         help='Print commands without executing (debug mode)')
     parser.add_argument('--debug', action='store_true',
@@ -358,6 +366,13 @@ def main():
         output_dir = Path(args.output_dir)
     else:
         output_dir = Path(f'outputs/us_{args.year}_{args.version}')
+
+    # Handle --reset flag: delete output directory for fresh run
+    if args.reset and output_dir.exists() and not args.print_only:
+        import shutil
+        print(f"\n[RESET] Deleting existing output directory: {output_dir}")
+        shutil.rmtree(output_dir)
+        print(f"[RESET] Deleted. Starting fresh run.\n")
 
     if not args.print_only and not args.skip_states:
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -484,7 +499,8 @@ def main():
                         print_only=args.print_only,
                         debug=args.debug,
                         position=1,
-                        dpi=args.dpi
+                        dpi=args.dpi,
+                        run_analysis=args.run_analysis
                     )
 
                     if success:
@@ -568,6 +584,8 @@ def main():
                     flags.append('--print-only')
                 if args.debug:
                     flags.append('--debug')
+                if args.run_analysis:
+                    flags.append('--run-analysis')
                 flags_str = ' '.join(flags)
 
                 cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {position} --dpi {args.dpi} {flags_str}'.strip()
@@ -706,8 +724,9 @@ def main():
             'critical': False
         })
 
-    # Run political analysis on all states
-    if not args.skip_political and (output_dir.exists() or args.print_only):
+    # Run political analysis on all states (batch mode - fallback only)
+    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
+    if not args.skip_political and not args.run_analysis and (output_dir.exists() or args.print_only):
         political_scripts = scripts_dir.parent / 'political'
         analyze_script = political_scripts / 'analyze_districts.py'
         visualize_script = political_scripts / 'visualize_partisan_lean.py'
@@ -716,23 +735,24 @@ def main():
             # Get list of state directories
             states_dir = output_dir / 'states'
             if states_dir.exists() or args.print_only:
-                # Add step to run political analysis on all states
+                # Add step to run political analysis on all states (legacy batch mode)
                 pipeline_steps.append({
-                    'name': 'Political analysis (all states)',
+                    'name': 'Political analysis (batch fallback)',
                     'command': f'{sys.executable} {political_scripts}/run_political_analysis.py --census-year {args.year} --version {args.version} --election-year {args.election_year}'.strip(),
                     'critical': False
                 })
 
-    # Create national political map (after political analysis completes)
+    # Create national political map (after per-state analysis completes)
     if not args.skip_political and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
             'name': 'Create national political map',
-            'command': f'{sys.executable} scripts/political/create_us_national_political_map.py --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
+            'command': f'{sys.executable} scripts/political/visualize_partisan_lean.py --scope national --output-dir {output_dir} --version {args.version} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
 
-    # Run demographic analysis on all states
-    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+    # Run demographic analysis on all states (batch mode - fallback only)
+    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
+    if not args.skip_demographic and not args.run_analysis and (output_dir.exists() or args.print_only):
         demographic_scripts = scripts_dir.parent / 'demographic'
         demographic_script = demographic_scripts / 'run_demographic_analysis.py'
 
@@ -740,15 +760,16 @@ def main():
             # Get list of state directories
             states_dir = output_dir / 'states'
             if states_dir.exists() or args.print_only:
-                # Add step to run demographic analysis on all states
+                # Add step to run demographic analysis on all states (legacy batch mode)
                 pipeline_steps.append({
-                    'name': 'Demographic analysis (all states)',
+                    'name': 'Demographic analysis (batch fallback)',
                     'command': f'{sys.executable} {demographic_scripts}/run_demographic_analysis.py --census-year {args.year} --version {args.version}'.strip(),
                     'critical': False
                 })
 
-    # Run demographic visualization on all states
-    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+    # Run demographic visualization on all states (batch mode - fallback only)
+    # Note: Only runs if --skip-analysis was used (per-state visualization didn't run)
+    if not args.skip_demographic and not args.run_analysis and (output_dir.exists() or args.print_only):
         demographic_scripts = scripts_dir.parent / 'demographic'
         demographic_viz_script = demographic_scripts / 'run_demographic_visualization.py'
 
@@ -756,18 +777,18 @@ def main():
             # Get list of state directories
             states_dir = output_dir / 'states'
             if states_dir.exists() or args.print_only:
-                # Add step to run demographic visualization on all states
+                # Add step to run demographic visualization on all states (legacy batch mode)
                 pipeline_steps.append({
-                    'name': 'Demographic visualization (all states)',
+                    'name': 'Demographic visualization (batch fallback)',
                     'command': f'{sys.executable} {demographic_scripts}/run_demographic_visualization.py --census-year {args.year} --version {args.version} --dpi {args.dpi}'.strip(),
                     'critical': False
                 })
 
-    # Create national demographic map (after demographic visualization completes)
+    # Create national demographic map (after per-state analysis completes)
     if not args.skip_demographic and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
             'name': 'Create national demographic map',
-            'command': f'{sys.executable} scripts/demographic/create_us_national_demographic_map.py --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
+            'command': f'{sys.executable} scripts/demographic/visualize_district_demographics.py --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
 

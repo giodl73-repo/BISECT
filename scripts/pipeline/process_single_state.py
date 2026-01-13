@@ -97,7 +97,7 @@ def main():
 
         steps.append((
             "Political analysis",
-            f'{sys.executable} {political_analyze} {state_dir} --election-year 2020 --position {child_position}'.strip()
+            f'{sys.executable} {political_analyze} {state_dir} --year 2020 --census-year {args.year}'.strip()
         ))
         steps.append((
             "Political visualization",
@@ -110,7 +110,7 @@ def main():
 
         steps.append((
             "Demographic analysis",
-            f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year} --position {child_position}'.strip()
+            f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year}'.strip()
         ))
         steps.append((
             "Demographic visualization",

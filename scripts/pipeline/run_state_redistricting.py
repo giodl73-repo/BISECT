@@ -35,7 +35,7 @@ import matplotlib.patheffects as path_effects
 import matplotlib.cm as cm
 
 def run_state_redistricting(state_code: str, state_config: dict, year: str = '2020',
-                           output_dir: str = None, print_only: bool = False, debug: bool = False, dpi: int = 150, position: int = 2):
+                           output_dir: str = None, print_only: bool = False, debug: bool = False, dpi: int = 150, position: int = 2, reset: bool = False):
     """Run redistricting for a specific state."""
 
     state_code = state_code.upper()
@@ -80,6 +80,13 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
         output_dir = Path(f'outputs/{state_name.lower().replace(" ", "_")}_full_{timestamp}')
     else:
         output_dir = Path(output_dir)
+
+    # Handle --reset flag: delete output directory for fresh run
+    if reset and output_dir.exists() and not print_only:
+        import shutil
+        print(f"\n[RESET] Deleting existing output directory: {output_dir}")
+        shutil.rmtree(output_dir)
+        print(f"[RESET] Deleted. Starting fresh run.\n")
 
     final_file = output_dir / 'final_assignments.pkl'
 
@@ -282,6 +289,8 @@ if __name__ == '__main__':
                        help='Print what would be done without executing')
     parser.add_argument('--debug', action='store_true',
                        help='Enable debug mode with progress delays and file display')
+    parser.add_argument('--reset', action='store_true',
+                       help='Delete output directory before starting (fresh run, not incremental)')
 
     args = parser.parse_args()
 
@@ -303,4 +312,4 @@ if __name__ == '__main__':
         print(f"ERROR: Unknown year {args.year}")
         sys.exit(1)
 
-    run_state_redistricting(args.state, STATE_CONFIG, args.year, args.output_dir, args.print_only, args.debug, args.dpi, args.position)
+    run_state_redistricting(args.state, STATE_CONFIG, args.year, args.output_dir, args.print_only, args.debug, args.dpi, args.position, args.reset)
