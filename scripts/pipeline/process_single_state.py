@@ -91,9 +91,36 @@ def main():
 
     # Add optional analysis steps
     if args.run_analysis:
+        # Political analysis and visualization
+        political_analyze = Path(__file__).parent.parent / 'political' / 'analyze_districts.py'
+        political_visualize = Path(__file__).parent.parent / 'political' / 'visualize_partisan_lean.py'
+
+        steps.append((
+            "Political analysis",
+            f'{sys.executable} {political_analyze} {state_dir} --election-year 2020 --position {child_position}'.strip()
+        ))
+        steps.append((
+            "Political visualization",
+            f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year 2020 --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
+        ))
+
+        # Demographic analysis and visualization
+        demographic_analyze = Path(__file__).parent.parent / 'demographic' / 'analyze_district_demographics.py'
+        demographic_visualize = Path(__file__).parent.parent / 'demographic' / 'visualize_district_demographics.py'
+
+        steps.append((
+            "Demographic analysis",
+            f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year} --position {child_position}'.strip()
+        ))
+        steps.append((
+            "Demographic visualization",
+            f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
+        ))
+
+        # Compactness visualization (metrics already calculated)
         compactness_script = Path(__file__).parent.parent / 'compactness' / 'visualize_compactness.py'
         steps.append((
-            "Compactness",
+            "Compactness visualization",
             f'{sys.executable} {compactness_script} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
         ))
 

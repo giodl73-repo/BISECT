@@ -16,6 +16,7 @@ import numpy as np
 import argparse
 from pathlib import Path
 import os
+import pickle
 
 
 # Color schemes
@@ -264,149 +265,98 @@ def create_diversity_map(tracts_gdf, district_stats, state_name, output_file, dp
     print(f"  Created: {output_file.name}")
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Visualize district demographics')
-    parser.add_argument('run_dir', type=str,
-                       help='Redistricting run directory (e.g., outputs/us_2020_v1/states/california)')
-    parser.add_argument('--output-dir', type=str, default=None,
-                       help='Output directory (default: run_dir/demographic_analysis/maps)')
-    parser.add_argument('--dpi', type=int, default=150,
-                       help='DPI for output maps (default: 150)')
-    parser.add_argument('--force', action='store_true',
-                       help='Force regeneration even if outputs exist')
-    args = parser.parse_args()
+def visualize_state_demographics(state_dir, state_code, census_year, dpi=150):
+    """Visualize demographics for a single state."""
+    state_dir = Path(state_dir)
 
-    run_dir = Path(args.run_dir)
-
-    if not run_dir.exists():
-        print(f"ERROR: Run directory not found: {run_dir}")
+    # Check demographic analysis exists
+    analysis_file = state_dir / 'demographic_analysis' / 'district_demographics.csv'
+    if not analysis_file.exists():
+        print(f"ERROR: Demographic analysis not found: {analysis_file}")
+        print(f"Run analyze_district_demographics.py first")
         return 1
 
-    # Set output directory
-    if args.output_dir:
-        output_dir = Path(args.output_dir)
-    else:
-        output_dir = run_dir / 'demographic_analysis' / 'maps'
+    # Load tract geometries
+    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+    if not tracts_file.exists():
+        print(f"ERROR: Tract geometries not found: {tracts_file}")
+        return 1
 
+    output_dir = state_dir / 'demographic_analysis' / 'maps'
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Check if progress reporting is needed
-    position = int(os.environ.get('TQDM_POSITION', '-1'))
-    send_status = position >= 0
+    # Load demographic data
+    demo_df = pd.read_csv(analysis_file)
 
-    def report_progress(msg):
-        if send_status:
-            print(f"STATUS:{position}:{msg}", flush=True)
+    # Load tract data and assignments
+    tracts_gdf = gpd.read_parquet(tracts_file)
+    assignments_file = state_dir / 'final_assignments.pkl'
+    with open(assignments_file, 'rb') as f:
+        assignments = pickle.load(f)
 
-    is_standalone = not send_status
+    tracts_gdf['district'] = tracts_gdf.index.map(assignments)
 
-    if is_standalone:
-        print("=" * 70)
-        print("DEMOGRAPHIC VISUALIZATION")
-        print("=" * 70)
-        print(f"Run: {run_dir}")
-        print(f"Output: {output_dir}")
-        print("=" * 70)
-        print()
+    # Create maps (functions expect tracts_gdf, district_stats, state_name, output, dpi)
+    state_name = state_code  # Just use state code as name for now
 
-    # Define output files
-    gender_map = output_dir / 'gender_balance.png'
-    majority_map = output_dir / 'majority_race.png'
-    diversity_map = output_dir / 'diversity_index.png'
+    print("  Creating gender balance map...")
+    create_gender_map(tracts_gdf.copy(), demo_df, state_name, output_dir / 'gender_balance.png', dpi)
 
-    # Check if all outputs exist
-    if not args.force and gender_map.exists() and majority_map.exists() and diversity_map.exists():
-        if is_standalone:
-            print("Demographic maps already exist - skipping")
-            print(f"  {gender_map.name}")
-            print(f"  {majority_map.name}")
-            print(f"  {diversity_map.name}")
-            print("\nUse --force to regenerate")
-        return 0
+    print("  Creating majority race map...")
+    create_majority_race_map(tracts_gdf.copy(), demo_df, state_name, output_dir / 'majority_race.png', dpi)
 
-    try:
-        # Detect state from directory name
-        dir_name = run_dir.name
-        STATE_NAME_TO_CODE = {
-            'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
-            'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
-            'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
-            'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-            'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
-            'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
-            'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
-            'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
-            'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
-            'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
-        }
+    print("  Creating diversity index map...")
+    create_diversity_map(tracts_gdf.copy(), demo_df, state_name, output_dir / 'diversity_index.png', dpi)
 
-        state_code = STATE_NAME_TO_CODE.get(dir_name)
-        if not state_code:
-            raise ValueError(f"Could not detect state from directory name: {dir_name}")
+    print(f"  Demographic visualizations complete")
+    return 0
 
-        state_name = dir_name.replace('_', ' ').title()
 
-        # Load tract file with district assignments
-        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_2020.parquet')
-        if not tracts_file.exists():
-            raise FileNotFoundError(f"Tract file not found: {tracts_file}")
+def main():
+    parser = argparse.ArgumentParser(description='Visualize district demographics at state or national scope')
 
-        report_progress(f"Visualizing {state_name} demographics - Loading data...")
-        tracts_gdf = gpd.read_parquet(tracts_file)
+    # Scope-based design
+    parser.add_argument('--scope', choices=['state', 'national'], default='national',
+                       help='Scope: state (single state) or national (all states, default)')
+    parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010'],
+                       help='Census year')
 
-        # Load district assignments
-        import pickle
-        assignments_file = run_dir / 'final_assignments.pkl'
-        if not assignments_file.exists():
-            raise FileNotFoundError(f"Assignments not found: {assignments_file}")
+    # State scope arguments
+    parser.add_argument('--state', type=str,
+                       help='State code (2-letter, required if scope=state)')
+    parser.add_argument('--state-dir', type=str,
+                       help='State directory (required if scope=state)')
 
-        with open(assignments_file, 'rb') as f:
-            assignments_by_index = pickle.load(f)
+    # National scope arguments
+    parser.add_argument('--output-dir', type=str,
+                       help='Base output directory (required if scope=national)')
+    parser.add_argument('--version', type=str,
+                       help='Version (required if scope=national)')
 
-        # Map indices to GEOIDs and add district column
-        geoid_to_district = {}
-        for idx, district in assignments_by_index.items():
-            if idx < len(tracts_gdf):
-                geoid = str(tracts_gdf.iloc[idx]['GEOID']).zfill(11)
-                geoid_to_district[geoid] = district
+    # Common arguments
+    parser.add_argument('--dpi', type=int, default=150,
+                       help='DPI for output maps')
+    parser.add_argument('--force', action='store_true',
+                       help='Force regeneration even if outputs exist')
+    parser.add_argument('--position', type=int, default=-1,
+                       help='Progress bar position (for parent coordination)')
 
-        tracts_gdf['district'] = tracts_gdf['GEOID'].astype(str).str.zfill(11).map(geoid_to_district)
+    args = parser.parse_args()
 
-        # Load demographic statistics
-        demo_file = run_dir / 'demographic_analysis' / 'district_demographics.csv'
-        if not demo_file.exists():
-            raise FileNotFoundError(f"Demographic statistics not found: {demo_file}\n"
-                                  f"Run analyze_district_demographics.py first.")
+    # Validate scope-specific requirements
+    if args.scope == 'state':
+        if not args.state or not args.state_dir:
+            parser.error("--state and --state-dir required when scope=state")
+        return visualize_state_demographics(args.state_dir, args.state, args.census_year, args.dpi)
 
-        district_stats = pd.read_csv(demo_file)
-
-        # Create maps
-        report_progress(f"Visualizing {state_name} demographics - Creating gender map...")
-        create_gender_map(tracts_gdf, district_stats, state_name, gender_map, args.dpi)
-
-        report_progress(f"Visualizing {state_name} demographics - Creating majority race map...")
-        create_majority_race_map(tracts_gdf, district_stats, state_name, majority_map, args.dpi)
-
-        report_progress(f"Visualizing {state_name} demographics - Creating diversity map...")
-        create_diversity_map(tracts_gdf, district_stats, state_name, diversity_map, args.dpi)
-
-        if is_standalone:
-            print("\n" + "=" * 70)
-            print("VISUALIZATION COMPLETE!")
-            print("=" * 70)
-            print("Created 3 demographic maps:")
-            print(f"  1. Gender Balance: {gender_map}")
-            print(f"  2. Majority Race: {majority_map}")
-            print(f"  3. Diversity Index: {diversity_map}")
-            print("=" * 70)
-
-        return 0
-
-    except Exception as e:
-        print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
+    elif args.scope == 'national':
+        if not args.output_dir or not args.version:
+            parser.error("--output-dir and --version required when scope=national")
+        print("ERROR: National scope not yet implemented for demographic visualization")
+        print("Use create_us_national_demographic_map.py for now")
         return 1
+
+
 
 
 if __name__ == '__main__':

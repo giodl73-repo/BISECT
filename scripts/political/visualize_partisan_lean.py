@@ -507,212 +507,113 @@ def visualize_intermediate_rounds(run_dir, analysis_dir, tracts_gdf, state_name,
         tracts_gdf.drop(columns=['region_1based', 'region_political', 'lean', 'dem_margin'], inplace=True, errors='ignore')
 
 
-def main():
-    parser = argparse.ArgumentParser(description='Visualize partisan lean of districts')
-    parser.add_argument('state', type=str, nargs='?', default=None,
-                       help='State name or code (e.g., california or CA), or full run_dir path')
-    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
-                       help='Election year for political data (default: 2020)')
-    parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010', '2000'],
-                       help='Census year for tract data (default: 2020)')
-    parser.add_argument('--version', type=str, default='v1',
-                       help='Version identifier (default: v1)')
-    parser.add_argument('--output-dir', type=str, default=None,
-                       help='Override output directory (default: outputs/us_{census_year}_{version}/states/{state})')
-    parser.add_argument('--dpi', type=int, default=150,
-                       help='DPI for output maps (default: 150)')
-    parser.add_argument('--skip-rounds', action='store_true',
-                       help='Skip visualizing intermediate rounds')
-    parser.add_argument('--force', action='store_true',
-                       help='Force regeneration even if outputs exist')
-    args = parser.parse_args()
+def visualize_state_political(state_dir, state_code, election_year, census_year, dpi=150, skip_rounds=False):
+    """Visualize political lean for a single state."""
+    state_dir = Path(state_dir)
 
-    # State name to code mapping
-    STATE_NAME_TO_CODE = {
-        'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
-        'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
-        'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
-        'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-        'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
-        'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
-        'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
-        'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
-        'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
-        'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
-    }
-    STATE_CODE_TO_NAME = {v.lower(): k for k, v in STATE_NAME_TO_CODE.items()}
-
-    # Determine run directory
-    if args.output_dir:
-        # Use explicit output directory override
-        run_dir = Path(args.output_dir)
-        # Extract state from directory name
-        dir_name = run_dir.name
-        state_code = STATE_NAME_TO_CODE.get(dir_name)
-        if not state_code:
-            raise ValueError(f"Could not detect state from directory name: {dir_name}")
-        state_name = dir_name.replace('_', ' ').title()
-    elif args.state:
-        # Check if state is a full path or just state name/code
-        state_path = Path(args.state)
-        if state_path.exists() and state_path.is_dir():
-            # Full path provided
-            run_dir = state_path
-            dir_name = run_dir.name
-            state_code = STATE_NAME_TO_CODE.get(dir_name)
-            if not state_code:
-                raise ValueError(f"Could not detect state from directory name: {dir_name}")
-            state_name = dir_name.replace('_', ' ').title()
-        else:
-            # State name or code provided - construct path
-            state_input = args.state.lower()
-            if state_input in STATE_NAME_TO_CODE:
-                # State name
-                state_code = STATE_NAME_TO_CODE[state_input]
-                state_name = state_input.replace('_', ' ').title()
-                dir_name = state_input
-            elif state_input in STATE_CODE_TO_NAME:
-                # State code
-                state_code = state_input.upper()
-                dir_name = STATE_CODE_TO_NAME[state_input]
-                state_name = dir_name.replace('_', ' ').title()
-            else:
-                raise ValueError(f"Unknown state: {args.state}")
-
-            # Construct run directory
-            run_dir = Path(f'outputs/us_{args.census_year}_{args.version}/states/{dir_name}')
-    else:
-        print("ERROR: Must provide state name/code or use --output-dir")
-        return 1
-
-    run_dir = Path(run_dir)
-
-    if not run_dir.exists():
-        print(f"ERROR: Run directory not found: {run_dir}")
-        return 1
-
-    # Detect state from directory name
-    dir_name = run_dir.name
-    STATE_NAME_TO_CODE = {
-        'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
-        'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
-        'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
-        'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-        'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
-        'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
-        'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
-        'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
-        'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
-        'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
+    # State code to name mapping
+    STATE_CODE_TO_NAME = {
+        'AL': 'alabama', 'AK': 'alaska', 'AZ': 'arizona', 'AR': 'arkansas', 'CA': 'california',
+        'CO': 'colorado', 'CT': 'connecticut', 'DE': 'delaware', 'FL': 'florida', 'GA': 'georgia',
+        'HI': 'hawaii', 'ID': 'idaho', 'IL': 'illinois', 'IN': 'indiana', 'IA': 'iowa',
+        'KS': 'kansas', 'KY': 'kentucky', 'LA': 'louisiana', 'ME': 'maine', 'MD': 'maryland',
+        'MA': 'massachusetts', 'MI': 'michigan', 'MN': 'minnesota', 'MS': 'mississippi', 'MO': 'missouri',
+        'MT': 'montana', 'NE': 'nebraska', 'NV': 'nevada', 'NH': 'new_hampshire', 'NJ': 'new_jersey',
+        'NM': 'new_mexico', 'NY': 'new_york', 'NC': 'north_carolina', 'ND': 'north_dakota', 'OH': 'ohio',
+        'OK': 'oklahoma', 'OR': 'oregon', 'PA': 'pennsylvania', 'RI': 'rhode_island', 'SC': 'south_carolina',
+        'SD': 'south_dakota', 'TN': 'tennessee', 'TX': 'texas', 'UT': 'utah', 'VT': 'vermont',
+        'VA': 'virginia', 'WA': 'washington', 'WV': 'west_virginia', 'WI': 'wisconsin', 'WY': 'wyoming'
     }
 
-    state_code = STATE_NAME_TO_CODE.get(dir_name)
-    if not state_code:
-        raise ValueError(f"Could not detect state from directory name: {dir_name}")
+    state_name_lower = STATE_CODE_TO_NAME.get(state_code.upper())
+    if not state_name_lower:
+        print(f"ERROR: Unknown state code: {state_code}")
+        return 1
 
-    state_name = dir_name.replace('_', ' ').title()
+    state_name = state_name_lower.replace('_', ' ').title()
 
-    # Check if political analysis exists
-    analysis_dir = run_dir / 'political_analysis'
-    if not analysis_dir.exists():
-        print(f"ERROR: Political analysis not found: {analysis_dir}")
+    # Check analysis directory exists
+    analysis_dir = state_dir / 'political_analysis'
+    political_file = analysis_dir / f'district_political_{election_year}.csv'
+
+    if not political_file.exists():
+        print(f"ERROR: Political analysis not found: {political_file}")
         print(f"Run analyze_districts.py first")
         return 1
 
-    # Load tract file
-    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.census_year}.parquet')
+    # Load tract geometries
+    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
     if not tracts_file.exists():
-        print(f"ERROR: Tract file not found: {tracts_file}")
+        print(f"ERROR: Tract geometries not found: {tracts_file}")
         return 1
 
-    # Check if being called from parent pipeline
-    position = int(os.environ.get('TQDM_POSITION', '-1'))
-    send_status = position >= 0
+    tracts_gdf = gpd.read_parquet(tracts_file)
 
-    def report_progress(msg):
-        """Report progress to parent pipeline."""
-        if send_status:
-            print(f"STATUS:{position}:{msg}", flush=True)
+    print(f"Creating political visualizations for {state_name}...")
 
-    is_standalone = not send_status
+    # Visualize final districts
+    print("  Creating final districts map...")
+    visualize_final_districts(state_dir, analysis_dir, tracts_gdf.copy(), state_name, election_year, dpi)
 
-    if is_standalone:
-        print("="*70)
-        print("VISUALIZING PARTISAN LEAN")
-        print("="*70)
-        print(f"State: {state_name} ({state_code})")
-        print(f"Run: {run_dir}")
-        print(f"Census Year: {args.census_year}")
-        print(f"Election Year: {args.election_year}")
-        print("="*70)
-        print()
+    # Visualize intermediate rounds
+    if not skip_rounds:
+        print("  Creating intermediate rounds maps...")
+        visualize_intermediate_rounds(state_dir, analysis_dir, tracts_gdf.copy(), state_name, election_year, dpi)
 
-    # Check if maps already exist
-    maps_dir = analysis_dir / 'maps'
-    district_map = maps_dir / f'partisan_lean_districts_{args.election_year}.png'
-    rounds_dir = maps_dir / 'rounds'
+    print(f"  Political visualizations complete for {state_name}")
+    return 0
 
-    if not args.force and district_map.exists():
-        # Check if we should skip
-        skip = True
-        if not args.skip_rounds:
-            # Also check if round maps exist
-            if rounds_dir.exists():
-                round_maps = list(rounds_dir.glob(f'partisan_lean_round_*_{args.election_year}.png'))
-                # If there are some round maps, assume it's complete
-                skip = len(round_maps) > 0
-            else:
-                skip = False
 
-        if skip:
-            print("Partisan lean maps already exist - skipping")
-            print(f"  {district_map}")
-            if not args.skip_rounds and rounds_dir.exists():
-                print(f"  {rounds_dir}/*.png")
-            print("\nUse --force to regenerate")
-            return 0
+def main():
+    parser = argparse.ArgumentParser(description='Visualize partisan lean of districts at state or national scope')
 
-    try:
-        report_progress(f"Visualizing {state_name} - Loading tract data...")
-        if is_standalone:
-            print("Loading tract data...")
-        tracts_gdf = gpd.read_parquet(tracts_file)
-        if is_standalone:
-            print(f"Loaded {len(tracts_gdf):,} tracts")
-            print()
+    # Scope-based design
+    parser.add_argument('--scope', choices=['state', 'national'], default='national',
+                       help='Scope: state (single state) or national (all states, default)')
+    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
+                       help='Election year for political data')
+    parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010', '2000'],
+                       help='Census year for tract data')
 
-        # Visualize final districts
-        report_progress(f"Visualizing {state_name} - Creating final districts map...")
-        if is_standalone:
-            print("Creating final districts map...")
-        visualize_final_districts(run_dir, analysis_dir, tracts_gdf.copy(), state_name, args.election_year, args.dpi)
-        if is_standalone:
-            print()
+    # State scope arguments
+    parser.add_argument('--state', type=str,
+                       help='State code (2-letter, required if scope=state)')
+    parser.add_argument('--state-dir', type=str,
+                       help='State directory (required if scope=state)')
 
-        # Visualize intermediate rounds
-        if not args.skip_rounds:
-            report_progress(f"Visualizing {state_name} - Creating intermediate rounds maps...")
-            if is_standalone:
-                print("Creating intermediate rounds maps...")
-            visualize_intermediate_rounds(run_dir, analysis_dir, tracts_gdf.copy(), state_name, args.election_year, args.dpi)
-        else:
-            if is_standalone:
-                print("Skipping intermediate rounds (--skip-rounds)")
-        if is_standalone:
-            print()
+    # National scope arguments
+    parser.add_argument('--output-dir', type=str,
+                       help='Base output directory (required if scope=national)')
+    parser.add_argument('--version', type=str,
+                       help='Version (required if scope=national)')
 
-        if is_standalone:
-            print("="*70)
-            print("VISUALIZATION COMPLETE!")
-            print("="*70)
+    # Common arguments
+    parser.add_argument('--dpi', type=int, default=150,
+                       help='DPI for output maps')
+    parser.add_argument('--skip-rounds', action='store_true',
+                       help='Skip visualizing intermediate rounds (state scope only)')
+    parser.add_argument('--force', action='store_true',
+                       help='Force regeneration even if outputs exist')
+    parser.add_argument('--position', type=int, default=-1,
+                       help='Progress bar position (for parent coordination)')
 
-        return 0
+    args = parser.parse_args()
 
-    except Exception as e:
-        print(f"ERROR: {e}")
-        import traceback
-        traceback.print_exc()
+    # Validate scope-specific requirements
+    if args.scope == 'state':
+        if not args.state or not args.state_dir:
+            parser.error("--state and --state-dir required when scope=state")
+        return visualize_state_political(args.state_dir, args.state, args.election_year,
+                                        args.census_year, args.dpi, args.skip_rounds)
+
+    elif args.scope == 'national':
+        if not args.output_dir or not args.version:
+            parser.error("--output-dir and --version required when scope=national")
+        print("ERROR: National scope not yet implemented for political visualization")
+        print("Use create_us_national_political_map.py for now")
         return 1
+
+
 
 
 if __name__ == '__main__':
