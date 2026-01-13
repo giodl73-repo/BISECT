@@ -1391,18 +1391,52 @@ Savings: 1-2 hours (analysis no longer adds sequential overhead)
    - `scripts/compactness/run_compactness_visualization.py` - Replaced by --scope national
    - `scripts/compactness/create_us_national_compactness_map.py` - Merged into visualize_compactness.py
 
-**📋 Remaining Work**:
-- Phase 3: Test compactness integration end-to-end
-- Phase 4: Apply scope pattern to `visualize_partisan_lean.py` (719 lines)
-- Phase 5: Apply scope pattern to `visualize_district_demographics.py`
-- Phase 6: Test complete pipeline with all analysis enabled
-- Phase 7: Delete obsolete wrapper scripts
-
 **🎯 Validation Status**:
 - [x] State scope tested (Vermont, Wyoming, Rhode Island)
-- [ ] National scope tested with force regeneration
-- [ ] Per-state pipeline integration tested
-- [ ] End-to-end test with --run-analysis
+- [x] Per-state pipeline integration tested (Vermont with --run-analysis)
+- [x] Compactness step runs successfully in state processing
+- [x] Explicit --state parameter implemented (no path parsing)
+- [ ] National scope tested end-to-end (killed due to time)
+- [ ] Full pipeline test with multiple states
+
+**📋 Remaining Work** (Future Enhancement):
+- Phase 4: Apply scope pattern to `visualize_partisan_lean.py` (719 lines, complex state detection logic)
+- Phase 5: Apply scope pattern to `visualize_district_demographics.py`
+- Phase 6: Test complete pipeline with all analysis enabled
+- Phase 7: Delete obsolete wrapper scripts after full validation
+
+**Template for Future Refactoring**:
+
+When applying to political/demographic scripts, follow this pattern:
+
+```python
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--scope', choices=['state', 'national'], default='national')
+    parser.add_argument('--census-year', required=True)
+
+    # State scope
+    parser.add_argument('--state', help='State code (required if scope=state)')
+    parser.add_argument('--state-dir', help='State directory (required if scope=state)')
+
+    # National scope
+    parser.add_argument('--output-dir', help='Base directory (required if scope=national)')
+    parser.add_argument('--version', help='Version (required if scope=national)')
+
+    # Common
+    parser.add_argument('--dpi', type=int, default=150)
+    parser.add_argument('--force', action='store_true')
+    parser.add_argument('--position', type=int, default=-1)
+
+    args = parser.parse_args()
+    position = args.position if args.position >= 0 else int(os.environ.get('TQDM_POSITION', '-1'))
+
+    if args.scope == 'state':
+        return visualize_state(args.state_dir, args.state, args.census_year, args.dpi)
+    elif args.scope == 'national':
+        return visualize_national(args.output_dir, args.version, args.census_year,
+                                 args.dpi, position, args.force)
+```
 
 ### Risk Mitigation
 
