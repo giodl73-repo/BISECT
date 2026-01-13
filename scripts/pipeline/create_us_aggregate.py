@@ -387,11 +387,14 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
         return
 
     # 1. Collect all districts with cities
+    report_progress("Create US aggregate files - Collecting districts...")
     us_districts = collect_all_districts(us_dir)
 
+    report_progress("Create US aggregate files - Saving districts CSV...")
     us_districts.to_csv(districts_file, index=False)
 
     # 2. Collect district summaries
+    report_progress("Create US aggregate files - Collecting summaries...")
     us_summary = collect_district_summaries(us_dir)
 
     if not us_summary.empty:

@@ -546,9 +546,6 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
             map_pbar.update(4)  # Instant completion
         return
 
-    # Load all states (with progress bar)
-    us_tracts = load_all_states_with_districts(us_dir, year=year, state_config=STATE_CONFIG, show_progress=True)
-
     # Get position for map creation progress
     position = int(os.environ.get('TQDM_POSITION', '0'))
 
@@ -558,6 +555,10 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
     def report_progress(msg):
         if send_status:
             print(f"STATUS:{position}:{msg}", flush=True)
+
+    # Load all states (with progress bar)
+    report_progress("Create US national maps - Loading 50 states...")
+    us_tracts = load_all_states_with_districts(us_dir, year=year, state_config=STATE_CONFIG, show_progress=True)
 
     # Create map without cities (matplotlib plotting + rendering ~2-3 min)
     report_progress("Create US national maps - Plotting 435 districts (1/4)")
