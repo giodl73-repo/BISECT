@@ -7,7 +7,7 @@ Provides a unified interface to gpmetis algorithm with support for:
 - NetworkX native algorithms (emergency fallback)
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 
 import numpy as np
 
@@ -20,7 +20,8 @@ def partition_graph(
     recursive: bool = True,
     ufactor: Optional[float] = None,
     niter: int = 100,
-    debug: bool = False
+    debug: bool = False,
+    edge_weights: Optional[Dict[Tuple[int, int], float]] = None
 ) -> np.ndarray:
     """
     Partition graph using METIS gpmetis algorithm.
@@ -74,7 +75,7 @@ def partition_graph(
         if debug:
             print("Trying gpmetis.exe executable...")
         from .metis_executable import partition_graph_with_executable
-        return partition_graph_with_executable(adjacency, vertex_weights, nparts, target_weights, ufactor, niter, debug=debug)
+        return partition_graph_with_executable(adjacency, vertex_weights, nparts, target_weights, ufactor, niter, debug=debug, edge_weights=edge_weights)
     except ImportError:
         if debug:
             print("metis_executable module not available")

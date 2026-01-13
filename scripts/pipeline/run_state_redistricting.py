@@ -153,7 +153,7 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     vertex_weights = graph_data['vertex_weights']
     index_to_geoid = graph_data['index_to_geoid']
 
-    # Load edge weights if using edge-weighted mode
+    # Load edge weights only if using edge-weighted mode
     edge_weights = None
     if args.partition_mode == 'edge-weighted':
         edge_weights = graph_data.get('edge_weights', None)
@@ -162,6 +162,14 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
             print(f"         Run: python scripts/data/geography/build_tract_adjacency.py --state {state_code} --year {args.year} --compute-boundary-lengths")
             print(f"         Falling back to normal mode (edge cut minimization)")
             args.partition_mode = 'normal'
+        else:
+            print(f"[OK] Using edge-weighted mode (boundary length minimization)")
+            print(f"     Loaded {len(edge_weights):,} edge weights from graph")
+    else:
+        # Normal mode: explicitly set edge_weights to None to ensure they're not used
+        edge_weights = None
+        if position == 2:  # Only print in standalone mode, not when called from pipeline
+            print(f"[OK] Using normal mode (edge cut minimization)")
 
     total_pop = int(vertex_weights.sum())
 

@@ -75,7 +75,9 @@
       "Bash(cmd /c \"deploy_web.bat --year 2020 --version v1\")",
       "Bash(git rev-list:*)",
       "Bash(git cat-file:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git grep:*)",
+      "Bash(git reset:*)"
     ]
   }
 }
