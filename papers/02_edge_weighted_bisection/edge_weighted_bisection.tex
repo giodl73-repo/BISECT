@@ -1,0 +1,127 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{booktabs}
+\usepackage{subcaption}
+
+\title{Edge-Weighted Recursive Bisection for Compact Congressional Redistricting}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper presents an enhancement to recursive bisection algorithms for congressional redistricting that incorporates actual boundary lengths as edge weights in the graph partitioning process. By minimizing total perimeter directly during partitioning, rather than simply minimizing edge cuts, we achieve significant improvements in district compactness while maintaining equal population and contiguity constraints. Testing on Alabama's 7 congressional districts demonstrates a 52.8\% improvement in Polsby-Popper compactness score and a 22.2\% reduction in total perimeter (1,638 km) compared to the baseline algorithm.
+\end{abstract}
+
+\section{Introduction}
+
+Congressional redistricting requires balancing multiple competing objectives: equal population, geographic contiguity, and compactness. Traditional graph partitioning algorithms like METIS optimize for edge cut minimization, which produces contiguous regions but does not directly optimize for geometric compactness.
+
+This paper introduces an edge-weighted approach that uses actual boundary lengths (in meters) as edge weights in the graph partitioning process. By minimizing the weighted edge cut, we directly minimize total district perimeter, leading to more compact districts.
+
+\subsection{Key Contributions}
+
+\begin{itemize}
+\item Edge-weighted graph representation using census tract boundaries
+\item METIS integration with boundary length minimization
+\item Comprehensive evaluation on Alabama test case
+\item Open-source implementation for reproducibility
+\end{itemize}
+
+\section{Background and Related Work}
+
+% TODO: Cite baseline recursive bisection paper
+The baseline recursive bisection approach \cite{TODO} uses METIS graph partitioning to divide geographic regions into equal-population districts. While effective at maintaining contiguity, it optimizes for edge cut minimization rather than geometric compactness.
+
+\section{Methodology}
+
+\subsection{Edge Weight Computation}
+
+For each adjacent pair of census tracts $i$ and $j$, we compute the boundary length:
+
+\begin{equation}
+w_{ij} = \text{length}(\text{boundary}_i \cap \text{boundary}_j)
+\end{equation}
+
+where boundaries are represented as LineString geometries and length is computed in meters using projected coordinates.
+
+\subsection{Graph Representation}
+
+The adjacency graph is represented in METIS CSR (Compressed Sparse Row) format with edge weights:
+
+\begin{itemize}
+\item \texttt{adjacency}: List of neighbor indices for each vertex
+\item \texttt{vertex\_weights}: Census tract populations
+\item \texttt{edge\_weights}: Boundary lengths in meters (scaled to integer centimeters for METIS)
+\end{itemize}
+
+\subsection{METIS Configuration}
+
+METIS is configured with:
+\begin{itemize}
+\item \texttt{-contig}: Ensure contiguous districts
+\item \texttt{-minconn}: Minimize subdomain connectivity
+\item \texttt{-ufactor=1.005}: Limit population imbalance to 0.5\%
+\item \texttt{-niter=100}: Number of refinement iterations
+\end{itemize}
+
+Edge weights are passed in format code 011, where each edge is specified as: \\
+\texttt{neighbor\_id edge\_weight neighbor\_id edge\_weight ...}
+
+\section{Results}
+
+\subsection{Alabama Test Case}
+
+We evaluate the edge-weighted approach on Alabama's 7 congressional districts using 2020 Census data.
+
+\subsubsection{Compactness Metrics}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+Metric & Normal Mode & Edge-Weighted Mode \\
+\midrule
+Polsby-Popper Score & 0.218 & 0.334 \\
+Total Perimeter & 7,389 km & 5,751 km \\
+Worst District P-P & 0.142 & 0.294 \\
+Tracts Reassigned & - & 1,091 / 1,437 (75.9\%) \\
+\midrule
+Improvement & - & +52.8\% / -22.2\% \\
+\bottomrule
+\end{tabular}
+\caption{Compactness comparison for Alabama 7 congressional districts}
+\end{table}
+
+\subsubsection{District Boundaries}
+
+% TODO: Add side-by-side district maps comparing normal vs edge-weighted
+
+\section{Discussion}
+
+The edge-weighted approach produces substantially more compact districts by directly minimizing perimeter during partitioning. The 52.8\% improvement in Polsby-Popper score represents a significant enhancement in geometric compactness.
+
+Notably, 75.9\% of tracts were reassigned, indicating that the edge-weighted solution explores fundamentally different configurations rather than making minor adjustments.
+
+\subsection{Limitations}
+
+\begin{itemize}
+\item Requires pre-computation of all boundary lengths (additional preprocessing time)
+\item METIS integer edge weights limit precision to centimeters
+\item Trade-off between compactness and other redistricting criteria
+\end{itemize}
+
+\section{Conclusion}
+
+Edge-weighted recursive bisection offers a practical method for generating compact congressional districts while maintaining equal population and contiguity constraints. Future work will evaluate this approach across all 50 states and explore integration with other redistricting objectives.
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}
