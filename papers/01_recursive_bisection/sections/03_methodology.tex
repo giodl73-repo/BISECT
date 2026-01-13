@@ -15,7 +15,7 @@ For each state, we construct an undirected graph $G = (V, E)$ where:
 
 For the 2020 Census, the 50 states contain approximately 84,000 census tracts. State graph sizes range from under 200 nodes (small states) to over 8,000 nodes (California).
 
-\textbf{Water-Based Adjacency:} Island tracts with no land-based connections receive water-based adjacency edges to the nearest tract within the same county. This ensures graph connectivity while respecting county boundaries \cite{chen2013unintentional}. Without this modification, island populations would form disconnected components, preventing contiguous district creation.
+\textbf{Water-Based Adjacency:} Island tracts with no land-based connections receive water-based adjacency edges to the nearest tract within the same county, where "nearest" is defined by centroid-to-centroid Euclidean distance after projection to state-specific coordinate reference systems (e.g., California Albers EPSG:3310, Texas Conic EPSG:3083). We impose a maximum distance threshold of 1 km to prevent unreasonable water crossings. This ensures graph connectivity while respecting county boundaries. Without this modification, island populations would form disconnected components, preventing contiguous district creation.
 
 \subsection{The METIS Graph Partitioning Library}
 

@@ -33,7 +33,9 @@ Districts within $\pm$10\% & 422 (97.0\%) \\
 
 These results demonstrate that recursive bisection produces highly balanced districts. The mean deviation of 2.79\% compares favorably to existing congressional plans, many of which achieve similar balance only through extensive manual refinement \cite{chen2013unintentional}.
 
-The distribution shows most districts clustered near ideal population, with 86\% within $\pm$5\%. Larger deviations occur primarily in small states where census tract granularity limits perfect balance. For example, Wyoming's single at-large district necessarily matches the state's total population, creating a fixed deviation from the national ideal.
+The distribution shows most districts clustered near ideal population, with 86\% within $\pm$5\%. The maximum deviation of 15.83\% occurs in single-district states (Wyoming, Montana, Alaska, Vermont, Delaware, North Dakota, South Dakota) where the state's total population necessarily differs from the national ideal district size—an unavoidable structural feature unrelated to algorithm performance.
+
+\textbf{Legal Standards:} The Supreme Court's \textit{Karcher v. Daggett} (1983) decision \cite{karcher1983} requires congressional districts to have populations "as nearly equal as practicable." While this is often interpreted as near-zero deviation, the Court has accepted plans with deviations under 1\% without requiring justification, and deviations under 10\% if justified by legitimate state interests. Our tract-level implementation achieves 86\% of districts within $\pm$5\% and 97\% within $\pm$10\%. Block-level data (8 million blocks vs. 84,000 tracts) would enable tighter bounds approaching the $\pm$0.1\% achieved by manual redistricting, at the cost of significantly increased computational complexity. We view tract-level as a reasonable proof-of-concept, with block-level refinement feasible for operational deployment.
 \subsection{Example: Even Division (Minnesota, 8 Districts)}
 
 Figure~\ref{fig:minnesota_rounds} demonstrates recursive bisection on Minnesota, where even division creates equal-sized partitions at each round. The algorithm achieves strong population balance (mean deviation 1.21\%, all districts within $\pm$3\%) and high compactness (mean Polsby-Popper 0.286). These results are comparable to Minnesota's court-ordered 2022 redistricting plan, which achieved near-perfect population equality (maximum deviation of 1 person) and a compactness score of 0.32—placing it among the top 6\% of simulated alternatives nationwide \cite{alarm2022minnesota}.
@@ -106,7 +108,7 @@ Std Dev & 0.126 & 0.157 \\
 \end{tabular}
 \end{table}
 
-For context, gerrymandered districts typically score 0.05--0.15 on Polsby-Popper, while current U.S. Congressional districts average 0.15--0.25. Iowa's redistricting commission, widely praised for creating compact districts, achieves 0.30--0.45. Our algorithmic approach produces a mean Polsby-Popper score of 0.220, placing it above gerrymandered and typical congressional districts, approaching Iowa's gold standard.
+For context, our mean Polsby-Popper score of 0.220 places the algorithmic districts in the middle range of existing congressional plans. Highly gerrymandered districts often score below 0.15, while compact commission-drawn plans (such as Iowa's) frequently exceed 0.30 \cite{deford2019implementing}. Our results suggest the algorithm produces reasonably compact districts without manual optimization, though with room for improvement compared to carefully designed commission plans.
 
 The distribution reveals that 155 districts (36\%) achieve "medium" compactness (0.20--0.30), with 106 districts (24\%) exceeding 0.30 (high to very high compactness). Only 83 districts (19\%) fall below 0.10 (very low compactness), typically in states with challenging geography (e.g., islands, peninsulas, or extreme elongation like Alaska's Panhandle).
 
