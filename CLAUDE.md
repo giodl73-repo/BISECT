@@ -2,6 +2,8 @@
 
 This document provides context and guidelines for AI assistants working on the Congressional Redistricting codebase.
 
+**Last Updated**: January 12, 2026
+
 ## Project Overview
 
 This is a congressional redistricting implementation using METIS recursive bisection algorithm to generate 435 districts across all 50 US states based on 2010 and 2020 Census data.
@@ -87,41 +89,42 @@ paper/                     # Academic paper
 
 ## Coding Patterns & Conventions
 
-### Progress Reporting
-Scripts that run as child processes use `STATUS:position:message` protocol:
+**For comprehensive coding patterns, see `docs/CODING_PATTERNS.md`**
+
+### Quick Reference
+
+**Progress Reporting**: Child processes use `STATUS:position:message` protocol
 ```python
 position = int(os.environ.get('TQDM_POSITION', '-1'))
-send_status = position >= 0
-
-def report_progress(msg):
-    if send_status:
-        print(f"STATUS:{position}:{msg}", flush=True)
+if position >= 0:
+    print(f"STATUS:{position}:{msg}", flush=True)
 ```
 
-### Import Patterns
+**Key Conventions**:
+- State names: lowercase with underscores (`california`, `new_york`)
+- Use `Path` objects from `pathlib`, not string concatenation
 - Scripts import from library: `from apportionment.partition.recursive_bisection import ...`
 - Scripts import config: `from scripts.config_2020 import STATE_CONFIG_2020`
 
-### File Naming Conventions
-- State names: lowercase with underscores (`california`, `new_york`)
-- Maps: `{state}_{districts}_districts.png`
-- Maps with cities: `{state}_{districts}_districts_with_cities.png`
-- National maps: `US_National_Map_435_Districts_2020.png`
-
-### Path Handling
-- Use `Path` objects from `pathlib`, not string concatenation
-- Always use absolute paths or paths relative to project root
-- Dashboard uses `.` for relative paths (deployed inside output directory)
+**See `docs/CODING_PATTERNS.md` for**:
+- Detailed progress bar integration patterns
+- Scope-based analysis pattern (state vs national)
+- File naming conventions and structure
+- Path handling best practices
+- Testing guidelines
 
 ## Common Tasks
 
 ### Add a New Analysis Type
-1. Create `scripts/{analysis_type}/` directory
-2. Create `analyze_{thing}.py` (per-state analysis)
-3. Create `run_{analysis}_analysis.py` (all-states wrapper)
-4. Create `create_us_national_{analysis}_map.py` (national visualization)
-5. Add to pipeline in `run_complete_redistricting.py`
-6. Add tab to dashboard in `web/dashboard.html`
+
+**Modern Approach (Scope-Based Pattern):**
+Follow the scope-based pattern documented in `docs/CODING_PATTERNS.md` Section 7:
+1. Create single script with `--scope state|national` parameter
+2. Implement both `analyze_state()` and `visualize_national()` functions
+3. Integrate into `process_single_state.py` (per-state) and `run_complete_redistricting.py` (post-processing)
+4. Add tab to dashboard in `web/dashboard.html`
+
+**See `docs/CODING_PATTERNS.md` for complete implementation template and integration guide.**
 
 ### Add a New Command-Line Parameter
 1. Add to `argparse` in relevant script
@@ -233,11 +236,14 @@ python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 -
 
 ## Recent Major Changes (Jan 2026)
 
+- **Scope-Based Analysis Pattern**: Unified per-state and national analysis into single scripts
+- **Parallel Pipeline Integration**: Analysis now runs per-state (parallel), not batch (sequential)
+- **Performance Optimization**: Eliminated 300+ minute sequential bottleneck
+- Added `--reset` flag for fresh runs, `--skip-analysis` for legacy batch mode
+- Integrated political and demographic national maps into post-processing
+- Fixed parameter threading for census year vs election year
 - Added compactness visualization pipeline (Polsby-Popper, Reock)
 - Created static dashboard generator with district data baking
-- Added Cities tab to dashboard (separate from Overview)
-- Integrated political and demographic national maps
-- Moved config files from root to scripts/
 - Fresh git repo (removed 240MB of data from history)
 
 ## Future Enhancements
@@ -250,6 +256,7 @@ See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhanceme
 - ✅ Enhancement 3: National Maps (Jan 11, 2026)
 - ✅ Enhancement 5: National Round Progression Maps (Jan 12, 2026)
 - ✅ Enhancement 6: System Architecture Diagrams (Jan 12, 2026)
+- ✅ Enhancement 9: Parallel Per-State Analysis Integration (Jan 12, 2026)
 
 **In Progress:**
 - 🚧 Enhancement 4: Urban Metro Area Maps

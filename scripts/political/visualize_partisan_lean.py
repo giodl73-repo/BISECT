@@ -52,6 +52,11 @@ def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, yea
 
     political_df = pd.read_csv(political_file)
 
+    # Skip if empty (AK/HI - no election data)
+    if len(political_df) == 0:
+        print(f"Political data empty for {state_name} (no tract-level election data) - skipping visualization")
+        return
+
     # Load assignments
     assignments_file = run_dir / 'final_assignments.pkl'
     if not assignments_file.exists():

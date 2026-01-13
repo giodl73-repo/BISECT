@@ -2,6 +2,15 @@
 
 This document explains the design of the redistricting system, key algorithms, and how components interact.
 
+**Last Updated**: January 12, 2026
+
+## Related Documentation
+
+- **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns and coding conventions
+- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Recent improvements and completed enhancements
+- **[../README.md](../README.md)** - User-facing project overview and quick start guide
+- **[../CLAUDE.md](../CLAUDE.md)** - AI assistant guide and quick reference
+
 ## Table of Contents
 1. [Visual Diagrams](#visual-diagrams)
 2. [System Overview](#system-overview)

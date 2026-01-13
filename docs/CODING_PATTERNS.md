@@ -2,6 +2,15 @@
 
 This document captures critical patterns and conventions used throughout the codebase. Following these patterns ensures consistency, proper progress reporting, and correct behavior.
 
+**Last Updated**: January 12, 2026
+
+## Related Documentation
+
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architectural decisions
+- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Recent improvements and roadmap
+- **[../README.md](../README.md)** - User-facing project overview
+- **[../CLAUDE.md](../CLAUDE.md)** - AI assistant guide and quick reference
+
 ## Table of Contents
 1. [Progress Bar Protocol](#progress-bar-protocol)
 2. [Skip Logic Pattern](#skip-logic-pattern)

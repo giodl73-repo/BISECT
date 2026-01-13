@@ -2,6 +2,16 @@
 
 All notable changes to the Congressional Redistricting project.
 
+**Last Updated**: January 12, 2026
+
+## Related Documentation
+
+- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Detailed enhancement specifications and implementation plans
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architectural decisions
+- **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns
+
+**Note**: This changelog tracks historical changes chronologically. For detailed enhancement specifications and future roadmap, see `ENHANCEMENTS_2026.md`.
+
 ## [Unreleased]
 
 ### Added

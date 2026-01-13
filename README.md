@@ -2,6 +2,8 @@
 
 Automated redistricting for all 50 US states using recursive bifurcation and the METIS graph partitioning algorithm.
 
+**Last Updated**: January 12, 2026
+
 ## Overview
 
 This project implements census tract-based redistricting using:
@@ -47,23 +49,29 @@ CANCEL.bat
 
 ```bash
 # Parallel mode - runs 4 states simultaneously (default)
-python scripts/run_complete_redistricting.py --mode parallel --year 2020 --version v1
+python scripts/pipeline/run_complete_redistricting.py --mode parallel --year 2020 --version v1
 
 # Sequential mode - one state at a time
-python scripts/run_complete_redistricting.py --mode sequential --year 2020 --version v1
+python scripts/pipeline/run_complete_redistricting.py --mode sequential --year 2020 --version v1
 
 # Custom workers and quality
-python scripts/run_complete_redistricting.py --mode parallel --workers 8 --dpi 200
+python scripts/pipeline/run_complete_redistricting.py --mode parallel --workers 8 --dpi 200
+
+# Fresh run (delete existing outputs first)
+python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 --reset
+
+# Skip per-state analysis (faster, use old batch post-processing)
+python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 --skip-analysis
 ```
 
 ### Run Single State
 
 ```bash
 # Process California through full pipeline
-python scripts/run_state_redistricting.py --state CA --year 2020 --output-dir outputs/california
+python scripts/pipeline/run_state_redistricting.py --state CA --year 2020 --output-dir outputs/california
 
 # With custom DPI
-python scripts/run_state_redistricting.py --state CA --year 2020 --dpi 150
+python scripts/pipeline/run_state_redistricting.py --state CA --year 2020 --dpi 150
 ```
 
 ### DPI Options
@@ -156,19 +164,19 @@ Census blocks separated by water bodies (e.g., San Francisco Bay) can be conside
 ## Scripts
 
 ### Main Orchestration
-- `run_all_states.py` - Process all 50 states with progress bars
-- `run_state_redistricting.py` - Process single state through full pipeline
+- `scripts/pipeline/run_complete_redistricting.py` - Process all 50 states with orchestration and progress bars
+- `scripts/pipeline/run_state_redistricting.py` - Process single state through full pipeline
 
 ### Data Preparation
-- `download_tracts.py` - Download census tract data
-- `download_places.py` - Download cities/places data
-- `build_tract_adjacency.py` - Build adjacency graphs (saves to data/adjacency/)
+- `scripts/data/census/download_all_states_tracts.py` - Download census tract data for all states
+- `scripts/data/geography/download_places.py` - Download cities/places data
+- `scripts/data/geography/build_adjacency.py` - Build adjacency graphs (saves to data/adjacency/)
 
 ### Post-Processing
-- `add_cities_to_districts.py` - Add city labels
-- `create_final_district_summary.py` - Generate statistics and rounds hierarchy
-- `visualize_all_rounds.py` - Create round-by-round maps
-- `create_individual_district_maps.py` - Generate per-district PNGs
+- `scripts/pipeline/add_cities_to_districts.py` - Add city labels to districts
+- `scripts/pipeline/create_final_district_summary.py` - Generate statistics and rounds hierarchy
+- `scripts/pipeline/visualize_all_rounds.py` - Create round-by-round maps
+- `scripts/pipeline/create_individual_district_maps.py` - Generate per-district PNGs
 
 ## Web Dashboard
 
@@ -194,6 +202,32 @@ python web/deploy_dashboard.py
 # Open in browser
 open outputs/index.html
 ```
+
+## Documentation
+
+For detailed technical documentation, see:
+
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and architectural decisions
+  - Data pipeline architecture
+  - Redistricting algorithm details
+  - Scope-based analysis pattern
+  - Progress bar protocol
+
+- **[CODING_PATTERNS.md](docs/CODING_PATTERNS.md)** - Developer patterns and best practices
+  - File organization conventions
+  - Progress bar integration
+  - Scope-based analysis implementation
+  - Testing guidelines
+
+- **[ENHANCEMENTS_2026.md](docs/ENHANCEMENTS_2026.md)** - Recent improvements and roadmap
+  - Completed enhancements
+  - Performance optimizations
+  - New features and capabilities
+
+- **[CLAUDE.md](CLAUDE.md)** - Guide for AI-assisted development
+  - Project context and architecture
+  - Common tasks and workflows
+  - Integration patterns
 
 ## Future Extensions
 

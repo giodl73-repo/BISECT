@@ -335,6 +335,36 @@ def main():
         if not state_code:
             raise ValueError(f"Could not detect state from directory name: {dir_name}")
 
+        # Skip Alaska and Hawaii - no tract-level election data available
+        if state_code in ['AK', 'HI']:
+            state_display = run_dir.name.replace('_', ' ').title()
+            report_progress(f"Analyzing {state_display} - Skipped (no tract-level election data)")
+            if is_standalone:
+                print(f"\nSkipping {state_code} - No tract-level election data available")
+                print("Political analysis requires precinct-to-tract geocoded data")
+
+            # Create empty output files to indicate completion
+            empty_district_df = pd.DataFrame(columns=[
+                'district', 'biden_votes', 'trump_votes', 'total_votes',
+                'biden_pct', 'trump_pct', 'dem_margin', 'lean_category'
+            ])
+            empty_rounds_df = pd.DataFrame(columns=[
+                'round', 'region_id', 'biden_votes', 'trump_votes', 'total_votes',
+                'biden_pct', 'trump_pct', 'dem_margin', 'lean_category'
+            ])
+
+            district_file = output_dir / f'district_political_{args.year}.csv'
+            rounds_file = output_dir / f'rounds_political_{args.year}.csv'
+            empty_district_df.to_csv(district_file, index=False)
+            empty_rounds_df.to_csv(rounds_file, index=False)
+
+            if is_standalone:
+                print(f"Created empty output files:")
+                print(f"  {district_file}")
+                print(f"  {rounds_file}")
+
+            return 0  # Success - expected skip
+
         # Load tract file to get GEOID mapping
         import geopandas as gpd
         tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.census_year}.parquet')
