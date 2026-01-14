@@ -23,6 +23,7 @@ This document captures critical patterns and conventions used throughout the cod
 9. [Git Commit Messages](#git-commit-messages)
 10. [Error Handling](#error-handling)
 11. [When to Use What](#when-to-use-what)
+12. [Static HTML Generation](#static-html-generation)
 
 ---
 
@@ -1098,6 +1099,137 @@ def process_everything():
 # scripts/analyze_data.py
 # scripts/visualize_results.py
 ```
+
+---
+
+## Static HTML Generation
+
+### Problem: Browser CORS Restrictions with Local Files
+
+**Issue**: When opening HTML files locally (`file://` protocol), browsers block `fetch()` calls to load JSON files due to CORS (Cross-Origin Resource Sharing) security restrictions.
+
+**Example of the Problem**:
+```html
+<!-- This FAILS when opened as file:// -->
+<script>
+    fetch('./data.json')  // BLOCKED by browser
+        .then(response => response.json())
+        .then(data => displayData(data));
+</script>
+```
+
+**Error**: `Access to fetch at 'file:///...' from origin 'null' has been blocked by CORS policy`
+
+### Solution: Embed Data Directly in HTML
+
+Instead of fetching external JSON files, embed the data directly into the HTML during generation.
+
+**Pattern**:
+
+1. **Template HTML** (`web/dashboard.html`):
+```html
+<script>
+    // Data will be embedded by generator script
+    const DATA = /* DATA_PLACEHOLDER */;
+
+    // Use data directly (synchronous, no fetch needed)
+    function loadData() {
+        displayData(DATA);  // Works immediately
+    }
+</script>
+```
+
+2. **Generator Script** (`scripts/web/generate_dashboard.py`):
+```python
+import json
+from pathlib import Path
+
+def generate_dashboard(template_path, output_path, data):
+    # Read template
+    with open(template_path, 'r', encoding='utf-8') as f:
+        html = f.read()
+
+    # Embed data as JSON
+    data_json = json.dumps(data, indent=8)
+    html = html.replace('/* DATA_PLACEHOLDER */', data_json)
+
+    # Write output
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(html)
+```
+
+**Result**: The generated HTML file contains all data embedded within it, eliminating any external dependencies and CORS issues.
+
+### Example: Master Dashboard
+
+**Template** (`web/master_dashboard.html`):
+```javascript
+const RUNS = /* RUNS_DATA_PLACEHOLDER */;
+const COMPARISON_DATA = /* COMPARISON_DATA_PLACEHOLDER */;
+
+// Data is immediately available, no async needed
+document.addEventListener('DOMContentLoaded', function() {
+    displayComparison(COMPARISON_DATA);
+    displayRuns(RUNS);
+});
+```
+
+**Generator** (`scripts/web/generate_master_dashboard.py`):
+```python
+# Embed run data
+runs_json = json.dumps(runs, indent=8)
+html = html.replace('/* RUNS_DATA_PLACEHOLDER */', runs_json)
+
+# Embed comparison data from file
+comparison_path = Path('outputs/comparison.json')
+with open(comparison_path, 'r', encoding='utf-8') as f:
+    comparison_data = json.load(f)
+comparison_json = json.dumps(comparison_data, indent=8)
+html = html.replace('/* COMPARISON_DATA_PLACEHOLDER */', comparison_json)
+```
+
+### Best Practices
+
+1. **Use Meaningful Placeholder Names**:
+   - `/* DATA_PLACEHOLDER */` - Generic data
+   - `/* RUNS_DATA_PLACEHOLDER */` - Run configuration
+   - `/* COMPARISON_DATA_PLACEHOLDER */` - Comparison results
+   - Use comments `/* ... */` not strings to avoid JSON escaping issues
+
+2. **Handle Missing Data Gracefully**:
+```python
+if data_file.exists():
+    with open(data_file) as f:
+        data = json.load(f)
+else:
+    data = {}  # Provide empty fallback
+    print(f"Warning: {data_file} not found")
+```
+
+3. **Format JSON for Readability**:
+```python
+# Use indent for human-readable embedded data
+json.dumps(data, indent=8)  # Nice indentation for viewing HTML source
+```
+
+4. **Consider Data Size**:
+   - Embedding works well for dashboards (typically < 5MB)
+   - For very large datasets (> 10MB), consider splitting into multiple pages
+   - State-by-state data is fine to embed, tract-level data may be too large
+
+### When to Use This Pattern
+
+**Use Embedded Data When**:
+- ✅ Generating static HTML dashboards for local viewing
+- ✅ Data size is reasonable (< 5MB)
+- ✅ Need self-contained single-file deliverable
+- ✅ Avoiding server setup complexity
+
+**Don't Use Embedded Data When**:
+- ❌ Building a web application with server (use API instead)
+- ❌ Data is extremely large (> 10MB)
+- ❌ Need real-time data updates
+- ❌ Multiple pages need to share same data (use shared JSON file with proper server)
 
 ---
 

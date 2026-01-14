@@ -388,6 +388,9 @@
         <div class="header">
             <h1>🗺️ Algorithmic Redistricting Dashboard</h1>
             <div class="header-controls">
+                <a href="../index.html" class="header-select" style="text-decoration: none; display: inline-block;">
+                    ← Cross-Census Overview
+                </a>
                 <div class="dropdown" style="position: relative; display: inline-block;">
                     <button class="header-select" onclick="togglePapersMenu()" style="cursor: pointer; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; background: white;">
                         📄 Research Papers
@@ -477,31 +480,10 @@
             prepareStatesArray();
             populateStates();
             setupDimensionTabs();
-            detectCurrentVersion();
 
             // Default to USA Overview on load
             selectState('usa');
         });
-
-        // Detect current year and version from URL hash or default
-        function detectCurrentVersion() {
-            const hash = window.location.hash;
-            const match = hash.match(/#us_(\d{4})_(v\d+)/);
-            if (match) {
-                currentYear = match[1];
-                currentVersion = match[2];
-                document.getElementById('yearSelect').value = currentYear;
-                document.getElementById('versionSelect').value = currentVersion;
-            } else {
-                // Default to current
-                updateHash();
-            }
-        }
-
-        // Update URL hash
-        function updateHash() {
-            window.location.hash = `us_${currentYear}_${currentVersion}`;
-        }
 
         // Toggle research papers dropdown menu
         function togglePapersMenu() {

@@ -164,41 +164,52 @@ def create_cross_census_comparison(runs):
     """
     Create cross-census comparison data structure.
 
-    Groups runs by year and computes stats.
+    Structure: {year: {version: {run, algorithmic, enacted, states, improvement}}}
     """
     comparison = {}
 
-    # Group runs by year (take first/best for each year)
-    year_runs = {}
+    # Group all edge-weighted runs by year and version
     for run in runs:
         year = run['year']
-        # Prefer edge-weighted over unweighted
-        if year not in year_runs or run['mode'] == 'Edge-Weighted':
-            year_runs[year] = run
+        version = run['version']
 
-    # Load data for each year
-    for year, run in sorted(year_runs.items()):
-        print(f"  Loading {year} data from {run['path']}...")
+        # Only consider edge-weighted runs
+        if run['mode'] != 'Edge-Weighted':
+            continue
+
+        # Initialize year structure
+        if year not in comparison:
+            comparison[year] = {}
+
+        print(f"  Loading {year} {version} data from {run['path']}...")
 
         algo_data = aggregate_compactness_data(f"outputs/{run['path']}")
         baseline_data = load_baseline_data(year)
 
         if algo_data:
-            comparison[year] = {
+            version_data = {
                 'run': run,
                 'algorithmic': algo_data['overall'],
                 'enacted': baseline_data,
-                'states': algo_data['states']
+                'states': []
             }
+
+            # Add state-level data with improvement calculations
+            for state in algo_data['states']:
+                state_copy = state.copy()
+                # States don't have enacted data yet, but structure is ready
+                version_data['states'].append(state_copy)
 
             # Calculate improvement if baseline available
             if baseline_data:
                 algo_pp = algo_data['overall']['mean_pp']
                 enacted_pp = baseline_data['mean_pp']
                 improvement = ((algo_pp / enacted_pp) - 1) * 100
-                comparison[year]['improvement_pct'] = improvement
-                comparison[year]['algorithmic']['mean_pp'] = algo_pp
-                comparison[year]['enacted']['mean_pp'] = enacted_pp
+                version_data['improvement_pct'] = improvement
+            else:
+                version_data['improvement_pct'] = None
+
+            comparison[year][version] = version_data
 
     return comparison
 
@@ -234,16 +245,21 @@ def generate_enhanced_master_dashboard(
     print("\nAggregating cross-census data...")
     comparison = create_cross_census_comparison(runs)
 
-    print(f"\nCross-census data loaded for {len(comparison)} years:")
+    print(f"\nCross-census data loaded:")
     for year in sorted(comparison.keys()):
-        data = comparison[year]
-        algo_pp = data['algorithmic']['mean_pp']
-        if data['enacted']:
-            enacted_pp = data['enacted']['mean_pp']
-            improvement = data['improvement_pct']
-            print(f"  {year}: Algo PP={algo_pp:.4f}, Enacted PP={enacted_pp:.4f}, +{improvement:.1f}%")
-        else:
-            print(f"  {year}: Algo PP={algo_pp:.4f}, Enacted baseline not available")
+        versions = comparison[year]
+        print(f"  {year}: {len(versions)} version(s) - {', '.join(sorted(versions.keys()))}")
+
+        # Show v1 stats as representative
+        if 'v1' in versions:
+            data = versions['v1']
+            algo_pp = data['algorithmic']['mean_pp']
+            if data['enacted']:
+                enacted_pp = data['enacted']['mean_pp']
+                improvement = data['improvement_pct']
+                print(f"        v1: Algo PP={algo_pp:.4f}, Enacted PP={enacted_pp:.4f}, {improvement:+.1f}%")
+            else:
+                print(f"        v1: Algo PP={algo_pp:.4f}, Enacted baseline not available")
 
     # Read template
     with open(template_path, 'r', encoding='utf-8') as f:
