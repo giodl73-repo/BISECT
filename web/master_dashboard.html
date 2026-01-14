@@ -536,8 +536,8 @@
                         state: state.state,
                         districts: state.num_districts,
                         algo_pp: state.mean_pp,
-                        enacted_pp: null,  // State-level enacted data not yet available
-                        improvement: 0
+                        enacted_pp: state.enacted_mean_pp || null,
+                        improvement: state.improvement_pct || null
                     });
                 });
             });
@@ -549,12 +549,14 @@
             });
 
             allStates.forEach(state => {
+                const enactedPP = state.enacted_pp ? state.enacted_pp.toFixed(4) : '-';
+
                 html += `
                     <tr>
                         <td><span class="year-badge year-${state.year}">${state.year}</span></td>
                         <td style="text-transform: capitalize;">${state.state.replace(/_/g, ' ')}</td>
                         <td>${state.districts}</td>
-                        <td>-</td>
+                        <td>${enactedPP}</td>
                         <td class="metric-highlight">${state.algo_pp.toFixed(4)}</td>
                     </tr>
                 `;

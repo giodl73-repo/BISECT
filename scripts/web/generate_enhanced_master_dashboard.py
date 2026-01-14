@@ -16,6 +16,23 @@ import re
 import pandas as pd
 import glob
 
+# State code to name mapping for matching enacted baseline with algorithmic data
+STATE_CODE_TO_NAME = {
+    'AL': 'ALABAMA', 'AK': 'ALASKA', 'AZ': 'ARIZONA', 'AR': 'ARKANSAS',
+    'CA': 'CALIFORNIA', 'CO': 'COLORADO', 'CT': 'CONNECTICUT', 'DE': 'DELAWARE',
+    'FL': 'FLORIDA', 'GA': 'GEORGIA', 'HI': 'HAWAII', 'ID': 'IDAHO',
+    'IL': 'ILLINOIS', 'IN': 'INDIANA', 'IA': 'IOWA', 'KS': 'KANSAS',
+    'KY': 'KENTUCKY', 'LA': 'LOUISIANA', 'ME': 'MAINE', 'MD': 'MARYLAND',
+    'MA': 'MASSACHUSETTS', 'MI': 'MICHIGAN', 'MN': 'MINNESOTA', 'MS': 'MISSISSIPPI',
+    'MO': 'MISSOURI', 'MT': 'MONTANA', 'NE': 'NEBRASKA', 'NV': 'NEVADA',
+    'NH': 'NEW_HAMPSHIRE', 'NJ': 'NEW_JERSEY', 'NM': 'NEW_MEXICO', 'NY': 'NEW_YORK',
+    'NC': 'NORTH_CAROLINA', 'ND': 'NORTH_DAKOTA', 'OH': 'OHIO', 'OK': 'OKLAHOMA',
+    'OR': 'OREGON', 'PA': 'PENNSYLVANIA', 'RI': 'RHODE_ISLAND', 'SC': 'SOUTH_CAROLINA',
+    'SD': 'SOUTH_DAKOTA', 'TN': 'TENNESSEE', 'TX': 'TEXAS', 'UT': 'UTAH',
+    'VT': 'VERMONT', 'VA': 'VIRGINIA', 'WA': 'WASHINGTON', 'WV': 'WEST_VIRGINIA',
+    'WI': 'WISCONSIN', 'WY': 'WYOMING'
+}
+
 
 def find_all_runs(outputs_dir='outputs'):
     """Find all us_{year}_{version} directories."""
@@ -131,7 +148,10 @@ def aggregate_compactness_data(run_path):
 
 
 def load_baseline_data(year):
-    """Load enacted baseline compactness for a census year."""
+    """Load enacted baseline compactness for a census year.
+
+    Returns dict with overall stats and per-state data.
+    """
     if year == '2010':
         baseline_file = 'data/enacted_districts/2010/enacted_compactness_2010.csv'
     elif year == '2020':
@@ -152,10 +172,31 @@ def load_baseline_data(year):
 
     if baseline_file and Path(baseline_file).exists():
         df = pd.read_csv(baseline_file)
+
+        # Determine state column name (varies between years)
+        state_col = 'state_code' if 'state_code' in df.columns else 'state'
+
+        # Calculate per-state stats
+        state_stats = {}
+        for state_code in df[state_col].unique():
+            state_df = df[df[state_col] == state_code]
+
+            # Convert state code to full name for matching with algorithmic data
+            state_key = STATE_CODE_TO_NAME.get(state_code.upper(), state_code.upper())
+
+            state_stats[state_key] = {
+                'mean_pp': state_df['polsby_popper'].mean(),
+                'median_pp': state_df['polsby_popper'].median(),
+                'num_districts': len(state_df)
+            }
+
         return {
-            'mean_pp': df['polsby_popper'].mean(),
-            'median_pp': df['polsby_popper'].median(),
-            'total_districts': len(df)
+            'overall': {
+                'mean_pp': df['polsby_popper'].mean(),
+                'median_pp': df['polsby_popper'].median(),
+                'total_districts': len(df)
+            },
+            'states': state_stats
         }
     return None
 
@@ -190,20 +231,33 @@ def create_cross_census_comparison(runs):
             version_data = {
                 'run': run,
                 'algorithmic': algo_data['overall'],
-                'enacted': baseline_data,
+                'enacted': baseline_data['overall'] if baseline_data else None,
                 'states': []
             }
 
             # Add state-level data with improvement calculations
             for state in algo_data['states']:
                 state_copy = state.copy()
-                # States don't have enacted data yet, but structure is ready
+
+                # Match with enacted data if available
+                if baseline_data and 'states' in baseline_data:
+                    state_code = state['state'].upper()
+                    if state_code in baseline_data['states']:
+                        enacted_state = baseline_data['states'][state_code]
+                        state_copy['enacted_mean_pp'] = enacted_state['mean_pp']
+                        state_copy['enacted_median_pp'] = enacted_state['median_pp']
+
+                        # Calculate state-level improvement
+                        if enacted_state['mean_pp'] > 0:
+                            improvement = ((state_copy['mean_pp'] / enacted_state['mean_pp']) - 1) * 100
+                            state_copy['improvement_pct'] = improvement
+
                 version_data['states'].append(state_copy)
 
-            # Calculate improvement if baseline available
-            if baseline_data:
+            # Calculate overall improvement if baseline available
+            if baseline_data and baseline_data['overall']:
                 algo_pp = algo_data['overall']['mean_pp']
-                enacted_pp = baseline_data['mean_pp']
+                enacted_pp = baseline_data['overall']['mean_pp']
                 improvement = ((algo_pp / enacted_pp) - 1) * 100
                 version_data['improvement_pct'] = improvement
             else:
