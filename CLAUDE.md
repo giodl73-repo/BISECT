@@ -606,9 +606,34 @@ python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 -
 - Dashboard generation: ~5 seconds
 
 ### Windows-Specific
+
+**IMPORTANT: This project runs on Windows** (as indicated in `<env>Platform: win32</env>`)
+
+**Console Output Encoding:**
+- Windows cmd/PowerShell uses CP1252 encoding, NOT UTF-8
+- **NEVER use Unicode characters** (✓, ✗, →, •, etc.) in print() statements
+- **ALWAYS use ASCII alternatives**: `[OK]`, `[FAIL]`, `[WARN]`, `->`, `-`, etc.
+- Violation causes: `UnicodeEncodeError: 'charmap' codec can't encode character`
+- This applies to ALL scripts that print to console
+
+**ASCII Alternatives for Common Symbols:**
+```python
+# DON'T use Unicode:
+print(f"✓ Success")      # Crashes on Windows
+print(f"✗ Failed")       # Crashes on Windows
+print(f"→ Next step")    # Crashes on Windows
+
+# DO use ASCII:
+print(f"[OK] Success")   # Works everywhere
+print(f"[FAIL] Failed")  # Works everywhere
+print(f"-> Next step")   # Works everywhere
+```
+
+**Other Windows Specifics:**
 - METIS binary: `bin/gpmetis.exe` (Windows build)
 - Batch files use Windows-style paths with backslashes
 - Line endings: CRLF (Windows) - Git auto-converts
+- File paths: Use `Path` objects from `pathlib` for cross-platform compatibility
 
 ### Algorithm Constraints
 - Equal population: Districts within ±0.5% of target population
