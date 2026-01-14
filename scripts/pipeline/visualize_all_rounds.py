@@ -221,8 +221,10 @@ def main():
 
     state_name = base_name.replace('_', ' ').title()
 
-    # Load tracts
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet'
+    # Load tracts (unified directory structure)
+    state_code_lower = state_code.lower()
+    tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
+
     intermediate_dir = run_dir / 'intermediate'
     output_dir = run_dir / 'maps' / 'rounds'
 
@@ -235,6 +237,9 @@ def main():
         elif args.year == '2010':
             from scripts.config_2010 import STATE_CONFIG_2010
             config = STATE_CONFIG_2010.get(state_code.upper(), {})
+        elif args.year == '2000':
+            from scripts.config_2000 import STATE_CONFIG_2000
+            config = STATE_CONFIG_2000.get(state_code.upper(), {})
         else:
             config = {}
         num_districts = config.get('districts', 1)

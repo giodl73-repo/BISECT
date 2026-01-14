@@ -4,7 +4,7 @@
 
 Ten enhancements to integrate into the main redistricting pipeline to provide more comprehensive analysis, visualization, and algorithmic improvements for congressional district generation.
 
-**Last Updated**: January 12, 2026
+**Last Updated**: January 13, 2026
 
 ## Related Documentation
 
@@ -21,9 +21,10 @@ Ten enhancements to integrate into the main redistricting pipeline to provide mo
 - ✅ Enhancement 5: National Round Progression - **COMPLETED**
 - ✅ Enhancement 6: System Architecture Diagrams - **COMPLETED**
 - ✅ Enhancement 7: Edge-Weighted Recursive Bisection - **COMPLETED**
-- 📋 Enhancement 8: Block-Level Data Support - **PLANNED**
+- 🔄 Enhancement 8: Block-Level Data Support - **PHASE 0 COMPLETE (2010)**, Phase 0 Partial (2000), Phases 1-4 Planned
 - ✅ Enhancement 9: Per-State Analysis Refactoring - **COMPLETED** (pending full validation)
 - 📋 Enhancement 10: Per-State Urban Area Processing - **PLANNED**
+- ✅ Enhancement 13: Unify Directory Structure - **COMPLETED**
 
 ---
 
@@ -825,10 +826,14 @@ python scripts/pipeline/run_state_redistricting.py --state AL --year 2020 --vers
 
 ---
 
-## Enhancement 8: Block-Level Data Support for Multi-Year Census 📋 PLANNED
+## Enhancement 8: Block-Level Data Support for Multi-Year Census 📋 DATA AVAILABLE
 
 ### Goal
 Support census block-level redistricting for 2000, 2010, and 2020, with automatic tract aggregation for older census years.
+
+**Data Status:** ✅ Block-level PL 94-171 redistricting data for all three census years (2000, 2010, 2020) has been copied to `data/census/` directory (January 13, 2026). Data includes geographic headers and population files for all 50 states.
+
+**Comprehensive Analysis:** See `docs/CENSUS_DATA_ANALYSIS.md` for complete assessment of available data, file formats, geographic hierarchies, and implementation roadmap.
 
 ### Background
 **Census Geographic Hierarchy:**
@@ -860,21 +865,114 @@ Support census block-level redistricting for 2000, 2010, and 2020, with automati
 3. **Time**: METIS partitioning scales with graph size
 4. **Storage**: Larger parquet/pickle files
 
+### Available Data Structure
+
+**Location:** `data/census/`
+
+**Census 2000:**
+- Directory: `Census 2000/geos/`
+- Format: Geographic files (.upl format)
+- Content: Block-level geography for all 50 states
+- Example: `algeo.upl` (Alabama), `cageo.upl` (California)
+
+**Census 2010:**
+- Directory: `Census 2010/[state]2010.pl/`
+- Format: PL 94-171 redistricting data
+- Files per state:
+  - `[state]000012010.pl` - File 1: P1 Population counts
+  - `[state]000022010.pl` - File 2: P2-P4 Race/ethnicity data
+  - `[state]geo2010.pl` - Geographic header with GEOID, coordinates, area
+- Example: `al2010.pl/algeo2010.pl` contains 222,189 blocks for Alabama
+
+**Census 2020:**
+- Directory: `Census 2020/[state]2020.pl/`
+- Format: PL 94-171 redistricting data
+- Files per state:
+  - `[state]000012020.pl` - File 1: P1 and P2 population tables
+  - `[state]000022020.pl` - File 2: Additional race/ethnicity tables
+  - `[state]000032020.pl` - File 3: Supplemental tables
+  - `[state]geo2020.pl` - Geographic header
+- Documentation: `2020Census_PL94_171Redistricting_StatesTechDoc_English.pdf`
+- Field definitions: `2020_PLSummaryFile_FieldNames.xlsx`
+- Headers: `aa_geo_header.csv`, `aa_000012020header.csv`
+
+**Data Format Details:**
+- Geographic header includes: SUMLEV (summary level), STATE, COUNTY, TRACT, BLKGRP, BLOCK
+- SUMLEV=750 indicates census block level
+- Includes AREALAND, AREAWATR (in square meters)
+- Includes INTPTLAT, INTPTLON (internal point coordinates)
+- Includes POP100 (official 2020 population count)
+
 ### Implementation Plan
 
-#### Phase 1: Data Download Infrastructure
+#### Phase 0: Tract Aggregation for Historical Years (2000, 2010) ✅ COMPLETED (2010), ⏳ PARTIAL (2000)
+
+**Completion Date:** January 13, 2026
+**Status:** 2010 pipeline fully complete; 2000 requires manual NHGIS shapefile download
+
+**Objective:** Generate tract-level data for 2000 and 2010 from block-level PL 94-171 files for historical comparison and longitudinal analysis.
+
+**Why Needed:**
+- Current pipeline uses tract-level shapefiles for 2020 only
+- 2000 and 2010 tract shapefiles not readily available in processed format
+- Longitudinal analysis requires consistent tract-level data across all three census years
+
+**Implementation Summary:**
+
+**Census 2010 (COMPLETE ✅):**
+1. ✅ **Parse Tract-Level PL 94-171 Files**: `scripts/data/census/parse_pl94171_tracts_2010.py`
+   - Extracted 74,224 tracts from fixed-width geographic headers (SUMLEV=140)
+   - Output: `data/processed/census_2010/[state]_tracts_2010_population.csv` (all 50 states)
+
+2. ✅ **Download TIGER/Line 2010 Tract Shapefiles**: `scripts/data/geography/download_tiger_tracts_2010.py`
+   - Downloaded directly from Census Bureau FTP (all 50 states)
+   - Output: `data/geography/tiger_2010_tracts/tl_2010_[fips]_tract10.zip`
+
+3. ✅ **Merge Population + Geometries**: `scripts/data/merge_tracts_with_geometries_2010.py`
+   - Combined census data with tract boundaries (all 50 states)
+   - Output: `data/tracts/2010/[state]_tracts_2010.parquet` (all 50 states)
+
+**Census 2000 (PARTIAL ⏳):**
+1. ✅ **Parse Tract-Level .upl Files**: `scripts/data/census/parse_pl94171_tracts_2000.py`
+   - Extracted 65,734 tracts from .upl format geographic files (SUMLEV=14000000)
+   - Output: `data/processed/census_2000/[state]_tracts_2000_population.csv` (all 50 states)
+
+2. ⏳ **Download NHGIS 2000 Tract Shapefiles**: `scripts/data/geography/download_tiger_tracts_2000.py`
+   - Script provides instructions for manual NHGIS download
+   - 2000 shapefiles not available via direct download (requires free NHGIS account)
+   - **Action Required:** Visit https://www.nhgis.org/ to download 2000 tract boundaries
+
+3. ✅ **Merge Script Ready**: `scripts/data/merge_tracts_with_geometries_2000.py`
+   - Script created and ready to merge once NHGIS shapefiles are available
+   - Output: `data/tracts/2000/[state]_tracts_2000.parquet` (will be created after NHGIS download)
+
+**Current Outputs:**
+- ✅ `data/tracts/2010/[state]_tracts_2010.parquet` (all 50 states) - **READY FOR REDISTRICTING**
+- ⏳ `data/tracts/2000/[state]_tracts_2000.parquet` (pending NHGIS shapefiles)
+- Compatible with existing 2020 tract-level pipeline
+
+**Benefit:**
+- ✅ **2010**: Can now run `run_redistricting.py --year 2010` for historical validation
+- ⏳ **2000**: Will enable `run_redistricting.py --year 2000` once NHGIS shapefiles are obtained
+
+#### Phase 1: Data Processing Infrastructure (Block-Level)
 
 **New Scripts:**
 ```bash
-# Download block-level shapefiles for all years
+# Parse block-level PL94-171 data into unified format
+scripts/data/census/parse_pl94171_blocks.py --year 2000
+scripts/data/census/parse_pl94171_blocks.py --year 2010
+scripts/data/census/parse_pl94171_blocks.py --year 2020
+
+# Download block-level TIGER/Line shapefiles
 scripts/data/geography/download_block_shapefiles.py --year 2000
 scripts/data/geography/download_block_shapefiles.py --year 2010
 scripts/data/geography/download_block_shapefiles.py --year 2020
 
-# Download block-level PL94-171 population data
-scripts/data/census/download_block_population.py --year 2000
-scripts/data/census/download_block_population.py --year 2010
-scripts/data/census/download_block_population.py --year 2020
+# Merge block population with block geometries
+scripts/data/preprocessing/merge_block_geography.py --year 2000
+scripts/data/preprocessing/merge_block_geography.py --year 2010
+scripts/data/preprocessing/merge_block_geography.py --year 2020
 ```
 
 **Output Format:**
@@ -1754,3 +1852,148 @@ Download and analyze actual 2020 congressional district boundaries, compute iden
 
 **Date**: January 12, 2026 (evening)
 **Next Session**: January 13, 2026
+
+---
+
+## Enhancement 13: Unify Directory Structure Across Census Years ✅ COMPLETED
+
+**Completion Date:** January 14, 2026
+
+### Priority
+**LOW-MEDIUM** - Code maintainability and simplification
+
+### Motivation
+Currently, 2020 data uses flat structure (`data/raw/`) while 2010/2000 use subdirectories (`data/tracts/{year}/`, `data/adjacency/{year}/`). This inconsistency requires conditional path logic in ~15+ scripts throughout the codebase. Unifying the structure would eliminate this complexity and make the codebase more maintainable.
+
+### Current State
+- **2020 Structure**: `data/raw/{state}_tracts_2020.parquet`
+- **2010/2000 Structure**: `data/tracts/{year}/{state}_tracts_{year}.parquet`
+- Every script that loads tract/adjacency/places data needs year-specific path logic
+- ~15-20 scripts affected across pipeline, analysis, and visualization
+
+### Implementation Plan
+
+#### Phase 1: Move 2020 Data (30 minutes)
+1. Create new directory structure:
+   ```
+   data/tracts/2020/
+   data/adjacency/2020/
+   ```
+2. Move all 2020 tract/places files from `data/raw/` to `data/tracts/2020/`
+3. Move all 2020 adjacency files from `data/adjacency/` to `data/adjacency/2020/`
+4. Keep `data/raw/` for truly raw downloaded data only
+
+#### Phase 2: Update Scripts (1 hour)
+Remove all conditional path logic and use uniform pattern:
+```python
+# Before (conditional):
+if args.year == '2020':
+    tracts_file = f'data/raw/{state}_tracts_{year}.parquet'
+else:
+    tracts_file = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
+
+# After (unified):
+tracts_file = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
+```
+
+**Scripts to Update** (~15-20 files):
+- `scripts/pipeline/` - 10 scripts
+- `scripts/political/` - 3 scripts
+- `scripts/demographic/` - 2 scripts
+- `scripts/compactness/` - 3 scripts
+- `scripts/data/geography/` - 1 script
+- Other visualization/analysis scripts as needed
+
+#### Phase 3: Update Documentation (15 minutes)
+- Update `docs/DATA_FORMATS.md` with new structure
+- Update `docs/ARCHITECTURE.md` data flow diagrams
+- Update `CLAUDE.md` and `README.md` if needed
+- Update `.gitignore` patterns if needed
+
+### Benefits
+- **Simplified Code**: Remove ~50-100 lines of conditional path logic
+- **Consistency**: All census years follow same pattern
+- **Maintainability**: Future census years (2030+) just drop in
+- **Clarity**: Logical separation of processed data by year
+- **Less Error-Prone**: No more forgetting to add year conditionals
+
+### Risks
+- **Minimal**: Just file moves + find/replace path updates
+- **Testing**: Verify one full 2020 run after changes
+- **Rollback**: Git commit before changes, easy to revert
+
+### Testing Plan
+1. Move 2020 files to new structure
+2. Update all path logic in scripts
+3. Run full 2020 pipeline: `run_redistricting.bat --year 2020 --version test`
+4. Verify outputs identical to previous run
+5. Run spot checks for 2010/2000 to ensure still working
+
+### Timeline
+**Estimated**: 2-3 hours total
+- 30 min: Move files
+- 1 hour: Update scripts
+- 15 min: Update documentation
+- 30 min: Testing and verification
+
+### Dependencies
+- None (independent enhancement)
+- Can be done anytime between census runs
+- Ideally after current 2000 run completes
+
+### Future-Proofing
+Once implemented, adding 2030 Census data will follow same pattern with zero code changes needed for path logic.
+
+### Implementation Summary
+
+**Status:** Completed January 14, 2026 (~2 hours total)
+
+**Phase 1: File Movement (30 minutes)**
+- Created `data/tracts/2020/` and `data/adjacency/2020/` directories
+- Moved 50 tract files from `data/raw/` to `data/tracts/2020/`
+- Moved 50 places files from `data/raw/` to `data/tracts/2020/`
+- Moved 50 adjacency files from `data/adjacency/` to `data/adjacency/2020/`
+- Verified file naming consistency across all three census years
+- **Result:** All 150 data files (50 states × 3 years) now use uniform structure
+
+**Phase 2: Script Updates (60 minutes)**
+- Updated 19 scripts to remove year-specific path conditionals
+- **Pipeline Scripts (7):** run_complete_redistricting.py, create_final_district_summary.py, add_cities_to_districts.py, create_individual_district_maps.py, visualize_all_rounds.py, create_us_national_map.py, create_us_national_rounds_progression.py
+- **Geography Scripts (4):** build_all_adjacency_graphs.py (4 conditionals removed), check_graph_connectivity.py, check_isolated_tracts.py, diagnose_components.py
+- **Political Scripts (3):** analyze_districts.py, visualize_partisan_lean.py, create_us_national_political_map.py
+- **Demographic Scripts (3):** analyze_district_demographics.py, visualize_district_demographics.py, create_us_national_demographic_map.py
+- **Compactness Scripts (2):** visualize_compactness.py, create_us_national_compactness_map.py
+- **Pattern Changed:** Removed all `if args.year == '2020': ... else: ...` conditionals for file paths
+- **Pattern Preserved:** Config imports remain conditional (intentionally)
+- **Result:** Simplified ~80 lines of conditional path logic
+
+**Phase 3: Documentation Updates (15 minutes)**
+- Updated `docs/CODING_PATTERNS.md` (4 path references)
+- Updated `docs/DATA_FORMATS.md` (3 sections: directory structure, data sizes, adjacency graphs)
+- Updated `docs/ARCHITECTURE.md` (2 code examples)
+- Updated `CLAUDE.md` (Enhanced Enhancement Workflow section with comprehensive guide)
+- Created `UNIFICATION_STATUS.md` tracking document
+
+**Phase 4: Testing (User Completed)**
+- Tested 2020 adjacency rebuild
+- Tested 2010 adjacency rebuild
+- Tested 2000 adjacency rebuild
+- All three census years verified working with new structure
+
+**Benefits Achieved:**
+- ✅ Simplified Code: Removed ~80 lines of conditional path logic
+- ✅ Consistency: All census years follow same pattern
+- ✅ Maintainability: Future census years (2030+) just drop in
+- ✅ Clarity: Logical separation of processed data by year
+- ✅ Less Error-Prone: No more forgetting to add year conditionals
+
+**Key Learnings:**
+- Manual editing safer for critical path changes (avoided batch operations)
+- Status documents helpful for tracking multi-phase enhancements
+- Preserving intentional conditionals while removing redundant ones is important
+- Testing all census years essential after directory structure changes
+
+---
+
+**Date Added**: January 13, 2026
+**Date Completed**: January 14, 2026

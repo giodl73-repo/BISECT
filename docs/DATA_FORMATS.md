@@ -349,7 +349,7 @@ https://electionlab.mit.edu/data
 ### Format
 
 **Type**: NetworkX Graph (pickled)
-**File**: `data/adjacency/{state}_adjacency_{year}.pkl`
+**File**: `data/adjacency/{year}/{state}_adjacency_{year}.pkl`
 
 ### Graph Structure
 
@@ -573,7 +573,7 @@ result = df1.merge(df2, on='GEOID')
 
 ## Data Sizes
 
-### Raw Data (data/raw/)
+### Census Tract Data (data/tracts/{year}/)
 
 | Dataset | Per State | All States |
 |---------|-----------|------------|
@@ -582,6 +582,8 @@ result = df1.merge(df2, on='GEOID')
 | Demographics (CSV) | 1-5 MB | ~250 MB |
 | Elections (CSV) | 5-20 MB | ~500 MB |
 
+**Note**: Organized by census year: `data/tracts/2020/`, `data/tracts/2010/`, `data/tracts/2000/`
+
 ### Processed Data (data/processed/)
 
 | Dataset | Size |
@@ -589,11 +591,13 @@ result = df1.merge(df2, on='GEOID')
 | 2020 Demographics (parquet) | 3-5 MB |
 | 2020 Elections (parquet) | 10-15 MB |
 
-### Adjacency Graphs (data/adjacency/)
+### Adjacency Graphs (data/adjacency/{year}/)
 
 | Per State | All States |
 |-----------|------------|
 | 100KB-5MB | ~200 MB |
+
+**Note**: Organized by census year: `data/adjacency/2020/`, `data/adjacency/2010/`, `data/adjacency/2000/`
 
 **Total Data Footprint**: ~12-15 GB for complete dataset (all 50 states, 2020)
 

@@ -162,7 +162,8 @@ def main():
 
             # Load tracts (use state abbreviation for filename)
             state_abbrev = STATE_ABBREV[state_name].lower()
-            tracts_file = Path(f'data/raw/{state_abbrev}_tracts_{args.year}.parquet')
+            tracts_file = Path(f'data/tracts/{args.year}/{state_abbrev}_tracts_{args.year}.parquet')
+
             if not tracts_file.exists():
                 continue
 

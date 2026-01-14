@@ -69,20 +69,27 @@ try:
 except ImportError:
     STATE_CONFIG_2010 = None
 
+try:
+    from scripts.config_2000 import STATE_CONFIG_2000
+except ImportError:
+    STATE_CONFIG_2000 = None
+
 
 def check_prerequisites(state_code, year='2020'):
     """Check if state has necessary data files."""
     state_code_lower = state_code.lower()
 
-    tracts_file = Path(f'data/raw/{state_code_lower}_tracts_{year}.parquet')
-    places_file = Path(f'data/raw/{state_code_lower}_places_{year}.parquet')
-    graph_file = Path(f'data/adjacency/{state_code_lower}_adjacency_{year}.pkl')
+    # Load data files (unified directory structure for all census years)
+    tracts_file = Path(f'data/tracts/{year}/{state_code_lower}_tracts_{year}.parquet')
+    places_file = Path(f'data/tracts/{year}/{state_code_lower}_places_{year}.parquet')
+    graph_file = Path(f'data/adjacency/{year}/{state_code_lower}_adjacency_{year}.pkl')
 
     missing = []
     if not tracts_file.exists():
         missing.append('tracts')
-    if not places_file.exists():
-        missing.append('places')
+    # Places is optional - only needed for demographic/metro analysis
+    # if not places_file.exists():
+    #     missing.append('places')
     if not graph_file.exists():
         missing.append('adjacency graph')
 
@@ -91,7 +98,7 @@ def check_prerequisites(state_code, year='2020'):
 
 def process_state_sequential(state_code, us_dir, state_config, year='2020', skip_existing=True,
                              print_only=False, debug=False, position=1, dpi=150, run_analysis=True,
-                             partition_mode='normal'):
+                             partition_mode='edge-weighted'):
     """
     Process a single state through the full pipeline (sequential mode).
     Uses ONLY 1 progress bar at the specified position.
@@ -148,7 +155,7 @@ def process_state_sequential(state_code, us_dir, state_config, year='2020', skip
 
     # Redistricting-specific flags
     redistricting_flags = common_flags.copy()
-    if partition_mode != 'normal':
+    if partition_mode != 'edge-weighted':
         redistricting_flags.append(f'--partition-mode {partition_mode}')
     redistricting_flags_str = ' '.join(redistricting_flags)
 
@@ -316,8 +323,8 @@ def main():
                         help='Print commands without executing (debug mode)')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug mode with progress delays')
-    parser.add_argument('--partition-mode', type=str, default='normal', choices=['normal', 'edge-weighted'],
-                        help='Partitioning mode: "normal" (edge cut minimization) or "edge-weighted" (boundary length minimization)')
+    parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
+                        help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
     parser.add_argument('states', nargs='*',
                         help='Specific state codes to process (default: all states)')
     args = parser.parse_args()
@@ -340,8 +347,10 @@ def main():
             sys.exit(1)
         STATE_CONFIG = STATE_CONFIG_2010
     elif args.year == '2000':
-        print("ERROR: 2000 census configuration not yet implemented.")
-        sys.exit(1)
+        if STATE_CONFIG_2000 is None:
+            print("ERROR: config_2000.py not found. Cannot process 2000 data.")
+            sys.exit(1)
+        STATE_CONFIG = STATE_CONFIG_2000
     else:
         print(f"ERROR: Unknown year {args.year}")
         sys.exit(1)
@@ -349,7 +358,7 @@ def main():
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        version_str = f'{args.version}_edge' if args.partition_mode == 'edge-weighted' else args.version
+        version_str = f'{args.version}_noedge' if args.partition_mode == 'unweighted' else args.version
         output_dir = Path(f'outputs/us_{args.year}_{version_str}')
 
     # Handle --reset flag: delete output directory for fresh run
@@ -684,9 +693,27 @@ def main():
             'critical': False
         })
 
+    # Check data availability for optional analysis
+    # Political analysis requires election data from same time period as census
+    # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
+    election_data_file = Path(f'data/processed/elections/{args.election_year}_president_tract.parquet')
+    election_data_available = (args.year == '2020' and election_data_file.exists())
+    demographic_data_available = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet').exists()
+
+    # Log data availability status
+    if not election_data_available and not args.skip_political:
+        if args.year != '2020':
+            print(f"\n[INFO] Political analysis will be skipped: Census year {args.year} requires {args.year}/2012 election data (not available)")
+        else:
+            print(f"\n[INFO] Political analysis will be skipped: No {args.election_year} election data found")
+            print(f"       Expected: data/processed/elections/{args.election_year}_president_tract.parquet")
+    if not demographic_data_available and not args.skip_demographic:
+        print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
+        print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
+
     # Run political analysis on all states (batch mode - fallback only)
     # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_political and not args.run_analysis and (output_dir.exists() or args.print_only):
+    if not args.skip_political and not args.run_analysis and election_data_available and (output_dir.exists() or args.print_only):
         political_scripts = scripts_dir.parent / 'political'
         analyze_script = political_scripts / 'analyze_districts.py'
         visualize_script = political_scripts / 'visualize_partisan_lean.py'
@@ -703,7 +730,7 @@ def main():
                 })
 
     # Create national political map (after per-state analysis completes)
-    if not args.skip_political and (output_dir.exists() or args.print_only):
+    if not args.skip_political and election_data_available and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
             'name': 'Create national political map',
             'command': f'{sys.executable} scripts/political/visualize_partisan_lean.py --scope national --output-dir {output_dir} --version {args.version} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi}'.strip(),
@@ -712,7 +739,7 @@ def main():
 
     # Run demographic analysis on all states (batch mode - fallback only)
     # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_demographic and not args.run_analysis and (output_dir.exists() or args.print_only):
+    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
         demographic_scripts = scripts_dir.parent / 'demographic'
         demographic_script = demographic_scripts / 'run_demographic_analysis.py'
 
@@ -729,7 +756,7 @@ def main():
 
     # Run demographic visualization on all states (batch mode - fallback only)
     # Note: Only runs if --skip-analysis was used (per-state visualization didn't run)
-    if not args.skip_demographic and not args.run_analysis and (output_dir.exists() or args.print_only):
+    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
         demographic_scripts = scripts_dir.parent / 'demographic'
         demographic_viz_script = demographic_scripts / 'run_demographic_visualization.py'
 
@@ -745,7 +772,7 @@ def main():
                 })
 
     # Create national demographic map (after per-state analysis completes)
-    if not args.skip_demographic and (output_dir.exists() or args.print_only):
+    if not args.skip_demographic and demographic_data_available and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
             'name': 'Create national demographic map',
             'command': f'{sys.executable} scripts/demographic/visualize_district_demographics.py --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),

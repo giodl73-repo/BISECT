@@ -155,7 +155,9 @@ def visualize_state_compactness(state_dir, state_code, census_year, dpi=150):
     }
 
     state_code = state_abbrev_map.get(state_name, state_name[:2]).lower()
-    tracts_file = Path(f'data/raw/{state_code}_tracts_{census_year}.parquet')
+
+    # Load tracts (unified directory structure)
+    tracts_file = Path(f'data/tracts/{census_year}/{state_code}_tracts_{census_year}.parquet')
 
     if not tracts_file.exists():
         print(f"ERROR: {tracts_file} not found")
@@ -249,7 +251,8 @@ def visualize_national_compactness(output_dir, version, census_year, dpi=150, po
 
             # Load tracts (use state abbreviation for filename)
             state_abbrev = STATE_ABBREV[state_name].lower()
-            tracts_file = Path(f'data/raw/{state_abbrev}_tracts_{census_year}.parquet')
+            tracts_file = Path(f'data/tracts/{census_year}/{state_abbrev}_tracts_{census_year}.parquet')
+
             if not tracts_file.exists():
                 continue
 
@@ -396,7 +399,7 @@ def main():
     parser.add_argument('--scope', choices=['state', 'national'], default='national',
                        help='Scope: state (single state) or national (all states, default)')
     parser.add_argument('--census-year', type=str, required=True,
-                       choices=['2010', '2020'],
+                       choices=['2000', '2010', '2020'],
                        help='Census year')
 
     # State scope arguments

@@ -98,17 +98,30 @@ def create_district_summary(
 
     # Load data
     if debug:
-        print("  Loading tracts and places data...")
+        print("  Loading tracts data...")
     tracts = gpd.read_parquet(tracts_file)
-    places = gpd.read_parquet(places_file)
 
     with open(assignments_file, 'rb') as f:
         assignments = pickle.load(f)
 
     tracts['district'] = [assignments[i] for i in range(len(tracts))]
 
-    # Load city data
-    cities_df = pd.read_csv(cities_file)
+    # Load city data (may not exist if places data unavailable)
+    from pathlib import Path as PathObj
+    cities_path = PathObj(cities_file)
+    if cities_path.exists():
+        cities_df = pd.read_csv(cities_file)
+        has_cities = True
+    else:
+        # Create empty cities dataframe with required columns
+        cities_df = pd.DataFrame({
+            'district': range(1, num_districts + 1),
+            'largest_city': ['N/A'] * num_districts,
+            'city_population': [0] * num_districts
+        })
+        has_cities = False
+        if debug:
+            print("  No city data available (places data not found for this census year)")
 
     # Calculate statistics for each district
     if debug:
@@ -286,8 +299,11 @@ if __name__ == '__main__':
     state_name = base_name.replace('_', ' ').title()
     if args.debug: print(f"[DEBUG] Detected state: {state_name} ({state_code})", file=sys.stderr, flush=True)
 
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet'
-    places_file = f'data/raw/{state_code.lower()}_places_{args.year}.parquet'
+    # Load tract and places files (unified directory structure)
+    state_code_lower = state_code.lower()
+    tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
+    places_file = f'data/tracts/{args.year}/{state_code_lower}_places_{args.year}.parquet'
+
     assignments_file = run_dir / 'final_assignments.pkl'
     cities_file = run_dir / 'district_cities.csv'
     output_file = run_dir / 'district_summary.csv'
@@ -301,6 +317,9 @@ if __name__ == '__main__':
         elif args.year == '2010':
             from scripts.config_2010 import STATE_CONFIG_2010
             config = STATE_CONFIG_2010.get(state_code.upper(), {})
+        elif args.year == '2000':
+            from scripts.config_2000 import STATE_CONFIG_2000
+            config = STATE_CONFIG_2000.get(state_code.upper(), {})
         else:
             config = {}
         num_districts = config.get('districts', 1)

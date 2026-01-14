@@ -214,9 +214,11 @@ def main():
         if not state_code:
             raise ValueError(f"Could not detect state from directory name: {dir_name}")
 
-        # Load tract file to get GEOID mapping
+        # Load tract file to get GEOID mapping (unified directory structure)
         import geopandas as gpd
-        tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{args.census_year}.parquet')
+        state_code_lower = state_code.lower()
+        tracts_file = Path(f'data/tracts/{args.census_year}/{state_code_lower}_tracts_{args.census_year}.parquet')
+
         if not tracts_file.exists():
             raise FileNotFoundError(f"Tract file not found: {tracts_file}")
 
@@ -246,6 +248,9 @@ def main():
         elif args.census_year == '2010':
             from scripts.config_2010 import STATE_CONFIG_2010
             config = STATE_CONFIG_2010.get(state_code, {})
+        elif args.census_year == '2000':
+            from scripts.config_2000 import STATE_CONFIG_2000
+            config = STATE_CONFIG_2000.get(state_code, {})
         else:
             config = {}
 

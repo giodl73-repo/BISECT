@@ -433,8 +433,11 @@ if __name__ == '__main__':
 
     state_name = base_name.replace('_', ' ').title()
 
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet'
-    places_file = f'data/raw/{state_code.lower()}_places_{args.year}.parquet'
+    # Load tract and places files (unified directory structure)
+    state_code_lower = state_code.lower()
+    tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
+    places_file = f'data/tracts/{args.year}/{state_code_lower}_places_{args.year}.parquet'
+
     assignments_file = run_dir / 'final_assignments.pkl'
     cities_file = run_dir / 'district_cities.csv'
     summary_file = run_dir / 'district_summary.csv'
@@ -459,6 +462,9 @@ if __name__ == '__main__':
             elif args.year == '2010':
                 from scripts.config_2010 import STATE_CONFIG_2010
                 config = STATE_CONFIG_2010.get(state_code.upper(), {})
+            elif args.year == '2000':
+                from scripts.config_2000 import STATE_CONFIG_2000
+                config = STATE_CONFIG_2000.get(state_code.upper(), {})
             else:
                 config = {}
             num_districts = config.get('districts', 1)

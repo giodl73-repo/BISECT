@@ -28,6 +28,11 @@ try:
 except ImportError:
     STATE_CONFIG_2010 = None
 
+try:
+    from scripts.config_2000 import STATE_CONFIG_2000
+except ImportError:
+    STATE_CONFIG_2000 = None
+
 # Fallback hardcoded config (2020)
 STATE_CONFIG_FALLBACK = {
     'CA': {'name': 'California', 'districts': 52},
@@ -114,7 +119,11 @@ def load_all_states_with_districts(us_dir=None, year='2020', state_config=None, 
         num_districts = config['districts']
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        tracts_file = f'data/raw/{state_code.lower()}_tracts_{year}.parquet'
+
+        # Load tracts (unified directory structure)
+        state_code_lower = state_code.lower()
+        tracts_file = f'data/tracts/{year}/{state_code_lower}_tracts_{year}.parquet'
+
         assignments_file = state_dir / 'final_assignments.pkl'
 
         if not Path(tracts_file).exists():
@@ -486,6 +495,8 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
         STATE_CONFIG = STATE_CONFIG_2020 if STATE_CONFIG_2020 else STATE_CONFIG_FALLBACK
     elif year == '2010':
         STATE_CONFIG = STATE_CONFIG_2010 if STATE_CONFIG_2010 else STATE_CONFIG_FALLBACK
+    elif year == '2000':
+        STATE_CONFIG = STATE_CONFIG_2000 if STATE_CONFIG_2000 else STATE_CONFIG_FALLBACK
     else:
         if is_standalone:
             print(f"ERROR: Unsupported year {year}")

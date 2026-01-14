@@ -380,7 +380,7 @@ def main():
     args = parser.parse_args()
 
     # Load data
-    tracts = gpd.read_parquet(f'data/raw/{state}_tracts_2020.parquet')
+    tracts = gpd.read_parquet(f'data/tracts/2020/{state}_tracts_2020.parquet')
     graph = load_adjacency_graph(state)
 
     # Progress reporting
@@ -525,7 +525,7 @@ All analysis/visualization scripts follow this structure:
 def visualize_state_xxx(state_dir, state_code, census_year, dpi=150):
     """Visualize for a single state."""
     # Load ONLY this state's data
-    tracts = gpd.read_parquet(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+    tracts = gpd.read_parquet(f'data/tracts/{census_year}/{state_code.lower()}_tracts_{census_year}.parquet')
     analysis = pd.read_csv(state_dir / 'xxx_analysis' / 'district_xxx.csv')
 
     # Create visualizations

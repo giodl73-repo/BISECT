@@ -291,7 +291,9 @@ def visualize_state_demographics(state_dir, state_code, census_year, dpi=150, fo
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Now load data (only if we need to generate)
-    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+    state_code_lower = state_code.lower()
+    tracts_file = Path(f'data/tracts/{census_year}/{state_code_lower}_tracts_{census_year}.parquet')
+
     if not tracts_file.exists():
         print(f"ERROR: Tract geometries not found: {tracts_file}")
         return 1

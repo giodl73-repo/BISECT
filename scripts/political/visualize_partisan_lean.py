@@ -557,7 +557,9 @@ def visualize_state_political(state_dir, state_code, election_year, census_year,
         return 0
 
     # Now load tract geometries (only if we need to generate)
-    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+    state_code_lower = state_code.lower()
+    tracts_file = Path(f'data/tracts/{census_year}/{state_code_lower}_tracts_{census_year}.parquet')
+
     if not tracts_file.exists():
         print(f"ERROR: Tract geometries not found: {tracts_file}")
         return 1

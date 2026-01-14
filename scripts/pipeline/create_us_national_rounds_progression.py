@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from scripts.config_2020 import STATE_CONFIG_2020
 from scripts.config_2010 import STATE_CONFIG_2010
+from scripts.config_2000 import STATE_CONFIG_2000
 
 
 def load_state_round_data(state_dir, round_num, tracts_file, state_code, state_name):
@@ -350,8 +351,10 @@ def main():
     # Get state config
     if args.year == '2020':
         state_config = STATE_CONFIG_2020
-    else:
+    elif args.year == '2010':
         state_config = STATE_CONFIG_2010
+    else:
+        state_config = STATE_CONFIG_2000
 
     # Check if called from parent (progress reporting protocol)
     position = int(os.environ.get('TQDM_POSITION', '-1'))
@@ -449,7 +452,9 @@ def main():
                         leave=False)
 
         for state_code, state_name, state_dir in load_iter:
-            tracts_file = f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet'
+            # Load tracts (unified directory structure)
+            state_code_lower = state_code.lower()
+            tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
 
             data = load_state_round_data(state_dir, round_num, tracts_file,
                                         state_code, state_name)

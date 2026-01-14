@@ -465,8 +465,11 @@ if __name__ == '__main__':
 
     state_name = base_name.replace('_', ' ').title()
 
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{args.year}.parquet'
-    places_file = f'data/raw/{state_code.lower()}_places_{args.year}.parquet'
+    # Load tract and places files (unified directory structure)
+    state_lower = state_code.lower()
+    tracts_file = f'data/tracts/{args.year}/{state_lower}_tracts_{args.year}.parquet'
+    places_file = f'data/tracts/{args.year}/{state_lower}_places_{args.year}.parquet'
+
     assignments_file = run_dir / 'final_assignments.pkl'
 
     # Show progress bars for integration with parent script
@@ -488,6 +491,9 @@ if __name__ == '__main__':
             elif args.year == '2010':
                 from scripts.config_2010 import STATE_CONFIG_2010
                 config = STATE_CONFIG_2010.get(state_code.upper(), {})
+            elif args.year == '2000':
+                from scripts.config_2000 import STATE_CONFIG_2000
+                config = STATE_CONFIG_2000.get(state_code.upper(), {})
             else:
                 config = {}
             num_districts = config.get('districts', 1)
@@ -524,6 +530,19 @@ if __name__ == '__main__':
 
     # Check if output already exists
     output_file = run_dir / 'district_cities.csv'
+
+    # Check if places file exists (not available for all census years)
+    places_path = Path(places_file)
+    if not places_path.exists():
+        # Skip cities stage if places data not available
+        if stage_pbar:
+            stage_pbar.set_description(f"{state_name} [{num_districts}D] Finding cities (skipped - no places data)")
+            stage_pbar.update(num_districts)
+            stage_pbar.close()
+        if file_pbar:
+            file_pbar.clear()
+            file_pbar.close()
+        sys.exit(0)
 
     # Print-only mode or skip if output exists
     if args.print_only or output_file.exists():

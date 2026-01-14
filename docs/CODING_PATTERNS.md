@@ -473,7 +473,7 @@ def visualize_state_xxx(state_dir, state_code, census_year, dpi=150):
         return 1
 
     # Load state-specific data ONLY
-    tracts_file = Path(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+    tracts_file = Path(f'data/tracts/{census_year}/{state_code.lower()}_tracts_{census_year}.parquet')
     tracts_gdf = gpd.read_parquet(tracts_file)
 
     # Load analysis results
@@ -652,11 +652,11 @@ if not args.skip_xxx and (output_dir.exists() or args.print_only):
    ```python
    # BAD - loads 84,000 tracts nationwide
    if args.scope == 'state':
-       all_tracts = gpd.read_parquet('data/raw/us_all_tracts.parquet')
+       all_tracts = gpd.read_parquet('data/tracts/us_all_tracts.parquet')
 
    # GOOD - loads only this state's tracts
    if args.scope == 'state':
-       tracts = gpd.read_parquet(f'data/raw/{state_code.lower()}_tracts_{census_year}.parquet')
+       tracts = gpd.read_parquet(f'data/tracts/{census_year}/{state_code.lower()}_tracts_{census_year}.parquet')
    ```
 
 2. **Analysis before visualization**
@@ -986,7 +986,7 @@ outputs/
 **Tracts (Geographic)**:
 ```python
 import geopandas as gpd
-tracts = gpd.read_parquet('data/raw/ca_tracts_2020.parquet')
+tracts = gpd.read_parquet('data/tracts/2020/ca_tracts_2020.parquet')
 ```
 
 **Tabular Data**:
@@ -1047,7 +1047,7 @@ df = pd.read_csv('C:/Users/John/data/file.csv')
 
 # GOOD
 from pathlib import Path
-data_dir = Path('data/raw')
+data_dir = Path('data/tracts/2020')
 df = pd.read_csv(data_dir / 'file.csv')
 ```
 
