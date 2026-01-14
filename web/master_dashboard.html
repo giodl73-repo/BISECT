@@ -327,8 +327,8 @@
                         <thead>
                             <tr>
                                 <th class="sortable">Census Year</th>
-                                <th class="sortable">Algorithmic PP</th>
                                 <th class="sortable">Enacted PP</th>
+                                <th class="sortable">Algorithmic PP</th>
                                 <th class="sortable">Improvement</th>
                                 <th class="sortable">Districts</th>
                             </tr>
@@ -369,9 +369,8 @@
                                 <th class="sortable">Year</th>
                                 <th class="sortable">State</th>
                                 <th class="sortable">Districts</th>
-                                <th class="sortable">Algo PP</th>
                                 <th class="sortable">Enacted PP</th>
-                                <th class="sortable">Improvement</th>
+                                <th class="sortable">Algo PP</th>
                             </tr>
                         </thead>
                         <tbody id="stateTableBody">
@@ -494,8 +493,8 @@
                 html += `
                     <tr>
                         <td><span class="year-badge year-${year}">${year}</span></td>
-                        <td class="metric-highlight">${data.algorithmic.mean_pp.toFixed(4)}</td>
                         <td>${data.enacted ? data.enacted.mean_pp.toFixed(4) : 'N/A'}</td>
+                        <td class="metric-highlight">${data.algorithmic.mean_pp.toFixed(4)}</td>
                         <td class="${improvementClass}">${improvementSign}${improvement.toFixed(1)}%</td>
                         <td>${data.algorithmic.total_districts}</td>
                     </tr>
@@ -555,14 +554,13 @@
                         <td><span class="year-badge year-${state.year}">${state.year}</span></td>
                         <td style="text-transform: capitalize;">${state.state.replace(/_/g, ' ')}</td>
                         <td>${state.districts}</td>
+                        <td>-</td>
                         <td class="metric-highlight">${state.algo_pp.toFixed(4)}</td>
-                        <td>-</td>
-                        <td>-</td>
                     </tr>
                 `;
             });
 
-            tbody.innerHTML = html || '<tr><td colspan="6" style="text-align: center; color: #999;">No data available</td></tr>';
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align: center; color: #999;">No data available</td></tr>';
         }
 
         // Table sorting functionality
