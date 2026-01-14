@@ -16,14 +16,15 @@ This document captures critical patterns and conventions used throughout the cod
 2. [Skip Logic Pattern](#skip-logic-pattern)
 3. [DPI Threading](#dpi-threading)
 4. [GEOID Handling](#geoid-handling-critical)
-5. [Map Visualization](#map-visualization)
-6. [Subprocess Communication](#subprocess-communication)
-7. [Scope-Based Analysis Pattern](#scope-based-analysis-pattern)
-8. [File Naming Conventions](#file-naming-conventions)
-9. [Git Commit Messages](#git-commit-messages)
-10. [Error Handling](#error-handling)
-11. [When to Use What](#when-to-use-what)
-12. [Static HTML Generation](#static-html-generation)
+5. [State Code Handling](#state-code-handling-critical)
+6. [Map Visualization](#map-visualization)
+7. [Subprocess Communication](#subprocess-communication)
+8. [Scope-Based Analysis Pattern](#scope-based-analysis-pattern)
+9. [File Naming Conventions](#file-naming-conventions)
+10. [Git Commit Messages](#git-commit-messages)
+11. [Error Handling](#error-handling)
+12. [When to Use What](#when-to-use-what)
+13. [Static HTML Generation](#static-html-generation)
 
 ---
 
@@ -299,6 +300,158 @@ result = demo_df.merge(assignments_df, on='GEOID')  # Works!
 ```
 
 **Why Critical**: Type mismatches cause merge failures that are hard to debug.
+
+---
+
+## State Code Handling (CRITICAL!)
+
+### The Problem
+
+State identifiers appear in **three different formats** across the codebase, causing frequent mismatches when merging data:
+
+1. **2-letter state codes**: `AL`, `CA`, `TX` (used in Census files, enacted baseline data)
+2. **Full uppercase names**: `ALABAMA`, `CALIFORNIA`, `TEXAS` (used in pipeline outputs, algorithmic data)
+3. **Lowercase with underscores**: `alabama`, `california`, `texas` (used in directory names)
+
+**Common error**: State data from enacted baselines (AL, CA) fails to match with algorithmic data (ALABAMA, CALIFORNIA).
+
+### Standard State Code Mapping
+
+**ALWAYS use this mapping** when converting between formats:
+
+```python
+# Standard mapping (add to top of script)
+STATE_CODE_TO_NAME = {
+    'AL': 'ALABAMA', 'AK': 'ALASKA', 'AZ': 'ARIZONA', 'AR': 'ARKANSAS',
+    'CA': 'CALIFORNIA', 'CO': 'COLORADO', 'CT': 'CONNECTICUT', 'DE': 'DELAWARE',
+    'FL': 'FLORIDA', 'GA': 'GEORGIA', 'HI': 'HAWAII', 'ID': 'IDAHO',
+    'IL': 'ILLINOIS', 'IN': 'INDIANA', 'IA': 'IOWA', 'KS': 'KANSAS',
+    'KY': 'KENTUCKY', 'LA': 'LOUISIANA', 'ME': 'MAINE', 'MD': 'MARYLAND',
+    'MA': 'MASSACHUSETTS', 'MI': 'MICHIGAN', 'MN': 'MINNESOTA', 'MS': 'MISSISSIPPI',
+    'MO': 'MISSOURI', 'MT': 'MONTANA', 'NE': 'NEBRASKA', 'NV': 'NEVADA',
+    'NH': 'NEW_HAMPSHIRE', 'NJ': 'NEW_JERSEY', 'NM': 'NEW_MEXICO', 'NY': 'NEW_YORK',
+    'NC': 'NORTH_CAROLINA', 'ND': 'NORTH_DAKOTA', 'OH': 'OHIO', 'OK': 'OKLAHOMA',
+    'OR': 'OREGON', 'PA': 'PENNSYLVANIA', 'RI': 'RHODE_ISLAND', 'SC': 'SOUTH_CAROLINA',
+    'SD': 'SOUTH_DAKOTA', 'TN': 'TENNESSEE', 'TX': 'TEXAS', 'UT': 'UTAH',
+    'VT': 'VERMONT', 'VA': 'VIRGINIA', 'WA': 'WASHINGTON', 'WV': 'WEST_VIRGINIA',
+    'WI': 'WISCONSIN', 'WY': 'WYOMING'
+}
+
+# Reverse mapping (full name to code)
+STATE_NAME_TO_CODE = {v: k for k, v in STATE_CODE_TO_NAME.items()}
+```
+
+### Common Use Cases
+
+#### 1. Matching Enacted Baseline with Algorithmic Data
+
+```python
+# Enacted baseline CSV has 'state' column with 2-letter codes
+enacted_df = pd.read_csv('enacted_compactness_2020.csv')
+# state column: AL, CA, TX, ...
+
+# Algorithmic data has 'state' column with full names
+algo_df = pd.read_csv('district_summary.csv')
+# state column: ALABAMA, CALIFORNIA, TEXAS, ...
+
+# Convert enacted baseline codes to names BEFORE merging
+enacted_df['state'] = enacted_df['state'].map(STATE_CODE_TO_NAME)
+
+# Now they match
+merged = algo_df.merge(enacted_df, on='state', suffixes=('_algo', '_enacted'))
+```
+
+#### 2. Loading Enacted Baseline Data Per-State
+
+```python
+def load_baseline_data(year):
+    df = pd.read_csv(f'enacted_compactness_{year}.csv')
+
+    # Detect column name (varies: 'state_code', 'state', 'STATE')
+    state_col = None
+    for col in ['state_code', 'state', 'STATE', 'state_name']:
+        if col in df.columns:
+            state_col = col
+            break
+
+    # Group by state and convert codes to names
+    state_stats = {}
+    for state_code in df[state_col].unique():
+        state_df = df[df[state_col] == state_code]
+
+        # Convert to full name for matching
+        state_key = STATE_CODE_TO_NAME.get(state_code.upper(), state_code.upper())
+
+        state_stats[state_key] = {
+            'mean_pp': state_df['polsby_popper'].mean(),
+            'num_districts': len(state_df)
+        }
+
+    return state_stats
+```
+
+#### 3. Directory Name to Full Name Conversion
+
+```python
+# Directory names use lowercase with underscores
+state_dir = Path('outputs/us_2020_v1/states/north_carolina')
+
+# Convert to full name for matching
+state_name = state_dir.name.upper()  # -> NORTH_CAROLINA
+
+# Or convert to 2-letter code
+state_code = STATE_NAME_TO_CODE.get(state_name)  # -> NC
+```
+
+### Format Conventions
+
+**When to use each format:**
+
+| Format | Use Case | Example |
+|--------|----------|---------|
+| **2-letter code** | Census data, FIPS codes, enacted baselines | `AL`, `CA`, `TX` |
+| **Full uppercase** | Pipeline outputs, internal data structures, matching | `ALABAMA`, `CALIFORNIA`, `TEXAS` |
+| **Lowercase underscore** | Directory names, file prefixes | `alabama`, `california`, `texas` |
+
+### BAD vs GOOD Examples
+
+```python
+# BAD - Direct comparison fails
+if enacted_state == algo_state:  # 'AL' != 'ALABAMA', always False
+    print("Match found")
+
+# GOOD - Convert before comparing
+enacted_state_name = STATE_CODE_TO_NAME.get(enacted_state.upper())
+if enacted_state_name == algo_state:
+    print("Match found")
+```
+
+```python
+# BAD - Hardcoding state codes
+states_to_process = ['AL', 'CA', 'TX']  # Fragile, error-prone
+
+# GOOD - Use the mapping
+states_to_process = STATE_CODE_TO_NAME.keys()  # All 50 states
+# or
+states_to_process = STATE_CODE_TO_NAME.values()  # Full names
+```
+
+### Real-World Issue Example
+
+**Problem encountered**: State-by-state dashboard showed "-" for all enacted data because:
+- Enacted baseline CSV: `state='AL'`
+- Algorithmic data: `state='ALABAMA'`
+- No matches found during merge
+
+**Solution**: Added `STATE_CODE_TO_NAME` mapping and converted enacted baseline codes to full names before merging.
+
+### Critical Rules
+
+1. **ALWAYS convert to a common format before merging**
+2. **NEVER hardcode state codes** - use the mapping dictionary
+3. **ALWAYS uppercase state codes** before lookup: `state_code.upper()`
+4. **Document which format** your function expects in docstrings
+5. **Add the mapping dictionary** to any script that merges state data
 
 ---
 
@@ -1241,16 +1394,18 @@ json.dumps(data, indent=8)  # Nice indentation for viewing HTML source
 3. ✅ Check `TQDM_POSITION` environment variable
 4. ✅ Implement `report_progress()` function
 5. ✅ Use `.zfill(11)` for all GEOIDs
-6. ✅ Follow file naming conventions
-7. ✅ Add skip logic for existing outputs
-8. ✅ Use thin white + thick black boundary pattern for maps
+6. ✅ Add `STATE_CODE_TO_NAME` mapping if merging state data
+7. ✅ Follow file naming conventions
+8. ✅ Add skip logic for existing outputs
+9. ✅ Use thin white + thick black boundary pattern for maps
 
 **When debugging**:
-1. Check GEOID types (str vs int)
-2. Check TQDM_POSITION is being passed
-3. Check STATUS messages have `flush=True`
-4. Check DPI is being threaded through
-5. Check file paths are platform-independent (use `Path`)
+1. Check GEOID types (str vs int with `.zfill(11)`)
+2. Check state code formats (AL vs ALABAMA vs alabama)
+3. Check TQDM_POSITION is being passed
+4. Check STATUS messages have `flush=True`
+5. Check DPI is being threaded through
+6. Check file paths are platform-independent (use `Path`)
 
 **When committing**:
 1. Use conventional commit format
