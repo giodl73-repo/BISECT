@@ -300,11 +300,11 @@ def create_national_map_with_cities(us_tracts, us_dir=None, year='2020'):
         us_dir = Path(us_dir)
 
     # Check if cities file exists (created by create_us_aggregate.py)
-    cities_file = us_dir / 'us_all_districts.csv'
+    cities_file = us_dir / 'data' / 'us_all_districts.csv'
     if not cities_file.exists():
         print(f"Warning: {cities_file} not found. Run create_us_aggregate.py first.")
         print("Creating map without city labels...")
-        return create_national_map(us_tracts, us_dir, year)
+        return create_national_map(us_tracts)
 
     cities_df = pd.read_csv(cities_file)
 
