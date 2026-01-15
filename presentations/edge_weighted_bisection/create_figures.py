@@ -566,9 +566,9 @@ print(f"  Created: {figures_dir / 'before_after_cut.png'}")
 plt.close()
 
 # =============================================================================
-# Figure 6: Real Census Tracts to Graph Transformation
+# Figure 6: Real Census Tracts to Graph Transformation with METIS Cut
 # =============================================================================
-print("Creating real census tracts to graph transformation...")
+print("Creating real census tracts to graph transformation with METIS cut...")
 
 import geopandas as gpd
 import warnings
@@ -577,69 +577,209 @@ warnings.filterwarnings('ignore')
 # Try to load real census tract data (Minnesota, FIPS 27)
 # Use 2010 data since it's available in the repository
 tracts_file = Path('../../data/geography/tiger_2010_tracts/tl_2010_27_tract10/tl_2010_27_tract10.shp')
+population_file = Path('../../data/processed/2010/mn_tracts.pkl')
 
 if not tracts_file.exists():
     print(f"  [WARNING] Census tracts shapefile not found at: {tracts_file}")
     print(f"            This is optional - skipping real tracts figure")
+elif not population_file.exists():
+    print(f"  [WARNING] Population data not found at: {population_file}")
+    print(f"            This is optional - skipping real tracts figure")
 else:
     try:
-        # Load tracts
+        import pickle
+
+        # Load tracts geometry
         tracts_gdf = gpd.read_file(tracts_file)
 
-        # Pick a small interesting cluster - let's use a few tracts from Hennepin County, MN (Minneapolis area)
-        # This gives us urban tracts with interesting shapes
-        # FIPS for Hennepin County is 27053
-        hennepin_tracts = tracts_gdf[tracts_gdf['COUNTYFP10'] == '053']
+        # Load population data
+        with open(population_file, 'rb') as f:
+            tracts_data = pickle.load(f)
+
+        # Merge geometry with population
+        tracts_gdf['GEOID10'] = tracts_gdf['GEOID10'].astype(str).str.zfill(11)
+        pop_dict = {str(t['geoid']).zfill(11): t['population'] for t in tracts_data}
+        tracts_gdf['population'] = tracts_gdf['GEOID10'].map(pop_dict)
+
+        # Filter to Hennepin County (Minneapolis area) and drop nulls
+        hennepin_tracts = tracts_gdf[tracts_gdf['COUNTYFP10'] == '053'].copy()
+        hennepin_tracts = hennepin_tracts[hennepin_tracts['population'].notna()]
 
         if len(hennepin_tracts) >= 6:
-            # Take first 6 tracts for simplicity
-            sample_tracts = hennepin_tracts.head(6).copy()
+            # Build adjacency graph to find contiguous cluster
+            from collections import deque
+
+            def get_neighbors(tract_idx, gdf):
+                """Get indices of adjacent tracts."""
+                neighbors = []
+                tract_geom = gdf.iloc[tract_idx].geometry
+                for idx in gdf.index:
+                    if idx != tract_idx:
+                        if tract_geom.touches(gdf.loc[idx, 'geometry']):
+                            neighbors.append(idx)
+                return neighbors
+
+            # Start with a tract in the middle (index 50 is arbitrary but likely central)
+            start_idx = hennepin_tracts.index[min(50, len(hennepin_tracts) - 1)]
+
+            # BFS to find 8 contiguous tracts
+            selected_indices = [start_idx]
+            queue = deque([start_idx])
+            visited = {start_idx}
+
+            while len(selected_indices) < 8 and queue:
+                current = queue.popleft()
+                neighbors = get_neighbors(current, hennepin_tracts)
+
+                for neighbor in neighbors:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        selected_indices.append(neighbor)
+                        queue.append(neighbor)
+
+                        if len(selected_indices) >= 8:
+                            break
+
+            # Extract our contiguous cluster
+            sample_tracts = hennepin_tracts.loc[selected_indices].copy().reset_index(drop=True)
+            # Build adjacency and calculate real boundary lengths
+            n_tracts = len(sample_tracts)
+            adjacency = {}
+            edge_weights = {}
+
+            for i in range(n_tracts):
+                geom_i = sample_tracts.iloc[i].geometry
+                adjacency[i] = []
+
+                for j in range(i + 1, n_tracts):
+                    geom_j = sample_tracts.iloc[j].geometry
+
+                    if geom_i.touches(geom_j):
+                        # Calculate boundary length in km
+                        boundary = geom_i.intersection(geom_j.boundary)
+                        if not boundary.is_empty:
+                            # Convert to meters then km (assuming projected CRS)
+                            length_km = boundary.length / 1000
+                            # If in degrees (unprojected), estimate
+                            if length_km < 0.1:
+                                length_km = boundary.length * 111  # rough deg to km
+
+                            adjacency[i].append(j)
+                            adjacency[j] = adjacency.get(j, [])
+                            adjacency[j].append(i)
+                            edge_weights[(i, j)] = length_km
+                            edge_weights[(j, i)] = length_km
+
+            # Run METIS to partition into 2 groups
+            try:
+                import pymetis
+
+                # Prepare data for METIS
+                adjacency_list = [adjacency.get(i, []) for i in range(n_tracts)]
+                vweights = [int(sample_tracts.iloc[i]['population']) for i in range(n_tracts)]
+
+                # Prepare edge weights for METIS (need integer weights)
+                eweights_list = []
+                for i in range(n_tracts):
+                    for j in adjacency_list[i]:
+                        if i < j:  # Only include each edge once
+                            weight = int(edge_weights[(i, j)] * 100)  # Scale to integers
+                            eweights_list.append(weight)
+
+                # Run METIS
+                n_cuts, membership = pymetis.part_graph(
+                    nparts=2,
+                    adjacency=adjacency_list,
+                    vweights=vweights,
+                    eweights=eweights_list
+                )
+
+                print(f"  METIS cut: {n_cuts} edges")
+
+            except ImportError:
+                print("  [WARNING] pymetis not available, using simple cut")
+                # Fallback: split by position
+                centroids = [sample_tracts.iloc[i].geometry.centroid for i in range(n_tracts)]
+                xs = [c.x for c in centroids]
+                median_x = sorted(xs)[len(xs) // 2]
+                membership = [0 if xs[i] < median_x else 1 for i in range(n_tracts)]
+
+            # Identify cut edges
+            cut_edges = []
+            for i in range(n_tracts):
+                for j in adjacency.get(i, []):
+                    if i < j and membership[i] != membership[j]:
+                        cut_edges.append((i, j))
+
+            print(f"  Selected {n_tracts} contiguous tracts")
+            print(f"  Cut edges: {len(cut_edges)}")
 
             # Create figure with two subplots
             fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
 
-            # Left: Geographic tracts with boundaries
-            ax1.set_title('Census Tracts\n(Geographic Reality)', fontsize=12, fontweight='bold')
+            # Left: Geographic tracts colored by partition
+            ax1.set_title('Census Tracts + METIS Cut\n(Geographic Reality)', fontsize=12, fontweight='bold')
 
-            # Assign labels A-F
-            labels = ['A', 'B', 'C', 'D', 'E', 'F']
-            sample_tracts['label'] = labels[:len(sample_tracts)]
+            # Assign labels
+            labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'][:n_tracts]
+            sample_tracts['label'] = labels
+            sample_tracts['partition'] = membership
 
-            # Plot tracts with different colors
-            colors = ['lightgreen', 'lightcoral', 'lightyellow', 'lightblue', 'plum', 'lightgray']
-            for idx, (_, tract) in enumerate(sample_tracts.iterrows()):
-                sample_tracts[sample_tracts['label'] == labels[idx]].plot(
+            # Colors by partition
+            partition_colors = {0: 'lightblue', 1: 'lightcoral'}
+
+            # Plot tracts colored by partition
+            for idx in range(n_tracts):
+                tract = sample_tracts.iloc[idx]
+                color = partition_colors[membership[idx]]
+                sample_tracts.iloc[[idx]].plot(
                     ax=ax1,
-                    facecolor=colors[idx],
+                    facecolor=color,
                     edgecolor='black',
-                    linewidth=2,
+                    linewidth=1.5,
                     alpha=0.7
                 )
 
-                # Add label at centroid
+                # Add label and population at centroid
                 centroid = tract.geometry.centroid
-                ax1.text(centroid.x, centroid.y, labels[idx],
+                pop_k = int(tract['population'] / 1000)
+                ax1.text(centroid.x, centroid.y, f'{labels[idx]}\n{pop_k}K',
                         ha='center', va='center',
-                        fontsize=14, fontweight='bold',
-                        bbox=dict(boxstyle='circle', facecolor='white',
-                                edgecolor='black', linewidth=1.5))
+                        fontsize=10, fontweight='bold',
+                        bbox=dict(boxstyle='round', facecolor='white',
+                                edgecolor='black', linewidth=1))
 
-            # Highlight some boundaries
-            for idx in range(len(sample_tracts) - 1):
-                geom1 = sample_tracts.iloc[idx].geometry
-                geom2 = sample_tracts.iloc[idx + 1].geometry
-                if geom1.touches(geom2):
-                    boundary = geom1.intersection(geom2.boundary)
-                    if not boundary.is_empty:
-                        gpd.GeoSeries([boundary]).plot(ax=ax1, color='red', linewidth=3, alpha=0.8)
+            # Highlight cut boundaries (thick red)
+            for i, j in cut_edges:
+                geom_i = sample_tracts.iloc[i].geometry
+                geom_j = sample_tracts.iloc[j].geometry
+                boundary = geom_i.intersection(geom_j.boundary)
+                if not boundary.is_empty:
+                    gpd.GeoSeries([boundary]).plot(ax=ax1, color='red', linewidth=4, alpha=0.9, zorder=10)
+
+            # Add partition labels
+            part0_geoms = sample_tracts[sample_tracts['partition'] == 0].geometry
+            part1_geoms = sample_tracts[sample_tracts['partition'] == 1].geometry
+            if len(part0_geoms) > 0:
+                c0 = part0_geoms.unary_union.centroid
+                pop0 = int(sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000)
+                ax1.text(c0.x, c0.y, f'Region 0\n{pop0}K total',
+                        ha='center', va='center', fontsize=9, style='italic',
+                        bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.5, edgecolor='darkblue'))
+            if len(part1_geoms) > 0:
+                c1 = part1_geoms.unary_union.centroid
+                pop1 = int(sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000)
+                ax1.text(c1.x, c1.y, f'Region 1\n{pop1}K total',
+                        ha='center', va='center', fontsize=9, style='italic',
+                        bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.5, edgecolor='darkred'))
 
             ax1.axis('off')
-            ax1.text(0.5, -0.05, 'Real census tracts with\nirregular shapes and boundaries',
+            ax1.text(0.5, -0.05, f'Real Minneapolis tracts\nMETIS cut: {len(cut_edges)} boundaries (red)',
                     transform=ax1.transAxes, ha='center', fontsize=9,
                     style='italic', color='gray')
 
-            # Right: Abstract graph representation
-            ax2.set_title('Graph Representation\n(For Algorithm)', fontsize=12, fontweight='bold')
+            # Right: Abstract graph representation with cut
+            ax2.set_title('Graph + METIS Cut\n(What Algorithm Sees)', fontsize=12, fontweight='bold')
 
             # Create layout for graph based on tract centroids
             centroids = sample_tracts.geometry.centroid
@@ -650,59 +790,66 @@ else:
             x_min, x_max = min(xs), max(xs)
             y_min, y_max = min(ys), max(ys)
             positions = {}
-            for i, label in enumerate(labels[:len(sample_tracts)]):
+            for i in range(n_tracts):
                 x_norm = 4 * (xs[i] - x_min) / (x_max - x_min) if x_max > x_min else 2
                 y_norm = 4 * (ys[i] - y_min) / (y_max - y_min) if y_max > y_min else 2
-                positions[label] = (x_norm, y_norm)
+                positions[i] = (x_norm, y_norm)
 
-            # Draw edges based on adjacency
-            from shapely.geometry import Point
-            for i in range(len(sample_tracts)):
-                geom1 = sample_tracts.iloc[i].geometry
-                label1 = labels[i]
-                for j in range(i + 1, len(sample_tracts)):
-                    geom2 = sample_tracts.iloc[j].geometry
-                    label2 = labels[j]
+            # Draw edges (colored by whether they're cut)
+            for i in range(n_tracts):
+                for j in adjacency.get(i, []):
+                    if i < j:  # Only draw each edge once
+                        x1, y1 = positions[i]
+                        x2, y2 = positions[j]
 
-                    # Check if tracts are adjacent
-                    if geom1.touches(geom2):
-                        x1, y1 = positions[label1]
-                        x2, y2 = positions[label2]
+                        length_km = edge_weights.get((i, j), 0)
+                        is_cut = (i, j) in cut_edges or (j, i) in cut_edges
 
-                        # Calculate boundary length (in meters if projected, else degrees)
-                        boundary = geom1.intersection(geom2.boundary)
-                        if not boundary.is_empty:
-                            length = boundary.length / 1000  # Convert to km if in meters
-                            if length < 0.01:  # If in degrees, scale up
-                                length = length * 100
-
-                            # Line thickness based on length
-                            thickness = min(8, max(1, length / 2))
-
-                            ax2.plot([x1, x2], [y1, y2], 'k-',
-                                   linewidth=thickness, alpha=0.5, zorder=1)
-
-                            # Add weight label at midpoint
+                        if is_cut:
+                            # Cut edges: thick red dashed
+                            ax2.plot([x1, x2], [y1, y2], 'r--',
+                                   linewidth=4, alpha=0.9, zorder=2)
+                            # Add X marker
                             mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
-                            ax2.text(mid_x, mid_y, f'{length:.1f}',
-                                   ha='center', va='center', fontsize=7,
-                                   bbox=dict(boxstyle='round', facecolor='white',
-                                           edgecolor='gray', linewidth=0.5))
+                            ax2.plot(mid_x, mid_y, 'rX', markersize=12, markeredgewidth=3, zorder=3)
+                        else:
+                            # Non-cut edges: gray, thickness by weight
+                            thickness = min(6, max(1.5, length_km / 3))
+                            ax2.plot([x1, x2], [y1, y2], 'k-',
+                                   linewidth=thickness, alpha=0.4, zorder=1)
 
-            # Draw nodes
-            for label, (x, y) in positions.items():
-                idx = labels.index(label)
-                circle = Circle((x, y), 0.25, facecolor=colors[idx],
-                              edgecolor='black', linewidth=2.5, alpha=0.8, zorder=2)
+                        # Add weight label
+                        mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                        if not is_cut:  # Only label non-cut edges to avoid clutter
+                            ax2.text(mid_x, mid_y, f'{length_km:.1f}',
+                                   ha='center', va='center', fontsize=6,
+                                   bbox=dict(boxstyle='round', facecolor='white',
+                                           edgecolor='gray', linewidth=0.5, alpha=0.7))
+
+            # Draw nodes colored by partition
+            for i in range(n_tracts):
+                x, y = positions[i]
+                color = partition_colors[membership[i]]
+                pop_k = int(sample_tracts.iloc[i]['population'] / 1000)
+
+                circle = Circle((x, y), 0.25, facecolor=color,
+                              edgecolor='black', linewidth=2.5, alpha=0.8, zorder=4)
                 ax2.add_patch(circle)
-                ax2.text(x, y, label, ha='center', va='center',
-                        fontsize=12, fontweight='bold', zorder=3)
+                ax2.text(x, y, labels[i], ha='center', va='center',
+                        fontsize=12, fontweight='bold', zorder=5)
+
+                # Add population below node
+                ax2.text(x, y - 0.4, f'{pop_k}K', ha='center', va='top',
+                        fontsize=7, style='italic', color='darkgray')
 
             ax2.set_xlim(-0.5, 4.5)
             ax2.set_ylim(-0.5, 4.5)
             ax2.set_aspect('equal')
             ax2.axis('off')
-            ax2.text(0.5, -0.05, 'Nodes = tract centroids\nEdges = shared boundaries (km)',
+
+            # Calculate total cut weight
+            total_cut_weight = sum(edge_weights.get((i, j), 0) for i, j in cut_edges)
+            ax2.text(0.5, -0.05, f'Edge weights = boundary length (km)\nTotal cut weight: {total_cut_weight:.1f} km',
                     transform=ax2.transAxes, ha='center', fontsize=9,
                     style='italic', color='gray')
 
