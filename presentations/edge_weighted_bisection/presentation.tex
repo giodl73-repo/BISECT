@@ -338,6 +338,59 @@ A \textbf{graph} is a way to represent connections:
 \end{center}
 \end{frame}
 
+\begin{frame}{Visualizing Edge Weights}
+\begin{figure}
+\centering
+\includegraphics[width=0.95\textwidth]{../../outputs/presentations/edge_weighted_bisection/figures/edge_weights_example.png}
+\end{figure}
+
+\textbf{Key insight:} Thicker red edges are long boundaries (expensive to cut). Thin blue edges are short boundaries (cheap to cut).
+\end{frame}
+
+\begin{frame}{The Cut Operation}
+\begin{figure}
+\centering
+\includegraphics[width=0.75\textwidth]{../../outputs/presentations/edge_weighted_bisection/figures/graph_with_cut.png}
+\end{figure}
+
+\textbf{What happened:} METIS cut 3 edges (red dashed lines) to create 2 balanced regions while minimizing total boundary length.
+\end{frame}
+
+\begin{frame}{Before and After Partitioning}
+\begin{figure}
+\centering
+\includegraphics[width=0.95\textwidth]{../../outputs/presentations/edge_weighted_bisection/figures/before_after_cut.png}
+\end{figure}
+
+\textbf{Result:} Two balanced districts separated by cutting only the shortest boundaries.
+\end{frame}
+
+\begin{frame}[fragile]{How We Call METIS}
+\textbf{METIS Graph File Format:}
+\begin{verbatim}
+6 7 011 2               % 6 vertices, 7 edges, format 011
+2 5.2 1                 % Tract A: neighbor 2, weight 5.2
+1 5.2 3 12.8 2          % Tract B: A (5.2km), C (12.8km)
+2 12.8 3                % Tract C: B (12.8km)
+...
+\end{verbatim}
+
+\vspace{0.5em}
+\textbf{Calling METIS:}
+\begin{verbatim}
+gpmetis graph.txt 2
+\end{verbatim}
+
+\vspace{0.5em}
+\textbf{Output:} One partition ID per tract (0 or 1)
+\begin{verbatim}
+0  (Tract A -> District 0)
+0  (Tract B -> District 0)
+1  (Tract C -> District 1)
+...
+\end{verbatim}
+\end{frame}
+
 % Section 5: Examples
 \section{Real Examples}
 
