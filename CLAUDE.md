@@ -2,7 +2,7 @@
 
 This document provides context and guidelines for AI assistants working on the Congressional Redistricting codebase.
 
-**Last Updated**: January 14, 2026
+**Last Updated**: January 15, 2026
 
 ## Project Overview
 
@@ -87,6 +87,30 @@ paper/                     # Academic paper
 ├── analysis/              # Statistical analysis scripts
 └── sections/              # LaTeX sections
 ```
+
+## Anthropic Skills
+
+**Phase 1 Skills**: ✅ 9 high-priority skills implemented in `.claude/skills/`
+
+Claude Code automatically discovers and offers to use these skills when appropriate. You don't need to explicitly invoke them - Claude will suggest using a skill when your request matches its description.
+
+**Available Skills**:
+- `/enhancement-plan` - Create enhancement specifications following project patterns
+- `/enhancement-implement` - Execute enhancements with todo tracking and testing
+- `/enhancement-document` - Complete all documentation for finished enhancements
+- `/run-redistricting` - Execute full 50-state redistricting pipeline
+- `/run-analysis-only` - Regenerate analysis without redistricting
+- `/pipeline-debug` - Systematically debug pipeline failures
+- `/census-download` - Download census data for specific year/state
+- `/adjacency-build` - Build adjacency graphs from tract data
+- `/data-validate` - Validate data completeness before running pipeline
+
+**How to use**: Simply describe what you want to do naturally. Examples:
+- "I want to plan a new feature" → Claude offers `/enhancement-plan`
+- "Run redistricting for 2020" → Claude offers `/run-redistricting`
+- "The pipeline failed with an error" → Claude offers `/pipeline-debug`
+
+**For full documentation**: See `docs/SKILLS.md`
 
 ## Coding Patterns & Conventions
 
@@ -709,6 +733,7 @@ print(f"-> Next step")   # Works everywhere
 - **Pipeline Validation Framework** (Enhancement 14): Comprehensive output validation across all stages
 - **Multi-Year Support** (Enhancement 15): Full 2000, 2010, 2020 census pipeline support
 - **Artifact Naming Standardization** (Enhancement 17): Clean, consistent naming conventions across all outputs
+- **Figure Quality Improvement** (Enhancement 18): Enhanced real census tract examples with strict validation (0.5% ratio tolerance, 0.25 Polsby-Popper compactness, 25 retry attempts)
 - Added `--reset` flag for fresh runs, `--skip-analysis` for legacy batch mode
 - Integrated political and demographic national maps into post-processing
 - Fixed parameter threading for census year vs election year
@@ -733,6 +758,7 @@ See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhanceme
 - ✅ Enhancement 14: Pipeline Output Validation Framework (Jan 14, 2026)
 - ✅ Enhancement 15: Multi-Year Pipeline Support (Jan 14, 2026)
 - ✅ Enhancement 17: Artifact Naming Standardization (Jan 14, 2026)
+- ✅ Enhancement 18: Figure Quality Improvement (Jan 15, 2026)
 
 **In Progress:**
 - 🔄 Enhancement 8: Block-Level Data Support (Phase 0 Complete for 2010, Partial for 2000)
