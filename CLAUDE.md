@@ -81,7 +81,11 @@ web/                       # Dashboard template
 
 docs/                      # Documentation
 ├── archive/               # Historical session notes
-└── ENHANCEMENTS_2026.md   # Recent improvements
+├── enhancements/          # Enhancement tracking (INDEX.md for overview)
+│   ├── completed/         # Archived completed enhancements
+│   ├── active/            # In-progress and planned enhancements
+│   └── templates/         # Enhancement templates
+└── ENHANCEMENTS_2026.md   # Redirect to enhancements/INDEX.md
 
 paper/                     # Academic paper
 ├── analysis/              # Statistical analysis scripts
@@ -167,7 +171,7 @@ When implementing enhancements to the codebase, follow this systematic process. 
 
 ### Standard Enhancement Structure
 
-Every enhancement in `docs/ENHANCEMENTS_2026.md` follows this template:
+Every enhancement follows this template (see `docs/enhancements/templates/enhancement_template.md`):
 - **Current State**: What exists today
 - **Goal**: What we want to achieve
 - **Implementation Plan**: Phases with specific tasks
@@ -183,7 +187,7 @@ Every enhancement in `docs/ENHANCEMENTS_2026.md` follows this template:
 - Read `docs/ARCHITECTURE.md` for system design and data flow
 - Read `docs/CODING_PATTERNS.md` for implementation patterns
 - Read `docs/DATA_FORMATS.md` if working with data files
-- Review `docs/ENHANCEMENTS_2026.md` for related enhancements
+- Review `docs/enhancements/INDEX.md` for related enhancements
 
 **Review Enhancement Archives:**
 - Check `docs/archive/` for related enhancement session notes
@@ -205,7 +209,7 @@ Every enhancement in `docs/ENHANCEMENTS_2026.md` follows this template:
 ### 2. Planning Phase
 
 **Create Enhancement Specification:**
-- Add or update entry in `docs/ENHANCEMENTS_2026.md`
+- Create new file in `docs/enhancements/active/` using the template
 - Define clear phases (typically 3-6 phases)
 - List all files to modify/create explicitly
 - Estimate complexity and time
@@ -320,11 +324,13 @@ elif args.scope == 'national':
 
 **Required Documentation Updates:**
 
-1. **`docs/ENHANCEMENTS_2026.md`**
+1. **Enhancement file** (in `docs/enhancements/active/` or `completed/`)
    - Mark enhancement as complete with date
    - Add "Completion Date" and "Implementation Summary"
    - Document quantitative results if applicable
    - Update status from 📋 PLANNED → ✅ COMPLETED
+   - Move file from `active/` to `completed/` if applicable
+   - Update `docs/enhancements/INDEX.md`
 
 2. **`docs/ARCHITECTURE.md`** (if applicable)
    - Update system design diagrams
@@ -743,7 +749,7 @@ print(f"-> Next step")   # Works everywhere
 
 ## Future Enhancements
 
-See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhancements:
+See `docs/enhancements/INDEX.md` for detailed specifications of all enhancements:
 
 **Completed:**
 - ✅ Enhancement 1: Compactness Integration (Jan 10, 2026)

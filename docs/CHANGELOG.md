@@ -6,11 +6,11 @@ All notable changes to the Congressional Redistricting project.
 
 ## Related Documentation
 
-- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Detailed enhancement specifications and implementation plans
+- **[Enhancement Index](enhancements/INDEX.md)** - Master index of all enhancements (detailed specifications and implementation plans)
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architectural decisions
 - **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns
 
-**Note**: This changelog tracks historical changes chronologically. For detailed enhancement specifications and future roadmap, see `ENHANCEMENTS_2026.md`.
+**Note**: This changelog tracks historical changes chronologically. For detailed enhancement specifications and future roadmap, see `enhancements/INDEX.md`.
 
 ## [Unreleased]
 
@@ -22,9 +22,21 @@ All notable changes to the Congressional Redistricting project.
 - Progress message standardization across analysis scripts
 
 ### Changed
+- **2026-01-15**: Reorganized enhancement tracking into individual files
+  - Split `ENHANCEMENTS_2026.md` (2,931 lines) into 18 individual files
+  - Created `docs/enhancements/` directory structure with `completed/`, `active/`, and `templates/` subdirectories
+  - Created master index at `docs/enhancements/INDEX.md`
+  - Original `ENHANCEMENTS_2026.md` now serves as redirect pointer
+  - Improved maintainability and navigation of enhancement documentation
 - Improved progress bar UX with state-specific status messages
 - Map boundaries: thin white tract lines + thick black district overlays
 - Default DPI changed from 300 to 150 for better performance
+
+### Fixed
+- **2026-01-15**: Fixed dashboard district data loading paths
+  - Updated `scripts/web/generate_dashboard.py` to look for `district_cities.csv` in correct `data/` subdirectory
+  - Fixed all CSV download links in `web/dashboard.html` template to use correct paths
+  - Districts tab now properly displays individual district maps for all states
 
 ## 2026-01-15 - Enhancement 18: Figure Quality Improvement
 
