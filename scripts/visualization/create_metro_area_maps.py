@@ -77,8 +77,8 @@ def load_single_state_with_districts(state_code, state_dir, year='2020'):
         GeoDataFrame with tracts and district assignments
     """
     state_dir = Path(state_dir)
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{year}.parquet'
-    assignments_file = state_dir / 'final_assignments.pkl'
+    tracts_file = f'data/tracts/{year}/{state_code.lower()}_tracts_{year}.parquet'
+    assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
     if not Path(tracts_file).exists():
         raise FileNotFoundError(f"Tracts file not found: {tracts_file}")
@@ -125,8 +125,8 @@ def load_all_states_with_districts(us_dir, year='2020'):
         state_name = config['name']
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        tracts_file = f'data/raw/{state_code.lower()}_tracts_{year}.parquet'
-        assignments_file = state_dir / 'final_assignments.pkl'
+        tracts_file = f'data/tracts/{year}/{state_code.lower()}_tracts_{year}.parquet'
+        assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
         if not Path(tracts_file).exists():
             continue
@@ -457,7 +457,7 @@ def main():
         state_tracts = load_single_state_with_districts(args.state, state_dir, year=str(args.year))
 
         # Load places data for this state
-        places_file = f'data/raw/{args.state.lower()}_places_{args.year}.parquet'
+        places_file = f'data/places/{args.year}/{args.state.lower()}_places_{args.year}.parquet'
         if Path(places_file).exists():
             places_gdf = gpd.read_parquet(places_file)
             places_gdf['state_code'] = args.state
@@ -591,7 +591,7 @@ def main():
     # Load places data for city labels
     places_all = []
     for state_code in STATE_CONFIG.keys():
-        places_file = f'data/raw/{state_code.lower()}_places_{args.year}.parquet'
+        places_file = f'data/places/{args.year}/{state_code.lower()}_places_{args.year}.parquet'
         if Path(places_file).exists():
             places = gpd.read_parquet(places_file)
             places['state_code'] = state_code
