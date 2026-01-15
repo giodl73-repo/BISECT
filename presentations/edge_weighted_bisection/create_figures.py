@@ -574,10 +574,12 @@ import geopandas as gpd
 import warnings
 warnings.filterwarnings('ignore')
 
-# Try to load real census tract data (Minnesota, FIPS 27)
-# Use 2010 data since it's available in the repository
-tracts_file = Path('../../data/geography/tiger_2010_tracts/tl_2010_27_tract10/tl_2010_27_tract10.shp')
-population_file = Path('../../data/processed/census_2010/mn_tracts_2010_population.csv')
+# Try to load real census tract data (Minnesota, FIPS 27) using specified year
+year_suffix = str(args.year)[-2:]  # '10' from 2010, '20' from 2020
+tracts_file = Path(f'../../data/geography/tiger_{args.year}_tracts/tl_{args.year}_27_tract{year_suffix}/tl_{args.year}_27_tract{year_suffix}.shp')
+population_file = Path(f'../../data/processed/census_{args.year}/mn_tracts_{args.year}_population.csv')
+geoid_field = f'GEOID{year_suffix}'  # GEOID10 for 2010, GEOID20 for 2020
+county_field = f'COUNTYFP{year_suffix}'  # COUNTYFP10 for 2010, COUNTYFP20 for 2020
 
 if not tracts_file.exists():
     print(f"  [WARNING] Census tracts shapefile not found at: {tracts_file}")
@@ -600,12 +602,12 @@ else:
         pop_dict = dict(zip(pop_df['GEOID'].astype(str).str.zfill(11),
                            pop_df['population']))
 
-        # Merge geometry with population
-        tracts_gdf['GEOID10'] = tracts_gdf['GEOID10'].astype(str).str.zfill(11)
-        tracts_gdf['population'] = tracts_gdf['GEOID10'].map(pop_dict)
+        # Merge geometry with population (use year-specific GEOID field)
+        tracts_gdf[geoid_field] = tracts_gdf[geoid_field].astype(str).str.zfill(11)
+        tracts_gdf['population'] = tracts_gdf[geoid_field].map(pop_dict)
 
         # Filter to Hennepin County (Minneapolis area) and drop nulls
-        hennepin_tracts = tracts_gdf[tracts_gdf['COUNTYFP10'] == '053'].copy()
+        hennepin_tracts = tracts_gdf[tracts_gdf[county_field] == '053'].copy()
         hennepin_tracts = hennepin_tracts[hennepin_tracts['population'].notna()]
 
         if len(hennepin_tracts) >= 6:
