@@ -577,7 +577,7 @@ warnings.filterwarnings('ignore')
 # Try to load real census tract data (Minnesota, FIPS 27)
 # Use 2010 data since it's available in the repository
 tracts_file = Path('../../data/geography/tiger_2010_tracts/tl_2010_27_tract10/tl_2010_27_tract10.shp')
-population_file = Path('../../data/processed/2010/mn_tracts.pkl')
+population_file = Path('../../data/processed/census_2010/mn_tracts_2010_population.csv')
 
 if not tracts_file.exists():
     print(f"  [WARNING] Census tracts shapefile not found at: {tracts_file}")
@@ -587,18 +587,21 @@ elif not population_file.exists():
     print(f"            This is optional - skipping real tracts figure")
 else:
     try:
-        import pickle
+        import pandas as pd
 
         # Load tracts geometry
         tracts_gdf = gpd.read_file(tracts_file)
 
-        # Load population data
-        with open(population_file, 'rb') as f:
-            tracts_data = pickle.load(f)
+        # Load population data from CSV
+        pop_df = pd.read_csv(population_file)
+
+        # Create mapping from GEOID to population
+        # CSV has 'GEOID' and 'population' columns
+        pop_dict = dict(zip(pop_df['GEOID'].astype(str).str.zfill(11),
+                           pop_df['population']))
 
         # Merge geometry with population
         tracts_gdf['GEOID10'] = tracts_gdf['GEOID10'].astype(str).str.zfill(11)
-        pop_dict = {str(t['geoid']).zfill(11): t['population'] for t in tracts_data}
         tracts_gdf['population'] = tracts_gdf['GEOID10'].map(pop_dict)
 
         # Filter to Hennepin County (Minneapolis area) and drop nulls
