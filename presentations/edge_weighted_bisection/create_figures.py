@@ -943,14 +943,28 @@ else:
                 ax2.text(x, y - 0.09, f'{pop_k:.1f}K', ha='center', va='center',
                         fontsize=10, fontweight='bold', color='black', zorder=5)
 
+            # Add region population labels
+            pop0_total = sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000
+            pop1_total = sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000
+
+            # Position labels at top (Region 0) and bottom (Region 1) of graph
+            ax2.text(2, 4.7, f'Region 0: {pop0_total:.1f}K total',
+                    ha='center', va='bottom', fontsize=8, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9,
+                            edgecolor='darkblue', linewidth=2))
+            ax2.text(2, -0.7, f'Region 1: {pop1_total:.1f}K total',
+                    ha='center', va='top', fontsize=8, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.9,
+                            edgecolor='darkred', linewidth=2))
+
             ax2.set_xlim(-0.5, 4.5)
-            ax2.set_ylim(-0.5, 4.5)
+            ax2.set_ylim(-0.9, 5.0)  # Expanded to fit labels
             ax2.set_aspect('equal')
             ax2.axis('off')
 
             # Calculate total cut weight
             total_cut_weight = sum(edge_weights.get((i, j), 0) for i, j in cut_edges)
-            ax2.text(0.5, -0.05, f'Edge weights = boundary length (km)\nTotal cut weight: {total_cut_weight:.1f} km',
+            ax2.text(0.5, -0.08, f'Edge weights = boundary length (km)\nTotal cut weight: {total_cut_weight:.1f} km',
                     transform=ax2.transAxes, ha='center', fontsize=9,
                     style='italic', color='gray')
 
