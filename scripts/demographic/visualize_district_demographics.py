@@ -303,7 +303,7 @@ def visualize_state_demographics(state_dir, state_code, census_year, dpi=150, fo
 
     # Load tract data and assignments
     tracts_gdf = gpd.read_parquet(tracts_file)
-    assignments_file = state_dir / 'final_assignments.pkl'
+    assignments_file = state_dir / 'data' / 'final_assignments.pkl'
     with open(assignments_file, 'rb') as f:
         assignments = pickle.load(f)
 

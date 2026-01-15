@@ -41,7 +41,7 @@ def load_district_assignments(run_dir, tracts_gdf):
     Returns:
         Dictionary mapping GEOID (str) -> district (int)
     """
-    assignments_file = Path(run_dir) / 'final_assignments.pkl'
+    assignments_file = Path(run_dir) / 'data' / 'final_assignments.pkl'
     if not assignments_file.exists():
         raise FileNotFoundError(f"Assignments not found: {assignments_file}")
 

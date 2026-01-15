@@ -84,7 +84,7 @@ def main():
             report_progress(f"Political Analysis ({i+1}/{len(state_dirs)}) - {state_name}")
 
         # Check if final_assignments.pkl exists (required for analysis)
-        assignments_file = state_dir / 'final_assignments.pkl'
+        assignments_file = state_dir / 'data' / 'final_assignments.pkl'
         if not assignments_file.exists():
             skipped.append(state_name)
             continue
