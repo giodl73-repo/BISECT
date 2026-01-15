@@ -13,9 +13,9 @@ from matplotlib.patches import FancyBboxPatch, Circle, FancyArrowPatch
 import numpy as np
 from pathlib import Path
 
-# Create figures directory
-figures_dir = Path('figures')
-figures_dir.mkdir(exist_ok=True)
+# Create figures directory in outputs
+figures_dir = Path('../../outputs/presentations/edge_weighted_bisection/figures')
+figures_dir.mkdir(parents=True, exist_ok=True)
 
 # =============================================================================
 # Figure 1: Example Gerrymandered District
@@ -193,4 +193,4 @@ print(f"  Created: {figures_dir / 'tract_to_graph.png'}")
 plt.close()
 
 print("\nAll figures created successfully!")
-print("Location: presentations/edge_weighted_bisection/figures/")
+print(f"Location: {figures_dir.resolve()}")

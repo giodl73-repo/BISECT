@@ -15,9 +15,25 @@ echo Output directory: %OUTPUT_DIR%
 echo.
 
 REM ======================================================================
+REM Generate Figures
+REM ======================================================================
+echo [1/3] Generating presentation figures...
+echo ----------------------------------------------------------------------
+
+python create_figures.py
+if errorlevel 1 (
+    echo [ERROR] Figure generation failed
+    pause
+    exit /b 1
+)
+
+echo [OK] Figures generated
+echo.
+
+REM ======================================================================
 REM Compile Presentation Slides
 REM ======================================================================
-echo [1/2] Compiling presentation slides (presentation.tex)...
+echo [2/3] Compiling presentation slides (presentation.tex)...
 echo ----------------------------------------------------------------------
 
 echo LaTeX pass 1/2...
@@ -51,7 +67,7 @@ echo.
 REM ======================================================================
 REM Compile Layman's Guide
 REM ======================================================================
-echo [2/2] Compiling layman's guide (laymen_guide.tex)...
+echo [3/3] Compiling layman's guide (laymen_guide.tex)...
 echo ----------------------------------------------------------------------
 
 echo LaTeX pass 1/2...
