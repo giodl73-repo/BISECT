@@ -85,7 +85,14 @@
       "Bash(50 States\"\n\nCleanup:\n- Remove 45 accidentally tracked tmpclaude-*-cwd temp files\n- Add LaTeX compilation artifacts and temp files to .gitignore\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(\"C:\\\\Users\\\\giodl\\\\AppData\\\\Local\\\\Programs\\\\MiKTeX\\\\miktex\\\\bin\\\\x64\\\\pdflatex.exe\" -interaction=nonstopmode recursive_bisection.tex)",
       "Bash(\"C:\\\\Users\\\\giodl\\\\AppData\\\\Local\\\\Programs\\\\MiKTeX\\\\miktex\\\\bin\\\\x64\\\\bibtex.exe\" recursive_bisection)",
-      "Bash(start outputs/index.html)"
+      "Bash(start outputs/index.html)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(do)",
+      "Bash(file=\"outputs/us_2020_v1/states/$state/data/rounds_hierarchy.csv\")",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(else)",
+      "WebFetch(domain:www.atlasobscura.com)"
     ]
   }
 }

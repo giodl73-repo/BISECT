@@ -3,6 +3,9 @@ REM Compile All Papers
 
 cd /d %~dp0
 
+REM Parse command-line arguments
+set ARGS=%*
+
 echo ======================================================================
 echo Compiling All Papers
 echo ======================================================================
@@ -15,7 +18,7 @@ REM ======================================================================
 echo [1/3] Compiling Paper 1: Baseline Recursive Bisection
 echo ----------------------------------------------------------------------
 cd 01_recursive_bisection
-call compile.bat
+call compile.bat %ARGS%
 if errorlevel 1 (
     echo [ERROR] Paper 1 compilation failed
     cd ..
@@ -31,7 +34,7 @@ REM ======================================================================
 echo [2/3] Compiling Paper 2: Edge-Weighted Bisection
 echo ----------------------------------------------------------------------
 cd 02_edge_weighted_bisection
-call compile.bat
+call compile.bat %ARGS%
 if errorlevel 1 (
     echo [ERROR] Paper 2 compilation failed
     cd ..
@@ -47,7 +50,7 @@ REM ======================================================================
 echo [3/3] Compiling Paper 3: Combined Recursive Bisection
 echo ----------------------------------------------------------------------
 cd 03_combined_recursive_bisection
-call compile.bat
+call compile.bat %ARGS%
 if errorlevel 1 (
     echo [ERROR] Paper 3 compilation failed
     cd ..

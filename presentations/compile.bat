@@ -3,6 +3,9 @@ REM Compile All Presentations
 
 cd /d %~dp0
 
+REM Parse command-line arguments
+set ARGS=%*
+
 echo ======================================================================
 echo Compiling All Presentation Materials
 echo ======================================================================
@@ -15,7 +18,7 @@ REM ======================================================================
 echo [1/1] Compiling Edge-Weighted Recursive Bisection Materials
 echo ----------------------------------------------------------------------
 cd edge_weighted_bisection
-call compile.bat
+call compile.bat %ARGS%
 if errorlevel 1 (
     echo [ERROR] Presentation compilation failed
     cd ..

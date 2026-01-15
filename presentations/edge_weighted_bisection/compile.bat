@@ -3,8 +3,28 @@ REM Compile Presentation Materials: Edge-Weighted Recursive Bisection
 
 cd /d %~dp0
 
+REM Parse command-line arguments
+set RESET_FLAG=0
+:parse_args
+if "%~1"=="" goto end_parse
+if /i "%~1"=="--reset" set RESET_FLAG=1
+shift
+goto parse_args
+:end_parse
+
 REM Create output directory
 set OUTPUT_DIR=..\..\outputs\presentations\edge_weighted_bisection
+
+REM Handle --reset flag
+if %RESET_FLAG%==1 (
+    if exist "%OUTPUT_DIR%" (
+        echo [RESET] Clearing existing output directory: %OUTPUT_DIR%
+        rmdir /s /q "%OUTPUT_DIR%"
+        echo [OK] Output directory cleared
+        echo.
+    )
+)
+
 if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
 
 echo ======================================================================
