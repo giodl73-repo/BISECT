@@ -181,7 +181,9 @@ def find_largest_cities(
     df = pd.DataFrame(district_cities)
 
     # Save to CSV
-    csv_file = output_dir / 'district_cities.csv'
+    data_dir = output_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    csv_file = data_dir / 'district_cities.csv'
     df.to_csv(csv_file, index=False)
     if debug:
         print(f"\nSaved city data to: {csv_file}")
@@ -468,9 +470,9 @@ if __name__ == '__main__':
     # Load tract and places files (unified directory structure)
     state_lower = state_code.lower()
     tracts_file = f'data/tracts/{args.year}/{state_lower}_tracts_{args.year}.parquet'
-    places_file = f'data/tracts/{args.year}/{state_lower}_places_{args.year}.parquet'
+    places_file = f'data/places/{args.year}/{state_lower}_places_{args.year}.parquet'
 
-    assignments_file = run_dir / 'final_assignments.pkl'
+    assignments_file = run_dir / 'data' / 'final_assignments.pkl'
 
     # Show progress bars for integration with parent script
     operation_pos = args.position
@@ -529,7 +531,7 @@ if __name__ == '__main__':
                             ncols=100)
 
     # Check if output already exists
-    output_file = run_dir / 'district_cities.csv'
+    output_file = run_dir / 'data' / 'district_cities.csv'
 
     # Check if places file exists (not available for all census years)
     places_path = Path(places_file)
@@ -590,7 +592,9 @@ if __name__ == '__main__':
     )
 
     # Create map with cities
-    map_file = run_dir / f'{state_name.lower()}_{num_districts}_districts_with_cities.png'
+    maps_dir = run_dir / 'maps'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+    map_file = maps_dir / 'all_districts_with_cities.png'
     create_map_with_cities(
         tracts_file,
         places_file,

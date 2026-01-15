@@ -261,13 +261,15 @@ def calculate_metrics_for_state(state_dir):
     # Create metrics dataframe
     metrics_df = pd.DataFrame(metrics_data)
 
-    # Load existing district summary
-    summary_file = state_dir / 'district_summary.csv'
+    # Load existing district summary from data/ subdirectory
+    summary_file = state_dir / 'data' / 'district_summary.csv'
 
     if not summary_file.exists():
         print(f"\nWARNING: district_summary.csv not found")
         print(f"Creating new summary with compactness metrics only")
-        output_file = state_dir / 'district_compactness.csv'
+        compactness_dir = state_dir / 'compactness'
+        compactness_dir.mkdir(parents=True, exist_ok=True)
+        output_file = compactness_dir / 'district_compactness.csv'
         metrics_df.to_csv(output_file, index=False)
         print(f"Saved to: {output_file}")
     else:

@@ -425,8 +425,12 @@ def main():
             print("\nAnalyzing final districts...")
         district_stats = analyze_districts(election_df, assignments, num_districts)
 
-        # Save district statistics
-        output_file = output_dir / f'district_political_{args.year}.csv'
+        # Create political subdirectory
+        political_dir = output_dir / 'political'
+        political_dir.mkdir(parents=True, exist_ok=True)
+
+        # Save district statistics (no year suffix)
+        output_file = political_dir / 'district_political.csv'
         district_stats.to_csv(output_file, index=False)
         print(f"\nSaved district statistics: {output_file}")
 
@@ -455,7 +459,8 @@ def main():
         round_stats = analyze_intermediate_rounds(election_df, run_dir, tracts_gdf)
 
         if round_stats is not None:
-            output_file = output_dir / f'rounds_political_{args.year}.csv'
+            # Save to political subdirectory (no year suffix)
+            output_file = political_dir / 'rounds_political.csv'
             round_stats.to_csv(output_file, index=False)
             print(f"\nSaved round statistics: {output_file}")
 

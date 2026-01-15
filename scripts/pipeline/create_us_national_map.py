@@ -124,7 +124,7 @@ def load_all_states_with_districts(us_dir=None, year='2020', state_config=None, 
         state_code_lower = state_code.lower()
         tracts_file = f'data/tracts/{year}/{state_code_lower}_tracts_{year}.parquet'
 
-        assignments_file = state_dir / 'final_assignments.pkl'
+        assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
         if not Path(tracts_file).exists():
             continue
@@ -514,9 +514,13 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
         print(f"Output directory: {us_dir}")
         print("="*70)
 
+    # Create maps directory if it doesn't exist
+    maps_dir = us_dir / 'maps'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
     # Check if outputs already exist
-    output_file = us_dir / f'US_National_Map_435_Districts_{year}.png'
-    output_file_cities = us_dir / f'US_National_Map_435_Districts_With_Cities_{year}.png'
+    output_file = maps_dir / 'us_all_districts.png'
+    output_file_cities = maps_dir / 'us_all_districts_with_cities.png'
 
     # In print-only mode, skip actual work but show progress bars
     if print_only:

@@ -272,9 +272,8 @@ def create_single_district_map(args_tuple):
     with contextlib.redirect_stderr(open(os.devnull, 'w')):
         plt.tight_layout()
 
-    # Save with clean filename
-    city_slug = city_name.lower().replace(' ', '_').replace('-', '_').replace('/', '_').replace('(', '').replace(')', '')
-    filename = f"district_{district_id:02d}_{city_slug}.png"
+    # Save with clean filename (no city slug)
+    filename = f"district_{district_id:02d}.png"
     output_file = output_dir / filename
 
     plt.savefig(output_file, dpi=dpi, bbox_inches='tight')
@@ -438,9 +437,9 @@ if __name__ == '__main__':
     tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
     places_file = f'data/tracts/{args.year}/{state_code_lower}_places_{args.year}.parquet'
 
-    assignments_file = run_dir / 'final_assignments.pkl'
-    cities_file = run_dir / 'district_cities.csv'
-    summary_file = run_dir / 'district_summary.csv'
+    assignments_file = run_dir / 'data' / 'final_assignments.pkl'
+    cities_file = run_dir / 'data' / 'district_cities.csv'
+    summary_file = run_dir / 'data' / 'district_summary.csv'
     output_dir = run_dir / 'maps' / 'districts'
 
     # Show progress bars for integration with parent script

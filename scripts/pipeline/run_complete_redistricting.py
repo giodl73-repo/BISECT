@@ -881,6 +881,33 @@ def main():
         for bar in step_bars:
             bar.close()
 
+    # Validate pipeline outputs
+    if not args.print_only:
+        print("\n" + "="*70)
+        print("  Validating Pipeline Outputs")
+        print("="*70)
+
+        validation_script = Path('scripts/validation/validate_pipeline_outputs.py')
+        if validation_script.exists():
+            validation_cmd = [
+                sys.executable,
+                str(validation_script),
+                '--year', args.year,
+                '--version', args.version,
+                '--output-dir', str(output_dir)
+            ]
+
+            validation_result = subprocess.run(validation_cmd)
+
+            # Validation script handles its own output:
+            # - Brief summary printed to console
+            # - Detailed report written to outputs/us_{year}_{version}_validation.txt
+            # - Exit code: 0 = all outputs present, 1 = some outputs missing
+
+            if validation_result.returncode != 0:
+                print(f"\nWARNING: Some pipeline outputs are missing.")
+                print(f"Review detailed report at: {output_dir.name}_validation.txt")
+
     # Brief final summary at position 3 (after the 3 post-processing steps at 0-2)
     summary_bar = tqdm(total=1,
                       desc=f"[3] Pipeline complete - Results in: {output_dir}",

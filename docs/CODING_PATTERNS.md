@@ -881,40 +881,79 @@ python scripts/xxx/visualize_xxx.py \
 ```
 
 ### Output Files
+
+**State-Level Directory Structure:**
 ```
-# State output directory
 outputs/us_{year}_{version}/states/{state_name}/
-
-# District files
-district_summary.csv                         # District metrics
-district_cities.csv                          # Major cities per district
-final_assignments.pkl                        # tract_idx -> district
-rounds_hierarchy.csv                         # Bisection tree
-
-# Maps directory
-maps/
-  {state_name}_52_districts.png             # Final map
-  {state_name}_52_districts_with_cities.png # With city labels
-  districts/                                 # Individual district maps
-    district_01.png
-    district_02.png
-  round_0.png                               # Bisection round maps
-  round_1.png
-
-# Analysis subdirectories
-political_analysis/
-  district_political_{year}.csv             # Partisan lean
-  maps/
-    partisan_lean.png
-    partisan_lean_with_margins.png
-
-demographic_analysis/
-  district_demographics.csv                 # Demographics
-  maps/
-    gender_balance.png
-    majority_race.png
-    diversity_index.png
+├── data/                                   # All CSV/pickle files
+│   ├── final_assignments.pkl               # tract_idx -> district
+│   ├── district_summary.csv                # District metrics
+│   ├── district_cities.csv                 # Major cities per district
+│   └── rounds_hierarchy.csv                # Bisection tree
+├── maps/                                   # All visualization files
+│   ├── all_districts.png                   # Final district map
+│   ├── all_districts_with_cities.png       # With city labels
+│   ├── rounds/
+│   │   ├── round_01.png                    # Bisection progression (zero-padded)
+│   │   ├── round_02.png
+│   │   └── round_03.png
+│   ├── districts/
+│   │   ├── district_01.png                 # Individual district maps (zero-padded)
+│   │   ├── district_02.png
+│   │   └── district_03.png
+│   └── metros/
+│       ├── los_angeles.png                 # Metro area maps (2010+ only)
+│       └── san_francisco.png
+├── political/                              # Political analysis (optional)
+│   ├── district_political.csv              # Partisan lean data
+│   ├── rounds_political.csv
+│   └── maps/
+│       ├── partisan_lean.png
+│       └── rounds/
+│           └── round_01.png
+├── demographic/                            # Demographics (optional)
+│   ├── district_demographics.csv
+│   └── maps/
+│       ├── gender_balance.png
+│       ├── majority_race.png
+│       └── diversity_index.png
+└── compactness/                            # Compactness (optional)
+    ├── district_compactness.csv            # Fallback if not in district_summary
+    └── maps/
+        ├── polsby_popper.png
+        └── reock.png
 ```
+
+**National-Level Directory Structure:**
+```
+outputs/us_{year}_{version}/
+├── data/                                   # Aggregated CSV files
+│   ├── us_all_districts.csv                # All 435 districts
+│   ├── us_district_summary.csv             # Summary statistics
+│   └── us_rounds_hierarchy.csv             # National bisection tree
+├── maps/                                   # National visualizations
+│   ├── us_all_districts.png                # All 435 districts
+│   ├── us_all_districts_with_cities.png    # With major cities
+│   ├── rounds/
+│   │   ├── round_01.png                    # 6 rounds (zero-padded)
+│   │   ├── round_02.png
+│   │   └── round_06.png
+│   ├── political/
+│   │   └── partisan_lean.png               # National political map
+│   ├── demographic/
+│   │   └── majority_demographics.png       # National demographics
+│   └── compactness/
+│       └── polsby_popper.png               # National compactness
+└── index.html                              # Interactive dashboard
+
+```
+
+**Naming Rules:**
+1. **No year suffixes** - Year is in directory path `us_{year}_{version}/`
+2. **Snake_case only** - All lowercase with underscores
+3. **Zero-padded numbers** - `round_01.png`, `district_01.png` (2-digit padding)
+4. **Organized by type** - `data/` for CSVs, `maps/` for visualizations
+5. **Consistent prefixes** - State: no prefix, National: `us_` prefix for CSVs
 
 ### Script Naming
 ```

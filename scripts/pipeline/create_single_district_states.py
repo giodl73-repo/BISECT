@@ -66,9 +66,11 @@ def create_single_district_state(state_code, state_name, dpi=150):
             cities_data['city_lat'] = [centroid.y]
 
     cities_df = pd.DataFrame(cities_data)
-    cities_file = state_dir / 'district_cities.csv'
+    data_dir = state_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    cities_file = data_dir / 'district_cities.csv'
     cities_df.to_csv(cities_file, index=False)
-    print(f"  [OK] Created: district_cities.csv")
+    print(f"  [OK] Created: data/district_cities.csv")
     if cities_data['largest_city'][0] != 'At-Large District':
         print(f"    Largest city: {cities_data['largest_city'][0]} ({cities_data['city_population'][0]:,})")
 
@@ -83,9 +85,9 @@ def create_single_district_state(state_code, state_name, dpi=150):
     }
 
     summary_df = pd.DataFrame(summary_data)
-    summary_file = state_dir / 'district_summary.csv'
+    summary_file = data_dir / 'district_summary.csv'  # data_dir already created above
     summary_df.to_csv(summary_file, index=False)
-    print(f"  [OK] Created: district_summary.csv")
+    print(f"  [OK] Created: data/district_summary.csv")
 
     # Create simple map
     print(f"  Creating map...")

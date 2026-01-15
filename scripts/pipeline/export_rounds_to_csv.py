@@ -113,8 +113,10 @@ df = pd.DataFrame(all_rows)
 # Sort by round, then region_name
 df = df.sort_values(['round', 'region_name'])
 
-# Save to CSV in parent directory (same as intermediate_dir parent)
-output_file = intermediate_dir.parent / 'rounds_hierarchy.csv'
+# Save to CSV in data/ subdirectory
+data_dir = intermediate_dir.parent / 'data'
+data_dir.mkdir(parents=True, exist_ok=True)
+output_file = data_dir / 'rounds_hierarchy.csv'
 df.to_csv(output_file, index=False, float_format='%.2f')
 
 print("\n" + "=" * 70)

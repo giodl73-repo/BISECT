@@ -247,7 +247,9 @@ def create_rounds_hierarchy(run_dir: Path, num_districts: int, debug: bool = Fal
         return None
 
     df = pd.DataFrame(hierarchy_data)
-    output_file = run_dir / 'rounds_hierarchy.csv'
+    data_dir = run_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    output_file = data_dir / 'rounds_hierarchy.csv'
     df.to_csv(output_file, index=False)
 
     return df
@@ -304,9 +306,11 @@ if __name__ == '__main__':
     tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
     places_file = f'data/tracts/{args.year}/{state_code_lower}_places_{args.year}.parquet'
 
-    assignments_file = run_dir / 'final_assignments.pkl'
-    cities_file = run_dir / 'district_cities.csv'
-    output_file = run_dir / 'district_summary.csv'
+    # References to data/ subdirectory
+    data_dir = run_dir / 'data'
+    assignments_file = data_dir / 'final_assignments.pkl'
+    cities_file = data_dir / 'district_cities.csv'
+    output_file = data_dir / 'district_summary.csv'
 
     # Get number of districts (needed for progress bar and skip logic)
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))

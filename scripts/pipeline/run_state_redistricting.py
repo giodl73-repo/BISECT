@@ -27,6 +27,11 @@ try:
 except ImportError:
     STATE_CONFIG_2010 = None
 
+try:
+    from scripts.config_2000 import STATE_CONFIG_2000
+except ImportError:
+    STATE_CONFIG_2000 = None
+
 from apportionment.partition.recursive_bisection import RecursiveBisection
 import geopandas as gpd
 import matplotlib.pyplot as plt
@@ -48,9 +53,15 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     state_name = config['name']
     num_districts = config['districts']
 
-    # File paths
-    graph_file = f'data/adjacency/{state_code.lower()}_adjacency_{year}.pkl'
-    tracts_file = f'data/raw/{state_code.lower()}_tracts_{year}.parquet'
+    # File paths - try year-specific subdirectory first, fall back to flat structure
+    state_lower = state_code.lower()
+    graph_file_new = Path(f'data/adjacency/{year}/{state_lower}_adjacency_{year}.pkl')
+    graph_file_old = Path(f'data/adjacency/{state_lower}_adjacency_{year}.pkl')
+    graph_file = str(graph_file_new if graph_file_new.exists() else graph_file_old)
+
+    tracts_file_new = Path(f'data/tracts/{year}/{state_lower}_tracts_{year}.parquet')
+    tracts_file_old = Path(f'data/raw/{state_lower}_tracts_{year}.parquet')
+    tracts_file = str(tracts_file_new if tracts_file_new.exists() else tracts_file_old)
 
     # Show progress bars for integration with parent script
     operation_pos = position
@@ -88,7 +99,10 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
         shutil.rmtree(output_dir)
         print(f"[RESET] Deleted. Starting fresh run.\n")
 
-    final_file = output_dir / 'final_assignments.pkl'
+    # Create data directory if needed
+    data_dir = output_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    final_file = data_dir / 'final_assignments.pkl'
 
     # In print-only mode or if output exists, skip processing
     if print_only or final_file.exists():
@@ -153,23 +167,24 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     vertex_weights = graph_data['vertex_weights']
     index_to_geoid = graph_data['index_to_geoid']
 
-    # Load edge weights only if using edge-weighted mode
+    # Load edge weights by default (edge-weighted is default mode)
     edge_weights = None
     if args.partition_mode == 'edge-weighted':
         edge_weights = graph_data.get('edge_weights', None)
         if edge_weights is None:
-            print(f"WARNING: --partition-mode edge-weighted specified but no edge_weights in graph file!")
-            print(f"         Run: python scripts/data/geography/build_tract_adjacency.py --state {state_code} --year {args.year} --compute-boundary-lengths")
-            print(f"         Falling back to normal mode (edge cut minimization)")
-            args.partition_mode = 'normal'
+            print(f"WARNING: edge_weights not found in graph file, falling back to unweighted mode")
+            print(f"         To use edge-weighted mode, run:")
+            print(f"         python scripts/data/compute_tract_adjacencies_{args.year}.py --states {state_code}")
+            print(f"         Falling back to unweighted mode (edge cut minimization)")
+            args.partition_mode = 'unweighted'
         else:
-            print(f"[OK] Using edge-weighted mode (boundary length minimization)")
+            print(f"[OK] Using edge-weighted mode (boundary length minimization, default)")
             print(f"     Loaded {len(edge_weights):,} edge weights from graph")
     else:
-        # Normal mode: explicitly set edge_weights to None to ensure they're not used
+        # Unweighted mode: explicitly set edge_weights to None to ensure they're not used
         edge_weights = None
         if position == 2:  # Only print in standalone mode, not when called from pipeline
-            print(f"[OK] Using normal mode (edge cut minimization)")
+            print(f"[OK] Using unweighted mode (edge cut minimization)")
 
     total_pop = int(vertex_weights.sum())
 
@@ -202,8 +217,8 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     deviations = [(p - ideal) / ideal * 100 for p in populations]
     max_dev = max(abs(d) for d in deviations)
 
-    # Save final assignments
-    final_file = output_dir / 'final_assignments.pkl'
+    # Save final assignments to data/ subdirectory
+    final_file = data_dir / 'final_assignments.pkl'
     with open(final_file, 'wb') as f:
         pickle.dump({i: int(final_assignments[i]) for i in range(len(final_assignments))}, f)
 
@@ -277,7 +292,11 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
 
     plt.tight_layout()
 
-    final_map = output_dir / f'{state_name.lower().replace(" ", "_")}_{num_districts}_districts.png'
+    # Create maps directory if it doesn't exist
+    maps_dir = output_dir / 'maps'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
+    final_map = maps_dir / 'all_districts.png'
     plt.savefig(final_map, dpi=dpi, bbox_inches='tight')
     plt.close()
 
@@ -310,8 +329,8 @@ if __name__ == '__main__':
                        help='Enable debug mode with progress delays and file display')
     parser.add_argument('--reset', action='store_true',
                        help='Delete output directory before starting (fresh run, not incremental)')
-    parser.add_argument('--partition-mode', type=str, default='normal', choices=['normal', 'edge-weighted'],
-                       help='Partitioning mode: "normal" (edge cut minimization) or "edge-weighted" (boundary length minimization for better compactness)')
+    parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
+                       help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
 
     args = parser.parse_args()
 
@@ -327,8 +346,10 @@ if __name__ == '__main__':
             sys.exit(1)
         STATE_CONFIG = STATE_CONFIG_2010
     elif args.year == '2000':
-        print("ERROR: 2000 census configuration not yet implemented.")
-        sys.exit(1)
+        if STATE_CONFIG_2000 is None:
+            print("ERROR: config_2000.py not found. Cannot process 2000 data.")
+            sys.exit(1)
+        STATE_CONFIG = STATE_CONFIG_2000
     else:
         print(f"ERROR: Unknown year {args.year}")
         sys.exit(1)

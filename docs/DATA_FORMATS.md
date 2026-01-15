@@ -601,6 +601,118 @@ result = df1.merge(df2, on='GEOID')
 
 **Total Data Footprint**: ~12-15 GB for complete dataset (all 50 states, 2020)
 
+## Output Directory Structure
+
+### State-Level Outputs
+
+All state outputs are organized under `outputs/us_{year}_{version}/states/{state_name}/`:
+
+```
+california/                                 # State directory (lowercase, underscores)
+├── data/                                   # All data files (CSV, pickle)
+│   ├── final_assignments.pkl               # District assignments (tract_idx -> district)
+│   ├── district_summary.csv                # Per-district metrics
+│   ├── district_cities.csv                 # Major cities per district
+│   └── rounds_hierarchy.csv                # Bisection tree structure
+│
+├── maps/                                   # All visualization files
+│   ├── all_districts.png                   # Final district map
+│   ├── all_districts_with_cities.png       # With city labels
+│   │
+│   ├── rounds/                             # Bisection progression maps
+│   │   ├── round_01.png                    # Zero-padded (01-99)
+│   │   ├── round_02.png
+│   │   └── round_N.png
+│   │
+│   ├── districts/                          # Individual district maps
+│   │   ├── district_01.png                 # Zero-padded (01-99)
+│   │   ├── district_02.png
+│   │   └── district_N.png
+│   │
+│   └── metros/                             # Metro area maps (2010+, optional)
+│       ├── los_angeles.png
+│       └── san_francisco.png
+│
+├── political/                              # Political analysis (optional)
+│   ├── district_political.csv              # Partisan lean by district
+│   ├── rounds_political.csv                # Partisan lean by round
+│   └── maps/
+│       ├── partisan_lean.png               # Main political map
+│       └── rounds/
+│           ├── round_01.png
+│           └── round_N.png
+│
+├── demographic/                            # Demographics (optional)
+│   ├── district_demographics.csv           # Demographics by district
+│   └── maps/
+│       ├── majority_race.png
+│       ├── diversity_index.png
+│       └── gender_balance.png
+│
+└── compactness/                            # Compactness (optional)
+    ├── district_compactness.csv            # Fallback (usually in district_summary)
+    └── maps/
+        ├── polsby_popper.png
+        └── reock.png
+```
+
+### National-Level Outputs
+
+All national outputs are organized under `outputs/us_{year}_{version}/`:
+
+```
+us_2020_v1/                                 # National directory
+├── data/                                   # Aggregated data files
+│   ├── us_all_districts.csv                # All 435 districts
+│   ├── us_district_summary.csv             # Summary statistics
+│   └── us_rounds_hierarchy.csv             # National bisection tree
+│
+├── maps/                                   # National visualizations
+│   ├── us_all_districts.png                # All 435 districts
+│   ├── us_all_districts_with_cities.png    # With major cities
+│   │
+│   ├── rounds/                             # National round progression (6 files)
+│   │   ├── round_01.png                    # 1→2 regions
+│   │   ├── round_02.png                    # 2→4 regions
+│   │   ├── round_03.png                    # 4→8 regions
+│   │   ├── round_04.png                    # 8→16 regions
+│   │   ├── round_05.png                    # 16→32 regions
+│   │   └── round_06.png                    # 32→50+ regions
+│   │
+│   ├── political/                          # National political maps (optional)
+│   │   └── partisan_lean.png
+│   │
+│   ├── demographic/                        # National demographic maps (optional)
+│   │   └── majority_demographics.png
+│   │
+│   └── compactness/                        # National compactness maps (optional)
+│       └── polsby_popper.png
+│
+├── states/                                 # All 50 state directories
+│   ├── alabama/
+│   ├── california/
+│   └── ...
+│
+└── index.html                              # Interactive dashboard
+```
+
+### Naming Conventions
+
+**Files:**
+- All lowercase, snake_case (`all_districts.png`)
+- No year suffixes (year is in parent directory)
+- Zero-padded numbers (`round_01.png`, `district_01.png`)
+- Descriptive names (`majority_race.png` not `demographic_1.png`)
+
+**Directories:**
+- Lowercase with underscores (`new_york`, `north_carolina`)
+- Organized by content type (`data/`, `maps/`, `political/`)
+- Analysis subdirectories have singular names (`demographic/` not `demographics/`)
+
+**Prefixes:**
+- State files: No prefix (`district_summary.csv`)
+- National files: `us_` prefix (`us_all_districts.csv`)
+
 ## References
 
 ### Census Bureau

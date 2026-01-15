@@ -44,8 +44,8 @@ LEAN_ORDER = ['Strong D', 'Lean D', 'Tilt D', 'Tossup', 'Tilt R', 'Lean R', 'Str
 def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, year, dpi=150):
     """Create map of final districts colored by partisan lean."""
 
-    # Load political analysis
-    political_file = analysis_dir / f'district_political_{year}.csv'
+    # Load political analysis (no year suffix)
+    political_file = analysis_dir / 'political' / 'district_political.csv'
     if not political_file.exists():
         print(f"Political analysis not found: {political_file}")
         return
@@ -57,8 +57,8 @@ def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, yea
         print(f"Political data empty for {state_name} (no tract-level election data) - skipping visualization")
         return
 
-    # Load assignments
-    assignments_file = run_dir / 'final_assignments.pkl'
+    # Load assignments from data/ subdirectory
+    assignments_file = run_dir / 'data' / 'final_assignments.pkl'
     if not assignments_file.exists():
         print(f"Assignments not found: {assignments_file}")
         return
@@ -258,10 +258,10 @@ def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, yea
 
     plt.tight_layout()
 
-    # Save
-    output_dir = analysis_dir / 'maps'
+    # Save to political/maps subdirectory (no year suffix)
+    output_dir = analysis_dir / 'political' / 'maps'
     output_dir.mkdir(parents=True, exist_ok=True)
-    map_file = output_dir / f'partisan_lean_districts_{year}.png'
+    map_file = output_dir / 'partisan_lean.png'
     plt.savefig(map_file, dpi=dpi, bbox_inches='tight')
     plt.close(fig)
 
@@ -271,8 +271,8 @@ def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, yea
 def visualize_intermediate_rounds(run_dir, analysis_dir, tracts_gdf, state_name, year, dpi=150):
     """Create maps of intermediate rounds colored by partisan lean."""
 
-    # Load political analysis
-    rounds_file = analysis_dir / f'rounds_political_{year}.csv'
+    # Load political analysis (no year suffix)
+    rounds_file = analysis_dir / 'political' / 'rounds_political.csv'
     if not rounds_file.exists():
         print(f"Rounds analysis not found: {rounds_file}")
         return
@@ -287,7 +287,7 @@ def visualize_intermediate_rounds(run_dir, analysis_dir, tracts_gdf, state_name,
     # Get unique rounds
     unique_rounds = sorted(rounds_df['round'].unique())
 
-    output_dir = analysis_dir / 'maps' / 'rounds'
+    output_dir = analysis_dir / 'political' / 'maps' / 'rounds'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     for round_num in unique_rounds:
@@ -501,8 +501,8 @@ def visualize_intermediate_rounds(run_dir, analysis_dir, tracts_gdf, state_name,
 
         plt.tight_layout()
 
-        # Save
-        map_file = output_dir / f'partisan_lean_round_{round_num}_{num_regions}_regions_{year}.png'
+        # Save with zero-padded round number (no year/region count suffix)
+        map_file = output_dir / f'round_{round_num:02d}.png'
         plt.savefig(map_file, dpi=dpi, bbox_inches='tight')
         plt.close(fig)
 
@@ -537,9 +537,9 @@ def visualize_state_political(state_dir, state_code, election_year, census_year,
 
     state_name = state_name_lower.replace('_', ' ').title()
 
-    # Check analysis directory exists
-    analysis_dir = state_dir / 'political_analysis'
-    political_file = analysis_dir / f'district_political_{election_year}.csv'
+    # Check political directory exists (no year suffix)
+    analysis_dir = state_dir
+    political_file = state_dir / 'political' / 'district_political.csv'
 
     if not political_file.exists():
         print(f"ERROR: Political analysis not found: {political_file}")
@@ -547,9 +547,9 @@ def visualize_state_political(state_dir, state_code, election_year, census_year,
         return 1
 
     # CHECK IF OUTPUTS EXIST BEFORE LOADING DATA
-    maps_dir = analysis_dir / 'maps'
+    political_maps_dir = state_dir / 'political' / 'maps'
     required_maps = [
-        maps_dir / f'partisan_lean_{state_name_lower}_{election_year}.png'
+        political_maps_dir / 'partisan_lean.png'
     ]
 
     if not force and all(m.exists() for m in required_maps):

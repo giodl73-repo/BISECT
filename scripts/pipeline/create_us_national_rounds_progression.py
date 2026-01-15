@@ -54,7 +54,7 @@ def load_state_round_data(state_dir, round_num, tracts_file, state_code, state_n
     # Handle single-district states (no intermediate directory)
     if not intermediate_dir.exists():
         # Load final assignments directly
-        assignments_file = state_dir / 'final_assignments.pkl'
+        assignments_file = state_dir / 'data' / 'final_assignments.pkl'
         if not assignments_file.exists():
             return None
 
@@ -426,11 +426,15 @@ def main():
     skipped = 0
     created = 0
 
+    # Create maps/rounds directory if it doesn't exist
+    rounds_dir = output_dir / 'maps' / 'rounds'
+    rounds_dir.mkdir(parents=True, exist_ok=True)
+
     for idx, round_num in enumerate(rounds_to_generate, 1):
         states_in_round = available_rounds[round_num]
 
-        # Check if output file already exists
-        output_file = output_dir / f'us_national_round_{round_num}_{args.year}.png'
+        # Check if output file already exists (zero-padded, no year suffix)
+        output_file = rounds_dir / f'round_{round_num:02d}.png'
 
         if output_file.exists():
             skipped += 1

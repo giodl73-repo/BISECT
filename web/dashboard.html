@@ -481,6 +481,15 @@
             populateStates();
             setupDimensionTabs();
 
+            // Hide Urban Areas tab for Census 2000 (CBSA classification not available)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+            if (censusYear === '2000') {
+                const urbanTab = document.querySelector('[data-dimension="urban"]');
+                if (urbanTab) {
+                    urbanTab.style.display = 'none';
+                }
+            }
+
             // Default to USA Overview on load
             selectState('usa');
         });
@@ -722,7 +731,7 @@
                     </div>
 
                     <h3>State Map</h3>
-                    <img src="${basePath}/states/${state}/${state}_${districts}_districts.png"
+                    <img src="${basePath}/states/${state}/maps/all_districts.png"
                          alt="${stateName} Districts"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
@@ -739,14 +748,14 @@
                     <h2>${stateName} - Districts with Major Cities</h2>
 
                     <h3>State Map with Cities</h3>
-                    <img src="${basePath}/states/${state}/${state}_${districts}_districts_with_cities.png"
+                    <img src="${basePath}/states/${state}/maps/all_districts_with_cities.png"
                          alt="${stateName} Districts with Cities"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
                     <p style="margin-top: 1rem; color: #6c757d;">Districts with major cities and urban areas labeled.</p>
 
                     <h3>District Cities</h3>
-                    <p><a href="${basePath}/states/${state}/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                    <p><a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
                 </div>
             `;
         }
@@ -764,7 +773,7 @@
 
                         <div class="map-container">
                             <div class="map-item">
-                                <img src="${basePath}/states/${state}/${state}_1_districts.png"
+                                <img src="${basePath}/states/${state}/maps/all_districts.png"
                                      alt="${stateName} District"
                                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
                                 <div class="map-label">At-Large District</div>
@@ -803,7 +812,7 @@
                     const cityName = district.city;
                     const cityFilename = district.filename;
                     const districtNumPadded = districtNum.padStart(2, '0');
-                    const imagePath = basePath + '/states/' + state + '/maps/districts/district_' + districtNumPadded + '_' + cityFilename + '.png';
+                    const imagePath = basePath + '/states/' + state + '/maps/districts/district_' + districtNumPadded + '.png';
 
                     mapsHtml += '<div class="map-item">';
                     mapsHtml += '<img src="' + imagePath + '"';
@@ -816,7 +825,7 @@
                 mapsHtml += '</div>';
                 mapsHtml += `
                     <h3>District Data</h3>
-                    <p><a href="${basePath}/states/${state}/district_summary.csv" target="_blank">📊 Download Summary CSV</a> |
+                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download Summary CSV</a> |
                        <a href="${basePath}/states/${state}/district_cities.csv" target="_blank">🏙️ Download Cities CSV</a></p>
                 `;
 
@@ -839,9 +848,10 @@
 
             while (currentRegions < districts) {
                 const nextRegions = Math.min(currentRegions * 2, districts);
+                const roundNumPadded = roundNum.toString().padStart(2, '0');
                 mapsHtml += `
                     <div class="map-item">
-                        <img src="${basePath}/states/${state}/maps/rounds/round_${roundNum}_${nextRegions}_regions.png"
+                        <img src="${basePath}/states/${state}/maps/rounds/round_${roundNumPadded}.png"
                              alt="Round ${roundNum}: ${currentRegions} → ${nextRegions} regions"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ERound ${roundNum}%3C/text%3E%3C/svg%3E'">
                         <div class="map-label">Round ${roundNum}: ${currentRegions} → ${nextRegions} regions</div>
@@ -876,7 +886,7 @@
 
                     <div class="map-container full-width">
                         <div class="map-item">
-                            <img src="${basePath}/states/${state}/political_analysis/maps/partisan_lean_districts_2020.png"
+                            <img src="${basePath}/states/${state}/political/maps/partisan_lean.png"
                                  alt="Partisan Lean Map"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EPolitical Analysis Not Available%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun political analysis for this state%3C/text%3E%3C/svg%3E'">
                             <div class="map-label">Partisan Lean by District</div>
@@ -884,13 +894,13 @@
                     </div>
 
                     <h3>Political Data</h3>
-                    <p><a href="${basePath}/states/${state}/political_analysis/district_political_2020.csv" target="_blank">📊 Download District Political CSV</a></p>
+                    <p><a href="${basePath}/states/${state}/political/district_political.csv" target="_blank">📊 Download District Political CSV</a></p>
 
                     <h3>Round Progression</h3>
                     <p>Political lean maps for each bisection round:</p>
                     <ul>
-                        <li><a href="${basePath}/states/${state}/political_analysis/maps/rounds/" target="_blank">📁 View Round Maps</a></li>
-                        <li><a href="${basePath}/states/${state}/political_analysis/rounds_political_2020.csv" target="_blank">📊 Download Rounds CSV</a></li>
+                        <li><a href="${basePath}/states/${state}/political/maps/rounds/" target="_blank">📁 View Round Maps</a></li>
+                        <li><a href="${basePath}/states/${state}/political/rounds_political.csv" target="_blank">📊 Download Rounds CSV</a></li>
                     </ul>
                 </div>
             `;
@@ -905,22 +915,22 @@
                     <p>Racial and ethnic composition of districts based on 2020 Census data.</p>
 
                     <h3>Majority Race by District</h3>
-                    <img src="${basePath}/states/${state}/demographic_analysis/maps/majority_race.png"
+                    <img src="${basePath}/states/${state}/demographic/maps/majority_race.png"
                          alt="Majority Race Map"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
 
                     <h3>Diversity Index by District</h3>
-                    <img src="${basePath}/states/${state}/demographic_analysis/maps/diversity_index.png"
+                    <img src="${basePath}/states/${state}/demographic/maps/diversity_index.png"
                          alt="Diversity Index Map"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;">
 
                     <h3>Gender Balance by District</h3>
-                    <img src="${basePath}/states/${state}/demographic_analysis/maps/gender_balance.png"
+                    <img src="${basePath}/states/${state}/demographic/maps/gender_balance.png"
                          alt="Gender Balance Map"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;">
 
                     <h3>Demographic Data</h3>
-                    <p><a href="${basePath}/states/${state}/demographic_analysis/district_demographics.csv" target="_blank">📊 Download District Demographics CSV</a></p>
+                    <p><a href="${basePath}/states/${state}/demographic/district_demographics.csv" target="_blank">📊 Download District Demographics CSV</a></p>
                 </div>
             `;
         }
@@ -934,20 +944,20 @@
                     <p>Polsby-Popper and Reock compactness scores for each district. Higher scores indicate more compact districts.</p>
 
                     <h3>Polsby-Popper Compactness</h3>
-                    <img src="${basePath}/states/${state}/compactness_analysis/maps/polsby_popper_districts_${currentYear}.png"
+                    <img src="${basePath}/states/${state}/compactness/maps/polsby_popper.png"
                          alt="Polsby-Popper Compactness"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ECompactness Map Not Available%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun compactness visualization for this state%3C/text%3E%3C/svg%3E'">
 
                     <h3>Reock Compactness</h3>
-                    <img src="${basePath}/states/${state}/compactness_analysis/maps/reock_districts_${currentYear}.png"
+                    <img src="${basePath}/states/${state}/compactness/maps/reock.png"
                          alt="Reock Compactness"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ECompactness Map Not Available%3C/text%3E%3C/svg%3E'">
 
                     <h3>Compactness Data</h3>
                     <p>Compactness scores are included in the district summary file:</p>
-                    <p><a href="${basePath}/states/${state}/district_summary.csv" target="_blank">📊 Download District Summary CSV</a></p>
+                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download District Summary CSV</a></p>
                 </div>
             `;
         }
@@ -955,6 +965,28 @@
         // Generate urban areas content
         function generateUrban(stateName, state, districts) {
             const basePath = getBasePath();
+
+            // Detect census year from path (e.g., us_2000_v1 -> 2000)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+
+            // Census 2000: CBSA classification not available
+            if (censusYear === '2000') {
+                return `
+                    <div class="content-card">
+                        <h2>${stateName} - Metropolitan Areas</h2>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong>📍 Metro area maps not available for Census 2000</strong><br>
+                                The CBSA (Core Based Statistical Area) classification system was introduced after 2000.
+                                Metro area district maps are available for 2010 and 2020 census data.
+                            </p>
+                        </div>
+
+                        <h3>Major Cities</h3>
+                        <p><a href="${basePath}/states/${state}/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                    </div>
+                `;
+            }
 
             // Define metros for each state
             const stateMetros = {
@@ -1058,16 +1090,16 @@
                     </div>
 
                     <h3>National Map</h3>
-                    <img src="${basePath}/US_National_Map_435_Districts_${currentYear}.png"
+                    <img src="${basePath}/maps/us_all_districts.png"
                          alt="US National Map - 435 Districts"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational District Map Not Available%3C/text%3E%3C/svg%3E'">
                     <p style="margin-top: 1rem; color: #6c757d;">All 435 congressional districts algorithmically generated using METIS recursive bisection.</p>
 
                     <h3>National Summary</h3>
-                    <p><a href="${basePath}/us_all_districts.csv" target="_blank">📊 All Districts CSV</a> |
-                       <a href="${basePath}/us_district_summary.csv" target="_blank">📊 District Summary CSV</a> |
-                       <a href="${basePath}/us_rounds_hierarchy.csv" target="_blank">📊 Rounds Hierarchy CSV</a></p>
+                    <p><a href="${basePath}/data/us_all_districts.csv" target="_blank">📊 All Districts CSV</a> |
+                       <a href="${basePath}/data/us_district_summary.csv" target="_blank">📊 District Summary CSV</a> |
+                       <a href="${basePath}/data/us_rounds_hierarchy.csv" target="_blank">📊 Rounds Hierarchy CSV</a></p>
 
                     <h3>Report</h3>
                     <p><a href="${basePath}/US_${currentYear}_Redistricting_Report.md" target="_blank">📄 Comprehensive Redistricting Report</a></p>
@@ -1088,7 +1120,7 @@
 
                     <div class="map-container">
                         <div class="map-item">
-                            <img src="${basePath}/us_national_political_${currentYear}.png"
+                            <img src="${basePath}/maps/political/partisan_lean.png"
                                  alt="US National Political Map"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Political Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun create_us_aggregate.py to generate%3C/text%3E%3C/svg%3E'">
                             <div class="map-label">National Political Lean</div>
@@ -1111,7 +1143,7 @@
 
                     <div class="map-container">
                         <div class="map-item">
-                            <img src="${basePath}/us_national_demographic_${currentYear}.png"
+                            <img src="${basePath}/maps/demographic/majority_demographics.png"
                                  alt="US National Demographic Map"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Demographic Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun create_us_aggregate.py to generate%3C/text%3E%3C/svg%3E'">
                             <div class="map-label">National Demographic Composition</div>
@@ -1134,7 +1166,7 @@
 
                     <div class="map-container">
                         <div class="map-item">
-                            <img src="${basePath}/us_national_compactness_${currentYear}.png"
+                            <img src="${basePath}/maps/compactness/polsby_popper.png"
                                  alt="US National Compactness Map"
                                  style="max-width: 100%; height: auto;"
                                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Compactness Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun compactness visualization pipeline%3C/text%3E%3C/svg%3E'">
@@ -1160,7 +1192,7 @@
                     <h2>United States - Districts with Major Cities</h2>
 
                     <h3>National Map with Cities</h3>
-                    <img src="${basePath}/US_National_Map_435_Districts_With_Cities_${currentYear}.png"
+                    <img src="${basePath}/maps/us_all_districts_with_cities.png"
                          alt="US National Map - Districts with Cities"
                          style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EDistricts with Cities Map Not Available%3C/text%3E%3C/svg%3E'">
@@ -1220,6 +1252,28 @@
         // Generate USA metros content
         function generateUSAMetros() {
             const basePath = getBasePath();
+
+            // Detect census year from path (e.g., us_2000_v1 -> 2000)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+
+            // Census 2000: CBSA classification not available
+            if (censusYear === '2000') {
+                return `
+                    <div class="content-card">
+                        <h2>USA - Metropolitan Areas</h2>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong>📍 Metro area maps not available for Census 2000</strong><br>
+                                The CBSA (Core Based Statistical Area) classification system was introduced after 2000.
+                                Metro area district maps are available for 2010 and 2020 census data.
+                            </p>
+                        </div>
+
+                        <h3>Available Data</h3>
+                        <p>District-level city data is available for all states. Navigate to individual states to view major cities in each district.</p>
+                    </div>
+                `;
+            }
 
             // Define metro map data (state code, display name)
             const metrosData = [

@@ -185,18 +185,18 @@ def visualize_state_compactness(state_dir, state_code, census_year, dpi=150):
     )
 
     # Create output directory
-    output_dir = state_dir / 'compactness_analysis' / 'maps'
+    output_dir = state_dir / 'compactness' / 'maps'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Creating compactness visualizations for {state_name.title()}...")
 
-    # Create Polsby-Popper map
-    pp_output = output_dir / f'polsby_popper_districts_{census_year}.png'
+    # Create Polsby-Popper map (no year suffix)
+    pp_output = output_dir / 'polsby_popper.png'
     create_compactness_map(tracts, 'Polsby-Popper', 'polsby_popper', pp_output, dpi)
     print(f"  Saved: {pp_output}")
 
-    # Create Reock map
-    reock_output = output_dir / f'reock_districts_{census_year}.png'
+    # Create Reock map (no year suffix)
+    reock_output = output_dir / 'reock.png'
     create_compactness_map(tracts, 'Reock', 'reock', reock_output, dpi)
     print(f"  Saved: {reock_output}")
 
@@ -220,8 +220,12 @@ def visualize_national_compactness(output_dir, version, census_year, dpi=150, po
             print(f"ERROR: Base directory not found: {base_dir}")
         return 1
 
-    # Output file
-    output_file = base_dir / f'us_national_compactness_{census_year}.png'
+    # Create maps/compactness directory if it doesn't exist
+    maps_dir = base_dir / 'maps' / 'compactness'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
+    # Output file (no year suffix)
+    output_file = maps_dir / 'polsby_popper.png'
 
     # Check if output exists
     if not force and output_file.exists():

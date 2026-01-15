@@ -104,8 +104,8 @@ def collect_all_districts(us_dir=None):
         report_progress(f"Create US aggregate files - Collecting ({idx}/{total_states})")
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        cities_file = state_dir / 'district_cities.csv'
-        summary_file = state_dir / 'district_summary.csv'
+        cities_file = state_dir / 'data' / 'district_cities.csv'
+        summary_file = state_dir / 'data' / 'district_summary.csv'
 
         if cities_file.exists():
             df = pd.read_csv(cities_file)
@@ -180,7 +180,7 @@ def collect_district_summaries(us_dir=None):
         num_districts = config['districts']
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        summary_file = state_dir / 'district_summary.csv'
+        summary_file = state_dir / 'data' / 'district_summary.csv'
 
         if summary_file.exists():
             df = pd.read_csv(summary_file)
@@ -350,9 +350,13 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
         print(f"Output directory: {us_dir}")
         print("=" * 70)
 
+    # Create data directory if it doesn't exist
+    data_dir = us_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+
     # Check if outputs already exist
-    districts_file = us_dir / 'us_all_districts.csv'
-    summary_file = us_dir / 'us_district_summary.csv'
+    districts_file = data_dir / 'us_all_districts.csv'
+    summary_file = data_dir / 'us_district_summary.csv'
     report_file = us_dir / 'US_2020_Redistricting_Report.md'
 
     if not force and districts_file.exists() and summary_file.exists() and report_file.exists():

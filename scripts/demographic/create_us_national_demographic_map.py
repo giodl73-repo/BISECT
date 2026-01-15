@@ -108,8 +108,12 @@ def main():
             print(f"ERROR: Base directory not found: {base_dir}")
         return 1
 
-    # Output file
-    output_file = base_dir / f'us_national_demographic_{args.year}.png'
+    # Create maps/demographic directory if it doesn't exist
+    maps_dir = base_dir / 'maps' / 'demographic'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
+    # Output file (no year suffix)
+    output_file = maps_dir / 'majority_demographics.png'
 
     # Print-only mode
     if args.print_only:
@@ -192,8 +196,8 @@ def main():
 
             tracts = gpd.read_parquet(tracts_file)
 
-            # Load assignments
-            assignments_file = state_dir / 'final_assignments.pkl'
+            # Load assignments from data/ subdirectory
+            assignments_file = state_dir / 'data' / 'final_assignments.pkl'
             if not assignments_file.exists():
                 continue
 
@@ -208,7 +212,7 @@ def main():
             )
 
             # Load demographic data if available
-            demographic_file = state_dir / 'demographic_analysis' / 'district_demographics.csv'
+            demographic_file = state_dir / 'demographic' / 'district_demographics.csv'
             if demographic_file.exists():
                 try:
                     demographic_df = pd.read_csv(demographic_file)

@@ -84,8 +84,12 @@ def main(output_dir=None, print_only=False, debug=False, force=False):
         print(f"Output directory: {us_dir}")
         print("=" * 70)
 
+    # Create data directory if it doesn't exist
+    data_dir = us_dir / 'data'
+    data_dir.mkdir(parents=True, exist_ok=True)
+
     # Check if output already exists
-    us_file = us_dir / 'us_rounds_hierarchy.csv'
+    us_file = data_dir / 'us_rounds_hierarchy.csv'
 
     if not force and us_file.exists():
         if is_standalone:
@@ -141,7 +145,7 @@ def main(output_dir=None, print_only=False, debug=False, force=False):
         report_progress(f"Create US rounds hierarchy - Collecting ({idx}/{total_states})")
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        hierarchy_file = state_dir / 'rounds_hierarchy.csv'
+        hierarchy_file = state_dir / 'data' / 'rounds_hierarchy.csv'
 
         if hierarchy_file.exists():
             try:

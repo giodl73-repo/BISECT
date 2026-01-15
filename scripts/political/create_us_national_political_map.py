@@ -111,8 +111,12 @@ def main():
             print(f"ERROR: Base directory not found: {base_dir}")
         return 1
 
-    # Output file
-    output_file = base_dir / f'us_national_political_{args.year}.png'
+    # Create maps/political directory if it doesn't exist
+    maps_dir = base_dir / 'maps' / 'political'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
+    # Output file (no year suffix)
+    output_file = maps_dir / 'partisan_lean.png'
 
     # Print-only mode
     if args.print_only:
@@ -196,8 +200,8 @@ def main():
 
             tracts = gpd.read_parquet(tracts_file)
 
-            # Load assignments
-            assignments_file = state_dir / 'final_assignments.pkl'
+            # Load assignments from data/ subdirectory
+            assignments_file = state_dir / 'data' / 'final_assignments.pkl'
             if not assignments_file.exists():
                 continue
 
@@ -211,8 +215,8 @@ def main():
                 lambda row: f"{row['state_code']}-{row['district']:02d}", axis=1
             )
 
-            # Load political data if available
-            political_file = state_dir / 'political_analysis' / f'district_political_{args.year}.csv'
+            # Load political data if available (no year suffix)
+            political_file = state_dir / 'political' / 'district_political.csv'
             if political_file.exists():
                 try:
                     political_df = pd.read_csv(political_file)

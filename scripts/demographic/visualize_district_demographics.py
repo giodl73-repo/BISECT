@@ -270,14 +270,14 @@ def visualize_state_demographics(state_dir, state_code, census_year, dpi=150, fo
     state_dir = Path(state_dir)
 
     # Check demographic analysis exists
-    analysis_file = state_dir / 'demographic_analysis' / 'district_demographics.csv'
+    analysis_file = state_dir / 'demographic' / 'district_demographics.csv'
     if not analysis_file.exists():
         print(f"ERROR: Demographic analysis not found: {analysis_file}")
         print(f"Run analyze_district_demographics.py first")
         return 1
 
     # CHECK IF OUTPUTS EXIST BEFORE LOADING DATA
-    output_dir = state_dir / 'demographic_analysis' / 'maps'
+    output_dir = state_dir / 'demographic' / 'maps'
     required_maps = [
         output_dir / 'gender_balance.png',
         output_dir / 'majority_race.png',

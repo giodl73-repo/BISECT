@@ -173,7 +173,7 @@ def main():
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        output_dir = run_dir / 'demographic_analysis'
+        output_dir = run_dir / 'demographic'
 
     output_dir.mkdir(parents=True, exist_ok=True)
 

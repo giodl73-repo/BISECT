@@ -36,7 +36,7 @@ def find_any_place_in_district(state_code, district_num):
     # Load tract and place data
     tracts_file = f'data/raw/{state_code.lower()}_tracts_2020.parquet'
     places_file = f'data/raw/{state_code.lower()}_places_2020.parquet'
-    assignments_file = state_dir / 'final_assignments.pkl'
+    assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
     if not Path(tracts_file).exists() or not Path(places_file).exists():
         return None
@@ -132,7 +132,7 @@ def main():
 
             # Also update the state-level CSV
             state_dir = Path(f'outputs/us_2020_redistricting/{state_name.lower().replace(" ", "_")}')
-            state_cities_file = state_dir / 'district_cities.csv'
+            state_cities_file = state_dir / 'data' / 'district_cities.csv'
 
             if state_cities_file.exists():
                 state_df = pd.read_csv(state_cities_file)

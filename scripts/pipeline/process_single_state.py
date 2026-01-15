@@ -23,8 +23,8 @@ def main():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--run-analysis', action='store_true',
                        help='Run per-state analysis (compactness, political, demographic)')
-    parser.add_argument('--partition-mode', type=str, default='normal', choices=['normal', 'edge-weighted'],
-                       help='Partitioning mode: "normal" (edge cut minimization) or "edge-weighted" (boundary length minimization)')
+    parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
+                       help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
     args = parser.parse_args()
 
     state_code = args.state.upper()
@@ -50,6 +50,9 @@ def main():
         elif args.year == '2010':
             from scripts.config_2010 import STATE_CONFIG_2010
             STATE_CONFIG = STATE_CONFIG_2010
+        elif args.year == '2000':
+            from scripts.config_2000 import STATE_CONFIG_2000
+            STATE_CONFIG = STATE_CONFIG_2000
         else:
             print(f"ERROR: Year {args.year} not supported")
             sys.exit(1)
@@ -82,7 +85,7 @@ def main():
 
     # Redistricting-specific flags
     redistricting_flags = common_flags.copy()
-    if args.partition_mode != 'normal':
+    if args.partition_mode != 'edge-weighted':
         redistricting_flags.append(f'--partition-mode {args.partition_mode}')
     redistricting_flags_str = ' '.join(redistricting_flags)
 
@@ -100,31 +103,40 @@ def main():
 
     # Add optional analysis steps
     if args.run_analysis:
-        # Political analysis and visualization
-        political_analyze = Path(__file__).parent.parent / 'political' / 'analyze_districts.py'
-        political_visualize = Path(__file__).parent.parent / 'political' / 'visualize_partisan_lean.py'
+        # Check data availability
+        # Political analysis requires election data from same time period as census
+        # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
+        election_data_2020 = Path('data/processed/elections/2020_president_tract.parquet')
+        demographic_data = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet')
 
-        steps.append((
-            "Political analysis",
-            f'{sys.executable} {political_analyze} {state_dir} --year 2020 --census-year {args.year}'.strip()
-        ))
-        steps.append((
-            "Political visualization",
-            f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year 2020 --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
-        ))
+        # Political analysis (only if compatible election data exists for this census year)
+        can_do_political = (args.year == '2020' and election_data_2020.exists())
+        if can_do_political:
+            political_analyze = Path(__file__).parent.parent / 'political' / 'analyze_districts.py'
+            political_visualize = Path(__file__).parent.parent / 'political' / 'visualize_partisan_lean.py'
 
-        # Demographic analysis and visualization
-        demographic_analyze = Path(__file__).parent.parent / 'demographic' / 'analyze_district_demographics.py'
-        demographic_visualize = Path(__file__).parent.parent / 'demographic' / 'visualize_district_demographics.py'
+            steps.append((
+                "Political analysis",
+                f'{sys.executable} {political_analyze} {state_dir} --year 2020 --census-year {args.year}'.strip()
+            ))
+            steps.append((
+                "Political visualization",
+                f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year 2020 --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
+            ))
 
-        steps.append((
-            "Demographic analysis",
-            f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year}'.strip()
-        ))
-        steps.append((
-            "Demographic visualization",
-            f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
-        ))
+        # Demographic analysis (only if demographic data exists for this census year)
+        if demographic_data.exists():
+            demographic_analyze = Path(__file__).parent.parent / 'demographic' / 'analyze_district_demographics.py'
+            demographic_visualize = Path(__file__).parent.parent / 'demographic' / 'visualize_district_demographics.py'
+
+            steps.append((
+                "Demographic analysis",
+                f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year}'.strip()
+            ))
+            steps.append((
+                "Demographic visualization",
+                f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
+            ))
 
         # Compactness visualization (metrics already calculated)
         compactness_script = Path(__file__).parent.parent / 'compactness' / 'visualize_compactness.py'
@@ -193,6 +205,35 @@ def main():
                 print(f"Command: {cmd}", file=sys.stderr)
                 process.kill()
                 sys.exit(1)
+
+        # Validate outputs after all steps complete
+        if not args.print_only:
+            from scripts.validation.validate_pipeline_outputs import validate_state_outputs
+
+            validation_result = validate_state_outputs(
+                state_dir,
+                state_code,
+                state_name,
+                num_districts,
+                args.year,
+                check_optional=False,  # Only check required outputs
+                verbose=False  # Don't print file-by-file details
+            )
+
+            # Determine if we should print validation results
+            is_standalone = (args.position == 2)
+            is_quiet = (args.position == 999)
+
+            missing_count = sum(1 for r in validation_result['results'] if not r['exists'] and r['required'])
+
+            if missing_count > 0:
+                # Always warn about missing files (even in quiet mode)
+                if is_standalone or is_quiet:
+                    send_status(f"{state_name} [{num_districts}D] WARNING: {missing_count} files missing")
+            else:
+                # All required outputs exist
+                if is_standalone:
+                    send_status(f"{state_name} [{num_districts}D] All outputs verified")
 
         # Show completion
         send_status(f"{state_name} [{num_districts}D] COMPLETE")

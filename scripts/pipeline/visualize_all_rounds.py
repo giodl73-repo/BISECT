@@ -172,8 +172,12 @@ def visualize_single_round(args_tuple):
 
     plt.tight_layout()
 
-    # Save
-    map_file = output_dir / f'round_{round_num}_{num_regions}_regions.png'
+    # Create maps/rounds directory if it doesn't exist
+    rounds_dir = output_dir / 'maps' / 'rounds'
+    rounds_dir.mkdir(parents=True, exist_ok=True)
+
+    # Save with zero-padded round number, no region count
+    map_file = rounds_dir / f'round_{round_num:02d}.png'
     plt.savefig(map_file, dpi=dpi, bbox_inches='tight')
     plt.close(fig)  # Explicitly close the figure object
     del fig, ax  # Help garbage collection
@@ -226,7 +230,7 @@ def main():
     tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
 
     intermediate_dir = run_dir / 'intermediate'
-    output_dir = run_dir / 'maps' / 'rounds'
+    output_dir = run_dir  # Function will add maps/rounds subdirectory
 
     # Get number of districts (needed for progress bar and task list)
     sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -288,9 +292,10 @@ def main():
                             ncols=100)
 
     # Check if output already exists
-    if not args.print_only and output_dir.exists():
+    rounds_output_dir = output_dir / 'maps' / 'rounds'
+    if not args.print_only and rounds_output_dir.exists():
         # Check if there are already PNG files in the output directory
-        existing_pngs = list(output_dir.glob('*.png'))
+        existing_pngs = list(rounds_output_dir.glob('*.png'))
         if len(existing_pngs) > 0:
             skip_exists = True
         else:
@@ -326,8 +331,8 @@ def main():
 
         sys.exit(0)
 
-    # Create maps subdirectory in the run directory
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Create maps/rounds subdirectory (no need to create output_dir as it's run_dir)
+    rounds_output_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all round files
     round_files = sorted(intermediate_dir.glob('round_*_metadata.json'))
