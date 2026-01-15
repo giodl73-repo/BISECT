@@ -430,8 +430,8 @@ def validate_national_outputs(
         for output_pattern in script_config['outputs']:
             # Handle multi-file patterns
             if 'round_num' in output_pattern:
-                # Check us_rounds directory
-                rounds_dir = output_dir / 'us_rounds'
+                # Check maps/rounds directory
+                rounds_dir = output_dir / 'maps' / 'rounds'
                 if rounds_dir.exists():
                     round_files = sorted(rounds_dir.glob('round_*.png'))
                     for round_file in round_files:
@@ -445,7 +445,7 @@ def validate_national_outputs(
                 else:
                     # Expected but missing
                     results.append({
-                        'file': 'us_rounds/round_*.png',
+                        'file': 'maps/rounds/round_*.png',
                         'exists': False,
                         'script': script_name,
                         'required': script_config['required'],
@@ -746,6 +746,62 @@ def write_detailed_report(
         f.write("=" * 70 + "\n")
 
 
+def write_state_report(
+    state_result: Dict[str, Any],
+    output_file: Path,
+    year: str
+):
+    """Write validation report for a single state."""
+    state_code = state_result['state_code']
+    state_name = state_result['state_name']
+    summary = state_result['summary']
+
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write("=" * 70 + "\n")
+        f.write(f"{state_name} ({state_code}) - PIPELINE OUTPUT VALIDATION\n")
+        f.write("=" * 70 + "\n\n")
+        f.write(f"Census Year: {year}\n")
+        f.write(f"Validation Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+
+        # Summary
+        f.write("SUMMARY\n")
+        f.write("-" * 70 + "\n")
+        f.write(f"Total files checked: {summary['total_checks']}\n")
+        f.write(f"Files present: {summary['passed']}\n")
+        f.write(f"Files missing: {summary['failed']}\n")
+        f.write(f"Required files failed: {summary['required_failed']}\n")
+        f.write(f"Completion: {summary['completion_pct']:.1f}%\n\n")
+
+        # Status
+        if summary['required_failed'] == 0:
+            f.write("[OK] All required outputs present!\n\n")
+        else:
+            f.write(f"[FAILED] {summary['required_failed']} required outputs missing\n\n")
+
+        # Details
+        f.write("DETAILED RESULTS\n")
+        f.write("-" * 70 + "\n\n")
+
+        missing_files = [c for c in state_result['results'] if not c['exists']]
+        present_files = [c for c in state_result['results'] if c['exists']]
+
+        if missing_files:
+            f.write(f"Missing Files ({len(missing_files)}):\n")
+            for check in missing_files:
+                required_str = "[REQUIRED]" if check['required'] else "[OPTIONAL]"
+                f.write(f"  {required_str} {check['file']}\n")
+                f.write(f"    Script: {check['script']}\n")
+            f.write("\n")
+
+        if present_files:
+            f.write(f"Present Files ({len(present_files)}):\n")
+            for check in present_files:
+                f.write(f"  [OK] {check['file']}\n")
+            f.write("\n")
+
+        f.write("=" * 70 + "\n")
+
+
 def write_csv_report(
     state_results: List[Dict[str, Any]],
     national_results: Dict[str, Any],
@@ -823,7 +879,7 @@ def main():
         return 1
 
     # Check if validation report already exists (skip logic)
-    report_file = output_dir.parent / f"{output_dir.name}_validation.txt"
+    report_file = output_dir / "validation.txt"
     if report_file.exists() and not args.force:
         print(f"Validation report already exists: {report_file}")
         print("Use --force to regenerate")
@@ -864,6 +920,10 @@ def main():
             args.verbose
         )
         state_results = [result]
+
+        # Write per-state validation report
+        state_report_file = state_dir / "validation.txt"
+        write_state_report(result, state_report_file, args.year)
     else:
         # All states validation
         print(f"Validating {len(state_config)} states...")
@@ -887,6 +947,10 @@ def main():
                 args.verbose
             )
             state_results.append(result)
+
+            # Write per-state validation report
+            state_report_file = state_dir / "validation.txt"
+            write_state_report(result, state_report_file, args.year)
 
     # Validate national outputs
     national_results = validate_national_outputs(
@@ -922,7 +986,7 @@ def main():
 
     # Optionally write CSV report
     if args.csv:
-        csv_file = output_dir.parent / f"{output_dir.name}_validation.csv"
+        csv_file = output_dir / "validation.csv"
         write_csv_report(state_results, national_results, csv_file)
         print(f"CSV report: {csv_file}")
 
