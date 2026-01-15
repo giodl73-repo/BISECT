@@ -647,14 +647,14 @@ else:
 
             # Extract our contiguous cluster
             sample_tracts = hennepin_tracts.loc[selected_indices].copy().reset_index(drop=True)
+
             # Build adjacency and calculate real boundary lengths
             n_tracts = len(sample_tracts)
-            adjacency = {}
+            adjacency = {i: [] for i in range(n_tracts)}  # Initialize all at once
             edge_weights = {}
 
             for i in range(n_tracts):
                 geom_i = sample_tracts.iloc[i].geometry
-                adjacency[i] = []
 
                 for j in range(i + 1, n_tracts):
                     geom_j = sample_tracts.iloc[j].geometry
@@ -669,8 +669,8 @@ else:
                             if length_km < 0.1:
                                 length_km = boundary.length * 111  # rough deg to km
 
+                            # Add to adjacency list (symmetric)
                             adjacency[i].append(j)
-                            adjacency[j] = adjacency.get(j, [])
                             adjacency[j].append(i)
                             edge_weights[(i, j)] = length_km
                             edge_weights[(j, i)] = length_km
