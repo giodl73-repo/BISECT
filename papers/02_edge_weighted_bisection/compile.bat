@@ -1,37 +1,49 @@
 @echo off
-REM Batch file to compile the LaTeX paper
-REM Usage: compile.bat [latex_bin_directory]
-REM Example: compile.bat "C:\Program Files\MiKTeX\miktex\bin\x64"
+REM Compile Paper 2: Edge-Weighted Bisection
 
-REM Set LaTeX path: use argument if provided, otherwise use default
-if "%~1"=="" (
-    set LATEX_PATH=C:\Users\giodl\AppData\Local\Programs\MiKTeX\miktex\bin\x64
+cd /d %~dp0
+
+REM Create output directory
+set OUTPUT_DIR=..\..\outputs\papers\02_edge_weighted_bisection
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
+
+echo Compiling Paper 2: Edge-Weighted Bisection
+echo ==================================================
+echo Output: %OUTPUT_DIR%
+echo.
+
+REM First pass
+echo LaTeX pass 1/3...
+pdflatex -interaction=nonstopmode edge_weighted_bisection.tex >nul 2>&1
+
+REM BibTeX
+echo BibTeX...
+bibtex edge_weighted_bisection >nul 2>&1
+
+REM Second pass
+echo LaTeX pass 2/3...
+pdflatex -interaction=nonstopmode edge_weighted_bisection.tex >nul 2>&1
+
+REM Third pass
+echo LaTeX pass 3/3...
+pdflatex -interaction=nonstopmode edge_weighted_bisection.tex >nul 2>&1
+
+echo.
+
+if exist edge_weighted_bisection.pdf (
+    echo [OK] edge_weighted_bisection.pdf created
+    copy /Y edge_weighted_bisection.pdf "%OUTPUT_DIR%\edge_weighted_bisection.pdf" >nul
+    echo [OK] Copied to %OUTPUT_DIR%\edge_weighted_bisection.pdf
 ) else (
-    set LATEX_PATH=%~1
+    echo [ERROR] edge_weighted_bisection.pdf not created
+    exit /b 1
 )
 
-set PAPER_DIR=%~dp0
-
-echo Using LaTeX from: %LATEX_PATH%
-echo Working in: %PAPER_DIR%
 echo.
 
-cd /d "%PAPER_DIR%"
+REM Clean up auxiliary files
+echo Cleaning auxiliary files...
+del /Q *.aux *.log *.bbl *.blg *.out *.toc 2>nul
 
-echo Compiling edge_weighted_bisection.tex (first pass)...
-"%LATEX_PATH%\pdflatex.exe" -interaction=nonstopmode edge_weighted_bisection.tex >nul 2>&1
-
-echo Running bibtex for references...
-"%LATEX_PATH%\bibtex.exe" edge_weighted_bisection >nul 2>&1
-
-echo Compiling edge_weighted_bisection.tex (second pass)...
-"%LATEX_PATH%\pdflatex.exe" -interaction=nonstopmode edge_weighted_bisection.tex >nul 2>&1
-
-echo Compiling edge_weighted_bisection.tex (third pass for cross-refs)...
-"%LATEX_PATH%\pdflatex.exe" -interaction=nonstopmode edge_weighted_bisection.tex
-
+echo Done!
 echo.
-echo Compilation complete! Check edge_weighted_bisection.pdf
-echo.
-echo Page count:
-"%LATEX_PATH%\pdfinfo.exe" edge_weighted_bisection.pdf 2>nul | findstr "Pages:" || echo Could not determine page count

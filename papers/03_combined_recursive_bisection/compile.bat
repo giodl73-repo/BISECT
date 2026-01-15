@@ -3,8 +3,13 @@ REM Compile Paper 3: Recursive Bisection with Edge-Weighted Cuts
 
 cd /d %~dp0
 
-echo Compiling Paper 3: Recursive Bisection with Edge-Weighted Cuts...
-echo ==================================================
+REM Create output directory
+set OUTPUT_DIR=..\..\outputs\papers\03_combined_recursive_bisection
+if not exist "%OUTPUT_DIR%" mkdir "%OUTPUT_DIR%"
+
+echo Compiling Paper 3: Recursive Bisection with Edge-Weighted Cuts
+echo ==================================================================
+echo Output: %OUTPUT_DIR%
 echo.
 
 REM First pass
@@ -24,8 +29,16 @@ echo LaTeX pass 3/3...
 pdflatex -interaction=nonstopmode recursive_bisection_with_edge_weighted_cuts.tex >nul 2>&1
 
 echo.
-echo Compilation complete!
-echo Output: recursive_bisection_with_edge_weighted_cuts.pdf
+
+if exist recursive_bisection_with_edge_weighted_cuts.pdf (
+    echo [OK] recursive_bisection_with_edge_weighted_cuts.pdf created
+    copy /Y recursive_bisection_with_edge_weighted_cuts.pdf "%OUTPUT_DIR%\recursive_bisection_with_edge_weighted_cuts.pdf" >nul
+    echo [OK] Copied to %OUTPUT_DIR%\recursive_bisection_with_edge_weighted_cuts.pdf
+) else (
+    echo [ERROR] recursive_bisection_with_edge_weighted_cuts.pdf not created
+    exit /b 1
+)
+
 echo.
 
 REM Clean up auxiliary files
@@ -33,4 +46,4 @@ echo Cleaning auxiliary files...
 del /Q *.aux *.log *.bbl *.blg *.out *.toc 2>nul
 
 echo Done!
-pause
+echo.
