@@ -817,22 +817,28 @@ else:
                 region0_perimeter = region0_union.boundary.length / 1000
                 if region0_perimeter < 1:
                     region0_perimeter = region0_union.boundary.length * 111
-                c0 = region0_union.centroid
+                # Position label above the region
+                bounds0 = region0_union.bounds  # (minx, miny, maxx, maxy)
+                label_x0 = (bounds0[0] + bounds0[2]) / 2  # Center horizontally
+                label_y0 = bounds0[3]  # Top of region
                 pop0 = sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000
-                ax1.text(c0.x, c0.y, f'Region 0\n{pop0:.1f}K pop\n{region0_perimeter:.1f} km perimeter',
-                        ha='center', va='center', fontsize=8, style='italic',
-                        bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.7, edgecolor='darkblue'))
+                ax1.text(label_x0, label_y0, f'Region 0: {pop0:.1f}K pop, {region0_perimeter:.1f} km perimeter',
+                        ha='center', va='bottom', fontsize=8, fontweight='bold',
+                        bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.9, edgecolor='darkblue', linewidth=2))
 
             if len(part1_geoms) > 0:
                 region1_union = part1_geoms.unary_union
                 region1_perimeter = region1_union.boundary.length / 1000
                 if region1_perimeter < 1:
                     region1_perimeter = region1_union.boundary.length * 111
-                c1 = region1_union.centroid
+                # Position label below the region
+                bounds1 = region1_union.bounds  # (minx, miny, maxx, maxy)
+                label_x1 = (bounds1[0] + bounds1[2]) / 2  # Center horizontally
+                label_y1 = bounds1[1]  # Bottom of region
                 pop1 = sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000
-                ax1.text(c1.x, c1.y, f'Region 1\n{pop1:.1f}K pop\n{region1_perimeter:.1f} km perimeter',
-                        ha='center', va='center', fontsize=8, style='italic',
-                        bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7, edgecolor='darkred'))
+                ax1.text(label_x1, label_y1, f'Region 1: {pop1:.1f}K pop, {region1_perimeter:.1f} km perimeter',
+                        ha='center', va='top', fontsize=8, fontweight='bold',
+                        bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.9, edgecolor='darkred', linewidth=2))
 
             ax1.axis('off')
             ax1.text(0.5, -0.05,
