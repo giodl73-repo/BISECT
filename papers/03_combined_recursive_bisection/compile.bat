@@ -32,6 +32,28 @@ echo ==================================================================
 echo Output: %OUTPUT_DIR%
 echo.
 
+REM ======================================================================
+REM Generate Figures
+REM ======================================================================
+echo [1/2] Generating paper figures...
+echo ----------------------------------------------------------------------
+
+python create_figures.py
+if errorlevel 1 (
+    echo [ERROR] Figure generation failed
+    pause
+    exit /b 1
+)
+
+echo [OK] Figures generated
+echo.
+
+REM ======================================================================
+REM Compile Paper
+REM ======================================================================
+echo [2/2] Compiling paper (recursive_bisection_with_edge_weighted_cuts.tex)...
+echo ----------------------------------------------------------------------
+
 REM First pass
 echo LaTeX pass 1/3...
 pdflatex -interaction=nonstopmode recursive_bisection_with_edge_weighted_cuts.tex >nul 2>&1

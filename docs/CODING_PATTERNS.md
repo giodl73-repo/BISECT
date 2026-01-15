@@ -1425,6 +1425,173 @@ json.dumps(data, indent=8)  # Nice indentation for viewing HTML source
 
 ---
 
+## Papers and Presentations Figure Management
+
+### Pattern: Figures in outputs/
+
+**All figures for papers and presentations must be generated to and referenced from `outputs/`**, not from source directories. This keeps the repository clean and follows the .gitignore pattern where all generated content goes to outputs/.
+
+### Structure
+
+```
+papers/{paper_name}/
+├── create_figures.py          # Generates all figures for this paper
+├── compile.bat                # Runs create_figures.py, then LaTeX
+├── {paper_name}.tex
+└── sections/
+    └── *.tex                  # Reference: ../../outputs/papers/{paper_name}/figures/
+
+presentations/{presentation_name}/
+├── create_figures.py          # Generates all figures for this presentation
+├── compile.bat                # Runs create_figures.py, then LaTeX
+├── presentation.tex
+└── laymen_guide.tex
+
+outputs/
+├── papers/
+│   └── {paper_name}/
+│       ├── figures/
+│       │   └── *.png         # Generated figures
+│       └── {paper_name}.pdf  # Compiled PDF
+└── presentations/
+    └── {presentation_name}/
+        ├── figures/
+        │   └── *.png         # Generated figures
+        ├── presentation.pdf
+        └── laymen_guide.pdf
+```
+
+### Implementation Pattern
+
+**1. Create `create_figures.py` Script**
+
+```python
+#!/usr/bin/env python3
+"""Create all figures for Paper 3."""
+
+from pathlib import Path
+import shutil
+import subprocess
+
+# Create figures directory in outputs
+figures_dir = Path('../../outputs/papers/03_combined_recursive_bisection/figures')
+figures_dir.mkdir(parents=True, exist_ok=True)
+
+# Option A: Copy from pipeline outputs
+source = Path('../../outputs/us_2020_v1/states/minnesota/maps/rounds/round_01.png')
+dest = figures_dir / 'minnesota_round_1.png'
+shutil.copy2(source, dest)
+
+# Option B: Call analysis script to generate figures
+subprocess.run([
+    'python', 'scripts/baseline/visualize_comparison.py',
+    '--output-dir', str(figures_dir)
+], check=True)
+
+# Option C: Generate matplotlib figures directly
+import matplotlib.pyplot as plt
+fig, ax = plt.subplots()
+# ... create figure ...
+plt.savefig(figures_dir / 'custom_figure.png', dpi=150)
+```
+
+**2. Update `compile.bat` to Run Figure Generation First**
+
+```batch
+@echo off
+REM ... setup code ...
+
+echo [1/2] Generating figures...
+python create_figures.py
+if errorlevel 1 (
+    echo [ERROR] Figure generation failed
+    exit /b 1
+)
+
+echo [2/2] Compiling LaTeX...
+pdflatex -interaction=nonstopmode paper.tex >nul 2>&1
+REM ... rest of LaTeX compilation ...
+```
+
+**3. Reference Figures from outputs/ in LaTeX**
+
+```latex
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/minnesota_round_1.png}
+\caption{Minnesota Round 1}
+\end{figure}
+```
+
+### Why This Pattern?
+
+**Benefits**:
+1. ✅ **Clean repository**: No generated PNGs committed to git
+2. ✅ **Consistent with pipeline**: All outputs go to outputs/
+3. ✅ **Reproducible**: `compile.bat --reset` regenerates everything from scratch
+4. ✅ **Single source of truth**: Pipeline outputs are the authoritative figures
+5. ✅ **Easy updates**: Rerun pipeline → recompile papers → figures automatically updated
+
+**Common Scenarios**:
+
+- **Round progression maps**: Copy from `outputs/us_{year}_{version}/states/{state}/maps/rounds/`
+- **Analysis charts**: Run visualization scripts with `--output-dir` pointing to outputs/
+- **Custom diagrams**: Generate matplotlib figures directly to outputs/
+
+### Figure Sources
+
+**1. Pipeline Outputs (Copy)**
+```python
+# Copy existing pipeline outputs
+pipeline_map = Path('outputs/us_2020_v1/states/alabama/maps/rounds/round_01.png')
+paper_fig = Path('outputs/papers/03_combined/figures/alabama_round_1.png')
+shutil.copy2(pipeline_map, paper_fig)
+```
+
+**2. Analysis Scripts (Generate)**
+```python
+# Call existing analysis scripts
+subprocess.run([
+    sys.executable,
+    'scripts/baseline/visualize_three_way_comparison.py',
+    '--comparison-csv', 'outputs/baseline_comparison_edge/three_way_comparison.csv',
+    '--output-dir', 'outputs/papers/03_combined/figures/'
+], check=True)
+```
+
+**3. Custom Figures (Create)**
+```python
+# Generate custom matplotlib figures
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(10, 6))
+# ... create visualization ...
+plt.savefig('outputs/presentations/edge_weighted/figures/graph_example.png',
+            dpi=150, bbox_inches='tight')
+```
+
+### Updating Existing Papers
+
+If a paper currently references `figures/` directly:
+
+**Before**:
+```latex
+\includegraphics[width=\textwidth]{figures/minnesota_round_1.png}
+```
+
+**After**:
+```latex
+\includegraphics[width=\textwidth]{../../outputs/papers/03_combined/figures/minnesota_round_1.png}
+```
+
+**Batch update** (in LaTeX files):
+```bash
+# Replace all figure references
+sed -i 's|figures/|../../outputs/papers/03_combined/figures/|g' sections/*.tex
+```
+
+---
+
 ## Summary: Quick Reference
 
 **When starting a new script**:

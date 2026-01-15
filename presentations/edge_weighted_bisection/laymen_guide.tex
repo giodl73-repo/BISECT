@@ -387,7 +387,7 @@ The algorithm starts with all of Minnesota as a single region containing approxi
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/minnesota_round_1_2_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/minnesota_round_1_2_regions.png}
 \caption{\textbf{Minnesota Round 1}: One state becomes two regions. The algorithm found a roughly north-south split that balances population while minimizing the shared boundary length. This creates a very clean division.}
 \end{figure}
 
@@ -406,7 +406,7 @@ Now we have 2 regions, each needing 4 districts. The algorithm recursively split
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/minnesota_round_2_4_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/minnesota_round_2_4_regions.png}
 \caption{\textbf{Minnesota Round 2}: Two regions become four. Each of the two regions from Round 1 is split in half. Notice how each split follows compact boundaries—no weird tendrils or long corridors.}
 \end{figure}
 
@@ -426,7 +426,7 @@ The final round splits each of the 4 regions into 2 districts, giving us our tar
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/minnesota_round_3_8_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/minnesota_round_3_8_regions.png}
 \caption{\textbf{Minnesota Round 3}: Four regions become eight final districts. This is the completed congressional district map. Each district is compact with smooth boundaries that follow natural geographic features.}
 \end{figure}
 
@@ -457,7 +457,7 @@ Alabama's population is approximately 5.0 million people. With 7 districts, each
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/alabama_round_1_2_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/alabama_round_1_2_regions.png}
 \caption{\textbf{Alabama Round 1}: One state becomes two unequally-sized regions. The larger region (blue, northern) will get 4 districts, while the smaller region (red, southern) will get 3 districts. Despite the unequal split, both regions are geographically compact.}
 \end{figure}
 
@@ -477,7 +477,7 @@ Now we recursively split each region. The 4-district region splits into 2+2. The
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/alabama_round_2_4_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/alabama_round_2_4_regions.png}
 \caption{\textbf{Alabama Round 2}: Two regions become four. The unequal split created one complete district (smallest region in the south) while the other three regions each need one more split to reach their final districts.}
 \end{figure}
 
@@ -497,7 +497,7 @@ The final round splits the three remaining 2-district regions, giving us all 7 c
 
 \begin{figure}[H]
 \centering
-\includegraphics[width=0.65\textwidth]{../../papers/03_combined_recursive_bisection/figures/alabama_round_3_7_regions.png}
+\includegraphics[width=0.65\textwidth]{../../outputs/papers/03_combined_recursive_bisection/figures/alabama_round_3_7_regions.png}
 \caption{\textbf{Alabama Round 3}: Four regions become seven final districts. Despite the odd number requiring unequal splits, all districts are compact with clean boundaries. The recursive approach gracefully handled the non-power-of-2 case.}
 \end{figure}
 
