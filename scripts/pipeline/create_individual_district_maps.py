@@ -449,26 +449,27 @@ if __name__ == '__main__':
     stage_pbar = None
     file_pbar = None
 
+    # Get number of districts from config (needed for skip logic)
+    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    try:
+        if args.year == '2020':
+            from scripts.config_2020 import STATE_CONFIG_2020
+            config = STATE_CONFIG_2020.get(state_code.upper(), {})
+        elif args.year == '2010':
+            from scripts.config_2010 import STATE_CONFIG_2010
+            config = STATE_CONFIG_2010.get(state_code.upper(), {})
+        elif args.year == '2000':
+            from scripts.config_2000 import STATE_CONFIG_2000
+            config = STATE_CONFIG_2000.get(state_code.upper(), {})
+        else:
+            config = {}
+        num_districts = config.get('districts', 1)
+    except:
+        num_districts = 1
+
     # Create progress bars if position is set (for integration with parent scripts)
     # In parallel mode: show stage progress but not file displays
     if args.print_only or args.position != 2 and args.position != 999:
-        # Get number of districts
-        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-        try:
-            if args.year == '2020':
-                from scripts.config_2020 import STATE_CONFIG_2020
-                config = STATE_CONFIG_2020.get(state_code.upper(), {})
-            elif args.year == '2010':
-                from scripts.config_2010 import STATE_CONFIG_2010
-                config = STATE_CONFIG_2010.get(state_code.upper(), {})
-            elif args.year == '2000':
-                from scripts.config_2000 import STATE_CONFIG_2000
-                config = STATE_CONFIG_2000.get(state_code.upper(), {})
-            else:
-                config = {}
-            num_districts = config.get('districts', 1)
-        except:
-            num_districts = 1
 
         # Create progress bar at operation_pos (number of district maps)
         stage_pbar = tqdm(total=num_districts,
@@ -498,16 +499,22 @@ if __name__ == '__main__':
                             leave=False,
                             ncols=100)
 
-    # Check if output already exists
+    # Check if output already exists - verify ALL expected district maps are present
+    skip_exists = False
     if not args.print_only and output_dir.exists():
-        # Check if there are already PNG files in the output directory
-        existing_pngs = list(output_dir.glob('*.png'))
-        if len(existing_pngs) > 0:
+        # Check if all expected district maps exist (district_01.png through district_NN.png)
+        expected_files = [output_dir / f'district_{i+1:02d}.png' for i in range(num_districts)]
+        all_exist = all(f.exists() for f in expected_files)
+
+        if all_exist:
             skip_exists = True
+            if args.debug:
+                print(f"[DEBUG] All {num_districts} district maps already exist, skipping", file=sys.stderr, flush=True)
         else:
-            skip_exists = False
-    else:
-        skip_exists = False
+            # Some maps are missing - need to regenerate
+            missing_count = sum(1 for f in expected_files if not f.exists())
+            if args.debug:
+                print(f"[DEBUG] {missing_count} of {num_districts} district maps missing, regenerating all", file=sys.stderr, flush=True)
 
     # Print-only mode or skip if output exists
     if args.print_only or skip_exists:
