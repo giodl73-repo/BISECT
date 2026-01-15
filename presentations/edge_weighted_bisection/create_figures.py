@@ -627,12 +627,12 @@ else:
             # Start with a tract in the middle (index 50 is arbitrary but likely central)
             start_idx = hennepin_tracts.index[min(50, len(hennepin_tracts) - 1)]
 
-            # BFS to find 10 contiguous tracts
+            # BFS to find 12 contiguous tracts
             selected_indices = [start_idx]
             queue = deque([start_idx])
             visited = {start_idx}
 
-            while len(selected_indices) < 10 and queue:
+            while len(selected_indices) < 12 and queue:
                 current = queue.popleft()
                 neighbors = get_neighbors(current, hennepin_tracts)
 
@@ -642,7 +642,7 @@ else:
                         selected_indices.append(neighbor)
                         queue.append(neighbor)
 
-                        if len(selected_indices) >= 10:
+                        if len(selected_indices) >= 12:
                             break
 
             # Extract our contiguous cluster
@@ -732,7 +732,7 @@ else:
             ax1.set_title('Census Tracts + METIS Cut\n(Geographic Reality)', fontsize=12, fontweight='bold')
 
             # Assign labels
-            labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'][:n_tracts]
+            labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'][:n_tracts]
             sample_tracts['label'] = labels
             sample_tracts['partition'] = membership
 
