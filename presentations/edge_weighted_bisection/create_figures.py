@@ -565,6 +565,161 @@ plt.savefig(figures_dir / 'before_after_cut.png', dpi=150, bbox_inches='tight',
 print(f"  Created: {figures_dir / 'before_after_cut.png'}")
 plt.close()
 
+# =============================================================================
+# Figure 6: Real Census Tracts to Graph Transformation
+# =============================================================================
+print("Creating real census tracts to graph transformation...")
+
+import geopandas as gpd
+import warnings
+warnings.filterwarnings('ignore')
+
+# Try to load real census tract data
+tracts_file = Path(f'../../data/geography/nhgis_shapefiles_{args.year}/tracts/US_tract_{args.year}.shp')
+
+if not tracts_file.exists():
+    print(f"  [WARNING] Census tracts shapefile not found at: {tracts_file}")
+    print(f"            Skipping real tracts figure")
+else:
+    try:
+        # Load tracts
+        tracts_gdf = gpd.read_file(tracts_file)
+
+        # Pick a small interesting cluster - let's use a few tracts from Hennepin County, MN (Minneapolis area)
+        # This gives us urban tracts with interesting shapes
+        hennepin_tracts = tracts_gdf[tracts_gdf['GISJOIN'].str.startswith('G2700053')]
+
+        if len(hennepin_tracts) >= 6:
+            # Take first 6 tracts for simplicity
+            sample_tracts = hennepin_tracts.head(6).copy()
+
+            # Create figure with two subplots
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+            # Left: Geographic tracts with boundaries
+            ax1.set_title('Census Tracts\n(Geographic Reality)', fontsize=12, fontweight='bold')
+
+            # Assign labels A-F
+            labels = ['A', 'B', 'C', 'D', 'E', 'F']
+            sample_tracts['label'] = labels[:len(sample_tracts)]
+
+            # Plot tracts with different colors
+            colors = ['lightgreen', 'lightcoral', 'lightyellow', 'lightblue', 'plum', 'lightgray']
+            for idx, (_, tract) in enumerate(sample_tracts.iterrows()):
+                sample_tracts[sample_tracts['label'] == labels[idx]].plot(
+                    ax=ax1,
+                    facecolor=colors[idx],
+                    edgecolor='black',
+                    linewidth=2,
+                    alpha=0.7
+                )
+
+                # Add label at centroid
+                centroid = tract.geometry.centroid
+                ax1.text(centroid.x, centroid.y, labels[idx],
+                        ha='center', va='center',
+                        fontsize=14, fontweight='bold',
+                        bbox=dict(boxstyle='circle', facecolor='white',
+                                edgecolor='black', linewidth=1.5))
+
+            # Highlight some boundaries
+            for idx in range(len(sample_tracts) - 1):
+                geom1 = sample_tracts.iloc[idx].geometry
+                geom2 = sample_tracts.iloc[idx + 1].geometry
+                if geom1.touches(geom2):
+                    boundary = geom1.intersection(geom2.boundary)
+                    if not boundary.is_empty:
+                        gpd.GeoSeries([boundary]).plot(ax=ax1, color='red', linewidth=3, alpha=0.8)
+
+            ax1.axis('off')
+            ax1.text(0.5, -0.05, 'Real census tracts with\nirregular shapes and boundaries',
+                    transform=ax1.transAxes, ha='center', fontsize=9,
+                    style='italic', color='gray')
+
+            # Right: Abstract graph representation
+            ax2.set_title('Graph Representation\n(For Algorithm)', fontsize=12, fontweight='bold')
+
+            # Create layout for graph based on tract centroids
+            centroids = sample_tracts.geometry.centroid
+            xs = [c.x for c in centroids]
+            ys = [c.y for c in centroids]
+
+            # Normalize to [0, 4] range for nice plotting
+            x_min, x_max = min(xs), max(xs)
+            y_min, y_max = min(ys), max(ys)
+            positions = {}
+            for i, label in enumerate(labels[:len(sample_tracts)]):
+                x_norm = 4 * (xs[i] - x_min) / (x_max - x_min) if x_max > x_min else 2
+                y_norm = 4 * (ys[i] - y_min) / (y_max - y_min) if y_max > y_min else 2
+                positions[label] = (x_norm, y_norm)
+
+            # Draw edges based on adjacency
+            from shapely.geometry import Point
+            for i in range(len(sample_tracts)):
+                geom1 = sample_tracts.iloc[i].geometry
+                label1 = labels[i]
+                for j in range(i + 1, len(sample_tracts)):
+                    geom2 = sample_tracts.iloc[j].geometry
+                    label2 = labels[j]
+
+                    # Check if tracts are adjacent
+                    if geom1.touches(geom2):
+                        x1, y1 = positions[label1]
+                        x2, y2 = positions[label2]
+
+                        # Calculate boundary length (in meters if projected, else degrees)
+                        boundary = geom1.intersection(geom2.boundary)
+                        if not boundary.is_empty:
+                            length = boundary.length / 1000  # Convert to km if in meters
+                            if length < 0.01:  # If in degrees, scale up
+                                length = length * 100
+
+                            # Line thickness based on length
+                            thickness = min(8, max(1, length / 2))
+
+                            ax2.plot([x1, x2], [y1, y2], 'k-',
+                                   linewidth=thickness, alpha=0.5, zorder=1)
+
+                            # Add weight label at midpoint
+                            mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                            ax2.text(mid_x, mid_y, f'{length:.1f}',
+                                   ha='center', va='center', fontsize=7,
+                                   bbox=dict(boxstyle='round', facecolor='white',
+                                           edgecolor='gray', linewidth=0.5))
+
+            # Draw nodes
+            for label, (x, y) in positions.items():
+                idx = labels.index(label)
+                circle = Circle((x, y), 0.25, facecolor=colors[idx],
+                              edgecolor='black', linewidth=2.5, alpha=0.8, zorder=2)
+                ax2.add_patch(circle)
+                ax2.text(x, y, label, ha='center', va='center',
+                        fontsize=12, fontweight='bold', zorder=3)
+
+            ax2.set_xlim(-0.5, 4.5)
+            ax2.set_ylim(-0.5, 4.5)
+            ax2.set_aspect('equal')
+            ax2.axis('off')
+            ax2.text(0.5, -0.05, 'Nodes = tract centroids\nEdges = shared boundaries (km)',
+                    transform=ax2.transAxes, ha='center', fontsize=9,
+                    style='italic', color='gray')
+
+            # Add transformation arrow
+            fig.text(0.5, 0.5, '→', fontsize=60, ha='center', va='center',
+                    color='darkblue', weight='bold', alpha=0.7)
+
+            plt.tight_layout()
+            plt.savefig(figures_dir / 'real_tracts_to_graph.png', dpi=150,
+                       bbox_inches='tight', facecolor='white', edgecolor='none')
+            print(f"  Created: {figures_dir / 'real_tracts_to_graph.png'}")
+            plt.close()
+        else:
+            print(f"  [WARNING] Not enough sample tracts found, skipping")
+
+    except Exception as e:
+        print(f"  [WARNING] Error creating real tracts figure: {e}")
+        print(f"            Skipping real tracts figure")
+
 print()
 print("=" * 70)
 print("Figure Generation Complete!")

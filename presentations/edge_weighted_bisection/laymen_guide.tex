@@ -286,9 +286,21 @@ How do we actually compute the boundary length between two adjacent tracts?
 
 \section{Visualizing the Process}
 
-\subsection{Graph Representation and Edge Weights}
+\subsection{From Real Geography to Abstract Graph}
 
-Let's see what this looks like visually. Here's a simple example showing how we transform census tracts into a graph, and why edge weights matter.
+Before we dive into the algorithm details, let's see exactly how real census tracts transform into the mathematical graph that METIS works with. This is the key bridge between geography and algorithm.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{../../outputs/presentations/edge_weighted_bisection/figures/real_tracts_to_graph.png}
+\caption{\textbf{Real Census Tracts to Graph}: On the left, actual census tracts from Hennepin County, Minnesota (Minneapolis area) with their irregular geographic shapes. Each tract is labeled A-F and colored differently. Red lines highlight some of the shared boundaries between adjacent tracts. On the right, the same tracts represented as an abstract graph—each tract becomes a node (circle), each shared boundary becomes an edge (line), and the edge thickness shows the boundary length in kilometers. This is what METIS sees when partitioning.}
+\end{figure}
+
+\textbf{Key insight:} The algorithm never "sees" the actual geographic shapes! It only works with the graph—nodes, edges, and weights. But because the edge weights encode real boundary lengths, METIS's graph-based decisions automatically create geographically compact districts.
+
+\subsection{Why Edge Weights Matter}
+
+Now let's see the difference between graphs with and without boundary information:
 
 \begin{figure}[H]
 \centering
