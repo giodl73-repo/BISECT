@@ -627,12 +627,12 @@ else:
             # Start with a tract in the middle (index 50 is arbitrary but likely central)
             start_idx = hennepin_tracts.index[min(50, len(hennepin_tracts) - 1)]
 
-            # BFS to find 8 contiguous tracts
+            # BFS to find 10 contiguous tracts
             selected_indices = [start_idx]
             queue = deque([start_idx])
             visited = {start_idx}
 
-            while len(selected_indices) < 8 and queue:
+            while len(selected_indices) < 10 and queue:
                 current = queue.popleft()
                 neighbors = get_neighbors(current, hennepin_tracts)
 
@@ -642,7 +642,7 @@ else:
                         selected_indices.append(neighbor)
                         queue.append(neighbor)
 
-                        if len(selected_indices) >= 8:
+                        if len(selected_indices) >= 10:
                             break
 
             # Extract our contiguous cluster
@@ -732,7 +732,7 @@ else:
             ax1.set_title('Census Tracts + METIS Cut\n(Geographic Reality)', fontsize=12, fontweight='bold')
 
             # Assign labels
-            labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'][:n_tracts]
+            labels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'][:n_tracts]
             sample_tracts['label'] = labels
             sample_tracts['partition'] = membership
 
@@ -773,10 +773,12 @@ else:
                                 # Get midpoint of boundary
                                 mid_point = boundary.centroid
                                 length_km = edge_weights.get((i, j), 0)
-                                ax1.text(mid_point.x, mid_point.y, f'{length_km:.1f}',
-                                       ha='center', va='center', fontsize=7,
-                                       bbox=dict(boxstyle='round', facecolor='white',
-                                               edgecolor='black', linewidth=0.5, alpha=0.8))
+                                # Only label if length is significant (> 0.1 km)
+                                if length_km > 0.1:
+                                    ax1.text(mid_point.x, mid_point.y, f'{length_km:.1f}',
+                                           ha='center', va='center', fontsize=7,
+                                           bbox=dict(boxstyle='round', facecolor='white',
+                                                   edgecolor='black', linewidth=0.5, alpha=0.8))
 
             # Highlight cut boundaries (thick red) and label them
             total_cut_length = 0
@@ -790,11 +792,13 @@ else:
                     mid_point = boundary.centroid
                     length_km = edge_weights.get((i, j), edge_weights.get((j, i), 0))
                     total_cut_length += length_km
-                    ax1.text(mid_point.x, mid_point.y, f'{length_km:.1f}',
-                           ha='center', va='center', fontsize=7, fontweight='bold',
-                           bbox=dict(boxstyle='round', facecolor='yellow',
-                                   edgecolor='red', linewidth=1.5, alpha=0.9),
-                           zorder=11)
+                    # Only label if length is significant (> 0.1 km)
+                    if length_km > 0.1:
+                        ax1.text(mid_point.x, mid_point.y, f'{length_km:.1f}',
+                               ha='center', va='center', fontsize=7, fontweight='bold',
+                               bbox=dict(boxstyle='round', facecolor='yellow',
+                                       edgecolor='red', linewidth=1.5, alpha=0.9),
+                               zorder=11)
 
             # Calculate perimeters
             part0_geoms = sample_tracts[sample_tracts['partition'] == 0].geometry
@@ -894,10 +898,12 @@ else:
                         label_x = mid_x + offset_x
                         label_y = mid_y + offset_y
 
-                        ax2.text(label_x, label_y, f'{length_km:.1f}',
-                               ha='center', va='center', fontsize=9,
-                               bbox=dict(boxstyle='round', facecolor='white',
-                                       edgecolor='gray', linewidth=0.5, alpha=0.8))
+                        # Only label if length is significant (> 0.1 km)
+                        if length_km > 0.1:
+                            ax2.text(label_x, label_y, f'{length_km:.1f}',
+                                   ha='center', va='center', fontsize=9,
+                                   bbox=dict(boxstyle='round', facecolor='white',
+                                           edgecolor='gray', linewidth=0.5, alpha=0.8))
 
             # Draw nodes colored by partition
             for i in range(n_tracts):
