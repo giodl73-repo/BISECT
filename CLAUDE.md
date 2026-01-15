@@ -6,7 +6,7 @@ This document provides context and guidelines for AI assistants working on the C
 
 ## Project Overview
 
-This is a congressional redistricting implementation using METIS recursive bisection algorithm to generate 435 districts across all 50 US states based on 2010 and 2020 Census data.
+This is a congressional redistricting implementation using METIS recursive bisection algorithm to generate 435 districts across all 50 US states based on 2000, 2010, and 2020 Census data.
 
 **Core Goal:** Algorithmically generate compact, population-balanced congressional districts using only geographic and demographic constraints (no gerrymandering).
 
@@ -24,6 +24,7 @@ This is a congressional redistricting implementation using METIS recursive bisec
 ### Configuration
 - `scripts/config_2020.py` - State district counts for 2020 apportionment
 - `scripts/config_2010.py` - State district counts for 2010 apportionment
+- `scripts/config_2000.py` - State district counts for 2000 apportionment
 
 ### Core Algorithm
 - `src/apportionment/partition/recursive_bisection.py` - Main redistricting algorithm
@@ -704,6 +705,10 @@ print(f"-> Next step")   # Works everywhere
 - **Scope-Based Analysis Pattern**: Unified per-state and national analysis into single scripts
 - **Parallel Pipeline Integration**: Analysis now runs per-state (parallel), not batch (sequential)
 - **Performance Optimization**: Eliminated 300+ minute sequential bottleneck
+- **Directory Unification** (Enhancement 13): Merged year-specific paths into single directory structure
+- **Pipeline Validation Framework** (Enhancement 14): Comprehensive output validation across all stages
+- **Multi-Year Support** (Enhancement 15): Full 2000, 2010, 2020 census pipeline support
+- **Artifact Naming Standardization** (Enhancement 17): Clean, consistent naming conventions across all outputs
 - Added `--reset` flag for fresh runs, `--skip-analysis` for legacy batch mode
 - Integrated political and demographic national maps into post-processing
 - Fixed parameter threading for census year vs election year
@@ -719,16 +724,22 @@ See `docs/ENHANCEMENTS_2026.md` for detailed specifications of planned enhanceme
 - ✅ Enhancement 1: Compactness Integration (Jan 10, 2026)
 - ✅ Enhancement 2: D/R Seat Totals (Jan 11, 2026)
 - ✅ Enhancement 3: National Maps (Jan 11, 2026)
+- ✅ Enhancement 4: Urban Metro Area Maps (Jan 12, 2026)
 - ✅ Enhancement 5: National Round Progression Maps (Jan 12, 2026)
 - ✅ Enhancement 6: System Architecture Diagrams (Jan 12, 2026)
+- ✅ Enhancement 7: Edge-Weighted Recursive Bisection (Jan 12, 2026)
 - ✅ Enhancement 9: Parallel Per-State Analysis Integration (Jan 12, 2026)
+- ✅ Enhancement 13: Directory Unification (Jan 14, 2026)
+- ✅ Enhancement 14: Pipeline Output Validation Framework (Jan 14, 2026)
+- ✅ Enhancement 15: Multi-Year Pipeline Support (Jan 14, 2026)
+- ✅ Enhancement 17: Artifact Naming Standardization (Jan 14, 2026)
 
 **In Progress:**
-- 🚧 Enhancement 4: Urban Metro Area Maps
+- 🔄 Enhancement 8: Block-Level Data Support (Phase 0 Complete for 2010, Partial for 2000)
 
 **Planned:**
-- 📋 Enhancement 7: Edge-Weighted Recursive Bisection
-- 📋 Enhancement 8: Block-Level Data Support (2000, 2010, 2020)
+- 📋 Enhancement 10: Per-State Urban Area Processing
+- 📋 Enhancement 16: 2000 Census Metro Area Maps
 
 For implementation details, timelines, technical specifications, and status updates, refer to the comprehensive enhancement document.
 

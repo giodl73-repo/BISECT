@@ -2,7 +2,7 @@
 
 All notable changes to the Congressional Redistricting project.
 
-**Last Updated**: January 12, 2026
+**Last Updated**: January 14, 2026
 
 ## Related Documentation
 
@@ -25,6 +25,69 @@ All notable changes to the Congressional Redistricting project.
 - Improved progress bar UX with state-specific status messages
 - Map boundaries: thin white tract lines + thick black district overlays
 - Default DPI changed from 300 to 150 for better performance
+
+## 2026-01-14 - Enhancement 17: Artifact Naming Standardization
+
+### Changed
+- Standardized all artifact naming conventions across state and national outputs
+- Removed year suffixes from filenames (year is in directory path)
+- Renamed directories: `political_analysis/` → `political/`, `demographic_analysis/` → `demographic/`
+- Organized CSVs in `data/` subdirectory, maps in `maps/` subdirectory
+- Changed national maps: `US_National_Map_435_Districts_2020.png` → `maps/us_all_districts.png`
+- Changed round maps: `round_1_2_regions.png` → `maps/rounds/round_01.png` (zero-padded)
+- Changed district maps: `district_01_los_angeles.png` → `district_01.png` (no city slug)
+- All filenames now use snake_case consistently
+
+### Fixed
+- Path migration bugs in compactness, political, and demographic analysis scripts
+- Updated 7 analysis scripts to use new `data/` subdirectory structure
+- Fixed output directory creation in political analysis
+
+### Files Modified
+- 16 generator scripts updated for new naming conventions
+- 7 analysis scripts updated for new directory structure
+- Validation script updated to reflect new paths
+- Web dashboard updated to reference new filenames
+
+## 2026-01-14 - Enhancement 15: Multi-Year Pipeline Support
+
+### Added
+- Full 2000 census data support (tract data, adjacency graphs)
+- Enhanced skip logic for missing data (election data, metro maps)
+- Year-specific handling throughout pipeline
+
+### Changed
+- Data paths support all three census years (2000, 2010, 2020)
+- Validation framework tests all three years
+- Pipeline gracefully skips unavailable data per year
+
+## 2026-01-14 - Enhancement 14: Pipeline Output Validation Framework
+
+### Added
+- Comprehensive validation script: `scripts/validation/validate_pipeline_outputs.py`
+- Validates all pipeline outputs for completeness
+- Checks state-level and national-level artifacts
+- Reports missing files, completion percentages
+- Integrated into main pipeline with `--validate` flag
+
+### Features
+- Per-state validation tracking
+- Per-stage completion reporting
+- Detailed missing file identification
+- Summary statistics per census year
+
+## 2026-01-14 - Enhancement 13: Directory Unification
+
+### Changed
+- Unified year-specific paths into single directory structure
+- Moved from `data/raw/{year}/` → `data/tracts/{year}/`
+- Moved from `data/adjacency/{year}/` → `data/adjacency/{year}/` (standardized)
+- Removed ~80 lines of conditional path logic
+- Preserved intentional conditionals (config imports)
+
+### Fixed
+- Path inconsistencies across census years
+- Manual editing used for safety on critical changes
 
 ## 2026-01-11 - Documentation Refactoring
 
