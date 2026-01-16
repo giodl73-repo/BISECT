@@ -265,22 +265,14 @@ def create_national_map(us_tracts):
     ax_hawaii.set_title('Hawaii', fontsize=10, fontweight='bold')
 
     # Main title
-    fig.suptitle('United States Congressional Districts - 435 Districts\n2020 Census Algorithmic Redistricting',
+    fig.suptitle('United States Congressional Districts - 435 Districts
+2020 Census Algorithmic Redistricting',
                  fontsize=22, fontweight='bold', y=0.98)
 
-    # Add stats text box to main panel
-    total_pop = us_tracts['population'].sum()
-    ideal_pop = total_pop / 435
+    # Stats text box removed for cleaner visualization
 
-    textstr = f'Total US Population: {total_pop:,}\n'
-    textstr += f'Congressional Districts: 435\n'
-    textstr += f'Ideal per district: {ideal_pop:,.0f}\n'
-    textstr += f'Method: Recursive bisection (METIS)\n'
-    textstr += f'Max Deviation: <1% per state'
 
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-    ax_main.text(0.02, 0.98, textstr, transform=ax_main.transAxes, fontsize=11,
-            verticalalignment='top', bbox=props)
+    # Information available in CSV data files
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
 
@@ -461,23 +453,14 @@ def create_national_map_with_cities(us_tracts, us_dir=None, year='2020'):
     ax_hawaii.set_title('Hawaii', fontsize=10, fontweight='bold')
 
     # Main title
-    fig.suptitle('United States Congressional Districts - 435 Districts with Cities\n2020 Census Algorithmic Redistricting',
+    fig.suptitle('United States Congressional Districts - 435 Districts with Cities
+2020 Census Algorithmic Redistricting',
                  fontsize=22, fontweight='bold', y=0.98)
 
-    # Add stats text box
-    total_pop = us_tracts['population'].sum()
-    ideal_pop = total_pop / 435
+    # Stats text box removed for cleaner visualization
 
-    textstr = f'Total US Population: {total_pop:,}\n'
-    textstr += f'Congressional Districts: 435\n'
-    textstr += f'Ideal per district: {ideal_pop:,.0f}\n'
-    textstr += f'Method: Recursive bisection (METIS)\n'
-    textstr += f'Max Deviation: <1% per state\n'
-    textstr += f'Red dots: Largest city per district'
 
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-    ax_main.text(0.02, 0.98, textstr, transform=ax_main.transAxes, fontsize=11,
-            verticalalignment='top', bbox=props)
+    # Information available in CSV data files
 
     plt.tight_layout(rect=[0, 0, 1, 0.97])
 
@@ -508,7 +491,8 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
         us_dir = Path(output_dir)
 
     if is_standalone:
-        print("\n" + "="*70)
+        print("
+" + "="*70)
         print(f"Creating US National Congressional Districts Maps - {year} Census")
         print("="*70)
         print(f"Output directory: {us_dir}")
@@ -547,10 +531,12 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
     # If outputs already exist, skip (but show progress bar completion)
     if not force and output_file.exists() and output_file_cities.exists():
         if is_standalone:
-            print("\nUS national maps already exist - skipping")
+            print("
+US national maps already exist - skipping")
             print(f"  {output_file.name}")
             print(f"  {output_file_cities.name}")
-            print("\nUse --force to regenerate")
+            print("
+Use --force to regenerate")
         position = int(os.environ.get('TQDM_POSITION', '0'))
         with tqdm(total=4,
                   desc="  Creating maps (skipped - exists)" if position > 0 else "Creating maps (skipped - exists)",
@@ -595,7 +581,8 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
 
     # Print summary only at the end and only if standalone
     if is_standalone:
-        print("\n" + "="*70)
+        print("
+" + "="*70)
         print("SUCCESS! Both maps created")
         print("="*70)
         print(f"  1. {output_file}")

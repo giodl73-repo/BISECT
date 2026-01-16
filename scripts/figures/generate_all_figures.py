@@ -31,7 +31,7 @@ def generate_schematic_figures(args):
     print("\n[1/3] Generating schematic figures...")
     print("-" * 70)
 
-    script = Path('presentations/edge_weighted_bisection/create_figures.py')
+    script = Path('artifacts/presentations/edge_weighted_bisection/create_figures.py')
     if not script.exists():
         print(f"  [ERROR] Script not found: {script}")
         return False
@@ -41,7 +41,7 @@ def generate_schematic_figures(args):
         return False
 
     # Copy to shared figures directory
-    source_dir = Path(f'outputs/presentations/edge_weighted_bisection/figures')
+    source_dir = Path(f'outputs/artifacts/presentations/edge_weighted_bisection/figures')
     dest_dir = Path('outputs/figures/schematic')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -68,7 +68,7 @@ def generate_real_tracts_examples(args):
     print("\n[2/3] Generating real tracts examples...")
     print("-" * 70)
 
-    script = Path('presentations/edge_weighted_bisection/create_appendix_examples.py')
+    script = Path('artifacts/guides/edge_weighted_bisection/create_appendix_examples.py')
     if not script.exists():
         print(f"  [ERROR] Script not found: {script}")
         return False
@@ -78,7 +78,7 @@ def generate_real_tracts_examples(args):
         return False
 
     # Copy to shared figures directory
-    source_dir = Path('outputs/presentations/edge_weighted_bisection/appendix_examples')
+    source_dir = Path('outputs/artifacts/guides/edge_weighted_bisection/appendix_examples')
     dest_dir = Path('outputs/figures/real_tracts_examples')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -219,8 +219,8 @@ python scripts/figures/generate_all_figures.py --year 2010 --version v1
 ```
 
 Or generate specific types:
-- Schematic figures: `python presentations/edge_weighted_bisection/create_figures.py`
-- Real tracts examples: `python presentations/edge_weighted_bisection/create_appendix_examples.py`
+- Schematic figures: `python artifacts/presentations/edge_weighted_bisection/create_figures.py`
+- Real tracts examples: `python artifacts/guides/edge_weighted_bisection/create_appendix_examples.py`
 - Custom variants: `python scripts/figures/create_figure_variants.py --city minneapolis --panels both --boundary-labels all --partition before`
 
 ### Creating Custom Figure Variants

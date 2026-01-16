@@ -107,8 +107,10 @@ def main():
             print("=" * 70)
             print(f"[PRINT-ONLY] National Compactness Map - {args.year} Census")
             print("=" * 70)
-            print("\nWOULD EXECUTE:")
-            print("\n  STEP 1: Load all state data")
+            print("
+WOULD EXECUTE:")
+            print("
+  STEP 1: Load all state data")
             print(f"    - Load tracts: data/raw/{{state}}_tracts_{args.year}.parquet")
             print(f"    - Load assignments: {base_dir}/states/{{state}}/final_assignments.pkl")
             print(f"    - Load compactness data: {base_dir}/states/{{state}}/district_summary.csv")
@@ -123,7 +125,8 @@ def main():
             print("")
             print("  STEP 3: Save map")
             print(f"    - Output: {output_file}")
-            print("\n" + "-" * 70)
+            print("
+" + "-" * 70)
             print("ESTIMATED OUTPUT:")
             print("-" * 70)
             print("  Total districts: 435")
@@ -144,7 +147,8 @@ def main():
     report_progress("Creating national compactness map - Loading data")
 
     if is_standalone:
-        print(f"\nCreating national compactness map for {args.year} census...")
+        print(f"
+Creating national compactness map for {args.year} census...")
         print(f"Output: {output_file}")
 
     # Load all states with districts and compactness data
@@ -259,7 +263,8 @@ def main():
         total_districts = len(us_tracts['unique_district_id'].unique())
 
         # Title
-        fig.suptitle(f'United States Congressional Districts - Compactness\nPolsby-Popper Scores ({args.year} Census, {total_districts} Districts)',
+        fig.suptitle(f'United States Congressional Districts - Compactness
+Polsby-Popper Scores ({args.year} Census, {total_districts} Districts)',
                      fontsize=22, fontweight='bold', y=0.98)
 
         # Add colorbar with realistic range (0.05-0.45)
@@ -272,8 +277,10 @@ def main():
         cbar.set_label('Polsby-Popper Score (0 = irregular, 1 = circular)', fontsize=12, fontweight='bold')
 
         # Add statistics box
-        textstr = f'Average: {avg_compactness:.3f}\n'
-        textstr += f'Median: {median_compactness:.3f}\n'
+        textstr = f'Average: {avg_compactness:.3f}
+'
+        textstr += f'Median: {median_compactness:.3f}
+'
         textstr += f'Total Districts: {total_districts}'
         props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='black', linewidth=2)
         ax_main.text(0.98, 0.98, textstr, transform=ax_main.transAxes, fontsize=14,
@@ -287,14 +294,16 @@ def main():
         plt.close(fig)
 
         if is_standalone:
-            print(f"\nSaved: {output_file}")
+            print(f"
+Saved: {output_file}")
 
         report_progress("Creating national compactness map - Complete")
         return 0
 
     except Exception as e:
         if is_standalone:
-            print(f"\nERROR: {e}")
+            print(f"
+ERROR: {e}")
             import traceback
             traceback.print_exc()
         return 1

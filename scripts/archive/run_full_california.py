@@ -141,13 +141,13 @@ for district_id in range(1, num_districts + 1):
             pass
 
 ax.set_axis_off()
-ax.set_title(f'California Congressional Districts - 52 Districts\\nTract-Level Redistricting (2020 Census)',
+ax.set_title(f'California Congressional Districts - 52 Districts\nTract-Level Redistricting (2020 Census)',
              fontsize=16, fontweight='bold', pad=20)
 
 # Add stats text box
-textstr = f'Total Population: {total_pop:,}\\n'
-textstr += f'Districts: {num_districts}\\n'
-textstr += f'Ideal per district: {ideal:,.0f}\\n'
+textstr = f'Total Population: {total_pop:,}\n'
+textstr += f'Districts: {num_districts}\n'
+textstr += f'Ideal per district: {ideal:,.0f}\n'
 textstr += f'Max Deviation: {max_dev:.2f}%'
 
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)

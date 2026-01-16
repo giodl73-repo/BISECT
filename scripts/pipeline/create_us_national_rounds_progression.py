@@ -307,16 +307,10 @@ def create_national_round_map(round_num, all_states_data, output_file, dpi=150, 
 
     fig.suptitle(title, fontsize=20, fontweight='bold', y=0.98)
 
-    # Add stats text box (same style as create_us_national_map.py)
-    total_pop = sum(data['total_population'] for data in all_states_data)
-    textstr = f'Round: {round_num}\n'
-    textstr += f'Regions: {total_regions}\n'
-    textstr += f'Total Population: {total_pop:,}\n'
-    textstr += f'Avg per region: {total_pop//total_regions:,}'
+    # Stats text box removed for cleaner visualization
 
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
-    ax_main.text(0.02, 0.98, textstr, transform=ax_main.transAxes, fontsize=12,
-                verticalalignment='top', bbox=props, zorder=15)
+
+    # Information available in CSV data files
 
     plt.tight_layout()
 

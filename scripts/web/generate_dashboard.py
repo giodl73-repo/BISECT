@@ -55,6 +55,103 @@ def load_district_data(state_dir):
         return None
 
 
+def scan_artifacts(output_dir):
+    """Scan outputs/artifacts/ and outputs/figures/ directories for artifacts.
+
+    Returns a dictionary of artifacts with paths relative to the dashboard.
+    This data will be baked into the HTML to avoid CORS issues on file:// protocol.
+    """
+    artifacts = {
+        'guides': [],
+        'presentations': [],
+        'papers': [],
+        'figures': {
+            'schematic': [],
+            'real_tracts': [],
+            'round_progression': []
+        }
+    }
+
+    # Scan PDFs in outputs/artifacts/ (shared across all runs)
+    # Note: artifacts are one level up from output_dir (sibling to us_YEAR_VERSION/)
+    artifacts_dir = output_dir.parent / 'artifacts'
+    if artifacts_dir.exists():
+        # Scan guides
+        guides_dir = artifacts_dir / 'guides'
+        if guides_dir.exists():
+            for pdf_path in guides_dir.rglob('*.pdf'):
+                # Path relative to dashboard (e.g., ../artifacts/guides/...)
+                rel_path = pdf_path.relative_to(output_dir.parent)
+                artifacts['guides'].append({
+                    'title': pdf_path.stem.replace('_', ' ').title(),
+                    'path': '../' + str(rel_path).replace('\\', '/'),
+                    'description': 'Educational guide',
+                    'type': 'guide'
+                })
+
+        # Scan presentations
+        presentations_dir = artifacts_dir / 'presentations'
+        if presentations_dir.exists():
+            for pdf_path in presentations_dir.rglob('*.pdf'):
+                # Path relative to dashboard (e.g., ../artifacts/presentations/...)
+                rel_path = pdf_path.relative_to(output_dir.parent)
+                artifacts['presentations'].append({
+                    'title': pdf_path.stem.replace('_', ' ').title(),
+                    'path': '../' + str(rel_path).replace('\\', '/'),
+                    'description': 'Conference presentation',
+                    'type': 'presentation'
+                })
+
+        # Scan papers
+        papers_dir = artifacts_dir / 'papers'
+        if papers_dir.exists():
+            for pdf_path in papers_dir.rglob('*.pdf'):
+                # Path relative to dashboard (e.g., ../artifacts/papers/...)
+                rel_path = pdf_path.relative_to(output_dir.parent)
+                artifacts['papers'].append({
+                    'title': pdf_path.stem.replace('_', ' ').title(),
+                    'path': '../' + str(rel_path).replace('\\', '/'),
+                    'description': 'Research paper',
+                    'type': 'paper'
+                })
+
+    # Scan figures in outputs/figures/
+    # Note: figures are one level up from output_dir (sibling to us_YEAR_VERSION/)
+    figures_dir = output_dir.parent / 'figures'
+    if figures_dir.exists():
+        # Schematic figures
+        schematic_dir = figures_dir / 'schematic'
+        if schematic_dir.exists():
+            for img_path in sorted(schematic_dir.glob('*.png')):
+                artifacts['figures']['schematic'].append({
+                    'name': img_path.stem.replace('_', ' ').title(),
+                    'path': f'../figures/schematic/{img_path.name}',
+                    'filename': img_path.name
+                })
+
+        # Real tracts examples
+        real_tracts_dir = figures_dir / 'real_tracts_examples'
+        if real_tracts_dir.exists():
+            for img_path in sorted(real_tracts_dir.glob('*.png')):
+                artifacts['figures']['real_tracts'].append({
+                    'name': img_path.stem.replace('_', ' ').title(),
+                    'path': f'../figures/real_tracts_examples/{img_path.name}',
+                    'filename': img_path.name
+                })
+
+        # Round progression
+        round_progression_dir = figures_dir / 'round_progression'
+        if round_progression_dir.exists():
+            for img_path in sorted(round_progression_dir.glob('*.png')):
+                artifacts['figures']['round_progression'].append({
+                    'name': img_path.stem.replace('_', ' ').title(),
+                    'path': f'../figures/round_progression/{img_path.name}',
+                    'filename': img_path.name
+                })
+
+    return artifacts
+
+
 def find_all_runs(outputs_dir='outputs'):
     """Find all us_{year}_{version} directories for run selector."""
     import re
@@ -76,8 +173,24 @@ def find_all_runs(outputs_dir='outputs'):
             version_val = match.group(2)
             noedge_suffix = match.group(3) or ''
 
-            # Check if this run has an index.html
-            if not (item / 'index.html').exists():
+            # Check if this run has states with data (check both old and new structure)
+            states_dir = item / 'states'
+            if not states_dir.exists():
+                continue
+
+            # Count states with district_summary.csv
+            num_states = 0
+            for state_dir in states_dir.iterdir():
+                if not state_dir.is_dir():
+                    continue
+                # New structure: states/{state}/data/district_summary.csv
+                if (state_dir / 'data' / 'district_summary.csv').exists():
+                    num_states += 1
+                # Old structure: states/{state}/district_summary.csv
+                elif (state_dir / 'district_summary.csv').exists():
+                    num_states += 1
+
+            if num_states == 0:
                 continue
 
             # Determine mode
@@ -167,8 +280,19 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
         if skipped > 0:
             print(f"  Skipped {skipped} states (no district_cities.csv)")
 
-    # Generate JavaScript variable
+    # Generate JavaScript variable for district data
     district_data_js = f"const DISTRICT_DATA = {json.dumps(district_data, indent=8)};"
+
+    # Scan and generate artifacts data
+    print(f"\n  Scanning artifacts...")
+    artifacts = scan_artifacts(output_dir)
+    artifacts_data_js = f"const ARTIFACTS = {json.dumps(artifacts, indent=8)};"
+
+    pdf_count = len(artifacts['guides']) + len(artifacts['presentations']) + len(artifacts['papers'])
+    fig_count = (len(artifacts['figures']['schematic']) +
+                 len(artifacts['figures']['real_tracts']) +
+                 len(artifacts['figures']['round_progression']))
+    print(f"  Found {pdf_count} PDFs and {fig_count} figures")
 
     # Inject run selector into header (before papers dropdown)
     import re
@@ -222,17 +346,17 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
     injection_comment = "// Note: DISTRICT_DATA will be injected here during deployment"
 
     if injection_comment in dashboard_html:
-        # Replace the comment with the actual data
+        # Replace the comment with the actual data (both district data and artifacts)
         dashboard_html = dashboard_html.replace(
             injection_comment,
-            f"// District data generated by generate_dashboard.py\n        {district_data_js}"
+            f"// District data and artifacts generated by generate_dashboard.py\n        {district_data_js}\n\n        {artifacts_data_js}"
         )
     else:
         print("  Warning: Injection comment not found in template, appending to script")
         # Fallback: inject before closing </script> tag
         dashboard_html = template_html.replace(
             "    </script>",
-            f"\n        // District data generated by generate_dashboard.py\n        {district_data_js}\n    </script>"
+            f"\n        // District data and artifacts generated by generate_dashboard.py\n        {district_data_js}\n\n        {artifacts_data_js}\n    </script>"
         )
 
     # Write output
@@ -243,6 +367,7 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
     print(f"\nDashboard generated: {output_file}")
     print(f"  File size: {len(dashboard_html):,} bytes")
     print(f"  District data: {len(district_data)} states")
+    print(f"  Artifacts: {pdf_count} PDFs, {fig_count} figures")
 
     return 0
 

@@ -304,7 +304,7 @@ def main():
         district_counts = us_tracts.drop_duplicates('unique_district_id')['majority_group'].value_counts()
 
         # Title
-        fig.suptitle(f'United States Congressional Districts - Demographic Composition\\nMajority Group by District ({args.year} Census)',
+        fig.suptitle(f'United States Congressional Districts - Demographic Composition\nMajority Group by District ({args.year} Census)',
                      fontsize=22, fontweight='bold', y=0.98)
 
         # Legend with counts
@@ -319,11 +319,11 @@ def main():
                       title='Majority Demographic Group', title_fontsize=11, framealpha=0.9)
 
         # Add summary statistics
-        textstr = f'Total Districts: 435\\n'
-        textstr += f'White Majority: {district_counts.get("White", 0)}\\n'
-        textstr += f'Hispanic Majority: {district_counts.get("Hispanic", 0)}\\n'
-        textstr += f'Black Majority: {district_counts.get("Black", 0)}\\n'
-        textstr += f'Asian Majority: {district_counts.get("Asian", 0)}\\n'
+        textstr = f'Total Districts: 435\n'
+        textstr += f'White Majority: {district_counts.get("White", 0)}\n'
+        textstr += f'Hispanic Majority: {district_counts.get("Hispanic", 0)}\n'
+        textstr += f'Black Majority: {district_counts.get("Black", 0)}\n'
+        textstr += f'Asian Majority: {district_counts.get("Asian", 0)}\n'
         textstr += f'Other: {district_counts.get("Other", 0)}'
         props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='black', linewidth=2)
         ax_main.text(0.98, 0.98, textstr, transform=ax_main.transAxes, fontsize=14,

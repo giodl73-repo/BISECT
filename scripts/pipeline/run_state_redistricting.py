@@ -95,9 +95,11 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     # Handle --reset flag: delete output directory for fresh run
     if reset and output_dir.exists() and not print_only:
         import shutil
-        print(f"\n[RESET] Deleting existing output directory: {output_dir}")
+        print(f"
+[RESET] Deleting existing output directory: {output_dir}")
         shutil.rmtree(output_dir)
-        print(f"[RESET] Deleted. Starting fresh run.\n")
+        print(f"[RESET] Deleted. Starting fresh run.
+")
 
     # Create data directory if needed
     data_dir = output_dir / 'data'
@@ -280,15 +282,8 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     ax.set_title(f'{state_name} Congressional Districts - {num_districts} Districts\nTract-Level Redistricting (2020 Census)',
                  fontsize=16, fontweight='bold', pad=20)
 
-    # Add stats text box
-    textstr = f'Total Population: {total_pop:,}\n'
-    textstr += f'Districts: {num_districts}\n'
-    textstr += f'Ideal per district: {ideal:,.0f}\n'
-    textstr += f'Max Deviation: {max_dev:.2f}%'
-
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=11,
-            verticalalignment='top', bbox=props)
+    # Stats text box removed for cleaner visualization
+    # Information available in CSV data files
 
     plt.tight_layout()
 

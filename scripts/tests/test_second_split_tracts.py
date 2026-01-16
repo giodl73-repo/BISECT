@@ -186,7 +186,7 @@ for part_id in [0, 1, 2, 3]:
             color='white', bbox=dict(boxstyle='round,pad=0.5', facecolor='black', alpha=0.7))
 
 ax.set_axis_off()
-ax.set_title('California Round 2: 4 Regions (13 districts each)\\nTract-Level Redistricting',
+ax.set_title('California Round 2: 4 Regions (13 districts each)\nTract-Level Redistricting',
              fontsize=16, fontweight='bold', pad=20)
 
 # Legend
@@ -196,15 +196,15 @@ for i, name in enumerate(region_names):
     r = results[name]
     legend_elements.append(
         mpatches.Patch(facecolor=colors[i], edgecolor='white',
-                      label=f"District {i+1} ({name}): {r['pop']:,} people ({len(r['indices']):,} tracts)\\n  {r['k']} districts x {r['per_district']:,.0f} avg")
+                      label=f"District {i+1} ({name}): {r['pop']:,} people ({len(r['indices']):,} tracts)\n  {r['k']} districts x {r['per_district']:,.0f} avg")
     )
 
 ax.legend(handles=legend_elements, loc='lower right',
          frameon=True, fancybox=True, shadow=True, fontsize=9)
 
 # Add stats text box
-textstr = f'Total Population: {total_pop:,}\\n'
-textstr += f'Target: 52 districts x {ideal_pop:,.0f} people\\n'
+textstr = f'Total Population: {total_pop:,}\n'
+textstr += f'Target: 52 districts x {ideal_pop:,.0f} people\n'
 textstr += f'Max Deviation: {max_dev:.2f}%'
 
 props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)

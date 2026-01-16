@@ -96,9 +96,9 @@ def visualize_single_round(args_tuple):
 
     # Add region numbers (1-based) with target district counts - white text with black outline
     if num_regions <= 4:
-        fontsize = 40
+        fontsize = 24  # Reduced from 40
     elif num_regions <= 8:
-        fontsize = 28
+        fontsize = 20  # Reduced from 28
     elif num_regions <= 16:
         fontsize = 18
     elif num_regions <= 32:
@@ -158,7 +158,7 @@ def visualize_single_round(args_tuple):
     else:
         max_dev = 0
 
-    title = f'{state_name} Round {round_num}: {num_regions} Regions\\n'
+    title = f'{state_name} Round {round_num}: {num_regions} Regions\n'
     if num_regions <= 8:
         dprs = total_districts // num_regions
         title += f'({dprs}-{dprs + 1} districts each)'
@@ -167,15 +167,8 @@ def visualize_single_round(args_tuple):
 
     ax.set_title(title, fontsize=16, fontweight='bold', pad=20)
 
-    # Add stats text box
-    textstr = f'Total Population: {total_pop:,}\\n'
-    textstr += f'Target: {total_districts} districts\\n'
-    textstr += f'Ideal per district: {ideal_pop:,.0f}\\n'
-    textstr += f'Max Deviation: {max_dev:.2f}%'
-
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=10,
-            verticalalignment='top', bbox=props)
+    # Stats text box removed for cleaner visualization
+    # Information available in CSV data files
 
     plt.tight_layout()
 

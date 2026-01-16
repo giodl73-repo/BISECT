@@ -24,7 +24,8 @@ SINGLE_DISTRICT_STATES = {
 def create_single_district_state(state_code, state_name, dpi=150):
     """Create all files for a single-district state."""
 
-    print(f"\n{'='*70}")
+    print(f"
+{'='*70}")
     print(f"Creating single-district structure for {state_name}")
     print(f"{'='*70}")
 
@@ -115,17 +116,14 @@ def create_single_district_state(state_code, state_name, dpi=150):
         pass
 
     ax.set_axis_off()
-    ax.set_title(f'{state_name} Congressional District\nAt-Large (Single District)',
+    ax.set_title(f'{state_name} Congressional District
+At-Large (Single District)',
                  fontsize=16, fontweight='bold', pad=20)
 
-    # Add stats text box
-    textstr = f'Total Population: {total_pop:,}\n'
-    textstr += f'Districts: 1 (At-Large)\n'
-    textstr += f'Status: No redistricting needed'
+    # Stats text box removed for cleaner visualization
 
-    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=11,
-            verticalalignment='top', bbox=props)
+
+    # Information available in CSV data files
 
     plt.tight_layout()
 
@@ -161,7 +159,8 @@ def create_single_district_state(state_code, state_name, dpi=150):
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', edgecolor='black', alpha=0.8))
 
         ax.set_axis_off()
-        ax.set_title(f'{state_name} Congressional District - At-Large\nLargest city: {city_name}',
+        ax.set_title(f'{state_name} Congressional District - At-Large
+Largest city: {city_name}',
                      fontsize=16, fontweight='bold', pad=20)
 
         plt.tight_layout()
@@ -183,7 +182,8 @@ def main():
     parser.add_argument('--dpi', type=int, default=150, help='DPI for output maps')
     args = parser.parse_args()
 
-    print("\n" + "="*70)
+    print("
+" + "="*70)
     print("Creating Single-District State Structures")
     print("="*70)
 
@@ -196,7 +196,8 @@ def main():
         else:
             failed.append(state_name)
 
-    print("\n" + "="*70)
+    print("
+" + "="*70)
     print("SUMMARY")
     print("="*70)
     print(f"Successful: {len(successful)}/{len(SINGLE_DISTRICT_STATES)}")
@@ -204,7 +205,8 @@ def main():
         print(f"  [OK] {s}")
 
     if failed:
-        print(f"\nFailed: {len(failed)}")
+        print(f"
+Failed: {len(failed)}")
         for f in failed:
             print(f"  [FAIL] {f}")
 

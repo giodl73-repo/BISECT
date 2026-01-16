@@ -29,7 +29,13 @@ def create_comparison_bar_chart(comparison_df: pd.DataFrame, output_file: Path):
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    methods = ['Normal\nRecursive\nBisection', 'Edge-Weighted\nRecursive\nBisection', 'Enacted\n2020\nDistricts']
+    methods = ['Normal
+Recursive
+Bisection', 'Edge-Weighted
+Recursive
+Bisection', 'Enacted
+2020
+Districts']
     means = [normal_mean, edge_mean, enacted_mean]
     colors = ['#e74c3c', '#27ae60', '#3498db']
 
@@ -54,7 +60,8 @@ def create_comparison_bar_chart(comparison_df: pd.DataFrame, output_file: Path):
             ha='center', fontsize=12, color='green', fontweight='bold')
 
     ax.set_ylabel('Mean Polsby-Popper Score', fontsize=14, fontweight='bold')
-    ax.set_title('National Compactness Comparison\n(All 435 Congressional Districts)',
+    ax.set_title('National Compactness Comparison
+(All 435 Congressional Districts)',
                  fontsize=16, fontweight='bold', pad=20)
     ax.set_ylim(0, 0.45)
     ax.grid(axis='y', alpha=0.3, linestyle='--')
@@ -96,7 +103,8 @@ def create_state_improvement_scatter(comparison_df: pd.DataFrame, output_file: P
 
     ax.set_xlabel('Enacted 2020 Districts (Polsby-Popper)', fontsize=12, fontweight='bold')
     ax.set_ylabel('Edge-Weighted Algorithm (Polsby-Popper)', fontsize=12, fontweight='bold')
-    ax.set_title('State-Level Compactness: Edge-Weighted vs Enacted\n(37 of 50 states improved)',
+    ax.set_title('State-Level Compactness: Edge-Weighted vs Enacted
+(37 of 50 states improved)',
                 fontsize=14, fontweight='bold', pad=15)
     ax.legend(fontsize=11, loc='upper left')
     ax.grid(alpha=0.3, linestyle='--')
@@ -119,7 +127,8 @@ def create_improvement_distribution(comparison_df: pd.DataFrame, output_file: Pa
                label=f'Mean: {improvements_normal.mean():.1f}%')
     ax1.set_xlabel('Improvement (%)', fontsize=12, fontweight='bold')
     ax1.set_ylabel('Number of States', fontsize=12, fontweight='bold')
-    ax1.set_title('Edge-Weighted vs Normal Mode\n(43 of 50 states improved)',
+    ax1.set_title('Edge-Weighted vs Normal Mode
+(43 of 50 states improved)',
                  fontsize=13, fontweight='bold')
     ax1.legend(fontsize=10)
     ax1.grid(axis='y', alpha=0.3)
@@ -131,7 +140,8 @@ def create_improvement_distribution(comparison_df: pd.DataFrame, output_file: Pa
                label=f'Mean: {improvements_enacted.mean():.1f}%')
     ax2.set_xlabel('Improvement (%)', fontsize=12, fontweight='bold')
     ax2.set_ylabel('Number of States', fontsize=12, fontweight='bold')
-    ax2.set_title('Edge-Weighted vs Enacted 2020\n(37 of 50 states improved)',
+    ax2.set_title('Edge-Weighted vs Enacted 2020
+(37 of 50 states improved)',
                  fontsize=13, fontweight='bold')
     ax2.legend(fontsize=10)
     ax2.grid(axis='y', alpha=0.3)
@@ -225,7 +235,8 @@ def main():
     create_improvement_distribution(comparison_df, args.output_dir / 'improvement_distribution.png')
     create_top_states_comparison(comparison_df, args.output_dir / 'top_bottom_states.png')
 
-    print("\n" + "=" * 60)
+    print("
+" + "=" * 60)
     print("All figures generated successfully!")
     print(f"Output directory: {args.output_dir}")
     print("=" * 60)

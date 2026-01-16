@@ -276,6 +276,288 @@
         .year-2010 { background: #fab1a0; color: #e17055; }
         .year-2020 { background: #a29bfe; color: #6c5ce7; }
 
+        /* View tabs */
+        .view-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .view-tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .view-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .view-tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .view-content {
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Run cards styles */
+        .runs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .run-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .run-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .run-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .run-card-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .run-card-mode {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .mode-edge-weighted {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .mode-unweighted {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .run-card-details {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .run-card-detail {
+            margin-bottom: 0.5rem;
+        }
+
+        .run-card-detail strong {
+            color: #333;
+        }
+
+        /* Artifacts styles */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .artifact-category {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .artifact-category:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .artifact-category h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .artifact-list {
+            list-style: none;
+        }
+
+        .artifact-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .artifact-item:hover {
+            background: #e7f3ff;
+            transform: translateX(4px);
+        }
+
+        .artifact-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .artifact-type {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .figures-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .figure-thumbnail {
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .figure-thumbnail:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .figure-thumbnail img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .figure-name {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+        }
+
+        .pdf-viewer-container {
+            margin: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .pdf-viewer-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-viewer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .pdf-viewer-guide,
+        .pdf-viewer-presentation,
+        .pdf-viewer-paper {
+            width: 100%;
+            border: none;
+        }
+
+        .pdf-viewer-guide,
+        .pdf-viewer-paper {
+            height: 1100px;
+            max-height: 80vh;
+        }
+
+        .pdf-viewer-presentation {
+            height: 540px;
+            max-height: 80vh;
+        }
+
+        .figure-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .modal-caption {
+            text-align: center;
+            color: #ccc;
+            padding: 20px;
+            font-size: 1.1rem;
+        }
+
         @media (max-width: 1024px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -305,10 +587,35 @@
             <div class="subtitle">Cross-Census Compactness Analysis (2000-2020)</div>
         </div>
 
+        <!-- View Tabs -->
+        <div class="view-tabs">
+            <div class="view-tab active" onclick="switchView('overview')">📊 Overview</div>
+            <div class="view-tab" onclick="switchView('compactness')">📐 Compactness</div>
+            <div class="view-tab" onclick="switchView('artifacts')">📄 Artifacts</div>
+        </div>
+
+        <!-- Overview Content -->
+        <div id="overview-view" class="view-content active">
+            <div style="padding: 2rem;">
+                <div class="section">
+                    <h2 class="section-title">Available Redistricting Runs</h2>
+                    <div class="section-subtitle">
+                        Click on a run to view its detailed dashboard
+                    </div>
+
+                    <div id="runsGrid" class="runs-grid">
+                        <!-- Run cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div><!-- end overview-view -->
+
+        <!-- Compactness Content -->
+        <div id="compactness-view" class="view-content">
         <div class="content-grid">
             <div class="main-content">
                 <div class="section">
-                    <h2 class="section-title">Cross-Census Overview</h2>
+                    <h2 class="section-title">Cross-Census Compactness Analysis</h2>
                     <div class="section-subtitle">
                         Comparing algorithmic vs enacted district compactness across three census cycles
                     </div>
@@ -407,7 +714,15 @@
                 </div>
             </div>
         </div>
-    </div>
+        </div><!-- end compactness-view -->
+
+        <!-- Artifacts Content -->
+        <div id="artifacts-view" class="view-content">
+            <div id="artifactsContainer" style="padding: 2rem;">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div><!-- end main-container -->
 
     <script>
         // Run data embedded by generator
@@ -638,6 +953,49 @@
             }
         }
 
+        function populateRunsGrid() {
+            const runsGridDiv = document.getElementById('runsGrid');
+
+            let html = '';
+            // Sort runs by year (desc) then version
+            const sortedRuns = [...RUNS].sort((a, b) => {
+                if (b.year !== a.year) return b.year.localeCompare(a.year);
+                return a.version_full.localeCompare(b.version_full);
+            });
+
+            sortedRuns.forEach(run => {
+                const modeClass = run.mode.toLowerCase().includes('edge') ? 'mode-edge-weighted' : 'mode-unweighted';
+                const yearClass = `year-${run.year}`;
+
+                html += `
+                    <div class="run-card" onclick="openRun('${run.path}/index.html')">
+                        <div class="run-card-header">
+                            <div class="run-card-title">${run.year}</div>
+                            <span class="year-badge ${yearClass}">${run.year}</span>
+                        </div>
+                        <div class="run-card-details">
+                            <div class="run-card-detail">
+                                <strong>Version:</strong> ${run.version_full}
+                            </div>
+                            <div class="run-card-detail">
+                                <strong>Mode:</strong>
+                                <span class="run-card-mode ${modeClass}">${run.mode}</span>
+                            </div>
+                            <div class="run-card-detail">
+                                <strong>States:</strong> ${run.num_states}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            runsGridDiv.innerHTML = html || '<p style="color: #999; text-align: center; grid-column: 1/-1;">No runs available</p>';
+        }
+
+        function openRun(path) {
+            window.location.href = path;
+        }
+
         function populateRunsList() {
             const runsListDiv = document.getElementById('runsList');
             const runsByYear = {};
@@ -659,13 +1017,202 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadComparisonData();
             setupTableSorting();
+            populateRunsGrid();
             populateRunsList();
+            loadArtifacts();
         });
 
         // Allow Enter key in run selector
         document.getElementById('runSelect').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 viewDashboard();
+            }
+        });
+
+        // View switching
+        function switchView(viewName) {
+            // Update tabs
+            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewName + '-view').classList.add('active');
+        }
+
+        // Artifacts data will be embedded here by generator
+        const ARTIFACTS = /* ARTIFACTS_DATA_PLACEHOLDER */;
+
+        // Load artifacts
+        function loadArtifacts() {
+            const container = document.getElementById('artifactsContainer');
+
+            if (typeof ARTIFACTS === 'undefined' || !ARTIFACTS) {
+                container.innerHTML = '<p>No artifacts data available.</p>';
+                return;
+            }
+
+            let html = '<h2 style="color: #667eea; margin-bottom: 1rem;">📄 Research Artifacts</h2>';
+            html += '<p style="color: #666; margin-bottom: 2rem;">Compiled PDFs and shared figures from the redistricting project.</p>';
+            html += '<div class="artifacts-grid">';
+
+            // Guides
+            if (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📖 Guides</h3>';
+                html += '<p class="category-description">Educational guides for general audiences</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.guides.forEach(guide => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${guide.path}', 'guide', '${guide.title}')">`;
+                    html += `<span class="artifact-title">${guide.title}</span>`;
+                    html += '<span class="artifact-type">Letter (8.5" × 11")</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Presentations
+            if (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📊 Presentations</h3>';
+                html += '<p class="category-description">Conference presentations</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.presentations.forEach(pres => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${pres.path}', 'presentation', '${pres.title}')">`;
+                    html += `<span class="artifact-title">${pres.title}</span>`;
+                    html += '<span class="artifact-type">Widescreen (16:9)</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Papers
+            if (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📝 Papers</h3>';
+                html += '<p class="category-description">Academic research papers</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.papers.forEach(paper => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${paper.path}', 'paper', '${paper.title}')">`;
+                    html += `<span class="artifact-title">${paper.title}</span>`;
+                    html += '<span class="artifact-type">Letter (8.5" × 11")</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Figures
+            if (ARTIFACTS.figures) {
+                const hasSchematic = ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0;
+                const hasRealTracts = ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0;
+                const hasRoundProgression = ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0;
+
+                if (hasSchematic || hasRealTracts || hasRoundProgression) {
+                    html += '<div class="artifact-category" style="grid-column: 1 / -1;">';
+                    html += '<h3>🖼️ Figures</h3>';
+                    html += '<p class="category-description">Shared figures used across documents</p>';
+
+                    if (hasSchematic) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Schematic Diagrams</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.schematic.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    if (hasRealTracts) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Real Census Tract Examples</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.real_tracts.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    if (hasRoundProgression) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Round Progression</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.round_progression.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    html += '</div>';
+                }
+            }
+
+            html += '</div>';
+
+            // Add PDF viewer and modal containers
+            html += `
+                <div id="pdfViewerContainer" class="pdf-viewer-container" style="display: none;">
+                    <div class="pdf-viewer-header">
+                        <h3 id="pdfViewerTitle"></h3>
+                        <button class="pdf-viewer-close" onclick="closePDFViewer()">✕</button>
+                    </div>
+                    <embed id="pdfViewerEmbed" type="application/pdf" class="pdf-viewer-guide">
+                </div>
+
+                <div id="figureModal" class="figure-modal" onclick="closeFigureModal()" style="display: none;">
+                    <span class="modal-close" onclick="closeFigureModal()">&times;</span>
+                    <img id="modalImage" class="modal-content">
+                    <div id="modalCaption" class="modal-caption"></div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Display PDF
+        function displayPDF(path, type, title) {
+            const container = document.getElementById('pdfViewerContainer');
+            const titleEl = document.getElementById('pdfViewerTitle');
+            const embedEl = document.getElementById('pdfViewerEmbed');
+
+            titleEl.textContent = title;
+            embedEl.src = path;
+            embedEl.className = `pdf-viewer-${type}`;
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Close PDF viewer
+        function closePDFViewer() {
+            document.getElementById('pdfViewerContainer').style.display = 'none';
+        }
+
+        // Open figure modal
+        function openFigureModal(path, name) {
+            const modal = document.getElementById('figureModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('modalCaption');
+
+            modal.style.display = 'flex';
+            modalImg.src = path;
+            caption.textContent = name;
+        }
+
+        // Close figure modal
+        function closeFigureModal() {
+            document.getElementById('figureModal').style.display = 'none';
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFigureModal();
+                closePDFViewer();
             }
         });
     </script>

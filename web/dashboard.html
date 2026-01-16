@@ -380,6 +380,279 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+
+        /* Artifacts Tab Styles */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .artifact-category {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .artifact-category:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .artifact-category h3 {
+            margin: 0 0 1rem 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .artifact-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .artifact-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .artifact-item:last-child {
+            border-bottom: none;
+        }
+
+        .artifact-item:hover {
+            background: #f8f9fa;
+        }
+
+        .artifact-item-icon {
+            font-size: 1.2rem;
+        }
+
+        .artifact-item-text {
+            flex: 1;
+        }
+
+        .artifact-item-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .artifact-item-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* PDF Viewers */
+        .pdf-viewer {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+
+        .pdf-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .pdf-viewer-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .pdf-viewer-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .pdf-viewer-close:hover {
+            background: #c82333;
+        }
+
+        .pdf-embed-container {
+            text-align: center;
+        }
+
+        .pdf-viewer-guide {
+            width: 850px;
+            height: 1100px;
+            max-width: 100%;
+        }
+
+        .pdf-viewer-presentation {
+            width: 960px;
+            height: 540px;
+            max-width: 100%;
+        }
+
+        .pdf-viewer-paper {
+            width: 850px;
+            height: 1100px;
+            max-width: 100%;
+        }
+
+        .pdf-fallback {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .pdf-fallback a {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .pdf-fallback a:hover {
+            background: #5568d3;
+        }
+
+        /* Figures Gallery */
+        .figures-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .figure-thumbnail {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .figure-thumbnail:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .figure-thumbnail img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .figure-thumbnail-caption {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Modal for full-size figures */
+        .figure-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .figure-modal.active {
+            display: flex;
+        }
+
+        .figure-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .figure-modal-img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .figure-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .figure-modal-close:hover {
+            background: #c82333;
+        }
+
+        .figure-modal-caption {
+            color: white;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .empty-artifacts {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .empty-artifacts-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-artifacts h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .empty-artifacts p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-artifacts code {
+            background: #f8f9fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #667eea;
+        }
     </style>
 </head>
 <body>
@@ -1212,9 +1485,10 @@
             let mapsHtml = '';
             for (let round = 1; round <= 6; round++) {
                 const expectedRegions = Math.pow(2, round);
+                const roundNumPadded = round.toString().padStart(2, '0');
                 mapsHtml += `
                     <div class="map-item">
-                        <img src="${basePath}/us_national_round_${round}_${currentYear}.png"
+                        <img src="${basePath}/maps/rounds/round_${roundNumPadded}.png"
                              alt="Round ${round}: ${expectedRegions} regions nationwide"
                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ERound ${round}%3C/text%3E%3C/svg%3E'">
                         <div class="map-label">Round ${round}: ${expectedRegions} regions (2^${round})</div>
@@ -1329,6 +1603,272 @@
                 </div>
             `;
         }
+
+        // Generate artifacts content
+        function generateArtifacts() {
+            const basePath = getBasePath();
+
+            // Check if ARTIFACTS is defined (baked in by generate_dashboard.py)
+            if (typeof ARTIFACTS === 'undefined') {
+                return `
+                    <div class="content-card">
+                        <h2>📄 Artifacts</h2>
+                        <div class="empty-artifacts">
+                            <p>Artifacts data not available.</p>
+                            <p>Run <code>python scripts/web/generate_dashboard.py</code> to regenerate dashboard with artifacts.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="content-card">
+                    <h2>📄 Artifacts</h2>
+                    <p>Compiled PDFs and shared figures from the redistricting project.</p>
+
+                    <div class="artifacts-grid">
+            `;
+
+            // Guides section
+            if (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📖 Guides</h3>
+                        <p class="category-description">Educational guides for general audiences</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.guides.forEach(guide => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${guide.path}', 'guide', '${guide.title}')">
+                            <span class="artifact-title">${guide.title}</span>
+                            <span class="artifact-type">Letter (8.5" × 11")</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Presentations section
+            if (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📊 Presentations</h3>
+                        <p class="category-description">Conference presentations and slides</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.presentations.forEach(pres => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${pres.path}', 'presentation', '${pres.title}')">
+                            <span class="artifact-title">${pres.title}</span>
+                            <span class="artifact-type">Widescreen (16:9)</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Papers section
+            if (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📝 Papers</h3>
+                        <p class="category-description">Academic research papers</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.papers.forEach(paper => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${paper.path}', 'paper', '${paper.title}')">
+                            <span class="artifact-title">${paper.title}</span>
+                            <span class="artifact-type">Letter (8.5" × 11")</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Figures section
+            if (ARTIFACTS.figures) {
+                const hasSchematic = ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0;
+                const hasRealTracts = ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0;
+                const hasRoundProgression = ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0;
+
+                if (hasSchematic || hasRealTracts || hasRoundProgression) {
+                    html += `
+                        <div class="artifact-category" style="grid-column: 1 / -1;">
+                            <h3>🖼️ Figures</h3>
+                            <p class="category-description">Shared figures used across documents</p>
+                    `;
+
+                    // Schematic figures
+                    if (hasSchematic) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Schematic Diagrams</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.schematic.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Real tracts examples
+                    if (hasRealTracts) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Real Census Tract Examples</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.real_tracts.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Round progression
+                    if (hasRoundProgression) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Round Progression</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.round_progression.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    html += `
+                        </div>
+                    `;
+                }
+            }
+
+            // Empty state if no artifacts
+            const hasAnyArtifacts = (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) ||
+                                    (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) ||
+                                    (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) ||
+                                    (ARTIFACTS.figures && (
+                                        (ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0) ||
+                                        (ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0) ||
+                                        (ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0)
+                                    ));
+
+            if (!hasAnyArtifacts) {
+                html += `
+                    <div class="empty-artifacts" style="grid-column: 1 / -1;">
+                        <p>No artifacts available.</p>
+                        <p>Compile artifacts using: <code>cd artifacts && compile.bat</code></p>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+
+                <!-- PDF Viewer Container (hidden by default) -->
+                <div id="pdfViewerContainer" class="pdf-viewer-container" style="display: none;">
+                    <div class="pdf-viewer-header">
+                        <h3 id="pdfViewerTitle"></h3>
+                        <button class="pdf-viewer-close" onclick="closePDFViewer()">✕</button>
+                    </div>
+                    <embed id="pdfViewerEmbed" type="application/pdf" class="pdf-viewer-guide">
+                    <div class="pdf-viewer-fallback" style="display: none;">
+                        <p>Your browser does not support inline PDF viewing.</p>
+                        <p><a id="pdfDownloadLink" href="#" target="_blank">Download PDF</a></p>
+                    </div>
+                </div>
+
+                <!-- Figure Modal (hidden by default) -->
+                <div id="figureModal" class="figure-modal" onclick="closeFigureModal()" style="display: none;">
+                    <span class="modal-close" onclick="closeFigureModal()">&times;</span>
+                    <img id="modalImage" class="modal-content">
+                    <div id="modalCaption" class="modal-caption"></div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Display PDF in viewer
+        function displayPDF(path, type, title) {
+            const basePath = getBasePath();
+            const fullPath = basePath + '/' + path;
+
+            const container = document.getElementById('pdfViewerContainer');
+            const titleEl = document.getElementById('pdfViewerTitle');
+            const embedEl = document.getElementById('pdfViewerEmbed');
+            const downloadLink = document.getElementById('pdfDownloadLink');
+
+            // Set title
+            titleEl.textContent = title;
+
+            // Set PDF source
+            embedEl.src = fullPath;
+            downloadLink.href = fullPath;
+
+            // Set appropriate dimensions based on type
+            embedEl.className = `pdf-viewer-${type}`;
+
+            // Show container
+            container.style.display = 'block';
+
+            // Scroll to top of viewer
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Close PDF viewer
+        function closePDFViewer() {
+            const container = document.getElementById('pdfViewerContainer');
+            container.style.display = 'none';
+        }
+
+        // Open figure modal
+        function openFigureModal(path, name) {
+            const modal = document.getElementById('figureModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('modalCaption');
+
+            modal.style.display = 'flex';
+            modalImg.src = path;
+            caption.textContent = name;
+        }
+
+        // Close figure modal
+        function closeFigureModal() {
+            const modal = document.getElementById('figureModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFigureModal();
+                closePDFViewer();
+            }
+        });
     </script>
 </body>
 </html>

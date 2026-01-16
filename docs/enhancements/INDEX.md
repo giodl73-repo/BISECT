@@ -39,7 +39,7 @@ Master index of all congressional redistricting pipeline enhancements.
 |---|-------|--------|-------|
 | [8](active/08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](active/08_block_level_data.md) |
 
-### 📋 Planned (11 enhancements)
+### 📋 Planned (12 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
@@ -48,6 +48,7 @@ Master index of all congressional redistricting pipeline enhancements.
 | [12](active/12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Medium | [View](active/12_edge_weighted_analysis.md) |
 | [16](active/16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](active/16_metro_2000.md) |
 | [22](active/22_national_redistricting.md) | National Redistricting (No State Boundaries) | Low (Research/Experimental) | [View](active/22_national_redistricting.md) |
+| [29](active/29_artifacts_dashboard_tab.md) | Artifacts Dashboard Tab | Medium | [View](active/29_artifacts_dashboard_tab.md) |
 | [23](active/23_county_representation.md) | Direct County Representation | Low (Research/Experimental) | [View](active/23_county_representation.md) |
 | [24](active/24_party_based_allocation.md) | Party-Based District Allocation | Low (Research/Experimental) | [View](active/24_party_based_allocation.md) |
 | [25](active/25_committee_based_representation.md) | Committee-Based Representation | Low (Research/Experimental) | [View](active/25_committee_based_representation.md) |
