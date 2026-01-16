@@ -1,5 +1,26 @@
 # Contributing to Congressional Redistricting System
 
+## Quick Start: Using Claude Code Skills
+
+**This project includes 25 Claude Code skills** that automate common development tasks. Simply describe what you want to do naturally, and Claude will offer the appropriate skill.
+
+**Example workflows**:
+- "I want to plan a new feature" → Claude suggests `/enhancement-plan`
+- "Run redistricting for 2020" → Claude suggests `/run-redistricting`
+- "Consolidate these duplicate scripts" → Claude suggests `/consolidate-scripts`
+- "Compile my LaTeX paper" → Claude suggests `/compile-latex`
+
+**See [SKILLS.md](SKILLS.md) for complete documentation** of all 25 available skills across:
+- Enhancement workflow
+- Data management
+- Pipeline execution
+- Visualization
+- Documentation
+- Research & analysis
+- Code organization
+
+---
+
 ## Git Workflow
 
 This project uses a **feature branch + pull request** workflow for all changes.
@@ -190,6 +211,14 @@ git commit -m "wip"
 
 ### Add Support for New Census Year
 
+**Using Claude Code Skills**: Ask Claude "I want to add 2000 census support" and it will guide you through using:
+- `/enhancement-plan` - Create enhancement specification
+- `/enhancement-implement` - Execute the implementation
+- `/census-download` - Download 2000 census data
+- `/adjacency-build` - Build adjacency graphs
+- `/enhancement-document` - Complete documentation
+
+**Manual workflow**:
 ```bash
 # Create feature branch
 git checkout -b feature/add-2000-census
@@ -238,6 +267,12 @@ git push -u origin fix/unicode-encoding
 
 ### Update Documentation
 
+**Using Claude Code Skills**: Ask Claude "Update the documentation" and it will use:
+- `/update-docs` - Systematically review and update all docs
+- `/create-architecture-diagram` - Create/update Mermaid diagrams
+- `/create-session-archive` - Archive session notes after major work
+
+**Manual workflow**:
 ```bash
 git checkout -b docs/update-readme
 
@@ -249,6 +284,21 @@ git add README.md
 git commit -m "Update README with 2010 census instructions"
 git push -u origin docs/update-readme
 ```
+
+### Plan and Implement an Enhancement
+
+**Using Claude Code Skills** (recommended):
+```
+1. Ask: "I want to add [feature name]"
+2. Claude suggests: /enhancement-plan
+3. Review and approve the plan
+4. Claude suggests: /enhancement-implement
+5. Claude implements with todo tracking
+6. Claude suggests: /enhancement-document
+7. Complete with updated documentation
+```
+
+See [SKILLS.md](SKILLS.md) for detailed enhancement workflow documentation.
 
 ---
 

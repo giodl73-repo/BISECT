@@ -2,14 +2,30 @@
 
 This document explains the design of the redistricting system, key algorithms, and how components interact.
 
-**Last Updated**: January 12, 2026
+**Last Updated**: January 15, 2026
 
 ## Related Documentation
 
 - **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns and coding conventions
 - **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Recent improvements and completed enhancements
+- **[SKILLS.md](SKILLS.md)** - Claude Code skills for automation (25 skills available)
 - **[../README.md](../README.md)** - User-facing project overview and quick start guide
 - **[../CLAUDE.md](../CLAUDE.md)** - AI assistant guide and quick reference
+
+## Working with This System
+
+### Using Claude Code Skills
+
+This project includes **25 automated skills** that handle common development tasks. Skills are automatically suggested when you describe what you want to do.
+
+**Key skills for working with this architecture**:
+- **Pipeline**: `/run-redistricting`, `/run-analysis-only`, `/pipeline-debug`
+- **Data**: `/census-download`, `/adjacency-build`, `/data-validate`
+- **Visualization**: `/create-state-map`, `/create-national-map`, `/generate-dashboard`
+- **Analysis**: `/run-statistical-analysis`, `/validate-compactness`, `/run-experiment`
+- **Development**: `/enhancement-plan`, `/enhancement-implement`, `/refactor-for-pattern`
+
+See **[SKILLS.md](SKILLS.md)** for complete documentation.
 
 ## Table of Contents
 1. [Visual Diagrams](#visual-diagrams)

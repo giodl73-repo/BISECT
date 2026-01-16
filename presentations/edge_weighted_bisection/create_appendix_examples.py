@@ -568,6 +568,12 @@ def generate_example(config, args, output_dir):
     """Generate a single example visualization with retry logic for better ratio matching."""
     print(f"[{config['name']}] {config['title']} - {config['subtitle']}")
 
+    # Check if output already exists
+    output_path = output_dir / f"{config['name']}.png"
+    if output_path.exists():
+        print(f"  [SKIP] File already exists: {output_path.name}")
+        return True
+
     year_suffix = str(args.year)[-2:]
     state_fips = config['state_fips']
     state_name = config['state_name']
@@ -695,7 +701,6 @@ def generate_example(config, args, output_dir):
             print(f"  [WARN] Using best attempt: {pct0:.1f}-{pct1:.1f}, {', '.join(issues)}")
 
         # Create visualization with best result
-        output_path = output_dir / f"{config['name']}.png"
         create_visualization(
             best_result['sample_tracts'],
             best_result['adjacency'],

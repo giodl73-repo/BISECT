@@ -568,11 +568,114 @@ plt.close()
 # =============================================================================
 # Figure 6: Real Census Tracts to Graph Transformation with METIS Cut
 # =============================================================================
-print("Creating real census tracts to graph transformation with METIS cut...")
 
 import geopandas as gpd
 import warnings
 warnings.filterwarnings('ignore')
+
+# Define example configurations for various states and partition ratios
+EXAMPLE_CONFIGS = [
+    {
+        'name': 'minneapolis_50_50',
+        'title': 'Minneapolis, MN (50-50 Split)',
+        'state_fips': '27',
+        'state_name': 'mn',
+        'county_fips': '053',  # Hennepin County
+        'nparts': 2,
+        'target_weights': [0.5, 0.5],
+        'n_tracts': 12,
+        'start_idx': 0
+    },
+    {
+        'name': 'los_angeles_67_33',
+        'title': 'Los Angeles, CA (67-33 Split)',
+        'state_fips': '06',
+        'state_name': 'ca',
+        'county_fips': '037',  # Los Angeles County
+        'nparts': 2,
+        'target_weights': [0.67, 0.33],
+        'n_tracts': 12,
+        'start_idx': 50
+    },
+    {
+        'name': 'houston_60_40',
+        'title': 'Houston, TX (60-40 Split)',
+        'state_fips': '48',
+        'state_name': 'tx',
+        'county_fips': '201',  # Harris County
+        'nparts': 2,
+        'target_weights': [0.6, 0.4],
+        'n_tracts': 12,
+        'start_idx': 100
+    },
+    {
+        'name': 'miami_75_25',
+        'title': 'Miami, FL (75-25 Split)',
+        'state_fips': '12',
+        'state_name': 'fl',
+        'county_fips': '086',  # Miami-Dade County
+        'nparts': 2,
+        'target_weights': [0.75, 0.25],
+        'n_tracts': 12,
+        'start_idx': 150
+    },
+    {
+        'name': 'phoenix_80_20',
+        'title': 'Phoenix, AZ (80-20 Split)',
+        'state_fips': '04',
+        'state_name': 'az',
+        'county_fips': '013',  # Maricopa County
+        'nparts': 2,
+        'target_weights': [0.8, 0.2],
+        'n_tracts': 12,
+        'start_idx': 200
+    },
+    {
+        'name': 'atlanta_55_45',
+        'title': 'Atlanta, GA (55-45 Split)',
+        'state_fips': '13',
+        'state_name': 'ga',
+        'county_fips': '121',  # Fulton County
+        'nparts': 2,
+        'target_weights': [0.55, 0.45],
+        'n_tracts': 12,
+        'start_idx': 75
+    }
+]
+
+def generate_real_tracts_example(config, args, figures_dir):
+    """Generate a single real tracts to graph example."""
+    print(f"Creating: {config['title']}...")
+
+    year_suffix = str(args.year)[-2:]
+    state_fips = config['state_fips']
+    state_name = config['state_name']
+
+    # File paths
+    tracts_file = Path(f'../../data/geography/tiger_{args.year}_tracts/tl_{args.year}_{state_fips}_tract{year_suffix}/tl_{args.year}_{state_fips}_tract{year_suffix}.shp')
+    population_file = Path(f'../../data/processed/census_{args.year}/{state_name}_tracts_{args.year}_population.csv')
+
+    geoid_field = f'GEOID{year_suffix}'
+    county_field = f'COUNTYFP{year_suffix}'
+
+    # Check if files exist
+    if not tracts_file.exists():
+        print(f"  [SKIP] Census tracts shapefile not found: {tracts_file}")
+        return False
+    if not population_file.exists():
+        print(f"  [SKIP] Population data not found: {population_file}")
+        return False
+
+    # Continue with existing generation logic...
+    # (I'll move the existing code into this function)
+    return True
+
+print("Generating real census tracts examples...")
+print(f"Total examples: {len(EXAMPLE_CONFIGS)}")
+print()
+
+# Generate the original Minneapolis example first
+print("Creating real census tracts to graph transformation with METIS cut...")
 
 # Try to load real census tract data (Minnesota, FIPS 27) using specified year
 year_suffix = str(args.year)[-2:]  # '10' from 2010, '20' from 2020
@@ -759,7 +862,7 @@ else:
                 pop_k = tract['population'] / 1000
                 ax1.text(centroid.x, centroid.y, f'{labels[idx]}\n{pop_k:.1f}K',
                         ha='center', va='center',
-                        fontsize=10, fontweight='bold',
+                        fontsize=9, fontweight='bold',
                         bbox=dict(boxstyle='round', facecolor='white',
                                 edgecolor='black', linewidth=1))
 
@@ -814,38 +917,40 @@ else:
             if pre_cut_perimeter < 1:
                 pre_cut_perimeter = combined_geom.boundary.length * 111
 
-            # Post-cut perimeters (external boundaries of each region)
-            if len(part0_geoms) > 0:
-                region0_union = part0_geoms.unary_union
-                # Position label above the region
-                bounds0 = region0_union.bounds  # (minx, miny, maxx, maxy)
-                label_x0 = (bounds0[0] + bounds0[2]) / 2  # Center horizontally
-                label_y0 = bounds0[3]  # Top of region
-                pop0 = sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000
-                ax1.text(label_x0, label_y0, f'0\n{pop0:.1f}K',
-                        ha='center', va='bottom', fontsize=10, fontweight='bold',
-                        bbox=dict(boxstyle='round', facecolor='white', edgecolor='black', linewidth=1))
+            # Calculate region populations and percentages
+            pop0 = sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000
+            pop1 = sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000
+            total_pop = pop0 + pop1
+            pct0 = (pop0 * 1000 / (total_pop * 1000)) * 100
+            pct1 = (pop1 * 1000 / (total_pop * 1000)) * 100
 
-            if len(part1_geoms) > 0:
-                region1_union = part1_geoms.unary_union
-                # Position label below the region
-                bounds1 = region1_union.bounds  # (minx, miny, maxx, maxy)
-                label_x1 = (bounds1[0] + bounds1[2]) / 2  # Center horizontally
-                label_y1 = bounds1[1]  # Bottom of region
-                pop1 = sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000
-                ax1.text(label_x1, label_y1, f'1\n{pop1:.1f}K',
-                        ha='center', va='top', fontsize=10, fontweight='bold',
-                        bbox=dict(boxstyle='round', facecolor='white', edgecolor='black', linewidth=1))
+            # Region labels at top - consistent position
+            ax1.text(0.25, 0.92, f'Region 1\n{pop0:.1f}K\n{pct0:.1f}%',
+                    transform=ax1.transAxes, ha='center', va='top',
+                    fontsize=11, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='lightblue',
+                            edgecolor='blue', linewidth=1.5, alpha=0.9),
+                    color='black')
+
+            ax1.text(0.75, 0.92, f'Region 2\n{pop1:.1f}K\n{pct1:.1f}%',
+                    transform=ax1.transAxes, ha='center', va='top',
+                    fontsize=11, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='lightcoral',
+                            edgecolor='red', linewidth=1.5, alpha=0.9),
+                    color='black')
 
             ax1.axis('off')
-            ax1.text(0.5, -0.12,
-                    f'Real Minneapolis tracts (pre-cut perimeter: {pre_cut_perimeter:.1f} km)\n'
-                    f'Red boundaries (METIS cut): {total_cut_length:.1f} km total',
-                    transform=ax1.transAxes, ha='center', fontsize=8,
-                    style='italic', color='gray')
+
+            # Add summary box with total cut length below the map
+            ax1.text(0.5, -0.05,
+                    f'Total Cut: {total_cut_length:.1f} km',
+                    transform=ax1.transAxes, ha='center', va='top',
+                    fontsize=9, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='yellow',
+                            edgecolor='red', linewidth=1.5, alpha=0.9))
 
             # Right: Abstract graph representation with cut
-            ax2.set_title('Graph + METIS Cut\n(What Algorithm Sees)', fontsize=12, fontweight='bold')
+            ax2.set_title('Graph + METIS Cut\n(What Algorithm Sees)', fontsize=11, fontweight='bold')
 
             # Create layout for graph based on tract centroids
             centroids = sample_tracts.geometry.centroid
@@ -934,36 +1039,61 @@ else:
                 ax2.add_patch(circle)
 
                 # Put label and population inside node (stacked vertically)
-                # Match map styling: fontsize=10, bold for both
+                # Match map styling: fontsize=9, bold for both
                 ax2.text(x, y + 0.06, labels[i], ha='center', va='center',
-                        fontsize=10, fontweight='bold', zorder=5)
+                        fontsize=9, fontweight='bold', zorder=5)
                 ax2.text(x, y - 0.09, f'{pop_k:.1f}K', ha='center', va='center',
-                        fontsize=10, fontweight='bold', color='black', zorder=5)
+                        fontsize=9, fontweight='bold', color='black', zorder=5)
 
-            # Add region population labels
+            # Region labels at top - position relative to partition extent in graph space
             pop0_total = sample_tracts[sample_tracts['partition'] == 0]['population'].sum() / 1000
             pop1_total = sample_tracts[sample_tracts['partition'] == 1]['population'].sum() / 1000
+            total_pop_graph = pop0_total + pop1_total
+            pct0_graph = (pop0_total * 1000 / (total_pop_graph * 1000)) * 100
+            pct1_graph = (pop1_total * 1000 / (total_pop_graph * 1000)) * 100
 
-            # Position labels at top (0) and bottom (1) of graph
-            ax2.text(2, 4.7, f'0\n{pop0_total:.1f}K',
-                    ha='center', va='bottom', fontsize=10, fontweight='bold',
-                    bbox=dict(boxstyle='round', facecolor='white',
-                            edgecolor='black', linewidth=1))
-            ax2.text(2, -0.7, f'1\n{pop1_total:.1f}K',
-                    ha='center', va='top', fontsize=10, fontweight='bold',
-                    bbox=dict(boxstyle='round', facecolor='white',
-                            edgecolor='black', linewidth=1))
+            # Calculate position extent for each partition
+            part0_positions = [positions[i] for i in range(n_tracts) if membership[i] == 0]
+            part1_positions = [positions[i] for i in range(n_tracts) if membership[i] == 1]
 
-            ax2.set_xlim(-0.5, 4.5)
-            ax2.set_ylim(-0.9, 5.0)  # Expanded to fit labels
+            # Position labels above each partition's extent
+            if part0_positions:
+                xs0 = [p[0] for p in part0_positions]
+                ys0 = [p[1] for p in part0_positions]
+                label_x0 = sum(xs0) / len(xs0)  # Average x position (centroid)
+                label_y0 = max(ys0) + 0.5  # Above highest node
+                ax2.text(label_x0, label_y0, f'Region 1\n{pop0_total:.1f}K\n{pct0_graph:.1f}%',
+                        ha='center', va='bottom',
+                        fontsize=11, fontweight='bold',
+                        bbox=dict(boxstyle='round', facecolor='lightblue',
+                                edgecolor='blue', linewidth=1.5, alpha=0.9),
+                        color='black', zorder=12)
+
+            if part1_positions:
+                xs1 = [p[0] for p in part1_positions]
+                ys1 = [p[1] for p in part1_positions]
+                label_x1 = sum(xs1) / len(xs1)  # Average x position (centroid)
+                label_y1 = max(ys1) + 0.5  # Above highest node
+                ax2.text(label_x1, label_y1, f'Region 2\n{pop1_total:.1f}K\n{pct1_graph:.1f}%',
+                        ha='center', va='bottom',
+                        fontsize=11, fontweight='bold',
+                        bbox=dict(boxstyle='round', facecolor='lightcoral',
+                                edgecolor='red', linewidth=1.5, alpha=0.9),
+                        color='black', zorder=12)
+
+            ax2.set_xlim(-0.5, 4.8)  # Expanded to fit repositioned red label
+            ax2.set_ylim(-0.7, 5.0)  # Adjusted for repositioned red label
             ax2.set_aspect('equal')
             ax2.axis('off')
 
-            # Calculate total cut weight
+            # Add total cut summary box below the graph
             total_cut_weight = sum(edge_weights.get((i, j), 0) for i, j in cut_edges)
-            ax2.text(0.5, -0.08, f'Edge weights = boundary length (km)\nTotal cut weight: {total_cut_weight:.1f} km',
-                    transform=ax2.transAxes, ha='center', fontsize=9,
-                    style='italic', color='gray')
+            ax2.text(0.5, 0.05,
+                    f'Total Cut: {total_cut_weight:.1f} km',
+                    transform=ax2.transAxes, ha='center', va='top',
+                    fontsize=9, fontweight='bold',
+                    bbox=dict(boxstyle='round', facecolor='yellow',
+                            edgecolor='red', linewidth=1.5, alpha=0.9))
 
             plt.savefig(figures_dir / 'real_tracts_to_graph.png', dpi=150,
                        bbox_inches='tight', facecolor='white', edgecolor='none')

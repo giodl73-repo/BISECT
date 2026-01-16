@@ -92,7 +92,26 @@
       "Bash(if [ -f \"$file\" ])",
       "Bash(then)",
       "Bash(else)",
-      "WebFetch(domain:www.atlasobscura.com)"
+      "WebFetch(domain:www.atlasobscura.com)",
+      "Bash(cmd.exe /c \"compile.bat --year 2010 --version v1\")",
+      "Bash(cmd //c compile_artifacts.bat)",
+      "Bash(start outputs/us_2020_v1/index.html)",
+      "Skill(enhancement-plan)",
+      "Skill(enhancement-implement)",
+      "Skill(create-skill)",
+      "Skill(edit-presentation)",
+      "Skill(compile-latex)",
+      "Skill(edit-guide)",
+      "Skill(pipeline-debug)",
+      "Bash(cmd.exe /c compile.bat)",
+      "Bash(do echo -n \"$f: \")",
+      "Bash(test:*)",
+      "Bash(compile.bat)",
+      "Bash(python3:*)",
+      "Bash(./compile.bat:*)",
+      "Bash(cmd //c:*)",
+      "Bash(del:*)",
+      "Bash(compile.bat --year 2020 --version v1)"
     ]
   }
 }

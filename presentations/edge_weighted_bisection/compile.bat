@@ -5,7 +5,7 @@ cd /d %~dp0
 
 REM Parse command-line arguments
 set RESET_FLAG=0
-set YEAR=2020
+set YEAR=2010
 set VERSION=v1
 
 :parse_args
@@ -59,23 +59,67 @@ echo.
 REM ======================================================================
 REM Generate Figures
 REM ======================================================================
-echo [1/3] Generating presentation figures...
+echo [1/6] Generating shared figures (main text)...
 echo ----------------------------------------------------------------------
 
-python create_figures.py --year %YEAR% --version %VERSION%
+python ..\..\scripts\figures\generate_all_figures.py --year %YEAR% --version %VERSION%
 if errorlevel 1 (
-    echo [ERROR] Figure generation failed
-    pause
-    exit /b 1
+    echo [WARNING] Some shared figures could not be generated
+    echo Continuing with presentation compilation...
 )
 
-echo [OK] Figures generated
+echo [OK] Shared figures ready
+echo.
+
+echo [2/6] Generating appendix examples (presentation-specific)...
+echo ----------------------------------------------------------------------
+
+python create_appendix_examples.py --year %YEAR%
+if errorlevel 1 (
+    echo [WARNING] Some appendix examples could not be generated
+    echo Continuing with presentation compilation...
+)
+
+echo [OK] Appendix examples ready
+echo.
+
+REM ======================================================================
+REM Copy Metro Maps from Pipeline Outputs
+REM ======================================================================
+echo [3/6] Copying metro maps (Minneapolis)...
+echo ----------------------------------------------------------------------
+
+REM Create metro_maps directory in output
+set METRO_DIR=%OUTPUT_DIR%\metro_maps
+if not exist "%METRO_DIR%" mkdir "%METRO_DIR%"
+
+REM Copy Minneapolis metro map from pipeline outputs
+set SOURCE_METRO=..\..\outputs\us_%YEAR%_%VERSION%\states\minnesota\maps\metros\minneapolis.png
+if exist "%SOURCE_METRO%" (
+    copy /Y "%SOURCE_METRO%" "%METRO_DIR%\minneapolis.png" >nul
+    echo [OK] Minneapolis metro map copied
+) else (
+    echo [WARNING] Minneapolis metro map not found at %SOURCE_METRO%
+)
+
+REM Copy national map from pipeline outputs
+set MAPS_DIR=%OUTPUT_DIR%\maps
+if not exist "%MAPS_DIR%" mkdir "%MAPS_DIR%"
+
+set SOURCE_NATIONAL=..\..\outputs\us_%YEAR%_%VERSION%\maps\us_all_districts.png
+if exist "%SOURCE_NATIONAL%" (
+    copy /Y "%SOURCE_NATIONAL%" "%MAPS_DIR%\us_all_districts.png" >nul
+    echo [OK] National districts map copied
+) else (
+    echo [WARNING] National districts map not found at %SOURCE_NATIONAL%
+)
+
 echo.
 
 REM ======================================================================
 REM Compile Presentation Slides
 REM ======================================================================
-echo [2/3] Compiling presentation slides (presentation.tex)...
+echo [4/6] Compiling presentation slides (presentation.tex)...
 echo ----------------------------------------------------------------------
 
 echo LaTeX pass 1/2...
@@ -109,7 +153,7 @@ echo.
 REM ======================================================================
 REM Compile Layman's Guide
 REM ======================================================================
-echo [3/3] Compiling layman's guide (laymen_guide.tex)...
+echo [5/6] Compiling layman's guide (laymen_guide.tex)...
 echo ----------------------------------------------------------------------
 
 echo LaTeX pass 1/2...
@@ -143,7 +187,7 @@ echo.
 REM ======================================================================
 REM Clean up auxiliary files
 REM ======================================================================
-echo Cleaning auxiliary files...
+echo [6/6] Cleaning auxiliary files...
 del /Q *.aux *.log *.nav *.out *.snm *.toc *.vrb 2>nul
 
 echo.

@@ -25,6 +25,7 @@ This document captures critical patterns and conventions used throughout the cod
 11. [Error Handling](#error-handling)
 12. [When to Use What](#when-to-use-what)
 13. [Static HTML Generation](#static-html-generation)
+14. [Creating Presentation Visualizations with Real Data](#creating-presentation-visualizations-with-real-data)
 
 ---
 
@@ -1589,6 +1590,366 @@ If a paper currently references `figures/` directly:
 # Replace all figure references
 sed -i 's|figures/|../../outputs/papers/03_combined/figures/|g' sections/*.tex
 ```
+
+---
+
+---
+
+## Creating Presentation Visualizations with Real Data
+
+### Overview
+
+When creating visualizations for presentations or papers that show real METIS partitioning with actual census data, follow this pattern to create publication-quality figures that demonstrate the algorithm's behavior on real geography.
+
+### Use Case
+
+**Goal**: Create side-by-side comparison showing:
+1. **Left panel**: Real geographic census tracts with METIS partition
+2. **Right panel**: Abstract graph representation with edge weights and cut
+
+**Example**: `presentations/edge_weighted_bisection/create_figures.py`
+
+### Step-by-Step Pattern
+
+#### 1. Select Contiguous Tracts Using BFS
+
+**Never use random tracts** - they may not be contiguous, causing METIS to fail or produce disconnected partitions.
+
+```python
+import geopandas as gpd
+from collections import deque
+
+def find_contiguous_tracts(tracts_gdf, start_idx, n_tracts):
+    """Use BFS to find n_tracts contiguous tracts starting from start_idx."""
+    visited = set()
+    queue = deque([start_idx])
+    contiguous = []
+
+    while queue and len(contiguous) < n_tracts:
+        idx = queue.popleft()
+        if idx in visited:
+            continue
+
+        visited.add(idx)
+        contiguous.append(idx)
+
+        # Find neighbors (tracts that touch this one)
+        geom = tracts_gdf.iloc[idx].geometry
+        for j in range(len(tracts_gdf)):
+            if j not in visited and tracts_gdf.iloc[j].geometry.touches(geom):
+                queue.append(j)
+
+    return contiguous[:n_tracts]
+
+# Use it
+hennepin_tracts = tracts_gdf[tracts_gdf['COUNTYFP'] == '053']  # Hennepin County, MN
+start_idx = 0  # Start from first tract
+tract_indices = find_contiguous_tracts(hennepin_tracts, start_idx, n_tracts=12)
+sample_tracts = hennepin_tracts.iloc[tract_indices].copy()
+```
+
+#### 2. Calculate Real Boundary Lengths
+
+**CRITICAL**: Boundary lengths must be calculated using geometry intersection, not just checking if tracts touch.
+
+```python
+import numpy as np
+
+# Build adjacency graph with real boundary lengths
+adjacency = {i: [] for i in range(n_tracts)}
+edge_weights = {}
+
+for i in range(n_tracts):
+    geom_i = sample_tracts.iloc[i].geometry
+    for j in range(i + 1, n_tracts):
+        geom_j = sample_tracts.iloc[j].geometry
+
+        if geom_i.touches(geom_j):
+            # Calculate actual shared boundary length
+            boundary = geom_i.intersection(geom_j.boundary)
+            if not boundary.is_empty:
+                length_km = boundary.length / 1000  # meters to km
+
+                # Handle unprojected coordinates (degrees)
+                if length_km < 0.1:
+                    length_km = boundary.length * 111  # degrees to km
+
+                # Filter corner adjacencies (< 0.1 km)
+                if length_km >= 0.1:
+                    # Add to BOTH directions (symmetric graph)
+                    adjacency[i].append(j)
+                    adjacency[j].append(i)
+                    edge_weights[(i, j)] = length_km
+                    edge_weights[(j, i)] = length_km
+```
+
+**Common mistakes:**
+- ❌ Only adding edge in one direction → non-symmetric graph
+- ❌ Not filtering corner adjacencies → visual clutter
+- ❌ Forgetting unprojected coordinate conversion → 0.0 km lengths
+
+#### 3. Run METIS with Contiguity Parameters
+
+**Must match production settings** from `run_state_redistricting.py`:
+
+```python
+from apportionment.partition.metis_wrapper import partition_graph
+
+# Prepare inputs
+adjacency_list = [adjacency.get(i, []) for i in range(n_tracts)]
+vweights = [int(sample_tracts.iloc[i]['population']) for i in range(n_tracts)]
+edge_weights_dict = {(i, j): int(w * 1000) for (i, j), w in edge_weights.items()}
+
+# Run METIS with contiguity enforcement
+membership = partition_graph(
+    adjacency=adjacency_list,
+    vertex_weights=vweights,
+    nparts=2,
+    target_weights=[0.5, 0.5],  # Equal population split
+    recursive=True,              # Use recursive bisection
+    ufactor=1.005,               # 0.5% imbalance tolerance
+    edge_weights=edge_weights_dict,
+    debug=False
+)
+
+# Identify cut edges (edges crossing partition boundary)
+cut_edges = set()
+for i in range(n_tracts):
+    for j in adjacency.get(i, []):
+        if i < j and membership[i] != membership[j]:
+            cut_edges.add((i, j))
+```
+
+#### 4. Create Side-by-Side Visualization
+
+**Use GridSpec for custom layout**:
+
+```python
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+
+fig = plt.figure(figsize=(16, 7))
+gs = fig.add_gridspec(1, 2, width_ratios=[1.4, 1], wspace=0.15)
+ax1 = fig.add_subplot(gs[0])  # Map
+ax2 = fig.add_subplot(gs[1])  # Graph
+```
+
+**Left panel: Geographic map**
+
+```python
+partition_colors = {0: 'lightblue', 1: 'lightcoral'}
+
+# Plot tracts colored by partition
+for idx in range(n_tracts):
+    color = partition_colors[membership[idx]]
+    sample_tracts.iloc[[idx]].plot(
+        ax=ax1,
+        facecolor=color,
+        edgecolor='black',
+        linewidth=1.5,
+        alpha=0.7
+    )
+
+    # Label each tract
+    centroid = sample_tracts.iloc[idx].geometry.centroid
+    pop_k = sample_tracts.iloc[idx]['population'] / 1000
+    ax1.text(centroid.x, centroid.y, f'{labels[idx]}\n{pop_k:.1f}K',
+            ha='center', va='center', fontsize=9, fontweight='bold',
+            bbox=dict(boxstyle='round', facecolor='white',
+                    edgecolor='black', linewidth=1))
+
+# Highlight cut boundaries with thick red lines
+for i, j in cut_edges:
+    geom_i = sample_tracts.iloc[i].geometry
+    geom_j = sample_tracts.iloc[j].geometry
+    boundary = geom_i.intersection(geom_j.boundary)
+    gpd.GeoSeries([boundary]).plot(ax=ax1, color='red',
+                                    linewidth=4, alpha=0.9, zorder=10)
+
+    # Label cut edges with yellow background
+    length_km = edge_weights.get((i, j), 0)
+    if length_km > 0.1:
+        mid_point = boundary.centroid
+        ax1.text(mid_point.x, mid_point.y, f'{length_km:.1f}',
+                ha='center', va='center', fontsize=7, fontweight='bold',
+                bbox=dict(boxstyle='round', facecolor='yellow',
+                        edgecolor='red', linewidth=1.5, alpha=0.9),
+                zorder=11)
+
+ax1.axis('off')
+```
+
+**Right panel: Abstract graph**
+
+```python
+from matplotlib.patches import Circle
+
+# Create node positions from tract centroids
+centroids = sample_tracts.geometry.centroid
+xs = [c.x for c in centroids]
+ys = [c.y for c in centroids]
+
+# Normalize to [0, 4] range
+x_min, x_max = min(xs), max(xs)
+y_min, y_max = min(ys), max(ys)
+positions = {}
+for i in range(n_tracts):
+    x_norm = 4 * (xs[i] - x_min) / (x_max - x_min)
+    y_norm = 4 * (ys[i] - y_min) / (y_max - y_min)
+    positions[i] = (x_norm, y_norm)
+
+# Draw edges (colored by cut status)
+for i in range(n_tracts):
+    for j in adjacency.get(i, []):
+        if i < j:
+            x1, y1 = positions[i]
+            x2, y2 = positions[j]
+            length_km = edge_weights.get((i, j), 0)
+
+            if length_km > 0.1:  # Skip corner adjacencies
+                is_cut = (i, j) in cut_edges
+
+                if is_cut:
+                    # Cut edge: thick red dashed with X marker
+                    ax2.plot([x1, x2], [y1, y2], 'r--',
+                            linewidth=4, alpha=0.9, zorder=2)
+                    mid_x, mid_y = (x1 + x2) / 2, (y1 + y2) / 2
+                    ax2.plot(mid_x, mid_y, 'rX', markersize=12,
+                            markeredgewidth=3, zorder=3)
+                else:
+                    # Non-cut edge: gray, thickness by weight
+                    thickness = min(6, max(1.5, length_km / 3))
+                    ax2.plot([x1, x2], [y1, y2], 'k-',
+                            linewidth=thickness, alpha=0.4, zorder=1)
+
+# Draw nodes (vertices)
+for i in range(n_tracts):
+    x, y = positions[i]
+    color = partition_colors[membership[i]]
+    pop_k = sample_tracts.iloc[i]['population'] / 1000
+
+    # Circle
+    circle = Circle((x, y), 0.3, facecolor=color,
+                   edgecolor='black', linewidth=2.5, alpha=0.8, zorder=4)
+    ax2.add_patch(circle)
+
+    # Label inside circle
+    ax2.text(x, y + 0.06, labels[i], ha='center', va='center',
+            fontsize=9, fontweight='bold', zorder=5)
+    ax2.text(x, y - 0.09, f'{pop_k:.1f}K', ha='center', va='center',
+            fontsize=9, fontweight='bold', zorder=5)
+
+ax2.set_xlim(-0.5, 4.5)
+ax2.set_ylim(-0.7, 5.0)
+ax2.set_aspect('equal')
+ax2.axis('off')
+```
+
+### Styling Guidelines
+
+**Font sizes (publication quality)**:
+- Tract labels: 9pt bold
+- Edge weight labels: 7pt (internal), 7pt bold (cuts)
+- Region labels: 11pt bold
+- Summary boxes: 9pt bold
+
+**Colors**:
+- Partition 1 (blue): `lightblue` fill, `blue` border
+- Partition 2 (red): `lightcoral` fill, `red` border
+- Cut edges: Red with yellow label backgrounds
+- Non-cut edges: Gray with white label backgrounds
+
+**Z-ordering** (critical for overlaps):
+- Base edges: zorder=1
+- Cut edges: zorder=2, 10
+- Vertices/circles: zorder=4
+- Labels: zorder=5, 11 (for labels on red lines)
+
+**Layout best practices**:
+- Use GridSpec with width_ratios=[1.4, 1] (more space for map)
+- No titles or captions - let visualization speak for itself
+- Add yellow summary box with total cut length below each panel
+- Position region labels to avoid tract overlaps
+
+### Complete Example Structure
+
+```python
+#!/usr/bin/env python3
+"""Create real tracts to graph visualization."""
+
+from pathlib import Path
+import geopandas as gpd
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.gridspec import GridSpec
+from matplotlib.patches import Circle
+from collections import deque
+
+def find_contiguous_tracts(tracts_gdf, start_idx, n_tracts):
+    """BFS to find contiguous tracts."""
+    # ... implementation ...
+
+def main():
+    # 1. Load data
+    tracts_gdf = gpd.read_file('tracts.shp')
+    population_df = pd.read_csv('population.csv')
+    tracts_gdf = tracts_gdf.merge(population_df, on='GEOID')
+
+    # 2. Select contiguous tracts
+    county_tracts = tracts_gdf[tracts_gdf['COUNTYFP'] == '053']
+    tract_indices = find_contiguous_tracts(county_tracts, 0, n_tracts=12)
+    sample_tracts = county_tracts.iloc[tract_indices].copy()
+
+    # 3. Build adjacency with real boundary lengths
+    adjacency, edge_weights = build_adjacency(sample_tracts)
+
+    # 4. Run METIS
+    membership = run_metis(sample_tracts, adjacency, edge_weights)
+
+    # 5. Identify cut edges
+    cut_edges = find_cut_edges(adjacency, membership)
+
+    # 6. Create visualization
+    fig = create_visualization(sample_tracts, adjacency, edge_weights,
+                              membership, cut_edges)
+
+    # 7. Save
+    plt.savefig('output.png', dpi=150, bbox_inches='tight')
+    plt.close()
+
+if __name__ == '__main__':
+    main()
+```
+
+### Testing and Validation
+
+**Verify correctness**:
+1. ✅ All tracts are contiguous (no disconnected components)
+2. ✅ Adjacency graph is symmetric (edges in both directions)
+3. ✅ Cut edges correctly identified (different partitions)
+4. ✅ Boundary lengths reasonable (0.1-10 km typical for tracts)
+5. ✅ No labels overlapping tracts or edges
+6. ✅ Total cut matches sum of individual cut edge weights
+
+**Common issues**:
+- Non-contiguous tracts → Use BFS
+- Asymmetric graph → Add edges in both directions
+- 0.0 km boundaries → Convert degrees to km
+- Overlapping labels → Adjust z-order, reposition region labels
+- Corner adjacencies cluttering → Filter edges < 0.1 km
+
+### When to Use This Pattern
+
+✅ **Use for**:
+- Presentation figures showing real algorithm behavior
+- Paper figures demonstrating METIS on actual geography
+- Educational materials explaining graph partitioning
+- Comparison of geographic vs abstract representation
+
+❌ **Don't use for**:
+- Production pipeline (use dedicated scripts)
+- Analysis requiring all 50 states (too slow)
+- Simple illustrations (use synthetic examples)
 
 ---
 

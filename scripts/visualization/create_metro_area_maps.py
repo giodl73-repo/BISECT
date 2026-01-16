@@ -170,16 +170,59 @@ def create_metro_map(metro_name, metro_geometry, us_tracts, places_gdf, output_f
     """
 
     # Find tracts within or intersecting the metro boundary
-    metro_tracts = us_tracts[us_tracts.intersects(metro_geometry)].copy()
+    intersecting_tracts = us_tracts[us_tracts.intersects(metro_geometry)].copy()
 
-    if len(metro_tracts) == 0:
+    if len(intersecting_tracts) == 0:
         print(f"  WARNING: No tracts found in {metro_name}")
         return False
+
+    # Filter to only show districts that are substantially within the metro area
+    # Calculate what percentage of each district's population is in the metro
+    district_pop_in_metro = intersecting_tracts.groupby(['state_code', 'district'])['population'].sum()
+
+    # Get total population for each district
+    district_total_pop = us_tracts.groupby(['state_code', 'district'])['population'].sum()
+
+    # Calculate percentage in metro by population
+    district_pct_pop_in_metro = (district_pop_in_metro / district_total_pop * 100).fillna(0)
+
+    # Calculate what percentage of each district's land area is in the metro
+    # Project to equal-area CRS for accurate area calculation
+    intersecting_tracts_proj = intersecting_tracts.to_crs('EPSG:5070')
+    us_tracts_proj = us_tracts.to_crs('EPSG:5070')
+
+    district_area_in_metro = intersecting_tracts_proj.groupby(['state_code', 'district']).apply(
+        lambda x: x.geometry.area.sum(), include_groups=False
+    )
+
+    district_total_area = us_tracts_proj.groupby(['state_code', 'district']).apply(
+        lambda x: x.geometry.area.sum(), include_groups=False
+    )
+
+    # Calculate percentage in metro by area
+    district_pct_area_in_metro = (district_area_in_metro / district_total_area * 100).fillna(0)
+
+    # Only include districts with >50% of BOTH population AND area in the metro
+    # (This ensures we only show core districts, not ones that are partially cut off)
+    threshold = 50.0
+    districts_to_include = district_pct_pop_in_metro[
+        (district_pct_pop_in_metro > threshold) &
+        (district_pct_area_in_metro > threshold)
+    ].index
+
+    # Get ALL tracts from qualifying districts (not just the ones in metro boundary)
+    # This ensures we show complete districts, not cropped ones
+    metro_tracts = us_tracts[
+        us_tracts.apply(
+            lambda row: (row['state_code'], row['district']) in districts_to_include,
+            axis=1
+        )
+    ].copy()
 
     # Get unique districts in this metro
     metro_districts = metro_tracts.groupby(['state_code', 'district']).first().reset_index()
 
-    print(f"  {metro_name}: {len(metro_districts)} districts, {len(metro_tracts)} tracts")
+    print(f"  {metro_name}: {len(metro_districts)} districts, {len(metro_tracts)} tracts (>{threshold}% pop AND area)")
 
     # Dissolve tracts into districts
     districts_gdf = metro_tracts.dissolve(by=['state_code', 'district'], as_index=False)
@@ -621,8 +664,8 @@ def main():
             # Create output filename
             output_file = state_dir / f"{short_name}.png"
 
-            # Skip if already exists
-            if output_file.exists():
+            # Skip if already exists (unless --force)
+            if output_file.exists() and not args.force:
                 successful += 1
                 print(f"  [SKIP] Already exists: {output_file}")
                 continue

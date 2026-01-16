@@ -15,20 +15,54 @@ Skills are specialized, reusable capabilities that:
 
 ## Implementation Status
 
-**Phase 1 Skills**: ✅ IMPLEMENTED (9 skills)
+**Phase 1 Skills**: ✅ IMPLEMENTED (10 skills - January 15, 2026)
+**Phase 2 Skills**: ✅ IMPLEMENTED (7 skills - January 15, 2026)
+**Phase 3 Skills**: ✅ IMPLEMENTED (6 skills - January 15, 2026)
+**Phase 4 Skills**: ✅ IMPLEMENTED (3 skills - January 15, 2026)
+**Phase 5 Skills**: ✅ IMPLEMENTED (3 skills - January 15, 2026)
 
-Skills have been implemented as formal Anthropic MCP Skills in `.claude/skills/`. Claude Code automatically discovers these skills at startup and offers to use them when your requests match their descriptions.
+**Total: 29 skills implemented** as formal Anthropic MCP Skills in `.claude/skills/`
 
-**Implemented skills** (Phase 1 - High Priority):
+**All phases complete!** Claude Code automatically discovers these skills at startup and offers to use them when your requests match their descriptions.
+
+**Implemented skills** (Phase 1 - High Priority - Enhancement & Pipeline):
 - `/enhancement-plan` - Create enhancement specifications
 - `/enhancement-implement` - Execute enhancements with todo tracking
 - `/enhancement-document` - Complete documentation for finished enhancements
+- `/create-skill` - Create new skills following established patterns
 - `/run-redistricting` - Execute full 50-state redistricting pipeline
 - `/run-analysis-only` - Run analysis without redistricting
 - `/pipeline-debug` - Debug pipeline failures systematically
 - `/census-download` - Download census data for specific year/state
 - `/adjacency-build` - Build adjacency graphs from tract data
 - `/data-validate` - Validate data completeness and quality
+
+**Implemented skills** (Phase 2 - Visualization & Documentation):
+- `/create-state-map` - Generate state-level visualization maps
+- `/create-national-map` - Generate national-level maps with AK/HI insets
+- `/create-pedagogical-example` - Create educational algorithm examples
+- `/generate-dashboard` - Generate static HTML dashboard
+- `/update-docs` - Systematically review and update all documentation
+- `/create-session-archive` - Archive session notes with rationale
+- `/create-architecture-diagram` - Create/update Mermaid diagrams
+
+**Implemented skills** (Phase 3 - Research & Analysis):
+- `/create-presentation-figures` - Generate figures for research presentations
+- `/compile-latex` - Compile LaTeX documents (papers, presentations)
+- `/run-statistical-analysis` - Perform quantitative analysis of results
+- `/run-experiment` - Test algorithm variants and compare results
+- `/parameter-sweep` - Test algorithm with different parameter values
+- `/validate-compactness` - Validate redistricting maintains/improves compactness
+
+**Implemented skills** (Phase 4 - Code Organization):
+- `/reorganize-directory-structure` - Restructure directories following best practices
+- `/consolidate-scripts` - Merge duplicate or similar scripts
+- `/refactor-for-pattern` - Refactor code to follow established patterns
+
+**Implemented skills** (Phase 5 - Editorial):
+- `/edit-paper` - Edit academic papers for journal submission
+- `/edit-presentation` - Edit conference presentations (Beamer slides)
+- `/edit-guide` - Edit educational guides for general audiences
 
 ### Using Skills
 
@@ -37,21 +71,12 @@ Skills have been implemented as formal Anthropic MCP Skills in `.claude/skills/`
 **Examples**:
 - Say: "I want to plan a new feature" → Claude offers to use `/enhancement-plan`
 - Say: "Run redistricting for 2020" → Claude offers to use `/run-redistricting`
-- Say: "The pipeline failed" → Claude offers to use `/pipeline-debug`
+- Say: "Create a map for California" → Claude offers to use `/create-state-map`
+- Say: "Update the documentation" → Claude offers to use `/update-docs`
 
 **To see available skills**: Ask Claude "What skills are available?"
 
 **Implementation details**: Each skill is a `SKILL.md` file in `.claude/skills/` with YAML frontmatter + markdown instructions. Claude reads the description to determine when to activate each skill.
-
-### Remaining Skills (Phases 2-4)
-
-The following skills are documented but not yet implemented as formal MCP skills (16 skills):
-
-**Phase 2**: Visualization & documentation skills
-**Phase 3**: Research & analysis skills
-**Phase 4**: Code organization skills
-
-These can be implemented incrementally as needed using the same pattern as Phase 1 skills.
 
 ## Skill Categories
 

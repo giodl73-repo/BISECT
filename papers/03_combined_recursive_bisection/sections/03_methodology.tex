@@ -130,6 +130,38 @@ METIS now minimizes weighted edge cuts:
 
 subject to population balance and contiguity. Since $w_{ij}$ represents boundary length, this directly minimizes total perimeter.
 
+\subsubsection{METIS Constraint Handling and Multilevel Algorithm}
+
+A critical distinction: METIS treats population balance as a \textbf{hard constraint}, not a soft objective to trade off against edge-cut minimization. The optimization problem is:
+\[
+\min_{P} \text{EdgeCut}(P) \quad \text{subject to} \quad \left|\frac{\sum_{v \in P_i} p_v}{\sum_{v \in V} p_v} - t_i\right| \leq \epsilon
+\]
+
+where $t_i$ is the target weight fraction for partition $i$ and $\epsilon$ is the balance tolerance (default 1-3\% for 2-way partitioning, controlled by \texttt{-ufactor} parameter). A partition that violates the balance constraint is rejected, regardless of how good its edge-cut is.
+
+\textbf{Multilevel K-way Partitioning Algorithm}~\cite{karypis1998fast,karypis1998multilevel}: METIS uses a three-phase approach to efficiently find high-quality partitions:
+
+\textbf{Phase 1: Coarsening}. The graph is progressively coarsened by collapsing vertices. At each level $i$, a matching $M_i$ is computed (pairs of vertices to merge), creating graph $G_{i+1}$ with $|V_{i+1}| \approx |V_i|/2$. Heavy-edge matching prioritizes merging vertices connected by high-weight edges, preserving graph structure. Coarsening continues until the graph has fewer than 100 vertices. This multi-level hierarchy allows global optimization with local refinement.
+
+\textbf{Phase 2: Initial Partitioning}. The coarsest graph $G_m$ is partitioned using either greedy graph growing (GGGP) or spectral bisection methods. These small-graph algorithms find initial partitions satisfying balance constraints. For 2-way partitioning, METIS typically uses GGGP: starting from a random seed vertex, greedily expand regions to meet target weights while minimizing boundary growth. Multiple random seeds are tried, selecting the partition with minimum edge-cut.
+
+\textbf{Phase 3: Uncoarsening and Refinement}. The partition is projected back through the coarsening levels. At each level $i$, vertices merged in $G_{i+1}$ are split in $G_i$, then the partition is refined using Kernighan-Lin (KL) or Fiduccia-Mattheyses (FM) algorithms~\cite{kernighan1970efficient,fiduccia1982linear}. These local search methods move vertices across partition boundaries to reduce edge-cut, subject to maintaining balance constraints. The key insight: refinement operates on progressively finer graphs, allowing both global structure (early levels) and local optimization (late levels).
+
+\textbf{Balance constraint enforcement}: At every phase, METIS maintains the balance constraint:
+\begin{itemize}
+\item \textbf{Initial partitioning}: GGGP explicitly grows regions to target weights
+\item \textbf{Refinement}: KL/FM moves are only accepted if they preserve balance within tolerance
+\item \textbf{Contiguity}: With \texttt{-contig} flag, moves that disconnect a partition are rejected
+\end{itemize}
+
+The \texttt{-ufactor} parameter controls balance tolerance. For redistricting, we use \texttt{-ufactor=1.005} (0.5\% imbalance), enforcing strict population equality while giving METIS minimal flexibility for compactness optimization. Tighter constraints (e.g., \texttt{-ufactor=1.001}) can over-constrain the problem, forcing poor edge-cuts; looser constraints violate equal population requirements.
+
+\textbf{Refinement iterations}: The \texttt{-niter} parameter controls how many KL/FM passes are performed. More iterations improve solution quality but increase runtime. We use \texttt{-niter=100}, balancing quality and efficiency. Empirically, edge-cut improvements plateau after 50-100 iterations for redistricting graphs.
+
+\textbf{Runtime complexity}: Coarsening and uncoarsening are $O(|E|)$. KL/FM refinement is $O(|E|)$ per pass. For $r$ refinement iterations across $\log|V|$ levels, total runtime is $O(r|E|\log|V|)$. With $r=100$ and redistricting graphs having $|E| \approx 6|V|$, this is highly efficient—California (8,057 tracts) partitions in 2-3 seconds per bisection.
+
+\textbf{Comparison to constrained multi-objective optimization}: Unlike Pareto-based methods that produce trade-off frontiers~\cite{zitzler2001spea2}, METIS solves a single-objective constrained problem. There is no "balance parameter" $\lambda$ mixing objectives. Population balance is non-negotiable; edge-cut minimization occurs strictly within the feasible region defined by balance and contiguity constraints. This matches redistricting's legal requirements: equal population is mandatory, compactness is desirable subject to equality.
+
 \subsubsection{Polsby-Popper Optimization}
 
 The Polsby-Popper score for a district with area $A$ and perimeter $P$ is:

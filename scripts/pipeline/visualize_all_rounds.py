@@ -122,15 +122,22 @@ def visualize_single_round(args_tuple):
                 centroid = region_data.geometry.union_all().representative_point()
 
                 # Create label with target districts if available
+                # Hide "(1)" when region only has 1 district (redundant and distracting)
                 if region_id in region_targets:
-                    label = f"{region_id + 1} ({region_targets[region_id]})"
+                    target_districts = region_targets[region_id]
+                    if target_districts == 1:
+                        label = str(region_id + 1)
+                    else:
+                        label = f"{region_id + 1} ({target_districts})"
                 else:
                     label = str(region_id + 1)
 
+                # Use black text with white outline for better contrast
+                # (white text hard to read on light-colored regions)
                 text = ax.text(centroid.x, centroid.y, label,
                         fontsize=fontsize, fontweight='bold', ha='center', va='center',
-                        color='white', zorder=10)
-                text.set_path_effects([path_effects.Stroke(linewidth=2, foreground='black'),
+                        color='black', zorder=10)
+                text.set_path_effects([path_effects.Stroke(linewidth=3, foreground='white'),
                                       path_effects.Normal()])
             except:
                 pass

@@ -98,9 +98,9 @@ paper/                     # Academic paper
 **Phase 2 Skills**: ✅ 7 skills (Visualization & Documentation)
 **Phase 3 Skills**: ✅ 6 skills (Research & Analysis)
 **Phase 4 Skills**: ✅ 3 skills (Code Organization)
-**Phase 5 Skills**: ✅ 2 skills (Editorial)
+**Phase 5 Skills**: ✅ 3 skills (Editorial)
 
-**Total: 28 skills implemented** in `.claude/skills/`
+**Total: 29 skills implemented** in `.claude/skills/`
 
 **All phases complete!** Claude Code automatically discovers and offers to use these skills when appropriate. You don't need to explicitly invoke them - Claude will suggest using a skill when your request matches its description.
 
@@ -141,6 +141,7 @@ paper/                     # Academic paper
 **Available Skills (Phase 5 - Editorial)**:
 - `/edit-paper` - Edit academic papers for journal submission (proofreading, condensing, copyediting)
 - `/edit-presentation` - Edit conference presentations (Beamer slides, one idea per slide, time targeting)
+- `/edit-guide` - Edit educational guides for general audiences (layman's guides, tutorials, explainers)
 
 **How to use**: Simply describe what you want to do naturally. Examples:
 - "I want to plan a new feature" → Claude offers `/enhancement-plan`
@@ -150,6 +151,7 @@ paper/                     # Academic paper
 - "Update the documentation" → Claude offers `/update-docs`
 - "Edit my paper for submission" → Claude offers `/edit-paper`
 - "Condense my presentation to 15 minutes" → Claude offers `/edit-presentation`
+- "Edit my layman's guide for readability" → Claude offers `/edit-guide`
 - "Generate figures for my presentation" → Claude offers `/create-presentation-figures`
 - "Compare edge-weighted vs unweighted mode" → Claude offers `/run-experiment`
 - "Validate compactness improvements" → Claude offers `/validate-compactness`

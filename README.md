@@ -2,7 +2,7 @@
 
 Automated redistricting for all 50 US states using recursive bifurcation and the METIS graph partitioning algorithm.
 
-**Last Updated**: January 12, 2026
+**Last Updated**: January 15, 2026
 
 ## Overview
 
@@ -218,6 +218,18 @@ For detailed technical documentation, see:
   - Progress bar integration
   - Scope-based analysis implementation
   - Testing guidelines
+
+- **[SKILLS.md](docs/SKILLS.md)** - Claude Code skills for automation (25 skills)
+  - Enhancement workflow
+  - Pipeline execution
+  - Visualization & analysis
+  - Code organization
+
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Development workflow and git practices
+  - Feature branch workflow
+  - Common development tasks
+  - Using Claude Code skills
+  - Code review guidelines
 
 - **[ENHANCEMENTS_2026.md](docs/ENHANCEMENTS_2026.md)** - Recent improvements and roadmap
   - Completed enhancements

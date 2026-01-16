@@ -39,9 +39,11 @@ import argparse
 import subprocess
 import sys
 import os
+import platform
 from pathlib import Path
 from datetime import datetime
 import time
+import threading
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
@@ -374,7 +376,6 @@ def main():
             try:
                 # On Windows, use rmdir /s /q for more reliable deletion
                 if platform.system() == 'Windows':
-                    import subprocess
                     # Use Windows rmdir command which is more robust
                     result = subprocess.run(
                         ['cmd', '/c', 'rmdir', '/s', '/q', str(output_dir)],
