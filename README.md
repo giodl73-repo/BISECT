@@ -2,7 +2,7 @@
 
 Automated redistricting for all 50 US states using recursive bifurcation and the METIS graph partitioning algorithm.
 
-**Last Updated**: January 15, 2026
+**Last Updated**: January 16, 2026
 
 ## Overview
 
@@ -103,12 +103,26 @@ apportionment/
 │   │   │   │   └── *.png               # Final maps
 │   │   │   └── ...
 │   │   └── us_rounds_hierarchy.csv     # National aggregate
-│   └── us_2010_v1/       # Full 50-state 2010 run
+│   ├── us_2010_v1/       # Full 50-state 2010 run
+│   ├── artifacts/        # Compiled academic outputs (PDFs)
+│   │   ├── papers/       # Generated papers
+│   │   ├── presentations/# Generated presentations
+│   │   └── guides/       # Generated guides
+│   ├── figures/          # Shared figures for papers/presentations
+│   └── index.html        # Master dashboard
+├── artifacts/            # Academic output sources (LaTeX)
+│   ├── papers/           # Paper LaTeX sources
+│   ├── presentations/    # Presentation LaTeX sources
+│   ├── guides/           # Guide LaTeX sources
+│   └── compile.bat       # Master compilation script
 ├── src/apportionment/
 │   ├── data/             # Data acquisition and processing
 │   ├── partition/        # Redistricting algorithms (METIS wrapper)
 │   └── visualization/    # Map generation
-└── scripts/              # Executable scripts (see below)
+├── scripts/              # Executable scripts (see below)
+└── web/                  # Dashboard templates
+    ├── dashboard.html    # Individual run dashboard
+    └── master_dashboard.html  # Cross-run master dashboard
 ```
 
 ## Algorithm Details
@@ -180,27 +194,39 @@ Census blocks separated by water bodies (e.g., San Francisco Bay) can be conside
 
 ## Web Dashboard
 
-An interactive HTML dashboard provides visualization and navigation across all outputs:
+Two interactive HTML dashboards provide visualization and navigation:
 
-### Source and Deployment
-- **Source**: `web/dashboard.html` - Master dashboard template
-- **Deployment**: Run `python web/deploy_dashboard.py` to copy to `outputs/index.html`
-- **Access**: Open `outputs/index.html` in a browser
+### Individual Run Dashboard
+Per-run dashboard showing detailed results for a single redistricting run:
 
-### Features
-- **State Navigation**: Browse all 50 states from sidebar
-- **Dimensions**: Overview, Districts, Rounds, Political, Demographics, Compactness, Urban Areas
-- **Version Switching**: Navigate between different output directories (`us_2020_v1`, `us_2030_v1`, etc.)
-- **Year Switching**: Switch between census years (2020, 2030, 2040)
-- **Dynamic Content**: Maps, statistics, and download links for each state and dimension
+- **Source**: `web/dashboard.html` - Template for individual runs
+- **Generated**: `outputs/us_{year}_{version}/index.html`
+- **Features**:
+  - **State Navigation**: Browse all 50 states from sidebar
+  - **Tabs**: Overview, Districts, Rounds, USA (national), Political, Demographics, Compactness, Urban Areas
+  - **Dynamic Content**: Maps, statistics, and download links per state
+
+### Master Dashboard
+Cross-run dashboard comparing multiple redistricting runs:
+
+- **Source**: `web/master_dashboard.html` - Cross-run comparison template
+- **Generated**: `outputs/index.html`
+- **Features**:
+  - **Overview Tab**: Clickable run cards for quick navigation
+  - **Compactness Tab**: Side-by-side compactness analysis across runs
+  - **Artifacts Tab**: View compiled PDFs (papers, presentations, guides)
+  - **Run Comparison**: Compare 2000, 2010, 2020 census years side-by-side
 
 ### Usage
 ```bash
-# Deploy dashboard after generating outputs
-python web/deploy_dashboard.py
+# Generate both dashboards after pipeline completes
+python scripts/web/generate_master_dashboard.py
 
-# Open in browser
+# Open master dashboard
 open outputs/index.html
+
+# Open specific run dashboard
+open outputs/us_2020_v1/index.html
 ```
 
 ## Documentation

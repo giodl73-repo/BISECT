@@ -1,10 +1,12 @@
 # Enhancement 29: Artifacts Dashboard Tab
 
-**Status**: 🔄 IN PROGRESS
+**Status**: ✅ COMPLETED
 **Priority**: Medium
 **Estimated Complexity**: Medium (3-5 hours)
+**Actual Complexity**: Medium (4 hours)
 **Created**: January 16, 2026
 **Started**: January 16, 2026
+**Completed**: January 16, 2026
 
 ## Current State
 
@@ -330,7 +332,82 @@ Options:
 
 ## Completion Summary
 
-*To be filled after completion*
+**Completed**: January 16, 2026
+
+### What Was Implemented
+
+This enhancement involved two major components:
+
+#### 1. Artifacts Directory Reorganization
+- Created top-level `artifacts/` directory with subdirectories for papers, presentations, and guides
+- Moved all LaTeX source files from scattered locations into organized structure
+- Created master `artifacts/compile.bat` with intelligent flag threading
+- Fixed all relative paths (../../ → ../../../) after directory reorganization
+- Implemented Phase 1 shared figures generation to avoid duplication
+- All compiled outputs now go to `outputs/artifacts/` for clean separation
+
+#### 2. Master Dashboard Restructuring
+**Note**: Implementation scope changed during development. Instead of adding an Artifacts tab to individual run dashboards, we restructured the **master dashboard** (`web/master_dashboard.html`) to better serve cross-run comparison and artifact viewing.
+
+**New 3-Tab Layout:**
+- **Overview Tab**: Redesigned with clickable run cards showing year, version, mode (color-coded badges), and state count. Direct navigation replaces dropdown requirement.
+- **Compactness Tab**: Moved all compactness analysis to dedicated tab with comparison tables and stats
+- **Artifacts Tab**: PDF viewer for papers, presentations, and guides with embedded display
+
+**Key Features:**
+- Run cards with hover effects (lift + shadow)
+- Color-coded mode badges (green = edge-weighted, red = unweighted)
+- Year badges with distinct colors (2020/2010/2000)
+- Direct click-to-navigate instead of dropdown selection
+- Artifacts embedded using `<embed>` tags with PDF.js fallback
+
+#### 3. Visualization Cleanup
+While implementing the enhancement, discovered and fixed several visualization issues:
+- Fixed `\\n` appearing as literal text in 15+ map scripts (changed `\\\\n` to `\n`)
+- Removed yellow stats boxes from all maps for cleaner presentation
+- Reduced district label font sizes for better visual balance:
+  - 2-4 regions: 40 → 24 fontsize
+  - 5-8 regions: 28 → 20 fontsize
+- Fixed national rounds path in individual run dashboard
+
+### Files Modified
+- **40+ files total**
+- Reorganized: `papers/`, `presentations/`, `guides/` → `artifacts/`
+- Updated: All artifact compilation scripts with paths and flag threading
+- Fixed: 15+ visualization scripts for title formatting and stats boxes
+- Restructured: `web/master_dashboard.html` with new 3-tab layout
+- Updated: `scripts/web/generate_master_dashboard.py` with artifacts scanning
+
+### Success Metrics
+✅ All success criteria met:
+- Master dashboard has 3-tab layout (Overview/Compactness/Artifacts)
+- Run cards provide direct navigation with visual indicators
+- Artifacts tab displays PDFs inline with proper embedding
+- All compilation paths corrected for 3-level hierarchy
+- Flag threading prevents duplicate figure generation
+- Map titles no longer show literal `\n` characters
+- Stats boxes removed for cleaner visualizations
+- District labels properly sized for different region counts
+
+### Benefits Delivered
+1. **Organized artifacts**: Clean directory structure with master compilation script
+2. **Improved UX**: Direct run navigation via cards instead of dropdown requirement
+3. **Better visualization**: Cleaner maps without clutter (stats boxes, oversized labels)
+4. **Efficient compilation**: Shared figures generated once, skipped by children
+5. **Centralized viewing**: Artifacts accessible directly in master dashboard
+6. **Professional presentation**: Embedded PDFs with proper viewer integration
+
+### Lessons Learned
+1. **Scope flexibility**: Original plan was individual run dashboard, but master dashboard was better fit for artifacts viewing
+2. **Discovery during implementation**: Found and fixed visualization issues (\\n, stats boxes, font sizes) as bonus improvements
+3. **Path depth matters**: 3-level directory hierarchy requires careful path calculation in all scripts
+4. **Flag threading important**: Prevents redundant work and improves compilation performance
+
+### Future Enhancements
+- Consider adding artifact thumbnails/previews for quicker browsing
+- Add artifact metadata (author, date, version) to cards
+- Implement figure lightbox/modal viewer for presentations
+- Add search/filter functionality for large artifact collections
 
 ## Related Documentation
 

@@ -2,7 +2,7 @@
 
 This document provides context and guidelines for AI assistants working on the Congressional Redistricting codebase.
 
-**Last Updated**: January 15, 2026
+**Last Updated**: January 16, 2026
 
 ## Project Overview
 
@@ -73,11 +73,24 @@ scripts/                   # Executable scripts (use the library)
 ├── demographic/           # Demographic analysis
 ├── compactness/           # Compactness analysis
 ├── web/                   # Dashboard generation
+├── figures/               # Shared figure generation
 ├── config_2020.py         # Configuration
 └── config_2010.py         # Configuration
 
-web/                       # Dashboard template
-└── dashboard.html         # Single-file static dashboard
+web/                       # Dashboard templates
+├── dashboard.html         # Individual run dashboard (per-run)
+└── master_dashboard.html  # Cross-run dashboard (master)
+
+artifacts/                 # Academic outputs (LaTeX sources)
+├── compile.bat            # Master compilation script
+├── papers/                # Academic papers
+│   ├── 01_recursive_bisection/
+│   ├── 02_edge_weighted_bisection/
+│   └── 03_combined_recursive_bisection/
+├── presentations/         # Conference presentations
+│   └── edge_weighted_bisection/
+└── guides/                # Educational guides
+    └── edge_weighted_bisection/
 
 docs/                      # Documentation
 ├── archive/               # Historical session notes
@@ -86,10 +99,6 @@ docs/                      # Documentation
 │   ├── active/            # In-progress and planned enhancements
 │   └── templates/         # Enhancement templates
 └── ENHANCEMENTS_2026.md   # Redirect to enhancements/INDEX.md
-
-paper/                     # Academic paper
-├── analysis/              # Statistical analysis scripts
-└── sections/              # LaTeX sections
 ```
 
 ## Anthropic Skills
@@ -777,6 +786,7 @@ print(f"-> Next step")   # Works everywhere
 
 ## Recent Major Changes (Jan 2026)
 
+- **Artifacts Directory Organization** (Enhancement 29, Jan 16, 2026): Reorganized papers, presentations, and guides into top-level artifacts/ directory; implemented master artifacts/compile.bat with --reset and --skip-figures flag threading; fixed all visualization \\n literal text issues; removed yellow stats boxes; reduced district label font sizes; added master dashboard Artifacts tab with PDF viewer
 - **Algorithm Formalization & Figure Quality** (Jan 15, 2026): Formalized recursive bisection algorithm with RBA notation and mathematical set theory; increased all figure fonts for better readability; improved boundary label logic and removed redundant graph labels when both panels shown
 - **Create-Skill Meta-Skill** (Enhancement 19): Automated skill creation following established patterns, reducing creation time from 30-60 minutes to 5-10 minutes (80-90% time savings)
 - **Edit-Paper Skill** (Enhancement 20): Journal editor for academic papers - proofread, condense, copyedit, page targeting for submission
@@ -815,6 +825,7 @@ See `docs/enhancements/INDEX.md` for detailed specifications of all enhancements
 - ✅ Enhancement 15: Multi-Year Pipeline Support (Jan 14, 2026)
 - ✅ Enhancement 17: Artifact Naming Standardization (Jan 14, 2026)
 - ✅ Enhancement 18: Figure Quality Improvement (Jan 15, 2026)
+- ✅ Enhancement 29: Artifacts Dashboard Tab (Jan 16, 2026)
 
 **In Progress:**
 - 🔄 Enhancement 8: Block-Level Data Support (Phase 0 Complete for 2010, Partial for 2000)

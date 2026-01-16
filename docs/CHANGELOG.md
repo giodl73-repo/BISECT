@@ -2,7 +2,7 @@
 
 All notable changes to the Congressional Redistricting project.
 
-**Last Updated**: January 15, 2026
+**Last Updated**: January 16, 2026
 
 ## Related Documentation
 
@@ -48,6 +48,48 @@ All notable changes to the Congressional Redistricting project.
   - Updated `scripts/web/generate_dashboard.py` to look for `district_cities.csv` in correct `data/` subdirectory
   - Fixed all CSV download links in `web/dashboard.html` template to use correct paths
   - Districts tab now properly displays individual district maps for all states
+
+## 2026-01-16 - Enhancement 29: Artifacts Dashboard Tab
+
+### Changed
+- Reorganized artifacts into top-level `artifacts/` directory
+  - Moved `papers/`, `presentations/`, and `guides/` into `artifacts/`
+  - Created master `artifacts/compile.bat` with flag threading
+  - All compilation outputs to `outputs/artifacts/`
+- Fixed all artifact script paths for 3-level directory hierarchy (../../ → ../../../)
+  - Updated `presentation.tex` image paths
+  - Updated `create_appendix_examples.py` and `create_figures.py` paths
+  - Updated all `compile.bat` OUTPUT_DIR paths
+- Implemented compilation flag threading
+  - Added `--reset` flag threading through all compile.bat files
+  - Added `--skip-figures` flag to suppress duplicate figure generation
+  - Master compile.bat generates shared figures first (Phase 1)
+  - Child scripts skip figure generation after Phase 1
+
+### Fixed
+- Fixed \\n appearing as literal text in map titles (changed \\\\n to \\n)
+  - Applied fix across 15+ visualization scripts
+  - Includes state maps, national maps, round progression, compactness, political, demographic
+- Removed yellow stats boxes from all maps for cleaner visualization
+- Reduced district label font sizes for better visual balance
+  - 2-4 regions: 40 → 24 fontsize
+  - 5-8 regions: 28 → 20 fontsize
+- Fixed national rounds path in dashboard (`maps/rounds/round_XX.png`)
+
+### Added
+- Master dashboard restructured with 3-tab layout
+  - **Overview Tab**: Clickable run cards with hover effects (no dropdown needed)
+  - **Compactness Tab**: Moved all compactness analysis here (new dedicated tab)
+  - **Artifacts Tab**: PDF viewer for papers, presentations, and guides
+- Run card features:
+  - Color-coded mode badges (green=edge-weighted, red=unweighted)
+  - Year badges with distinct colors
+  - Hover effects with lift and shadow
+  - Direct navigation to run dashboards on click
+
+### Files Modified
+- 40+ files (artifacts/, scripts/, web/)
+- Created `docs/enhancements/active/29_artifacts_dashboard_tab.md`
 
 ## 2026-01-15 - Enhancement 18: Figure Quality Improvement
 
