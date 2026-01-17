@@ -15,17 +15,17 @@ Skills are specialized, reusable capabilities that:
 
 ## Implementation Status
 
-**Phase 1 Skills**: ✅ IMPLEMENTED (10 skills - January 15, 2026)
+**Phase 1 Skills**: ✅ IMPLEMENTED (12 skills - January 16, 2026)
 **Phase 2 Skills**: ✅ IMPLEMENTED (7 skills - January 15, 2026)
 **Phase 3 Skills**: ✅ IMPLEMENTED (6 skills - January 15, 2026)
 **Phase 4 Skills**: ✅ IMPLEMENTED (3 skills - January 15, 2026)
 **Phase 5 Skills**: ✅ IMPLEMENTED (3 skills - January 15, 2026)
 
-**Total: 29 skills implemented** as formal Anthropic MCP Skills in `.claude/skills/`
+**Total: 31 skills implemented** as formal Anthropic MCP Skills in `.claude/skills/`
 
 **All phases complete!** Claude Code automatically discovers these skills at startup and offers to use them when your requests match their descriptions.
 
-**Implemented skills** (Phase 1 - High Priority - Enhancement & Pipeline):
+**Implemented skills** (Phase 1 - High Priority - Enhancement, Pipeline & Testing):
 - `/enhancement-plan` - Create enhancement specifications
 - `/enhancement-implement` - Execute enhancements with todo tracking
 - `/enhancement-document` - Complete documentation for finished enhancements
@@ -36,6 +36,8 @@ Skills are specialized, reusable capabilities that:
 - `/census-download` - Download census data for specific year/state
 - `/adjacency-build` - Build adjacency graphs from tract data
 - `/data-validate` - Validate data completeness and quality
+- `/run-tests` - Execute test suite with intelligent filtering and reporting
+- `/debug-tests` - Systematically debug test failures with guided troubleshooting
 
 **Implemented skills** (Phase 2 - Visualization & Documentation):
 - `/create-state-map` - Generate state-level visualization maps
@@ -83,11 +85,12 @@ Skills are specialized, reusable capabilities that:
 1. [Enhancement Workflow Skills](#enhancement-workflow-skills)
 2. [Data Management Skills](#data-management-skills)
 3. [Pipeline Execution Skills](#pipeline-execution-skills)
-4. [Visualization Skills](#visualization-skills)
-5. [Documentation Skills](#documentation-skills)
-6. [Research & Academic Skills](#research--academic-skills)
-7. [Experiment & Analysis Skills](#experiment--analysis-skills)
-8. [Code Organization Skills](#code-organization-skills)
+4. [Testing & Validation Skills](#testing--validation-skills)
+5. [Visualization Skills](#visualization-skills)
+6. [Documentation Skills](#documentation-skills)
+7. [Research & Academic Skills](#research--academic-skills)
+8. [Experiment & Analysis Skills](#experiment--analysis-skills)
+9. [Code Organization Skills](#code-organization-skills)
 
 ---
 
@@ -328,6 +331,133 @@ Skills are specialized, reusable capabilities that:
 - GEOID type → Force `dtype={'GEOID': str}`
 - Unicode → Replace with ASCII ([OK] not ✓)
 - Connectivity → Rebuild adjacency with water connections
+
+---
+
+## Testing & Validation Skills
+
+### `/run-tests`
+**Purpose**: Execute test suite with intelligent filtering and reporting
+
+**When to use**:
+- "Run tests"
+- "Run all tests"
+- "Run unit tests with coverage"
+- Before committing code changes
+- When validating new features
+
+**What it does**:
+1. Asks user what to run:
+   - All tests (151 tests, ~18 seconds)
+   - Unit tests (110 tests, ~7 seconds)
+   - Integration tests (21 tests, ~3 seconds)
+   - E2E dashboard tests (20 tests, ~8 seconds)
+   - Specific component (redistricting, political, demographic, etc.)
+2. Builds appropriate pytest command:
+   - With markers: `-m redistricting`
+   - With coverage: `--cov=apportionment --cov-report=html`
+   - With options: `--lf` (failed first), `--tb=long` (verbose)
+3. Executes tests with Bash
+4. Parses results for statistics (passed/failed/skipped)
+5. Reports summary with clear formatting
+6. Suggests next steps based on results
+
+**Test categories**:
+- **By type**: unit, integration, e2e
+- **By component**: redistricting, political, demographic, compactness, visualization, dashboard
+- **By speed**: Fast (unit only) vs Full (all tests)
+
+**Coverage reporting**:
+- Generates HTML report in `htmlcov/`
+- Shows line-by-line coverage
+- Identifies uncovered code sections
+- Typical coverage: 90%+ for most components
+
+**Quick commands**:
+```bash
+pytest tests/ -v                 # All tests
+pytest tests/unit/ -v            # Unit tests only
+pytest tests/ -m political -v    # Political tests
+pytest tests/ --cov=apportionment --cov-report=html -v  # With coverage
+```
+
+**Next steps**:
+- If all pass: Ready to commit
+- If some fail: Use `/debug-tests` to investigate
+- If coverage low: Write additional tests
+
+---
+
+### `/debug-tests`
+**Purpose**: Systematically debug test failures with guided troubleshooting
+
+**When to use**:
+- "Debug tests"
+- "Why are my tests failing?"
+- "Fix test failures"
+- After `/run-tests` reports failures
+- When tests fail in CI/CD
+
+**What it does**:
+1. Gathers test failure information:
+   - Reads recent pytest output
+   - Or offers to run tests
+2. Categorizes failures by pattern:
+   - **Import Errors**: ModuleNotFoundError, ImportError
+   - **Mock Data Errors**: FileNotFoundError in fixtures/outputs
+   - **Assertion Failures**: assert X == Y
+   - **Playwright Errors**: TimeoutError, browser issues
+   - **File Not Found**: Data files missing
+   - **AttributeError**: API mismatches
+3. Provides guided debugging steps for each category
+4. Checks common issues automatically:
+   - PYTHONPATH set correctly
+   - Package importable
+   - Mock data exists
+   - Pytest plugins installed
+   - Browser installed (for E2E)
+5. Suggests specific fixes with commands
+6. Offers targeted re-test with `--lf` or specific tests
+
+**Common failure patterns detected**:
+- **Import errors** → Check/set PYTHONPATH
+- **Mock data missing** → Run `generate_mock_run.py`
+- **Browser not installed** → Run `playwright install chromium`
+- **Assertion failures** → Update test expectations or fix implementation
+- **API mismatches** → Update mocks or test code
+
+**Debugging workflow**:
+```
+1. Identify failure category
+2. Check common causes automatically
+3. Provide step-by-step debugging guide
+4. Suggest specific fixes
+5. Re-run failed tests
+6. Verify fixes resolved issues
+```
+
+**Advanced debugging**:
+- Interactive: `pytest --pdb` (stop on failure)
+- Verbose: `pytest --tb=long` (full tracebacks)
+- Visible browser: `pytest tests/e2e/ --headed` (see Playwright)
+- Slow motion: `pytest tests/e2e/ --slowmo=500` (debug UI)
+
+**Example patterns**:
+```python
+# Import error fix
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+
+# Mock data fix
+python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test
+
+# Browser fix
+playwright install chromium
+
+# Re-run failed only
+pytest --lf -v
+```
+
+**Benefit**: 50-70% reduction in debugging time through pattern recognition and guided troubleshooting
 
 ---
 

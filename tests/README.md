@@ -91,6 +91,31 @@ tests/
 
 ## Running Tests
 
+### With Claude Code Skills (Recommended)
+
+Claude Code provides intelligent test execution and debugging skills:
+
+**`/run-tests`** - Execute tests with filtering and reporting
+- Asks what to run (all/unit/integration/E2E/component)
+- Supports coverage reporting
+- Clear summaries and statistics
+- Suggests next steps based on results
+
+**`/debug-tests`** - Systematically debug test failures
+- Automatic failure pattern detection (6+ common patterns)
+- Guided troubleshooting steps
+- Common issue checks
+- Specific fix suggestions
+
+**Example workflows**:
+- Say: "Run all tests" → Claude offers `/run-tests`
+- Say: "Run unit tests with coverage" → Claude offers `/run-tests` with options
+- Say: "Why are my tests failing?" → Claude offers `/debug-tests`
+
+See [docs/SKILLS.md](../docs/SKILLS.md#testing--validation-skills) for detailed documentation.
+
+### Direct pytest Commands
+
 ### All Tests
 ```bash
 # All 151 tests (~18 seconds)

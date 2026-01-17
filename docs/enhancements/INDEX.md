@@ -12,7 +12,7 @@ Master index of all congressional redistricting pipeline enhancements.
 
 ## Status Overview
 
-### ✅ Completed (20 enhancements)
+### ✅ Completed (21 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -36,6 +36,7 @@ Master index of all congressional redistricting pipeline enhancements.
 | [30](active/30_playwright_testing.md) | Playwright Test Harness for Dashboard Testing | Jan 16, 2026 | [View](active/30_playwright_testing.md) |
 | [31](active/31_pipeline_test_system.md) | Pipeline Test System | Jan 16, 2026 | [View](active/31_pipeline_test_system.md) |
 | [33](active/33_dashboard_mock_data.md) | Dashboard Mock Data Integration | Jan 16, 2026 | [View](active/33_dashboard_mock_data.md) |
+| [34](active/34_test_execution_skills.md) | Test Execution and Debugging Skills | Jan 16, 2026 | [View](active/34_test_execution_skills.md) |
 
 ### 🔄 In Progress (1 enhancement)
 

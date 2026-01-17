@@ -103,17 +103,17 @@ docs/                      # Documentation
 
 ## Anthropic Skills
 
-**Phase 1 Skills**: ✅ 10 skills (Enhancement & Pipeline)
+**Phase 1 Skills**: ✅ 12 skills (Enhancement, Pipeline & Testing)
 **Phase 2 Skills**: ✅ 7 skills (Visualization & Documentation)
 **Phase 3 Skills**: ✅ 6 skills (Research & Analysis)
 **Phase 4 Skills**: ✅ 3 skills (Code Organization)
 **Phase 5 Skills**: ✅ 3 skills (Editorial)
 
-**Total: 29 skills implemented** in `.claude/skills/`
+**Total: 31 skills implemented** in `.claude/skills/`
 
 **All phases complete!** Claude Code automatically discovers and offers to use these skills when appropriate. You don't need to explicitly invoke them - Claude will suggest using a skill when your request matches its description.
 
-**Available Skills (Phase 1 - Enhancement & Pipeline)**:
+**Available Skills (Phase 1 - Enhancement, Pipeline & Testing)**:
 - `/enhancement-plan` - Create enhancement specifications following project patterns
 - `/enhancement-implement` - Execute enhancements with todo tracking and testing
 - `/enhancement-document` - Complete all documentation for finished enhancements
@@ -124,6 +124,8 @@ docs/                      # Documentation
 - `/census-download` - Download census data for specific year/state
 - `/adjacency-build` - Build adjacency graphs from tract data
 - `/data-validate` - Validate data completeness before running pipeline
+- `/run-tests` - Execute test suite with intelligent filtering and reporting
+- `/debug-tests` - Systematically debug test failures with guided troubleshooting
 
 **Available Skills (Phase 2 - Visualization & Documentation)**:
 - `/create-state-map` - Generate state-level visualization maps
@@ -158,6 +160,8 @@ docs/                      # Documentation
 - "Run redistricting for 2020" → Claude offers `/run-redistricting`
 - "Create a map for California" → Claude offers `/create-state-map`
 - "Update the documentation" → Claude offers `/update-docs`
+- "Run all tests" → Claude offers `/run-tests`
+- "Why are my tests failing?" → Claude offers `/debug-tests`
 - "Edit my paper for submission" → Claude offers `/edit-paper`
 - "Condense my presentation to 15 minutes" → Claude offers `/edit-presentation`
 - "Edit my layman's guide for readability" → Claude offers `/edit-guide`
