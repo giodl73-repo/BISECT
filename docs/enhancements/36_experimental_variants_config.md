@@ -45,17 +45,18 @@ outputs/
 Create a comprehensive experimental variants configuration system that:
 
 1. **Tracks all algorithmic choices** via `config.json` in each output directory
-2. **Reorganizes output directory structure** to separate experiments from production runs
-3. **Displays experiment settings** prominently on dashboard
-4. **Enables systematic variant comparison** for future experiments (tract vs block, parameter sweeps, etc.)
-5. **Cleans up cluttered outputs directory** with clear organizational hierarchy
+2. **Reorganizes output directory structure** to separate production, experiments, and tests
+3. **Hides test/debug runs** from main dashboard and directory listings
+4. **Displays experiment settings** prominently on dashboard
+5. **Enables systematic variant comparison** for future experiments (tract vs block, parameter sweeps, etc.)
+6. **Cleans up cluttered outputs directory** with clear organizational hierarchy
 
 ## Proposed Output Structure
 
 ### Option A: Version-First Hierarchy (User Preference)
 ```
 outputs/
-  v1/                              # Version directory
+  v1/                              # Production version directory
     2020/                          # Year subdirectory
       config.json                  # Run configuration metadata
       states/
@@ -68,7 +69,7 @@ outputs/
     2000/
       config.json
       ...
-  experiments/                     # All experimental runs
+  experiments/                     # Experimental runs (research variants)
     tract_vs_block_2020/
       tract_v1/
         config.json
@@ -83,6 +84,13 @@ outputs/
       unweighted_v1/
         config.json
         ...
+  tests/                           # Development/validation runs (hidden from UI)
+    test_2020_vermont/
+      config.json
+      ...
+    debug_alabama_edge/
+      config.json
+      ...
   artifacts/                       # All academic outputs
     papers/                        # Compiled PDFs
     presentations/                 # Compiled PDFs
@@ -102,6 +110,9 @@ outputs/
     us_2000_v1/
   experiments/
     [same as Option A]
+  tests/                           # Development/validation runs (hidden from UI)
+    test_2020_vermont/
+    debug_alabama_edge/
   artifacts/                       # All academic outputs
     papers/
     presentations/
@@ -122,7 +133,8 @@ outputs/
     "version": "v1",
     "census_year": 2020,
     "election_year": 2020,
-    "run_type": "production",
+    "run_type": "production",  // "production", "experiment", or "test"
+    "experiment_name": null,   // e.g., "tract_vs_block_2020" for experiments
     "description": "Production run with edge-weighted algorithm"
   },
   "algorithm": {
@@ -184,9 +196,9 @@ The schema supports future experimental variants:
 
 ### Phase 2: Implement New Output Directory Structure
 - [ ] Wipe `outputs/` directory (user has backup)
-- [ ] Create new directory structure: `outputs/v1/`, `outputs/experiments/`, `outputs/artifacts/`
+- [ ] Create new directory structure: `outputs/v1/`, `outputs/experiments/`, `outputs/tests/`, `outputs/artifacts/`
 - [ ] Move `artifacts/` contents from repo root to `outputs/artifacts/`
-- [ ] Update `.gitignore` to reflect new structure
+- [ ] Update `.gitignore` to reflect new structure (exclude `outputs/tests/` from git)
 - [ ] Create `outputs/README.md` documenting new structure
 - [ ] Update figure generation scripts to use `outputs/artifacts/figures/`
 
@@ -199,8 +211,9 @@ The schema supports future experimental variants:
 ### Phase 3: Update Pipeline Scripts to Write Config
 - [ ] Modify `run_complete_redistricting.py` to write config.json
 - [ ] Update output directory path logic (support new structure)
-- [ ] Add `--run-type` parameter (production/experiment)
+- [ ] Add `--run-type` parameter (production/experiment/test)
 - [ ] Add `--experiment-name` parameter for experiments
+- [ ] Auto-detect test runs (states like VT/DE with version "test")
 - [ ] Write config.json at start of pipeline (with initial metadata)
 - [ ] Update config.json at end with timing/system info
 - [ ] Update all analysis scripts to read config if needed
@@ -216,8 +229,9 @@ The schema supports future experimental variants:
 - [ ] Display algorithm settings (partition mode, data level)
 - [ ] Display pipeline settings (skip flags, DPI)
 - [ ] Add metadata section (created date, version, year)
-- [ ] Update master dashboard to show all run configs
+- [ ] Update master dashboard to show production and experiment runs (exclude tests/)
 - [ ] Add config comparison view (side-by-side)
+- [ ] Add run_type badge/label (production/experiment/test)
 
 **Files:**
 - `scripts/web/generate_dashboard.py` - Read and embed config
@@ -333,25 +347,26 @@ Compare configs side-by-side in master dashboard.
 
 - [ ] Every pipeline run generates a valid config.json file
 - [ ] Config.json contains all required fields (metadata, algorithm, pipeline, system)
-- [ ] New output directory structure is clean and organized
-- [ ] Experiments separated from production runs
+- [ ] New output directory structure is clean and organized (v1/, experiments/, tests/, artifacts/)
+- [ ] Production, experiments, and test runs properly separated
+- [ ] Test runs excluded from master dashboard and main listings
 - [ ] Dashboard displays configuration prominently
 - [ ] Master dashboard allows config comparison
-- [ ] All existing runs migrated successfully to new structure
 - [ ] Documentation updated (ARCHITECTURE.md, EXPERIMENTS.md, README.md)
-- [ ] Old scripts still work after migration
 - [ ] Config schema is extensible for future variants
+- [ ] LaTeX compilation works from new artifacts/ location
 
 ## Benefits
 
 1. **Reproducibility**: Every run fully documented with algorithmic choices
-2. **Experiment Organization**: Clear separation of experiments from production
-3. **Systematic Comparison**: Easy to compare variants side-by-side
-4. **Dashboard Transparency**: Users can see exactly what settings were used
-5. **Future-Proof**: Schema supports future experimental parameters
-6. **Clean Structure**: Organized outputs directory with clear hierarchy
-7. **Version Flexibility**: Can maintain multiple production versions simultaneously
-8. **Audit Trail**: Complete record of what was run when
+2. **Experiment Organization**: Clear separation of production, experiments, and tests
+3. **Clean Development**: Test/debug runs hidden from main UI and directory listings
+4. **Systematic Comparison**: Easy to compare variants side-by-side
+5. **Dashboard Transparency**: Users can see exactly what settings were used
+6. **Future-Proof**: Schema supports future experimental parameters (tract vs block, parameter sweeps)
+7. **Clean Structure**: Organized outputs directory with clear hierarchy
+8. **Version Flexibility**: Can maintain multiple production versions simultaneously
+9. **Audit Trail**: Complete record of what was run when
 
 ## Dependencies
 
