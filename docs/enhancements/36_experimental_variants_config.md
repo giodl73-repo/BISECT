@@ -25,11 +25,11 @@ The current output directory structure has several limitations:
 - Dashboard doesn't display experiment configuration
 - Difficult to compare variants systematically
 
-**Example Current Structure:**
+**Example Current Structure (OLD - to be replaced):**
 ```
 outputs/
-  us_2020_v1/                      # Production run
-  us_2020_v1_noedge/              # Unweighted variant (implicit in name)
+  us_2020_v1/                      # Edge-weighted production run
+  us_2020_v1_noedge/              # Unweighted variant (_noedge suffix - BAD)
   alabama_edge_test/               # Experiment (mixed with production)
   iowa_edge_test/                  # Experiment
   baseline_comparison/             # Analysis outputs
@@ -39,6 +39,11 @@ outputs/
   edge_weighted_comparison_50states.csv
   index.html                       # Master dashboard
 ```
+
+**Problems with Current Approach:**
+1. `_noedge` suffix encodes algorithm choice in directory name (not scalable)
+2. No way to track other parameters (tract vs block, edge weight scaling, etc.)
+3. Mixed production, experiments, and test runs in flat structure
 
 ## Goal
 
@@ -134,6 +139,8 @@ outputs/
     "census_year": 2020,
     "election_year": 2020,
     "run_type": "production",  // "production", "experiment", or "test"
+    "scope": "us",             // "us" for 50-state run, "state" for single state
+    "states": ["all"],         // ["all"] or specific states like ["california", "texas"]
     "experiment_name": null,   // e.g., "tract_vs_block_2020" for experiments
     "description": "Production run with edge-weighted algorithm"
   },
@@ -211,16 +218,20 @@ The schema supports future experimental variants:
 ### Phase 3: Update Pipeline Scripts to Write Config
 - [ ] Modify `run_complete_redistricting.py` to write config.json
 - [ ] Update output directory path logic (support new structure)
+- [ ] **Remove `_noedge` suffix logic** (partition mode now in config.json, not directory name)
+- [ ] New path logic: `outputs/{run_type}/{version}/{year}/` or `outputs/experiments/{experiment_name}/`
 - [ ] Add `--run-type` parameter (production/experiment/test)
 - [ ] Add `--experiment-name` parameter for experiments
 - [ ] Auto-detect test runs (states like VT/DE with version "test")
 - [ ] Write config.json at start of pipeline (with initial metadata)
 - [ ] Update config.json at end with timing/system info
+- [ ] **Handle single-state runs**: If running standalone state (not part of US run), create `outputs/tests/{state}_{year}_{timestamp}/config.json`
+- [ ] Modify `process_single_state.py` to write config.json when run standalone
 - [ ] Update all analysis scripts to read config if needed
 
 **Files:**
-- `scripts/pipeline/run_complete_redistricting.py` - Config generation
-- `scripts/pipeline/process_single_state.py` - Read config if needed
+- `scripts/pipeline/run_complete_redistricting.py` - Config generation, remove `_noedge` logic (line 363)
+- `scripts/pipeline/process_single_state.py` - Write config.json for standalone state runs
 - All analysis scripts that reference output directories
 
 ### Phase 4: Update Dashboard to Display Configuration
@@ -251,7 +262,23 @@ The schema supports future experimental variants:
 - `deploy_web.bat` - New path logic
 - `create_experiment.bat` - Helper for experiments
 
-### Phase 6: Testing and Validation
+### Phase 6: Update Existing Tests for New Structure
+- [ ] Update pipeline test fixtures to expect new directory structure
+- [ ] Modify `tests/e2e/test_pipeline.py` to use new paths (v1/2020/ instead of us_2020_v1/)
+- [ ] Update mock data generation to create config.json files
+- [ ] Add test for config.json validation (schema, required fields)
+- [ ] Add test for run type detection (production/experiment/test)
+- [ ] Add test for directory path logic (ensure correct routing)
+- [ ] Update dashboard tests to expect config display section
+- [ ] Update any other tests that hardcode output paths
+
+**Files:**
+- `tests/e2e/test_pipeline.py` - Update for new structure
+- `tests/fixtures/generate_mock_run.py` - Generate config.json
+- `tests/unit/test_run_config.py` - New tests for config module
+- Any other test files referencing output paths
+
+### Phase 7: Integration Testing and Validation
 - [ ] Test print-only mode with new structure
 - [ ] Run small state test (VT) with config generation
 - [ ] Verify config.json is written correctly
@@ -260,7 +287,7 @@ The schema supports future experimental variants:
 - [ ] Test master dashboard with multiple configs
 - [ ] Verify LaTeX compilation still works from new artifacts location
 
-### Phase 7: Documentation
+### Phase 8: Documentation
 - [ ] Update `docs/ARCHITECTURE.md` with new output structure
 - [ ] Update `docs/CODING_PATTERNS.md` with config usage
 - [ ] Create `docs/EXPERIMENTS.md` guide for running variants
@@ -396,6 +423,27 @@ Compare configs side-by-side in master dashboard.
   - Easy to adjust since starting fresh (no migration)
 
 ## Implementation Notes
+
+### Single-State Runs
+
+When running a single state independently (not part of full US pipeline):
+```bash
+python scripts/pipeline/process_single_state.py --state california --year 2020 --version test
+```
+
+Output structure:
+```
+outputs/tests/california_2020_20260117_143052/
+  config.json              # State-level config
+  states/
+    california/
+      data/
+      maps/
+      ...
+  index.html              # State dashboard
+```
+
+Config includes `"scope": "state"` field to differentiate from US-level runs.
 
 ### Directory Structure Decision
 
