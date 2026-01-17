@@ -704,6 +704,7 @@
             <!-- Top Navigation - Dimensions -->
             <div class="dimensions" id="dimensions">
                 <div class="dimension-tab active" data-dimension="overview">📊 Overview</div>
+                <div class="dimension-tab" data-dimension="configuration">⚙️ Configuration</div>
                 <div class="dimension-tab" data-dimension="rounds">🔄 Rounds</div>
                 <div class="dimension-tab" data-dimension="districts">🗺️ Districts</div>
                 <div class="dimension-tab" data-dimension="political">🏛️ Political</div>
@@ -747,12 +748,14 @@
         let currentVersion = 'v1';
         let currentSort = 'alpha-asc';
         let statesArray = [];
+        let runConfig = null;  // Will be loaded from config.json
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             prepareStatesArray();
             populateStates();
             setupDimensionTabs();
+            loadConfig();  // Load config.json asynchronously
 
             // Hide Urban Areas tab for Census 2000 (CBSA classification not available)
             const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
@@ -908,6 +911,9 @@
                     case 'overview':
                         html = generateUSAOverview();
                         break;
+                    case 'configuration':
+                        html = generateConfiguration();
+                        break;
                     case 'cities':
                         html = generateUSACities();
                         break;
@@ -951,6 +957,9 @@
                 case 'overview':
                     html = generateOverview(stateName, currentState, districts);
                     break;
+                case 'configuration':
+                    html = generateConfiguration();
+                    break;
                 case 'cities':
                     html = generateCities(stateName, currentState, districts);
                     break;
@@ -975,6 +984,153 @@
             }
 
             contentArea.innerHTML = html;
+        }
+
+        // Load config.json
+        async function loadConfig() {
+            try {
+                const basePath = getBasePath();
+                const response = await fetch(`${basePath}/config.json`);
+                if (response.ok) {
+                    runConfig = await response.json();
+                    console.log('Loaded config:', runConfig);
+                } else {
+                    console.warn('config.json not found');
+                }
+            } catch (error) {
+                console.warn('Error loading config.json:', error);
+            }
+        }
+
+        // Generate configuration content
+        function generateConfiguration() {
+            if (!runConfig) {
+                return `
+                    <div class="content-card">
+                        <h2>Run Configuration</h2>
+                        <p style="color: #6c757d;">Configuration data not available. This may be an older run without config.json.</p>
+                    </div>
+                `;
+            }
+
+            const config = runConfig;
+            const metadata = config.metadata || {};
+            const algorithm = config.algorithm || {};
+            const pipeline = config.pipeline || {};
+            const system = config.system || {};
+
+            return `
+                <div class="content-card">
+                    <h2>Run Configuration</h2>
+                    <p style="color: #6c757d; margin-bottom: 1.5rem;">Configuration snapshot from config.json</p>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Metadata</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Schema Version</td>
+                            <td style="padding: 0.75rem;">${config.schema_version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Created</td>
+                            <td style="padding: 0.75rem;">${metadata.created ? new Date(metadata.created).toLocaleString() : 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Version</td>
+                            <td style="padding: 0.75rem;">${metadata.version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Census Year</td>
+                            <td style="padding: 0.75rem;">${metadata.census_year || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Election Year</td>
+                            <td style="padding: 0.75rem;">${metadata.election_year || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Run Type</td>
+                            <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${metadata.run_type === 'production' ? '#28a745' : metadata.run_type === 'experiment' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${metadata.run_type || 'N/A'}</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Scope</td>
+                            <td style="padding: 0.75rem;">${metadata.scope || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">States</td>
+                            <td style="padding: 0.75rem;">${metadata.states ? metadata.states.join(', ') : 'N/A'}</td>
+                        </tr>
+                        ${metadata.experiment_name ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Experiment Name</td>
+                            <td style="padding: 0.75rem;">${metadata.experiment_name}</td>
+                        </tr>
+                        ` : ''}
+                        ${metadata.description ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Description</td>
+                            <td style="padding: 0.75rem;">${metadata.description}</td>
+                        </tr>
+                        ` : ''}
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Algorithm</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Partition Mode</td>
+                            <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${algorithm.partition_mode === 'edge_weighted' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${algorithm.partition_mode || 'N/A'}</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Data Level</td>
+                            <td style="padding: 0.75rem;">${algorithm.data_level || 'N/A'}</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Pipeline Settings</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Skip Political</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_political ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Demographic</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_demographic ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Compactness</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_compactness ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Metro</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_metro ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">DPI</td>
+                            <td style="padding: 0.75rem;">${pipeline.dpi || 'N/A'}</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">System Info</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Python Version</td>
+                            <td style="padding: 0.75rem;">${system.python_version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">METIS Version</td>
+                            <td style="padding: 0.75rem;">${system.metis_version || 'N/A'}</td>
+                        </tr>
+                        ${system.execution_time_seconds ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Execution Time</td>
+                            <td style="padding: 0.75rem;">${Math.floor(system.execution_time_seconds / 60)} minutes ${system.execution_time_seconds % 60} seconds</td>
+                        </tr>
+                        ` : ''}
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Hostname</td>
+                            <td style="padding: 0.75rem;">${system.hostname || 'N/A'}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
         }
 
         // Generate overview content
