@@ -29,9 +29,6 @@ def parse_enhancement(file_path):
         if not enhancement_id:
             return None
 
-        # Determine directory (active or completed)
-        directory = 'active' if file_path.parent.name == 'active' else 'completed'
-
         return {
             'id': enhancement_id,
             'title': metadata.get('title', f'Enhancement {enhancement_id}'),
@@ -41,7 +38,7 @@ def parse_enhancement(file_path):
             'created': metadata.get('created', 'Unknown'),
             'completed': metadata.get('completed', ''),
             'started': metadata.get('started', ''),
-            'file': f'{directory}/{file_path.name}',
+            'file': file_path.name,
             'summary': metadata.get('summary', '')
         }
 

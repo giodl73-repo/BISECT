@@ -19,8 +19,6 @@ app = Flask(__name__, static_folder='static', static_url_path='')
 
 # Base path for enhancements
 BASE_PATH = Path(__file__).parent.parent.parent / 'docs' / 'enhancements'
-ACTIVE_PATH = BASE_PATH / 'active'
-COMPLETED_PATH = BASE_PATH / 'completed'
 INDEX_PATH = BASE_PATH / 'INDEX.md'
 
 
@@ -61,17 +59,12 @@ def get_enhancements():
     """
     enhancements = []
 
-    # Scan active directory
-    for file_path in ACTIVE_PATH.glob('*.md'):
-        try:
-            enhancement = parse_enhancement(file_path)
-            if enhancement:
-                enhancements.append(enhancement)
-        except Exception as e:
-            print(f"[WARN] Failed to parse {file_path.name}: {e}")
+    # Scan enhancements directory (skip INDEX.md and templates)
+    for file_path in BASE_PATH.glob('*.md'):
+        # Skip INDEX.md and other non-enhancement files
+        if file_path.name in ['INDEX.md', 'README.md']:
+            continue
 
-    # Scan completed directory
-    for file_path in COMPLETED_PATH.glob('*.md'):
         try:
             enhancement = parse_enhancement(file_path)
             if enhancement:
@@ -317,7 +310,7 @@ def get_stats():
 
 def find_enhancement_file(enhancement_id):
     """
-    Find enhancement file by ID in active or completed directories
+    Find enhancement file by ID in enhancements directory
 
     Args:
         enhancement_id: Enhancement number
@@ -325,12 +318,8 @@ def find_enhancement_file(enhancement_id):
     Returns:
         Path object or None if not found
     """
-    # Try active directory first
-    for file_path in ACTIVE_PATH.glob(f'{enhancement_id}_*.md'):
-        return file_path
-
-    # Try completed directory
-    for file_path in COMPLETED_PATH.glob(f'{enhancement_id}_*.md'):
+    # Search in enhancements directory
+    for file_path in BASE_PATH.glob(f'{enhancement_id}_*.md'):
         return file_path
 
     return None
