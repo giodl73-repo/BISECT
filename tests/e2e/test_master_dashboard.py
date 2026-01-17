@@ -166,7 +166,7 @@ def _create_minimal_master_dashboard(path: Path):
                         <p>Districts: ${run.districts}</p>
                         <p>States: ${run.states}</p>
                     </div>
-                    <a href="outputs/us_${run.year}_${run.version}/index.html" class="view-btn">View Details</a>
+                    <a href="outputs/${run.version}/${run.year}/index.html" class="view-btn">View Details</a>
                 `;
                 container.appendChild(card);
             });

@@ -42,6 +42,9 @@ from tests.mocks.mock_maps import (
     generate_mock_metro_map
 )
 
+# Import config module for generating config.json
+from apportionment.config import RunConfig, write_config
+
 # State configurations (district counts for 2020)
 STATE_DISTRICTS = {
     'vermont': 1,
@@ -414,7 +417,8 @@ def generate_national_aggregations(base_path, states, year):
 def generate_mock_run(states, year, version, output_dir=None):
     """Generate complete mock run for specified states."""
     if output_dir is None:
-        output_dir = project_root / 'outputs' / f'us_{year}_{version}'
+        # Use new directory structure: outputs/dev/{version}_{year}/
+        output_dir = project_root / 'outputs' / 'dev' / f'{version}_{year}'
     else:
         output_dir = Path(output_dir)
 
@@ -423,6 +427,25 @@ def generate_mock_run(states, year, version, output_dir=None):
     print(f"  Version: {version}")
     print(f"  States: {', '.join(states)}")
     print(f"  Output: {output_dir}")
+    print()
+
+    # Create output directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate config.json
+    print("Generating config.json...")
+    config = RunConfig.create(
+        version=version,
+        census_year=int(year),
+        election_year=int(year),
+        partition_mode='edge_weighted',  # Default for mocks
+        data_level='tract',
+        run_type='test',  # Mark as test/mock run
+        scope='state' if len(states) < 50 else 'us',
+        states=states
+    )
+    write_config(config, output_dir)
+    print("[OK] Generated config.json")
     print()
 
     # Suppress warnings from mock generators
@@ -495,7 +518,7 @@ def main():
     parser.add_argument(
         '--output-dir',
         type=str,
-        help='Custom output directory (default: outputs/us_{year}_{version})'
+        help='Custom output directory (default: outputs/dev/{version}_{year})'
     )
 
     args = parser.parse_args()
