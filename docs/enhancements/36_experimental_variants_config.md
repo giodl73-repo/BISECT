@@ -50,8 +50,8 @@ outputs/
 Create a comprehensive experimental variants configuration system that:
 
 1. **Tracks all algorithmic choices** via `config.json` in each output directory
-2. **Reorganizes output directory structure** to separate production, experiments, and tests
-3. **Hides test/debug runs** from main dashboard and directory listings
+2. **Reorganizes output directory structure** to separate production, experiments, and dev runs
+3. **Hides dev/debug runs** from main dashboard and directory listings
 4. **Displays experiment settings** prominently on dashboard
 5. **Enables systematic variant comparison** for future experiments (tract vs block, parameter sweeps, etc.)
 6. **Cleans up cluttered outputs directory** with clear organizational hierarchy
@@ -89,7 +89,7 @@ outputs/
       unweighted_v1/
         config.json
         ...
-  tests/                           # Development/validation runs (hidden from UI)
+  dev/                             # Development/validation runs (hidden from UI)
     test_2020_vermont/
       config.json
       ...
@@ -115,7 +115,7 @@ outputs/
     us_2000_v1/
   experiments/
     [same as Option A]
-  tests/                           # Development/validation runs (hidden from UI)
+  dev/                             # Development/validation runs (hidden from UI)
     test_2020_vermont/
     debug_alabama_edge/
   artifacts/                       # All academic outputs
@@ -203,9 +203,9 @@ The schema supports future experimental variants:
 
 ### Phase 2: Implement New Output Directory Structure
 - [ ] Wipe `outputs/` directory (user has backup)
-- [ ] Create new directory structure: `outputs/v1/`, `outputs/experiments/`, `outputs/tests/`, `outputs/artifacts/`
+- [ ] Create new directory structure: `outputs/v1/`, `outputs/experiments/`, `outputs/dev/`, `outputs/artifacts/`
 - [ ] Move `artifacts/` contents from repo root to `outputs/artifacts/`
-- [ ] Update `.gitignore` to reflect new structure (exclude `outputs/tests/` from git)
+- [ ] Update `.gitignore` to reflect new structure (exclude `outputs/dev/` from git)
 - [ ] Create `outputs/README.md` documenting new structure
 - [ ] Update figure generation scripts to use `outputs/artifacts/figures/`
 
@@ -225,7 +225,7 @@ The schema supports future experimental variants:
 - [ ] Auto-detect test runs (states like VT/DE with version "test")
 - [ ] Write config.json at start of pipeline (with initial metadata)
 - [ ] Update config.json at end with timing/system info
-- [ ] **Handle single-state runs**: If running standalone state (not part of US run), create `outputs/tests/{state}_{year}_{timestamp}/config.json`
+- [ ] **Handle single-state runs**: If running standalone state (not part of US run), create `outputs/dev/{state}_{year}_{timestamp}/config.json`
 - [ ] Modify `process_single_state.py` to write config.json when run standalone
 - [ ] Update all analysis scripts to read config if needed
 
@@ -433,7 +433,7 @@ python scripts/pipeline/process_single_state.py --state california --year 2020 -
 
 Output structure:
 ```
-outputs/tests/california_2020_20260117_143052/
+outputs/dev/california_2020_20260117_143052/
   config.json              # State-level config
   states/
     california/
