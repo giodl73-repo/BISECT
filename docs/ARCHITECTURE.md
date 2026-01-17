@@ -2,7 +2,7 @@
 
 This document explains the design of the redistricting system, key algorithms, and how components interact.
 
-**Last Updated**: January 15, 2026
+**Last Updated**: January 16, 2026
 
 ## Related Documentation
 

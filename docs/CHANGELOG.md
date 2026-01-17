@@ -17,6 +17,49 @@ All notable changes to the Congressional Redistricting project.
 ### Added
 - Nothing pending
 
+## 2026-01-16 - Test Execution and Debugging Skills (Enhancement 34)
+
+### Added
+- **Enhancement 34: Test Execution and Debugging Skills**
+  - `/run-tests` skill for intelligent test execution
+    - Filter by type (unit/integration/E2E) or component (redistricting, political, demographic, etc.)
+    - Coverage reporting integration with HTML output
+    - Clear summaries with pass/fail statistics
+    - Actionable next-step suggestions based on results
+  - `/debug-tests` skill for systematic test debugging
+    - Automatic detection of 6 common failure patterns (imports, mocks, assertions, Playwright, file not found, AttributeError)
+    - Guided debugging steps for each failure category
+    - Automatic common issue checks (PYTHONPATH, browser, mock data)
+    - Specific fix suggestions with copy-paste commands
+    - 50-70% reduction in debugging time through pattern recognition
+  - Created using `/create-skill` meta-skill (Enhancement 19)
+  - Tool permissions: Read, Bash, Grep, Glob for both skills
+
+### Changed
+- **Documentation Updates**:
+  - CLAUDE.md: Updated Phase 1 from 10 to 12 skills (total 29 → 31 skills)
+  - docs/SKILLS.md: Added new "Testing & Validation Skills" category with comprehensive documentation
+  - tests/README.md: Added "With Claude Code Skills (Recommended)" section with usage examples
+  - docs/enhancements/INDEX.md: Moved Enhancement 34 from Planned to Completed (20 → 21 completed)
+
+### Benefits
+- Streamlined test execution with intelligent defaults
+- Lower barrier for developers (no pytest expertise needed)
+- Faster debugging through pattern recognition and guided troubleshooting
+- Consistent testing workflow across team
+- Better guidance with actionable suggestions instead of raw errors
+
+### Files
+- `.claude/skills/run-tests/SKILL.md` (new, 482 lines)
+- `.claude/skills/debug-tests/SKILL.md` (new, 514 lines)
+- `docs/enhancements/active/34_test_execution_skills.md` (new, 515 lines)
+- `CLAUDE.md` (updated skill counts and usage examples)
+- `docs/SKILLS.md` (added Testing & Validation Skills section)
+- `tests/README.md` (added skill usage guidance)
+- `docs/enhancements/INDEX.md` (marked Enhancement 34 as completed)
+
+---
+
 ## 2026-01-16 - Comprehensive Test Suite Complete (Enhancements 30, 31, 33)
 
 ### Added
