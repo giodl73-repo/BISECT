@@ -62,10 +62,17 @@ def extract_metadata(content):
     """
     metadata = {}
 
-    # Extract title (first # heading)
+    # Extract title (first # or ## heading)
+    # Try level 1 heading first (newer format)
     title_match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
+    if not title_match:
+        # Fall back to level 2 heading (older format)
+        title_match = re.search(r'^##\s+(.+)$', content, re.MULTILINE)
     if title_match:
-        metadata['title'] = title_match.group(1).strip()
+        title = title_match.group(1).strip()
+        # Remove emoji status indicators from END of title if present
+        title = re.sub(r'\s*[✅🔄📋]\s*(COMPLETED|IN PROGRESS|PLANNED)?\s*$', '', title).strip()
+        metadata['title'] = title
 
     # Extract frontmatter fields
     patterns = {
@@ -82,16 +89,31 @@ def extract_metadata(content):
         if match:
             metadata[key] = match.group(1).strip()
 
+    # Infer status from title if not explicitly set (older format)
+    if 'status' not in metadata:
+        title = metadata.get('title', '')
+        if '✅' in title or 'COMPLETED' in title:
+            metadata['status'] = '✅ COMPLETED'
+        elif '🔄' in title or 'IN PROGRESS' in title:
+            metadata['status'] = '🔄 IN PROGRESS'
+        elif '📋' in title or 'PLANNED' in title:
+            metadata['status'] = '📋 PLANNED'
+        else:
+            # Default to unknown
+            metadata['status'] = 'Unknown'
+
     # Extract summary (first paragraph after frontmatter)
-    # Look for text between "## Current State" and next heading
+    # Look for text between "## Current State" or "### Current State" or "### Goal" and next heading
     summary_match = re.search(
-        r'##\s+(?:Current State|Goal)\s*\n\n(.+?)(?:\n\n|\n##)',
+        r'###?\s+(?:Current State|Goal|Problem)\s*\n+(.+?)(?:\n\n|\n###?)',
         content,
         re.DOTALL
     )
     if summary_match:
         summary = summary_match.group(1).strip()
-        # Take first 200 characters
+        # Remove markdown formatting and take first 200 characters
+        summary = re.sub(r'\*\*(.+?)\*\*', r'\1', summary)  # Remove bold
+        summary = re.sub(r'`(.+?)`', r'\1', summary)  # Remove code blocks
         if len(summary) > 200:
             summary = summary[:200] + '...'
         metadata['summary'] = summary
@@ -111,19 +133,15 @@ def validate_enhancement(content):
     """
     errors = []
 
-    # Check for required fields
-    required_patterns = {
-        'Title': r'^#\s+Enhancement',
-        'Status': r'\*\*Status\*\*:',
-        'Priority': r'\*\*Priority\*\*:',
-        'Created': r'\*\*Created\*\*:',
-    }
+    # Check for required fields (relaxed for older formats)
+    # Only require a title with "Enhancement"
+    has_title_level1 = re.search(r'^#\s+Enhancement', content, re.MULTILINE)
+    has_title_level2 = re.search(r'^##\s+Enhancement', content, re.MULTILINE)
 
-    for field, pattern in required_patterns.items():
-        if not re.search(pattern, content, re.MULTILINE):
-            errors.append(f'Missing required field: {field}')
+    if not (has_title_level1 or has_title_level2):
+        errors.append('Missing required field: Title (must contain "Enhancement")')
 
-    # Check status value
+    # Check status value only if present (optional for older format)
     status_match = re.search(r'\*\*Status\*\*:\s*(.+)', content)
     if status_match:
         status = status_match.group(1).strip()
@@ -131,11 +149,7 @@ def validate_enhancement(content):
         if status not in valid_statuses:
             errors.append(f'Invalid status: {status}. Must be one of: {", ".join(valid_statuses)}')
 
-    # Check for common sections
-    required_sections = ['## Current State', '## Goal', '## Implementation Plan']
-    for section in required_sections:
-        if section not in content:
-            errors.append(f'Missing section: {section}')
+    # Don't require specific sections - different formats have different structures
 
     return {
         'valid': len(errors) == 0,

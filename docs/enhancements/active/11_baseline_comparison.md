@@ -1,4 +1,9 @@
-## Enhancement 11: Baseline Comparison to Enacted 2020 Congressional Districts 📋 PLANNED
+# Enhancement 11: Baseline Comparison to Enacted 2020 Congressional Districts
+
+**Status**: 📋 PLANNED
+**Priority**: Medium
+**Estimated Complexity**: Medium
+**Created**: January 2026
 
 ### Priority
 **HIGH** - Critical for Paper 1 academic acceptance

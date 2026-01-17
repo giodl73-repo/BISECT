@@ -1,4 +1,9 @@
-## Enhancement 8: Block-Level Data Support for Multi-Year Census 📋 DATA AVAILABLE
+# Enhancement 8: Block-Level Data Support for Multi-Year Census 📋 DATA AVAILABLE
+
+**Status**: 📋 PLANNED
+**Priority**: Medium
+**Estimated Complexity**: Medium
+**Created**: January 2026
 
 ### Goal
 Support census block-level redistricting for 2000, 2010, and 2020, with automatic tract aggregation for older census years.

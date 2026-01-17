@@ -1,4 +1,9 @@
-## Enhancement 10: Per-State Urban Area Processing 📋 PLANNED
+# Enhancement 10: Per-State Urban Area Processing
+
+**Status**: 📋 PLANNED
+**Priority**: Medium
+**Estimated Complexity**: Medium
+**Created**: January 2026
 
 ### Current State
 - Urban area maps are generated in post-processing batch stage
