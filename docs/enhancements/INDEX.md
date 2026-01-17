@@ -12,10 +12,12 @@ Master index of all congressional redistricting pipeline enhancements.
 
 ## Status Overview
 
-### ✅ Completed (23 enhancements)
+### ✅ Completed (25 enhancements)
 
 | # | Title | Completion Date | Files |
-|---|-------|----------------|-------|
+|---
+| [12](active/12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Jan 17, 2026 | [View](active/12_edge_weighted_analysis.md) |
+| [11](active/11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Jan 17, 2026 | [View](active/11_baseline_comparison.md) ||-------|----------------|-------|
 | [1](completed/01_compactness_integration.md) | Compactness Integration | Jan 10, 2026 | [View](completed/01_compactness_integration.md) |
 | [2](completed/02_seat_totals.md) | D/R Seat Totals | Jan 11, 2026 | [View](completed/02_seat_totals.md) |
 | [3](completed/03_national_maps.md) | National Maps | Jan 11, 2026 | [View](completed/03_national_maps.md) |
@@ -50,9 +52,7 @@ Master index of all congressional redistricting pipeline enhancements.
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
-| [11](active/11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Low | [View](active/11_baseline_comparison.md) |
 | [32](active/32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](active/32_reock_compactness_metric.md) |
-| [12](active/12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Medium | [View](active/12_edge_weighted_analysis.md) |
 | [16](active/16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](active/16_metro_2000.md) |
 | [22](active/22_national_redistricting.md) | National Redistricting (No State Boundaries) | Low (Research/Experimental) | [View](active/22_national_redistricting.md) |
 | [23](active/23_county_representation.md) | Direct County Representation | Low (Research/Experimental) | [View](active/23_county_representation.md) |
