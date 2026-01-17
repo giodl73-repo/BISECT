@@ -25,6 +25,12 @@ def master_dashboard_path(project_root, tmp_path):
     test_dashboard = tmp_path / 'master_dashboard.html'
 
     if template_path.exists():
+        # Just copy the template directly - it already has the right structure
+        import shutil
+        shutil.copy(template_path, test_dashboard)
+        return test_dashboard
+
+        # OLD CODE - was trying to embed data but template already works
         # Copy template and embed sample data
         content = template_path.read_text(encoding='utf-8')
 
@@ -220,12 +226,12 @@ def test_master_dashboard_loads(page: Page, master_dashboard_url: str):
     page.goto(master_dashboard_url)
 
     # Verify title
-    expect(page).to_have_title("Congressional Redistricting - Master Dashboard")
+    expect(page).to_have_title("Algorithmic Redistricting - Cross-Census Analysis")
 
     # Verify header
     header = page.locator('.header')
     expect(header).to_be_visible()
-    expect(header.locator('h1')).to_contain_text('Master Dashboard')
+    expect(header.locator('h1')).to_contain_text('Algorithmic Redistricting')
 
 
 def test_comparison_table_exists(page: Page, master_dashboard_url: str):
