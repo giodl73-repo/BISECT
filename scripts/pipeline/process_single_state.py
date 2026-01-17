@@ -91,10 +91,10 @@ def main():
 
     steps = [
         ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {child_position} {redistricting_flags_str}'.strip()),
-        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
-        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
-        ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
-        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --year {args.year} --position {child_position} {common_flags_str}'.strip())
+        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
+        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
+        ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
+        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip())
     ]
 
     # Add optional analysis steps
@@ -113,7 +113,7 @@ def main():
 
             steps.append((
                 "Political analysis",
-                f'{sys.executable} {political_analyze} {state_dir} --year 2020 --census-year {args.year}'.strip()
+                f'{sys.executable} {political_analyze} {state_dir} --state {state_code} --year 2020 --census-year {args.year}'.strip()
             ))
             steps.append((
                 "Political visualization",
@@ -127,7 +127,7 @@ def main():
 
             steps.append((
                 "Demographic analysis",
-                f'{sys.executable} {demographic_analyze} {state_dir} --census-year {args.year}'.strip()
+                f'{sys.executable} {demographic_analyze} {state_dir} --state {state_code} --census-year {args.year}'.strip()
             ))
             steps.append((
                 "Demographic visualization",

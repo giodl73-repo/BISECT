@@ -155,6 +155,7 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze demographic characteristics of districts')
     parser.add_argument('run_dir', type=str,
                        help='Redistricting run directory (e.g., outputs/us_2020_v1/states/california)')
+    parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, NY)')
     parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
     parser.add_argument('--output-dir', type=str, default=None,
@@ -162,6 +163,9 @@ def main():
     parser.add_argument('--force', action='store_true',
                        help='Force regeneration even if outputs exist')
     args = parser.parse_args()
+
+    # Get state code from arguments
+    state_code = args.state.upper()
 
     run_dir = Path(args.run_dir)
 
@@ -195,24 +199,6 @@ def main():
         return 0
 
     try:
-        # Detect state from directory name
-        dir_name = run_dir.name
-        STATE_NAME_TO_CODE = {
-            'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
-            'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
-            'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
-            'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-            'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
-            'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
-            'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
-            'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
-            'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
-            'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
-        }
-
-        state_code = STATE_NAME_TO_CODE.get(dir_name)
-        if not state_code:
-            raise ValueError(f"Could not detect state from directory name: {dir_name}")
 
         # Load tract file to get GEOID mapping (unified directory structure)
         import geopandas as gpd

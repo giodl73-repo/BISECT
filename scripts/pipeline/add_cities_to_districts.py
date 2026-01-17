@@ -434,6 +434,7 @@ def create_map_with_cities(
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Add largest cities to district maps')
     parser.add_argument('run_dir', type=str, help='Run directory (e.g., outputs/us_2020_v1/states/california)')
+    parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, NY)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
     parser.add_argument('--print-only', action='store_true',
@@ -446,30 +447,14 @@ if __name__ == '__main__':
 
     run_dir = Path(args.run_dir)
 
-    # State name to code mapping (normalized directory name to state code)
-    STATE_NAME_TO_CODE = {
-        'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
-        'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
-        'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
-        'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
-        'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
-        'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
-        'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
-        'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
-        'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
-        'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
-    }
-
-    # Auto-detect state from directory name
-    dir_name = run_dir.name
-    # Remove _full_ suffix if present
-    base_name = dir_name.split('_full_')[0]
-
-    state_code = STATE_NAME_TO_CODE.get(base_name)
-    if not state_code:
-        raise ValueError(f"Could not detect state from directory name: {dir_name}")
-
-    state_name = base_name.replace('_', ' ').title()
+    # Get state info from arguments
+    state_code = args.state.upper()
+    STATE_CONFIG = get_state_config(args.year)
+    config = STATE_CONFIG.get(state_code)
+    if not config:
+        print(f"ERROR: Unknown state code {state_code}")
+        sys.exit(1)
+    state_name = config['name']
 
     # Load tract and places files (unified directory structure)
     tracts_file = str(get_tract_file(state_code, args.year))

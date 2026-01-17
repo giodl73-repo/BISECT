@@ -143,7 +143,7 @@ def process_california_niter100(test_dir):
     # Step 2: Add cities
     print(f"\nStep 2/5: Adding cities...")
     if not run_command(
-        f'python scripts/add_cities_to_districts.py {state_dir}',
+        f'python scripts/add_cities_to_districts.py {state_dir} --state {state_code}',
         f'Adding cities to {state_name}',
         timeout=600
     ):
@@ -152,7 +152,7 @@ def process_california_niter100(test_dir):
     # Step 3: Create district summary
     print(f"\nStep 3/5: Creating district summary...")
     if not run_command(
-        f'python scripts/create_final_district_summary.py {state_dir}',
+        f'python scripts/create_final_district_summary.py {state_dir} --state {state_code}',
         f'Creating summary for {state_name}',
         timeout=300
     ):
@@ -161,7 +161,7 @@ def process_california_niter100(test_dir):
     # Step 4: Create individual district maps
     print(f"\nStep 4/5: Creating individual district maps...")
     if not run_command(
-        f'python scripts/create_individual_district_maps.py {state_dir}',
+        f'python scripts/create_individual_district_maps.py {state_dir} --state {state_code}',
         f'Creating {num_districts} district maps for {state_name}',
         timeout=1800
     ):
@@ -170,7 +170,7 @@ def process_california_niter100(test_dir):
     # Step 5: Visualize intermediate rounds
     print(f"\nStep 5/5: Visualizing intermediate rounds...")
     if not run_command(
-        f'python scripts/visualize_all_rounds.py {state_dir}',
+        f'python scripts/visualize_all_rounds.py {state_dir} --state {state_code}',
         f'Creating round visualizations for {state_name}',
         timeout=600
     ):

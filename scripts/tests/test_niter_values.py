@@ -147,7 +147,7 @@ def test_niter_value(niter, test_dir):
         # Step 2: Add cities
         print(f"\nStep 2/5: Adding cities...")
         success, elapsed_cities = run_command(
-            f'python scripts/add_cities_to_districts.py {state_dir}',
+            f'python scripts/add_cities_to_districts.py {state_dir} --state {state_code}',
             f'Adding cities to {STATE_NAME}',
             timeout=600
         )
@@ -158,7 +158,7 @@ def test_niter_value(niter, test_dir):
         # Step 3: Create district summary
         print(f"\nStep 3/5: Creating district summary...")
         success, elapsed_summary = run_command(
-            f'python scripts/create_final_district_summary.py {state_dir}',
+            f'python scripts/create_final_district_summary.py {state_dir} --state {state_code}',
             f'Creating summary for {STATE_NAME}',
             timeout=300
         )
@@ -173,7 +173,7 @@ def test_niter_value(niter, test_dir):
         # Step 5: Create visualizations (optional, can skip for speed)
         print(f"\nStep 5/5: Creating final map...")
         success, elapsed_viz = run_command(
-            f'python scripts/visualize_all_rounds.py {state_dir}',
+            f'python scripts/visualize_all_rounds.py {state_dir} --state {state_code}',
             f'Creating round visualizations',
             timeout=600
         )

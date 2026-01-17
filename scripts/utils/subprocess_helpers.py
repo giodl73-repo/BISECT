@@ -140,6 +140,6 @@ def get_python_executable():
     Example:
         >>> python = get_python_executable()
         >>> print(python)
-        C:\Python\python.exe
+        C:\\Python\\python.exe
     """
     return sys.executable

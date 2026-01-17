@@ -176,10 +176,10 @@ def process_state_sequential(state_code, us_dir, state_config, year='2020', skip
     # Pipeline steps - pass position 999 to hide child progress bars
     steps = [
         ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {year} --output-dir {state_dir} --position 999 {redistricting_flags_str}'.strip(), 1800),
-        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --year {year} --position 999 {common_flags_str}'.strip(), 600),
-        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --year {year} --position 999 {common_flags_str}'.strip(), 300),
-        ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --year {year} --position 999 {common_flags_str}'.strip(), 600),
-        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --year {year} --position 999 {common_flags_str}'.strip(), 1800)
+        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {year} --position 999 {common_flags_str}'.strip(), 600),
+        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {year} --position 999 {common_flags_str}'.strip(), 300),
+        ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --state {state_code} --year {year} --position 999 {common_flags_str}'.strip(), 600),
+        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --state {state_code} --year {year} --position 999 {common_flags_str}'.strip(), 1800)
     ]
 
     # ONE progress bar for entire state pipeline
