@@ -95,11 +95,9 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     # Handle --reset flag: delete output directory for fresh run
     if reset and output_dir.exists() and not print_only:
         import shutil
-        print(f"
-[RESET] Deleting existing output directory: {output_dir}")
+        print(f"[RESET] Deleting existing output directory: {output_dir}")
         shutil.rmtree(output_dir)
-        print(f"[RESET] Deleted. Starting fresh run.
-")
+        print(f"[RESET] Deleted. Starting fresh run.")
 
     # Create data directory if needed
     data_dir = output_dir / 'data'
