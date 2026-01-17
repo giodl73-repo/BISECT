@@ -76,6 +76,51 @@ def sample_run_dir(project_root, tmp_path_factory):
     return output_path
 
 
+@pytest.fixture(scope='session')
+def mock_run(project_root, tmp_path_factory):
+    """
+    Generate comprehensive mock redistricting run for dashboard E2E tests.
+
+    Uses the full mock run generator to create all files the dashboard expects:
+    - Vermont (1 district) and Alabama (7 districts)
+    - All CSVs: district_summary, district_cities, rounds_hierarchy
+    - Political CSVs and maps (2020 only)
+    - Demographic CSVs and maps
+    - Compactness maps
+    - Metro area maps
+    - National aggregations
+    - Complete dashboard HTML
+
+    Returns tuple of (output_dir, dashboard_url) for comprehensive testing.
+    """
+    import sys
+    sys.path.insert(0, str(project_root))
+
+    from tests.fixtures.generate_mock_run import generate_mock_run
+
+    # Use temporary directory for test outputs
+    temp_outputs = tmp_path_factory.mktemp('mock_outputs')
+    output_dir = temp_outputs / 'us_2020_test'
+
+    # Generate comprehensive mock run
+    generate_mock_run(
+        states=['vermont', 'alabama'],
+        year='2020',
+        version='test',
+        output_dir=output_dir
+    )
+
+    # Dashboard URL
+    dashboard_path = output_dir / 'index.html'
+    dashboard_url = dashboard_path.as_uri()
+
+    yield (output_dir, dashboard_url)
+
+    # Cleanup after all tests complete
+    if output_dir.exists():
+        shutil.rmtree(output_dir)
+
+
 def _generate_state_data(state_dir: Path, state_name: str, num_districts: int, total_population: int):
     """Generate minimal valid data for a single state."""
 
