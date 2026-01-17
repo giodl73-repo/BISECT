@@ -59,6 +59,10 @@ if not Path('data').exists() and (project_root / 'data').exists():
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(project_root / 'src'))
+
+# Import run config module for config.json generation
+from apportionment.config import RunConfig, write_config
 
 # Import configuration files
 try:
@@ -327,9 +331,17 @@ def main():
                         help='Enable debug mode with progress delays')
     parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
                         help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
+    parser.add_argument('--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
+                        help='Run type: "production" (outputs/v{version}/{year}/), "experiment" (outputs/experiments/{experiment_name}/), or "test" (outputs/dev/) (default: production)')
+    parser.add_argument('--experiment-name', type=str,
+                        help='Experiment name (required when --run-type=experiment)')
     parser.add_argument('states', nargs='*',
                         help='Specific state codes to process (default: all states)')
     args = parser.parse_args()
+
+    # Validate arguments
+    if args.run_type == 'experiment' and not args.experiment_name:
+        parser.error("--experiment-name is required when --run-type=experiment")
 
     # Get the scripts directory
     scripts_dir = Path(__file__).parent
@@ -357,11 +369,19 @@ def main():
         print(f"ERROR: Unknown year {args.year}")
         sys.exit(1)
 
+    # Determine output directory based on run type
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        version_str = f'{args.version}_noedge' if args.partition_mode == 'unweighted' else args.version
-        output_dir = Path(f'outputs/us_{args.year}_{version_str}')
+        if args.run_type == 'production':
+            # Production: outputs/v{version}/{year}/
+            output_dir = Path(f'outputs/{args.version}/{args.year}')
+        elif args.run_type == 'experiment':
+            # Experiment: outputs/experiments/{experiment_name}/{version}_{year}/
+            output_dir = Path(f'outputs/experiments/{args.experiment_name}/{args.version}_{args.year}')
+        else:  # test
+            # Test/Dev: outputs/dev/{version}_{year}/
+            output_dir = Path(f'outputs/dev/{args.version}_{args.year}')
 
     # Handle --reset flag: delete output directory for fresh run
     if args.reset and output_dir.exists() and not args.print_only:
@@ -410,8 +430,28 @@ def main():
         else:
             print(f"[RESET] Directory may not be fully deleted. Continuing...\n")
 
-    if not args.print_only and not args.skip_states:
+    # Create output directory and generate config.json (unless print-only mode)
+    if not args.print_only:
         output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate config.json
+        start_time = time.time()
+        config = RunConfig.create(
+            version=args.version,
+            census_year=int(args.year),
+            election_year=int(args.election_year),
+            partition_mode=args.partition_mode.replace('-', '_'),  # 'edge-weighted' -> 'edge_weighted'
+            data_level='tract',  # Currently always tract-level
+            run_type=args.run_type,
+            scope='us' if not args.states else 'state',
+            states=args.states if args.states else ['all'],
+            experiment_name=args.experiment_name if args.run_type == 'experiment' else None,
+            skip_political=args.skip_political,
+            skip_demographic=args.skip_demographic,
+            dpi=args.dpi
+        )
+        write_config(config, output_dir)
+        print(f"[OK] Generated config.json")
 
     print("\n" + "="*70)
     print("US CONGRESSIONAL REDISTRICTING - COMPLETE PIPELINE")
