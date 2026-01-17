@@ -192,6 +192,29 @@ Census blocks separated by water bodies (e.g., San Francisco Bay) can be conside
 - `scripts/pipeline/visualize_all_rounds.py` - Create round-by-round maps
 - `scripts/pipeline/create_individual_district_maps.py` - Generate per-district PNGs
 
+## Testing
+
+Automated test suite validates dashboard functionality and catches pipeline regressions.
+
+### Quick Test
+
+```bash
+# Run smoke tests (30 seconds)
+run_dashboard_tests.bat --smoke
+
+# Run full test suite (< 3 minutes)
+run_dashboard_tests.bat
+```
+
+### Test Coverage
+- **~75 automated tests**
+- Navigation and interactivity
+- Data integrity validation
+- Visual regression detection
+- Cross-browser compatibility
+
+See [docs/TESTING.md](docs/TESTING.md) for complete testing guide.
+
 ## Web Dashboard
 
 Two interactive HTML dashboards provide visualization and navigation:
@@ -244,6 +267,12 @@ For detailed technical documentation, see:
   - Progress bar integration
   - Scope-based analysis implementation
   - Testing guidelines
+
+- **[TESTING.md](docs/TESTING.md)** - Automated testing guide
+  - Playwright end-to-end tests
+  - Visual regression testing
+  - Developer workflow
+  - CI/CD integration
 
 - **[SKILLS.md](docs/SKILLS.md)** - Claude Code skills for automation (25 skills)
   - Enhancement workflow

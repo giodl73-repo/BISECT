@@ -69,6 +69,12 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Playwright test results
+tests/test-results/
+tests/screenshots/diff/
+tests/.pytest_cache/
+playwright-report/
+
 # Jupyter Notebook
 .ipynb_checkpoints
 

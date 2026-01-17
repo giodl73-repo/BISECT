@@ -24,3 +24,13 @@ matplotlib>=3.8.0
 
 # Utilities
 tqdm>=4.66.0
+
+# Testing - Dashboard (Playwright)
+pytest>=8.0.0
+pytest-playwright>=0.4.0
+playwright>=1.40.0
+
+# Testing - Pipeline (Unit & Integration)
+pytest-cov>=4.0.0
+pytest-mock>=3.12.0
+pytest-timeout>=2.2.0

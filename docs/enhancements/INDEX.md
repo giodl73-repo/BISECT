@@ -12,7 +12,7 @@ Master index of all congressional redistricting pipeline enhancements.
 
 ## Status Overview
 
-### ✅ Completed (17 enhancements)
+### ✅ Completed (18 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -33,12 +33,14 @@ Master index of all congressional redistricting pipeline enhancements.
 | [20](active/20_edit_paper.md) | Edit-Paper Skill | Jan 15, 2026 | [View](active/20_edit_paper.md) |
 | [21](active/21_edit_presentation.md) | Edit-Presentation Skill | Jan 15, 2026 | [View](active/21_edit_presentation.md) |
 | [29](active/29_artifacts_dashboard_tab.md) | Artifacts Dashboard Tab | Jan 16, 2026 | [View](active/29_artifacts_dashboard_tab.md) |
+| [30](active/30_playwright_testing.md) | Playwright Test Harness for Dashboard Testing | Jan 16, 2026 | [View](active/30_playwright_testing.md) |
 
-### 🔄 In Progress (1 enhancement)
+### 🔄 In Progress (2 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
 | [8](active/08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](active/08_block_level_data.md) |
+| [31](active/31_pipeline_test_system.md) | Pipeline Test System | Phase 1 Starting | [View](active/31_pipeline_test_system.md) |
 
 ### 📋 Planned (11 enhancements)
 
@@ -46,13 +48,14 @@ Master index of all congressional redistricting pipeline enhancements.
 |---|-------|----------|-------|
 | [10](active/10_per_state_urban.md) | Per-State Urban Area Processing | Medium | [View](active/10_per_state_urban.md) |
 | [11](active/11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Low | [View](active/11_baseline_comparison.md) |
+| [32](active/32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](active/32_reock_compactness_metric.md) |
 | [12](active/12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Medium | [View](active/12_edge_weighted_analysis.md) |
 | [16](active/16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](active/16_metro_2000.md) |
 | [22](active/22_national_redistricting.md) | National Redistricting (No State Boundaries) | Low (Research/Experimental) | [View](active/22_national_redistricting.md) |
 | [23](active/23_county_representation.md) | Direct County Representation | Low (Research/Experimental) | [View](active/23_county_representation.md) |
 | [24](active/24_party_based_allocation.md) | Party-Based District Allocation | Low (Research/Experimental) | [View](active/24_party_based_allocation.md) |
 | [25](active/25_committee_based_representation.md) | Committee-Based Representation | Low (Research/Experimental) | [View](active/25_committee_based_representation.md) |
-| [26](active/26_demographic_similarity_districts.md) | Demographic Similarity Districts | Low (Research/Experimental) | [View](active/26_demographic_similarity_districts.md) |
+| [26](active/26_demographic_similarity_districts.md) | Demographic Similarity Districts | Low (Research/Experimental) | [View](active/26_demographic_similarity.md) |
 | [27](active/27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Low (Research/Experimental) | [View](active/27_electoral_college_county_reform.md) |
 | [28](active/28_multi_member_districts.md) | Multi-Member Districts | Low (Research/Experimental) | [View](active/28_multi_member_districts.md) |
 
