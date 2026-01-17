@@ -96,9 +96,9 @@ def create_compactness_map(tracts_gdf, metric_name, metric_col, output_file, dpi
     state_name = tracts_gdf['state'].iloc[0].replace('_', ' ').title()
     num_districts = len(tracts_gdf['district'].unique())
     avg_score = tracts_gdf.drop_duplicates('district')[metric_col].mean()
-    
-    plt.title(f'{state_name} - {metric_name} Compactness
-{num_districts} Districts | Average: {avg_score:.3f}',
+
+    plt.title(f'{state_name} - {metric_name} Compactness\n'
+              f'{num_districts} Districts | Average: {avg_score:.3f}',
               fontsize=16, fontweight='bold', pad=20)
     
     # Add colorbar
@@ -238,8 +238,7 @@ def visualize_national_compactness(output_dir, version, census_year, dpi=150, po
     report_progress("Creating national compactness map - Loading data")
 
     if is_standalone:
-        print(f"
-Creating national compactness map for {census_year} census...")
+        print(f"\nCreating national compactness map for {census_year} census...")
         print(f"Output: {output_file}")
 
     # Load all states with districts and compactness data
@@ -355,8 +354,8 @@ Creating national compactness map for {census_year} census...")
         total_districts = len(us_tracts['unique_district_id'].unique())
 
         # Title
-        fig.suptitle(f'United States Congressional Districts - Compactness
-Polsby-Popper Scores ({census_year} Census, {total_districts} Districts)',
+        fig.suptitle(f'United States Congressional Districts - Compactness\n'
+                     f'Polsby-Popper Scores ({census_year} Census, {total_districts} Districts)',
                      fontsize=22, fontweight='bold', y=0.98)
 
         # Add colorbar with realistic range (0.05-0.45)
@@ -369,10 +368,8 @@ Polsby-Popper Scores ({census_year} Census, {total_districts} Districts)',
         cbar.set_label('Polsby-Popper Score (0 = irregular, 1 = circular)', fontsize=12, fontweight='bold')
 
         # Add statistics box
-        textstr = f'Average: {avg_compactness:.3f}
-'
-        textstr += f'Median: {median_compactness:.3f}
-'
+        textstr = f'Average: {avg_compactness:.3f}\n'
+        textstr += f'Median: {median_compactness:.3f}\n'
         textstr += f'Total Districts: {total_districts}'
         props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='black', linewidth=2)
         ax_main.text(0.98, 0.98, textstr, transform=ax_main.transAxes, fontsize=14,
@@ -386,16 +383,14 @@ Polsby-Popper Scores ({census_year} Census, {total_districts} Districts)',
         plt.close(fig)
 
         if is_standalone:
-            print(f"
-Saved: {output_file}")
+            print(f"\nSaved: {output_file}")
 
         report_progress("Creating national compactness map - Complete")
         return 0
 
     except Exception as e:
         if is_standalone:
-            print(f"
-ERROR: {e}")
+            print(f"\nERROR: {e}")
             import traceback
             traceback.print_exc()
         return 1

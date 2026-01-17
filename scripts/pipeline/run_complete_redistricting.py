@@ -62,7 +62,10 @@ sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / 'src'))
 
 # Import run config module for config.json generation
-from apportionment.config import RunConfig, write_config
+from apportionment.config import (
+    RunConfig, write_config,
+    VersionConfig, write_version_config, read_version_config, update_version_config_with_year
+)
 
 # Import configuration files
 try:
@@ -299,11 +302,65 @@ def run_command(description, command, critical=True, print_only=False, pbar=None
     return result.returncode == 0
 
 
+def build_pipeline_command(base_args, year, states_only=False, skip_states=False):
+    """
+    Build command for running pipeline with specific year and mode.
+
+    Args:
+        base_args: Original parsed arguments
+        year: Census year to process
+        states_only: Skip post-processing (state processing only)
+        skip_states: Skip state processing (post-processing only)
+
+    Returns:
+        List of command arguments
+    """
+    cmd = [sys.executable, str(Path(__file__))]
+    cmd.extend(['--year', year])
+    cmd.extend(['--version', base_args.version])
+    cmd.extend(['--dpi', str(base_args.dpi)])
+    cmd.extend(['--election-year', base_args.election_year])
+    cmd.extend(['--partition-mode', base_args.partition_mode])
+    cmd.extend(['--run-type', base_args.run_type])
+
+    # Mode flags
+    if states_only:
+        cmd.append('--states-only')
+    if skip_states:
+        cmd.append('--skip-states')
+
+    # Optional parameters
+    if base_args.experiment_name:
+        cmd.extend(['--experiment-name', base_args.experiment_name])
+    if states_only:
+        cmd.extend(['--workers', str(base_args.workers)])  # Only for state processing
+    if base_args.run_analysis:
+        cmd.append('--run-analysis')
+    else:
+        cmd.append('--skip-analysis')
+    if base_args.skip_political:
+        cmd.append('--skip-political')
+    if base_args.skip_demographic:
+        cmd.append('--skip-demographic')
+    if base_args.reprocess and not skip_states:
+        cmd.append('--reprocess')
+    if base_args.print_only:
+        cmd.append('--print-only')
+    if base_args.debug:
+        cmd.append('--debug')
+
+    # Add state list if specified
+    if base_args.states and not skip_states:
+        cmd.extend(base_args.states)
+
+    return cmd
+
+
 def main():
     parser = argparse.ArgumentParser(description='Run complete US redistricting pipeline')
     parser.add_argument('--output-dir', type=str, help='Output directory (overrides year and version)')
-    parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
-                        help='Census year (default: 2020)')
+    parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000', 'all'],
+                        help='Census year: 2020, 2010, 2000, or "all" to run all three decades (default: 2020)')
     parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
     parser.add_argument('--workers', type=int, default=4,
                         help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 4)')
@@ -321,6 +378,8 @@ def main():
                         help='Skip demographic analysis steps')
     parser.add_argument('--skip-states', action='store_true',
                         help='Skip state processing (for post-processing only)')
+    parser.add_argument('--states-only', action='store_true',
+                        help='Process states only, skip post-processing (useful for multi-year runs)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
     parser.add_argument('--reset', action='store_true',
@@ -345,6 +404,108 @@ def main():
 
     # Get the scripts directory
     scripts_dir = Path(__file__).parent
+
+    # Build year queue based on arguments
+    if args.year == 'all':
+        year_queue = ['2000', '2010', '2020']
+        multi_year_mode = True
+        print("\n" + "="*70)
+        print("MULTI-YEAR MODE: Running all three census decades")
+        print("  Pass 1: State processing for 2000, 2010, 2020")
+        print("  Pass 2: Post-processing for 2000, 2010, 2020")
+        print("="*70)
+    else:
+        year_queue = [args.year]
+        multi_year_mode = False
+
+    # Determine version directory (same for all years in queue)
+    if args.run_type == 'production':
+        version_dir = Path(f'outputs/{args.version}')
+    elif args.run_type == 'experiment':
+        version_dir = Path(f'outputs/experiments/{args.experiment_name}')
+    else:  # test
+        version_dir = Path('outputs/dev')
+
+    # Create or load version config (once for all years)
+    version_config_path = version_dir / 'version.json'
+    if not args.skip_states and not args.print_only:
+        if version_config_path.exists() and not args.reset:
+            print(f"\n[OK] Loading existing version config: {version_config_path}")
+            version_config = read_version_config(version_config_path)
+        else:
+            print(f"\n[OK] Creating new version config: {version_config_path}")
+            version_config = VersionConfig.create(
+                version=args.version,
+                partition_mode=args.partition_mode.replace('-', '_'),
+                data_level='tract',
+                description=f"Redistricting variant: {args.version}",
+                skip_political=args.skip_political,
+                skip_demographic=args.skip_demographic,
+                dpi=args.dpi
+            )
+            write_version_config(version_config, version_dir)
+
+    # Handle multi-year mode with two-pass approach
+    if multi_year_mode:
+        # PASS 1: State processing for all years
+        print("\n" + "="*70)
+        print("PASS 1: STATE PROCESSING FOR ALL YEARS")
+        print("="*70)
+
+        for year_index, year in enumerate(year_queue):
+            print(f"\n{'='*70}")
+            print(f"YEAR {year}: Processing all 50 states")
+            print('='*70)
+
+            # Build command with --states-only flag
+            cmd = build_pipeline_command(args, year, states_only=True, skip_states=False)
+
+            # Add --reset only for first year
+            if args.reset and year_index == 0:
+                cmd.append('--reset')
+
+            # Run state processing
+            if not args.print_only:
+                result = subprocess.run(cmd)
+                if result.returncode != 0:
+                    print(f"\n[ERROR] State processing failed for year {year}")
+                    sys.exit(1)
+            else:
+                print(f"[PRINT-ONLY] Would execute: {' '.join(cmd)}")
+
+        # PASS 2: Post-processing for all years
+        print("\n" + "="*70)
+        print("PASS 2: POST-PROCESSING FOR ALL YEARS")
+        print("="*70)
+
+        for year in year_queue:
+            print(f"\n{'='*70}")
+            print(f"YEAR {year}: Running national aggregation and maps")
+            print('='*70)
+
+            # Build command with --skip-states flag
+            cmd = build_pipeline_command(args, year, states_only=False, skip_states=True)
+
+            # Run post-processing
+            if not args.print_only:
+                result = subprocess.run(cmd)
+                if result.returncode != 0:
+                    print(f"\n[ERROR] Post-processing failed for year {year}")
+                    sys.exit(1)
+
+                # Update version config with completed year
+                update_version_config_with_year(version_dir, int(year))
+                print(f"\n[OK] Updated version config: completed years = {read_version_config(version_config_path).completed_years}")
+            else:
+                print(f"[PRINT-ONLY] Would execute: {' '.join(cmd)}")
+
+        print(f"\n" + "="*70)
+        print(f"MULTI-YEAR MODE COMPLETE")
+        print(f"Pass 1: Processed states for {', '.join(year_queue)}")
+        print(f"Pass 2: Generated national outputs for {', '.join(year_queue)}")
+        print(f"Version config: {version_config_path}")
+        print("="*70)
+        return
 
     # Determine execution mode
     mode = 'parallel' if args.workers > 1 else 'sequential'
@@ -430,11 +591,11 @@ def main():
         else:
             print(f"[RESET] Directory may not be fully deleted. Continuing...\n")
 
-    # Create output directory and generate config.json (unless print-only mode)
+    # Create output directory and generate config files (unless print-only mode)
     if not args.print_only:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Generate config.json
+        # Generate run-level config.json
         start_time = time.time()
         config = RunConfig.create(
             version=args.version,
@@ -451,7 +612,28 @@ def main():
             dpi=args.dpi
         )
         write_config(config, output_dir)
-        print(f"[OK] Generated config.json")
+        print(f"[OK] Generated run config: {output_dir}/config.json")
+
+        # Handle version-level config
+        version_dir = output_dir.parent  # e.g., outputs/v1/ (parent of outputs/v1/2020/)
+        version_config_path = version_dir / 'version.json'
+
+        if version_config_path.exists():
+            # Version config already exists - this is a subsequent year run
+            print(f"[OK] Version config already exists: {version_config_path}")
+        else:
+            # Create new version config for this version
+            print(f"[OK] Creating version config: {version_config_path}")
+            version_config = VersionConfig.create(
+                version=args.version,
+                partition_mode=args.partition_mode.replace('-', '_'),
+                data_level='tract',
+                description=f"Redistricting variant: {args.version}",
+                skip_political=args.skip_political,
+                skip_demographic=args.skip_demographic,
+                dpi=args.dpi
+            )
+            write_version_config(version_config, version_dir)
 
     print("\n" + "="*70)
     print("US CONGRESSIONAL REDISTRICTING - COMPLETE PIPELINE")
@@ -721,6 +903,12 @@ def main():
     # STEP 2: POST-PROCESSING
     # =========================================================================
 
+    # Skip post-processing if --states-only is set
+    if args.states_only:
+        print("\n[OK] States-only mode: Skipping post-processing steps")
+        print(f"[OK] State processing complete. Run with --skip-states to do post-processing later.")
+        return 0
+
     pipeline_steps = []
 
     # Create US national maps FIRST (most important visualization)
@@ -989,6 +1177,18 @@ def main():
             if validation_result.returncode != 0:
                 print(f"\nWARNING: Some pipeline outputs are missing.")
                 print(f"Review detailed report at: {output_dir.name}_validation.txt")
+
+    # Update version config with completed year
+    if not args.print_only:
+        version_dir = output_dir.parent  # e.g., outputs/v1/ (parent of outputs/v1/2020/)
+        version_config_path = version_dir / 'version.json'
+        if version_config_path.exists():
+            try:
+                update_version_config_with_year(version_dir, int(args.year))
+                version_config = read_version_config(version_config_path)
+                print(f"\n[OK] Updated version config: completed years = {version_config.completed_years}")
+            except Exception as e:
+                print(f"\n[WARNING] Could not update version config: {e}")
 
     # Brief final summary at position 3 (after the 3 post-processing steps at 0-2)
     summary_bar = tqdm(total=1,

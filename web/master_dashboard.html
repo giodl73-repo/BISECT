@@ -590,6 +590,7 @@
         <!-- View Tabs -->
         <div class="view-tabs">
             <div class="view-tab active" onclick="switchView('overview')">📊 Overview</div>
+            <div class="view-tab" onclick="switchView('versions')">🔬 Versions</div>
             <div class="view-tab" onclick="switchView('compactness')">📐 Compactness</div>
             <div class="view-tab" onclick="switchView('artifacts')">📄 Artifacts</div>
         </div>
@@ -609,6 +610,18 @@
                 </div>
             </div>
         </div><!-- end overview-view -->
+
+        <!-- Versions Content -->
+        <div id="versions-view" class="view-content">
+            <div style="padding: 2rem;">
+                <div class="section">
+                    <h2 class="section-title">Experimental Variants & Runs</h2>
+                    <p class="section-subtitle">Each version represents a single experimental configuration tested across all census decades</p>
+
+                    <div id="versionsContainer"></div>
+                </div>
+            </div>
+        </div><!-- end versions-view -->
 
         <!-- Compactness Content -->
         <div id="compactness-view" class="view-content">
@@ -730,6 +743,9 @@
 
         // Comparison data embedded by generator
         const COMPARISON_DATA = /* COMPARISON_DATA_PLACEHOLDER */;
+
+        // Versions data embedded by generator
+        const VERSIONS = /* VERSIONS_DATA_PLACEHOLDER */;
 
         // Initialize comparison data
         let comparisonData = COMPARISON_DATA;
@@ -1013,12 +1029,87 @@
             runsListDiv.innerHTML = html;
         }
 
+        function populateVersionsView() {
+            const container = document.getElementById('versionsContainer');
+
+            if (!VERSIONS || VERSIONS.length === 0) {
+                container.innerHTML = '<p style="color: #999;">No versions found. Run redistricting with new directory structure to create versions.</p>';
+                return;
+            }
+
+            let html = '';
+
+            VERSIONS.forEach(version => {
+                const partitionMode = version.partition_mode.replace('_', '-').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const dataLevel = version.data_level.charAt(0).toUpperCase() + version.data_level.slice(1);
+
+                html += `
+                <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="color: #667eea; margin: 0; font-size: 1.5rem;">${version.name}</h3>
+                            ${version.description ? `<p style="color: #666; margin: 0.5rem 0 0 0; font-size: 0.95rem;">${version.description}</p>` : ''}
+                        </div>
+                        <div style="text-align: right; font-size: 0.9rem; color: #999;">
+                            ${version.num_runs} run(s)
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Partition Mode</div>
+                            <div style="font-weight: 600; color: #333;">${partitionMode}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Data Level</div>
+                            <div style="font-weight: 600; color: #333;">${dataLevel}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Completed Years</div>
+                            <div style="font-weight: 600; color: #333;">${version.completed_years.join(', ') || 'None'}</div>
+                        </div>
+                    </div>
+
+                    <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <h4 style="color: #495057; font-size: 1rem; margin-bottom: 0.75rem;">Runs:</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                `;
+
+                version.runs.forEach(run => {
+                    const modeClass = run.mode.toLowerCase().includes('edge') ? 'mode-edge-weighted' : 'mode-unweighted';
+                    const yearClass = `year-${run.year}`;
+
+                    html += `
+                        <div class="run-card ${modeClass} ${yearClass}" onclick="openRun('${run.path}')">
+                            <div class="run-card-header">
+                                <span class="run-card-year">${run.year}</span>
+                                <span class="run-card-states">${run.num_states} states</span>
+                            </div>
+                            <div class="run-card-mode">${run.mode}</div>
+                            <div class="run-card-footer">
+                                ${run.created ? new Date(run.created).toLocaleDateString() : 'Unknown date'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadComparisonData();
             setupTableSorting();
             populateRunsGrid();
             populateRunsList();
+            populateVersionsView();
             loadArtifacts();
         });
 

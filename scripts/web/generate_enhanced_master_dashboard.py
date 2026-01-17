@@ -34,56 +34,123 @@ STATE_CODE_TO_NAME = {
 }
 
 
-def find_all_runs(outputs_dir='outputs'):
-    """Find all us_{year}_{version} directories."""
+def find_all_versions_and_runs(outputs_dir='outputs'):
+    """
+    Find all versions and their runs in the new directory structure.
+
+    New structure:
+        outputs/
+        ├── v1/                     (version directory)
+        │   ├── version.json        (version config)
+        │   ├── 2000/               (run directory)
+        │   │   └── config.json     (run config)
+        │   ├── 2010/
+        │   └── 2020/
+        ├── edge_weighted/
+        │   ├── version.json
+        │   ├── 2000/
+        │   ├── 2010/
+        │   └── 2020/
+
+    Returns:
+        versions: List of version dicts with version config and completed runs
+        all_runs: Flat list of all runs (for backward compatibility)
+    """
     outputs_path = Path(outputs_dir)
     if not outputs_path.exists():
-        return []
+        return [], []
 
-    runs = []
-    pattern = re.compile(r'us_(\d{4})_(v\d+)(_noedge)?$')
+    versions = []
+    all_runs = []
 
-    for item in outputs_path.iterdir():
-        if not item.is_dir():
+    # Iterate through potential version directories
+    for version_dir in outputs_path.iterdir():
+        if not version_dir.is_dir():
             continue
 
-        match = pattern.match(item.name)
-        if match:
-            year = match.group(1)
-            version = match.group(2)
-            noedge_suffix = match.group(3) or ''
+        # Skip special directories
+        if version_dir.name in ['experiments', 'dev', 'archived', 'baseline']:
+            continue
 
-            # Check if this run has states
-            states_dir = item / 'states'
-            if not states_dir.exists():
+        version_config_path = version_dir / 'version.json'
+
+        # Check if this is a version directory (has version.json)
+        if version_config_path.exists():
+            try:
+                with open(version_config_path, 'r') as f:
+                    version_config = json.load(f)
+
+                # Find completed runs (year subdirectories with config.json and states/)
+                runs_in_version = []
+                for year_dir in version_dir.iterdir():
+                    if not year_dir.is_dir():
+                        continue
+
+                    # Check if year directory name is a valid census year
+                    if not year_dir.name.isdigit() or year_dir.name not in ['2000', '2010', '2020']:
+                        continue
+
+                    run_config_path = year_dir / 'config.json'
+                    states_dir = year_dir / 'states'
+
+                    if run_config_path.exists() and states_dir.exists():
+                        # Load run config
+                        with open(run_config_path, 'r') as f:
+                            run_config = json.load(f)
+
+                        # Count states
+                        num_states = sum(1 for state_dir in states_dir.iterdir()
+                                       if state_dir.is_dir() and (state_dir / 'district_summary.csv').exists())
+
+                        if num_states > 0:
+                            run_info = {
+                                'year': year_dir.name,
+                                'version': version_dir.name,
+                                'mode': version_config.get('algorithm', {}).get('partition_mode', 'unknown').replace('_', '-').title(),
+                                'data_level': version_config.get('algorithm', {}).get('data_level', 'tract'),
+                                'num_states': num_states,
+                                'path': f"{version_dir.name}/{year_dir.name}",
+                                'census_year': run_config.get('metadata', {}).get('census_year'),
+                                'election_year': run_config.get('metadata', {}).get('election_year'),
+                                'created': run_config.get('metadata', {}).get('created', ''),
+                                'sort_key': (year_dir.name, version_dir.name)
+                            }
+                            runs_in_version.append(run_info)
+                            all_runs.append(run_info)
+
+                # Add version with its runs
+                if runs_in_version:
+                    versions.append({
+                        'name': version_dir.name,
+                        'config': version_config,
+                        'partition_mode': version_config.get('algorithm', {}).get('partition_mode', 'unknown'),
+                        'data_level': version_config.get('algorithm', {}).get('data_level', 'tract'),
+                        'description': version_config.get('description', ''),
+                        'completed_years': version_config.get('completed_years', []),
+                        'runs': sorted(runs_in_version, key=lambda r: r['year'], reverse=True),
+                        'num_runs': len(runs_in_version)
+                    })
+
+            except (json.JSONDecodeError, KeyError) as e:
+                print(f"Warning: Could not parse version config for {version_dir.name}: {e}")
                 continue
 
-            num_states = sum(1 for state_dir in states_dir.iterdir()
-                           if state_dir.is_dir() and (state_dir / 'district_summary.csv').exists())
+    # Sort versions by name
+    versions.sort(key=lambda v: v['name'])
 
-            if num_states == 0:
-                continue
+    # Sort all_runs by year (desc), then version
+    all_runs.sort(key=lambda r: r['sort_key'], reverse=True)
 
-            # Determine mode
-            if noedge_suffix:
-                mode = 'Unweighted'
-            else:
-                mode = 'Edge-Weighted'
+    return versions, all_runs
 
-            runs.append({
-                'year': year,
-                'version': version,
-                'version_full': version + noedge_suffix,
-                'mode': mode,
-                'num_states': num_states,
-                'path': item.name,
-                'sort_key': (year, version, noedge_suffix)
-            })
 
-    # Sort by year (desc), then version, then mode
-    runs.sort(key=lambda r: r['sort_key'], reverse=True)
-
-    return runs
+def find_all_runs(outputs_dir='outputs'):
+    """
+    Legacy function for backward compatibility.
+    Returns flat list of all runs.
+    """
+    _, all_runs = find_all_versions_and_runs(outputs_dir)
+    return all_runs
 
 
 def aggregate_compactness_data(run_path):
@@ -270,7 +337,7 @@ def create_cross_census_comparison(runs):
 
 def generate_enhanced_master_dashboard(
     output_file='outputs/index.html',
-    template_file='web/enhanced_master_dashboard.html'
+    template_file='web/master_dashboard.html'
 ):
     """Generate enhanced master dashboard with cross-census comparison."""
 
@@ -282,18 +349,20 @@ def generate_enhanced_master_dashboard(
         print(f"ERROR: Template not found: {template_path}")
         return 1
 
-    # Find all runs
-    print("\nScanning for runs...")
-    runs = find_all_runs()
+    # Find all versions and runs
+    print("\nScanning for versions and runs...")
+    versions, runs = find_all_versions_and_runs()
 
     if not runs:
         print("ERROR: No valid runs found in outputs directory")
         return 1
 
-    # Print found runs
-    print(f"\nFound {len(runs)} runs:")
-    for run in runs:
-        print(f"  {run['year']} {run['version_full']:<12} - {run['mode']:<15} ({run['num_states']} states)")
+    # Print found versions and runs
+    print(f"\nFound {len(versions)} version(s) with {len(runs)} total run(s):")
+    for version in versions:
+        print(f"  {version['name']}: {version['partition_mode']} - {version['num_runs']} run(s)")
+        for run in version['runs']:
+            print(f"    - {run['year']}: {run['num_states']} states")
 
     # Create cross-census comparison
     print("\nAggregating cross-census data...")
@@ -339,6 +408,7 @@ def generate_enhanced_master_dashboard(
     html = html.replace('<!-- OPTIONS_PLACEHOLDER -->', '\n'.join(options_html))
     html = html.replace('/* RUNS_DATA_PLACEHOLDER */', json.dumps(runs, indent=8))
     html = html.replace('/* COMPARISON_DATA_PLACEHOLDER */', json.dumps(comparison, indent=8))
+    html = html.replace('/* VERSIONS_DATA_PLACEHOLDER */', json.dumps(versions, indent=8))
 
     # Write output
     with open(output_path, 'w', encoding='utf-8') as f:
@@ -370,8 +440,8 @@ if __name__ == '__main__':
     )
     parser.add_argument('--output', type=str, default='outputs/index.html',
                        help='Output file path (default: outputs/index.html)')
-    parser.add_argument('--template', type=str, default='web/enhanced_master_dashboard.html',
-                       help='Dashboard template file (default: web/enhanced_master_dashboard.html)')
+    parser.add_argument('--template', type=str, default='web/master_dashboard.html',
+                       help='Dashboard template file (default: web/master_dashboard.html)')
 
     args = parser.parse_args()
 

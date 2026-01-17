@@ -3,6 +3,10 @@ Run configuration management.
 
 Tracks algorithmic choices, pipeline settings, and system information
 for experimental variants and reproducible redistricting runs.
+
+Two-level configuration system:
+- Version-level: outputs/{version}/version.json - Tracks all runs under a version
+- Run-level: outputs/{version}/{year}/config.json - Tracks specific run parameters
 """
 
 import json
@@ -52,6 +56,71 @@ class SystemConfig:
     metis_version: str = "5.1.0"
     execution_time_seconds: Optional[int] = None
     hostname: str = ""
+
+
+@dataclass
+class VersionConfig:
+    """
+    Version-level configuration for an experimental variant.
+
+    Stored at: outputs/{version}/version.json
+
+    A version represents a single experimental configuration (e.g., "edge_weighted",
+    "unweighted") that runs across all census decades (2000, 2010, 2020) with the
+    SAME algorithmic and pipeline settings.
+
+    Example:
+        outputs/edge_weighted/version.json - Configuration for edge-weighted mode
+        outputs/edge_weighted/2000/config.json - 2000 census run details
+        outputs/edge_weighted/2010/config.json - 2010 census run details
+        outputs/edge_weighted/2020/config.json - 2020 census run details
+    """
+    schema_version: str
+    version: str
+    created: str
+    description: str
+    algorithm: AlgorithmConfig  # Same for all census years in this version
+    pipeline: PipelineConfig    # Same for all census years in this version
+    completed_years: List[int] = field(default_factory=list)  # [2000, 2010, 2020]
+
+    @classmethod
+    def create(
+        cls,
+        version: str,
+        partition_mode: str,
+        data_level: str = "tract",
+        description: str = "",
+        **pipeline_kwargs
+    ) -> 'VersionConfig':
+        """
+        Create a VersionConfig for a new experimental variant.
+
+        Args:
+            version: Version identifier (e.g., "edge_weighted", "v1")
+            partition_mode: "edge_weighted" or "unweighted"
+            data_level: "tract" or "block"
+            description: Human-readable description of this variant
+            **pipeline_kwargs: Pipeline settings (skip_political, dpi, etc.)
+
+        Returns:
+            VersionConfig instance
+        """
+        algorithm = AlgorithmConfig(
+            partition_mode=partition_mode,
+            data_level=data_level
+        )
+
+        pipeline = PipelineConfig(**pipeline_kwargs)
+
+        return cls(
+            schema_version="1.0",
+            version=version,
+            created=datetime.now().isoformat(),
+            description=description,
+            algorithm=algorithm,
+            pipeline=pipeline,
+            completed_years=[]
+        )
 
 
 @dataclass
@@ -245,3 +314,90 @@ def validate_config(config: RunConfig) -> Dict[str, Any]:
         'valid': len(errors) == 0,
         'errors': errors
     }
+
+
+def write_version_config(config: VersionConfig, output_dir: Path) -> Path:
+    """
+    Write version-level configuration to version.json.
+
+    Args:
+        config: VersionConfig instance
+        output_dir: Version output directory (e.g., outputs/v1/)
+
+    Returns:
+        Path to written version.json file
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    config_path = output_dir / "version.json"
+
+    # Convert to dict and write JSON
+    config_dict = asdict(config)
+
+    with open(config_path, 'w', encoding='utf-8') as f:
+        json.dump(config_dict, f, indent=2)
+
+    return config_path
+
+
+def read_version_config(config_path: Path) -> VersionConfig:
+    """
+    Read version-level configuration from version.json.
+
+    Args:
+        config_path: Path to version.json file
+
+    Returns:
+        VersionConfig instance
+
+    Raises:
+        FileNotFoundError: If config file doesn't exist
+        ValueError: If config is invalid
+    """
+    config_path = Path(config_path)
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Version config file not found: {config_path}")
+
+    with open(config_path, 'r', encoding='utf-8') as f:
+        data = json.load(f)
+
+    # Reconstruct nested dataclasses
+    algorithm = AlgorithmConfig(**data['algorithm'])
+    pipeline = PipelineConfig(**data['pipeline'])
+
+    return VersionConfig(
+        schema_version=data['schema_version'],
+        version=data['version'],
+        created=data['created'],
+        description=data['description'],
+        algorithm=algorithm,
+        pipeline=pipeline,
+        completed_years=data.get('completed_years', [])
+    )
+
+
+def update_version_config_with_year(version_dir: Path, census_year: int) -> None:
+    """
+    Add a completed year to version config.
+
+    Args:
+        version_dir: Version output directory (e.g., outputs/v1/)
+        census_year: Census year that was completed (2000, 2010, or 2020)
+    """
+    config_path = version_dir / "version.json"
+
+    if not config_path.exists():
+        raise FileNotFoundError(f"Version config not found: {config_path}")
+
+    # Read existing config
+    config = read_version_config(config_path)
+
+    # Add year if not already present
+    if census_year not in config.completed_years:
+        config.completed_years.append(census_year)
+        config.completed_years.sort()
+
+    # Write updated config
+    write_version_config(config, version_dir)

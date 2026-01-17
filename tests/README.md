@@ -23,13 +23,15 @@ pytest tests/unit/ -v
 
 ```
 tests/
-├── unit/                          # Unit tests (110 tests, 7s)
+├── unit/                          # Unit tests (299 tests, 9s)
+│   ├── test_syntax_validation.py  # **NEW** Python syntax validation (189 tests)
 │   ├── test_redistricting.py      # Core algorithm tests
 │   ├── test_metis_integration.py  # METIS wrapper tests
 │   ├── test_political_analysis.py # Political analysis tests
 │   ├── test_demographic_analysis.py # Demographics tests
 │   ├── test_compactness_analysis.py # Compactness metrics tests
 │   ├── test_visualization.py      # Map generation tests
+│   ├── test_run_config.py         # Config system tests
 │   └── test_aggregation.py        # CSV aggregation tests
 │
 ├── integration/                   # Integration tests (21 tests, 3s)
@@ -64,21 +66,23 @@ tests/
 
 ## Test Coverage
 
-**Total: 151 tests, ~18 seconds execution time**
+**Total: 340 tests, ~20 seconds execution time**
 
 ### Test Breakdown
 
 | Category | Tests | Time | Description |
 |----------|-------|------|-------------|
+| **Syntax Validation** | 189 | 2s | All Python files compile without errors |
 | **Unit Tests** | 110 | 7s | Individual component tests with mocks |
 | **Integration Tests** | 21 | 3s | Multi-stage pipeline flow tests |
 | **E2E Dashboard Tests** | 20 | 8s | Full dashboard with mock data |
-| **Total** | **151** | **~18s** | **Complete test coverage** |
+| **Total** | **340** | **~20s** | **Complete test coverage** |
 
 ### Coverage by Component
 
 | Component | Tests | Coverage |
 |-----------|-------|----------|
+| **Python Syntax** | **189** | **100%** |
 | Redistricting Algorithm | 10 | 95%+ |
 | METIS Integration | 27 | 95%+ |
 | Political Analysis | 13 | 90%+ |
@@ -127,7 +131,10 @@ pytest tests/ --cov=apportionment --cov-report=html
 
 ### By Test Type
 ```bash
-# Unit tests only (110 tests, 7s)
+# Syntax validation only (189 tests, 2s) **NEW**
+pytest tests/unit/test_syntax_validation.py -v
+
+# Unit tests only (299 tests, 9s)
 pytest tests/unit/ -v
 
 # Integration tests only (21 tests, 3s)
@@ -197,6 +204,17 @@ Tests are organized by marker for easy filtering:
 
 ## What Tests Validate
 
+### Syntax Validation Tests (189 tests) **NEW**
+- ✅ **All Python Files**: Every .py file compiles without syntax errors (189 files checked)
+- ✅ **Critical Scripts**: Pipeline, visualization, analysis scripts explicitly validated
+- ✅ **Common Issues**: Unterminated f-strings, broken multi-line strings, import errors
+- ✅ **Coverage**: 100% of Python codebase (src/, scripts/, tests/, tools/)
+- ⚡ **Fast**: 2 seconds to check entire codebase
+- 🛡️ **Guardian**: Catches syntax errors before they reach production
+
+**Why This Matters:**
+The Enhancement 29 incident demonstrated that syntax errors in visualization scripts weren't caught by existing tests because those scripts were never imported during test execution. This new test closes that gap by validating all Python files compile correctly.
+
 ### Unit Tests (110 tests)
 - ✅ **Redistricting Algorithm**: Recursive bisection, split logic, subgraph extraction
 - ✅ **METIS Integration**: Graph partitioning, weighted/unweighted, odd districts, population balance
@@ -205,6 +223,7 @@ Tests are organized by marker for easy filtering:
 - ✅ **Compactness Metrics**: Polsby-Popper calculation, geometric properties
 - ✅ **Visualization**: State maps, national maps, color schemes, PNG validation
 - ✅ **Aggregation**: CSV merging, ranking, statistics, data quality checks
+- ✅ **Configuration**: RunConfig system, JSON serialization, validation
 
 ### Integration Tests (21 tests)
 - ✅ **Single-State Flow**: Complete pipeline (VT/AL), multi-year, error handling
@@ -223,15 +242,20 @@ Tests are organized by marker for easy filtering:
 ### Before Committing Code Changes
 
 ```bash
-# 1. Run all tests (< 20 seconds)
+# 1. Quick syntax check (< 2 seconds) **NEW**
+pytest tests/unit/test_syntax_validation.py -v
+
+# 2. Run all tests (< 20 seconds)
 pytest tests/ -v
 
-# 2. Check coverage (optional)
+# 3. Check coverage (optional)
 pytest tests/ --cov=apportionment --cov-report=html
 
-# 3. Commit when all tests pass
+# 4. Commit when all tests pass
 git commit -m "Update code"
 ```
+
+**Pro Tip:** The syntax validation test is so fast (2 seconds) that you can run it before every commit to catch typos and syntax errors immediately.
 
 ### After Algorithm Changes
 

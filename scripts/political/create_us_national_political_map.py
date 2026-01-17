@@ -124,10 +124,8 @@ def main():
             print("=" * 70)
             print(f"[PRINT-ONLY] National Political Map - {args.year} Census")
             print("=" * 70)
-            print("
-WOULD EXECUTE:")
-            print("
-  STEP 1: Load all state data")
+            print("\nWOULD EXECUTE:")
+            print("\n  STEP 1: Load all state data")
             print(f"    - Load tracts: data/raw/{{state}}_tracts_{args.year}.parquet")
             print(f"    - Load assignments: {base_dir}/states/{{state}}/data/final_assignments.pkl")
             print(f"    - Load political data: {base_dir}/states/{{state}}/political/district_political.csv")
@@ -143,8 +141,7 @@ WOULD EXECUTE:")
             print("")
             print("  STEP 3: Save map")
             print(f"    - Output: {output_file}")
-            print("
-" + "-" * 70)
+            print("\n" + "-" * 70)
             print("ESTIMATED OUTPUT:")
             print("-" * 70)
             print("  Total districts: 433 (48 states)")
@@ -165,8 +162,7 @@ WOULD EXECUTE:")
     report_progress("Creating national political map - Loading data")
 
     if is_standalone:
-        print(f"
-Creating national political map for {args.year} census...")
+        print(f"\nCreating national political map for {args.year} census...")
         print(f"Output: {output_file}")
 
     # Load all states with districts and political data
@@ -297,8 +293,8 @@ Creating national political map for {args.year} census...")
         total_districts = len(us_tracts['unique_district_id'].unique())
 
         # Title
-        fig.suptitle(f'United States Congressional Districts - Political Lean
-2020 Presidential Election Results (48 States, {total_districts} Districts)',
+        fig.suptitle(f'United States Congressional Districts - Political Lean\n'
+                     f'2020 Presidential Election Results (48 States, {total_districts} Districts)',
                      fontsize=22, fontweight='bold', y=0.98)
 
         # Legend
@@ -312,8 +308,7 @@ Creating national political map for {args.year} census...")
                       title='Partisan Lean', title_fontsize=11, framealpha=0.9)
 
         # Add seat count
-        textstr = f'D: {d_seats} | R: {r_seats}
-'
+        textstr = f'D: {d_seats} | R: {r_seats}\n'
         textstr += f'Total Districts: {total_districts}'
         props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='black', linewidth=2)
         ax_main.text(0.98, 0.98, textstr, transform=ax_main.transAxes, fontsize=14,
@@ -327,16 +322,14 @@ Creating national political map for {args.year} census...")
         plt.close(fig)
 
         if is_standalone:
-            print(f"
-Saved: {output_file}")
+            print(f"\nSaved: {output_file}")
 
         report_progress("Creating national political map - Complete")
         return 0
 
     except Exception as e:
         if is_standalone:
-            print(f"
-ERROR: {e}")
+            print(f"\nERROR: {e}")
             import traceback
             traceback.print_exc()
         return 1

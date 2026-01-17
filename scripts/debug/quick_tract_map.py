@@ -21,8 +21,8 @@ fig, axes = plt.subplots(1, 2, figsize=(18, 10))
 # Map 1: All tracts with boundaries
 ax1 = axes[0]
 tracts.plot(ax=ax1, facecolor='lightblue', edgecolor='white', linewidth=0.2, alpha=0.7)
-ax1.set_title('California Census Tracts
-(9,129 tracts)', fontsize=14, fontweight='bold')
+ax1.set_title('California Census Tracts\n'
+              '(9,129 tracts)', fontsize=14, fontweight='bold')
 ax1.set_axis_off()
 
 # Map 2: Population density
@@ -47,8 +47,7 @@ plt.tight_layout()
 output_file = Path('outputs/maps/ca_tracts_overview.png')
 output_file.parent.mkdir(parents=True, exist_ok=True)
 
-print(f"
-Saving map to: {output_file}")
+print(f"Saving map to: {output_file}")
 plt.savefig(output_file, dpi=300, bbox_inches='tight')
 print("Map saved!")
 
@@ -85,12 +84,10 @@ ax.legend(handles=legend_elements, loc='lower right', fontsize=11, frameon=True,
 plt.tight_layout()
 
 mock_file = Path('outputs/maps/ca_tracts_mock_split.png')
-print(f"
-Saving mock split to: {mock_file}")
+print(f"Saving mock split to: {mock_file}")
 plt.savefig(mock_file, dpi=300, bbox_inches='tight')
 print("Mock split saved!")
 
-print(f"
-Files saved:")
+print("Files saved:")
 print(f"  Overview: {output_file}")
 print(f"  Mock split: {mock_file}")

@@ -37,8 +37,7 @@ def find_largest_cities(
     Find the largest city in each district.
     """
     if debug:
-        print("
-Loading data...")
+        print("Loading data...")
     tracts = gpd.read_parquet(tracts_file)
     places = gpd.read_parquet(places_file)
 
@@ -56,8 +55,7 @@ Loading data...")
 
     # Spatial join: which places are in which districts
     if debug:
-        print("
-Performing spatial join to identify cities in each district...")
+        print("Performing spatial join to identify cities in each district...")
 
     # Update progress bar to show we're doing spatial join
     if progress_bar:
@@ -76,8 +74,7 @@ Performing spatial join to identify cities in each district...")
 
     # Group by district and find best city label
     if debug:
-        print("
-Identifying best city/neighborhood label for each district...")
+        print("Identifying best city/neighborhood label for each district...")
     district_cities = []
 
     # Track which large cities we've already used to prefer neighborhoods
@@ -189,13 +186,11 @@ Identifying best city/neighborhood label for each district...")
     csv_file = data_dir / 'district_cities.csv'
     df.to_csv(csv_file, index=False)
     if debug:
-        print(f"
-Saved city data to: {csv_file}")
+        print(f"Saved city data to: {csv_file}")
 
     # Print summary
     if debug:
-        print("
-Largest cities by district:")
+        print("Largest cities by district:")
         for _, row in df.head(20).iterrows():
             if row['city_population'] > 0:
                 print(f"  District {row['district']:2d}: {row['largest_city']} ({row['city_population']:,})")
@@ -220,9 +215,7 @@ def create_map_with_cities(
     Create district map with largest cities labeled.
     """
     if debug:
-        print("
-
-Generating map with city labels...")
+        print("Generating map with city labels...")
 
     tracts = gpd.read_parquet(tracts_file)
     places = gpd.read_parquet(places_file)
@@ -420,8 +413,7 @@ Generating map with city labels...")
 
     ax.set_axis_off()
     ax.set_title(
-        f'{state_name} Congressional Districts - {num_districts} Districts
-'
+        f'{state_name} Congressional Districts - {num_districts} Districts\n'
         'Labeled with largest city/neighborhood in each district',
         fontsize=16, fontweight='bold', pad=20
     )
@@ -623,5 +615,4 @@ if __name__ == '__main__':
         file_pbar.close()
 
     if args.debug:
-        print("
-" + "=" * 70)
+        print("=" * 70)

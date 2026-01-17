@@ -8,7 +8,10 @@ from pathlib import Path
 import tempfile
 import shutil
 
-from apportionment.config import RunConfig, write_config, read_config, validate_config
+from apportionment.config import (
+    RunConfig, write_config, read_config, validate_config,
+    VersionConfig, write_version_config, read_version_config, update_version_config_with_year
+)
 
 
 class TestRunConfigCreation:
@@ -268,3 +271,176 @@ class TestConfigValidation:
         result = validate_config(config)
         assert result['valid'] is False
         assert len(result['errors']) >= 2
+
+
+class TestVersionConfigCreation:
+    """Test VersionConfig creation and defaults."""
+
+    def test_create_version_config(self):
+        """Test creating version config with minimal parameters."""
+        config = VersionConfig.create(
+            version="edge_weighted",
+            partition_mode="edge_weighted"
+        )
+
+        assert config.schema_version == "1.0"
+        assert config.version == "edge_weighted"
+        assert config.algorithm.partition_mode == "edge_weighted"
+        assert config.algorithm.data_level == "tract"
+        assert config.pipeline.dpi == 150
+        assert config.completed_years == []
+
+    def test_create_version_config_with_description(self):
+        """Test creating version config with description."""
+        config = VersionConfig.create(
+            version="unweighted",
+            partition_mode="unweighted",
+            description="Baseline unweighted redistricting for comparison"
+        )
+
+        assert config.version == "unweighted"
+        assert config.description == "Baseline unweighted redistricting for comparison"
+
+    def test_create_version_config_with_pipeline_kwargs(self):
+        """Test creating version config with pipeline settings."""
+        config = VersionConfig.create(
+            version="high_res",
+            partition_mode="edge_weighted",
+            dpi=300,
+            skip_political=True
+        )
+
+        assert config.pipeline.dpi == 300
+        assert config.pipeline.skip_political is True
+
+
+class TestVersionConfigIO:
+    """Test version config read/write operations."""
+
+    def setup_method(self):
+        """Create temporary directory for tests."""
+        self.temp_dir = Path(tempfile.mkdtemp())
+
+    def teardown_method(self):
+        """Clean up temporary directory."""
+        if self.temp_dir.exists():
+            shutil.rmtree(self.temp_dir)
+
+    def test_write_version_config(self):
+        """Test writing version config to JSON file."""
+        config = VersionConfig.create(
+            version="edge_weighted",
+            partition_mode="edge_weighted",
+            description="Edge-weighted redistricting"
+        )
+
+        config_path = write_version_config(config, self.temp_dir)
+
+        assert config_path.exists()
+        assert config_path.name == "version.json"
+
+        # Verify JSON structure
+        with open(config_path, 'r') as f:
+            data = json.load(f)
+
+        assert data['schema_version'] == "1.0"
+        assert data['version'] == "edge_weighted"
+        assert data['algorithm']['partition_mode'] == "edge_weighted"
+        assert data['completed_years'] == []
+
+    def test_read_version_config(self):
+        """Test reading version config from JSON file."""
+        # Create and write config
+        original_config = VersionConfig.create(
+            version="unweighted",
+            partition_mode="unweighted",
+            description="Unweighted baseline"
+        )
+
+        config_path = write_version_config(original_config, self.temp_dir)
+
+        # Read it back
+        loaded_config = read_version_config(config_path)
+
+        assert loaded_config.schema_version == original_config.schema_version
+        assert loaded_config.version == original_config.version
+        assert loaded_config.description == original_config.description
+        assert loaded_config.algorithm.partition_mode == original_config.algorithm.partition_mode
+
+    def test_read_nonexistent_version_config(self):
+        """Test reading version config from nonexistent file raises error."""
+        with pytest.raises(FileNotFoundError):
+            read_version_config(self.temp_dir / "nonexistent.json")
+
+    def test_version_config_roundtrip(self):
+        """Test write and read roundtrip preserves version config data."""
+        config = VersionConfig.create(
+            version="test_version",
+            partition_mode="edge_weighted",
+            data_level="block",
+            description="Test version configuration",
+            skip_demographic=True,
+            dpi=300
+        )
+
+        config_path = write_version_config(config, self.temp_dir)
+        loaded_config = read_version_config(config_path)
+
+        # Compare key fields
+        assert loaded_config.version == config.version
+        assert loaded_config.description == config.description
+        assert loaded_config.algorithm.partition_mode == config.algorithm.partition_mode
+        assert loaded_config.algorithm.data_level == config.algorithm.data_level
+        assert loaded_config.pipeline.skip_demographic == config.pipeline.skip_demographic
+        assert loaded_config.pipeline.dpi == config.pipeline.dpi
+
+    def test_update_version_config_with_year(self):
+        """Test adding completed years to version config."""
+        # Create initial config
+        config = VersionConfig.create(
+            version="edge_weighted",
+            partition_mode="edge_weighted"
+        )
+        config_path = write_version_config(config, self.temp_dir)
+
+        # Add year 2020
+        update_version_config_with_year(self.temp_dir, 2020)
+
+        loaded_config = read_version_config(config_path)
+        assert 2020 in loaded_config.completed_years
+
+        # Add year 2010
+        update_version_config_with_year(self.temp_dir, 2010)
+
+        loaded_config = read_version_config(config_path)
+        assert 2010 in loaded_config.completed_years
+        assert 2020 in loaded_config.completed_years
+        # Should be sorted
+        assert loaded_config.completed_years == [2010, 2020]
+
+        # Add year 2000
+        update_version_config_with_year(self.temp_dir, 2000)
+
+        loaded_config = read_version_config(config_path)
+        assert loaded_config.completed_years == [2000, 2010, 2020]
+
+    def test_update_version_config_duplicate_year(self):
+        """Test adding same year twice doesn't duplicate."""
+        config = VersionConfig.create(
+            version="edge_weighted",
+            partition_mode="edge_weighted"
+        )
+        write_version_config(config, self.temp_dir)
+
+        # Add 2020 twice
+        update_version_config_with_year(self.temp_dir, 2020)
+        update_version_config_with_year(self.temp_dir, 2020)
+
+        config_path = self.temp_dir / "version.json"
+        loaded_config = read_version_config(config_path)
+        assert loaded_config.completed_years == [2020]  # Only once
+
+    def test_update_nonexistent_version_config(self):
+        """Test updating nonexistent version config raises error."""
+        with pytest.raises(FileNotFoundError):
+            update_version_config_with_year(self.temp_dir, 2020)

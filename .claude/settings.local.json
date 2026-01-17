@@ -121,7 +121,10 @@
       "Bash(PYTHONPATH=/c/src/apportionment python -m pytest:*)",
       "Bash(taskkill:*)",
       "Bash(netstat:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(do python -m py_compile \"$f\")",
+      "Bash(do python -m py_compile \"$file\")",
+      "Bash(pytest:*)"
     ]
   }
 }

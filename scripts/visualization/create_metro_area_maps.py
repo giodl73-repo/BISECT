@@ -330,8 +330,8 @@ def create_metro_map(metro_name, metro_geometry, us_tracts, places_gdf, output_f
 
     # Title
     plt.title(
-        f"{metro_name}
-Congressional Districts",
+        f"{metro_name}\n"
+        "Congressional Districts",
         fontsize=16,
         fontweight='bold',
         pad=20
@@ -439,15 +439,13 @@ def main():
     if args.scope == 'national':
         report_progress("Metro maps complete (created per-state)")
         if is_standalone:
-            print(f"
-{'='*80}")
+            print(f"\n{'='*80}")
             print(f"National Metro Maps")
             print(f"{'='*80}")
             print("Metro area maps are created during per-state processing.")
             print("No national aggregation map needed.")
             print(f"View individual metro maps in web dashboard.")
-            print(f"{'='*80}
-")
+            print(f"{'='*80}\n")
         return 0
 
     #==========================================================================
@@ -473,15 +471,13 @@ def main():
         state_name = STATE_CONFIG[args.state]['name']
 
         if is_standalone:
-            print(f"
-{'='*80}")
+            print(f"\n{'='*80}")
             print(f"Creating Metro Area Maps for {state_name}")
             print(f"{'='*80}")
             print(f"Metros: {len(metros_list)}")
             print(f"Year: {args.year}")
             print(f"DPI: {args.dpi}")
-            print(f"{'='*80}
-")
+            print(f"{'='*80}\n")
 
         # Determine state directory
         if args.state_dir:
@@ -580,14 +576,12 @@ def main():
 
         # Summary for state scope
         if is_standalone:
-            print(f"
-{'='*80}")
+            print(f"\n{'='*80}")
             print(f"Metro Maps Complete for {state_name}")
             print(f"{'='*80}")
             print(f"Total: {total_metros}, Successful: {successful}, Failed: {failed}")
             print(f"Output: {output_map_dir}")
-            print(f"{'='*80}
-")
+            print(f"{'='*80}\n")
 
         report_progress(f"{state_name} - Metro maps complete ({successful}/{total_metros})")
         return 0 if failed == 0 else 1
@@ -599,29 +593,25 @@ def main():
     if args.year == 2000:
         report_progress(f"Metro maps not available for 2000 census (skipped)")
         if is_standalone:
-            print(f"
-{'='*80}")
+            print(f"\n{'='*80}")
             print(f"Metro Area Maps - Not Available for Census 2000")
             print(f"{'='*80}")
             print(f"CBSA (Core Based Statistical Area) classification was")
             print(f"introduced after 2000. Metro area maps are only available")
             print(f"for 2010 and 2020 census data.")
-            print(f"{'='*80}
-")
+            print(f"{'='*80}\n")
         return 0
 
     # Banner
     if is_standalone:
-        print(f"
-{'='*80}")
+        print(f"\n{'='*80}")
         print(f"Creating Metro Area District Maps (Batch Mode)")
         print(f"{'='*80}")
         print(f"Year: {args.year}")
         print(f"Version: {args.version}")
         print(f"Output: {output_dir}/states/*/maps/metros/*.png")
         print(f"DPI: {args.dpi}")
-        print(f"{'='*80}
-")
+        print(f"{'='*80}\n")
 
     # Load CBSA boundaries
     cbsa_file = f'data/raw/us_cbsa_{args.year}.parquet'
@@ -667,8 +657,7 @@ def main():
         state_name = STATE_CONFIG[state_code]['name']
         state_dir = output_dir / 'states' / state_name.lower().replace(' ', '_') / 'maps' / 'metros'
 
-        print(f"
-Processing {state_code} ({state_name}): {len(metros_list)} metro(s)")
+        print(f"\nProcessing {state_code} ({state_name}): {len(metros_list)} metro(s)")
 
         for metro_name, short_name in metros_list:
             total_metros += 1
@@ -736,16 +725,14 @@ Processing {state_code} ({state_name}): {len(metros_list)} metro(s)")
 
     # Summary
     if is_standalone:
-        print(f"
-{'='*80}")
+        print(f"\n{'='*80}")
         print(f"Metro Area Maps Complete")
         print(f"{'='*80}")
         print(f"Total Metros: {total_metros}")
         print(f"Successful: {successful}")
         print(f"Failed: {failed}")
         print(f"Output: {output_dir}/states/*/maps/metros/*.png")
-        print(f"{'='*80}
-")
+        print(f"{'='*80}\n")
 
     return 0 if failed == 0 else 1
 
