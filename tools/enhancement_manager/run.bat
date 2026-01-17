@@ -2,6 +2,9 @@
 REM Enhancement Manager Launcher
 REM Starts the Flask server and opens browser
 
+REM Change to the script's directory
+cd /d "%~dp0"
+
 echo.
 echo ========================================
 echo   Enhancement Manager
@@ -20,29 +23,42 @@ if errorlevel 1 (
     )
 )
 
-REM Check if port 5000 is already in use
-netstat -ano | findstr :5000 | findstr LISTENING >nul
+REM Check if port 5001 is already in use and kill the process
+netstat -ano | findstr :5001 | findstr LISTENING >nul
 if not errorlevel 1 (
-    echo [WARN] Port 5000 is already in use
+    echo [WARN] Port 5001 is already in use
+    echo [OK] Finding and killing existing server...
+
+    REM Get the PID of the process using port 5001
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5001 ^| findstr LISTENING') do (
+        echo [OK] Killing process %%a...
+        taskkill //F //PID %%a >nul 2>&1
+    )
+
+    REM Wait a moment for the port to be released
+    timeout /t 2 /nobreak >nul
+    echo [OK] Port 5001 is now free
     echo.
-    echo Another Flask instance may be running.
-    echo Please close it or change the port in app.py
-    echo.
-    pause
-    exit /b 1
 )
 
 REM Start the Flask server
 echo [OK] Starting Enhancement Manager...
-echo [OK] Server will run at http://localhost:5000
+echo [OK] Server will run at http://localhost:5001
+echo.
+
+REM Start Flask server in background
+start /B python app.py
+
+REM Wait for server to fully start (5 seconds)
+echo [OK] Waiting for server to start...
+ping 127.0.0.1 -n 6 >nul
+
+REM Open browser
+echo [OK] Opening browser...
+start "" http://localhost:5001
+
 echo.
 echo Press Ctrl+C to stop the server
 echo.
-
-REM Wait a moment then open browser
-start "" http://localhost:5000
-
-REM Start Flask server
-python app.py
 
 pause

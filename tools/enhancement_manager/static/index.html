@@ -46,7 +46,12 @@
         <div class="max-w-7xl mx-auto px-4 py-6">
             <div class="flex items-center justify-between mb-4">
                 <h1 class="text-3xl font-bold text-gray-900">Enhancement Manager</h1>
-                <div class="text-sm text-gray-500" id="lastUpdated"></div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-500" id="lastUpdated"></div>
+                    <button onclick="shutdownServer()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
+                        Shutdown Server
+                    </button>
+                </div>
             </div>
 
             <!-- Stats Summary -->
@@ -273,8 +278,16 @@
         // Open enhancement detail modal
         async function openEnhancement(id) {
             try {
+                console.log('Loading enhancement:', id);
                 const response = await fetch(`/api/enhancements/${id}`);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('Data received:', data);
                 currentEnhancement = data;
 
                 // Update modal
@@ -296,8 +309,24 @@
                 document.getElementById('modalMetadata').textContent = metadata.join(' • ');
 
                 // Render markdown
-                const html = DOMPurify.sanitize(marked.parse(data.content));
+                console.log('Rendering markdown...');
+                let html;
+                if (typeof marked !== 'undefined') {
+                    // Try marked.parse() for v11+, fall back to marked() for older versions
+                    html = marked.parse ? marked.parse(data.content) : marked(data.content);
+                } else {
+                    console.error('marked.js not loaded');
+                    html = '<pre>' + data.content + '</pre>';
+                }
+
+                if (typeof DOMPurify !== 'undefined') {
+                    html = DOMPurify.sanitize(html);
+                } else {
+                    console.warn('DOMPurify not loaded, using unsanitized HTML');
+                }
+
                 document.getElementById('modalContent').innerHTML = html;
+                console.log('Markdown rendered successfully');
 
                 // Setup edit tab
                 document.getElementById('statusSelect').value = data.metadata.status;
@@ -308,7 +337,8 @@
                 switchTab('view');
             } catch (error) {
                 console.error('Failed to load enhancement:', error);
-                alert('Failed to load enhancement details');
+                console.error('Error stack:', error.stack);
+                alert('Failed to load enhancement details: ' + error.message);
             }
         }
 
@@ -397,6 +427,25 @@
             document.getElementById('detailModal').addEventListener('click', (e) => {
                 if (e.target.id === 'detailModal') closeModal();
             });
+        }
+
+        // Shutdown server
+        async function shutdownServer() {
+            if (!confirm('Are you sure you want to shutdown the server? This will close the Enhancement Manager.')) {
+                return;
+            }
+
+            try {
+                await fetch('/api/shutdown', { method: 'POST' });
+                alert('Server is shutting down. You can close this browser tab.');
+                // Close the window after a delay (may not work due to browser security)
+                setTimeout(() => {
+                    window.close();
+                }, 2000);
+            } catch (error) {
+                // Expected to fail since server will be down
+                alert('Server has been shutdown. You can close this browser tab.');
+            }
         }
 
         // Initialize on load

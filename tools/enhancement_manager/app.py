@@ -30,6 +30,27 @@ def index():
     return send_from_directory('static', 'index.html')
 
 
+@app.route('/api/shutdown', methods=['POST'])
+def shutdown():
+    """Shutdown the Flask server"""
+    try:
+        print("[OK] Shutdown requested from web interface")
+        # Get the shutdown function from werkzeug
+        func = request.environ.get('werkzeug.server.shutdown')
+        if func is None:
+            # Alternative method for Flask in debug mode
+            import os
+            import signal
+            print("[OK] Terminating server process...")
+            os.kill(os.getpid(), signal.SIGTERM)
+            return jsonify({'success': True, 'message': 'Server shutting down...'})
+        func()
+        return jsonify({'success': True, 'message': 'Server shutting down...'})
+    except Exception as e:
+        print(f"[ERROR] Shutdown failed: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/enhancements', methods=['GET'])
 def get_enhancements():
     """
@@ -318,7 +339,7 @@ def find_enhancement_file(enhancement_id):
 if __name__ == '__main__':
     print("[OK] Starting Enhancement Manager...")
     print(f"[OK] Enhancement path: {BASE_PATH}")
-    print(f"[OK] Server running at http://localhost:5000")
+    print(f"[OK] Server running at http://localhost:5001")
     print("[OK] Press Ctrl+C to stop")
 
-    app.run(debug=True, port=5000, host='localhost')
+    app.run(debug=True, port=5001, host='localhost')

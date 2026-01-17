@@ -63,7 +63,7 @@ The Enhancement Manager provides a visual interface to manage the 32+ enhancemen
    ```
 
 3. **Open in browser**:
-   Navigate to http://localhost:5000
+   Navigate to http://localhost:5001
 
 ## Usage
 
@@ -81,11 +81,11 @@ cd tools/enhancement_manager
 run.bat
 ```
 
-The server will start on http://localhost:5000 and automatically display the URL.
+The server will start on http://localhost:5001 and automatically display the URL.
 
 ### Viewing Enhancements
 
-1. Open http://localhost:5000 in your browser
+1. Open http://localhost:5001 in your browser
 2. All enhancements load automatically
 3. Use filter buttons to show specific statuses
 4. Type in search box to find enhancements by keyword
@@ -267,7 +267,7 @@ INDEX_PATH = BASE_PATH / 'INDEX.md'
 ```
 
 ### Server Settings
-Default configuration runs on localhost:5000. To change:
+Default configuration runs on localhost:5001. To change:
 
 **Port**: Edit `app.py` line 324:
 ```python
@@ -367,13 +367,13 @@ This application is designed for **local development use only**:
 python app.py
 
 # Test endpoints
-curl http://localhost:5000/api/enhancements
-curl http://localhost:5000/api/enhancements/35
-curl http://localhost:5000/api/stats
+curl http://localhost:5001/api/enhancements
+curl http://localhost:5001/api/enhancements/35
+curl http://localhost:5001/api/stats
 ```
 
 **Frontend**:
-1. Open http://localhost:5000 in browser
+1. Open http://localhost:5001 in browser
 2. Test filtering (All/Completed/In Progress/Planned)
 3. Test search functionality
 4. Test viewing enhancement details
