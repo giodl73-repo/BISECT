@@ -786,6 +786,7 @@ print(f"-> Next step")   # Works everywhere
 
 ## Recent Major Changes (Jan 2026)
 
+- **Test Suite Complete** (Enhancements 30, 31, 33 - Jan 16, 2026): Comprehensive test coverage with 151 tests (110 unit, 21 integration, 20 E2E dashboard) running in ~18 seconds; mock data generators for all pipeline stages; artifact validation tests catch pipeline failures; 90%+ code coverage across all components; fully automated E2E dashboard testing with mock runs
 - **Artifacts Directory Organization** (Enhancement 29, Jan 16, 2026): Reorganized papers, presentations, and guides into top-level artifacts/ directory; implemented master artifacts/compile.bat with --reset and --skip-figures flag threading; fixed all visualization \\n literal text issues; removed yellow stats boxes; reduced district label font sizes; added master dashboard Artifacts tab with PDF viewer
 - **Algorithm Formalization & Figure Quality** (Jan 15, 2026): Formalized recursive bisection algorithm with RBA notation and mathematical set theory; increased all figure fonts for better readability; improved boundary label logic and removed redundant graph labels when both panels shown
 - **Create-Skill Meta-Skill** (Enhancement 19): Automated skill creation following established patterns, reducing creation time from 30-60 minutes to 5-10 minutes (80-90% time savings)

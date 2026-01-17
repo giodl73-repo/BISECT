@@ -15,11 +15,61 @@ All notable changes to the Congressional Redistricting project.
 ## [Unreleased]
 
 ### Added
-- Demographic analysis and visualization (3 map types per state)
-- Political analysis with partisan lean maps
-- Comprehensive directory READMEs for AI assistant context
-- DPI configuration threading through all visualization scripts
-- Progress message standardization across analysis scripts
+- Nothing pending
+
+## 2026-01-16 - Comprehensive Test Suite Complete (Enhancements 30, 31, 33)
+
+### Added
+- **Enhancement 30: Playwright Test Harness**
+  - E2E browser testing infrastructure with Playwright + pytest integration
+  - Foundation for dashboard testing with screenshot comparison
+
+- **Enhancement 31: Pipeline Test System**
+  - 110 unit tests covering all pipeline components (redistricting, METIS, political, demographic, compactness, visualization, aggregation)
+  - 21 integration tests for multi-stage pipeline flows
+  - Mock data generators: `mock_tracts.py`, `mock_adjacency.py`, `mock_districts.py`, `mock_analysis.py`, `mock_maps.py`
+  - Test utilities: assertions, validators, cleanup helpers
+  - Pytest markers for filtering: unit, integration, redistricting, political, demographic, compactness, visualization, aggregation
+  - Warning suppression policy (fail on new warnings)
+  - 90%+ code coverage target achieved
+
+- **Enhancement 33: Dashboard Mock Data Integration**
+  - Complete mock run generator (`tests/fixtures/generate_mock_run.py`) - generates all CSVs, maps, and dashboard HTML
+  - 20 comprehensive E2E dashboard tests with mock data (Vermont 1 district, Alabama 7 districts)
+  - 11 artifact validation tests that catch pipeline failures
+  - Dashboard functionality tests: all tabs, state switching, table data, maps
+  - CSV structure validation: correct columns, row counts, no nulls
+  - Mock run fixture in `tests/e2e/conftest.py` for automatic test data generation
+
+### Changed
+- Updated `tests/README.md` with comprehensive test documentation (151 total tests, ~18 second execution)
+- Enhanced test structure with unit/, integration/, e2e/, mocks/, fixtures/, utils/ directories
+- All E2E tests now use mock data (no dependency on 4-hour real runs)
+- Replaced 20 old minimal dashboard tests with comprehensive artifact validation
+
+### Performance
+- **Total test suite**: 151 tests in ~18 seconds
+- **Unit tests**: 110 tests in 7 seconds (95%+ coverage)
+- **Integration tests**: 21 tests in 3 seconds (85%+ coverage)
+- **E2E tests**: 20 tests in 8 seconds (90%+ coverage)
+
+### Files Added
+- `tests/unit/` - 7 test files (110 tests)
+- `tests/integration/` - 2 test files (21 tests)
+- `tests/mocks/` - 5 mock generators
+- `tests/fixtures/generate_mock_run.py` - Complete mock run generator
+- `tests/utils/` - Test utilities
+- `tests/PIPELINE_TESTS.md` - Unit/integration test guide
+- `tests/TEST_SUMMARY.md` - Complete test results
+- `docs/enhancements/active/30_playwright_testing.md`
+- `docs/enhancements/active/31_pipeline_test_system.md`
+- `docs/enhancements/active/33_dashboard_mock_data.md`
+
+### Files Modified
+- `tests/e2e/conftest.py` - Added mock_run fixture
+- `tests/e2e/test_run_dashboard.py` - Comprehensive rewrite (20 new tests)
+- `tests/README.md` - Complete documentation rewrite
+- `docs/enhancements/INDEX.md` - Updated to 20 completed enhancements
 
 ### Changed
 - **2026-01-15**: Algorithm formalization and figure quality improvements
