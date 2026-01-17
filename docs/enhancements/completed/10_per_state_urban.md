@@ -1,9 +1,10 @@
 # Enhancement 10: Per-State Urban Area Processing
 
-**Status**: 📋 PLANNED
+**Status**: ✅ COMPLETED
 **Priority**: Medium
 **Estimated Complexity**: Medium
 **Created**: January 2026
+**Completed**: January 2026
 
 ### Current State
 - Urban area maps are generated in post-processing batch stage
@@ -119,6 +120,62 @@ Post-processing:
 
 ---
 
-**Date**: January 12, 2026
-**Status**: Enhancements 1-6, 9 complete; 7-8, 10 planned
-**Order**: ✅ 1 → ✅ 2 → ✅ 3 → ✅ 4 → ✅ 5 → ✅ 6 → 📋 7 → 📋 8 → ✅ 9 → 📋 10
+## Completion Summary
+
+**Completion Date**: January 2026 (discovered already implemented January 17, 2026)
+
+### Implementation Status
+
+Enhancement 10 was already fully implemented as part of the pipeline refactoring. The implementation exactly matches the planned design:
+
+**Verified Implementation**:
+
+1. **Per-State Processing (Parallel)** ✅
+   - `scripts/pipeline/process_single_state.py` line 148-152
+   - Calls: `create_metro_area_maps.py --scope state --state {state_code}`
+   - Runs in parallel during state processing (step 9 of 10)
+
+2. **National Aggregation (Post-Processing)** ✅
+   - `scripts/pipeline/run_complete_redistricting.py` line 847-852
+   - Calls: `create_metro_area_maps.py --scope national`
+   - Only reports "Metro maps complete (created per-state)" - no actual processing
+   - Runs when `--run-analysis` flag is active (default)
+
+3. **Scope-Based Pattern** ✅
+   - `scripts/visualization/create_metro_area_maps.py` supports three scopes:
+     - `--scope state`: Per-state processing (parallel)
+     - `--scope national`: Aggregation/reporting (post-processing)
+     - `--scope all`: Legacy batch mode (only with `--skip-analysis`)
+
+4. **Legacy Fallback** ✅
+   - Line 836-844: Batch mode still available with `--skip-analysis` flag
+   - Backward compatible for workflows that skip per-state analysis
+
+### Success Criteria Met
+
+- [x] Each metro area has defined primary_state (in metro configuration)
+- [x] Urban maps generated during per-state processing for matching metros
+- [x] National scope just reports completion (no sequential bottleneck)
+- [x] No sequential bottleneck for urban processing (fully parallel)
+- [x] Output quality matches previous batch-mode results
+- [x] Code follows scope-based pattern from Enhancement 9
+
+### Benefits Realized
+
+1. **Performance**: Metro processing happens in parallel with 50-state execution
+2. **Consistency**: Follows established scope-based pattern (political/demographic/compactness)
+3. **Incremental**: Metro maps available immediately after each state completes
+4. **Maintainable**: Single script with multiple scopes, not separate scripts
+5. **Scalability**: No sequential bottleneck - scales to any number of metro areas
+
+### Files Confirmed
+
+All planned modifications were completed:
+- ✅ `scripts/visualization/create_metro_area_maps.py` - Has `--scope state|national|all`
+- ✅ `scripts/pipeline/process_single_state.py` - Calls metro maps per-state
+- ✅ `scripts/pipeline/run_complete_redistricting.py` - Calls `--scope national` in post-processing
+
+**Date**: January 12, 2026 (planned)
+**Completed**: January 2026 (implemented)
+**Discovered**: January 17, 2026 (marked complete)
+**Status**: ✅ 1 → ✅ 2 → ✅ 3 → ✅ 4 → ✅ 5 → ✅ 6 → ✅ 9 → ✅ 10

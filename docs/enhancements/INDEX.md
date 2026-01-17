@@ -2,7 +2,7 @@
 
 Master index of all congressional redistricting pipeline enhancements.
 
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
 
 ## Quick Links
 
@@ -12,7 +12,7 @@ Master index of all congressional redistricting pipeline enhancements.
 
 ## Status Overview
 
-### ✅ Completed (21 enhancements)
+### ✅ Completed (23 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -24,6 +24,7 @@ Master index of all congressional redistricting pipeline enhancements.
 | [6](completed/06_architecture_diagrams.md) | System Architecture Diagrams | Jan 12, 2026 | [View](completed/06_architecture_diagrams.md) |
 | [7](completed/07_edge_weighted_bisection.md) | Edge-Weighted Recursive Bisection | Jan 12, 2026 | [View](completed/07_edge_weighted_bisection.md) |
 | [9](completed/09_per_state_analysis.md) | Per-State Analysis Refactoring | Jan 12, 2026 | [View](completed/09_per_state_analysis.md) |
+| [10](completed/10_per_state_urban.md) | Per-State Urban Area Processing | Jan 2026 | [View](completed/10_per_state_urban.md) |
 | [13](completed/13_directory_unification.md) | Directory Unification | Jan 14, 2026 | [View](completed/13_directory_unification.md) |
 | [14](completed/14_validation_framework.md) | Pipeline Output Validation | Jan 14, 2026 | [View](completed/14_validation_framework.md) |
 | [15](completed/15_multi_year_support.md) | Multi-Year Pipeline Support | Jan 14, 2026 | [View](completed/15_multi_year_support.md) |
@@ -37,6 +38,7 @@ Master index of all congressional redistricting pipeline enhancements.
 | [31](active/31_pipeline_test_system.md) | Pipeline Test System | Jan 16, 2026 | [View](active/31_pipeline_test_system.md) |
 | [33](active/33_dashboard_mock_data.md) | Dashboard Mock Data Integration | Jan 16, 2026 | [View](active/33_dashboard_mock_data.md) |
 | [34](active/34_test_execution_skills.md) | Test Execution and Debugging Skills | Jan 16, 2026 | [View](active/34_test_execution_skills.md) |
+| [35](active/35_enhancement_manager_app.md) | Enhancement Manager Web App | Jan 17, 2026 | [View](active/35_enhancement_manager_app.md) |
 
 ### 🔄 In Progress (1 enhancement)
 
@@ -44,12 +46,10 @@ Master index of all congressional redistricting pipeline enhancements.
 |---|-------|--------|-------|
 | [8](active/08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](active/08_block_level_data.md) |
 
-### 📋 Planned (12 enhancements)
+### 📋 Planned (10 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
-| [35](active/35_enhancement_manager_app.md) | Enhancement Manager Web App | Medium | [View](active/35_enhancement_manager_app.md) |
-| [10](active/10_per_state_urban.md) | Per-State Urban Area Processing | Medium | [View](active/10_per_state_urban.md) |
 | [11](active/11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Low | [View](active/11_baseline_comparison.md) |
 | [32](active/32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](active/32_reock_compactness_metric.md) |
 | [12](active/12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Medium | [View](active/12_edge_weighted_analysis.md) |
