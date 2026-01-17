@@ -48,6 +48,9 @@
                 <h1 class="text-3xl font-bold text-gray-900">Enhancement Manager</h1>
                 <div class="flex items-center gap-4">
                     <div class="text-sm text-gray-500" id="lastUpdated"></div>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        Refresh
+                    </button>
                     <button onclick="shutdownServer()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
                         Shutdown Server
                     </button>
@@ -427,6 +430,18 @@
             document.getElementById('detailModal').addEventListener('click', (e) => {
                 if (e.target.id === 'detailModal') closeModal();
             });
+        }
+
+        // Refresh data from server
+        async function refreshData() {
+            try {
+                await loadEnhancements();
+                await loadStats();
+                alert('Data refreshed successfully!');
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+                alert('Failed to refresh data: ' + error.message);
+            }
         }
 
         // Shutdown server
