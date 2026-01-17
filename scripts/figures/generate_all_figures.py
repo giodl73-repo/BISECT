@@ -31,7 +31,7 @@ def generate_schematic_figures(args):
     print("\n[1/3] Generating schematic figures...")
     print("-" * 70)
 
-    script = Path('artifacts/presentations/edge_weighted_bisection/create_figures.py')
+    script = Path('outputs/artifacts/presentations/edge_weighted_bisection/create_figures.py')
     if not script.exists():
         print(f"  [ERROR] Script not found: {script}")
         return False
@@ -41,8 +41,8 @@ def generate_schematic_figures(args):
         return False
 
     # Copy to shared figures directory
-    source_dir = Path(f'outputs/artifacts/presentations/edge_weighted_bisection/figures')
-    dest_dir = Path('outputs/figures/schematic')
+    source_dir = Path(f'outputs/outputs/artifacts/presentations/edge_weighted_bisection/figures')
+    dest_dir = Path('outputs/artifacts/figures/schematic')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     schematics = [
@@ -79,7 +79,7 @@ def generate_real_tracts_examples(args):
 
     # Copy to shared figures directory
     source_dir = Path('outputs/artifacts/guides/edge_weighted_bisection/appendix_examples')
-    dest_dir = Path('outputs/figures/real_tracts_examples')
+    dest_dir = Path('outputs/artifacts/figures/real_tracts_examples')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     # Copy all PNG files
@@ -126,7 +126,7 @@ def copy_round_progression_maps(args):
     print("-" * 70)
 
     source_dir = Path(f'outputs/us_{args.year}_{args.version}/states')
-    dest_dir = Path('outputs/figures/round_progression')
+    dest_dir = Path('outputs/artifacts/figures/round_progression')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     if not source_dir.exists():
@@ -165,7 +165,7 @@ def copy_round_progression_maps(args):
 
 
 def create_readme():
-    """Create README.md in outputs/figures/ directory."""
+    """Create README.md in outputs/artifacts/figures/ directory."""
     readme_content = """# Shared Figures Directory
 
 This directory contains all figures used across papers, presentations, and guides.
@@ -173,7 +173,7 @@ This directory contains all figures used across papers, presentations, and guide
 ## Directory Structure
 
 ```
-outputs/figures/
+outputs/artifacts/figures/
 ├── schematic/               # Educational/schematic diagrams
 │   ├── tract_to_graph.png               # Shows tract → graph transformation
 │   ├── graph_with_cut.png               # Graph with METIS cut visualization
@@ -204,10 +204,10 @@ outputs/figures/
 
 ```latex
 % From papers/
-\\includegraphics[width=0.8\\textwidth]{../outputs/figures/schematic/tract_to_graph.png}
+\\includegraphics[width=0.8\\textwidth]{../outputs/artifacts/figures/schematic/tract_to_graph.png}
 
 % From presentations/
-\\includegraphics[width=0.8\\textwidth]{../../outputs/figures/real_tracts_examples/minneapolis_50_50.png}
+\\includegraphics[width=0.8\\textwidth]{../../outputs/artifacts/figures/real_tracts_examples/minneapolis_50_50.png}
 ```
 
 ### Regenerating Figures
@@ -219,7 +219,7 @@ python scripts/figures/generate_all_figures.py --year 2010 --version v1
 ```
 
 Or generate specific types:
-- Schematic figures: `python artifacts/presentations/edge_weighted_bisection/create_figures.py`
+- Schematic figures: `python outputs/artifacts/presentations/edge_weighted_bisection/create_figures.py`
 - Real tracts examples: `python artifacts/guides/edge_weighted_bisection/create_appendix_examples.py`
 - Custom variants: `python scripts/figures/create_figure_variants.py --city minneapolis --panels both --boundary-labels all --partition before`
 
@@ -291,7 +291,7 @@ State-by-state visualization of recursive bisection progress, showing how distri
 Run `python scripts/figures/generate_all_figures.py` to see generation timestamp.
 """
 
-    readme_path = Path('outputs/figures/README.md')
+    readme_path = Path('outputs/artifacts/figures/README.md')
     readme_path.parent.mkdir(parents=True, exist_ok=True)
     with open(readme_path, 'w', encoding='utf-8') as f:
         f.write(readme_content)

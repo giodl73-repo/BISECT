@@ -116,7 +116,12 @@
       "Skill(update-docs)",
       "Skill(reorganize-directory-structure)",
       "Bash(cmd /c compile.bat:*)",
-      "Bash(deploy_master.bat)"
+      "Bash(deploy_master.bat)",
+      "Bash(cmd.exe /c \"run_tests.bat all\")",
+      "Bash(PYTHONPATH=/c/src/apportionment python -m pytest:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)"
     ]
   }
 }

@@ -757,7 +757,7 @@ def main():
 
     # Generate output filename
     if args.output is None:
-        output_dir = Path('outputs/figures/real_tracts_examples')
+        output_dir = Path('outputs/artifacts/figures/real_tracts_examples')
         output_dir.mkdir(parents=True, exist_ok=True)
         filename = f"{base_city}_{ratio_str}_{args.panels}_{args.boundary_labels}_{args.partition}_{args.partition_mode}.png"
         output_path = output_dir / filename

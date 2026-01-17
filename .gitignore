@@ -9,6 +9,11 @@ data/
 # ============================================================================
 # Output Files (Generated Results)
 # ============================================================================
+# Excludes all generated outputs:
+#   outputs/v1/         - Production runs
+#   outputs/experiments/ - Research variants
+#   outputs/dev/        - Development/test runs
+#   outputs/artifacts/  - Academic outputs (PDFs, figures)
 outputs/
 *.png
 *.jpg
