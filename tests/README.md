@@ -1,89 +1,157 @@
 # Tests
 
-Automated test suite for Congressional Redistricting project.
+Comprehensive automated test suite for Congressional Redistricting project.
 
 ## Quick Start
 
 ```bash
 # Install dependencies
-pip install pytest pytest-playwright playwright
+pip install pytest pytest-playwright playwright pandas geopandas
 playwright install chromium
 
-# Generate test data (2 minutes)
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version test --states "VT,DE"
+# Run all tests (< 20 seconds)
+pytest tests/ -v
 
-# Run all tests (< 3 minutes)
+# Run only E2E dashboard tests (8 seconds)
 pytest tests/e2e/ -v
 
-# Run smoke tests only (30 seconds)
-pytest tests/e2e/ -m smoke -v
+# Run only unit tests (7 seconds)
+pytest tests/unit/ -v
 ```
 
 ## Test Structure
 
 ```
 tests/
-├── e2e/                          # End-to-end Playwright tests
-│   ├── conftest.py               # Pytest fixtures and configuration
-│   ├── test_run_dashboard.py     # Run dashboard tests (30+ tests)
-│   ├── test_master_dashboard.py  # Master dashboard tests (20+ tests)
-│   └── test_visual_regression.py # Visual regression tests (15+ tests)
-├── fixtures/                     # Test data fixtures
-├── screenshots/                  # Screenshot baselines and diffs
-│   ├── baseline/                 # Expected screenshots
-│   └── diff/                     # Diff images on test failure
-├── playwright.config.json        # Playwright configuration
-└── README.md                     # This file
+├── unit/                          # Unit tests (110 tests, 7s)
+│   ├── test_redistricting.py      # Core algorithm tests
+│   ├── test_metis_integration.py  # METIS wrapper tests
+│   ├── test_political_analysis.py # Political analysis tests
+│   ├── test_demographic_analysis.py # Demographics tests
+│   ├── test_compactness_analysis.py # Compactness metrics tests
+│   ├── test_visualization.py      # Map generation tests
+│   └── test_aggregation.py        # CSV aggregation tests
+│
+├── integration/                   # Integration tests (21 tests, 3s)
+│   ├── test_single_state_flow.py  # Single-state pipeline tests
+│   └── test_national_aggregation.py # National rollup tests
+│
+├── e2e/                           # E2E Playwright tests (20 tests, 8s)
+│   ├── conftest.py                # Pytest fixtures (mock_run fixture)
+│   └── test_run_dashboard.py      # Dashboard tests with mock data
+│
+├── mocks/                         # Mock data generators
+│   ├── mock_tracts.py             # Mock census tracts
+│   ├── mock_adjacency.py          # Mock adjacency graphs
+│   ├── mock_districts.py          # Mock district assignments
+│   ├── mock_analysis.py           # Mock analysis results
+│   └── mock_maps.py               # Mock map generation
+│
+├── fixtures/                      # Test fixtures
+│   └── generate_mock_run.py       # Complete mock run generator
+│
+├── utils/                         # Test utilities
+│   ├── assertions.py              # Custom assertions
+│   ├── validators.py              # Data validators
+│   └── cleanup.py                 # Cleanup helpers
+│
+├── conftest.py                    # Shared pytest fixtures
+├── pytest.ini                     # Pytest configuration
+├── README.md                      # This file
+├── PIPELINE_TESTS.md              # Unit/integration test guide
+└── TEST_SUMMARY.md                # Complete test results
 ```
 
 ## Test Coverage
 
-- **~75 total tests**
-- **Execution time: < 3 minutes**
-- **Coverage: 90%+ of dashboard features**
+**Total: 151 tests, ~18 seconds execution time**
 
-### Test Categories
+### Test Breakdown
 
-| Test File | Tests | Time | Description |
-|-----------|-------|------|-------------|
-| `test_run_dashboard.py` | ~30 | 60s | Navigation, content, edge cases |
-| `test_master_dashboard.py` | ~20 | 30s | Cross-run comparison |
-| `test_visual_regression.py` | ~15 | 45s | Visual regression detection |
+| Category | Tests | Time | Description |
+|----------|-------|------|-------------|
+| **Unit Tests** | 110 | 7s | Individual component tests with mocks |
+| **Integration Tests** | 21 | 3s | Multi-stage pipeline flow tests |
+| **E2E Dashboard Tests** | 20 | 8s | Full dashboard with mock data |
+| **Total** | **151** | **~18s** | **Complete test coverage** |
+
+### Coverage by Component
+
+| Component | Tests | Coverage |
+|-----------|-------|----------|
+| Redistricting Algorithm | 10 | 95%+ |
+| METIS Integration | 27 | 95%+ |
+| Political Analysis | 13 | 90%+ |
+| Demographic Analysis | 13 | 90%+ |
+| Compactness Metrics | 15 | 90%+ |
+| Visualization | 18 | 85%+ |
+| Aggregation | 14 | 90%+ |
+| Dashboard E2E | 20 | 90%+ |
+| Pipeline Integration | 21 | 85%+ |
 
 ## Running Tests
 
 ### All Tests
 ```bash
+# All 151 tests (~18 seconds)
+pytest tests/ -v
+
+# With coverage report
+pytest tests/ --cov=apportionment --cov-report=html
+```
+
+### By Test Type
+```bash
+# Unit tests only (110 tests, 7s)
+pytest tests/unit/ -v
+
+# Integration tests only (21 tests, 3s)
+pytest tests/integration/ -v
+
+# E2E dashboard tests only (20 tests, 8s)
 pytest tests/e2e/ -v
 ```
 
-### Smoke Tests (Quick Validation)
+### By Component
 ```bash
-pytest tests/e2e/ -m smoke -v
-```
+# METIS integration tests
+pytest tests/unit/test_metis_integration.py -v
 
-### Visual Regression Tests
-```bash
-# Generate baselines
-pytest tests/e2e/test_visual_regression.py --update-baselines
+# Political analysis tests
+pytest tests/unit/test_political_analysis.py -v
 
-# Run visual tests
-pytest tests/e2e/test_visual_regression.py -v
-```
-
-### Specific Test File
-```bash
+# Dashboard artifact validation
 pytest tests/e2e/test_run_dashboard.py -v
+```
+
+### By Marker
+```bash
+# Quick tests only
+pytest tests/ -m "not slow" -v
+
+# Unit tests for redistricting
+pytest tests/unit/ -m redistricting -v
+
+# Integration tests
+pytest tests/integration/ -m integration -v
 ```
 
 ### Specific Test
 ```bash
-pytest tests/e2e/test_run_dashboard.py::test_state_navigation -v
+# Single test
+pytest tests/unit/test_metis_integration.py::test_metis_basic_partition -v
+
+# Test class
+pytest tests/unit/test_metis_integration.py::TestMETISOddDistrictCounts -v
 ```
 
-### With Visible Browser (Debug Mode)
+### Debug Mode (E2E Tests)
 ```bash
+# With visible browser
 pytest tests/e2e/ --headed -v
+
+# With slow motion (500ms between actions)
+pytest tests/e2e/ --headed --slowmo=500 -v
 ```
 
 ## Test Markers
@@ -92,132 +160,233 @@ Tests are organized by marker for easy filtering:
 
 | Marker | Description | Usage |
 |--------|-------------|-------|
-| `smoke` | Critical path tests | `pytest -m smoke` |
-| `visual` | Visual regression tests | `pytest -m visual` |
+| `unit` | Unit tests (isolated components) | `pytest -m unit` |
+| `integration` | Integration tests (multi-stage) | `pytest -m integration` |
+| `redistricting` | Redistricting algorithm tests | `pytest -m redistricting` |
+| `political` | Political analysis tests | `pytest -m political` |
+| `demographic` | Demographic analysis tests | `pytest -m demographic` |
+| `compactness` | Compactness metric tests | `pytest -m compactness` |
+| `visualization` | Map generation tests | `pytest -m visualization` |
+| `aggregation` | CSV aggregation tests | `pytest -m aggregation` |
 | `slow` | Tests > 10 seconds | `pytest -m "not slow"` |
 
 ## What Tests Validate
 
-### Data Integrity
-- ✅ Pipeline output files exist
-- ✅ CSV files have correct structure
-- ✅ Maps render correctly
-- ✅ Embedded data is valid JSON
+### Unit Tests (110 tests)
+- ✅ **Redistricting Algorithm**: Recursive bisection, split logic, subgraph extraction
+- ✅ **METIS Integration**: Graph partitioning, weighted/unweighted, odd districts, population balance
+- ✅ **Political Analysis**: Vote shares, seat counts, partisan lean, winner calculation
+- ✅ **Demographic Analysis**: Race/ethnicity shares, diversity index, representation metrics
+- ✅ **Compactness Metrics**: Polsby-Popper calculation, geometric properties
+- ✅ **Visualization**: State maps, national maps, color schemes, PNG validation
+- ✅ **Aggregation**: CSV merging, ranking, statistics, data quality checks
 
-### Functionality
-- ✅ State navigation works
-- ✅ Tab switching works
-- ✅ Sorting/filtering works
-- ✅ Links are valid
+### Integration Tests (21 tests)
+- ✅ **Single-State Flow**: Complete pipeline (VT/AL), multi-year, error handling
+- ✅ **National Aggregation**: Cross-state rollup, 435 districts, summary generation
+- ✅ **Multi-Stage Validation**: Data flows correctly through all pipeline stages
 
-### Visual Regression
-- ✅ UI elements render correctly
-- ✅ Layout is consistent
-- ✅ No unintended visual changes
-
-### Performance
-- ✅ Page load < 3 seconds
-- ✅ No console errors
-- ✅ Responsive layout works
+### E2E Dashboard Tests (20 tests)
+- ✅ **Dashboard Functionality**: All 6 tabs, state switching, table data, maps
+- ✅ **Artifact Validation**: All CSVs exist, all maps exist, correct structure
+- ✅ **Pipeline Guardian**: Tests fail if pipeline produces incorrect/missing files
+- ✅ **Data Integrity**: CSV columns correct, row counts match, no null values
+- ✅ **Mock Data**: Fast test execution without 4-hour real runs
 
 ## Developer Workflow
 
-### Before Committing Pipeline Changes
+### Before Committing Code Changes
 
 ```bash
-# 1. Generate test data
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version test --states "VT,DE" --reset
+# 1. Run all tests (< 20 seconds)
+pytest tests/ -v
 
-# 2. Run smoke tests
-pytest tests/e2e/ -m smoke -v
+# 2. Check coverage (optional)
+pytest tests/ --cov=apportionment --cov-report=html
 
-# 3. Run full suite
-pytest tests/e2e/ -v
-
-# 4. Review failures (if any)
-ls tests/screenshots/diff/
-
-# 5. Commit when tests pass
-git commit -m "Update pipeline"
+# 3. Commit when all tests pass
+git commit -m "Update code"
 ```
 
-### After UI Changes
+### After Algorithm Changes
 
 ```bash
-# 1. Update baselines
-pytest tests/e2e/test_visual_regression.py --update-baselines
+# 1. Run redistricting tests
+pytest tests/unit/ -m redistricting -v
 
-# 2. Verify baselines
-pytest tests/e2e/test_visual_regression.py -v
+# 2. Run METIS integration tests
+pytest tests/unit/test_metis_integration.py -v
 
-# 3. Commit code and baselines
-git add web/ tests/screenshots/baseline/
-git commit -m "Update dashboard UI"
+# 3. Run integration tests
+pytest tests/integration/ -v
+
+# 4. Commit when all pass
+git commit -m "Update redistricting algorithm"
+```
+
+### After Analysis Script Changes
+
+```bash
+# 1. Run component tests
+pytest tests/unit/test_political_analysis.py -v
+pytest tests/unit/test_demographic_analysis.py -v
+pytest tests/unit/test_compactness_analysis.py -v
+
+# 2. Run integration tests
+pytest tests/integration/ -v
+
+# 3. Commit when all pass
+git commit -m "Update analysis scripts"
+```
+
+### After Dashboard Changes
+
+```bash
+# 1. Run E2E tests with mock data
+pytest tests/e2e/ -v
+
+# 2. Verify artifact validation passes
+pytest tests/e2e/test_run_dashboard.py -k "artifact" -v
+
+# 3. Commit when all pass
+git commit -m "Update dashboard"
 ```
 
 ## Test Reports
 
-### HTML Report
+### HTML Coverage Report
 ```bash
-pytest tests/e2e/ --html=tests/test-results/report.html --self-contained-html
-start tests/test-results/report.html
+# Generate coverage report
+pytest tests/ --cov=apportionment --cov-report=html
+
+# Open in browser
+start htmlcov/index.html  # Windows
+open htmlcov/index.html   # Mac
 ```
 
-### Artifacts on Failure
-- Screenshots: `tests/screenshots/diff/`
-- Traces: `tests/test-results/` (view with `playwright show-trace`)
+### Verbose Test Report
+```bash
+# Detailed test output
+pytest tests/ -v --tb=long
+
+# Show stdout even for passing tests
+pytest tests/ -v -s
+```
+
+### Artifacts on E2E Test Failure
+- Screenshots: `tests/screenshots/` (for debugging visual issues)
+- Playwright traces: `tests/test-results/` (view with `playwright show-trace`)
 
 ## Troubleshooting
 
-### "Element not found"
+### Import Errors
 ```bash
-# Run with visible browser to debug
-pytest tests/e2e/ --headed -v
+# Ensure project root in Python path
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"  # Unix
+set PYTHONPATH=%PYTHONPATH%;%CD%          # Windows
 ```
 
-### "Missing test data"
-```bash
-# Generate test data
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version test --states "VT,DE"
-```
-
-### Visual regression false positives
-```bash
-# Regenerate baselines
-pytest tests/e2e/test_visual_regression.py --update-baselines
-```
-
-### Playwright not installed
+### Playwright Not Installed
 ```bash
 pip install pytest-playwright playwright
 playwright install chromium
 ```
 
-## Configuration
+### E2E Tests - Element Not Found
+```bash
+# Run with visible browser to debug
+pytest tests/e2e/ --headed -v
 
-### Playwright Settings
-
-See `playwright.config.json` for:
-- Browser configuration
-- Screenshot settings
-- Timeout values
-- Visual diff thresholds
-
-### Pytest Settings
-
-Markers are defined in `conftest.py`:
-```python
-markers = [
-    "smoke: Quick smoke tests",
-    "visual: Visual regression tests",
-    "slow: Tests > 10 seconds"
-]
+# Run with slow motion
+pytest tests/e2e/ --headed --slowmo=500 -v
 ```
 
-## Full Documentation
+### Tests Run But Mock Data Not Generated
+```bash
+# Mock data is generated automatically by pytest fixture
+# If issues persist, generate manually:
+python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test
+```
 
-For complete testing guide, see [docs/TESTING.md](../docs/TESTING.md)
+### Coverage Not Generated
+```bash
+pip install pytest-cov
+```
+
+## Configuration
+
+### Pytest Configuration
+
+See `pytest.ini` for:
+- Test markers (unit, integration, redistricting, political, etc.)
+- Warning filters
+- Test discovery patterns
+- Python path settings
+
+### E2E Test Configuration
+
+E2E tests use mock data fixtures defined in:
+- `tests/e2e/conftest.py` - Mock run fixture
+- `tests/fixtures/generate_mock_run.py` - Complete mock run generator
+- `tests/mocks/` - Individual mock data generators
+
+## Mock Data System
+
+The test suite uses a comprehensive mock data system:
+
+**Mock Generators:**
+- `mock_tracts.py` - Generates realistic census tract GeoDataFrames
+- `mock_adjacency.py` - Creates NetworkX adjacency graphs
+- `mock_districts.py` - Produces population-balanced district assignments
+- `mock_analysis.py` - Generates political, demographic, compactness data
+- `mock_maps.py` - Creates PNG placeholder maps
+
+**Complete Run Generator:**
+- `generate_mock_run.py` - Generates full pipeline output with all CSVs and maps
+- Used by E2E tests to create complete dashboard test environment
+- Generates data for Vermont (1 district) and Alabama (7 districts)
+- Includes all analysis types: political, demographic, compactness, urban, national
+
+## Documentation
+
+### Test Documentation
+- **`PIPELINE_TESTS.md`** - Unit and integration test guide
+- **`TEST_SUMMARY.md`** - Complete test results and statistics
+- **`README.md`** (this file) - Overview and quick start
+
+### Enhancement Documentation
+- **Enhancement 30** - Playwright Test Harness (`docs/enhancements/active/30_playwright_testing.md`)
+- **Enhancement 31** - Pipeline Test System (`docs/enhancements/active/31_pipeline_test_system.md`)
+- **Enhancement 33** - Dashboard Mock Data Integration (`docs/enhancements/active/33_dashboard_mock_data.md`)
 
 ## CI/CD Integration
 
-Tests can be integrated into CI pipelines. See example GitHub Actions workflow in [docs/TESTING.md](../docs/TESTING.md#cicd-integration).
+All tests are designed for CI/CD:
+- **Fast execution**: < 20 seconds for all 151 tests
+- **No external dependencies**: Mock data generated automatically
+- **Comprehensive coverage**: 90%+ code coverage
+- **Pipeline guardian**: Tests fail if pipeline output is incorrect
+
+### Example GitHub Actions Workflow
+
+```yaml
+name: Test Suite
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.13
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-playwright pytest-cov pandas geopandas
+          playwright install chromium
+      - name: Run all tests
+        run: pytest tests/ -v --cov=apportionment
+      - name: Upload coverage
+        uses: codecov/codecov-action@v2
+```
