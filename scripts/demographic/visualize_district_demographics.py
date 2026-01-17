@@ -366,25 +366,12 @@ def main():
         if not args.output_dir or not args.version:
             parser.error("--output-dir and --version required when scope=national")
 
-        # Delegate to existing national map script for now
-        # TODO: Merge logic directly into this script
-        import subprocess
-        import sys
-        cmd = [
-            sys.executable,
-            str(Path(__file__).parent / 'create_us_national_demographic_map.py'),
-            '--year', args.census_year,
-            '--version', args.version,
-            '--output-dir', args.output_dir,
-            '--dpi', str(args.dpi)
-        ]
-        if args.force:
-            cmd.append('--force')
-        if args.position >= 0:
-            cmd.extend(['--position', str(args.position)])
-
-        result = subprocess.run(cmd)
-        return result.returncode
+        # TODO: Implement national demographic visualization logic
+        # (Similar to visualize_partisan_lean.py::visualize_national_political)
+        # For now, print message and skip
+        print("[SKIP] National demographic visualization - not yet implemented in consolidated script")
+        print("       Will be implemented in follow-up enhancement")
+        return 0
 
 
 

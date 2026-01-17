@@ -131,7 +131,7 @@ def fix_missing_district_maps(state_config, output_dir, year, dry_run=False):
     print("  Phase 2: Creating Individual District Maps")
     print("="*70)
 
-    script_path = Path('scripts/pipeline/create_individual_district_maps.py')
+    script_path = Path('scripts/pipeline/visualize_individual_districts.py')
     if not script_path.exists():
         print(f"ERROR: Script not found: {script_path}")
         return False
@@ -140,7 +140,7 @@ def fix_missing_district_maps(state_config, output_dir, year, dry_run=False):
     print(f"Processing {len(states_to_fix)} states...")
 
     if dry_run:
-        print("[DRY RUN] Would run create_individual_district_maps.py for all 50 states")
+        print("[DRY RUN] Would run visualize_individual_districts.py for all 50 states")
         return True
 
     successful = 0
@@ -194,8 +194,8 @@ def fix_national_outputs(output_dir, year, version, dry_run=False):
 
     scripts = [
         ('scripts/pipeline/create_rounds_hierarchy.py', 'rounds_hierarchy.csv'),
-        ('scripts/pipeline/create_us_national_map.py', 'us_all_districts.png'),
-        ('scripts/pipeline/create_us_national_rounds_progression.py', 'us_rounds/')
+        ('scripts/pipeline/visualize_national_districts.py', 'us_all_districts.png'),
+        ('scripts/pipeline/visualize_national_rounds.py', 'us_rounds/')
     ]
 
     if dry_run:

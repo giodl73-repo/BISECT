@@ -88,7 +88,7 @@ def main():
     pipeline_steps = []
 
     # Create US national maps FIRST (most important visualization)
-    national_map_script = scripts_dir / 'create_us_national_map.py'
+    national_map_script = scripts_dir / 'visualize_national_districts.py'
     if national_map_script.exists():
         flags = []
         if args.print_only:
@@ -98,7 +98,7 @@ def main():
         flags_str = ' '.join(flags)
         pipeline_steps.append({
             'name': 'Create US national maps',
-            'command': f'{sys.executable} {scripts_dir}/create_us_national_map.py --year {args.year} --output-dir {output_dir} --dpi {args.dpi} {flags_str}'.strip(),
+            'command': f'{sys.executable} {scripts_dir}/visualize_national_districts.py --year {args.year} --output-dir {output_dir} --dpi {args.dpi} {flags_str}'.strip(),
             'critical': False
         })
 
@@ -131,7 +131,7 @@ def main():
         })
 
     # Create national round progression maps
-    national_rounds_script = scripts_dir / 'create_us_national_rounds_progression.py'
+    national_rounds_script = scripts_dir / 'visualize_national_rounds.py'
     if national_rounds_script.exists() and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
             'name': 'Create national round progression maps',
@@ -239,7 +239,7 @@ def main():
     # Create metro area maps for major MSAs
     if not args.run_analysis and (output_dir.exists() or args.print_only):
         # Batch fallback mode (legacy) - only if --skip-analysis was used
-        metro_viz_script = Path('scripts/visualization/create_metro_area_maps.py')
+        metro_viz_script = Path('scripts/visualization/visualize_metro_areas.py')
         if metro_viz_script.exists():
             pipeline_steps.append({
                 'name': 'Create metro area district maps (batch fallback)',
@@ -248,7 +248,7 @@ def main():
             })
     elif args.run_analysis and (output_dir.exists() or args.print_only):
         # Per-state mode - metros already created, just report completion
-        metro_viz_script = Path('scripts/visualization/create_metro_area_maps.py')
+        metro_viz_script = Path('scripts/visualization/visualize_metro_areas.py')
         if metro_viz_script.exists():
             pipeline_steps.append({
                 'name': 'Metro area maps (completed per-state)',

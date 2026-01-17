@@ -12,10 +12,10 @@ Metrics:
 - Perimeter: Total boundary length in kilometers
 
 Usage:
-    python scripts/calculate_compactness_metrics.py <state_directory>
+    python scripts/analyze_district_compactness.py <state_directory>
 
 Example:
-    python scripts/calculate_compactness_metrics.py outputs/compactness-testing/california
+    python scripts/analyze_district_compactness.py outputs/compactness-testing/california
 """
 
 import sys
@@ -336,8 +336,8 @@ def main():
     """Calculate compactness metrics for a state."""
 
     if len(sys.argv) < 2:
-        print("Usage: python scripts/calculate_compactness_metrics.py <state_directory>")
-        print("Example: python scripts/calculate_compactness_metrics.py outputs/compactness-testing/california")
+        print("Usage: python scripts/analyze_district_compactness.py <state_directory>")
+        print("Example: python scripts/analyze_district_compactness.py outputs/compactness-testing/california")
         return 1
 
     state_dir = sys.argv[1]

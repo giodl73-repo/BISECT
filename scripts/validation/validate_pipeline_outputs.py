@@ -69,7 +69,7 @@ PIPELINE_OUTPUTS = {
     },
     "create_individual_district_maps": {
         "outputs": ["maps/districts/district_{district_num:02d}.png"],  # Multiple files (no city name)
-        "location": "scripts/pipeline/create_individual_district_maps.py",
+        "location": "scripts/pipeline/visualize_individual_districts.py",
         "scope": "per-state",
         "required": True,
         "condition": "After data/final_assignments.pkl exists"
@@ -129,7 +129,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "maps/metros/"  # Directory with multiple PNG files
         ],
-        "location": "scripts/visualization/create_metro_area_maps.py",
+        "location": "scripts/visualization/visualize_metro_areas.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND state has metros"
@@ -155,14 +155,14 @@ PIPELINE_OUTPUTS = {
     },
     "create_us_national_map": {
         "outputs": ["maps/us_all_districts.png"],
-        "location": "scripts/pipeline/create_us_national_map.py",
+        "location": "scripts/pipeline/visualize_national_districts.py",
         "scope": "national",
         "required": True,
         "condition": "After data/us_all_districts.csv exists"
     },
     "create_us_national_rounds_progression": {
         "outputs": ["maps/rounds/round_{round_num:02d}.png"],  # 6 files (zero-padded)
-        "location": "scripts/pipeline/create_us_national_rounds_progression.py",
+        "location": "scripts/pipeline/visualize_national_rounds.py",
         "scope": "national",
         "required": True,
         "condition": "After data/us_rounds_hierarchy.csv exists"

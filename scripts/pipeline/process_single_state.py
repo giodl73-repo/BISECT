@@ -94,7 +94,7 @@ def main():
         ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
-        ("District maps", f'{sys.executable} {scripts_dir}/create_individual_district_maps.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip())
+        ("District maps", f'{sys.executable} {scripts_dir}/visualize_individual_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip())
     ]
 
     # Add optional analysis steps
@@ -142,7 +142,7 @@ def main():
         ))
 
         # Metro area visualization (if state has major metros)
-        metro_script = Path(__file__).parent.parent / 'visualization' / 'create_metro_area_maps.py'
+        metro_script = Path(__file__).parent.parent / 'visualization' / 'visualize_metro_areas.py'
         steps.append((
             "Metro area maps",
             f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --dpi {args.dpi}'.strip()

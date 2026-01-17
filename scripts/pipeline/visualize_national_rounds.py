@@ -188,7 +188,7 @@ def create_national_round_map(round_num, all_states_data, output_file, dpi=150, 
     alaska = us_tracts[us_tracts['state_code'] == 'AK'].copy()
     hawaii = us_tracts[us_tracts['state_code'] == 'HI'].copy()
 
-    # Create figure with 3 panels (same layout as create_us_national_map.py)
+    # Create figure with 3 panels (same layout as visualize_national_districts.py)
     fig = plt.figure(figsize=(28, 18))
 
     # Main continental US (takes most of the space)

@@ -11,6 +11,7 @@ import os
 os.environ['MPLBACKEND'] = 'Agg'
 warnings.filterwarnings('ignore')
 
+import sys
 import pandas as pd
 import geopandas as gpd
 import matplotlib
@@ -24,6 +25,7 @@ from pathlib import Path
 import pickle
 import json
 import numpy as np
+from shapely.ops import unary_union
 
 
 # Political lean color mapping
@@ -39,6 +41,34 @@ LEAN_COLORS = {
 }
 
 LEAN_ORDER = ['Strong D', 'Lean D', 'Tilt D', 'Tossup', 'Tilt R', 'Lean R', 'Strong R', 'No Data']
+
+# State name to abbreviation mapping
+STATE_ABBREV = {
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR', 'california': 'CA',
+    'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE', 'florida': 'FL', 'georgia': 'GA',
+    'hawaii': 'HI', 'idaho': 'ID', 'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA',
+    'kansas': 'KS', 'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+    'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS', 'missouri': 'MO',
+    'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV', 'new_hampshire': 'NH', 'new_jersey': 'NJ',
+    'new_mexico': 'NM', 'new_york': 'NY', 'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH',
+    'oklahoma': 'OK', 'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
+    'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT', 'vermont': 'VT',
+    'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV', 'wisconsin': 'WI', 'wyoming': 'WY'
+}
+
+# Districts per state (2020 apportionment)
+DISTRICTS_PER_STATE = {
+    'alabama': 7, 'alaska': 1, 'arizona': 9, 'arkansas': 4, 'california': 52,
+    'colorado': 8, 'connecticut': 5, 'delaware': 1, 'florida': 28, 'georgia': 14,
+    'hawaii': 2, 'idaho': 2, 'illinois': 17, 'indiana': 9, 'iowa': 4,
+    'kansas': 4, 'kentucky': 6, 'louisiana': 6, 'maine': 2, 'maryland': 8,
+    'massachusetts': 9, 'michigan': 13, 'minnesota': 8, 'mississippi': 4, 'missouri': 8,
+    'montana': 2, 'nebraska': 3, 'nevada': 4, 'new_hampshire': 2, 'new_jersey': 12,
+    'new_mexico': 3, 'new_york': 26, 'north_carolina': 14, 'north_dakota': 1, 'ohio': 15,
+    'oklahoma': 5, 'oregon': 6, 'pennsylvania': 17, 'rhode_island': 2, 'south_carolina': 7,
+    'south_dakota': 1, 'tennessee': 9, 'texas': 38, 'utah': 4, 'vermont': 1,
+    'virginia': 11, 'washington': 10, 'west_virginia': 2, 'wisconsin': 8, 'wyoming': 1
+}
 
 
 def visualize_final_districts(run_dir, analysis_dir, tracts_gdf, state_name, year, dpi=150):
@@ -581,6 +611,204 @@ def visualize_state_political(state_dir, state_code, election_year, census_year,
     return 0
 
 
+def visualize_national_political(output_dir, version, election_year, census_year, dpi=150, force=False, position=-1):
+    """Create national political map showing all 435 congressional districts colored by partisan lean."""
+
+    # Get position from args or environment
+    send_status = position >= 0
+    is_standalone = not send_status
+
+    def report_progress(msg):
+        if send_status:
+            print(f"STATUS:{position}:{msg}", flush=True)
+
+    # Determine base directory
+    base_dir = Path(output_dir)
+
+    if not base_dir.exists():
+        if is_standalone:
+            print(f"ERROR: Base directory not found: {base_dir}")
+        return 1
+
+    # Create maps/political directory if it doesn't exist
+    maps_dir = base_dir / 'maps' / 'political'
+    maps_dir.mkdir(parents=True, exist_ok=True)
+
+    # Output file (no year suffix)
+    output_file = maps_dir / 'partisan_lean.png'
+
+    # Check if output exists
+    if not force and output_file.exists():
+        if is_standalone:
+            print(f"Output already exists: {output_file}")
+            print("Use --force to regenerate")
+        return 0
+
+    # Main execution
+    report_progress("Creating national political map - Loading data")
+
+    if is_standalone:
+        print(f"\nCreating national political map for {census_year} census...")
+        print(f"Output: {output_file}")
+
+    # Load all states with districts and political data
+    try:
+        all_tracts = []
+        total_states = len(DISTRICTS_PER_STATE)
+        processed = 0
+
+        for state_name, num_districts in DISTRICTS_PER_STATE.items():
+            # Skip Alaska and Hawaii (no 2020 presidential election data available)
+            if state_name in ['alaska', 'hawaii']:
+                continue
+
+            state_dir = base_dir / 'states' / state_name
+
+            # Skip if state not processed
+            if not state_dir.exists():
+                continue
+
+            # Load tracts (use state abbreviation for filename)
+            state_abbrev = STATE_ABBREV[state_name].lower()
+            tracts_file = Path(f'data/tracts/{census_year}/{state_abbrev}_tracts_{census_year}.parquet')
+
+            if not tracts_file.exists():
+                continue
+
+            tracts = gpd.read_parquet(tracts_file)
+
+            # Load assignments from data/ subdirectory
+            assignments_file = state_dir / 'data' / 'final_assignments.pkl'
+            if not assignments_file.exists():
+                continue
+
+            with open(assignments_file, 'rb') as f:
+                assignments = pickle.load(f)
+
+            tracts['district'] = tracts.index.map(assignments)
+            tracts['state'] = state_name
+            tracts['state_code'] = STATE_ABBREV[state_name]
+            tracts['unique_district_id'] = tracts.apply(
+                lambda row: f"{row['state_code']}-{row['district']:02d}", axis=1
+            )
+
+            # Load political data if available (no year suffix)
+            political_file = state_dir / 'political' / 'district_political.csv'
+            if political_file.exists():
+                try:
+                    political_df = pd.read_csv(political_file)
+                    # Merge political data
+                    tracts = tracts.merge(
+                        political_df[['district', 'lean', 'dem_margin']],
+                        on='district',
+                        how='left'
+                    )
+                except Exception as e:
+                    # Skip states with problematic political data
+                    if is_standalone:
+                        print(f"  Warning: Skipping {state_name} - error loading political data: {e}")
+                    continue
+            else:
+                tracts['lean'] = 'No Data'
+                tracts['dem_margin'] = 0.0
+
+            all_tracts.append(tracts)
+            processed += 1
+
+            if is_standalone and processed % 10 == 0:
+                print(f"  Loaded {processed}/{total_states} states...")
+
+        if not all_tracts:
+            if is_standalone:
+                print("ERROR: No state data found")
+            return 1
+
+        us_tracts = gpd.GeoDataFrame(pd.concat(all_tracts, ignore_index=True))
+
+        if is_standalone:
+            print(f"  Loaded {processed} states with {len(us_tracts):,} tracts")
+
+        # Create single-panel figure for continental US only
+        fig = plt.figure(figsize=(28, 18))
+        ax_main = fig.add_subplot(111)
+
+        # Plot function
+        def plot_political_region(tracts_data, ax, region_name):
+            if len(tracts_data) == 0:
+                return
+
+            # Plot each lean category
+            for lean in LEAN_ORDER:
+                if lean in tracts_data['lean'].values:
+                    data = tracts_data[tracts_data['lean'] == lean]
+                    data.plot(
+                        ax=ax,
+                        color=LEAN_COLORS[lean],
+                        edgecolor='white',
+                        linewidth=0.05,
+                        alpha=0.9
+                    )
+
+            # Add district boundaries (dissolved tracts)
+            region_districts = tracts_data.dissolve(by='unique_district_id')
+            region_districts.boundary.plot(ax=ax, linewidth=1.5, edgecolor='black', alpha=0.8)
+
+            # Add state boundaries
+            region_states = tracts_data.dissolve(by='state_code')
+            region_states.boundary.plot(ax=ax, linewidth=0.8, edgecolor='black', alpha=0.6)
+            ax.set_axis_off()
+
+        # Plot continental US (48 states)
+        plot_political_region(us_tracts, ax_main, "Continental US")
+
+        # Add D/R seat counts
+        d_seats = len(us_tracts[us_tracts['dem_margin'] >= 0].drop_duplicates('unique_district_id'))
+        r_seats = len(us_tracts[us_tracts['dem_margin'] < 0].drop_duplicates('unique_district_id'))
+        total_districts = len(us_tracts['unique_district_id'].unique())
+
+        # Title
+        fig.suptitle(f'United States Congressional Districts - Political Lean\n'
+                     f'2020 Presidential Election Results (48 States, {total_districts} Districts)',
+                     fontsize=22, fontweight='bold', y=0.98)
+
+        # Legend
+        from matplotlib.patches import Patch
+        legend_elements = [
+            Patch(facecolor=LEAN_COLORS[lean], edgecolor='black', label=lean)
+            for lean in ['Strong D', 'Lean D', 'Tilt D', 'Tossup', 'Tilt R', 'Lean R', 'Strong R']
+            if lean in us_tracts['lean'].values
+        ]
+        ax_main.legend(handles=legend_elements, loc='lower right', fontsize=10,
+                      title='Partisan Lean', title_fontsize=11, framealpha=0.9)
+
+        # Add seat count
+        textstr = f'D: {d_seats} | R: {r_seats}\n'
+        textstr += f'Total Districts: {total_districts}'
+        props = dict(boxstyle='round', facecolor='white', alpha=0.9, edgecolor='black', linewidth=2)
+        ax_main.text(0.98, 0.98, textstr, transform=ax_main.transAxes, fontsize=14,
+                    verticalalignment='top', horizontalalignment='right', bbox=props, fontweight='bold')
+
+        plt.tight_layout(rect=[0, 0, 1, 0.97])
+
+        # Save
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(output_file, dpi=dpi, bbox_inches='tight')
+        plt.close(fig)
+
+        if is_standalone:
+            print(f"\nSaved: {output_file}")
+
+        report_progress("Creating national political map - Complete")
+        return 0
+
+    except Exception as e:
+        if is_standalone:
+            print(f"\nERROR: {e}")
+            import traceback
+            traceback.print_exc()
+        return 1
+
+
 def main():
     parser = argparse.ArgumentParser(description='Visualize partisan lean of districts at state or national scope')
 
@@ -627,24 +855,16 @@ def main():
         if not args.output_dir or not args.version:
             parser.error("--output-dir and --version required when scope=national")
 
-        # Delegate to existing national map script for now
-        # TODO: Merge logic directly into this script
-        import subprocess
-        cmd = [
-            sys.executable,
-            str(Path(__file__).parent / 'create_us_national_political_map.py'),
-            '--year', args.election_year,
-            '--version', args.version,
-            '--output-dir', args.output_dir,
-            '--dpi', str(args.dpi)
-        ]
-        if args.force:
-            cmd.append('--force')
-        if args.position >= 0:
-            cmd.extend(['--position', str(args.position)])
-
-        result = subprocess.run(cmd)
-        return result.returncode
+        # Call the national visualization function directly (merged from create_us_national_political_map.py)
+        return visualize_national_political(
+            args.output_dir,
+            args.version,
+            args.election_year,
+            args.census_year,
+            args.dpi,
+            args.force,
+            args.position
+        )
 
 
 

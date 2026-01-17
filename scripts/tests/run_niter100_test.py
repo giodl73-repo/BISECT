@@ -161,7 +161,7 @@ def process_california_niter100(test_dir):
     # Step 4: Create individual district maps
     print(f"\nStep 4/5: Creating individual district maps...")
     if not run_command(
-        f'python scripts/create_individual_district_maps.py {state_dir} --state {state_code}',
+        f'python scripts/visualize_individual_districts.py {state_dir} --state {state_code}',
         f'Creating {num_districts} district maps for {state_name}',
         timeout=1800
     ):
