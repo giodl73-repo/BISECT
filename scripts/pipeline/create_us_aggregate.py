@@ -423,7 +423,7 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
 
             cmd = [
                 'python',
-                'scripts/political/create_us_national_political_map.py',
+                'scripts/pipeline/create_us_national_political_map.py',
                 '--year', year,
                 '--version', version,
                 '--output-dir', str(us_dir),
@@ -455,7 +455,7 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
 
             cmd = [
                 'python',
-                'scripts/demographic/create_us_national_demographic_map.py',
+                'scripts/pipeline/create_us_national_demographic_map.py',
                 '--year', year,
                 '--version', version,
                 '--output-dir', str(us_dir),

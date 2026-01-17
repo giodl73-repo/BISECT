@@ -7,13 +7,13 @@ for districts at state or national scope.
 
 Usage:
     # State scope (single state)
-    python scripts/compactness/visualize_compactness.py \
+    python scripts/pipeline/visualize_compactness.py \
         --scope state \
         --state-dir outputs/us_2020_v1/states/vermont \
         --census-year 2020
 
     # National scope (all states)
-    python scripts/compactness/visualize_compactness.py \
+    python scripts/pipeline/visualize_compactness.py \
         --scope national \
         --output-dir outputs/us_2020_v1 \
         --version v1 \

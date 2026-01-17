@@ -6,8 +6,8 @@ This script generates detailed maps for the top 20 MSAs (Metropolitan Statistica
 showing how congressional districts are configured within major urban areas.
 
 Example usage:
-    python scripts/visualization/visualize_metro_areas.py --year 2020 --version v2
-    python scripts/visualization/visualize_metro_areas.py --year 2020 --version v2 --metros "New York" "Los Angeles"
+    python scripts/pipeline/visualize_metro_areas.py --year 2020 --version v2
+    python scripts/pipeline/visualize_metro_areas.py --year 2020 --version v2 --metros "New York" "Los Angeles"
 """
 
 import geopandas as gpd

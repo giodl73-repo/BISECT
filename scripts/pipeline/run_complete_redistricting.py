@@ -680,8 +680,8 @@ def main():
         if not election_data_file.exists():
             print(f"\n[WARNING] Election data not found: {election_data_file}")
             print(f"Run these commands to prepare election data:")
-            print(f"  python scripts/political/download_election_data.py --year {args.election_year}")
-            print(f"  python scripts/political/process_election_data.py --year {args.election_year}")
+            print(f"  python scripts/pipeline/download_election_data.py --year {args.election_year}")
+            print(f"  python scripts/pipeline/process_election_data.py --year {args.election_year}")
             print(f"\nPolitical analysis will be skipped.")
             args.skip_political = True
             sys.stdout.flush()

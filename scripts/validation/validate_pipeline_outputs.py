@@ -81,7 +81,7 @@ PIPELINE_OUTPUTS = {
             "political/district_political.csv",
             "political/rounds_political.csv"
         ],
-        "location": "scripts/political/analyze_districts.py",
+        "location": "scripts/pipeline/analyze_districts.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND year==2020 AND election data exists"
@@ -90,7 +90,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "political/maps/partisan_lean.png"
         ],
-        "location": "scripts/political/visualize_partisan_lean.py",
+        "location": "scripts/pipeline/visualize_partisan_lean.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND year==2020"
@@ -99,7 +99,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "demographic/district_demographics.csv"
         ],
-        "location": "scripts/demographic/analyze_district_demographics.py",
+        "location": "scripts/pipeline/analyze_district_demographics.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND demographic data exists"
@@ -110,7 +110,7 @@ PIPELINE_OUTPUTS = {
             "demographic/maps/gender_balance.png",
             "demographic/maps/majority_race.png"
         ],
-        "location": "scripts/demographic/visualize_district_demographics.py",
+        "location": "scripts/pipeline/visualize_district_demographics.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND demographic data exists"
@@ -120,7 +120,7 @@ PIPELINE_OUTPUTS = {
             "compactness/maps/polsby_popper.png",
             "compactness/maps/reock.png"
         ],
-        "location": "scripts/compactness/visualize_compactness.py",
+        "location": "scripts/pipeline/visualize_compactness.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis"
@@ -129,7 +129,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "maps/metros/"  # Directory with multiple PNG files
         ],
-        "location": "scripts/visualization/visualize_metro_areas.py",
+        "location": "scripts/pipeline/visualize_metro_areas.py",
         "scope": "per-state",
         "required": False,
         "condition": "--run-analysis AND state has metros"
@@ -169,7 +169,7 @@ PIPELINE_OUTPUTS = {
     },
     "visualize_partisan_lean_national": {
         "outputs": ["maps/political/partisan_lean.png"],
-        "location": "scripts/political/create_us_national_political_map.py",
+        "location": "scripts/pipeline/create_us_national_political_map.py",
         "scope": "national",
         "required": False,
         "condition": "year==2020 AND --run-analysis"
@@ -178,7 +178,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "maps/demographic/majority_demographics.png"
         ],
-        "location": "scripts/demographic/create_us_national_demographic_map.py",
+        "location": "scripts/pipeline/create_us_national_demographic_map.py",
         "scope": "national",
         "required": False,
         "condition": "--run-analysis AND demographic data exists"
@@ -187,7 +187,7 @@ PIPELINE_OUTPUTS = {
         "outputs": [
             "maps/compactness/polsby_popper.png"
         ],
-        "location": "scripts/compactness/visualize_compactness.py",
+        "location": "scripts/pipeline/visualize_compactness.py",
         "scope": "national",
         "required": False,
         "condition": "--run-analysis"

@@ -6,7 +6,7 @@ Creates Polsby-Popper and Reock compactness maps for all districts
 in all states.
 
 Usage:
-    python scripts/compactness/run_compactness_visualization.py --census-year 2020 --version v1 --dpi 150
+    python scripts/pipeline/run_compactness_visualization.py --census-year 2020 --version v1 --dpi 150
 """
 
 import argparse
@@ -103,7 +103,7 @@ def main():
         # Run visualization
         try:
             result = subprocess.run(
-                [sys.executable, 'scripts/compactness/visualize_compactness.py',
+                [sys.executable, 'scripts/pipeline/visualize_compactness.py',
                  str(state_dir), '--census-year', args.census_year, '--dpi', str(args.dpi)],
                 capture_output=True,
                 text=True,

@@ -6,7 +6,7 @@ Calculates Polsby-Popper, Reock, and convex hull ratio for each district
 and adds them to district_summary.csv files.
 
 Usage:
-    python scripts/compactness/run_analyze_district_compactness.py --census-year 2020 --version v1
+    python scripts/pipeline/run_analyze_district_compactness.py --census-year 2020 --version v1
 """
 
 import argparse
@@ -89,7 +89,7 @@ def main():
         # Run calculation
         try:
             result = subprocess.run(
-                [sys.executable, 'scripts/compactness/analyze_district_compactness.py',
+                [sys.executable, 'scripts/pipeline/analyze_district_compactness.py',
                  str(state_dir)],
                 capture_output=True,
                 text=True,
