@@ -361,7 +361,8 @@ def build_pipeline_command(base_args, year, states_only=False, skip_states=False
     return cmd
 
 
-def main():
+def create_argument_parser():
+    """Create and configure argument parser for the pipeline."""
     parser = argparse.ArgumentParser(description='Run complete US redistricting pipeline')
     parser.add_argument('--output-dir', type=str, help='Output directory (overrides year and version)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000', 'all'],
@@ -401,6 +402,134 @@ def main():
                         help='Experiment name (required when --run-type=experiment)')
     parser.add_argument('states', nargs='*',
                         help='Specific state codes to process (default: all states)')
+    return parser
+
+
+def setup_output_directory(args):
+    """
+    Determine output directory and handle reset logic.
+
+    Returns:
+        Path: Output directory
+    """
+    # Determine output directory based on run type
+    if args.output_dir:
+        output_dir = Path(args.output_dir)
+    else:
+        if args.run_type == 'production':
+            # Production: outputs/v{version}/{year}/
+            output_dir = Path(f'outputs/{args.version}/{args.year}')
+        elif args.run_type == 'experiment':
+            # Experiment: outputs/experiments/{experiment_name}/{version}_{year}/
+            output_dir = Path(f'outputs/experiments/{args.experiment_name}/{args.version}_{args.year}')
+        else:  # test
+            # Test/Dev: outputs/dev/{version}_{year}/
+            output_dir = Path(f'outputs/dev/{args.version}_{args.year}')
+
+    # Handle --reset flag: delete output directory for fresh run
+    if args.reset and output_dir.exists() and not args.print_only:
+        import shutil
+
+        print(f"\n[RESET] Deleting existing output directory: {output_dir}")
+
+        # Windows-compatible deletion with retry logic
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                # On Windows, use rmdir /s /q for more reliable deletion
+                if platform.system() == 'Windows':
+                    result = subprocess.run(
+                        ['cmd', '/c', 'rmdir', '/s', '/q', str(output_dir)],
+                        capture_output=True,
+                        text=True
+                    )
+                    if result.returncode == 0:
+                        break
+                    elif attempt < max_retries - 1:
+                        print(f"  Retry {attempt + 1}/{max_retries}... (waiting for file handles to close)")
+                        time.sleep(2)
+                    else:
+                        # Fall back to shutil if cmd fails
+                        shutil.rmtree(output_dir, ignore_errors=True)
+                else:
+                    shutil.rmtree(output_dir)
+                    break
+            except PermissionError as e:
+                if attempt < max_retries - 1:
+                    print(f"  Retry {attempt + 1}/{max_retries}... (waiting for file handles to close)")
+                    time.sleep(2)
+                else:
+                    print(f"[WARNING] Could not fully delete directory: {e}")
+                    print(f"[WARNING] Some files may still exist. Continuing anyway...")
+            except Exception as e:
+                print(f"[ERROR] Unexpected error during deletion: {e}")
+                break
+
+        # Verify deletion
+        if not output_dir.exists():
+            print(f"[RESET] Deleted successfully. Starting fresh run.\n")
+        else:
+            print(f"[RESET] Directory may not be fully deleted. Continuing...\n")
+
+    return output_dir
+
+
+def create_config_files(args, output_dir):
+    """
+    Create config.json and version.json files.
+
+    Args:
+        args: Parsed command-line arguments
+        output_dir: Path to output directory
+    """
+    if args.print_only:
+        return
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate run-level config.json
+    config = RunConfig.create(
+        version=args.version,
+        census_year=int(args.year),
+        election_year=int(args.election_year),
+        partition_mode=args.partition_mode.replace('-', '_'),  # 'edge-weighted' -> 'edge_weighted'
+        data_level='tract',  # Currently always tract-level
+        run_type=args.run_type,
+        scope='us' if not args.states else 'state',
+        states=args.states if args.states else ['all'],
+        experiment_name=args.experiment_name if args.run_type == 'experiment' else None,
+        skip_political=args.skip_political,
+        skip_demographic=args.skip_demographic,
+        dpi=args.dpi
+    )
+    write_config(config, output_dir)
+    print(f"[OK] Generated run config: {output_dir}/config.json")
+
+    # Handle version-level config
+    version_dir = output_dir.parent  # e.g., outputs/v1/ (parent of outputs/v1/2020/)
+    version_config_path = version_dir / 'version.json'
+
+    if version_config_path.exists():
+        # Version config already exists - this is a subsequent year run
+        print(f"[OK] Version config already exists: {version_config_path}")
+    else:
+        # Create new version config for this version
+        print(f"[OK] Creating version config: {version_config_path}")
+        version_config = VersionConfig.create(
+            version=args.version,
+            partition_mode=args.partition_mode.replace('-', '_'),
+            data_level='tract',
+            description=f"Redistricting variant: {args.version}",
+            skip_political=args.skip_political,
+            skip_demographic=args.skip_demographic,
+            dpi=args.dpi
+        )
+        write_version_config(version_config, version_dir)
+
+
+def main():
+    # Parse arguments
+    parser = create_argument_parser()
     args = parser.parse_args()
 
     # Validate arguments
@@ -522,110 +651,11 @@ def main():
         print(f"ERROR: Could not load config for year {args.year}: {e}")
         sys.exit(1)
 
-    # Determine output directory based on run type
-    if args.output_dir:
-        output_dir = Path(args.output_dir)
-    else:
-        if args.run_type == 'production':
-            # Production: outputs/v{version}/{year}/
-            output_dir = Path(f'outputs/{args.version}/{args.year}')
-        elif args.run_type == 'experiment':
-            # Experiment: outputs/experiments/{experiment_name}/{version}_{year}/
-            output_dir = Path(f'outputs/experiments/{args.experiment_name}/{args.version}_{args.year}')
-        else:  # test
-            # Test/Dev: outputs/dev/{version}_{year}/
-            output_dir = Path(f'outputs/dev/{args.version}_{args.year}')
+    # Setup output directory (determine path and handle --reset)
+    output_dir = setup_output_directory(args)
 
-    # Handle --reset flag: delete output directory for fresh run
-    if args.reset and output_dir.exists() and not args.print_only:
-        import shutil
-        import platform
-
-        print(f"\n[RESET] Deleting existing output directory: {output_dir}")
-
-        # Windows-compatible deletion with retry logic
-        max_retries = 5
-        for attempt in range(max_retries):
-            try:
-                # On Windows, use rmdir /s /q for more reliable deletion
-                if platform.system() == 'Windows':
-                    # Use Windows rmdir command which is more robust
-                    result = subprocess.run(
-                        ['cmd', '/c', 'rmdir', '/s', '/q', str(output_dir)],
-                        capture_output=True,
-                        text=True
-                    )
-                    if result.returncode == 0:
-                        break
-                    elif attempt < max_retries - 1:
-                        print(f"  Retry {attempt + 1}/{max_retries}... (waiting for file handles to close)")
-                        time.sleep(2)
-                    else:
-                        # Fall back to shutil if cmd fails
-                        shutil.rmtree(output_dir, ignore_errors=True)
-                else:
-                    shutil.rmtree(output_dir)
-                    break
-            except PermissionError as e:
-                if attempt < max_retries - 1:
-                    print(f"  Retry {attempt + 1}/{max_retries}... (waiting for file handles to close)")
-                    time.sleep(2)
-                else:
-                    print(f"[WARNING] Could not fully delete directory: {e}")
-                    print(f"[WARNING] Some files may still exist. Continuing anyway...")
-            except Exception as e:
-                print(f"[ERROR] Unexpected error during deletion: {e}")
-                break
-
-        # Verify deletion
-        if not output_dir.exists():
-            print(f"[RESET] Deleted successfully. Starting fresh run.\n")
-        else:
-            print(f"[RESET] Directory may not be fully deleted. Continuing...\n")
-
-    # Create output directory and generate config files (unless print-only mode)
-    if not args.print_only:
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Generate run-level config.json
-        start_time = time.time()
-        config = RunConfig.create(
-            version=args.version,
-            census_year=int(args.year),
-            election_year=int(args.election_year),
-            partition_mode=args.partition_mode.replace('-', '_'),  # 'edge-weighted' -> 'edge_weighted'
-            data_level='tract',  # Currently always tract-level
-            run_type=args.run_type,
-            scope='us' if not args.states else 'state',
-            states=args.states if args.states else ['all'],
-            experiment_name=args.experiment_name if args.run_type == 'experiment' else None,
-            skip_political=args.skip_political,
-            skip_demographic=args.skip_demographic,
-            dpi=args.dpi
-        )
-        write_config(config, output_dir)
-        print(f"[OK] Generated run config: {output_dir}/config.json")
-
-        # Handle version-level config
-        version_dir = output_dir.parent  # e.g., outputs/v1/ (parent of outputs/v1/2020/)
-        version_config_path = version_dir / 'version.json'
-
-        if version_config_path.exists():
-            # Version config already exists - this is a subsequent year run
-            print(f"[OK] Version config already exists: {version_config_path}")
-        else:
-            # Create new version config for this version
-            print(f"[OK] Creating version config: {version_config_path}")
-            version_config = VersionConfig.create(
-                version=args.version,
-                partition_mode=args.partition_mode.replace('-', '_'),
-                data_level='tract',
-                description=f"Redistricting variant: {args.version}",
-                skip_political=args.skip_political,
-                skip_demographic=args.skip_demographic,
-                dpi=args.dpi
-            )
-            write_version_config(version_config, version_dir)
+    # Create config files (config.json and version.json)
+    create_config_files(args, output_dir)
 
     print("\n" + "="*70)
     print("US CONGRESSIONAL REDISTRICTING - COMPLETE PIPELINE")
@@ -901,301 +931,42 @@ def main():
         print(f"[OK] State processing complete. Run with --skip-states to do post-processing later.")
         return 0
 
-    pipeline_steps = []
+    # Call process_nation.py to handle all national post-processing
+    process_nation_script = scripts_dir / 'process_nation.py'
 
-    # Create US national maps FIRST (most important visualization)
-    national_map_script = scripts_dir / 'create_us_national_map.py'
-    if national_map_script.exists():
-        flags = []
-        if args.print_only:
-            flags.append('--print-only')
-        if args.debug:
-            flags.append('--debug')
-        flags_str = ' '.join(flags)
-        pipeline_steps.append({
-            'name': 'Create US national maps',
-            'command': f'{sys.executable} {scripts_dir}/create_us_national_map.py --year {args.year} --output-dir {output_dir} --dpi {args.dpi} {flags_str}'.strip(),
-            'critical': False
-        })
+    # Build command with all arguments
+    cmd = [
+        sys.executable,
+        str(process_nation_script),
+        '--year', args.year,
+        '--version', args.version,
+        '--output-dir', str(output_dir),
+        '--election-year', args.election_year,
+        '--dpi', str(args.dpi)
+    ]
 
-    # Create US aggregate files
-    if output_dir.exists() or args.print_only:
-        flags = []
-        if args.print_only:
-            flags.append('--print-only')
-        if args.debug:
-            flags.append('--debug')
-        flags_str = ' '.join(flags)
-        pipeline_steps.append({
-            'name': 'Create US aggregate files',
-            'command': f'{sys.executable} {scripts_dir}/create_us_aggregate.py --year {args.year} --version {args.version} --dpi {args.dpi} --output-dir {output_dir} --skip-maps {flags_str}'.strip(),
-            'critical': False
-        })
+    # Add optional flags
+    if args.run_analysis:
+        cmd.append('--run-analysis')
+    else:
+        cmd.append('--skip-analysis')
 
-    # Create US rounds hierarchy aggregate
-    if output_dir.exists() or args.print_only:
-        flags = []
-        if args.print_only:
-            flags.append('--print-only')
-        if args.debug:
-            flags.append('--debug')
-        flags_str = ' '.join(flags)
-        pipeline_steps.append({
-            'name': 'Create US rounds hierarchy',
-            'command': f'{sys.executable} {scripts_dir}/create_us_rounds_hierarchy.py --output-dir {output_dir} {flags_str}'.strip(),
-            'critical': False
-        })
+    if args.skip_political:
+        cmd.append('--skip-political')
 
-    # Create national round progression maps
-    national_rounds_script = scripts_dir / 'create_us_national_rounds_progression.py'
-    if national_rounds_script.exists() and (output_dir.exists() or args.print_only):
-        pipeline_steps.append({
-            'name': 'Create national round progression maps',
-            'command': f'{sys.executable} {national_rounds_script} --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi} --max-rounds 6'.strip(),
-            'critical': False
-        })
+    if args.skip_demographic:
+        cmd.append('--skip-demographic')
 
-    # Check data availability for optional analysis
-    # Political analysis requires election data from same time period as census
-    # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
-    election_data_file = get_election_data_file(args.election_year)
-    election_data_available = (args.year == '2020' and election_data_file.exists())
-    demographic_data_available = get_demographic_data_file(args.year).exists()
+    if args.print_only:
+        cmd.append('--print-only')
 
-    # Log data availability status
-    if not election_data_available and not args.skip_political:
-        if args.year != '2020':
-            print(f"\n[INFO] Political analysis will be skipped: Census year {args.year} requires {args.year}/2012 election data (not available)")
-        else:
-            print(f"\n[INFO] Political analysis will be skipped: No {args.election_year} election data found")
-            print(f"       Expected: data/processed/elections/{args.election_year}_president_tract.parquet")
-    if not demographic_data_available and not args.skip_demographic:
-        print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
-        print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
+    if args.debug:
+        cmd.append('--debug')
 
-    # Run political analysis on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_political and not args.run_analysis and election_data_available and (output_dir.exists() or args.print_only):
-        political_scripts = scripts_dir.parent / 'political'
-        analyze_script = political_scripts / 'analyze_districts.py'
-        visualize_script = political_scripts / 'visualize_partisan_lean.py'
+    # Run national post-processing
+    result = subprocess.run(cmd)
 
-        if analyze_script.exists() and visualize_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run political analysis on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Political analysis (batch fallback)',
-                    'command': f'{sys.executable} {political_scripts}/run_political_analysis.py --census-year {args.year} --version {args.version} --election-year {args.election_year}'.strip(),
-                    'critical': False
-                })
-
-    # Create national political map (after per-state analysis completes)
-    if not args.skip_political and election_data_available and (output_dir.exists() or args.print_only):
-        pipeline_steps.append({
-            'name': 'Create national political map',
-            'command': f'{sys.executable} scripts/political/visualize_partisan_lean.py --scope national --output-dir {output_dir} --version {args.version} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi}'.strip(),
-            'critical': False
-        })
-
-    # Run demographic analysis on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
-        demographic_scripts = scripts_dir.parent / 'demographic'
-        demographic_script = demographic_scripts / 'run_demographic_analysis.py'
-
-        if demographic_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run demographic analysis on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Demographic analysis (batch fallback)',
-                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_analysis.py --census-year {args.year} --version {args.version}'.strip(),
-                    'critical': False
-                })
-
-    # Run demographic visualization on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state visualization didn't run)
-    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
-        demographic_scripts = scripts_dir.parent / 'demographic'
-        demographic_viz_script = demographic_scripts / 'run_demographic_visualization.py'
-
-        if demographic_viz_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run demographic visualization on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Demographic visualization (batch fallback)',
-                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_visualization.py --census-year {args.year} --version {args.version} --dpi {args.dpi}'.strip(),
-                    'critical': False
-                })
-
-    # Create national demographic map (after per-state analysis completes)
-    if not args.skip_demographic and demographic_data_available and (output_dir.exists() or args.print_only):
-        pipeline_steps.append({
-            'name': 'Create national demographic map',
-            'command': f'{sys.executable} scripts/demographic/visualize_district_demographics.py --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),
-            'critical': False
-        })
-
-    # Run compactness visualization
-    # Note: If --run-analysis is enabled, per-state visualizations already ran during state processing
-    # This step creates the national aggregation map
-    if output_dir.exists() or args.print_only:
-        compactness_script = scripts_dir.parent / 'compactness' / 'visualize_compactness.py'
-        pipeline_steps.append({
-            'name': 'Create national compactness map',
-            'command': f'{sys.executable} {compactness_script} --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),
-            'critical': False
-        })
-
-    # Create metro area maps for major MSAs
-    if not args.run_analysis and (output_dir.exists() or args.print_only):
-        # Batch fallback mode (legacy) - only if --skip-analysis was used
-        metro_viz_script = Path('scripts/visualization/create_metro_area_maps.py')
-        if metro_viz_script.exists():
-            pipeline_steps.append({
-                'name': 'Create metro area district maps (batch fallback)',
-                'command': f'{sys.executable} {metro_viz_script} --scope all --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
-                'critical': False
-            })
-    elif args.run_analysis and (output_dir.exists() or args.print_only):
-        # Per-state mode - metros already created, just report completion
-        metro_viz_script = Path('scripts/visualization/create_metro_area_maps.py')
-        if metro_viz_script.exists():
-            pipeline_steps.append({
-                'name': 'Metro area maps (completed per-state)',
-                'command': f'{sys.executable} {metro_viz_script} --scope national --output-dir {output_dir} --version {args.version} --year {args.year}'.strip(),
-                'critical': False
-            })
-
-    # Generate static dashboard with all district data
-    if output_dir.exists() or args.print_only:
-        dashboard_script = Path('scripts/web/generate_dashboard.py')
-        if dashboard_script.exists():
-            pipeline_steps.append({
-                'name': 'Generate static dashboard',
-                'command': f'{sys.executable} {dashboard_script} --year {args.year} --version {args.version} --output-dir {output_dir}'.strip(),
-                'critical': False
-            })
-
-    # Run post-processing steps with progress bars
-    if pipeline_steps:
-        # Create progress bars for each post-processing step at positions 0-3
-        step_bars = []
-        for i, step in enumerate(pipeline_steps):
-            bar = tqdm(total=1,
-                      desc=f"[{i}] {step['name']} - Waiting...",
-                      unit="step",
-                      position=i,
-                      ncols=120,
-                      leave=True,
-                      bar_format="{desc}",
-                      dynamic_ncols=False,
-                      file=sys.stderr)
-            step_bars.append(bar)
-
-        # Run each step (set TQDM_POSITION to suppress child banners)
-        for i, step in enumerate(pipeline_steps):
-            # Update bar to show starting
-            step_bars[i].set_description_str(f"[{i}] {step['name']} - Starting...".ljust(120))
-            step_bars[i].refresh()
-
-            env = os.environ.copy()
-            env['TQDM_POSITION'] = str(i)  # Pass position so child can report progress
-
-            # Use Popen to monitor output in real-time
-            proc = subprocess.Popen(step['command'], shell=True, env=env,
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   text=True, bufsize=1)
-
-            # Monitor stdout for STATUS messages
-            for line in proc.stdout:
-                line = line.strip()
-                if line.startswith("STATUS:"):
-                    # Parse: STATUS:position:message
-                    parts = line.split(":", 2)
-                    if len(parts) >= 3:
-                        pos = int(parts[1])
-                        msg = parts[2]
-                        step_bars[i].set_description_str(f"[{i}] {msg}".ljust(120))
-                        step_bars[i].refresh()
-
-            proc.wait()
-
-            if proc.returncode == 0:
-                step_bars[i].set_description_str(f"[{i}] {step['name']} - COMPLETE".ljust(120))
-            else:
-                step_bars[i].set_description_str(f"[{i}] {step['name']} - FAILED".ljust(120))
-                if step['critical'] and not args.print_only:
-                    print(f"\n[ERROR] {step['name']} failed", file=sys.stderr)
-                    stderr_output = proc.stderr.read()
-                    print(stderr_output[-500:] if stderr_output else "", file=sys.stderr)
-                    return 1
-
-            step_bars[i].refresh()
-            step_bars[i].update(1)
-
-        # Close bars
-        for bar in step_bars:
-            bar.close()
-
-    # Validate pipeline outputs
-    if not args.print_only:
-        print("\n" + "="*70)
-        print("  Validating Pipeline Outputs")
-        print("="*70)
-
-        validation_script = Path('scripts/validation/validate_pipeline_outputs.py')
-        if validation_script.exists():
-            validation_cmd = [
-                sys.executable,
-                str(validation_script),
-                '--year', args.year,
-                '--version', args.version,
-                '--output-dir', str(output_dir)
-            ]
-
-            validation_result = subprocess.run(validation_cmd)
-
-            # Validation script handles its own output:
-            # - Brief summary printed to console
-            # - Detailed report written to outputs/us_{year}_{version}_validation.txt
-            # - Exit code: 0 = all outputs present, 1 = some outputs missing
-
-            if validation_result.returncode != 0:
-                print(f"\nWARNING: Some pipeline outputs are missing.")
-                print(f"Review detailed report at: {output_dir.name}_validation.txt")
-
-    # Update version config with completed year
-    if not args.print_only:
-        version_dir = output_dir.parent  # e.g., outputs/v1/ (parent of outputs/v1/2020/)
-        version_config_path = version_dir / 'version.json'
-        if version_config_path.exists():
-            try:
-                update_version_config_with_year(version_dir, int(args.year))
-                version_config = read_version_config(version_config_path)
-                print(f"\n[OK] Updated version config: completed years = {version_config.completed_years}")
-            except Exception as e:
-                print(f"\n[WARNING] Could not update version config: {e}")
-
-    # Brief final summary at position 3 (after the 3 post-processing steps at 0-2)
-    summary_bar = tqdm(total=1,
-                      desc=f"[3] Pipeline complete - Results in: {output_dir}",
-                      unit="step",
-                      position=3,
-                      ncols=120,
-                      leave=True,
-                      bar_format="{desc}",
-                      dynamic_ncols=False,
-                      file=sys.stderr)
-    summary_bar.update(1)
-    summary_bar.close()
-
-    return 0 if (not 'failed' in locals() or not failed) else 1
+    return 0 if (result.returncode == 0 and (not 'failed' in locals() or not failed)) else 1
 
 
 if __name__ == '__main__':
