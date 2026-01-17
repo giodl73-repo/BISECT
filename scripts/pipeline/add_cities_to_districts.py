@@ -13,6 +13,10 @@ warnings.filterwarnings('ignore', message='.*tranform.*')
 warnings.filterwarnings('ignore', category=UserWarning, module='matplotlib')
 warnings.filterwarnings('ignore', category=UserWarning, module='adjustText')
 from pathlib import Path
+
+# Import utility functions
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_state_config, get_tract_file, get_places_file
 import pickle
 import geopandas as gpd
 import pandas as pd
@@ -468,9 +472,8 @@ if __name__ == '__main__':
     state_name = base_name.replace('_', ' ').title()
 
     # Load tract and places files (unified directory structure)
-    state_lower = state_code.lower()
-    tracts_file = f'data/tracts/{args.year}/{state_lower}_tracts_{args.year}.parquet'
-    places_file = f'data/places/{args.year}/{state_lower}_places_{args.year}.parquet'
+    tracts_file = str(get_tract_file(state_code, args.year))
+    places_file = str(get_places_file(state_code, args.year))
 
     assignments_file = run_dir / 'data' / 'final_assignments.pkl'
 
@@ -485,19 +488,9 @@ if __name__ == '__main__':
     # In parallel mode: show stage progress but not file displays
     if args.print_only or args.position != 2 and args.position != 999:
         # Get number of districts
-        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
         try:
-            if args.year == '2020':
-                from scripts.config_2020 import STATE_CONFIG_2020
-                config = STATE_CONFIG_2020.get(state_code.upper(), {})
-            elif args.year == '2010':
-                from scripts.config_2010 import STATE_CONFIG_2010
-                config = STATE_CONFIG_2010.get(state_code.upper(), {})
-            elif args.year == '2000':
-                from scripts.config_2000 import STATE_CONFIG_2000
-                config = STATE_CONFIG_2000.get(state_code.upper(), {})
-            else:
-                config = {}
+            STATE_CONFIG = get_state_config(args.year)
+            config = STATE_CONFIG.get(state_code.upper(), {})
             num_districts = config.get('districts', 1)
         except:
             num_districts = 1

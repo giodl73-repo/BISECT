@@ -4,7 +4,12 @@
 import warnings
 import json
 import os
+import sys
 from pathlib import Path
+
+# Import utility functions
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_state_config, get_tract_file
 
 # Suppress ALL warnings including matplotlib
 warnings.filterwarnings('ignore')
@@ -226,26 +231,15 @@ def main():
     state_name = base_name.replace('_', ' ').title()
 
     # Load tracts (unified directory structure)
-    state_code_lower = state_code.lower()
-    tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
+    tracts_file = str(get_tract_file(state_code, args.year))
 
     intermediate_dir = run_dir / 'intermediate'
     output_dir = run_dir  # Function will add maps/rounds subdirectory
 
     # Get number of districts (needed for progress bar and task list)
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     try:
-        if args.year == '2020':
-            from scripts.config_2020 import STATE_CONFIG_2020
-            config = STATE_CONFIG_2020.get(state_code.upper(), {})
-        elif args.year == '2010':
-            from scripts.config_2010 import STATE_CONFIG_2010
-            config = STATE_CONFIG_2010.get(state_code.upper(), {})
-        elif args.year == '2000':
-            from scripts.config_2000 import STATE_CONFIG_2000
-            config = STATE_CONFIG_2000.get(state_code.upper(), {})
-        else:
-            config = {}
+        STATE_CONFIG = get_state_config(args.year)
+        config = STATE_CONFIG.get(state_code.upper(), {})
         num_districts = config.get('districts', 1)
     except:
         num_districts = 1

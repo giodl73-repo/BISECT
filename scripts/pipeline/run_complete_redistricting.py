@@ -67,6 +67,13 @@ from apportionment.config import (
     VersionConfig, write_version_config, read_version_config, update_version_config_with_year
 )
 
+# Import utility functions
+from scripts.utils import (
+    get_state_config, get_state_config_safe,
+    get_tract_file, get_places_file, get_adjacency_file,
+    get_election_data_file, get_demographic_data_file
+)
+
 # Import configuration files
 try:
     from scripts.config_2020 import STATE_CONFIG_2020
@@ -86,12 +93,10 @@ except ImportError:
 
 def check_prerequisites(state_code, year='2020'):
     """Check if state has necessary data files."""
-    state_code_lower = state_code.lower()
-
     # Load data files (unified directory structure for all census years)
-    tracts_file = Path(f'data/tracts/{year}/{state_code_lower}_tracts_{year}.parquet')
-    places_file = Path(f'data/tracts/{year}/{state_code_lower}_places_{year}.parquet')
-    graph_file = Path(f'data/adjacency/{year}/{state_code_lower}_adjacency_{year}.pkl')
+    tracts_file = get_tract_file(state_code, year)
+    places_file = get_places_file(state_code, year)
+    graph_file = get_adjacency_file(state_code, year)
 
     missing = []
     if not tracts_file.exists():
@@ -510,24 +515,11 @@ def main():
     # Determine execution mode
     mode = 'parallel' if args.workers > 1 else 'sequential'
 
-    # Select the correct STATE_CONFIG based on year
-    if args.year == '2020':
-        if STATE_CONFIG_2020 is None:
-            print("ERROR: config_2020.py not found. Cannot process 2020 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2020
-    elif args.year == '2010':
-        if STATE_CONFIG_2010 is None:
-            print("ERROR: config_2010.py not found. Cannot process 2010 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2010
-    elif args.year == '2000':
-        if STATE_CONFIG_2000 is None:
-            print("ERROR: config_2000.py not found. Cannot process 2000 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2000
-    else:
-        print(f"ERROR: Unknown year {args.year}")
+    # Load state configuration for the specified year
+    try:
+        STATE_CONFIG = get_state_config(args.year)
+    except (ValueError, ImportError) as e:
+        print(f"ERROR: Could not load config for year {args.year}: {e}")
         sys.exit(1)
 
     # Determine output directory based on run type
@@ -653,7 +645,7 @@ def main():
     # STEP 0: CHECK ELECTION DATA (for political analysis)
     # =========================================================================
     if not args.skip_political and not args.skip_states:
-        election_data_file = Path(f'data/processed/elections/{args.election_year}_president_tract.parquet')
+        election_data_file = get_election_data_file(args.election_year)
 
         if not election_data_file.exists():
             print(f"\n[WARNING] Election data not found: {election_data_file}")
@@ -671,7 +663,7 @@ def main():
     # STEP 0B: CHECK DEMOGRAPHIC DATA (for demographic analysis)
     # =========================================================================
     if not args.skip_demographic and not args.skip_states:
-        demographic_data_file = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet')
+        demographic_data_file = get_demographic_data_file(args.year)
 
         if not demographic_data_file.exists():
             print(f"\n[WARNING] Demographic data not found: {demographic_data_file}")
@@ -966,9 +958,9 @@ def main():
     # Check data availability for optional analysis
     # Political analysis requires election data from same time period as census
     # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
-    election_data_file = Path(f'data/processed/elections/{args.election_year}_president_tract.parquet')
+    election_data_file = get_election_data_file(args.election_year)
     election_data_available = (args.year == '2020' and election_data_file.exists())
-    demographic_data_available = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet').exists()
+    demographic_data_available = get_demographic_data_file(args.year).exists()
 
     # Log data availability status
     if not election_data_available and not args.skip_political:

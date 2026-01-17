@@ -8,6 +8,10 @@ import os
 import time
 import json
 from pathlib import Path
+
+# Import utility functions
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_state_config, get_tract_file, get_places_file
 import pickle
 import pandas as pd
 import geopandas as gpd
@@ -236,7 +240,7 @@ def create_rounds_hierarchy(run_dir: Path, num_districts: int, debug: bool = Fal
             census_year = '2000'
 
         # Load tract data
-        tracts_file = Path(f'data/tracts/{census_year}/{state_code.lower()}_tracts_{census_year}.parquet')
+        tracts_file = get_tract_file(state_code, census_year)
         if not tracts_file.exists():
             if debug:
                 print(f"  Tracts file not found: {tracts_file}")
@@ -385,9 +389,8 @@ if __name__ == '__main__':
     if args.debug: print(f"[DEBUG] Detected state: {state_name} ({state_code})", file=sys.stderr, flush=True)
 
     # Load tract and places files (unified directory structure)
-    state_code_lower = state_code.lower()
-    tracts_file = f'data/tracts/{args.year}/{state_code_lower}_tracts_{args.year}.parquet'
-    places_file = f'data/tracts/{args.year}/{state_code_lower}_places_{args.year}.parquet'
+    tracts_file = str(get_tract_file(state_code, args.year))
+    places_file = str(get_places_file(state_code, args.year))
 
     # References to data/ subdirectory
     data_dir = run_dir / 'data'
@@ -396,19 +399,9 @@ if __name__ == '__main__':
     output_file = data_dir / 'district_summary.csv'
 
     # Get number of districts (needed for progress bar and skip logic)
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
     try:
-        if args.year == '2020':
-            from scripts.config_2020 import STATE_CONFIG_2020
-            config = STATE_CONFIG_2020.get(state_code.upper(), {})
-        elif args.year == '2010':
-            from scripts.config_2010 import STATE_CONFIG_2010
-            config = STATE_CONFIG_2010.get(state_code.upper(), {})
-        elif args.year == '2000':
-            from scripts.config_2000 import STATE_CONFIG_2000
-            config = STATE_CONFIG_2000.get(state_code.upper(), {})
-        else:
-            config = {}
+        STATE_CONFIG = get_state_config(args.year)
+        config = STATE_CONFIG.get(state_code.upper(), {})
         num_districts = config.get('districts', 1)
     except:
         num_districts = 1

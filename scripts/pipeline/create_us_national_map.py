@@ -17,21 +17,8 @@ from tqdm import tqdm
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Import configuration files
-try:
-    from scripts.config_2020 import STATE_CONFIG_2020
-except ImportError:
-    STATE_CONFIG_2020 = None
-
-try:
-    from scripts.config_2010 import STATE_CONFIG_2010
-except ImportError:
-    STATE_CONFIG_2010 = None
-
-try:
-    from scripts.config_2000 import STATE_CONFIG_2000
-except ImportError:
-    STATE_CONFIG_2000 = None
+# Import utility functions
+from scripts.utils import get_state_config, get_state_config_safe, get_tract_file
 
 # Fallback hardcoded config (2020)
 STATE_CONFIG_FALLBACK = {
@@ -121,12 +108,11 @@ def load_all_states_with_districts(us_dir=None, year='2020', state_config=None, 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
 
         # Load tracts (unified directory structure)
-        state_code_lower = state_code.lower()
-        tracts_file = f'data/tracts/{year}/{state_code_lower}_tracts_{year}.parquet'
+        tracts_file = get_tract_file(state_code, year)
 
         assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
-        if not Path(tracts_file).exists():
+        if not tracts_file.exists():
             continue
 
         tracts = gpd.read_parquet(tracts_file)
@@ -471,17 +457,12 @@ def main(output_dir=None, year='2020', print_only=False, debug=False, force=Fals
     # Only print header if running standalone (not called from parent)
     is_standalone = not os.environ.get('TQDM_POSITION')
 
-    # Select the correct STATE_CONFIG based on year
-    if year == '2020':
-        STATE_CONFIG = STATE_CONFIG_2020 if STATE_CONFIG_2020 else STATE_CONFIG_FALLBACK
-    elif year == '2010':
-        STATE_CONFIG = STATE_CONFIG_2010 if STATE_CONFIG_2010 else STATE_CONFIG_FALLBACK
-    elif year == '2000':
-        STATE_CONFIG = STATE_CONFIG_2000 if STATE_CONFIG_2000 else STATE_CONFIG_FALLBACK
-    else:
+    # Load state configuration for the specified year
+    STATE_CONFIG = get_state_config_safe(year)
+    if STATE_CONFIG is None:
         if is_standalone:
-            print(f"ERROR: Unsupported year {year}")
-        sys.exit(1)
+            print(f"ERROR: Could not load config for year {year}, using fallback")
+        STATE_CONFIG = STATE_CONFIG_FALLBACK
 
     if output_dir is None:
         us_dir = Path(f'outputs/us_{year}_v2')

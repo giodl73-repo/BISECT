@@ -10,6 +10,14 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 
+# Import utility functions
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import (
+    get_state_config,
+    get_election_data_file,
+    get_demographic_data_file,
+)
+
 
 def main():
     import argparse
@@ -41,23 +49,11 @@ def main():
         # This is the full path to the state directory passed from parent
         state_dir = output_path
 
-    # Load state config
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+    # Load state config using utility function
     try:
-        if args.year == '2020':
-            from scripts.config_2020 import STATE_CONFIG_2020
-            STATE_CONFIG = STATE_CONFIG_2020
-        elif args.year == '2010':
-            from scripts.config_2010 import STATE_CONFIG_2010
-            STATE_CONFIG = STATE_CONFIG_2010
-        elif args.year == '2000':
-            from scripts.config_2000 import STATE_CONFIG_2000
-            STATE_CONFIG = STATE_CONFIG_2000
-        else:
-            print(f"ERROR: Year {args.year} not supported")
-            sys.exit(1)
-    except ImportError:
-        print(f"ERROR: Could not load config for year {args.year}")
+        STATE_CONFIG = get_state_config(args.year)
+    except (ValueError, ImportError) as e:
+        print(f"ERROR: Could not load config for year {args.year}: {e}")
         sys.exit(1)
 
     config = STATE_CONFIG.get(state_code)
@@ -103,11 +99,11 @@ def main():
 
     # Add optional analysis steps
     if args.run_analysis:
-        # Check data availability
+        # Check data availability using utility functions
         # Political analysis requires election data from same time period as census
         # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
-        election_data_2020 = Path('data/processed/elections/2020_president_tract.parquet')
-        demographic_data = Path(f'data/processed/demographics/{args.year}_demographics_tract.parquet')
+        election_data_2020 = get_election_data_file('2020')
+        demographic_data = get_demographic_data_file(args.year)
 
         # Political analysis (only if compatible election data exists for this census year)
         can_do_political = (args.year == '2020' and election_data_2020.exists())

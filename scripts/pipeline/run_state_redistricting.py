@@ -16,21 +16,8 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-# Import configuration files
-try:
-    from scripts.config_2020 import STATE_CONFIG_2020
-except ImportError:
-    STATE_CONFIG_2020 = None
-
-try:
-    from scripts.config_2010 import STATE_CONFIG_2010
-except ImportError:
-    STATE_CONFIG_2010 = None
-
-try:
-    from scripts.config_2000 import STATE_CONFIG_2000
-except ImportError:
-    STATE_CONFIG_2000 = None
+# Import utility functions
+from scripts.utils import get_state_config, get_tract_file, get_adjacency_file
 
 from apportionment.partition.recursive_bisection import RecursiveBisection
 import geopandas as gpd
@@ -53,15 +40,9 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     state_name = config['name']
     num_districts = config['districts']
 
-    # File paths - try year-specific subdirectory first, fall back to flat structure
-    state_lower = state_code.lower()
-    graph_file_new = Path(f'data/adjacency/{year}/{state_lower}_adjacency_{year}.pkl')
-    graph_file_old = Path(f'data/adjacency/{state_lower}_adjacency_{year}.pkl')
-    graph_file = str(graph_file_new if graph_file_new.exists() else graph_file_old)
-
-    tracts_file_new = Path(f'data/tracts/{year}/{state_lower}_tracts_{year}.parquet')
-    tracts_file_old = Path(f'data/raw/{state_lower}_tracts_{year}.parquet')
-    tracts_file = str(tracts_file_new if tracts_file_new.exists() else tracts_file_old)
+    # File paths (unified directory structure)
+    graph_file = str(get_adjacency_file(state_code, year))
+    tracts_file = str(get_tract_file(state_code, year))
 
     # Show progress bars for integration with parent script
     operation_pos = position
@@ -327,24 +308,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    # Select the correct STATE_CONFIG based on year
-    if args.year == '2020':
-        if STATE_CONFIG_2020 is None:
-            print("ERROR: config_2020.py not found. Cannot process 2020 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2020
-    elif args.year == '2010':
-        if STATE_CONFIG_2010 is None:
-            print("ERROR: config_2010.py not found. Cannot process 2010 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2010
-    elif args.year == '2000':
-        if STATE_CONFIG_2000 is None:
-            print("ERROR: config_2000.py not found. Cannot process 2000 data.")
-            sys.exit(1)
-        STATE_CONFIG = STATE_CONFIG_2000
-    else:
-        print(f"ERROR: Unknown year {args.year}")
+    # Load state configuration for the specified year
+    try:
+        STATE_CONFIG = get_state_config(args.year)
+    except (ValueError, ImportError) as e:
+        print(f"ERROR: Could not load config for year {args.year}: {e}")
         sys.exit(1)
 
     run_state_redistricting(args.state, STATE_CONFIG, args.year, args.output_dir, args.print_only, args.debug, args.dpi, args.position, args.reset)
