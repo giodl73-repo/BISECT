@@ -174,6 +174,33 @@ docs/                      # Documentation
 
 **For full documentation**: See `docs/SKILLS.md`
 
+## Enhancement Manager Tool
+
+A web-based tool for viewing, filtering, searching, and editing enhancement files.
+
+**Location**: `tools/enhancement_manager/`
+
+**Features**:
+- View all enhancements in filterable grid (status, search)
+- Edit enhancement markdown inline with live preview
+- Update status with automatic INDEX.md synchronization
+- Statistics dashboard (totals, completion rate, complexity)
+
+**Usage**:
+```bash
+cd tools/enhancement_manager
+run.bat  # Opens http://localhost:5000 in browser
+```
+
+**Why use it**:
+- Faster than opening individual markdown files
+- Quick filtering by status (Completed/In Progress/Planned)
+- Search across all enhancements
+- Inline editing with validation
+- Auto-updates INDEX.md on status changes
+
+**Documentation**: See `tools/enhancement_manager/README.md`
+
 ## Coding Patterns & Conventions
 
 **For comprehensive coding patterns, see `docs/CODING_PATTERNS.md`**

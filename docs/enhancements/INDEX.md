@@ -44,10 +44,11 @@ Master index of all congressional redistricting pipeline enhancements.
 |---|-------|--------|-------|
 | [8](active/08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](active/08_block_level_data.md) |
 
-### 📋 Planned (11 enhancements)
+### 📋 Planned (12 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
+| [35](active/35_enhancement_manager_app.md) | Enhancement Manager Web App | Medium | [View](active/35_enhancement_manager_app.md) |
 | [10](active/10_per_state_urban.md) | Per-State Urban Area Processing | Medium | [View](active/10_per_state_urban.md) |
 | [11](active/11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Low | [View](active/11_baseline_comparison.md) |
 | [32](active/32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](active/32_reock_compactness_metric.md) |
