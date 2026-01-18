@@ -151,10 +151,16 @@ class ProgressCoordinator:
 
                 if phase == 'postprocess':
                     # Post-processing phase - show tasks not states
-                    year_line = f"[{year}] {bar} {phase_desc}"
+                    if completed >= total:
+                        year_line = f"[{year}] {bar} {phase_desc} COMPLETE"
+                    else:
+                        year_line = f"[{year}] {bar} {phase_desc}"
                 else:
                     # State processing phase
-                    year_line = f"[{year}] {bar} {completed}/{total} states complete"
+                    if completed >= total:
+                        year_line = f"[{year}] {bar} {completed}/{total} states COMPLETE"
+                    else:
+                        year_line = f"[{year}] {bar} {completed}/{total} states complete"
 
                 lines.append(year_line)
 
