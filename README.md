@@ -248,7 +248,7 @@ pytest tests/e2e/ -v
 
 ### Test Coverage
 
-**Total: 151 tests in ~18 seconds**
+**Total: 187 tests in ~23 seconds**
 
 | Category | Tests | Coverage |
 |----------|-------|----------|

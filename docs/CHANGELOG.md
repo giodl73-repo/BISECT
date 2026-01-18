@@ -17,6 +17,21 @@ All notable changes to the Congressional Redistricting project.
 ### Added
 - Nothing pending
 
+## 2026-01-17 - Complete E2E Test Coverage Expansion
+
+### Added
+- **Expanded E2E tests to cover all 26 pipeline scripts** (from 20 tests to 56 tests)
+  - Added 18 additional E2E tests for comprehensive pipeline coverage
+  - Increased pipeline script coverage from 46% (12/26) to 100% (26/26)
+  - New tests for: process_nation.py, visualize_national_rounds.py, run_state_redistricting.py, add_cities_to_districts.py, and 14 others
+  - **Total test suite: 187 tests in ~23 seconds** (110 unit, 21 integration, 56 E2E)
+
+### Changed
+- Updated test documentation to reflect expanded coverage
+- Enhanced E2E test utilities for better script validation
+
+**Motivation**: Comprehensive test coverage ensures all pipeline scripts are validated, preventing regressions in critical components like national post-processing.
+
 ## 2026-01-17 - Pipeline Error Logging System (Enhancement 39)
 
 ### Added
@@ -182,10 +197,10 @@ All notable changes to the Congressional Redistricting project.
 - Replaced 20 old minimal dashboard tests with comprehensive artifact validation
 
 ### Performance
-- **Total test suite**: 151 tests in ~18 seconds
+- **Total test suite**: 151 tests in ~18 seconds (as of Jan 16; expanded to 187 tests on Jan 17)
 - **Unit tests**: 110 tests in 7 seconds (95%+ coverage)
 - **Integration tests**: 21 tests in 3 seconds (85%+ coverage)
-- **E2E tests**: 20 tests in 8 seconds (90%+ coverage)
+- **E2E tests**: 20 tests in 8 seconds (expanded to 56 tests on Jan 17)
 
 ### Files Added
 - `tests/unit/` - 7 test files (110 tests)

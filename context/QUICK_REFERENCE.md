@@ -38,9 +38,9 @@ start outputs/us_2020_v1/index.html                 # Specific run
 
 ### Tests
 ```bash
-pytest tests/ -v                 # All (18s)
-pytest tests/unit/ -v            # Unit (7s)
-pytest tests/e2e/ -v             # E2E (8s)
+pytest tests/ -v                 # All 187 tests (~23s)
+pytest tests/unit/ -v            # Unit 110 tests (~7s)
+pytest tests/e2e/ -v             # E2E 56 tests (~10s)
 pytest tests/ --cov=src/apportionment --cov-report=html  # With coverage
 pytest tests/unit/test_file.py::test_func -v       # Specific test
 ```
@@ -211,7 +211,7 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 - Single state VT/DE: 30s-2min
 - Single state CA/TX: 3-5min
 
-**Tests**: All ~18s, unit ~7s, integration ~5s, e2e ~8s
+**Tests**: 187 total (~23s): unit 110 (~7s), integration 21 (~3s), e2e 56 (~10s)
 
 ## Skills (Claude Code)
 

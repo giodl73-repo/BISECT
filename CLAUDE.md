@@ -38,7 +38,7 @@ web/                  # dashboard.html, master_dashboard.html
 artifacts/            # papers/, presentations/, guides/ (LaTeX)
 context/              # AI context (enhancements/, archive/, patterns, architecture)
 docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, etc.)
-tests/                # unit/ (110), integration/ (21), e2e/ (20) - 18s total
+tests/                # unit/ (110), integration/ (21), e2e/ (56) - 187 total, ~23s
 ```
 
 ## Git Rules
@@ -88,8 +88,8 @@ python scripts/web/generate_master_dashboard.py
 deploy_web.bat --year 2020 --version v1
 
 # Tests
-pytest tests/ -v           # All (18s)
-pytest tests/unit/ -v      # Unit only
+pytest tests/ -v           # All 187 tests (~23s)
+pytest tests/unit/ -v      # Unit only (110 tests)
 ```
 
 **See**: [context/QUICK_REFERENCE.md](context/QUICK_REFERENCE.md) for troubleshooting
@@ -131,6 +131,7 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 ## Recent Changes
 - **2026-01-17**: Error logging system (Enhancement 39) - Persistent error.log files for debugging
 - **2026-01-17**: Parallel multi-year pipeline (Enhancement 37) - 60-70% faster
+- **2026-01-17**: E2E tests expanded to 187 total (100% pipeline coverage)
 - **2026-01-16**: Test suite complete (151 tests, 18s) + test skills (Enhancement 34)
 - **2026-01-15**: Artifacts reorg (Enhancement 29), RBA formalization
 
