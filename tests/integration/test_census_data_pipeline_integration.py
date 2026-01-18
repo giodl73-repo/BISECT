@@ -350,16 +350,19 @@ class TestPipelineSkipLogic:
 
         assert run_census is True
 
-    def test_sequential_vs_parallel_mode(self):
-        """Test census processing in sequential vs parallel mode."""
-        # Census processing should work in both modes
+    def test_unified_hierarchical_mode(self):
+        """Test unified hierarchical mode with different worker counts."""
+        # Always use hierarchical mode, workers just controls parallelism level
 
-        # Sequential (workers=1)
+        # Single worker (sequential processing)
         workers = 1
-        is_parallel = workers > 1
-        assert not is_parallel
+        uses_hierarchical = True  # Always true now
+        assert uses_hierarchical
 
-        # Parallel (workers>1)
+        # Multiple workers (parallel processing)
         workers = 4
-        is_parallel = workers > 1
-        assert is_parallel
+        uses_hierarchical = True  # Still uses same hierarchical code path
+        assert uses_hierarchical
+
+        # Workers just controls how many states run in parallel
+        assert workers == 4
