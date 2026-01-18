@@ -5,6 +5,9 @@ REM Sets up PATH, environment variables, and window configuration
 REM Set window title
 title Congressional Redistricting - Development Environment
 
+REM Set window color (navy blue background, bright white text)
+color 1F
+
 REM Set window size (120 columns x 40 lines, buffer 120x3000)
 mode con: cols=120 lines=40
 
