@@ -817,6 +817,7 @@ print(f"-> Next step")   # Works everywhere
 
 ## Recent Major Changes (Jan 2026)
 
+- **Parallel Multi-Year Pipeline** (Enhancement 37 - Jan 17, 2026): Implemented parallel execution for `--year all` mode running 2020, 2010, 2000 concurrently with hierarchical progress display; ProcessPoolExecutor-based parallelism; worker allocation algorithm (6 workers → [2,2,2]); created terminal_utils.py and progress_coordinator.py for ASCII-based hierarchical progress bars; Windows-compatible display with tree connectors (`+-`, `` `- ``); expected 60% time reduction (7.5-13.5 hours → 3-5 hours); parallel is now the ONLY mode for `--year all`
 - **Test Execution & Debugging Skills** (Enhancement 34 - Jan 16, 2026): Created `/run-tests` and `/debug-tests` skills for intelligent test execution and systematic debugging; automatic detection of 6 common failure patterns (imports, mocks, assertions, Playwright, etc.); guided troubleshooting with specific fix suggestions; 50-70% reduction in debugging time; total skills: 29 → 31
 - **Test Suite Complete** (Enhancements 30, 31, 33 - Jan 16, 2026): Comprehensive test coverage with 151 tests (110 unit, 21 integration, 20 E2E dashboard) running in ~18 seconds; mock data generators for all pipeline stages; artifact validation tests catch pipeline failures; 90%+ code coverage across all components; fully automated E2E dashboard testing with mock runs
 - **Artifacts Directory Organization** (Enhancement 29, Jan 16, 2026): Reorganized papers, presentations, and guides into top-level artifacts/ directory; implemented master artifacts/compile.bat with --reset and --skip-figures flag threading; fixed all visualization \\n literal text issues; removed yellow stats boxes; reduced district label font sizes; added master dashboard Artifacts tab with PDF viewer
@@ -859,6 +860,7 @@ See `docs/enhancements/INDEX.md` for detailed specifications of all enhancements
 - ✅ Enhancement 17: Artifact Naming Standardization (Jan 14, 2026)
 - ✅ Enhancement 18: Figure Quality Improvement (Jan 15, 2026)
 - ✅ Enhancement 29: Artifacts Dashboard Tab (Jan 16, 2026)
+- ✅ Enhancement 37: Parallel Multi-Year Pipeline (Jan 17, 2026)
 
 **In Progress:**
 - 🔄 Enhancement 8: Block-Level Data Support (Phase 0 Complete for 2010, Partial for 2000)

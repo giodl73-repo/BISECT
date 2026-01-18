@@ -12,7 +12,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 
 ## Status Overview
 
-### ✅ Completed (25 enhancements)
+### ✅ Completed (26 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -41,6 +41,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [33](33_dashboard_mock_data.md) | Dashboard Mock Data Integration | Jan 16, 2026 | [View](33_dashboard_mock_data.md) |
 | [34](34_test_execution_skills.md) | Test Execution and Debugging Skills | Jan 16, 2026 | [View](34_test_execution_skills.md) |
 | [35](35_enhancement_manager_app.md) | Enhancement Manager Web App | Jan 17, 2026 | [View](35_enhancement_manager_app.md) |
+| [37](active/37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | Jan 17, 2026 | [View](active/37_parallel_multi_year_pipeline.md) |
 
 ### 🔄 In Progress (1 enhancement)
 
@@ -48,11 +49,10 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (10 enhancements)
+### 📋 Planned (9 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
-| [37](active/37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | High | [View](active/37_parallel_multi_year_pipeline.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
 | [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
 | [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](16_metro_2000.md) |
