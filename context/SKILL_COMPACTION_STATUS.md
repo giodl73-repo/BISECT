@@ -5,9 +5,9 @@
 ## Goal
 Compact all 31 Claude Code skills to AI-optimized format (40-60% line reduction while preserving 100% information).
 
-## Status: 7 of 31 Complete (23%)
+## Status: 10 of 31 Complete (32%)
 
-### ✅ Completed (7 skills)
+### ✅ Completed (10 skills)
 
 | Skill | Before | After | Reduction |
 |-------|--------|-------|-----------|
@@ -18,7 +18,10 @@ Compact all 31 Claude Code skills to AI-optimized format (40-60% line reduction 
 | run-tests | 455 | 188 | 59% |
 | debug-tests | 656 | 262 | 60% |
 | pipeline-debug | 290 | 121 | 58% |
-| **Total** | **2,492** | **1,178** | **53% avg** |
+| data-validate | 315 | 149 | 53% |
+| create-state-map | 430 | 147 | 66% |
+| run-analysis-only | 205 | 96 | 53% |
+| **Total** | **3,442** | **1,570** | **54% avg** |
 
 ### 🔄 In Progress (0 skills)
 None - awaiting next session
