@@ -20,10 +20,10 @@ class TestCensusDataPhaseIntegration:
 
     def test_census_phase_runs_before_states(self):
         """Test that census data processing runs before state processing."""
-        # Phase order should be: census_data -> states -> nation
-        phases = ['census_data', 'states', 'nation']
+        # Phase order should be: data -> states -> nation
+        phases = ['data', 'states', 'nation']
 
-        census_idx = phases.index('census_data')
+        census_idx = phases.index('data')
         states_idx = phases.index('states')
 
         assert census_idx < states_idx
