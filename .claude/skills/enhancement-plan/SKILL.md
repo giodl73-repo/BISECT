@@ -31,10 +31,11 @@ Read the following files to understand project structure and patterns:
 
 **Required reading:**
 1. `CLAUDE.md` - Project overview, quick reference, recent changes
-2. `docs/ARCHITECTURE.md` - System design, data flow, component relationships
-3. `docs/CODING_PATTERNS.md` - Implementation patterns, progress reporting, file naming
-4. `docs/enhancements/INDEX.md` - Review similar past enhancements for patterns
-5. `docs/enhancements/templates/enhancement_template.md` - Standard template
+2. `docs/ENHANCEMENT_WORKFLOW.md` - Detailed 6-phase workflow process (research, planning, implementation, testing, documentation, completion)
+3. `docs/ARCHITECTURE.md` - System design, data flow, component relationships
+4. `docs/CODING_PATTERNS.md` - Implementation patterns, progress reporting, file naming
+5. `docs/enhancements/INDEX.md` - Review similar past enhancements for patterns
+6. `docs/enhancements/templates/enhancement_template.md` - Standard template
 
 **Use Grep to find:**
 - Similar past enhancements using keywords from user request
