@@ -564,9 +564,9 @@ def create_argument_parser():
                         help='Skip political analysis steps')
     parser.add_argument('--skip-demographic', action='store_true',
                         help='Skip demographic analysis steps')
-    parser.add_argument('--stages', type=str, nargs='+', default=['census_data', 'states', 'nation'],
-                        choices=['census_data', 'states', 'nation'],
-                        help='Which pipeline stages to run (default: all three). Examples: --stages census_data (data only), --stages states nation (skip data processing), --stages nation (post-processing only)')
+    parser.add_argument('--stages', type=str, nargs='+', default=['data', 'states', 'nation'],
+                        choices=['data', 'states', 'nation'],
+                        help='Which pipeline stages to run (default: all three). Examples: --stages data (data only), --stages states nation (skip data processing), --stages nation (post-processing only)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
     parser.add_argument('-r', '--reset', action='store_true',
@@ -869,7 +869,7 @@ def main():
         processes = {}
 
         # Track phase for each year
-        year_phase = {}  # Will be set to: 'census_data', 'states', 'ready_for_nation', 'nation', 'failed'
+        year_phase = {}  # Will be set to: 'data', 'states', 'ready_for_nation', 'nation', 'failed'
 
         # Determine output directories for each year
         year_output_dirs = {}
@@ -907,7 +907,7 @@ def main():
             year_census_complete[year] = census_complete
 
             # Determine initial phase based on --stages and census data completion
-            if 'census_data' not in args.stages:
+            if 'data' not in args.stages:
                 # Skip census data processing
                 if 'states' in args.stages:
                     year_phase[year] = 'ready_for_states'
@@ -916,7 +916,7 @@ def main():
                     year_phase[year] = 'ready_for_nation'
             elif not census_complete:
                 # Need to process census data for this year
-                year_phase[year] = 'census_data'
+                year_phase[year] = 'data'
             elif 'states' in args.stages:
                 # Census data already complete, ready for states
                 year_phase[year] = 'ready_for_states'
@@ -925,7 +925,7 @@ def main():
                 year_phase[year] = 'ready_for_nation'
 
         # Launch census data processing for years that need it
-        any_census_needed = any(phase == 'census_data' for phase in year_phase.values())
+        any_census_needed = any(phase == 'data' for phase in year_phase.values())
 
         if any_census_needed:
             print("\n")
@@ -934,7 +934,7 @@ def main():
             print("="*70)
 
             for year in year_queue:
-                if year_phase[year] == 'census_data':
+                if year_phase[year] == 'data':
                     print(f"  [{year}] Census data processing needed")
                 else:
                     print(f"  [{year}] Census data already complete (all {resolution}-level stages done)")
@@ -943,7 +943,7 @@ def main():
 
             # Launch census data processing processes
             for i, year in enumerate(year_queue):
-                if year_phase[year] == 'census_data':
+                if year_phase[year] == 'data':
                     # Build command for process_census_data.py
                     census_script = scripts_dir.parent / 'data' / 'process_census_data.py'
 
