@@ -4,7 +4,7 @@
 
 ## Overview
 
-**Test Suite**: 169 tests (110 unit, 21 integration, 38 E2E) - ~20s total
+**Test Suite**: 187 tests (110 unit, 21 integration, 56 E2E) - ~23s total
 
 **Types**:
 1. **Unit** (110) - Functions/classes in isolation, mock I/O - ~7s
@@ -40,9 +40,9 @@ tests/
 ├─ integration/             # 21 tests, 5s
 │  ├─ pipeline/             # State processing, orchestration
 │  └─ analysis/             # Political, demographic, compactness
-└─ e2e/                     # 38 tests, 10s
+└─ e2e/                     # 56 tests, 11s
    ├─ test_redistricting_pipeline.py  # Full VT/DE runs
-   ├─ test_pipeline_scripts.py        # Script syntax/CLI validation (18 tests)
+   ├─ test_pipeline_scripts.py        # ALL 26 pipeline scripts (36 tests)
    ├─ test_dashboard.py               # HTML generation
    └─ test_visual_regression.py       # UI consistency
 ```
@@ -138,6 +138,8 @@ pytest tests/e2e/ -v
 
 ## Pipeline Script E2E Tests
 
+**Coverage**: ✅ ALL 26 pipeline scripts (36 tests, 100% coverage)
+
 **Purpose**: Catch bugs in command-line pipeline scripts
 
 **Why Needed**: Previous tests used mocks instead of real scripts, missing:
@@ -202,9 +204,47 @@ def test_output_directory_structure():
 2. **Missing Args**: `create_rounds_hierarchy(run_dir, num_districts)` → Missing state_code, census_year
 3. **Wrong Directory**: Writing to root instead of `demographic/` subdirectory
 
+**Scripts Tested (26/26)**:
+
+*Core Pipeline*:
+- process_single_state.py
+- process_nation.py ⚠️ (V6 failure point)
+- run_complete_redistricting.py
+- run_state_redistricting.py
+- add_cities_to_districts.py
+
+*Analysis*:
+- analyze_districts.py (political)
+- analyze_district_demographics.py
+- analyze_district_compactness.py
+- create_final_district_summary.py
+
+*National Aggregation*:
+- create_us_aggregate.py
+- create_us_rounds_hierarchy.py
+- visualize_national_districts.py
+- visualize_national_rounds.py ⚠️ (V6 failing script)
+
+*Visualization* (9):
+- visualize_individual_districts.py
+- visualize_all_rounds.py
+- visualize_partisan_lean.py
+- visualize_district_demographics.py
+- visualize_compactness.py
+- visualize_metro_areas.py
+- visualize_districts.py
+- visualize_split.py
+
+*Utilities*:
+- create_single_district_states.py
+- export_rounds_to_csv.py
+- cleanup_district_summary.py
+- fill_missing_cities.py
+- fix_2010_missing_outputs.py
+
 **Run**:
 ```bash
-# All pipeline script tests
+# All pipeline script tests (36 tests, ~8s)
 pytest tests/e2e/test_pipeline_scripts.py -v
 
 # Just syntax checks (fast)
@@ -212,6 +252,10 @@ pytest tests/e2e/test_pipeline_scripts.py -k "imports" -v
 
 # Test specific script
 pytest tests/e2e/test_pipeline_scripts.py::TestAnalyzeDistrictDemographics -v
+
+# High priority only (scripts involved in V6 failure)
+pytest tests/e2e/test_pipeline_scripts.py::TestProcessNation -v
+pytest tests/e2e/test_pipeline_scripts.py::TestVisualizeNationalRounds -v
 ```
 
 ## Test Requirements (When Adding Code)
