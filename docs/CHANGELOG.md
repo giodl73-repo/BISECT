@@ -6,9 +6,9 @@ All notable changes to the Congressional Redistricting project.
 
 ## Related Documentation
 
-- **[Enhancement Index](enhancements/INDEX.md)** - Master index of all enhancements (detailed specifications and implementation plans)
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architectural decisions
-- **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns
+- **[Enhancement Index](../context/enhancements/INDEX.md)** - Master index of all enhancements (detailed specifications and implementation plans)
+- **[ARCHITECTURE.md](../context/ARCHITECTURE.md)** - System design and architectural decisions
+- **[CODING_PATTERNS.md](../context/CODING_PATTERNS.md)** - Implementation patterns
 
 **Note**: This changelog tracks historical changes chronologically. For detailed enhancement specifications and future roadmap, see `enhancements/INDEX.md`.
 
