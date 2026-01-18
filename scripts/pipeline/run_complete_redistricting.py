@@ -423,14 +423,18 @@ def run_single_year_pipeline(year, workers_for_year, args):
 
         # Run state processing
         if not args.print_only:
-            result = subprocess.run(cmd_states, capture_output=False)
+            # Set environment variable to suppress child progress bars
+            env = os.environ.copy()
+            env['MULTI_YEAR_SUBPROCESS'] = '1'
+
+            result = subprocess.run(cmd_states, capture_output=False, env=env)
             if result.returncode != 0:
                 error_msg = f"State processing failed with code {result.returncode}"
                 print(f"\n[{year}] FAILED: {error_msg}")
                 return (year, False, error_msg)
 
             # Run post-processing
-            result = subprocess.run(cmd_post, capture_output=False)
+            result = subprocess.run(cmd_post, capture_output=False, env=env)
             if result.returncode != 0:
                 error_msg = f"Post-processing failed with code {result.returncode}"
                 print(f"\n[{year}] FAILED: {error_msg}")
@@ -892,6 +896,9 @@ def main():
     # STEP 1: PROCESS ALL 50 STATES
     # =========================================================================
     if not args.skip_states:
+        # Check if we're running as a subprocess of multi-year mode
+        is_multi_year_subprocess = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
+
         # Get list of states to process
         if args.states:
             states_to_process = [s.upper() for s in args.states]
@@ -907,9 +914,13 @@ def main():
                 reverse=True
             )
 
-        print(f"\nProcessing {len(states_to_process)} states in {mode} mode...")
-        print()
-        sys.stdout.flush()
+        if not is_multi_year_subprocess:
+            print(f"\nProcessing {len(states_to_process)} states in {mode} mode...")
+            print()
+            sys.stdout.flush()
+        else:
+            # Running as subprocess - minimal output
+            print(f"[{args.year}] Processing {len(states_to_process)} states with {args.workers} workers...")
 
         # Track results
         successful = []
@@ -918,47 +929,128 @@ def main():
         results = {}
 
         if mode == 'sequential':
-            # SEQUENTIAL MODE: Process one state at a time
-            # USA-level progress bar at position 0
-            mode_label = " [Edge-Weighted]" if args.partition_mode == 'edge-weighted' else ""
-            with tqdm(states_to_process,
-                      desc=f"USA Redistricting{mode_label} - {args.year} Census",
-                      unit="state",
-                      ncols=120,
-                      position=0,
-                      leave=True,
-                      dynamic_ncols=False,
-                      file=sys.stderr) as usa_pbar:
+            if not is_multi_year_subprocess:
+                # SEQUENTIAL MODE: Process one state at a time
+                # USA-level progress bar at position 0
+                mode_label = " [Edge-Weighted]" if args.partition_mode == 'edge-weighted' else ""
+                with tqdm(states_to_process,
+                          desc=f"USA Redistricting{mode_label} - {args.year} Census",
+                          unit="state",
+                          ncols=120,
+                          position=0,
+                          leave=True,
+                          dynamic_ncols=False,
+                          file=sys.stderr) as usa_pbar:
 
-                for state_code in usa_pbar:
+                    for state_code in usa_pbar:
+                        config = STATE_CONFIG[state_code]
+                        state_name = config['name']
+
+                        # Update USA progress bar
+                        usa_pbar.set_description(f"USA Redistricting - {args.year} Census: {state_name}")
+
+                        # NOTE: Removed blanket skip check - now using per-stage skip logic
+                        # process_single_state.py handles per-stage checks
+
+                        # Process state at position 1 (below USA bar)
+                        success = process_state_sequential(
+                            state_code, output_dir, STATE_CONFIG,
+                            year=args.year,
+                            skip_existing=not args.reprocess,
+                            print_only=args.print_only,
+                            debug=args.debug,
+                            position=1,
+                            dpi=args.dpi,
+                            run_analysis=args.run_analysis,
+                            partition_mode=args.partition_mode
+                        )
+
+                        if success:
+                            successful.append(state_code)
+                            usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
+                        else:
+                            failed.append(state_code)
+                            usa_pbar.set_postfix_str(f"✗ {len(failed)} failed")
+            else:
+                # Running as subprocess - sequential without progress bars
+                for i, state_code in enumerate(states_to_process, 1):
                     config = STATE_CONFIG[state_code]
                     state_name = config['name']
 
-                    # Update USA progress bar
-                    usa_pbar.set_description(f"USA Redistricting - {args.year} Census: {state_name}")
+                    print(f"[{args.year}] Processing {i}/{len(states_to_process)}: {state_name}", flush=True)
 
-                    # NOTE: Removed blanket skip check - now using per-stage skip logic
-                    # process_single_state.py handles per-stage checks
+                    scripts_dir = Path(__file__).parent
+                    flags = []
+                    if args.print_only:
+                        flags.append('--print-only')
+                    if args.debug:
+                        flags.append('--debug')
+                    if args.run_analysis:
+                        flags.append('--run-analysis')
+                    if args.partition_mode != 'edge-weighted':
+                        flags.append(f'--partition-mode {args.partition_mode}')
+                    flags_str = ' '.join(flags)
 
-                    # Process state at position 1 (below USA bar)
-                    success = process_state_sequential(
-                        state_code, output_dir, STATE_CONFIG,
-                        year=args.year,
-                        skip_existing=not args.reprocess,
-                        print_only=args.print_only,
-                        debug=args.debug,
-                        position=1,
-                        dpi=args.dpi,
-                        run_analysis=args.run_analysis,
-                        partition_mode=args.partition_mode
-                    )
+                    states_dir = output_dir / 'states'
+                    state_dir = states_dir / state_name.lower().replace(' ', '_')
+                    cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --dpi {args.dpi} {flags_str}'.strip()
 
-                    if success:
+                    env = os.environ.copy()
+                    env['DPI'] = str(args.dpi)
+
+                    result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
+                    if result.returncode == 0:
                         successful.append(state_code)
-                        usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
+                        print(f"[{args.year}] ✓ Completed {len(successful)}/{len(states_to_process)}", flush=True)
                     else:
                         failed.append(state_code)
-                        usa_pbar.set_postfix_str(f"✗ {len(failed)} failed")
+                        print(f"[{args.year}] ✗ Failed: {state_name}", flush=True)
+
+        elif is_multi_year_subprocess:
+            # Running as subprocess of multi-year mode - no progress bars
+            # Just run the states quietly using ProcessPoolExecutor
+            from concurrent.futures import ProcessPoolExecutor, as_completed
+
+            def process_state_simple(state_code):
+                """Process a single state without progress bars."""
+                config = STATE_CONFIG[state_code]
+                state_name = config['name']
+                states_dir = output_dir / 'states'
+                state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+                scripts_dir = Path(__file__).parent
+                flags = []
+                if args.print_only:
+                    flags.append('--print-only')
+                if args.debug:
+                    flags.append('--debug')
+                if args.run_analysis:
+                    flags.append('--run-analysis')
+                if args.partition_mode != 'edge-weighted':
+                    flags.append(f'--partition-mode {args.partition_mode}')
+                flags_str = ' '.join(flags)
+
+                cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --dpi {args.dpi} {flags_str}'.strip()
+
+                env = os.environ.copy()
+                env['DPI'] = str(args.dpi)
+
+                result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
+                return (state_code, result.returncode == 0)
+
+            # Process states in parallel without progress bars
+            with ProcessPoolExecutor(max_workers=min(args.workers, 8)) as executor:
+                futures = {executor.submit(process_state_simple, state): state for state in states_to_process}
+
+                for future in as_completed(futures):
+                    state_code = futures[future]
+                    state_code_result, success = future.result()
+                    if success:
+                        successful.append(state_code_result)
+                        print(f"[{args.year}] Completed {len(successful)}/{len(states_to_process)} states", flush=True)
+                    else:
+                        failed.append(state_code_result)
+                        print(f"[{args.year}] Failed: {STATE_CONFIG[state_code_result]['name']}", flush=True)
 
         else:
             # PARALLEL MODE: Process multiple states at once
