@@ -108,8 +108,8 @@ def main():
         # Political analysis (only if compatible election data exists for this census year)
         can_do_political = (args.year == '2020' and election_data_2020.exists())
         if can_do_political:
-            political_analyze = Path(__file__).parent.parent / 'political' / 'analyze_districts.py'
-            political_visualize = Path(__file__).parent.parent / 'political' / 'visualize_partisan_lean.py'
+            political_analyze = Path(__file__).parent / 'analyze_districts.py'
+            political_visualize = Path(__file__).parent / 'visualize_partisan_lean.py'
 
             steps.append((
                 "Political analysis",
@@ -122,8 +122,8 @@ def main():
 
         # Demographic analysis (only if demographic data exists for this census year)
         if demographic_data.exists():
-            demographic_analyze = Path(__file__).parent.parent / 'demographic' / 'analyze_district_demographics.py'
-            demographic_visualize = Path(__file__).parent.parent / 'demographic' / 'visualize_district_demographics.py'
+            demographic_analyze = Path(__file__).parent / 'analyze_district_demographics.py'
+            demographic_visualize = Path(__file__).parent / 'visualize_district_demographics.py'
 
             steps.append((
                 "Demographic analysis",
@@ -142,7 +142,7 @@ def main():
         ))
 
         # Metro area visualization (if state has major metros)
-        metro_script = Path(__file__).parent.parent / 'visualization' / 'visualize_metro_areas.py'
+        metro_script = Path(__file__).parent / 'visualize_metro_areas.py'
         steps.append((
             "Metro area maps",
             f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --dpi {args.dpi}'.strip()
