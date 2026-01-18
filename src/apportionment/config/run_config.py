@@ -37,6 +37,7 @@ class AlgorithmConfig:
     """Algorithm configuration and parameters."""
     partition_mode: str  # "edge_weighted" or "unweighted"
     data_level: str  # "tract" or "block"
+    minimum_boundary_length: float = 10.0  # Minimum shared boundary length (meters) to filter tiny adjacencies
 
 
 @dataclass
@@ -89,6 +90,7 @@ class VersionConfig:
         version: str,
         partition_mode: str,
         data_level: str = "tract",
+        minimum_boundary_length: float = 10.0,
         description: str = "",
         **pipeline_kwargs
     ) -> 'VersionConfig':
@@ -99,6 +101,7 @@ class VersionConfig:
             version: Version identifier (e.g., "edge_weighted", "v1")
             partition_mode: "edge_weighted" or "unweighted"
             data_level: "tract" or "block"
+            minimum_boundary_length: Minimum shared boundary length (meters) to filter tiny adjacencies
             description: Human-readable description of this variant
             **pipeline_kwargs: Pipeline settings (skip_political, dpi, etc.)
 
@@ -107,7 +110,8 @@ class VersionConfig:
         """
         algorithm = AlgorithmConfig(
             partition_mode=partition_mode,
-            data_level=data_level
+            data_level=data_level,
+            minimum_boundary_length=minimum_boundary_length
         )
 
         pipeline = PipelineConfig(**pipeline_kwargs)
@@ -145,6 +149,7 @@ class RunConfig:
         election_year: int,
         partition_mode: str,
         data_level: str = "tract",
+        minimum_boundary_length: float = 10.0,
         run_type: str = "production",
         scope: str = "us",
         states: List[str] = None,
@@ -161,6 +166,7 @@ class RunConfig:
             election_year: Election year for political data
             partition_mode: "edge_weighted" or "unweighted"
             data_level: "tract" or "block"
+            minimum_boundary_length: Minimum shared boundary length (meters) to filter tiny adjacencies
             run_type: "production", "experiment", or "test"
             scope: "us" or "state"
             states: List of state names or ["all"]
@@ -188,7 +194,8 @@ class RunConfig:
 
         algorithm = AlgorithmConfig(
             partition_mode=partition_mode,
-            data_level=data_level
+            data_level=data_level,
+            minimum_boundary_length=minimum_boundary_length
         )
 
         pipeline = PipelineConfig(**pipeline_kwargs)

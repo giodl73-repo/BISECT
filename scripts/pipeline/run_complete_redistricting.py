@@ -578,6 +578,8 @@ def create_argument_parser():
                         help='Enable debug mode with progress delays')
     parser.add_argument('-pm', '--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
                         help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
+    parser.add_argument('--minimum-boundary-length', type=float, default=10.0,
+                        help='Minimum shared boundary length (meters) to filter tiny adjacencies. Eliminates unrealistic corner touches. (default: 10, range: 0-100)')
     parser.add_argument('-rt', '--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
                         help='Run type: "production" (outputs/v{version}/{year}/), "experiment" (outputs/experiments/{experiment_name}/), or "test" (outputs/dev/) (default: production)')
     parser.add_argument('--experiment-name', type=str,
@@ -676,6 +678,7 @@ def create_config_files(args, output_dir):
         election_year=int(args.election_year),
         partition_mode=args.partition_mode.replace('-', '_'),  # 'edge-weighted' -> 'edge_weighted'
         data_level='tract',  # Currently always tract-level
+        minimum_boundary_length=args.minimum_boundary_length,
         run_type=args.run_type,
         scope='us' if not args.states else 'state',
         states=args.states if args.states else ['all'],
@@ -701,6 +704,7 @@ def create_config_files(args, output_dir):
             version=args.version,
             partition_mode=args.partition_mode.replace('-', '_'),
             data_level='tract',
+            minimum_boundary_length=args.minimum_boundary_length,
             description=f"Redistricting variant: {args.version}",
             skip_political=args.skip_political,
             skip_demographic=args.skip_demographic,
@@ -750,6 +754,7 @@ def main():
                 version=args.version,
                 partition_mode=args.partition_mode.replace('-', '_'),
                 data_level='tract',
+                minimum_boundary_length=args.minimum_boundary_length,
                 description=f"Redistricting variant: {args.version}",
                 skip_political=args.skip_political,
                 skip_demographic=args.skip_demographic,
