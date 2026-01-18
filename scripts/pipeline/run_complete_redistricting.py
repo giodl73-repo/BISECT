@@ -689,6 +689,9 @@ def main():
             workers_per_year=workers_per_year
         )
 
+        # Track display lines for in-place updates
+        num_display_lines = [0]
+
         if args.print_only:
             print("\n[PRINT-ONLY MODE] - Demonstrating progress display with mock data")
             print("\nInitial Progress Display:")
@@ -753,13 +756,13 @@ def main():
             # Don't actually run anything in print-only mode
             return 0
         else:
-            # Real execution mode
-            print("\nInitial Progress Display:")
-            coordinator.print_status()
-            print("\n" + "="*70)
-            print("RUNNING: All 3 years executing in parallel...")
-            print("This will take 3-5 hours. Progress updates when each year completes.")
-            print("="*70)
+            # Real execution mode - print initial display
+            print("\n")
+            display_text = coordinator.render()
+            lines = display_text.split('\n')
+            for line in lines:
+                print(line)
+            num_display_lines[0] = len(lines)
             sys.stdout.flush()
 
         # Start timestamp
@@ -799,6 +802,25 @@ def main():
         display_lock = threading.Lock()
         last_display_time = [time.time()]  # Mutable container for thread sharing
 
+        def clear_and_update_display(coordinator):
+            """Clear previous display and show updated progress."""
+            # Move cursor up to overwrite previous display
+            if num_display_lines[0] > 0:
+                # ANSI escape: move cursor up N lines
+                print(f"\033[{num_display_lines[0]}A", end='', flush=True)
+
+            # Render the display
+            display_text = coordinator.render()
+            lines = display_text.split('\n')
+
+            # Print each line, clearing to end of line
+            for line in lines:
+                print(f"\r\033[K{line}")
+
+            # Track number of lines for next clear
+            num_display_lines[0] = len(lines)
+            sys.stdout.flush()
+
         def monitor_process(year, proc, coordinator):
             """Monitor a single year process and update coordinator."""
             try:
@@ -806,10 +828,6 @@ def main():
                     line = line.strip()
                     if not line:
                         continue
-
-                    # Debug: print raw line
-                    # sys.stderr.write(f"[DEBUG {year}] {line}\n")
-                    # sys.stderr.flush()
 
                     msg_type, data = parse_status_message(line)
                     if msg_type == 'YEAR':
@@ -819,14 +837,10 @@ def main():
                                 data['completed'],
                                 data['total']
                             )
-                            # Refresh display
+                            # Refresh display (throttled)
                             now = time.time()
                             if now - last_display_time[0] >= 1.0:
-                                print("\n" + "="*70, flush=True)
-                                print("PROGRESS UPDATE:", flush=True)
-                                print("="*70, flush=True)
-                                coordinator.print_status()
-                                print("="*70 + "\n", flush=True)
+                                clear_and_update_display(coordinator)
                                 last_display_time[0] = now
                     elif msg_type == 'WORKER':
                         with display_lock:
@@ -839,14 +853,10 @@ def main():
                                 data['stage_total'],
                                 data['stage_desc']
                             )
-                            # Refresh display
+                            # Refresh display (throttled)
                             now = time.time()
                             if now - last_display_time[0] >= 1.0:
-                                print("\n" + "="*70, flush=True)
-                                print("PROGRESS UPDATE:", flush=True)
-                                print("="*70, flush=True)
-                                coordinator.print_status()
-                                print("="*70 + "\n", flush=True)
+                                clear_and_update_display(coordinator)
                                 last_display_time[0] = now
             except Exception as e:
                 sys.stderr.write(f"[ERROR] Monitor thread for {year} died: {e}\n")
