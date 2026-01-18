@@ -722,7 +722,7 @@ def main():
 
     # Build year queue based on arguments
     if args.year == 'all':
-        year_queue = ['2000', '2010', '2020']
+        year_queue = ['2020', '2010', '2000']  # Priority order: newest to oldest
         multi_year_mode = True
         # Banner will be printed in parallel multi-year section
     else:
