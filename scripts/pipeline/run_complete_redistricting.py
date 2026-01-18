@@ -865,7 +865,7 @@ def main():
         processes = {}
 
         # Track phase for each year
-        year_phase = {}  # Will be set to: 'states', 'ready_for_nation', 'nation', 'failed'
+        year_phase = {}  # Will be set to: 'census_data', 'states', 'ready_for_nation', 'nation', 'failed'
 
         # Determine output directories for each year
         year_output_dirs = {}
@@ -877,9 +877,130 @@ def main():
             else:  # test
                 year_output_dirs[year] = version_dir / year
 
+        # =====================================================================
+        # PHASE 0: CENSUS DATA PROCESSING (if needed)
+        # =====================================================================
+        # Check for .downloads_complete marker and process census data if missing
+        year_census_complete = {}
+        census_processes = {}
+
+        for year in year_queue:
+            census_marker = year_output_dirs[year] / '.downloads_complete'
+            census_complete = census_marker.exists() and not args.reset
+            year_census_complete[year] = census_complete
+
+            if not census_complete and not args.skip_states:
+                # Need to process census data for this year
+                year_phase[year] = 'census_data'
+            elif args.skip_states:
+                # Skipping all processing
+                year_phase[year] = 'ready_for_nation'
+            else:
+                # Census data already complete, ready for states
+                year_phase[year] = 'ready_for_states'
+
+        # Launch census data processing for years that need it
+        any_census_needed = any(phase == 'census_data' for phase in year_phase.values())
+
+        if any_census_needed:
+            print("\n")
+            print("="*70)
+            print("CENSUS DATA PROCESSING")
+            print("="*70)
+
+            for year in year_queue:
+                if year_phase[year] == 'census_data':
+                    census_marker = year_output_dirs[year] / '.downloads_complete'
+                    status = "needed" if not census_marker.exists() else "forcing rebuild"
+                    print(f"  [{year}] Census data processing {status}")
+                else:
+                    print(f"  [{year}] Census data already complete (skipping)")
+            print("="*70)
+            print()
+
+            # Launch census data processing processes
+            for i, year in enumerate(year_queue):
+                if year_phase[year] == 'census_data':
+                    # Build command for process_census_data.py
+                    census_script = scripts_dir.parent / 'data' / 'process_census_data.py'
+
+                    cmd_census = [
+                        sys.executable,
+                        str(census_script),
+                        '--year', year,
+                        '--output-dir', str(year_output_dirs[year]),
+                        '--stages', 'tracts', 'adjacency', 'elections', 'demographics'
+                    ]
+
+                    if args.print_only:
+                        cmd_census.append('--dry-run')
+
+                    # Set environment for worker subprocess
+                    env = os.environ.copy()
+                    env['TQDM_POSITION'] = str(i)  # Assign position for STATUS protocol
+                    env['CENSUS_YEAR'] = year
+
+                    # Launch process
+                    proc = subprocess.Popen(
+                        cmd_census,
+                        stdout=subprocess.PIPE,
+                        stderr=sys.stderr,
+                        text=True,
+                        bufsize=1,
+                        env=env
+                    )
+                    census_processes[year] = proc
+
+            # Monitor census data processing with simple output
+            census_results = {}
+            for year, proc in census_processes.items():
+                # Read and forward stdout
+                for line in proc.stdout:
+                    print(f"[{year}] {line}", end='', flush=True)
+
+                proc.wait()
+                success = (proc.returncode == 0)
+                census_results[year] = success
+
+                if success:
+                    # Create .downloads_complete marker
+                    census_marker = year_output_dirs[year] / '.downloads_complete'
+                    census_marker.parent.mkdir(parents=True, exist_ok=True)
+                    census_marker.write_text(f"Census data processing completed: {datetime.now().isoformat()}\n")
+                    year_phase[year] = 'ready_for_states'
+                    print(f"\n[{year}] [OK] Census data processing complete\n")
+                else:
+                    year_phase[year] = 'failed'
+                    print(f"\n[{year}] [FAIL] Census data processing failed\n")
+
+            print("\n" + "="*70)
+            print("CENSUS DATA PROCESSING COMPLETE")
+            print("="*70)
+
+            # Check if any failed
+            failed_census = [year for year, success in census_results.items() if not success]
+            if failed_census:
+                print(f"\n[ERROR] Census data processing failed for: {', '.join(failed_census)}")
+                print("Cannot proceed with state processing.")
+                return 1
+
+            print("\nProceeding to state processing...")
+            print("="*70)
+            print()
+
+        # Update year_phase for years that already had complete census data
+        for year in year_queue:
+            if year_phase[year] == 'ready_for_states':
+                year_phase[year] = 'states'  # Ready to start state processing
+
         # Check for .states_complete marker file or --skip-states flag
         year_states_complete = {}
         for year in year_queue:
+            # Only check states if not already failed during census processing
+            if year_phase.get(year) == 'failed':
+                year_states_complete[year] = False
+                continue
+
             # Skip states if explicitly requested OR if marker file exists
             if args.skip_states:
                 states_complete = True
@@ -891,12 +1012,19 @@ def main():
                 if states_complete:
                     # Don't print in multi-year mode - would interfere with hierarchical display
                     year_phase[year] = 'ready_for_nation'  # Skip to nation processing
-                else:
+                elif year_phase.get(year) != 'failed':
+                    # Only set to 'states' if not failed
                     year_phase[year] = 'states'  # Need to run state processing
             year_states_complete[year] = states_complete
 
-        # Start year processes (skip if .states_complete marker exists)
+        # Start year processes (skip if .states_complete marker exists or census failed)
         for i, year in enumerate(year_queue):
+            # Skip if census processing failed for this year
+            if year_phase.get(year) == 'failed':
+                processes[year] = None
+                results[year] = {'success': False, 'error': 'Census data processing failed'}
+                continue
+
             if year_states_complete[year]:
                 # Skip state processing - go straight to national
                 processes[year] = None  # Will launch nation process immediately
