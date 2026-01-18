@@ -166,15 +166,20 @@ class ProgressCoordinator:
 
                 # Worker bars
                 num_workers = self.workers_per_year[year]
+                year_complete = (completed >= total)
+
                 for worker_id in range(num_workers):
                     worker_key = (year, worker_id)
-                    if worker_key in self.worker_status:
+                    is_last = (worker_id == num_workers - 1)
+                    connector = format_tree_connector(is_last, wide_terminal=self.wide_terminal)
+
+                    # If year is complete, show all workers as Idle
+                    if year_complete:
+                        worker_line = f"{connector}Worker {worker_id + 1}: Idle"
+                        lines.append(worker_line)
+                    elif worker_key in self.worker_status:
                         status = self.worker_status[worker_key]
                         status_type = status.get('type', 'state')
-
-                        # Tree connector
-                        is_last = (worker_id == num_workers - 1)
-                        connector = format_tree_connector(is_last, wide_terminal=self.wide_terminal)
 
                         if status_type == 'state':
                             # State processing worker
@@ -207,8 +212,6 @@ class ProgressCoordinator:
                             lines.append(worker_line)
                     else:
                         # Worker not yet started
-                        is_last = (worker_id == num_workers - 1)
-                        connector = format_tree_connector(is_last, wide_terminal=self.wide_terminal)
                         worker_line = f"{connector}Worker {worker_id + 1}: Idle"
                         lines.append(worker_line)
 
