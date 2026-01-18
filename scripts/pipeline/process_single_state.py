@@ -135,7 +135,7 @@ def main():
             ))
 
         # Compactness visualization (metrics already calculated)
-        compactness_script = Path(__file__).parent.parent / 'compactness' / 'visualize_compactness.py'
+        compactness_script = Path(__file__).parent / 'visualize_compactness.py'
         steps.append((
             "Compactness visualization",
             f'{sys.executable} {compactness_script} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
