@@ -36,7 +36,8 @@ src/apportionment/    # Library (partition/, data/, visualization/)
 scripts/              # Executables (pipeline/, political/, demographic/, compactness/, web/, config_*.py)
 web/                  # dashboard.html, master_dashboard.html
 artifacts/            # papers/, presentations/, guides/ (LaTeX)
-docs/                 # enhancements/, archive/
+context/              # AI context (enhancements/, archive/, patterns, architecture)
+docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, etc.)
 tests/                # unit/ (110), integration/ (21), e2e/ (20) - 18s total
 ```
 
@@ -45,7 +46,7 @@ tests/                # unit/ (110), integration/ (21), e2e/ (20) - 18s total
 
 ## Skills (31 total)
 **Common**: `/enhancement-{plan,implement}`, `/run-{redistricting,tests}`, `/debug-{tests,pipeline}`
-**See**: [docs/SKILLS.md](docs/SKILLS.md)
+**See**: [context/SKILLS.md](context/SKILLS.md)
 
 ## Coding Patterns
 
@@ -61,7 +62,7 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 - **Imports**: `from apportionment.partition...`, `from scripts.config_2020...`
 - **Windows**: ⚠️ ASCII ONLY (`[OK]`/`[FAIL]`/`->`) - NO Unicode (✓✗→•) → crashes CP1252
 
-**See**: [docs/CODING_PATTERNS.md](docs/CODING_PATTERNS.md) for full patterns
+**See**: [context/CODING_PATTERNS.md](context/CODING_PATTERNS.md) for full patterns
 
 ## Common Commands
 
@@ -81,11 +82,11 @@ pytest tests/ -v           # All (18s)
 pytest tests/unit/ -v      # Unit only
 ```
 
-**See**: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) for troubleshooting
+**See**: [context/QUICK_REFERENCE.md](context/QUICK_REFERENCE.md) for troubleshooting
 
 ## Enhancement Workflow (6 phases)
 1. **Research**: Review docs/archives/dependencies
-2. **Planning**: Create spec (docs/enhancements/active/), identify tests needed
+2. **Planning**: Create spec (context/enhancements/active/), identify tests needed
 3. **Implementation**: TodoWrite, follow patterns, **write tests as you code** (TDD)
 4. **Testing**: Automated tests (unit/integration/e2e/dashboard) → print-only → small state → multi-year
 5. **Documentation**: Update ALL affected docs (mandatory)
@@ -93,7 +94,7 @@ pytest tests/unit/ -v      # Unit only
 
 **CRITICAL**: Add tests for EVERY enhancement (unit/integration/e2e/dashboard) - use decision tree in workflow doc.
 
-**See**: [docs/ENHANCEMENT_WORKFLOW.md](docs/ENHANCEMENT_WORKFLOW.md)
+**See**: [context/ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md)
 
 ## Test Requirements (MANDATORY)
 ```
@@ -134,10 +135,10 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 
 ## Documentation
 **Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md)
-**System**: [ARCHITECTURE.md](docs/ARCHITECTURE.md), [RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)
-**Dev**: [CODING_PATTERNS.md](docs/CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](docs/ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](docs/CONTRIBUTING.md)
-**Ref**: [QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [SKILLS.md](docs/SKILLS.md), [DATA_FORMATS.md](docs/DATA_FORMATS.md), [TESTING.md](docs/TESTING.md)
-**History**: [CHANGELOG.md](docs/CHANGELOG.md), [enhancements/INDEX.md](docs/enhancements/INDEX.md), [archive/](docs/archive/)
+**System**: [ARCHITECTURE.md](context/ARCHITECTURE.md), [RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)
+**Dev**: [CODING_PATTERNS.md](context/CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](docs/CONTRIBUTING.md)
+**Ref**: [QUICK_REFERENCE.md](context/QUICK_REFERENCE.md), [SKILLS.md](context/SKILLS.md), [DATA_FORMATS.md](context/DATA_FORMATS.md), [TESTING.md](context/TESTING.md)
+**History**: [CHANGELOG.md](docs/CHANGELOG.md), [enhancements/INDEX.md](context/enhancements/INDEX.md), [archive/](context/archive/)
 
 ## Tools
 **Enhancement Manager**: `cd tools/enhancement_manager && run.bat` → http://localhost:5001

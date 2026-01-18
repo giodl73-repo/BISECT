@@ -12,7 +12,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 
 ## Status Overview
 
-### ✅ Completed (26 enhancements)
+### ✅ Completed (27 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -42,6 +42,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [34](34_test_execution_skills.md) | Test Execution and Debugging Skills | Jan 16, 2026 | [View](34_test_execution_skills.md) |
 | [35](35_enhancement_manager_app.md) | Enhancement Manager Web App | Jan 17, 2026 | [View](35_enhancement_manager_app.md) |
 | [37](active/37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | Jan 17, 2026 | [View](active/37_parallel_multi_year_pipeline.md) |
+| [38](active/38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](active/38_streamline_claude_md.md) |
 
 ### 🔄 In Progress (1 enhancement)
 

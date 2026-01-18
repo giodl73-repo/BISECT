@@ -1,16 +1,16 @@
 # Enhancement Workflow
 
 **Structure**: Current State → Goal → Implementation Plan → Files → Testing → Benefits → Success Criteria → Complexity
-**Template**: `docs/enhancements/templates/enhancement_template.md`
+**Template**: `enhancements/templates/enhancement_template.md`
 
 ## 1. Research Phase
 
 **Review**:
-- `docs/ARCHITECTURE.md` - System design/data flow
-- `docs/CODING_PATTERNS.md` - Implementation patterns
-- `docs/DATA_FORMATS.md` - Data structures (if data work)
-- `docs/enhancements/INDEX.md` - Related enhancements
-- `docs/archive/` - Similar implementations
+- `ARCHITECTURE.md` - System design/data flow
+- `CODING_PATTERNS.md` - Implementation patterns
+- `DATA_FORMATS.md` - Data structures (if data work)
+- `enhancements/INDEX.md` - Related enhancements
+- `archive/` - Similar implementations
 
 **Dependencies Check**:
 - Census year differences (2000/2010/2020)? Field names? Formats?
@@ -20,7 +20,7 @@
 
 ## 2. Planning Phase
 
-**Create Spec** (`docs/enhancements/active/NN_name.md`):
+**Create Spec** (`enhancements/active/NN_name.md`):
 - Define 3-6 phases: Data prep (0) → Core (1) → Integration (2) → Config/CLI (3) → Testing (4) → Docs (5)
 - List ALL files to modify/create
 - Estimate complexity
@@ -159,7 +159,7 @@ pytest tests/unit/partition/ -v -k "bisection"  # Subset
 
 **Commit**: Clear message, reference enhancement #, list key files
 
-**Archive**: Create `docs/archive/YYYY-MM-DD_enhancement_N_desc.md` for significant sessions (rationale, decisions, not just what)
+**Archive**: Create `archive/YYYY-MM-DD_enhancement_N_desc.md` for significant sessions (rationale, decisions, not just what)
 
 **Defaults**: Only change with overwhelming evidence (e.g., "52.8% PP improvement"), keep non-default accessible
 

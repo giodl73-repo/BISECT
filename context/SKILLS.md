@@ -18,7 +18,7 @@ Skills are specialized workflows invoked via `/skill-name`. Claude Code auto-dis
 
 ### Enhancement Workflow (3)
 
-**`/enhancement-plan`** - Create enhancement specs (docs/enhancements/active/)
+**`/enhancement-plan`** - Create enhancement specs (enhancements/active/)
 - Reviews ARCHITECTURE.md, CODING_PATTERNS.md, existing enhancements
 - Breaks into phases, lists files, estimates complexity
 - Identifies test requirements (unit/integration/e2e/dashboard)
@@ -111,7 +111,7 @@ Skills are specialized workflows invoked via `/skill-name`. Claude Code auto-dis
 
 **`/create-session-archive`** - Historical documentation of sessions
 - Captures rationale, decisions, challenges, solutions
-- Archives to docs/archive/ for future reference
+- Archives to archive/ for future reference
 - Used after major enhancements or significant decisions
 
 **`/create-architecture-diagram`** - Mermaid diagrams for ARCHITECTURE.md
