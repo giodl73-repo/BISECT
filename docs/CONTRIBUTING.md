@@ -2,7 +2,7 @@
 
 ## Quick Start: Using Claude Code Skills
 
-**This project includes 25 Claude Code skills** that automate common development tasks. Simply describe what you want to do naturally, and Claude will offer the appropriate skill.
+**This project includes 31 Claude Code skills** that automate common development tasks. Simply describe what you want to do naturally, and Claude will offer the appropriate skill.
 
 **Example workflows**:
 - "I want to plan a new feature" → Claude suggests `/enhancement-plan`
@@ -10,7 +10,7 @@
 - "Consolidate these duplicate scripts" → Claude suggests `/consolidate-scripts`
 - "Compile my LaTeX paper" → Claude suggests `/compile-latex`
 
-**See [SKILLS.md](SKILLS.md) for complete documentation** of all 25 available skills across:
+**See [SKILLS.md](../context/SKILLS.md) for complete documentation** of all 31 available skills across:
 - Enhancement workflow
 - Data management
 - Pipeline execution
@@ -310,7 +310,7 @@ When creating enhancements, assign a priority to help with planning:
 
 View enhancements by priority: [INDEX.md - By Priority](../context/enhancements/INDEX.md#by-priority)
 
-See [SKILLS.md](SKILLS.md) for detailed enhancement workflow documentation.
+See [SKILLS.md](../context/SKILLS.md) for detailed enhancement workflow documentation.
 
 ---
 
