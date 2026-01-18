@@ -160,8 +160,9 @@ def main():
     is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
     census_year = args.year
 
-    # State counter for multi-year mode (get from environment if set)
+    # State counter and worker ID for multi-year mode (get from environment if set)
     state_number = int(os.environ.get('STATE_NUMBER', '0'))
+    worker_id = int(os.environ.get('WORKER_ID', '0'))
 
     def send_status(msg, stage=None, stage_total=None, stage_desc=None):
         """Send status update to parent process."""
@@ -169,7 +170,7 @@ def main():
             # Hierarchical format for multi-year mode
             if stage is not None:
                 # WORKER status
-                print(f"STATUS:WORKER:{census_year}:0:STATE:{state_number}/50:{state_name}:STAGE:{stage}/{stage_total}:{stage_desc}", flush=True)
+                print(f"STATUS:WORKER:{census_year}:{worker_id}:STATE:{state_number}/50:{state_name}:STAGE:{stage}/{stage_total}:{stage_desc}", flush=True)
             else:
                 # Simple message - send as year progress
                 pass

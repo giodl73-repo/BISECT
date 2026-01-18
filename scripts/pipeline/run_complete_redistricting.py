@@ -674,13 +674,13 @@ def main():
         print("PARALLEL MULTI-YEAR MODE: Running 2020, 2010, 2000 concurrently")
         print("="*70)
 
-        # In multi-year mode, we run 1 state at a time per year (sequential)
-        # The parallelism is at the year level, not state level
-        workers_per_year = [1, 1, 1]  # 1 worker per year (sequential processing)
+        # Allocate workers across years
+        workers_per_year = allocate_workers_across_years(args.workers, num_years=3)
         print(f"\nExecution Model:")
         print(f"  - 3 years run in parallel (2020, 2010, 2000)")
-        print(f"  - Each year processes states sequentially")
-        print(f"  - Estimated time: 3-5 hours (vs 7-13 hours sequential)")
+        print(f"  - Each year runs {workers_per_year[0]}/{workers_per_year[1]}/{workers_per_year[2]} states in parallel")
+        print(f"  - Total: {sum(workers_per_year)} concurrent state processes")
+        print(f"  - Estimated time: 2-4 hours (vs 7-13 hours sequential)")
         print("="*70)
 
         # Create hierarchical progress coordinator
@@ -1105,8 +1105,12 @@ def main():
 
         elif is_multi_year_subprocess:
             # Running as subprocess of multi-year mode
-            # Process single_state.py will emit STATUS:WORKER messages
-            for i, state_code in enumerate(states_to_process, 1):
+            # Run multiple states in parallel using ProcessPoolExecutor
+            max_workers = min(args.workers, 8)
+
+            def process_state_in_subprocess(state_info):
+                """Process a single state, forwarding STATUS messages."""
+                state_code, state_number = state_info
                 config = STATE_CONFIG[state_code]
                 state_name = config['name']
                 states_dir = output_dir / 'states'
@@ -1128,9 +1132,10 @@ def main():
 
                 env = os.environ.copy()
                 env['DPI'] = str(args.dpi)
-                env['STATE_NUMBER'] = str(i)  # Pass state number for progress reporting
+                env['STATE_NUMBER'] = str(state_number)
+                env['WORKER_ID'] = str(multiprocessing.current_process()._identity[0] if multiprocessing.current_process()._identity else 0)
 
-                # Use Popen to forward STATUS messages from child to parent
+                # Use Popen to forward STATUS messages
                 proc = subprocess.Popen(cmd, shell=True, env=env,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
@@ -1142,15 +1147,21 @@ def main():
 
                 proc.wait()
 
-                if proc.returncode == 0:
-                    successful.append(state_code)
-                    # Emit year-level progress
-                    print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
-                else:
-                    failed.append(state_code)
-                    # Only print errors to stderr
-                    sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
-                    sys.stderr.flush()
+                return (state_code, proc.returncode == 0)
+
+            # Process states in parallel
+            state_info_list = [(state_code, i) for i, state_code in enumerate(states_to_process, 1)]
+
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                for state_code, success in executor.map(process_state_in_subprocess, state_info_list):
+                    if success:
+                        successful.append(state_code)
+                        # Emit year-level progress
+                        print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
+                    else:
+                        failed.append(state_code)
+                        sys.stderr.write(f"[{args.year}] Failed: {STATE_CONFIG[state_code]['name']}\n")
+                        sys.stderr.flush()
 
         else:
             # PARALLEL MODE: Process multiple states at once
