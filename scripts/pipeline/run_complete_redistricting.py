@@ -1008,13 +1008,16 @@ def main():
 
         elif is_multi_year_subprocess:
             # Running as subprocess of multi-year mode - no progress bars
-            # Just run the states quietly using ProcessPoolExecutor
-            def process_state_simple(state_code):
-                """Process a single state without progress bars."""
+            # Process states sequentially (parallelism already at year level)
+            # Note: Trying to use ProcessPoolExecutor here causes pickling errors on Windows
+            for i, state_code in enumerate(states_to_process, 1):
                 config = STATE_CONFIG[state_code]
                 state_name = config['name']
                 states_dir = output_dir / 'states'
                 state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+                if i % 5 == 1:  # Print every 5 states
+                    print(f"[{args.year}] Processing {i}/{len(states_to_process)}: {state_name}", flush=True)
 
                 scripts_dir = Path(__file__).parent
                 flags = []
@@ -1034,21 +1037,11 @@ def main():
                 env['DPI'] = str(args.dpi)
 
                 result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
-                return (state_code, result.returncode == 0)
-
-            # Process states in parallel without progress bars
-            with ProcessPoolExecutor(max_workers=min(args.workers, 8)) as executor:
-                futures = {executor.submit(process_state_simple, state): state for state in states_to_process}
-
-                for future in as_completed(futures):
-                    state_code = futures[future]
-                    state_code_result, success = future.result()
-                    if success:
-                        successful.append(state_code_result)
-                        print(f"[{args.year}] Completed {len(successful)}/{len(states_to_process)} states", flush=True)
-                    else:
-                        failed.append(state_code_result)
-                        print(f"[{args.year}] Failed: {STATE_CONFIG[state_code_result]['name']}", flush=True)
+                if result.returncode == 0:
+                    successful.append(state_code)
+                else:
+                    failed.append(state_code)
+                    print(f"[{args.year}] Failed: {state_name}", flush=True)
 
         else:
             # PARALLEL MODE: Process multiple states at once
