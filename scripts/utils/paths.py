@@ -4,6 +4,9 @@ Path construction utilities.
 This module provides helper functions to construct standard file paths
 used throughout the redistricting pipeline. Centralizes path logic to
 ensure consistency and reduce duplication.
+
+Raw census data: data/Census {year}/
+Processed data: outputs/data/
 """
 
 from pathlib import Path
@@ -18,15 +21,15 @@ def get_tract_file(state, year):
         year: Census year as string ('2000', '2010', '2020')
 
     Returns:
-        Path: Path to tract parquet file
+        Path: Path to tract parquet file (processed data)
 
     Example:
         >>> path = get_tract_file('California', '2020')
         >>> print(path)
-        data/tracts/2020/california_tracts_2020.parquet
+        outputs/data/tracts/2020/california_tracts_2020.parquet
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'data/tracts/{year}/{state_normalized}_tracts_{year}.parquet')
+    return Path(f'outputs/data/tracts/{year}/{state_normalized}_tracts_{year}.parquet')
 
 
 def get_places_file(state, year):
@@ -38,15 +41,15 @@ def get_places_file(state, year):
         year: Census year as string ('2000', '2010', '2020')
 
     Returns:
-        Path: Path to places parquet file
+        Path: Path to places parquet file (processed data)
 
     Example:
         >>> path = get_places_file('New York', '2020')
         >>> print(path)
-        data/tracts/2020/new_york_places_2020.parquet
+        outputs/data/places/2020/new_york_places_2020.parquet
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'data/tracts/{year}/{state_normalized}_places_{year}.parquet')
+    return Path(f'outputs/data/places/{year}/{state_normalized}_places_{year}.parquet')
 
 
 def get_adjacency_file(state, year):
@@ -58,15 +61,15 @@ def get_adjacency_file(state, year):
         year: Census year as string ('2000', '2010', '2020')
 
     Returns:
-        Path: Path to adjacency pickle file
+        Path: Path to adjacency pickle file (processed data)
 
     Example:
         >>> path = get_adjacency_file('california', '2020')
         >>> print(path)
-        data/adjacency/2020/california_adjacency_2020.pkl
+        outputs/data/adjacency/2020/california_adjacency_2020.pkl
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'data/adjacency/{year}/{state_normalized}_adjacency_{year}.pkl')
+    return Path(f'outputs/data/adjacency/{year}/{state_normalized}_adjacency_{year}.pkl')
 
 
 def get_output_dir(year, version):
@@ -117,14 +120,14 @@ def get_election_data_file(year):
         year: Election year as string ('2020' currently supported)
 
     Returns:
-        Path: Path to election data parquet file
+        Path: Path to election data parquet file (processed data)
 
     Example:
         >>> path = get_election_data_file('2020')
         >>> print(path)
-        data/processed/elections/2020_president_tract.parquet
+        outputs/data/elections/2020_president_tract.parquet
     """
-    return Path(f'data/processed/elections/{year}_president_tract.parquet')
+    return Path(f'outputs/data/elections/{year}_president_tract.parquet')
 
 
 def get_demographic_data_file(year):
@@ -135,11 +138,11 @@ def get_demographic_data_file(year):
         year: Census year as string ('2000', '2010', '2020')
 
     Returns:
-        Path: Path to demographic data parquet file
+        Path: Path to demographic data parquet file (processed data)
 
     Example:
         >>> path = get_demographic_data_file('2020')
         >>> print(path)
-        data/processed/demographics/2020_demographics_tract.parquet
+        outputs/data/demographics/{year}_demographics_tract.parquet
     """
-    return Path(f'data/processed/demographics/{year}_demographics_tract.parquet')
+    return Path(f'outputs/data/demographics/{year}_demographics_tract.parquet')
