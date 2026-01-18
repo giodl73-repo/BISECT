@@ -761,6 +761,82 @@ def main():
             )
             write_version_config(version_config, version_dir)
 
+    # =========================================================================
+    # PHASE 0: CENSUS DATA PROCESSING (if 'data' in stages)
+    # =========================================================================
+    # Run census data processing for all years in queue if requested
+    if 'data' in args.stages and not args.print_only:
+        scripts_dir = Path(__file__).parent
+        sys.path.insert(0, str(scripts_dir.parent / 'data'))
+        from process_census_data import check_all_stages_complete
+
+        # Default stages for redistricting
+        required_stages = ['tracts', 'adjacency']
+        resolution = 'tract'
+
+        # Determine output directories for each year
+        year_output_dirs = {}
+        for year in year_queue:
+            if args.run_type == 'production':
+                year_output_dirs[year] = version_dir / year
+            elif args.run_type == 'experiment':
+                year_output_dirs[year] = version_dir / f"{args.version}_{year}"
+            else:  # test
+                year_output_dirs[year] = version_dir / year
+
+        # Check which years need census data processing
+        years_needing_data = []
+        for year in year_queue:
+            census_complete = check_all_stages_complete(
+                year_output_dirs[year],
+                required_stages,
+                resolution,
+                args.reset
+            )
+            if not census_complete:
+                years_needing_data.append(year)
+
+        if years_needing_data:
+            print("\n")
+            print("="*70)
+            print("CENSUS DATA PROCESSING")
+            print("="*70)
+            print(f"Years needing processing: {', '.join(years_needing_data)}")
+            print("="*70)
+            print()
+
+            for year in years_needing_data:
+                census_script = scripts_dir.parent / 'data' / 'process_census_data.py'
+
+                cmd_census = [
+                    sys.executable,
+                    str(census_script),
+                    '--year', year,
+                    '--output-dir', str(year_output_dirs[year]),
+                    '--stages', 'tracts', 'adjacency',
+                    '--minimum-boundary-length', str(args.minimum_boundary_length)
+                ]
+
+                # Add compute-boundary-lengths flag for edge-weighted mode
+                if args.partition_mode == 'edge-weighted':
+                    cmd_census.append('--compute-boundary-lengths')
+
+                print(f"[{year}] Processing census data...")
+                result = subprocess.run(cmd_census)
+
+                if result.returncode == 0:
+                    print(f"[{year}] [OK] Census data processing complete\n")
+                else:
+                    print(f"[{year}] [FAIL] Census data processing failed\n")
+                    if not multi_year_mode:
+                        # In single-year mode, exit on failure
+                        return 1
+
+            print("="*70)
+            print("CENSUS DATA PROCESSING COMPLETE")
+            print("="*70)
+            print()
+
     # Handle multi-year mode with PARALLEL execution
     if multi_year_mode:
         print("\n" + "="*70)
