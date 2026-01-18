@@ -1,6 +1,6 @@
 ---
 name: enhancement-plan
-description: Create a new enhancement specification following project patterns. Use when the user requests a new feature, improvement, or system change. Reads ARCHITECTURE.md, CODING_PATTERNS.md, and existing enhancements to maintain consistency.
+description: Create enhancement specification following project patterns. Reads ARCHITECTURE.md, CODING_PATTERNS.md, existing enhancements for consistency.
 allowed-tools:
   - Read
   - Write
@@ -10,234 +10,134 @@ allowed-tools:
 user-invocable: true
 ---
 
-# Enhancement Planning Skill
+# Enhancement Planning
 
-## Overview
+Creates comprehensive enhancement specs following patterns from 26+ past enhancements.
 
-This skill creates comprehensive enhancement specifications following the project's established patterns from 18+ previous enhancements. It ensures consistency with existing patterns and provides detailed implementation roadmaps.
-
-## When to Use This Skill
-
-- User says: "I want to add [feature]"
-- User says: "Can we improve [component]"
-- User says: "Let's plan [enhancement]"
-- Any request that requires planning before implementation
+## When to Use
+User requests: "add [feature]", "improve [component]", "plan [enhancement]"
 
 ## Workflow
 
-### Step 1: Gather Context
+### Step 1: Context
+**Read**: CLAUDE.md, context/ENHANCEMENT_WORKFLOW.md, context/ARCHITECTURE.md, context/CODING_PATTERNS.md, context/enhancements/INDEX.md, context/enhancements/templates/enhancement_template.md
+**Grep**: Similar enhancements (keywords), existing patterns, data deps
 
-Read the following files to understand project structure and patterns:
+### Step 2: Analyze
+**Identify**: Affected components, data deps, integration points, similar enhancements
+**Check**: Year compatibility (2000/2010/2020)
 
-**Required reading:**
-1. `CLAUDE.md` - Project overview, quick reference, recent changes
-2. `../../context/ENHANCEMENT_WORKFLOW.md` - Detailed 6-phase workflow process (research, planning, implementation, testing, documentation, completion)
-3. `../../context/ARCHITECTURE.md` - System design, data flow, component relationships
-4. `../../context/CODING_PATTERNS.md` - Implementation patterns, progress reporting, file naming
-5. `../../context/enhancements/INDEX.md` - Review similar past enhancements for patterns
-6. `../../context/enhancements/templates/enhancement_template.md` - Standard template
+### Step 3: Create Spec
+**Get next number**: Check `context/enhancements/INDEX.md`
+**Create**: `context/enhancements/active/XX_name.md` following template
 
-**Use Grep to find:**
-- Similar past enhancements using keywords from user request
-- Existing code patterns that relate to the request
-- Data format dependencies if working with census data
-
-### Step 2: Analyze Request
-
-Identify:
-- **Affected components**: Which parts of the system will change?
-- **Data dependencies**: What data files/formats are required?
-- **Integration points**: How does this fit into existing pipeline?
-- **Similar enhancements**: What patterns can we reuse from past work?
-- **Year compatibility**: Does this work for 2000, 2010, 2020 data?
-
-### Step 3: Create Enhancement Specification
-
-Determine next enhancement number by checking `../../context/enhancements/INDEX.md`.
-
-Create a new file in `../../context/enhancements/active/` following the template from `../../context/enhancements/templates/enhancement_template.md`:
-
+**Template structure**:
 ```markdown
-## Enhancement XX: [Descriptive Name]
-
-**Status**: 📋 PLANNED
-**Proposed**: [Current Date]
-**Complexity**: [Low (1-2 hours) | Medium (2-4 hours) | Medium-High (4-8 hours) | High (8-15 hours) | Very High (15+ hours)]
+## Enhancement XX: [Name]
+**Status**: 📋 PLANNED | **Proposed**: [Date] | **Complexity**: [Low|Medium|Medium-High|High|Very High]
 
 ### Current State
-
-[Describe what exists today. Be specific about current capabilities and limitations.]
+[What exists. Be specific about capabilities/limitations.]
 
 ### Goal
-
-[What we want to achieve. Be specific and measurable. Include quantitative goals if applicable.]
+[What we want. Specific, measurable, quantifiable.]
 
 ### Implementation Plan
-
-**Phase 1: [Name - e.g., Core Implementation]**
-- Task 1: [Specific deliverable]
-- Task 2: [Specific deliverable]
-- Files: `path/to/file.py` - [Purpose]
-
-**Phase 2: [Name - e.g., Pipeline Integration]**
-- Task 1: [Specific deliverable]
-- Task 2: [Specific deliverable]
-- Files: `path/to/file.py` - [Purpose]
-
-**Phase 3: [Name - e.g., Testing & Validation]**
-- Task 1: [Testing approach]
-- Task 2: [Validation criteria]
-
-**Phase 4: [Name - e.g., Documentation]**
-- Update all relevant documentation files
-
-[Continue phases as needed, typically 3-6 phases]
+**Phase 1: [Name]** • Task 1 • Task 2 • Files: `path/file.py` - purpose
+**Phase 2: [Name]** • Task 1 • Task 2 • Files: `path/file.py` - purpose
+**Phase 3: Testing** • Print-only • Small state • Full validation
+**Phase 4: Docs** • Update CHANGELOG, INDEX.md, CLAUDE.md
+[3-6 phases typical]
 
 ### Files to Modify/Create
-
-**New Files:**
-1. `path/to/new/file.py` - Purpose and functionality
-2. `path/to/another/file.py` - Purpose and functionality
-
-**Modified Files:**
-1. `path/to/existing/file.py` - Specific changes needed
-2. `path/to/another/existing.py` - Specific changes needed
+**New**: `path/new.py` - purpose, `path/another.py` - purpose
+**Modified**: `path/existing.py` - changes, `path/other.py` - changes
 
 ### Testing Plan
-
-Follow project testing pattern:
-
-1. **Print-only mode first** - Validate all parameters thread correctly
-   ```bash
-   python script.py --print-only --year 2020 --version test
-   ```
-
-2. **Small state test** - Quick validation (VT or DE, 30 seconds - 2 minutes)
-   ```bash
-   python script.py --state VT --year 2020 --version test
-   ```
-
-3. **Multi-year test** - If year-dependent, test all supported years
-   ```bash
-   # Test 2020, 2010, and 2000 if applicable
-   ```
-
-4. **Full validation** - Spot-check with subset of states
-   ```bash
-   python script.py --states "VT,DE,AL" --year 2020 --version test
-   ```
-
-5. **Quantitative validation** - If applicable, measure improvements
-   - Compare metrics before/after (compactness, performance, etc.)
-   - Document percentage improvements
+1. **Print-only**: `script.py --print-only --year 2020 --version test`
+2. **Small state** (VT/DE, 30s-2m): `--state VT --year 2020 --version test`
+3. **Multi-year** (if year-dependent): Test 2000/2010/2020
+4. **Full validation** (subset): `--states "VT,DE,AL" --year 2020 --version test`
+5. **Quantitative** (if applicable): Compare metrics before/after, document % improvements
 
 ### Benefits
-
-[List concrete benefits, quantify when possible]
-- Benefit 1: [e.g., "52.8% improvement in Polsby-Popper compactness"]
-- Benefit 2: [e.g., "Reduces processing time from 4 hours to 2 hours"]
-- Benefit 3: [e.g., "Eliminates manual step in workflow"]
+• [Quantified benefit 1: "52.8% improvement in X"]
+• [Quantified benefit 2: "Reduces time from 4h → 2h"]
+• [Benefit 3: "Eliminates manual step"]
 
 ### Success Criteria
-
-- [ ] Criterion 1: [Specific, testable condition]
-- [ ] Criterion 2: [Specific, testable condition]
-- [ ] Criterion 3: [Specific, testable condition]
-- [ ] All tests pass (print-only, small state, full validation)
-- [ ] Documentation updated (CHANGELOG, INDEX.md, CLAUDE.md)
-- [ ] Code follows patterns in CODING_PATTERNS.md
+- [ ] [Specific testable condition]
+- [ ] All tests pass (print-only, small state, full)
+- [ ] Docs updated (CHANGELOG, INDEX.md, CLAUDE.md)
+- [ ] Code follows CODING_PATTERNS.md
 
 ### Estimated Complexity
-
-**Effort**: [X-Y hours based on phases]
-**Risk**: [Low/Medium/High - explain any risks]
-**Dependencies**: [List any prerequisites or blocking items]
+**Effort**: [X-Y hours] | **Risk**: [Low/Medium/High + explain] | **Deps**: [Prerequisites/blockers]
 
 ### Implementation Notes
-
-[Any additional context, gotchas, or important considerations]
+[Context, gotchas, important considerations]
 ```
 
-### Step 4: Update Index and Present to User
+### Step 4: Update & Present
+1. Add entry to `context/enhancements/INDEX.md` (Planned section)
+2. Summarize key points for user
+3. Highlight risks/deps
+4. Get user approval
+5. Suggest: `/enhancement-implement` to execute
 
-After writing the enhancement specification:
-1. Add entry to `../../context/enhancements/INDEX.md` in the "Planned" section
-2. Summarize the key points for the user
-3. Highlight any risks or dependencies
-4. Get user approval before proceeding to implementation
-5. Suggest next step: Use `/enhancement-implement` skill to execute
+## Key Patterns
 
-## Key Patterns to Follow
-
-### From CODING_PATTERNS.md:
-
-**Progress Reporting (STATUS Protocol)**:
+### STATUS Protocol (CODING_PATTERNS.md)
 ```python
-position = int(os.environ.get('TQDM_POSITION', '-1'))
-if position >= 0:
-    print(f"STATUS:{position}:{msg}", flush=True)
+pos = int(os.environ.get('TQDM_POSITION', '-1'))
+if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 ```
 
-**Per-Stage Skip Logic**:
+### Per-Stage Skip Logic
 ```python
 if output_file.exists() and not force:
-    if is_standalone:
-        print(f"[SKIP] Output already exists: {output_file}")
-    else:
-        report_progress(f"[SKIP] Already exists")
+    report_progress("[SKIP] Already exists") if not is_standalone else print("[SKIP]...")
     return
 ```
 
-**Windows Compatibility**:
-- NEVER use Unicode characters in console output (✓, ✗, →, etc.)
-- ALWAYS use ASCII: [OK], [FAIL], [WARN], ->, -
+### Windows Compatibility
+**Never**: Unicode (✓, ✗, →) | **Always**: ASCII ([OK], [FAIL], [WARN], ->, -)
 
-**Path Handling**:
-- Use `Path` objects from `pathlib`, not string concatenation
-- Support year-specific paths: `data/tracts/{year}/{state}_tracts_{year}.parquet`
+### Path Handling
+**Use**: `Path` objects from `pathlib` (not string concat)
+**Support**: Year-specific paths `data/tracts/{year}/{state}_tracts_{year}.parquet`
 
-**State Names**:
-- Always lowercase with underscores: `california`, `new_york`
+### State Names
+**Always**: lowercase with underscores (`california`, `new_york`)
 
-### From Enhancement History:
+## Complexity Estimates (from 26+ enhancements)
+• **Low** (20-60m): Simple integrations, text annotations
+• **Medium** (2-4h): New visualizations, modest refactoring
+• **Medium-High** (4-8h): Multi-file refactoring, new analysis types
+• **High** (8-15h): New algorithms, major architectural changes
+• **Very High** (15+h): Multi-year data support, block-level data
 
-**Complexity Estimates** (from 18+ past enhancements):
-- **Low** (20-60 min): Simple integrations, text annotations
-- **Medium** (2-4 hours): New visualizations, modest refactoring
-- **Medium-High** (4-8 hours): Multi-file refactoring, new analysis types
-- **High** (8-15 hours): New algorithms, major architectural changes
-- **Very High** (15+ hours): Multi-year data support, block-level data
-
-**Common Enhancement Types**:
+## Common Enhancement Types
 1. **Integration**: Add existing functionality to pipeline (Low)
-2. **Visualization**: New maps or charts (Medium)
-3. **Analysis**: New metrics or statistics (Medium-High)
+2. **Visualization**: New maps/charts (Medium)
+3. **Analysis**: New metrics/statistics (Medium-High)
 4. **Algorithm**: Core redistricting changes (High)
 5. **Data**: New census year support (Very High)
 
-## What You'll Get
-
-After completing this skill, you will have:
-
-1. **Complete enhancement specification** in `../../context/enhancements/active/XX_name.md`
-2. **Entry added** to `../../context/enhancements/INDEX.md`
-3. **Detailed implementation phases** with specific tasks and files
-4. **Testing approach** following project patterns
-5. **Success criteria** for validation
-6. **User approval** before proceeding to implementation
+## Output
+✅ Complete spec in `context/enhancements/active/XX_name.md`
+✅ Entry in `context/enhancements/INDEX.md`
+✅ Detailed phases with tasks/files
+✅ Testing approach following project patterns
+✅ Success criteria for validation
+✅ User approval before impl
 
 ## Next Steps
-
-After user approves the plan:
-- Use `/enhancement-implement` skill to execute the enhancement
-- Follow the phases sequentially
-- Mark each phase complete using TodoWrite tool
-- Update documentation using `/enhancement-document` skill when finished
+**After user approval**: `/enhancement-implement` → Follow phases → TodoWrite tracking → `/enhancement-document` when complete
 
 ## Examples
-
-See `../../context/enhancements/completed/` for 14 completed enhancement examples:
-- [01_compactness_integration.md](../../../../context/enhancements/completed/01_compactness_integration.md) - Simple integration
-- [07_edge_weighted_bisection.md](../../../../context/enhancements/completed/07_edge_weighted_bisection.md) - Algorithm improvement with quantitative validation
-- [13_directory_unification.md](../../../../context/enhancements/completed/13_directory_unification.md) - Large refactoring
-- [18_figure_quality.md](../../../../context/enhancements/completed/18_figure_quality.md) - Validation + retry logic
+See `context/enhancements/completed/`:
+• `01_compactness_integration.md` - Simple integration
+• `07_edge_weighted_bisection.md` - Algorithm + quantitative validation
+• `13_directory_unification.md` - Large refactoring
+• `18_figure_quality.md` - Validation + retry logic

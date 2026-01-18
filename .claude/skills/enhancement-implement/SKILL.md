@@ -1,6 +1,6 @@
 ---
 name: enhancement-implement
-description: Execute an enhancement following the standard workflow with progress tracking. Use when implementing a planned enhancement from ../../context/enhancements/. Creates todo lists, follows phases sequentially, uses STATUS protocol for progress reporting.
+description: Execute enhancement following standard workflow with progress tracking. Creates todo lists, follows phases sequentially, uses STATUS protocol.
 allowed-tools:
   - Read
   - Write
@@ -12,241 +12,150 @@ allowed-tools:
 user-invocable: true
 ---
 
-# Enhancement Implementation Skill
+# Enhancement Implementation
 
-## Overview
-
-This skill executes planned enhancements following the project's standard workflow. It creates todo lists from enhancement phases, implements changes incrementally, and validates at each step.
+Executes planned enhancements with todo tracking, incremental changes, step-by-step validation.
 
 ## Prerequisites
+**Read**: context/ENHANCEMENT_WORKFLOW.md (6-phase process)
+**Required**: Enhancement in `context/enhancements/active/` with 📋 PLANNED status, detailed phases/files, data deps noted
+**Check**: context/enhancements/INDEX.md for status
 
-- **Read `../../context/ENHANCEMENT_WORKFLOW.md`** - Detailed 6-phase process (research, planning, implementation, testing, documentation, completion)
-- Enhancement must be documented in `../../context/enhancements/active/` with status 📋 PLANNED
-- Enhancement spec includes detailed phases and file lists
-- All data dependencies are available or noted
-- Check `../../context/enhancements/INDEX.md` for enhancement status
-
-## When to Use This Skill
-
-- User says: "Let's implement [enhancement name]"
-- User says: "Execute enhancement XX"
-- After `/enhancement-plan` skill completes and user approves
-- When ready to start coding a planned feature
+## When to Use
+User says: "implement [enhancement]", "execute enhancement XX" | After `/enhancement-plan` approval
 
 ## Workflow
 
-### Step 1: Read Enhancement Specification
+### Step 1: Read Spec
+1. Check `context/enhancements/INDEX.md` for location
+2. Read `context/enhancements/active/XX_name.md`
+3. Extract phases, tasks, file lists, deps, testing plan
 
-1. Check `../../context/enhancements/INDEX.md` to locate the enhancement file
-2. Read the enhancement file from `../../context/enhancements/active/XX_name.md`
-3. Extract all phases, tasks, and file lists
-4. Note any dependencies or prerequisites
-5. Review testing plan
-
-### Step 2: Create Todo List
-
-Use TodoWrite tool to create task list from enhancement phases:
-
+### Step 2: Create Todos
+**TodoWrite** from enhancement phases:
 ```python
 todos = [
-    {"content": "Phase 1: Core Implementation", "status": "pending", "activeForm": "Implementing core functionality"},
-    {"content": "Phase 2: Pipeline Integration", "status": "pending", "activeForm": "Integrating with pipeline"},
-    {"content": "Phase 3: Testing & Validation", "status": "pending", "activeForm": "Testing and validating"},
-    {"content": "Phase 4: Documentation", "status": "pending", "activeForm": "Updating documentation"}
+    {"content": "Phase 1: Core Implementation", "status": "pending", "activeForm": "Implementing core"},
+    {"content": "Phase 2: Pipeline Integration", "status": "pending", "activeForm": "Integrating pipeline"},
+    {"content": "Phase 3: Testing & Validation", "status": "pending", "activeForm": "Testing"},
+    {"content": "Phase 4: Documentation", "status": "pending", "activeForm": "Updating docs"}
 ]
 ```
 
-### Step 3: Execute Phases Sequentially
+### Step 3: Execute Phases (Sequential)
+**For each phase**:
+1. **Mark in_progress** (TodoWrite)
+2. **Implement**: Read files → Make changes incrementally → Follow CODING_PATTERNS.md → Use STATUS protocol
+3. **Test**: Print-only → Small state (VT/DE) → Validate outputs
+4. **Mark completed** (TodoWrite)
+5. **Next phase**
 
-For each phase:
+### Step 4: Patterns (CODING_PATTERNS.md)
 
-1. **Mark phase as in_progress** using TodoWrite
-2. **Implement the phase**:
-   - Read files that need modification
-   - Make changes incrementally (one component at a time)
-   - Follow patterns from `../../context/CODING_PATTERNS.md`
-   - Use STATUS protocol for child processes
-3. **Test the phase**:
-   - Run print-only mode if applicable
-   - Test with small state (VT/DE)
-   - Validate outputs
-4. **Mark phase as completed** using TodoWrite
-5. **Move to next phase**
-
-### Step 4: Follow Implementation Best Practices
-
-**From CODING_PATTERNS.md:**
-
-**Progress Reporting (if creating scripts)**:
+**STATUS Protocol** (scripts):
 ```python
-position = int(os.environ.get('TQDM_POSITION', '-1'))
-if position >= 0:
-    print(f"STATUS:{position}:{msg}", flush=True)
+pos = int(os.environ.get('TQDM_POSITION', '-1'))
+if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 ```
 
-**Skip Logic Pattern**:
+**Skip Logic**:
 ```python
 if output_file.exists() and not force:
-    if is_standalone:
-        print(f"[SKIP] Output already exists: {output_file}")
-    else:
-        report_progress(f"[SKIP] Already exists")
+    report_progress("[SKIP] Already exists") if not is_standalone else print("[SKIP]...")
     return
 ```
 
-**Windows-Safe Console Output**:
-- Use ASCII: `[OK]`, `[FAIL]`, `[WARN]` not Unicode (✓/✗)
-- All print statements must be Windows CP1252 compatible
+**Windows-Safe Console**:
+**Use**: `[OK]`, `[FAIL]`, `[WARN]`, `->`, `-` | **Never**: ✓, ✗, →
 
-**Path Handling**:
+**Paths**:
 ```python
 from pathlib import Path
 tract_file = Path(f'data/tracts/{year}/{state}_tracts_{year}.parquet')
 ```
 
 ### Step 5: Testing Sequence
+1. **Print-only** (catches param threading): `script.py --print-only --year 2020 --version test`
+2. **Small state** (30s-2m, VT/DE): `--state VT --year 2020 --version test`
+3. **Multi-year** (if year-dependent): Test 2000/2010/2020
+4. **Quantitative** (if applicable): Compare metrics before/after, document % improvements
+5. **Full spot-check** (optional): `run_redistricting.bat --year 2020 --version test --states "VT,DE,WY"`
 
-Follow the standard testing pattern:
-
-1. **Print-Only First** (catches parameter threading issues):
-   ```bash
-   python script.py --print-only --year 2020 --version test
-   ```
-
-2. **Small State Test** (quick validation, 30 sec - 2 min):
-   ```bash
-   python script.py --state VT --year 2020 --version test
-   python script.py --state DE --year 2010 --version test
-   ```
-
-3. **Multi-Year Test** (if year-dependent):
-   ```bash
-   # Test all supported census years (2000, 2010, 2020)
-   ```
-
-4. **Quantitative Validation** (if applicable):
-   - Compare metrics before/after
-   - Document improvements with specific numbers
-   - Test statistical significance if needed
-
-5. **Full Pipeline Spot-Check** (optional):
-   ```bash
-   run_redistricting.bat --year 2020 --version test --states "VT,DE,WY"
-   ```
-
-### Step 6: Mark Enhancement In Progress
-
-Update the enhancement file in `../../context/enhancements/active/XX_name.md`:
+### Step 6: Mark In Progress
+**Update** `context/enhancements/active/XX_name.md`:
 ```markdown
-**Status**: 🔄 IN PROGRESS
-**Started**: [Date]
+**Status**: 🔄 IN PROGRESS | **Started**: [Date]
 ```
-
-Also update `../../context/enhancements/INDEX.md` to reflect the status change.
+**Also update**: context/enhancements/INDEX.md
 
 ## Key Patterns
 
 ### Incremental Development
+• One component at a time • Manual edits for critical changes • Test after each change • Keep system working
 
-- Make changes one component at a time
-- Prefer safe, manual edits for critical changes
-- Test after each significant change
-- Keep system in working state
+### Common Issues → Solutions
 
-### Error Handling
+**Unicode (Windows)**: `UnicodeEncodeError` → Replace ✓→[OK], ✗→[FAIL], →→->
 
-Common issues and solutions:
-
-**Unicode Errors (Windows)**:
-- Problem: `UnicodeEncodeError: 'charmap' codec can't encode character`
-- Solution: Replace Unicode with ASCII: ✓ → [OK], ✗ → [FAIL], → → ->
-
-**GEOID Type Mismatches**:
+**GEOID Type**:
 ```python
-# Force GEOID as string type
-tracts = pd.read_csv(file, dtype={'GEOID': str})
+tracts = pd.read_csv(file, dtype={'GEOID': str})  # Force string
 ```
 
 **Missing Data**:
 ```python
-# Check data availability before adding analysis
-election_data_available = (year == '2020' and election_file.exists())
-if election_data_available:
-    # Run analysis
-else:
+if not election_file.exists():
     print(f"[SKIP] Election data not available for {year}")
+    return  # Skip gracefully, don't fail
 ```
 
-**Path Compatibility**:
+**Path Compat** (transitions):
 ```python
-# Support both old and new paths during transitions
-graph_file_new = Path(f'data/adjacency/{year}/{state}_adjacency_{year}.pkl')
-graph_file_old = Path(f'data/adjacency/{state}_adjacency_{year}.pkl')
-graph_file = graph_file_new if graph_file_new.exists() else graph_file_old
+file_new = Path(f'data/adjacency/{year}/{state}_adj_{year}.pkl')
+file_old = Path(f'data/adjacency/{state}_adj_{year}.pkl')
+file = file_new if file_new.exists() else file_old
 ```
 
-### Scope-Based Pattern (for analysis scripts)
-
-If creating new analysis script:
+### Scope-Based (analysis scripts)
 ```python
 parser.add_argument('--scope', choices=['state', 'national'], default='state')
-
-if args.scope == 'state':
-    # Per-state processing (runs in parallel)
-    process_single_state(args)
-elif args.scope == 'national':
-    # National aggregation (runs in post-processing)
-    aggregate_all_states(args)
+if args.scope == 'state': process_single_state(args)  # Parallel
+elif args.scope == 'national': aggregate_all_states(args)  # Post-processing
 ```
 
-## What NOT to Do
-
-From project anti-patterns:
+## Anti-Patterns
 
 ```python
-# ❌ DON'T: Hardcode census year
-tracts_file = f'data/raw/{state}_tracts_2020.parquet'
+# ❌ Hardcode year
+tracts = f'data/raw/{state}_tracts_2020.parquet'
+# ✅ Use param
+tracts = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
 
-# ✅ DO: Use year parameter
-tracts_file = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
+# ❌ Fail on missing optional data
+if not file.exists(): raise FileNotFoundError()
+# ✅ Skip gracefully
+if not file.exists(): print("[SKIP] Not available"); return
 
-# ❌ DON'T: Fail on missing optional data
-if not election_data_file.exists():
-    raise FileNotFoundError("Election data not found")
-
-# ✅ DO: Skip gracefully
-if not election_data_file.exists():
-    print(f"[SKIP] Election data not available")
-    return
-
-# ❌ DON'T: Use Unicode in console output
-print(f"✓ Complete")  # Crashes on Windows
-
-# ✅ DO: Use ASCII
-print(f"[OK] Complete")
+# ❌ Unicode console
+print("✓ Complete")  # Crashes Windows
+# ✅ ASCII
+print("[OK] Complete")
 ```
 
 ## After Implementation
+1. Run full validation
+2. `/enhancement-document` to update all docs
+3. Git commit (clear message)
+4. Move `active/XX_name.md` → `completed/`
+5. Update `context/enhancements/INDEX.md`
+6. Mark ✅ COMPLETED
 
-Once all phases complete:
-1. Run full validation suite
-2. Use `/enhancement-document` skill to update all documentation
-3. Create git commit with clear message
-4. Move enhancement file from `active/` to `completed/`
-5. Update `../../context/enhancements/INDEX.md`
-6. Mark enhancement as ✅ COMPLETED
-
-## What You'll Get
-
-- Complete implementation of planned enhancement
-- All files modified/created per specification
-- Validated outputs (tested incrementally)
-- Todo list tracking for full transparency
-- Code following established patterns
+## Output
+✅ Complete impl per spec
+✅ All files modified/created
+✅ Validated outputs (incremental testing)
+✅ Todo tracking (full transparency)
+✅ Code follows patterns
 
 ## Next Steps
-
-After implementation:
-- Use `/enhancement-document` to complete documentation
-- Consider creating session archive with `/create-session-archive`
-- Update CHANGELOG.md with dated entry
+**After**: `/enhancement-document` → `/create-session-archive` (optional) → Update CHANGELOG.md
