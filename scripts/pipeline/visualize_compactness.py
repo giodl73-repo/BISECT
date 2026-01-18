@@ -218,11 +218,14 @@ def visualize_national_compactness(output_dir, version, census_year, dpi=150, po
 
     # Load all states with districts and compactness data
     try:
+        # Build state name -> districts mapping from year-specific config
+        districts_per_state = build_state_name_to_districts_map(census_year)
+
         all_tracts = []
-        total_states = len(DISTRICTS_PER_STATE)
+        total_states = len(districts_per_state)
         processed = 0
 
-        for state_name in DISTRICTS_PER_STATE.keys():
+        for state_name in districts_per_state.keys():
             state_dir = base_dir / 'states' / state_name
 
             # Skip if state not processed

@@ -21,6 +21,7 @@ Example:
 from .config import (
     get_state_config,
     get_state_config_safe,
+    build_state_name_to_districts_map,
 )
 
 # Path utilities
@@ -65,6 +66,7 @@ __all__ = [
     # Config
     'get_state_config',
     'get_state_config_safe',
+    'build_state_name_to_districts_map',
 
     # Paths
     'get_tract_file',

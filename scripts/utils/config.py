@@ -72,3 +72,40 @@ def get_state_config_safe(year):
         return get_state_config(year)
     except (ValueError, ImportError):
         return None
+
+
+def build_state_name_to_districts_map(year):
+    """
+    Build a mapping from lowercase state names to district counts.
+
+    This function derives district counts from the year-specific STATE_CONFIG
+    dictionaries, eliminating the need for hardcoded DISTRICTS_PER_STATE constants.
+
+    Args:
+        year: Census year as string ('2000', '2010', '2020')
+
+    Returns:
+        dict: Mapping of lowercase state names (with underscores) to district counts
+              Example: {'alabama': 7, 'california': 52, 'new_york': 26, ...}
+
+    Raises:
+        ValueError: If year is not supported
+        ImportError: If config module cannot be imported
+
+    Example:
+        >>> districts = build_state_name_to_districts_map('2020')
+        >>> print(districts['california'])  # 52
+        >>> print(districts['new_york'])     # 26
+    """
+    from scripts.constants import STATE_ABBREV
+
+    # Get the year-specific STATE_CONFIG
+    state_config = get_state_config(year)
+
+    # Build the mapping: lowercase_name -> districts
+    name_to_districts = {}
+    for lowercase_name, code in STATE_ABBREV.items():
+        if code in state_config:
+            name_to_districts[lowercase_name] = state_config[code]['districts']
+
+    return name_to_districts

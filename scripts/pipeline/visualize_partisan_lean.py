@@ -29,7 +29,8 @@ from shapely.ops import unary_union
 
 # Import shared constants
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.constants import STATE_ABBREV, DISTRICTS_PER_STATE
+from scripts.constants import STATE_ABBREV
+from scripts.utils import build_state_name_to_districts_map
 
 
 # Political lean color mapping
@@ -629,11 +630,14 @@ def visualize_national_political(output_dir, version, election_year, census_year
 
     # Load all states with districts and political data
     try:
+        # Build state name -> districts mapping from year-specific config
+        districts_per_state = build_state_name_to_districts_map(census_year)
+
         all_tracts = []
-        total_states = len(DISTRICTS_PER_STATE)
+        total_states = len(districts_per_state)
         processed = 0
 
-        for state_name, num_districts in DISTRICTS_PER_STATE.items():
+        for state_name, num_districts in districts_per_state.items():
             # Skip Alaska and Hawaii (no 2020 presidential election data available)
             if state_name in ['alaska', 'hawaii']:
                 continue
