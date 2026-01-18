@@ -924,10 +924,13 @@ def main():
                             if now - last_display_time[0] >= 1.0:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
-                    elif msg_type == 'YEAR_PHASE':
+                    elif msg_type == 'YEAR_POSTPROCESS':
                         with display_lock:
-                            phase_desc = f"Phase {data['phase']}: {data['phase_desc']}"
-                            coordinator.update_year_phase(data['year'], phase_desc)
+                            coordinator.update_year_postprocess(
+                                data['year'],
+                                data['completed'],
+                                data['total']
+                            )
                             # Refresh display (throttled)
                             now = time.time()
                             if now - last_display_time[0] >= 1.0:
@@ -956,8 +959,7 @@ def main():
                                 data['worker_id'],
                                 data['task_index'],
                                 data['task_total'],
-                                data['task_name'],
-                                data['progress']
+                                data['task_name']
                             )
                             # Refresh display (throttled)
                             now = time.time()

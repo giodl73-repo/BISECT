@@ -95,7 +95,7 @@ class ProgressCoordinator:
                 'stage_desc': stage_desc
             }
 
-    def update_worker_task(self, year, worker_id, task_index, task_total, task_name, progress):
+    def update_worker_task(self, year, worker_id, task_index, task_total, task_name):
         """
         Update worker-level status for post-processing task.
 
@@ -105,16 +105,29 @@ class ProgressCoordinator:
             task_index: Task number (1, 2, 3, ...)
             task_total: Total tasks
             task_name: Task name (e.g., "National_district_map")
-            progress: Progress percent (0-100)
         """
         with self.lock:
             self.worker_status[(year, worker_id)] = {
                 'type': 'task',
                 'task_index': task_index,
                 'task_total': task_total,
-                'task_name': task_name,
-                'progress': progress
+                'task_name': task_name
             }
+
+    def update_year_postprocess(self, year, completed, total):
+        """
+        Update year-level post-processing progress.
+
+        Args:
+            year: Census year
+            completed: Number of tasks completed
+            total: Total tasks
+        """
+        with self.lock:
+            self.year_progress[year]['phase'] = 'postprocess'
+            self.year_progress[year]['completed'] = completed
+            self.year_progress[year]['total'] = total
+            self.year_progress[year]['phase_desc'] = f'{completed}/{total} tasks'
 
     def render(self):
         """
@@ -180,17 +193,12 @@ class ProgressCoordinator:
                         elif status_type == 'task':
                             # Post-processing task worker
                             task_name = status['task_name'].replace('_', ' ')
-                            progress_pct = status['progress']
-
-                            # Progress indicator
-                            if progress_pct >= 100:
-                                progress_str = "DONE"
-                            else:
-                                progress_str = f"{progress_pct}%"
+                            task_index = status['task_index']
+                            task_total = status['task_total']
 
                             worker_line = (
                                 f"{connector}Worker {worker_id + 1}: "
-                                f"{task_name} ({progress_str})"
+                                f"[Task {task_index}/{task_total}] {task_name}"
                             )
                             lines.append(worker_line)
                     else:
@@ -252,20 +260,21 @@ def parse_status_message(line):
     if msg_type == "YEAR":
         year = parts[2]
 
-        # Check if this is post-processing phase message
-        if len(parts) >= 7 and parts[3] == "POSTPROCESS" and parts[4] == "PHASE":
-            # STATUS:YEAR:2020:POSTPROCESS:PHASE:2/3:Visualization
-            phase = parts[5]  # "2/3"
-            phase_desc = parts[6]  # "Visualization"
-            return ('YEAR_PHASE', {
-                'year': year,
-                'phase': phase,
-                'phase_desc': phase_desc
-            })
+        # Check if this is post-processing progress
+        if len(parts) >= 5 and parts[3] == "POSTPROCESS":
+            # STATUS:YEAR:2020:POSTPROCESS:3/9
+            progress_str = parts[4]  # "3/9"
+            if '/' in progress_str:
+                completed, total = progress_str.split('/')
+                return ('YEAR_POSTPROCESS', {
+                    'year': year,
+                    'completed': int(completed),
+                    'total': int(total)
+                })
 
         # Otherwise it's a regular state completion message
         # STATUS:YEAR:2020:COMPLETE:24/50
-        if len(parts) >= 5:
+        if len(parts) >= 5 and parts[3] == "COMPLETE":
             complete_str = parts[4]  # "24/50"
             if '/' in complete_str:
                 completed, total = complete_str.split('/')
@@ -303,23 +312,20 @@ def parse_status_message(line):
                     })
 
         elif work_type == "TASK":
-            # STATUS:WORKER:2020:1:TASK:3/6:National_district_map:PROGRESS:75/100
-            if len(parts) >= 9:
-                task_str = parts[5]  # "3/6"
+            # STATUS:WORKER:2020:1:TASK:3/9:National_district_map
+            if len(parts) >= 7:
+                task_str = parts[5]  # "3/9"
                 task_name = parts[6]
-                progress_str = parts[8]  # "75/100"
 
-                if '/' in task_str and '/' in progress_str:
+                if '/' in task_str:
                     task_index, task_total = task_str.split('/')
-                    progress, _ = progress_str.split('/')
 
                     return ('WORKER_TASK', {
                         'year': year,
                         'worker_id': worker_id,
                         'task_index': int(task_index),
                         'task_total': int(task_total),
-                        'task_name': task_name,
-                        'progress': int(progress)
+                        'task_name': task_name
                     })
 
     return (None, None)

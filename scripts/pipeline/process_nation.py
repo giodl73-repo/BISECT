@@ -62,9 +62,9 @@ def run_postprocessing_task(args_tuple):
     """
     task_name, command, worker_id, year, task_index, total_tasks, is_multi_year = args_tuple
 
-    # Emit starting status (only in multi-year mode)
+    # Emit starting status (only in multi-year mode) - format matches state processing
     if is_multi_year:
-        print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:0/100", flush=True)
+        print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}", flush=True)
         sys.stdout.flush()
 
     try:
@@ -72,10 +72,10 @@ def run_postprocessing_task(args_tuple):
         result = subprocess.run(command, shell=True, timeout=900,
                                capture_output=True, text=True)
 
-        # Emit completion status (only in multi-year mode)
+        # On completion, emit year-level progress (only in multi-year mode)
         if result.returncode == 0:
             if is_multi_year:
-                print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:100/100", flush=True)
+                print(f"STATUS:YEAR:{year}:POSTPROCESS:{task_index}/{total_tasks}", flush=True)
                 sys.stdout.flush()
             return (task_name, True)
         else:
@@ -136,14 +136,9 @@ def main():
             print("Mode: PRINT-ONLY (debug mode - no execution)")
         print("="*70)
 
-    # Organize tasks into 3 phases:
-    # Phase 1: Setup (sequential - creates prerequisite files)
-    # Phase 2: Visualization (parallel - independent visualization tasks)
-    # Phase 3: Finalization (sequential - dashboard and validation)
-
-    phase1_steps = []  # Setup
-    phase2_steps = []  # Parallel visualization
-    phase3_steps = []  # Finalization
+    # Collect all post-processing tasks as sequential stages
+    # Workers will dynamically pick up tasks as they become available
+    all_tasks = []
 
     # Common flags for all commands
     flags = []
@@ -153,40 +148,38 @@ def main():
         flags.append('--debug')
     flags_str = ' '.join(flags)
 
-    # ========== PHASE 1: SETUP (Sequential - creates prerequisite files) ==========
+    # ========== ALL POST-PROCESSING TASKS (numbered sequentially) ==========
 
-    # Create US aggregate files (required by visualization tasks)
+    # Task 1: Create US aggregate files
     if output_dir.exists() or args.print_only:
-        phase1_steps.append({
-            'name': 'US aggregates',
+        all_tasks.append({
+            'name': 'US_aggregates',
             'command': f'{sys.executable} {scripts_dir}/create_us_aggregate.py --year {args.year} --version {args.version} --dpi {args.dpi} --output-dir {output_dir} --skip-maps {flags_str}'.strip(),
             'critical': False
         })
 
-    # Create US rounds hierarchy aggregate (required by round progression maps)
+    # Task 2: Create US rounds hierarchy aggregate
     if output_dir.exists() or args.print_only:
-        phase1_steps.append({
-            'name': 'Rounds hierarchy',
+        all_tasks.append({
+            'name': 'Rounds_hierarchy',
             'command': f'{sys.executable} {scripts_dir}/create_us_rounds_hierarchy.py --output-dir {output_dir} {flags_str}'.strip(),
             'critical': False
         })
 
-    # ========== PHASE 2: VISUALIZATION (Parallel - independent tasks) ==========
-
-    # National district maps
+    # Task 3: National district maps
     national_map_script = scripts_dir / 'visualize_national_districts.py'
     if national_map_script.exists():
-        phase2_steps.append({
-            'name': 'National district map',
+        all_tasks.append({
+            'name': 'National_district_map',
             'command': f'{sys.executable} {scripts_dir}/visualize_national_districts.py --year {args.year} --output-dir {output_dir} --dpi {args.dpi} {flags_str}'.strip(),
             'critical': False
         })
 
-    # National round progression maps
+    # Task 4: National round progression maps
     national_rounds_script = scripts_dir / 'visualize_national_rounds.py'
     if national_rounds_script.exists() and (output_dir.exists() or args.print_only):
-        phase2_steps.append({
-            'name': 'Round progression maps',
+        all_tasks.append({
+            'name': 'Round_progression_maps',
             'command': f'{sys.executable} {national_rounds_script} --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi} --max-rounds 6'.strip(),
             'critical': False
         })
@@ -209,109 +202,83 @@ def main():
         print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
         print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
 
-    # National political map
+    # Task 5: National political map
     if not args.skip_political and election_data_available and (output_dir.exists() or args.print_only):
-        phase2_steps.append({
-            'name': 'Political map',
+        all_tasks.append({
+            'name': 'Political_map',
             'command': f'{sys.executable} scripts/pipeline/visualize_partisan_lean.py --scope national --output-dir {output_dir} --version {args.version} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
 
-    # National demographic map
+    # Task 6: National demographic map
     if not args.skip_demographic and demographic_data_available and (output_dir.exists() or args.print_only):
-        phase2_steps.append({
-            'name': 'Demographic map',
+        all_tasks.append({
+            'name': 'Demographic_map',
             'command': f'{sys.executable} scripts/pipeline/visualize_district_demographics.py --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
 
-    # National compactness map
+    # Task 7: National compactness map
     if output_dir.exists() or args.print_only:
         compactness_script = scripts_dir / 'visualize_compactness.py'
-        phase2_steps.append({
-            'name': 'Compactness map',
+        all_tasks.append({
+            'name': 'Compactness_map',
             'command': f'{sys.executable} {compactness_script} --scope national --output-dir {output_dir} --version {args.version} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
 
-    # Metro area national aggregation
+    # Task 8: Metro area national aggregation
     if output_dir.exists() or args.print_only:
         metro_viz_script = Path('scripts/pipeline/visualize_metro_areas.py')
         if metro_viz_script.exists():
-            phase2_steps.append({
-                'name': 'Metro areas',
+            all_tasks.append({
+                'name': 'Metro_areas',
                 'command': f'{sys.executable} {metro_viz_script} --scope national --output-dir {output_dir} --version {args.version} --year {args.year}'.strip(),
                 'critical': False
             })
 
-    # ========== PHASE 3: FINALIZATION (Sequential - requires all visualizations complete) ==========
-
-    # Generate static dashboard with all district data
+    # Task 9: Generate static dashboard
     if output_dir.exists() or args.print_only:
         dashboard_script = Path('scripts/web/generate_dashboard.py')
         if dashboard_script.exists():
-            phase3_steps.append({
+            all_tasks.append({
                 'name': 'Dashboard',
                 'command': f'{sys.executable} {dashboard_script} --year {args.year} --version {args.version} --output-dir {output_dir}'.strip(),
                 'critical': False
             })
 
-    # Helper function to run a single step sequentially
-    def run_sequential_step(step, phase_name, step_index, total_steps):
-        if is_multi_year:
-            print(f"STATUS:YEAR:{args.year}:POSTPROCESS:PHASE:{phase_name}:STEP:{step_index}/{total_steps}:{step['name']}", flush=True)
-        else:
-            print(f"\n[{step_index}/{total_steps}] {step['name']}...")
-
-        proc = subprocess.run(step['command'], shell=True, capture_output=True)
-        return proc.returncode == 0
-
-    # ========== PHASE 1: SETUP (Sequential) ==========
-    if phase1_steps:
-        if is_multi_year:
-            print(f"STATUS:YEAR:{args.year}:POSTPROCESS:PHASE:1/3:Setup", flush=True)
-        else:
+    # ========== EXECUTE ALL TASKS (Workers pick up tasks dynamically) ==========
+    if all_tasks:
+        if not is_multi_year:
             print("\n" + "="*70)
-            print("PHASE 1: SETUP")
+            print(f"POST-PROCESSING ({len(all_tasks)} tasks)")
             print("="*70)
 
-        for i, step in enumerate(phase1_steps, 1):
-            success = run_sequential_step(step, "1/3:Setup", i, len(phase1_steps))
-            if not success and step['critical'] and not args.print_only:
-                return 1
-
-    # ========== PHASE 2: VISUALIZATION (Parallel within year, parallel across years) ==========
-    if phase2_steps:
-        if is_multi_year:
-            print(f"STATUS:YEAR:{args.year}:POSTPROCESS:PHASE:2/3:Visualization", flush=True)
-            sys.stdout.flush()
-        else:
-            print("\n" + "="*70)
-            print("PHASE 2: VISUALIZATION (Parallel)")
-            print("="*70)
+        total_tasks = len(all_tasks)
 
         # Determine number of workers (use allocated workers, or number of tasks if fewer)
-        max_workers = min(len(phase2_steps), args.workers)
+        max_workers = min(total_tasks, args.workers)
 
-        # Prepare task arguments with worker ID assignment (round-robin)
+        # Prepare task arguments (tasks numbered sequentially, workers assigned round-robin)
         task_args = [
-            (step['name'].replace(' ', '_'), step['command'], i % max_workers, args.year, i, len(phase2_steps), is_multi_year)
-            for i, step in enumerate(phase2_steps, 1)
+            (task['name'], task['command'], i % max_workers, args.year, i, total_tasks, is_multi_year)
+            for i, task in enumerate(all_tasks, 1)
         ]
 
         if args.print_only:
             # Print-only mode - just show what would run
             for task_name, command, worker_id, year, task_index, total_tasks, _ in task_args:
                 if not is_multi_year:
-                    print(f"[Worker {worker_id+1}] [{task_index}/{total_tasks}] {task_name}: {command}")
+                    print(f"[Worker {worker_id+1}] [Task {task_index}/{total_tasks}] {task_name}")
         else:
             # Emit initial Idle status for all workers (only in multi-year mode)
             if is_multi_year:
                 for worker_id in range(max_workers):
-                    print(f"STATUS:WORKER:{args.year}:{worker_id}:TASK:0/0:Idle:PROGRESS:0/100", flush=True)
+                    print(f"STATUS:WORKER:{args.year}:{worker_id}:TASK:0/{total_tasks}:Idle", flush=True)
                 sys.stdout.flush()
 
             # Run tasks in parallel using ProcessPoolExecutor
+            # Workers dynamically pick up next task as they finish
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 results = list(executor.map(run_postprocessing_task, task_args))
 
@@ -319,20 +286,6 @@ def main():
                 for task_name, success in results:
                     if not success and not is_multi_year:
                         print(f"[WARNING] {task_name} failed but continuing...")
-
-    # ========== PHASE 3: FINALIZATION (Sequential) ==========
-    if phase3_steps:
-        if is_multi_year:
-            print(f"STATUS:YEAR:{args.year}:POSTPROCESS:PHASE:3/3:Finalization", flush=True)
-        else:
-            print("\n" + "="*70)
-            print("PHASE 3: FINALIZATION")
-            print("="*70)
-
-        for i, step in enumerate(phase3_steps, 1):
-            success = run_sequential_step(step, "3/3:Finalization", i, len(phase3_steps))
-            if not success and step['critical'] and not args.print_only:
-                return 1
 
     # Validate pipeline outputs
     if not args.print_only:
