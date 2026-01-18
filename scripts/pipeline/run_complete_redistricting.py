@@ -1152,6 +1152,28 @@ def main():
                     coordinator.update_year_progress(year, 50, 50)
             clear_and_update_display(coordinator)
 
+        # Generate master dashboard (cross-year comparison) if any year succeeded
+        any_success = any(results.get(year, {}).get('success', False) for year in year_queue)
+        if any_success and not args.print_only:
+            print("\n" + "="*70)
+            print("GENERATING MASTER DASHBOARD")
+            print("="*70)
+            master_dash_script = Path('scripts/web/generate_master_dashboard.py')
+            if master_dash_script.exists():
+                cmd_master = [
+                    sys.executable,
+                    str(master_dash_script),
+                    '--version', args.version,
+                    '--output-dir', str(version_dir)
+                ]
+                result = subprocess.run(cmd_master, capture_output=True, text=True)
+                if result.returncode == 0:
+                    print(f"[OK] Master dashboard: {version_dir / 'index.html'}")
+                else:
+                    print(f"[WARN] Master dashboard generation failed")
+                    if result.stderr:
+                        print(f"  {result.stderr[:200]}")
+
         # Add spacing before summary (move past the hierarchical display)
         print("\n" * 2)
 
