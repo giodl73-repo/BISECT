@@ -247,6 +247,55 @@ Traceback:
 
         self.logger.warning(warning_msg)
 
+    def log_command_failure(self, command: str, return_code: int, output: str,
+                           task_name: Optional[str] = None, context: Optional[dict] = None):
+        """
+        Log a command failure with full output.
+
+        Args:
+            command: The command that was run
+            return_code: The exit code returned
+            output: Combined stdout/stderr output
+            task_name: Name of the task (e.g., 'redistricting', 'summary')
+            context: Optional dict with additional context
+        """
+        self._write_header()
+        self.error_count += 1
+
+        timestamp = self._get_timestamp()
+
+        # Truncate output if too long (keep first and last parts)
+        max_output_lines = 100
+        output_lines = output.split('\n')
+        if len(output_lines) > max_output_lines:
+            truncated_output = '\n'.join(output_lines[:50])
+            truncated_output += '\n\n... [output truncated - see full output above] ...\n\n'
+            truncated_output += '\n'.join(output_lines[-50:])
+        else:
+            truncated_output = output
+
+        error_msg = f"""[{timestamp}] COMMAND_FAILURE: {task_name or 'Unknown Task'}
+Return Code: {return_code}
+Command: {command}
+Output:
+{'-' * 70}
+{truncated_output}
+{'-' * 70}
+"""
+
+        # Add system context
+        error_msg += "\n" + self._get_system_context()
+
+        # Add custom context if provided
+        if context:
+            error_msg += "\nTask Context:"
+            for key, value in context.items():
+                error_msg += f"\n  - {key}: {value}"
+
+        error_msg += "\n"
+
+        self.logger.error(error_msg)
+
     def write_summary(self):
         """Write summary footer to log file."""
         if not self.header_written:

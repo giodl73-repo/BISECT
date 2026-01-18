@@ -461,7 +461,7 @@ if __name__ == '__main__':
     # Create rounds hierarchy (all states, including single-district)
     if args.debug:
         print("\nCreating rounds hierarchy...")
-    create_rounds_hierarchy(run_dir, num_districts, debug=args.debug)
+    create_rounds_hierarchy(run_dir, num_districts, state_code, args.year, debug=args.debug)
 
     # Close progress bar if it was created
     if stage_pbar:

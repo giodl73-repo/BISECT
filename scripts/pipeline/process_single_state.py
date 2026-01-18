@@ -16,6 +16,7 @@ from scripts.utils import (
     get_state_config,
     get_election_data_file,
     get_demographic_data_file,
+    get_error_logger,
 )
 
 
@@ -66,6 +67,36 @@ def main():
 
     # Get position from argument (not environment - more reliable in parallel)
     position = args.position
+
+    # Initialize error logger (try to extract version and year from output path)
+    error_logger = None
+    try:
+        # Extract version and year from output path (e.g., outputs/V9/2020/states/california)
+        parts = output_path.parts
+        version = None
+        year_int = None
+
+        # Look for version (like V9, v1, etc.)
+        for part in parts:
+            if part.startswith('v') or part.startswith('V'):
+                version = part
+                break
+
+        # Year is the argument we got
+        year_int = int(args.year)
+
+        # Determine base output directory (parent of states/)
+        if 'states' in parts:
+            states_index = parts.index('states')
+            base_output_dir = Path(*parts[:states_index])
+        else:
+            base_output_dir = output_path
+
+        if version and year_int:
+            error_logger = get_error_logger(base_output_dir, version, year_int)
+    except Exception:
+        # If logger initialization fails, continue without logging (non-fatal)
+        pass
 
     scripts_dir = Path(__file__).parent
 
@@ -201,8 +232,13 @@ def main():
                     text=True, bufsize=1
                 )
 
+                # Buffer ALL output (not just PROGRESS messages) for error logging
+                output_lines = []
+
                 # Read output line by line and look for PROGRESS: messages
                 for line in process.stdout:
+                    output_lines.append(line)  # Buffer all output
+
                     if line.startswith("PROGRESS:"):
                         # Parse format: "PROGRESS:15/52"
                         progress = line.split(":", 1)[1].strip()
@@ -219,12 +255,49 @@ def main():
                     print(f"\n[ERROR] {state_name} failed at {step_label}", file=sys.stderr)
                     print(f"Command: {cmd}", file=sys.stderr)
                     print(f"Return code: {process.returncode}", file=sys.stderr)
+
+                    # Log to error log with full output
+                    if error_logger:
+                        full_output = ''.join(output_lines)
+                        context = {
+                            'state': state_name,
+                            'state_code': state_code,
+                            'step': step_label,
+                            'step_number': f'{i}/{len(steps)}'
+                        }
+                        error_logger.log_command_failure(
+                            command=cmd,
+                            return_code=process.returncode,
+                            output=full_output,
+                            task_name=f'{state_name} - {step_label}',
+                            context=context
+                        )
+                        error_logger.write_summary()
+                        error_logger.close()
+
                     sys.exit(1)
 
             except subprocess.TimeoutExpired:
                 send_status(f"{state_name} [{num_districts}D] TIMEOUT at {step_label}")
                 print(f"\n[TIMEOUT] {state_name} timed out at {step_label} (60 min limit)", file=sys.stderr)
                 print(f"Command: {cmd}", file=sys.stderr)
+
+                # Log timeout to error log
+                if error_logger:
+                    context = {
+                        'state': state_name,
+                        'state_code': state_code,
+                        'step': step_label,
+                        'step_number': f'{i}/{len(steps)}',
+                        'timeout_minutes': '60'
+                    }
+                    error_logger.log_warning(
+                        f"Command timed out after 60 minutes: {step_label}",
+                        context=context
+                    )
+                    error_logger.write_summary()
+                    error_logger.close()
+
                 process.kill()
                 sys.exit(1)
 
@@ -259,6 +332,10 @@ def main():
 
         # Show completion
         send_status(f"{state_name} [{num_districts}D] COMPLETE")
+
+    # Close error logger on success (if no errors were logged, file remains minimal)
+    if error_logger:
+        error_logger.close()
 
     return 0
 

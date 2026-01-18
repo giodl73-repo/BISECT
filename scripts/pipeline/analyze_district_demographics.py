@@ -197,20 +197,22 @@ def main():
         error_logger = get_error_logger(output_dir, run_dir.parent.name, int(args.census_year))
     except Exception:
         # If logger initialization fails, continue without logging (non-fatal)
-        pass / 'demographic'
+        pass
 
-    output_dir.mkdir(parents=True, exist_ok=True)
+    # Create demographic subdirectory
+    demographic_dir = output_dir / 'demographic'
+    demographic_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 70)
     print("DEMOGRAPHIC ANALYSIS")
     print("=" * 70)
     print(f"Run: {run_dir}")
-    print(f"Output: {output_dir}")
+    print(f"Output: {demographic_dir}")
     print("=" * 70)
     print()
 
     # Check if analysis already exists
-    district_file = output_dir / 'district_demographics.csv'
+    district_file = demographic_dir / 'district_demographics.csv'
 
     if not args.force and district_file.exists():
         print("Demographic analysis already exists - skipping")
