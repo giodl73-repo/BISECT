@@ -124,6 +124,8 @@ def main():
                         help='Print commands without executing (debug mode)')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug mode')
+    parser.add_argument('--workers', type=int, default=6,
+                        help='Number of workers for parallel Phase 2 visualization (default: 6)')
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)
@@ -296,8 +298,8 @@ def main():
             print("PHASE 2: VISUALIZATION (Parallel)")
             print("="*70)
 
-        # Determine number of workers (max 6, or number of tasks if fewer)
-        max_workers = min(len(phase2_steps), 6)
+        # Determine number of workers (use allocated workers, or number of tasks if fewer)
+        max_workers = min(len(phase2_steps), args.workers)
 
         # Prepare task arguments with worker ID assignment
         task_args = [

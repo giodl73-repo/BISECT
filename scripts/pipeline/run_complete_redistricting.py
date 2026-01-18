@@ -340,8 +340,8 @@ def build_pipeline_command(base_args, year, states_only=False, skip_states=False
     # Optional parameters
     if base_args.experiment_name:
         cmd.extend(['--experiment-name', base_args.experiment_name])
-    if states_only:
-        cmd.extend(['--workers', str(base_args.workers)])  # Only for state processing
+    # Pass worker count for both state processing and post-processing
+    cmd.extend(['--workers', str(base_args.workers)])
     if base_args.run_analysis:
         cmd.append('--run-analysis')
     else:
@@ -473,8 +473,14 @@ def run_single_year_pipeline(year, workers_for_year, args):
         cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
         cmd_states.extend(['--workers', str(workers_for_year)])
 
-        # Pass 2: Post-processing
+        # Pass 2: Post-processing (override worker count for this year's allocation)
         cmd_post = build_pipeline_command(args, year, states_only=False, skip_states=True)
+        # Override the --workers argument with this year's allocation
+        # Find and replace the --workers value
+        for i, arg in enumerate(cmd_post):
+            if arg == '--workers' and i + 1 < len(cmd_post):
+                cmd_post[i + 1] = str(workers_for_year)
+                break
 
         # Run state processing
         if not args.print_only:
@@ -1398,7 +1404,8 @@ def main():
         '--version', args.version,
         '--output-dir', str(output_dir),
         '--election-year', args.election_year,
-        '--dpi', str(args.dpi)
+        '--dpi', str(args.dpi),
+        '--workers', str(args.workers)
     ]
 
     # Add optional flags
