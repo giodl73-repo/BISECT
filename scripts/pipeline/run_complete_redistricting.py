@@ -1010,6 +1010,25 @@ def main():
                             if now - last_display_time[0] >= 0.5:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
+
+                # Stdout closed - wait for process to complete
+                proc.wait()
+
+                # Mark year as complete based on phase
+                with display_lock:
+                    phase = year_phase.get(year, 'states')
+                    if phase == 'nation':
+                        # Post-processing complete - get task count from coordinator
+                        progress = coordinator.year_progress.get(year, {})
+                        total_tasks = progress.get('total', 7)
+                        coordinator.update_year_postprocess(year, total_tasks, total_tasks)
+                    else:
+                        # State processing complete
+                        coordinator.update_year_progress(year, 50, 50)
+
+                    # Final display update
+                    clear_and_update_display(coordinator)
+
             except Exception as e:
                 sys.stderr.write(f"[ERROR] Monitor thread for {year} died: {e}\n")
                 sys.stderr.flush()
