@@ -857,6 +857,31 @@ def main():
         results = {}
         processes = {}
 
+        # Track phase for each year
+        year_phase = {}  # Will be set to: 'states', 'ready_for_nation', 'nation', 'failed'
+
+        # Determine output directories for each year
+        year_output_dirs = {}
+        for year in year_queue:
+            if args.run_type == 'production':
+                year_output_dirs[year] = version_dir / year
+            elif args.run_type == 'experiment':
+                year_output_dirs[year] = version_dir / year
+            else:  # test
+                year_output_dirs[year] = version_dir / year
+
+        # Check for .states_complete marker file (skip state processing if exists)
+        year_states_complete = {}
+        for year in year_queue:
+            marker_file = year_output_dirs[year] / '.states_complete'
+            states_complete = marker_file.exists() and not args.reset
+            year_states_complete[year] = states_complete
+            if states_complete:
+                print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
+                year_phase[year] = 'ready_for_nation'  # Skip to nation processing
+            else:
+                year_phase[year] = 'states'  # Need to run state processing
+
         # Start year processes (skip if .states_complete marker exists)
         for i, year in enumerate(year_queue):
             if year_states_complete[year]:
@@ -983,31 +1008,6 @@ def main():
                 thread = threading.Thread(target=monitor_process, args=(year, proc, coordinator), daemon=True)
                 thread.start()
                 threads[year] = thread
-
-        # Track phase for each year
-        year_phase = {}  # Will be set to: 'states', 'ready_for_nation', 'nation', 'failed'
-
-        # Determine output directories for each year
-        year_output_dirs = {}
-        for year in year_queue:
-            if args.run_type == 'production':
-                year_output_dirs[year] = version_dir / year
-            elif args.run_type == 'experiment':
-                year_output_dirs[year] = version_dir / year
-            else:  # test
-                year_output_dirs[year] = version_dir / year
-
-        # Check for .states_complete marker file (skip state processing if exists)
-        year_states_complete = {}
-        for year in year_queue:
-            marker_file = year_output_dirs[year] / '.states_complete'
-            states_complete = marker_file.exists() and not args.reset
-            year_states_complete[year] = states_complete
-            if states_complete:
-                print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
-                year_phase[year] = 'ready_for_nation'  # Skip to nation processing
-            else:
-                year_phase[year] = 'states'  # Need to run state processing
 
         # Helper function to launch national post-processing
         def launch_nation_processing(year):
