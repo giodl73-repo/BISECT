@@ -17,6 +17,29 @@ All notable changes to the Congressional Redistricting project.
 ### Added
 - Nothing pending
 
+## 2026-01-17 - Pipeline Error Logging System (Enhancement 39)
+
+### Added
+- **Enhancement 39: Comprehensive Pipeline Error Logging**
+  - `scripts/utils/error_logger.py` - Thread-safe error logging with full tracebacks and system context
+  - `scripts/utils/stage_tracker.py` - Stage completion tracking with `.stage_{name}` marker files
+  - `scripts/utils/parse_error_logs.py` - Error log analysis tool with categorization and suggested fixes
+  - Error logs: `outputs/{version}/{year}/error.log` created automatically on any failure
+  - Integrated into `scripts/pipeline/process_nation.py` for national post-processing failures
+  - 16 unit tests for error logging utilities (100% pass rate)
+
+### Changed
+- `scripts/utils/__init__.py` - Exported ErrorLogger and StageTracker for easy imports
+
+### Benefits
+- **Faster Debugging**: Immediately see what went wrong without detective work (solves V6 debugging issue)
+- **No Lost Information**: Error details persist even if terminal closes or parallel workers crash
+- **Actionable Errors**: Parse logs with `python scripts/utils/parse_error_logs.py --version v1`
+- **Error Categorization**: Automatic grouping (Missing Data, METIS Issues, Memory, etc.) with suggested fixes
+- **Stage Tracking**: Know exactly which stage failed for targeted recovery
+
+**Files**: 3 new utility modules, 1 test file, 2 modified scripts
+
 ## 2026-01-17 - Parallel Multi-Year Pipeline (Enhancement 37)
 
 ### Added

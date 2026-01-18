@@ -283,31 +283,58 @@ open outputs/us_2020_v1/index.html
 
 ## Documentation
 
-For detailed technical documentation, see:
+### User Guides (Start Here!)
 
-- **[ARCHITECTURE.md](context/ARCHITECTURE.md)** - System design and architectural decisions
-  - Data pipeline architecture
-  - Redistricting algorithm details
-  - Scope-based analysis pattern
-  - Progress bar protocol
+**New to the project?** Start with these comprehensive, user-friendly guides:
 
-- **[CODING_PATTERNS.md](context/CODING_PATTERNS.md)** - Developer patterns and best practices
-  - File organization conventions
-  - Progress bar integration
-  - Scope-based analysis implementation
-  - Testing guidelines
+- **[GETTING_STARTED.md](docs/GETTING_STARTED.md)** - Complete setup and first-run tutorial
+  - Installation walkthrough
+  - Prerequisites and dependencies
+  - Running your first redistricting
+  - Troubleshooting common issues
 
-- **[TESTING.md](context/TESTING.md)** - Automated testing guide
-  - Playwright end-to-end tests
-  - Visual regression testing
-  - Developer workflow
-  - CI/CD integration
+- **[DATA_DICTIONARY.md](docs/DATA_DICTIONARY.md)** - Field-by-field explanation of all outputs
+  - CSV column definitions
+  - Compactness metrics explained
+  - Political and demographic data
+  - How to interpret results
 
-- **[SKILLS.md](context/SKILLS.md)** - Claude Code skills for automation (31 skills)
-  - Enhancement workflow
-  - Pipeline execution
-  - Visualization & analysis
-  - Code organization
+- **[VISUALIZATION_GUIDE.md](docs/VISUALIZATION_GUIDE.md)** - Reading maps and dashboards
+  - Map types and what they show
+  - Dashboard navigation
+  - Interpreting compactness scores
+  - Political and demographic visualization
+
+- **[TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Solutions to common problems
+  - Installation errors
+  - Runtime issues
+  - Data problems
+  - Performance optimization
+
+### Algorithm Documentation
+
+- **[RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)** - How the redistricting algorithm works
+  - Step-by-step explanation
+  - METIS graph partitioning
+  - Population balancing
+  - Compactness optimization
+
+- **[DEPENDENCIES.md](docs/DEPENDENCIES.md)** - Software requirements and setup
+  - Python packages
+  - METIS installation
+  - Platform-specific instructions
+
+### Developer Resources (AI-Optimized)
+
+**For developers and AI assistants** - these docs are optimized for conciseness and token efficiency:
+
+- **[ARCHITECTURE.md](context/ARCHITECTURE.md)** - System design (compact notation)
+- **[CODING_PATTERNS.md](context/CODING_PATTERNS.md)** - Code conventions (pattern-first)
+- **[TESTING.md](context/TESTING.md)** - Test system documentation
+- **[SKILLS.md](context/SKILLS.md)** - Claude Code skills catalog (31 skills)
+- **[ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md)** - Development process
+
+### Contributing
 
 - **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Development workflow and git practices
   - Feature branch workflow
@@ -315,15 +342,16 @@ For detailed technical documentation, see:
   - Using Claude Code skills
   - Code review guidelines
 
-- **[Enhancement Index](context/enhancements/INDEX.md)** - Recent improvements and roadmap
-  - Completed enhancements
-  - Performance optimizations
-  - New features and capabilities
+- **[CHANGELOG.md](docs/CHANGELOG.md)** - Version history and recent changes
 
-- **[CLAUDE.md](CLAUDE.md)** - Guide for AI-assisted development
-  - Project context and architecture
+- **[Enhancement Index](context/enhancements/INDEX.md)** - Recent improvements and roadmap
+
+### AI-Assisted Development
+
+- **[CLAUDE.md](CLAUDE.md)** - Guide for Claude Code (AI assistant)
+  - Project context and patterns
   - Common tasks and workflows
-  - Integration patterns
+  - Skill usage
 
 ## Future Extensions
 
