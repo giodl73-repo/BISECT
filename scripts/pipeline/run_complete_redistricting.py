@@ -361,12 +361,99 @@ def build_pipeline_command(base_args, year, states_only=False, skip_states=False
     return cmd
 
 
+def allocate_workers_across_years(total_workers, num_years=3):
+    """
+    Distribute workers across census years for parallel execution.
+
+    Args:
+        total_workers: Total number of workers available
+        num_years: Number of census years (default: 3)
+
+    Returns:
+        List of worker counts per year
+
+    Examples:
+        allocate_workers_across_years(6) -> [2, 2, 2]
+        allocate_workers_across_years(8) -> [3, 3, 2]
+        allocate_workers_across_years(9) -> [3, 3, 3]
+    """
+    if total_workers < num_years:
+        # Minimum 1 worker per year
+        return [1] * num_years
+
+    base = total_workers // num_years
+    remainder = total_workers % num_years
+
+    # Distribute base + remainder to first years
+    workers = [base] * num_years
+    for i in range(remainder):
+        workers[i] += 1
+
+    return workers
+
+
+def run_single_year_pipeline(year, workers_for_year, args):
+    """
+    Run the complete pipeline for a single census year.
+
+    This function is designed to be called in parallel for multiple years.
+
+    Args:
+        year: Census year string ('2020', '2010', '2000')
+        workers_for_year: Number of workers to allocate to this year
+        args: Command-line arguments object
+
+    Returns:
+        Tuple of (year, success_bool, error_message)
+    """
+    try:
+        print(f"\n[{year}] Starting with {workers_for_year} workers...")
+        start_time = time.time()
+
+        # Build commands for this year
+        # Pass 1: State processing
+        cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
+        cmd_states.extend(['--workers', str(workers_for_year)])
+
+        # Pass 2: Post-processing
+        cmd_post = build_pipeline_command(args, year, states_only=False, skip_states=True)
+
+        # Run state processing
+        if not args.print_only:
+            result = subprocess.run(cmd_states, capture_output=False)
+            if result.returncode != 0:
+                error_msg = f"State processing failed with code {result.returncode}"
+                print(f"\n[{year}] FAILED: {error_msg}")
+                return (year, False, error_msg)
+
+            # Run post-processing
+            result = subprocess.run(cmd_post, capture_output=False)
+            if result.returncode != 0:
+                error_msg = f"Post-processing failed with code {result.returncode}"
+                print(f"\n[{year}] FAILED: {error_msg}")
+                return (year, False, error_msg)
+        else:
+            print(f"\n[{year}] Would execute:")
+            print(f"  States: {' '.join(cmd_states)}")
+            print(f"  Post:   {' '.join(cmd_post)}")
+
+        elapsed = time.time() - start_time
+        elapsed_mins = elapsed / 60
+        print(f"\n[{year}] COMPLETE in {elapsed_mins:.1f} minutes")
+        return (year, True, None)
+
+    except Exception as e:
+        error_msg = str(e)
+        print(f"\n[{year}] EXCEPTION: {error_msg}")
+        return (year, False, error_msg)
+
+
 def create_argument_parser():
     """Create and configure argument parser for the pipeline."""
     parser = argparse.ArgumentParser(description='Run complete US redistricting pipeline')
     parser.add_argument('--output-dir', type=str, help='Output directory (overrides year and version)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000', 'all'],
-                        help='Census year: 2020, 2010, 2000, or "all" to run all three decades (default: 2020)')
+                        help='Census year: 2020, 2010, 2000, or "all" to run all three in parallel (default: 2020)')
     parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
     parser.add_argument('--workers', type=int, default=4,
                         help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 4)')
@@ -543,11 +630,7 @@ def main():
     if args.year == 'all':
         year_queue = ['2000', '2010', '2020']
         multi_year_mode = True
-        print("\n" + "="*70)
-        print("MULTI-YEAR MODE: Running all three census decades")
-        print("  Pass 1: State processing for 2000, 2010, 2020")
-        print("  Pass 2: Post-processing for 2000, 2010, 2020")
-        print("="*70)
+        # Banner will be printed in parallel multi-year section
     else:
         year_queue = [args.year]
         multi_year_mode = False
@@ -579,67 +662,83 @@ def main():
             )
             write_version_config(version_config, version_dir)
 
-    # Handle multi-year mode with two-pass approach
+    # Handle multi-year mode with PARALLEL execution
     if multi_year_mode:
-        # PASS 1: State processing for all years
         print("\n" + "="*70)
-        print("PASS 1: STATE PROCESSING FOR ALL YEARS")
+        print("PARALLEL MULTI-YEAR MODE: Running 2020, 2010, 2000 concurrently")
         print("="*70)
 
-        for year_index, year in enumerate(year_queue):
-            print(f"\n{'='*70}")
-            print(f"YEAR {year}: Processing all 50 states")
-            print('='*70)
-
-            # Build command with --states-only flag
-            cmd = build_pipeline_command(args, year, states_only=True, skip_states=False)
-
-            # Add --reset only for first year
-            if args.reset and year_index == 0:
-                cmd.append('--reset')
-
-            # Run state processing
-            if not args.print_only:
-                result = subprocess.run(cmd)
-                if result.returncode != 0:
-                    print(f"\n[ERROR] State processing failed for year {year}")
-                    sys.exit(1)
-            else:
-                print(f"[PRINT-ONLY] Would execute: {' '.join(cmd)}")
-
-        # PASS 2: Post-processing for all years
-        print("\n" + "="*70)
-        print("PASS 2: POST-PROCESSING FOR ALL YEARS")
+        # Allocate workers across years
+        workers_per_year = allocate_workers_across_years(args.workers, num_years=3)
+        print(f"\nWorker Allocation:")
+        print(f"  2020: {workers_per_year[0]} workers")
+        print(f"  2010: {workers_per_year[1]} workers")
+        print(f"  2000: {workers_per_year[2]} workers")
+        print(f"  Total: {sum(workers_per_year)} workers")
         print("="*70)
 
+        if args.print_only:
+            print("\n[PRINT-ONLY MODE] - No execution")
+
+        # Start timestamp
+        start_time = time.time()
+
+        # Run all 3 years in parallel using ProcessPoolExecutor
+        results = {}
+        with ProcessPoolExecutor(max_workers=3) as executor:
+            # Submit all year processes
+            future_to_year = {
+                executor.submit(run_single_year_pipeline, year, workers_per_year[i], args): year
+                for i, year in enumerate(year_queue)
+            }
+
+            # Collect results as they complete
+            for future in as_completed(future_to_year):
+                year = future_to_year[future]
+                try:
+                    year_result, success, error = future.result()
+                    results[year_result] = {'success': success, 'error': error}
+                except Exception as e:
+                    print(f"\n[{year}] EXCEPTION during execution: {e}")
+                    results[year] = {'success': False, 'error': str(e)}
+
+        # Calculate elapsed time
+        elapsed = time.time() - start_time
+        elapsed_mins = elapsed / 60
+        elapsed_hours = elapsed / 3600
+
+        # Print summary
+        print("\n" + "="*70)
+        print("PARALLEL MULTI-YEAR PIPELINE COMPLETE")
+        print("="*70)
+        print(f"Total Time: {elapsed_hours:.2f} hours ({elapsed_mins:.1f} minutes)")
+        print(f"\nResults:")
+
+        success_count = 0
         for year in year_queue:
-            print(f"\n{'='*70}")
-            print(f"YEAR {year}: Running national aggregation and maps")
-            print('='*70)
+            result = results.get(year, {'success': False, 'error': 'No result'})
+            status = "[OK]" if result['success'] else "[FAIL]"
+            print(f"  {year}: {status}")
+            if not result['success'] and result['error']:
+                print(f"         Error: {result['error']}")
+            if result['success']:
+                success_count += 1
+                # Update version config for successful years
+                if not args.print_only:
+                    update_version_config_with_year(version_dir, int(year))
 
-            # Build command with --skip-states flag
-            cmd = build_pipeline_command(args, year, states_only=False, skip_states=True)
-
-            # Run post-processing
-            if not args.print_only:
-                result = subprocess.run(cmd)
-                if result.returncode != 0:
-                    print(f"\n[ERROR] Post-processing failed for year {year}")
-                    sys.exit(1)
-
-                # Update version config with completed year
-                update_version_config_with_year(version_dir, int(year))
-                print(f"\n[OK] Updated version config: completed years = {read_version_config(version_config_path).completed_years}")
-            else:
-                print(f"[PRINT-ONLY] Would execute: {' '.join(cmd)}")
-
-        print(f"\n" + "="*70)
-        print(f"MULTI-YEAR MODE COMPLETE")
-        print(f"Pass 1: Processed states for {', '.join(year_queue)}")
-        print(f"Pass 2: Generated national outputs for {', '.join(year_queue)}")
-        print(f"Version config: {version_config_path}")
         print("="*70)
-        return
+
+        # Exit with appropriate code
+        if success_count == len(year_queue):
+            print("\n[SUCCESS] All census years completed successfully")
+            return 0
+        elif success_count > 0:
+            print(f"\n[PARTIAL] {success_count}/{len(year_queue)} census years completed")
+            return 1
+        else:
+            print("\n[FAILURE] All census years failed")
+            return 1
 
     # Determine execution mode
     mode = 'parallel' if args.workers > 1 else 'sequential'
