@@ -14,643 +14,156 @@ user-invocable: true
 
 # Reorganize Directory Structure
 
-## Overview
-
-Systematically restructure project directories following best practices and established patterns. Ensures consistency, maintainability, and scalability as the project grows.
+Systematically restructure project directories following best practices and established patterns. Ensures consistency, maintainability, and scalability as project grows.
 
 ## Prerequisites
+**Required**: Full project codebase access, git version control (for safety/rollback), clean working directory (no uncommitted changes)
+**Recommended**: Backup or git commit before starting, full test suite to validate paths after changes, documentation of current structure
 
-**Required**:
-- Full project codebase access
-- Git version control (for safety/rollback)
-- Clean working directory (no uncommitted changes)
-
-**Recommended**:
-- Backup or git commit before starting
-- Full test suite to validate paths after changes
-- Documentation of current structure
-
-## When to Use This Skill
-
-- User says: "Organize the directories" or "Clean up the file structure"
-- User says: "Restructure the data directories"
-- Directory structure has grown organically without plan
-- Year-specific data mixed with generic data
-- Scripts scattered across multiple locations
-- Outputs not consistently organized
-- After major feature additions that changed organization needs
+## When to Use
+User says "Organize the directories/Clean up the file structure/Restructure the data directories", directory structure has grown organically without plan, year-specific data mixed with generic data, scripts scattered across multiple locations, outputs not consistently organized, after major feature additions that changed organization needs
 
 ## Target Directory Patterns
 
-### 1. Year-Specific Data
+**1. Year-Specific Data**: Pattern `data/{type}/{year}/`
+Structure: `data/tracts/2020/`, `data/adjacency/2020/`, `data/districts/2020/`
+Why: Separate data by census year, easy year comparison, clear data dependencies, scalable for additional years
 
-**Pattern**: `data/{type}/{year}/`
+**2. Function-Based Scripts**: Pattern `scripts/{function}/`
+Structure: `scripts/pipeline/` (orchestration), `scripts/political/` (analysis), `scripts/demographic/` (analysis), `scripts/compactness/` (analysis), `scripts/data/` (download/build)
+Why: Group by functionality (not chronology), clear separation of concerns, easier navigation, maintainable codebase
 
-**Structure**:
-```
-data/
-├── tracts/
-│   ├── 2000/
-│   │   ├── alabama_tracts_2000.parquet
-│   │   └── ...
-│   ├── 2010/
-│   │   └── ...
-│   └── 2020/
-│       └── ...
-├── adjacency/
-│   ├── 2000/
-│   ├── 2010/
-│   └── 2020/
-├── election/
-│   └── 2020/  # Only 2020 has presidential data
-└── demographics/
-    ├── 2000/
-    ├── 2010/
-    └── 2020/
-```
+**3. Organized Outputs**: Pattern `outputs/us_{year}_{version}/`
+Structure: `outputs/us_2020_v1/states/` (per-state results), `outputs/us_2020_v1/national/` (national aggregates), `outputs/us_2020_v1/figures/` (visualizations)
+Why: Version control for outputs, compare across versions, isolate experiments, avoid overwriting results
 
-**Benefits**:
-- Clear year separation
-- Easy to add new census years
-- Supports multi-year comparisons
-- Reduces path complexity
-
-### 2. Analysis Outputs
-
-**Pattern**: `outputs/{year}_{version}/{analysis_type}/`
-
-**Structure**:
-```
-outputs/
-└── us_2020_v1/
-    ├── states/
-    │   ├── alabama/
-    │   │   ├── data/
-    │   │   │   ├── districts.csv
-    │   │   │   ├── compactness.csv
-    │   │   │   └── ...
-    │   │   └── maps/
-    │   │       ├── districts.png
-    │   │       └── ...
-    │   └── ...
-    ├── national/
-    │   ├── maps/
-    │   └── data/
-    ├── metro/
-    └── index.html  # Dashboard
-```
-
-**Benefits**:
-- Versioned outputs (can compare v1 vs v2)
-- Year-tagged (can compare 2010 vs 2020)
-- Hierarchical (state → national → metro)
-
-### 3. Scripts Organization
-
-**Pattern**: `scripts/{function}/{script}.py`
-
-**Structure**:
-```
-scripts/
-├── pipeline/          # Orchestration
-│   ├── run_complete_redistricting.py
-│   └── process_single_state.py
-├── data/             # Data preparation
-│   ├── download_census.py
-│   └── build_adjacency.py
-├── political/        # Political analysis
-│   └── analyze_districts.py
-├── demographic/      # Demographic analysis
-│   └── analyze_demographics.py
-├── compactness/      # Compactness metrics
-│   └── analyze_compactness.py
-├── visualization/    # Visualization
-│   ├── visualize_state.py
-│   └── visualize_rounds.py
-└── validation/       # Validation
-    └── validate_pipeline_outputs.py
-```
-
-**Benefits**:
-- Function-based grouping
-- Easy to find related scripts
-- Clear responsibility boundaries
-
-### 4. Papers & Presentations
-
-**Pattern**: `papers/{paper_name}/` and `presentations/{presentation_name}/`
-
-**Structure**:
-```
-papers/
-├── 01_recursive_bisection/
-│   ├── recursive_bisection.tex
-│   ├── references.bib
-│   ├── sections/
-│   ├── figures/
-│   └── compile.bat
-└── ...
-
-presentations/
-├── edge_weighted_bisection/
-│   ├── presentation.tex
-│   ├── figures/
-│   └── compile.bat
-└── ...
-```
-
-**Benefits**:
-- Self-contained papers/presentations
-- Version control friendly
-- Easy to archive or share
+**4. Artifacts by Type**: Pattern `artifacts/{type}/`
+Structure: `papers/` (LaTeX papers), `presentations/` (Beamer presentations), `guides/` (educational guides), `figures/` (publication figures)
+Why: Separate docs/code, clear publication pipeline, version controlled separately
 
 ## Workflow
 
 ### Step 1: Analyze Current Structure
+Map existing directories: `find . -type d -maxdepth 3 | sort`, identify issues (mixed years, scattered scripts, inconsistent naming, redundant directories), document current structure (record where files are now)
 
-**Document current state**:
+### Step 2: Design Target Structure
+Based on project patterns: Year-specific data (`data/{type}/{year}/`), function-based scripts (`scripts/{function}/`), organized outputs (`outputs/us_{year}_{version}/`), artifacts by type (`artifacts/{type}/`)
+
+**Create directory map**:
+```
+# Current → Target
+data/tracts_2020/ → data/tracts/2020/
+data/tracts_2010/ → data/tracts/2010/
+scripts/analyze_political.py → scripts/political/analyze_districts.py
+scripts/analyze_demographic.py → scripts/demographic/analyze_districts.py
+outputs/2020_v1/ → outputs/us_2020_v1/
+```
+
+### Step 3: Create Migration Plan
+Use TodoWrite to track: [ ] Create new directory structure, [ ] Move data files, [ ] Move script files, [ ] Update path references in code, [ ] Update path references in docs, [ ] Run tests to validate, [ ] Remove old directories, [ ] Document changes
+
+**Prioritize moves**: Non-breaking first (unused dirs), data files (before code), scripts (after data), test after each major category
+
+### Step 4: Create New Directory Structure
 ```bash
-# Generate directory tree
-tree -d -L 3 > ../../context/archive/directory_structure_before.txt
-
-# Count files per directory
-find . -type f | cut -d/ -f1-3 | sort | uniq -c | sort -rn > ../../context/archive/file_counts.txt
-
-# Identify duplicates or inconsistencies
-find . -name "*.py" | grep -E "(old|backup|temp|copy)" > ../../context/archive/cleanup_candidates.txt
+mkdir -p data/{tracts,adjacency,districts}/{2000,2010,2020}
+mkdir -p scripts/{pipeline,political,demographic,compactness,data,web,utils}
+mkdir -p outputs
+mkdir -p artifacts/{papers,presentations,guides,figures}
 ```
 
-**Identify issues**:
-- Mixed year-specific and generic paths
-- Scattered scripts
-- Inconsistent output organization
-- Duplicate or redundant files
-- Deep nesting (>4 levels)
+### Step 5: Move Files Systematically
+**Use git mv** (preserves history): `git mv old/path new/path`
 
-**Example findings**:
-```
-Issues identified:
-1. data/tracts/ has flat structure (all years mixed)
-2. outputs/ has inconsistent naming (us_2020_v1 vs us_2010_test)
-3. Scripts in both scripts/ and src/apportionment/
-4. Old backup files (*.old, *.backup) present
-5. Temporary directories (temp/, old/, backup/) present
-```
-
-### Step 2: Design New Structure
-
-**Create proposal document**:
-```markdown
-# Directory Reorganization Proposal
-
-## Current Issues
-1. Year-specific data not separated
-2. Scripts scattered across locations
-3. Outputs inconsistently named
-
-## Proposed Structure
-[Include tree diagram of new structure]
-
-## Migration Plan
-- Phase 1: Create new directories
-- Phase 2: Copy files (preserve originals)
-- Phase 3: Update path references
-- Phase 4: Validate all paths
-- Phase 5: Delete old structure
-
-## Affected Files
-- 47 Python scripts with hardcoded paths
-- 12 batch files with paths
-- 5 LaTeX documents with figure paths
-
-## Risk Assessment
-- Low risk: All changes can be rolled back via git
-- Testing: Run full pipeline after Phase 3
-```
-
-**Get user approval**:
-- Present proposal
-- Discuss any concerns
-- Confirm timeline
-- Agree on rollback plan
-
-### Step 3: Phase 1 - Create New Directories
-
-**Create target structure**:
+**Move data files**:
 ```bash
-# Data directories
-mkdir -p data/tracts/{2000,2010,2020}
-mkdir -p data/adjacency/{2000,2010,2020}
-mkdir -p data/election/2020
-mkdir -p data/demographics/{2000,2010,2020}
-
-# Output directories (examples)
-mkdir -p outputs/us_2020_v1/{states,national,metro}
-mkdir -p outputs/us_2010_v1/{states,national,metro}
-
-# Scripts (already organized, but verify)
-ls scripts/  # Check structure
+git mv data/tracts_2020/ data/tracts/2020/
+git mv data/adjacency_2020/ data/adjacency/2020/
 ```
 
-**Use TodoWrite to track**:
+**Move script files**:
+```bash
+git mv scripts/analyze_political.py scripts/political/analyze_districts.py
+git mv scripts/analyze_demographic.py scripts/demographic/analyze_districts.py
+```
+
+**Verify moves**: `git status` (check staged moves), `ls -R` (verify new structure)
+
+### Step 6: Update Path References in Code
+**Find all path references**: `grep -r "data/tracts_2020" --include="*.py"`, `grep -r "scripts/analyze_political" --include="*.py"`
+
+**Update imports**:
 ```python
-todos = [
-    {"content": "Create new data directories", "status": "completed"},
-    {"content": "Create new output directories", "status": "completed"},
-    {"content": "Verify script organization", "status": "completed"},
-]
+# Before
+from scripts.analyze_political import analyze
+
+# After
+from scripts.political.analyze_districts import analyze
 ```
 
-### Step 4: Phase 2 - Copy Files
-
-**Copy files to new locations** (preserve originals):
-```bash
-# Copy tract data
-cp data/tracts/alabama_tracts_2020.parquet data/tracts/2020/
-cp data/tracts/alabama_tracts_2010.parquet data/tracts/2010/
-
-# Or use script
-python scripts/migration/migrate_tract_data.py --dry-run
-python scripts/migration/migrate_tract_data.py --execute
-```
-
-**Verify copies**:
-```bash
-# Check file counts
-find data/tracts/2020 -name "*.parquet" | wc -l
-# Should match old structure
-
-# Verify file integrity
-md5sum data/tracts/alabama_tracts_2020.parquet
-md5sum data/tracts/2020/alabama_tracts_2020.parquet
-# Should match
-```
-
-**Safety notes**:
-- Never move files, always copy first
-- Verify copies before modifying anything
-- Keep originals until fully validated
-
-### Step 5: Phase 3 - Update Path References
-
-**Find all hardcoded paths**:
-```bash
-# Find Python files with old paths
-grep -r "data/tracts/[a-z]" scripts/ --include="*.py" > path_updates_needed.txt
-
-# Find batch files with old paths
-grep -r "data\\tracts\\" . --include="*.bat" >> path_updates_needed.txt
-
-# Find LaTeX files with old paths
-grep -r "figures/" papers/ --include="*.tex" >> path_updates_needed.txt
-```
-
-**Update paths systematically**:
-
-**Option A: Manual (safer for critical files)**:
+**Update file paths**:
 ```python
-# Example: Update single file
-# From:
-tracts_file = f'data/tracts/{state}_tracts_2020.parquet'
+# Before
+data_path = "data/tracts_2020/california_tracts.parquet"
 
-# To:
-tracts_file = f'data/tracts/2020/{state}_tracts_2020.parquet'
+# After
+data_path = f"data/tracts/{year}/california_tracts.parquet"
 ```
 
-**Option B: Batch (for many similar changes)**:
+**Update script invocations**:
 ```bash
-# Use sed (be very careful!)
-find scripts/ -name "*.py" -exec sed -i "s|data/tracts/\([a-z_]*\)_tracts_\(20[0-9][0-9]\)|data/tracts/\2/\1_tracts_\2|g" {} +
+# Before
+python scripts/analyze_political.py --state CA
 
-# Always test on a copy first!
+# After
+python scripts/political/analyze_districts.py --state CA --scope state
 ```
 
-**Track changes**:
-```python
-# Use TodoWrite to track each file updated
-todos.append({"content": "Update paths in run_complete_redistricting.py", "status": "completed"})
-todos.append({"content": "Update paths in download_census.py", "status": "completed"})
-# etc.
-```
-
-**Common path updates**:
-```python
-# Data paths
-OLD: f'data/tracts/{state}_tracts_{year}.parquet'
-NEW: f'data/tracts/{year}/{state}_tracts_{year}.parquet'
-
-OLD: f'data/adjacency/{state}_adjacency_{year}.pkl'
-NEW: f'data/adjacency/{year}/{state}_adjacency_{year}.pkl'
-
-# Output paths (already correct, verify)
-CURRENT: f'outputs/us_{year}_{version}/states/{state}/data/'
-```
-
-### Step 6: Phase 4 - Test All Paths
-
-**Run validation script**:
-```python
-# scripts/validation/validate_paths.py
-import sys
-from pathlib import Path
-
-errors = []
-
-# Check all expected data files exist
-states = ['alabama', 'alaska', ...]  # All 50 states
-for state in states:
-    for year in [2000, 2010, 2020]:
-        tract_file = Path(f'data/tracts/{year}/{state}_tracts_{year}.parquet')
-        if not tract_file.exists():
-            errors.append(f"Missing: {tract_file}")
-
-if errors:
-    print(f"Found {len(errors)} missing files:")
-    for err in errors:
-        print(f"  {err}")
-    sys.exit(1)
-else:
-    print("[OK] All paths validated")
-```
-
-**Run test pipeline**:
-```bash
-# Test with small states
-python scripts/pipeline/run_complete_redistricting.py \
-  --year 2020 --version test_paths \
-  --states "VT,DE" \
-  --print-only
-
-# If print-only succeeds, run for real
-python scripts/pipeline/run_complete_redistricting.py \
-  --year 2020 --version test_paths \
-  --states "VT,DE"
-```
-
-**Check outputs**:
-```bash
-# Verify outputs created in correct location
-ls outputs/us_2020_test_paths/states/vermont/data/
-ls outputs/us_2020_test_paths/states/delaware/data/
-
-# Run full validation
-python scripts/validation/validate_pipeline_outputs.py \
-  --year 2020 --version test_paths
-```
-
-### Step 7: Phase 5 - Clean Up Old Structure
-
-**Only after full validation**:
-
-**Create backup**:
-```bash
-# Archive old structure
-tar -czf old_structure_backup_$(date +%Y%m%d).tar.gz \
-  data/tracts/*.parquet \
-  data/adjacency/*.pkl
-
-# Move to archive
-mv old_structure_backup_*.tar.gz ../../context/archive/
-```
-
-**Remove old files**:
-```bash
-# Remove old tract files (NEW structure has them)
-rm data/tracts/*.parquet
-
-# Remove old adjacency files
-rm data/adjacency/*.pkl
-
-# Remove temporary/backup files
-rm -rf temp/
-rm -rf backup/
-find . -name "*.old" -delete
-find . -name "*.backup" -delete
-```
-
-**Verify clean state**:
-```bash
-# Should only have year-organized directories
-ls data/tracts/
-# Should show: 2000/ 2010/ 2020/
-
-ls data/adjacency/
-# Should show: 2000/ 2010/ 2020/
-```
-
-### Step 8: Update Documentation
-
-**Update CHANGELOG.md**:
-```markdown
-## [Unreleased]
-
-### Changed
-- Reorganized directory structure for year-specific data
-  - Moved `data/tracts/*.parquet` → `data/tracts/{year}/*.parquet`
-  - Moved `data/adjacency/*.pkl` → `data/adjacency/{year}/*.pkl`
-- Updated all path references in scripts (47 files)
-- Removed temporary and backup directories
-
-### Migration
-- Existing data: Run `scripts/migration/migrate_data.py` to move files
-- Scripts: All paths automatically updated
-- Outputs: New structure used going forward
-```
-
-**Update DATA_FORMATS.md**:
-```markdown
-## Directory Structure
+### Step 7: Update Path References in Docs
+**Find documentation references**: `grep -r "data/tracts_2020" --include="*.md"`, `grep -r "scripts/analyze" --include="*.md"`
 
-### Data Files
-\`\`\`
-data/
-├── tracts/{year}/          # Census tract geometries and population
-│   ├── {state}_tracts_{year}.parquet
-│   └── ...
-├── adjacency/{year}/       # Adjacency graphs
-│   ├── {state}_adjacency_{year}.pkl
-│   └── ...
-...
-\`\`\`
-```
-
-**Update ARCHITECTURE.md**:
-- Update directory structure diagrams
-- Update data flow descriptions
-- Update code examples with new paths
-
-**Update CODING_PATTERNS.md**:
-- Add pattern for year-specific paths
-- Document path construction patterns
-- Update examples
-
-### Step 9: Commit Changes
+**Update docs**: README.md (update file paths in examples), ARCHITECTURE.md (update directory structure diagrams), CLAUDE.md (update script references), docs/*.md (update all documentation)
 
-**Create comprehensive commit**:
-```bash
-git add .
-git status  # Review all changes
-
-git commit -m "Reorganize directory structure to year-specific pattern
+### Step 8: Run Tests to Validate
+**Run full test suite**: `pytest tests/` (verify all tests pass), check for import errors, check for file not found errors
 
-- Move tract data to data/tracts/{year}/
-- Move adjacency graphs to data/adjacency/{year}/
-- Update all path references in scripts (47 files)
-- Update batch files with new paths
-- Remove old temporary/backup directories
-- Update documentation (CHANGELOG, DATA_FORMATS, ARCHITECTURE)
+**Manual testing**: Run key scripts (`python scripts/pipeline/run_complete_redistricting.py --print-only`), verify outputs created in correct locations, compare with pre-move outputs (ensure equivalence)
 
-Tested: Full pipeline run for VT, DE with new structure
-Validated: All 50 states have data in new locations
+### Step 9: Remove Old Directories
+**After validation passes**: `git rm -r old/directory/`, verify old paths completely gone (`find . -name "old_dir_name"`), commit changes with descriptive message
 
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
-```
+### Step 10: Document Changes
+Update ARCHITECTURE.md with new structure, update CLAUDE.md with new script paths, update CHANGELOG.md (note directory reorganization), create migration guide (if others need to adapt), commit documentation changes
 
-## Common Reorganization Scenarios
+## Migration Safety Checklist
 
-### Scenario 1: Year-Specific Data Separation
+**Before migration**: [ ] Full git commit (clean state), [ ] Document current structure, [ ] Backup critical data (if not in git), [ ] Plan complete migration (TodoWrite)
 
-**Problem**: All census years mixed in flat structure
+**During migration**: [ ] Use `git mv` (preserves history), [ ] One category at a time (data, then scripts, then outputs), [ ] Update references immediately (after each move), [ ] Test incrementally (after each category)
 
-**Solution**: Create year subdirectories
+**After migration**: [ ] All tests pass, [ ] No broken imports, [ ] No file not found errors, [ ] Documentation updated, [ ] Old directories removed
 
-**Migration**:
-```python
-# scripts/migration/separate_by_year.py
-from pathlib import Path
-import shutil
+## Common Pitfalls
 
-source_dir = Path('data/tracts')
-years = [2000, 2010, 2020]
+**Breaking imports**: Move file without updating imports → Import errors → Update imports in same commit as move
 
-for year in years:
-    target_dir = source_dir / str(year)
-    target_dir.mkdir(exist_ok=True)
+**Forgetting documentation**: Update code but not docs → Docs out of date → Update README/ARCHITECTURE/CLAUDE.md systematically
 
-    # Move year-specific files
-    for file in source_dir.glob(f'*_{year}.parquet'):
-        target = target_dir / file.name
-        shutil.copy2(file, target)
-        print(f"Copied: {file} → {target}")
-```
+**Incomplete path updates**: Update some paths but miss others → Broken scripts → Use grep to find ALL references before updating
 
-### Scenario 2: Consolidate Scattered Scripts
+**Testing too late**: Move everything then test → Hard to debug → Test after each major category of moves
 
-**Problem**: Scripts in multiple locations (scripts/, src/, root/)
+**Losing git history**: Use `mv` instead of `git mv` → Breaks git history → Always use `git mv` for files in git
 
-**Solution**: Consolidate to scripts/{function}/
+## Performance Notes
+**Typical time**: Small reorganization (1-2 dirs, 30-60 min), moderate reorganization (5-10 dirs, 2-4h), major reorganization (entire project, 4-8h)
+**What takes time**: Planning structure (15%), moving files (20%), updating references (40%), testing (20%), documentation (5%)
 
-**Migration**:
-1. Identify all script locations
-2. Group by function
-3. Move to appropriate subdirectory
-4. Update imports and paths
-5. Test each script
-
-### Scenario 3: Flatten Deep Nesting
-
-**Problem**: Paths like `data/processed/census/2020/tracts/geometries/`
-
-**Solution**: Simplify to `data/tracts/2020/`
-
-**Benefits**:
-- Shorter paths
-- Less cognitive overhead
-- Easier to type/remember
-
-## Safety Protocols
-
-**Always**:
-1. ✅ Commit clean working directory first
-2. ✅ Create backup before starting
-3. ✅ Copy files (never move) in early phases
-4. ✅ Validate thoroughly before deleting originals
-5. ✅ Test pipeline after path updates
-6. ✅ Document all changes
-7. ✅ Can rollback via git
-
-**Never**:
-1. ❌ Delete files before validation
-2. ❌ Batch update paths without testing
-3. ❌ Skip documentation updates
-4. ❌ Reorganize during active development
-5. ❌ Mix reorganization with feature work
-
-## Troubleshooting
-
-### Broken Imports After Reorganization
-
-**Symptom**: `ModuleNotFoundError` or `ImportError`
-
-**Cause**: Python imports depend on directory structure
-
-**Solution**:
-- Keep source code structure (`src/apportionment/`) unchanged
-- Only reorganize data/ and outputs/
-- If moving scripts, update imports
-
-### Tests Fail After Path Updates
-
-**Symptom**: Tests can't find fixture files
-
-**Cause**: Test fixtures have hardcoded paths
-
-**Solution**:
-```python
-# Update test fixtures
-# From:
-fixture_path = 'tests/fixtures/sample_tracts.parquet'
-
-# To:
-import os
-fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures', 'sample_tracts.parquet')
-```
-
-### Git Recognizes as New Files (Not Moves)
-
-**Symptom**: Git shows file deletions + additions instead of renames
-
-**Cause**: Using copy instead of `git mv`
-
-**Solution**: Expected behavior when using copy-validate-delete approach
-- Git will track content similarity
-- Use `git log --follow` to see file history
-- Worth it for safety
-
-### Old Paths Still Work (Shadowing)
-
-**Symptom**: Code runs but uses wrong files
-
-**Cause**: Old files still present, new paths not actually used
-
-**Solution**:
-- Verify new paths in code
-- Check which files were accessed: `strace -e open python script.py 2>&1 | grep parquet`
-- Delete old files once validated
-
-## Related Skills
-
-- `/enhancement-implement` - Implement as formal enhancement
-- `/update-docs` - Update all documentation after reorganization
-- `/consolidate-scripts` - Consolidate scripts after reorganization
-- `/refactor-for-pattern` - Refactor code to use new patterns
-
-## Best Practices
-
-1. **Plan first, execute second**: Design full structure before moving anything
-2. **Incremental validation**: Test after each phase
-3. **Document decisions**: Explain why structure chosen
-4. **Communicate changes**: Notify team of upcoming reorganization
-5. **Version control**: Commit each phase separately for easier rollback
-6. **Keep backups**: Archive old structure even after deletion
-7. **Update CI/CD**: Ensure automation uses new paths
+## What You'll Get
+Organized directory structure (following project patterns), updated code references (all paths corrected), updated documentation (reflects new structure), validated functionality (tests pass), preserved git history (using git mv), migration documentation (for future reference)
 
 ## Next Steps
+Review new structure (ensure meets needs), run full pipeline (end-to-end validation), update team (if collaborative project), monitor for issues (fix any missed references), document patterns (update CODING_PATTERNS.md if new patterns established)
 
-After reorganization:
-- Run full test suite
-- Update CI/CD pipelines
-- Notify collaborators of changes
-- Archive old structure documentation
-- Monitor for any path-related issues
-- Consider adding path validation to CI
+## Related Skills
+`/refactor-for-pattern` (apply patterns after reorganization), `/consolidate-scripts` (merge scripts during reorganization), `/update-docs` (update documentation systematically), `/run-tests` (validate reorganization doesn't break tests)
