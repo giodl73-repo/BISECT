@@ -549,8 +549,8 @@ def create_argument_parser():
     parser.add_argument('--year', type=str, default='all', choices=['2020', '2010', '2000', 'all'],
                         help='Census year: 2020, 2010, 2000, or "all" to run all three in parallel (default: all)')
     parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
-    parser.add_argument('--workers', type=int, default=6,
-                        help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 6)')
+    parser.add_argument('--workers', type=int, default=12,
+                        help='Number of parallel workers: 1=sequential, 2-24=parallel (default: 12)')
     parser.add_argument('--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
                         help='DPI for output maps (default: 150). Higher = better quality but slower.')
     parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
