@@ -12,7 +12,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 
 ## Status Overview
 
-### ✅ Completed (27 enhancements)
+### ✅ Completed (28 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -41,8 +41,14 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [33](33_dashboard_mock_data.md) | Dashboard Mock Data Integration | Jan 16, 2026 | [View](33_dashboard_mock_data.md) |
 | [34](34_test_execution_skills.md) | Test Execution and Debugging Skills | Jan 16, 2026 | [View](34_test_execution_skills.md) |
 | [35](35_enhancement_manager_app.md) | Enhancement Manager Web App | Jan 17, 2026 | [View](35_enhancement_manager_app.md) |
-| [37](active/37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | Jan 17, 2026 | [View](active/37_parallel_multi_year_pipeline.md) |
-| [38](active/38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](active/38_streamline_claude_md.md) |
+| [37](37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | Jan 17, 2026 | [View](37_parallel_multi_year_pipeline.md) |
+| [38](38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](38_streamline_claude_md.md) |
+
+### ✅ Completed (28 enhancements)
+
+| # | Title | Completion Date | Files |
+|---|-------|----------------|-------|
+| [39](39_pipeline_error_logging.md) | Comprehensive Pipeline Error Logging (MVP) | Jan 17, 2026 | [View](39_pipeline_error_logging.md) |
 
 ### 🔄 In Progress (1 enhancement)
 
@@ -50,12 +56,14 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (9 enhancements)
+### 📋 Planned (11 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
+| [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | [View](41_public_distribution.md) |
 | [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
+| [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | [View](40_corner_adjacency_filter.md) |
 | [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](16_metro_2000.md) |
 | [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Low (Research/Experimental) | [View](22_national_redistricting.md) |
 | [23](23_county_representation.md) | Direct County Representation | Low (Research/Experimental) | [View](23_county_representation.md) |
