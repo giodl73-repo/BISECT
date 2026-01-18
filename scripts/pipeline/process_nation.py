@@ -158,24 +158,6 @@ def main():
         print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
         print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
 
-    # Run political analysis on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_political and not args.run_analysis and election_data_available and (output_dir.exists() or args.print_only):
-        political_scripts = scripts_dir
-        analyze_script = political_scripts / 'analyze_districts.py'
-        visualize_script = political_scripts / 'visualize_partisan_lean.py'
-
-        if analyze_script.exists() and visualize_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run political analysis on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Political analysis (batch fallback)',
-                    'command': f'{sys.executable} {political_scripts}/run_political_analysis.py --census-year {args.year} --version {args.version} --election-year {args.election_year}'.strip(),
-                    'critical': False
-                })
-
     # Create national political map (after per-state analysis completes)
     if not args.skip_political and election_data_available and (output_dir.exists() or args.print_only):
         pipeline_steps.append({
@@ -183,40 +165,6 @@ def main():
             'command': f'{sys.executable} scripts/pipeline/visualize_partisan_lean.py --scope national --output-dir {output_dir} --version {args.version} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi}'.strip(),
             'critical': False
         })
-
-    # Run demographic analysis on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state analysis didn't run)
-    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
-        demographic_scripts = scripts_dir
-        demographic_script = demographic_scripts / 'run_demographic_analysis.py'
-
-        if demographic_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run demographic analysis on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Demographic analysis (batch fallback)',
-                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_analysis.py --census-year {args.year} --version {args.version}'.strip(),
-                    'critical': False
-                })
-
-    # Run demographic visualization on all states (batch mode - fallback only)
-    # Note: Only runs if --skip-analysis was used (per-state visualization didn't run)
-    if not args.skip_demographic and not args.run_analysis and demographic_data_available and (output_dir.exists() or args.print_only):
-        demographic_scripts = scripts_dir
-        demographic_viz_script = demographic_scripts / 'run_demographic_visualization.py'
-
-        if demographic_viz_script.exists():
-            # Get list of state directories
-            states_dir = output_dir / 'states'
-            if states_dir.exists() or args.print_only:
-                # Add step to run demographic visualization on all states (legacy batch mode)
-                pipeline_steps.append({
-                    'name': 'Demographic visualization (batch fallback)',
-                    'command': f'{sys.executable} {demographic_scripts}/run_demographic_visualization.py --census-year {args.year} --version {args.version} --dpi {args.dpi}'.strip(),
-                    'critical': False
-                })
 
     # Create national demographic map (after per-state analysis completes)
     if not args.skip_demographic and demographic_data_available and (output_dir.exists() or args.print_only):
@@ -226,8 +174,8 @@ def main():
             'critical': False
         })
 
-    # Run compactness visualization
-    # Note: If --run-analysis is enabled, per-state visualizations already ran during state processing
+    # Create national compactness map
+    # Note: Per-state visualizations ran during state processing
     # This step creates the national aggregation map
     if output_dir.exists() or args.print_only:
         compactness_script = scripts_dir / 'visualize_compactness.py'
@@ -237,18 +185,8 @@ def main():
             'critical': False
         })
 
-    # Create metro area maps for major MSAs
-    if not args.run_analysis and (output_dir.exists() or args.print_only):
-        # Batch fallback mode (legacy) - only if --skip-analysis was used
-        metro_viz_script = Path('scripts/pipeline/visualize_metro_areas.py')
-        if metro_viz_script.exists():
-            pipeline_steps.append({
-                'name': 'Create metro area district maps (batch fallback)',
-                'command': f'{sys.executable} {metro_viz_script} --scope all --year {args.year} --version {args.version} --output-dir {output_dir} --dpi {args.dpi}'.strip(),
-                'critical': False
-            })
-    elif args.run_analysis and (output_dir.exists() or args.print_only):
-        # Per-state mode - metros already created, just report completion
+    # Metro area maps (created per-state, this just reports completion)
+    if output_dir.exists() or args.print_only:
         metro_viz_script = Path('scripts/pipeline/visualize_metro_areas.py')
         if metro_viz_script.exists():
             pipeline_steps.append({
