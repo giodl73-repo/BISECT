@@ -756,28 +756,90 @@ def main():
             # Real execution mode
             print("\nInitial Progress Display:")
             coordinator.print_status()
+            print("\n" + "="*70)
+            print("RUNNING: All 3 years executing in parallel...")
+            print("This will take 3-5 hours. Progress updates when each year completes.")
+            print("="*70)
+            sys.stdout.flush()
 
         # Start timestamp
         start_time = time.time()
 
-        # Run all 3 years in parallel using ProcessPoolExecutor
-        results = {}
-        with ProcessPoolExecutor(max_workers=3) as executor:
-            # Submit all year processes
-            future_to_year = {
-                executor.submit(run_single_year_pipeline, year, workers_per_year[i], args): year
-                for i, year in enumerate(year_queue)
-            }
+        # Import progress coordinator parser
+        from scripts.utils.progress_coordinator import parse_status_message
 
-            # Collect results as they complete
-            for future in as_completed(future_to_year):
-                year = future_to_year[future]
-                try:
-                    year_result, success, error = future.result()
-                    results[year_result] = {'success': success, 'error': error}
-                except Exception as e:
-                    print(f"\n[{year}] EXCEPTION during execution: {e}")
-                    results[year] = {'success': False, 'error': str(e)}
+        # Run all 3 years in parallel using Popen for real-time monitoring
+        results = {}
+        processes = {}
+
+        # Start all year processes
+        for i, year in enumerate(year_queue):
+            cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
+            cmd_states.extend(['--workers', str(workers_per_year[i])])
+
+            env = os.environ.copy()
+            env['MULTI_YEAR_SUBPROCESS'] = '1'
+
+            # Use Popen to monitor stdout in real-time
+            proc = subprocess.Popen(
+                cmd_states,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,  # Line buffering
+                env=env
+            )
+            processes[year] = proc
+
+        # Monitor all processes in real-time
+        import select
+        import threading
+
+        # Shared lock for display updates
+        display_lock = threading.Lock()
+        last_display_time = [time.time()]  # Mutable container for thread sharing
+
+        def monitor_process(year, proc, coordinator):
+            """Monitor a single year process and update coordinator."""
+            try:
+                for line in proc.stdout:
+                    line = line.strip()
+                    msg_type, data = parse_status_message(line)
+                    if msg_type == 'YEAR':
+                        with display_lock:
+                            coordinator.update_year_progress(
+                                data['year'],
+                                data['completed'],
+                                data['total']
+                            )
+                            # Only refresh display every 2 seconds to avoid flicker
+                            now = time.time()
+                            if now - last_display_time[0] >= 2.0:
+                                print("\n" + "="*70)
+                                print("PROGRESS UPDATE:")
+                                print("="*70)
+                                coordinator.print_status()
+                                print("="*70 + "\n", flush=True)
+                                last_display_time[0] = now
+            except Exception as e:
+                pass  # Process ended
+
+        # Start monitoring threads
+        threads = []
+        for year, proc in processes.items():
+            thread = threading.Thread(target=monitor_process, args=(year, proc, coordinator), daemon=True)
+            thread.start()
+            threads.append(thread)
+
+        # Wait for all processes to complete
+        for year, proc in processes.items():
+            proc.wait()
+            success = (proc.returncode == 0)
+            results[year] = {'success': success, 'error': None if success else f"Exit code {proc.returncode}"}
+
+        # Wait for monitoring threads
+        for thread in threads:
+            thread.join(timeout=1)
 
         # Calculate elapsed time
         elapsed = time.time() - start_time
@@ -1004,9 +1066,8 @@ def main():
                         sys.stderr.flush()
 
         elif is_multi_year_subprocess:
-            # Running as subprocess of multi-year mode - no progress bars or output
-            # Process states sequentially (parallelism already at year level)
-            # Silent to avoid interfering with parent's hierarchical display
+            # Running as subprocess of multi-year mode
+            # Emit STATUS messages for parent to track progress
             for i, state_code in enumerate(states_to_process, 1):
                 config = STATE_CONFIG[state_code]
                 state_name = config['name']
@@ -1033,6 +1094,8 @@ def main():
                 result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
                 if result.returncode == 0:
                     successful.append(state_code)
+                    # Emit STATUS message for parent to track progress
+                    print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
                 else:
                     failed.append(state_code)
                     # Only print errors to stderr
