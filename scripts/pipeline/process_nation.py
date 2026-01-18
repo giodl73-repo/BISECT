@@ -62,30 +62,17 @@ def run_postprocessing_task(args_tuple):
     """
     task_name, command, worker_id, year, task_index, total_tasks, is_multi_year = args_tuple
 
-    # Emit starting status (only in multi-year mode) - format matches state processing
-    if is_multi_year:
-        try:
-            # Check if stdout is valid before printing (Windows multiprocessing issue)
-            if sys.stdout is not None and not sys.stdout.closed:
-                print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}", flush=True)
-                sys.stdout.flush()
-        except (OSError, ValueError):
-            pass  # Stdout not available in worker process
+    # Don't print STATUS messages from worker processes on Windows
+    # Windows multiprocessing doesn't properly inherit stdout, causing OSError
+    # Year-level progress is tracked via return values instead
 
     try:
         # Run the command (suppress verbose output, keep only critical errors)
         result = subprocess.run(command, shell=True, timeout=900,
                                capture_output=True, text=True)
 
-        # On completion, emit year-level progress (only in multi-year mode)
+        # On completion, return success (progress tracked via return values)
         if result.returncode == 0:
-            if is_multi_year:
-                try:
-                    if sys.stdout is not None and not sys.stdout.closed:
-                        print(f"STATUS:YEAR:{year}:POSTPROCESS:{task_index}/{total_tasks}", flush=True)
-                        sys.stdout.flush()
-                except (OSError, ValueError):
-                    pass  # Stdout not available in worker process
             return (task_name, True)
         else:
             # On failure, print stderr for debugging
