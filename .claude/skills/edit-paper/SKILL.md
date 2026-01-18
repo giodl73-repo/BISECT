@@ -13,411 +13,124 @@ user-invocable: true
 
 # Edit Paper
 
-## Overview
+Act as academic journal editor to review and improve LaTeX papers for publication. Provides systematic proofreading, condensing, copyediting, quality enhancement while preserving technical accuracy and meeting page constraints.
 
-Act as an academic journal editor to review and improve LaTeX papers for publication. Provides systematic proofreading, condensing, copyediting, and quality enhancement while preserving technical accuracy and meeting page constraints.
-
-**Target audience**: Academic peer reviewers and researchers
-**Style**: Formal, technical, precise, concise
-**Common use**: Preparing papers for conference/journal submission (8-12 page limits)
+**Target audience**: Academic peer reviewers and researchers | **Style**: Formal, technical, precise, concise | **Common use**: Preparing papers for conference/journal submission (8-12 page limits)
 
 ## Prerequisites
+**Required**: LaTeX paper files (`.tex`) in `papers/` directory, paper uses standard LaTeX structure (sections/figures/citations)
+**Recommended**: Compiled PDF available for visual review, clear target page count (e.g., "reduce to 10 pages"), `/compile-latex` skill available for validation
 
-**Required**:
-- LaTeX paper files (`.tex`) in `papers/` directory
-- Paper uses standard LaTeX structure (sections, figures, citations)
-
-**Recommended**:
-- Compiled PDF available for visual review
-- Clear target page count (e.g., "reduce to 10 pages")
-- `/compile-latex` skill available for validation
-
-## When to Use This Skill
-
-- User says: "Edit my paper for submission"
-- User says: "Proofread the paper" or "Condense the paper"
-- User says: "Help me meet the page limit"
-- User needs consistent notation across sections
-- User wants academic style review (avoid colloquialisms)
-- Paper exceeds journal/conference page limits
-- Preparing for peer review submission
+## When to Use
+User says "Edit my paper for submission/Proofread the paper/Condense the paper/Help me meet the page limit", user needs consistent notation across sections, user wants academic style review (avoid colloquialisms), paper exceeds journal/conference page limits, preparing for peer review submission
 
 ## Editing Levels
 
-Choose editing intensity based on needs and time constraints:
+**Level 1: Light Proofread** (5-10 min): Grammar/spelling fixes, remove obvious verbosity, fix citation formatting, no condensing or restructuring → Use when: Quick polish before informal review
 
-### Level 1: Light Proofread (5-10 minutes)
-**What it includes**:
-- Grammar and spelling fixes
-- Remove obvious verbosity
-- Fix citation formatting
-- No condensing or restructuring
+**Level 2: Standard Edit** (15-30 min): Full proofread + copyedit, light condensing (10-15% reduction), notation consistency checks, improve clarity of unclear passages, no major restructuring → Use when: Standard submission preparation
 
-**Use when**: Quick polish before informal review
+**Level 3: Heavy Edit** (30-60 min): Comprehensive editing, significant condensing (20-30% reduction), restructuring sections as needed, quality enhancement (clarity/flow/arguments), meet specific page targets → Use when: Paper significantly exceeds page limit
 
-### Level 2: Standard Edit (15-30 minutes)
-**What it includes**:
-- Full proofread + copyedit
-- Light condensing (10-15% reduction)
-- Notation consistency checks
-- Improve clarity of unclear passages
-- No major restructuring
-
-**Use when**: Standard submission preparation
-
-### Level 3: Heavy Edit (30-60 minutes)
-**What it includes**:
-- Comprehensive editing
-- Significant condensing (20-30% reduction)
-- Restructuring sections as needed
-- Quality enhancement (clarity, flow, arguments)
-- Meet specific page targets
-
-**Use when**: Paper significantly exceeds page limit
-
-### Level 4: Complete Overhaul (60+ minutes)
-**What it includes**:
-- Major restructuring
-- Aggressive condensing (30%+ reduction)
-- Complete notation standardization
-- Extensive rewriting for clarity
-- Move content to appendix/supplementary
-
-**Use when**: Major revision required
+**Level 4: Complete Overhaul** (60+ min): Major restructuring, aggressive condensing (30%+ reduction), complete notation standardization, extensive rewriting for clarity, move content to appendix/supplementary → Use when: Major revision required
 
 ## Workflow
 
 ### Step 1: Analyze Paper
-
-**Gather requirements via `AskUserQuestion`**:
-- Which paper to edit? (path to paper directory)
-- Which sections? (all, or specific sections like methodology)
-- Current vs target page count (e.g., "18 pages → 12 pages")
-- Editing level (Light / Standard / Heavy / Complete)
-- Specific concerns (notation, clarity, length, style)
-
-**Read paper files**:
-```bash
-# Find all .tex files in paper directory
-find papers/03_combined_recursive_bisection/ -name "*.tex"
-
-# Read main file and sections
-```
-
-**Analyze structure**:
-- Section lengths and proportions
-- Notation usage (e.g., $G = (V, E)$, $PP$ for Polsby-Popper)
-- Citation patterns
-- Figure/table references
-- Estimated page count
-
-### Step 2: Review Content
-
-**Proofread each section**:
-- **Grammar and spelling**: Fix typos, subject-verb agreement, punctuation
-- **Academic style**: Remove colloquialisms ("pretty good" → "effective"), contractions ("don't" → "do not")
-- **Verb tense**: Past for methods, present for results/conclusions
-- **Citation format**: Consistent style (Author (Year) vs [1])
-
-**Check technical accuracy**:
-- **Notation consistency**: Same variable names throughout (e.g., always $G$ for graph, not $G$ then $\mathcal{G}$)
-- **Algorithm accuracy**: Descriptions match actual implementation
-- **Mathematical correctness**: Formulas are valid
-- **Definitions**: All variables defined on first use
-
-**Identify verbosity**:
-- Redundant phrases: "in order to" → "to", "due to the fact that" → "because"
-- Unnecessary qualifiers: "very", "quite", "somewhat", "rather"
-- Repetitive content: Same point made in multiple places
-- Complex sentences: Can one sentence become two clearer ones?
-
-### Step 3: Apply Edits
-
-**Condensing strategies**:
-- **Simplify sentences**: Break complex sentences, remove unnecessary clauses
-- **Remove redundancy**: Delete repeated information
-- **Efficient phrasing**: Use active voice, concrete language
-- **Consolidate**: Merge similar paragraphs
-
-**Example condensing patterns**:
-```
-Before: "It is important to note that the algorithm performs well."
-After: "The algorithm performs well."
-
-Before: "We use the METIS algorithm in order to partition the graph."
-After: "We use METIS to partition the graph."
-
-Before: "As can be seen in Figure 3, the compactness improves significantly."
-After: "Figure 3 shows significant compactness improvement."
-```
-
-**Restructuring (if needed)**:
-- Move detailed derivations to appendix
-- Consolidate similar subsections
-- Reorder for logical flow
-- Create subsections for long sections
-
-**Use `Edit` tool to apply changes**:
-- Edit one section at a time
-- Preserve technical content
-- Maintain LaTeX formatting
-- Keep all figure/citation references intact
-
-### Step 4: Verify Quality
-
-**Consistency checks**:
-- Notation: Same symbols throughout (use `Grep` to find all uses)
-- Terminology: Consistent terms ("census tract" not mixed with "tract")
-- Citations: All references formatted same way
-- Hyphenation: "edge-weighted" consistently hyphenated
-
-**Clarity checks**:
-- Each paragraph has clear main point
-- Transitions between paragraphs exist
-- Jargon is defined on first use
-- Examples support claims
-
-**Technical validation**:
-```bash
-# Compile to check for LaTeX errors
-/compile-latex papers/03_combined_recursive_bisection/
-```
-
-**Before/after metrics**:
-- Word count reduction: X words → Y words (Z% reduction)
-- Estimated page count: A pages → B pages
-- Number of edits by type (grammar, condensing, notation, etc.)
-
-### Step 5: Generate Summary
-
-**Create edit summary** (`papers/{paper_name}/EDIT_SUMMARY.md`):
-
-```markdown
-# Edit Summary: [Paper Name]
-
-**Date**: [Today's date]
-**Editing Level**: [Light/Standard/Heavy/Complete]
-**Target**: Reduce from X pages to Y pages
-
-## Changes Made
-
-### Grammar & Style (N edits)
-- Fixed subject-verb agreement in Section 2
-- Changed passive to active voice throughout
-- Removed colloquialisms ("pretty good" → "effective")
-
-### Condensing (M% reduction)
-- Simplified complex sentences in Introduction
-- Removed redundant explanations in Methodology
-- Consolidated Results subsections 4.1 and 4.2
-
-### Notation Consistency (K fixes)
-- Standardized graph notation: $G = (V, E)$ throughout
-- Changed $PP$ to Polsby-Popper on first use, $PP$ thereafter
-- Fixed inconsistent hyphenation: "edge-weighted" everywhere
-
-### Quality Improvements
-- Added transition sentences between Sections 2 and 3
-- Clarified algorithm description in Section 3.1
-- Strengthened conclusions with quantitative evidence
-
-## Statistics
-
-- **Word count**: 6,500 → 5,200 words (-20%)
-- **Est. page count**: 18 pages → 13 pages
-- **Total edits**: 127 (42 grammar, 58 condensing, 27 other)
-
-## Sections Requiring Author Review
-
-- **Section 3.2**: Condensed significantly, verify accuracy
-- **Figure 4**: May need resizing to save space
-- **Appendix A**: Consider moving to supplementary materials
-
-## Suggested Follow-Up
-
-- Review condensed sections for technical accuracy
-- Consider reducing Figure 4 from full-page to half-page
-- Add 1-2 sentences to Introduction motivation (currently terse)
-```
-
-**Report to user**:
-- Summary of changes
-- Before/after metrics
-- Sections needing author review
-- Next steps
-
-## Academic Style Guidelines
-
-### Preferred Patterns
-
-**Active voice**:
-- ✅ "We apply METIS to partition the graph"
-- ❌ "METIS is applied to partition the graph"
-
-**Concrete over abstract**:
-- ✅ "Compactness improves by 52.8%"
-- ❌ "Compactness significantly improves"
-
-**Direct statements**:
-- ✅ "The algorithm fails when graphs are disconnected"
-- ❌ "It appears that the algorithm might fail when graphs are disconnected"
-
-**Specific examples**:
-- ✅ "In Alabama, METIS creates 7 districts"
-- ❌ "In some states, METIS creates districts"
-
-### Avoid
-
-**Contractions**:
-- ❌ "don't", "can't", "we've"
-- ✅ "do not", "cannot", "we have"
-
-**Colloquialisms**:
-- ❌ "pretty good", "a lot", "kind of"
-- ✅ "effective", "many", "somewhat" (sparingly)
-
-**Hedging words** (use sparingly):
-- Avoid: "somewhat", "rather", "quite", "fairly"
-- Exception: Appropriate for genuine uncertainty
-
-**Passive voice** (when active is clearer):
-- ❌ "The graph is partitioned by METIS"
-- ✅ "METIS partitions the graph"
-
-**Vague quantifiers**:
-- ❌ "many", "some", "several", "numerous"
-- ✅ Use specific numbers or percentages
-
-## Common Condensing Patterns
-
-### Phrase Replacement
-
-| Verbose | Concise |
-|---------|---------|
-| in order to | to |
-| due to the fact that | because |
-| it is important to note that | [delete] |
-| as can be seen in Figure X | Figure X shows |
-| at the present time | now |
-| in the event that | if |
-| for the purpose of | for, to |
-| a number of | several, many, N |
-
-### Sentence Simplification
-
-**Before**: "It is worth noting that the algorithm, which uses recursive bisection, performs well when the graph has a large number of nodes."
-
-**After**: "The recursive bisection algorithm performs well on large graphs."
-
-**Before**: "We utilize the METIS graph partitioning algorithm for the purpose of creating congressional districts."
-
-**After**: "We use METIS to create congressional districts."
-
-### Redundancy Removal
-
-**Before**: "The algorithm recursively bisects the graph again and again until the desired number of districts is reached."
-
-**After**: "The algorithm recursively bisects the graph until reaching the desired number of districts."
-
-## Page Estimation Heuristics
-
-**Typical LaTeX article class**:
-- ~450-500 words per page (double column)
-- ~750-800 words per page (single column)
-- Figures: ~0.3-0.5 pages (small), ~0.7-1.0 pages (large)
-- Tables: ~0.2-0.4 pages (typical)
-- Display equations: ~0.1-0.2 pages each
-
-**Condensing targets**:
-- **10% reduction**: Remove obvious verbosity, low risk
-- **20% reduction**: Significant condensing, preserve all content
-- **30% reduction**: Aggressive condensing, may move content to appendix
-- **40%+ reduction**: Major restructuring, supplementary materials needed
-
-## Troubleshooting
-
-**LaTeX compilation errors after editing**:
-```
-Issue: Missing $ or unmatched braces
-Solution: Carefully check math mode ($...$), verify all braces match
-```
-
-**Changes altered technical meaning**:
-```
-Issue: Condensing changed algorithm description
-Solution: Restore original, condense elsewhere, or ask author to clarify
-```
-
-**Still over page limit after editing**:
-```
-Issue: Paper still 2-3 pages too long
-Solution:
-  - Move derivations to appendix
-  - Reduce figure sizes or move figures to supplementary
-  - Consider two-column format if single-column
-  - Suggest content for supplementary materials
-```
-
-**Notation inconsistencies persist**:
-```
-Issue: Multiple notations for same concept
-Solution: Use Grep to find all uses, standardize globally using Edit tool
-```
-
-**Unclear what to condense**:
-```
-Issue: All content seems essential
-Solution:
-  - Focus on Introduction and Related Work (often verbose)
-  - Simplify experimental setup descriptions
-  - Reduce redundant explanations of results
-  - Move detailed tables to supplementary
-```
+**Gather requirements via `AskUserQuestion`**: Which paper to edit? (path to paper directory), which sections? (all, or specific sections like methodology), current vs target page count (e.g., "18 pages → 12 pages"), editing level (Light/Standard/Heavy/Complete), specific concerns (notation, clarity, length, style)
+
+**Read paper files**: `ls papers/{paper_name}/*.tex`, `cat papers/{paper_name}/{main}.tex`
+
+**Identify opportunities**: Total page count (current vs target), verbose sections (intro, methodology, results), notation inconsistencies ($G$ vs $G_{adj}$), redundant explanations (repeated concepts), figure/table sizing (can be reduced?), length-reducing moves (appendix candidates)
+
+### Step 2: Proofread and Copyedit
+**Grammar/spelling**: Fix typos, grammatical errors, punctuation, remove extra whitespace
+**Academic style**: Replace colloquialisms ("we show" → "we demonstrate"), remove contractions ("don't" → "do not"), use formal tone consistently, avoid first person where inappropriate
+**Citations**: Consistent format (all \cite{...}), proper ordering (alphabetical/chronological), no broken references
+
+### Step 3: Condense Content
+**Sentence-level**: Remove verbose phrases ("due to the fact that" → "because", "in order to" → "to", "it is worth noting that" → [delete]), use active voice ("the algorithm computes" vs "is computed by"), eliminate redundant clauses
+**Paragraph-level**: Combine related sentences, remove redundant statements, keep one example per concept, consolidate bullet lists to prose
+**Section-level**: Combine introductory subsections, move detailed derivations to appendix, consolidate results tables, merge redundant background sections
+
+### Step 4: Standardize Notation
+**Variables**: Consistent symbols ($n$ always = number, $G$ always = graph), consistent formatting (italics for variables $x$, upright for functions $\sin$), define all notation on first use
+**Equations**: Consistent numbering style, proper alignment using align/equation environments, explanatory text before/after equations
+**Terms**: Pick one term per concept ("redistricting" vs "apportionment" → choose one consistently), define abbreviations (METIS, RBA, PP)
+
+### Step 5: Improve Clarity
+**Paragraph structure**: Topic sentence first, supporting sentences follow, conclusion/transition last
+**Section transitions**: Clear connectors between sections, forward/backward references where appropriate
+**Technical explanations**: Define technical terms on first use, use concrete examples, refer to figures/tables to support arguments
+**Arguments**: Clear logical flow (premise → evidence → conclusion), quantitative support for claims, acknowledge limitations where appropriate
+
+### Step 6: Optimize Figures and Tables
+**Figure sizing**: Essential figures (0.5 textwidth), supporting figures (0.4 textwidth), multi-panel combinations (2-3 panels per figure)
+**Table condensing**: Remove non-essential rows/columns, combine related data, use scientific notation for large numbers, move to appendix if reference-only
+**Captions**: Concise (1-2 sentences), explain key takeaway, avoid repeating body text
+**Placement**: Near first reference, grouped by topic, avoid orphaning
+
+### Step 7: Apply Specific Targets
+**If page limit specified**: Calculate required reduction % ((current-target)/current), prioritize sections by length + verbosity, condense aggressively in verbose sections, consider appendix moves for non-critical content
+**If notation focus**: Create notation table, check every symbol usage, update inconsistencies systematically, add notation section if needed
+**If clarity focus**: Identify unclear passages, rewrite for clarity, add examples/figures, get feedback on improved sections
+
+### Step 8: Verify Technical Accuracy
+**Equations**: Check all derivations, verify equation numbers referenced correctly, ensure notation consistent with definitions
+**Claims**: Verify quantitative statements match results, check citations support claims, flag unsupported assertions
+**Code/algorithms**: If included, check syntax + logic, verify matches paper descriptions, ensure reproducibility
+
+### Step 9: Generate Edit Summary
+Document: **Sections edited** (list affected sections), **Word/page reduction** (XX pages → YY pages, ZZ% reduction), **Notation changes** (list standardizations), **Major condensing moves** (sections combined, content moved to appendix), **Areas for review** (flag passages needing author attention), **Quality improvements** (clarity enhancements, flow improvements)
+
+### Step 10: Compile and Validate
+Run `/compile-latex` to verify, check page count matches target (±0.5 pages), verify figures/tables render correctly, check for orphaned references, review one final time for consistency
+
+## Condensing Strategies
+
+**Verbose → Concise Examples**:
+- "due to the fact that" → "because"
+- "in order to" → "to"
+- "it is worth noting that" → [delete]
+- "we utilize the approach of" → "we use"
+- "the algorithm is capable of" → "the algorithm can"
+
+**Section Condensing**:
+- Multiple intro subsections → Combine into single introduction
+- Detailed background → Keep only essential context, cite surveys for details
+- Verbose methodology → Focus on novel contributions, reference standard methods
+- Redundant results → Combine related findings, move tables to appendix
+- Long conclusions → Concise summary of key contributions only
+
+**Notation Standardization**:
+- $G$ vs $G_{adj}$ vs $G_a$ → Pick one ($G$)
+- $n$ vs $N$ vs $|V|$ → Pick one ($n$)
+- PP vs $PP$ vs \text{PP} → Pick one (PP or Polsby-Popper)
+- Tracts vs census tracts vs $T$ → Define once, use consistently
 
 ## Quality Checklist
 
-Before finalizing edits:
+**Clarity**: [ ] All technical terms defined, [ ] Notation consistent throughout, [ ] Clear argument structure, [ ] No ambiguous pronouns
 
-### Technical Accuracy
-- [ ] No mathematical errors introduced
-- [ ] Algorithm descriptions remain correct
-- [ ] All citations still properly referenced
-- [ ] Figure/table numbers still match
+**Conciseness**: [ ] No verbose phrases, [ ] One example per concept, [ ] Redundant sections combined, [ ] Appropriate detail level
 
-### Consistency
-- [ ] Notation used consistently throughout
-- [ ] Terminology uniform (not "tract" sometimes, "census tract" others)
-- [ ] Citation style consistent
-- [ ] Hyphenation consistent (e.g., "edge-weighted")
+**Technical accuracy**: [ ] All equations correct, [ ] Claims supported by results, [ ] Citations accurate, [ ] Reproducible descriptions
 
-### Clarity
-- [ ] Each paragraph has clear main point
-- [ ] Transitions exist between paragraphs/sections
-- [ ] Jargon defined on first use
-- [ ] No ambiguous statements remain
+**Style**: [ ] Active voice where appropriate, [ ] Concrete language (specific numbers/examples), [ ] No colloquialisms or contractions, [ ] Proper academic tone maintained
 
-### Style
-- [ ] Active voice used where appropriate
-- [ ] Concrete language (specific numbers/examples)
-- [ ] No colloquialisms or contractions
-- [ ] Proper academic tone maintained
+**Format**: [ ] LaTeX compiles without errors, [ ] No formatting issues introduced, [ ] Line breaks and spacing preserved, [ ] Math mode used correctly
 
-### Format
-- [ ] LaTeX compiles without errors
-- [ ] No formatting issues introduced
-- [ ] Line breaks and spacing preserved
-- [ ] Math mode used correctly
+## Troubleshooting
 
-## Related Skills
+**Still over page limit after editing**: Move entire sections to appendix (detailed derivations, extra results, literature review), aggressive figure/table reduction (combine into multi-panel, reduce sizes), cut background sections (assume expert audience), consider supplementary materials
 
-- `/compile-latex` - Compile LaTeX after editing to verify no errors
-- `/create-presentation-figures` - May need to regenerate figures for paper
-- `/update-docs` - Similar editing workflow for documentation
-- `/create-session-archive` - Archive major paper revisions
+**Lost technical accuracy during condensing**: Restore critical explanations, add clarifying sentences back strategically, consult with author/co-authors, mark sections for expert review
+
+**Notation changes break references**: Search/replace carefully with context, check all equation references updated, verify figure/table references still correct, recompile to catch orphaned refs
+
+**Unclear after condensing**: Add one concrete example back, restore one explanatory sentence, add forward/backward references, consider keeping original if clarity lost
 
 ## Performance Notes
-
-**Typical editing time**:
 
 | Level | Time | Reduction |
 |-------|------|-----------|
@@ -426,31 +139,13 @@ Before finalizing edits:
 | Heavy Edit | 30-60 min | 20-30% |
 | Complete Overhaul | 60-120 min | 30-40%+ |
 
-**Factors affecting time**:
-- Paper length (longer = more time)
-- Current verbosity (more verbose = more to condense)
-- Technical density (highly technical = slower to verify accuracy)
-- Notation inconsistencies (more issues = more fixes needed)
+**Factors affecting time**: Paper length (longer = more time), current verbosity (more verbose = more to condense), technical density (highly technical = slower to verify accuracy), notation inconsistencies (more issues = more fixes needed)
 
 ## What You'll Get
-
-After successful paper editing:
-- **Edited LaTeX files**: All `.tex` files updated with improvements
-- **Edit summary**: Comprehensive report of changes made
-- **Before/after metrics**: Word count, page count reduction
-- **Compiled PDF**: Verified paper compiles correctly
-- **Quality assurance**: Technical accuracy preserved
-- **Sections for review**: Flagged areas needing author attention
+Edited LaTeX files (all `.tex` files updated with improvements), edit summary (comprehensive report of changes made), before/after metrics (word count, page count reduction), compiled PDF (verified paper compiles correctly), quality assurance (technical accuracy preserved), sections for review (flagged areas needing author attention)
 
 ## Next Steps
-
-After editing:
-1. **Review flagged sections**: Check areas marked for author review
-2. **Recompile paper**: Generate final PDF to see visual result
-3. **Read through once**: Do final pass for flow and coherence
-4. **Get co-author feedback**: Share edited version with collaborators
-5. **Submit**: If target page count met and quality high, submit to journal/conference
-6. **Archive version**: Save edited version with date for future reference
+Review flagged sections (check areas marked for author review), recompile paper (generate final PDF to see visual result), read through once (do final pass for flow and coherence), get co-author feedback (share edited version with collaborators), submit (if target page count met and quality high, submit to journal/conference), archive version (save edited version with date for future reference)
 
 ## Example Usage
 
@@ -458,20 +153,14 @@ After editing:
 
 **Steps**:
 1. User invokes: `/edit-paper`
-2. Skill asks:
-   - Paper: `papers/03_combined_recursive_bisection/`
-   - Sections: All
-   - Target: 18 pages → 12 pages (33% reduction)
-   - Level: Heavy Edit
-   - Concerns: "Too verbose in intro and methodology"
+2. Skill asks: Paper (`papers/03_combined_recursive_bisection/`), Sections (All), Target (18 pages → 12 pages, 33% reduction), Level (Heavy Edit), Concerns ("Too verbose in intro and methodology")
 3. Skill analyzes paper structure
-4. Applies edits:
-   - Condenses Introduction from 3 pages to 1.5 pages
-   - Simplifies Methodology explanations
-   - Consolidates Results subsections
-   - Moves detailed derivation to Appendix
+4. Applies edits: Condenses Introduction (3 pages → 1.5 pages), simplifies Methodology explanations, consolidates Results subsections, moves detailed derivation to Appendix
 5. Generates summary showing 35% word count reduction
 6. Compiles paper successfully, now 11.5 pages
 7. Flags Methodology Section 3.2 for author review
 
 **Result**: Paper ready for submission, under page limit, technical accuracy preserved
+
+## Related Skills
+`/compile-latex` (compile LaTeX after editing to verify no errors), `/create-presentation-figures` (may need to regenerate figures for paper), `/update-docs` (similar editing workflow for documentation), `/create-session-archive` (archive major paper revisions)
