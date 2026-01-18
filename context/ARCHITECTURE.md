@@ -64,7 +64,7 @@ maps/                         # us_*.png (national maps)
 
 **Benefits**: Fast (log₂K rounds), balanced population, compact (min edge cuts), hierarchical, visualizable
 
-**See**: [RECURSIVE_BISECTION.md](RECURSIVE_BISECTION.md) for algorithm details
+**See**: [RECURSIVE_BISECTION.md](../docs/RECURSIVE_BISECTION.md) for algorithm details
 
 ## Component Architecture
 

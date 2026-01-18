@@ -225,7 +225,7 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 ## Docs
 
 **Start**: [README.md](../README.md), [CLAUDE.md](../CLAUDE.md)
-**System**: [ARCHITECTURE.md](ARCHITECTURE.md), [RECURSIVE_BISECTION.md](RECURSIVE_BISECTION.md)
-**Dev**: [CODING_PATTERNS.md](CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](CONTRIBUTING.md)
-**Ref**: [TESTING.md](TESTING.md), [DATA_FORMATS.md](DATA_FORMATS.md), [DEPENDENCIES.md](DEPENDENCIES.md)
-**History**: [CHANGELOG.md](CHANGELOG.md), [enhancements/INDEX.md](enhancements/INDEX.md), [archive/](archive/)
+**System**: [ARCHITECTURE.md](ARCHITECTURE.md), [RECURSIVE_BISECTION.md](../docs/RECURSIVE_BISECTION.md)
+**Dev**: [CODING_PATTERNS.md](CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](../docs/CONTRIBUTING.md)
+**Ref**: [TESTING.md](TESTING.md), [DATA_FORMATS.md](DATA_FORMATS.md), [DEPENDENCIES.md](../docs/DEPENDENCIES.md)
+**History**: [CHANGELOG.md](../docs/CHANGELOG.md), [enhancements/INDEX.md](enhancements/INDEX.md), [archive/](archive/)
