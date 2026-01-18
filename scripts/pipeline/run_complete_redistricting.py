@@ -870,17 +870,23 @@ def main():
             else:  # test
                 year_output_dirs[year] = version_dir / year
 
-        # Check for .states_complete marker file (skip state processing if exists)
+        # Check for .states_complete marker file or --skip-states flag
         year_states_complete = {}
         for year in year_queue:
-            marker_file = year_output_dirs[year] / '.states_complete'
-            states_complete = marker_file.exists() and not args.reset
-            year_states_complete[year] = states_complete
-            if states_complete:
-                print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
+            # Skip states if explicitly requested OR if marker file exists
+            if args.skip_states:
+                states_complete = True
+                print(f"\n[OK] {year}: --skip-states flag set - skipping state processing")
                 year_phase[year] = 'ready_for_nation'  # Skip to nation processing
             else:
-                year_phase[year] = 'states'  # Need to run state processing
+                marker_file = year_output_dirs[year] / '.states_complete'
+                states_complete = marker_file.exists() and not args.reset
+                if states_complete:
+                    print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
+                    year_phase[year] = 'ready_for_nation'  # Skip to nation processing
+                else:
+                    year_phase[year] = 'states'  # Need to run state processing
+            year_states_complete[year] = states_complete
 
         # Start year processes (skip if .states_complete marker exists)
         for i, year in enumerate(year_queue):
