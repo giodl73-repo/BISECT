@@ -913,7 +913,7 @@ def main():
                 proc = subprocess.Popen(
                     cmd_states,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=sys.stderr,  # Don't capture stderr - let it flow through
                     text=True,
                     bufsize=1,  # Line buffering
                     env=env
@@ -1082,7 +1082,7 @@ def main():
             proc_nation = subprocess.Popen(
                 cmd_nation,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stderr=sys.stderr,  # Don't capture stderr - let it flow through
                 text=True,
                 bufsize=1,
                 env=env
@@ -1141,34 +1141,30 @@ def main():
 
             if year_phase[year] == 'nation':
                 proc = processes[year]
-                # Check if process has already exited (monitoring thread may have waited)
-                poll_result = proc.poll()
-                sys.stderr.write(f"[DEBUG] {year} proc.poll() = {poll_result}\n")
-                sys.stderr.flush()
 
-                if poll_result is None:
-                    # Still running - wait for it
-                    sys.stderr.write(f"[DEBUG] {year} process still running, waiting...\n")
-                    sys.stderr.flush()
-                    proc.wait()
-                    sys.stderr.write(f"[DEBUG] {year} process finished with code {proc.returncode}\n")
-                    sys.stderr.flush()
+                # IMPORTANT: Don't call proc.wait() here! The monitoring thread already called it.
+                # On Windows, calling wait() twice on the same process causes the second call to hang.
+                # Instead, just wait for the monitoring thread to finish.
 
-                # Process has exited - get return code
-                success = (proc.returncode == 0)
-                results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
-
-                # Wait for monitoring thread to finish
+                # Wait for monitoring thread to finish (it handles proc.wait())
                 if year in threads:
                     sys.stderr.write(f"[DEBUG] Joining monitoring thread for {year}...\n")
                     sys.stderr.flush()
-                    threads[year].join(timeout=5)
+                    threads[year].join(timeout=180)  # 3 minutes - enough for post-processing
                     if threads[year].is_alive():
                         sys.stderr.write(f"[DEBUG] WARNING: {year} monitoring thread still alive after timeout\n")
                         sys.stderr.flush()
                     else:
                         sys.stderr.write(f"[DEBUG] {year} monitoring thread joined successfully\n")
                         sys.stderr.flush()
+
+                # Now get return code (process has been waited on by monitoring thread)
+                poll_result = proc.poll()
+                sys.stderr.write(f"[DEBUG] {year} proc.poll() = {poll_result} (returncode={proc.returncode})\n")
+                sys.stderr.flush()
+
+                success = (proc.returncode == 0)
+                results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
             elif year_phase[year] == 'failed':
                 pass  # Already recorded failure
 
@@ -1202,8 +1198,7 @@ def main():
                 cmd_master = [
                     sys.executable,
                     str(master_dash_script),
-                    '--version', args.version,
-                    '--output-dir', str(version_dir)
+                    '--output', str(version_dir / 'index.html')
                 ]
                 result = subprocess.run(cmd_master, capture_output=True, text=True)
                 if result.returncode == 0:

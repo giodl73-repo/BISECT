@@ -64,8 +64,13 @@ def run_postprocessing_task(args_tuple):
 
     # Emit starting status (only in multi-year mode) - format matches state processing
     if is_multi_year:
-        print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}", flush=True)
-        sys.stdout.flush()
+        try:
+            # Check if stdout is valid before printing (Windows multiprocessing issue)
+            if sys.stdout is not None and not sys.stdout.closed:
+                print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}", flush=True)
+                sys.stdout.flush()
+        except (OSError, ValueError):
+            pass  # Stdout not available in worker process
 
     try:
         # Run the command (suppress verbose output, keep only critical errors)
@@ -75,8 +80,12 @@ def run_postprocessing_task(args_tuple):
         # On completion, emit year-level progress (only in multi-year mode)
         if result.returncode == 0:
             if is_multi_year:
-                print(f"STATUS:YEAR:{year}:POSTPROCESS:{task_index}/{total_tasks}", flush=True)
-                sys.stdout.flush()
+                try:
+                    if sys.stdout is not None and not sys.stdout.closed:
+                        print(f"STATUS:YEAR:{year}:POSTPROCESS:{task_index}/{total_tasks}", flush=True)
+                        sys.stdout.flush()
+                except (OSError, ValueError):
+                    pass  # Stdout not available in worker process
             return (task_name, True)
         else:
             # On failure, print stderr for debugging
@@ -124,6 +133,10 @@ def main():
 
     # Check if running in multi-year mode
     is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
+
+    if is_multi_year:
+        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Starting process_nation.py (is_multi_year={is_multi_year})\n")
+        sys.stderr.flush()
 
     if not is_multi_year:
         print("\n" + "="*70)
@@ -249,11 +262,18 @@ def main():
             })
 
     # ========== EXECUTE ALL TASKS (Workers pick up tasks dynamically) ==========
+    if is_multi_year:
+        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Collected {len(all_tasks)} tasks\n")
+        sys.stderr.flush()
+
     if all_tasks:
         if not is_multi_year:
             print("\n" + "="*70)
             print(f"POST-PROCESSING ({len(all_tasks)} tasks)")
             print("="*70)
+        else:
+            sys.stderr.write(f"[DEBUG-NATION-{args.year}] Entering task execution block\n")
+            sys.stderr.flush()
 
         total_tasks = len(all_tasks)
 
@@ -280,13 +300,21 @@ def main():
 
             # Run tasks in parallel using ProcessPoolExecutor
             # Workers dynamically pick up next task as they finish
+            if is_multi_year:
+                sys.stderr.write(f"[DEBUG-NATION-{args.year}] Starting ProcessPoolExecutor with {max_workers} workers\n")
+                sys.stderr.flush()
+
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 results = list(executor.map(run_postprocessing_task, task_args))
 
-                # Check for failures (show warnings in standalone mode)
-                for task_name, success in results:
-                    if not success and not is_multi_year:
-                        print(f"[WARNING] {task_name} failed but continuing...")
+            if is_multi_year:
+                sys.stderr.write(f"[DEBUG-NATION-{args.year}] ProcessPoolExecutor finished\n")
+                sys.stderr.flush()
+
+            # Check for failures (show warnings in standalone mode)
+            for task_name, success in results:
+                if not success and not is_multi_year:
+                    print(f"[WARNING] {task_name} failed but continuing...")
 
     # Validate pipeline outputs
     if not args.print_only and not is_multi_year:
@@ -342,9 +370,17 @@ def main():
                           file=sys.stderr)
         summary_bar.update(1)
         summary_bar.close()
+    else:
+        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Returning 0 (exiting)\n")
+        sys.stderr.flush()
 
     return 0
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.stderr.write("[DEBUG-NATION] Script starting...\n")
+    sys.stderr.flush()
+    exit_code = main()
+    sys.stderr.write(f"[DEBUG-NATION] Script exiting with code {exit_code}\n")
+    sys.stderr.flush()
+    sys.exit(exit_code)
