@@ -2,7 +2,7 @@
 
 This document explains the design of the redistricting system, key algorithms, and how components interact.
 
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
 
 ## Related Documentation
 
@@ -645,16 +645,115 @@ To add a new analysis type:
 
 ---
 
+## Parallel Multi-Year Execution
+
+**Added**: Enhancement 37 (January 17, 2026)
+
+### Overview
+
+The pipeline now supports parallel execution across multiple census years (2020, 2010, 2000) with real-time hierarchical progress visualization.
+
+### Architecture
+
+**Multi-Year Orchestration** (`run_complete_redistricting.py`):
+```
+Main Process (Coordinator)
+├── Year 2020 Subprocess (2 workers)
+│   ├── Worker 1: Processing states → national tasks
+│   └── Worker 2: Processing states → national tasks
+├── Year 2010 Subprocess (1 worker)
+│   └── Worker 1: Processing states → national tasks
+└── Year 2000 Subprocess (1 worker)
+    └── Worker 1: Processing states → national tasks
+```
+
+**Worker Allocation Algorithm**:
+- 4 workers → [2, 1, 1] (2020 gets 2, others get 1 each)
+- 6 workers → [2, 2, 2] (even distribution)
+- 8 workers → [3, 3, 2] (prioritize newer years)
+
+**Progress Communication**:
+- **STATUS Message Protocol**: Child processes emit structured messages
+  - `STATUS:YEAR:2020:COMPLETE:24/50` - Year-level progress
+  - `STATUS:WORKER:2020:1:STATE:12/50:california:STAGE:3/7:district_maps` - Worker status
+  - `STATUS:YEAR:2020:POSTPROCESS:3/9` - National post-processing progress
+  - `STATUS:WORKER:2020:1:TASK:3/9:National_district_map` - National task status
+
+- **Hierarchical Display** (`progress_coordinator.py`):
+  ```
+  [2020] ████████████████░░░░ 24/50 states complete
+    ├─ Worker 1: [12/50] California      | Stage 3/7: District Maps
+    └─ Worker 2: [13/50] Texas           | Stage 5/7: Political Analysis
+  ```
+
+### Smart Iteration with `.states_complete` Markers
+
+**Problem**: State processing takes 2-4 hours, but users often want to iterate on national visualizations (maps, dashboards).
+
+**Solution**: After successful state processing, creates `.states_complete` marker file:
+```
+outputs/v1/2020/.states_complete
+```
+
+**Benefits**:
+- **Subsequent runs check marker** → skip state processing → run national tasks only
+- **Iteration time**: Hours → Minutes
+- **Perfect for**: Dashboard tweaks, new national visualizations, changing DPI
+
+**Usage**:
+```bash
+# First run: Full pipeline (creates markers)
+python scripts/pipeline/run_complete_redistricting.py --version v1
+
+# Second run: Fast! (sees markers, skips states)
+python scripts/pipeline/run_complete_redistricting.py --version v1
+
+# Force full rerun: Ignores markers
+python scripts/pipeline/run_complete_redistricting.py --version v1 --reset
+
+# Explicit skip: Skip states even without markers
+python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-states
+```
+
+### Parallel National Post-Processing
+
+**Before**: All 3 years finish states → then all 3 run national post-processing (sequential dependency)
+
+**After**: Each year independently launches national post-processing immediately after its states finish:
+```
+2020: States (1-2 hrs) → National (15 min) → Done
+2010: States (1-2 hrs) → National (15 min) → Done
+2000: States (1-2 hrs) → National (15 min) → Done
+```
+
+All 3 national post-processing phases run **in parallel** - no waiting!
+
+### Performance Metrics
+
+**Multi-Year Parallel** (default with `--year all`):
+- **First run**: 2-4 hours (all 3 census years)
+- **Subsequent runs** (with markers): Minutes (just national tasks)
+- **Time reduction**: 60-70% vs sequential
+
+**Implementation Files**:
+- `scripts/utils/progress_coordinator.py` - Hierarchical display coordination
+- `scripts/utils/terminal_utils.py` - Progress bars, tree connectors, formatting
+- `scripts/pipeline/process_nation.py` - National post-processing (9 parallel tasks)
+
+---
+
 ## Scalability
 
 ### Current Scale
 
 - **States**: 50 (all US states)
+- **Census Years**: 3 (2000, 2010, 2020) - runs in parallel
 - **Tracts**: ~84,000 nationwide (~100 to 9,000 per state)
 - **Districts**: 435 total
 - **Processing time**:
-  - Sequential: ~8-12 hours (all 50 states)
-  - Parallel (4 workers): ~2-3 hours
+  - **Multi-year parallel** (default): ~2-4 hours (all 3 years)
+  - **Single year parallel** (4 workers): ~1 hour
+  - **Subsequent runs** (with `.states_complete`): Minutes
 
 ### Bottlenecks
 

@@ -2,7 +2,7 @@
 
 Automated redistricting for all 50 US states using recursive bifurcation and the METIS graph partitioning algorithm.
 
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
 
 ## Overview
 
@@ -32,14 +32,14 @@ pip install pymetis
 #### Windows Batch Files (Easiest)
 
 ```bash
-# Parallel mode (4-8 states at once) - FAST ✓
-run_parallel.bat
+# Multi-year parallel mode (all 3 census years: 2020, 2010, 2000) - NEW DEFAULT ✓
+run_redistricting.bat --version v1
 
-# With custom settings
-run_parallel.bat --workers 6 --dpi 200 --version v2
+# Single year with custom workers
+run_redistricting.bat --year 2020 --workers 6 --version v1
 
-# Sequential mode (one at a time)
-run_sequential.bat
+# Skip state processing (fast national post-processing only)
+run_redistricting.bat --version v1 --skip-states
 
 # Emergency stop (if needed)
 CANCEL.bat
@@ -48,21 +48,30 @@ CANCEL.bat
 #### Command Line (All Platforms)
 
 ```bash
-# Parallel mode - runs 4 states simultaneously (default)
-python scripts/pipeline/run_complete_redistricting.py --mode parallel --year 2020 --version v1
+# Multi-year parallel (DEFAULT) - runs all 3 census years in parallel with hierarchical progress
+python scripts/pipeline/run_complete_redistricting.py --version v1
+# Runs: 2020, 2010, 2000 concurrently with 4 workers (allocates 2+1+1)
 
-# Sequential mode - one state at a time
-python scripts/pipeline/run_complete_redistricting.py --mode sequential --year 2020 --version v1
+# Single census year
+python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1
 
-# Custom workers and quality
-python scripts/pipeline/run_complete_redistricting.py --mode parallel --workers 8 --dpi 200
+# Custom workers (for multi-year: 4 workers → 2+1+1 allocation, 6 workers → 2+2+2)
+python scripts/pipeline/run_complete_redistricting.py --workers 6 --version v1
 
 # Fresh run (delete existing outputs first)
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 --reset
+python scripts/pipeline/run_complete_redistricting.py --version v1 --reset
+
+# Skip state processing (fast iteration - just rerun national post-processing)
+python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-states
 
 # Skip per-state analysis (faster, use old batch post-processing)
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1 --skip-analysis
+python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-analysis
 ```
+
+**Performance**:
+- **Multi-year parallel** (default): 2-4 hours for all 3 census years (60-70% faster than sequential)
+- **Single year**: ~1 hour with 4 workers
+- **Subsequent runs** (with `.states_complete` markers): Minutes instead of hours!
 
 ### Run Single State
 

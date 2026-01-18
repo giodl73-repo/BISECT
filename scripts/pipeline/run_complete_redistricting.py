@@ -368,17 +368,21 @@ def allocate_workers_across_years(total_workers, num_years=3):
     """
     Distribute workers across census years for parallel execution.
 
+    Prioritizes 2020 (newest, highest priority) > 2010 > 2000 for extra workers.
+
     Args:
         total_workers: Total number of workers available
         num_years: Number of census years (default: 3)
 
     Returns:
-        List of worker counts per year
+        List of worker counts per year [2020, 2010, 2000]
 
     Examples:
-        allocate_workers_across_years(6) -> [2, 2, 2]
-        allocate_workers_across_years(8) -> [3, 3, 2]
-        allocate_workers_across_years(9) -> [3, 3, 3]
+        allocate_workers_across_years(4) -> [2, 1, 1]  (2020 gets extra)
+        allocate_workers_across_years(5) -> [2, 2, 1]  (2020 and 2010 get extra)
+        allocate_workers_across_years(6) -> [2, 2, 2]  (all equal)
+        allocate_workers_across_years(7) -> [3, 2, 2]  (2020 gets extra)
+        allocate_workers_across_years(8) -> [3, 3, 2]  (2020 and 2010 get extra)
     """
     if total_workers < num_years:
         # Minimum 1 worker per year
@@ -387,10 +391,12 @@ def allocate_workers_across_years(total_workers, num_years=3):
     base = total_workers // num_years
     remainder = total_workers % num_years
 
-    # Distribute base + remainder to first years
+    # Distribute base to all years
     workers = [base] * num_years
+
+    # Distribute remainder from FIRST to LAST (prioritize 2020 over 2000)
     for i in range(remainder):
-        workers[i] += 1
+        workers[i] += 1  # Start from beginning: workers[0], workers[1], workers[2]
 
     return workers
 
@@ -543,8 +549,8 @@ def create_argument_parser():
     parser.add_argument('--year', type=str, default='all', choices=['2020', '2010', '2000', 'all'],
                         help='Census year: 2020, 2010, 2000, or "all" to run all three in parallel (default: all)')
     parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
-    parser.add_argument('--workers', type=int, default=4,
-                        help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 4)')
+    parser.add_argument('--workers', type=int, default=6,
+                        help='Number of parallel workers: 1=sequential, 2-8=parallel (default: 6)')
     parser.add_argument('--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
                         help='DPI for output maps (default: 150). Higher = better quality but slower.')
     parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],

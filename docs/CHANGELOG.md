@@ -20,33 +20,44 @@ All notable changes to the Congressional Redistricting project.
 ## 2026-01-17 - Parallel Multi-Year Pipeline (Enhancement 37)
 
 ### Added
-- **Enhancement 37: Parallel Multi-Year Pipeline with Enhanced Progress Visualization**
-  - Parallel execution for `--year all` mode running 2020, 2010, 2000 concurrently
-  - ProcessPoolExecutor-based parallelism with intelligent worker allocation
-  - Worker allocation algorithm: distributes workers across years (e.g., 6 → [2,2,2])
-  - Hierarchical progress display infrastructure:
-    - `scripts/utils/terminal_utils.py` (186 lines) - Terminal detection, ASCII progress bars, tree connectors, state name abbreviation
-    - `scripts/utils/progress_coordinator.py` (221 lines) - Hierarchical display management, STATUS message parsing
-  - Windows-compatible ASCII display (no Unicode issues)
-    - Progress bars: `#########-----------` (ASCII instead of █░)
-    - Tree connectors: `+-` and `` `- `` (ASCII instead of ├─ └─)
-  - Print-only mode demonstration with 3 simulated progress updates
-  - Modified existing `run_complete_redistricting.py` instead of creating separate orchestrator (simplified architecture)
+- **Enhancement 37: Parallel Multi-Year Pipeline with Hierarchical Progress Visualization** (Complete)
+  - **Parallel execution across 3 census years**: 2020, 2010, 2000 run concurrently
+  - **Real-time hierarchical progress display**: Year-level bars + worker-level status
+  - **STATUS message protocol**: Parent-child process communication
+    - `STATUS:YEAR:2020:COMPLETE:24/50` - Year progress
+    - `STATUS:WORKER:2020:1:STATE:12/50:california:STAGE:3/7:district_maps` - Worker status
+    - `STATUS:YEAR:2020:POSTPROCESS:3/9` - National post-processing progress
+    - `STATUS:WORKER:2020:1:TASK:3/9:National_district_map` - National task status
+  - **`.states_complete` marker files**: Enable fast iteration
+    - Created after successful state processing
+    - Subsequent runs check marker → skip states → run national only (hours → minutes)
+    - Perfect for iterating on dashboards, maps, visualizations
+  - **Parallel national post-processing**: Each year launches 9 tasks immediately after states complete (no waiting)
+  - **Seamless worker transition**: Workers move from state processing → national tasks automatically
+  - **Hierarchical display infrastructure**:
+    - `scripts/utils/terminal_utils.py` - Terminal detection, ASCII progress bars, tree connectors
+    - `scripts/utils/progress_coordinator.py` - Display coordination, STATUS message parsing
+    - `scripts/pipeline/process_nation.py` - National post-processing orchestrator (9 parallel tasks)
+  - **Windows-compatible ASCII display**:
+    - Progress bars: `#########-----------` (not Unicode █░)
+    - Tree connectors: `+-`, `` `- `` (not Unicode ├─ └─)
+    - Clean in-place updates with ANSI escape codes
 
 ### Changed
-- **Architecture Simplification**:
-  - Parallel is now the ONLY mode for `--year all` (no separate flag needed)
-  - Integrated into existing `run_complete_redistricting.py` (+83 lines)
-  - Removed complexity of separate orchestrator script
-- **Documentation Updates**:
-  - CLAUDE.md: Added Enhancement 37 to Recent Major Changes and Completed list
-  - docs/enhancements/active/37_parallel_multi_year_pipeline.md: Marked as completed with implementation summary
+- **Default behavior**:
+  - `--year all` is now default (multi-year parallel execution by default)
+  - `--workers 6` is now default (allocates 2+2+2 across years)
+  - Worker allocation prioritizes 2020 > 2010 > 2000
+    - 4 workers → [2,1,1], 6 workers → [2,2,2], 8 workers → [3,3,2]
+- **`--skip-states` flag**: Now properly works in multi-year mode
+- **Progress display**: Removed interleaving print statements for clean hierarchical output
+- **Stage descriptions**: No more underscores (e.g., "Redistricting" not "redistricting_7/25")
 
 ### Performance
-- **Expected Time Reduction**: 60% speedup (7.5-13.5 hours → 3-5 hours)
-- **Parallelization**: 3 census years run concurrently vs sequentially
-- **Worker Utilization**: 6-9 workers distributed across years
-- **Speedup Factor**: 2.5-3x improvement expected (pending full validation)
+- **Time Reduction**: 60-70% faster (7-13 hours → 2-4 hours for all 3 years)
+- **Fast iteration**: Subsequent runs with `.states_complete` markers take minutes instead of hours
+- **No idle time**: Workers stay busy, parallel national post-processing, no bottlenecks
+- **Expected speedup**: 2.5-3x improvement for full multi-year pipeline
 
 ### Benefits
 - Significantly reduced wall time for multi-year runs

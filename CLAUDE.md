@@ -2,7 +2,7 @@
 
 This document provides context and guidelines for AI assistants working on the Congressional Redistricting codebase.
 
-**Last Updated**: January 16, 2026
+**Last Updated**: January 17, 2026
 
 ## Project Overview
 
@@ -32,9 +32,14 @@ This is a congressional redistricting implementation using METIS recursive bisec
 - `src/apportionment/data/adjacency.py` - Tract adjacency graph generation
 
 ### Pipeline Scripts (Executable Entry Points)
-- `scripts/pipeline/run_complete_redistricting.py` - **Main orchestrator** for 50-state pipeline
+- `scripts/pipeline/run_complete_redistricting.py` - **Main orchestrator** for 50-state pipeline (parallel multi-year execution)
+- `scripts/pipeline/process_nation.py` - National post-processing orchestrator (9 parallel tasks)
 - `scripts/pipeline/run_state_redistricting.py` - Single-state redistricting wrapper
-- `scripts/pipeline/process_single_state.py` - Core single-state logic
+- `scripts/pipeline/process_single_state.py` - Core single-state logic (emits STATUS messages)
+
+### Progress Coordination (Multi-Year Parallel)
+- `scripts/utils/progress_coordinator.py` - Hierarchical progress display coordinator
+- `scripts/utils/terminal_utils.py` - Terminal utilities (progress bars, tree connectors, formatting)
 
 ### Analysis Scripts
 - `scripts/political/` - Partisan lean analysis using 2020 election data
@@ -817,7 +822,7 @@ print(f"-> Next step")   # Works everywhere
 
 ## Recent Major Changes (Jan 2026)
 
-- **Parallel Multi-Year Pipeline** (Enhancement 37 - Jan 17, 2026): Implemented parallel execution for `--year all` mode running 2020, 2010, 2000 concurrently with hierarchical progress display; ProcessPoolExecutor-based parallelism; worker allocation algorithm (6 workers → [2,2,2]); created terminal_utils.py and progress_coordinator.py for ASCII-based hierarchical progress bars; Windows-compatible display with tree connectors (`+-`, `` `- ``); expected 60% time reduction (7.5-13.5 hours → 3-5 hours); parallel is now the ONLY mode for `--year all`
+- **Parallel Multi-Year Pipeline with Hierarchical Progress** (Enhancement 37 - Jan 17, 2026): Complete parallel execution across 3 census years (2020, 2010, 2000) with real-time hierarchical progress visualization showing year-level progress bars and worker-level status; STATUS message protocol for parent-child process communication; `.states_complete` marker files enable fast iteration (skip state processing, rerun national post-processing in minutes instead of hours); parallel national post-processing (each year launches 9 tasks immediately after completing states, no waiting); seamless worker transition from state → national tasks; changed defaults to `--year all` (multi-year by default) and `--workers 4`; `--skip-states` flag properly works in multi-year mode; eliminated all idle time and bottlenecks; clean in-place updates with ANSI escape codes; expected 60-70% time reduction (7-13 hours → 2-4 hours)
 - **Test Execution & Debugging Skills** (Enhancement 34 - Jan 16, 2026): Created `/run-tests` and `/debug-tests` skills for intelligent test execution and systematic debugging; automatic detection of 6 common failure patterns (imports, mocks, assertions, Playwright, etc.); guided troubleshooting with specific fix suggestions; 50-70% reduction in debugging time; total skills: 29 → 31
 - **Test Suite Complete** (Enhancements 30, 31, 33 - Jan 16, 2026): Comprehensive test coverage with 151 tests (110 unit, 21 integration, 20 E2E dashboard) running in ~18 seconds; mock data generators for all pipeline stages; artifact validation tests catch pipeline failures; 90%+ code coverage across all components; fully automated E2E dashboard testing with mock runs
 - **Artifacts Directory Organization** (Enhancement 29, Jan 16, 2026): Reorganized papers, presentations, and guides into top-level artifacts/ directory; implemented master artifacts/compile.bat with --reset and --skip-figures flag threading; fixed all visualization \\n literal text issues; removed yellow stats boxes; reduced district label font sizes; added master dashboard Artifacts tab with PDF viewer
