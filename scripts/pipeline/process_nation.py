@@ -251,15 +251,9 @@ def main():
                 'critical': False
             })
 
-    # Task 9: Generate static dashboard
-    if output_dir.exists() or args.print_only:
-        dashboard_script = Path('scripts/web/generate_dashboard.py')
-        if dashboard_script.exists():
-            all_tasks.append({
-                'name': 'Dashboard',
-                'command': f'{sys.executable} {dashboard_script} --year {args.year} --version {args.version} --output-dir {output_dir}'.strip(),
-                'critical': False
-            })
+    # Task 9: Generate static dashboard - MOVED TO FINAL STAGE after all years complete
+    # Dashboard generation now happens once after all years finish
+    # See run_complete_redistricting.py final stage
 
     # ========== EXECUTE ALL TASKS (Workers pick up tasks dynamically) ==========
     if is_multi_year:
