@@ -395,6 +395,62 @@ def allocate_workers_across_years(total_workers, num_years=3):
     return workers
 
 
+def process_state_for_multi_year(args_tuple):
+    """
+    Process a single state in multi-year mode.
+    Must be at module level for Windows multiprocessing pickling.
+
+    Args:
+        args_tuple: (state_code, state_number, year, output_dir, script_args_dict)
+
+    Returns:
+        (state_code, success_bool)
+    """
+    state_code, state_number, year, output_dir, args_dict = args_tuple
+
+    # Reconstruct paths and config
+    from scripts.utils import get_state_config
+    STATE_CONFIG = get_state_config(year)
+
+    config = STATE_CONFIG[state_code]
+    state_name = config['name']
+    states_dir = Path(output_dir) / 'states'
+    state_dir = states_dir / state_name.lower().replace(' ', '_')
+
+    scripts_dir = Path(__file__).parent
+    flags = []
+    if args_dict.get('print_only'):
+        flags.append('--print-only')
+    if args_dict.get('debug'):
+        flags.append('--debug')
+    if args_dict.get('run_analysis'):
+        flags.append('--run-analysis')
+    if args_dict.get('partition_mode') != 'edge-weighted':
+        flags.append(f"--partition-mode {args_dict['partition_mode']}")
+    flags_str = ' '.join(flags)
+
+    cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {year} --output-dir {state_dir} --dpi {args_dict["dpi"]} {flags_str}'.strip()
+
+    env = os.environ.copy()
+    env['DPI'] = str(args_dict['dpi'])
+    env['STATE_NUMBER'] = str(state_number)
+    env['WORKER_ID'] = str(multiprocessing.current_process()._identity[0] if multiprocessing.current_process()._identity else 0)
+
+    # Use Popen to forward STATUS messages
+    proc = subprocess.Popen(cmd, shell=True, env=env,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
+                           text=True, bufsize=1)
+
+    # Forward stdout (STATUS messages) to our stdout
+    for line in proc.stdout:
+        print(line, end='', flush=True)
+
+    proc.wait()
+
+    return (state_code, proc.returncode == 0)
+
+
 def run_single_year_pipeline(year, workers_for_year, args):
     """
     Run the complete pipeline for a single census year.
@@ -1108,52 +1164,23 @@ def main():
             # Run multiple states in parallel using ProcessPoolExecutor
             max_workers = min(args.workers, 8)
 
-            def process_state_in_subprocess(state_info):
-                """Process a single state, forwarding STATUS messages."""
-                state_code, state_number = state_info
-                config = STATE_CONFIG[state_code]
-                state_name = config['name']
-                states_dir = output_dir / 'states'
-                state_dir = states_dir / state_name.lower().replace(' ', '_')
-
-                scripts_dir = Path(__file__).parent
-                flags = []
-                if args.print_only:
-                    flags.append('--print-only')
-                if args.debug:
-                    flags.append('--debug')
-                if args.run_analysis:
-                    flags.append('--run-analysis')
-                if args.partition_mode != 'edge-weighted':
-                    flags.append(f'--partition-mode {args.partition_mode}')
-                flags_str = ' '.join(flags)
-
-                cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --dpi {args.dpi} {flags_str}'.strip()
-
-                env = os.environ.copy()
-                env['DPI'] = str(args.dpi)
-                env['STATE_NUMBER'] = str(state_number)
-                env['WORKER_ID'] = str(multiprocessing.current_process()._identity[0] if multiprocessing.current_process()._identity else 0)
-
-                # Use Popen to forward STATUS messages
-                proc = subprocess.Popen(cmd, shell=True, env=env,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE,
-                                       text=True, bufsize=1)
-
-                # Forward stdout (STATUS messages) to our stdout
-                for line in proc.stdout:
-                    print(line, end='', flush=True)
-
-                proc.wait()
-
-                return (state_code, proc.returncode == 0)
+            # Prepare arguments as dict (picklable)
+            args_dict = {
+                'print_only': args.print_only,
+                'debug': args.debug,
+                'run_analysis': args.run_analysis,
+                'partition_mode': args.partition_mode,
+                'dpi': args.dpi
+            }
 
             # Process states in parallel
-            state_info_list = [(state_code, i) for i, state_code in enumerate(states_to_process, 1)]
+            state_args_list = [
+                (state_code, i, args.year, str(output_dir), args_dict)
+                for i, state_code in enumerate(states_to_process, 1)
+            ]
 
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                for state_code, success in executor.map(process_state_in_subprocess, state_info_list):
+                for state_code, success in executor.map(process_state_for_multi_year, state_args_list):
                     if success:
                         successful.append(state_code)
                         # Emit year-level progress
