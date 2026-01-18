@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: [790023d](https://github.com/giodl_microsoft/redistricting/commit/790023da0954a468f9a78d5653252ed87cb8cd60), [4bc07f9](https://github.com/giodl_microsoft/redistricting/commit/4bc07f9eb1b57c7fe98c6957bb2d2411e3761e36), [ec1cd35](https://github.com/giodl_microsoft/redistricting/commit/ec1cd357f6e21c2e03900b3f6b7928cc841bf3af), [50b5e55](https://github.com/giodl_microsoft/redistricting/commit/50b5e55074f304e957962fc3920ad7f7a085407e), [547fcf7](https://github.com/giodl_microsoft/redistricting/commit/547fcf72e13ee2a8eff23a0f8f7866cb9e6430e9), [1e0d266](https://github.com/giodl_microsoft/redistricting/commit/1e0d26601534b5fb213bd589c7be7e62b5e8db1e), [80e8d70](https://github.com/giodl_microsoft/redistricting/commit/80e8d706bc03f007baf2277d56a0bcb8dddb2028)
+**Size**: L - 1,512 lines changed (24 files)
 
 ### Current State (Bottleneck)
 

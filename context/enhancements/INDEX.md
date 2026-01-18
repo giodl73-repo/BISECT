@@ -2,17 +2,39 @@
 
 Master index of all congressional redistricting pipeline enhancements.
 
-**Last Updated**: January 17, 2026
+**Last Updated**: January 18, 2026
 
 ## Quick Links
 
 - **[Enhancement Template](templates/enhancement_template.md)** - Template for new enhancements
+- **[Enhancement Manager](../../tools/enhancement_manager/)** - Web UI for viewing/editing enhancements
 
 All enhancements are stored in this directory. Status is indicated in the frontmatter and table below.
 
+## Enhancement Metadata Fields
+
+As of Enhancement 48, all completed enhancements include:
+
+**Commits**: Links to GitHub commits that implemented the enhancement
+- Format: `[short_sha](github_url), [short_sha](github_url), ...`
+- Automatically populated via `tools/enhancement_manager/capture_commits.py`
+- Example: [abc1234](https://github.com/.../commit/abc1234), [def5678](...)
+
+**Size**: Code change metrics
+- Format: `{Category} - {Lines} lines changed ({Files} files)`
+- Categories: XS (<100 lines), S (100-500), M (500-1500), L (1500-5000), XL (>5000)
+- Example: `M - 1,250 lines changed (15 files)`
+- Calculated from git diff-tree for all related commits
+
+These fields enable:
+- Traceability: Direct links from enhancement to implementation
+- Code Review: Easy access to GitHub commit diffs
+- Effort Estimation: Size metrics inform future planning
+- Analytics: Size distribution reveals project patterns
+
 ## Status Overview
 
-### ✅ Completed (28 enhancements)
+### ✅ Completed (29 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -45,6 +67,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [38](38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](38_streamline_claude_md.md) |
 
 | [39](39_pipeline_error_logging.md) | Comprehensive Pipeline Error Logging (MVP) | Jan 17, 2026 | [View](39_pipeline_error_logging.md) |
+| [48](active/48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Jan 18, 2026 | [View](active/48_unified_download_orchestrator.md) |
 
 ### 🔄 In Progress (1 enhancement)
 
@@ -52,10 +75,11 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (17 enhancements)
+### 📋 Planned (18 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
+| [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | [View](49_pipeline_download_integration.md) |
 | [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Critical | [View](active/47_data_separation_restoration.md) |
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | High | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | High | [View](45_baseline_data_organization.md) |
@@ -96,10 +120,11 @@ Enhancements organized by priority level for better planning and focus.
 | [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | [View](12_edge_weighted_analysis.md) |
 | [10](10_per_state_urban.md) | Per-State Urban Area Processing | Completed (Jan 2026) | [View](10_per_state_urban.md) |
 
-### Medium (31 enhancements)
+### Medium (32 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
+| [48](active/48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Completed (Jan 18, 2026) | [View](active/48_unified_download_orchestrator.md) |
 | [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Proposed | [View](43_cross_year_longitudinal_analysis.md) |
 | [44](44_real_world_constraints.md) | Real-World Redistricting Constraints | Proposed | [View](44_real_world_constraints.md) |
 | [46](46_enhancement_priority_system.md) | Priority System for Enhancements | In Progress | [View](46_enhancement_priority_system.md) |

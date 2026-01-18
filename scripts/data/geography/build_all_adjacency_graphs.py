@@ -20,14 +20,14 @@ ALL_STATES = [
 def check_existing(state_code, year='2020', output_dir=None):
     """Check if adjacency graph already exists."""
     if output_dir is None:
-        output_dir = f'outputs/data/adjacency/{year}'
+        output_dir = f'outputs/data/{year}/adjacency'
     graph_file = Path(output_dir) / f'{state_code.lower()}_adjacency_{year}.pkl'
     return graph_file.exists()
 
 def check_tracts_exist(state_code, year='2020', input_dir=None):
     """Check if tracts file exists."""
     if input_dir is None:
-        input_dir = f'outputs/data/tracts/{year}'
+        input_dir = f'outputs/data/{year}/units'
     tracts_file = Path(input_dir) / f'{state_code.lower()}_tracts_{year}.parquet'
     return tracts_file.exists()
 
@@ -45,9 +45,9 @@ def build_adjacency_graph(state_code, year='2020', compute_boundary_lengths=Fals
 
     # Set input and output directories (use new default paths)
     if input_dir is None:
-        input_dir = f'outputs/data/tracts/{year}'
+        input_dir = f'outputs/data/{year}/units'
     if output_dir is None:
-        output_dir = f'outputs/data/adjacency/{year}'
+        output_dir = f'outputs/data/{year}/adjacency'
 
     cmd = [sys.executable, str(scripts_dir / 'build_tract_adjacency.py'),
            '--state', state_code, '--year', str(year),
@@ -86,9 +86,9 @@ def main():
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                         help='Census year (default: 2020)')
     parser.add_argument('--input-dir', type=str,
-                        help='Input directory for tract files (default: outputs/data/tracts/{year})')
+                        help='Input directory for tract files (default: outputs/data/{year}/units)')
     parser.add_argument('--output-dir', type=str,
-                        help='Output directory for adjacency files (default: outputs/data/adjacency/{year})')
+                        help='Output directory for adjacency files (default: outputs/data/{year}/adjacency)')
     parser.add_argument('--compute-boundary-lengths', action='store_true',
                         help='Compute boundary lengths for edge-weighted partitioning')
     parser.add_argument('--water-distance', type=float, default=1.0,
@@ -100,7 +100,7 @@ def main():
     args = parser.parse_args()
 
     # Set default paths if not provided
-    input_dir = args.input_dir if args.input_dir else f'outputs/data/tracts/{args.year}'
+    input_dir = args.input_dir if args.input_dir else f'outputs/data/units/{args.year}'
     output_dir = args.output_dir if args.output_dir else f'outputs/data/adjacency/{args.year}'
 
     # Create output directory if it doesn't exist

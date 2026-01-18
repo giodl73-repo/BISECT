@@ -77,8 +77,15 @@ doskey dash=deploy_web.bat $*
 doskey gendash=python scripts/web/generate_dashboard.py $*
 doskey master=run_master.bat $*
 
-REM Project shortcuts - Data
+REM Project shortcuts - Data Downloads
 doskey dlcensus=python scripts/data/census/download_all_states_tracts.py $*
+doskey dltiger2000=python scripts/data/geography/download_tiger_tracts_2000.py $*
+doskey dltiger2010=python scripts/data/geography/download_tiger_tracts_2010.py $*
+doskey dlplaces=python scripts/data/geography/download_all_places.py $*
+doskey dlelect=python scripts/data/elections/download_election_data.py $*
+doskey dldemo=python scripts/data/demographics/download_demographic_data_robust.py $*
+
+REM Project shortcuts - Data Processing
 doskey buildadj=python scripts/data/geography/build_all_adjacency_graphs.py $*
 doskey checkconn=python scripts/data/geography/check_graph_connectivity.py $*
 
@@ -102,6 +109,13 @@ echo     test                            - Run test suite
 echo     dash --year 2020 --version v1   - Deploy dashboard
 echo     cancel                          - Cancel running pipeline
 echo     compile                         - Compile LaTeX artifacts
+echo.
+echo   Data Downloads:
+echo     dldemo -y 2010                  - Download demographics
+echo     dlelect -y 2020                 - Download elections
+echo     dlplaces -y 2020                - Download places
+echo     dlcensus -y 2020                - Download census tracts
+echo     buildadj -y 2020                - Build adjacency graphs
 echo.
 echo   Git:
 echo     gs                              - Git status

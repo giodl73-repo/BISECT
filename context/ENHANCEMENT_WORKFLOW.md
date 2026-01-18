@@ -167,6 +167,16 @@ pytest tests/unit/partition/ -v -k "bisection"  # Subset
 
 **Commit**: Clear message, reference enhancement #, list key files
 
+**Capture Commits** (automatically adds metadata):
+```bash
+python tools/enhancement_manager/capture_commits.py <enhancement_id> --verbose
+```
+- Finds all commits referencing the enhancement in git history
+- Calculates size metrics (lines changed, files modified)
+- Updates **Commits** and **Size** fields in enhancement file
+- Run after creating commits, before documentation step
+- Example: `python tools/enhancement_manager/capture_commits.py 48`
+
 **Archive**: Create `archive/YYYY-MM-DD_enhancement_N_desc.md` for significant sessions (rationale, decisions, not just what)
 
 **Defaults**: Only change with overwhelming evidence (e.g., "52.8% PP improvement"), keep non-default accessible

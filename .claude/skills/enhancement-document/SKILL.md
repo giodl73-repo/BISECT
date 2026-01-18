@@ -31,6 +31,15 @@ User says "Document the completed enhancement", after `/enhancement-implement` c
 **Complexity**: [Actual based on time]
 ```
 
+**Capture commits** (automatically adds git commit metadata):
+```bash
+python tools/enhancement_manager/capture_commits.py XX --verbose
+```
+This will:
+- Find all commits referencing Enhancement XX in git history
+- Calculate size metrics (lines changed, files modified)
+- Update **Commits** and **Size** fields in the enhancement file
+
 **Add completion summary**:
 ```markdown
 ### Implementation Summary

@@ -4,6 +4,8 @@
 **Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: High (12-16 hours)
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ## Current State
 

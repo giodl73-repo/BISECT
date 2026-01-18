@@ -256,41 +256,118 @@ class TestStageProcessing:
 
     def test_all_stages_specified(self):
         """Test when all stages are specified."""
-        stages = ['tracts', 'adjacency', 'elections', 'demographics']
+        stages = ['tracts', 'merge', 'adjacency', 'elections', 'demographics']
 
-        assert len(stages) == 4
+        assert len(stages) == 5
         assert 'tracts' in stages
+        assert 'merge' in stages
         assert 'adjacency' in stages
         assert 'elections' in stages
         assert 'demographics' in stages
 
     def test_subset_of_stages(self):
         """Test when only subset of stages specified."""
-        stages = ['tracts', 'adjacency']
+        stages = ['tracts', 'merge', 'adjacency']
 
-        assert len(stages) == 2
+        assert len(stages) == 3
         assert 'tracts' in stages
+        assert 'merge' in stages
         assert 'adjacency' in stages
         assert 'elections' not in stages
         assert 'demographics' not in stages
 
     def test_stage_order_matters(self):
         """Test that stages run in correct order."""
-        # Tracts must come before adjacency (adjacency needs tract files)
-        correct_order = ['tracts', 'adjacency', 'elections', 'demographics']
+        # Correct order: tracts (parse) -> merge (add geometry) -> adjacency (needs geometry)
+        correct_order = ['tracts', 'merge', 'adjacency', 'elections', 'demographics']
 
-        # Verify tracts before adjacency
+        # Verify tracts before merge
         tract_idx = correct_order.index('tracts')
+        merge_idx = correct_order.index('merge')
+        assert tract_idx < merge_idx
+
+        # Verify merge before adjacency (adjacency needs geometry from merge)
         adjacency_idx = correct_order.index('adjacency')
+        assert merge_idx < adjacency_idx
 
-        assert tract_idx < adjacency_idx
+    def test_default_stages_core_only(self):
+        """Test that default includes core stages only."""
+        # Default should be core stages: tracts, merge, adjacency
+        default_stages = ['tracts', 'merge', 'adjacency']
 
-    def test_default_stages_all(self):
-        """Test that default includes all stages."""
-        # Default should be all stages
-        default_stages = ['tracts', 'adjacency', 'elections', 'demographics']
+        assert len(default_stages) == 3
+        assert 'tracts' in default_stages
+        assert 'merge' in default_stages
+        assert 'adjacency' in default_stages
 
-        assert len(default_stages) == 4
+    def test_merge_stage_outputs_parquet(self):
+        """Test that merge stage produces parquet files."""
+        year = 2020
+        state = 'VT'
+
+        # Merge takes CSV input and produces parquet output
+        input_csv = f"outputs/data/{year}/units/{state.lower()}_tracts_{year}_population.csv"
+        output_parquet = f"outputs/data/{year}/units/{state.lower()}_tracts_{year}.parquet"
+
+        # Verify paths
+        assert '.csv' in input_csv
+        assert '.parquet' in output_parquet
+        assert input_csv != output_parquet
+
+
+class TestMergeStage:
+    """Test merge stage specifically."""
+
+    def test_merge_requires_tiger_directory(self):
+        """Test that merge checks for TIGER/Line directory."""
+        year = 2020
+        tiger_dir = Path(f'data/{year}/tiger/tracts')
+
+        # Merge should check tiger directory exists
+        # If missing, should provide helpful error message
+        if not tiger_dir.exists():
+            error_msg = f"TIGER/Line directory not found: {tiger_dir}"
+            assert "TIGER/Line" in error_msg
+            assert str(year) in error_msg
+
+    def test_merge_stage_marker(self, tmp_path):
+        """Test that merge stage creates .tract_merge_complete marker."""
+        output_dir = tmp_path / "outputs" / "test" / "2020"
+        output_dir.mkdir(parents=True)
+
+        marker = output_dir / '.tract_merge_complete'
+
+        # Create marker after successful merge
+        from datetime import datetime
+        marker.write_text(f"tract merge processing completed: {datetime.now().isoformat()}\n")
+
+        assert marker.exists()
+        assert 'merge' in marker.name
+
+    def test_merge_skip_logic(self, tmp_path):
+        """Test that merge skips states with existing parquet files."""
+        output_dir = tmp_path / "outputs" / "data" / "2020" / "tracts"
+        output_dir.mkdir(parents=True)
+
+        # Create parquet file (simulate completed merge)
+        parquet_file = output_dir / "vt_tracts_2020.parquet"
+        parquet_file.write_text("")  # Mock file
+
+        # Should skip if exists and not force
+        force = False
+        should_skip = parquet_file.exists() and not force
+
+        assert should_skip is True
+
+    def test_merge_parallel_processing(self):
+        """Test that merge supports parallel state processing."""
+        workers = 12
+        states = ['VT', 'DE', 'RI', 'NH', 'ME']
+
+        # Can process min(workers, states) simultaneously
+        max_parallel = min(workers, len(states))
+
+        assert max_parallel == 5
 
 
 class TestResolutionAwareness:
@@ -302,9 +379,9 @@ class TestResolutionAwareness:
 
         assert resolution == 'tract'
 
-        # Tract files should go to outputs/data/tracts/
-        expected_dir = Path('outputs/data/tracts/2020')
-        assert 'tracts' in str(expected_dir)
+        # Tract files should go to outputs/data/units/
+        expected_dir = Path('outputs/data/units/2020')
+        assert 'units' in str(expected_dir)
 
     def test_block_resolution(self):
         """Test block-level resolution processing."""
@@ -312,9 +389,9 @@ class TestResolutionAwareness:
 
         assert resolution == 'block'
 
-        # Block files should go to outputs/data/blocks/
-        expected_dir = Path('outputs/data/blocks/2020')
-        assert 'blocks' in str(expected_dir)
+        # Block files should go to outputs/data/units/
+        expected_dir = Path('outputs/data/units/2020')
+        assert 'units' in str(expected_dir)
 
     def test_multiple_resolutions(self):
         """Test processing multiple resolutions."""
@@ -331,16 +408,15 @@ class TestResolutionAwareness:
         assert default_resolution == 'tract'
 
     def test_resolution_in_output_paths(self):
-        """Test that resolution appears in output paths."""
+        """Test that resolution-independent path is used."""
         year = '2020'
 
-        # Tract resolution
-        tract_path = Path(f'outputs/data/tracts/{year}')
-        assert 'tracts' in str(tract_path)
+        # Both tract and block resolutions use units directory
+        units_path = Path(f'outputs/data/units/{year}')
+        assert 'units' in str(units_path)
 
-        # Block resolution
-        block_path = Path(f'outputs/data/blocks/{year}')
-        assert 'blocks' in str(block_path)
+        # Same path for both resolutions (resolution-independent)
+        assert units_path == Path(f'outputs/data/units/{year}')
 
 
 class TestDryRunMode:

@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: [919b074](https://github.com/giodl_microsoft/redistricting/commit/919b074e81007f8edbd9305f806e335be3d8b70a), [4a08bd4](https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643)
+**Size**: M - 855 lines changed (3 files)
 
 ### Goal
 Implement a variant of the recursive bisection algorithm that minimizes geographic boundary length when partitioning, producing more compact districts.

@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ### Current State
 - Compactness calculation exists as standalone script: `scripts/pipeline/calculate_compactness_metrics.py`

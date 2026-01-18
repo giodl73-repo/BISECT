@@ -5,6 +5,8 @@
 **Estimated Effort**: Small (< 2h) | Medium (2-8h) | Large (8-40h) | XL (> 40h)
 **Created**: YYYY-MM-DD
 **Completed**: YYYY-MM-DD _(if completed)_
+**Commits**: _(filled automatically after implementation via git_analyzer.py)_
+**Size**: _(filled automatically after implementation via git_analyzer.py)_
 
 ## Priority Levels
 

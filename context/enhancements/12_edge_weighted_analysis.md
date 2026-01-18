@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: Jan 17, 2026
+**Commits**: [c321196](https://github.com/giodl_microsoft/redistricting/commit/c3211966fa915625c3ef678c058f1c272cd672a0), [6e99bb1](https://github.com/giodl_microsoft/redistricting/commit/6e99bb17955ffe7a3d1a1a5b86acd9bd58091579)
+**Size**: XS - 93 lines changed (4 files)
 
 ### Priority
 **HIGH** - Paper 2 completion

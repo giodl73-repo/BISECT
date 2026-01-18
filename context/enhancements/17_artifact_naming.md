@@ -182,6 +182,8 @@ Used **Clean Regeneration** approach:
 **Date Added**: January 14, 2026
 **Date Completed**: January 14, 2026
 **Status**: COMPLETED
+**Commits**: [2eb7ed7](https://github.com/giodl_microsoft/redistricting/commit/2eb7ed768a8bcd8b4ad72421a4b50255a1c6bcd6), [9e35aaf](https://github.com/giodl_microsoft/redistricting/commit/9e35aafaecb39078640165d0757dccc2723ff558), [54bf030](https://github.com/giodl_microsoft/redistricting/commit/54bf030c615359f04df80c6601a033b9b53b6dbc), [5ab531a](https://github.com/giodl_microsoft/redistricting/commit/5ab531ad0fc676b9276fef17638b4bf96aa301e5), [67ed998](https://github.com/giodl_microsoft/redistricting/commit/67ed99896b0a67f1346d225b4d8150873e2fa1b8), [cf3b655](https://github.com/giodl_microsoft/redistricting/commit/cf3b65576b7b5931efbf20675b06401ca26da22f), [22a9f53](https://github.com/giodl_microsoft/redistricting/commit/22a9f532c759350f2f8903a501c15f4fa5fd8171)
+**Size**: L - 3,141 lines changed (44 files)
 **Actual Implementation Time**: 3-4 hours
 
 ### Built-in Validation

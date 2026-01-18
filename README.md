@@ -2,12 +2,12 @@
 
 Automated redistricting for all 50 US states using recursive bifurcation and the METIS graph partitioning algorithm.
 
-**Last Updated**: January 17, 2026
+**Last Updated**: January 18, 2026
 
 ## Overview
 
 This project implements census tract-based redistricting using:
-- **Data Source**: Census 2020 & 2010 TIGER/Line shapefiles (tract-level geometries and population)
+- **Data Source**: Census tract data from data/2000/, data/2010/, data/2020/ with TIGER/Line shapefiles (tract-level geometries and population)
 - **Algorithm**: Recursive bifurcation with METIS gpmetis (niter=100)
 - **Adjacency**: Queen contiguity with county-aware water-based adjacency adaptation
 - **Visualization**: 4-level progress bars, round-by-round maps, individual district maps, city labels
@@ -123,9 +123,35 @@ python scripts/pipeline/run_state_redistricting.py --state CA --year 2020 --dpi 
 ```
 apportionment/
 ├── data/
-│   ├── raw/              # Census tracts and places (2020 & 2010)
-│   ├── adjacency/        # Adjacency graphs
-│   └── processed/        # Other processed data
+│   ├── 2000/             # 2000 census raw data
+│   │   ├── redistricting/# PL 94-171 redistricting files
+│   │   └── tiger/        # TIGER/Line tract shapefiles
+│   ├── 2010/             # 2010 census raw data
+│   │   ├── redistricting/# PL 94-171 redistricting files
+│   │   └── tiger/        # TIGER/Line tract shapefiles
+│   └── 2020/             # 2020 census raw data
+│       ├── redistricting/# PL 94-171 redistricting files
+│       └── tiger/        # TIGER/Line tract shapefiles
+├── outputs/
+│   ├── data/             # Processed census data
+│   │   ├── 2000/
+│   │   │   ├── tracts/   # Census tract GeoParquet files
+│   │   │   ├── adjacency/# Adjacency graphs
+│   │   │   ├── places/   # Place labels
+│   │   │   ├── elections/# Election data (2000)
+│   │   │   └── demographics/# Demographics (2000)
+│   │   ├── 2010/
+│   │   │   ├── tracts/   # Census tract GeoParquet files
+│   │   │   ├── adjacency/# Adjacency graphs
+│   │   │   ├── places/   # Place labels
+│   │   │   ├── elections/# Election data (2010)
+│   │   │   └── demographics/# Demographics (2010)
+│   │   └── 2020/
+│   │       ├── tracts/   # Census tract GeoParquet files
+│   │       ├── adjacency/# Adjacency graphs
+│   │       ├── places/   # Place labels
+│   │       ├── elections/# Election data (2020)
+│   │       └── demographics/# Demographics (2020)
 ├── outputs/
 │   ├── us_2020_v1/       # Full 50-state 2020 run
 │   │   ├── states/       # Individual state directories
@@ -182,10 +208,10 @@ Census blocks separated by water bodies (e.g., San Francisco Bay) can be conside
 
 ## Data Sources
 
-- **Tract Geometries**: TIGER/Line Shapefiles (via pygris)
-- **Population**: Census P.L. 94-171 Redistricting File
+- **Tract Geometries**: TIGER/Line Shapefiles (from Census Bureau)
+- **Population**: Census P.L. 94-171 Redistricting Files
 - **Places (Cities)**: TIGER/Line Places shapefiles
-- **Coverage**: All 50 US states, 2020 & 2010 census
+- **Coverage**: All 50 US states, 2000, 2010, and 2020 census
 
 ## Key Features
 
@@ -219,9 +245,13 @@ Census blocks separated by water bodies (e.g., San Francisco Bay) can be conside
 - `scripts/pipeline/run_state_redistricting.py` - Process single state through full pipeline
 
 ### Data Preparation
-- `scripts/data/census/download_all_states_tracts.py` - Download census tract data for all states
+- `scripts/data/process_census_data.py` - Process census data (parse → merge → adjacency)
+- `scripts/data/census/parse_pl94171_tracts_{year}.py` - Parse PL 94-171 files
+- `scripts/data/merge_tracts_with_geometries.py` - Merge population + TIGER/Line geometries
+- `scripts/data/geography/download_tiger_tracts.py` - Download TIGER/Line tract shapefiles
+- `scripts/data/geography/build_all_adjacency_graphs.py` - Build adjacency graphs
 - `scripts/data/geography/download_places.py` - Download cities/places data
-- `scripts/data/geography/build_adjacency.py` - Build adjacency graphs (saves to data/adjacency/)
+- `scripts/data/validate_census_data.py` - Validate census data completeness
 
 ### Post-Processing
 - `scripts/pipeline/add_cities_to_districts.py` - Add city labels to districts
@@ -248,13 +278,13 @@ pytest tests/e2e/ -v
 
 ### Test Coverage
 
-**Total: 187 tests in ~23 seconds**
+**Total: 215 tests in ~25 seconds**
 
 | Category | Tests | Coverage |
 |----------|-------|----------|
-| Unit Tests | 110 | 95%+ |
-| Integration Tests | 21 | 85%+ |
-| E2E Dashboard Tests | 20 | 90%+ |
+| Unit Tests | 135 | 95%+ |
+| Integration Tests | 24 | 85%+ |
+| E2E Tests | 56 | 90%+ |
 
 **What's Tested:**
 - ✅ Redistricting algorithm and METIS integration
@@ -346,6 +376,12 @@ open outputs/us_2020_v1/index.html
   - METIS graph partitioning
   - Population balancing
   - Compactness optimization
+
+- **[CENSUS_DATA_PROCESSING.md](docs/CENSUS_DATA_PROCESSING.md)** - Census data processing pipeline
+  - Data organization and structure
+  - Processing steps (parse → merge → adjacency)
+  - Commands and validation
+  - File formats and requirements
 
 - **[DEPENDENCIES.md](docs/DEPENDENCIES.md)** - Software requirements and setup
   - Python packages

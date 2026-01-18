@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: [e8641cd](https://github.com/giodl_microsoft/redistricting/commit/e8641cdf6acd6e159c6238ca1829029a696e91c6)
+**Size**: S - 293 lines changed (20 files)
 
 ### Goal
 Systematically fix all missing outputs in 2010 and 2000 census runs identified by the validation framework, ensuring all three census years (2000, 2010, 2020) have complete and consistent pipeline outputs.

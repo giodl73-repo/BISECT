@@ -78,6 +78,8 @@ Enhancement proposals include priority in their markdown frontmatter, but:
 **Status**: Proposed | In Progress | Completed | Cancelled
 **Priority**: Critical | High | Medium | Low | Research
 **Created**: YYYY-MM-DD
+**Commits**: [471716d](https://github.com/giodl_microsoft/redistricting/commit/471716de6b23c50d37ba4c3ca97524626acb1cf7), [ad542e9](https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789)
+**Size**: M - 1,194 lines changed (7 files)
 **Estimated Effort**: Small (< 2h) | Medium (2-8h) | Large (8-40h) | XL (> 40h)
 ```
 

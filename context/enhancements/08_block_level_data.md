@@ -4,6 +4,8 @@
 **Priority**: Medium
 **Estimated Complexity**: Medium
 **Created**: January 2026
+**Commits**: [4a08bd4](https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643)
+**Size**: M - 777 lines changed (2 files)
 
 ### Goal
 Support census block-level redistricting for 2000, 2010, and 2020, with automatic tract aggregation for older census years.

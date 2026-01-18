@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium (2-4 hours)
 **Created**: January 15, 2026
 **Completed**: January 15, 2026
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ## Current State
 

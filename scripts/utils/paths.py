@@ -5,8 +5,8 @@ This module provides helper functions to construct standard file paths
 used throughout the redistricting pipeline. Centralizes path logic to
 ensure consistency and reduce duplication.
 
-Raw census data: data/Census {year}/
-Processed data: outputs/data/
+Raw census data: data/{year}/
+Processed data: outputs/data/{year}/
 """
 
 from pathlib import Path
@@ -26,10 +26,10 @@ def get_tract_file(state, year):
     Example:
         >>> path = get_tract_file('California', '2020')
         >>> print(path)
-        outputs/data/tracts/2020/california_tracts_2020.parquet
+        outputs/data/2020/units/california_tracts_2020.parquet
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'outputs/data/tracts/{year}/{state_normalized}_tracts_{year}.parquet')
+    return Path(f'outputs/data/{year}/units/{state_normalized}_tracts_{year}.parquet')
 
 
 def get_places_file(state, year):
@@ -46,10 +46,10 @@ def get_places_file(state, year):
     Example:
         >>> path = get_places_file('New York', '2020')
         >>> print(path)
-        outputs/data/places/2020/new_york_places_2020.parquet
+        outputs/data/2020/places/new_york_places_2020.parquet
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'outputs/data/places/{year}/{state_normalized}_places_{year}.parquet')
+    return Path(f'outputs/data/{year}/places/{state_normalized}_places_{year}.parquet')
 
 
 def get_adjacency_file(state, year):
@@ -66,10 +66,10 @@ def get_adjacency_file(state, year):
     Example:
         >>> path = get_adjacency_file('california', '2020')
         >>> print(path)
-        outputs/data/adjacency/2020/california_adjacency_2020.pkl
+        outputs/data/2020/adjacency/california_adjacency_2020.pkl
     """
     state_normalized = state.lower().replace(' ', '_')
-    return Path(f'outputs/data/adjacency/{year}/{state_normalized}_adjacency_{year}.pkl')
+    return Path(f'outputs/data/{year}/adjacency/{state_normalized}_adjacency_{year}.pkl')
 
 
 def get_output_dir(year, version):
@@ -125,9 +125,9 @@ def get_election_data_file(year):
     Example:
         >>> path = get_election_data_file('2020')
         >>> print(path)
-        outputs/data/elections/2020_president_tract.parquet
+        outputs/data/2020/elections/2020_president_tract.parquet
     """
-    return Path(f'outputs/data/elections/{year}_president_tract.parquet')
+    return Path(f'outputs/data/{year}/elections/{year}_president_tract.parquet')
 
 
 def get_demographic_data_file(year):
@@ -143,6 +143,6 @@ def get_demographic_data_file(year):
     Example:
         >>> path = get_demographic_data_file('2020')
         >>> print(path)
-        outputs/data/demographics/{year}_demographics_tract.parquet
+        outputs/data/2020/demographics/2020_demographics_tract.parquet
     """
-    return Path(f'outputs/data/demographics/{year}_demographics_tract.parquet')
+    return Path(f'outputs/data/{year}/demographics/{year}_demographics_tract.parquet')

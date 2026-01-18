@@ -1,8 +1,33 @@
 # Quick Reference
 
-**Updated**: 2026-01-17
+**Updated**: 2026-01-18
 
 ## Commands
+
+### Census Data Processing
+```bash
+# Full pipeline (parse → merge → adjacency)
+python scripts/data/process_census_data.py --year 2020                # Process all stages
+python scripts/data/process_census_data.py --year 2020 --states VT   # Single state
+python scripts/data/process_census_data.py --year 2020 --workers 24  # More workers
+
+# Individual stages
+python scripts/data/census/parse_pl94171_tracts_2020.py --states VT  # Parse PL 94-171
+python scripts/data/merge_units_with_geometries.py --year 2020      # Merge geometries
+python scripts/data/geography/build_all_adjacency_graphs.py --year 2020  # Build graphs
+
+# Download TIGER/Line shapefiles
+python scripts/data/geography/download_tiger_units.py --year 2020
+python scripts/data/geography/download_tiger_units.py --year 2010
+python scripts/data/geography/download_tiger_units.py --year 2000
+
+# Validate data completeness
+python scripts/data/validate_census_data.py --year 2020
+python scripts/data/validate_census_data.py --year 2020 --states VT --verbose
+
+# Reorganize directory structure (one-time)
+scripts/data/reorganize_census_data.bat
+```
 
 ### Pipeline
 ```bash
@@ -38,18 +63,12 @@ start outputs/us_2020_v1/index.html                 # Specific run
 
 ### Tests
 ```bash
-pytest tests/ -v                 # All 187 tests (~23s)
-pytest tests/unit/ -v            # Unit 110 tests (~7s)
+pytest tests/ -v                 # All 215 tests (~25s)
+pytest tests/unit/ -v            # Unit 135 tests (~9s)
+pytest tests/integration/ -v     # Integration 24 tests (~3s)
 pytest tests/e2e/ -v             # E2E 56 tests (~10s)
 pytest tests/ --cov=src/apportionment --cov-report=html  # With coverage
 pytest tests/unit/test_file.py::test_func -v       # Specific test
-```
-
-### Data Prep
-```bash
-python scripts/data/census/download_all_states_tracts.py --year 2020
-python scripts/data/geography/build_adjacency.py --state CA --year 2020
-python scripts/data/geography/check_graph_connectivity.py --year 2020
 ```
 
 ### Emergency
@@ -59,14 +78,27 @@ CANCEL.bat  # Kill all Python processes (Windows)
 
 ## File Paths
 
-**Input**:
+**Raw Data**:
 ```
-data/tracts/{year}/{state}_tracts_{year}.parquet
-data/tracts/{year}/{state}_places_{year}.parquet
-data/adjacency/{year}/{state}_adjacency_{year}.pkl
+data/{year}/
+├── redistricting/                    # PL 94-171 redistricting files
+│   ├── {state}{year}.pl/             # State PL files (2010, 2020)
+│   └── {state}geo.upl                # State geographic files (2000)
+└── tiger/                            # TIGER/Line tract shapefiles
+    └── tl_{year}_{fips}_tract/
 ```
 
-**Output**:
+**Processed Data**:
+```
+outputs/data/{year}/
+├── tracts/{state}_tracts_{year}.parquet              # Census tract GeoParquet
+├── adjacency/{state}_adjacency_{year}.pkl            # Adjacency graphs
+├── places/{state}_places_{year}.parquet              # Place labels
+├── elections/{year}_president_tract.parquet          # Election data
+└── demographics/{year}_demographics_tract.parquet    # Demographics
+```
+
+**Pipeline Output**:
 ```
 outputs/us_{year}_{version}/
 ├── states/{state_name}/
@@ -180,10 +212,13 @@ from pathlib import Path
 import geopandas as gpd
 import pickle
 
-tract_file = Path(f'data/tracts/{year}/{state}_tracts_{year}.parquet')
+# Using path utilities (recommended)
+from scripts.utils.paths import get_tract_file, get_adjacency_file
+
+tract_file = get_tract_file(state, year)  # outputs/data/{year}/units/{state}_tracts_{year}.parquet
 tracts = gpd.read_parquet(tract_file)
 
-graph_file = Path(f'data/adjacency/{year}/{state}_adjacency_{year}.pkl')
+graph_file = get_adjacency_file(state, year)  # outputs/data/{year}/adjacency/{state}_adjacency_{year}.pkl
 with open(graph_file, 'rb') as f:
     adjacency = pickle.load(f)
 ```
@@ -211,7 +246,7 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 - Single state VT/DE: 30s-2min
 - Single state CA/TX: 3-5min
 
-**Tests**: 187 total (~23s): unit 110 (~7s), integration 21 (~3s), e2e 56 (~10s)
+**Tests**: 215 total (~25s): unit 135 (~9s), integration 24 (~3s), e2e 56 (~10s)
 
 ## Skills (Claude Code)
 

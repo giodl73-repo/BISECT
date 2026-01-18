@@ -38,6 +38,11 @@ def parse_enhancement(file_path):
             'created': metadata.get('created', 'Unknown'),
             'completed': metadata.get('completed', ''),
             'started': metadata.get('started', ''),
+            'commits': metadata.get('commits', []),
+            'github_urls': metadata.get('github_urls', []),
+            'size_lines': metadata.get('size_lines', 0),
+            'size_files': metadata.get('size_files', 0),
+            'size_category': metadata.get('size_category', 'Unknown'),
             'file': file_path.name,
             'summary': metadata.get('summary', '')
         }
@@ -85,6 +90,39 @@ def extract_metadata(content):
         match = re.search(pattern, content)
         if match:
             metadata[key] = match.group(1).strip()
+
+    # Extract commits field
+    commits_match = re.search(r'\*\*Commits\*\*:\s*(.+)', content)
+    if commits_match:
+        commits_text = commits_match.group(1).strip()
+        # Parse markdown links: [short_sha](github_url)
+        commit_links = re.findall(r'\[([a-f0-9]+)\]\((https://github\.com/[^\)]+)\)', commits_text)
+        if commit_links:
+            metadata['commits'] = [sha for sha, url in commit_links]
+            metadata['github_urls'] = [url for sha, url in commit_links]
+        else:
+            metadata['commits'] = []
+            metadata['github_urls'] = []
+    else:
+        metadata['commits'] = []
+        metadata['github_urls'] = []
+
+    # Extract size field
+    size_match = re.search(r'\*\*Size\*\*:\s*(.+)', content)
+    if size_match:
+        size_text = size_match.group(1).strip()
+        # Parse format: "XS - 1,250 lines changed (15 files)"
+        category_match = re.match(r'(XS|S|M|L|XL)', size_text)
+        lines_match = re.search(r'([\d,]+)\s+lines?\s+changed', size_text)
+        files_match = re.search(r'\((\d+)\s+files?\)', size_text)
+
+        metadata['size_category'] = category_match.group(1) if category_match else 'Unknown'
+        metadata['size_lines'] = int(lines_match.group(1).replace(',', '')) if lines_match else 0
+        metadata['size_files'] = int(files_match.group(1)) if files_match else 0
+    else:
+        metadata['size_category'] = 'Unknown'
+        metadata['size_lines'] = 0
+        metadata['size_files'] = 0
 
     # Infer status from title if not explicitly set (older format)
     if 'status' not in metadata:

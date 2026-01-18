@@ -1,10 +1,20 @@
 # Enhancement Manager
 
-A simple web application for viewing, filtering, searching, and editing project enhancement files.
+Comprehensive suite of tools for managing, tracking, and analyzing project enhancements with GitHub integration.
+
+**Last Updated**: January 18, 2026
 
 ## Overview
 
-The Enhancement Manager provides a visual interface to manage the 32+ enhancement specifications stored in `../../context/enhancements/`. It allows you to:
+The Enhancement Manager provides:
+- **Web UI** for viewing/editing enhancements (Flask app)
+- **Git integration** for tracking commits and code changes
+- **Size metrics** for effort estimation and analytics
+- **Automated workflows** for capturing commit metadata
+
+### Web Interface Features
+
+The web application allows you to:
 
 - **View all enhancements** in one place with status badges
 - **Filter** by status (Completed / In Progress / Planned)
@@ -38,6 +48,144 @@ The Enhancement Manager provides a visual interface to manage the 32+ enhancemen
 - Status breakdown (completed/in-progress/planned)
 - Completion rate percentage
 - Complexity distribution
+- **Size distribution** (XS/S/M/L/XL) - shows code change metrics
+- **Size filtering** - filter enhancements by code size category
+- **Commit tracking** - view GitHub commit links for each enhancement
+
+## Git Integration Tools
+
+### 1. Git Analyzer (`git_analyzer.py`)
+
+Analyzes git commit history to match commits with enhancements.
+
+**Usage**:
+```bash
+python git_analyzer.py [--output FILE] [--verbose]
+```
+
+**What it does**:
+- Scans entire git log for commits mentioning enhancements
+- Extracts enhancement numbers using regex patterns
+- Calculates size metrics per commit (lines added/deleted, files modified)
+- Handles batch proposals (e.g., "Enhancement 42-46" → splits to 5 enhancements)
+- Outputs to `enhancement_commits.json`
+
+**Patterns matched**:
+- `Enhancement N: Title`
+- `Enhancement N Phase M: Title`
+- `Mark Enhancement N as Completed`
+- `Add Enhancements N-M` (batch)
+- And more...
+
+**Example output** (enhancement_commits.json):
+```json
+{
+  "48": {
+    "enhancement_id": 48,
+    "commit_count": 2,
+    "commits": [...],
+    "total_lines_changed": 1550,
+    "total_files_modified": 15
+  }
+}
+```
+
+### 2. Update Enhancements (`update_enhancements.py`)
+
+Batch updates all enhancement files with commit metadata.
+
+**Usage**:
+```bash
+python update_enhancements.py [--dry-run] [--verbose]
+```
+
+**What it does**:
+- Reads `enhancement_commits.json`
+- Finds all enhancement markdown files
+- Adds **Commits** and **Size** fields to each file
+- Calculates size category (XS/S/M/L/XL)
+
+**Size categories**:
+- **XS**: < 100 lines (< 5 files)
+- **S**: 100-500 lines (5-15 files)
+- **M**: 500-1500 lines (15-30 files)
+- **L**: 1500-5000 lines (30-60 files)
+- **XL**: > 5000 lines (> 60 files)
+
+### 3. Capture Commits (`capture_commits.py`)
+
+Automatically captures commits for a specific enhancement.
+
+**Usage**:
+```bash
+python capture_commits.py <enhancement_id> [--commit SHA] [--dry-run] [--verbose]
+```
+
+**Examples**:
+```bash
+# Capture all new commits for Enhancement 48
+python capture_commits.py 48 --verbose
+
+# Add a specific commit
+python capture_commits.py 48 --commit abc123
+
+# Preview without writing
+python capture_commits.py 48 --dry-run
+```
+
+**When to use**:
+- After committing changes for an enhancement
+- During enhancement completion workflow
+- To add a missed commit manually
+
+**Convenience wrapper** (`add_commit.bat`):
+```bash
+add_commit 48           # Capture all new commits
+add_commit 48 abc123    # Add specific commit
+```
+
+## Workflows
+
+### Initial Setup (One-Time)
+
+Generate commit metadata for all existing enhancements:
+
+```bash
+cd tools/enhancement_manager
+
+# 1. Analyze git history
+python git_analyzer.py --verbose
+
+# 2. Update all enhancement files (preview first)
+python update_enhancements.py --dry-run
+python update_enhancements.py --verbose
+
+# 3. Commit the changes
+git add context/enhancements/*.md
+git commit -m "Add commit metadata to all enhancements"
+```
+
+### Completing a New Enhancement
+
+When finishing Enhancement N:
+
+```bash
+# 1. Make implementation commits
+git commit -m "Enhancement N: Implementation
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>"
+
+# 2. Capture commits automatically
+python tools/enhancement_manager/capture_commits.py N --verbose
+
+# 3. Review changes
+git diff context/enhancements/*N_*.md
+
+# 4. Complete documentation (use /enhancement-document skill)
+
+# 5. Final commit
+git commit -m "Document Enhancement N completion"
+```
 
 ## Installation
 
@@ -230,14 +378,20 @@ Returns enhancement statistics.
 
 ```
 tools/enhancement_manager/
-├── app.py                 # Flask server with API endpoints
-├── parser.py              # Markdown parsing and validation
-├── index_sync.py          # INDEX.md synchronization
-├── requirements.txt       # Python dependencies
-├── README.md              # This file
-├── run.bat                # Windows launcher
+├── README.md                      # This file
+├── app.py                         # Flask web server
+├── parser.py                      # Markdown parser
+├── index_sync.py                  # INDEX.md synchronization
+├── run.bat                        # Windows startup script
+├── git_analyzer.py                # Git history analyzer (NEW)
+├── update_enhancements.py         # Batch enhancement updater (NEW)
+├── capture_commits.py             # Individual enhancement commit capturer (NEW)
+├── add_commit.bat                 # Convenience wrapper (NEW)
+├── test_git_analyzer.py           # Unit tests (NEW)
+├── enhancement_commits.json       # Generated commit mapping (not in git)
+├── requirements.txt               # Python dependencies
 └── static/
-    └── index.html         # Single-page web application
+    └── index.html                 # Web UI (single-page app)
 ```
 
 ## Configuration
@@ -392,6 +546,37 @@ curl http://localhost:5001/api/stats
 2. Or add custom CSS in `<style>` section
 3. Refresh browser to see changes
 
+## Troubleshooting Git Tools
+
+### Git analyzer finds no commits
+
+**Cause**: Commits don't mention "Enhancement N" in message
+
+**Solution**:
+- Ensure commit messages follow patterns
+- Use `git log --grep="Enhancement"` to verify
+- Manually add commits using `capture_commits.py --commit SHA`
+
+### Unicode encoding errors (Windows)
+
+**Cause**: Git log contains non-ASCII characters
+
+**Solution**: Already handled in git_analyzer.py with `encoding='utf-8', errors='replace'`
+
+### Enhancement file not found
+
+**Cause**: Looking in wrong directory or file renamed
+
+**Solution**:
+- Check both `context/enhancements/` and `context/enhancements/active/`
+- Ensure filename follows pattern: `NN_description.md`
+
+### Size metrics seem incorrect
+
+**Cause**: Binary files or generated files inflating counts
+
+**Solution**: Review `git diff-tree` output for the commit
+
 ## Future Enhancements
 
 Potential additions (not in current scope):
@@ -406,13 +591,16 @@ Potential additions (not in current scope):
 
 ## Credits
 
-Created as Enhancement 35 for the Congressional Redistricting project.
+Created for the Congressional Redistricting project:
+- **Enhancement 35** (Jan 2026): Web UI for viewing/editing enhancements
+- **Enhancement 48** (Jan 2026): Git integration with commit tracking and size metrics
 
 **Technology Stack**:
 - Flask 3.0.0
 - Tailwind CSS 3.x (CDN)
 - marked.js 11.x (CDN)
 - DOMPurify 3.x (CDN)
+- Python standard library (subprocess, pathlib, re, json)
 
 ## License
 

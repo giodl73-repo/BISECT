@@ -3,6 +3,8 @@
 **Status**: Proposed
 **Priority**: Critical
 **Created**: January 17, 2026
+**Commits**: [ad542e9](https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789)
+**Size**: M - 1,191 lines changed (6 files)
 
 ## Problem Statement
 

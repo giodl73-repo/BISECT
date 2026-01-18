@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: [9bb05e1](https://github.com/giodl_microsoft/redistricting/commit/9bb05e1060041db5b8aeabb601543877124e54d9)
+**Size**: S - 406 lines changed (5 files)
 
 **Completion Date:** January 12, 2026
 **Implementation:** Created `scripts/pipeline/create_us_national_rounds_progression.py`, integrated into pipeline, added USA Rounds tab to dashboard.

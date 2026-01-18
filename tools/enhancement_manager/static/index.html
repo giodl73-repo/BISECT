@@ -114,6 +114,17 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Size:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn size-filter active" data-size="all">All</button>
+                        <button class="filter-btn size-filter" data-size="XS">XS</button>
+                        <button class="filter-btn size-filter" data-size="S">S</button>
+                        <button class="filter-btn size-filter" data-size="M">M</button>
+                        <button class="filter-btn size-filter" data-size="L">L</button>
+                        <button class="filter-btn size-filter" data-size="XL">XL</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
                     <div class="text-sm font-medium text-gray-700">Sort by:</div>
                     <select id="sortSelect" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
                         <option value="priority">Priority (High to Low)</option>
@@ -121,6 +132,8 @@
                         <option value="number-asc">Number (Oldest First)</option>
                         <option value="status">Status (Completed → In Progress → Planned)</option>
                         <option value="title">Title (A-Z)</option>
+                        <option value="size-desc">Size (Largest First)</option>
+                        <option value="size-asc">Size (Smallest First)</option>
                     </select>
                     <input
                         type="text"
@@ -160,6 +173,7 @@
                 <div class="flex border-t border-gray-200 px-6">
                     <button class="tab-btn active" onclick="switchTab('view')">View</button>
                     <button class="tab-btn" onclick="switchTab('edit')">Edit</button>
+                    <button class="tab-btn" onclick="switchTab('commits')">Commits</button>
                 </div>
             </div>
 
@@ -202,6 +216,15 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Commits Tab -->
+            <div id="commitsTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div id="commitsContent">
+                        <!-- Commits will be loaded here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -210,8 +233,9 @@
         let currentEnhancement = null;
         let currentFilter = 'all';
         let currentPriorityFilter = 'all';
+        let currentSizeFilter = 'all';
         let currentSearch = '';
-        let currentSort = 'priority'; // 'priority', 'number', 'status'
+        let currentSort = 'priority'; // 'priority', 'number', 'status', 'size-desc', 'size-asc'
 
         // Initialize
         async function init() {
@@ -287,6 +311,12 @@
                     priorityMatch = e.priority && e.priority.includes(currentPriorityFilter);
                 }
 
+                // Filter by size
+                let sizeMatch = true;
+                if (currentSizeFilter !== 'all') {
+                    sizeMatch = e.size_category === currentSizeFilter;
+                }
+
                 // Filter by search
                 let searchMatch = true;
                 if (currentSearch) {
@@ -296,7 +326,7 @@
                         (e.summary && e.summary.toLowerCase().includes(searchLower));
                 }
 
-                return statusMatch && priorityMatch && searchMatch;
+                return statusMatch && priorityMatch && sizeMatch && searchMatch;
             });
 
             // Sort enhancements
@@ -326,6 +356,20 @@
                     if (titleA < titleB) return -1;
                     if (titleA > titleB) return 1;
                     return 0;
+                });
+            } else if (currentSort === 'size-desc') {
+                filtered.sort((a, b) => {
+                    const aSize = a.size_lines || 0;
+                    const bSize = b.size_lines || 0;
+                    if (aSize !== bSize) return bSize - aSize; // Largest first
+                    return b.id - a.id; // Secondary sort by ID
+                });
+            } else if (currentSort === 'size-asc') {
+                filtered.sort((a, b) => {
+                    const aSize = a.size_lines || 0;
+                    const bSize = b.size_lines || 0;
+                    if (aSize !== bSize) return aSize - bSize; // Smallest first
+                    return b.id - a.id; // Secondary sort by ID
                 });
             }
 
@@ -362,6 +406,19 @@
                 enhancement.created ? `Created: ${enhancement.created}` :
                 '';
 
+            // Build size and commit badges
+            let sizeBadge = '';
+            if (enhancement.size_category && enhancement.size_category !== 'Unknown') {
+                const sizeLines = enhancement.size_lines || 0;
+                const sizeFiles = enhancement.size_files || 0;
+                sizeBadge = `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" title="${sizeLines.toLocaleString()} lines / ${sizeFiles} files">${enhancement.size_category} - ${sizeLines.toLocaleString()} lines</span>`;
+            }
+
+            let commitBadge = '';
+            if (enhancement.commits && enhancement.commits.length > 0) {
+                commitBadge = `<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${enhancement.commits.length} commit${enhancement.commits.length > 1 ? 's' : ''}</span>`;
+            }
+
             return `
                 <div class="enhancement-card" onclick="openEnhancement(${enhancement.id})">
                     <div class="flex items-start justify-between mb-3">
@@ -377,9 +434,13 @@
                     </div>
                     <h3 class="text-xl font-bold text-gray-900 mb-2">${enhancement.title}</h3>
                     ${enhancement.summary ? `<p class="text-gray-600 text-sm mb-3">${enhancement.summary}</p>` : ''}
-                    <div class="flex items-center justify-between text-sm text-gray-500">
+                    <div class="flex items-center justify-between text-sm text-gray-500 gap-2">
                         <span>${dateInfo}</span>
-                        ${enhancement.complexity ? `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${enhancement.complexity}</span>` : ''}
+                        <div class="flex items-center gap-2">
+                            ${sizeBadge}
+                            ${commitBadge}
+                            ${enhancement.complexity ? `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${enhancement.complexity}</span>` : ''}
+                        </div>
                     </div>
                 </div>
             `;
@@ -466,10 +527,62 @@
             if (tab === 'view') {
                 document.querySelector('[onclick="switchTab(\'view\')"]').classList.add('active');
                 document.getElementById('viewTab').classList.add('active');
-            } else {
+            } else if (tab === 'edit') {
                 document.querySelector('[onclick="switchTab(\'edit\')"]').classList.add('active');
                 document.getElementById('editTab').classList.add('active');
+            } else if (tab === 'commits') {
+                document.querySelector('[onclick="switchTab(\'commits\')"]').classList.add('active');
+                document.getElementById('commitsTab').classList.add('active');
+                // Render commits when tab is opened
+                renderCommits();
             }
+        }
+
+        // Render commits in the commits tab
+        function renderCommits() {
+            const commitsContent = document.getElementById('commitsContent');
+
+            if (!currentEnhancement || !currentEnhancement.metadata) {
+                commitsContent.innerHTML = '<p class="text-gray-500">No enhancement data loaded.</p>';
+                return;
+            }
+
+            const commits = currentEnhancement.metadata.commits || [];
+            const githubUrls = currentEnhancement.metadata.github_urls || [];
+
+            if (commits.length === 0) {
+                commitsContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No commits found for this enhancement.</p>
+                        <p class="text-sm text-gray-400 mt-2">This enhancement may not have been implemented yet, or commit metadata hasn't been added.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build commits list
+            const commitsList = commits.map((sha, index) => {
+                const url = githubUrls[index] || '';
+                return `
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer"
+                               class="text-blue-600 hover:text-blue-800 font-mono text-sm font-semibold">
+                                ${sha}
+                            </a>
+                            <span class="text-xs text-gray-500">View on GitHub →</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            commitsContent.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Git Commits</h3>
+                    <p class="text-sm text-gray-600 mb-4">${commits.length} commit${commits.length > 1 ? 's' : ''} found for this enhancement</p>
+                </div>
+                ${commitsList}
+            `;
         }
 
         // Save enhancement
@@ -513,9 +626,9 @@
         // Setup event listeners
         function setupEventListeners() {
             // Status filter buttons
-            document.querySelectorAll('.filter-btn:not(.priority-filter)').forEach(btn => {
+            document.querySelectorAll('.filter-btn:not(.priority-filter):not(.size-filter)').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-btn:not(.priority-filter)').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.filter-btn:not(.priority-filter):not(.size-filter)').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     currentFilter = e.target.dataset.filter;
                     renderEnhancements();
@@ -528,6 +641,16 @@
                     document.querySelectorAll('.priority-filter').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     currentPriorityFilter = e.target.dataset.priority;
+                    renderEnhancements();
+                });
+            });
+
+            // Size filter buttons
+            document.querySelectorAll('.size-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.size-filter').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentSizeFilter = e.target.dataset.size;
                     renderEnhancements();
                 });
             });

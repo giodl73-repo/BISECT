@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: [062f177](https://github.com/giodl_microsoft/redistricting/commit/062f177489dd4c5718107d09fd9540caf6451071), [4a08bd4](https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643)
+**Size**: M - 1,331 lines changed (10 files)
 
 **Completion Date:** January 12, 2026
 **Implementation:** Created 4 Mermaid diagrams in `docs/diagrams/`, embedded in `ARCHITECTURE.md`.

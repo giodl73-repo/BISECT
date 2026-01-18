@@ -136,4 +136,6 @@ Updated `laymen_guide.tex` appendix with transparency notes:
 **Date Added**: January 15, 2026
 **Date Completed**: January 15, 2026
 **Status**: COMPLETED
+**Commits**: [3792a57](https://github.com/giodl_microsoft/redistricting/commit/3792a5796b8585b01d35f7426612fc8d74c60338)
+**Size**: M - 1,113 lines changed (5 files)
 **Actual Implementation Time**: ~3-4 hours

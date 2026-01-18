@@ -1,9 +1,11 @@
-# Enhancement 47: Data Separation and Restoration
+# Enhancement 47: Census Data Processing and Path Reorganization
 
-**Status**: Proposed
+**Status**: ✅ COMPLETED
 **Priority**: Critical
-**Estimated Effort**: Large (20-30h)
+**Completed**: 2026-01-18
 **Created**: 2026-01-18
+**Commits**: [0972568](https://github.com/giodl_microsoft/redistricting/commit/0972568eeba402ec80c92e76af371342207cf5f6), [da418c7](https://github.com/giodl_microsoft/redistricting/commit/da418c7c0b0329276c6c26eb1ae4c5e3a7d14ad8)
+**Size**: M - 792 lines changed (5 files)
 
 ## Priority Levels
 
@@ -174,17 +176,17 @@ outputs/data/                            # ALL processed/derived data
 
 | Data Type | Year | Source | Download Location | Final Output Location |
 |-----------|------|--------|-------------------|----------------------|
-| Tract geometries | 2000 | NHGIS (manual) | `data/Census 2000/tracts/` | `outputs/data/tracts/2000/` |
+| Tract geometries | 2000 | NHGIS (manual) | `data/Census 2000/tracts/` | `outputs/data/units/2000/` |
 | Tract population | 2000 | NHGIS (manual) | `data/Census 2000/population/` | (merged into tracts/) |
 | Places | 2000 | NHGIS (manual) | `data/Census 2000/places/` | `outputs/data/places/2000/` |
 | Demographics | 2000 | Census API | `data/Census 2000/demographics/` | `outputs/data/processed/demographics/` |
 | Elections | 2000 | N/A | (none) | (none) |
-| Tract geometries | 2010 | TIGER/Line FTP | `data/Census 2010/tiger/` (temp) | `outputs/data/tracts/2010/` |
+| Tract geometries | 2010 | TIGER/Line FTP | `data/Census 2010/tiger/` (temp) | `outputs/data/units/2010/` |
 | Tract population | 2010 | User-provided | `data/Census 2010/*.pl` | (merged into tracts/) |
 | Places | 2010 | Census API | `data/Census 2010/tiger/` (temp) | `outputs/data/places/2010/` |
 | Demographics | 2010 | Census API | `data/Census 2010/demographics/` | `outputs/data/processed/demographics/` |
 | Elections | 2010 | N/A | (none) | (none) |
-| Tract geometries | 2020 | cenpy API | `data/Census 2020/tiger/` (temp) | `outputs/data/tracts/2020/` |
+| Tract geometries | 2020 | cenpy API | `data/Census 2020/tiger/` (temp) | `outputs/data/units/2020/` |
 | Tract population | 2020 | User-provided | `data/Census 2020/*.pl` | (merged into tracts/) |
 | Places | 2020 | Census API | `data/Census 2020/tiger/` (temp) | `outputs/data/places/2020/` |
 | Demographics | 2020 | Census API | `data/Census 2020/demographics/` | `outputs/data/processed/demographics/` |
@@ -217,9 +219,9 @@ outputs/data/                            # ALL processed/derived data
 1. Read NHGIS national tract shapefile
 2. Split into per-state shapefiles (50 states)
 3. Join with NHGIS population CSV (GISJOIN field)
-4. Output to `outputs/data/tracts/2000/{state}_tracts_2000.parquet`
+4. Output to `outputs/data/units/2000/{state}_tracts_2000.parquet`
 5. Read NHGIS places shapefile, split by state
-6. Output to `outputs/data/tracts/2000/{state}_places_2000.parquet`
+6. Output to `outputs/data/units/2000/{state}_places_2000.parquet`
 7. Build adjacency graphs from tract geometries
 
 **No downloads needed** - Everything is already in `data/NHGIS/`
@@ -237,8 +239,8 @@ outputs/data/                            # ALL processed/derived data
 1. Parse PL 94-171 files → Extract tract population (existing script: `parse_pl94171_tracts_2010.py`)
 2. Download TIGER/Line tract shapefiles (existing script: `download_tiger_tracts_2010.py`)
 3. Merge population + geometries (existing script: `merge_tracts_with_geometries_2010.py`)
-4. Output to `outputs/data/tracts/2010/{state}_tracts_2010.parquet`
-5. Download/process places → `outputs/data/tracts/2010/{state}_places_2010.parquet`
+4. Output to `outputs/data/units/2010/{state}_tracts_2010.parquet`
+5. Download/process places → `outputs/data/units/2010/{state}_places_2010.parquet`
 6. Build adjacency graphs from tract geometries
 
 **Downloads automated** - TIGER/Line from Census Bureau FTP
@@ -254,8 +256,8 @@ outputs/data/                            # ALL processed/derived data
 **Processing strategy**:
 1. Download tract geometries (existing script: `download_all_states_tracts.py` uses cenpy)
 2. Merge with population data
-3. Output to `outputs/data/tracts/2020/{state}_tracts_2020.parquet`
-4. Download/process places → `outputs/data/tracts/2020/{state}_places_2020.parquet`
+3. Output to `outputs/data/units/2020/{state}_tracts_2020.parquet`
+4. Download/process places → `outputs/data/units/2020/{state}_places_2020.parquet`
 5. Build adjacency graphs from tract geometries
 
 **Downloads automated** - TIGER/Line via cenpy API (faster, more reliable)
@@ -284,8 +286,8 @@ outputs/data/                            # ALL processed/derived data
 **Goal**: Update `scripts/utils/paths.py` to support new structure
 
 - [ ] Add `get_raw_census_dir(year)` → `data/Census {year}/`
-- [ ] Update `get_tract_file(state, year)` → `outputs/data/tracts/{year}/{state}_tracts_{year}.parquet`
-- [ ] Update `get_places_file(state, year)` → `outputs/data/tracts/{year}/{state}_places_{year}.parquet`
+- [ ] Update `get_tract_file(state, year)` → `outputs/data/units/{year}/{state}_tracts_{year}.parquet`
+- [ ] Update `get_places_file(state, year)` → `outputs/data/units/{year}/{state}_places_{year}.parquet`
 - [ ] Update `get_adjacency_file(state, year)` → `outputs/data/adjacency/{year}/{state}_adjacency_{year}.pkl`
 - [ ] Update `get_election_data_file(year)` → `outputs/data/processed/elections/{year}_president_tract.parquet`
 - [ ] Update `get_demographic_data_file(year)` → `outputs/data/processed/demographics/{year}_demographics_tract.parquet`
@@ -306,14 +308,14 @@ outputs/data/                            # ALL processed/derived data
   - Read `data/NHGIS/nhgis0006_csv/nhgis0006_ds146_2000_tract.csv` (population)
   - Split national shapefile by state (STATEA field)
   - Join with population CSV on GISJOIN field
-  - Output per-state parquet: `outputs/data/tracts/2000/{state}_tracts_2000.parquet`
+  - Output per-state parquet: `outputs/data/units/2000/{state}_tracts_2000.parquet`
   - Fields: GEOID, NAME, AREALAND, AREAWATR, INTPTLAT, INTPTLON, POPULATION, geometry
 
 #### 3.2: Census Tract Processing (2010/2020 - PL 94-171 + TIGER)
 - [ ] **`parse_pl94171_tracts_2010.py`** - Read from `data/Census 2010/`, write CSVs to temp
 - [ ] **`download_tiger_tracts_2010.py`** - Download TIGER/Line, save to temp
-- [ ] **`merge_tracts_with_geometries_2010.py`** - Merge, write to `outputs/data/tracts/2010/`
-- [ ] **`download_all_states_tracts.py`** - Update for 2020, write to `outputs/data/tracts/2020/`
+- [ ] **`merge_tracts_with_geometries_2010.py`** - Merge, write to `outputs/data/units/2010/`
+- [ ] **`download_all_states_tracts.py`** - Update for 2020, write to `outputs/data/units/2020/`
   - Currently uses cenpy API (good!)
   - Just needs path update to `outputs/data/`
 
@@ -322,12 +324,12 @@ outputs/data/                            # ALL processed/derived data
   - Read `data/NHGIS/nhgis0004_shapefile_tl2000_us_place_2000/US_place_2000.shp` (national)
   - Read `data/NHGIS/nhgis0006_csv/nhgis0006_ds146_2000_place.csv` (optional, for additional data)
   - Split national shapefile by state
-  - Output per-state parquet: `outputs/data/tracts/2000/{state}_places_2000.parquet`
-- [ ] **`download_places.py`** - Update for 2010/2020, write to `outputs/data/tracts/{year}/`
+  - Output per-state parquet: `outputs/data/units/2000/{state}_places_2000.parquet`
+- [ ] **`download_places.py`** - Update for 2010/2020, write to `outputs/data/units/{year}/`
 - [ ] **`convert_nhgis_places_to_parquet.py`** - Update if used for 2010/2020
 
 #### 3.4: Adjacency Graph Building
-- [ ] **`build_tract_adjacency.py`** - Read from `outputs/data/tracts/{year}/`, write to `outputs/data/adjacency/{year}/`
+- [ ] **`build_tract_adjacency.py`** - Read from `outputs/data/units/{year}/`, write to `outputs/data/adjacency/{year}/`
 - [ ] **`build_all_adjacency_graphs.py`** - Update paths
 - [ ] **`compute_tract_adjacencies_2000.py`** - Update paths
 - [ ] **`compute_tract_adjacencies_2010.py`** - Update paths
@@ -509,8 +511,8 @@ outputs/data/                            # ALL processed/derived data
 - [ ] All raw census data documented in `data/README.md`
 - [ ] All PL 94-171 files parsed to CSVs for 2000/2010/2020
 - [ ] All TIGER/Line geometries downloaded for sample state (VT)
-- [ ] All tracts merged to parquet files in `outputs/data/tracts/{year}/`
-- [ ] All places converted to parquet files in `outputs/data/tracts/{year}/`
+- [ ] All tracts merged to parquet files in `outputs/data/units/{year}/`
+- [ ] All places converted to parquet files in `outputs/data/units/{year}/`
 - [ ] All adjacency graphs built in `outputs/data/adjacency/{year}/`
 - [ ] All election data processed to `outputs/data/processed/elections/`
 - [ ] All demographic data processed to `outputs/data/processed/demographics/`

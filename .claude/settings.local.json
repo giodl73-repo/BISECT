@@ -132,7 +132,16 @@
       "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/redistricting_reference.pdf\")",
       "Bash(git ls-tree:*)",
       "Bash(git log:*)",
-      "Bash(./reorganize_data.bat)"
+      "Bash(./reorganize_data.bat)",
+      "Bash(./reorganize_2010_2020.bat)",
+      "WebFetch(domain:api.census.gov)",
+      "Bash(tr:*)",
+      "Bash(cmd /c reorganize_census_data.bat)",
+      "Bash(if [ -d \"data/Census 2000/geos\" ])",
+      "Bash(then mv \"data/Census 2000/geos\" \"data/Census 2000/redistricting\")",
+      "Bash(else echo \"geos directory not found\")",
+      "Bash(run:*)",
+      "Bash(git show:*)"
     ]
   }
 }

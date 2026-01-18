@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium (3-4 hours)
 **Created**: January 16, 2026
 **Completed**: January 16, 2026
+**Commits**: [cb447b5](https://github.com/giodl_microsoft/redistricting/commit/cb447b52a82ec6edbd9efa618def41ff9d058d1b), [431796e](https://github.com/giodl_microsoft/redistricting/commit/431796e6df8d4612cac8191d94e7eef6b7edeb3f)
+**Size**: L - 1,856 lines changed (10 files)
 
 ## Current State
 

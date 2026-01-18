@@ -4,6 +4,8 @@
 **Proposed**: January 16, 2026
 **Complexity**: Medium (3-4 hours)
 **Priority**: Low
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ## Current State
 

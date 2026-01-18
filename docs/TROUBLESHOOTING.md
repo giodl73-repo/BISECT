@@ -242,8 +242,8 @@ python scripts/data/geography/build_adjacency.py --year 2020
 
 **Verify**:
 ```bash
-ls data/adjacency/2020/
-# Should show: 01_adjacency.json, 06_adjacency.json, etc.
+ls outputs/data/2020/adjacency/
+# Should show: alabama_adjacency_2020.pkl, california_adjacency_2020.pkl, etc.
 ```
 
 ### Error: "METIS partitioning failed" or "Could not partition graph"
@@ -263,9 +263,10 @@ import json
 from pathlib import Path
 
 # Load adjacency graph
-adj_path = Path("data/adjacency/2020/06_adjacency.json")
-with open(adj_path) as f:
-    adj = json.load(f)
+import pickle
+adj_path = Path("outputs/data/2020/adjacency/california_adjacency_2020.pkl")
+with open(adj_path, 'rb') as f:
+    adj = pickle.load(f)
 
 # Check for isolated nodes
 isolated = [node for node, neighbors in adj.items() if len(neighbors) == 0]
@@ -583,6 +584,6 @@ python --version
 python -c "import geopandas; print('GeoPandas:', geopandas.__version__)"
 python -c "import pymetis; print('PyMETIS: OK')"
 gpmetis --help
-ls data/raw/tracts_2020/ | head -5
-ls data/adjacency/2020/ | head -5
+ls data/2020/tiger/ | head -5
+ls outputs/data/2020/adjacency/ | head -5
 ```

@@ -7,9 +7,9 @@ for the redistricting pipeline by calling existing processing scripts
 with the correct new paths (outputs/data/).
 
 Stages:
-  1. Census tract parquet files (from PL 94-171 or NHGIS)
-  2. Adjacency graphs for all states
-  3. Places parquet files (for map labels)
+  1. Parse PL 94-171 files (raw → CSV with population)
+  2. Merge with TIGER/Line geometries (CSV → GeoParquet)
+  3. Build adjacency graphs for all states
   4. Election data (tract-level parquet)
   5. Demographics data (tract-level parquet)
 
@@ -217,15 +217,15 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
 
 
 def create_directory_structure(year: int, is_standalone: bool = None):
-    """Create outputs/data directory structure for the year."""
-    report_progress(f"[1/5] Creating directory structure", is_standalone)
+    """Create outputs/data/{year}/ directory structure."""
+    report_progress(f"[1/6] Creating directory structure", is_standalone)
 
     dirs = [
-        f'outputs/data/tracts/{year}',
-        f'outputs/data/adjacency/{year}',
-        f'outputs/data/places/{year}',
-        f'outputs/data/elections',
-        f'outputs/data/demographics',
+        f'outputs/data/{year}/units',
+        f'outputs/data/{year}/adjacency',
+        f'outputs/data/{year}/places',
+        f'outputs/data/{year}/elections',
+        f'outputs/data/{year}/demographics',
     ]
 
     for dir_path in dirs:
@@ -235,29 +235,39 @@ def create_directory_structure(year: int, is_standalone: bool = None):
 
 
 def process_census_tracts(year: int, error_log_file: Path, states: Optional[List[str]] = None,
-                          force: bool = False, dry_run: bool = False, is_standalone: bool = None):
+                          workers: int = 1, force: bool = False, dry_run: bool = False,
+                          is_standalone: bool = None):
     """
-    Process raw census data into tract parquet files.
+    Parse raw census data into population CSV files.
 
-    For 2000: Parse NHGIS national shapefile, split by state
-    For 2010: Parse PL 94-171 files, download TIGER/Line, merge
-    For 2020: Download via cenpy API
+    For 2000: Parse NHGIS .upl files
+    For 2010: Parse PL 94-171 fixed-width files
+    For 2020: Parse PL 94-171 pipe-delimited files
+
+    Args:
+        year: Census year (2000, 2010, 2020)
+        error_log_file: Path to error log
+        states: List of state codes to process (None = all)
+        workers: Number of parallel workers (1 = sequential)
+        force: Force reprocessing even if output exists
+        dry_run: Print commands without executing
+        is_standalone: Whether running standalone
     """
-    report_progress(f"[2/5] Processing census tracts ({year})", is_standalone)
+    report_progress(f"[2/6] Parsing PL 94-171 files ({year})", is_standalone)
 
     if states is None:
         states = ALL_STATES
 
-    # Check which processing script exists based on year
+    # Select processing script based on year
     if year == 2020:
-        script = 'scripts/data/census/download_all_states_tracts.py'
-        strategy = "Download via cenpy API"
+        script = 'scripts/data/census/parse_pl94171_tracts_2020.py'
+        census_dir = 'data/2020'
     elif year == 2010:
         script = 'scripts/data/census/parse_pl94171_tracts_2010.py'
-        strategy = "Parse PL 94-171 + download TIGER/Line"
+        census_dir = 'data/2010'
     elif year == 2000:
         script = 'scripts/data/census/parse_pl94171_tracts_2000.py'
-        strategy = "Parse NHGIS national shapefile"
+        census_dir = 'data/2000'
     else:
         error_msg = f"Unsupported year: {year}"
         report_progress(f"[ERROR] {error_msg}", is_standalone)
@@ -270,25 +280,250 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
         log_error(error_log_file, "process_census_tracts", error_msg)
         return False
 
-    # For 2020, use the download script with new output path
-    if year == 2020:
+    output_dir = Path(f'outputs/data/{year}/units')
+
+    # Check which states need processing
+    states_to_process = []
+    for state in states:
+        state_lower = state.lower()
+        output_file = output_dir / f"{state_lower}_tracts_{year}_population.csv"
+        if not output_file.exists() or force:
+            states_to_process.append(state)
+
+    if not states_to_process:
+        report_progress(f"[SKIP] All states already processed", is_standalone)
+        return True
+
+    report_progress(f"Processing {len(states_to_process)}/{len(states)} states", is_standalone)
+
+    # Sequential processing (workers=1)
+    if workers == 1:
         cmd = [
             sys.executable, script,
-            '--year', str(year),
-            '--output-dir', f'outputs/data/tracts/{year}'
-        ]
-
-        if states != ALL_STATES:
-            # For now, the script doesn't support state filtering
-            report_progress(f"[WARN] State filtering not supported for {script}", is_standalone)
+            '--census-dir', census_dir,
+            '--output-dir', str(output_dir),
+            '--states'
+        ] + list(states_to_process)
 
         success = run_command(cmd, f"Process census tracts ({year})", error_log_file, dry_run, is_standalone)
         return success
-    else:
-        error_msg = f"Script {script} needs path updates"
-        report_progress(f"[TODO] {error_msg}", is_standalone)
-        log_error(error_log_file, "process_census_tracts", error_msg)
+
+    # Parallel processing (workers > 1)
+    report_progress(f"Launching {workers} parallel workers", is_standalone)
+
+    # Launch parallel processes for each state
+    processes = {}  # {state_code: Popen object}
+    completed_states = set()
+    failed_states = []
+    running_workers = 0
+
+    import time as time_module
+    from collections import deque
+
+    state_queue = deque(states_to_process)
+
+    while state_queue or processes:
+        # Launch new processes if workers are available
+        while state_queue and running_workers < workers:
+            state_code = state_queue.popleft()
+
+            cmd = [
+                sys.executable, script,
+                '--census-dir', census_dir,
+                '--output-dir', str(output_dir),
+                '--states', state_code
+            ]
+
+            try:
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                processes[state_code] = proc
+                running_workers += 1
+            except Exception as e:
+                failed_states.append(state_code)
+                error_msg = f"{state_code} failed to start: {str(e)}"
+                report_progress(f"[ERROR] {error_msg}", is_standalone)
+                log_error(error_log_file, "process_census_tracts", error_msg)
+
+        # Check for completed processes
+        for state_code, proc in list(processes.items()):
+            retcode = proc.poll()
+
+            if retcode is not None:
+                # Process has completed
+                stdout, stderr = proc.communicate()
+                running_workers -= 1
+                del processes[state_code]
+
+                if retcode == 0:
+                    completed_states.add(state_code)
+                    report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} complete", is_standalone)
+                else:
+                    failed_states.append(state_code)
+                    error_msg = f"{state_code} failed with exit code {retcode}"
+                    if stderr:
+                        error_msg += f": {stderr[:200]}"
+                    report_progress(f"[ERROR] {error_msg}", is_standalone)
+                    log_error(error_log_file, "process_census_tracts", error_msg)
+
+        # Short sleep to avoid busy-waiting
+        time_module.sleep(0.1)
+
+    if failed_states:
+        report_progress(f"Failed states: {', '.join(failed_states)}", is_standalone)
         return False
+
+    report_progress(f"All {len(states_to_process)} states completed successfully", is_standalone)
+    return True
+
+
+def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Optional[List[str]] = None,
+                                   workers: int = 1, force: bool = False, dry_run: bool = False,
+                                   is_standalone: bool = None):
+    """
+    Merge population CSVs with TIGER/Line geometries to create GeoParquet files.
+
+    Args:
+        year: Census year (2000, 2010, 2020)
+        error_log_file: Path to error log
+        states: List of state codes to process (None = all)
+        workers: Number of parallel workers (1 = sequential)
+        force: Force reprocessing even if output exists
+        dry_run: Print commands without executing
+        is_standalone: Whether running standalone
+    """
+    report_progress(f"[3/6] Merging with TIGER/Line geometries ({year})", is_standalone)
+
+    if states is None:
+        states = ALL_STATES
+
+    script = 'scripts/data/merge_units_with_geometries.py'
+
+    if not Path(script).exists():
+        error_msg = f"Merge script not found: {script}"
+        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
+        return False
+
+    # Set directories based on year
+    csv_dir = Path(f'outputs/data/{year}/units')
+    tiger_dir = Path(f'data/{year}/tiger/tracts')
+    output_dir = Path(f'outputs/data/{year}/units')
+
+    # Check TIGER/Line directory exists
+    if not tiger_dir.exists():
+        error_msg = f"TIGER/Line directory not found: {tiger_dir}"
+        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        report_progress(f"Please download TIGER/Line shapefiles first:", is_standalone)
+        report_progress(f"  python scripts/data/geography/download_tiger_units.py --year {year} --resolution tract", is_standalone)
+        log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
+        return False
+
+    # Check which states need processing
+    states_to_process = []
+    for state in states:
+        state_lower = state.lower()
+        output_file = output_dir / f"{state_lower}_tracts_{year}.parquet"
+        if not output_file.exists() or force:
+            states_to_process.append(state)
+
+    if not states_to_process:
+        report_progress(f"[SKIP] All states already merged", is_standalone)
+        return True
+
+    report_progress(f"Merging {len(states_to_process)}/{len(states)} states", is_standalone)
+
+    # Sequential processing (workers=1)
+    if workers == 1:
+        cmd = [
+            sys.executable, script,
+            '--year', str(year),
+            '--csv-dir', str(csv_dir),
+            '--tiger-dir', str(tiger_dir),
+            '--output-dir', str(output_dir),
+            '--states'
+        ] + list(states_to_process)
+
+        success = run_command(cmd, f"Merge tracts with geometries ({year})", error_log_file, dry_run, is_standalone)
+        return success
+
+    # Parallel processing (workers > 1)
+    report_progress(f"Launching {workers} parallel workers", is_standalone)
+
+    # Launch parallel processes for each state
+    processes = {}  # {state_code: Popen object}
+    completed_states = set()
+    failed_states = []
+    running_workers = 0
+
+    import time as time_module
+    from collections import deque
+
+    state_queue = deque(states_to_process)
+
+    while state_queue or processes:
+        # Launch new processes if workers are available
+        while state_queue and running_workers < workers:
+            state_code = state_queue.popleft()
+
+            cmd = [
+                sys.executable, script,
+                '--year', str(year),
+                '--csv-dir', str(csv_dir),
+                '--tiger-dir', str(tiger_dir),
+                '--output-dir', str(output_dir),
+                '--states', state_code
+            ]
+
+            try:
+                proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True
+                )
+                processes[state_code] = proc
+                running_workers += 1
+            except Exception as e:
+                failed_states.append(state_code)
+                error_msg = f"{state_code} merge failed to start: {str(e)}"
+                report_progress(f"[ERROR] {error_msg}", is_standalone)
+                log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
+
+        # Check for completed processes
+        for state_code, proc in list(processes.items()):
+            retcode = proc.poll()
+
+            if retcode is not None:
+                # Process has completed
+                stdout, stderr = proc.communicate()
+                running_workers -= 1
+                del processes[state_code]
+
+                if retcode == 0:
+                    completed_states.add(state_code)
+                    report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} merged", is_standalone)
+                else:
+                    failed_states.append(state_code)
+                    error_msg = f"{state_code} merge failed with exit code {retcode}"
+                    if stderr:
+                        error_msg += f": {stderr[:200]}"
+                    report_progress(f"[ERROR] {error_msg}", is_standalone)
+                    log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
+
+        # Short sleep to avoid busy-waiting
+        time_module.sleep(0.1)
+
+    if failed_states:
+        report_progress(f"Failed states: {', '.join(failed_states)}", is_standalone)
+        return False
+
+    report_progress(f"All {len(states_to_process)} states merged successfully", is_standalone)
+    return True
 
 
 def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[List[str]] = None,
@@ -309,7 +544,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         dry_run: Show what would be done without executing
         is_standalone: Whether running standalone (None = auto-detect)
     """
-    report_progress(f"[3/5] Building adjacency graphs ({year})", is_standalone)
+    report_progress(f"[4/6] Building adjacency graphs ({year})", is_standalone)
 
     if states is None:
         states = ALL_STATES
@@ -326,8 +561,8 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
     cmd = [
         sys.executable, script,
         '--year', str(year),
-        '--input-dir', f'outputs/data/tracts/{year}',
-        '--output-dir', f'outputs/data/adjacency/{year}',
+        '--input-dir', f'outputs/data/{year}/units',
+        '--output-dir', f'outputs/data/{year}/adjacency',
         '--water-distance', str(water_distance),
         '--minimum-boundary-length', str(minimum_boundary_length)
     ]
@@ -345,7 +580,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
 def process_election_data(year: int, error_log_file: Path, election_year: Optional[int] = None,
                           force: bool = False, dry_run: bool = False, is_standalone: bool = None):
     """Process election data to tract-level parquet."""
-    report_progress(f"[4/5] Processing election data", is_standalone)
+    report_progress(f"[5/6] Processing election data", is_standalone)
 
     if election_year is None:
         election_year = year
@@ -368,7 +603,7 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
         log_error(error_log_file, "process_election_data", error_msg)
         return False
 
-    output_dir = Path(f'outputs/data/elections')
+    output_dir = Path(f'outputs/data/{year}/elections')
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = [
@@ -385,7 +620,7 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
 def process_demographic_data(year: int, error_log_file: Path, force: bool = False,
                               dry_run: bool = False, is_standalone: bool = None):
     """Process demographic data to tract-level parquet."""
-    report_progress(f"[5/5] Processing demographic data", is_standalone)
+    report_progress(f"[6/6] Processing demographic data", is_standalone)
 
     # Check if raw demographic data exists
     raw_data_dir = Path(f'data/Census {year}/demographics')
@@ -401,7 +636,7 @@ def process_demographic_data(year: int, error_log_file: Path, force: bool = Fals
         log_error(error_log_file, "process_demographic_data", error_msg)
         return False
 
-    output_dir = Path(f'outputs/data/demographics')
+    output_dir = Path(f'outputs/data/{year}/demographics')
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = [
@@ -489,7 +724,7 @@ Examples:
     parser.add_argument('--states', type=str, nargs='*',
                        help='Process only specific states (e.g., CA TX NY)')
     parser.add_argument('--stages', type=str, nargs='*',
-                       choices=['tracts', 'adjacency', 'elections', 'demographics'],
+                       choices=['tracts', 'merge', 'adjacency', 'elections', 'demographics'],
                        help='Process only specific stages (default: all except elections/demographics if not available)')
     parser.add_argument('--election-year', type=int,
                        help='Election year (if different from census year)')
@@ -499,6 +734,8 @@ Examples:
                        help='Water distance threshold in km (default: 1.0)')
     parser.add_argument('--minimum-boundary-length', type=float, default=10.0,
                        help='Minimum shared boundary length (meters) to filter tiny adjacencies (default: 10)')
+    parser.add_argument('--workers', type=int, default=12,
+                       help='Number of parallel workers for state processing (default: 12)')
     parser.add_argument('--force', action='store_true',
                        help='Force reprocessing (skip existing files)')
     parser.add_argument('--dry-run', action='store_true',
@@ -529,8 +766,8 @@ Examples:
     is_standalone = int(os.environ.get('TQDM_POSITION', '-1')) < 0
 
     # Determine stages to run
-    all_stages = ['tracts', 'adjacency', 'elections', 'demographics']
-    requested_stages = args.stages if args.stages else ['tracts', 'adjacency']  # Default: core stages only
+    all_stages = ['tracts', 'merge', 'adjacency', 'elections', 'demographics']
+    requested_stages = args.stages if args.stages else ['tracts', 'merge', 'adjacency']  # Default: core stages only
 
     # Resolution-aware processing
     resolution = args.resolution[0] if args.resolution else 'tract'
@@ -600,9 +837,20 @@ Examples:
         # For now, tract is the only implemented resolution
 
     if 'tracts' in stages:
-        results['tracts'] = process_census_tracts(args.year, error_log_file, states, args.force, args.dry_run, is_standalone)
+        results['tracts'] = process_census_tracts(
+            args.year, error_log_file, states,
+            args.workers, args.force, args.dry_run, is_standalone
+        )
         if results['tracts']:
             create_stage_marker(output_dir, 'tracts', resolution, args.dry_run)
+
+    if 'merge' in stages:
+        results['merge'] = merge_tracts_with_geometries(
+            args.year, error_log_file, states,
+            args.workers, args.force, args.dry_run, is_standalone
+        )
+        if results['merge']:
+            create_stage_marker(output_dir, 'merge', resolution, args.dry_run)
 
     if 'adjacency' in stages:
         results['adjacency'] = build_adjacency_graphs(

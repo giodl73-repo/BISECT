@@ -278,6 +278,28 @@ def get_stats():
                 level = match.group(1)
                 complexity_dist[level] = complexity_dist.get(level, 0) + 1
 
+        # Size distribution (XS/S/M/L/XL)
+        size_dist = {}
+        total_lines = 0
+        total_files = 0
+        for e in enhancements:
+            category = e.get('size_category', 'Unknown')
+            if category != 'Unknown':
+                size_dist[category] = size_dist.get(category, 0) + 1
+                total_lines += e.get('size_lines', 0)
+                total_files += e.get('size_files', 0)
+
+        # Average size by priority
+        size_by_priority = {}
+        for priority_level in ['Critical', 'High', 'Medium', 'Low', 'Research']:
+            priority_enhancements = [
+                e for e in enhancements
+                if priority_level in e.get('priority', '') and e.get('size_lines', 0) > 0
+            ]
+            if priority_enhancements:
+                avg_lines = sum(e.get('size_lines', 0) for e in priority_enhancements) / len(priority_enhancements)
+                size_by_priority[priority_level] = round(avg_lines)
+
         # Recent completions (last 30 days)
         recent_completions = []
         for e in enhancements:
@@ -314,6 +336,10 @@ def get_stats():
             'completion_rate': round(completion_rate, 1),
             'priority_distribution': priority_dist,
             'complexity_distribution': complexity_dist,
+            'size_distribution': size_dist,
+            'size_by_priority': size_by_priority,
+            'total_lines_changed': total_lines,
+            'total_files_modified': total_files,
             'recent_completions': recent_completions[:10]  # Top 10
         })
 

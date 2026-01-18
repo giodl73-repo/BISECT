@@ -1,6 +1,6 @@
 # Data Formats
 
-**Updated**: 2026-01-17
+**Updated**: 2026-01-18
 
 ## Data Sources
 
@@ -117,7 +117,7 @@ params = {'get': 'P1_001N', 'for': 'tract:*', 'in': 'state:06', 'key': 'YOUR_KEY
 - `P3_006N` - Asian (non-Hispanic)
 - `P4_002N` - Hispanic/Latino (any race)
 
-**Output**: `data/processed/demographics/{year}_demographics_tract.parquet`
+**Output**: `outputs/data/{year}/demographics/{year}_demographics_tract.parquet`
 **Columns**: `GEOID` (str, 11 digits), `state`, `county`, `tract`, `total_pop`, `male`, `female`, `white_nh`, `black_nh`, `asian_nh`, `hispanic`
 
 ## Election Data (MIT Election Lab)
@@ -126,7 +126,7 @@ params = {'get': 'P1_001N', 'for': 'tract:*', 'in': 'state:06', 'key': 'YOUR_KEY
 **Dataset**: County Presidential Election Returns 2000-2020
 
 **Raw**: `data/elections/countypres_2000-2020.csv`
-**Processed**: `data/processed/elections/{year}_president_tract.parquet`
+**Processed**: `outputs/data/{year}/elections/{year}_president_tract.parquet`
 
 **Geocoding**: County results → precinct estimates → tract assignment
 
@@ -143,7 +143,7 @@ params = {'get': 'P1_001N', 'for': 'tract:*', 'in': 'state:06', 'key': 'YOUR_KEY
 ## Adjacency Graphs
 
 **Format**: NetworkX Graph (pickled)
-**Location**: `data/adjacency/{year}/{state}_adjacency_{year}.pkl`
+**Location**: `outputs/data/{year}/adjacency/{state}_adjacency_{year}.pkl`
 
 **Structure**:
 ```python
@@ -233,13 +233,29 @@ tracts['GEOID']  # str: '06001400100'
 
 ## File Naming Conventions
 
-### Input Data
+### Raw Input Data
 ```
-data/tracts/{year}/{state}_tracts_{year}.parquet
-data/tracts/{year}/{state}_places_{year}.parquet
-data/adjacency/{year}/{state}_adjacency_{year}.pkl
-data/processed/demographics/{year}_demographics_tract.parquet
-data/processed/elections/{year}_president_tract.parquet
+data/{year}/
+├── redistricting/          # PL 94-171 redistricting files
+│   ├── {state}{year}.pl/   # State PL files (2010, 2020)
+│   └── {state}geo.upl      # State geographic files (2000)
+└── tiger/                  # TIGER/Line tract shapefiles
+    └── tl_{year}_{fips}_tract/
+```
+
+### Processed Data
+```
+outputs/data/{year}/
+├── tracts/                 # Census tract GeoParquet files
+│   └── {state}_tracts_{year}.parquet
+├── adjacency/              # Adjacency graphs
+│   └── {state}_adjacency_{year}.pkl
+├── places/                 # Place labels
+│   └── {state}_places_{year}.parquet
+├── elections/              # Election data
+│   └── {year}_president_tract.parquet
+└── demographics/           # Demographic data
+    └── {year}_demographics_tract.parquet
 ```
 
 ### Output Files

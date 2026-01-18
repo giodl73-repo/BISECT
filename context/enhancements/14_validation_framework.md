@@ -5,6 +5,8 @@
 **Estimated Complexity**: Medium
 **Created**: January 2026
 **Completed**: January 2026
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ### Goal
 Create a validation script that checks for missing/incomplete outputs from the redistricting pipeline and reports which specific scripts failed to generate their expected outputs.

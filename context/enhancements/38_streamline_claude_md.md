@@ -6,6 +6,8 @@
 **Created**: January 17, 2026
 **Started**: January 17, 2026
 **Completed**: January 17, 2026
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ## Current State
 

@@ -3,6 +3,8 @@
 **Status**: Planned
 **Created**: January 14, 2026
 **Priority**: Medium
+**Commits**: (Not yet implemented)
+**Size**: (Not yet implemented)
 
 ## Overview
 

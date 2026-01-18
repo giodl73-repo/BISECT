@@ -1,6 +1,6 @@
 # Claude AI Guide - Congressional Redistricting
 
-**Updated**: 2026-01-17
+**Updated**: 2026-01-18
 
 ## Project Context
 Congressional redistricting via METIS recursive bisection → 435 districts, 50 states, 3 census years (2000/2010/2020). Purely algorithmic (no gerrymandering). Goal: compact + population-balanced districts.
@@ -33,12 +33,14 @@ Congressional redistricting via METIS recursive bisection → 435 districts, 50 
 ## Structure
 ```
 src/apportionment/    # Library (partition/, data/, visualization/)
-scripts/              # Executables (pipeline/, political/, demographic/, compactness/, web/, config_*.py)
+scripts/              # Executables (pipeline/, data/, political/, demographic/, compactness/, web/, config_*.py)
+data/{year}/          # Raw census data (redistricting/, tiger/tracts/, tiger/blocks/, demographics/, elections/)
+outputs/data/{year}/  # Processed data (units/, adjacency/, places/, elections/, demographics/)
 web/                  # dashboard.html, master_dashboard.html
 artifacts/            # papers/, presentations/, guides/ (LaTeX)
 context/              # AI context (enhancements/, archive/, patterns, architecture)
-docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, etc.)
-tests/                # unit/ (110), integration/ (21), e2e/ (56) - 187 total, ~23s
+docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, CENSUS_DATA_PROCESSING.md, etc.)
+tests/                # unit/ (135), integration/ (24), e2e/ (56) - 215 total, ~24s
 ```
 
 ## Git Rules
@@ -78,6 +80,11 @@ runtest -y 2020 -v test                               # Test run - doskey alias
 runtest -y 2020 -v test -st VT                        # Test single state
 run -p -v test                                        # Dry run (print-only)
 run -v v1 -d                                          # Debug mode (progress delays)
+
+# Downloads (separate from pipeline - manual control)
+python scripts/data/download_orchestrator.py --stages redistricting demographics --year 2020 --check-only  # Check cache
+python scripts/data/download_orchestrator.py --stages redistricting --year 2020 --workers 4  # Download missing data
+python scripts/data/download_orchestrator.py --type demographics --year 2020 --states VT DE  # Test with small states
 
 # Short flags: -h=help, -y=year, -v=version, -s=stages, -st=states, -w=workers, -r=reset,
 #              -p=print-only, -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
@@ -129,11 +136,13 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 - No political/racial data
 
 ## Recent Changes
-- **2026-01-17**: Error logging system (Enhancement 39) - Persistent error.log files for debugging
-- **2026-01-17**: Parallel multi-year pipeline (Enhancement 37) - 60-70% faster
-- **2026-01-17**: E2E tests expanded to 187 total (100% pipeline coverage)
-- **2026-01-16**: Test suite complete (151 tests, 18s) + test skills (Enhancement 34)
-- **2026-01-15**: Artifacts reorg (Enhancement 29), RBA formalization
+- **2026-01-18**: Resolution-independent restructuring - `units/` directory, `tiger/tracts/` + `tiger/blocks/` structure
+- **2026-01-18**: Script renames - `download_tiger_units.py`, `merge_units_with_geometries.py` (resolution-aware)
+- **2026-01-18**: Download orchestrator (Enhancement 48) - Parallel downloads, cache checking, 4-8x faster
+- **2026-01-18**: Centralized download config - STATE_FIPS, CENSUS_CONFIGS single source (75 unit tests)
+- **2026-01-18**: Stage-aware downloads - Check cache, skip existing data, download only what's missing
+- **2026-01-18**: Census data processing (Enhancement 47) - Parse/merge/adjacency pipeline integrated
+- **2026-01-18**: Path reorganization - `data/{year}/` and `outputs/data/{year}/` structure
 
 **See**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
 
