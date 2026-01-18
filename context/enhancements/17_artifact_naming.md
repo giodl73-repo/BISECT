@@ -109,8 +109,8 @@ outputs/us_{year}_{version}/
 19. `scripts/web/generate_dashboard.py` - Path handling (if needed)
 
 **Documentation (2 files):**
-20. `docs/CODING_PATTERNS.md` - Updated Section 9 (File Naming Conventions)
-21. `docs/DATA_FORMATS.md` - Added comprehensive directory structure examples
+20. `CODING_PATTERNS.md` - Updated Section 9 (File Naming Conventions)
+21. `DATA_FORMATS.md` - Added comprehensive directory structure examples
 
 ### Benefits
 

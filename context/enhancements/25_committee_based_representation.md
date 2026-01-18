@@ -106,7 +106,7 @@ The current congressional system:
 
 ### Modified Files
 1. `scripts/apportionment/huntington_hill.py` - Support committee entities
-2. `docs/ARCHITECTURE.md` - Document experimental committee system
+2. `ARCHITECTURE.md` - Document experimental committee system
 
 ## Testing Plan
 

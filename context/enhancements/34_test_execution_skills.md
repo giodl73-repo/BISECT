@@ -152,7 +152,7 @@ Create two complementary skills for test execution and debugging:
   - Add skills to Phase 1 section (Testing category)
   - Update skill counts (29 → 31 skills)
   - Add usage examples
-- [ ] Update `docs/SKILLS.md`:
+- [ ] Update `SKILLS.md`:
   - Add Testing & Validation Skills section
   - Document `/run-tests` workflow and options
   - Document `/debug-tests` workflow and patterns
@@ -161,7 +161,7 @@ Create two complementary skills for test execution and debugging:
   - Add "Running Tests with Skills" section
   - Reference `/run-tests` and `/debug-tests`
   - Show examples of skill usage
-- [ ] Update `docs/enhancements/INDEX.md`:
+- [ ] Update `enhancements/INDEX.md`:
   - Add Enhancement 34 to completed list
   - Update completion date
 
@@ -175,9 +175,9 @@ Create two complementary skills for test execution and debugging:
 ### Modify
 
 - `CLAUDE.md` - Add skills to Phase 1 (Testing), update counts (29→31)
-- `docs/SKILLS.md` - Add Testing & Validation Skills section
+- `SKILLS.md` - Add Testing & Validation Skills section
 - `tests/README.md` - Add "Running Tests with Skills" section
-- `docs/enhancements/INDEX.md` - Mark Enhancement 34 as complete
+- `enhancements/INDEX.md` - Mark Enhancement 34 as complete
 
 ## Testing Plan
 
@@ -375,7 +375,7 @@ Claude Code provides skills for streamlined test execution:
 - Enhancement 33: Dashboard Mock Data Integration
 - [tests/README.md](../../tests/README.md) - Testing guide
 - [CLAUDE.md](../../CLAUDE.md) - AI assistant guide
-- [docs/SKILLS.md](../SKILLS.md) - Skill documentation
+- [SKILLS.md](../SKILLS.md) - Skill documentation
 
 ## Completion Summary
 
@@ -420,7 +420,7 @@ Used `/create-skill` meta-skill (Enhancement 19) to generate both skills:
    - Added usage examples
    - Updated total skill count: 29 → 31
 
-2. **docs/SKILLS.md**:
+2. **SKILLS.md**:
    - Added new "Testing & Validation Skills" category
    - Comprehensive documentation for both skills
    - Workflow examples and quick commands
@@ -432,7 +432,7 @@ Used `/create-skill` meta-skill (Enhancement 19) to generate both skills:
    - Provided usage examples
    - Linked to SKILLS.md for details
 
-4. **docs/enhancements/INDEX.md**:
+4. **enhancements/INDEX.md**:
    - Moved Enhancement 34 from Planned to Completed
    - Updated completion date
 

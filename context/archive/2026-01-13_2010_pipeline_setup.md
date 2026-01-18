@@ -311,8 +311,8 @@ Once the 2010 algorithmic run completes, we can compare:
 ### Created Files
 1. `scripts/baseline/download_enacted_districts_2010.py` - Download CD112 districts
 2. `scripts/baseline/compute_enacted_compactness_2010.py` - Compute metrics
-3. `docs/archive/2026-01-13_conditional_analysis_skip.md` - Skip logic documentation
-4. `docs/archive/2026-01-13_2010_pipeline_setup.md` - This file
+3. `archive/2026-01-13_conditional_analysis_skip.md` - Skip logic documentation
+4. `archive/2026-01-13_2010_pipeline_setup.md` - This file
 
 ### Modified Files
 1. `scripts/pipeline/process_single_state.py` - Added data availability checks

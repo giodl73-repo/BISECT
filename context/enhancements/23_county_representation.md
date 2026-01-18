@@ -113,7 +113,7 @@ Large urban counties (e.g., Los Angeles County ~10M population) may be split acr
 ### Modified Files
 1. `scripts/apportionment/huntington_hill.py` - Support mixed entity types (states + counties)
 2. `src/apportionment/data/adjacency.py` - Handle state remainder geometries
-3. `docs/ARCHITECTURE.md` - Document experimental county system
+3. `ARCHITECTURE.md` - Document experimental county system
 
 ## Testing Plan
 

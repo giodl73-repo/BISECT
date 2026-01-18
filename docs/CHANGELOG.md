@@ -101,9 +101,9 @@ All notable changes to the Congressional Redistricting project.
 ### Changed
 - **Documentation Updates**:
   - CLAUDE.md: Updated Phase 1 from 10 to 12 skills (total 29 → 31 skills)
-  - docs/SKILLS.md: Added new "Testing & Validation Skills" category with comprehensive documentation
+  - ../context/SKILLS.md: Added new "Testing & Validation Skills" category with comprehensive documentation
   - tests/README.md: Added "With Claude Code Skills (Recommended)" section with usage examples
-  - docs/enhancements/INDEX.md: Moved Enhancement 34 from Planned to Completed (20 → 21 completed)
+  - ../context/enhancements/INDEX.md: Moved Enhancement 34 from Planned to Completed (20 → 21 completed)
 
 ### Benefits
 - Streamlined test execution with intelligent defaults
@@ -115,11 +115,11 @@ All notable changes to the Congressional Redistricting project.
 ### Files
 - `.claude/skills/run-tests/SKILL.md` (new, 482 lines)
 - `.claude/skills/debug-tests/SKILL.md` (new, 514 lines)
-- `docs/enhancements/active/34_test_execution_skills.md` (new, 515 lines)
+- `../context/enhancements/active/34_test_execution_skills.md` (new, 515 lines)
 - `CLAUDE.md` (updated skill counts and usage examples)
-- `docs/SKILLS.md` (added Testing & Validation Skills section)
+- `../context/SKILLS.md` (added Testing & Validation Skills section)
 - `tests/README.md` (added skill usage guidance)
-- `docs/enhancements/INDEX.md` (marked Enhancement 34 as completed)
+- `../context/enhancements/INDEX.md` (marked Enhancement 34 as completed)
 
 ---
 
@@ -167,15 +167,15 @@ All notable changes to the Congressional Redistricting project.
 - `tests/utils/` - Test utilities
 - `tests/PIPELINE_TESTS.md` - Unit/integration test guide
 - `tests/TEST_SUMMARY.md` - Complete test results
-- `docs/enhancements/active/30_playwright_testing.md`
-- `docs/enhancements/active/31_pipeline_test_system.md`
-- `docs/enhancements/active/33_dashboard_mock_data.md`
+- `../context/enhancements/active/30_playwright_testing.md`
+- `../context/enhancements/active/31_pipeline_test_system.md`
+- `../context/enhancements/active/33_dashboard_mock_data.md`
 
 ### Files Modified
 - `tests/e2e/conftest.py` - Added mock_run fixture
 - `tests/e2e/test_run_dashboard.py` - Comprehensive rewrite (20 new tests)
 - `tests/README.md` - Complete documentation rewrite
-- `docs/enhancements/INDEX.md` - Updated to 20 completed enhancements
+- `../context/enhancements/INDEX.md` - Updated to 20 completed enhancements
 
 ### Changed
 - **2026-01-15**: Algorithm formalization and figure quality improvements
@@ -191,8 +191,8 @@ All notable changes to the Congressional Redistricting project.
   - Fixed `presentation.tex` to reference correct figure filename
 - **2026-01-15**: Reorganized enhancement tracking into individual files
   - Split `ENHANCEMENTS_2026.md` (2,931 lines) into 18 individual files
-  - Created `docs/enhancements/` directory structure with `completed/`, `active/`, and `templates/` subdirectories
-  - Created master index at `docs/enhancements/INDEX.md`
+  - Created `../context/enhancements/` directory structure with `completed/`, `active/`, and `templates/` subdirectories
+  - Created master index at `../context/enhancements/INDEX.md`
   - Original `ENHANCEMENTS_2026.md` now serves as redirect pointer
   - Improved maintainability and navigation of enhancement documentation
 - Improved progress bar UX with state-specific status messages
@@ -245,7 +245,7 @@ All notable changes to the Congressional Redistricting project.
 
 ### Files Modified
 - 40+ files (artifacts/, scripts/, web/)
-- Created `docs/enhancements/active/29_artifacts_dashboard_tab.md`
+- Created `../context/enhancements/active/29_artifacts_dashboard_tab.md`
 
 ## 2026-01-15 - Enhancement 18: Figure Quality Improvement
 

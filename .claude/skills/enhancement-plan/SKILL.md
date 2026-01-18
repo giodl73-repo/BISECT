@@ -31,11 +31,11 @@ Read the following files to understand project structure and patterns:
 
 **Required reading:**
 1. `CLAUDE.md` - Project overview, quick reference, recent changes
-2. `docs/ENHANCEMENT_WORKFLOW.md` - Detailed 6-phase workflow process (research, planning, implementation, testing, documentation, completion)
-3. `docs/ARCHITECTURE.md` - System design, data flow, component relationships
-4. `docs/CODING_PATTERNS.md` - Implementation patterns, progress reporting, file naming
-5. `docs/enhancements/INDEX.md` - Review similar past enhancements for patterns
-6. `docs/enhancements/templates/enhancement_template.md` - Standard template
+2. `../../context/ENHANCEMENT_WORKFLOW.md` - Detailed 6-phase workflow process (research, planning, implementation, testing, documentation, completion)
+3. `../../context/ARCHITECTURE.md` - System design, data flow, component relationships
+4. `../../context/CODING_PATTERNS.md` - Implementation patterns, progress reporting, file naming
+5. `../../context/enhancements/INDEX.md` - Review similar past enhancements for patterns
+6. `../../context/enhancements/templates/enhancement_template.md` - Standard template
 
 **Use Grep to find:**
 - Similar past enhancements using keywords from user request
@@ -53,9 +53,9 @@ Identify:
 
 ### Step 3: Create Enhancement Specification
 
-Determine next enhancement number by checking `docs/enhancements/INDEX.md`.
+Determine next enhancement number by checking `../../context/enhancements/INDEX.md`.
 
-Create a new file in `docs/enhancements/active/` following the template from `docs/enhancements/templates/enhancement_template.md`:
+Create a new file in `../../context/enhancements/active/` following the template from `../../context/enhancements/templates/enhancement_template.md`:
 
 ```markdown
 ## Enhancement XX: [Descriptive Name]
@@ -161,7 +161,7 @@ Follow project testing pattern:
 ### Step 4: Update Index and Present to User
 
 After writing the enhancement specification:
-1. Add entry to `docs/enhancements/INDEX.md` in the "Planned" section
+1. Add entry to `../../context/enhancements/INDEX.md` in the "Planned" section
 2. Summarize the key points for the user
 3. Highlight any risks or dependencies
 4. Get user approval before proceeding to implementation
@@ -219,8 +219,8 @@ if output_file.exists() and not force:
 
 After completing this skill, you will have:
 
-1. **Complete enhancement specification** in `docs/enhancements/active/XX_name.md`
-2. **Entry added** to `docs/enhancements/INDEX.md`
+1. **Complete enhancement specification** in `../../context/enhancements/active/XX_name.md`
+2. **Entry added** to `../../context/enhancements/INDEX.md`
 3. **Detailed implementation phases** with specific tasks and files
 4. **Testing approach** following project patterns
 5. **Success criteria** for validation
@@ -236,8 +236,8 @@ After user approves the plan:
 
 ## Examples
 
-See `docs/enhancements/completed/` for 14 completed enhancement examples:
-- [01_compactness_integration.md](../../docs/enhancements/completed/01_compactness_integration.md) - Simple integration
-- [07_edge_weighted_bisection.md](../../docs/enhancements/completed/07_edge_weighted_bisection.md) - Algorithm improvement with quantitative validation
-- [13_directory_unification.md](../../docs/enhancements/completed/13_directory_unification.md) - Large refactoring
-- [18_figure_quality.md](../../docs/enhancements/completed/18_figure_quality.md) - Validation + retry logic
+See `../../context/enhancements/completed/` for 14 completed enhancement examples:
+- [01_compactness_integration.md](../../../../context/enhancements/completed/01_compactness_integration.md) - Simple integration
+- [07_edge_weighted_bisection.md](../../../../context/enhancements/completed/07_edge_weighted_bisection.md) - Algorithm improvement with quantitative validation
+- [13_directory_unification.md](../../../../context/enhancements/completed/13_directory_unification.md) - Large refactoring
+- [18_figure_quality.md](../../../../context/enhancements/completed/18_figure_quality.md) - Validation + retry logic

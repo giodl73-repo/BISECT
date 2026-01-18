@@ -34,17 +34,17 @@ No specific prerequisites required. This skill can be run at any time to ensure 
 ### Core Documentation (Required Review)
 1. **`CLAUDE.md`** - AI assistant guide, project overview, quick reference
 2. **`README.md`** - User-facing project description, setup, usage
-3. **`docs/ARCHITECTURE.md`** - System design, data flow, components
-4. **`docs/CODING_PATTERNS.md`** - Coding conventions, patterns, protocols
-5. **`docs/DATA_FORMATS.md`** - File formats, schemas, data structures
+3. **`../../context/ARCHITECTURE.md`** - System design, data flow, components
+4. **`../../context/CODING_PATTERNS.md`** - Coding conventions, patterns, protocols
+5. **`../../context/DATA_FORMATS.md`** - File formats, schemas, data structures
 6. **`docs/CHANGELOG.md`** - Version history, changes, improvements
 7. **`docs/ENHANCEMENTS_2026.md`** - Enhancement tracking, status updates
 
 ### Secondary Documentation (Conditional Review)
 8. **`docs/DEPENDENCIES.md`** - Package requirements, setup instructions
 9. **`docs/CONTRIBUTING.md`** - Development workflow, contribution guidelines
-10. **`docs/SKILLS.md`** - Anthropic MCP skills documentation
-11. **`docs/archive/`** - Historical session notes (review recent only)
+10. **`../../context/SKILLS.md`** - Anthropic MCP skills documentation
+11. **`../../context/archive/`** - Historical session notes (review recent only)
 
 ## Workflow
 
@@ -119,7 +119,7 @@ For each documentation file, check:
 - ✅ New capability added in Enhancement N
 ```
 
-#### docs/ARCHITECTURE.md
+#### ../../context/ARCHITECTURE.md
 
 **Check for**:
 - [ ] Diagrams reflect current structure
@@ -138,7 +138,7 @@ For each documentation file, check:
 Description of new stage added in Enhancement N
 ```
 
-#### docs/CODING_PATTERNS.md
+#### ../../context/CODING_PATTERNS.md
 
 **Check for**:
 - [ ] Patterns match current code
@@ -162,7 +162,7 @@ def example():
 \`\`\`
 ```
 
-#### docs/DATA_FORMATS.md
+#### ../../context/DATA_FORMATS.md
 
 **Check for**:
 - [ ] Directory structure diagrams current
@@ -274,7 +274,7 @@ git diff docs/
 
 # Check that changes are intentional
 git diff CLAUDE.md
-git diff docs/ARCHITECTURE.md
+git diff ../../context/ARCHITECTURE.md
 git diff docs/CHANGELOG.md
 ```
 

@@ -54,8 +54,8 @@ tracts_file = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
 - Other visualization/analysis scripts as needed
 
 #### Phase 3: Update Documentation (15 minutes)
-- Update `docs/DATA_FORMATS.md` with new structure
-- Update `docs/ARCHITECTURE.md` data flow diagrams
+- Update `DATA_FORMATS.md` with new structure
+- Update `ARCHITECTURE.md` data flow diagrams
 - Update `CLAUDE.md` and `README.md` if needed
 - Update `.gitignore` patterns if needed
 
@@ -117,9 +117,9 @@ Once implemented, adding 2030 Census data will follow same pattern with zero cod
 - **Result:** Simplified ~80 lines of conditional path logic
 
 **Phase 3: Documentation Updates (15 minutes)**
-- Updated `docs/CODING_PATTERNS.md` (4 path references)
-- Updated `docs/DATA_FORMATS.md` (3 sections: directory structure, data sizes, adjacency graphs)
-- Updated `docs/ARCHITECTURE.md` (2 code examples)
+- Updated `CODING_PATTERNS.md` (4 path references)
+- Updated `DATA_FORMATS.md` (3 sections: directory structure, data sizes, adjacency graphs)
+- Updated `ARCHITECTURE.md` (2 code examples)
 - Updated `CLAUDE.md` (Enhanced Enhancement Workflow section with comprehensive guide)
 - Created `UNIFICATION_STATUS.md` tracking document
 

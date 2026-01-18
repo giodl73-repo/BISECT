@@ -82,7 +82,7 @@ This is a **theoretical experiment** to explore:
 
 ### Modified Files
 1. `src/apportionment/partition/recursive_bisection.py` - Optional national mode flag
-2. `docs/ARCHITECTURE.md` - Document experimental features
+2. `ARCHITECTURE.md` - Document experimental features
 3. `CLAUDE.md` - Add experimental enhancements section
 
 ## Testing Plan

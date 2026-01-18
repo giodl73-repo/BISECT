@@ -285,25 +285,25 @@ open outputs/us_2020_v1/index.html
 
 For detailed technical documentation, see:
 
-- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)** - System design and architectural decisions
+- **[ARCHITECTURE.md](context/ARCHITECTURE.md)** - System design and architectural decisions
   - Data pipeline architecture
   - Redistricting algorithm details
   - Scope-based analysis pattern
   - Progress bar protocol
 
-- **[CODING_PATTERNS.md](docs/CODING_PATTERNS.md)** - Developer patterns and best practices
+- **[CODING_PATTERNS.md](context/CODING_PATTERNS.md)** - Developer patterns and best practices
   - File organization conventions
   - Progress bar integration
   - Scope-based analysis implementation
   - Testing guidelines
 
-- **[TESTING.md](docs/TESTING.md)** - Automated testing guide
+- **[TESTING.md](context/TESTING.md)** - Automated testing guide
   - Playwright end-to-end tests
   - Visual regression testing
   - Developer workflow
   - CI/CD integration
 
-- **[SKILLS.md](docs/SKILLS.md)** - Claude Code skills for automation (31 skills)
+- **[SKILLS.md](context/SKILLS.md)** - Claude Code skills for automation (31 skills)
   - Enhancement workflow
   - Pipeline execution
   - Visualization & analysis
@@ -315,7 +315,7 @@ For detailed technical documentation, see:
   - Using Claude Code skills
   - Code review guidelines
 
-- **[Enhancement Index](docs/enhancements/INDEX.md)** - Recent improvements and roadmap
+- **[Enhancement Index](context/enhancements/INDEX.md)** - Recent improvements and roadmap
   - Completed enhancements
   - Performance optimizations
   - New features and capabilities

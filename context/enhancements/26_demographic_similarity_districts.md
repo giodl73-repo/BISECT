@@ -140,7 +140,7 @@ The current redistricting system:
 12. `data/experimental/tract_demographics_2020.csv` - Feature data
 
 ### Modified Files
-1. `docs/ARCHITECTURE.md` - Document experimental demographic system
+1. `ARCHITECTURE.md` - Document experimental demographic system
 
 ## Testing Plan
 

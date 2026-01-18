@@ -116,7 +116,7 @@ Claude Code provides intelligent test execution and debugging skills:
 - Say: "Run unit tests with coverage" → Claude offers `/run-tests` with options
 - Say: "Why are my tests failing?" → Claude offers `/debug-tests`
 
-See [docs/SKILLS.md](../docs/SKILLS.md#testing--validation-skills) for detailed documentation.
+See [../context/SKILLS.md](../../context/SKILLS.md#testing--validation-skills) for detailed documentation.
 
 ### Direct pytest Commands
 
@@ -404,9 +404,9 @@ The test suite uses a comprehensive mock data system:
 - **`README.md`** (this file) - Overview and quick start
 
 ### Enhancement Documentation
-- **Enhancement 30** - Playwright Test Harness (`docs/enhancements/active/30_playwright_testing.md`)
-- **Enhancement 31** - Pipeline Test System (`docs/enhancements/active/31_pipeline_test_system.md`)
-- **Enhancement 33** - Dashboard Mock Data Integration (`docs/enhancements/active/33_dashboard_mock_data.md`)
+- **Enhancement 30** - Playwright Test Harness (`../context/enhancements/active/30_playwright_testing.md`)
+- **Enhancement 31** - Pipeline Test System (`../context/enhancements/active/31_pipeline_test_system.md`)
+- **Enhancement 33** - Dashboard Mock Data Integration (`../context/enhancements/active/33_dashboard_mock_data.md`)
 
 ## CI/CD Integration
 

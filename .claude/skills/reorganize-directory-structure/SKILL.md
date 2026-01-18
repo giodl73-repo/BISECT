@@ -171,13 +171,13 @@ presentations/
 **Document current state**:
 ```bash
 # Generate directory tree
-tree -d -L 3 > docs/archive/directory_structure_before.txt
+tree -d -L 3 > ../../context/archive/directory_structure_before.txt
 
 # Count files per directory
-find . -type f | cut -d/ -f1-3 | sort | uniq -c | sort -rn > docs/archive/file_counts.txt
+find . -type f | cut -d/ -f1-3 | sort | uniq -c | sort -rn > ../../context/archive/file_counts.txt
 
 # Identify duplicates or inconsistencies
-find . -name "*.py" | grep -E "(old|backup|temp|copy)" > docs/archive/cleanup_candidates.txt
+find . -name "*.py" | grep -E "(old|backup|temp|copy)" > ../../context/archive/cleanup_candidates.txt
 ```
 
 **Identify issues**:
@@ -410,7 +410,7 @@ tar -czf old_structure_backup_$(date +%Y%m%d).tar.gz \
   data/adjacency/*.pkl
 
 # Move to archive
-mv old_structure_backup_*.tar.gz docs/archive/
+mv old_structure_backup_*.tar.gz ../../context/archive/
 ```
 
 **Remove old files**:

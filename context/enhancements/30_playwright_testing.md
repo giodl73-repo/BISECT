@@ -350,7 +350,7 @@ Actual files:
   - Support flags: `--headed`, `--trace`, `--update-baselines`
 
 - [ ] **Documentation**
-  - Update `docs/TESTING.md` with Playwright guide
+  - Update `TESTING.md` with Playwright guide
   - Document test fixture generation
   - Add troubleshooting section
   - Include example test output
@@ -371,12 +371,12 @@ Actual files:
 5. `tests/fixtures/generate_sample_data.py` - Generate test data
 6. `tests/playwright.config.json` - Playwright configuration
 7. `run_dashboard_tests.bat` - Windows test runner
-8. `docs/TESTING.md` - Testing documentation
+8. `TESTING.md` - Testing documentation
 9. `.github/workflows/dashboard_tests.yml` - CI workflow (if using GitHub Actions)
 
 ### Modify
-1. `docs/ARCHITECTURE.md` - Add testing architecture section
-2. `docs/CODING_PATTERNS.md` - Add testing patterns
+1. `ARCHITECTURE.md` - Add testing architecture section
+2. `CODING_PATTERNS.md` - Add testing patterns
 3. `README.md` - Add testing section to Quick Start
 4. `.gitignore` - Add test output directories
 
@@ -595,7 +595,7 @@ Actual files:
 
 **Phase 5: Integration & Documentation**
 - ✅ Created `run_dashboard_tests.bat` Windows test runner with flags
-- ✅ Created `docs/TESTING.md` comprehensive testing guide (500+ lines)
+- ✅ Created `TESTING.md` comprehensive testing guide (500+ lines)
 - ✅ Created `tests/README.md` test directory documentation
 - ✅ Updated main `README.md` with testing section
 - ✅ Updated `.gitignore` for test artifacts
@@ -626,7 +626,7 @@ Actual files:
 4. `tests/e2e/test_visual_regression.py` (279 lines)
 5. `tests/playwright.config.json` (24 lines)
 6. `run_dashboard_tests.bat` (119 lines)
-7. `docs/TESTING.md` (570 lines)
+7. `TESTING.md` (570 lines)
 8. `tests/README.md` (223 lines)
 
 **Files Modified**: 3

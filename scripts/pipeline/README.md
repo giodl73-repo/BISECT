@@ -304,7 +304,7 @@ subprocess.Popen(cmd, env=env, ...)
 **Fix**:
 - Use `--dpi 150` (default)
 - Check for hardcoded `dpi=300` in savefig calls
-- See `docs/CODING_PATTERNS.md` for DPI threading pattern
+- See `../../context/CODING_PATTERNS.md` for DPI threading pattern
 
 ### Issue: Missing GEOID Data
 
@@ -381,7 +381,7 @@ outputs/us_2020_v1/
 
 ## See Also
 
-- `docs/CODING_PATTERNS.md` - Detailed coding conventions
-- `docs/ARCHITECTURE.md` - System design and algorithms
+- `../../context/CODING_PATTERNS.md` - Detailed coding conventions
+- `../../context/ARCHITECTURE.md` - System design and algorithms
 - `scripts/political/README.md` - Political analysis scripts
 - `scripts/data/README.md` - Data acquisition scripts

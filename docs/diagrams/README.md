@@ -60,7 +60,7 @@ Step-by-step explanation of how the recursive bisection algorithm works.
 ## Viewing Diagrams
 
 ### In GitHub
-GitHub automatically renders Mermaid diagrams in markdown files. Just view the .mmd files or see them embedded in docs/ARCHITECTURE.md.
+GitHub automatically renders Mermaid diagrams in markdown files. Just view the .mmd files or see them embedded in ../context/ARCHITECTURE.md.
 
 ### In VS Code
 Install the "Markdown Preview Mermaid Support" extension to view diagrams in preview.

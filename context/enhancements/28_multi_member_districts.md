@@ -129,7 +129,7 @@ The current redistricting system:
 ### Modified Files
 1. `src/apportionment/partition/recursive_bisection.py` - Support variable target populations
 2. `scripts/config_2020.py` - Add multi-member district counts per state
-3. `docs/ARCHITECTURE.md` - Document experimental multi-member system
+3. `ARCHITECTURE.md` - Document experimental multi-member system
 
 ## Testing Plan
 

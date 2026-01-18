@@ -156,8 +156,8 @@ Create an `/edit-paper` skill that acts as a **journal editor** to:
 
 - `papers/{paper_name}/sections/*.tex` - LaTeX section files (edited content)
 - `CLAUDE.md` - Add `/edit-paper` to Phase 5 (Editorial) skills
-- `docs/SKILLS.md` - Document skill usage and examples
-- `docs/enhancements/INDEX.md` - Mark Enhancement 20 as complete
+- `SKILLS.md` - Document skill usage and examples
+- `enhancements/INDEX.md` - Mark Enhancement 20 as complete
 
 ## Testing Plan
 

@@ -1,6 +1,6 @@
 ---
 name: enhancement-implement
-description: Execute an enhancement following the standard workflow with progress tracking. Use when implementing a planned enhancement from docs/enhancements/. Creates todo lists, follows phases sequentially, uses STATUS protocol for progress reporting.
+description: Execute an enhancement following the standard workflow with progress tracking. Use when implementing a planned enhancement from ../../context/enhancements/. Creates todo lists, follows phases sequentially, uses STATUS protocol for progress reporting.
 allowed-tools:
   - Read
   - Write
@@ -20,11 +20,11 @@ This skill executes planned enhancements following the project's standard workfl
 
 ## Prerequisites
 
-- **Read `docs/ENHANCEMENT_WORKFLOW.md`** - Detailed 6-phase process (research, planning, implementation, testing, documentation, completion)
-- Enhancement must be documented in `docs/enhancements/active/` with status 📋 PLANNED
+- **Read `../../context/ENHANCEMENT_WORKFLOW.md`** - Detailed 6-phase process (research, planning, implementation, testing, documentation, completion)
+- Enhancement must be documented in `../../context/enhancements/active/` with status 📋 PLANNED
 - Enhancement spec includes detailed phases and file lists
 - All data dependencies are available or noted
-- Check `docs/enhancements/INDEX.md` for enhancement status
+- Check `../../context/enhancements/INDEX.md` for enhancement status
 
 ## When to Use This Skill
 
@@ -37,8 +37,8 @@ This skill executes planned enhancements following the project's standard workfl
 
 ### Step 1: Read Enhancement Specification
 
-1. Check `docs/enhancements/INDEX.md` to locate the enhancement file
-2. Read the enhancement file from `docs/enhancements/active/XX_name.md`
+1. Check `../../context/enhancements/INDEX.md` to locate the enhancement file
+2. Read the enhancement file from `../../context/enhancements/active/XX_name.md`
 3. Extract all phases, tasks, and file lists
 4. Note any dependencies or prerequisites
 5. Review testing plan
@@ -64,7 +64,7 @@ For each phase:
 2. **Implement the phase**:
    - Read files that need modification
    - Make changes incrementally (one component at a time)
-   - Follow patterns from `docs/CODING_PATTERNS.md`
+   - Follow patterns from `../../context/CODING_PATTERNS.md`
    - Use STATUS protocol for child processes
 3. **Test the phase**:
    - Run print-only mode if applicable
@@ -136,13 +136,13 @@ Follow the standard testing pattern:
 
 ### Step 6: Mark Enhancement In Progress
 
-Update the enhancement file in `docs/enhancements/active/XX_name.md`:
+Update the enhancement file in `../../context/enhancements/active/XX_name.md`:
 ```markdown
 **Status**: 🔄 IN PROGRESS
 **Started**: [Date]
 ```
 
-Also update `docs/enhancements/INDEX.md` to reflect the status change.
+Also update `../../context/enhancements/INDEX.md` to reflect the status change.
 
 ## Key Patterns
 
@@ -233,7 +233,7 @@ Once all phases complete:
 2. Use `/enhancement-document` skill to update all documentation
 3. Create git commit with clear message
 4. Move enhancement file from `active/` to `completed/`
-5. Update `docs/enhancements/INDEX.md`
+5. Update `../../context/enhancements/INDEX.md`
 6. Mark enhancement as ✅ COMPLETED
 
 ## What You'll Get

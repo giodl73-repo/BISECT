@@ -167,8 +167,8 @@ Create an `/edit-presentation` skill that acts as a **conference presentation ed
 
 - `presentations/{presentation_name}/*.tex` - Beamer LaTeX files (edited content)
 - `CLAUDE.md` - Add `/edit-presentation` to Phase 5 (Editorial) skills
-- `docs/SKILLS.md` - Document skill usage and examples
-- `docs/enhancements/INDEX.md` - Mark Enhancement 21 as complete
+- `SKILLS.md` - Document skill usage and examples
+- `enhancements/INDEX.md` - Mark Enhancement 21 as complete
 
 ## Testing Plan
 

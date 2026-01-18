@@ -291,8 +291,8 @@ The schema supports future experimental variants:
 - [ ] Verify LaTeX compilation still works from new artifacts location
 
 ### Phase 8: Documentation
-- [ ] Update `docs/ARCHITECTURE.md` with new output structure
-- [ ] Update `docs/CODING_PATTERNS.md` with config usage
+- [ ] Update `ARCHITECTURE.md` with new output structure
+- [ ] Update `CODING_PATTERNS.md` with config usage
 - [ ] Create `docs/EXPERIMENTS.md` guide for running variants
 - [ ] Update `README.md` with new directory structure
 - [ ] Update `CLAUDE.md` with config patterns
@@ -319,8 +319,8 @@ The schema supports future experimental variants:
 8. `run_redistricting.bat` - New parameters (--run-type, --experiment-name)
 9. `deploy_web.bat` - Handle new directory structure
 10. `.gitignore` - Update output directory patterns
-11. `docs/ARCHITECTURE.md` - Document new structure
-12. `docs/CODING_PATTERNS.md` - Config usage patterns
+11. `ARCHITECTURE.md` - Document new structure
+12. `CODING_PATTERNS.md` - Config usage patterns
 13. `README.md` - Update directory structure documentation
 14. `CLAUDE.md` - Update with config patterns
 

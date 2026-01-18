@@ -444,7 +444,7 @@ Add user invocation example:
 - [existing examples...]
 ```
 
-**Update docs/SKILLS.md** (if exists):
+**Update ../../context/SKILLS.md** (if exists):
 
 Add comprehensive entry with:
 - Skill name and description
@@ -453,7 +453,7 @@ Add comprehensive entry with:
 - Examples
 - Related skills
 
-**Update docs/enhancements/INDEX.md** (if part of enhancement):
+**Update ../../context/enhancements/INDEX.md** (if part of enhancement):
 
 Mark skill creation enhancement as complete or in progress.
 

@@ -125,7 +125,7 @@ The current redistricting system:
 ### Modified Files
 1. `scripts/apportionment/huntington_hill.py` - Support party entities
 2. `src/apportionment/partition/recursive_bisection.py` - Party mode flag
-3. `docs/ARCHITECTURE.md` - Document experimental party system
+3. `ARCHITECTURE.md` - Document experimental party system
 
 ## Testing Plan
 

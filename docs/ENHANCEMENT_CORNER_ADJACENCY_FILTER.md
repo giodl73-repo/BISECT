@@ -66,8 +66,8 @@ if geom_i.touches(geom_j):
 
 1. `scripts/build_tract_adjacency.py` - Add filter when building graphs
 2. `src/apportionment/data/adjacency.py` - Add to adjacency construction
-3. `docs/DATA_FORMATS.md` - Document filtering behavior
-4. `docs/CODING_PATTERNS.md` - Note the threshold convention
+3. `../context/DATA_FORMATS.md` - Document filtering behavior
+4. `../context/CODING_PATTERNS.md` - Note the threshold convention
 
 ## Testing
 

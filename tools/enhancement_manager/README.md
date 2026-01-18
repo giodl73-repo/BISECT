@@ -4,7 +4,7 @@ A simple web application for viewing, filtering, searching, and editing project 
 
 ## Overview
 
-The Enhancement Manager provides a visual interface to manage the 32+ enhancement specifications stored in `docs/enhancements/`. It allows you to:
+The Enhancement Manager provides a visual interface to manage the 32+ enhancement specifications stored in `../../context/enhancements/`. It allows you to:
 
 - **View all enhancements** in one place with status badges
 - **Filter** by status (Completed / In Progress / Planned)
@@ -43,7 +43,7 @@ The Enhancement Manager provides a visual interface to manage the 32+ enhancemen
 
 ### Prerequisites
 - Python 3.8+
-- Project enhancements stored in `docs/enhancements/`
+- Project enhancements stored in `../../context/enhancements/`
 
 ### Setup
 
@@ -123,7 +123,7 @@ When you change an enhancement status:
 
 ### Data Storage
 - **No database**: File system is the source of truth
-- **Direct file I/O**: Reads/writes markdown files in `docs/enhancements/`
+- **Direct file I/O**: Reads/writes markdown files in `../../context/enhancements/`
 - **Automatic backups**: INDEX.md.backup created before updates
 
 ## API Endpoints
@@ -285,7 +285,7 @@ app.run(debug=True, port=5000, host='localhost')
 ### Enhancements not loading
 **Issue**: Empty list or error message
 **Solution**:
-1. Check that `docs/enhancements/` directory exists
+1. Check that `../../context/enhancements/` directory exists
 2. Verify markdown files are in `active/` and `completed/` subdirectories
 3. Check console for error messages
 
@@ -327,7 +327,7 @@ This application is designed for **local development use only**:
 - Allow untrusted users to access
 
 ### File System Access
-- Only reads/writes to `docs/enhancements/` directory
+- Only reads/writes to `../../context/enhancements/` directory
 - Input validation on file paths (prevents directory traversal)
 - Markdown content is sanitized before HTML rendering (DOMPurify)
 

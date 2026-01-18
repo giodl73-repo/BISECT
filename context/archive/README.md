@@ -11,10 +11,10 @@ These files document the development process, decisions, and issues encountered 
 The information from these files has been reorganized and consolidated into:
 
 - **docs/CHANGELOG.md** - Project history, features, and changes
-- **docs/DATA_FORMATS.md** - Data format specifications
+- **DATA_FORMATS.md** - Data format specifications
 - **docs/DEPENDENCIES.md** - Installation and setup
-- **docs/CODING_PATTERNS.md** - Coding conventions and patterns
-- **docs/ARCHITECTURE.md** - System design and algorithms
+- **CODING_PATTERNS.md** - Coding conventions and patterns
+- **ARCHITECTURE.md** - System design and algorithms
 - **scripts/*/README.md** - Directory-specific documentation
 
 ## Archive Contents
@@ -39,8 +39,8 @@ The information from these files has been reorganized and consolidated into:
 
 ### Technical Documentation (Consolidated)
 - `METIS_COMPILE_GUIDE.md` → **docs/DEPENDENCIES.md**
-- `PL94171_FORMAT.md` → **docs/DATA_FORMATS.md**
-- `HISTORICAL_DATA_REQUIREMENTS.md` → **docs/DATA_FORMATS.md**
+- `PL94171_FORMAT.md` → **DATA_FORMATS.md**
+- `HISTORICAL_DATA_REQUIREMENTS.md` → **DATA_FORMATS.md**
 - `COMPACTNESS_IMPROVEMENTS.md` → **docs/CHANGELOG.md**
 - `PHASE1_COMPACTNESS_IMPLEMENTATION.md` → **docs/CHANGELOG.md**
 
@@ -60,13 +60,13 @@ These files remain in version control for reference:
 
 ```bash
 # View archived files
-ls docs/archive/
+ls archive/
 
 # Read a specific archived file
-cat docs/archive/PROGRESS_BAR_GUIDE.md
+cat archive/PROGRESS_BAR_GUIDE.md
 
 # Search across archived files
-grep -r "pattern" docs/archive/
+grep -r "pattern" archive/
 ```
 
 ## When to Use Archive vs Current Docs

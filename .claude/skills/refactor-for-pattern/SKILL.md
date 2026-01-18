@@ -204,7 +204,7 @@ tracts_file = f'data/tracts/{year}/{state}_tracts_{year}.parquet'
 **Read CODING_PATTERNS.md**:
 ```bash
 # Review patterns documentation
-cat docs/CODING_PATTERNS.md
+cat ../../context/CODING_PATTERNS.md
 ```
 
 **Scan code for violations**:

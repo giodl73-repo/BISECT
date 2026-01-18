@@ -302,7 +302,7 @@ Configure your IDE to run syntax validation on save:
 
 - Test implementation: `tests/unit/test_syntax_validation.py`
 - Test documentation: `tests/README.md`
-- Enhancement 29: `docs/enhancements/completed/29_artifacts_organization.md`
+- Enhancement 29: `../context/enhancements/completed/29_artifacts_organization.md`
 - Python `py_compile` docs: https://docs.python.org/3/library/py_compile.html
 
 ## Summary

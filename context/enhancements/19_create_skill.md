@@ -18,7 +18,7 @@ Creating new skills requires:
 2. Manually creating directory and SKILL.md file
 3. Writing YAML frontmatter correctly
 4. Following content structure conventions
-5. Updating CLAUDE.md and docs/SKILLS.md manually
+5. Updating CLAUDE.md and SKILLS.md manually
 
 This is time-consuming and error-prone, especially for:
 - Choosing appropriate tool permissions
@@ -99,7 +99,7 @@ This will:
   - Add skill to appropriate phase section
   - Update skill count totals
   - Add user invocation example
-- [ ] Update `docs/SKILLS.md` (if exists, otherwise note for future)
+- [ ] Update `SKILLS.md` (if exists, otherwise note for future)
 - [ ] Display summary of created files and changes
 
 ### Phase 5: Validation & Testing
@@ -128,8 +128,8 @@ This will:
 ### Modify
 
 - `CLAUDE.md` - Add new skill to appropriate phase section, update counts
-- `docs/SKILLS.md` - Add comprehensive skill documentation (if file exists)
-- `docs/enhancements/INDEX.md` - Mark Enhancement 19 as complete
+- `SKILLS.md` - Add comprehensive skill documentation (if file exists)
+- `enhancements/INDEX.md` - Mark Enhancement 19 as complete
 
 ## Testing Plan
 
@@ -249,5 +249,5 @@ After initial testing, use `/create-skill` to create:
 - Enhancement #20: Edit-Paper Skill (next step)
 - Enhancement #21: Edit-Presentation Skill (next step)
 - [CLAUDE.md](../../CLAUDE.md) - Anthropic Skills section
-- [docs/SKILLS.md](../SKILLS.md) - Comprehensive skill documentation
+- [SKILLS.md](../SKILLS.md) - Comprehensive skill documentation
 - Existing skills in `.claude/skills/` - Pattern examples

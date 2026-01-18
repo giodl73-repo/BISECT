@@ -327,5 +327,5 @@ When adding tests:
 ## References
 
 - [pytest Documentation](https://docs.pytest.org/)
-- [Enhancement 31 Specification](../docs/enhancements/active/31_pipeline_test_system.md)
+- [Enhancement 31 Specification](../../context/enhancements/active/31_pipeline_test_system.md)
 - [E2E Dashboard Tests](README.md)

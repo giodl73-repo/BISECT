@@ -7,7 +7,7 @@
 **Completed**: January 2026
 
 **Completion Date:** January 12, 2026
-**Implementation:** Created 4 Mermaid diagrams in `docs/diagrams/`, embedded in `docs/ARCHITECTURE.md`.
+**Implementation:** Created 4 Mermaid diagrams in `docs/diagrams/`, embedded in `ARCHITECTURE.md`.
 
 ### Goal
 Generate visual architecture diagrams showing system components, data flow, and relationships.
@@ -67,10 +67,10 @@ graph TB
 #### Output Locations
 - `docs/diagrams/` - Source files (.mmd, .drawio)
 - `docs/diagrams/rendered/` - PNG exports
-- Embed in `docs/ARCHITECTURE.md` via relative paths
+- Embed in `ARCHITECTURE.md` via relative paths
 
 #### Integration
-Update `docs/ARCHITECTURE.md` to include diagram embeds:
+Update `ARCHITECTURE.md` to include diagram embeds:
 ```markdown
 ## System Architecture
 

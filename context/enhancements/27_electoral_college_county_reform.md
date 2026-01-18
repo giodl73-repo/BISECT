@@ -117,7 +117,7 @@ The current electoral college system:
 9. `data/experimental/county_results_2020.csv` - County election results
 
 ### Modified Files
-1. `docs/ARCHITECTURE.md` - Document experimental electoral system
+1. `ARCHITECTURE.md` - Document experimental electoral system
 
 ## Testing Plan
 

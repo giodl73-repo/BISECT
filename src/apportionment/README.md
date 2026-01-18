@@ -586,8 +586,8 @@ def load_data(file_path):
 
 ## See Also
 
-- `docs/CODING_PATTERNS.md` - Detailed coding conventions
-- `docs/ARCHITECTURE.md` - System design and algorithm details
+- `../../context/CODING_PATTERNS.md` - Detailed coding conventions
+- `../../context/ARCHITECTURE.md` - System design and algorithm details
 - `scripts/pipeline/README.md` - Pipeline orchestration
 - `scripts/data/README.md` - Data acquisition
 - `scripts/political/README.md` - Political/demographic analysis

@@ -10,7 +10,7 @@
 ## Current State
 
 Enhancement management currently requires:
-- **Manual file navigation**: Browse `docs/enhancements/active/` and `completed/` directories
+- **Manual file navigation**: Browse `enhancements/active/` and `completed/` directories
 - **Text editor**: Open individual markdown files to view/edit
 - **Manual INDEX.md updates**: Track status changes and update INDEX.md manually
 - **Command-line grep**: Search for enhancements by keyword
@@ -412,7 +412,7 @@ Create a simple web application to manage enhancements:
 ### Security Considerations
 
 **File System Access**:
-- Only reads/writes to `docs/enhancements/` directory
+- Only reads/writes to `enhancements/` directory
 - No access to other project files
 - Input validation on file paths (prevent directory traversal)
 
@@ -480,8 +480,8 @@ Create a simple web application to manage enhancements:
 ## Related Documentation
 
 - Enhancement 29: Artifacts Dashboard Tab (similar HTML/JS patterns)
-- docs/enhancements/INDEX.md - What we're managing
-- docs/enhancements/templates/enhancement_template.md - Enhancement structure
+- enhancements/INDEX.md - What we're managing
+- enhancements/templates/enhancement_template.md - Enhancement structure
 - web/dashboard.html - Reference for web app patterns
 
 ## Completion Summary

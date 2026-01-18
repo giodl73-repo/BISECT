@@ -33,7 +33,7 @@ This skill completes the documentation for a finished enhancement, ensuring all 
 
 ### Step 1: Update Enhancement File
 
-1. **Locate** enhancement file in `docs/enhancements/active/XX_name.md`
+1. **Locate** enhancement file in `../../context/enhancements/active/XX_name.md`
 2. **Update status section**:
 ```markdown
 **Status**: ✅ COMPLETED
@@ -73,12 +73,12 @@ This skill completes the documentation for a finished enhancement, ensuring all 
 
 ### Step 2: Move Enhancement File and Update INDEX.md
 
-1. **Move** enhancement file from `docs/enhancements/active/` to `docs/enhancements/completed/`
+1. **Move** enhancement file from `../../context/enhancements/active/` to `../../context/enhancements/completed/`
    ```bash
-   git mv docs/enhancements/active/XX_name.md docs/enhancements/completed/XX_name.md
+   git mv ../../context/enhancements/active/XX_name.md ../../context/enhancements/completed/XX_name.md
    ```
 
-2. **Update** `docs/enhancements/INDEX.md`:
+2. **Update** `../../context/enhancements/INDEX.md`:
    - Move enhancement from "In Progress" or "Planned" section to "Completed" section
    - Add completion date
    - Update total counts in headers
@@ -134,7 +134,7 @@ X. **[New Pitfall]** - Description and solution
 
 Only if enhancement changed system design:
 
-1. **Read** `docs/ARCHITECTURE.md`
+1. **Read** `../../context/ARCHITECTURE.md`
 2. **Update relevant sections**:
    - System design diagrams
    - Data flow descriptions
@@ -145,7 +145,7 @@ Only if enhancement changed system design:
 
 Only if enhancement introduced new patterns:
 
-1. **Read** `docs/CODING_PATTERNS.md`
+1. **Read** `../../context/CODING_PATTERNS.md`
 2. **Add new pattern section** or update existing:
    - Pattern description
    - Code examples
@@ -156,7 +156,7 @@ Only if enhancement introduced new patterns:
 
 Only if enhancement changed data formats:
 
-1. **Read** `docs/DATA_FORMATS.md`
+1. **Read** `../../context/DATA_FORMATS.md`
 2. **Update affected sections**:
    - File format specifications
    - Directory structure diagrams
@@ -268,7 +268,7 @@ After documentation complete:
 
 3. **Consider session archive** (for significant enhancements):
    - Use `/create-session-archive` to document rationale and decisions
-   - Create `docs/archive/YYYY-MM-DD_enhancement_XX_description.md`
+   - Create `../../context/archive/YYYY-MM-DD_enhancement_XX_description.md`
 
 ## Common Mistakes to Avoid
 

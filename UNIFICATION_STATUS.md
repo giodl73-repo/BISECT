@@ -81,9 +81,9 @@ elif args.year == '2010':
 **4/4 documentation files updated**
 
 Files updated:
-- ✅ `docs/DATA_FORMATS.md` - Updated directory structure section (3 references)
-- ✅ `docs/ARCHITECTURE.md` - Updated data flow diagrams (2 code examples)
-- ✅ `docs/CODING_PATTERNS.md` - Updated path examples (4 references)
+- ✅ `context/DATA_FORMATS.md` - Updated directory structure section (3 references)
+- ✅ `context/ARCHITECTURE.md` - Updated data flow diagrams (2 code examples)
+- ✅ `context/CODING_PATTERNS.md` - Updated path examples (4 references)
 - ✅ `CLAUDE.md` - Updated quick reference (directory structure section)
 
 ## Phase 4: Testing ✅ COMPLETE

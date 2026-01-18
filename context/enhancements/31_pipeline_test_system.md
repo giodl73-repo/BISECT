@@ -600,15 +600,15 @@ Comprehensive testing framework for all pipeline scripts.
 
 **Documentation:**
 24. `tests/README.md` - Test suite documentation
-25. Updated `docs/TESTING.md` - Comprehensive testing guide
+25. Updated `TESTING.md` - Comprehensive testing guide
 
 ### Modify (5 files)
 
 1. `requirements.txt` - Add testing dependencies
 2. `README.md` - Add testing section and badge
-3. `docs/ARCHITECTURE.md` - Add testing architecture section
+3. `ARCHITECTURE.md` - Add testing architecture section
 4. `.gitignore` - Add test output directories
-5. `docs/enhancements/INDEX.md` - Add Enhancement 31
+5. `enhancements/INDEX.md` - Add Enhancement 31
 
 ## Testing Plan
 

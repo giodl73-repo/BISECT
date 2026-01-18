@@ -1,6 +1,6 @@
 ---
 name: create-session-archive
-description: Create comprehensive historical documentation of significant work sessions, capturing rationale, decisions, challenges, and solutions. Archives go to docs/archive/ for future reference. Use after major enhancements or when significant decisions are made.
+description: Create comprehensive historical documentation of significant work sessions, capturing rationale, decisions, challenges, and solutions. Archives go to ../../context/archive/ for future reference. Use after major enhancements or when significant decisions are made.
 allowed-tools:
   - Read
   - Write
@@ -94,7 +94,7 @@ Identify what should be archived:
 
 Follow naming convention:
 ```
-docs/archive/YYYY-MM-DD_topic_description.md
+../../context/archive/YYYY-MM-DD_topic_description.md
 ```
 
 **Examples**:
@@ -224,7 +224,7 @@ git log --oneline -20
 git diff --stat HEAD~10..HEAD
 
 # Check enhancement specification
-cat docs/enhancements/active/enhancement_N.md
+cat ../../context/enhancements/active/enhancement_N.md
 ```
 
 **From conversations**:
@@ -263,14 +263,14 @@ cat docs/enhancements/active/enhancement_N.md
 - [ ] Are links to related docs included?
 - [ ] Is it concise (not a transcript)?
 
-### Step 7: Save to docs/archive/
+### Step 7: Save to ../../context/archive/
 
 ```bash
 # Create the archive file
-# File: docs/archive/2026-01-15_session_topic.md
+# File: ../../context/archive/2026-01-15_session_topic.md
 ```
 
-**Location**: Always in `docs/archive/`
+**Location**: Always in `../../context/archive/`
 **Format**: Markdown (`.md`)
 **Naming**: Follow YYYY-MM-DD_topic_description.md pattern
 
@@ -431,7 +431,7 @@ Parent collects and updates tqdm bars.
 1. **Don't update archives**: They're historical snapshots
 2. **Create new archive**: If situation evolves, write new one and link
 3. **Reference in docs**: Link from current docs to relevant archives
-4. **Index archives**: Keep docs/archive/README.md with index
+4. **Index archives**: Keep ../../context/archive/README.md with index
 
 ### Timing
 
@@ -458,12 +458,12 @@ Archives are part of completion phase:
 
 ### What Goes Where
 
-**Enhancement spec** (docs/enhancements/):
+**Enhancement spec** (../../context/enhancements/):
 - Current status
 - Implementation plan
 - Success criteria
 
-**Session archive** (docs/archive/):
+**Session archive** (../../context/archive/):
 - WHY decisions made
 - Challenges and solutions
 - Lessons learned
@@ -516,7 +516,7 @@ Solution: Focus on permanent insights and learnings
 #!/bin/bash
 DATE=$(date +%Y-%m-%d)
 TOPIC=$1
-OUTPUT="docs/archive/${DATE}_${TOPIC}.md"
+OUTPUT="../../context/archive/${DATE}_${TOPIC}.md"
 
 cat > $OUTPUT <<'EOF'
 # [Title]: [Brief Description]
@@ -561,7 +561,7 @@ echo "Created: $OUTPUT"
 from pathlib import Path
 import re
 
-archives = sorted(Path('docs/archive/').glob('*.md'))
+archives = sorted(Path('../../context/archive/').glob('*.md'))
 
 for archive in archives:
     # Extract title from first heading
@@ -593,6 +593,6 @@ After creating session archive:
 
 - Reference archive from relevant documentation
 - Link from enhancement specification
-- Update docs/archive/README.md index
+- Update ../../context/archive/README.md index
 - Share insights with collaborators
 - Use learnings in future work

@@ -149,7 +149,7 @@ The existing data loading functions in `src/apportionment/data/loader.py` should
    - Implementation roadmap for future phases
 
 ### New Session Archive
-- **`docs/archive/2026-01-13_historical_tract_data_pipeline.md`** (this file)
+- **`archive/2026-01-13_historical_tract_data_pipeline.md`** (this file)
 
 ---
 
@@ -252,7 +252,7 @@ data/tracts/2000/                        # (pending NHGIS)
 ### Related Documentation
 - `docs/CENSUS_DATA_ANALYSIS.md` - Complete data inventory and analysis
 - `docs/ENHANCEMENTS_2026.md` - Enhancement 8 full specification
-- `docs/DATA_FORMATS.md` - File format specifications
+- `DATA_FORMATS.md` - File format specifications
 
 ---
 

@@ -19,7 +19,7 @@ Create or update Mermaid diagrams embedded in ARCHITECTURE.md to visualize compl
 
 - Basic understanding of Mermaid diagram syntax
 - Familiarity with the system component being diagrammed
-- Access to `docs/ARCHITECTURE.md`
+- Access to `../../context/ARCHITECTURE.md`
 
 ## When to Use This Skill
 
@@ -656,7 +656,7 @@ Solution: Use ER diagram for data relationships
 Check ARCHITECTURE.md for existing diagram examples:
 ```bash
 # See current diagrams
-grep -A 20 "```mermaid" docs/ARCHITECTURE.md
+grep -A 20 "```mermaid" ../../context/ARCHITECTURE.md
 ```
 
 **Current diagrams** (as of Enhancement 6):

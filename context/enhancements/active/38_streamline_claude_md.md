@@ -11,13 +11,13 @@
 
 CLAUDE.md has grown to 450 lines and contains significant duplication with other documentation files:
 
-1. **Full skills list** (lines 121-179): Duplicates content from `.claude/skills/` metadata and `docs/SKILLS.md`
+1. **Full skills list** (lines 121-179): Duplicates content from `.claude/skills/` metadata and `SKILLS.md`
 2. **Enhancement Manager Tool** (lines 182-208): Duplicates `tools/enhancement_manager/README.md`
-3. **Coding Patterns** (lines 212-246): Duplicates `docs/CODING_PATTERNS.md`
-4. **Common Tasks** (lines 236-258): Duplicates `docs/ARCHITECTURE.md` and `docs/CODING_PATTERNS.md`
-5. **Enhancement Workflow** (lines 260-270): Duplicates `docs/ENHANCEMENT_WORKFLOW.md`
+3. **Coding Patterns** (lines 212-246): Duplicates `CODING_PATTERNS.md`
+4. **Common Tasks** (lines 236-258): Duplicates `ARCHITECTURE.md` and `CODING_PATTERNS.md`
+5. **Enhancement Workflow** (lines 260-270): Duplicates `ENHANCEMENT_WORKFLOW.md`
 6. **Recent Major Changes** (lines 395-419): Should be in `docs/CHANGELOG.md` instead
-7. **Future Enhancements** (lines 422-449): Lists all enhancements instead of referencing `docs/enhancements/INDEX.md`
+7. **Future Enhancements** (lines 422-449): Lists all enhancements instead of referencing `enhancements/INDEX.md`
 
 **Current Size**: 450 lines
 **Target Size**: 200-250 lines (45-55% reduction)
@@ -53,7 +53,7 @@ Reduce CLAUDE.md to essential quick-reference information by:
 - [ ] Add screenshots if available
 - [ ] Document all features
 
-#### C. Create docs/QUICK_REFERENCE.md
+#### C. Create QUICK_REFERENCE.md
 - [ ] Common commands (run pipeline, generate dashboard, etc.)
 - [ ] File path patterns
 - [ ] Quick troubleshooting tips
@@ -83,15 +83,15 @@ Reduce CLAUDE.md to essential quick-reference information by:
 
 - 🔄 Coding Patterns (lines 212-246): Reduce from 35 lines to ~10 lines
   - Keep: Quick reference for STATUS protocol, key conventions
-  - Link to: `docs/CODING_PATTERNS.md` for details
+  - Link to: `CODING_PATTERNS.md` for details
 
 - 🔄 Common Tasks (lines 236-258): Reduce from 23 lines to ~8 lines
   - Keep: Brief list of task categories
-  - Link to: `docs/QUICK_REFERENCE.md` and `docs/CODING_PATTERNS.md`
+  - Link to: `QUICK_REFERENCE.md` and `CODING_PATTERNS.md`
 
 - 🔄 Enhancement Workflow (lines 260-270): Keep brief summary
   - 6-phase process list stays
-  - Link to: `docs/ENHANCEMENT_WORKFLOW.md` for details
+  - Link to: `ENHANCEMENT_WORKFLOW.md` for details
 
 - 🔄 Testing & Running (lines 273-287): Keep as-is (concise already)
 
@@ -101,7 +101,7 @@ Reduce CLAUDE.md to essential quick-reference information by:
 
 - 🔄 Future Enhancements (lines 422-449): Drastically reduce
   - Remove full listing of all enhancements
-  - Replace with: "See `docs/enhancements/INDEX.md` - 26 completed, 1 in progress, 9 planned"
+  - Replace with: "See `enhancements/INDEX.md` - 26 completed, 1 in progress, 9 planned"
 
 **Remove Entirely:**
 - ❌ Documentation Files guide (lines 337-385): Move to docs/README.md or CONTRIBUTING.md
@@ -114,7 +114,7 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 - [ ] Update ENHANCEMENT_WORKFLOW.md
 - [ ] Update README.md
 - [ ] Update CONTRIBUTING.md
-- [ ] Update docs/enhancements/INDEX.md
+- [ ] Update enhancements/INDEX.md
 
 ### Phase 5: Update INDEX.md (10 minutes)
 
@@ -126,17 +126,17 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 
 ### Create
 - `docs/SKILLS_GUIDE.md` - Complete skills documentation with usage examples
-- `docs/QUICK_REFERENCE.md` - Common commands and quick troubleshooting
+- `QUICK_REFERENCE.md` - Common commands and quick troubleshooting
 - `docs/README.md` - Documentation navigation guide (optional)
 
 ### Modify
 - `CLAUDE.md` - Streamline from 450 to 200-250 lines
 - `tools/enhancement_manager/README.md` - Enhance with full documentation
 - `docs/CHANGELOG.md` - Add recent major changes section
-- `docs/ARCHITECTURE.md` - Update references
-- `docs/CODING_PATTERNS.md` - Update references
-- `docs/ENHANCEMENT_WORKFLOW.md` - Update references
-- `docs/enhancements/INDEX.md` - Add Enhancement 38
+- `ARCHITECTURE.md` - Update references
+- `CODING_PATTERNS.md` - Update references
+- `ENHANCEMENT_WORKFLOW.md` - Update references
+- `enhancements/INDEX.md` - Add Enhancement 38
 - `README.md` - Update references if needed
 
 ## Testing Plan
@@ -230,7 +230,7 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 ### Key Decisions
 
 **1. Leveraged Existing Documentation (Don't Duplicate)**
-- Found `docs/SKILLS.md` already comprehensive (975 lines)
+- Found `SKILLS.md` already comprehensive (975 lines)
 - Found `tools/enhancement_manager/README.md` already complete (420 lines)
 - Found `docs/CHANGELOG.md` already contains recent changes
 - Decision: Reference existing docs instead of creating duplicates
@@ -274,18 +274,18 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 - Reduction: 168 lines (37%)
 
 **Files Created**:
-1. `docs/QUICK_REFERENCE.md` - Common commands, troubleshooting, file paths (485 lines)
+1. `QUICK_REFERENCE.md` - Common commands, troubleshooting, file paths (485 lines)
 
 **Files Modified**:
 1. `CLAUDE.md` - Streamlined from 453 to 285 lines
-2. `docs/enhancements/INDEX.md` - Added Enhancement 38, updated in-progress count
-3. `docs/enhancements/active/38_streamline_claude_md.md` - This file (status updates, implementation notes)
+2. `enhancements/INDEX.md` - Added Enhancement 38, updated in-progress count
+3. `enhancements/active/38_streamline_claude_md.md` - This file (status updates, implementation notes)
 
 **What Was Removed/Condensed**:
 1. **Full Skills List** (lines 121-179): 58 lines → 18 lines
    - Removed detailed skill descriptions
    - Kept phase summary and most common skills
-   - Added pointer to docs/SKILLS.md (975 lines)
+   - Added pointer to SKILLS.md (975 lines)
 
 2. **Enhancement Manager Tool** (lines 182-208): 26 lines → 8 lines
    - Removed feature list and usage instructions
@@ -295,15 +295,15 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 3. **Coding Patterns** (lines 212-246): 34 lines → 20 lines
    - Kept STATUS protocol quick reference
    - Kept key conventions and Windows warnings
-   - Added pointer to docs/CODING_PATTERNS.md for details
+   - Added pointer to CODING_PATTERNS.md for details
 
 4. **Common Tasks** (lines 236-258): 22 lines → 24 lines
    - Kept essential commands
-   - Added pointer to docs/QUICK_REFERENCE.md
+   - Added pointer to QUICK_REFERENCE.md
 
 5. **Enhancement Workflow** (lines 260-270): 10 lines → 11 lines
    - Kept 6-phase summary
-   - Added pointer to docs/ENHANCEMENT_WORKFLOW.md
+   - Added pointer to ENHANCEMENT_WORKFLOW.md
 
 6. **Documentation Files Guide** (lines 337-385): 48 lines → 24 lines (in new structure)
    - Removed prose descriptions
@@ -317,7 +317,7 @@ Update all documentation files that reference CLAUDE.md sections that moved:
 8. **Future Enhancements** (lines 422-449): 27 lines → 3 lines
    - Removed full enhancement listing
    - Replaced with summary: "26 completed, 2 in progress, 9 planned"
-   - Added pointer to docs/enhancements/INDEX.md
+   - Added pointer to enhancements/INDEX.md
 
 **Benefits Achieved**:
 - ✅ 37% reduction in file size (453→285 lines)
