@@ -49,41 +49,39 @@ except ImportError:
     pass
 
 
-def run_sequential_task(step, task_index, total_tasks, year, worker_id=0):
+def run_postprocessing_task(args_tuple):
     """
-    Run a single task sequentially, emitting STATUS messages.
+    Run a single post-processing task in parallel.
+    Must be at module level for Windows multiprocessing pickling.
 
     Args:
-        step: Dict with 'name' and 'command' keys
-        task_index: Task number (1-based)
-        total_tasks: Total number of tasks
-        year: Census year
-        worker_id: Worker ID (default 0)
+        args_tuple: (task_name, command, worker_id, year, task_index, total_tasks)
 
     Returns:
-        success_bool
+        (task_name, success_bool)
     """
-    task_name = step['name'].replace(' ', '_')
-    command = step['command']
+    task_name, command, worker_id, year, task_index, total_tasks = args_tuple
 
     # Emit starting status
     print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:0/100", flush=True)
+    sys.stdout.flush()
 
     try:
-        # Run the command
-        result = subprocess.run(command, shell=True, timeout=900, capture_output=True)
+        # Run the command (stdout/stderr to parent)
+        result = subprocess.run(command, shell=True, timeout=900)
 
         # Emit completion status
         if result.returncode == 0:
             print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:100/100", flush=True)
-            return True
+            sys.stdout.flush()
+            return (task_name, True)
         else:
-            return False
+            return (task_name, False)
 
     except subprocess.TimeoutExpired:
-        return False
+        return (task_name, False)
     except Exception as e:
-        return False
+        return (task_name, False)
 
 
 def main():
@@ -275,25 +273,45 @@ def main():
             if not success and step['critical'] and not args.print_only:
                 return 1
 
-    # ========== PHASE 2: VISUALIZATION (Sequential within year, parallel across years) ==========
+    # ========== PHASE 2: VISUALIZATION (Parallel within year, parallel across years) ==========
     if phase2_steps:
         if is_multi_year:
             print(f"STATUS:YEAR:{args.year}:POSTPROCESS:PHASE:2/3:Visualization", flush=True)
+            sys.stdout.flush()
         else:
             print("\n" + "="*70)
-            print("PHASE 2: VISUALIZATION")
+            print("PHASE 2: VISUALIZATION (Parallel)")
             print("="*70)
 
-        # Run tasks sequentially, emitting STATUS messages
-        # Parallelization happens at the year level (3 years running simultaneously)
-        for i, step in enumerate(phase2_steps, 1):
-            if args.print_only:
+        # Determine number of workers (use allocated workers, or number of tasks if fewer)
+        max_workers = min(len(phase2_steps), args.workers)
+
+        # Prepare task arguments with worker ID assignment (round-robin)
+        task_args = [
+            (step['name'].replace(' ', '_'), step['command'], i % max_workers, args.year, i, len(phase2_steps))
+            for i, step in enumerate(phase2_steps, 1)
+        ]
+
+        if args.print_only:
+            # Print-only mode - just show what would run
+            for task_name, command, worker_id, year, task_index, total_tasks in task_args:
                 if not is_multi_year:
-                    print(f"[{i}/{len(phase2_steps)}] {step['name']}: {step['command']}")
-            else:
-                success = run_sequential_task(step, i, len(phase2_steps), args.year, worker_id=0)
-                if not success and not is_multi_year:
-                    print(f"[WARNING] {step['name']} failed but continuing...")
+                    print(f"[Worker {worker_id+1}] [{task_index}/{total_tasks}] {task_name}: {command}")
+        else:
+            # Emit initial Idle status for all workers
+            if is_multi_year:
+                for worker_id in range(max_workers):
+                    print(f"STATUS:WORKER:{args.year}:{worker_id}:TASK:0/0:Idle:PROGRESS:0/100", flush=True)
+                sys.stdout.flush()
+
+            # Run tasks in parallel using ProcessPoolExecutor
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                results = list(executor.map(run_postprocessing_task, task_args))
+
+                # Check for failures
+                for task_name, success in results:
+                    if not success and not is_multi_year:
+                        print(f"[WARNING] {task_name} failed but continuing...")
 
     # ========== PHASE 3: FINALIZATION (Sequential) ==========
     if phase3_steps:
