@@ -11,645 +11,153 @@ user-invocable: true
 
 # Generate Dashboard
 
-## Overview
-
-Create a comprehensive, interactive static HTML dashboard that presents all redistricting results in an accessible web interface. The dashboard bakes all data, maps, and links into a single HTML file that can be opened locally or hosted on a web server.
+Create comprehensive interactive static HTML dashboard presenting all redistricting results. Bakes all data/maps/links into single HTML file (opens locally or hosted on web server).
 
 ## Prerequisites
+Redistricting completed (all states or subset), analysis data exists (`districts.csv`, `compactness.csv`), maps generated (state/national), output directory structure (`outputs/us_{year}_{version}/`)
 
-Before generating dashboard:
-1. **Redistricting completed** for all states (or subset)
-2. **Analysis data exists** (districts.csv, compactness.csv, etc.)
-3. **Maps generated** (state maps, national maps)
-4. **Output directory structure** in place (`outputs/us_{year}_{version}/`)
+## When to Use
+User says "Generate dashboard/Create web dashboard/Open results in browser", after full 50-state pipeline, after regenerating maps/analysis, wants interactive exploration/sharing results
 
-## When to Use This Skill
-
-- User says: "Generate the dashboard" or "Create web dashboard"
-- User says: "Open the results in a browser"
-- After completing full 50-state pipeline run
-- After regenerating maps or analysis
-- User wants interactive exploration of results
-- User wants to share results with others
-
-## What the Dashboard Provides
+## Dashboard Provides
 
 ### Interactive Features
-
-**State Navigation**:
-- Dropdown menu with all 50 states + DC
-- Quick jump to any state's results
-- State-by-state statistics
-
-**Tabbed Interface**:
-- **Districts**: Basic district assignment maps
-- **Political**: Partisan lean analysis (2020 only)
-- **Demographics**: Racial/ethnic composition
-- **Compactness**: Polsby-Popper and Reock scores
-- **Metro Areas**: Urban area focus maps (if available)
-- **National**: US-wide visualizations
-- **Rounds**: Algorithm progression maps
-- **Data**: CSV downloads and statistics
-
-**Data Display**:
-- Inline map viewing (no external image downloads needed)
-- Direct links to CSV files
-- Summary statistics tables
-- Sortable/filterable data tables (future enhancement)
+**State Navigation**: Dropdown menu (50 states + DC), quick jump to any state, state-by-state stats
+**Tabbed Interface**: Districts (basic assignments), Political (partisan lean, 2020 only), Demographics (racial/ethnic composition), Compactness (PP/Reock scores), Metro Areas (urban focus if available), National (US-wide), Rounds (algorithm progression), Data (CSV downloads/statistics)
+**Data Display**: Inline map viewing (no external downloads), direct CSV links, summary statistics tables, sortable/filterable tables (future)
 
 ### Content Included
-
-**Per-State Content** (51 states):
-- District assignment map
-- Political lean map (if 2020)
-- Demographic composition maps (3 types)
-- Compactness score maps (2 metrics)
-- Data CSVs (districts, analysis results)
-- Summary statistics
-
-**National Content**:
-- All 435 districts map
-- National political lean map
-- National demographic maps
-- National compactness maps
-- Round progression series (9 maps)
-
-**Metro Area Content** (if available):
-- Top 20 metropolitan areas
-- Focused district views
-- Organized by state
+**Per-State** (51): District assignment map, political lean map (2020), demographic composition maps (3 types), compactness score maps (2 metrics), data CSVs (districts/analysis), summary stats
+**National**: All 435 districts map, national political/demographic/compactness maps, round progression series (9 maps)
+**Metro Areas** (if available): Top 20 metro areas, focused district views, organized by state
 
 ## Workflow
 
 ### Step 1: Verify Prerequisites
-
-Check that output directory exists and is complete:
 ```bash
-# Check output directory
-ls outputs/us_2020_v1/
-
-# Check state data completeness
-ls outputs/us_2020_v1/states/*/data/districts.csv | wc -l
-# Should be 51 (50 states + DC)
-
-# Check maps exist
-ls outputs/us_2020_v1/states/*/maps/*.png | wc -l
-# Should be 250-400 depending on analysis types
+ls outputs/us_2020_v1/                                     # Check output dir
+ls outputs/us_2020_v1/states/*/data/districts.csv | wc -l # Should be 51
+ls outputs/us_2020_v1/states/*/maps/*.png | wc -l         # Should be 250-400
 ```
+If incomplete → `/run-redistricting --states "missing"` or `/run-analysis-only`
 
-If data incomplete:
-- Run missing states: `/run-redistricting --states "missing_states"`
-- Regenerate maps: `/run-analysis-only`
+### Step 2: Run Dashboard Generation
+**Basic**: `python scripts/web/generate_dashboard.py --year 2020 --version v1`
+**Custom options**: `--template web/dashboard.html --output outputs/us_2020_v1/index.html --open`
+**Batch wrapper**: `deploy_web.bat --year 2020 --version v1`
 
-### Step 2: Run Dashboard Generation Script
-
-Execute the dashboard generator:
-
-**Basic generation**:
-```bash
-python scripts/web/generate_dashboard.py \
-  --year 2020 \
-  --version v1
-```
-
-**With custom options**:
-```bash
-python scripts/web/generate_dashboard.py \
-  --year 2020 \
-  --version v1 \
-  --template web/dashboard.html \
-  --output outputs/us_2020_v1/index.html \
-  --open
-```
-
-**Or use batch file wrapper**:
-```bash
-deploy_web.bat --year 2020 --version v1
-```
-
-### Step 3: Monitor Generation Process
-
-Dashboard generation involves:
+### Step 3: Monitor Generation
 ```
 [1/5] Reading template: web/dashboard.html
 [2/5] Scanning state data: 51 states found
 [3/5] Cataloging maps: 324 maps found
 [4/5] Baking data into HTML: district data, statistics
 [5/5] Writing output: outputs/us_2020_v1/index.html
-
-Dashboard generated successfully!
-Opening in browser...
+Dashboard generated successfully! Opening in browser...
 ```
-
-**Typical runtime**: ~5-10 seconds
+**Runtime**: ~5-10s
 
 ### Step 4: Verify Dashboard Opens
+Browser auto-opens to `file:///C:/src/apportionment/outputs/us_2020_v1/index.html`
+Check: State dropdown works, tabs display content, maps load, CSVs link correctly, national maps visible
 
-Browser should automatically open to:
-```
-file:///C:/src/apportionment/outputs/us_2020_v1/index.html
-```
+### Step 5: Test Functionality
+**Navigation**: Select states from dropdown, switch tabs, verify all maps load
+**Links**: Click CSV links (should download/open), verify paths correct
+**Data**: Check statistics tables populated, numbers reasonable
+**Responsiveness**: Resize browser, check mobile layout (if responsive design)
 
-**Manual open** (if auto-open fails):
-```bash
-# Windows
-start outputs/us_2020_v1/index.html
+## Parameters
 
-# Or double-click file in explorer
-```
+**Required**: `--year` (2000/2010/2020), `--version` (output version tag)
+**Optional**: `--template` (custom HTML template path, default `web/dashboard.html`), `--output` (custom output path, default `outputs/us_{year}_{version}/index.html`), `--open` (auto-open in browser, default true), `--title` (custom dashboard title), `--description` (custom description text)
 
-### Step 5: Test Dashboard Functionality
+## Dashboard Structure
 
-**Checklist**:
-- [ ] Page loads without errors
-- [ ] All 51 states appear in dropdown
-- [ ] Tab navigation works (Districts, Political, etc.)
-- [ ] State selection updates displayed content
-- [ ] Maps load and display correctly
-- [ ] Links to CSV files work
-- [ ] National maps tab shows all US-wide maps
-- [ ] Statistics display accurately
+### HTML Template
+**Base template**: `web/dashboard.html` (Jinja2-style with placeholders)
+**Placeholders**: `{{YEAR}}`, `{{VERSION}}`, `{{STATES}}`, `{{MAPS}}`, `{{DATA}}`, `{{STATISTICS}}`
+**JavaScript**: Embedded for interactivity (state selection, tab switching, data tables)
+**CSS**: Embedded styling (responsive layout, clean design)
 
-## Dashboard Template Structure
+### Data Baking
+**Maps**: Relative paths embedded (`states/california/maps/districts.png`)
+**CSVs**: Direct file links (`states/california/data/districts.csv`)
+**Statistics**: JSON embedded in HTML (`<script>var stats = {...}</script>`)
+**State list**: Dropdown populated from directory scan
 
-### Template File: `web/dashboard.html`
-
-The template is a single HTML file with embedded CSS and JavaScript:
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>US Congressional Redistricting Dashboard</title>
-  <style>
-    /* Embedded CSS for styling */
-    /* No external CSS dependencies */
-  </style>
-</head>
-<body>
-  <header>
-    <h1>Congressional Redistricting Results ({{YEAR}})</h1>
-    <select id="stateSelector">
-      <!-- States populated by generator -->
-    </select>
-  </header>
-
-  <nav id="tabs">
-    <button class="tab-btn" data-tab="districts">Districts</button>
-    <button class="tab-btn" data-tab="political">Political</button>
-    <button class="tab-btn" data-tab="demographics">Demographics</button>
-    <button class="tab-btn" data-tab="compactness">Compactness</button>
-    <button class="tab-btn" data-tab="national">National</button>
-    <button class="tab-btn" data-tab="data">Data</button>
-  </nav>
-
-  <main id="content">
-    <!-- Content populated by generator -->
-  </main>
-
-  <script>
-    /* Embedded JavaScript for interactivity */
-    /* Data baked in by generator */
-    const stateData = {{STATE_DATA_JSON}};
-    const nationalMaps = {{NATIONAL_MAPS_JSON}};
-
-    // Tab switching logic
-    // State selection logic
-    // Map display logic
-  </script>
-</body>
-</html>
-```
-
-### Data Baking Process
-
-Generator replaces template placeholders with actual data:
-
-**State data JSON**:
-```javascript
-const stateData = {
-  "california": {
-    "name": "California",
-    "districts": 52,
-    "maps": {
-      "districts": "states/california/maps/districts.png",
-      "political": "states/california/maps/political_lean.png",
-      "compactness_pp": "states/california/maps/compactness_polsby_popper.png",
-      "compactness_reock": "states/california/maps/compactness_reock.png",
-      "demographic_white": "states/california/maps/demographic_white_percentage.png",
-      "demographic_minority": "states/california/maps/demographic_minority_percentage.png"
-    },
-    "data": {
-      "districts_csv": "states/california/data/districts.csv",
-      "summary_csv": "states/california/data/district_summary.csv",
-      "political_csv": "states/california/data/political_lean.csv",
-      "demographic_csv": "states/california/data/demographic_composition.csv",
-      "compactness_csv": "states/california/data/compactness.csv"
-    },
-    "stats": {
-      "total_population": 39538223,
-      "mean_compactness_pp": 0.42,
-      "d_seats": 42,
-      "r_seats": 10
-    }
-  },
-  // ... 50 more states
-};
-```
-
-**National maps JSON**:
-```javascript
-const nationalMaps = {
-  "all_districts": "maps/us_all_districts.png",
-  "political_lean": "maps/us_political_lean.png",
-  "compactness_pp": "maps/us_compactness_polsby_popper.png",
-  "demographic_white": "maps/us_demographic_white_percentage.png",
-  "rounds": [
-    "maps/rounds/us_round_1.png",
-    "maps/rounds/us_round_2.png",
-    // ... rounds 3-9
-  ]
-};
-```
-
-## Dashboard Script Reference
-
-### Main Generation Script
-
-**Location**: `scripts/web/generate_dashboard.py`
-
-**Key functions**:
-```python
-def read_template(template_path):
-    """Load dashboard HTML template"""
-    pass
-
-def scan_state_data(output_dir, year, version):
-    """Scan output directory for all state data and maps"""
-    # Returns dict with all state information
-    pass
-
-def scan_national_maps(output_dir):
-    """Find all national-level maps"""
-    pass
-
-def compute_statistics(state_data_csvs):
-    """Calculate summary statistics from CSVs"""
-    pass
-
-def bake_data_into_template(template, state_data, national_data):
-    """Replace template placeholders with actual data"""
-    # Returns complete HTML with embedded data
-    pass
-
-def write_dashboard(html_content, output_path):
-    """Write final HTML file"""
-    pass
-
-def open_in_browser(html_path):
-    """Open dashboard in default browser"""
-    pass
-```
-
-### Command-Line Interface
-
-```bash
-python scripts/web/generate_dashboard.py \
-  --year YEAR \              # Census year (2000/2010/2020)
-  --version VERSION \        # Output version tag
-  --template TEMPLATE \      # Template file (default: web/dashboard.html)
-  --output OUTPUT \          # Output path (default: outputs/us_{year}_{version}/index.html)
-  --open \                   # Automatically open in browser
-  --no-stats \               # Skip statistics computation (faster)
-  --states-filter STATES     # Only include specific states (comma-separated)
-```
-
-## Output Files
-
-Dashboard and related files:
-```
-outputs/us_{year}_{version}/
-├── index.html                    # Main dashboard (self-contained)
-├── maps/                         # National maps (referenced by dashboard)
-│   ├── us_all_districts.png
-│   ├── us_political_lean.png
-│   └── rounds/
-└── states/                       # State-specific content (referenced)
-    └── {state}/
-        ├── maps/
-        │   └── *.png
-        └── data/
-            └── *.csv
-```
-
-**File size**:
-- **Dashboard HTML**: ~100-500 KB (with embedded data)
-- **Total directory**: ~50-200 MB (depending on map DPI and analysis types)
+### Output File
+**Single HTML**: `outputs/us_2020_v1/index.html` (~500KB-2MB depending on embedded data)
+**Self-contained**: All paths relative, works offline
+**No dependencies**: Pure HTML/CSS/JS, no external libraries required
 
 ## Customization
 
-### Modify Template
+### Custom Template
+Create new template based on `web/dashboard.html`, modify structure/styling, use same placeholders, generate with `--template custom_dashboard.html`
 
-Edit `web/dashboard.html` to customize:
+### Custom Styling
+Edit CSS in template: Colors, fonts, layout, responsive breakpoints
+**Example**: `.state-dropdown { background: #f0f0f0; }`
 
-**Change colors**:
-```css
-/* In <style> section */
-:root {
-  --primary-color: #1a73e8;  /* Change theme color */
-  --bg-color: #f8f9fa;
-  --text-color: #202124;
-}
-```
+### Custom Data Display
+Modify JavaScript in template for: Custom sorting/filtering, Additional statistics, Different chart types, Custom interactions
 
-**Add custom tabs**:
-```html
-<!-- In <nav> section -->
-<button class="tab-btn" data-tab="custom">Custom Analysis</button>
-
-<!-- In <main> section -->
-<div id="tab-custom" class="tab-content">
-  <!-- Custom content here -->
-</div>
-```
-
-**Modify layout**:
-```css
-/* Change from sidebar to top nav */
-.dashboard-container {
-  flex-direction: column;  /* Was: row */
-}
-```
-
-### Add Custom Data
-
-Inject additional data during generation:
-
-```python
-# In generate_dashboard.py
-custom_data = {
-    "algorithm_version": "edge-weighted",
-    "generation_date": "2026-01-15",
-    "computation_time": "3.5 hours",
-}
-
-# Bake into template
-html = html.replace("{{CUSTOM_DATA}}", json.dumps(custom_data))
-```
-
-### Filter States
-
-Generate dashboard for subset of states:
-```bash
-python scripts/web/generate_dashboard.py \
-  --year 2020 \
-  --version v1 \
-  --states-filter "california,texas,florida,new_york"
-```
+### Multiple Dashboards
+Generate comparison dashboards: `--output comparison_2010_v1.html`, `--output comparison_2020_v1.html`, link between dashboards for easy comparison
 
 ## Troubleshooting
 
-**Common Issues**:
+**Missing maps**: `[WARNING] Map not found: states/california/maps/political_lean.png` → Regenerate with `/run-analysis-only`
+**Empty state dropdown**: No states found in output dir → Check path, run redistricting
+**Broken CSV links**: Files not found → Verify analysis completed, check file permissions
+**Dashboard doesn't open**: Browser not found → Manually open `outputs/us_2020_v1/index.html`
+**Maps don't load**: Relative paths broken → Check output directory structure, regenerate dashboard
+**Large file size**: Dashboard >5MB → Reduce embedded data, use external links for large datasets
 
-**Dashboard doesn't open automatically**:
-```
-Issue: Browser doesn't open after generation
-Solution: Manually open outputs/us_2020_v1/index.html
-          Or use: start outputs/us_2020_v1/index.html
-```
+## Deployment
 
-**Maps not displaying**:
-```
-Issue: Broken image links, maps show as broken
-Cause: Relative paths incorrect
-Solution: Ensure dashboard HTML is in outputs/us_{year}_{version}/
-          Verify map files exist at referenced paths
-```
+### Local Use
+Dashboard works immediately after generation, open directly in browser, share via file system/cloud storage
 
-**Missing state data**:
-```
-Issue: Some states don't appear in dropdown
-Cause: districts.csv missing for those states
-Solution: Run redistricting for missing states
-          Or regenerate with --allow-partial
-```
+### Web Hosting
+**Static hosting**: Copy entire `outputs/us_2020_v1/` directory to web server, dashboard works with relative paths
+**Platforms**: GitHub Pages, Netlify, Vercel, AWS S3, any static file hosting
+**Commands**: `deploy_web.bat --year 2020 --version v1 --deploy` (copies to web directory)
 
-**Tabs not working**:
-```
-Issue: Clicking tabs does nothing
-Cause: JavaScript error (check browser console: F12)
-Solution: Verify template JavaScript section intact
-          Check for syntax errors in baked JSON data
-```
-
-**Statistics wrong or missing**:
-```
-Issue: Summary statistics show NaN or incorrect values
-Cause: CSV parsing error or missing data
-Solution: Validate CSV files exist and are correctly formatted
-          Run with --no-stats to skip statistics (debug)
-```
-
-**File too large**:
-```
-Issue: Dashboard HTML is megabytes in size
-Cause: Too much data baked into HTML
-Solution: Reduce embedded data, reference external files instead
-          Or split into multiple dashboard pages
-```
-
-## Advanced Usage
-
-### Comparison Dashboard
-
-Create side-by-side comparison of multiple versions:
-```bash
-# Generate dashboards for different versions
-python scripts/web/generate_dashboard.py --year 2020 --version v1
-python scripts/web/generate_dashboard.py --year 2020 --version v2
-
-# Create comparison HTML (custom script)
-python scripts/web/create_comparison_dashboard.py \
-  --versions "v1,v2" \
-  --year 2020
-```
-
-### Multi-Year Dashboard
-
-Compare across census years:
-```bash
-# Generate for each year
-python scripts/web/generate_dashboard.py --year 2000 --version v1
-python scripts/web/generate_dashboard.py --year 2010 --version v1
-python scripts/web/generate_dashboard.py --year 2020 --version v1
-
-# Create multi-year dashboard
-python scripts/web/create_multiyear_dashboard.py \
-  --years "2000,2010,2020"
-```
-
-### Export to Static Site
-
-Deploy dashboard as static website:
-```bash
-# Copy to web hosting directory
-cp -r outputs/us_2020_v1/ /var/www/html/redistricting/
-
-# Or use GitHub Pages
-cd outputs/us_2020_v1/
-git init
-git add .
-git commit -m "Add redistricting dashboard"
-git push origin gh-pages
-```
-
-### Embed in Documentation
-
-Include dashboard in larger documentation site:
-```html
-<!-- In main docs site -->
-<iframe src="outputs/us_2020_v1/index.html" width="100%" height="800px">
-</iframe>
-```
+### Access Control
+For private dashboards: Use .htaccess (Apache), nginx auth_basic, cloud platform access controls
+**No server-side processing needed** (static HTML)
 
 ## Integration with Pipeline
 
-Dashboard generation is the final stage of the pipeline:
-
-**Automatic generation**:
+Dashboard auto-generated during post-processing:
 ```bash
-# Dashboard generated automatically at end
-python scripts/pipeline/run_complete_redistricting.py \
-  --year 2020 \
-  --version v1
-# Creates: outputs/us_2020_v1/index.html
-# Opens in browser automatically
+python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1
+# Automatically runs generate_dashboard.py at end
 ```
 
-**Manual regeneration** (after updating maps/data):
+**Manual regeneration** (after data changes):
 ```bash
-# Regenerate dashboard only
-python scripts/web/generate_dashboard.py \
-  --year 2020 \
-  --version v1 \
-  --open
+python scripts/web/generate_dashboard.py --year 2020 --version v1 --force
 ```
-
-**Batch file wrapper**:
-```bash
-# Windows convenience script
-deploy_web.bat --year 2020 --version v1
-```
-
-## Sharing Results
-
-### Local Sharing
-
-Share complete output directory:
-```bash
-# Zip for sharing
-zip -r redistricting_2020_v1.zip outputs/us_2020_v1/
-
-# Recipient extracts and opens index.html
-```
-
-### Web Hosting
-
-Host on static file server:
-```bash
-# Upload to web server
-rsync -avz outputs/us_2020_v1/ user@server:/var/www/redistricting/
-
-# Access at: https://server.com/redistricting/
-```
-
-### GitHub Pages
-
-Host on GitHub:
-```bash
-cd outputs/us_2020_v1/
-git init
-git add .
-git commit -m "Add redistricting results"
-git remote add origin https://github.com/user/redistricting.git
-git push -u origin main
-
-# Enable GitHub Pages in repo settings
-# Access at: https://user.github.io/redistricting/
-```
-
-## Performance Notes
-
-**Generation time**:
-| States | Maps | Time |
-|--------|------|------|
-| 5 states | ~30 maps | ~2 sec |
-| 10 states | ~60 maps | ~3 sec |
-| 51 states | ~400 maps | ~5-10 sec |
-
-**Bottlenecks**:
-- Scanning directory structure for maps/CSVs
-- Computing statistics from CSVs
-- Writing large HTML file
-
-**Optimization**:
-- Use `--no-stats` to skip statistics computation
-- Cache directory scans for repeated regeneration
-- Minimize embedded data (reference external files)
-
-## Browser Compatibility
-
-**Tested browsers**:
-- Chrome/Edge 90+ ✓
-- Firefox 88+ ✓
-- Safari 14+ ✓
-- Internet Explorer 11 ⚠️ (limited support)
-
-**Required features**:
-- ES6 JavaScript (const, arrow functions)
-- CSS Grid
-- Flexbox
-- Fetch API (for future AJAX features)
-
-**Fallbacks**:
-- No external dependencies (no CDN requirements)
-- Works offline (all data embedded or local)
-- Degrades gracefully in older browsers
-
-## Related Skills
-
-- `/run-redistricting` - Complete pipeline that generates dashboard
-- `/create-state-map` - Generate individual state maps for dashboard
-- `/create-national-map` - Generate national maps for dashboard
-- `/run-analysis-only` - Regenerate analysis data for dashboard
 
 ## Best Practices
 
-1. **Regenerate after changes**: Always regenerate dashboard after updating maps/data
-2. **Test locally first**: Open dashboard locally before deploying
+1. **Regenerate after changes**: Always regenerate after updating maps/data
+2. **Test locally first**: Open locally before deploying
 3. **Version control template**: Track changes to `web/dashboard.html`
-4. **Validate data**: Ensure all referenced files exist before generation
-5. **Optimize images**: Use appropriate DPI for web (150 is good balance)
-6. **Document customizations**: Note any template modifications
+4. **Validate data**: Ensure all files exist before generation
+5. **Optimize images**: Use DPI 150 for web (good balance)
+6. **Document customizations**: Note template modifications
 7. **Backup outputs**: Archive dashboard + data before regeneration
 
 ## What You'll Get
 
-After successful generation:
-- **Single HTML file** with all data embedded
-- **Interactive interface** for exploring all 51 states
-- **Tabbed navigation** for different analysis types
-- **Direct links** to all maps and CSV files
-- **Summary statistics** for quick insights
-- **Automatic browser opening** to view results
-- **Self-contained package** for easy sharing
-- **No dependencies** (works offline)
+Single HTML file (all data embedded), interactive interface (explore 51 states), tabbed navigation (different analysis types), direct links (maps/CSVs), summary statistics (quick insights), automatic browser opening (view results), self-contained package (easy sharing), no dependencies (works offline)
+
+## Related Skills
+`/run-redistricting` (auto-generates dashboard), `/run-analysis-only` (regenerate before dashboard), `/create-state-map` (regenerate state maps), `/create-national-map` (regenerate national maps)
 
 ## Next Steps
-
-- Share dashboard with collaborators
-- Customize template for specific presentation needs
-- Create comparison dashboards for different versions/years
-- Deploy to web server for public access
-- Generate exports/reports from dashboard data
+Share with collaborators, customize template for presentation needs, create comparison dashboards (different versions/years), deploy to web server for public access, generate exports/reports from dashboard data
