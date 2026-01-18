@@ -31,7 +31,7 @@ def generate_schematic_figures(args):
     print("\n[1/3] Generating schematic figures...")
     print("-" * 70)
 
-    script = Path('outputs/artifacts/presentations/edge_weighted_bisection/create_figures.py')
+    script = Path('artifacts/presentations/edge_weighted_bisection/create_figures.py')
     if not script.exists():
         print(f"  [ERROR] Script not found: {script}")
         return False
@@ -41,7 +41,7 @@ def generate_schematic_figures(args):
         return False
 
     # Copy to shared figures directory
-    source_dir = Path(f'outputs/outputs/artifacts/presentations/edge_weighted_bisection/figures')
+    source_dir = Path('artifacts/presentations/edge_weighted_bisection/figures')
     dest_dir = Path('outputs/artifacts/figures/schematic')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -78,7 +78,7 @@ def generate_real_tracts_examples(args):
         return False
 
     # Copy to shared figures directory
-    source_dir = Path('outputs/artifacts/guides/edge_weighted_bisection/appendix_examples')
+    source_dir = Path('artifacts/guides/edge_weighted_bisection/appendix_examples')
     dest_dir = Path('outputs/artifacts/figures/real_tracts_examples')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +125,7 @@ def copy_round_progression_maps(args):
     print("\n[3/3] Copying round progression maps...")
     print("-" * 70)
 
-    source_dir = Path(f'outputs/us_{args.year}_{args.version}/states')
+    source_dir = Path(f'outputs/{args.version}/{args.year}/states')
     dest_dir = Path('outputs/artifacts/figures/round_progression')
     dest_dir.mkdir(parents=True, exist_ok=True)
 
