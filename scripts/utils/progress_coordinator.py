@@ -177,10 +177,8 @@ class ProgressCoordinator:
                             if not self.wide_terminal:
                                 state_name = abbreviate_state_name(state_name, max_length=10)
 
-                            # Format stage description
-                            stage_desc = status['stage_desc']
-                            if not self.wide_terminal:
-                                stage_desc = format_stage_description(stage_desc, wide_terminal=False)
+                            # Format stage description (replace underscores, title case)
+                            stage_desc = format_stage_description(status['stage_desc'], wide_terminal=self.wide_terminal)
 
                             # Worker line
                             worker_line = (
