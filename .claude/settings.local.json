@@ -131,7 +131,8 @@
       "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/github_reference.pdf\")",
       "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/redistricting_reference.pdf\")",
       "Bash(git ls-tree:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(./reorganize_data.bat)"
     ]
   }
 }

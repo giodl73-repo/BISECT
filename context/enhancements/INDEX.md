@@ -52,10 +52,11 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (16 enhancements)
+### 📋 Planned (17 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
+| [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Critical | [View](active/47_data_separation_restoration.md) |
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | High | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | High | [View](45_baseline_data_organization.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
@@ -78,10 +79,11 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 
 Enhancements organized by priority level for better planning and focus.
 
-### Critical (2 enhancements)
+### Critical (3 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
+| [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Proposed | [View](active/47_data_separation_restoration.md) |
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Proposed | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Proposed | [View](45_baseline_data_organization.md) |
 
