@@ -1102,7 +1102,12 @@ def main():
 
         # Wait for states to complete, then launch national processing
         # This allows each year to start post-processing as soon as its states finish
+        sys.stderr.write(f"\n[DEBUG] Initial year_phase: {dict(year_phase)}\n")
+        sys.stderr.flush()
+
         while any(phase == 'states' for phase in year_phase.values()):
+            sys.stderr.write(f"[DEBUG] Still waiting for states: {dict(year_phase)}\n")
+            sys.stderr.flush()
             for year in year_queue:
                 if year_phase[year] == 'states':
                     proc = processes[year]
@@ -1127,22 +1132,48 @@ def main():
             time.sleep(0.1)  # Avoid busy-waiting
 
         # Now wait for all national post-processing to complete
+        sys.stderr.write("\n[DEBUG] Waiting for post-processing to complete...\n")
+        sys.stderr.flush()
+
         for year in year_queue:
+            sys.stderr.write(f"[DEBUG] Checking year {year}, phase={year_phase.get(year, 'unknown')}\n")
+            sys.stderr.flush()
+
             if year_phase[year] == 'nation':
                 proc = processes[year]
                 # Check if process has already exited (monitoring thread may have waited)
-                if proc.poll() is None:
+                poll_result = proc.poll()
+                sys.stderr.write(f"[DEBUG] {year} proc.poll() = {poll_result}\n")
+                sys.stderr.flush()
+
+                if poll_result is None:
                     # Still running - wait for it
+                    sys.stderr.write(f"[DEBUG] {year} process still running, waiting...\n")
+                    sys.stderr.flush()
                     proc.wait()
+                    sys.stderr.write(f"[DEBUG] {year} process finished with code {proc.returncode}\n")
+                    sys.stderr.flush()
+
                 # Process has exited - get return code
                 success = (proc.returncode == 0)
                 results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
 
                 # Wait for monitoring thread to finish
                 if year in threads:
+                    sys.stderr.write(f"[DEBUG] Joining monitoring thread for {year}...\n")
+                    sys.stderr.flush()
                     threads[year].join(timeout=5)
+                    if threads[year].is_alive():
+                        sys.stderr.write(f"[DEBUG] WARNING: {year} monitoring thread still alive after timeout\n")
+                        sys.stderr.flush()
+                    else:
+                        sys.stderr.write(f"[DEBUG] {year} monitoring thread joined successfully\n")
+                        sys.stderr.flush()
             elif year_phase[year] == 'failed':
                 pass  # Already recorded failure
+
+        sys.stderr.write("[DEBUG] All post-processing complete, moving to summary...\n")
+        sys.stderr.flush()
 
         # Calculate elapsed time
         elapsed = time.time() - start_time
