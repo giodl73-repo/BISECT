@@ -67,8 +67,9 @@ def run_postprocessing_task(args_tuple):
     sys.stdout.flush()
 
     try:
-        # Run the command (stdout/stderr to parent)
-        result = subprocess.run(command, shell=True, timeout=900)
+        # Run the command (suppress verbose output, keep only critical errors)
+        result = subprocess.run(command, shell=True, timeout=900,
+                               capture_output=True, text=True)
 
         # Emit completion status
         if result.returncode == 0:
@@ -76,6 +77,10 @@ def run_postprocessing_task(args_tuple):
             sys.stdout.flush()
             return (task_name, True)
         else:
+            # On failure, print stderr for debugging
+            if result.stderr:
+                sys.stderr.write(f"[ERROR] {task_name} failed:\n{result.stderr}\n")
+                sys.stderr.flush()
             return (task_name, False)
 
     except subprocess.TimeoutExpired:
@@ -108,8 +113,8 @@ def main():
                         help='Print commands without executing (debug mode)')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug mode')
-    parser.add_argument('--workers', type=int, default=6,
-                        help='Number of workers for parallel Phase 2 visualization (default: 6)')
+    parser.add_argument('--workers', type=int, default=2,
+                        help='Number of workers for parallel Phase 2 visualization (default: 2)')
     args = parser.parse_args()
 
     output_dir = Path(args.output_dir)

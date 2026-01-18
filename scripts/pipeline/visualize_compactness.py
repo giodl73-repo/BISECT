@@ -34,9 +34,10 @@ from matplotlib.colors import Normalize
 import pickle
 import numpy as np
 
-# Import shared constants
+# Import shared constants and utilities
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.constants import STATE_ABBREV
+from scripts.utils.config import build_state_name_to_districts_map
 
 
 def create_compactness_map(tracts_gdf, metric_name, metric_col, output_file, dpi=150):
