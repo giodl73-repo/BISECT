@@ -1,7 +1,7 @@
 # Enhancement 23: Direct County Representation
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: Very High (15-20 hours)
 

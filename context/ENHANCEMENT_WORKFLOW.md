@@ -24,6 +24,14 @@
 - Define 3-6 phases: Data prep (0) → Core (1) → Integration (2) → Config/CLI (3) → Testing (4) → Docs (5)
 - List ALL files to modify/create
 - Estimate complexity
+- **Assign priority** (Critical/High/Medium/Low/Research) - see below
+
+**Priority Assignment**:
+- **Critical**: Blocks publication or breaks core functionality (must do now)
+- **High**: Answers key research questions, significant impact (next 1-2 sprints)
+- **Medium**: Improves quality/capabilities but not urgent (next quarter)
+- **Low**: Quality-of-life improvements, polish (when time permits)
+- **Research**: Experimental/exploratory work, uncertain value (no timeline)
 
 **Test Requirements** (MANDATORY):
 ```

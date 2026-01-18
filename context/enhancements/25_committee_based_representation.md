@@ -1,7 +1,7 @@
 # Enhancement 25: Committee-Based Representation
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: High (12-15 hours)
 

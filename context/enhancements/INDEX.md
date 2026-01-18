@@ -74,6 +74,80 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Research | [View](27_electoral_college_county_reform.md) |
 | [28](28_multi_member_districts.md) | Multi-Member Districts | Research | [View](28_multi_member_districts.md) |
 
+## By Priority
+
+Enhancements organized by priority level for better planning and focus.
+
+### Critical (2 enhancements)
+
+| # | Title | Status | Files |
+|---|-------|--------|-------|
+| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Proposed | [View](42_research_narrative_policy_questions.md) |
+| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Proposed | [View](45_baseline_data_organization.md) |
+
+### High (4 enhancements)
+
+| # | Title | Status | Files |
+|---|-------|--------|-------|
+| [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | Proposed | [View](36_experimental_variants_config.md) |
+| [11](11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Completed (Jan 17, 2026) | [View](11_baseline_comparison.md) |
+| [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | [View](12_edge_weighted_analysis.md) |
+| [10](10_per_state_urban.md) | Per-State Urban Area Processing | Completed (Jan 2026) | [View](10_per_state_urban.md) |
+
+### Medium (31 enhancements)
+
+| # | Title | Status | Files |
+|---|-------|--------|-------|
+| [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Proposed | [View](43_cross_year_longitudinal_analysis.md) |
+| [44](44_real_world_constraints.md) | Real-World Redistricting Constraints | Proposed | [View](44_real_world_constraints.md) |
+| [46](46_enhancement_priority_system.md) | Priority System for Enhancements | In Progress | [View](46_enhancement_priority_system.md) |
+| [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Proposed | [View](41_public_distribution.md) |
+| [1](01_compactness_integration.md) | Compactness Integration | Completed | [View](01_compactness_integration.md) |
+| [2](02_seat_totals.md) | D/R Seat Totals | Completed | [View](02_seat_totals.md) |
+| [3](03_national_maps.md) | National Maps | Completed | [View](03_national_maps.md) |
+| [4](04_metro_areas.md) | Urban Metro Areas | Completed | [View](04_metro_areas.md) |
+| [5](05_national_rounds.md) | National Round Progression | Completed | [View](05_national_rounds.md) |
+| [6](06_architecture_diagrams.md) | System Architecture Diagrams | Completed | [View](06_architecture_diagrams.md) |
+| [7](07_edge_weighted_bisection.md) | Edge-Weighted Recursive Bisection | Completed | [View](07_edge_weighted_bisection.md) |
+| [9](09_per_state_analysis.md) | Per-State Analysis Refactoring | Completed | [View](09_per_state_analysis.md) |
+| [13](13_directory_unification.md) | Directory Unification | Completed | [View](13_directory_unification.md) |
+| [14](14_validation_framework.md) | Pipeline Output Validation | Completed | [View](14_validation_framework.md) |
+| [15](15_multi_year_support.md) | Multi-Year Pipeline Support | Completed | [View](15_multi_year_support.md) |
+| [17](17_artifact_naming.md) | Artifact Naming Standardization | Completed | [View](17_artifact_naming.md) |
+| [18](18_figure_quality.md) | Figure Quality Improvement | Completed | [View](18_figure_quality.md) |
+| [19](19_create_skill.md) | Create-Skill Meta-Skill | Completed | [View](19_create_skill.md) |
+| [20](20_edit_paper.md) | Edit-Paper Skill | Completed | [View](20_edit_paper.md) |
+| [21](21_edit_presentation.md) | Edit-Presentation Skill | Completed | [View](21_edit_presentation.md) |
+| [29](29_artifacts_dashboard_tab.md) | Artifacts Dashboard Tab | Completed | [View](29_artifacts_dashboard_tab.md) |
+| [30](30_playwright_testing.md) | Playwright Test Harness | Completed | [View](30_playwright_testing.md) |
+| [31](31_pipeline_test_system.md) | Pipeline Test System | Completed | [View](31_pipeline_test_system.md) |
+| [33](33_dashboard_mock_data.md) | Dashboard Mock Data Integration | Completed | [View](33_dashboard_mock_data.md) |
+| [34](34_test_execution_skills.md) | Test Execution and Debugging Skills | Completed | [View](34_test_execution_skills.md) |
+| [35](35_enhancement_manager_app.md) | Enhancement Manager Web App | Completed | [View](35_enhancement_manager_app.md) |
+| [37](37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline | Completed | [View](37_parallel_multi_year_pipeline.md) |
+| [38](38_streamline_claude_md.md) | Streamline CLAUDE.md | Completed | [View](38_streamline_claude_md.md) |
+| [39](39_pipeline_error_logging.md) | Pipeline Error Logging | Completed | [View](39_pipeline_error_logging.md) |
+
+### Low (3 enhancements)
+
+| # | Title | Status | Files |
+|---|-------|--------|-------|
+| [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Proposed | [View](32_reock_compactness_metric.md) |
+| [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies | Proposed | [View](40_corner_adjacency_filter.md) |
+| [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Proposed | [View](16_metro_2000.md) |
+
+### Research (7 enhancements)
+
+| # | Title | Status | Files |
+|---|-------|--------|-------|
+| [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Proposed | [View](22_national_redistricting.md) |
+| [23](23_county_representation.md) | Direct County Representation | Proposed | [View](23_county_representation.md) |
+| [24](24_party_based_allocation.md) | Party-Based District Allocation | Proposed | [View](24_party_based_allocation.md) |
+| [25](25_committee_based_representation.md) | Committee-Based Representation | Proposed | [View](25_committee_based_representation.md) |
+| [26](26_demographic_similarity_districts.md) | Demographic Similarity Districts | Proposed | [View](26_demographic_similarity.md) |
+| [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Proposed | [View](27_electoral_college_county_reform.md) |
+| [28](28_multi_member_districts.md) | Multi-Member Districts | Proposed | [View](28_multi_member_districts.md) |
+
 ## Related Documentation
 
 - **[ARCHITECTURE.md](../ARCHITECTURE.md)** - System design and architectural decisions

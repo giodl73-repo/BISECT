@@ -41,6 +41,9 @@ run_redistricting.bat --year 2020 --workers 12 --version v1
 # Skip state processing (fast national post-processing only)
 run_redistricting.bat --version v1 --skip-states
 
+# Test/debug runs (outputs to dev/)
+run_test.bat --year 2020 --version my_test
+
 # Emergency stop (if needed)
 CANCEL.bat
 ```

@@ -2,7 +2,7 @@
 
 **Status**: Planned
 **Created**: January 14, 2026
-**Priority**: Medium (after core research complete)
+**Priority**: Medium
 
 ## Overview
 

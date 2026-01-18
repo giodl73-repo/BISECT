@@ -25,6 +25,12 @@
         .status-completed { background-color: #d1fae5; color: #065f46; }
         .status-in-progress { background-color: #dbeafe; color: #1e40af; }
         .status-planned { background-color: #fef3c7; color: #92400e; }
+        .priority-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .priority-critical { background-color: #fee2e2; color: #991b1b; }
+        .priority-high { background-color: #fed7aa; color: #9a3412; }
+        .priority-medium { background-color: #fef3c7; color: #92400e; }
+        .priority-low { background-color: #dbeafe; color: #1e40af; }
+        .priority-research { background-color: #e9d5ff; color: #6b21a8; }
         .filter-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
         .filter-btn:hover { background-color: #f3f4f6; }
         .filter-btn.active { background-color: #3b82f6; color: white; }
@@ -77,20 +83,44 @@
                 </div>
             </div>
 
-            <!-- Filters and Search -->
-            <div class="flex items-center gap-4">
-                <div class="flex gap-2">
-                    <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="completed">Completed</button>
-                    <button class="filter-btn" data-filter="in-progress">In Progress</button>
-                    <button class="filter-btn" data-filter="planned">Planned</button>
+            <!-- Priority Summary -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                <div class="text-sm font-semibold text-gray-700 mb-2">Priority Distribution</div>
+                <div class="flex flex-wrap gap-3 text-sm" id="prioritySummary">
+                    <span class="text-gray-500">Loading...</span>
                 </div>
-                <input
-                    type="text"
-                    id="searchInput"
-                    placeholder="Search enhancements..."
-                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Status:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                        <button class="filter-btn" data-filter="in-progress">In Progress</button>
+                        <button class="filter-btn" data-filter="planned">Planned</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Priority:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn priority-filter active" data-priority="all">All</button>
+                        <button class="filter-btn priority-filter" data-priority="Critical">Critical</button>
+                        <button class="filter-btn priority-filter" data-priority="High">High</button>
+                        <button class="filter-btn priority-filter" data-priority="Medium">Medium</button>
+                        <button class="filter-btn priority-filter" data-priority="Low">Low</button>
+                        <button class="filter-btn priority-filter" data-priority="Research">Research</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search enhancements..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
             </div>
         </div>
     </header>
@@ -171,7 +201,9 @@
         let enhancements = [];
         let currentEnhancement = null;
         let currentFilter = 'all';
+        let currentPriorityFilter = 'all';
         let currentSearch = '';
+        let currentSort = 'priority'; // 'priority', 'number', 'status'
 
         // Initialize
         async function init() {
@@ -203,6 +235,24 @@
                 document.getElementById('completedCount').textContent = stats.completed;
                 document.getElementById('inProgressCount').textContent = stats.in_progress;
                 document.getElementById('plannedCount').textContent = stats.planned;
+
+                // Update priority summary
+                const prioritySummary = document.getElementById('prioritySummary');
+                if (stats.priority_distribution) {
+                    const priorityOrder = ['Critical', 'High', 'Medium', 'Low', 'Research'];
+                    const priorityColors = {
+                        'Critical': 'text-red-700',
+                        'High': 'text-orange-700',
+                        'Medium': 'text-yellow-700',
+                        'Low': 'text-blue-700',
+                        'Research': 'text-purple-700'
+                    };
+                    const priorityHTML = priorityOrder
+                        .filter(p => stats.priority_distribution[p])
+                        .map(p => `<span class="font-semibold ${priorityColors[p]}">${p}: ${stats.priority_distribution[p]}</span>`)
+                        .join('<span class="text-gray-300">|</span>');
+                    prioritySummary.innerHTML = priorityHTML || '<span class="text-gray-500">No priority data</span>';
+                }
             } catch (error) {
                 console.error('Failed to load stats:', error);
             }
@@ -223,6 +273,12 @@
                     else if (currentFilter === 'planned') statusMatch = e.status.includes('📋');
                 }
 
+                // Filter by priority
+                let priorityMatch = true;
+                if (currentPriorityFilter !== 'all') {
+                    priorityMatch = e.priority && e.priority.includes(currentPriorityFilter);
+                }
+
                 // Filter by search
                 let searchMatch = true;
                 if (currentSearch) {
@@ -232,8 +288,29 @@
                         (e.summary && e.summary.toLowerCase().includes(searchLower));
                 }
 
-                return statusMatch && searchMatch;
+                return statusMatch && priorityMatch && searchMatch;
             });
+
+            // Sort enhancements
+            if (currentSort === 'priority') {
+                const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3, 'Research': 4, 'Unknown': 5 };
+                filtered.sort((a, b) => {
+                    const aPriority = priorityOrder[a.priority] ?? 5;
+                    const bPriority = priorityOrder[b.priority] ?? 5;
+                    if (aPriority !== bPriority) return aPriority - bPriority;
+                    return b.id - a.id; // Secondary sort by ID (descending)
+                });
+            } else if (currentSort === 'number') {
+                filtered.sort((a, b) => b.id - a.id); // Descending by ID
+            } else if (currentSort === 'status') {
+                const statusOrder = { '✅': 0, '🔄': 1, '📋': 2 };
+                filtered.sort((a, b) => {
+                    const aStatus = a.status.includes('✅') ? 0 : a.status.includes('🔄') ? 1 : 2;
+                    const bStatus = b.status.includes('✅') ? 0 : b.status.includes('🔄') ? 1 : 2;
+                    if (aStatus !== bStatus) return aStatus - bStatus;
+                    return b.id - a.id;
+                });
+            }
 
             if (filtered.length === 0) {
                 grid.innerHTML = '';
@@ -252,6 +329,16 @@
                 enhancement.status.includes('🔄') ? 'status-in-progress' :
                 'status-planned';
 
+            const priorityClass =
+                enhancement.priority && enhancement.priority.includes('Critical') ? 'priority-critical' :
+                enhancement.priority && enhancement.priority.includes('High') ? 'priority-high' :
+                enhancement.priority && enhancement.priority.includes('Medium') ? 'priority-medium' :
+                enhancement.priority && enhancement.priority.includes('Low') ? 'priority-low' :
+                enhancement.priority && enhancement.priority.includes('Research') ? 'priority-research' :
+                '';
+
+            const priorityText = enhancement.priority ? enhancement.priority.split('|')[0].trim() : '';
+
             const dateInfo =
                 enhancement.completed ? `Completed: ${enhancement.completed}` :
                 enhancement.started ? `Started: ${enhancement.started}` :
@@ -261,8 +348,11 @@
             return `
                 <div class="enhancement-card" onclick="openEnhancement(${enhancement.id})">
                     <div class="flex items-start justify-between mb-3">
-                        <div class="text-lg font-semibold text-gray-900">
-                            Enhancement ${enhancement.id}
+                        <div class="flex items-center gap-2">
+                            <div class="text-lg font-semibold text-gray-900">
+                                Enhancement ${enhancement.id}
+                            </div>
+                            ${priorityClass ? `<span class="priority-badge ${priorityClass}">${priorityText}</span>` : ''}
                         </div>
                         <span class="status-badge ${statusClass}">
                             ${enhancement.status.replace(/[📋🔄✅]/g, '').trim()}
@@ -405,12 +495,22 @@
 
         // Setup event listeners
         function setupEventListeners() {
-            // Filter buttons
-            document.querySelectorAll('.filter-btn').forEach(btn => {
+            // Status filter buttons
+            document.querySelectorAll('.filter-btn:not(.priority-filter)').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.filter-btn:not(.priority-filter)').forEach(b => b.classList.remove('active'));
                     e.target.classList.add('active');
                     currentFilter = e.target.dataset.filter;
+                    renderEnhancements();
+                });
+            });
+
+            // Priority filter buttons
+            document.querySelectorAll('.priority-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.priority-filter').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentPriorityFilter = e.target.dataset.priority;
                     renderEnhancements();
                 });
             });

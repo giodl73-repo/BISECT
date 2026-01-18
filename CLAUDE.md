@@ -67,10 +67,13 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 ## Common Commands
 
 ```bash
-# Pipeline
+# Pipeline (production - outputs/v1/{year}/)
 run_redistricting.bat --version v1                    # Multi-year parallel (2-4h)
 run_redistricting.bat --year 2020 --version v1        # Single year (~1h)
 run_redistricting.bat --version v1 --skip-states      # National only (fast)
+
+# Test/debug runs (outputs/dev/{version}_{year}/)
+run_test.bat --year 2020 --version my_test            # Test run
 python scripts/pipeline/run_complete_redistricting.py --print-only  # Dry run
 
 # Dashboard

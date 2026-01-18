@@ -1,7 +1,7 @@
 # Enhancement 27: Electoral College County-Based Reform
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: Medium-High (8-12 hours)
 

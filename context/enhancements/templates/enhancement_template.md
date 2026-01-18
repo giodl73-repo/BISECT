@@ -1,10 +1,18 @@
 # Enhancement XX: [Title]
 
-**Status**: 📋 PLANNED / 🔄 IN PROGRESS / ✅ COMPLETED
-**Priority**: Low / Medium / High / Critical
-**Estimated Complexity**: Low / Medium / Medium-High / High / Very High
-**Created**: [Date]
-**Completed**: [Date] _(if completed)_
+**Status**: Proposed | In Progress | Completed | Cancelled
+**Priority**: Critical | High | Medium | Low | Research
+**Estimated Effort**: Small (< 2h) | Medium (2-8h) | Large (8-40h) | XL (> 40h)
+**Created**: YYYY-MM-DD
+**Completed**: YYYY-MM-DD _(if completed)_
+
+## Priority Levels
+
+- **Critical**: Blocker for publication or core functionality (must do now)
+- **High**: Important for project goals, significant impact (next 1-2 sprints)
+- **Medium**: Valuable but not urgent (next quarter)
+- **Low**: Quality-of-life improvements (when time permits)
+- **Research**: Experimental/exploratory work (no timeline)
 
 ## Current State
 

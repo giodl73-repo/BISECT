@@ -1,7 +1,7 @@
 # Enhancement 44: Real-World Redistricting Constraints
 
 **Status**: Proposed
-**Priority**: Medium-Low (Research/Policy)
+**Priority**: Medium
 **Created**: January 17, 2026
 
 ## Problem Statement

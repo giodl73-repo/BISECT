@@ -1,7 +1,7 @@
 # Enhancement 26: Demographic Similarity Districts
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: Very High (18-22 hours)
 

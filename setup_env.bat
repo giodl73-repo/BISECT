@@ -61,6 +61,7 @@ doskey ghr=gh repo view
 
 REM Project shortcuts - Pipeline
 doskey run=run_redistricting.bat $*
+doskey runtest=run_test.bat $*
 doskey cancel=CANCEL.bat
 doskey validate=python scripts/validation/validate_pipeline_outputs.py $*
 
@@ -96,6 +97,7 @@ echo.
 echo Quick Commands:
 echo   Pipeline:
 echo     run --version v1                - Run redistricting (multi-year)
+echo     runtest --year 2020 --version t - Test run (outputs to dev/)
 echo     test                            - Run test suite
 echo     dash --year 2020 --version v1   - Deploy dashboard
 echo     cancel                          - Cancel running pipeline

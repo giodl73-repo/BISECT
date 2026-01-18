@@ -419,6 +419,282 @@ class TestRunCompleteRedistricting:
         assert '--workers' in content, "Should have --workers argument"
 
 
+# ============================================================================
+# HIGH PRIORITY: Scripts that caused or are involved in V6 failure
+# ============================================================================
+
+class TestProcessNation:
+    """Test process_nation.py - National post-processing orchestrator (V6 failure point)."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+    def test_has_main_function(self):
+        """Test that script has a main() function."""
+        script = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        assert 'def main():' in content, "Script must have main() function"
+        assert 'if __name__ == \'__main__\':' in content, "Script must be executable"
+
+    def test_has_error_logging(self):
+        """Test that script uses error logger for debugging failures."""
+        script_path = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
+
+        with open(script_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        assert 'get_error_logger' in content or 'ErrorLogger' in content, \
+            "Should use error logger to catch V6-style failures"
+
+
+class TestVisualizeNationalRounds:
+    """Test visualize_national_rounds.py - Script that failed in V6 run."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'visualize_national_rounds.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+    def test_has_error_logging(self):
+        """Test that script uses error logger."""
+        script_path = project_root / 'scripts' / 'pipeline' / 'visualize_national_rounds.py'
+
+        with open(script_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Should have error logger for debugging
+        assert 'get_error_logger' in content or 'ErrorLogger' in content, \
+            "Should use error logger (this script failed in V6)"
+
+
+class TestRunStateRedistricting:
+    """Test run_state_redistricting.py - State-level orchestrator."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'run_state_redistricting.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+    def test_has_argument_parser(self):
+        """Test that script has argparse for CLI execution."""
+        script = project_root / 'scripts' / 'pipeline' / 'run_state_redistricting.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        assert 'argparse.ArgumentParser' in content, "Should use argparse"
+        assert '--state' in content, "Should have --state argument"
+
+
+class TestAddCitiesToDistricts:
+    """Test add_cities_to_districts.py - Called for every state."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'add_cities_to_districts.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestCreateUSAggregate:
+    """Test create_us_aggregate.py - Used in national post-processing."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'create_us_aggregate.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestCreateUSRoundsHierarchy:
+    """Test create_us_rounds_hierarchy.py - Used in national post-processing."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'create_us_rounds_hierarchy.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestVisualizeNationalDistricts:
+    """Test visualize_national_districts.py - Used in national post-processing."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'visualize_national_districts.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+# ============================================================================
+# REMAINING SCRIPTS: Data processing and utilities
+# ============================================================================
+
+class TestCreateSingleDistrictStates:
+    """Test create_single_district_states.py - Creates at-large districts."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'create_single_district_states.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestExportRoundsToCSV:
+    """Test export_rounds_to_csv.py - Exports round data."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'export_rounds_to_csv.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestCleanupDistrictSummary:
+    """Test cleanup_district_summary.py - Cleans up summary files."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'cleanup_district_summary.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestFillMissingCities:
+    """Test fill_missing_cities.py - Fills missing city data."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'fill_missing_cities.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestFix2010MissingOutputs:
+    """Test fix_2010_missing_outputs.py - One-off fix for 2010 data."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'fix_2010_missing_outputs.py'
+
+        if not script.exists():
+            pytest.skip("Script may have been removed after fix was applied")
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestVisualizeDistricts:
+    """Test visualize_districts.py - District visualization."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'visualize_districts.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
+class TestVisualizeSplit:
+    """Test visualize_split.py - Split visualization."""
+
+    def test_script_imports_successfully(self):
+        """Test that script can be imported without syntax errors."""
+        script = project_root / 'scripts' / 'pipeline' / 'visualize_split.py'
+
+        with open(script, 'r', encoding='utf-8') as f:
+            code = f.read()
+
+        try:
+            compile(code, str(script), 'exec')
+        except SyntaxError as e:
+            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+
 # Pytest markers
 pytestmark = [
     pytest.mark.e2e,

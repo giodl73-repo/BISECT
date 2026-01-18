@@ -547,14 +547,14 @@ def create_argument_parser():
     """Create and configure argument parser for the pipeline."""
     parser = argparse.ArgumentParser(description='Run complete US redistricting pipeline')
     parser.add_argument('--output-dir', type=str, help='Output directory (overrides year and version)')
-    parser.add_argument('--year', type=str, default='all', choices=['2020', '2010', '2000', 'all'],
+    parser.add_argument('-y', '--year', type=str, default='all', choices=['2020', '2010', '2000', 'all'],
                         help='Census year: 2020, 2010, 2000, or "all" to run all three in parallel (default: all)')
-    parser.add_argument('--version', type=str, default='v1', help='Version identifier (default: v1)')
-    parser.add_argument('--workers', type=int, default=12,
+    parser.add_argument('-v', '--version', type=str, default='v1', help='Version identifier (default: v1)')
+    parser.add_argument('-w', '--workers', type=int, default=12,
                         help='Number of parallel workers: 1=sequential, 2-24=parallel (default: 12)')
-    parser.add_argument('--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
+    parser.add_argument('-d', '--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
                         help='DPI for output maps (default: 150). Higher = better quality but slower.')
-    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
+    parser.add_argument('-e', '--election-year', type=str, default='2020', choices=['2020', '2016'],
                         help='Election year for political analysis (default: 2020)')
     parser.add_argument('--run-analysis', action='store_true', default=True,
                         help='Run per-state analysis (political, demographic, compactness) during state processing (default: True)')
@@ -570,9 +570,9 @@ def create_argument_parser():
                         help='Process states only, skip post-processing (useful for multi-year runs)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
-    parser.add_argument('--reset', action='store_true',
+    parser.add_argument('-r', '--reset', action='store_true',
                         help='Delete output directory before starting (fresh run, not incremental)')
-    parser.add_argument('--print-only', action='store_true',
+    parser.add_argument('-p', '--print-only', action='store_true',
                         help='Print commands without executing (debug mode)')
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug mode with progress delays')

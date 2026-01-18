@@ -76,17 +76,25 @@ Process killed (out of memory)
 
 **Issue 7 - Path Not Found**:
 ```
-FileNotFoundError: outputs/us_2020_v1/states/new_york/data/districts.csv
+FileNotFoundError: outputs/v1/2020/states/new_york/data/districts.csv
 ```
-**Diagnosis**: `ls outputs/us_2020_v1/states/` + check name format (lowercase_underscores: `new_york` not `New_York`)
-**Fix**: Verify lowercase_with_underscores, check `--version` matches, verify redistricting completed for state
+**Diagnosis**: Check output directory structure:
+- Production: `outputs/v1/2020/states/` (default `--run-type production`)
+- Test/Dev: `outputs/dev/v1_2020/states/` (use `--run-type test`)
+- Experiment: `outputs/experiments/{name}/v1_2020/states/`
+**Fix**: Verify correct `--run-type`, lowercase_underscores state names, `--version` matches, redistricting completed for state
 
 ### Step 3: Test Fix with Small State
-After applying fix:
+After applying fix, test with small state using `run_test.bat` (outputs to `dev/`):
 ```bash
+# Windows
+run_test.bat --year 2020 --version debug_test --states "VT"
+
+# Direct Python call
 python scripts/pipeline/run_complete_redistricting.py \
-  --year 2020 --version debug_test --states "VT"
+  --year 2020 --version debug_test --run-type test --states "VT"
 ```
+**Output location**: `outputs/dev/debug_test_2020/` (keeps test runs organized)
 If Vermont succeeds → test full pipeline
 
 ### Step 4: Check Known Issues
@@ -103,7 +111,7 @@ If Vermont succeeds → test full pipeline
 - [ ] Unicode characters checked (Windows)
 - [ ] Memory usage checked
 - [ ] Path formats verified
-- [ ] Small state test attempted
+- [ ] Small state test attempted with `run_test.bat` (outputs to `dev/`)
 - [ ] Known issues reviewed in docs
 
 ## Error Categories

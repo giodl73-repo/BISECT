@@ -1,7 +1,7 @@
 # Enhancement 28: Multi-Member Districts
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: High (12-16 hours)
 

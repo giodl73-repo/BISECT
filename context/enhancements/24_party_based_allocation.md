@@ -1,7 +1,7 @@
 # Enhancement 24: Party-Based District Allocation
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: Very High (20-25 hours)
 

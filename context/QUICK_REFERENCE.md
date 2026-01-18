@@ -6,11 +6,17 @@
 
 ### Pipeline
 ```bash
-run_redistricting.bat --version v1                    # Multi-year parallel (all 3 years) - 2-4h
-run_redistricting.bat --year 2020 --version v1        # Single year - ~1h
-run_redistricting.bat --workers 12 --version v1       # Custom workers (4+4+4 allocation)
-run_redistricting.bat --version v1 --reset            # Fresh run (delete outputs)
-run_redistricting.bat --version v1 --skip-states      # National only (fast - minutes)
+# Production runs (outputs/v1/{year}/)
+run_redistricting.bat -v v1                           # Multi-year parallel (all 3 years) - 2-4h
+run -v v1                                             # Short alias (doskey + short flags)
+run_redistricting.bat -y 2020 -v v1                   # Single year - ~1h
+run_redistricting.bat --workers 12 -v v1              # Custom workers (4+4+4 allocation)
+run_redistricting.bat -v v1 --reset                   # Fresh run (delete outputs)
+run_redistricting.bat -v v1 --skip-states             # National only (fast - minutes)
+
+# Test/debug runs (outputs/dev/{version}_{year}/)
+run_test.bat -y 2020 -v my_test                       # Test run (uses --run-type test)
+runtest -y 2020 -v test                               # Short alias (doskey + short flags)
 python scripts/pipeline/run_complete_redistricting.py --print-only  # Dry run
 
 # Single state

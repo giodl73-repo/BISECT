@@ -256,6 +256,18 @@ def get_stats():
         # Completion rate
         completion_rate = (completed / total * 100) if total > 0 else 0
 
+        # Priority distribution
+        priority_dist = {}
+        for e in enhancements:
+            priority = e.get('priority', 'Unknown')
+            # Extract first word (Critical/High/Medium/Low/Research)
+            match = re.match(r'(Critical|High|Medium|Low|Research)', priority)
+            if match:
+                level = match.group(1)
+                priority_dist[level] = priority_dist.get(level, 0) + 1
+            else:
+                priority_dist['Unknown'] = priority_dist.get('Unknown', 0) + 1
+
         # Complexity distribution
         complexity_dist = {}
         for e in enhancements:
@@ -300,6 +312,7 @@ def get_stats():
             'in_progress': in_progress,
             'planned': planned,
             'completion_rate': round(completion_rate, 1),
+            'priority_distribution': priority_dist,
             'complexity_distribution': complexity_dist,
             'recent_completions': recent_completions[:10]  # Top 10
         })

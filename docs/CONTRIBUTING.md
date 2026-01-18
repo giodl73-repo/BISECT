@@ -298,6 +298,18 @@ git push -u origin docs/update-readme
 7. Complete with updated documentation
 ```
 
+**Enhancement Priorities**:
+
+When creating enhancements, assign a priority to help with planning:
+
+- **Critical**: Blocks publication or breaks core functionality → work on immediately
+- **High**: Answers key research questions, significant impact → next 1-2 sprints
+- **Medium**: Improves quality/capabilities but not urgent → next quarter
+- **Low**: Quality-of-life improvements, polish → when time permits
+- **Research**: Experimental/exploratory work, uncertain value → no timeline
+
+View enhancements by priority: [INDEX.md - By Priority](../context/enhancements/INDEX.md#by-priority)
+
 See [SKILLS.md](SKILLS.md) for detailed enhancement workflow documentation.
 
 ---

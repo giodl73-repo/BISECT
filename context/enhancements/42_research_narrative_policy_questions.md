@@ -1,7 +1,7 @@
 # Enhancement 42: Research Narrative and Policy Questions
 
 **Status**: Proposed
-**Priority**: High (Critical for Publication)
+**Priority**: Critical
 **Created**: January 17, 2026
 
 ## Problem Statement

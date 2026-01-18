@@ -1,7 +1,7 @@
 # Enhancement: Filter Corner Adjacencies from Adjacency Graphs
 
 **Status**: Proposed  
-**Priority**: Low (quality-of-life improvement)  
+**Priority**: Low  
 **Created**: January 14, 2026
 
 ## Problem

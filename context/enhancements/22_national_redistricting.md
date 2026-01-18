@@ -1,7 +1,7 @@
 # Enhancement 22: National Redistricting (No State Boundaries)
 
 **Status**: 📋 PLANNED
-**Priority**: Low (Research/Experimental)
+**Priority**: Research
 **Proposed**: January 15, 2026
 **Estimated Complexity**: High (10-15 hours)
 
