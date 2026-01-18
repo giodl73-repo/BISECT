@@ -70,18 +70,18 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 # Pipeline (production - outputs/v1/{year}/)
 run -v v1                                             # Multi-year parallel (2-4h) - doskey alias
 run -y 2020 -v v1                                     # Single year (~1h)
-run -y 2020 -v v1 -s CA TX NY                         # Specific states only
-run -v v1 --skip-states                               # National only (fast)
+run -y 2020 -v v1 -st CA TX NY                        # Specific states only
+run -v v1 -s nation                                   # National only (fast)
 
 # Test/debug runs (outputs/dev/{version}_{year}/)
 runtest -y 2020 -v test                               # Test run - doskey alias
-runtest -y 2020 -v test -s VT                         # Test single state
+runtest -y 2020 -v test -st VT                        # Test single state
 run -p -v test                                        # Dry run (print-only)
 run -v v1 -d                                          # Debug mode (progress delays)
 
-# Short flags: -h=help, -y=year, -v=version, -s=states, -w=workers, -r=reset,
+# Short flags: -h=help, -y=year, -v=version, -s=stages, -st=states, -w=workers, -r=reset,
 #              -p=print-only, -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
-# Long forms also work: --help, --year, --version, --states, --workers, --dpi, etc.
+# Long forms also work: --help, --year, --version, --stages, --states, --workers, --dpi, etc.
 
 # Dashboard
 python scripts/web/generate_master_dashboard.py

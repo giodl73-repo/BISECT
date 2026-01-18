@@ -10,16 +10,16 @@
 run -h                                                # Show all options and flags
 run -v v1                                             # Multi-year parallel - 2-4h (doskey alias)
 run -y 2020 -v v1                                     # Single year - ~1h
-run -y 2020 -v v1 -s CA TX NY                         # Specific states only
+run -y 2020 -v v1 -st CA TX NY                        # Specific states only
 run -w 16 -v v1                                       # Custom workers (5+5+6 allocation)
 run -v v1 -r                                          # Fresh run (reset/delete outputs)
 run -v v1 -d                                          # Debug mode (progress delays)
-run -v v1 --skip-states                               # National only (fast - minutes)
+run -v v1 -s nation                                   # National only (fast - minutes)
 run -p -v test                                        # Dry run (print only)
 
 # Test/debug runs (outputs/dev/{version}_{year}/)
 runtest -y 2020 -v my_test                            # Test run (doskey alias)
-runtest -y 2020 -v test -s VT                         # Test with single state
+runtest -y 2020 -v test -st VT                        # Test with single state
 
 # Long forms also work (short flags are optional)
 run --year 2020 --version v1 --workers 12 --reset    # All long flags

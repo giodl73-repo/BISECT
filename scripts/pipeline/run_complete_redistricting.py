@@ -564,9 +564,9 @@ def create_argument_parser():
                         help='Skip political analysis steps')
     parser.add_argument('--skip-demographic', action='store_true',
                         help='Skip demographic analysis steps')
-    parser.add_argument('--stages', type=str, nargs='+', default=['data', 'states', 'nation'],
+    parser.add_argument('-s', '--stages', type=str, nargs='+', default=['data', 'states', 'nation'],
                         choices=['data', 'states', 'nation'],
-                        help='Which pipeline stages to run (default: all three). Examples: --stages data (data only), --stages states nation (skip data processing), --stages nation (post-processing only)')
+                        help='Which pipeline stages to run (default: all three). Examples: -s data (data only), -s states nation (skip data), -s nation (post-processing only)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
     parser.add_argument('-r', '--reset', action='store_true',
@@ -583,7 +583,7 @@ def create_argument_parser():
                         help='Run type: "production" (outputs/v{version}/{year}/), "experiment" (outputs/experiments/{experiment_name}/), or "test" (outputs/dev/) (default: production)')
     parser.add_argument('--experiment-name', type=str,
                         help='Experiment name (required when --run-type=experiment)')
-    parser.add_argument('-s', '--states', nargs='*', default=None,
+    parser.add_argument('-st', '--states', nargs='*', default=None,
                         help='Specific state codes to process (default: all states)')
     return parser
 
