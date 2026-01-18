@@ -482,18 +482,38 @@ def run_single_year_pipeline(year, workers_for_year, args):
             env = os.environ.copy()
             env['MULTI_YEAR_SUBPROCESS'] = '1'
 
-            # Capture output to avoid interfering with parent progress display
-            result = subprocess.run(cmd_states, capture_output=True, env=env)
-            if result.returncode != 0:
-                error_msg = f"State processing failed with code {result.returncode}"
+            # Use Popen to forward STATUS messages
+            cmd_states_str = ' '.join(cmd_states)
+            proc = subprocess.Popen(cmd_states_str, shell=True, env=env,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   text=True, bufsize=1)
+
+            # Forward STATUS messages to parent
+            for line in proc.stdout:
+                print(line, end='', flush=True)
+
+            proc.wait()
+            if proc.returncode != 0:
+                error_msg = f"State processing failed with code {proc.returncode}"
                 sys.stderr.write(f"[{year}] FAILED: {error_msg}\n")
                 sys.stderr.flush()
                 return (year, False, error_msg)
 
-            # Run post-processing
-            result = subprocess.run(cmd_post, capture_output=True, env=env)
-            if result.returncode != 0:
-                error_msg = f"Post-processing failed with code {result.returncode}"
+            # Run post-processing (also forward STATUS messages)
+            cmd_post_str = ' '.join(cmd_post)
+            proc = subprocess.Popen(cmd_post_str, shell=True, env=env,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   text=True, bufsize=1)
+
+            # Forward STATUS messages to parent
+            for line in proc.stdout:
+                print(line, end='', flush=True)
+
+            proc.wait()
+            if proc.returncode != 0:
+                error_msg = f"Post-processing failed with code {proc.returncode}"
                 sys.stderr.write(f"[{year}] FAILED: {error_msg}\n")
                 sys.stderr.flush()
                 return (year, False, error_msg)
@@ -898,6 +918,15 @@ def main():
                             if now - last_display_time[0] >= 1.0:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
+                    elif msg_type == 'YEAR_PHASE':
+                        with display_lock:
+                            phase_desc = f"Phase {data['phase']}: {data['phase_desc']}"
+                            coordinator.update_year_phase(data['year'], phase_desc)
+                            # Refresh display (throttled)
+                            now = time.time()
+                            if now - last_display_time[0] >= 1.0:
+                                clear_and_update_display(coordinator)
+                                last_display_time[0] = now
                     elif msg_type == 'WORKER':
                         with display_lock:
                             coordinator.update_worker_status(
@@ -908,6 +937,21 @@ def main():
                                 data['stage'],
                                 data['stage_total'],
                                 data['stage_desc']
+                            )
+                            # Refresh display (throttled)
+                            now = time.time()
+                            if now - last_display_time[0] >= 1.0:
+                                clear_and_update_display(coordinator)
+                                last_display_time[0] = now
+                    elif msg_type == 'WORKER_TASK':
+                        with display_lock:
+                            coordinator.update_worker_task(
+                                data['year'],
+                                data['worker_id'],
+                                data['task_index'],
+                                data['task_total'],
+                                data['task_name'],
+                                data['progress']
                             )
                             # Refresh display (throttled)
                             now = time.time()
