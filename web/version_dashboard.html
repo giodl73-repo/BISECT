@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{VERSION} Dashboard - Algorithmic Redistricting</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin-bottom: 1.5rem;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1rem;
+        }
+
+        .breadcrumb a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .breadcrumb a:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .quick-links-label {
+            font-weight: 600;
+            opacity: 0.9;
+        }
+
+        .run-link-badge {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .run-link-badge.year-2020 {
+            background: #a29bfe;
+            color: #6c5ce7;
+            border-color: #6c5ce7;
+        }
+
+        .run-link-badge.year-2010 {
+            background: #fab1a0;
+            color: #e17055;
+            border-color: #e17055;
+        }
+
+        .run-link-badge.year-2000 {
+            background: #ffeaa7;
+            color: #d63031;
+            border-color: #d63031;
+        }
+
+        .run-link-badge:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .view-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .view-tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .view-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .view-tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .view-content {
+            display: none;
+            padding: 2rem;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background: #5568d3;
+        }
+
+        th.sortable::after {
+            content: ' \u2195';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+
+        th.sorted-asc::after {
+            content: ' \u2191';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: ' \u2193';
+            opacity: 1;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .improvement-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .improvement-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .metric-highlight {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .year-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .year-2000 { background: #ffeaa7; color: #d63031; }
+        .year-2010 { background: #fab1a0; color: #e17055; }
+        .year-2020 { background: #a29bfe; color: #6c5ce7; }
+
+        .config-table {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .config-table table {
+            box-shadow: none;
+        }
+
+        .config-table thead {
+            background: #495057;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+
+        .filter-controls label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-controls select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .filter-controls select:hover {
+            border-color: #667eea;
+        }
+
+        .filter-controls select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 3rem;
+            color: #999;
+            font-style: italic;
+        }
+
+        .trend-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .trend-up {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .trend-down {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .trend-stable {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <div class="breadcrumb">
+                <a href="../index.html">&larr; Master Dashboard</a>
+            </div>
+            <h1>{VERSION}: {DESCRIPTION}</h1>
+            <div class="subtitle">Cross-Census Year Analysis</div>
+            <div class="quick-links">
+                <span class="quick-links-label">Individual Runs:</span>
+                <div id="quickLinksContainer"></div>
+            </div>
+        </div>
+
+        <div class="view-tabs">
+            <div class="view-tab active" onclick="switchView('overview')">&#128202; Overview</div>
+            <div class="view-tab" onclick="switchView('compactness')">&#128208; Compactness</div>
+            <div class="view-tab" onclick="switchView('demographics')">&#128101; Demographics</div>
+        </div>
+
+        <div id="overview-view" class="view-content active">
+            <div class="section">
+                <h2 class="section-title">Version Configuration</h2>
+                <div id="versionConfigContent"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Completed Runs</h2>
+                <div id="completedRunsContent"></div>
+            </div>
+        </div>
+
+        <div id="compactness-view" class="view-content">
+            <div class="section">
+                <h2 class="section-title">Cross-Year Compactness Comparison</h2>
+                <p class="section-subtitle">Overall compactness scores across all census years</p>
+                <div id="overallCompactnessTable"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">State-by-State Compactness</h2>
+                <div class="filter-controls">
+                    <label for="yearFilter">Filter by Year:</label>
+                    <select id="yearFilter" onchange="filterStateCompactness()">
+                        <option value="all">All Years</option>
+                        <option value="2020">2020</option>
+                        <option value="2010">2010</option>
+                        <option value="2000">2000</option>
+                    </select>
+                </div>
+                <div id="stateCompactnessTable"></div>
+            </div>
+        </div>
+
+        <div id="demographics-view" class="view-content">
+            <div class="section">
+                <h2 class="section-title">Population Trends</h2>
+                <p class="section-subtitle">US population and district count changes across census years</p>
+                <div id="populationTrendsContent"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">District Count Changes (Apportionment)</h2>
+                <p class="section-subtitle">States gaining or losing congressional districts</p>
+                <div id="apportionmentChangesContent"></div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title">Demographic Composition</h2>
+                <p class="section-subtitle">Racial and ethnic composition trends by year</p>
+                <div id="demographicCompositionContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data placeholders (will be replaced by generator script)
+        const VERSION_CONFIG = /* VERSION_CONFIG_PLACEHOLDER */;
+        const COMPARISON_DATA = /* COMPARISON_DATA_PLACEHOLDER */;
+        const RUNS = /* RUNS_PLACEHOLDER */;
+
+        // Extract version-specific data from comparison
+        const versionData = {};
+        for (const year in COMPARISON_DATA) {
+            if (COMPARISON_DATA[year][VERSION_CONFIG.version]) {
+                versionData[year] = COMPARISON_DATA[year][VERSION_CONFIG.version];
+            }
+        }
+
+        // Tab switching
+        function switchView(viewName) {
+            // Hide all views and deactivate all tabs
+            document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
+            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+
+            // Show selected view and activate selected tab
+            document.getElementById(viewName + '-view').classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Initialize dashboard on load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateQuickLinks();
+            populateOverview();
+            populateCompactness();
+            populateDemographics();
+        });
+
+        // Populate quick links to individual runs
+        function populateQuickLinks() {
+            const container = document.getElementById('quickLinksContainer');
+            const years = ['2020', '2010', '2000'];
+
+            years.forEach(year => {
+                const yearRuns = RUNS.filter(r => r.year == year);
+                if (yearRuns.length > 0) {
+                    const badge = document.createElement('a');
+                    badge.className = `run-link-badge year-${year}`;
+                    badge.href = `${year}/index.html`;
+                    badge.textContent = `${year} (${yearRuns[0].num_states || 50} states)`;
+                    container.appendChild(badge);
+                }
+            });
+
+            if (container.children.length === 0) {
+                container.innerHTML = '<span class="no-data">No completed runs</span>';
+            }
+        }
+
+        // Populate Overview tab
+        function populateOverview() {
+            // Version configuration
+            const configContent = document.getElementById('versionConfigContent');
+            let configHTML = '<div class="config-table"><table><thead><tr><th>Setting</th><th>Value</th></tr></thead><tbody>';
+
+            // Add version and description
+            if (VERSION_CONFIG.version) {
+                configHTML += `<tr><td><strong>Version</strong></td><td>${VERSION_CONFIG.version}</td></tr>`;
+            }
+            if (VERSION_CONFIG.description) {
+                configHTML += `<tr><td><strong>Description</strong></td><td>${VERSION_CONFIG.description}</td></tr>`;
+            }
+
+            // Format algorithm object
+            if (VERSION_CONFIG.algorithm) {
+                const algo = VERSION_CONFIG.algorithm;
+                const partitionMode = algo.partition_mode ? algo.partition_mode.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'N/A';
+                const dataLevel = algo.data_level ? algo.data_level.charAt(0).toUpperCase() + algo.data_level.slice(1) : 'N/A';
+                configHTML += `<tr><td><strong>Partition Mode</strong></td><td>${partitionMode}</td></tr>`;
+                configHTML += `<tr><td><strong>Data Level</strong></td><td>${dataLevel}</td></tr>`;
+            }
+
+            // Add edge weight mode if present
+            if (VERSION_CONFIG.edge_weight_mode) {
+                configHTML += `<tr><td><strong>Edge Weight Mode</strong></td><td>${VERSION_CONFIG.edge_weight_mode}</td></tr>`;
+            }
+
+            // Add scaling factor if present
+            if (VERSION_CONFIG.scaling_factor !== undefined) {
+                configHTML += `<tr><td><strong>Scaling Factor</strong></td><td>${VERSION_CONFIG.scaling_factor}</td></tr>`;
+            }
+
+            configHTML += '</tbody></table></div>';
+            configContent.innerHTML = configHTML;
+
+            // Completed runs
+            const runsContent = document.getElementById('completedRunsContent');
+            if (RUNS.length === 0) {
+                runsContent.innerHTML = '<p class="no-data">No completed runs for this version</p>';
+            } else {
+                let runsHTML = '<div class="stats-grid">';
+                RUNS.forEach(run => {
+                    runsHTML += `
+                        <div class="stat-card">
+                            <div class="stat-number">${run.year}</div>
+                            <div class="stat-label">${run.num_states || 50} States</div>
+                            <div class="stat-label" style="margin-top: 0.5rem;">
+                                <a href="${run.year}/index.html" style="color: white; text-decoration: underline;">View Dashboard &rarr;</a>
+                            </div>
+                        </div>
+                    `;
+                });
+                runsHTML += '</div>';
+                runsContent.innerHTML = runsHTML;
+            }
+        }
+
+        // Populate Compactness tab
+        function populateCompactness() {
+            // Overall compactness table
+            const overallTable = document.getElementById('overallCompactnessTable');
+            let html = '<table><thead><tr>';
+            html += '<th class="sortable" onclick="sortTable(this, 0)">Year</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 1)">Algorithmic</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 2)">Enacted</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 3)">Improvement</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 4)">States</th>';
+            html += '</tr></thead><tbody>';
+
+            const years = Object.keys(versionData).sort().reverse();
+            years.forEach(year => {
+                const data = versionData[year];
+                const improvement = data.improvement_pct || 0;
+                const improvementClass = improvement > 0 ? 'improvement-positive' : 'improvement-negative';
+
+                html += `<tr>
+                    <td><span class="year-badge year-${year}">${year}</span></td>
+                    <td class="metric-highlight">${data.algorithmic ? data.algorithmic.toFixed(4) : 'N/A'}</td>
+                    <td>${data.enacted ? data.enacted.toFixed(4) : 'N/A'}</td>
+                    <td class="${improvementClass}">${improvement > 0 ? '+' : ''}${improvement.toFixed(2)}%</td>
+                    <td>${Object.keys(data.states || {}).length}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            overallTable.innerHTML = html;
+
+            // State-by-state table
+            populateStateCompactnessTable();
+        }
+
+        function populateStateCompactnessTable() {
+            const stateTable = document.getElementById('stateCompactnessTable');
+            let html = '<table id="stateCompactnessTableEl"><thead><tr>';
+            html += '<th class="sortable" onclick="sortTable(this, 0)">State</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 1)">Year</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 2)">Algorithmic</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 3)">Enacted</th>';
+            html += '<th class="sortable" onclick="sortTable(this, 4)">Improvement</th>';
+            html += '</tr></thead><tbody>';
+
+            const rows = [];
+            for (const year in versionData) {
+                const data = versionData[year];
+                if (data.states) {
+                    for (const state in data.states) {
+                        const stateData = data.states[state];
+                        rows.push({
+                            state: state,
+                            year: year,
+                            algorithmic: stateData.algorithmic || 0,
+                            enacted: stateData.enacted || 0,
+                            improvement: stateData.improvement_pct || 0
+                        });
+                    }
+                }
+            }
+
+            rows.sort((a, b) => a.state.localeCompare(b.state) || b.year - a.year);
+
+            rows.forEach(row => {
+                const improvementClass = row.improvement > 0 ? 'improvement-positive' : 'improvement-negative';
+                html += `<tr data-year="${row.year}">
+                    <td><strong>${row.state}</strong></td>
+                    <td><span class="year-badge year-${row.year}">${row.year}</span></td>
+                    <td class="metric-highlight">${row.algorithmic.toFixed(4)}</td>
+                    <td>${row.enacted.toFixed(4)}</td>
+                    <td class="${improvementClass}">${row.improvement > 0 ? '+' : ''}${row.improvement.toFixed(2)}%</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            stateTable.innerHTML = html;
+        }
+
+        function filterStateCompactness() {
+            const filter = document.getElementById('yearFilter').value;
+            const rows = document.querySelectorAll('#stateCompactnessTableEl tbody tr');
+
+            rows.forEach(row => {
+                const year = row.getAttribute('data-year');
+                if (filter === 'all' || year === filter) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Populate Demographics tab
+        function populateDemographics() {
+            // Population trends
+            const populationContent = document.getElementById('populationTrendsContent');
+            populationContent.innerHTML = `
+                <div class="info-box">
+                    <strong>Note:</strong> Detailed demographic data requires reading individual run outputs.
+                    This section shows high-level population and district count information from available data.
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number">2000</div>
+                        <div class="stat-label">~281M Population</div>
+                        <div class="stat-label">435 Districts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2010</div>
+                        <div class="stat-label">~309M Population</div>
+                        <div class="stat-label">435 Districts</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">2020</div>
+                        <div class="stat-label">~331M Population</div>
+                        <div class="stat-label">435 Districts</div>
+                    </div>
+                </div>
+            `;
+
+            // Apportionment changes
+            const apportionmentContent = document.getElementById('apportionmentChangesContent');
+            apportionmentContent.innerHTML = `
+                <div class="info-box">
+                    Congressional seats are reapportioned after each census. Some states gain seats while others lose seats based on population changes.
+                    For detailed state-by-state district counts, see the individual year dashboards.
+                </div>
+                <p style="color: #666; font-style: italic; text-align: center; padding: 2rem;">
+                    Detailed apportionment data will be populated from configuration files in future updates.
+                </p>
+            `;
+
+            // Demographic composition
+            const compositionContent = document.getElementById('demographicCompositionContent');
+            compositionContent.innerHTML = `
+                <div class="info-box">
+                    Detailed demographic breakdowns (race, ethnicity, age, gender) are available in individual run dashboards.
+                    This version dashboard focuses on cross-year compactness comparisons.
+                </div>
+                <p style="color: #666; font-style: italic; text-align: center; padding: 2rem;">
+                    For detailed demographic analysis, visit the individual year dashboards linked above.
+                </p>
+            `;
+        }
+
+        // Table sorting
+        function sortTable(header, columnIndex) {
+            const table = header.closest('table');
+            const tbody = table.querySelector('tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+
+            // Determine sort direction
+            const isAsc = header.classList.contains('sorted-asc');
+            const isDesc = header.classList.contains('sorted-desc');
+
+            // Clear all sorted classes
+            table.querySelectorAll('th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+
+            // Set new sort direction
+            if (!isAsc && !isDesc) {
+                header.classList.add('sorted-asc');
+            } else if (isAsc) {
+                header.classList.add('sorted-desc');
+            } else {
+                header.classList.add('sorted-asc');
+            }
+
+            const direction = header.classList.contains('sorted-asc') ? 1 : -1;
+
+            // Sort rows
+            rows.sort((a, b) => {
+                const aText = a.cells[columnIndex].textContent.trim();
+                const bText = b.cells[columnIndex].textContent.trim();
+
+                // Try numeric comparison first
+                const aNum = parseFloat(aText.replace(/[^0-9.-]/g, ''));
+                const bNum = parseFloat(bText.replace(/[^0-9.-]/g, ''));
+
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return (aNum - bNum) * direction;
+                }
+
+                // Fall back to string comparison
+                return aText.localeCompare(bText) * direction;
+            });
+
+            // Re-append rows in sorted order
+            rows.forEach(row => tbody.appendChild(row));
+        }
+    </script>
+</body>
+</html>

@@ -15,6 +15,9 @@ REM   create_test_data.bat --quick      - Quick test dataset (VT, DE only)
 REM   create_test_data.bat --full       - All 50 states (slow, for comprehensive testing)
 REM ============================================================================
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 setlocal enabledelayedexpansion
 
 REM Parse command-line arguments

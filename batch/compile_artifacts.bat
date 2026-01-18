@@ -4,7 +4,8 @@ REM
 REM This script compiles figures, presentations, and papers in the correct order,
 REM ensuring all dependencies are met.
 
-cd /d %~dp0
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
 
 REM Parse command-line arguments
 set YEAR=2020

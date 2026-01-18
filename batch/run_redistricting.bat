@@ -5,6 +5,9 @@ REM Supports Ctrl+C cancellation
 REM NOTE: For best viewing, resize your terminal to at least 60 lines tall and 120 columns wide
 REM This allows you to see all 50 state progress bars plus post-processing output
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 REM Pass all arguments to the Python script
 python scripts/pipeline/run_complete_redistricting.py %*
 

@@ -2,6 +2,9 @@
 REM Test execution script for pipeline tests
 REM Usage: run_tests.bat [test_type]
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 setlocal enabledelayedexpansion
 
 REM Parse arguments

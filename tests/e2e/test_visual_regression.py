@@ -66,7 +66,7 @@ def test_run_dashboard_overview_tab(page: Page, dashboard_url: str, baseline_dir
     page.locator('.state-item[data-state="vermont"]').click()
 
     # Click Overview tab (should be default)
-    page.locator('.tab[data-tab="overview"]').click()
+    page.locator('.dimension-tab[data-dimension="overview"]').click()
 
     # Wait for content
     page.wait_for_timeout(500)  # Brief pause for rendering
@@ -87,7 +87,7 @@ def test_run_dashboard_districts_tab(page: Page, dashboard_url: str, baseline_di
     page.locator('.state-item[data-state="vermont"]').click()
 
     # Click Districts tab
-    page.locator('.tab[data-tab="districts"]').click()
+    page.locator('.dimension-tab[data-dimension="districts"]').click()
 
     # Wait for content
     page.wait_for_timeout(500)
@@ -108,7 +108,7 @@ def test_run_dashboard_rounds_tab(page: Page, dashboard_url: str, baseline_dir: 
     page.locator('.state-item[data-state="vermont"]').click()
 
     # Click Rounds tab
-    page.locator('.tab[data-tab="rounds"]').click()
+    page.locator('.dimension-tab[data-dimension="rounds"]').click()
 
     # Wait for content
     page.wait_for_timeout(500)
@@ -129,7 +129,7 @@ def test_run_dashboard_compactness_tab(page: Page, dashboard_url: str, baseline_
     page.locator('.state-item[data-state="vermont"]').click()
 
     # Click Compactness tab
-    page.locator('.tab[data-tab="compactness"]').click()
+    page.locator('.dimension-tab[data-dimension="compactness"]').click()
 
     # Wait for content
     page.wait_for_timeout(500)
@@ -187,10 +187,10 @@ def test_master_dashboard_comparison_table(page: Page, master_dashboard_url: str
     page.goto(master_dashboard_url)
     page.wait_for_load_state('networkidle')
 
-    # Take screenshot of comparison table
-    table = page.locator('.comparison-table')
+    # Take screenshot of main container (new structure doesn't use .comparison-table)
+    main_container = page.locator('.main-container')
     screenshot_path = baseline_dir / 'master_dashboard_comparison_table.png'
-    table.screenshot(path=str(screenshot_path))
+    main_container.screenshot(path=str(screenshot_path))
 
 
 @pytest.mark.visual
@@ -199,10 +199,10 @@ def test_master_dashboard_run_cards(page: Page, master_dashboard_url: str, basel
     page.goto(master_dashboard_url)
     page.wait_for_load_state('networkidle')
 
-    # Take screenshot of run cards section
-    cards = page.locator('.run-cards')
+    # Take screenshot of view tabs section (new structure uses .view-tabs, not .run-cards)
+    view_tabs = page.locator('.view-tabs')
     screenshot_path = baseline_dir / 'master_dashboard_run_cards.png'
-    cards.screenshot(path=str(screenshot_path))
+    view_tabs.screenshot(path=str(screenshot_path))
 
 
 # ============================================================================
@@ -325,18 +325,18 @@ def test_visual_regression_comparison_table(page: Page, master_dashboard_url: st
     page.goto(master_dashboard_url)
     page.wait_for_load_state('networkidle')
 
-    # Compare screenshot
-    table = page.locator('.comparison-table')
+    # Compare screenshot (new structure uses .main-container, not .comparison-table)
+    main_container = page.locator('.main-container')
 
     try:
-        expect(table).to_have_screenshot(
+        expect(main_container).to_have_screenshot(
             'master_dashboard_comparison_table.png',
             max_diff_pixels=100
         )
     except AssertionError as e:
         # Save diff screenshot
         diff_path = diff_dir / 'master_dashboard_comparison_table_diff.png'
-        table.screenshot(path=str(diff_path))
+        main_container.screenshot(path=str(diff_path))
         raise AssertionError(f"Visual regression detected. Diff saved to: {diff_path}") from e
 
 

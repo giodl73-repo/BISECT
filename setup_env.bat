@@ -11,6 +11,9 @@ mode con: cols=120 lines=40
 REM Change to project directory
 cd /d "%~dp0"
 
+REM Add batch directory to PATH so shortcuts work
+set PATH=%CD%\batch;%PATH%
+
 REM Set Python path (add your Python installation if needed)
 REM set PATH=C:\Python313;C:\Python313\Scripts;%PATH%
 

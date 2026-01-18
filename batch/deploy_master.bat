@@ -10,6 +10,9 @@ REM Usage:
 REM   deploy_master.bat                  (regenerate everything - default)
 REM   deploy_master.bat --skip-dashboards (fast mode - only update master)
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 setlocal enabledelayedexpansion
 
 REM Parse arguments

@@ -178,6 +178,115 @@ def _create_placeholder_png(path: Path):
     path.write_bytes(png_data)
 
 
+@pytest.fixture(scope='session')
+def master_dashboard_path(project_root, tmp_path_factory):
+    """Generate master dashboard HTML for testing."""
+    # Create temp outputs directory
+    temp_outputs = tmp_path_factory.mktemp('master_outputs')
+
+    # Create version directory structure: v1/2020/, v1/2010/
+    v1_dir = temp_outputs / 'v1'
+    v1_dir.mkdir()
+
+    # Create subdirectories for each census year
+    for year in ['2020', '2010', '2000']:
+        year_dir = v1_dir / year
+        year_dir.mkdir()
+        states_dir = year_dir / 'states'
+        states_dir.mkdir()
+
+        # Create minimal state data
+        vt_dir = states_dir / 'vermont'
+        vt_dir.mkdir()
+        (vt_dir / 'data').mkdir()
+        pd.DataFrame({
+            'district': [1],
+            'population': [643077],
+            'polsby_popper': [0.345],
+            'reock': [0.456]
+        }).to_csv(vt_dir / 'data' / 'district_summary.csv', index=False)
+
+    # Copy master dashboard template
+    template_path = project_root / 'web' / 'master_dashboard.html'
+    output_path = temp_outputs / 'index.html'
+
+    if template_path.exists():
+        shutil.copy(template_path, output_path)
+    else:
+        # Create minimal master dashboard
+        _create_minimal_master_dashboard(output_path)
+
+    return output_path
+
+
+@pytest.fixture(scope='session')
+def master_dashboard_url(master_dashboard_path):
+    """Get file:// URL for master dashboard."""
+    return master_dashboard_path.as_uri()
+
+
+def _create_minimal_master_dashboard(path: Path):
+    """Create minimal HTML master dashboard for testing."""
+    html = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Master Dashboard</title>
+    <style>
+        .main-container { max-width: 1400px; margin: 0 auto; }
+        .header { padding: 2rem; }
+        .view-tabs { display: flex; }
+        .view-tab { padding: 10px 20px; cursor: pointer; }
+        table { width: 100%; }
+        th { padding: 1rem; cursor: pointer; }
+        td { padding: 0.75rem; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Algorithmic Redistricting</h1>
+        </div>
+        <div class="view-tabs">
+            <div class="view-tab active">Versions</div>
+            <div class="view-tab">Compactness</div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Census Year</th>
+                    <th>PP Score</th>
+                    <th>Districts</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>2020</td>
+                    <td>0.345</td>
+                    <td>435</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        // Mock RUNS_DATA and COMPARISON_DATA for tests
+        const RUNS_DATA = [{
+            version: 'v1',
+            year: '2020',
+            mode: 'Edge-Weighted',
+            states: 1,
+            path: 'v1/2020/index.html'
+        }];
+        const COMPARISON_DATA = {
+            '2020': { algorithmic: 0.345, enacted: 0.234, improvement: 47.4 }
+        };
+    </script>
+</body>
+</html>
+    """
+    path.write_text(html, encoding='utf-8')
+
+
 def _create_minimal_dashboard(path: Path):
     """Create minimal HTML dashboard for testing."""
     html = """<!DOCTYPE html>
@@ -194,8 +303,8 @@ def _create_minimal_dashboard(path: Path):
         .state-item:hover { background: #2c3e50; }
         .content-area { margin-left: 250px; padding: 20px; }
         .tabs { display: flex; border-bottom: 2px solid #2c3e50; margin-bottom: 20px; }
-        .tab { padding: 10px 20px; cursor: pointer; border: none; background: none; }
-        .tab.active { border-bottom: 3px solid #3498db; font-weight: bold; }
+        .dimension-tab { padding: 10px 20px; cursor: pointer; border: none; background: none; }
+        .dimension-tab.active { border-bottom: 3px solid #3498db; font-weight: bold; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         table { border-collapse: collapse; width: 100%; }
@@ -215,10 +324,10 @@ def _create_minimal_dashboard(path: Path):
 
     <div class="content-area">
         <div class="tabs">
-            <button class="tab active" data-tab="overview">Overview</button>
-            <button class="tab" data-tab="districts">Districts</button>
-            <button class="tab" data-tab="rounds">Rounds</button>
-            <button class="tab" data-tab="compactness">Compactness</button>
+            <button class="dimension-tab active" data-dimension="overview">Overview</button>
+            <button class="dimension-tab" data-dimension="districts">Districts</button>
+            <button class="dimension-tab" data-dimension="rounds">Rounds</button>
+            <button class="dimension-tab" data-dimension="compactness">Compactness</button>
         </div>
 
         <div id="overview" class="tab-content active">

@@ -236,6 +236,35 @@
             cursor: not-allowed;
         }
 
+        .version-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .version-card:hover {
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .version-card-clickable {
+            /* This area is clickable and navigates to version dashboard */
+        }
+
+        .version-card-runs {
+            /* Run cards inside here are NOT clickable by version card */
+            pointer-events: none;
+        }
+
+        .version-card-runs .run-card {
+            /* Re-enable pointer events for run cards */
+            pointer-events: auto;
+        }
+
         .run-details {
             margin-top: 1rem;
             padding: 1rem;
@@ -584,19 +613,18 @@
     <div class="main-container">
         <div class="header">
             <h1>Algorithmic Redistricting</h1>
-            <div class="subtitle">Cross-Census Compactness Analysis (2000-2020)</div>
+            <div class="subtitle">Experimental Variants & Analysis (2000-2020)</div>
         </div>
 
         <!-- View Tabs -->
         <div class="view-tabs">
-            <div class="view-tab active" onclick="switchView('overview')">📊 Overview</div>
-            <div class="view-tab" onclick="switchView('versions')">🔬 Versions</div>
+            <div class="view-tab active" onclick="switchView('versions')">🔬 Versions</div>
             <div class="view-tab" onclick="switchView('compactness')">📐 Compactness</div>
             <div class="view-tab" onclick="switchView('artifacts')">📄 Artifacts</div>
         </div>
 
-        <!-- Overview Content -->
-        <div id="overview-view" class="view-content active">
+        <!-- Overview Content (removed - versions is now primary) -->
+        <div id="overview-view" class="view-content" style="display: none;">
             <div style="padding: 2rem;">
                 <div class="section">
                     <h2 class="section-title">Available Redistricting Runs</h2>
@@ -612,13 +640,15 @@
         </div><!-- end overview-view -->
 
         <!-- Versions Content -->
-        <div id="versions-view" class="view-content">
+        <div id="versions-view" class="view-content active">
             <div style="padding: 2rem;">
                 <div class="section">
                     <h2 class="section-title">Experimental Variants & Runs</h2>
                     <p class="section-subtitle">Each version represents a single experimental configuration tested across all census decades</p>
 
-                    <div id="versionsContainer"></div>
+                    <div id="versionsContainer">
+                        <!-- VERSIONS_HTML_PLACEHOLDER -->
+                    </div>
                 </div>
             </div>
         </div><!-- end versions-view -->
@@ -1012,6 +1042,10 @@
             window.location.href = path;
         }
 
+        function openVersionDashboard(versionName) {
+            window.location.href = `${versionName}/index.html`;
+        }
+
         function populateRunsList() {
             const runsListDiv = document.getElementById('runsList');
             const runsByYear = {};
@@ -1032,11 +1066,18 @@
         function populateVersionsView() {
             const container = document.getElementById('versionsContainer');
 
+            if (!container) {
+                console.error('versionsContainer element not found!');
+                return;
+            }
+
             if (!VERSIONS || VERSIONS.length === 0) {
+                console.error('No VERSIONS data:', VERSIONS);
                 container.innerHTML = '<p style="color: #999;">No versions found. Run redistricting with new directory structure to create versions.</p>';
                 return;
             }
 
+            console.log('Populating', VERSIONS.length, 'versions');
             let html = '';
 
             VERSIONS.forEach(version => {
@@ -1044,34 +1085,37 @@
                 const dataLevel = version.data_level.charAt(0).toUpperCase() + version.data_level.slice(1);
 
                 html += `
-                <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                        <div>
-                            <h3 style="color: #667eea; margin: 0; font-size: 1.5rem;">${version.name}</h3>
-                            ${version.description ? `<p style="color: #666; margin: 0.5rem 0 0 0; font-size: 0.95rem;">${version.description}</p>` : ''}
+                <div class="version-card" onclick="openVersionDashboard('${version.name}')">
+                    <div class="version-card-clickable">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div>
+                                <h3 style="color: #667eea; margin: 0; font-size: 1.5rem;">${version.name}</h3>
+                                ${version.description ? `<p style="color: #666; margin: 0.5rem 0 0 0; font-size: 0.95rem;">${version.description}</p>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: #999;">${version.num_runs} run(s)</div>
+                                <div style="font-size: 0.85rem; color: #667eea; margin-top: 0.25rem;">Click to view &rarr;</div>
+                            </div>
                         </div>
-                        <div style="text-align: right; font-size: 0.9rem; color: #999;">
-                            ${version.num_runs} run(s)
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Partition Mode</div>
+                                <div style="font-weight: 600; color: #333;">${partitionMode}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Data Level</div>
+                                <div style="font-weight: 600; color: #333;">${dataLevel}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Completed Years</div>
+                                <div style="font-weight: 600; color: #333;">${version.completed_years.join(', ') || 'None'}</div>
+                            </div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Partition Mode</div>
-                            <div style="font-weight: 600; color: #333;">${partitionMode}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Data Level</div>
-                            <div style="font-weight: 600; color: #333;">${dataLevel}</div>
-                        </div>
-                        <div>
-                            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Completed Years</div>
-                            <div style="font-weight: 600; color: #333;">${version.completed_years.join(', ') || 'None'}</div>
-                        </div>
-                    </div>
-
-                    <div style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
-                        <h4 style="color: #495057; font-size: 1rem; margin-bottom: 0.75rem;">Runs:</h4>
+                    <div class="version-card-runs" style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <h4 style="color: #495057; font-size: 1rem; margin-bottom: 0.75rem;">Individual Runs:</h4>
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
                 `;
 
@@ -1100,7 +1144,9 @@
                 `;
             });
 
+            console.log('Setting container.innerHTML with', html.length, 'characters');
             container.innerHTML = html;
+            console.log('Versions populated successfully');
         }
 
         // Initialize on page load
@@ -1109,7 +1155,7 @@
             setupTableSorting();
             populateRunsGrid();
             populateRunsList();
-            populateVersionsView();
+            // populateVersionsView(); // No longer needed - versions are statically generated
             loadArtifacts();
         });
 

@@ -124,7 +124,9 @@
       "Bash(findstr:*)",
       "Bash(do python -m py_compile \"$f\")",
       "Bash(do python -m py_compile \"$file\")",
-      "Bash(pytest:*)"
+      "Bash(pytest:*)",
+      "Bash(node:*)",
+      "Bash(start \"C:\\\\src\\\\apportionment\\\\outputs\\\\index.html\")"
     ]
   }
 }

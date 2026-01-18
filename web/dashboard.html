@@ -749,13 +749,14 @@
         let currentSort = 'alpha-asc';
         let statesArray = [];
         let runConfig = null;  // Will be loaded from config.json
+        let versionConfig = null;  // Will be loaded from ../version.json
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             prepareStatesArray();
             populateStates();
             setupDimensionTabs();
-            loadConfig();  // Load config.json asynchronously
+            loadConfig();  // Load config.json and version.json asynchronously
 
             // Hide Urban Areas tab for Census 2000 (CBSA classification not available)
             const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
@@ -986,10 +987,11 @@
             contentArea.innerHTML = html;
         }
 
-        // Load config.json
+        // Load config.json and version.json
         async function loadConfig() {
             try {
                 const basePath = getBasePath();
+                // Load run config
                 const response = await fetch(`${basePath}/config.json`);
                 if (response.ok) {
                     runConfig = await response.json();
@@ -997,20 +999,80 @@
                 } else {
                     console.warn('config.json not found');
                 }
+
+                // Load version config (one level up)
+                const versionResponse = await fetch(`${basePath}/../version.json`);
+                if (versionResponse.ok) {
+                    versionConfig = await versionResponse.json();
+                    console.log('Loaded version config:', versionConfig);
+                } else {
+                    console.warn('version.json not found');
+                }
             } catch (error) {
-                console.warn('Error loading config.json:', error);
+                console.warn('Error loading config:', error);
             }
         }
 
         // Generate configuration content
         function generateConfiguration() {
-            if (!runConfig) {
+            if (!runConfig && !versionConfig) {
                 return `
                     <div class="content-card">
-                        <h2>Run Configuration</h2>
+                        <h2>Configuration</h2>
                         <p style="color: #6c757d;">Configuration data not available. This may be an older run without config.json.</p>
                     </div>
                 `;
+            }
+
+            let html = '';
+
+            // Show version configuration first (if available)
+            if (versionConfig) {
+                const vAlgorithm = versionConfig.algorithm || {};
+                const vPipeline = versionConfig.pipeline || {};
+                const completedYears = versionConfig.completed_years || [];
+
+                html += `
+                    <div class="content-card">
+                        <h2>Version Configuration: ${versionConfig.version || 'Unknown'}</h2>
+                        <p style="color: #6c757d; margin-bottom: 1.5rem;">Shared configuration for this experimental variant (version.json)</p>
+
+                        ${versionConfig.description ? `
+                        <div style="padding: 1rem; background: #f8f9fa; border-left: 4px solid #007bff; margin-bottom: 1.5rem;">
+                            <strong>Description:</strong> ${versionConfig.description}
+                        </div>
+                        ` : ''}
+
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Algorithm Configuration</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Partition Mode</td>
+                                <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${vAlgorithm.partition_mode === 'edge_weighted' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${vAlgorithm.partition_mode || 'N/A'}</span></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600;">Data Level</td>
+                                <td style="padding: 0.75rem;">${vAlgorithm.data_level || 'N/A'}</td>
+                            </tr>
+                        </table>
+
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Pipeline Configuration</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600; width: 40%;">DPI</td>
+                                <td style="padding: 0.75rem;">${vPipeline.dpi || 'N/A'}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600;">Completed Years</td>
+                                <td style="padding: 0.75rem;">${completedYears.join(', ') || 'None'}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // Show run-specific configuration
+            if (!runConfig) {
+                return html;
             }
 
             const config = runConfig;
@@ -1019,10 +1081,10 @@
             const pipeline = config.pipeline || {};
             const system = config.system || {};
 
-            return `
-                <div class="content-card">
-                    <h2>Run Configuration</h2>
-                    <p style="color: #6c757d; margin-bottom: 1.5rem;">Configuration snapshot from config.json</p>
+            html += `
+                <div class="content-card" style="margin-top: 2rem;">
+                    <h2>Run-Specific Configuration</h2>
+                    <p style="color: #6c757d; margin-bottom: 1.5rem;">Configuration for this specific census year run (config.json)</p>
 
                     <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Metadata</h3>
                     <table style="width: 100%; border-collapse: collapse;">
@@ -1131,6 +1193,8 @@
                     </table>
                 </div>
             `;
+
+            return html;
         }
 
         // Generate overview content

@@ -7,6 +7,9 @@ REM   deploy_web.bat --year 2020 --version v2
 REM   deploy_web.bat --year 2020 --version v1 --partition-mode unweighted
 REM   deploy_web.bat --year 2020 --version v1 --output-dir outputs/custom
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 setlocal enabledelayedexpansion
 
 REM Default values

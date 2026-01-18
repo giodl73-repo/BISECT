@@ -2,6 +2,9 @@
 REM Open the master dashboard without regenerating it
 REM Just displays the existing outputs/index.html file
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 echo Opening master dashboard...
 
 if not exist "outputs\index.html" (

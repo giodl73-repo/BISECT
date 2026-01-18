@@ -9,6 +9,9 @@ REM   run_dashboard_tests.bat --headed         - Run with visible browser
 REM   run_dashboard_tests.bat --update-baselines - Update visual baselines
 REM ============================================================================
 
+REM Change to project root (one level up from batch/)
+cd /d "%~dp0\.."
+
 setlocal enabledelayedexpansion
 
 REM Parse command-line arguments
