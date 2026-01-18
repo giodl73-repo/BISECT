@@ -1,6 +1,6 @@
 # Claude Code Skills for Congressional Redistricting Project
 
-**Last Updated**: January 15, 2026
+**Last Updated**: January 17, 2026
 
 This document defines reusable skills that AI assistants can use to work effectively on the Congressional Redistricting codebase. Skills encapsulate common workflows, patterns, and best practices learned through 18+ enhancements.
 
@@ -103,7 +103,7 @@ Skills are specialized, reusable capabilities that:
 
 **What it does**:
 1. Reads `docs/CODING_PATTERNS.md` and `docs/ARCHITECTURE.md` for context
-2. Reviews similar enhancements in `docs/ENHANCEMENTS_2026.md`
+2. Reviews similar enhancements in `docs/enhancements/INDEX.md`
 3. Creates enhancement specification with:
    - Current State
    - Goal
@@ -113,7 +113,7 @@ Skills are specialized, reusable capabilities that:
    - Benefits
    - Success Criteria
    - Estimated Complexity
-4. Adds to `docs/ENHANCEMENTS_2026.md` with status: 📋 PLANNED
+4. Adds to `docs/enhancements/INDEX.md` with status: 📋 PLANNED
 5. Gets user approval before proceeding
 
 **Inputs**:
@@ -121,7 +121,7 @@ Skills are specialized, reusable capabilities that:
 - Affected components/systems
 
 **Outputs**:
-- Enhancement entry in ENHANCEMENTS_2026.md
+- Enhancement entry in enhancements/INDEX.md
 - Implementation plan with phases
 
 ---
@@ -149,7 +149,7 @@ Skills are specialized, reusable capabilities that:
 
 **Outputs**:
 - Modified/created files per enhancement spec
-- Updated status in ENHANCEMENTS_2026.md
+- Updated status in enhancements/INDEX.md
 
 ---
 
@@ -159,7 +159,7 @@ Skills are specialized, reusable capabilities that:
 **When to use**: After enhancement implementation and testing complete
 
 **What it does**:
-1. Updates `docs/ENHANCEMENTS_2026.md`:
+1. Updates `docs/enhancements/INDEX.md`:
    - Mark as ✅ COMPLETED with date
    - Add "Completion Date" and "Implementation Summary"
    - Document quantitative results if applicable
@@ -576,7 +576,7 @@ pytest --lf -v
 - CODING_PATTERNS.md
 - DATA_FORMATS.md
 - CHANGELOG.md
-- ENHANCEMENTS_2026.md
+- enhancements/INDEX.md
 - CONTRIBUTING.md
 
 ---

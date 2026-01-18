@@ -36,7 +36,7 @@ pip install pymetis
 run_redistricting.bat --version v1
 
 # Single year with custom workers
-run_redistricting.bat --year 2020 --workers 6 --version v1
+run_redistricting.bat --year 2020 --workers 12 --version v1
 
 # Skip state processing (fast national post-processing only)
 run_redistricting.bat --version v1 --skip-states
@@ -50,13 +50,13 @@ CANCEL.bat
 ```bash
 # Multi-year parallel (DEFAULT) - runs all 3 census years in parallel with hierarchical progress
 python scripts/pipeline/run_complete_redistricting.py --version v1
-# Runs: 2020, 2010, 2000 concurrently with 4 workers (allocates 2+1+1)
+# Runs: 2020, 2010, 2000 concurrently with 12 workers (allocates 4+4+4)
 
 # Single census year
 python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1
 
-# Custom workers (for multi-year: 4 workers → 2+1+1 allocation, 6 workers → 2+2+2)
-python scripts/pipeline/run_complete_redistricting.py --workers 6 --version v1
+# Custom workers (for multi-year: 4 workers → 2+1+1 allocation, 12 workers → 4+4+4)
+python scripts/pipeline/run_complete_redistricting.py --workers 12 --version v1
 
 # Fresh run (delete existing outputs first)
 python scripts/pipeline/run_complete_redistricting.py --version v1 --reset
@@ -69,7 +69,7 @@ python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-analys
 ```
 
 **Performance**:
-- **Multi-year parallel** (default): 2-4 hours for all 3 census years (60-70% faster than sequential)
+- **Multi-year parallel** (default with 12 workers): 2-4 hours for all 3 census years (60-70% faster than sequential)
 - **Single year**: ~1 hour with 4 workers
 - **Subsequent runs** (with `.states_complete` markers): Minutes instead of hours!
 
@@ -303,7 +303,7 @@ For detailed technical documentation, see:
   - Developer workflow
   - CI/CD integration
 
-- **[SKILLS.md](docs/SKILLS.md)** - Claude Code skills for automation (25 skills)
+- **[SKILLS.md](docs/SKILLS.md)** - Claude Code skills for automation (31 skills)
   - Enhancement workflow
   - Pipeline execution
   - Visualization & analysis
@@ -315,7 +315,7 @@ For detailed technical documentation, see:
   - Using Claude Code skills
   - Code review guidelines
 
-- **[ENHANCEMENTS_2026.md](docs/ENHANCEMENTS_2026.md)** - Recent improvements and roadmap
+- **[Enhancement Index](docs/enhancements/INDEX.md)** - Recent improvements and roadmap
   - Completed enhancements
   - Performance optimizations
   - New features and capabilities
@@ -327,7 +327,7 @@ For detailed technical documentation, see:
 
 ## Future Extensions
 
-- Additional census years (2000)
 - Alternative algorithms (K-means, simulated annealing)
-- Compactness optimization
+- Compactness optimization beyond edge-weighted METIS
 - Interactive visualization
+- Additional census years (1990, earlier decades)

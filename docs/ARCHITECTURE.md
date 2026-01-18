@@ -7,8 +7,8 @@ This document explains the design of the redistricting system, key algorithms, a
 ## Related Documentation
 
 - **[CODING_PATTERNS.md](CODING_PATTERNS.md)** - Implementation patterns and coding conventions
-- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Recent improvements and completed enhancements
-- **[SKILLS.md](SKILLS.md)** - Claude Code skills for automation (25 skills available)
+- **[Enhancement Index](enhancements/INDEX.md)** - Recent improvements and completed enhancements
+- **[SKILLS.md](SKILLS.md)** - Claude Code skills for automation (31 skills available)
 - **[../README.md](../README.md)** - User-facing project overview and quick start guide
 - **[../CLAUDE.md](../CLAUDE.md)** - AI assistant guide and quick reference
 
@@ -16,7 +16,7 @@ This document explains the design of the redistricting system, key algorithms, a
 
 ### Using Claude Code Skills
 
-This project includes **25 automated skills** that handle common development tasks. Skills are automatically suggested when you describe what you want to do.
+This project includes **31 automated skills** that handle common development tasks. Skills are automatically suggested when you describe what you want to do.
 
 **Key skills for working with this architecture**:
 - **Pipeline**: `/run-redistricting`, `/run-analysis-only`, `/pipeline-debug`

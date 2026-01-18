@@ -73,15 +73,24 @@ def scan_artifacts(output_dir):
     }
 
     # Scan PDFs in outputs/artifacts/ (shared across all runs)
-    # Note: artifacts are one level up from output_dir (sibling to us_YEAR_VERSION/)
-    artifacts_dir = output_dir.parent / 'artifacts'
+    # New structure: output_dir is outputs/v1/2020/, artifacts at outputs/artifacts/
+    # Old structure: output_dir is outputs/us_2020_v1/, artifacts at outputs/artifacts/
+    # Detect which structure by checking if parent.parent exists and has artifacts
+    if (output_dir.parent.parent / 'artifacts').exists():
+        # New structure: go up two levels (v1/2020 -> v1 -> outputs)
+        artifacts_dir = output_dir.parent.parent / 'artifacts'
+        outputs_base = output_dir.parent.parent
+    else:
+        # Old structure: go up one level (us_2020_v1 -> outputs)
+        artifacts_dir = output_dir.parent / 'artifacts'
+        outputs_base = output_dir.parent
     if artifacts_dir.exists():
         # Scan guides
         guides_dir = artifacts_dir / 'guides'
         if guides_dir.exists():
             for pdf_path in guides_dir.rglob('*.pdf'):
                 # Path relative to dashboard (e.g., ../artifacts/guides/...)
-                rel_path = pdf_path.relative_to(output_dir.parent)
+                rel_path = pdf_path.relative_to(outputs_base)
                 artifacts['guides'].append({
                     'title': pdf_path.stem.replace('_', ' ').title(),
                     'path': '../' + str(rel_path).replace('\\', '/'),
@@ -94,7 +103,7 @@ def scan_artifacts(output_dir):
         if presentations_dir.exists():
             for pdf_path in presentations_dir.rglob('*.pdf'):
                 # Path relative to dashboard (e.g., ../artifacts/presentations/...)
-                rel_path = pdf_path.relative_to(output_dir.parent)
+                rel_path = pdf_path.relative_to(outputs_base)
                 artifacts['presentations'].append({
                     'title': pdf_path.stem.replace('_', ' ').title(),
                     'path': '../' + str(rel_path).replace('\\', '/'),
@@ -107,7 +116,7 @@ def scan_artifacts(output_dir):
         if papers_dir.exists():
             for pdf_path in papers_dir.rglob('*.pdf'):
                 # Path relative to dashboard (e.g., ../artifacts/papers/...)
-                rel_path = pdf_path.relative_to(output_dir.parent)
+                rel_path = pdf_path.relative_to(outputs_base)
                 artifacts['papers'].append({
                     'title': pdf_path.stem.replace('_', ' ').title(),
                     'path': '../' + str(rel_path).replace('\\', '/'),
@@ -115,17 +124,41 @@ def scan_artifacts(output_dir):
                     'type': 'paper'
                 })
 
-    # Scan figures in outputs/figures/
-    # Note: figures are one level up from output_dir (sibling to us_YEAR_VERSION/)
-    figures_dir = output_dir.parent / 'figures'
+    # Scan figures in outputs/artifacts/figures/
+    # New structure: figures at outputs/artifacts/figures/
+    # Old structure: figures at outputs/figures/ (if exists) or outputs/artifacts/figures/
+    figures_dir = outputs_base / 'artifacts' / 'figures'
+    if not figures_dir.exists():
+        # Fallback to old location
+        figures_dir = outputs_base / 'figures'
     if figures_dir.exists():
+        # Calculate relative path prefix based on structure
+        # New structure: dashboard at v1/2020/index.html, figures at artifacts/figures/
+        #   Need: ../../artifacts/figures/
+        # Old structure: dashboard at us_2020_v1/index.html, figures at figures/
+        #   Need: ../figures/
+        try:
+            rel_figures = figures_dir.relative_to(outputs_base)
+            if outputs_base == output_dir.parent.parent:
+                # New structure (two levels up)
+                figures_prefix = f'../../{rel_figures}'
+            else:
+                # Old structure (one level up)
+                figures_prefix = f'../{rel_figures}'
+        except ValueError:
+            # Fallback
+            figures_prefix = '../figures'
+
+        # Normalize path separators
+        figures_prefix = figures_prefix.replace('\\', '/')
+
         # Schematic figures
         schematic_dir = figures_dir / 'schematic'
         if schematic_dir.exists():
             for img_path in sorted(schematic_dir.glob('*.png')):
                 artifacts['figures']['schematic'].append({
                     'name': img_path.stem.replace('_', ' ').title(),
-                    'path': f'../figures/schematic/{img_path.name}',
+                    'path': f'{figures_prefix}/schematic/{img_path.name}',
                     'filename': img_path.name
                 })
 
@@ -135,7 +168,7 @@ def scan_artifacts(output_dir):
             for img_path in sorted(real_tracts_dir.glob('*.png')):
                 artifacts['figures']['real_tracts'].append({
                     'name': img_path.stem.replace('_', ' ').title(),
-                    'path': f'../figures/real_tracts_examples/{img_path.name}',
+                    'path': f'{figures_prefix}/real_tracts_examples/{img_path.name}',
                     'filename': img_path.name
                 })
 
@@ -145,7 +178,7 @@ def scan_artifacts(output_dir):
             for img_path in sorted(round_progression_dir.glob('*.png')):
                 artifacts['figures']['round_progression'].append({
                     'name': img_path.stem.replace('_', ' ').title(),
-                    'path': f'../figures/round_progression/{img_path.name}',
+                    'path': f'{figures_prefix}/round_progression/{img_path.name}',
                     'filename': img_path.name
                 })
 
@@ -226,10 +259,9 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
         template_file = Path('web/dashboard.html')
 
     if output_dir is None:
-        # Auto-generate output directory based on partition mode
-        # Match main pipeline convention: edge-weighted is default (no suffix), unweighted adds _noedge
-        version_suffix = f"{version}_noedge" if partition_mode == 'unweighted' else version
-        output_dir = Path(f'outputs/us_{year}_{version_suffix}')
+        # Auto-generate output directory for new version-first structure
+        # New structure: outputs/{version}/{year}/
+        output_dir = Path(f'outputs/{version}/{year}')
     else:
         output_dir = Path(output_dir)
 
@@ -386,7 +418,7 @@ def main():
                        default='edge-weighted',
                        help='Partition mode: unweighted or edge-weighted (default: edge-weighted)')
     parser.add_argument('--output-dir', type=str,
-                       help='Output directory (default: outputs/us_YEAR_VERSION or us_YEAR_VERSION_noedge)')
+                       help='Output directory (default: outputs/VERSION/YEAR, e.g., outputs/v1/2020)')
     parser.add_argument('--template', type=str,
                        help='Dashboard template file (default: web/dashboard.html)')
 

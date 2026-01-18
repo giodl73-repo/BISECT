@@ -15,9 +15,9 @@
 **Phase 1: Parallel Multi-Year Execution** ✅
 1. ✅ Parallel execution across 3 census years (2020, 2010, 2000) using subprocess.Popen
 2. ✅ Worker allocation algorithm prioritizing 2020 > 2010 > 2000
-   - 4 workers → [2,1,1], 6 workers → [2,2,2], 8 workers → [3,3,2]
+   - 4 workers → [2,1,1], 6 workers → [2,2,2], 12 workers → [4,4,4]
 3. ✅ Real-time STATUS message monitoring with threading
-4. ✅ Changed defaults: `--year all` and `--workers 6`
+4. ✅ Changed defaults: `--year all` and `--workers 12`
 
 **Phase 2: Hierarchical Progress Display** ✅
 1. ✅ `scripts/utils/progress_coordinator.py` - Coordinates hierarchical display

@@ -46,9 +46,9 @@ All notable changes to the Congressional Redistricting project.
 ### Changed
 - **Default behavior**:
   - `--year all` is now default (multi-year parallel execution by default)
-  - `--workers 6` is now default (allocates 2+2+2 across years)
+  - `--workers 12` is now default (allocates 4+4+4 across years)
   - Worker allocation prioritizes 2020 > 2010 > 2000
-    - 4 workers → [2,1,1], 6 workers → [2,2,2], 8 workers → [3,3,2]
+    - 4 workers → [2,1,1], 6 workers → [2,2,2], 12 workers → [4,4,4]
 - **`--skip-states` flag**: Now properly works in multi-year mode
 - **Progress display**: Removed interleaving print statements for clean hierarchical output
 - **Stage descriptions**: No more underscores (e.g., "Redistricting" not "redistricting_7/25")

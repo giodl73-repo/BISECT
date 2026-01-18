@@ -2,12 +2,13 @@
 
 This document captures critical patterns and conventions used throughout the codebase. Following these patterns ensures consistency, proper progress reporting, and correct behavior.
 
-**Last Updated**: January 12, 2026
+**Last Updated**: January 17, 2026
 
 ## Related Documentation
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architectural decisions
-- **[ENHANCEMENTS_2026.md](ENHANCEMENTS_2026.md)** - Recent improvements and roadmap
+- **[enhancements/INDEX.md](enhancements/INDEX.md)** - Enhancement tracking and specifications
+- **[ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md)** - Enhancement implementation workflow
 - **[../README.md](../README.md)** - User-facing project overview
 - **[../CLAUDE.md](../CLAUDE.md)** - AI assistant guide and quick reference
 

@@ -16,64 +16,146 @@ from generate_dashboard import scan_artifacts
 
 
 def find_all_runs(outputs_dir='outputs'):
-    """Find all us_{year}_{version} directories."""
+    """Find all {version}/{year} directories in new structure."""
     outputs_path = Path(outputs_dir)
     if not outputs_path.exists():
         return []
 
     runs = []
-    pattern = re.compile(r'us_(\d{4})_(v\d+)(_noedge)?$')
 
-    for item in outputs_path.iterdir():
-        if not item.is_dir():
+    # Scan for version directories (v1, V2, V3, etc.)
+    version_pattern = re.compile(r'^[vV]\d+$', re.IGNORECASE)
+
+    for version_dir in outputs_path.iterdir():
+        if not version_dir.is_dir():
             continue
 
-        match = pattern.match(item.name)
-        if match:
-            year = match.group(1)
-            version = match.group(2)
-            noedge_suffix = match.group(3) or ''
+        # Skip special directories
+        if version_dir.name in ['artifacts', 'experiments', 'dev', 'test', 'test_post']:
+            continue
+
+        # Check if this is a version directory
+        if not version_pattern.match(version_dir.name):
+            continue
+
+        version = version_dir.name.lower()  # Normalize to lowercase (v1, v2, v3)
+
+        # Read version.json if it exists
+        version_json_path = version_dir / 'version.json'
+        version_metadata = {}
+        if version_json_path.exists():
+            try:
+                with open(version_json_path, 'r', encoding='utf-8') as f:
+                    version_metadata = json.load(f)
+            except Exception as e:
+                print(f"Warning: Could not read {version_json_path}: {e}")
+
+        # Scan for year subdirectories (2000, 2010, 2020)
+        year_pattern = re.compile(r'^(2000|2010|2020)$')
+
+        for year_dir in version_dir.iterdir():
+            if not year_dir.is_dir():
+                continue
+
+            # Check if this is a year directory
+            if not year_pattern.match(year_dir.name):
+                continue
+
+            year = year_dir.name
 
             # Check if this run has states
-            states_dir = item / 'states'
+            states_dir = year_dir / 'states'
             if not states_dir.exists():
                 continue
 
-            # Count states with district_summary.csv (check both old and new structure)
+            # Count states with district_summary.csv
             num_states = 0
             for state_dir in states_dir.iterdir():
                 if not state_dir.is_dir():
                     continue
-                # New structure: states/{state}/data/district_summary.csv
+                # Check for district_summary.csv in data/ subdirectory
                 if (state_dir / 'data' / 'district_summary.csv').exists():
-                    num_states += 1
-                # Old structure: states/{state}/district_summary.csv
-                elif (state_dir / 'district_summary.csv').exists():
                     num_states += 1
 
             if num_states == 0:
                 continue
 
-            # Determine mode
-            if noedge_suffix:
+            # Read config.json to get partition mode
+            config_path = year_dir / 'config.json'
+            partition_mode = 'edge_weighted'  # Default
+            if config_path.exists():
+                try:
+                    with open(config_path, 'r', encoding='utf-8') as f:
+                        config = json.load(f)
+                        partition_mode = config.get('algorithm', {}).get('partition_mode', 'edge_weighted')
+                except Exception as e:
+                    print(f"Warning: Could not read {config_path}: {e}")
+
+            # Determine mode label
+            if partition_mode == 'unweighted':
                 mode = 'Unweighted'
             else:
                 mode = 'Edge-Weighted'
 
+            # Build relative path for linking
+            relative_path = f"{version}/{year}"
+
             runs.append({
                 'year': year,
                 'version': version,
-                'version_full': version + noedge_suffix,
+                'version_full': version,  # No more _noedge suffix
                 'mode': mode,
                 'num_states': num_states,
-                'path': item.name,
-                'sort_key': (year, version, noedge_suffix)
+                'path': relative_path,
+                'partition_mode': partition_mode,
+                'sort_key': (year, version, partition_mode)
             })
 
-    # Sort by year (desc), then version, then mode
-    runs.sort(key=lambda r: r['sort_key'], reverse=True)
+    # Sort by year (desc), then version
+    runs.sort(key=lambda r: (r['year'], r['version']), reverse=True)
 
     return runs
+
+
+def build_versions_data(runs):
+    """Build VERSIONS data structure from runs list."""
+    versions_dict = {}
+
+    for run in runs:
+        version = run['version']
+
+        if version not in versions_dict:
+            versions_dict[version] = {
+                'name': version,
+                'description': f'Redistricting variant: {version}',
+                'partition_mode': run['partition_mode'],
+                'data_level': 'tract',  # Default, can be extended
+                'num_runs': 0,
+                'completed_years': [],
+                'runs': []
+            }
+
+        versions_dict[version]['num_runs'] += 1
+        if run['year'] not in versions_dict[version]['completed_years']:
+            versions_dict[version]['completed_years'].append(run['year'])
+
+        versions_dict[version]['runs'].append({
+            'year': run['year'],
+            'mode': run['mode'],
+            'num_states': run['num_states'],
+            'path': run['path'] + '/index.html',
+            'created': None  # Could read from config.json if needed
+        })
+
+    # Sort completed_years for each version
+    for version_data in versions_dict.values():
+        version_data['completed_years'].sort()
+
+    # Convert to list and sort by version
+    versions_list = list(versions_dict.values())
+    versions_list.sort(key=lambda v: v['name'])
+
+    return versions_list
 
 
 def generate_master_dashboard(output_file='outputs/index.html', template_file='web/master_dashboard.html'):
@@ -130,20 +212,27 @@ def generate_master_dashboard(output_file='outputs/index.html', template_file='w
     runs_json = json.dumps(runs, indent=8)
     html = html.replace('/* RUNS_DATA_PLACEHOLDER */', runs_json)
 
+    # Build and insert versions data
+    versions = build_versions_data(runs)
+    versions_json = json.dumps(versions, indent=8)
+    html = html.replace('/* VERSIONS_DATA_PLACEHOLDER */', versions_json)
+
     # Scan and embed artifacts data
     print(f"\n  Scanning artifacts...")
-    # Use a dummy output_dir (outputs/us_2020_v1) just for relative path calculation
-    # Artifacts are shared across all runs at outputs/artifacts and outputs/figures
-    dummy_run_dir = output_path.parent / 'us_2020_v1'  # Any run dir works for path calculation
-    if not dummy_run_dir.exists():
-        # Use first available run
-        if runs:
-            dummy_run_dir = output_path.parent / runs[0]['path']
+    # For new structure, artifacts are at outputs/artifacts (sibling to version dirs)
+    # Master dashboard is at outputs/index.html
+    # scan_artifacts expects output_dir.parent to be outputs/, so we pass any subdirectory
+    # Use first available run directory, or create a dummy path
+    if runs:
+        scan_base = output_path.parent / runs[0]['path']
+    else:
+        # Create a dummy path so output_dir.parent = outputs/
+        scan_base = output_path.parent / 'dummy'
 
-    artifacts = scan_artifacts(dummy_run_dir)
+    artifacts = scan_artifacts(scan_base)
 
     # Fix paths for master dashboard: remove '../' prefix since master is at outputs/index.html (same level as artifacts/)
-    # scan_artifacts generates paths like '../artifacts/...' for individual dashboards (outputs/us_YEAR_VERSION/index.html)
+    # scan_artifacts generates paths like '../artifacts/...' for individual dashboards
     # but master dashboard needs 'artifacts/...' (no '../')
     for guide in artifacts['guides']:
         guide['path'] = guide['path'].replace('../', '', 1)
