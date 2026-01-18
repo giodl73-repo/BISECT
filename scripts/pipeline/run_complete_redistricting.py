@@ -401,12 +401,12 @@ def process_state_for_multi_year(args_tuple):
     Must be at module level for Windows multiprocessing pickling.
 
     Args:
-        args_tuple: (state_code, state_number, year, output_dir, script_args_dict)
+        args_tuple: (state_code, state_number, year, output_dir, script_args_dict, worker_id)
 
     Returns:
         (state_code, success_bool)
     """
-    state_code, state_number, year, output_dir, args_dict = args_tuple
+    state_code, state_number, year, output_dir, args_dict, worker_id = args_tuple
 
     # Reconstruct paths and config
     from scripts.utils import get_state_config
@@ -434,7 +434,7 @@ def process_state_for_multi_year(args_tuple):
     env = os.environ.copy()
     env['DPI'] = str(args_dict['dpi'])
     env['STATE_NUMBER'] = str(state_number)
-    env['WORKER_ID'] = str(multiprocessing.current_process()._identity[0] if multiprocessing.current_process()._identity else 0)
+    env['WORKER_ID'] = str(worker_id)
 
     # Use Popen to forward STATUS messages
     proc = subprocess.Popen(cmd, shell=True, env=env,
@@ -1173,9 +1173,10 @@ def main():
                 'dpi': args.dpi
             }
 
-            # Process states in parallel
+            # Pre-assign states to workers in round-robin fashion
+            # This ensures we can track which worker is processing which state
             state_args_list = [
-                (state_code, i, args.year, str(output_dir), args_dict)
+                (state_code, i, args.year, str(output_dir), args_dict, i % max_workers)
                 for i, state_code in enumerate(states_to_process, 1)
             ]
 
