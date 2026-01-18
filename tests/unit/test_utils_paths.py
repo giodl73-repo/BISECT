@@ -23,7 +23,7 @@ class TestGetTractFile:
         path = get_tract_file('california', '2020')
 
         assert isinstance(path, Path)
-        assert path.as_posix() == 'data/tracts/2020/california_tracts_2020.parquet'
+        assert path.as_posix() == 'outputs/data/tracts/2020/california_tracts_2020.parquet'
 
     def test_get_tract_file_case_insensitive(self):
         """Test that state names are normalized to lowercase."""
@@ -37,13 +37,13 @@ class TestGetTractFile:
         """Test that spaces are converted to underscores."""
         path = get_tract_file('New York', '2020')
 
-        assert path.as_posix() == 'data/tracts/2020/new_york_tracts_2020.parquet'
+        assert path.as_posix() == 'outputs/data/tracts/2020/new_york_tracts_2020.parquet'
 
     def test_get_tract_file_all_years(self):
         """Test tract file paths for all census years."""
         for year in ['2000', '2010', '2020']:
             path = get_tract_file('california', year)
-            assert path.as_posix() == f'data/tracts/{year}/california_tracts_{year}.parquet'
+            assert path.as_posix() == f'outputs/data/tracts/{year}/california_tracts_{year}.parquet'
 
 
 class TestGetPlacesFile:
@@ -54,13 +54,13 @@ class TestGetPlacesFile:
         path = get_places_file('california', '2020')
 
         assert isinstance(path, Path)
-        assert path.as_posix() == 'data/tracts/2020/california_places_2020.parquet'
+        assert path.as_posix() == 'outputs/data/places/2020/california_places_2020.parquet'
 
     def test_get_places_file_normalization(self):
         """Test state name normalization."""
         path = get_places_file('North Dakota', '2020')
 
-        assert path.as_posix() == 'data/tracts/2020/north_dakota_places_2020.parquet'
+        assert path.as_posix() == 'outputs/data/places/2020/north_dakota_places_2020.parquet'
 
 
 class TestGetAdjacencyFile:
@@ -71,13 +71,13 @@ class TestGetAdjacencyFile:
         path = get_adjacency_file('california', '2020')
 
         assert isinstance(path, Path)
-        assert path.as_posix() == 'data/adjacency/2020/california_adjacency_2020.pkl'
+        assert path.as_posix() == 'outputs/data/adjacency/2020/california_adjacency_2020.pkl'
 
     def test_get_adjacency_file_all_years(self):
         """Test adjacency file paths for all census years."""
         for year in ['2000', '2010', '2020']:
             path = get_adjacency_file('texas', year)
-            assert path.as_posix() == f'data/adjacency/{year}/texas_adjacency_{year}.pkl'
+            assert path.as_posix() == f'outputs/data/adjacency/{year}/texas_adjacency_{year}.pkl'
 
 
 class TestGetOutputDir:
@@ -147,7 +147,7 @@ class TestGetElectionDataFile:
         path = get_election_data_file('2020')
 
         assert isinstance(path, Path)
-        assert path.as_posix() == 'data/processed/elections/2020_president_tract.parquet'
+        assert path.as_posix() == 'outputs/data/elections/2020_president_tract.parquet'
 
     def test_get_election_data_file_structure(self):
         """Test election data file structure."""
@@ -165,13 +165,13 @@ class TestGetDemographicDataFile:
         path = get_demographic_data_file('2020')
 
         assert isinstance(path, Path)
-        assert path.as_posix() == 'data/processed/demographics/2020_demographics_tract.parquet'
+        assert path.as_posix() == 'outputs/data/demographics/2020_demographics_tract.parquet'
 
     def test_get_demographic_data_file_all_years(self):
         """Test demographic data file paths for all census years."""
         for year in ['2000', '2010', '2020']:
             path = get_demographic_data_file(year)
-            assert path.as_posix() == f'data/processed/demographics/{year}_demographics_tract.parquet'
+            assert path.as_posix() == f'outputs/data/demographics/{year}_demographics_tract.parquet'
 
     def test_get_demographic_data_file_structure(self):
         """Test demographic data file structure."""
