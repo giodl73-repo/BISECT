@@ -44,10 +44,6 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 | [37](37_parallel_multi_year_pipeline.md) | Parallel Multi-Year Pipeline with Enhanced Progress Visualization | Jan 17, 2026 | [View](37_parallel_multi_year_pipeline.md) |
 | [38](38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](38_streamline_claude_md.md) |
 
-### ✅ Completed (28 enhancements)
-
-| # | Title | Completion Date | Files |
-|---|-------|----------------|-------|
 | [39](39_pipeline_error_logging.md) | Comprehensive Pipeline Error Logging (MVP) | Jan 17, 2026 | [View](39_pipeline_error_logging.md) |
 
 ### 🔄 In Progress (1 enhancement)
@@ -56,22 +52,27 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (11 enhancements)
+### 📋 Planned (16 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
+| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | High | [View](42_research_narrative_policy_questions.md) |
+| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | High | [View](45_baseline_data_organization.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
+| [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Medium | [View](43_cross_year_longitudinal_analysis.md) |
+| [44](44_real_world_constraints.md) | Real-World Redistricting Constraints (VRA, COI, County Splitting) | Medium | [View](44_real_world_constraints.md) |
+| [46](46_enhancement_priority_system.md) | Priority System for Enhancements and Enhancement Manager | Medium | [View](46_enhancement_priority_system.md) |
 | [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | [View](41_public_distribution.md) |
 | [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
 | [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | [View](40_corner_adjacency_filter.md) |
 | [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](16_metro_2000.md) |
-| [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Low (Research/Experimental) | [View](22_national_redistricting.md) |
-| [23](23_county_representation.md) | Direct County Representation | Low (Research/Experimental) | [View](23_county_representation.md) |
-| [24](24_party_based_allocation.md) | Party-Based District Allocation | Low (Research/Experimental) | [View](24_party_based_allocation.md) |
-| [25](25_committee_based_representation.md) | Committee-Based Representation | Low (Research/Experimental) | [View](25_committee_based_representation.md) |
-| [26](26_demographic_similarity_districts.md) | Demographic Similarity Districts | Low (Research/Experimental) | [View](26_demographic_similarity.md) |
-| [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Low (Research/Experimental) | [View](27_electoral_college_county_reform.md) |
-| [28](28_multi_member_districts.md) | Multi-Member Districts | Low (Research/Experimental) | [View](28_multi_member_districts.md) |
+| [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Research | [View](22_national_redistricting.md) |
+| [23](23_county_representation.md) | Direct County Representation | Research | [View](23_county_representation.md) |
+| [24](24_party_based_allocation.md) | Party-Based District Allocation | Research | [View](24_party_based_allocation.md) |
+| [25](25_committee_based_representation.md) | Committee-Based Representation | Research | [View](25_committee_based_representation.md) |
+| [26](26_demographic_similarity_districts.md) | Demographic Similarity Districts | Research | [View](26_demographic_similarity.md) |
+| [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Research | [View](27_electoral_college_county_reform.md) |
+| [28](28_multi_member_districts.md) | Multi-Member Districts | Research | [View](28_multi_member_districts.md) |
 
 ## Related Documentation
 
