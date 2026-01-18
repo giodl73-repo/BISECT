@@ -25,6 +25,7 @@ import argparse
 import subprocess
 import sys
 import os
+import threading
 from pathlib import Path
 from tqdm import tqdm
 
@@ -296,19 +297,35 @@ def main():
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                    text=True, bufsize=1)
 
-            # Monitor stdout for STATUS messages
-            for line in proc.stdout:
-                line = line.strip()
-                if line.startswith("STATUS:"):
-                    # Parse: STATUS:position:message
-                    parts = line.split(":", 2)
-                    if len(parts) >= 3:
-                        pos = int(parts[1])
-                        msg = parts[2]
-                        step_bars[i].set_description_str(f"[{i}] {msg}".ljust(120))
-                        step_bars[i].refresh()
+            # Non-blocking monitor thread for STATUS messages
+            def monitor_output(proc, bar_index):
+                try:
+                    for line in proc.stdout:
+                        line = line.strip()
+                        if line.startswith("STATUS:"):
+                            # Parse: STATUS:position:message
+                            parts = line.split(":", 2)
+                            if len(parts) >= 3:
+                                msg = parts[2]
+                                step_bars[bar_index].set_description_str(f"[{bar_index}] {msg}".ljust(120))
+                                step_bars[bar_index].refresh()
+                except:
+                    pass
 
-            proc.wait()
+            thread = threading.Thread(target=monitor_output, args=(proc, i), daemon=True)
+            thread.start()
+
+            # Wait with timeout (15 minutes for slow operations like national map rendering)
+            try:
+                proc.wait(timeout=900)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                step_bars[i].set_description_str(f"[{i}] {step['name']} - TIMEOUT (15 min)".ljust(120))
+                step_bars[i].refresh()
+                if step['critical'] and not args.print_only:
+                    print(f"\n[ERROR] {step['name']} timed out after 15 minutes", file=sys.stderr)
+                    return 1
+                continue
 
             if proc.returncode == 0:
                 step_bars[i].set_description_str(f"[{i}] {step['name']} - COMPLETE".ljust(120))
