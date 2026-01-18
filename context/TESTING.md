@@ -4,7 +4,7 @@
 
 ## Overview
 
-**Test Suite**: 151 tests (110 unit, 21 integration, 20 E2E) - 18s total
+**Test Suite**: 169 tests (110 unit, 21 integration, 38 E2E) - ~20s total
 
 **Types**:
 1. **Unit** (110) - Functions/classes in isolation, mock I/O - ~7s
@@ -40,8 +40,9 @@ tests/
 ├─ integration/             # 21 tests, 5s
 │  ├─ pipeline/             # State processing, orchestration
 │  └─ analysis/             # Political, demographic, compactness
-└─ e2e/                     # 20 tests, 8s
+└─ e2e/                     # 38 tests, 10s
    ├─ test_redistricting_pipeline.py  # Full VT/DE runs
+   ├─ test_pipeline_scripts.py        # Script syntax/CLI validation (18 tests)
    ├─ test_dashboard.py               # HTML generation
    └─ test_visual_regression.py       # UI consistency
 ```
@@ -133,6 +134,84 @@ def test_generate_dashboard_with_test_data(tmp_path):
 **Run**:
 ```bash
 pytest tests/e2e/ -v
+```
+
+## Pipeline Script E2E Tests
+
+**Purpose**: Catch bugs in command-line pipeline scripts
+
+**Why Needed**: Previous tests used mocks instead of real scripts, missing:
+- Syntax errors (modules never imported)
+- Missing function arguments
+- Wrong file paths/directory structure
+- Command-line interface issues
+
+**What We Test**:
+1. **Syntax Validation**: Scripts compile without errors
+2. **Argument Validation**: Function calls have correct parameters
+3. **Directory Structure**: Outputs go to correct subdirectories
+4. **CLI Interface**: Scripts have proper argparse setup
+
+**Examples**:
+```python
+# tests/e2e/test_pipeline_scripts.py
+
+def test_script_imports_successfully():
+    """Catch syntax errors by compiling script."""
+    script = project_root / 'scripts' / 'pipeline' / 'analyze_district_demographics.py'
+
+    with open(script, 'r', encoding='utf-8') as f:
+        code = f.read()
+
+    try:
+        compile(code, str(script), 'exec')
+    except SyntaxError as e:
+        pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
+
+def test_create_rounds_hierarchy_calls_correct():
+    """Catch missing function arguments."""
+    script_path = project_root / 'scripts' / 'pipeline' / 'create_final_district_summary.py'
+
+    with open(script_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Check function signature includes state_code and census_year
+    assert 'def create_rounds_hierarchy(run_dir: Path, num_districts: int, state_code: str, census_year: str' in content
+
+    # Check all calls include required arguments (count commas)
+    import re
+    calls = re.findall(r'create_rounds_hierarchy\([^)]+\)', content)
+    for call in calls:
+        comma_count = call.count(',')
+        assert comma_count >= 3, f"Missing arguments: {call}"
+
+def test_output_directory_structure():
+    """Verify outputs go to correct subdirectories."""
+    script_path = project_root / 'scripts' / 'pipeline' / 'analyze_district_demographics.py'
+
+    with open(script_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    # Should create demographic/ subdirectory like political analysis
+    assert "/ 'demographic'" in content or "demographic_dir" in content
+    assert "district_demographics.csv" in content
+```
+
+**Real Bugs Caught**:
+1. **Syntax Error**: `pass / 'demographic'` → Invalid syntax
+2. **Missing Args**: `create_rounds_hierarchy(run_dir, num_districts)` → Missing state_code, census_year
+3. **Wrong Directory**: Writing to root instead of `demographic/` subdirectory
+
+**Run**:
+```bash
+# All pipeline script tests
+pytest tests/e2e/test_pipeline_scripts.py -v
+
+# Just syntax checks (fast)
+pytest tests/e2e/test_pipeline_scripts.py -k "imports" -v
+
+# Test specific script
+pytest tests/e2e/test_pipeline_scripts.py::TestAnalyzeDistrictDemographics -v
 ```
 
 ## Test Requirements (When Adding Code)
