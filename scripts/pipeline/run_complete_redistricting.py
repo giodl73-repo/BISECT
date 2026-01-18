@@ -1118,16 +1118,19 @@ def main():
         elapsed_mins = elapsed / 60
         elapsed_hours = elapsed / 3600
 
-        # Update final progress display
-        print("\nFinal Progress Display:")
-        for year in year_queue:
-            result = results.get(year, {'success': False})
-            if result['success']:
-                coordinator.update_year_progress(year, 50, 50)
-        coordinator.print_status()
+        # Update final progress display (one last time, in-place)
+        with display_lock:
+            for year in year_queue:
+                result = results.get(year, {'success': False})
+                if result['success']:
+                    coordinator.update_year_progress(year, 50, 50)
+            clear_and_update_display(coordinator)
+
+        # Add spacing before summary (move past the hierarchical display)
+        print("\n" * 2)
 
         # Print summary
-        print("\n" + "="*70)
+        print("="*70)
         print("PARALLEL MULTI-YEAR PIPELINE COMPLETE")
         print("="*70)
         print(f"Total Time: {elapsed_hours:.2f} hours ({elapsed_mins:.1f} minutes)")
