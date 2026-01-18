@@ -945,8 +945,13 @@ def main():
                         str(census_script),
                         '--year', year,
                         '--output-dir', str(year_output_dirs[year]),
-                        '--stages', 'tracts', 'adjacency', 'elections', 'demographics'
+                        '--stages', 'tracts', 'adjacency', 'elections', 'demographics',
+                        '--minimum-boundary-length', str(args.minimum_boundary_length)
                     ]
+
+                    # Add compute-boundary-lengths flag for edge-weighted mode
+                    if args.partition_mode == 'edge-weighted':
+                        cmd_census.append('--compute-boundary-lengths')
 
                     if args.print_only:
                         cmd_census.append('--dry-run')

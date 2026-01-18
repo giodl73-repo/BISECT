@@ -292,8 +292,23 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
 
 
 def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[List[str]] = None,
-                           force: bool = False, dry_run: bool = False, is_standalone: bool = None):
-    """Build adjacency graphs for all states."""
+                           compute_boundary_lengths: bool = True, water_distance: float = 1.0,
+                           minimum_boundary_length: float = 10.0, force: bool = False,
+                           dry_run: bool = False, is_standalone: bool = None):
+    """
+    Build adjacency graphs for all states.
+
+    Args:
+        year: Census year
+        error_log_file: Path to error log
+        states: List of state codes (None = all states)
+        compute_boundary_lengths: Whether to compute boundary lengths for edge weighting
+        water_distance: Water distance threshold in km
+        minimum_boundary_length: Minimum shared boundary length (meters) to filter tiny adjacencies
+        force: Force rebuild (delete existing graphs)
+        dry_run: Show what would be done without executing
+        is_standalone: Whether running standalone (None = auto-detect)
+    """
     report_progress(f"[3/5] Building adjacency graphs ({year})", is_standalone)
 
     if states is None:
@@ -312,8 +327,13 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         sys.executable, script,
         '--year', str(year),
         '--input-dir', f'outputs/data/tracts/{year}',
-        '--output-dir', f'outputs/data/adjacency/{year}'
+        '--output-dir', f'outputs/data/adjacency/{year}',
+        '--water-distance', str(water_distance),
+        '--minimum-boundary-length', str(minimum_boundary_length)
     ]
+
+    if compute_boundary_lengths:
+        cmd.append('--compute-boundary-lengths')
 
     if force:
         cmd.append('--reset')
@@ -473,6 +493,12 @@ Examples:
                        help='Process only specific stages (default: all except elections/demographics if not available)')
     parser.add_argument('--election-year', type=int,
                        help='Election year (if different from census year)')
+    parser.add_argument('--compute-boundary-lengths', action='store_true', default=True,
+                       help='Compute boundary lengths for edge-weighted partitioning (default: True)')
+    parser.add_argument('--water-distance', type=float, default=1.0,
+                       help='Water distance threshold in km (default: 1.0)')
+    parser.add_argument('--minimum-boundary-length', type=float, default=10.0,
+                       help='Minimum shared boundary length (meters) to filter tiny adjacencies (default: 10)')
     parser.add_argument('--force', action='store_true',
                        help='Force reprocessing (skip existing files)')
     parser.add_argument('--dry-run', action='store_true',
@@ -579,7 +605,11 @@ Examples:
             create_stage_marker(output_dir, 'tracts', resolution, args.dry_run)
 
     if 'adjacency' in stages:
-        results['adjacency'] = build_adjacency_graphs(args.year, error_log_file, states, args.force, args.dry_run, is_standalone)
+        results['adjacency'] = build_adjacency_graphs(
+            args.year, error_log_file, states,
+            args.compute_boundary_lengths, args.water_distance, args.minimum_boundary_length,
+            args.force, args.dry_run, is_standalone
+        )
         if results['adjacency']:
             create_stage_marker(output_dir, 'adjacency', resolution, args.dry_run)
 
