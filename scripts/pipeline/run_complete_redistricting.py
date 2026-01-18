@@ -1427,9 +1427,26 @@ def main():
         cmd.append('--debug')
 
     # Run national post-processing
-    result = subprocess.run(cmd)
+    # Check if running in multi-year mode - if so, forward STATUS messages
+    is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
 
-    return 0 if (result.returncode == 0 and (not 'failed' in locals() or not failed)) else 1
+    if is_multi_year:
+        # Use Popen to forward STATUS messages to parent
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               text=True, bufsize=1)
+
+        # Forward STATUS messages
+        for line in proc.stdout:
+            print(line, end='', flush=True)
+
+        proc.wait()
+        result_code = proc.returncode
+    else:
+        # Standalone mode - use regular subprocess.run
+        result = subprocess.run(cmd)
+        result_code = result.returncode
+
+    return 0 if (result_code == 0 and (not 'failed' in locals() or not failed)) else 1
 
 
 if __name__ == '__main__':
