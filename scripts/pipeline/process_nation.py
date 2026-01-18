@@ -121,10 +121,6 @@ def main():
     # Check if running in multi-year mode
     is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
 
-    if is_multi_year:
-        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Starting process_nation.py (is_multi_year={is_multi_year})\n")
-        sys.stderr.flush()
-
     if not is_multi_year:
         print("\n" + "="*70)
         print("NATIONAL POST-PROCESSING")
@@ -243,18 +239,11 @@ def main():
     # See run_complete_redistricting.py final stage
 
     # ========== EXECUTE ALL TASKS (Workers pick up tasks dynamically) ==========
-    if is_multi_year:
-        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Collected {len(all_tasks)} tasks\n")
-        sys.stderr.flush()
-
     if all_tasks:
         if not is_multi_year:
             print("\n" + "="*70)
             print(f"POST-PROCESSING ({len(all_tasks)} tasks)")
             print("="*70)
-        else:
-            sys.stderr.write(f"[DEBUG-NATION-{args.year}] Entering task execution block\n")
-            sys.stderr.flush()
 
         total_tasks = len(all_tasks)
 
@@ -281,16 +270,8 @@ def main():
 
             # Run tasks in parallel using ProcessPoolExecutor
             # Workers dynamically pick up next task as they finish
-            if is_multi_year:
-                sys.stderr.write(f"[DEBUG-NATION-{args.year}] Starting ProcessPoolExecutor with {max_workers} workers\n")
-                sys.stderr.flush()
-
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 results = list(executor.map(run_postprocessing_task, task_args))
-
-            if is_multi_year:
-                sys.stderr.write(f"[DEBUG-NATION-{args.year}] ProcessPoolExecutor finished\n")
-                sys.stderr.flush()
 
             # Check for failures (show warnings in standalone mode)
             for task_name, success in results:
@@ -351,17 +332,9 @@ def main():
                           file=sys.stderr)
         summary_bar.update(1)
         summary_bar.close()
-    else:
-        sys.stderr.write(f"[DEBUG-NATION-{args.year}] Returning 0 (exiting)\n")
-        sys.stderr.flush()
 
     return 0
 
 
 if __name__ == '__main__':
-    sys.stderr.write("[DEBUG-NATION] Script starting...\n")
-    sys.stderr.flush()
-    exit_code = main()
-    sys.stderr.write(f"[DEBUG-NATION] Script exiting with code {exit_code}\n")
-    sys.stderr.flush()
-    sys.exit(exit_code)
+    sys.exit(main())
