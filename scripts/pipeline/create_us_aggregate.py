@@ -410,10 +410,13 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
     with open(report_file, 'w') as f:
         f.write(report_text)
 
+    # Define map file paths (used later for reporting)
+    political_map_file = us_dir / f'us_national_political_{year}.png'
+    demographic_map_file = us_dir / f'us_national_demographic_{year}.png'
+
     # 4. Create national political map (skipped when called from pipeline with --skip-maps)
     if not skip_maps:
         import subprocess
-        political_map_file = us_dir / f'us_national_political_{year}.png'
 
         if force or not political_map_file.exists():
             report_progress("Create national political map")
@@ -445,8 +448,6 @@ def main(output_dir=None, print_only=False, debug=False, force=False, year='2020
                 print(f"\nNational political map exists: {political_map_file}")
 
         # 5. Create national demographic map
-        demographic_map_file = us_dir / f'us_national_demographic_{year}.png'
-
         if force or not demographic_map_file.exists():
             report_progress("Create national demographic map")
 

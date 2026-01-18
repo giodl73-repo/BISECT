@@ -150,8 +150,8 @@ class ProgressCoordinator:
                 bar = create_progress_bar(completed, total, width=20)
 
                 if phase == 'postprocess':
-                    # Post-processing phase - show phase description
-                    year_line = f"[{year}] {bar} {completed}/{total} states complete -> {phase_desc}"
+                    # Post-processing phase - show tasks not states
+                    year_line = f"[{year}] {bar} {phase_desc}"
                 else:
                     # State processing phase
                     year_line = f"[{year}] {bar} {completed}/{total} states complete"

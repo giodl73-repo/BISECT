@@ -407,7 +407,7 @@ def process_state_for_multi_year(args_tuple):
     Must be at module level for Windows multiprocessing pickling.
 
     Args:
-        args_tuple: (state_code, state_number, year, output_dir, script_args_dict, worker_id)
+        args_tuple: (state_code, state_number, year, output_dir, script_args_dict, worker_id, completed_states)
 
     Returns:
         (state_code, success_bool)
@@ -441,6 +441,7 @@ def process_state_for_multi_year(args_tuple):
     env['DPI'] = str(args_dict['dpi'])
     env['STATE_NUMBER'] = str(state_number)
     env['WORKER_ID'] = str(worker_id)
+    env['CENSUS_YEAR'] = year  # Pass year for YEAR completion messages
 
     # Use Popen to forward STATUS messages
     proc = subprocess.Popen(cmd, shell=True, env=env,
@@ -962,9 +963,9 @@ def main():
                                 data['completed'],
                                 data['total']
                             )
-                            # Refresh display (throttled)
+                            # Refresh display (throttled to 0.5s for better responsiveness)
                             now = time.time()
-                            if now - last_display_time[0] >= 1.0:
+                            if now - last_display_time[0] >= 0.5:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
                     elif msg_type == 'YEAR_POSTPROCESS':
@@ -976,7 +977,7 @@ def main():
                             )
                             # Refresh display (throttled)
                             now = time.time()
-                            if now - last_display_time[0] >= 1.0:
+                            if now - last_display_time[0] >= 0.5:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
                     elif msg_type == 'WORKER':
@@ -992,7 +993,7 @@ def main():
                             )
                             # Refresh display (throttled)
                             now = time.time()
-                            if now - last_display_time[0] >= 1.0:
+                            if now - last_display_time[0] >= 0.5:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
                     elif msg_type == 'WORKER_TASK':
@@ -1006,7 +1007,7 @@ def main():
                             )
                             # Refresh display (throttled)
                             now = time.time()
-                            if now - last_display_time[0] >= 1.0:
+                            if now - last_display_time[0] >= 0.5:
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
             except Exception as e:
@@ -1371,8 +1372,9 @@ def main():
                 for state_code, success in executor.map(process_state_for_multi_year, state_args_list):
                     if success:
                         successful.append(state_code)
-                        # Emit year-level progress
-                        print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
+                        # Emit year-level progress using sys.stdout to ensure proper forwarding
+                        sys.stdout.write(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50\n")
+                        sys.stdout.flush()
                     else:
                         failed.append(state_code)
                         sys.stderr.write(f"[{args.year}] Failed: {STATE_CONFIG[state_code]['name']}\n")
