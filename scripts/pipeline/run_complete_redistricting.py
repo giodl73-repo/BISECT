@@ -883,13 +883,13 @@ def main():
             # Skip states if explicitly requested OR if marker file exists
             if args.skip_states:
                 states_complete = True
-                print(f"\n[OK] {year}: --skip-states flag set - skipping state processing")
+                # Don't print in multi-year mode - would interfere with hierarchical display
                 year_phase[year] = 'ready_for_nation'  # Skip to nation processing
             else:
                 marker_file = year_output_dirs[year] / '.states_complete'
                 states_complete = marker_file.exists() and not args.reset
                 if states_complete:
-                    print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
+                    # Don't print in multi-year mode - would interfere with hierarchical display
                     year_phase[year] = 'ready_for_nation'  # Skip to nation processing
                 else:
                     year_phase[year] = 'states'  # Need to run state processing

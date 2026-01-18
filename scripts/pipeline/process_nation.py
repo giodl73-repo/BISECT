@@ -191,16 +191,17 @@ def main():
     election_data_available = (args.year == '2020' and election_data_file.exists())
     demographic_data_available = get_demographic_data_file(args.year).exists()
 
-    # Log data availability status
-    if not election_data_available and not args.skip_political:
-        if args.year != '2020':
-            print(f"\n[INFO] Political analysis will be skipped: Census year {args.year} requires {args.year}/2012 election data (not available)")
-        else:
-            print(f"\n[INFO] Political analysis will be skipped: No {args.election_year} election data found")
-            print(f"       Expected: data/processed/elections/{args.election_year}_president_tract.parquet")
-    if not demographic_data_available and not args.skip_demographic:
-        print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
-        print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
+    # Log data availability status (only in standalone mode)
+    if not is_multi_year:
+        if not election_data_available and not args.skip_political:
+            if args.year != '2020':
+                print(f"\n[INFO] Political analysis will be skipped: Census year {args.year} requires {args.year}/2012 election data (not available)")
+            else:
+                print(f"\n[INFO] Political analysis will be skipped: No {args.election_year} election data found")
+                print(f"       Expected: data/processed/elections/{args.election_year}_president_tract.parquet")
+        if not demographic_data_available and not args.skip_demographic:
+            print(f"[INFO] Demographic analysis will be skipped: No {args.year} demographic data found")
+            print(f"       Expected: data/processed/demographics/{args.year}_demographics_tract.parquet\n")
 
     # Task 5: National political map
     if not args.skip_political and election_data_available and (output_dir.exists() or args.print_only):
@@ -288,7 +289,7 @@ def main():
                         print(f"[WARNING] {task_name} failed but continuing...")
 
     # Validate pipeline outputs
-    if not args.print_only:
+    if not args.print_only and not is_multi_year:
         print("\n" + "="*70)
         print("  Validating Pipeline Outputs")
         print("="*70)
@@ -310,7 +311,7 @@ def main():
             # - Detailed report written to outputs/us_{year}_{version}_validation.txt
             # - Exit code: 0 = all outputs present, 1 = some outputs missing
 
-            if validation_result.returncode != 0:
+            if validation_result.returncode != 0 and not is_multi_year:
                 print(f"\nWARNING: Some pipeline outputs are missing.")
                 print(f"Review detailed report at: {output_dir.name}_validation.txt")
 
@@ -321,23 +322,26 @@ def main():
         if version_config_path.exists():
             try:
                 update_version_config_with_year(version_dir, int(args.year))
-                version_config = read_version_config(version_config_path)
-                print(f"\n[OK] Updated version config: completed years = {version_config.completed_years}")
+                if not is_multi_year:
+                    version_config = read_version_config(version_config_path)
+                    print(f"\n[OK] Updated version config: completed years = {version_config.completed_years}")
             except Exception as e:
-                print(f"\n[WARNING] Could not update version config: {e}")
+                if not is_multi_year:
+                    print(f"\n[WARNING] Could not update version config: {e}")
 
-    # Brief final summary at position 3 (after the 3 post-processing steps at 0-2)
-    summary_bar = tqdm(total=1,
-                      desc=f"[3] National post-processing complete - Results in: {output_dir}",
-                      unit="step",
-                      position=3,
-                      ncols=120,
-                      leave=True,
-                      bar_format="{desc}",
-                      dynamic_ncols=False,
-                      file=sys.stderr)
-    summary_bar.update(1)
-    summary_bar.close()
+    # Brief final summary (only in standalone mode)
+    if not is_multi_year:
+        summary_bar = tqdm(total=1,
+                          desc=f"[3] National post-processing complete - Results in: {output_dir}",
+                          unit="step",
+                          position=3,
+                          ncols=120,
+                          leave=True,
+                          bar_format="{desc}",
+                          dynamic_ncols=False,
+                          file=sys.stderr)
+        summary_bar.update(1)
+        summary_bar.close()
 
     return 0
 
