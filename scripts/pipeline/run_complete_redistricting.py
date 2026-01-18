@@ -950,7 +950,15 @@ def main():
         def monitor_process(year, proc, coordinator):
             """Monitor a single year process and update coordinator."""
             try:
-                for line in proc.stdout:
+                # Read stdout until process exits
+                while True:
+                    line = proc.stdout.readline()
+                    if not line:  # EOF or empty
+                        # Check if process has exited
+                        if proc.poll() is not None:
+                            break
+                        continue
+
                     line = line.strip()
                     if not line:
                         continue
@@ -1011,8 +1019,10 @@ def main():
                                 clear_and_update_display(coordinator)
                                 last_display_time[0] = now
 
-                # Stdout closed - wait for process to complete
-                proc.wait()
+                # Process has exited (detected by poll() in loop above)
+                # Ensure we have the return code
+                if proc.returncode is None:
+                    proc.wait()
 
                 # Mark year as complete based on phase
                 with display_lock:
