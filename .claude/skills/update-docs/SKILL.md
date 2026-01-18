@@ -29,24 +29,60 @@ No specific prerequisites required. This skill can be run at any time to ensure 
 - When adding new features or capabilities
 - After fixing bugs that affect documentation
 
-## Documentation Files Covered
+## Documentation Structure
 
-### Core Documentation (Required Review)
-1. **`CLAUDE.md`** - AI assistant guide, project overview, quick reference
-2. **`README.md`** - User-facing project description, setup, usage
-3. **`../../context/ARCHITECTURE.md`** - System design, data flow, components
-4. **`../../context/CODING_PATTERNS.md`** - Coding conventions, patterns, protocols
-5. **`../../context/DATA_FORMATS.md`** - File formats, schemas, data structures
-6. **`docs/CHANGELOG.md`** - Version history, changes, improvements
-7. **`docs/ENHANCEMENTS_2026.md`** - Enhancement tracking, status updates
+The project has TWO distinct documentation systems:
 
-### Secondary Documentation (Conditional Review)
-8. **`docs/DEPENDENCIES.md`** - Package requirements, setup instructions
-9. **`docs/CONTRIBUTING.md`** - Development workflow, contribution guidelines
-10. **`../../context/SKILLS.md`** - Anthropic MCP skills documentation
-11. **`../../context/archive/`** - Historical session notes (review recent only)
+### AI Context (`context/` directory) - Optimized for Claude
+Dense, token-efficient documentation for AI consumption:
+1. **`context/ARCHITECTURE.md`** - System design (compact, symbolic notation)
+2. **`context/CODING_PATTERNS.md`** - Coding conventions (pattern-first)
+3. **`context/DATA_FORMATS.md`** - File formats (inline schemas)
+4. **`context/SKILLS.md`** - Skill catalog (category-based)
+5. **`context/QUICK_REFERENCE.md`** - Commands, troubleshooting
+6. **`context/ENHANCEMENT_WORKFLOW.md`** - Enhancement process
+7. **`context/TESTING.md`** - Test system documentation
+8. **`context/enhancements/`** - Enhancement specifications
+9. **`context/archive/`** - Historical session notes
+
+### Human Documentation (`docs/` directory) - User-friendly
+Comprehensive, readable documentation for developers:
+1. **`docs/RECURSIVE_BISECTION.md`** - Algorithm explanation (detailed)
+2. **`docs/DEPENDENCIES.md`** - Package requirements, setup
+3. **`docs/CONTRIBUTING.md`** - Development workflow, git practices
+4. **`docs/CHANGELOG.md`** - Version history, changes
+5. **`docs/DATA_DICTIONARY.md`** - *(TODO: Create)* Field definitions for users
+6. **`docs/TROUBLESHOOTING.md`** - *(TODO: Create)* Common issues, solutions
+7. **`docs/DEPLOYMENT.md`** - *(TODO: Create)* Production deployment guide
+
+### Root Documentation
+1. **`CLAUDE.md`** - AI assistant guide (references both context/ and docs/)
+2. **`README.md`** - User-facing project overview
 
 ## Workflow
+
+### Step 0: Check for Human Documentation Gaps
+
+**IMPORTANT**: Ensure human docs exist for user-facing features:
+
+```bash
+# Check what exists in docs/ vs context/
+ls docs/
+ls context/
+
+# Identify missing human docs
+# Compare topic coverage between directories
+```
+
+**Common Gaps to Check**:
+- [ ] Algorithm explanations (context/ has compact version, docs/ needs detailed)
+- [ ] Setup/installation guides (DEPENDENCIES.md complete?)
+- [ ] Troubleshooting guides (common errors documented?)
+- [ ] Data dictionary (field definitions for users?)
+- [ ] Deployment procedures (production setup documented?)
+- [ ] API/CLI reference (command documentation?)
+
+**If gaps found**: Create human-friendly versions in `docs/` that expand on AI context
 
 ### Step 1: Identify What Changed
 
@@ -119,70 +155,152 @@ For each documentation file, check:
 - ✅ New capability added in Enhancement N
 ```
 
-#### ../../context/ARCHITECTURE.md
+#### context/ARCHITECTURE.md (AI-optimized)
 
 **Check for**:
-- [ ] Diagrams reflect current structure
-- [ ] Component descriptions accurate
-- [ ] Data flow matches implementation
+- [ ] Compact notation still clear
+- [ ] Symbolic data flow accurate (→ arrows, etc.)
 - [ ] File paths current
 - [ ] New components documented
 - [ ] Deprecated components removed
-- [ ] Integration patterns up-to-date
+- [ ] Design decisions use ✅/❌ format
 
 **Update if needed**:
 ```markdown
-## Pipeline Stages
-
-### Stage N: New Stage (Added 2026-01-15)
-Description of new stage added in Enhancement N
+### Stage N: New Stage
+**Input**: data → **Process**: algorithm → **Output**: results
+**Added**: 2026-01-15 (Enhancement N)
 ```
 
-#### ../../context/CODING_PATTERNS.md
+**Note**: Keep compact for token efficiency, use symbols not prose
+
+#### docs/RECURSIVE_BISECTION.md (Human-readable)
+
+**Check for**:
+- [ ] Algorithm explanation clear for humans
+- [ ] Examples illustrative and detailed
+- [ ] Mathematical notation explained
+- [ ] Step-by-step walkthroughs included
+- [ ] Diagrams aid understanding
+- [ ] References to papers included
+
+**Update if needed**:
+```markdown
+## Algorithm Overview
+
+The recursive bisection algorithm works by...
+
+### Step 1: Initial Partitioning
+[Detailed explanation with examples]
+
+### Step 2: Refinement
+[Step-by-step process]
+```
+
+**Note**: Prioritize clarity over brevity, explain concepts thoroughly
+
+#### context/CODING_PATTERNS.md (AI-optimized)
 
 **Check for**:
 - [ ] Patterns match current code
-- [ ] Examples use current file paths
-- [ ] New patterns documented
-- [ ] Anti-patterns updated with learnings
-- [ ] Progress reporting protocol current
-- [ ] Scope-based pattern examples accurate
+- [ ] Examples concise (pattern-first)
+- [ ] Anti-patterns use ❌ notation
+- [ ] Progress reporting (STATUS protocol) current
+- [ ] Inline comments used (not verbose)
 
 **Update if needed**:
 ```markdown
-### Pattern: New Pattern Name
-
-**When to use**: Description
-
-**Example**:
-\`\`\`python
-# Current implementation pattern
-def example():
-    pass
-\`\`\`
+## Pattern: New Pattern
+**Use when**: Brief trigger
+**Code**:
+```python
+pos = int(os.environ.get('VAR'))  # Brief inline comment
+```
+**Anti-pattern** ❌: Don't do this
 ```
 
-#### ../../context/DATA_FORMATS.md
+**Note**: Pattern-first, minimal prose, inline documentation
+
+#### docs/CONTRIBUTING.md (Human-readable)
 
 **Check for**:
-- [ ] Directory structure diagrams current
-- [ ] File format specifications accurate
-- [ ] Field names match actual data
-- [ ] CSV schemas up-to-date
-- [ ] Year-specific differences documented
-- [ ] New file types documented
+- [ ] Git workflow explained clearly
+- [ ] Branch naming conventions
+- [ ] Commit message guidelines
+- [ ] Code review process
+- [ ] Testing requirements before PR
+- [ ] Documentation update requirements
 
 **Update if needed**:
 ```markdown
-### `new_file.csv`
+## Making Changes
 
-**Location**: `outputs/us_{year}_{version}/data/new_file.csv`
+1. Create a feature branch:
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
 
-**Schema**:
-| Column | Type | Description |
-|--------|------|-------------|
-| field1 | str  | Description |
+2. Make your changes following coding patterns...
+
+[Detailed step-by-step guide]
 ```
+
+**Note**: Assume reader is new to project, explain thoroughly
+
+#### context/DATA_FORMATS.md (AI-optimized)
+
+**Check for**:
+- [ ] Schemas use inline format
+- [ ] Field descriptions concise
+- [ ] URLs inline (no separate reference section)
+- [ ] Examples compact
+
+**Update if needed**:
+```markdown
+### `file.csv`
+**Path**: `outputs/{year}/file.csv`
+**Fields**: state(str), pop(int), pct(float)
+```
+
+**Note**: Inline everything, use abbreviations, compact tables
+
+#### docs/DATA_DICTIONARY.md (Human-readable) *[CREATE IF MISSING]*
+
+**Should contain**:
+- [ ] Every CSV field explained in detail
+- [ ] Data types and ranges
+- [ ] Example values
+- [ ] Where data comes from
+- [ ] How fields are calculated
+- [ ] Common use cases
+
+**Example structure**:
+```markdown
+# Data Dictionary
+
+## District Summary CSV
+
+### Field: `polsby_popper_score`
+
+**Type**: Float (0.0 to 1.0)
+
+**Description**: Measures district compactness using the Polsby-Popper metric, which compares the district's area to the area of a circle with the same perimeter.
+
+**Formula**: 4π × Area / Perimeter²
+
+**Interpretation**:
+- 1.0 = Perfect circle (most compact)
+- 0.5 = Moderately compact
+- 0.1 = Highly irregular (gerrymandered?)
+
+**Example Values**:
+- Wyoming District 1: 0.67 (fairly compact)
+- Maryland District 3: 0.14 (very irregular)
+
+**Data Source**: Calculated from district geometries
+```
+
+**Note**: Write for users who need to understand the data
 
 #### docs/CHANGELOG.md
 
@@ -207,7 +325,53 @@ def example():
 - Bug fix description (2026-01-13)
 ```
 
-#### docs/ENHANCEMENTS_2026.md
+#### docs/TROUBLESHOOTING.md (Human-readable) *[CREATE IF MISSING]*
+
+**Should contain**:
+- [ ] Common error messages and solutions
+- [ ] Platform-specific issues (Windows/Linux/Mac)
+- [ ] Data quality issues
+- [ ] Performance problems
+- [ ] Installation issues
+
+**Example structure**:
+```markdown
+# Troubleshooting Guide
+
+## Installation Issues
+
+### Error: "METIS not found"
+
+**Problem**: Pipeline fails with "gpmetis command not found"
+
+**Solution**:
+1. Install METIS: `brew install metis` (Mac) or download from...
+2. Add to PATH: `export PATH=/path/to/metis:$PATH`
+3. Verify: `gpmetis --help`
+
+**Why this happens**: METIS is required for graph partitioning...
+
+## Runtime Errors
+
+### Error: "UnicodeEncodeError: 'charmap' codec"
+
+**Problem**: Console output fails on Windows
+
+**Solution**: Never use Unicode characters (✓, →, etc.) in console output. Use ASCII: [OK], ->, etc.
+
+**Code fix**:
+```python
+# Bad
+print("✓ Complete")
+
+# Good
+print("[OK] Complete")
+```
+```
+
+**Note**: Write for users troubleshooting real problems
+
+#### context/enhancements/INDEX.md
 
 **Check for**:
 - [ ] Completed enhancements marked ✅
@@ -280,57 +444,106 @@ git diff docs/CHANGELOG.md
 
 ## Common Update Scenarios
 
+### Creating Missing Human Documentation
+
+**When**: User reports docs/ directory has gaps compared to context/
+
+**Process**:
+1. **Identify gaps**: Compare topic coverage (context/ has it, docs/ doesn't)
+2. **Determine need**: Is this user-facing? Do external users need this?
+3. **Create human version**: Expand AI context into readable documentation
+4. **Cross-reference**: Link from context/ to docs/ and vice versa
+
+**Example - Creating docs/TROUBLESHOOTING.md**:
+```bash
+# 1. Check what exists
+ls context/QUICK_REFERENCE.md  # Has troubleshooting section (compact)
+ls docs/TROUBLESHOOTING.md     # Doesn't exist
+
+# 2. Read AI version
+# context/QUICK_REFERENCE.md has:
+# "UnicodeEncodeError → Use ASCII not Unicode"
+
+# 3. Create human version
+# docs/TROUBLESHOOTING.md should have:
+# - Detailed error message
+# - Why it happens (Windows CP1252)
+# - Step-by-step solution
+# - Code examples (before/after)
+# - Platform-specific notes
+```
+
+**Files typically needing human versions**:
+- [ ] Algorithm explanations (context/ARCHITECTURE.md → docs/RECURSIVE_BISECTION.md)
+- [ ] Troubleshooting (context/QUICK_REFERENCE.md → docs/TROUBLESHOOTING.md)
+- [ ] Data dictionary (context/DATA_FORMATS.md → docs/DATA_DICTIONARY.md)
+- [ ] Deployment guide (context/ARCHITECTURE.md → docs/DEPLOYMENT.md)
+
 ### After Directory Restructure
 
 **Files to update**:
-- All docs with path references
-- ARCHITECTURE.md (directory structure diagrams)
-- DATA_FORMATS.md (file location tables)
-- CLAUDE.md (project structure section)
+- **AI context**: context/ARCHITECTURE.md, context/DATA_FORMATS.md (compact updates)
+- **Human docs**: README.md, docs/CONTRIBUTING.md (detailed explanations)
+- **Root**: CLAUDE.md (project structure section, references both)
 
 **Find all path references**:
 ```bash
-grep -r "data/tracts/2020/" docs/*.md
+# Check both directories
+grep -r "data/tracts/2020/" context/*.md docs/*.md
 # Update to: data/tracts/{year}/
 ```
 
 ### After Adding New Feature
 
-**Files to update**:
-- CLAUDE.md (Recent Major Changes, features list)
-- README.md (Features section)
-- ARCHITECTURE.md (if new component)
-- CODING_PATTERNS.md (if new pattern)
-- CHANGELOG.md (Add entry)
-- ENHANCEMENTS_2026.md (Mark complete)
+**AI context updates**:
+- context/ARCHITECTURE.md (compact component description)
+- context/CODING_PATTERNS.md (pattern-first examples)
+- context/enhancements/INDEX.md (mark complete)
+
+**Human docs updates**:
+- README.md (features section with explanations)
+- docs/CHANGELOG.md (detailed entry)
+- docs/RECURSIVE_BISECTION.md (if algorithm affected)
+- docs/TROUBLESHOOTING.md (if new errors possible)
+
+**Root updates**:
+- CLAUDE.md (Recent Major Changes, quick reference)
 
 ### After Renaming Commands
 
-**Files to update**:
-- All docs with command examples
-- CLAUDE.md (command reference sections)
+**Files to update** (both AI and human):
+- CLAUDE.md (command reference, examples)
 - README.md (usage examples)
-- SKILLS.md (skill command examples)
+- context/QUICK_REFERENCE.md (command list)
+- context/SKILLS.md (skill command examples)
+- docs/CONTRIBUTING.md (workflow commands)
 
 **Find command references**:
 ```bash
-grep -r "old_command" docs/*.md
+grep -r "old_command" context/*.md docs/*.md README.md CLAUDE.md
 # Update to: new_command
 ```
 
 ### After Changing Data Formats
 
-**Files to update**:
-- DATA_FORMATS.md (schema tables)
-- ARCHITECTURE.md (data flow diagrams)
-- CODING_PATTERNS.md (data handling examples)
+**AI context updates**:
+- context/DATA_FORMATS.md (inline schema, compact)
+
+**Human docs updates**:
+- docs/DATA_DICTIONARY.md (detailed field explanations)
+- README.md (if user-visible format change)
+
+**Both**:
+- context/ARCHITECTURE.md (data flow diagrams)
+- context/CODING_PATTERNS.md (data handling examples)
 
 ### After Bug Fixes Affecting Docs
 
-**Files to update**:
-- CHANGELOG.md (document fix)
-- CLAUDE.md (update anti-patterns if relevant)
-- CODING_PATTERNS.md (add "Don't Do This" if needed)
+**Updates needed**:
+- docs/CHANGELOG.md (document fix for humans)
+- docs/TROUBLESHOOTING.md (add solution for this error)
+- context/CODING_PATTERNS.md (add anti-pattern ❌ if relevant)
+- CLAUDE.md (update common pitfalls if major)
 
 ## Automation Helpers
 
@@ -495,13 +708,34 @@ Solution: Use TodoWrite to track each document
 - `/create-session-archive` - Create detailed historical notes
 - `/create-architecture-diagram` - Update visual documentation
 
+## Documentation Philosophy
+
+**Two Audiences, Two Formats**:
+
+### AI Context (context/)
+- **Audience**: Claude Code and AI assistants
+- **Goal**: Maximum information density, minimal tokens
+- **Style**: Compact, symbolic, pattern-first, inline
+- **When to use**: Working with AI, need quick reference
+
+### Human Docs (docs/)
+- **Audience**: Developers, researchers, users
+- **Goal**: Clarity, completeness, accessibility
+- **Style**: Detailed explanations, examples, walkthroughs
+- **When to use**: Onboarding, learning, troubleshooting
+
+**Key Principle**: Never sacrifice human documentation for AI optimization. Both must exist and complement each other.
+
 ## What You'll Get
 
 After successful documentation update:
-- **Accurate documentation** reflecting current state
+- **Accurate documentation** reflecting current state (both AI and human)
 - **Consistent information** across all docs
+- **No gaps** - human docs exist for all user-facing features
 - **Current examples** that work as written
 - **Updated timestamps** on modified docs
+- **AI-optimized context** for efficient Claude Code usage
+- **Human-friendly guides** for developers and users
 - **Improved maintainability** for future changes
 - **Better user experience** for new contributors
 - **Audit trail** of what changed and why
