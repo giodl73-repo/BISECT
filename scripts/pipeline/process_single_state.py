@@ -155,12 +155,31 @@ def main():
 
     # Don't create tqdm bars in subprocess - just send status messages to parent
     # Parent will create and manage the bars
-    def send_status(msg):
+
+    # Check if running in multi-year mode
+    is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
+    census_year = args.year
+
+    # State counter for multi-year mode (get from environment if set)
+    state_number = int(os.environ.get('STATE_NUMBER', '0'))
+
+    def send_status(msg, stage=None, stage_total=None, stage_desc=None):
         """Send status update to parent process."""
-        print(f"STATUS:{position}:{msg}", flush=True)
+        if is_multi_year:
+            # Hierarchical format for multi-year mode
+            if stage is not None:
+                # WORKER status
+                print(f"STATUS:WORKER:{census_year}:0:STATE:{state_number}/50:{state_name}:STAGE:{stage}/{stage_total}:{stage_desc}", flush=True)
+            else:
+                # Simple message - send as year progress
+                pass
+        else:
+            # Original format for single-year mode
+            print(f"STATUS:{position}:{msg}", flush=True)
 
     # Send starting message
-    send_status(f"{state_name} [{num_districts}D] Starting...")
+    if not is_multi_year:
+        send_status(f"{state_name} [{num_districts}D] Starting...")
 
     # Process without tqdm
     if True:
@@ -168,7 +187,10 @@ def main():
         # Process each step
         for i, (step_label, cmd) in enumerate(steps, 1):
             # Send status update to parent
-            send_status(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label}")
+            if is_multi_year:
+                send_status(None, stage=i, stage_total=len(steps), stage_desc=step_label.lower().replace(' ', '_'))
+            else:
+                send_status(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label}")
 
             try:
                 # Use Popen to read progress messages in real-time
@@ -184,7 +206,10 @@ def main():
                         # Parse format: "PROGRESS:15/52"
                         progress = line.split(":", 1)[1].strip()
                         # Send updated status with progress to parent
-                        send_status(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label} ({progress})")
+                        if is_multi_year:
+                            send_status(None, stage=i, stage_total=len(steps), stage_desc=f"{step_label.lower().replace(' ', '_')}_{progress}")
+                        else:
+                            send_status(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label} ({progress})")
 
                 process.wait(timeout=3600)
 

@@ -804,6 +804,13 @@ def main():
             try:
                 for line in proc.stdout:
                     line = line.strip()
+                    if not line:
+                        continue
+
+                    # Debug: print raw line
+                    # sys.stderr.write(f"[DEBUG {year}] {line}\n")
+                    # sys.stderr.flush()
+
                     msg_type, data = parse_status_message(line)
                     if msg_type == 'YEAR':
                         with display_lock:
@@ -812,17 +819,38 @@ def main():
                                 data['completed'],
                                 data['total']
                             )
-                            # Only refresh display every 2 seconds to avoid flicker
+                            # Refresh display
                             now = time.time()
-                            if now - last_display_time[0] >= 2.0:
-                                print("\n" + "="*70)
-                                print("PROGRESS UPDATE:")
-                                print("="*70)
+                            if now - last_display_time[0] >= 1.0:
+                                print("\n" + "="*70, flush=True)
+                                print("PROGRESS UPDATE:", flush=True)
+                                print("="*70, flush=True)
+                                coordinator.print_status()
+                                print("="*70 + "\n", flush=True)
+                                last_display_time[0] = now
+                    elif msg_type == 'WORKER':
+                        with display_lock:
+                            coordinator.update_worker_status(
+                                data['year'],
+                                data['worker_id'],
+                                data['state_num'],
+                                data['state_name'],
+                                data['stage'],
+                                data['stage_total'],
+                                data['stage_desc']
+                            )
+                            # Refresh display
+                            now = time.time()
+                            if now - last_display_time[0] >= 1.0:
+                                print("\n" + "="*70, flush=True)
+                                print("PROGRESS UPDATE:", flush=True)
+                                print("="*70, flush=True)
                                 coordinator.print_status()
                                 print("="*70 + "\n", flush=True)
                                 last_display_time[0] = now
             except Exception as e:
-                pass  # Process ended
+                sys.stderr.write(f"[ERROR] Monitor thread for {year} died: {e}\n")
+                sys.stderr.flush()
 
         # Start monitoring threads
         threads = []
@@ -1067,7 +1095,7 @@ def main():
 
         elif is_multi_year_subprocess:
             # Running as subprocess of multi-year mode
-            # Emit STATUS messages for parent to track progress
+            # Process single_state.py will emit STATUS:WORKER messages
             for i, state_code in enumerate(states_to_process, 1):
                 config = STATE_CONFIG[state_code]
                 state_name = config['name']
@@ -1090,11 +1118,12 @@ def main():
 
                 env = os.environ.copy()
                 env['DPI'] = str(args.dpi)
+                env['STATE_NUMBER'] = str(i)  # Pass state number for progress reporting
 
-                result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
+                result = subprocess.run(cmd, shell=True, env=env, capture_output=False)  # Don't capture so STATUS prints through
                 if result.returncode == 0:
                     successful.append(state_code)
-                    # Emit STATUS message for parent to track progress
+                    # Emit year-level progress
                     print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
                 else:
                     failed.append(state_code)
