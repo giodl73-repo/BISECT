@@ -74,6 +74,9 @@ from scripts.utils import (
     get_election_data_file, get_demographic_data_file
 )
 
+# Import progress coordinator for hierarchical multi-year display
+from scripts.utils.progress_coordinator import ProgressCoordinator
+
 # Import configuration files
 try:
     from scripts.config_2020 import STATE_CONFIG_2020
@@ -677,8 +680,79 @@ def main():
         print(f"  Total: {sum(workers_per_year)} workers")
         print("="*70)
 
+        # Create hierarchical progress coordinator
+        coordinator = ProgressCoordinator(
+            years=['2020', '2010', '2000'],
+            workers_per_year=workers_per_year
+        )
+
         if args.print_only:
-            print("\n[PRINT-ONLY MODE] - No execution")
+            print("\n[PRINT-ONLY MODE] - Demonstrating progress display with mock data")
+            print("\nInitial Progress Display:")
+            coordinator.print_status()
+
+            # Simulate some progress updates to demonstrate the display
+            print("\n\nSimulated Progress Updates (demonstrating the display):")
+            print("="*70)
+
+            # Update 1: Some initial progress
+            coordinator.update_year_progress('2020', 5, 50)
+            coordinator.update_worker_status('2020', 0, 3, 'california', 2, 7, 'district_maps')
+            coordinator.update_worker_status('2020', 1, 2, 'texas', 4, 7, 'round_maps')
+
+            coordinator.update_year_progress('2010', 8, 50)
+            coordinator.update_worker_status('2010', 0, 4, 'florida', 5, 7, 'political_analysis')
+            coordinator.update_worker_status('2010', 1, 4, 'new_york', 3, 7, 'summary')
+
+            coordinator.update_year_progress('2000', 3, 50)
+            coordinator.update_worker_status('2000', 0, 2, 'pennsylvania', 1, 7, 'redistricting')
+            coordinator.update_worker_status('2000', 1, 1, 'illinois', 6, 7, 'demographic_analysis')
+
+            print("\nProgress Update 1:")
+            coordinator.print_status()
+
+            # Update 2: More progress
+            coordinator.update_year_progress('2020', 15, 50)
+            coordinator.update_worker_status('2020', 0, 8, 'ohio', 7, 7, 'demographic_analysis')
+            coordinator.update_worker_status('2020', 1, 7, 'georgia', 1, 7, 'redistricting')
+
+            coordinator.update_year_progress('2010', 20, 50)
+            coordinator.update_worker_status('2010', 0, 10, 'michigan', 3, 7, 'summary')
+            coordinator.update_worker_status('2010', 1, 10, 'north_carolina', 5, 7, 'political_analysis')
+
+            coordinator.update_year_progress('2000', 12, 50)
+            coordinator.update_worker_status('2000', 0, 6, 'virginia', 4, 7, 'round_maps')
+            coordinator.update_worker_status('2000', 1, 6, 'massachusetts', 2, 7, 'district_maps')
+
+            print("\nProgress Update 2:")
+            coordinator.print_status()
+
+            # Update 3: Near completion
+            coordinator.update_year_progress('2020', 45, 50)
+            coordinator.update_worker_status('2020', 0, 23, 'vermont', 6, 7, 'demographic_analysis')
+            coordinator.update_worker_status('2020', 1, 22, 'wyoming', 7, 7, 'complete')
+
+            coordinator.update_year_progress('2010', 48, 50)
+            coordinator.update_worker_status('2010', 0, 24, 'delaware', 5, 7, 'political_analysis')
+            coordinator.update_worker_status('2010', 1, 24, 'rhode_island', 6, 7, 'demographic_analysis')
+
+            coordinator.update_year_progress('2000', 40, 50)
+            coordinator.update_worker_status('2000', 0, 20, 'montana', 3, 7, 'summary')
+            coordinator.update_worker_status('2000', 1, 20, 'south_dakota', 4, 7, 'round_maps')
+
+            print("\nProgress Update 3 (near completion):")
+            coordinator.print_status()
+
+            print("\n" + "="*70)
+            print("[PRINT-ONLY MODE] Progress display demonstration complete")
+            print("="*70)
+
+            # Don't actually run anything in print-only mode
+            return 0
+        else:
+            # Real execution mode
+            print("\nInitial Progress Display:")
+            coordinator.print_status()
 
         # Start timestamp
         start_time = time.time()
@@ -706,6 +780,14 @@ def main():
         elapsed = time.time() - start_time
         elapsed_mins = elapsed / 60
         elapsed_hours = elapsed / 3600
+
+        # Update final progress display
+        print("\nFinal Progress Display:")
+        for year in year_queue:
+            result = results.get(year, {'success': False})
+            if result['success']:
+                coordinator.update_year_progress(year, 50, 50)
+        coordinator.print_status()
 
         # Print summary
         print("\n" + "="*70)
