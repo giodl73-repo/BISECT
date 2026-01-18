@@ -880,13 +880,26 @@ def main():
         # =====================================================================
         # PHASE 0: CENSUS DATA PROCESSING (if needed)
         # =====================================================================
-        # Check for .downloads_complete marker and process census data if missing
+        # Check for per-stage census data markers (.tract_tracts_complete, etc.)
+        # Import helper to check stage completion
+        sys.path.insert(0, str(scripts_dir.parent / 'data'))
+        from process_census_data import check_all_stages_complete
+
+        # Default stages for redistricting
+        required_stages = ['tracts', 'adjacency']  # Core stages needed for redistricting
+        resolution = 'tract'  # Currently only tract-level supported
+
         year_census_complete = {}
         census_processes = {}
 
         for year in year_queue:
-            census_marker = year_output_dirs[year] / '.downloads_complete'
-            census_complete = census_marker.exists() and not args.reset
+            # Check if ALL required stages are complete (per-stage markers)
+            census_complete = check_all_stages_complete(
+                year_output_dirs[year],
+                required_stages,
+                resolution,
+                args.reset  # If reset, treat as not complete
+            )
             year_census_complete[year] = census_complete
 
             if not census_complete and not args.skip_states:
@@ -910,11 +923,9 @@ def main():
 
             for year in year_queue:
                 if year_phase[year] == 'census_data':
-                    census_marker = year_output_dirs[year] / '.downloads_complete'
-                    status = "needed" if not census_marker.exists() else "forcing rebuild"
-                    print(f"  [{year}] Census data processing {status}")
+                    print(f"  [{year}] Census data processing needed")
                 else:
-                    print(f"  [{year}] Census data already complete (skipping)")
+                    print(f"  [{year}] Census data already complete (all {resolution}-level stages done)")
             print("="*70)
             print()
 
@@ -963,12 +974,9 @@ def main():
                 census_results[year] = success
 
                 if success:
-                    # Create .downloads_complete marker
-                    census_marker = year_output_dirs[year] / '.downloads_complete'
-                    census_marker.parent.mkdir(parents=True, exist_ok=True)
-                    census_marker.write_text(f"Census data processing completed: {datetime.now().isoformat()}\n")
+                    # Per-stage markers already created by process_census_data.py
                     year_phase[year] = 'ready_for_states'
-                    print(f"\n[{year}] [OK] Census data processing complete\n")
+                    print(f"\n[{year}] [OK] Census data processing complete (per-stage markers created)\n")
                 else:
                     year_phase[year] = 'failed'
                     print(f"\n[{year}] [FAIL] Census data processing failed\n")
