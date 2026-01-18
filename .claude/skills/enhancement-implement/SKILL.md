@@ -20,6 +20,7 @@ This skill executes planned enhancements following the project's standard workfl
 
 ## Prerequisites
 
+- **Read `docs/ENHANCEMENT_WORKFLOW.md`** - Detailed 6-phase process (research, planning, implementation, testing, documentation, completion)
 - Enhancement must be documented in `docs/enhancements/active/` with status 📋 PLANNED
 - Enhancement spec includes detailed phases and file lists
 - All data dependencies are available or noted
