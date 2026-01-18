@@ -1130,12 +1130,17 @@ def main():
         for year in year_queue:
             if year_phase[year] == 'nation':
                 proc = processes[year]
-                proc.wait()
+                # Check if process has already exited (monitoring thread may have waited)
+                if proc.poll() is None:
+                    # Still running - wait for it
+                    proc.wait()
+                # Process has exited - get return code
                 success = (proc.returncode == 0)
                 results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
 
-                # Wait for monitoring thread
-                threads[year].join(timeout=1)
+                # Wait for monitoring thread to finish
+                if year in threads:
+                    threads[year].join(timeout=5)
             elif year_phase[year] == 'failed':
                 pass  # Already recorded failure
 
@@ -1151,6 +1156,9 @@ def main():
                 if result['success']:
                     coordinator.update_year_progress(year, 50, 50)
             clear_and_update_display(coordinator)
+
+        # Move past the hierarchical display for subsequent output
+        print("\n")
 
         # Generate master dashboard (cross-year comparison) if any year succeeded
         any_success = any(results.get(year, {}).get('success', False) for year in year_queue)
