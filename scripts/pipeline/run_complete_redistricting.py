@@ -564,10 +564,9 @@ def create_argument_parser():
                         help='Skip political analysis steps')
     parser.add_argument('--skip-demographic', action='store_true',
                         help='Skip demographic analysis steps')
-    parser.add_argument('--skip-states', action='store_true',
-                        help='Skip state processing (for post-processing only)')
-    parser.add_argument('--states-only', action='store_true',
-                        help='Process states only, skip post-processing (useful for multi-year runs)')
+    parser.add_argument('--stages', type=str, nargs='+', default=['census_data', 'states', 'nation'],
+                        choices=['census_data', 'states', 'nation'],
+                        help='Which pipeline stages to run (default: all three). Examples: --stages census_data (data only), --stages states nation (skip data processing), --stages nation (post-processing only)')
     parser.add_argument('--reprocess', action='store_true',
                         help='Reprocess all states (do not skip already processed states)')
     parser.add_argument('-r', '--reset', action='store_true',
@@ -744,7 +743,7 @@ def main():
 
     # Create or load version config (once for all years)
     version_config_path = version_dir / 'version.json'
-    if not args.skip_states and not args.print_only:
+    if 'states' in args.stages and not args.print_only:
         if version_config_path.exists() and not args.reset:
             print(f"\n[OK] Loading existing version config: {version_config_path}")
             version_config = read_version_config(version_config_path)
@@ -907,15 +906,23 @@ def main():
             )
             year_census_complete[year] = census_complete
 
-            if not census_complete and not args.skip_states:
+            # Determine initial phase based on --stages and census data completion
+            if 'census_data' not in args.stages:
+                # Skip census data processing
+                if 'states' in args.stages:
+                    year_phase[year] = 'ready_for_states'
+                else:
+                    # Skip directly to nation
+                    year_phase[year] = 'ready_for_nation'
+            elif not census_complete:
                 # Need to process census data for this year
                 year_phase[year] = 'census_data'
-            elif args.skip_states:
-                # Skipping all processing
-                year_phase[year] = 'ready_for_nation'
-            else:
+            elif 'states' in args.stages:
                 # Census data already complete, ready for states
                 year_phase[year] = 'ready_for_states'
+            else:
+                # Skip states, go directly to nation
+                year_phase[year] = 'ready_for_nation'
 
         # Launch census data processing for years that need it
         any_census_needed = any(phase == 'census_data' for phase in year_phase.values())
@@ -1011,7 +1018,7 @@ def main():
             if year_phase[year] == 'ready_for_states':
                 year_phase[year] = 'states'  # Ready to start state processing
 
-        # Check for .states_complete marker file or --skip-states flag
+        # Check for .states_complete marker file or 'states' not in --stages
         year_states_complete = {}
         for year in year_queue:
             # Only check states if not already failed during census processing
@@ -1019,8 +1026,8 @@ def main():
                 year_states_complete[year] = False
                 continue
 
-            # Skip states if explicitly requested OR if marker file exists
-            if args.skip_states:
+            # Skip states if not in requested stages OR if marker file exists
+            if 'states' not in args.stages:
                 states_complete = True
                 # Don't print in multi-year mode - would interfere with hierarchical display
                 year_phase[year] = 'ready_for_nation'  # Skip to nation processing
@@ -1407,7 +1414,7 @@ def main():
     # =========================================================================
     # STEP 0: CHECK ELECTION DATA (for political analysis)
     # =========================================================================
-    if not args.skip_political and not args.skip_states:
+    if not args.skip_political and 'states' in args.stages:
         election_data_file = get_election_data_file(args.election_year)
 
         if not election_data_file.exists():
@@ -1425,7 +1432,7 @@ def main():
     # =========================================================================
     # STEP 0B: CHECK DEMOGRAPHIC DATA (for demographic analysis)
     # =========================================================================
-    if not args.skip_demographic and not args.skip_states:
+    if not args.skip_demographic and 'states' in args.stages:
         demographic_data_file = get_demographic_data_file(args.year)
 
         if not demographic_data_file.exists():
@@ -1443,7 +1450,7 @@ def main():
     # =========================================================================
     # STEP 1: PROCESS ALL 50 STATES
     # =========================================================================
-    if not args.skip_states:
+    if 'states' in args.stages:
         # Check if we're running as a subprocess of multi-year mode
         is_multi_year_subprocess = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
 
@@ -1731,10 +1738,10 @@ def main():
     # STEP 2: POST-PROCESSING
     # =========================================================================
 
-    # Skip post-processing if --states-only is set
-    if args.states_only:
-        print("\n[OK] States-only mode: Skipping post-processing steps")
-        print(f"[OK] State processing complete. Run with --skip-states to do post-processing later.")
+    # Skip post-processing if 'nation' not in --stages
+    if 'nation' not in args.stages:
+        print("\n[OK] Skipping nation post-processing (not in --stages)")
+        print(f"[OK] Requested stages complete. Run with --stages nation to do post-processing later.")
         return 0
 
     # Call process_nation.py to handle all national post-processing
