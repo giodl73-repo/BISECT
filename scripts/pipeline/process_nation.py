@@ -55,26 +55,28 @@ def run_postprocessing_task(args_tuple):
     Must be at module level for Windows multiprocessing pickling.
 
     Args:
-        args_tuple: (task_name, command, worker_id, year, task_index, total_tasks)
+        args_tuple: (task_name, command, worker_id, year, task_index, total_tasks, is_multi_year)
 
     Returns:
         (task_name, success_bool)
     """
-    task_name, command, worker_id, year, task_index, total_tasks = args_tuple
+    task_name, command, worker_id, year, task_index, total_tasks, is_multi_year = args_tuple
 
-    # Emit starting status
-    print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:0/100", flush=True)
-    sys.stdout.flush()
+    # Emit starting status (only in multi-year mode)
+    if is_multi_year:
+        print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:0/100", flush=True)
+        sys.stdout.flush()
 
     try:
         # Run the command (suppress verbose output, keep only critical errors)
         result = subprocess.run(command, shell=True, timeout=900,
                                capture_output=True, text=True)
 
-        # Emit completion status
+        # Emit completion status (only in multi-year mode)
         if result.returncode == 0:
-            print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:100/100", flush=True)
-            sys.stdout.flush()
+            if is_multi_year:
+                print(f"STATUS:WORKER:{year}:{worker_id}:TASK:{task_index}/{total_tasks}:{task_name}:PROGRESS:100/100", flush=True)
+                sys.stdout.flush()
             return (task_name, True)
         else:
             # On failure, print stderr for debugging
@@ -293,17 +295,17 @@ def main():
 
         # Prepare task arguments with worker ID assignment (round-robin)
         task_args = [
-            (step['name'].replace(' ', '_'), step['command'], i % max_workers, args.year, i, len(phase2_steps))
+            (step['name'].replace(' ', '_'), step['command'], i % max_workers, args.year, i, len(phase2_steps), is_multi_year)
             for i, step in enumerate(phase2_steps, 1)
         ]
 
         if args.print_only:
             # Print-only mode - just show what would run
-            for task_name, command, worker_id, year, task_index, total_tasks in task_args:
+            for task_name, command, worker_id, year, task_index, total_tasks, _ in task_args:
                 if not is_multi_year:
                     print(f"[Worker {worker_id+1}] [{task_index}/{total_tasks}] {task_name}: {command}")
         else:
-            # Emit initial Idle status for all workers
+            # Emit initial Idle status for all workers (only in multi-year mode)
             if is_multi_year:
                 for worker_id in range(max_workers):
                     print(f"STATUS:WORKER:{args.year}:{worker_id}:TASK:0/0:Idle:PROGRESS:0/100", flush=True)
@@ -313,7 +315,7 @@ def main():
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 results = list(executor.map(run_postprocessing_task, task_args))
 
-                # Check for failures
+                # Check for failures (show warnings in standalone mode)
                 for task_name, success in results:
                     if not success and not is_multi_year:
                         print(f"[WARNING] {task_name} failed but continuing...")
