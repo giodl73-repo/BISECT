@@ -68,13 +68,20 @@ if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
 
 ```bash
 # Pipeline (production - outputs/v1/{year}/)
-run_redistricting.bat --version v1                    # Multi-year parallel (2-4h)
-run_redistricting.bat --year 2020 --version v1        # Single year (~1h)
-run_redistricting.bat --version v1 --skip-states      # National only (fast)
+run -v v1                                             # Multi-year parallel (2-4h) - doskey alias
+run -y 2020 -v v1                                     # Single year (~1h)
+run -y 2020 -v v1 -s CA TX NY                         # Specific states only
+run -v v1 --skip-states                               # National only (fast)
 
 # Test/debug runs (outputs/dev/{version}_{year}/)
-run_test.bat --year 2020 --version my_test            # Test run
-python scripts/pipeline/run_complete_redistricting.py --print-only  # Dry run
+runtest -y 2020 -v test                               # Test run - doskey alias
+runtest -y 2020 -v test -s VT                         # Test single state
+run -p -v test                                        # Dry run (print-only)
+run -v v1 -d                                          # Debug mode (progress delays)
+
+# Short flags: -h=help, -y=year, -v=version, -s=states, -w=workers, -r=reset,
+#              -p=print-only, -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
+# Long forms also work: --help, --year, --version, --states, --workers, --dpi, etc.
 
 # Dashboard
 python scripts/web/generate_master_dashboard.py

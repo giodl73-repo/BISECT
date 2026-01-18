@@ -194,10 +194,11 @@ python scripts/data/geography/build_adjacency.py --year 2020
 
 # Step 4: Run full redistricting pipeline (2-4 hours)
 # Windows:
-run_redistricting.bat --year 2020 --version v1
+run_redistricting.bat -y 2020 -v v1
+run -y 2020 -v v1                                     # Short: doskey alias
 
 # macOS/Linux:
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1
+python scripts/pipeline/run_complete_redistricting.py -y 2020 -v v1
 ```
 
 **Progress monitoring**: The pipeline shows 4-level hierarchical progress bars:
@@ -224,9 +225,10 @@ python scripts/data/geography/build_adjacency.py --year 2010
 python scripts/data/geography/build_adjacency.py --year 2000
 
 # Run multi-year parallel pipeline (2-4 hours total)
-run_redistricting.bat --version v1
+run_redistricting.bat -v v1
+run -v v1                                             # Short: doskey alias
 # or
-python scripts/pipeline/run_complete_redistricting.py --version v1
+python scripts/pipeline/run_complete_redistricting.py -v v1
 ```
 
 **Speed benefit**: 60-70% faster than running years sequentially (2-4 hours vs. 6-9 hours).

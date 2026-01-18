@@ -33,42 +33,67 @@ pip install pymetis
 
 ```bash
 # Multi-year parallel mode (all 3 census years: 2020, 2010, 2000) - NEW DEFAULT ✓
-run_redistricting.bat --version v1
+run_redistricting.bat -v v1
+run -v v1                                             # Short: doskey alias + short flags
 
 # Single year with custom workers
-run_redistricting.bat --year 2020 --workers 12 --version v1
+run_redistricting.bat -y 2020 -w 12 -v v1
+run -y 2020 -w 12 -v v1                               # Short: doskey alias
 
 # Skip state processing (fast national post-processing only)
-run_redistricting.bat --version v1 --skip-states
+run_redistricting.bat -v v1 --skip-states
 
 # Test/debug runs (outputs to dev/)
-run_test.bat --year 2020 --version my_test
+run_test.bat -y 2020 -v my_test
+runtest -y 2020 -v test                               # Short: doskey alias
+
+# Get help (show all options)
+run -h
 
 # Emergency stop (if needed)
 CANCEL.bat
+
+# Note: Short flags available: -h=help, -y=year, -v=version, -s=states, -w=workers,
+#       -r=reset, -p=print-only, -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
+#       Long forms also work: --help, --year, --version, --states, --dpi, etc.
 ```
 
 #### Command Line (All Platforms)
 
 ```bash
 # Multi-year parallel (DEFAULT) - runs all 3 census years in parallel with hierarchical progress
-python scripts/pipeline/run_complete_redistricting.py --version v1
+python scripts/pipeline/run_complete_redistricting.py -v v1
 # Runs: 2020, 2010, 2000 concurrently with 12 workers (allocates 4+4+4)
 
 # Single census year
-python scripts/pipeline/run_complete_redistricting.py --year 2020 --version v1
+python scripts/pipeline/run_complete_redistricting.py -y 2020 -v v1
+
+# Specific states only
+python scripts/pipeline/run_complete_redistricting.py -y 2020 -v v1 -s CA TX NY
 
 # Custom workers (for multi-year: 4 workers → 2+1+1 allocation, 12 workers → 4+4+4)
-python scripts/pipeline/run_complete_redistricting.py --workers 12 --version v1
+python scripts/pipeline/run_complete_redistricting.py -w 12 -v v1
 
 # Fresh run (delete existing outputs first)
-python scripts/pipeline/run_complete_redistricting.py --version v1 --reset
+python scripts/pipeline/run_complete_redistricting.py -v v1 -r
+
+# Debug mode (progress delays for monitoring)
+python scripts/pipeline/run_complete_redistricting.py -v v1 -d
 
 # Skip state processing (fast iteration - just rerun national post-processing)
-python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-states
+python scripts/pipeline/run_complete_redistricting.py -v v1 --skip-states
 
 # Skip per-state analysis (faster, use old batch post-processing)
-python scripts/pipeline/run_complete_redistricting.py --version v1 --skip-analysis
+python scripts/pipeline/run_complete_redistricting.py -v v1 --skip-analysis
+
+# Test/debug run (outputs to dev/)
+python scripts/pipeline/run_complete_redistricting.py -y 2020 -v test -rt test -s VT
+
+# Dry run (print only, no execution)
+python scripts/pipeline/run_complete_redistricting.py -p -v preview
+
+# Get help
+python scripts/pipeline/run_complete_redistricting.py -h
 ```
 
 **Performance**:

@@ -88,11 +88,12 @@ FileNotFoundError: outputs/v1/2020/states/new_york/data/districts.csv
 After applying fix, test with small state using `run_test.bat` (outputs to `dev/`):
 ```bash
 # Windows
-run_test.bat --year 2020 --version debug_test --states "VT"
+run_test.bat -y 2020 -v debug_test --states "VT"
+runtest -y 2020 -v debug_test --states "VT"           # Short: doskey alias
 
 # Direct Python call
 python scripts/pipeline/run_complete_redistricting.py \
-  --year 2020 --version debug_test --run-type test --states "VT"
+  -y 2020 -v debug_test -rt test --states "VT"
 ```
 **Output location**: `outputs/dev/debug_test_2020/` (keeps test runs organized)
 If Vermont succeeds → test full pipeline

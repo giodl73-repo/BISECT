@@ -552,9 +552,9 @@ def create_argument_parser():
     parser.add_argument('-v', '--version', type=str, default='v1', help='Version identifier (default: v1)')
     parser.add_argument('-w', '--workers', type=int, default=12,
                         help='Number of parallel workers: 1=sequential, 2-24=parallel (default: 12)')
-    parser.add_argument('-d', '--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
+    parser.add_argument('--dpi', type=int, default=150, choices=[72, 100, 150, 200, 300],
                         help='DPI for output maps (default: 150). Higher = better quality but slower.')
-    parser.add_argument('-e', '--election-year', type=str, default='2020', choices=['2020', '2016'],
+    parser.add_argument('-ey', '--election-year', type=str, default='2020', choices=['2020', '2016'],
                         help='Election year for political analysis (default: 2020)')
     parser.add_argument('--run-analysis', action='store_true', default=True,
                         help='Run per-state analysis (political, demographic, compactness) during state processing (default: True)')
@@ -574,15 +574,15 @@ def create_argument_parser():
                         help='Delete output directory before starting (fresh run, not incremental)')
     parser.add_argument('-p', '--print-only', action='store_true',
                         help='Print commands without executing (debug mode)')
-    parser.add_argument('--debug', action='store_true',
+    parser.add_argument('-d', '--debug', action='store_true',
                         help='Enable debug mode with progress delays')
-    parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
+    parser.add_argument('-pm', '--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
                         help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
-    parser.add_argument('--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
+    parser.add_argument('-rt', '--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
                         help='Run type: "production" (outputs/v{version}/{year}/), "experiment" (outputs/experiments/{experiment_name}/), or "test" (outputs/dev/) (default: production)')
     parser.add_argument('--experiment-name', type=str,
                         help='Experiment name (required when --run-type=experiment)')
-    parser.add_argument('states', nargs='*',
+    parser.add_argument('-s', '--states', nargs='*', default=None,
                         help='Specific state codes to process (default: all states)')
     return parser
 

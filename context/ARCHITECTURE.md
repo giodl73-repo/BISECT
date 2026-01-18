@@ -205,16 +205,17 @@ Main Process (Coordinator)
 
 ```bash
 # First run: Full (creates marker)
-run_redistricting.bat --version v1
+run_redistricting.bat -v v1
+run -v v1                                             # Short: doskey alias
 
 # Second run: Fast! (sees marker, skips states)
-run_redistricting.bat --version v1
+run -v v1
 
 # Force rerun: Ignores marker
-run_redistricting.bat --version v1 --reset
+run -v v1 -r                                          # -r = --reset
 
 # Explicit skip: Skip states without marker
-run_redistricting.bat --version v1 --skip-states
+run -v v1 --skip-states
 ```
 
 ### Parallel National Post-Processing

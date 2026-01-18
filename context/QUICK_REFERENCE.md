@@ -7,20 +7,26 @@
 ### Pipeline
 ```bash
 # Production runs (outputs/v1/{year}/)
-run_redistricting.bat -v v1                           # Multi-year parallel (all 3 years) - 2-4h
-run -v v1                                             # Short alias (doskey + short flags)
-run_redistricting.bat -y 2020 -v v1                   # Single year - ~1h
-run_redistricting.bat --workers 12 -v v1              # Custom workers (4+4+4 allocation)
-run_redistricting.bat -v v1 --reset                   # Fresh run (delete outputs)
-run_redistricting.bat -v v1 --skip-states             # National only (fast - minutes)
+run -h                                                # Show all options and flags
+run -v v1                                             # Multi-year parallel - 2-4h (doskey alias)
+run -y 2020 -v v1                                     # Single year - ~1h
+run -y 2020 -v v1 -s CA TX NY                         # Specific states only
+run -w 16 -v v1                                       # Custom workers (5+5+6 allocation)
+run -v v1 -r                                          # Fresh run (reset/delete outputs)
+run -v v1 -d                                          # Debug mode (progress delays)
+run -v v1 --skip-states                               # National only (fast - minutes)
+run -p -v test                                        # Dry run (print only)
 
 # Test/debug runs (outputs/dev/{version}_{year}/)
-run_test.bat -y 2020 -v my_test                       # Test run (uses --run-type test)
-runtest -y 2020 -v test                               # Short alias (doskey + short flags)
-python scripts/pipeline/run_complete_redistricting.py --print-only  # Dry run
+runtest -y 2020 -v my_test                            # Test run (doskey alias)
+runtest -y 2020 -v test -s VT                         # Test with single state
 
-# Single state
-python scripts/pipeline/run_state_redistricting.py --state CA --year 2020 --output-dir outputs/california
+# Long forms also work (short flags are optional)
+run --year 2020 --version v1 --workers 12 --reset    # All long flags
+
+# Short flag reference:
+# -h=help, -y=year, -v=version, -s=states, -w=workers, -r=reset, -p=print-only,
+# -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
 ```
 
 ### Dashboard
@@ -116,16 +122,32 @@ Use standard mapping:
 
 ## Flags
 
-**Pipeline**:
-- `--version v1`: Output version
-- `--year {2020|2010|2000|all}`: Census year(s) (default: all)
-- `--workers N`: Parallel workers (default: 12)
-- `--dpi N`: Image DPI (default: 150)
-- `--reset`: Delete existing outputs
+**Pipeline Short Flags** (all have long equivalents):
+
+| Short | Long | Values | Default | Description |
+|-------|------|--------|---------|-------------|
+| `-h` | `--help` | - | - | Show all options |
+| `-y` | `--year` | 2020/2010/2000/all | all | Census year(s) |
+| `-v` | `--version` | string | v1 | Output version identifier |
+| `-s` | `--states` | state codes | all | Specific states (e.g., CA TX NY) |
+| `-w` | `--workers` | 1-24 | 12 | Parallel workers |
+| `-r` | `--reset` | flag | - | Delete outputs (fresh run) |
+| `-p` | `--print-only` | flag | - | Dry run (no execution) |
+| `-d` | `--debug` | flag | - | Debug mode with delays |
+| `-ey` | `--election-year` | 2020/2016 | 2020 | Election data year |
+| `-pm` | `--partition-mode` | edge-weighted/unweighted | edge-weighted | METIS partition mode |
+| `-rt` | `--run-type` | production/test/experiment | production | Output directory type |
+
+**Pipeline Long Flags** (no short equivalent):
+- `--dpi N`: Map DPI (72/100/150/200/300, default: 150)
 - `--skip-states`: National post-processing only
 - `--skip-analysis`: Skip per-state analysis (legacy)
-- `--print-only`: Dry run
 - `--force`: Override skip logic
+- `--skip-political`: Skip political analysis
+- `--skip-demographic`: Skip demographic analysis
+- `--states-only`: Process states, skip post-processing
+- `--reprocess`: Reprocess all states (ignore skip logic)
+- `--experiment-name`: Name for experiment runs (required with `-rt experiment`)
 
 **Tests**:
 - `-v`: Verbose
