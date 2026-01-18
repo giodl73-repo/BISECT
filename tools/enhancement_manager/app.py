@@ -18,7 +18,7 @@ from index_sync import update_index_status
 app = Flask(__name__, static_folder='static', static_url_path='')
 
 # Base path for enhancements
-BASE_PATH = Path(__file__).parent.parent.parent / 'docs' / 'enhancements'
+BASE_PATH = Path(__file__).parent.parent.parent / 'context' / 'enhancements'
 INDEX_PATH = BASE_PATH / 'INDEX.md'
 
 

@@ -10,6 +10,8 @@ Modules:
     args: Argument parsing utilities
     common: Skip logic, progress reporting, common helpers
     subprocess_helpers: Command building for subprocess calls
+    error_logger: Error logging with full tracebacks
+    stage_tracker: Pipeline stage completion tracking
 
 Example:
     >>> from scripts.utils import get_state_config, get_tract_file
@@ -62,6 +64,18 @@ from .subprocess_helpers import (
     get_python_executable,
 )
 
+# Error logging
+from .error_logger import (
+    ErrorLogger,
+    get_error_logger,
+)
+
+# Stage tracking
+from .stage_tracker import (
+    StageTracker,
+    get_stage_tracker,
+)
+
 __all__ = [
     # Config
     'get_state_config',
@@ -97,4 +111,12 @@ __all__ = [
     'build_command_string',
     'add_common_flags_to_command',
     'get_python_executable',
+
+    # Error logging
+    'ErrorLogger',
+    'get_error_logger',
+
+    # Stage tracking
+    'StageTracker',
+    'get_stage_tracker',
 ]

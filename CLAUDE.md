@@ -119,6 +119,7 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 - No political/racial data
 
 ## Recent Changes
+- **2026-01-17**: Error logging system (Enhancement 39) - Persistent error.log files for debugging
 - **2026-01-17**: Parallel multi-year pipeline (Enhancement 37) - 60-70% faster
 - **2026-01-16**: Test suite complete (151 tests, 18s) + test skills (Enhancement 34)
 - **2026-01-15**: Artifacts reorg (Enhancement 29), RBA formalization
@@ -132,6 +133,7 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 4. State names: lowercase_underscores
 5. Unicode: NEVER in console (Windows CP1252)
 6. **Tests: Add systematically for EVERY enhancement** (not ad-hoc)
+7. **Error logs**: Check `outputs/{version}/{year}/error.log` for failures
 
 ## Documentation
 **Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md)

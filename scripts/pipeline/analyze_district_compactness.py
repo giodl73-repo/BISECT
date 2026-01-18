@@ -27,6 +27,10 @@ import numpy as np
 from shapely.ops import unary_union
 from shapely.geometry import Point
 
+# Add parent directory to path for error logger
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_error_logger
+
 
 def polsby_popper_score(geometry):
     """
@@ -340,12 +344,45 @@ def main():
         print("Example: python scripts/analyze_district_compactness.py outputs/compactness-testing/california")
         return 1
 
-    state_dir = sys.argv[1]
+    state_dir = Path(sys.argv[1])
+
+    # Initialize error logger
+    error_logger = None
+    try:
+        # Try to extract version and year from path (e.g., outputs/v1/2020/states/california)
+        # or outputs/us_2020_v1/states/california
+        parts = state_dir.parts
+        version = None
+        year = None
+
+        # Look for year and version in path
+        for part in parts:
+            if part in ['2020', '2010', '2000']:
+                year = int(part)
+            if part.startswith('v') or part.startswith('V'):
+                version = part
+
+        if version and year:
+            output_dir = state_dir
+            error_logger = get_error_logger(output_dir, version, year)
+    except Exception:
+        # If logger initialization fails, continue without logging (non-fatal)
+        pass
 
     try:
-        success = calculate_metrics_for_state(state_dir)
+        success = calculate_metrics_for_state(str(state_dir))
         return 0 if success else 1
     except Exception as e:
+        # Log the exception with full context
+        if error_logger:
+            context = {
+                'state_dir': str(state_dir),
+                'operation': 'compactness_analysis'
+            }
+            error_logger.log_exception('compactness_analysis', e, context)
+            error_logger.write_summary()
+            error_logger.close()
+
         print(f"\nERROR: {e}")
         import traceback
         traceback.print_exc()

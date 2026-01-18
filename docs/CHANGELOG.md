@@ -29,6 +29,11 @@ All notable changes to the Congressional Redistricting project.
   - 16 unit tests for error logging utilities (100% pass rate)
 
 ### Changed
+- `scripts/pipeline/process_nation.py` - Integrated error logging for national post-processing
+- `scripts/pipeline/analyze_districts.py` - Error logging for political analysis with missing data warnings
+- `scripts/pipeline/analyze_district_demographics.py` - Error logging for demographic analysis
+- `scripts/pipeline/analyze_district_compactness.py` - Error logging for compactness calculations
+- `scripts/pipeline/visualize_national_rounds.py` - Error logging for national round visualization
 - `scripts/utils/__init__.py` - Exported ErrorLogger and StageTracker for easy imports
 
 ### Benefits
@@ -38,7 +43,7 @@ All notable changes to the Congressional Redistricting project.
 - **Error Categorization**: Automatic grouping (Missing Data, METIS Issues, Memory, etc.) with suggested fixes
 - **Stage Tracking**: Know exactly which stage failed for targeted recovery
 
-**Files**: 3 new utility modules, 1 test file, 2 modified scripts
+**Files**: 3 new utility modules, 1 test file, 6 modified scripts
 
 ## 2026-01-17 - Parallel Multi-Year Pipeline (Enhancement 37)
 

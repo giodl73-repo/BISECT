@@ -36,6 +36,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.utils import (
     get_election_data_file,
     get_demographic_data_file,
+    get_error_logger,
+    get_stage_tracker,
 )
 
 # Import config helpers
@@ -120,6 +122,18 @@ def main():
 
     # Check if running in multi-year mode
     is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
+
+    # Initialize error logger and stage tracker
+    error_logger = None
+    stage_tracker = None
+    if not args.print_only:
+        try:
+            error_logger = get_error_logger(output_dir, args.version, int(args.year))
+            stage_tracker = get_stage_tracker(output_dir)
+        except Exception as e:
+            # If logger initialization fails, continue without logging (non-fatal)
+            if not is_multi_year:
+                print(f"[WARNING] Could not initialize error logger: {e}")
 
     if not is_multi_year:
         print("\n" + "="*70)
@@ -245,6 +259,10 @@ def main():
             print(f"POST-PROCESSING ({len(all_tasks)} tasks)")
             print("="*70)
 
+        # Log stage start
+        if error_logger:
+            error_logger.log_stage_start('national_post_processing')
+
         total_tasks = len(all_tasks)
 
         # Determine number of workers (use allocated workers, or number of tasks if fewer)
@@ -270,13 +288,49 @@ def main():
 
             # Run tasks in parallel using ProcessPoolExecutor
             # Workers dynamically pick up next task as they finish
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                results = list(executor.map(run_postprocessing_task, task_args))
+            try:
+                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                    results = list(executor.map(run_postprocessing_task, task_args))
 
-            # Check for failures (show warnings in standalone mode)
-            for task_name, success in results:
-                if not success and not is_multi_year:
-                    print(f"[WARNING] {task_name} failed but continuing...")
+                # Check for failures and log them
+                failed_tasks = []
+                for (task_name, _, _, _, _, _, _), (result_name, success) in zip(task_args, results):
+                    if not success:
+                        failed_tasks.append(task_name)
+                        if error_logger:
+                            # Log as warning since tasks are non-critical
+                            error_logger.log_warning(
+                                f"Task '{task_name}' failed but continuing",
+                                context={'year': args.year, 'task_count': f'{len(failed_tasks)}/{total_tasks}'}
+                            )
+                        if not is_multi_year:
+                            print(f"[WARNING] {task_name} failed but continuing...")
+
+                # Log stage complete (with or without failures)
+                if error_logger:
+                    if failed_tasks:
+                        error_logger.log_warning(
+                            f"National post-processing completed with {len(failed_tasks)} failed tasks",
+                            context={'failed_tasks': ', '.join(failed_tasks)}
+                        )
+                    error_logger.log_stage_complete('national_post_processing')
+
+                # Mark stage as complete
+                if stage_tracker and not failed_tasks:
+                    stage_tracker.mark_stage_complete(
+                        'national_post_processing',
+                        metadata={'tasks_completed': total_tasks, 'year': args.year}
+                    )
+
+            except Exception as e:
+                # Log critical failure
+                if error_logger:
+                    error_logger.log_stage_failed('national_post_processing')
+                    error_logger.log_exception('national_post_processing', e, context={
+                        'total_tasks': total_tasks,
+                        'max_workers': max_workers
+                    })
+                raise
 
     # Validate pipeline outputs
     if not args.print_only and not is_multi_year:
@@ -332,6 +386,13 @@ def main():
                           file=sys.stderr)
         summary_bar.update(1)
         summary_bar.close()
+
+    # Write error log summary
+    if error_logger:
+        try:
+            error_logger.write_summary()
+        except Exception:
+            pass  # Non-fatal if summary write fails
 
     return 0
 

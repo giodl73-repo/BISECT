@@ -21,15 +21,22 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.utils import get_state_config
+from scripts.utils import get_state_config, get_error_logger
 
 
-def load_election_data(year='2020'):
+def load_election_data(year='2020', error_logger=None):
     """Load processed election data."""
     election_file = Path(f'data/processed/elections/{year}_president_tract.parquet')
     if not election_file.exists():
+        # Log as warning if logger available
+        if error_logger:
+            error_logger.log_warning(
+                f"Election data not found: {election_file}",
+                context={'year': year, 'expected_file': str(election_file)}
+            )
         raise FileNotFoundError(f"Election data not found: {election_file}\n"
-                               f"Run process_election_data.py first.")
+                               f"Run: python scripts/data/elections/download_election_data.py --year {year}\n"
+                               f"Then: python scripts/data/elections/process_election_data.py --year {year}")
 
     df = pd.read_parquet(election_file)
     print(f"Loaded {len(df):,} tracts with election data")
@@ -312,6 +319,14 @@ def main():
         print("="*70)
         print()
 
+    # Initialize error logger
+    error_logger = None
+    try:
+        error_logger = get_error_logger(output_dir, run_dir.parent.name, int(args.census_year))
+    except Exception:
+        # If logger initialization fails, continue without logging (non-fatal)
+        pass
+
     # Check if analysis already exists
     district_file = output_dir / f'district_political_{args.year}.csv'
     rounds_file = output_dir / f'rounds_political_{args.year}.csv'
@@ -380,7 +395,7 @@ def main():
         report_progress(f"Analyzing {state_display} - Loading election data...")
         if is_standalone:
             print("\nLoading election data...")
-        election_df = load_election_data(args.year)
+        election_df = load_election_data(args.year, error_logger)
         if is_standalone:
             print()
 
@@ -459,6 +474,19 @@ def main():
         return 0
 
     except Exception as e:
+        # Log the exception with full context
+        if error_logger:
+            context = {
+                'state': state_code,
+                'election_year': args.year,
+                'census_year': args.census_year,
+                'run_dir': str(run_dir),
+                'output_dir': str(output_dir)
+            }
+            error_logger.log_exception('political_analysis', e, context)
+            error_logger.write_summary()
+            error_logger.close()
+
         print(f"ERROR: {e}")
         import traceback
         traceback.print_exc()

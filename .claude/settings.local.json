@@ -126,7 +126,12 @@
       "Bash(do python -m py_compile \"$file\")",
       "Bash(pytest:*)",
       "Bash(node:*)",
-      "Bash(start \"C:\\\\src\\\\apportionment\\\\outputs\\\\index.html\")"
+      "Bash(start \"C:\\\\src\\\\apportionment\\\\outputs\\\\index.html\")",
+      "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/command_reference.pdf\")",
+      "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/github_reference.pdf\")",
+      "Bash(start \"/c/src/apportionment/outputs/artifacts/guides/command_reference/redistricting_reference.pdf\")",
+      "Bash(git ls-tree:*)",
+      "Bash(git log:*)"
     ]
   }
 }

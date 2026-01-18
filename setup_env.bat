@@ -45,11 +45,44 @@ doskey gc=git commit -m $*
 doskey gp=git push
 doskey gl=git log --oneline -10
 doskey gd=git diff $*
+doskey gco=git checkout $*
+doskey gb=git branch $*
 
-REM Project shortcuts
+REM GitHub CLI shortcuts
+doskey ghpr=gh pr create $*
+doskey ghprl=gh pr list
+doskey ghprv=gh pr view $*
+doskey ghprc=gh pr checkout $*
+doskey ghprm=gh pr merge $*
+doskey ghi=gh issue create $*
+doskey ghil=gh issue list
+doskey ghiv=gh issue view $*
+doskey ghr=gh repo view
+
+REM Project shortcuts - Pipeline
 doskey run=run_redistricting.bat $*
+doskey cancel=CANCEL.bat
+doskey validate=python scripts/validation/validate_pipeline_outputs.py $*
+
+REM Project shortcuts - Testing
 doskey test=pytest tests/ -v
+doskey unittest=pytest tests/unit/ -v
+doskey inttest=pytest tests/integration/ -v
+doskey e2etest=pytest tests/e2e/ -v
+doskey dashtest=run_dashboard_tests.bat
+
+REM Project shortcuts - Dashboard
 doskey dash=deploy_web.bat $*
+doskey gendash=python scripts/web/generate_dashboard.py $*
+doskey master=run_master.bat $*
+
+REM Project shortcuts - Data
+doskey dlcensus=python scripts/data/census/download_all_states_tracts.py $*
+doskey buildadj=python scripts/data/geography/build_all_adjacency_graphs.py $*
+doskey checkconn=python scripts/data/geography/check_graph_connectivity.py $*
+
+REM Project shortcuts - Artifacts
+doskey compile=compile_artifacts.bat
 
 REM Display welcome message
 echo.
@@ -61,13 +94,28 @@ echo Project Root: %PROJECT_ROOT%
 echo Python Path:  %PYTHONPATH%
 echo.
 echo Quick Commands:
-echo   run --version v1              - Run pipeline (multi-year)
-echo   test                          - Run test suite
-echo   dash --year 2020 --version v1 - Deploy dashboard
-echo   gs                            - Git status
-echo   ga .                          - Git add all
-echo   gc "message"                  - Git commit
-echo   gp                            - Git push
+echo   Pipeline:
+echo     run --version v1                - Run redistricting (multi-year)
+echo     test                            - Run test suite
+echo     dash --year 2020 --version v1   - Deploy dashboard
+echo     cancel                          - Cancel running pipeline
+echo     compile                         - Compile LaTeX artifacts
+echo.
+echo   Git:
+echo     gs                              - Git status
+echo     ga .                            - Git add all
+echo     gc "message"                    - Git commit
+echo     gp                              - Git push
+echo     gl                              - Git log (10 recent)
+echo     gd                              - Git diff
+echo.
+echo   GitHub CLI:
+echo     ghpr                            - Create pull request
+echo     ghprl                           - List pull requests
+echo     ghprv [number]                  - View pull request
+echo     ghprc [number]                  - Checkout pull request
+echo     ghi                             - Create issue
+echo     ghil                            - List issues
 echo.
 echo Type 'exit' to close this window
 echo ========================================

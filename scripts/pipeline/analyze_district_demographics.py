@@ -18,15 +18,22 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.utils import get_state_config
+from scripts.utils import get_state_config, get_error_logger
 
 
-def load_demographic_data(census_year='2020'):
+def load_demographic_data(census_year='2020', error_logger=None):
     """Load processed demographic data."""
     demo_file = Path(f'data/processed/demographics/{census_year}_demographics_tract.parquet')
     if not demo_file.exists():
+        # Log as warning if logger available
+        if error_logger:
+            error_logger.log_warning(
+                f"Demographic data not found: {demo_file}",
+                context={'census_year': census_year, 'expected_file': str(demo_file)}
+            )
         raise FileNotFoundError(f"Demographic data not found: {demo_file}\n"
-                               f"Run process_demographic_data.py first.")
+                               f"Run: python scripts/data/demographics/download_demographic_data_robust.py --year {census_year}\n"
+                               f"Then: python scripts/data/demographics/process_demographic_data.py --year {census_year}")
 
     df = pd.read_parquet(demo_file)
     print(f"Loaded {len(df):,} tracts with demographic data")
@@ -182,7 +189,15 @@ def main():
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        output_dir = run_dir / 'demographic'
+        output_dir = run_dir
+
+    # Initialize error logger
+    error_logger = None
+    try:
+        error_logger = get_error_logger(output_dir, run_dir.parent.name, int(args.census_year))
+    except Exception:
+        # If logger initialization fails, continue without logging (non-fatal)
+        pass / 'demographic'
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -219,7 +234,7 @@ def main():
 
         # Load demographic data
         print("\nLoading demographic data...")
-        demo_df = load_demographic_data(args.census_year)
+        demo_df = load_demographic_data(args.census_year, error_logger)
         print()
 
         # Load district assignments
@@ -278,6 +293,18 @@ def main():
         return 0
 
     except Exception as e:
+        # Log the exception with full context
+        if error_logger:
+            context = {
+                'state': state_code,
+                'census_year': args.census_year,
+                'run_dir': str(run_dir),
+                'output_dir': str(output_dir)
+            }
+            error_logger.log_exception('demographic_analysis', e, context)
+            error_logger.write_summary()
+            error_logger.close()
+
         print(f"ERROR: {e}")
         import traceback
         traceback.print_exc()

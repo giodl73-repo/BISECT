@@ -31,7 +31,7 @@ from tqdm import tqdm
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.utils import get_state_config
+from scripts.utils import get_state_config, get_error_logger
 
 
 def load_state_round_data(state_dir, round_num, tracts_file, state_code, state_name):
@@ -342,6 +342,14 @@ def main():
     # Get state config
     state_config = get_state_config(args.year)
 
+    # Initialize error logger
+    error_logger = None
+    try:
+        error_logger = get_error_logger(output_dir, args.version, int(args.year))
+    except Exception:
+        # If logger initialization fails, continue without logging (non-fatal)
+        pass
+
     # Check if called from parent (progress reporting protocol)
     position = int(os.environ.get('TQDM_POSITION', '-1'))
     send_status = position >= 0
@@ -479,4 +487,10 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except Exception as e:
+        print(f"FATAL ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
