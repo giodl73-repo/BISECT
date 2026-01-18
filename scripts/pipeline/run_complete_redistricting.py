@@ -674,13 +674,13 @@ def main():
         print("PARALLEL MULTI-YEAR MODE: Running 2020, 2010, 2000 concurrently")
         print("="*70)
 
-        # Allocate workers across years
-        workers_per_year = allocate_workers_across_years(args.workers, num_years=3)
-        print(f"\nWorker Allocation:")
-        print(f"  2020: {workers_per_year[0]} workers")
-        print(f"  2010: {workers_per_year[1]} workers")
-        print(f"  2000: {workers_per_year[2]} workers")
-        print(f"  Total: {sum(workers_per_year)} workers")
+        # In multi-year mode, we run 1 state at a time per year (sequential)
+        # The parallelism is at the year level, not state level
+        workers_per_year = [1, 1, 1]  # 1 worker per year (sequential processing)
+        print(f"\nExecution Model:")
+        print(f"  - 3 years run in parallel (2020, 2010, 2000)")
+        print(f"  - Each year processes states sequentially")
+        print(f"  - Estimated time: 3-5 hours (vs 7-13 hours sequential)")
         print("="*70)
 
         # Create hierarchical progress coordinator
@@ -1130,8 +1130,19 @@ def main():
                 env['DPI'] = str(args.dpi)
                 env['STATE_NUMBER'] = str(i)  # Pass state number for progress reporting
 
-                result = subprocess.run(cmd, shell=True, env=env, capture_output=False)  # Don't capture so STATUS prints through
-                if result.returncode == 0:
+                # Use Popen to forward STATUS messages from child to parent
+                proc = subprocess.Popen(cmd, shell=True, env=env,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       text=True, bufsize=1)
+
+                # Forward stdout (STATUS messages) to our stdout
+                for line in proc.stdout:
+                    print(line, end='', flush=True)
+
+                proc.wait()
+
+                if proc.returncode == 0:
                     successful.append(state_code)
                     # Emit year-level progress
                     print(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50", flush=True)
