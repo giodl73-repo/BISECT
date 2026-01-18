@@ -11,76 +11,37 @@ user-invocable: true
 
 # Run Tests
 
-## Overview
-
-Execute the test suite with intelligent filtering, clear reporting, and actionable guidance. This skill provides a streamlined interface to the 151-test suite, supporting execution by category (unit/integration/E2E), by component (redistricting, political, demographic, etc.), with coverage reporting, and with failure analysis.
+Execute test suite (151 tests, ~18s) with intelligent filtering, clear reporting, actionable guidance.
 
 ## Prerequisites
+**Required**: pytest, pytest-playwright, tests in `tests/`, fixtures in `tests/fixtures/` + `tests/mocks/`
+**Optional**: pytest-cov (coverage), Chromium (`playwright install chromium`, E2E)
 
-**Required**:
-- Test suite installed (pytest, pytest-playwright)
-- Tests located in `tests/` directory
-- Mock data fixtures in `tests/fixtures/` and `tests/mocks/`
-
-**Optional**:
-- pytest-cov for coverage reporting
-- Chromium browser for E2E tests (`playwright install chromium`)
-
-## When to Use This Skill
-
-- User says: "Run tests"
-- User says: "Run all tests"
-- User says: "Run unit tests"
-- User says: "Run tests with coverage"
-- User says: "Test the redistricting code"
-- When validating code changes before commit
-- When checking test suite health
-- When generating coverage reports
-- After implementing new features
+## When to Use
+User says "Run tests/all tests/unit tests/with coverage/test X code", when validating changes pre-commit, checking test health, generating coverage, after implementing features
 
 ## Workflow
 
-### Step 1: Determine Test Scope
+### Step 1: Determine Scope
+Ask user via `AskUserQuestion`:
 
-Ask user what tests to run using `AskUserQuestion`:
-
-**Test Type Options**:
-- **All tests** (151 tests, ~18 seconds) - Complete validation
-- **Unit tests** (110 tests, ~7 seconds) - Fast component testing
-- **Integration tests** (21 tests, ~3 seconds) - Multi-stage pipeline flows
-- **E2E dashboard tests** (20 tests, ~8 seconds) - Full dashboard validation
-- **Specific component** - Filter by marker (redistricting, political, demographic, etc.)
-
-**Additional Options**:
-- **With coverage** - Generate HTML coverage report
-- **Verbose output** - Show detailed test information
-- **Failed first** - Run previously failed tests first
-- **Show markers** - Display available test markers
+**Test Type**: All (151, ~18s), Unit (110, ~7s), Integration (21, ~3s), E2E dashboard (20, ~8s), Specific component (by marker)
+**Options**: With coverage, Verbose, Failed first, Show markers
 
 ### Step 2: Build Pytest Command
 
-Based on user selection, construct appropriate pytest command:
-
-**All tests**:
+**By type**:
 ```bash
-pytest tests/ -v
+pytest tests/ -v                 # All
+pytest tests/unit/ -v            # Unit
+pytest tests/integration/ -v     # Integration
+pytest tests/e2e/ -v            # E2E
 ```
 
-**By test type**:
+**By marker**:
 ```bash
-pytest tests/unit/ -v           # Unit tests only
-pytest tests/integration/ -v    # Integration tests only
-pytest tests/e2e/ -v           # E2E tests only
-```
-
-**By component marker**:
-```bash
-pytest tests/ -m redistricting -v    # Redistricting tests
-pytest tests/ -m political -v        # Political analysis tests
-pytest tests/ -m demographic -v      # Demographic tests
-pytest tests/ -m compactness -v      # Compactness tests
-pytest tests/ -m visualization -v    # Visualization tests
-pytest tests/ -m dashboard -v        # Dashboard tests
+pytest tests/ -m redistricting -v   # Component markers: redistricting, political,
+pytest tests/ -m political -v       # demographic, compactness, visualization, dashboard
 ```
 
 **With coverage**:
@@ -88,368 +49,139 @@ pytest tests/ -m dashboard -v        # Dashboard tests
 pytest tests/ --cov=apportionment --cov-report=html -v
 ```
 
-**Advanced options**:
+**Advanced**:
 ```bash
-pytest tests/ --lf -v              # Run last failed tests first
-pytest tests/ --markers            # Show available markers
-pytest tests/ -v --tb=long         # Verbose failure tracebacks
-pytest tests/ -v -s               # Show print statements
+pytest tests/ --lf -v           # Last failed first
+pytest tests/ --markers         # Show markers
+pytest tests/ -v --tb=long      # Verbose tracebacks
+pytest tests/ -v -s            # Show print statements
 ```
 
-### Step 3: Execute Tests
-
-Use `Bash` tool to run pytest command:
-
+### Step 3: Execute
+Use `Bash`:
 ```bash
 cd C:\src\apportionment
 pytest [command from Step 2]
 ```
 
-**Monitor execution**:
-- Track progress messages
-- Note test counts (passed/failed/skipped)
-- Capture any error output
-- Record execution time
-
-**Handle interruptions**:
-- If user cancels: Report partial results
-- If timeout: Suggest running smaller subset
-- If crash: Offer to use `/debug-tests` skill
+**Monitor**: Progress, counts (passed/failed/skipped), errors, time
+**Handle issues**: Cancel → partial results, timeout → smaller subset, crash → `/debug-tests`
 
 ### Step 4: Parse Results
+Extract via `Grep` if needed: Total run, passed, failed, skipped, time, coverage %
 
-Extract key statistics from pytest output using `Grep` if needed:
-
-**Look for**:
-- Total tests run
-- Number passed (green)
-- Number failed (red)
-- Number skipped (yellow)
-- Execution time
-- Coverage percentage (if --cov used)
-
-**Example output patterns**:
+**Output patterns**:
 ```
 ====== 151 passed in 18.23s ======
-====== 110 passed in 7.12s ======
-====== 18 passed, 2 failed in 8.45s ======
+====== 148 passed, 3 failed in 18.67s ======
 ====== 100 passed, 5 skipped in 15.32s ======
 ```
 
 ### Step 5: Report Summary
 
-Provide clear summary with statistics:
-
-**Success (all passing)**:
+**All passed**:
 ```
 [OK] All tests passed!
-
-Summary:
-- Tests run: 151
-- Passed: 151 (100%)
-- Failed: 0
-- Skipped: 0
-- Time: 18.2 seconds
-
-Coverage: 92% (if --cov used)
+Summary: 151 run, 151 passed (100%), 0 failed, 0 skipped, 18.2s
+Coverage: 92% (if --cov)
 ```
 
 **Partial failures**:
 ```
 [WARN] Some tests failed
-
-Summary:
-- Tests run: 151
-- Passed: 148 (98%)
-- Failed: 3 (2%)
-- Skipped: 0
-- Time: 18.5 seconds
-
-Failed tests:
-- tests/unit/test_political_analysis.py::test_seat_calculation
-- tests/integration/test_single_state_flow.py::test_vermont_pipeline
-- tests/e2e/test_run_dashboard.py::test_political_tab
-
-Next step: Use /debug-tests to investigate failures
+Summary: 151 run, 148 passed (98%), 3 failed (2%), 0 skipped, 18.5s
+Failed: test1, test2, test3
+Next: /debug-tests to investigate
 ```
 
-**All failed / Critical errors**:
+**Critical (all failed)**:
 ```
 [FAIL] Test suite failed
-
-Summary:
-- Tests run: 12
-- Passed: 0
-- Failed: 12 (100%)
-- Time: 2.1 seconds
-
-Critical issue detected (all tests failing)
-Common causes:
-- Import errors (check PYTHONPATH)
-- Missing dependencies (check requirements.txt)
-- Mock data not generated (check fixtures)
-
-Next step: Use /debug-tests for guided troubleshooting
+Summary: 12 run, 0 passed, 12 failed (100%), 2.1s
+Critical issue → Common: Import errors (PYTHONPATH), missing deps (requirements.txt), mock data (fixtures)
+Next: /debug-tests for troubleshooting
 ```
 
 ### Step 6: Suggest Next Steps
 
-Based on results, recommend actions:
-
-**If all passed**:
-- Consider running with coverage to check code coverage
-- Ready to commit changes
-- Run full pipeline test if major changes made
-
-**If some failed**:
-- Use `/debug-tests` to investigate specific failures
-- Re-run failed tests with `pytest --lf -v`
-- Check if failures are related to recent changes
-
-**If many failed**:
-- Use `/debug-tests` for systematic troubleshooting
-- Check common issues (imports, mocks, data)
-- Verify test environment is set up correctly
-
-**If coverage generated**:
-- Open HTML report: `start htmlcov/index.html` (Windows)
-- Review uncovered code sections
-- Identify areas needing more tests
+**All passed**: Run with coverage (check %), ready to commit, consider full pipeline test
+**Some failed**: `/debug-tests`, re-run failed (`pytest --lf -v`), check recent changes
+**Many failed**: `/debug-tests` for systematic troubleshooting, check imports/mocks/data, verify env setup
+**Coverage generated**: Open `htmlcov/index.html`, review uncovered sections, identify areas needing tests
 
 ## Test Categories
 
-### By Test Type
+### By Type
+**Unit** (110, 7s): Redistricting (10), METIS (27), Political (13), Demographic (13), Compactness (15), Visualization (18), Aggregation (14)
+**Integration** (21, 3s): Single-state flows, national aggregation, multi-stage validation
+**E2E Dashboard** (20, 8s): Dashboard functionality (9), artifact validation (11)
 
-**Unit Tests** (110 tests, 7 seconds):
-- Redistricting algorithm (10 tests)
-- METIS integration (27 tests)
-- Political analysis (13 tests)
-- Demographic analysis (13 tests)
-- Compactness metrics (15 tests)
-- Visualization (18 tests)
-- Aggregation (14 tests)
-
-**Integration Tests** (21 tests, 3 seconds):
-- Single-state pipeline flows
-- National aggregation
-- Multi-stage validation
-
-**E2E Dashboard Tests** (20 tests, 8 seconds):
-- Dashboard functionality (9 tests)
-- Artifact validation (11 tests)
-
-### By Component Marker
-
-Available markers:
-- `redistricting` - Redistricting algorithm tests
-- `political` - Political analysis tests
-- `demographic` - Demographic analysis tests
-- `compactness` - Compactness metric tests
-- `visualization` - Map generation tests
-- `aggregation` - CSV aggregation tests
-- `dashboard` - Dashboard E2E tests
-- `unit` - All unit tests
-- `integration` - All integration tests
-- `slow` - Tests taking >10 seconds
+### By Marker
+`redistricting`, `political`, `demographic`, `compactness`, `visualization`, `aggregation`, `dashboard`, `unit`, `integration`, `slow` (>10s)
 
 ## Coverage Reporting
 
-When running with `--cov`:
+**With --cov**: HTML → `htmlcov/index.html`, open: `start htmlcov/index.html` (Win) / `open htmlcov/index.html` (Mac)
 
-**HTML Report Generated**:
-- Location: `htmlcov/index.html`
-- View: `start htmlcov/index.html` (Windows) or `open htmlcov/index.html` (Mac)
+**Interpretation**: 90-100% excellent, 70-90% good, 50-70% moderate (needs work), <50% low (needs tests)
 
-**Coverage Interpretation**:
-- **90-100%**: Excellent coverage
-- **70-90%**: Good coverage, some gaps
-- **50-70%**: Moderate coverage, needs improvement
-- **<50%**: Low coverage, significant testing needed
+**Check**: `apportionment/partition/` (core), `apportionment/data/`, `apportionment/visualization/` (scripts/ excluded)
 
-**Files to Check**:
-- `apportionment/partition/` - Core algorithm
-- `apportionment/data/` - Data processing
-- `apportionment/visualization/` - Visualization
-- `scripts/` - Pipeline scripts (not included in coverage)
-
-## Quick Commands Reference
-
+## Quick Commands
 ```bash
-# All tests (~18 seconds)
-pytest tests/ -v
-
-# Fast unit tests only (~7 seconds)
-pytest tests/unit/ -v
-
-# Integration tests (~3 seconds)
-pytest tests/integration/ -v
-
-# E2E dashboard tests (~8 seconds)
-pytest tests/e2e/ -v
-
-# With coverage report
-pytest tests/ --cov=apportionment --cov-report=html -v
-
-# Run previously failed tests first
-pytest tests/ --lf -v
-
-# Show available markers
-pytest tests/ --markers
-
-# Verbose with full tracebacks
-pytest tests/ -v --tb=long
-
-# Run specific component
-pytest tests/ -m redistricting -v
-pytest tests/ -m political -v
-pytest tests/ -m dashboard -v
-
-# Run with debugger (stops on failure)
-pytest tests/ --pdb -v
-
-# Show print statements
-pytest tests/ -v -s
+pytest tests/ -v                                         # All (~18s)
+pytest tests/unit/ -v                                    # Unit (~7s)
+pytest tests/integration/ -v                             # Integration (~3s)
+pytest tests/e2e/ -v                                     # E2E (~8s)
+pytest tests/ --cov=apportionment --cov-report=html -v   # Coverage
+pytest tests/ --lf -v                                    # Last failed first
+pytest tests/ --markers                                  # Show markers
+pytest tests/ -v --tb=long                               # Verbose tracebacks
+pytest tests/ -m redistricting -v                        # Specific component
+pytest tests/ -m political -v                            # Political tests
+pytest tests/ --pdb -v                                   # Debugger (stop on fail)
+pytest tests/ -v -s                                      # Show prints
 ```
 
 ## Troubleshooting
 
-**Import Errors**:
-```
-Issue: ModuleNotFoundError: No module named 'apportionment'
-Solution: Set PYTHONPATH: export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-```
+**Import Errors**: `ModuleNotFoundError: apportionment` → `export PYTHONPATH="${PYTHONPATH}:$(pwd)"`
+**Playwright**: Browser not found → `playwright install chromium`
+**Mock Data**: FileNotFoundError → Auto-generated by conftest.py, persist → `/debug-tests`
+**Coverage**: --cov not recognized → `pip install pytest-cov`
+**Slow Tests**: E2E timeout → `--headed --slowmo` or subset: `pytest tests/e2e/test_run_dashboard.py -v`
 
-**Playwright Not Installed**:
-```
-Issue: Playwright browser not found
-Solution: Install browser: playwright install chromium
-```
+## Performance
 
-**Mock Data Missing**:
-```
-Issue: FileNotFoundError in test fixtures
-Solution: Mock data generated automatically by conftest.py fixture
-         If issues persist, use /debug-tests
-```
+**Times**: All ~18s, Unit ~7s, Integration ~3s, E2E ~8s
 
-**Coverage Not Generated**:
-```
-Issue: --cov flag not recognized
-Solution: Install pytest-cov: pip install pytest-cov
-```
-
-**Tests Taking Too Long**:
-```
-Issue: E2E tests timing out
-Solution: Use --headed --slowmo flags to debug
-         Or run smaller subset: pytest tests/e2e/test_run_dashboard.py -v
-```
-
-## Performance Notes
-
-**Execution Times** (typical):
-- All tests: ~18 seconds
-- Unit tests: ~7 seconds
-- Integration tests: ~3 seconds
-- E2E tests: ~8 seconds
-
-**Parallelization**:
-Currently tests run sequentially. For faster execution:
+**Parallel** (faster):
 ```bash
-# Install pytest-xdist
 pip install pytest-xdist
-
-# Run with 4 workers
-pytest tests/ -n 4 -v
+pytest tests/ -n 4 -v  # 4 workers
 ```
 
-**Test Optimization**:
-- Mock data generated once per session (session-scoped fixture)
-- E2E tests reuse same mock run
-- Unit tests use lightweight mocks (no real data)
+**Optimization**: Mock data once per session (session-scoped), E2E reuse mock run, unit tests use lightweight mocks
 
 ## What You'll Get
-
-After successful execution:
-- **Test results summary** with pass/fail statistics
-- **Execution time** for selected test category
-- **Failure details** if any tests failed
-- **Coverage report** (if --cov used) in `htmlcov/`
-- **Next step recommendations** based on results
-- **Quick commands** for re-running or debugging
+Test results summary (pass/fail stats), execution time, failure details (if any), coverage report (if --cov) in `htmlcov/`, next step recommendations, quick re-run/debug commands
 
 ## Next Steps
 
-After running tests:
-
-**If all passed**:
-- Commit changes with confidence
-- Run coverage analysis if not done: `pytest tests/ --cov=apportionment --cov-report=html -v`
-- Consider running full pipeline test for integration validation
-
-**If some failed**:
-- Use `/debug-tests` to investigate failures
-- Re-run failed tests: `pytest --lf -v`
-- Check recent code changes for issues
-
-**If coverage low**:
-- Identify uncovered code in `htmlcov/index.html`
-- Write additional tests for uncovered functions
-- Focus on critical paths (redistricting, analysis)
-
-**For CI/CD integration**:
-- Add pytest command to workflow
-- Use exit codes for pass/fail detection
-- Upload coverage reports to Codecov
+**All passed**: Commit with confidence, run coverage if not done, consider full pipeline test
+**Some failed**: `/debug-tests` to investigate, re-run `pytest --lf -v`, check recent changes
+**Coverage low**: Identify uncovered in `htmlcov/index.html`, write tests for uncovered functions, focus on critical paths
+**CI/CD**: Add pytest to workflow, use exit codes, upload coverage to Codecov
 
 ## Related Skills
-
-- `/debug-tests` - Systematically debug test failures
-- `/enhancement-implement` - Includes testing as Phase 4
-- `/pipeline-debug` - Debug pipeline failures (separate from tests)
+`/debug-tests` (debug test failures), `/enhancement-implement` (Phase 4 includes testing), `/pipeline-debug` (pipeline failures)
 
 ## Examples
 
-### Example 1: Run All Tests
+**Ex 1 - All tests**: User "Run all tests" → Ask confirm → `pytest tests/ -v` → 151 passed, 18.2s → [OK] Ready to commit
 
-**User**: "Run all tests"
+**Ex 2 - Unit + coverage**: User "Run unit tests with coverage" → Ask confirm → `pytest tests/unit/ --cov=apportionment --cov-report=html -v` → 110 passed, 7.5s, 92% → [OK] Open htmlcov/
 
-**Skill actions**:
-1. Ask: "Run all 151 tests?" → User confirms
-2. Execute: `pytest tests/ -v`
-3. Parse: 151 passed in 18.23s
-4. Report: [OK] All tests passed! Time: 18.2s
-5. Suggest: "Ready to commit"
+**Ex 3 - With failures**: User "Run tests" → Ask confirm → `pytest tests/ -v` → 148 passed, 3 failed, 18.7s → [WARN] List failures → `/debug-tests`
 
-### Example 2: Run Unit Tests with Coverage
-
-**User**: "Run unit tests with coverage"
-
-**Skill actions**:
-1. Ask: "Run 110 unit tests with coverage?" → User confirms
-2. Execute: `pytest tests/unit/ --cov=apportionment --cov-report=html -v`
-3. Parse: 110 passed in 7.45s, Coverage: 92%
-4. Report: [OK] All unit tests passed! Coverage: 92%
-5. Suggest: "Open htmlcov/index.html to view coverage details"
-
-### Example 3: Run Tests with Failures
-
-**User**: "Run tests"
-
-**Skill actions**:
-1. Ask: "Run all tests?" → User confirms
-2. Execute: `pytest tests/ -v`
-3. Parse: 148 passed, 3 failed in 18.67s
-4. Report: [WARN] 3 tests failed (see list)
-5. Suggest: "Use /debug-tests to investigate failures"
-
-### Example 4: Run Specific Component
-
-**User**: "Test the political analysis code"
-
-**Skill actions**:
-1. Recognize "political analysis" → suggest `-m political`
-2. Execute: `pytest tests/ -m political -v`
-3. Parse: 13 passed in 1.82s
-4. Report: [OK] All political analysis tests passed!
-5. Suggest: "Run integration tests to validate end-to-end"
+**Ex 4 - Component**: User "Test political analysis" → Recognize "political" → `pytest tests/ -m political -v` → 13 passed, 1.8s → [OK] Run integration for e2e

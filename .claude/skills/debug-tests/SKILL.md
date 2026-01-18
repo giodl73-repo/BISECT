@@ -11,162 +11,72 @@ user-invocable: true
 
 # Debug Tests
 
-## Overview
-
-Systematically debug test failures using pattern recognition and guided troubleshooting. This skill analyzes pytest output to identify failure types, checks for common issues automatically, provides step-by-step debugging guidance, and suggests specific fixes based on error patterns.
+Systematically debug test failures via pattern recognition + guided troubleshooting. Analyzes pytest output → identifies failure types → checks common issues → suggests specific fixes.
 
 ## Prerequisites
+**Required**: Test suite with failing tests, recent pytest output (or ability to run), access to test files/fixtures
+**Recommended**: `/run-tests` output for context, knowledge of recent changes, understanding of test structure
 
-**Required**:
-- Test suite with failing tests
-- Recent pytest output (or ability to run tests)
-- Access to test files and fixtures
-
-**Recommended**:
-- `/run-tests` skill output for context
-- Knowledge of recent code changes
-- Understanding of test structure
-
-## When to Use This Skill
-
-- User says: "Debug tests"
-- User says: "Why are my tests failing?"
-- User says: "Fix test failures"
-- User says: "Tests aren't passing"
-- After `/run-tests` reports failures
-- When tests fail in CI/CD
-- When test errors are unclear
-- When multiple tests fail with similar errors
+## When to Use
+User says "Debug tests/Why are tests failing/Fix test failures/Tests aren't passing", after `/run-tests` reports failures, CI/CD failures, unclear errors, multiple similar failures
 
 ## Workflow
 
-### Step 1: Gather Test Failure Information
-
-**Check for recent pytest output**:
-- Look for pytest output in recent messages
-- If not found, ask user to run tests: "Run `pytest tests/ -v` and share output"
-- Or offer to run tests using Bash: `pytest tests/ -v --tb=short`
-
-**What to capture**:
-- Failed test names
-- Error messages and tracebacks
-- Number of failures
-- Test categories affected (unit/integration/E2E)
-- Any patterns in failure locations
+### Step 1: Gather Failure Info
+**Check pytest output**: Recent messages, or ask user to run `pytest tests/ -v`, or run via Bash: `pytest tests/ -v --tb=short`
+**Capture**: Failed test names, error messages/tracebacks, failure count, categories (unit/integration/E2E), patterns
 
 ### Step 2: Categorize Failures
+Parse output via `Grep` for patterns:
 
-Parse output to identify failure types using `Grep` for pattern matching:
-
-#### Pattern 1: Import Errors
-**Symptoms**:
+**Pattern 1 - Import Errors**:
 ```
 ModuleNotFoundError: No module named 'apportionment'
-ImportError: cannot import name 'X' from 'Y'
+ImportError: cannot import name 'X'
 ```
+**Detect**: `grep -i "ModuleNotFoundError\|ImportError" pytest_output`
+**Causes**: PYTHONPATH not set, missing `__init__.py`, circular imports, package not installed
 
-**Detection**:
-```bash
-grep -i "ModuleNotFoundError\|ImportError" pytest_output
+**Pattern 2 - Mock Data Errors**:
 ```
-
-**Common causes**:
-- PYTHONPATH not set correctly
-- Missing `__init__.py` files
-- Circular imports
-- Package not installed
-
-#### Pattern 2: Mock Data Errors
-**Symptoms**:
-```
-FileNotFoundError: [Errno 2] No such file or directory: 'outputs/us_2020_test/...'
+FileNotFoundError: outputs/us_2020_test/...
 AttributeError: 'NoneType' object has no attribute 'get'
 ```
+**Detect**: `grep -i "FileNotFoundError.*outputs\|FileNotFoundError.*tests/fixtures"`
+**Causes**: Fixtures not generated, conftest.py not executed, path incorrect, scope issue
 
-**Detection**:
-```bash
-grep -i "FileNotFoundError.*outputs\|FileNotFoundError.*tests/fixtures" pytest_output
-```
-
-**Common causes**:
-- Mock fixtures not generated
-- conftest.py fixture not executed
-- Mock data path incorrect
-- Session fixture scope issue
-
-#### Pattern 3: Assertion Failures
-**Symptoms**:
+**Pattern 3 - Assertion Failures**:
 ```
 AssertionError: assert 42 == 43
-AssertionError: assert 'expected' == 'actual'
 ```
+**Detect**: `grep "AssertionError: assert"`
+**Causes**: Expected values outdated, implementation changed, mock values incorrect, test too strict
 
-**Detection**:
-```bash
-grep "AssertionError: assert" pytest_output
-```
-
-**Common causes**:
-- Expected values outdated
-- Implementation logic changed
-- Mock data values incorrect
-- Test expectations too strict
-
-#### Pattern 4: Playwright/Browser Errors
-**Symptoms**:
+**Pattern 4 - Playwright/Browser**:
 ```
 TimeoutError: Timeout 30000ms exceeded
 Error: locator.click: Target closed
 playwright._impl._api_types.Error: Executable doesn't exist
 ```
+**Detect**: `grep -i "TimeoutError\|playwright.*Error\|Target closed"`
+**Causes**: Browser not installed (`playwright install chromium`), selectors incorrect, page slow, mock data not loading
 
-**Detection**:
-```bash
-grep -i "TimeoutError\|playwright.*Error\|Target closed" pytest_output
-```
-
-**Common causes**:
-- Browser not installed (`playwright install chromium`)
-- Element selectors incorrect/outdated
-- Page load too slow
-- Mock data not loading properly
-
-#### Pattern 5: File Not Found (Data)
-**Symptoms**:
+**Pattern 5 - File Not Found (Data)**:
 ```
 FileNotFoundError: data/tracts/2020/california_tracts_2020.parquet
 ```
+**Detect**: `grep "FileNotFoundError.*data/"`
+**Causes**: Real data referenced (should use mocks), path incorrect, year-specific issues, data not downloaded
 
-**Detection**:
-```bash
-grep "FileNotFoundError.*data/" pytest_output
-```
-
-**Common causes**:
-- Real data files referenced (should use mocks)
-- Data path incorrect for test environment
-- Year-specific path issues
-- Data not downloaded
-
-#### Pattern 6: AttributeError (API Mismatch)
-**Symptoms**:
+**Pattern 6 - AttributeError (API Mismatch)**:
 ```
 AttributeError: 'DataFrame' object has no attribute 'foo'
 AttributeError: module 'X' has no attribute 'Y'
 ```
+**Detect**: `grep "AttributeError:"`
+**Causes**: Mocks incomplete, API changed but tests not updated, pandas/GeoPandas version mismatch, typos
 
-**Detection**:
-```bash
-grep "AttributeError:" pytest_output
-```
-
-**Common causes**:
-- Mock objects incomplete
-- API changed but tests not updated
-- Pandas/GeoPandas version mismatch
-- Method name typos
-
-**Report categories found**:
+**Report**:
 ```
 Failure Analysis:
 - Import Errors: 5 tests
@@ -178,197 +88,59 @@ Failure Analysis:
 - Other: 1 test
 ```
 
-### Step 3: Provide Guided Debugging Steps
+### Step 3: Guided Debugging
 
-For each failure category, provide specific troubleshooting:
+**Import Errors**:
+1. Check PYTHONPATH: `echo $PYTHONPATH` / `echo %PYTHONPATH%` (should include `C:\src\apportionment`)
+2. Set if not: `export PYTHONPATH="${PYTHONPATH}:$(pwd)"` (Unix) / `set PYTHONPATH=%PYTHONPATH%;%CD%` (Win)
+3. Check structure: Glob for `__init__.py`, verify `apportionment/__init__.py` exists
+4. Check circular: Review recent import changes (A imports B, B imports A)
+5. Re-run: `pytest tests/ -v`
 
-#### For Import Errors
+**Mock Data Errors**:
+1. Check fixture: Verify `tests/e2e/conftest.py` has `mock_run` (session-scoped)
+2. Generate manually: `python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test`
+3. Check exists: Glob for mock files, `ls outputs/us_2020_test/states/vermont/`
+4. Verify usage: Test functions have `mock_run` parameter, fixture returns correct path
+5. Re-run debug: `pytest tests/e2e/ -v -s` (show prints)
 
-**Step-by-step debugging**:
-1. **Check PYTHONPATH**:
-   ```bash
-   echo $PYTHONPATH  # Unix
-   echo %PYTHONPATH%  # Windows
-   ```
-   Should include project root: `C:\src\apportionment`
+**Assertion Failures**:
+1. Show diff: Parse assertion for expected vs actual, display comparison
+2. Check mock changes: Review generator changes, verify expectations match mock values
+3. Run single: `pytest tests/path/to/test.py::test_name -vv`
+4. Update expectations (if impl correct): Read test file, suggest new values
+5. Verify impl (if test correct): Check logic, review changes, suggest fix
 
-2. **Set PYTHONPATH** (if not set):
-   ```bash
-   export PYTHONPATH="${PYTHONPATH}:$(pwd)"  # Unix
-   set PYTHONPATH=%PYTHONPATH%;%CD%  # Windows
-   ```
+**Playwright Errors**:
+1. Install browser: `playwright install chromium`
+2. Run visible: `pytest tests/e2e/ --headed -v`
+3. Slow motion: `pytest tests/e2e/ --headed --slowmo=500 -v`
+4. Check selectors: Grep for selectors in test, verify match dashboard HTML
+5. Check mock loading: Dashboard HTML generated correctly, paths point to mock data
+6. Increase timeout: Add `page.set_default_timeout(60000)` or `page.wait_for_timeout(2000)`
 
-3. **Check package structure**:
-   ```bash
-   # Use Glob to find __init__.py files
-   ```
-   Verify `apportionment/__init__.py` exists
+**File Not Found (Data)**:
+1. Check real data usage: Tests should use mocks, Grep for data path references
+2. Fix to mocks: Replace paths with fixtures, use `mock_run` for E2E
+3. If data needed: `/census-download` + `/adjacency-build`
+4. Check year paths: Format `data/tracts/{year}/{state}_tracts_{year}.parquet`
 
-4. **Check for circular imports**:
-   - Review recent changes to import statements
-   - Look for A imports B, B imports A patterns
+**AttributeError**:
+1. Check mock structure: Grep for mock generator, verify includes required attributes
+2. Check API compat: Verify pandas/geopandas versions, check method name changes
+3. Update mocks: Add missing attributes, match real data structure
+4. Update tests: Use new method names, update expectations
 
-5. **Re-run tests**:
-   ```bash
-   pytest tests/ -v
-   ```
+### Step 4: Automatic Checks
+Run via Bash + Grep:
 
-#### For Mock Data Errors
+**Check 1 - PYTHONPATH**: `python -c "import sys; print('\\n'.join(sys.path))"` → Verify project root
+**Check 2 - Package imports**: `python -c "import apportionment; print(apportionment.__file__)"` → Should succeed
+**Check 3 - Mock data**: `ls -R outputs/us_2020_test/ 2>/dev/null | wc -l` → Should show files
+**Check 4 - Pytest plugins**: `pytest --version && pip list | grep pytest` → Verify pytest-playwright, pytest-cov
+**Check 5 - Browser**: `playwright install --dry-run chromium` → Check if needs install
 
-**Step-by-step debugging**:
-1. **Check fixture execution**:
-   - Verify `tests/e2e/conftest.py` has `mock_run` fixture
-   - Verify fixture is session-scoped
-
-2. **Manually generate mock data**:
-   ```bash
-   python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test
-   ```
-
-3. **Check mock data exists**:
-   ```bash
-   # Use Glob to find mock data files
-   ls outputs/us_2020_test/states/vermont/
-   ```
-
-4. **Verify fixture usage**:
-   - Check test functions have `mock_run` parameter
-   - Verify fixture returns correct path
-
-5. **Re-run tests with fixture debugging**:
-   ```bash
-   pytest tests/e2e/ -v -s  # Show print statements
-   ```
-
-#### For Assertion Failures
-
-**Step-by-step debugging**:
-1. **Show expected vs actual**:
-   - Parse assertion error for values
-   - Display side-by-side comparison
-
-2. **Check if mock data changed**:
-   - Review mock generator changes
-   - Verify test expectations match mock values
-
-3. **Run single test with verbose output**:
-   ```bash
-   pytest tests/path/to/test.py::test_name -vv
-   ```
-
-4. **Update test expectations** (if implementation correct):
-   - Use Read to view test file
-   - Suggest new expected values based on actual
-
-5. **Verify implementation** (if test correct):
-   - Check code logic
-   - Review recent changes
-   - Suggest fix if logic error found
-
-#### For Playwright Errors
-
-**Step-by-step debugging**:
-1. **Check browser installation**:
-   ```bash
-   playwright install chromium
-   ```
-
-2. **Run with visible browser**:
-   ```bash
-   pytest tests/e2e/ --headed -v
-   ```
-
-3. **Run with slow motion**:
-   ```bash
-   pytest tests/e2e/ --headed --slowmo=500 -v
-   ```
-
-4. **Check element selectors**:
-   - Use Grep to find selectors in test file
-   - Verify selectors match dashboard HTML
-
-5. **Check mock data loading**:
-   - Ensure dashboard HTML generated correctly
-   - Verify paths in dashboard point to mock data
-
-6. **Increase timeout**:
-   - Add `page.set_default_timeout(60000)` to test
-   - Or use `page.wait_for_timeout(2000)` before action
-
-#### For File Not Found (Data)
-
-**Step-by-step debugging**:
-1. **Check if test uses real data**:
-   - Tests should use mocks, not real data
-   - Use Grep to find data path references
-
-2. **Fix test to use mocks**:
-   - Replace data paths with mock fixtures
-   - Use `mock_run` fixture for E2E tests
-
-3. **If data needed**:
-   - Download with `/census-download` skill
-   - Build adjacency with `/adjacency-build` skill
-
-4. **Check year-specific paths**:
-   - Verify path format: `data/tracts/{year}/{state}_tracts_{year}.parquet`
-   - Not: `data/raw/{state}_tracts_2020.parquet`
-
-#### For AttributeError
-
-**Step-by-step debugging**:
-1. **Check mock object structure**:
-   - Use Grep to find mock generator
-   - Verify mock includes required attributes
-
-2. **Check API compatibility**:
-   - Verify pandas/geopandas versions
-   - Check if method names changed
-
-3. **Update mocks** (if needed):
-   - Add missing attributes to mock generators
-   - Match real data structure
-
-4. **Update tests** (if API changed):
-   - Use new method names
-   - Update test expectations
-
-### Step 4: Check Common Issues Automatically
-
-Run automatic checks using Bash and Grep:
-
-**Check 1: PYTHONPATH**
-```bash
-python -c "import sys; print('\\n'.join(sys.path))"
-```
-Verify project root in path
-
-**Check 2: Package imports**
-```bash
-python -c "import apportionment; print(apportionment.__file__)"
-```
-Should succeed without error
-
-**Check 3: Mock data existence**
-```bash
-ls -R outputs/us_2020_test/ 2>/dev/null | wc -l
-```
-Should show files if mock run generated
-
-**Check 4: Pytest plugins**
-```bash
-pytest --version
-pip list | grep pytest
-```
-Verify pytest-playwright, pytest-cov installed
-
-**Check 5: Browser installation**
-```bash
-playwright install --dry-run chromium
-```
-Check if browser needs installation
-
-**Report findings**:
+**Report**:
 ```
 Automatic Checks:
 [OK] PYTHONPATH includes project root
@@ -378,279 +150,112 @@ Automatic Checks:
 [WARN] Chromium browser not installed
 ```
 
-### Step 5: Suggest Specific Fixes
-
-Based on analysis, provide actionable fix suggestions:
-
-**Example output**:
+### Step 5: Suggest Fixes
+**Example**:
 ```
 Recommended Fixes:
-
 1. Import Errors (5 tests):
    Issue: PYTHONPATH not set
    Fix: export PYTHONPATH="${PYTHONPATH}:$(pwd)"
    Then: Re-run tests
 
 2. Assertion Failures (2 tests):
-   Issue: Expected value 42, got 43
-   Fix: Update test expectation in tests/unit/test_political_analysis.py:45
-   Change: assert result == 42
-   To: assert result == 43
-   Verify: Implementation logic is correct
+   Issue: Expected 42, got 43
+   Fix: Update tests/unit/test_political_analysis.py:45
+   Change: assert result == 42 → assert result == 43
+   Verify: Implementation correct
 
-3. Playwright Browser (E2E tests):
+3. Playwright Browser:
    Issue: Chromium not installed
    Fix: playwright install chromium
    Then: Re-run E2E tests
 
-Priority: Fix PYTHONPATH first (affects 5 tests), then browser (affects E2E)
+Priority: Fix PYTHONPATH first (5 tests), then browser (E2E)
 ```
 
 ### Step 6: Offer Targeted Re-test
-
-After suggesting fixes:
-
-**Offer to re-run failed tests**:
 ```bash
-# Re-run only previously failed tests
-pytest --lf -v
-
-# Re-run specific test with verbose output
-pytest tests/unit/test_political_analysis.py::test_seat_calculation -vv
-
-# Re-run with debugger (stops on failure)
-pytest --lf --pdb -v
+pytest --lf -v                                           # Re-run failed only
+pytest tests/unit/test_political_analysis.py::test_seat_calculation -vv  # Specific test
+pytest --lf --pdb -v                                     # With debugger
 ```
 
-**Monitor for improvement**:
-- If failures reduce: Report progress, continue debugging remaining
-- If failures persist: Suggest deeper investigation or manual debugging
-- If new failures appear: Analyze new error patterns
+**Monitor**: Failures reduce → report progress, continue debugging | persist → deeper investigation | new failures → analyze new patterns
 
-## Common Failure Patterns Reference
+## Pattern Detection Reference
 
-### Pattern Detection Quick Reference
-
-| Pattern | Grep Command | Common Fix |
-|---------|--------------|------------|
+| Pattern | Grep | Fix |
+|---------|------|-----|
 | Import Error | `grep -i "ModuleNotFoundError\|ImportError"` | Set PYTHONPATH |
-| Mock Data | `grep "FileNotFoundError.*outputs"` | Generate mock data |
+| Mock Data | `grep "FileNotFoundError.*outputs"` | Generate mock |
 | Assertion | `grep "AssertionError: assert"` | Update expectations |
 | Playwright | `grep -i "TimeoutError\|playwright.*Error"` | Install browser |
-| File Not Found | `grep "FileNotFoundError.*data/"` | Use mocks not real data |
+| File Not Found | `grep "FileNotFoundError.*data/"` | Use mocks |
 | AttributeError | `grep "AttributeError:"` | Update mocks/API |
 
-### Quick Fix Commands
-
+## Quick Fix Commands
 ```bash
-# Fix PYTHONPATH (Unix)
-export PYTHONPATH="${PYTHONPATH}:$(pwd)"
-
-# Fix PYTHONPATH (Windows)
-set PYTHONPATH=%PYTHONPATH%;%CD%
-
-# Generate mock data
-python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test
-
-# Install Playwright browser
-playwright install chromium
-
-# Re-run failed tests only
-pytest --lf -v
-
-# Run with debugger
-pytest --lf --pdb -v
-
-# Run with full traceback
-pytest --lf -v --tb=long
-
-# Show print statements
-pytest --lf -v -s
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"                  # PYTHONPATH (Unix)
+set PYTHONPATH=%PYTHONPATH%;%CD%                          # PYTHONPATH (Win)
+python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test  # Mock data
+playwright install chromium                               # Browser
+pytest --lf -v                                           # Re-run failed
+pytest --lf --pdb -v                                     # With debugger
+pytest --lf -v --tb=long                                 # Full traceback
+pytest --lf -v -s                                        # Show prints
 ```
 
-## Troubleshooting the Debugger
+## Troubleshooting Debugger
 
-**No pytest output available**:
-```
-Solution: Run tests first with /run-tests or manually:
-          pytest tests/ -v > pytest_output.txt 2>&1
-```
-
-**Can't identify failure pattern**:
-```
-Solution: Show raw error output
-          Use --tb=long for full traceback
-          Manual investigation may be needed
-```
-
-**Fixes don't resolve failures**:
-```
-Solution: Check if multiple issues present
-          Fix one category at a time
-          Consider using pytest --pdb for interactive debugging
-```
-
-**E2E tests still failing after browser install**:
-```
-Solution: Check element selectors with --headed mode
-          Verify mock data generated correctly
-          Check dashboard HTML exists
-```
+**No pytest output**: Run `/run-tests` or `pytest tests/ -v > pytest_output.txt 2>&1`
+**Can't identify pattern**: Show raw error, use `--tb=long`, manual investigation
+**Fixes don't work**: Check multiple issues, fix one category at a time, use `pytest --pdb`
+**E2E still failing**: Check selectors with `--headed`, verify mock data, check dashboard HTML
 
 ## Advanced Debugging
 
-### Interactive Debugging with pdb
-
+**Interactive (pdb)**:
 ```bash
-# Stop at first failure
-pytest --pdb -v
-
-# Common pdb commands:
-# l (list) - Show code context
-# p variable - Print variable value
-# c (continue) - Continue execution
-# q (quit) - Exit debugger
+pytest --pdb -v  # Stop at first failure
+# pdb: l (list code), p variable (print), c (continue), q (quit)
 ```
 
-### Debugging Specific Tests
-
+**Specific tests**:
 ```bash
-# Single test with verbose
-pytest tests/unit/test_file.py::test_name -vv
-
-# Single test file
-pytest tests/unit/test_file.py -v
-
-# Test class
-pytest tests/unit/test_file.py::TestClassName -v
-
-# Test by marker
-pytest -m redistricting -v
+pytest tests/unit/test_file.py::test_name -vv        # Single test
+pytest tests/unit/test_file.py -v                    # File
+pytest tests/unit/test_file.py::TestClassName -v     # Class
+pytest -m redistricting -v                           # Marker
 ```
 
-### Debugging Mock Fixtures
-
+**Mock fixtures**:
 ```bash
-# Show fixture setup/teardown
-pytest tests/e2e/ -v --setup-show
-
-# List available fixtures
-pytest --fixtures
-
-# Use specific fixture
-pytest tests/e2e/ -v --fixtures | grep mock
+pytest tests/e2e/ -v --setup-show    # Show fixture setup/teardown
+pytest --fixtures                    # List fixtures
+pytest --fixtures | grep mock        # Mock fixtures
 ```
 
 ## What You'll Get
-
-After successful debugging:
-- **Failure categorization** by pattern type
-- **Guided troubleshooting steps** for each category
-- **Automatic checks** for common issues
-- **Specific fix suggestions** with commands
-- **Re-test recommendations** to verify fixes
-- **Progress tracking** as failures are resolved
+Failure categorization by pattern, guided troubleshooting steps per category, automatic checks for common issues, specific fix suggestions with commands, re-test recommendations, progress tracking
 
 ## Next Steps
 
-After debugging:
-
-**If failures resolved**:
-- Run full test suite with `/run-tests` to verify
-- Commit fixes with clear message
-- Document any test changes made
-
-**If some failures remain**:
-- Focus on one category at a time
-- Use interactive debugging: `pytest --pdb`
-- Check for multiple simultaneous issues
-- Review recent code changes
-
-**If stuck**:
-- Review test documentation in `tests/README.md`
-- Check for similar issues in git history
-- Run single test in isolation
-- Consider reverting recent changes
-
-**To prevent future failures**:
-- Run tests before committing
-- Use `/run-tests` as part of development workflow
-- Keep test expectations up to date
-- Review CI/CD failures promptly
+**Resolved**: Run full suite (`/run-tests`) to verify, commit fixes with clear message, document test changes
+**Some remain**: Focus one category at a time, use `pytest --pdb`, check for multiple issues, review recent changes
+**Stuck**: Review `tests/README.md`, check git history, run single test in isolation, consider reverting changes
+**Prevent future**: Run tests before commit, use `/run-tests` in dev workflow, keep expectations updated, review CI/CD failures promptly
 
 ## Related Skills
-
-- `/run-tests` - Execute test suite (typically run before debugging)
-- `/enhancement-implement` - Includes testing phase
-- `/pipeline-debug` - Debug pipeline failures (different from tests)
+`/run-tests` (execute suite), `/enhancement-implement` (testing phase), `/pipeline-debug` (pipeline failures)
 
 ## Examples
 
-### Example 1: Debug Import Errors
+**Ex 1 - Import**: User "Why failing?" → Read output (5 import errors) → Categorize: ModuleNotFoundError → Check: PYTHONPATH not set → Fix: `export PYTHONPATH` → Re-run: All pass
 
-**User**: "Why are my tests failing?"
+**Ex 2 - Mock Data**: User "E2E can't find mock" → Read: FileNotFoundError in outputs/ → Categorize: Mock data → Check: Fixtures empty → Fix: `python tests/fixtures/generate_mock_run.py` → Verify: Data exists → Re-run: Pass
 
-**Skill actions**:
-1. Read pytest output (5 import errors)
-2. Categorize: All ModuleNotFoundError
-3. Check: PYTHONPATH not set
-4. Suggest: `export PYTHONPATH="${PYTHONPATH}:$(pwd)"`
-5. Offer: Re-run with `pytest --lf -v`
-6. Result: All tests now pass
+**Ex 3 - Playwright**: User "Dashboard timeout" → Read: TimeoutError → Categorize: Browser errors → Check: Not installed → Fix: `playwright install chromium` → Additional: `--headed` → Re-run: Pass
 
-### Example 2: Debug Mock Data Issues
+**Ex 4 - Assertion**: User "Wrong values" → Read: assert 42 == 43 → Categorize: Assertion → Analyze: Mock generates 43, test expects 42 → Check: Impl correct, test outdated → Fix: Update 42→43 → Pass
 
-**User**: "E2E tests can't find mock data"
-
-**Skill actions**:
-1. Read pytest output (FileNotFoundError in outputs/)
-2. Categorize: Mock data errors
-3. Check: Mock fixtures directory empty
-4. Suggest: `python tests/fixtures/generate_mock_run.py --states "vermont,alabama" --year 2020 --version test`
-5. Verify: Mock data now exists
-6. Re-run: `pytest tests/e2e/ -v`
-7. Result: E2E tests pass
-
-### Example 3: Debug Playwright Failures
-
-**User**: "Dashboard tests timing out"
-
-**Skill actions**:
-1. Read pytest output (TimeoutError)
-2. Categorize: Playwright browser errors
-3. Check: Browser not installed
-4. Suggest: `playwright install chromium`
-5. Additional: Run with `--headed` to see browser
-6. Re-run: `pytest tests/e2e/ -v`
-7. Result: Tests pass
-
-### Example 4: Debug Assertion Failures
-
-**User**: "Tests expect wrong values"
-
-**Skill actions**:
-1. Read pytest output (AssertionError: assert 42 == 43)
-2. Categorize: Assertion failures
-3. Analyze: Mock data generates 43, test expects 42
-4. Suggest: Update test expectation or verify implementation
-5. Check: Implementation correct, test outdated
-6. Fix: Update test from 42 to 43
-7. Result: Test passes
-
-### Example 5: Multiple Failure Types
-
-**User**: "Lots of tests failing"
-
-**Skill actions**:
-1. Read pytest output (18 failures)
-2. Categorize:
-   - 10 import errors (PYTHONPATH)
-   - 5 mock data errors
-   - 3 assertion failures
-3. Priority: Fix PYTHONPATH first
-4. Fix: Set PYTHONPATH
-5. Re-run: 8 failures remain (mock + assertions)
-6. Fix: Generate mock data
-7. Re-run: 3 failures remain (assertions)
-8. Analyze: Tests need updating
-9. Result: All resolved
+**Ex 5 - Multiple**: User "Lots failing" → Read: 18 failures → Categorize: 10 import (PYTHONPATH), 5 mock, 3 assertion → Priority: PYTHONPATH first → Fix: Set PYTHONPATH → Re-run: 8 remain → Fix: Generate mock → Re-run: 3 remain → Analyze: Update tests → Resolved
