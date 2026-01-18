@@ -114,6 +114,14 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Sort by:</div>
+                    <select id="sortSelect" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="priority">Priority (High to Low)</option>
+                        <option value="number-desc">Number (Newest First)</option>
+                        <option value="number-asc">Number (Oldest First)</option>
+                        <option value="status">Status (Completed → In Progress → Planned)</option>
+                        <option value="title">Title (A-Z)</option>
+                    </select>
                     <input
                         type="text"
                         id="searchInput"
@@ -300,15 +308,24 @@
                     if (aPriority !== bPriority) return aPriority - bPriority;
                     return b.id - a.id; // Secondary sort by ID (descending)
                 });
-            } else if (currentSort === 'number') {
-                filtered.sort((a, b) => b.id - a.id); // Descending by ID
+            } else if (currentSort === 'number-desc') {
+                filtered.sort((a, b) => b.id - a.id); // Newest first
+            } else if (currentSort === 'number-asc') {
+                filtered.sort((a, b) => a.id - b.id); // Oldest first
             } else if (currentSort === 'status') {
-                const statusOrder = { '✅': 0, '🔄': 1, '📋': 2 };
                 filtered.sort((a, b) => {
                     const aStatus = a.status.includes('✅') ? 0 : a.status.includes('🔄') ? 1 : 2;
                     const bStatus = b.status.includes('✅') ? 0 : b.status.includes('🔄') ? 1 : 2;
                     if (aStatus !== bStatus) return aStatus - bStatus;
-                    return b.id - a.id;
+                    return b.id - a.id; // Secondary sort by ID
+                });
+            } else if (currentSort === 'title') {
+                filtered.sort((a, b) => {
+                    const titleA = a.title.toLowerCase();
+                    const titleB = b.title.toLowerCase();
+                    if (titleA < titleB) return -1;
+                    if (titleA > titleB) return 1;
+                    return 0;
                 });
             }
 
@@ -518,6 +535,12 @@
             // Search input
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 currentSearch = e.target.value;
+                renderEnhancements();
+            });
+
+            // Sort dropdown
+            document.getElementById('sortSelect').addEventListener('change', (e) => {
+                currentSort = e.target.value;
                 renderEnhancements();
             });
 
