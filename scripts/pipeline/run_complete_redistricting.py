@@ -857,24 +857,30 @@ def main():
         results = {}
         processes = {}
 
-        # Start all year processes
+        # Start year processes (skip if .states_complete marker exists)
         for i, year in enumerate(year_queue):
-            cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
-            cmd_states.extend(['--workers', str(workers_per_year[i])])
+            if year_states_complete[year]:
+                # Skip state processing - go straight to national
+                processes[year] = None  # Will launch nation process immediately
+                coordinator.update_year_progress(year, 50, 50)  # Show as complete
+            else:
+                # Launch state processing
+                cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
+                cmd_states.extend(['--workers', str(workers_per_year[i])])
 
-            env = os.environ.copy()
-            env['MULTI_YEAR_SUBPROCESS'] = '1'
+                env = os.environ.copy()
+                env['MULTI_YEAR_SUBPROCESS'] = '1'
 
-            # Use Popen to monitor stdout in real-time
-            proc = subprocess.Popen(
-                cmd_states,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                bufsize=1,  # Line buffering
-                env=env
-            )
-            processes[year] = proc
+                # Use Popen to monitor stdout in real-time
+                proc = subprocess.Popen(
+                    cmd_states,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    bufsize=1,  # Line buffering
+                    env=env
+                )
+                processes[year] = proc
 
         # Monitor all processes in real-time
         import select
@@ -970,22 +976,136 @@ def main():
                 sys.stderr.write(f"[ERROR] Monitor thread for {year} died: {e}\n")
                 sys.stderr.flush()
 
-        # Start monitoring threads
-        threads = []
+        # Start monitoring threads (only for years that are running states)
+        threads = {}  # Changed to dict to track per-year
         for year, proc in processes.items():
-            thread = threading.Thread(target=monitor_process, args=(year, proc, coordinator), daemon=True)
+            if proc is not None:  # Skip years with marker file
+                thread = threading.Thread(target=monitor_process, args=(year, proc, coordinator), daemon=True)
+                thread.start()
+                threads[year] = thread
+
+        # Track phase for each year
+        year_phase = {}  # Will be set to: 'states', 'ready_for_nation', 'nation', 'failed'
+
+        # Determine output directories for each year
+        year_output_dirs = {}
+        for year in year_queue:
+            if args.run_type == 'production':
+                year_output_dirs[year] = version_dir / year
+            elif args.run_type == 'experiment':
+                year_output_dirs[year] = version_dir / year
+            else:  # test
+                year_output_dirs[year] = version_dir / year
+
+        # Check for .states_complete marker file (skip state processing if exists)
+        year_states_complete = {}
+        for year in year_queue:
+            marker_file = year_output_dirs[year] / '.states_complete'
+            states_complete = marker_file.exists() and not args.reset
+            year_states_complete[year] = states_complete
+            if states_complete:
+                print(f"\n[OK] {year}: Found .states_complete marker - skipping state processing")
+                year_phase[year] = 'ready_for_nation'  # Skip to nation processing
+            else:
+                year_phase[year] = 'states'  # Need to run state processing
+
+        # Helper function to launch national post-processing
+        def launch_nation_processing(year):
+            """Launch process_nation.py for a given year."""
+            output_dir = year_output_dirs[year]
+
+            cmd_nation = [
+                sys.executable,
+                str(scripts_dir / 'process_nation.py'),
+                '--year', year,
+                '--version', args.version,
+                '--output-dir', str(output_dir),
+                '--election-year', args.election_year,
+                '--dpi', str(args.dpi),
+                '--workers', str(workers_per_year[year_queue.index(year)])
+            ]
+
+            # Add optional flags
+            if args.run_analysis:
+                cmd_nation.append('--run-analysis')
+            else:
+                cmd_nation.append('--skip-analysis')
+
+            if args.skip_political:
+                cmd_nation.append('--skip-political')
+
+            if args.skip_demographic:
+                cmd_nation.append('--skip-demographic')
+
+            if args.print_only:
+                cmd_nation.append('--print-only')
+
+            if args.debug:
+                cmd_nation.append('--debug')
+
+            # Start nation process
+            env = os.environ.copy()
+            env['MULTI_YEAR_SUBPROCESS'] = '1'
+
+            proc_nation = subprocess.Popen(
+                cmd_nation,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                bufsize=1,
+                env=env
+            )
+            processes[year] = proc_nation
+            year_phase[year] = 'nation'
+
+            # Start new monitoring thread for nation process
+            thread = threading.Thread(target=monitor_process, args=(year, proc_nation, coordinator), daemon=True)
             thread.start()
-            threads.append(thread)
+            threads[year] = thread
 
-        # Wait for all processes to complete
-        for year, proc in processes.items():
-            proc.wait()
-            success = (proc.returncode == 0)
-            results[year] = {'success': success, 'error': None if success else f"Exit code {proc.returncode}"}
+        # Immediately launch nation processing for years with .states_complete marker
+        for year in year_queue:
+            if year_phase[year] == 'ready_for_nation':
+                launch_nation_processing(year)
 
-        # Wait for monitoring threads
-        for thread in threads:
-            thread.join(timeout=1)
+        # Wait for states to complete, then launch national processing
+        # This allows each year to start post-processing as soon as its states finish
+        while any(phase == 'states' for phase in year_phase.values()):
+            for year in year_queue:
+                if year_phase[year] == 'states':
+                    proc = processes[year]
+                    if proc.poll() is not None:  # Process finished
+                        # Wait for monitoring thread to finish reading output
+                        threads[year].join(timeout=2)
+
+                        success = (proc.returncode == 0)
+                        if success:
+                            # Create .states_complete marker file
+                            marker_file = year_output_dirs[year] / '.states_complete'
+                            marker_file.parent.mkdir(parents=True, exist_ok=True)
+                            marker_file.write_text(f"States processing completed: {datetime.now().isoformat()}\n")
+
+                            # Launch national post-processing immediately
+                            launch_nation_processing(year)
+                        else:
+                            # State processing failed
+                            results[year] = {'success': False, 'error': f"State processing exit code {proc.returncode}"}
+                            year_phase[year] = 'failed'
+
+            time.sleep(0.1)  # Avoid busy-waiting
+
+        # Now wait for all national post-processing to complete
+        for year in year_queue:
+            if year_phase[year] == 'nation':
+                proc = processes[year]
+                proc.wait()
+                success = (proc.returncode == 0)
+                results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
+
+                # Wait for monitoring thread
+                threads[year].join(timeout=1)
+            elif year_phase[year] == 'failed':
+                pass  # Already recorded failure
 
         # Calculate elapsed time
         elapsed = time.time() - start_time
