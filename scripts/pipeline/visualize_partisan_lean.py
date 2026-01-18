@@ -28,7 +28,7 @@ import numpy as np
 from shapely.ops import unary_union
 
 # Import shared constants
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.constants import STATE_ABBREV, DISTRICTS_PER_STATE
 
 
