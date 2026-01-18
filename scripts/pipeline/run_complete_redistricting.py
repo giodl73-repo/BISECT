@@ -727,11 +727,11 @@ def main():
     # Build year queue based on arguments
     if args.year == 'all':
         year_queue = ['2020', '2010', '2000']  # Priority order: newest to oldest
-        multi_year_mode = True
-        # Banner will be printed in parallel multi-year section
     else:
         year_queue = [args.year]
-        multi_year_mode = False
+
+    # Always use hierarchical parallel approach (whether 1 year or 3 years)
+    multi_year_mode = True  # Now always true - single vs multi-year use same code path
 
     # Determine version directory (same for all years in queue)
     if args.run_type == 'production':
@@ -837,24 +837,33 @@ def main():
             print("="*70)
             print()
 
-    # Handle multi-year mode with PARALLEL execution
-    if multi_year_mode:
+    # Always use hierarchical parallel execution
+    if True:  # Always run this path now
         print("\n" + "="*70)
-        print("PARALLEL MULTI-YEAR MODE: Running 2020, 2010, 2000 concurrently")
+        if len(year_queue) > 1:
+            print(f"PARALLEL MULTI-YEAR MODE: Running {', '.join(year_queue)} concurrently")
+        else:
+            print(f"HIERARCHICAL PIPELINE MODE: {year_queue[0]} Census")
         print("="*70)
 
         # Allocate workers across years
-        workers_per_year = allocate_workers_across_years(args.workers, num_years=3)
+        workers_per_year = allocate_workers_across_years(args.workers, num_years=len(year_queue))
         print(f"\nExecution Model:")
-        print(f"  - 3 years run in parallel (2020, 2010, 2000)")
-        print(f"  - Each year runs {workers_per_year[0]}/{workers_per_year[1]}/{workers_per_year[2]} states in parallel")
-        print(f"  - Total: {sum(workers_per_year)} concurrent state processes")
-        print(f"  - Estimated time: 2-4 hours (vs 7-13 hours sequential)")
+        if len(year_queue) > 1:
+            print(f"  - {len(year_queue)} years run in parallel ({', '.join(year_queue)})")
+            workers_str = '/'.join(str(w) for w in workers_per_year)
+            print(f"  - Each year runs {workers_str} states in parallel")
+            print(f"  - Total: {sum(workers_per_year)} concurrent state processes")
+            print(f"  - Estimated time: 2-4 hours (vs 7-13 hours sequential)")
+        else:
+            print(f"  - Single year: {year_queue[0]}")
+            print(f"  - Parallel workers: {workers_per_year[0]}")
+            print(f"  - Estimated time: ~1 hour")
         print("="*70)
 
         # Create hierarchical progress coordinator
         coordinator = ProgressCoordinator(
-            years=['2020', '2010', '2000'],
+            years=year_queue,
             workers_per_year=workers_per_year
         )
 
@@ -1457,424 +1466,8 @@ def main():
             print("\n[FAILURE] All census years failed")
             return 1
 
-    # Determine execution mode
-    mode = 'parallel' if args.workers > 1 else 'sequential'
-
-    # Load state configuration for the specified year
-    try:
-        STATE_CONFIG = get_state_config(args.year)
-    except (ValueError, ImportError) as e:
-        print(f"ERROR: Could not load config for year {args.year}: {e}")
-        sys.exit(1)
-
-    # Setup output directory (determine path and handle --reset)
-    output_dir = setup_output_directory(args)
-
-    # Create config files (config.json and version.json)
-    create_config_files(args, output_dir)
-
-    print("\n" + "="*70)
-    print("US CONGRESSIONAL REDISTRICTING - COMPLETE PIPELINE")
-    print("="*70)
-    print(f"Census Year: {args.year}")
-    print(f"Output directory: {output_dir}")
-    print(f"Version: {args.version}")
-    print(f"Execution Mode: {mode.upper()}")
-    if mode == 'parallel':
-        print(f"Parallel Workers: {min(args.workers, 8)} (max 8 recommended)")
-    if args.print_only:
-        print("Mode: PRINT-ONLY (debug mode - no execution)")
-    print("="*70)
-    sys.stdout.flush()
-
-    # =========================================================================
-    # STEP 0: CHECK ELECTION DATA (for political analysis)
-    # =========================================================================
-    if not args.skip_political and 'states' in args.stages:
-        election_data_file = get_election_data_file(args.election_year)
-
-        if not election_data_file.exists():
-            print(f"\n[WARNING] Election data not found: {election_data_file}")
-            print(f"Run these commands to prepare election data:")
-            print(f"  python scripts/pipeline/download_election_data.py --year {args.election_year}")
-            print(f"  python scripts/pipeline/process_election_data.py --year {args.election_year}")
-            print(f"\nPolitical analysis will be skipped.")
-            args.skip_political = True
-            sys.stdout.flush()
-        else:
-            print(f"\nElection data found: {election_data_file}")
-            sys.stdout.flush()
-
-    # =========================================================================
-    # STEP 0B: CHECK DEMOGRAPHIC DATA (for demographic analysis)
-    # =========================================================================
-    if not args.skip_demographic and 'states' in args.stages:
-        demographic_data_file = get_demographic_data_file(args.year)
-
-        if not demographic_data_file.exists():
-            print(f"\n[WARNING] Demographic data not found: {demographic_data_file}")
-            print(f"Run these commands to prepare demographic data:")
-            print(f"  python scripts/data/demographics/download_demographic_data_robust.py --year {args.year}")
-            print(f"  python scripts/data/demographics/process_demographic_data.py --year {args.year}")
-            print(f"\nDemographic analysis will be skipped.")
-            args.skip_demographic = True
-            sys.stdout.flush()
-        else:
-            print(f"\nDemographic data found: {demographic_data_file}")
-            sys.stdout.flush()
-
-    # =========================================================================
-    # STEP 1: PROCESS ALL 50 STATES
-    # =========================================================================
-    if 'states' in args.stages:
-        # Check if we're running as a subprocess of multi-year mode
-        is_multi_year_subprocess = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
-
-        # Get list of states to process
-        if args.states:
-            states_to_process = [s.upper() for s in args.states]
-            invalid = [s for s in states_to_process if s not in STATE_CONFIG]
-            if invalid:
-                print(f"ERROR: Invalid state codes: {', '.join(invalid)}")
-                sys.exit(1)
-        else:
-            # Process all states (sorted by number of districts, descending)
-            states_to_process = sorted(
-                STATE_CONFIG.keys(),
-                key=lambda s: STATE_CONFIG[s]['districts'],
-                reverse=True
-            )
-
-        if not is_multi_year_subprocess:
-            print(f"\nProcessing {len(states_to_process)} states in {mode} mode...")
-            print()
-            sys.stdout.flush()
-        # else: subprocess runs silently to avoid interfering with parent progress display
-
-        # Track results
-        successful = []
-        failed = []
-        skipped_states = []
-        results = {}
-
-        if mode == 'sequential':
-            if not is_multi_year_subprocess:
-                # SEQUENTIAL MODE: Process one state at a time
-                # USA-level progress bar at position 0
-                mode_label = " [Edge-Weighted]" if args.partition_mode == 'edge-weighted' else ""
-                with tqdm(states_to_process,
-                          desc=f"USA Redistricting{mode_label} - {args.year} Census",
-                          unit="state",
-                          ncols=120,
-                          position=0,
-                          leave=True,
-                          dynamic_ncols=False,
-                          file=sys.stderr) as usa_pbar:
-
-                    for state_code in usa_pbar:
-                        config = STATE_CONFIG[state_code]
-                        state_name = config['name']
-
-                        # Update USA progress bar
-                        usa_pbar.set_description(f"USA Redistricting - {args.year} Census: {state_name}")
-
-                        # NOTE: Removed blanket skip check - now using per-stage skip logic
-                        # process_single_state.py handles per-stage checks
-
-                        # Process state at position 1 (below USA bar)
-                        success = process_state_sequential(
-                            state_code, output_dir, STATE_CONFIG,
-                            year=args.year,
-                            skip_existing=not args.reprocess,
-                            print_only=args.print_only,
-                            debug=args.debug,
-                            position=1,
-                            dpi=args.dpi,
-                            run_analysis=args.run_analysis,
-                            partition_mode=args.partition_mode
-                        )
-
-                        if success:
-                            successful.append(state_code)
-                            usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
-                        else:
-                            failed.append(state_code)
-                            usa_pbar.set_postfix_str(f"✗ {len(failed)} failed")
-            else:
-                # Running as subprocess - sequential without progress bars or output
-                # (silent to avoid interfering with parent's hierarchical display)
-                for i, state_code in enumerate(states_to_process, 1):
-                    config = STATE_CONFIG[state_code]
-                    state_name = config['name']
-
-                    scripts_dir = Path(__file__).parent
-                    flags = []
-                    if args.print_only:
-                        flags.append('--print-only')
-                    if args.debug:
-                        flags.append('--debug')
-                    if args.run_analysis:
-                        flags.append('--run-analysis')
-                    if args.partition_mode != 'edge-weighted':
-                        flags.append(f'--partition-mode {args.partition_mode}')
-                    flags_str = ' '.join(flags)
-
-                    states_dir = output_dir / 'states'
-                    state_dir = states_dir / state_name.lower().replace(' ', '_')
-                    cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --dpi {args.dpi} {flags_str}'.strip()
-
-                    env = os.environ.copy()
-                    env['DPI'] = str(args.dpi)
-
-                    result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
-                    if result.returncode == 0:
-                        successful.append(state_code)
-                    else:
-                        failed.append(state_code)
-                        # Only print errors to stderr
-                        sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
-                        sys.stderr.flush()
-
-        elif is_multi_year_subprocess:
-            # Running as subprocess of multi-year mode
-            # Run multiple states in parallel using ProcessPoolExecutor
-            max_workers = min(args.workers, 8)
-
-            # Prepare arguments as dict (picklable)
-            args_dict = {
-                'print_only': args.print_only,
-                'debug': args.debug,
-                'run_analysis': args.run_analysis,
-                'partition_mode': args.partition_mode,
-                'dpi': args.dpi
-            }
-
-            # Pre-assign states to workers in round-robin fashion
-            # This ensures we can track which worker is processing which state
-            state_args_list = [
-                (state_code, i, args.year, str(output_dir), args_dict, i % max_workers)
-                for i, state_code in enumerate(states_to_process, 1)
-            ]
-
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                for state_code, success in executor.map(process_state_for_multi_year, state_args_list):
-                    if success:
-                        successful.append(state_code)
-                        # Emit year-level progress using sys.stdout to ensure proper forwarding
-                        sys.stdout.write(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/50\n")
-                        sys.stdout.flush()
-                    else:
-                        failed.append(state_code)
-                        sys.stderr.write(f"[{args.year}] Failed: {STATE_CONFIG[state_code]['name']}\n")
-                        sys.stderr.flush()
-
-        else:
-            # PARALLEL MODE: Process multiple states at once
-            # Parent creates and manages all progress bars
-            start_time = time.time()
-
-            import select
-            import threading
-            from queue import Queue
-
-            # Create tqdm bars for each state at their assigned positions
-            state_bars = {}
-            for i, state_code in enumerate(states_to_process):
-                config = STATE_CONFIG[state_code]
-                state_name = config['name']
-                num_districts = config['districts']
-                bar = tqdm(total=1,
-                          desc=f"[{i+1}] {state_name} [{num_districts}D] Waiting...",
-                          unit="step",
-                          position=i + 1,
-                          ncols=120,
-                          leave=True,
-                          bar_format="{desc}",
-                          dynamic_ncols=False,
-                          file=sys.stderr)
-                state_bars[i + 1] = bar  # Position is i+1
-
-            # USA-level progress bar at position 0
-            mode_label = " [Edge-Weighted]" if args.partition_mode == 'edge-weighted' else ""
-            usa_pbar = tqdm(total=len(states_to_process),
-                           desc=f"USA Redistricting (Parallel){mode_label} - {args.year} Census",
-                           unit="state",
-                           ncols=120,
-                           position=0,
-                           leave=True,
-                           dynamic_ncols=False,
-                           file=sys.stderr)
-
-            # Start subprocess for each state
-            processes = {}
-            for i, state_code in enumerate(states_to_process):
-                config = STATE_CONFIG[state_code]
-                state_name = config['name']
-                num_districts = config['districts']
-                position = i + 1
-
-                states_dir = output_dir / 'states'
-                state_dir = states_dir / state_name.lower().replace(' ', '_')
-
-                # NOTE: Removed blanket skip check - now using per-stage skip logic
-                # Each stage in process_single_state.py checks its own outputs
-
-                # Build command
-                scripts_dir = Path(__file__).parent
-                flags = []
-                if args.print_only:
-                    flags.append('--print-only')
-                if args.debug:
-                    flags.append('--debug')
-                if args.run_analysis:
-                    flags.append('--run-analysis')
-                if args.partition_mode != 'normal':
-                    flags.append(f'--partition-mode {args.partition_mode}')
-                flags_str = ' '.join(flags)
-
-                cmd = f'{sys.executable} {scripts_dir}/process_single_state.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {position} --dpi {args.dpi} {flags_str}'.strip()
-
-                # Set up environment
-                env = os.environ.copy()
-                env['PARALLEL_MODE'] = '1'
-                env['DPI'] = str(args.dpi)
-
-                # Start process (limit to max_workers at a time)
-                if len([p for p in processes.values() if p.poll() is None]) >= min(args.workers, 8):
-                    # Wait for a slot to open up
-                    while True:
-                        for state_code2, proc in list(processes.items()):
-                            if proc.poll() is not None:
-                                break
-                        if len([p for p in processes.values() if p.poll() is None]) < min(args.workers, 8):
-                            break
-                        time.sleep(0.1)
-
-                proc = subprocess.Popen(cmd, shell=True, env=env,
-                                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                       text=True, bufsize=1)
-                processes[state_code] = proc
-
-                # Start thread to monitor this process's output
-                def monitor_output(proc, position, state_code):
-                    try:
-                        for line in proc.stdout:
-                            line = line.strip()
-                            if line.startswith("STATUS:"):
-                                # Parse: STATUS:position:message
-                                parts = line.split(":", 2)
-                                if len(parts) >= 3:
-                                    pos = int(parts[1])
-                                    msg = parts[2]
-                                    if pos in state_bars:
-                                        state_bars[pos].set_description_str(f"[{pos}] {msg}".ljust(120))
-                                        state_bars[pos].refresh()
-                    except:
-                        pass
-
-                thread = threading.Thread(target=monitor_output, args=(proc, position, state_code), daemon=True)
-                thread.start()
-
-            # Wait for all processes to complete
-            for state_code, proc in processes.items():
-                proc.wait()
-                config = STATE_CONFIG[state_code]
-                state_name = config['name']
-
-                if proc.returncode == 0:
-                    successful.append(state_code)
-                    results[state_code] = (True, "SUCCESS")
-                else:
-                    failed.append(state_code)
-                    results[state_code] = (False, f"Failed with code {proc.returncode}")
-                    print(f"\n[FAIL] {state_name}: exit code {proc.returncode}", file=sys.stderr)
-
-                usa_pbar.update(1)
-                usa_pbar.set_postfix_str(f"✓ {len(successful)}/{len(states_to_process)}")
-
-            # Close all bars
-            usa_pbar.close()
-            for bar in state_bars.values():
-                bar.close()
-
-            # Clear visual space after closing many bars
-            print("\n" + "="*70, file=sys.stderr)
-            print("POST-PROCESSING", file=sys.stderr)
-            print("="*70, file=sys.stderr)
-
-        # Show brief summary
-        if failed:
-            print(f"\n[WARN] Failed states: {len(failed)}/{len(states_to_process)}", file=sys.stderr)
-            for s in failed:
-                state_name = STATE_CONFIG[s]['name']
-                print(f"  [FAIL] {state_name} ({s})", file=sys.stderr)
-            print(file=sys.stderr)
-
-    # =========================================================================
-    # STEP 2: POST-PROCESSING
-    # =========================================================================
-
-    # Skip post-processing if 'nation' not in --stages
-    if 'nation' not in args.stages:
-        print("\n[OK] Skipping nation post-processing (not in --stages)")
-        print(f"[OK] Requested stages complete. Run with --stages nation to do post-processing later.")
-        return 0
-
-    # Call process_nation.py to handle all national post-processing
-    process_nation_script = scripts_dir / 'process_nation.py'
-
-    # Build command with all arguments
-    cmd = [
-        sys.executable,
-        str(process_nation_script),
-        '--year', args.year,
-        '--version', args.version,
-        '--output-dir', str(output_dir),
-        '--election-year', args.election_year,
-        '--dpi', str(args.dpi),
-        '--workers', str(args.workers)
-    ]
-
-    # Add optional flags
-    if args.run_analysis:
-        cmd.append('--run-analysis')
-    else:
-        cmd.append('--skip-analysis')
-
-    if args.skip_political:
-        cmd.append('--skip-political')
-
-    if args.skip_demographic:
-        cmd.append('--skip-demographic')
-
-    if args.print_only:
-        cmd.append('--print-only')
-
-    if args.debug:
-        cmd.append('--debug')
-
-    # Run national post-processing
-    # Check if running in multi-year mode - if so, forward STATUS messages
-    is_multi_year = os.environ.get('MULTI_YEAR_SUBPROCESS') == '1'
-
-    if is_multi_year:
-        # Use Popen to forward STATUS messages to parent
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                               text=True, bufsize=1)
-
-        # Forward STATUS messages
-        for line in proc.stdout:
-            print(line, end='', flush=True)
-
-        proc.wait()
-        result_code = proc.returncode
-    else:
-        # Standalone mode - use regular subprocess.run
-        result = subprocess.run(cmd)
-        result_code = result.returncode
-
-    return 0 if (result_code == 0 and (not 'failed' in locals() or not failed)) else 1
-
+    # NOTE: Old single-year sequential/parallel code paths removed
+    # Now always use hierarchical parallel approach above (unified for 1 or N years)
 
 if __name__ == '__main__':
     # Required for multiprocessing on Windows
