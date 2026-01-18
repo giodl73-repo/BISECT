@@ -410,7 +410,6 @@ def run_single_year_pipeline(year, workers_for_year, args):
         Tuple of (year, success_bool, error_message)
     """
     try:
-        print(f"\n[{year}] Starting with {workers_for_year} workers...")
         start_time = time.time()
 
         # Build commands for this year
@@ -427,31 +426,31 @@ def run_single_year_pipeline(year, workers_for_year, args):
             env = os.environ.copy()
             env['MULTI_YEAR_SUBPROCESS'] = '1'
 
-            result = subprocess.run(cmd_states, capture_output=False, env=env)
+            # Capture output to avoid interfering with parent progress display
+            result = subprocess.run(cmd_states, capture_output=True, env=env)
             if result.returncode != 0:
                 error_msg = f"State processing failed with code {result.returncode}"
-                print(f"\n[{year}] FAILED: {error_msg}")
+                sys.stderr.write(f"[{year}] FAILED: {error_msg}\n")
+                sys.stderr.flush()
                 return (year, False, error_msg)
 
             # Run post-processing
-            result = subprocess.run(cmd_post, capture_output=False, env=env)
+            result = subprocess.run(cmd_post, capture_output=True, env=env)
             if result.returncode != 0:
                 error_msg = f"Post-processing failed with code {result.returncode}"
-                print(f"\n[{year}] FAILED: {error_msg}")
+                sys.stderr.write(f"[{year}] FAILED: {error_msg}\n")
+                sys.stderr.flush()
                 return (year, False, error_msg)
-        else:
-            print(f"\n[{year}] Would execute:")
-            print(f"  States: {' '.join(cmd_states)}")
-            print(f"  Post:   {' '.join(cmd_post)}")
 
         elapsed = time.time() - start_time
         elapsed_mins = elapsed / 60
-        print(f"\n[{year}] COMPLETE in {elapsed_mins:.1f} minutes")
+        # Success - don't print anything to keep display clean
         return (year, True, None)
 
     except Exception as e:
         error_msg = str(e)
-        print(f"\n[{year}] EXCEPTION: {error_msg}")
+        sys.stderr.write(f"[{year}] EXCEPTION: {error_msg}\n")
+        sys.stderr.flush()
         return (year, False, error_msg)
 
 
@@ -918,9 +917,7 @@ def main():
             print(f"\nProcessing {len(states_to_process)} states in {mode} mode...")
             print()
             sys.stdout.flush()
-        else:
-            # Running as subprocess - minimal output
-            print(f"[{args.year}] Processing {len(states_to_process)} states with {args.workers} workers...")
+        # else: subprocess runs silently to avoid interfering with parent progress display
 
         # Track results
         successful = []
@@ -972,12 +969,11 @@ def main():
                             failed.append(state_code)
                             usa_pbar.set_postfix_str(f"✗ {len(failed)} failed")
             else:
-                # Running as subprocess - sequential without progress bars
+                # Running as subprocess - sequential without progress bars or output
+                # (silent to avoid interfering with parent's hierarchical display)
                 for i, state_code in enumerate(states_to_process, 1):
                     config = STATE_CONFIG[state_code]
                     state_name = config['name']
-
-                    print(f"[{args.year}] Processing {i}/{len(states_to_process)}: {state_name}", flush=True)
 
                     scripts_dir = Path(__file__).parent
                     flags = []
@@ -1001,23 +997,21 @@ def main():
                     result = subprocess.run(cmd, shell=True, env=env, capture_output=True)
                     if result.returncode == 0:
                         successful.append(state_code)
-                        print(f"[{args.year}] ✓ Completed {len(successful)}/{len(states_to_process)}", flush=True)
                     else:
                         failed.append(state_code)
-                        print(f"[{args.year}] ✗ Failed: {state_name}", flush=True)
+                        # Only print errors to stderr
+                        sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
+                        sys.stderr.flush()
 
         elif is_multi_year_subprocess:
-            # Running as subprocess of multi-year mode - no progress bars
+            # Running as subprocess of multi-year mode - no progress bars or output
             # Process states sequentially (parallelism already at year level)
-            # Note: Trying to use ProcessPoolExecutor here causes pickling errors on Windows
+            # Silent to avoid interfering with parent's hierarchical display
             for i, state_code in enumerate(states_to_process, 1):
                 config = STATE_CONFIG[state_code]
                 state_name = config['name']
                 states_dir = output_dir / 'states'
                 state_dir = states_dir / state_name.lower().replace(' ', '_')
-
-                if i % 5 == 1:  # Print every 5 states
-                    print(f"[{args.year}] Processing {i}/{len(states_to_process)}: {state_name}", flush=True)
 
                 scripts_dir = Path(__file__).parent
                 flags = []
@@ -1041,7 +1035,9 @@ def main():
                     successful.append(state_code)
                 else:
                     failed.append(state_code)
-                    print(f"[{args.year}] Failed: {state_name}", flush=True)
+                    # Only print errors to stderr
+                    sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
+                    sys.stderr.flush()
 
         else:
             # PARALLEL MODE: Process multiple states at once
