@@ -17,6 +17,11 @@ from pathlib import Path
 import json
 import pickle
 import os
+import sys
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_state_config
 
 
 def load_election_data(year='2020'):
@@ -388,23 +393,8 @@ def main():
             print()
 
         # Get number of districts from config
-        import sys
-        script_dir = Path(__file__).parent
-        project_root = script_dir.parent.parent
-        sys.path.insert(0, str(project_root))
-
-        if args.census_year == '2020':
-            from scripts.config_2020 import STATE_CONFIG_2020
-            config = STATE_CONFIG_2020.get(state_code, {})
-        elif args.census_year == '2010':
-            from scripts.config_2010 import STATE_CONFIG_2010
-            config = STATE_CONFIG_2010.get(state_code, {})
-        elif args.census_year == '2000':
-            from scripts.config_2000 import STATE_CONFIG_2000
-            config = STATE_CONFIG_2000.get(state_code, {})
-        else:
-            config = {}
-
+        state_config = get_state_config(args.census_year)
+        config = state_config.get(state_code, {})
         num_districts = config.get('districts', 1)
         print(f"State has {num_districts} congressional districts")
 

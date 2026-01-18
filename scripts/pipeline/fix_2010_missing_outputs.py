@@ -18,22 +18,9 @@ from tqdm import tqdm
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
-
-def load_state_config(year):
-    """Load state configuration for the given year."""
-    sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-    if year == '2020':
-        from scripts.config_2020 import STATE_CONFIG_2020
-        return STATE_CONFIG_2020
-    elif year == '2010':
-        from scripts.config_2010 import STATE_CONFIG_2010
-        return STATE_CONFIG_2010
-    elif year == '2000':
-        from scripts.config_2000 import STATE_CONFIG_2000
-        return STATE_CONFIG_2000
-    else:
-        raise ValueError(f"Unsupported year: {year}")
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_state_config
 
 
 def run_script_for_state(state_code, state_name, script_path, output_dir, year, args_extra=''):
@@ -296,7 +283,7 @@ def main():
 
     # Load state configuration
     try:
-        state_config = load_state_config(args.year)
+        state_config = get_state_config(args.year)
     except Exception as e:
         print(f"ERROR: Failed to load state config: {e}")
         return 1

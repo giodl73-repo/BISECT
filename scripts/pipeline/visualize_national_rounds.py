@@ -31,10 +31,7 @@ from tqdm import tqdm
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from scripts.config_2020 import STATE_CONFIG_2020
-from scripts.config_2010 import STATE_CONFIG_2010
-from scripts.config_2000 import STATE_CONFIG_2000
+from scripts.utils import get_state_config
 
 
 def load_state_round_data(state_dir, round_num, tracts_file, state_code, state_name):
@@ -343,12 +340,7 @@ def main():
         output_dir = Path(f'outputs/us_{args.year}_{args.version}')
 
     # Get state config
-    if args.year == '2020':
-        state_config = STATE_CONFIG_2020
-    elif args.year == '2010':
-        state_config = STATE_CONFIG_2010
-    else:
-        state_config = STATE_CONFIG_2000
+    state_config = get_state_config(args.year)
 
     # Check if called from parent (progress reporting protocol)
     position = int(os.environ.get('TQDM_POSITION', '-1'))

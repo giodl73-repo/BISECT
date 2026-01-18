@@ -24,13 +24,7 @@ from tqdm import tqdm
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-# Import configuration files
-try:
-    from scripts.config_2020 import STATE_CONFIG_2020
-    STATE_CONFIG = STATE_CONFIG_2020
-except ImportError:
-    STATE_CONFIG = None
+from scripts.utils import get_state_config
 
 # Top 20 MSAs by population (2020 Census)
 # Each metro pinned to its primary state for organization
@@ -408,6 +402,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Load state configuration based on census year
+    global STATE_CONFIG
+    STATE_CONFIG = get_state_config(str(args.year))
 
     # Validate scope parameters
     if args.scope == 'state':
