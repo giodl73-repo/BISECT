@@ -1009,8 +1009,6 @@ def main():
         elif is_multi_year_subprocess:
             # Running as subprocess of multi-year mode - no progress bars
             # Just run the states quietly using ProcessPoolExecutor
-            from concurrent.futures import ProcessPoolExecutor, as_completed
-
             def process_state_simple(state_code):
                 """Process a single state without progress bars."""
                 config = STATE_CONFIG[state_code]
