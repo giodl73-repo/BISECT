@@ -236,6 +236,92 @@ run -v v1 --skip-states
 
 **Files**: `progress_coordinator.py`, `terminal_utils.py`, `process_nation.py`
 
+### Pipeline Orchestrator Pattern
+
+**Added**: 2026-01-18 (Refactor)
+
+**Purpose**: Unified subprocess management for multi-stage, multi-year pipeline execution with automatic phase transitions and completion tracking.
+
+**Architecture**:
+```
+PipelineOrchestrator
+├─ ProcessMonitor (low-level)
+│  ├─ Spawn subprocess with line-buffered stdout
+│  ├─ Monitor via daemon thread + readline loop
+│  ├─ Parse STATUS messages
+│  └─ Route to handlers (coordinator updates)
+│
+└─ PipelineOrchestrator (high-level)
+   ├─ Stage registration (census → states → nation)
+   ├─ Sequential stage execution (all years complete stage before next)
+   ├─ Marker file tracking (.census_complete, .states_complete, .nation_complete)
+   ├─ Automatic phase transitions
+   └─ Unified error handling
+```
+
+**Key Components**:
+
+1. **ProcessMonitor** (`scripts/utils/pipeline_orchestrator.py`):
+   - Low-level subprocess wrapper
+   - Non-blocking readline loop (NOT `for line in stdout` - blocks until EOF!)
+   - Thread-safe message routing
+   - Proper process cleanup
+
+2. **PipelineOrchestrator** (`scripts/utils/pipeline_orchestrator.py`):
+   - High-level multi-stage, multi-year coordinator
+   - Sequential stages: All years finish census → all years finish states → all years finish nation
+   - Marker files: `.{stage}_complete` for skip logic
+   - Completion callbacks for phase transitions
+
+**Usage Pattern**:
+```python
+# Create orchestrator
+orchestrator = PipelineOrchestrator(
+    coordinator=coordinator,
+    display_lock=display_lock,
+    years=['2020', '2010', '2000'],
+    output_dirs={'2020': Path(...), ...}
+)
+
+# Register stages
+orchestrator.add_stage('census', census_command_builder, census_handlers)
+orchestrator.add_stage('states', states_command_builder, state_handlers)
+orchestrator.add_stage('nation', nation_command_builder, nation_handlers)
+
+# Run pipeline
+results = orchestrator.run_pipeline(
+    stages=['census', 'states', 'nation'],
+    skip_stages_if_complete=True,
+    reset=False
+)
+```
+
+**Benefits**:
+- ✅ Centralized subprocess management (no scattered Popen calls)
+- ✅ Automatic marker file handling (skip completed stages)
+- ✅ Thread-safe coordinator updates (no race conditions)
+- ✅ Clean error handling (per-stage failure tracking)
+- ✅ Testable components (31 unit + integration tests)
+
+**Critical Pattern - Non-Blocking Readline**:
+```python
+# ❌ WRONG - Blocks until EOF (process exit)
+for line in proc.stdout:
+    process(line)
+
+# ✅ CORRECT - Non-blocking with poll() check
+while True:
+    line = proc.stdout.readline()
+    if not line:
+        if proc.poll() is not None:  # Process exited
+            break
+        continue  # Empty line, keep reading
+    process(line)
+```
+
+**Files**: `scripts/utils/pipeline_orchestrator.py`, `scripts/pipeline/run_complete_redistricting.py`
+**Tests**: `tests/unit/test_pipeline_orchestrator.py` (19 tests), `tests/integration/test_pipeline_orchestrator_integration.py` (12 tests)
+
 ## Scalability
 
 **Current**:

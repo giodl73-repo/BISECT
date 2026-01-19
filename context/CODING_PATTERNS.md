@@ -1,18 +1,24 @@
 # Coding Patterns
 
-**Updated**: 2026-01-17
+**Updated**: 2026-01-18
 
 **Related**: [ARCHITECTURE.md](ARCHITECTURE.md), [ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md), [../CLAUDE.md](../CLAUDE.md)
 
 ## Progress Bar Protocol (STATUS)
 
 **Env Var**: `TQDM_POSITION` - Coordinates parent-child progress bars
+**CLI Arg**: `--position 999` - Signals deeply nested child (alternative to env var)
 
 **Pattern**:
 ```python
+# Option 1: Via environment variable
 pos = int(os.environ.get('TQDM_POSITION', '-1'))
 send_status = pos >= 0
 is_standalone = not send_status
+
+# Option 2: Via command-line argument (for scripts that accept --position)
+parser.add_argument('--position', type=int, default=-1, help='Progress bar position')
+is_standalone = args.position < 0
 
 def report_progress(msg):
     if send_status: print(f"STATUS:{pos}:{msg}", flush=True)
@@ -29,14 +35,30 @@ else:
 
 **Parent Monitoring**:
 ```python
+# Option 1: Pass via environment variable (all child processes inherit)
 env = os.environ.copy()
-env['TQDM_POSITION'] = str(pos)
-proc = subprocess.Popen(cmd, env=env, stdout=PIPE, text=True, bufsize=1)
+env['TQDM_POSITION'] = '999'  # Signal deeply nested child
+proc = subprocess.Popen(cmd, env=env, stdout=PIPE, stderr=sys.stderr, text=True, bufsize=1)
 
-for line in proc.stdout:
+# Option 2: Pass via command-line argument (explicit control)
+cmd = ['python', 'script.py', '--position', '999', '--year', '2020']
+proc = subprocess.Popen(cmd, stdout=PIPE, stderr=sys.stderr, text=True, bufsize=1)
+
+# CRITICAL: Use readline() loop, NOT 'for line in stdout' (blocks until EOF!)
+while True:
+    line = proc.stdout.readline()
+    if not line:
+        if proc.poll() is not None:
+            break
+        continue
+
     if line.startswith("STATUS:"):
         _, pos, msg = line.split(":", 2)
         progress_bars[int(pos)].set_description_str(msg)
+
+# Ensure process terminated
+if proc.returncode is None:
+    proc.wait()
 ```
 
 **Rules**:
@@ -44,6 +66,59 @@ for line in proc.stdout:
 - ⚠️ Always `flush=True`
 - ⚠️ Use `Popen` (not `run` w/ `capture_output`)
 - ⚠️ Child bars: `disable=send_status`
+- ⚠️ **NEVER** use `for line in proc.stdout:` - blocks until EOF (see Subprocess Pattern below)
+- ⚠️ Use `stderr=sys.stderr` not `stderr=PIPE` - pipes block if not read
+- ⚠️ Use `--position 999` (or `TQDM_POSITION=999`) for deeply nested children to suppress verbose output
+- ⚠️ Position values: `-1` = standalone, `0-50` = specific bar, `999` = deeply nested (suppress all)
+
+## Subprocess Pattern (CRITICAL)
+
+**Problem**: Capturing stdout/stderr with `PIPE` causes blocking if not read properly.
+
+**Anti-Patterns** ❌:
+```python
+# BLOCKS until process terminates and closes stdout!
+proc = subprocess.Popen(cmd, stdout=PIPE)
+for line in proc.stdout:  # ❌ Waits for EOF
+    process(line)
+
+# Pipes fill and block if not read!
+proc = subprocess.Popen(cmd, stderr=PIPE)  # ❌ stderr never read
+proc.wait()  # Process hangs when stderr pipe fills (65KB buffer)
+```
+
+**Correct Pattern** ✅:
+```python
+# Option 1: Non-blocking readline loop (for real-time monitoring)
+proc = subprocess.Popen(cmd, stdout=PIPE, stderr=sys.stderr, text=True, bufsize=1)
+
+while True:
+    line = proc.stdout.readline()
+    if not line:
+        if proc.poll() is not None:  # Process exited
+            break
+        continue  # Empty line, keep reading
+
+    process(line)
+
+if proc.returncode is None:
+    proc.wait()
+
+# Option 2: Let stderr flow through (don't capture)
+proc = subprocess.Popen(cmd, stdout=PIPE, stderr=sys.stderr)  # ✅ stderr flows to console
+
+# Option 3: Suppress stderr entirely
+proc = subprocess.Popen(cmd, stdout=PIPE, stderr=subprocess.DEVNULL)  # ✅ stderr discarded
+```
+
+**Key Rules**:
+- ⚠️ **NEVER** use `for line in proc.stdout:` - it blocks until EOF
+- ⚠️ **NEVER** use `stderr=PIPE` unless you read from it in a separate thread
+- ⚠️ Use `stderr=sys.stderr` (flow through) or `stderr=DEVNULL` (discard)
+- ⚠️ Always use `readline()` loop with `poll()` check for real-time output
+- ⚠️ Use `bufsize=1` for line buffering
+
+**References**: Commits be6156b, 023268b
 
 ## Skip Logic
 
