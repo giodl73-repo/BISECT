@@ -47,6 +47,10 @@ import threading
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
+import colorama
+
+# Initialize colorama for ANSI escape code support on Windows
+colorama.init()
 
 # Ensure we're running from project root
 script_dir = Path(__file__).parent
