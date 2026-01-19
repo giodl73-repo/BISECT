@@ -8,6 +8,16 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 
+def report_progress(message, is_standalone=True):
+    """Report progress using STATUS protocol when running as child process."""
+    if is_standalone:
+        print(message, flush=True)
+    else:
+        # Running as child process - use STATUS protocol
+        position = int(os.environ.get('TQDM_POSITION', '-1'))
+        if position >= 0:
+            print(f"STATUS:{position}:{message}", flush=True)
+
 # All 50 states (no DC for redistricting)
 ALL_STATES = [
     'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
@@ -32,14 +42,12 @@ def check_tracts_exist(state_code, year='2020', input_dir=None):
     return tracts_file.exists()
 
 def build_adjacency_graph(state_code, year='2020', compute_boundary_lengths=False, water_distance=1.0,
-                          minimum_boundary_length=0.0, input_dir=None, output_dir=None):
+                          minimum_boundary_length=0.0, input_dir=None, output_dir=None, is_standalone=True):
     """Build adjacency graph for a single state."""
-    print(f"\n{'='*70}")
     mode_str = "with boundary lengths" if compute_boundary_lengths else "without boundary lengths"
     water_str = f" (water distance: {water_distance} km)"
     boundary_filter = f", min boundary: {minimum_boundary_length}m" if minimum_boundary_length > 0 else ""
-    print(f"Building adjacency graph for {state_code} ({year} Census) {mode_str}{water_str}{boundary_filter}...")
-    print(f"{'='*70}")
+    report_progress(f"Building adjacency graph for {state_code} ({year} Census) {mode_str}{water_str}{boundary_filter}...", is_standalone)
 
     scripts_dir = Path(__file__).parent
 
@@ -67,17 +75,21 @@ def build_adjacency_graph(state_code, year='2020', compute_boundary_lengths=Fals
             text=True,
             timeout=600  # 10 minutes per state
         )
-        print(result.stdout)
-        if result.stderr:
-            print("STDERR:", result.stderr)
+        # Only show subprocess output in standalone mode
+        if is_standalone:
+            if result.stdout:
+                print(result.stdout)
+            if result.stderr:
+                print("STDERR:", result.stderr)
         return True
     except subprocess.CalledProcessError as e:
-        print(f"ERROR: Failed to build graph for {state_code}")
-        print(f"STDOUT: {e.stdout}")
-        print(f"STDERR: {e.stderr}")
+        report_progress(f"ERROR: Failed to build graph for {state_code}", is_standalone)
+        if is_standalone:
+            print(f"STDOUT: {e.stdout}")
+            print(f"STDERR: {e.stderr}")
         return False
     except subprocess.TimeoutExpired:
-        print(f"ERROR: Build timed out for {state_code}")
+        report_progress(f"ERROR: Build timed out for {state_code}", is_standalone)
         return False
 
 def main():
@@ -99,6 +111,10 @@ def main():
                         help='Delete existing adjacency graphs and rebuild from scratch')
     args = parser.parse_args()
 
+    # Detect if running as child process (via TQDM_POSITION)
+    position = int(os.environ.get('TQDM_POSITION', '-1'))
+    is_standalone = position < 0
+
     # Set default paths if not provided
     input_dir = args.input_dir if args.input_dir else f'outputs/data/units/{args.year}'
     output_dir = args.output_dir if args.output_dir else f'outputs/data/adjacency/{args.year}'
@@ -108,9 +124,7 @@ def main():
 
     # If reset flag is set, delete existing graphs
     if args.reset:
-        print(f"\n{'='*70}")
-        print("RESET MODE: Deleting existing adjacency graphs...")
-        print(f"{'='*70}")
+        report_progress("RESET MODE: Deleting existing adjacency graphs...", is_standalone)
         deleted_count = 0
         for state in ALL_STATES:
             graph_file = Path(output_dir) / f'{state.lower()}_adjacency_{args.year}.pkl'
@@ -118,9 +132,8 @@ def main():
             if graph_file.exists():
                 graph_file.unlink()
                 deleted_count += 1
-                print(f"  [DELETED] {state}")
-        print(f"\nDeleted {deleted_count} existing graphs")
-        print(f"{'='*70}\n")
+                report_progress(f"  [DELETED] {state}", is_standalone)
+        report_progress(f"Deleted {deleted_count} existing graphs", is_standalone)
 
     # Check which states need processing
     to_build = []
@@ -135,68 +148,86 @@ def main():
         else:
             to_build.append(state)
 
-    print(f"\n{'='*70}")
-    mode_str = " with boundary lengths" if args.compute_boundary_lengths else ""
-    water_str = f" (water distance: {args.water_distance} km)"
-    print(f"Building Adjacency Graphs for All States - {args.year} Census{mode_str}{water_str}")
-    print(f"{'='*70}")
-    print(f"States with existing graphs: {len(already_exists)}")
-    for state in already_exists:
-        print(f"  [OK] {state}")
+    # Only show detailed status in standalone mode
+    if is_standalone:
+        print(f"\n{'='*70}")
+        mode_str = " with boundary lengths" if args.compute_boundary_lengths else ""
+        water_str = f" (water distance: {args.water_distance} km)"
+        print(f"Building Adjacency Graphs for All States - {args.year} Census{mode_str}{water_str}")
+        print(f"{'='*70}")
+        print(f"States with existing graphs: {len(already_exists)}")
+        for state in already_exists:
+            print(f"  [OK] {state}")
 
-    if missing_tracts:
-        print(f"\nStates missing tract data: {len(missing_tracts)}")
-        for state in missing_tracts:
-            print(f"  [MISSING] {state}")
+        if missing_tracts:
+            print(f"\nStates missing tract data: {len(missing_tracts)}")
+            for state in missing_tracts:
+                print(f"  [MISSING] {state}")
 
-    print(f"\nStates to build: {len(to_build)}")
-    for state in to_build:
-        print(f"  - {state}")
-    print(f"{'='*70}\n")
+        print(f"\nStates to build: {len(to_build)}")
+        for state in to_build:
+            print(f"  - {state}")
+        print(f"{'='*70}\n")
 
     if not to_build:
-        print("All states already have adjacency graphs!")
+        report_progress("All states already have adjacency graphs!", is_standalone)
         return 0
 
     # Build missing graphs
     successful = []
     failed = []
 
-    # Get position for stacked progress bars
+    # Use position from environment for stacked progress bars (defaults to 0 in standalone)
     position = int(os.environ.get('TQDM_POSITION', '0'))
 
-    with tqdm(to_build,
-              desc="Building adjacency graphs",
-              unit="state",
-              position=position,
-              leave=(position == 0),
-              ncols=100) as pbar:
-        for state in pbar:
-            pbar.set_description(f"Building {state}")
+    # Only show progress bar in standalone mode
+    if is_standalone:
+        with tqdm(to_build,
+                  desc="Building adjacency graphs",
+                  unit="state",
+                  position=position,
+                  leave=(position == 0),
+                  ncols=100) as pbar:
+            for state in pbar:
+                pbar.set_description(f"Building {state}")
 
+                if build_adjacency_graph(state, args.year, args.compute_boundary_lengths, args.water_distance,
+                                        args.minimum_boundary_length, input_dir, output_dir, is_standalone):
+                    successful.append(state)
+                    pbar.set_postfix_str("OK Built")
+                else:
+                    failed.append(state)
+                    pbar.set_postfix_str("X Failed")
+    else:
+        # Running as child process - no progress bar
+        for state in to_build:
+            report_progress(f"Building adjacency graph for {state}...", is_standalone)
             if build_adjacency_graph(state, args.year, args.compute_boundary_lengths, args.water_distance,
-                                    args.minimum_boundary_length, input_dir, output_dir):
+                                    args.minimum_boundary_length, input_dir, output_dir, is_standalone):
                 successful.append(state)
-                pbar.set_postfix_str("OK Built")
             else:
                 failed.append(state)
-                pbar.set_postfix_str("X Failed")
 
-    # Summary
-    print(f"\n\n{'='*70}")
-    print(f"BUILD SUMMARY")
-    print(f"{'='*70}")
-    print(f"Successful: {len(successful)}/{len(to_build)}")
-    for state in successful:
-        print(f"  [OK] {state}")
+    # Summary - only show detailed output in standalone mode
+    if is_standalone:
+        print(f"\n\n{'='*70}")
+        print(f"BUILD SUMMARY")
+        print(f"{'='*70}")
+        print(f"Successful: {len(successful)}/{len(to_build)}")
+        for state in successful:
+            print(f"  [OK] {state}")
 
-    if failed:
-        print(f"\nFailed: {len(failed)}")
-        for state in failed:
-            print(f"  [FAIL] {state}")
+        if failed:
+            print(f"\nFailed: {len(failed)}")
+            for state in failed:
+                print(f"  [FAIL] {state}")
 
-    print(f"\nTotal states with graphs: {len(already_exists) + len(successful)}/50")
-    print(f"{'='*70}")
+        print(f"\nTotal states with graphs: {len(already_exists) + len(successful)}/50")
+        print(f"{'='*70}")
+    else:
+        # In child mode, just report the final result
+        total_complete = len(already_exists) + len(successful)
+        report_progress(f"Adjacency graphs complete: {total_complete}/50 states ({len(successful)} built, {len(failed)} failed)", is_standalone)
 
     return 0 if not failed else 1
 

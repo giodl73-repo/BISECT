@@ -44,6 +44,10 @@ class ProgressCoordinator:
         self.year_progress = {year: {'completed': 0, 'total': 50, 'phase': 'states', 'phase_desc': ''} for year in years}
         self.worker_status = {}  # {(year, worker_id): status_dict}
 
+        # Track census data processing
+        self.census_progress = {year: {'stage': '', 'completed': 0, 'total': 50, 'active': False} for year in years}
+        self.census_worker_status = {}  # {(year, worker_id): status_dict}
+
         self.lock = threading.Lock()
         self.wide_terminal = is_wide_terminal(120)
 
@@ -129,6 +133,53 @@ class ProgressCoordinator:
             self.year_progress[year]['total'] = total
             self.year_progress[year]['phase_desc'] = f'{completed}/{total} tasks'
 
+    def update_census_stage(self, year, stage_name, completed, total):
+        """
+        Update census data processing stage.
+
+        Args:
+            year: Census year
+            stage_name: Stage name (e.g., "Parsing PL 94-171", "Merging geometries")
+            completed: Number of states completed
+            total: Total states
+        """
+        with self.lock:
+            self.census_progress[year] = {
+                'stage': stage_name,
+                'completed': completed,
+                'total': total,
+                'active': True
+            }
+
+    def update_census_worker(self, year, worker_id, state_num, state_name, stage_name):
+        """
+        Update census data worker status.
+
+        Args:
+            year: Census year
+            worker_id: Worker ID (0, 1, 2, ...)
+            state_num: State number this worker is on
+            state_name: State code (e.g., 'CA', 'TX')
+            stage_name: Stage name (e.g., "Parsing PL 94-171")
+        """
+        with self.lock:
+            self.census_worker_status[(year, worker_id)] = {
+                'state_num': state_num,
+                'state_name': state_name,
+                'stage_name': stage_name
+            }
+
+    def census_complete(self, year):
+        """
+        Mark census data processing as complete for a year.
+
+        Args:
+            year: Census year
+        """
+        with self.lock:
+            self.census_progress[year]['active'] = False
+            self.census_worker_status = {k: v for k, v in self.census_worker_status.items() if k[0] != year}
+
     def render(self):
         """
         Render the current progress display.
@@ -140,7 +191,41 @@ class ProgressCoordinator:
             lines = []
 
             for year in self.years:
-                # Top bar
+                # Census data processing (if active)
+                census = self.census_progress[year]
+                if census['active']:
+                    census_completed = census['completed']
+                    census_total = census['total']
+                    census_stage = census['stage']
+
+                    census_bar = create_progress_bar(census_completed, census_total, width=20)
+                    census_line = f"[{year} Census Data] {census_bar} {census_stage}: {census_completed}/{census_total} states"
+                    lines.append(census_line)
+
+                    # Census worker bars
+                    num_workers = self.workers_per_year[year]
+                    for worker_id in range(num_workers):
+                        worker_key = (year, worker_id)
+                        is_last = (worker_id == num_workers - 1)
+                        connector = format_tree_connector(is_last, wide_terminal=self.wide_terminal)
+
+                        if worker_key in self.census_worker_status:
+                            status = self.census_worker_status[worker_key]
+                            state_name = status['state_name']
+                            stage_name = status['stage_name']
+
+                            worker_line = (
+                                f"{connector}Worker {worker_id + 1}: "
+                                f"[{status['state_num']:02d}/{census_total}] {state_name:4s} | {stage_name}"
+                            )
+                            lines.append(worker_line)
+                        else:
+                            worker_line = f"{connector}Worker {worker_id + 1}: Idle"
+                            lines.append(worker_line)
+
+                    lines.append("")  # Blank line after census data
+
+                # Top bar (state processing)
                 progress = self.year_progress[year]
                 completed = progress['completed']
                 total = progress['total']
@@ -290,6 +375,51 @@ def parse_status_message(line):
                     'completed': int(completed),
                     'total': int(total)
                 })
+
+    elif msg_type == "CENSUS":
+        # STATUS:CENSUS:{year}:STAGE:{stage_num}/{total}:{stage_name}:{completed}/{total_states}
+        # STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{state_num}/{total}:{state_code}:{stage_name}
+        year = parts[2]
+        submsg_type = parts[3]
+
+        if submsg_type == "STAGE":
+            # STATUS:CENSUS:2020:STAGE:1/3:Parsing PL 94-171:0/50
+            if len(parts) >= 7:
+                stage_str = parts[4]  # "1/3"
+                stage_name = parts[5]
+                progress_str = parts[6]  # "0/50"
+
+                if '/' in progress_str:
+                    completed, total = progress_str.split('/')
+                    return ('CENSUS_STAGE', {
+                        'year': year,
+                        'stage_name': stage_name,
+                        'completed': int(completed),
+                        'total': int(total)
+                    })
+
+        elif submsg_type == "WORKER":
+            # STATUS:CENSUS:2020:WORKER:0:STATE:1/50:CA:STAGE:1/3:Parsing PL 94-171
+            worker_id = int(parts[4])
+            if len(parts) >= 11 and parts[5] == "STATE" and parts[8] == "STAGE":
+                state_str = parts[6]  # "1/50"
+                state_code = parts[7]
+                stage_str = parts[9]  # "1/3"
+                stage_name = parts[10]
+
+                if '/' in state_str and '/' in stage_str:
+                    state_num, _ = state_str.split('/')
+                    stage_num, stage_total = stage_str.split('/')
+
+                    return ('CENSUS_WORKER', {
+                        'year': year,
+                        'worker_id': worker_id,
+                        'state_num': int(state_num),
+                        'state_name': state_code,
+                        'stage_num': int(stage_num),
+                        'stage_total': int(stage_total),
+                        'stage_name': stage_name
+                    })
 
     elif msg_type == "WORKER":
         year = parts[2]

@@ -185,30 +185,54 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
     Returns:
         True if successful, False otherwise
     """
+    # Auto-detect standalone mode if not specified
+    if is_standalone is None:
+        is_standalone = int(os.environ.get('TQDM_POSITION', '-1')) < 0
+
     report_progress(f"Running: {description}", is_standalone)
 
     if dry_run:
         report_progress(f"[DRY RUN] Would execute: {description}", is_standalone)
         return True
 
+    # Set up environment for child process (following CODING_PATTERNS.md)
+    env = os.environ.copy()
+    # Set TQDM_POSITION=999 to signal deeply nested child
+    # This tells child scripts to suppress verbose output and use STATUS protocol
+    env['TQDM_POSITION'] = '999'
+
     try:
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        # Don't print stdout in worker mode (interferes with STATUS protocol)
-        if result.stdout and is_standalone:
-            print(result.stdout)
+        # Use Popen to forward STATUS messages (following run_complete_redistricting.py pattern)
+        proc = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=sys.stderr,  # Let stderr flow through directly
+            text=True,
+            bufsize=1,  # Line buffering
+            env=env
+        )
+
+        # Forward stdout line by line (only in standalone mode)
+        # In child mode, suppress child process output entirely
+        if is_standalone:
+            for line in proc.stdout:
+                print(line, end='', flush=True)
+        else:
+            # Child mode: consume output silently
+            for line in proc.stdout:
+                pass  # Discard output
+
+        # Wait for completion
+        proc.wait()
+
+        if proc.returncode != 0:
+            error_msg = f"{description} failed with exit code {proc.returncode}"
+            report_progress(f"[ERROR] {error_msg}", is_standalone)
+            log_error(error_log_file, description, error_msg)
+            return False
+
         return True
-    except subprocess.CalledProcessError as e:
-        error_msg = f"{description} failed: {e}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
-        log_error(error_log_file, description, error_msg)
 
-        if e.stdout and is_standalone:
-            print(f"  STDOUT: {e.stdout}")
-        if e.stderr:
-            report_progress(f"  STDERR: {e.stderr}", is_standalone)
-            log_error(error_log_file, description, f"STDERR: {e.stderr}")
-
-        return False
     except Exception as e:
         error_msg = f"{description} failed with exception: {e}"
         report_progress(f"[ERROR] {error_msg}", is_standalone)
@@ -253,7 +277,13 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
         dry_run: Print commands without executing
         is_standalone: Whether running standalone
     """
-    report_progress(f"[2/6] Parsing PL 94-171 files ({year})", is_standalone)
+    stage_name = "Parsing PL 94-171"
+    stage_num = 1  # Stage 1 of 3 census stages
+    if is_standalone:
+        report_progress(f"[2/6] {stage_name} ({year})", is_standalone)
+    else:
+        # Emit STATUS message for progress coordinator
+        print(f"STATUS:CENSUS:{year}:STAGE:{stage_num}/3:{stage_name}:0/50", flush=True)
 
     if states is None:
         states = ALL_STATES
@@ -312,20 +342,26 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
     report_progress(f"Launching {workers} parallel workers", is_standalone)
 
     # Launch parallel processes for each state
-    processes = {}  # {state_code: Popen object}
+    processes = {}  # {state_code: (Popen object, worker_id)}
     completed_states = set()
     failed_states = []
-    running_workers = 0
+
+    # Track worker assignments for STATUS messages
+    worker_state = {}  # {worker_id: state_code}
+    next_worker_id = 0
 
     import time as time_module
     from collections import deque
 
     state_queue = deque(states_to_process)
+    total_states = len(states_to_process)
 
     while state_queue or processes:
         # Launch new processes if workers are available
-        while state_queue and running_workers < workers:
+        while state_queue and len(processes) < workers:
             state_code = state_queue.popleft()
+            worker_id = next_worker_id
+            next_worker_id = (next_worker_id + 1) % workers
 
             cmd = [
                 sys.executable, script,
@@ -341,8 +377,13 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                processes[state_code] = proc
-                running_workers += 1
+                processes[state_code] = (proc, worker_id)
+                worker_state[worker_id] = state_code
+
+                # Emit STATUS message: worker started processing state
+                if not is_standalone:
+                    state_num = len(completed_states) + len(processes)
+                    print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{state_num}/{total_states}:{state_code}:STAGE:{stage_num}/3:{stage_name}", flush=True)
             except Exception as e:
                 failed_states.append(state_code)
                 error_msg = f"{state_code} failed to start: {str(e)}"
@@ -350,18 +391,23 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
                 log_error(error_log_file, "process_census_tracts", error_msg)
 
         # Check for completed processes
-        for state_code, proc in list(processes.items()):
+        for state_code, (proc, worker_id) in list(processes.items()):
             retcode = proc.poll()
 
             if retcode is not None:
                 # Process has completed
                 stdout, stderr = proc.communicate()
-                running_workers -= 1
                 del processes[state_code]
+                if worker_id in worker_state and worker_state[worker_id] == state_code:
+                    del worker_state[worker_id]
 
                 if retcode == 0:
                     completed_states.add(state_code)
-                    report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} complete", is_standalone)
+                    if is_standalone:
+                        report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} complete", is_standalone)
+                    else:
+                        # Emit STATUS message: worker completed state
+                        print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{len(completed_states)}/{total_states}:{state_code}:COMPLETE", flush=True)
                 else:
                     failed_states.append(state_code)
                     error_msg = f"{state_code} failed with exit code {retcode}"
@@ -396,7 +442,13 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
         dry_run: Print commands without executing
         is_standalone: Whether running standalone
     """
-    report_progress(f"[3/6] Merging with TIGER/Line geometries ({year})", is_standalone)
+    stage_name = "Merging geometries"
+    stage_num = 2  # Stage 2 of 3 census stages
+    if is_standalone:
+        report_progress(f"[3/6] {stage_name} ({year})", is_standalone)
+    else:
+        # Emit STATUS message for progress coordinator
+        print(f"STATUS:CENSUS:{year}:STAGE:{stage_num}/3:{stage_name}:0/50", flush=True)
 
     if states is None:
         states = ALL_STATES
@@ -455,20 +507,26 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
     report_progress(f"Launching {workers} parallel workers", is_standalone)
 
     # Launch parallel processes for each state
-    processes = {}  # {state_code: Popen object}
+    processes = {}  # {state_code: (Popen object, worker_id)}
     completed_states = set()
     failed_states = []
-    running_workers = 0
+
+    # Track worker assignments for STATUS messages
+    worker_state = {}  # {worker_id: state_code}
+    next_worker_id = 0
 
     import time as time_module
     from collections import deque
 
     state_queue = deque(states_to_process)
+    total_states = len(states_to_process)
 
     while state_queue or processes:
         # Launch new processes if workers are available
-        while state_queue and running_workers < workers:
+        while state_queue and len(processes) < workers:
             state_code = state_queue.popleft()
+            worker_id = next_worker_id
+            next_worker_id = (next_worker_id + 1) % workers
 
             cmd = [
                 sys.executable, script,
@@ -486,8 +544,13 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
                     stderr=subprocess.PIPE,
                     text=True
                 )
-                processes[state_code] = proc
-                running_workers += 1
+                processes[state_code] = (proc, worker_id)
+                worker_state[worker_id] = state_code
+
+                # Emit STATUS message: worker started processing state
+                if not is_standalone:
+                    state_num = len(completed_states) + len(processes)
+                    print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{state_num}/{total_states}:{state_code}:STAGE:{stage_num}/3:{stage_name}", flush=True)
             except Exception as e:
                 failed_states.append(state_code)
                 error_msg = f"{state_code} merge failed to start: {str(e)}"
@@ -495,18 +558,23 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
                 log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
 
         # Check for completed processes
-        for state_code, proc in list(processes.items()):
+        for state_code, (proc, worker_id) in list(processes.items()):
             retcode = proc.poll()
 
             if retcode is not None:
                 # Process has completed
                 stdout, stderr = proc.communicate()
-                running_workers -= 1
                 del processes[state_code]
+                if worker_id in worker_state and worker_state[worker_id] == state_code:
+                    del worker_state[worker_id]
 
                 if retcode == 0:
                     completed_states.add(state_code)
-                    report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} merged", is_standalone)
+                    if is_standalone:
+                        report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} merged", is_standalone)
+                    else:
+                        # Emit STATUS message: worker completed state
+                        print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{len(completed_states)}/{total_states}:{state_code}:COMPLETE", flush=True)
                 else:
                     failed_states.append(state_code)
                     error_msg = f"{state_code} merge failed with exit code {retcode}"
@@ -650,9 +718,10 @@ def process_demographic_data(year: int, error_log_file: Path, force: bool = Fals
     return success
 
 
-def validate_outputs(year: int, states: Optional[List[str]] = None):
+def validate_outputs(year: int, states: Optional[List[str]] = None, is_standalone: bool = True):
     """Validate all required outputs exist."""
-    print(f"\n[7/7] Validating outputs...")
+    if is_standalone:
+        print(f"\n[7/7] Validating outputs...")
 
     if states is None:
         states = ALL_STATES
@@ -674,21 +743,22 @@ def validate_outputs(year: int, states: Optional[List[str]] = None):
         if not adj_file.exists():
             missing_files.append(adj_file)
 
-    print(f"  Total required files: {len(required_files)}")
-    print(f"  Existing files: {len(required_files) - len(missing_files)}")
-    print(f"  Missing files: {len(missing_files)}")
+    if is_standalone:
+        print(f"  Total required files: {len(required_files)}")
+        print(f"  Existing files: {len(required_files) - len(missing_files)}")
+        print(f"  Missing files: {len(missing_files)}")
 
-    if missing_files and len(missing_files) <= 10:
-        print(f"\n  Missing files:")
-        for f in missing_files[:10]:
-            print(f"    - {f}")
+        if missing_files and len(missing_files) <= 10:
+            print(f"\n  Missing files:")
+            for f in missing_files[:10]:
+                print(f"    - {f}")
 
-    if missing_files:
-        print(f"\n  [WARN] {len(missing_files)} files missing")
-        return False
-    else:
-        print(f"\n  [OK] All required files exist!")
-        return True
+        if missing_files:
+            print(f"\n  [WARN] {len(missing_files)} files missing")
+        else:
+            print(f"\n  [OK] All required files exist!")
+
+    return len(missing_files) == 0
 
 
 def main():
@@ -740,6 +810,8 @@ Examples:
                        help='Force reprocessing (skip existing files)')
     parser.add_argument('--dry-run', action='store_true',
                        help='Show what would be done without executing')
+    parser.add_argument('--position', type=int, default=-1,
+                       help='Progress bar position (>=0 for child process, -1 for standalone)')
 
     args = parser.parse_args()
 
@@ -762,8 +834,8 @@ Examples:
     output_dir.mkdir(parents=True, exist_ok=True)
     error_log_file = output_dir / 'error.log'
 
-    # Auto-detect standalone mode
-    is_standalone = int(os.environ.get('TQDM_POSITION', '-1')) < 0
+    # Auto-detect standalone mode from --position argument
+    is_standalone = args.position < 0
 
     # Determine stages to run
     all_stages = ['tracts', 'merge', 'adjacency', 'elections', 'demographics']
@@ -791,21 +863,25 @@ Examples:
                 print(f"  [OK] {stage}: {marker.name}")
             print("=" * 70)
             print("Use --force to reprocess")
+        else:
+            # Child mode: emit STATUS message
+            report_progress(f"All stages complete", is_standalone)
         return 0
 
     # Update stages to only process what's needed
     stages = stages_to_run
 
-    if is_standalone and stages_skipped:
-        print("=" * 70)
-        print(f"Skipping {len(stages_skipped)} completed stages:")
-        for stage in stages_skipped:
-            marker = get_stage_marker(output_dir, stage, resolution)
-            print(f"  [SKIP] {stage}: {marker.name}")
-        print("=" * 70)
-
-    # Standalone mode: print header
+    # Only show detailed info in standalone mode
     if is_standalone:
+        if stages_skipped:
+            print("=" * 70)
+            print(f"Skipping {len(stages_skipped)} completed stages:")
+            for stage in stages_skipped:
+                marker = get_stage_marker(output_dir, stage, resolution)
+                print(f"  [SKIP] {stage}: {marker.name}")
+            print("=" * 70)
+
+        # Standalone mode: print header
         print("=" * 70)
         print("PROCESS CENSUS DATA")
         print("=" * 70)
