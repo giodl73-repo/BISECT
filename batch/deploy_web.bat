@@ -52,7 +52,8 @@ goto parse_args
 REM Year and version now have defaults, so no validation needed
 
 REM Build command
-set CMD=python scripts\web\generate_dashboard.py --year %YEAR% --version %VERSION% --partition-mode %PARTITION_MODE%
+REM Use py -3.13 to ensure correct Python with installed dependencies
+set CMD=py -3.13 scripts\web\generate_dashboard.py --year %YEAR% --version %VERSION% --partition-mode %PARTITION_MODE%
 if not "%OUTPUT_DIR%"=="" (
     set CMD=%CMD% --output-dir %OUTPUT_DIR%
 )

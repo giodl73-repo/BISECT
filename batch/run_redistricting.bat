@@ -9,7 +9,8 @@ REM Change to project root (one level up from batch/)
 cd /d "%~dp0\.."
 
 REM Pass all arguments to the Python script
-python scripts/pipeline/run_complete_redistricting.py %*
+REM Use py -3.13 to ensure correct Python with installed dependencies
+py -3.13 scripts/pipeline/run_complete_redistricting.py %*
 
 REM If Ctrl+C was pressed, ensure Python processes are killed
 if errorlevel 1 (

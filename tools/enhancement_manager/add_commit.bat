@@ -18,10 +18,10 @@ if "%1"=="" (
 
 if "%2"=="" (
     echo Capturing commits for Enhancement %1...
-    python capture_commits.py %1 --verbose
+    py -3.13 capture_commits.py %1 --verbose
 ) else (
     echo Adding commit %2 to Enhancement %1...
-    python capture_commits.py %1 --commit %2 --verbose
+    py -3.13 capture_commits.py %1 --commit %2 --verbose
 )
 
 exit /b %ERRORLEVEL%

@@ -63,7 +63,7 @@ REM Project shortcuts - Pipeline
 doskey run=run_redistricting.bat $*
 doskey runtest=run_test.bat $*
 doskey cancel=CANCEL.bat
-doskey validate=python scripts/validation/validate_pipeline_outputs.py $*
+doskey validate=py -3.13 scripts/validation/validate_pipeline_outputs.py $*
 
 REM Project shortcuts - Testing
 doskey test=pytest tests/ -v
@@ -74,20 +74,28 @@ doskey dashtest=run_dashboard_tests.bat
 
 REM Project shortcuts - Dashboard
 doskey dash=deploy_web.bat $*
-doskey gendash=python scripts/web/generate_dashboard.py $*
+doskey gendash=py -3.13 scripts/web/generate_dashboard.py $*
 doskey master=run_master.bat $*
 
-REM Project shortcuts - Data Downloads
-doskey dlcensus=python scripts/data/census/download_all_states_tracts.py $*
-doskey dltiger2000=python scripts/data/geography/download_tiger_tracts_2000.py $*
-doskey dltiger2010=python scripts/data/geography/download_tiger_tracts_2010.py $*
-doskey dlplaces=python scripts/data/geography/download_all_places.py $*
-doskey dlelect=python scripts/data/elections/download_election_data.py $*
-doskey dldemo=python scripts/data/demographics/download_demographic_data_robust.py $*
+REM Project shortcuts - Tools
+doskey pm=run_manager.bat $*
+
+REM Project shortcuts - Data Downloads (New Orchestrator)
+doskey dl=py -3.13 scripts/data/download_orchestrator.py $*
+doskey dlcheck=py -3.13 scripts/data/download_orchestrator.py --check-only $*
+doskey dlval=py -3.13 scripts/data/validate_downloads.py $*
+
+REM Project shortcuts - Data Downloads (Legacy)
+doskey dlcensus=py -3.13 scripts/data/census/download_all_states_tracts.py $*
+doskey dltiger2000=py -3.13 scripts/data/geography/download_tiger_tracts_2000.py $*
+doskey dltiger2010=py -3.13 scripts/data/geography/download_tiger_tracts_2010.py $*
+doskey dlplaces=py -3.13 scripts/data/geography/download_all_places.py $*
+doskey dlelect=py -3.13 scripts/data/elections/download_election_data.py $*
+doskey dldemo=py -3.13 scripts/data/demographics/download_demographic_data_robust.py $*
 
 REM Project shortcuts - Data Processing
-doskey buildadj=python scripts/data/geography/build_all_adjacency_graphs.py $*
-doskey checkconn=python scripts/data/geography/check_graph_connectivity.py $*
+doskey buildadj=py -3.13 scripts/data/geography/build_all_adjacency_graphs.py $*
+doskey checkconn=py -3.13 scripts/data/geography/check_graph_connectivity.py $*
 
 REM Project shortcuts - Artifacts
 doskey compile=compile_artifacts.bat
@@ -106,15 +114,20 @@ echo   Pipeline:
 echo     run --version v1                - Run redistricting (multi-year)
 echo     runtest --year 2020 --version t - Test run (outputs to dev/)
 echo     test                            - Run test suite
+echo     pm                              - Pipeline Manager web UI (port 5200)
 echo     dash --year 2020 --version v1   - Deploy dashboard
 echo     cancel                          - Cancel running pipeline
 echo     compile                         - Compile LaTeX artifacts
 echo.
-echo   Data Downloads:
+echo   Data Downloads (Orchestrator - Parallel):
+echo     dl                                     - Check all data (all stages, all years)
+echo     dl --stages redistricting --year 2020  - Download specific stages
+echo     dlval --year all --create-markers      - Validate and mark complete
+echo.
+echo   Data Downloads (Legacy - Individual):
 echo     dldemo -y 2010                  - Download demographics
 echo     dlelect -y 2020                 - Download elections
 echo     dlplaces -y 2020                - Download places
-echo     dlcensus -y 2020                - Download census tracts
 echo     buildadj -y 2020                - Build adjacency graphs
 echo.
 echo   Git:

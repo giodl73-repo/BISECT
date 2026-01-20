@@ -17,7 +17,11 @@ import argparse
 from pathlib import Path
 import os
 import pickle
+import sys
 
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from scripts.utils import get_tract_file
 
 # Color schemes
 LEAN_COLORS = {
@@ -292,7 +296,7 @@ def visualize_state_demographics(state_dir, state_code, census_year, dpi=150, fo
 
     # Now load data (only if we need to generate)
     state_code_lower = state_code.lower()
-    tracts_file = Path(f'data/tracts/{census_year}/{state_code_lower}_tracts_{census_year}.parquet')
+    tracts_file = get_tract_file(state_code, str(census_year))
 
     if not tracts_file.exists():
         print(f"ERROR: Tract geometries not found: {tracts_file}")

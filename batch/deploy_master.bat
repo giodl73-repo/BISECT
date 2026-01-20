@@ -26,7 +26,8 @@ shift
 goto parse_args
 
 :run_script
-python scripts\web\generate_master_dashboard.py %ARGS%
+REM Use py -3.13 to ensure correct Python with installed dependencies
+py -3.13 scripts\web\generate_master_dashboard.py %ARGS%
 
 if %ERRORLEVEL% EQU 0 (
     echo.

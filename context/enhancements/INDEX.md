@@ -75,10 +75,11 @@ These fields enable:
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (18 enhancements)
+### 📋 Planned (20 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
+| [51](active/51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | High | [View](active/51_pipeline_manager_web_app.md) |
 | [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | [View](49_pipeline_download_integration.md) |
 | [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Critical | [View](active/47_data_separation_restoration.md) |
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | High | [View](42_research_narrative_policy_questions.md) |
@@ -87,6 +88,7 @@ These fields enable:
 | [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Medium | [View](43_cross_year_longitudinal_analysis.md) |
 | [44](44_real_world_constraints.md) | Real-World Redistricting Constraints (VRA, COI, County Splitting) | Medium | [View](44_real_world_constraints.md) |
 | [46](46_enhancement_priority_system.md) | Priority System for Enhancements and Enhancement Manager | Medium | [View](46_enhancement_priority_system.md) |
+| [50](active/50_status_protocol_unification.md) | STATUS Protocol Unification | Medium | [View](active/50_status_protocol_unification.md) |
 | [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | [View](41_public_distribution.md) |
 | [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
 | [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | [View](40_corner_adjacency_filter.md) |
@@ -111,16 +113,17 @@ Enhancements organized by priority level for better planning and focus.
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Proposed | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Proposed | [View](45_baseline_data_organization.md) |
 
-### High (4 enhancements)
+### High (5 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
+| [51](active/51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | Proposed | [View](active/51_pipeline_manager_web_app.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | Proposed | [View](36_experimental_variants_config.md) |
 | [11](11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Completed (Jan 17, 2026) | [View](11_baseline_comparison.md) |
 | [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | [View](12_edge_weighted_analysis.md) |
 | [10](10_per_state_urban.md) | Per-State Urban Area Processing | Completed (Jan 2026) | [View](10_per_state_urban.md) |
 
-### Medium (32 enhancements)
+### Medium (33 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
@@ -128,6 +131,7 @@ Enhancements organized by priority level for better planning and focus.
 | [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Proposed | [View](43_cross_year_longitudinal_analysis.md) |
 | [44](44_real_world_constraints.md) | Real-World Redistricting Constraints | Proposed | [View](44_real_world_constraints.md) |
 | [46](46_enhancement_priority_system.md) | Priority System for Enhancements | In Progress | [View](46_enhancement_priority_system.md) |
+| [50](active/50_status_protocol_unification.md) | STATUS Protocol Unification | Proposed | [View](active/50_status_protocol_unification.md) |
 | [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Proposed | [View](41_public_distribution.md) |
 | [1](01_compactness_integration.md) | Compactness Integration | Completed | [View](01_compactness_integration.md) |
 | [2](02_seat_totals.md) | D/R Seat Totals | Completed | [View](02_seat_totals.md) |

@@ -18,7 +18,7 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-from scripts.utils import get_state_config, get_error_logger
+from scripts.utils import get_state_config, get_error_logger, get_tract_file
 
 
 def load_demographic_data(census_year='2020', error_logger=None):
@@ -225,7 +225,7 @@ def main():
         # Load tract file to get GEOID mapping (unified directory structure)
         import geopandas as gpd
         state_code_lower = state_code.lower()
-        tracts_file = Path(f'data/tracts/{args.census_year}/{state_code_lower}_tracts_{args.census_year}.parquet')
+        tracts_file = get_tract_file(state_code, str(args.census_year))
 
         if not tracts_file.exists():
             raise FileNotFoundError(f"Tract file not found: {tracts_file}")

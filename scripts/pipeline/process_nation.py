@@ -289,22 +289,46 @@ def main():
             # Run tasks in parallel using ProcessPoolExecutor
             # Workers dynamically pick up next task as they finish
             try:
-                with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                    results = list(executor.map(run_postprocessing_task, task_args))
+                # Emit initial progress for multi-year mode
+                if is_multi_year:
+                    print(f"STATUS:YEAR_POSTPROCESS:{args.year}:0/{total_tasks}", flush=True)
 
-                # Check for failures and log them
+                # Submit all tasks and track completion
                 failed_tasks = []
-                for (task_name, _, _, _, _, _, _), (result_name, success) in zip(task_args, results):
-                    if not success:
-                        failed_tasks.append(task_name)
-                        if error_logger:
-                            # Log as warning since tasks are non-critical
-                            error_logger.log_warning(
-                                f"Task '{task_name}' failed but continuing",
-                                context={'year': args.year, 'task_count': f'{len(failed_tasks)}/{total_tasks}'}
-                            )
-                        if not is_multi_year:
-                            print(f"[WARNING] {task_name} failed but continuing...")
+                completed = 0
+
+                with ProcessPoolExecutor(max_workers=max_workers) as executor:
+                    # Use as_completed to track progress
+                    from concurrent.futures import as_completed
+                    futures = {executor.submit(run_postprocessing_task, task_arg): task_arg[0]
+                              for task_arg in task_args}
+
+                    # Process results as they complete
+                    for future in as_completed(futures):
+                        task_name = futures[future]
+                        try:
+                            result_name, success = future.result()
+                            completed += 1
+
+                            # Emit progress update for multi-year mode
+                            if is_multi_year:
+                                print(f"STATUS:YEAR_POSTPROCESS:{args.year}:{completed}/{total_tasks}", flush=True)
+
+                            if not success:
+                                failed_tasks.append(task_name)
+                                if error_logger:
+                                    # Log as warning since tasks are non-critical
+                                    error_logger.log_warning(
+                                        f"Task '{task_name}' failed but continuing",
+                                        context={'year': args.year, 'task_count': f'{len(failed_tasks)}/{total_tasks}'}
+                                    )
+                                if not is_multi_year:
+                                    print(f"[WARNING] {task_name} failed but continuing...")
+                        except Exception as e:
+                            # Future failed to execute
+                            failed_tasks.append(task_name)
+                            if error_logger:
+                                error_logger.log_exception('post_processing_task', e, context={'task': task_name})
 
                 # Log stage complete (with or without failures)
                 if error_logger:

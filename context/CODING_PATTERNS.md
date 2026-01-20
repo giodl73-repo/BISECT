@@ -1,36 +1,54 @@
 # Coding Patterns
 
-**Updated**: 2026-01-18
+**Updated**: 2026-01-19
 
 **Related**: [ARCHITECTURE.md](ARCHITECTURE.md), [ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md), [../CLAUDE.md](../CLAUDE.md)
 
 ## Progress Bar Protocol (STATUS)
 
 **Env Var**: `TQDM_POSITION` - Coordinates parent-child progress bars
-**CLI Arg**: `--position 999` - Signals deeply nested child (alternative to env var)
+**Unified Module**: `scripts/utils/status_protocol.py` - Centralized STATUS protocol implementation
 
-**Pattern**:
+### Recommended Pattern (Unified StatusReporter)
+
+**Child Process (generating STATUS messages)**:
 ```python
-# Option 1: Via environment variable
-pos = int(os.environ.get('TQDM_POSITION', '-1'))
-send_status = pos >= 0
-is_standalone = not send_status
+from scripts.utils.status_protocol import StatusReporter
 
-# Option 2: Via command-line argument (for scripts that accept --position)
-parser.add_argument('--position', type=int, default=-1, help='Progress bar position')
-is_standalone = args.position < 0
+# Initialize reporter (auto-detects TQDM_POSITION)
+reporter = StatusReporter()
 
-def report_progress(msg):
-    if send_status: print(f"STATUS:{pos}:{msg}", flush=True)
+# Report basic progress
+reporter.report("Processing california")
 
-# Child behavior
-if is_standalone:
+# Report CENSUS stage progress
+reporter.report_census_stage("2020", "Parsing PL 94-171", 5, 50)
+
+# Report CENSUS worker activity
+reporter.report_census_worker("2020", 0, 5, "CA", 1, 3, "Parsing PL 94-171")
+
+# Report YEAR completion
+reporter.report_year_complete("2020", 24, 50)
+
+# Report WORKER state
+reporter.report_worker_state("2020", 1, 12, "california", 3, 7, "political_visualization")
+
+# Child behavior (automatic based on TQDM_POSITION)
+if reporter.is_standalone:
     print("Headers OK")  # Standalone: show all output
     pbar = tqdm(...)
 else:
     # Parent-called: suppress banners, emit STATUS
-    report_progress(f"Processing X...")
+    reporter.report(f"Processing X...")
     pbar = tqdm(..., disable=True)  # No child bars
+```
+
+**Legacy Pattern (for backwards compatibility)**:
+```python
+# Still supported via scripts/utils/common.py
+from scripts.utils.common import report_progress
+
+report_progress("Processing california")  # Auto-routes to StatusReporter
 ```
 
 **Parent Monitoring**:

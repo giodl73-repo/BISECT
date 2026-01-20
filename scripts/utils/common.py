@@ -8,6 +8,7 @@ and file existence checks.
 
 import os
 from pathlib import Path
+from .status_protocol import StatusReporter
 
 
 def should_skip_existing(output_file, force=False):
@@ -53,13 +54,9 @@ def report_progress(msg, position=None):
         >>> report_progress("Processing California")
         STATUS:2:Processing California
     """
-    if position is None:
-        position = int(os.environ.get('TQDM_POSITION', '-1'))
-
-    if position >= 0:
-        print(f"STATUS:{position}:{msg}", flush=True)
-    else:
-        print(f"  {msg}")
+    # Use unified StatusReporter (with explicit position if provided)
+    reporter = StatusReporter(position=position)
+    reporter.report(msg)
 
 
 def report_skip(reason, position=None):

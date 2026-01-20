@@ -103,7 +103,7 @@ echo.
 echo Next steps:
 echo 1. Review the new structure above
 echo 2. Check that all files moved correctly
-echo 3. Run: python scripts/data/build_all_processed_data.py --year 2020 --states VT
+echo 3. Run: py -3.13 scripts/data/build_all_processed_data.py --year 2020 --states VT
 echo.
 
 pause

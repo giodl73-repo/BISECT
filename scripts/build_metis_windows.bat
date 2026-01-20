@@ -79,6 +79,6 @@ echo.
 echo Next steps:
 echo   1. Add %METIS_INSTALL%\bin to your PATH
 echo   2. Set environment variable: METIS_DLL=%METIS_INSTALL%\lib\metis.dll
-echo   3. Try: pip install pymetis
+echo   3. Try: py -3.13 -m pip install pymetis
 echo.
 pause

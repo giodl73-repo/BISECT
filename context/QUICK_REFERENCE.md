@@ -4,6 +4,39 @@
 
 ## Commands
 
+### Download Orchestrator (NEW - Parallel Downloads)
+```bash
+# Check what data exists vs needs downloading
+dl                                                                # Check all stages, all years (default)
+dl --stages redistricting demographics --year 2020 --check-only  # Check specific stages
+dlcheck --stages all --year all                                   # Check all (doskey alias)
+
+# Download missing data (4-8x faster than sequential)
+dl --stages redistricting --year 2020 --workers 4                 # Single stage (doskey alias)
+dl --stages redistricting demographics --year all --workers 12    # Multi-year parallel
+dl --stages metros enacted_districts --year 2020                  # Metros + baseline CDs
+
+# Force redownload everything (bypass cache)
+dl --stages redistricting --year 2020 --force                     # Redownload all 50 states
+
+# Validate existing data and create markers
+dlval --year all --create-markers                                 # Mark complete data (doskey alias)
+dlval --year 2020 --stages redistricting --check-only            # Check specific stage
+
+# Available stages:
+#   redistricting    - Census tracts/blocks + population (PL 94-171 files)
+#   demographics     - Age, race, sex demographic data (Census API)
+#   elections        - Presidential election results (Harvard Dataverse)
+#   places           - City/town boundaries (TIGER/Line)
+#   metros           - Metro/CBSA boundaries (TIGER/Line)
+#   enacted_districts - Enacted congressional districts (TIGER/Line)
+
+# Doskey shortcuts (after running setup_env.bat):
+dl        # python scripts/data/download_orchestrator.py
+dlcheck   # python scripts/data/download_orchestrator.py --check-only
+dlval     # python scripts/data/validate_downloads.py
+```
+
 ### Census Data Processing
 ```bash
 # Full pipeline (parse → merge → adjacency)

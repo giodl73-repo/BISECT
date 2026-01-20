@@ -486,9 +486,15 @@ def main():
         # Load CBSA boundaries
         cbsa_file = f'data/raw/us_cbsa_{args.year}.parquet'
         if not Path(cbsa_file).exists():
-            print(f"ERROR: CBSA boundaries not found at {cbsa_file}")
-            print(f"Run: python scripts/data/geography/download_metro_boundaries.py --year {args.year}")
-            return 1
+            # 2000 CBSA data not available from Census Bureau
+            if args.year == '2000':
+                print(f"[SKIP] CBSA boundaries not available for {args.year}")
+                print(f"       Metro area visualization skipped")
+                return 0  # Success - skip gracefully
+            else:
+                print(f"ERROR: CBSA boundaries not found at {cbsa_file}")
+                print(f"Run: python scripts/data/geography/download_metro_boundaries.py --year {args.year}")
+                return 1
 
         report_progress(f"{state_name} - Loading MSA boundaries")
         cbsa_gdf = gpd.read_parquet(cbsa_file)
@@ -614,9 +620,15 @@ def main():
     # Load CBSA boundaries
     cbsa_file = f'data/raw/us_cbsa_{args.year}.parquet'
     if not Path(cbsa_file).exists():
-        print(f"ERROR: CBSA boundaries not found at {cbsa_file}")
-        print(f"Run: python scripts/data/geography/download_metro_boundaries.py --year {args.year}")
-        return 1
+        # 2000 CBSA data not available from Census Bureau
+        if args.year == '2000':
+            print(f"[SKIP] CBSA boundaries not available for {args.year}")
+            print(f"       Metro area visualization skipped")
+            return 0  # Success - skip gracefully
+        else:
+            print(f"ERROR: CBSA boundaries not found at {cbsa_file}")
+            print(f"Run: python scripts/data/geography/download_metro_boundaries.py --year {args.year}")
+            return 1
 
     report_progress("Loading MSA boundaries")
     cbsa_gdf = gpd.read_parquet(cbsa_file)

@@ -34,6 +34,68 @@ ALL_STATES = [
 class RunManager:
     """Manages pipeline run execution and progress tracking."""
 
+    def _ensure_all_states_tracked(self, stage_tasks: list, stage_num: int, stage_name: str) -> int:
+        """
+        Ensure all 50 US states are tracked in a stage's tasks.
+
+        Args:
+            stage_tasks: List of task entries (will be modified in place)
+            stage_num: Stage number (1-3 for census, 1-7 for redistricting)
+            stage_name: Stage name for logging
+
+        Returns:
+            Number of states added
+        """
+        existing_states = {task['state'].upper() for task in stage_tasks}  # Normalize to uppercase
+        missing_states = [s for s in ALL_STATES if s not in existing_states]
+
+        if missing_states:
+            print(f"[ASSERT] Stage '{stage_name}' missing {len(missing_states)} states - adding them", flush=True)
+            for state_code in missing_states:
+                stage_tasks.append({
+                    'state': state_code,
+                    'worker_id': -1,  # Indicates auto-filled/skipped
+                    'stage': stage_num,
+                    'completed_at': datetime.now().isoformat()
+                })
+            print(f"[ASSERT] Added: {', '.join(missing_states)}", flush=True)
+            return len(missing_states)
+        else:
+            print(f"[ASSERT] Stage '{stage_name}' has all 50 states tracked ✓", flush=True)
+            return 0
+
+    def _normalize_state_code(self, state_name: str) -> str:
+        """
+        Normalize state name to uppercase 2-letter code.
+
+        Args:
+            state_name: State name (can be "CA", "california", "California", etc.)
+
+        Returns:
+            Uppercase 2-letter state code
+        """
+        state_name = state_name.strip().upper()
+
+        # Already a 2-letter code
+        if len(state_name) == 2:
+            return state_name
+
+        # Map full names to codes
+        state_map = {
+            'ALABAMA': 'AL', 'ALASKA': 'AK', 'ARIZONA': 'AZ', 'ARKANSAS': 'AR', 'CALIFORNIA': 'CA',
+            'COLORADO': 'CO', 'CONNECTICUT': 'CT', 'DELAWARE': 'DE', 'FLORIDA': 'FL', 'GEORGIA': 'GA',
+            'HAWAII': 'HI', 'IDAHO': 'ID', 'ILLINOIS': 'IL', 'INDIANA': 'IN', 'IOWA': 'IA',
+            'KANSAS': 'KS', 'KENTUCKY': 'KY', 'LOUISIANA': 'LA', 'MAINE': 'ME', 'MARYLAND': 'MD',
+            'MASSACHUSETTS': 'MA', 'MICHIGAN': 'MI', 'MINNESOTA': 'MN', 'MISSISSIPPI': 'MS', 'MISSOURI': 'MO',
+            'MONTANA': 'MT', 'NEBRASKA': 'NE', 'NEVADA': 'NV', 'NEW_HAMPSHIRE': 'NH', 'NEW_JERSEY': 'NJ',
+            'NEW_MEXICO': 'NM', 'NEW_YORK': 'NY', 'NORTH_CAROLINA': 'NC', 'NORTH_DAKOTA': 'ND', 'OHIO': 'OH',
+            'OKLAHOMA': 'OK', 'OREGON': 'OR', 'PENNSYLVANIA': 'PA', 'RHODE_ISLAND': 'RI', 'SOUTH_CAROLINA': 'SC',
+            'SOUTH_DAKOTA': 'SD', 'TENNESSEE': 'TN', 'TEXAS': 'TX', 'UTAH': 'UT', 'VERMONT': 'VT',
+            'VIRGINIA': 'VA', 'WASHINGTON': 'WA', 'WEST_VIRGINIA': 'WV', 'WISCONSIN': 'WI', 'WYOMING': 'WY'
+        }
+
+        return state_map.get(state_name, state_name[:2])  # Fallback to first 2 chars
+
     def __init__(self, progress_file: Path):
         """
         Initialize run manager.
@@ -97,12 +159,29 @@ class RunManager:
 
                     # Ensure current_stage and completed_stages exist for all years (migration for old runs)
                     if self.active_run and 'years' in self.active_run:
-                        for year_data in self.active_run['years'].values():
+                        print(f"[ASSERT] Loaded progress file - validating data integrity", flush=True)
+                        for year, year_data in self.active_run['years'].items():
                             if 'current_stage' not in year_data:
                                 year_data['current_stage'] = None
                             if 'completed_stages' not in year_data:
                                 year_data['completed_stages'] = []
-            except Exception:
+
+                            # Validate completed stages have all states when appropriate
+                            for stage in year_data.get('completed_stages', []):
+                                if stage.get('tasks'):
+                                    state_count = len(stage['tasks'])
+                                    if state_count < 50:
+                                        print(f"[ASSERT] WARNING: {year} stage '{stage['name']}' only has {state_count}/50 states", flush=True)
+                                    elif state_count == 50:
+                                        print(f"[ASSERT] {year} stage '{stage['name']}' has all 50 states ✓", flush=True)
+
+                            # Validate current stage
+                            if year_data.get('current_stage') and year_data['current_stage'].get('tasks'):
+                                stage = year_data['current_stage']
+                                state_count = len(stage['tasks'])
+                                print(f"[ASSERT] {year} current stage '{stage['name']}' has {state_count} states tracked", flush=True)
+            except Exception as e:
+                print(f"[ERROR] Failed to load progress: {e}", flush=True)
                 self.active_run = None
                 self.history = []
         else:
@@ -504,10 +583,48 @@ class RunManager:
 
                     with self.lock:
                         if self.active_run and self.active_run['run_id'] == run_id:
+                            prev_count = self.active_run['years'][year]['completed']
                             self.active_run['years'][year]['completed'] = len(completed_states)
                             self.active_run['years'][year]['status'] = 'running'
+
+                            # Track completed redistricting states in current_stage
+                            # Create or update "Redistricting" stage
+                            if self.active_run['years'][year]['current_stage'] is None or \
+                               self.active_run['years'][year]['current_stage'].get('type') == 'census':
+                                # Create redistricting stage
+                                self.active_run['years'][year]['current_stage'] = {
+                                    'name': 'Redistricting',
+                                    'type': 'redistricting',
+                                    'tasks': []
+                                }
+                                print(f"[DEBUG] Created Redistricting stage for {year}", flush=True)
+
+                            # Add newly completed states to tasks (normalize all state names)
+                            current_stage = self.active_run['years'][year]['current_stage']
+                            if current_stage and current_stage['type'] == 'redistricting':
+                                existing_states = {task['state'].upper() for task in current_stage['tasks']}
+
+                                # Normalize state names from .states_complete file
+                                normalized_completed = [self._normalize_state_code(s) for s in completed_states]
+                                new_states = [s for s in normalized_completed if s not in existing_states]
+
+                                if new_states:
+                                    print(f"[ASSERT] Adding {len(new_states)} newly completed redistricting states for {year}: {', '.join(new_states)}", flush=True)
+                                    for state_code in new_states:
+                                        current_stage['tasks'].append({
+                                            'state': state_code,
+                                            'stage': 7,  # Mark as final redistricting stage
+                                            'completed_at': datetime.now().isoformat()
+                                        })
+
+                                # Assert all 50 states present when complete
+                                if len(normalized_completed) >= 50:
+                                    added = self._ensure_all_states_tracked(current_stage['tasks'], 7, 'Redistricting')
+                                    if added > 0:
+                                        print(f"[ASSERT] Backfilled {added} missing redistricting states for {year}", flush=True)
+
                             self._save_progress()
-                            print(f"[DEBUG] Progress update: {year} = {len(completed_states)}/50 states", flush=True)
+                            print(f"[DEBUG] Progress update: {year} = {len(completed_states)}/50 states (+{len(completed_states) - prev_count} since last poll)", flush=True)
                 except Exception as e:
                     print(f"[DEBUG] Error polling progress: {e}", flush=True)
 
@@ -545,6 +662,24 @@ class RunManager:
 
                 # Track when states complete
                 if prev_completed < data['total'] and data['completed'] >= data['total']:
+                    # Ensure current redistricting stage has all 50 states before marking complete
+                    if self.active_run['years'][year]['current_stage'] and \
+                       self.active_run['years'][year]['current_stage']['type'] == 'redistricting':
+                        current_stage = self.active_run['years'][year]['current_stage']
+                        added = self._ensure_all_states_tracked(current_stage['tasks'], 7, 'Redistricting')
+                        if added > 0:
+                            print(f"[ASSERT] Backfilled {added} states before marking {year} redistricting complete", flush=True)
+
+                        # Move current redistricting stage to completed
+                        self.active_run['years'][year]['completed_stages'].append({
+                            'name': current_stage['name'],
+                            'type': current_stage['type'],
+                            'tasks': current_stage['tasks'],
+                            'completed_at': datetime.now().isoformat()
+                        })
+                        self.active_run['years'][year]['current_stage'] = None
+                        print(f"[DEBUG] Moved Redistricting stage to completed_stages for {year} with {len(current_stage['tasks'])} states", flush=True)
+
                     completion_entry = {
                         'stage': 'States',
                         'name': 'State Redistricting',
@@ -553,7 +688,7 @@ class RunManager:
                     }
                     self.active_run['years'][year]['completed_stages'].append(completion_entry)
                     print(f"[DEBUG] Added States stage to completed_stages for {year}: {completion_entry}", flush=True)
-                    print(f"[DEBUG] States complete for {year}", flush=True)
+                    print(f"[ASSERT] Year {year} state processing complete - all 50 states done ✓", flush=True)
 
             elif msg_type == 'YEAR_POSTPROCESS':
                 # STATUS:YEAR:2020:POSTPROCESS:3/9
@@ -593,6 +728,47 @@ class RunManager:
                     'last_update': datetime.now().isoformat()
                 }
                 print(f"[DEBUG] Updated WORKER: {worker_key} = {data['state_name']} stage {data['stage']}/{data['stage_total']}", flush=True)
+
+                # Track redistricting states in current_stage as workers progress through stages
+                state_name = data['state_name']
+                stage_num = data['stage']
+                normalized_state = self._normalize_state_code(state_name)
+
+                # Ensure we have a redistricting current_stage
+                if self.active_run['years'][year]['current_stage'] is None or \
+                   self.active_run['years'][year]['current_stage'].get('type') == 'census':
+                    print(f"[ASSERT] Creating redistricting current_stage for {year}", flush=True)
+                    self.active_run['years'][year]['current_stage'] = {
+                        'name': 'Redistricting',
+                        'type': 'redistricting',
+                        'tasks': []
+                    }
+
+                # Check if state already tracked
+                current_stage = self.active_run['years'][year]['current_stage']
+                existing_task = None
+                for task in current_stage['tasks']:
+                    if task['state'].upper() == normalized_state:
+                        existing_task = task
+                        break
+
+                if existing_task:
+                    # Update existing task with new stage (if progressed)
+                    old_stage = existing_task.get('stage', 0)
+                    if stage_num > old_stage:
+                        existing_task['stage'] = stage_num
+                        existing_task['worker_id'] = worker_id
+                        existing_task['last_update'] = datetime.now().isoformat()
+                        print(f"[ASSERT] Updated {normalized_state} redistricting progress: stage {old_stage} -> {stage_num}", flush=True)
+                else:
+                    # Add new state to tracking
+                    current_stage['tasks'].append({
+                        'state': normalized_state,
+                        'stage': stage_num,
+                        'worker_id': worker_id,
+                        'last_update': datetime.now().isoformat()
+                    })
+                    print(f"[ASSERT] Added {normalized_state} to redistricting tracking at stage {stage_num}", flush=True)
 
                 # Clean up stale workers (no update in 60 seconds)
                 now = datetime.now()
@@ -655,19 +831,10 @@ class RunManager:
                         else:
                             stage_num = 3  # Default
 
-                        # Ensure all 50 states are tracked
-                        existing_states = {task['state'] for task in current_stage['tasks']}
-                        missing_states = [s for s in ALL_STATES if s not in existing_states]
-
-                        if missing_states:
-                            print(f"[DEBUG] Stage '{stage_name}' complete - adding {len(missing_states)} missing states (skipped)", flush=True)
-                            for state_code in missing_states:
-                                current_stage['tasks'].append({
-                                    'state': state_code,
-                                    'worker_id': -1,  # Indicates skipped
-                                    'stage': stage_num,
-                                    'completed_at': datetime.now().isoformat()
-                                })
+                        # Use assertion function to ensure all 50 states tracked
+                        added = self._ensure_all_states_tracked(current_stage['tasks'], stage_num, stage_name)
+                        if added > 0:
+                            print(f"[ASSERT] Stage '{stage_name}' completed with {len(current_stage['tasks'])} states total", flush=True)
 
                 print(f"[DEBUG] Updated CENSUS_STAGE: {year} = {stage_name} {data['completed']}/{data['total']}", flush=True)
 
@@ -719,6 +886,21 @@ class RunManager:
                 if data['completed'] >= data['total']:
                     if self.active_run['years'][year]['current_stage'] is not None:
                         current = self.active_run['years'][year]['current_stage']
+
+                        # Ensure all 50 states are tracked before moving to completed
+                        stage_num = None
+                        if 'Parsing' in current['name']:
+                            stage_num = 1
+                        elif 'Merging' in current['name']:
+                            stage_num = 2
+                        elif 'adjacency' in current['name'].lower():
+                            stage_num = 3
+
+                        if stage_num:
+                            added = self._ensure_all_states_tracked(current['tasks'], stage_num, current['name'])
+                            if added > 0:
+                                print(f"[ASSERT] Backfilled {added} states before completing stage '{current['name']}'", flush=True)
+
                         self.active_run['years'][year]['completed_stages'].append({
                             'name': current['name'],
                             'type': current['type'],
@@ -726,7 +908,7 @@ class RunManager:
                             'completed_at': datetime.now().isoformat()
                         })
                         self.active_run['years'][year]['current_stage'] = None
-                        print(f"[DEBUG] Moved current stage '{current['name']}' to completed_stages for {year}", flush=True)
+                        print(f"[DEBUG] Moved current stage '{current['name']}' to completed_stages for {year} with {len(current['tasks'])} states", flush=True)
 
                     # Remove all census workers for this year
                     workers_to_remove = [k for k, v in self.active_run['workers'].items()

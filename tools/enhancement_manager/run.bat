@@ -12,10 +12,10 @@ echo ========================================
 echo.
 
 REM Check if requirements are installed
-python -c "import flask" 2>nul
+py -3.13 -c "import flask" 2>nul
 if errorlevel 1 (
     echo [WARN] Flask not found. Installing dependencies...
-    pip install -r requirements.txt
+    py -3.13 -m pip install -r requirements.txt
     if errorlevel 1 (
         echo [FAIL] Failed to install dependencies
         pause
@@ -47,7 +47,7 @@ echo [OK] Server will run at http://localhost:5001
 echo.
 
 REM Start Flask server in background
-start /B python app.py
+start /B py -3.13 app.py
 
 REM Wait for server to fully start (5 seconds)
 echo [OK] Waiting for server to start...

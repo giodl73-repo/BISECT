@@ -11,6 +11,14 @@ import argparse
 import pickle
 import sys
 from pathlib import Path
+import warnings
+import os
+
+# Suppress warnings that can disrupt hierarchical display
+warnings.filterwarnings('ignore')
+
+# Suppress pandas warnings
+os.environ['PYTHONWARNINGS'] = 'ignore'
 
 # Add project root to path (use cwd which should be project root)
 project_root = Path.cwd()
@@ -18,7 +26,11 @@ sys.path.insert(0, str(project_root / 'src'))
 sys.path.insert(0, str(project_root))
 
 import geopandas as gpd
+import pandas as pd
 from apportionment.data.adjacency import build_adjacency_graph
+
+# Additional pandas-specific warning suppression
+pd.options.mode.chained_assignment = None  # Suppress SettingWithCopyWarning
 
 
 def build_tract_adjacency(

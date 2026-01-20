@@ -72,14 +72,14 @@ echo.
 
 if "%MODE%"=="full" (
     REM Full 50-state run with national maps and aggregation
-    python scripts/pipeline/run_complete_redistricting.py --year 2020 --version test --reset --dpi 150
+    py -3.13 scripts/pipeline/run_complete_redistricting.py --year 2020 --version test --reset --dpi 150
 ) else (
     REM Subset of states - use process_single_state.py to avoid national processing
     REM Process each state individually (no national maps/aggregates)
     for %%S in (%STATES%) do (
         echo.
         echo Processing %%S...
-        python scripts/pipeline/process_single_state.py --state %%S --year 2020 --output-dir outputs\us_2020_test --dpi 150
+        py -3.13 scripts/pipeline/process_single_state.py --state %%S --year 2020 --output-dir outputs\us_2020_test --dpi 150
         if errorlevel 1 (
             echo [ERROR] Failed to process %%S
             exit /b 1

@@ -44,32 +44,15 @@ from scripts.utils.paths import (
     get_election_data_file,
     get_demographic_data_file,
 )
+from scripts.utils.status_protocol import StatusReporter
 
 
 # ============================================================================
 # STATUS Protocol (for hierarchical progress display)
 # ============================================================================
 
-def report_progress(message: str, is_standalone: bool = None):
-    """
-    Report progress using STATUS protocol for hierarchical display.
-
-    Args:
-        message: Progress message to display
-        is_standalone: Whether running standalone (None = auto-detect)
-    """
-    # Auto-detect standalone mode if not specified
-    if is_standalone is None:
-        is_standalone = int(os.environ.get('TQDM_POSITION', '-1')) < 0
-
-    # Use STATUS protocol if running as worker process
-    if not is_standalone:
-        position = int(os.environ.get('TQDM_POSITION', '-1'))
-        if position >= 0:
-            print(f"STATUS:{position}:{message}", flush=True)
-    else:
-        # Standalone mode: print normally
-        print(message, flush=True)
+# Global reporter instance (initialized based on TQDM_POSITION)
+_reporter = StatusReporter()
 
 
 def log_error(error_log_file: Path, stage: str, error_msg: str):
@@ -189,10 +172,10 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
     if is_standalone is None:
         is_standalone = int(os.environ.get('TQDM_POSITION', '-1')) < 0
 
-    report_progress(f"Running: {description}", is_standalone)
+    _reporter.report(f"Running: {description}")
 
     if dry_run:
-        report_progress(f"[DRY RUN] Would execute: {description}", is_standalone)
+        _reporter.report(f"[DRY RUN] Would execute: {description}")
         return True
 
     # Set up environment for child process (following CODING_PATTERNS.md)
@@ -203,31 +186,44 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
 
     try:
         # Use Popen to forward STATUS messages (following run_complete_redistricting.py pattern)
+        # Suppress stderr when running as child process to avoid disrupting hierarchical display
+        stderr_target = subprocess.DEVNULL if not is_standalone else sys.stderr
         proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
-            stderr=sys.stderr,  # Let stderr flow through directly
+            stderr=stderr_target,
             text=True,
             bufsize=1,  # Line buffering
             env=env
         )
 
-        # Forward stdout line by line (only in standalone mode)
-        # In child mode, suppress child process output entirely
-        if is_standalone:
-            for line in proc.stdout:
-                print(line, end='', flush=True)
-        else:
-            # Child mode: consume output silently
-            for line in proc.stdout:
-                pass  # Discard output
+        # Forward stdout line by line
+        # In standalone mode: print everything
+        # In child mode: forward STATUS messages to parent, suppress others
+        # Use readline() loop instead of 'for line in stdout' to avoid blocking until EOF
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                # Check if process has exited
+                if proc.poll() is not None:
+                    break
+                continue
 
-        # Wait for completion
-        proc.wait()
+            if is_standalone:
+                # Standalone: print everything
+                print(line, end='', flush=True)
+            else:
+                # Child mode: forward STATUS messages, suppress other output
+                if line.strip().startswith('STATUS:'):
+                    print(line, end='', flush=True)
+
+        # Ensure process is fully terminated
+        if proc.returncode is None:
+            proc.wait()
 
         if proc.returncode != 0:
             error_msg = f"{description} failed with exit code {proc.returncode}"
-            report_progress(f"[ERROR] {error_msg}", is_standalone)
+            _reporter.report(f"[ERROR] {error_msg}")
             log_error(error_log_file, description, error_msg)
             return False
 
@@ -235,14 +231,14 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
 
     except Exception as e:
         error_msg = f"{description} failed with exception: {e}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, description, error_msg)
         return False
 
 
 def create_directory_structure(year: int, is_standalone: bool = None):
     """Create outputs/data/{year}/ directory structure."""
-    report_progress(f"[1/6] Creating directory structure", is_standalone)
+    _reporter.report(f"[1/6] Creating directory structure")
 
     dirs = [
         f'outputs/data/{year}/units',
@@ -255,7 +251,7 @@ def create_directory_structure(year: int, is_standalone: bool = None):
     for dir_path in dirs:
         Path(dir_path).mkdir(parents=True, exist_ok=True)
 
-    report_progress(f"[OK] Directory structure created", is_standalone)
+    _reporter.report(f"[OK] Directory structure created")
 
 
 def process_census_tracts(year: int, error_log_file: Path, states: Optional[List[str]] = None,
@@ -280,7 +276,7 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
     stage_name = "Parsing PL 94-171"
     stage_num = 1  # Stage 1 of 3 census stages
     if is_standalone:
-        report_progress(f"[2/6] {stage_name} ({year})", is_standalone)
+        _reporter.report(f"[2/6] {stage_name} ({year})")
     else:
         # Emit STATUS message for progress coordinator
         print(f"STATUS:CENSUS:{year}:STAGE:{stage_num}/3:{stage_name}:0/50", flush=True)
@@ -300,13 +296,13 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
         census_dir = 'data/2000'
     else:
         error_msg = f"Unsupported year: {year}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "process_census_tracts", error_msg)
         return False
 
     if not Path(script).exists():
         error_msg = f"Processing script not found: {script}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "process_census_tracts", error_msg)
         return False
 
@@ -321,10 +317,16 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
             states_to_process.append(state)
 
     if not states_to_process:
-        report_progress(f"[SKIP] All states already processed", is_standalone)
+        _reporter.report(f"[SKIP] All states already processed")
+
+        # Emit completion STATUS message for child process mode
+        if not is_standalone:
+            total_states = len(states)
+            print(f"STATUS:CENSUS:{year}:WORKER:0:STATE:{total_states}/{total_states}:SKIP:COMPLETE", flush=True)
+
         return True
 
-    report_progress(f"Processing {len(states_to_process)}/{len(states)} states", is_standalone)
+    _reporter.report(f"Processing {len(states_to_process)}/{len(states)} states")
 
     # Sequential processing (workers=1)
     if workers == 1:
@@ -339,7 +341,7 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
         return success
 
     # Parallel processing (workers > 1)
-    report_progress(f"Launching {workers} parallel workers", is_standalone)
+    _reporter.report(f"Launching {workers} parallel workers")
 
     # Launch parallel processes for each state
     processes = {}  # {state_code: (Popen object, worker_id)}
@@ -356,6 +358,10 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
     state_queue = deque(states_to_process)
     total_states = len(states_to_process)
 
+    # Track last activity time to detect hangs
+    last_activity_time = time_module.time()
+    max_idle_seconds = 300  # 5 minute timeout without any process completion
+
     while state_queue or processes:
         # Launch new processes if workers are available
         while state_queue and len(processes) < workers:
@@ -371,10 +377,12 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
             ]
 
             try:
+                # Suppress stderr to prevent flickering in hierarchical display
+                stderr_target = subprocess.DEVNULL if not is_standalone else subprocess.PIPE
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=stderr_target,
                     text=True
                 )
                 processes[state_code] = (proc, worker_id)
@@ -387,7 +395,7 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
             except Exception as e:
                 failed_states.append(state_code)
                 error_msg = f"{state_code} failed to start: {str(e)}"
-                report_progress(f"[ERROR] {error_msg}", is_standalone)
+                _reporter.report(f"[ERROR] {error_msg}")
                 log_error(error_log_file, "process_census_tracts", error_msg)
 
         # Check for completed processes
@@ -403,8 +411,9 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
 
                 if retcode == 0:
                     completed_states.add(state_code)
+                    last_activity_time = time_module.time()  # Reset timeout on completion
                     if is_standalone:
-                        report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} complete", is_standalone)
+                        _reporter.report(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} complete")
                     else:
                         # Emit STATUS message: worker completed state
                         print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{len(completed_states)}/{total_states}:{state_code}:COMPLETE", flush=True)
@@ -413,17 +422,31 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
                     error_msg = f"{state_code} failed with exit code {retcode}"
                     if stderr:
                         error_msg += f": {stderr[:200]}"
-                    report_progress(f"[ERROR] {error_msg}", is_standalone)
+                    _reporter.report(f"[ERROR] {error_msg}")
                     log_error(error_log_file, "process_census_tracts", error_msg)
+
+        # Check for timeout (processes might be zombies or hung)
+        if time_module.time() - last_activity_time > max_idle_seconds:
+            # Timeout! Force-kill remaining processes and continue
+            if is_standalone:
+                _reporter.report(f"[TIMEOUT] No progress for {max_idle_seconds}s, terminating remaining processes")
+            for state_code, (proc, worker_id) in list(processes.items()):
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except:
+                    proc.kill()  # Force kill if terminate doesn't work
+                del processes[state_code]
+            break  # Exit the loop
 
         # Short sleep to avoid busy-waiting
         time_module.sleep(0.1)
 
     if failed_states:
-        report_progress(f"Failed states: {', '.join(failed_states)}", is_standalone)
+        _reporter.report(f"Failed states: {', '.join(failed_states)}")
         return False
 
-    report_progress(f"All {len(states_to_process)} states completed successfully", is_standalone)
+    _reporter.report(f"All {len(states_to_process)} states completed successfully")
     return True
 
 
@@ -445,7 +468,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
     stage_name = "Merging geometries"
     stage_num = 2  # Stage 2 of 3 census stages
     if is_standalone:
-        report_progress(f"[3/6] {stage_name} ({year})", is_standalone)
+        _reporter.report(f"[3/6] {stage_name} ({year})")
     else:
         # Emit STATUS message for progress coordinator
         print(f"STATUS:CENSUS:{year}:STAGE:{stage_num}/3:{stage_name}:0/50", flush=True)
@@ -457,7 +480,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
 
     if not Path(script).exists():
         error_msg = f"Merge script not found: {script}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
         return False
 
@@ -469,9 +492,9 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
     # Check TIGER/Line directory exists
     if not tiger_dir.exists():
         error_msg = f"TIGER/Line directory not found: {tiger_dir}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
-        report_progress(f"Please download TIGER/Line shapefiles first:", is_standalone)
-        report_progress(f"  python scripts/data/geography/download_tiger_units.py --year {year} --resolution tract", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
+        _reporter.report(f"Please download TIGER/Line shapefiles first:")
+        _reporter.report(f"  python scripts/data/geography/download_tiger_units.py --year {year} --resolution tract")
         log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
         return False
 
@@ -484,10 +507,16 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
             states_to_process.append(state)
 
     if not states_to_process:
-        report_progress(f"[SKIP] All states already merged", is_standalone)
+        _reporter.report(f"[SKIP] All states already merged")
+
+        # Emit completion STATUS message for child process mode
+        if not is_standalone:
+            total_states = len(states)
+            print(f"STATUS:CENSUS:{year}:WORKER:0:STATE:{total_states}/{total_states}:SKIP:COMPLETE", flush=True)
+
         return True
 
-    report_progress(f"Merging {len(states_to_process)}/{len(states)} states", is_standalone)
+    _reporter.report(f"Merging {len(states_to_process)}/{len(states)} states")
 
     # Sequential processing (workers=1)
     if workers == 1:
@@ -504,7 +533,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
         return success
 
     # Parallel processing (workers > 1)
-    report_progress(f"Launching {workers} parallel workers", is_standalone)
+    _reporter.report(f"Launching {workers} parallel workers")
 
     # Launch parallel processes for each state
     processes = {}  # {state_code: (Popen object, worker_id)}
@@ -520,6 +549,10 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
 
     state_queue = deque(states_to_process)
     total_states = len(states_to_process)
+
+    # Track last activity time to detect hangs
+    last_activity_time = time_module.time()
+    max_idle_seconds = 300  # 5 minute timeout without any process completion
 
     while state_queue or processes:
         # Launch new processes if workers are available
@@ -538,10 +571,12 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
             ]
 
             try:
+                # Suppress stderr to prevent flickering in hierarchical display
+                stderr_target = subprocess.DEVNULL if not is_standalone else subprocess.PIPE
                 proc = subprocess.Popen(
                     cmd,
                     stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
+                    stderr=stderr_target,
                     text=True
                 )
                 processes[state_code] = (proc, worker_id)
@@ -554,7 +589,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
             except Exception as e:
                 failed_states.append(state_code)
                 error_msg = f"{state_code} merge failed to start: {str(e)}"
-                report_progress(f"[ERROR] {error_msg}", is_standalone)
+                _reporter.report(f"[ERROR] {error_msg}")
                 log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
 
         # Check for completed processes
@@ -571,7 +606,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
                 if retcode == 0:
                     completed_states.add(state_code)
                     if is_standalone:
-                        report_progress(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} merged", is_standalone)
+                        _reporter.report(f"[{len(completed_states)}/{len(states_to_process)}] {state_code} merged")
                     else:
                         # Emit STATUS message: worker completed state
                         print(f"STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{len(completed_states)}/{total_states}:{state_code}:COMPLETE", flush=True)
@@ -580,22 +615,36 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
                     error_msg = f"{state_code} merge failed with exit code {retcode}"
                     if stderr:
                         error_msg += f": {stderr[:200]}"
-                    report_progress(f"[ERROR] {error_msg}", is_standalone)
+                    _reporter.report(f"[ERROR] {error_msg}")
                     log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
+
+        # Check for timeout (processes might be zombies or hung)
+        if time_module.time() - last_activity_time > max_idle_seconds:
+            # Timeout! Force-kill remaining processes and continue
+            if is_standalone:
+                _reporter.report(f"[TIMEOUT] No progress for {max_idle_seconds}s, terminating remaining processes")
+            for state_code, (proc, worker_id) in list(processes.items()):
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except:
+                    proc.kill()  # Force kill if terminate doesn't work
+                del processes[state_code]
+            break  # Exit the loop
 
         # Short sleep to avoid busy-waiting
         time_module.sleep(0.1)
 
     if failed_states:
-        report_progress(f"Failed states: {', '.join(failed_states)}", is_standalone)
+        _reporter.report(f"Failed states: {', '.join(failed_states)}")
         return False
 
-    report_progress(f"All {len(states_to_process)} states merged successfully", is_standalone)
+    _reporter.report(f"All {len(states_to_process)} states merged successfully")
     return True
 
 
 def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[List[str]] = None,
-                           compute_boundary_lengths: bool = True, water_distance: float = 1.0,
+                           workers: int = 12, compute_boundary_lengths: bool = True, water_distance: float = 1.0,
                            minimum_boundary_length: float = 10.0, force: bool = False,
                            dry_run: bool = False, is_standalone: bool = None):
     """
@@ -605,6 +654,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         year: Census year
         error_log_file: Path to error log
         states: List of state codes (None = all states)
+        workers: Number of parallel workers (default: 12)
         compute_boundary_lengths: Whether to compute boundary lengths for edge weighting
         water_distance: Water distance threshold in km
         minimum_boundary_length: Minimum shared boundary length (meters) to filter tiny adjacencies
@@ -612,7 +662,17 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         dry_run: Show what would be done without executing
         is_standalone: Whether running standalone (None = auto-detect)
     """
-    report_progress(f"[4/6] Building adjacency graphs ({year})", is_standalone)
+    stage_num = 3
+    stage_name = "Building adjacency"
+
+    if is_standalone is None:
+        is_standalone = _reporter.is_standalone
+
+    if is_standalone:
+        _reporter.report(f"[4/6] Building adjacency graphs ({year})")
+    else:
+        # Emit STATUS message for progress coordinator
+        print(f"STATUS:CENSUS:{year}:STAGE:{stage_num}/3:{stage_name}:0/50", flush=True)
 
     if states is None:
         states = ALL_STATES
@@ -621,7 +681,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
 
     if not Path(script).exists():
         error_msg = f"Script not found: {script}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "build_adjacency_graphs", error_msg)
         return False
 
@@ -631,6 +691,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         '--year', str(year),
         '--input-dir', f'outputs/data/{year}/units',
         '--output-dir', f'outputs/data/{year}/adjacency',
+        '--workers', str(workers),
         '--water-distance', str(water_distance),
         '--minimum-boundary-length', str(minimum_boundary_length)
     ]
@@ -648,7 +709,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
 def process_election_data(year: int, error_log_file: Path, election_year: Optional[int] = None,
                           force: bool = False, dry_run: bool = False, is_standalone: bool = None):
     """Process election data to tract-level parquet."""
-    report_progress(f"[5/6] Processing election data", is_standalone)
+    _reporter.report(f"[5/6] Processing election data")
 
     if election_year is None:
         election_year = year
@@ -660,14 +721,14 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
         raw_csv = Path(f'data/Census {year}/elections/tracts-{year}.csv')
 
     if not raw_csv.exists():
-        report_progress(f"[SKIP] No election data found", is_standalone)
+        _reporter.report(f"[SKIP] No election data found")
         return True
 
     script = 'scripts/data/elections/process_election_data.py'
 
     if not Path(script).exists():
         error_msg = f"Script not found: {script}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "process_election_data", error_msg)
         return False
 
@@ -688,19 +749,19 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
 def process_demographic_data(year: int, error_log_file: Path, force: bool = False,
                               dry_run: bool = False, is_standalone: bool = None):
     """Process demographic data to tract-level parquet."""
-    report_progress(f"[6/6] Processing demographic data", is_standalone)
+    _reporter.report(f"[6/6] Processing demographic data")
 
     # Check if raw demographic data exists
     raw_data_dir = Path(f'data/Census {year}/demographics')
     if not raw_data_dir.exists() or not list(raw_data_dir.glob('*.csv')):
-        report_progress(f"[SKIP] No demographic data found", is_standalone)
+        _reporter.report(f"[SKIP] No demographic data found")
         return True
 
     script = 'scripts/data/demographics/process_demographic_data.py'
 
     if not Path(script).exists():
         error_msg = f"Script not found: {script}"
-        report_progress(f"[ERROR] {error_msg}", is_standalone)
+        _reporter.report(f"[ERROR] {error_msg}")
         log_error(error_log_file, "process_demographic_data", error_msg)
         return False
 
@@ -865,7 +926,7 @@ Examples:
             print("Use --force to reprocess")
         else:
             # Child mode: emit STATUS message
-            report_progress(f"All stages complete", is_standalone)
+            _reporter.report(f"All stages complete")
         return 0
 
     # Update stages to only process what's needed
@@ -907,7 +968,7 @@ Examples:
     results = {}
 
     for resolution in args.resolution:
-        report_progress(f"Processing {resolution}-level data", is_standalone)
+        _reporter.report(f"Processing {resolution}-level data")
 
         # TODO: Update processing functions to accept resolution parameter
         # For now, tract is the only implemented resolution
@@ -931,7 +992,7 @@ Examples:
     if 'adjacency' in stages:
         results['adjacency'] = build_adjacency_graphs(
             args.year, error_log_file, states,
-            args.compute_boundary_lengths, args.water_distance, args.minimum_boundary_length,
+            args.workers, args.compute_boundary_lengths, args.water_distance, args.minimum_boundary_length,
             args.force, args.dry_run, is_standalone
         )
         if results['adjacency']:
@@ -981,9 +1042,9 @@ Examples:
     else:
         # Worker mode: final status
         if success:
-            report_progress(f"[OK] All stages complete ({elapsed:.1f}s)", is_standalone)
+            _reporter.report(f"[OK] All stages complete ({elapsed:.1f}s)")
         else:
-            report_progress(f"[FAIL] Processing incomplete ({elapsed:.1f}s)", is_standalone)
+            _reporter.report(f"[FAIL] Processing incomplete ({elapsed:.1f}s)")
 
     return 0 if success else 1
 

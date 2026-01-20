@@ -81,6 +81,9 @@ from scripts.utils import (
 # Import progress coordinator for hierarchical multi-year display
 from scripts.utils.progress_coordinator import ProgressCoordinator
 
+# Import pipeline orchestrator for unified worker management
+from scripts.utils.pipeline_orchestrator import PipelineOrchestrator
+
 # Import configuration files
 try:
     from scripts.config_2020 import STATE_CONFIG_2020
@@ -360,22 +363,11 @@ def main():
 
         def clear_and_update_display(coordinator):
             """Clear previous display and show updated progress."""
-            # Move cursor up to overwrite previous display
-            if num_display_lines[0] > 0:
-                # ANSI escape: move cursor up N lines
-                print(f"\033[{num_display_lines[0]}A", end='', flush=True)
-
-            # Render the display
+            # Append-only mode - no cursor movement
+            # Just print a separator and current status
+            print("=" * 70)
             display_text = coordinator.render()
-            lines = display_text.split('\n')
-
-            # Print each line with clear-to-end-of-line code
-            for line in lines:
-                # \r moves to start of line, \033[K clears to end of line
-                print(f"\r\033[K{line}")
-
-            # Track number of lines for next clear
-            num_display_lines[0] = len(lines)
+            print(display_text)
             sys.stdout.flush()
 
         if args.print_only:
@@ -497,11 +489,10 @@ def main():
         # =====================================================================
         # Check for per-stage census data markers (.tract_tracts_complete, etc.)
         # Import helper to check stage completion
-        sys.path.insert(0, str(scripts_dir.parent / 'data'))
-        from process_census_data import check_all_stages_complete
+        from scripts.data.process_census_data import check_all_stages_complete
 
         # Default stages for redistricting
-        required_stages = ['tracts', 'adjacency']  # Core stages needed for redistricting
+        required_stages = ['tracts', 'merge', 'adjacency']  # Core stages needed for redistricting
         resolution = 'tract'  # Currently only tract-level supported
 
         year_census_complete = {}
@@ -535,427 +526,206 @@ def main():
                 # Skip states, go directly to nation
                 year_phase[year] = 'ready_for_nation'
 
-        # Launch census data processing for years that need it
-        any_census_needed = any(phase == 'data' for phase in year_phase.values())
+        # =========================================================================
+        # UNIFIED PIPELINE ORCHESTRATION (census → states → nation)
+        # =========================================================================
 
-        if any_census_needed:
-            # Launch census data processing processes (hierarchical display will show progress)
-            for i, year in enumerate(year_queue):
-                if year_phase[year] == 'data':
-                    # Build command for process_census_data.py
-                    census_script = scripts_dir.parent / 'data' / 'process_census_data.py'
+        # Define stages to run based on args.stages
+        pipeline_stages = []
+        if 'data' in args.stages:
+            pipeline_stages.append('census')
+        if 'states' in args.stages:
+            pipeline_stages.append('states')
+        if 'nation' in args.stages:
+            pipeline_stages.append('nation')
 
-                    cmd_census = [
-                        sys.executable,
-                        str(census_script),
-                        '--year', year,
-                        '--output-dir', str(year_output_dirs[year]),
-                        '--stages', 'tracts', 'adjacency', 'elections', 'demographics',
-                        '--minimum-boundary-length', str(args.minimum_boundary_length),
-                        '--position', '999'  # Signal deeply nested child - suppress verbose output
-                    ]
+        # Command builders for each stage
+        def build_census_command(year):
+            """Build command for census data processing."""
+            census_script = scripts_dir.parent / 'data' / 'process_census_data.py'
+            year_idx = year_queue.index(year)
+            worker_count = workers_per_year[year_idx]
 
-                    # Add compute-boundary-lengths flag for edge-weighted mode
-                    if args.partition_mode == 'edge-weighted':
-                        cmd_census.append('--compute-boundary-lengths')
+            cmd = [
+                sys.executable,
+                str(census_script),
+                '--year', year,
+                '--output-dir', str(year_output_dirs[year]),
+                '--stages', 'tracts', 'merge', 'adjacency', 'elections', 'demographics',
+                '--workers', str(worker_count),
+                '--minimum-boundary-length', str(args.minimum_boundary_length),
+                '--position', '999'  # Signal deeply nested child - suppress verbose output
+            ]
+            if args.partition_mode == 'edge-weighted':
+                cmd.append('--compute-boundary-lengths')
+            if args.print_only:
+                cmd.append('--dry-run')
+            return cmd
 
-                    if args.print_only:
-                        cmd_census.append('--dry-run')
+        def build_states_command(year):
+            """Build command for state redistricting - spawns worker manager."""
+            # Instead of recursively calling orchestrator, call a dedicated worker manager
+            # that will spawn individual state workers with ProcessPoolExecutor
+            year_idx = year_queue.index(year)
+            worker_count = workers_per_year[year_idx]
 
-                    # Set environment for child processes spawned by process_census_data.py
-                    env = os.environ.copy()
-                    env['TQDM_POSITION'] = '999'  # For deeply nested children (parse scripts, etc.)
+            # For now, use a wrapper script that spawns state workers
+            # TODO: Create dedicated scripts/pipeline/run_states_parallel.py
+            # For backwards compatibility, call orchestrator with special flag to prevent recursion
+            cmd = [
+                sys.executable,
+                str(scripts_dir / 'run_states_parallel.py'),  # Dedicated worker manager
+                '--year', year,
+                '--version', args.version,
+                '--output-dir', str(year_output_dirs[year]),
+                '--workers', str(worker_count),
+                '--dpi', str(args.dpi),
+                '--partition-mode', args.partition_mode
+            ]
+            if args.reprocess:
+                cmd.append('--reprocess')
+            if args.print_only:
+                cmd.append('--print-only')
+            if args.debug:
+                cmd.append('--debug')
+            if args.states:
+                cmd.append('--states')
+                cmd.extend(args.states)
+            return cmd
 
-                    # Launch process
-                    proc = subprocess.Popen(
-                        cmd_census,
-                        stdout=subprocess.PIPE,
-                        stderr=sys.stderr,
-                        text=True,
-                        bufsize=1,
-                        env=env
-                    )
-                    census_processes[year] = proc
-
-            # Monitor census data processing with hierarchical coordinator
-            # Track which years are processing census data
-            census_active_years = {year for year, proc in census_processes.items() if proc is not None}
-
-            # Helper function to monitor census processes
-            def monitor_census_process(year, proc):
-                """Monitor a census data process and update coordinator."""
-                try:
-                    # Read stdout until process exits
-                    while True:
-                        line = proc.stdout.readline()
-                        if not line:
-                            if proc.poll() is not None:
-                                break
-                            continue
-
-                        line = line.strip()
-                        if not line:
-                            continue
-
-                        msg_type, data = parse_status_message(line)
-                        if msg_type == 'CENSUS_STAGE':
-                            with display_lock:
-                                coordinator.update_census_stage(
-                                    data['year'],
-                                    data['stage_name'],
-                                    data['completed'],
-                                    data['total']
-                                )
-                                # Note: Main loop handles display updates (no flicker)
-                        elif msg_type == 'CENSUS_WORKER':
-                            with display_lock:
-                                coordinator.update_census_worker(
-                                    data['year'],
-                                    data['worker_id'],
-                                    data['state_num'],
-                                    data['state_name'],
-                                    data['stage_name']
-                                )
-                                # Note: Main loop handles display updates (no flicker)
-
-                    # Process has exited
-                    if proc.returncode is None:
-                        proc.wait()
-
-                    # Mark census as complete for this year
-                    with display_lock:
-                        coordinator.census_complete(year)
-                        if proc.returncode == 0:
-                            year_phase[year] = 'ready_for_states'
-                        else:
-                            year_phase[year] = 'failed'
-                        clear_and_update_display(coordinator)
-
-                except Exception as e:
-                    sys.stderr.write(f"[ERROR] Census monitor thread for {year} died: {e}\n")
-                    sys.stderr.flush()
-
-            # Start monitoring threads for census processes
-            census_threads = {}
-            for year, proc in census_processes.items():
-                thread = threading.Thread(target=monitor_census_process, args=(year, proc), daemon=True)
-                thread.start()
-                census_threads[year] = thread
-
-            # Display progress while census processes run
-            while census_active_years:
-                with display_lock:
-                    clear_and_update_display(coordinator)
-                time.sleep(0.5)
-
-                # Check which years are still active
-                still_active = set()
-                for year in census_active_years:
-                    if census_processes[year].poll() is None:
-                        still_active.add(year)
-                census_active_years = still_active
-
-            # Wait for all census threads to complete
-            for year, thread in census_threads.items():
-                thread.join(timeout=5)
-
-            # Final display update
-            print()  # Blank line after display (display already updated by loop)
-
-            # Check if any failed
-            failed_census = [year for year in census_processes.keys() if year_phase.get(year) == 'failed']
-            if failed_census:
-                print(f"\n[ERROR] Census data processing failed for: {', '.join(failed_census)}")
-                print("Cannot proceed with state processing.")
-                return 1
-
-            # Census data processing complete (hierarchical display showed progress)
-
-        # Update year_phase for years that already had complete census data
-        for year in year_queue:
-            if year_phase[year] == 'ready_for_states':
-                year_phase[year] = 'states'  # Ready to start state processing
-
-        # Check for .states_complete marker file or 'states' not in --stages
-        year_states_complete = {}
-        for year in year_queue:
-            # Only check states if not already failed during census processing
-            if year_phase.get(year) == 'failed':
-                year_states_complete[year] = False
-                continue
-
-            # Skip states if not in requested stages OR if marker file exists
-            if 'states' not in args.stages:
-                states_complete = True
-                # Don't print in multi-year mode - would interfere with hierarchical display
-                year_phase[year] = 'ready_for_nation'  # Skip to nation processing
-            else:
-                marker_file = year_output_dirs[year] / '.states_complete'
-                states_complete = marker_file.exists() and not args.reset
-                if states_complete:
-                    # Don't print in multi-year mode - would interfere with hierarchical display
-                    year_phase[year] = 'ready_for_nation'  # Skip to nation processing
-                elif year_phase.get(year) != 'failed':
-                    # Only set to 'states' if not failed
-                    year_phase[year] = 'states'  # Need to run state processing
-            year_states_complete[year] = states_complete
-
-        # Start year processes (skip if .states_complete marker exists or census failed)
-        for i, year in enumerate(year_queue):
-            # Skip if census processing failed for this year
-            if year_phase.get(year) == 'failed':
-                processes[year] = None
-                results[year] = {'success': False, 'error': 'Census data processing failed'}
-                continue
-
-            if year_states_complete[year]:
-                # Skip state processing - go straight to national
-                processes[year] = None  # Will launch nation process immediately
-                coordinator.update_year_progress(year, 50, 50)  # Show as complete
-            else:
-                # Launch state processing
-                cmd_states = build_pipeline_command(args, year, states_only=True, skip_states=False)
-                cmd_states.extend(['--workers', str(workers_per_year[i])])
-
-                env = os.environ.copy()
-                env['MULTI_YEAR_SUBPROCESS'] = '1'
-
-                # Use Popen to monitor stdout in real-time
-                proc = subprocess.Popen(
-                    cmd_states,
-                    stdout=subprocess.PIPE,
-                    stderr=sys.stderr,  # Don't capture stderr - let it flow through
-                    text=True,
-                    bufsize=1,  # Line buffering
-                    env=env
-                )
-                processes[year] = proc
-
-        # Monitor all processes in real-time
-        import select
-
-        # (display_lock, last_display_time, and clear_and_update_display already defined above)
-
-        def monitor_process(year, proc, coordinator):
-            """Monitor a single year process and update coordinator."""
-            try:
-                # Read stdout until process exits
-                while True:
-                    line = proc.stdout.readline()
-                    if not line:  # EOF or empty
-                        # Check if process has exited
-                        if proc.poll() is not None:
-                            break
-                        continue
-
-                    line = line.strip()
-                    if not line:
-                        continue
-
-                    msg_type, data = parse_status_message(line)
-                    if msg_type == 'YEAR':
-                        with display_lock:
-                            coordinator.update_year_progress(
-                                data['year'],
-                                data['completed'],
-                                data['total']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-                    elif msg_type == 'YEAR_POSTPROCESS':
-                        with display_lock:
-                            coordinator.update_year_postprocess(
-                                data['year'],
-                                data['completed'],
-                                data['total']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-                    elif msg_type == 'WORKER':
-                        with display_lock:
-                            coordinator.update_worker_status(
-                                data['year'],
-                                data['worker_id'],
-                                data['state_num'],
-                                data['state_name'],
-                                data['stage'],
-                                data['stage_total'],
-                                data['stage_desc']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-                    elif msg_type == 'WORKER_TASK':
-                        with display_lock:
-                            coordinator.update_worker_task(
-                                data['year'],
-                                data['worker_id'],
-                                data['task_index'],
-                                data['task_total'],
-                                data['task_name']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-                    elif msg_type == 'CENSUS_STAGE':
-                        with display_lock:
-                            coordinator.update_census_stage(
-                                data['year'],
-                                data['stage_name'],
-                                data['completed'],
-                                data['total']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-                    elif msg_type == 'CENSUS_WORKER':
-                        with display_lock:
-                            coordinator.update_census_worker(
-                                data['year'],
-                                data['worker_id'],
-                                data['state_num'],
-                                data['state_name'],
-                                data['stage_name']
-                            )
-                            # Note: Main loop handles display updates (no flicker)
-
-                # Process has exited (detected by poll() in loop above)
-                # Ensure we have the return code
-                if proc.returncode is None:
-                    proc.wait()
-
-                # Mark year as complete based on phase
-                with display_lock:
-                    phase = year_phase.get(year, 'states')
-                    if phase == 'nation':
-                        # Post-processing complete - get task count from coordinator
-                        progress = coordinator.year_progress.get(year, {})
-                        total_tasks = progress.get('total', 7)
-                        coordinator.update_year_postprocess(year, total_tasks, total_tasks)
-                    else:
-                        # State processing complete
-                        coordinator.update_year_progress(year, 50, 50)
-
-                    # Final display update
-                    clear_and_update_display(coordinator)
-
-            except Exception as e:
-                sys.stderr.write(f"[ERROR] Monitor thread for {year} died: {e}\n")
-                sys.stderr.flush()
-
-        # Start monitoring threads (only for years that are running states)
-        threads = {}  # Changed to dict to track per-year
-        for year, proc in processes.items():
-            if proc is not None:  # Skip years with marker file
-                thread = threading.Thread(target=monitor_process, args=(year, proc, coordinator), daemon=True)
-                thread.start()
-                threads[year] = thread
-
-        # Helper function to launch national post-processing
-        def launch_nation_processing(year):
-            """Launch process_nation.py for a given year."""
-            output_dir = year_output_dirs[year]
-
-            cmd_nation = [
+        def build_nation_command(year):
+            """Build command for national post-processing."""
+            year_idx = year_queue.index(year)
+            cmd = [
                 sys.executable,
                 str(scripts_dir / 'process_nation.py'),
                 '--year', year,
                 '--version', args.version,
-                '--output-dir', str(output_dir),
+                '--output-dir', str(year_output_dirs[year]),
                 '--election-year', args.election_year,
                 '--dpi', str(args.dpi),
-                '--workers', str(workers_per_year[year_queue.index(year)])
+                '--workers', str(workers_per_year[year_idx])
             ]
-
-            # Add optional flags
             if args.run_analysis:
-                cmd_nation.append('--run-analysis')
+                cmd.append('--run-analysis')
             else:
-                cmd_nation.append('--skip-analysis')
-
+                cmd.append('--skip-analysis')
             if args.skip_political:
-                cmd_nation.append('--skip-political')
-
+                cmd.append('--skip-political')
             if args.skip_demographic:
-                cmd_nation.append('--skip-demographic')
-
+                cmd.append('--skip-demographic')
             if args.print_only:
-                cmd_nation.append('--print-only')
-
+                cmd.append('--print-only')
             if args.debug:
-                cmd_nation.append('--debug')
+                cmd.append('--debug')
+            return cmd
 
-            # Start nation process
-            env = os.environ.copy()
-            env['MULTI_YEAR_SUBPROCESS'] = '1'
-
-            proc_nation = subprocess.Popen(
-                cmd_nation,
-                stdout=subprocess.PIPE,
-                stderr=sys.stderr,  # Don't capture stderr - let it flow through
-                text=True,
-                bufsize=1,
-                env=env
+        # Message handlers for each stage
+        census_handlers = {
+            'CENSUS_STAGE': lambda data: coordinator.update_census_stage(
+                data['year'],
+                data['stage_name'],
+                data['completed'],
+                data['total']
+            ),
+            'CENSUS_STAGE_PROGRESS': lambda data: coordinator.update_census_stage(
+                data['year'],
+                coordinator.census_progress.get(data['year'], {}).get('stage', 'Processing'),
+                data['completed'],
+                data['total']
+            ),
+            'CENSUS_WORKER': lambda data: coordinator.update_census_worker(
+                data['year'],
+                data['worker_id'],
+                data['state_num'],
+                data['state_name'],
+                data['stage_name']
             )
-            processes[year] = proc_nation
-            year_phase[year] = 'nation'
+        }
 
-            # Start new monitoring thread for nation process
-            thread = threading.Thread(target=monitor_process, args=(year, proc_nation, coordinator), daemon=True)
-            thread.start()
-            threads[year] = thread
+        state_handlers = {
+            'YEAR': lambda data: coordinator.update_year_progress(
+                data['year'],
+                data['completed'],
+                data['total']
+            ),
+            'WORKER': lambda data: coordinator.update_worker_status(
+                data['year'],
+                data['worker_id'],
+                data['state_num'],
+                data['state_name'],
+                data['stage'],
+                data['stage_total'],
+                data['stage_desc']
+            ),
+            'WORKER_TASK': lambda data: coordinator.update_worker_task(
+                data['year'],
+                data['worker_id'],
+                data['task_index'],
+                data['task_total'],
+                data['task_name']
+            ),
+            # State stage may also emit census messages if census runs inline
+            **census_handlers
+        }
 
-        # Immediately launch nation processing for years with .states_complete marker
+        nation_handlers = {
+            'YEAR_POSTPROCESS': lambda data: coordinator.update_year_postprocess(
+                data['year'],
+                data['completed'],
+                data['total']
+            )
+        }
+
+        # Create and configure pipeline orchestrator
+        orchestrator = PipelineOrchestrator(
+            coordinator=coordinator,
+            display_lock=display_lock,
+            years=year_queue,
+            output_dirs=year_output_dirs
+        )
+
+        # Register stages
+        orchestrator.add_stage('census', build_census_command, census_handlers)
+        orchestrator.add_stage('states', build_states_command, state_handlers)
+        orchestrator.add_stage('nation', build_nation_command, nation_handlers)
+
+        # Run pipeline
+        pipeline_results = orchestrator.run_pipeline(
+            stages=pipeline_stages,
+            skip_stages_if_complete=True,
+            reset=args.reset,
+            poll_interval=0.5,
+            display_update_callback=lambda: clear_and_update_display(coordinator)
+        )
+
+        # Process results - flatten stage results into year results
+        results = {}
         for year in year_queue:
-            if year_phase[year] == 'ready_for_nation':
-                launch_nation_processing(year)
+            year_results = pipeline_results.get(year, {})
+            # Check if all stages succeeded
+            all_success = all(
+                stage_result.get('success', False)
+                for stage_result in year_results.values()
+            )
+            # Find first failure if any
+            first_error = None
+            for stage_name, stage_result in year_results.items():
+                if not stage_result.get('success', False):
+                    first_error = stage_result.get('error', f'{stage_name} failed')
+                    break
 
-        # Wait for states to complete, then launch national processing
-        # This allows each year to start post-processing as soon as its states finish
-        while any(phase == 'states' for phase in year_phase.values()):
-            # Update display
-            with display_lock:
-                clear_and_update_display(coordinator)
+            results[year] = {
+                'success': all_success,
+                'error': first_error
+            }
 
-            # Check for completed processes
-            for year in year_queue:
-                if year_phase[year] == 'states':
-                    proc = processes[year]
-                    if proc.poll() is not None:  # Process finished
-                        # Wait for monitoring thread to finish reading output
-                        threads[year].join(timeout=2)
-
-                        success = (proc.returncode == 0)
-                        if success:
-                            # Create .states_complete marker file
-                            marker_file = year_output_dirs[year] / '.states_complete'
-                            marker_file.parent.mkdir(parents=True, exist_ok=True)
-                            marker_file.write_text(f"States processing completed: {datetime.now().isoformat()}\n")
-
-                            # Launch national post-processing immediately
-                            launch_nation_processing(year)
-                        else:
-                            # State processing failed
-                            results[year] = {'success': False, 'error': f"State processing exit code {proc.returncode}"}
-                            year_phase[year] = 'failed'
-
-            time.sleep(0.5)  # Throttle display updates
-
-        # Now wait for all national post-processing to complete
-        while any(year_phase.get(year) == 'nation' for year in year_queue):
-            # Update display
-            with display_lock:
-                clear_and_update_display(coordinator)
-
-            # Check for completed processes
-            for year in year_queue:
-                if year_phase[year] == 'nation':
-                    proc = processes[year]
-                    if proc.poll() is not None:  # Process finished
-                        # Wait for monitoring thread to finish reading output
-                        if year in threads:
-                            threads[year].join(timeout=2)
-
-                        # Get return code
-                        success = (proc.returncode == 0)
-                        results[year] = {'success': success, 'error': None if success else f"Post-processing exit code {proc.returncode}"}
-                        year_phase[year] = 'complete' if success else 'failed'
-                elif year_phase[year] == 'failed':
-                    pass  # Already recorded failure
-
-            time.sleep(0.5)  # Throttle display updates
+        # Legacy compatibility: ensure year_phase is set correctly
+        for year in year_queue:
+            if results[year]['success']:
+                year_phase[year] = 'complete'
+            else:
+                year_phase[year] = 'failed'
 
         # Calculate elapsed time
         elapsed = time.time() - start_time

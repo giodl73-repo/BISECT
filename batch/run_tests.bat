@@ -25,33 +25,33 @@ goto unknown_type
 
 :run_unit
 echo [INFO] Running unit tests...
-python -m pytest tests/unit -v --tb=short --cov=apportionment --cov-report=term --cov-report=html
+py -3.13 -m pytest tests/unit -v --tb=short --cov=apportionment --cov-report=term --cov-report=html
 goto end
 
 :run_integration
 echo [INFO] Running integration tests...
-python -m pytest tests/integration -v --tb=short
+py -3.13 -m pytest tests/integration -v --tb=short
 goto end
 
 :run_e2e
 echo [INFO] Running E2E tests...
 echo [INFO] Note: Run create_test_data.bat first to generate test data
-python -m pytest tests/e2e -v --tb=short
+py -3.13 -m pytest tests/e2e -v --tb=short
 goto end
 
 :run_quick
 echo [INFO] Running quick test suite...
-python -m pytest tests/unit -v --tb=short -x
+py -3.13 -m pytest tests/unit -v --tb=short -x
 goto end
 
 :run_all
 echo [INFO] Running all pipeline tests...
-python -m pytest tests/unit tests/integration -v --tb=short --cov=apportionment --cov-report=term --cov-report=html
+py -3.13 -m pytest tests/unit tests/integration -v --tb=short --cov=apportionment --cov-report=term --cov-report=html
 goto end
 
 :run_coverage
 echo [INFO] Running tests with detailed coverage report...
-python -m pytest tests/unit tests/integration -v --tb=short --cov=apportionment --cov-report=term --cov-report=html --cov-report=xml
+py -3.13 -m pytest tests/unit tests/integration -v --tb=short --cov=apportionment --cov-report=term --cov-report=html --cov-report=xml
 echo [INFO] Coverage report generated:
 echo   - HTML: htmlcov/index.html
 echo   - XML: coverage.xml
@@ -59,7 +59,7 @@ goto end
 
 :run_markers
 echo [INFO] Available test markers:
-python -m pytest --markers
+py -3.13 -m pytest --markers
 goto end
 
 :unknown_type

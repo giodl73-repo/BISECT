@@ -79,7 +79,7 @@ if %SKIP_FIGURES%==1 (
     echo ======================================================================
     echo.
 
-    python scripts\figures\generate_all_figures.py --year %YEAR% --version %VERSION%
+    py -3.13 scripts\figures\generate_all_figures.py --year %YEAR% --version %VERSION%
     if errorlevel 1 (
         echo.
         echo [WARNING] Some figures could not be generated

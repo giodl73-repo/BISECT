@@ -118,7 +118,12 @@ class ProcessMonitor:
                 if not line:
                     continue
 
-                # Parse and route STATUS message
+                # Echo ALL STATUS messages to stdout for parent process monitoring
+                if line.startswith('STATUS:'):
+                    sys.stdout.write(f"{line}\n")
+                    sys.stdout.flush()
+
+                # Parse and route STATUS message to handlers
                 msg_type, data = parse_status_message(line)
                 if msg_type and msg_type in self.message_handlers:
                     with self.display_lock:

@@ -36,7 +36,7 @@ echo ===========================================================================
 echo.
 
 REM Check if pytest is installed
-python -c "import pytest" 2>nul
+py -3.13 -c "import pytest" 2>nul
 if errorlevel 1 (
     echo [ERROR] pytest not installed
     echo.
@@ -47,7 +47,7 @@ if errorlevel 1 (
 )
 
 REM Check if playwright is installed
-python -c "import playwright" 2>nul
+py -3.13 -c "import playwright" 2>nul
 if errorlevel 1 (
     echo [ERROR] playwright not installed
     echo.
@@ -82,9 +82,9 @@ echo.
 if not "%UPDATE_BASELINES%"=="" (
     echo [UPDATE] Regenerating visual regression baselines
     echo.
-    python -m pytest tests/e2e/test_visual_regression.py %UPDATE_BASELINES% -v
+    py -3.13 -m pytest tests/e2e/test_visual_regression.py %UPDATE_BASELINES% -v
 ) else (
-    python -m pytest tests/e2e/ %EXTRA_ARGS% %HEADED% -v
+    py -3.13 -m pytest tests/e2e/ %EXTRA_ARGS% %HEADED% -v
 )
 
 set TEST_EXIT_CODE=%errorlevel%
