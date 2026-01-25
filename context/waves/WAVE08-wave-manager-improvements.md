@@ -1,26 +1,30 @@
 # Wave 8: Wave Manager Improvements
 
 **Date**: 2026-01-25
-**Focus**: Fix wave manager bugs and add project branding across all projects
+**Focus**: Upgrade wave manager with schema v2.0, fix bugs, and add project branding across all projects
 **Status**: ✅ COMPLETED
 **Started**: 2026-01-25
 **Completed**: 2026-01-25
-**Estimated Duration**: 2 hours
-**Actual Duration**: 2 hours
-**Enhancements**: 56, 57
+**Estimated Duration**: 1 day
+**Actual Duration**: 1 day
+**Enhancements**: 53, 54, 55, 56, 57
 **Phases**:
-- Phase 1: Enhancement 56 (✅ COMPLETED 2026-01-25)
-- Phase 2: Enhancement 57 (✅ COMPLETED 2026-01-25)
+- Phase 1: Enhancement 53 - Schema v2.0 & Wave Reorganization (✅ COMPLETED 2026-01-25)
+- Phase 2: Enhancements 54, 55 - Skills Integration & Validation (✅ COMPLETED 2026-01-25)
+- Phase 3: Enhancements 56, 57 - Title Branding & Phase Display Fix (✅ COMPLETED 2026-01-25)
 
 ---
 
 ## Goals
 
-1. Add project-specific branding to wave manager (PROJECT_NAME and PROJECT_COLOR)
-2. Fix phase display bug showing "No phases assigned to this wave"
-3. Apply fixes to all projects (apportionment, appmanager, TCM, NHL, Performance)
-4. Fix enhancement file organization (move from active/ subdirectory)
-5. Add cache-busting meta tags to prevent stale JavaScript
+1. Upgrade wave manager to schema v2.0 with phase mapping support
+2. Reorganize all waves to reflect accurate chronological history
+3. Configure wave management skills and validation
+4. Add project-specific branding to wave manager (PROJECT_NAME and PROJECT_COLOR)
+5. Fix phase display bug showing "No phases assigned to this wave"
+6. Apply fixes to all projects (apportionment, appmanager, TCM, NHL, Performance)
+7. Fix enhancement file organization (move from active/ subdirectory)
+8. Add cache-busting meta tags to prevent stale JavaScript
 
 ---
 
@@ -28,6 +32,10 @@
 
 | Metric | Target | Actual | Notes |
 |--------|--------|--------|-------|
+| Schema upgrade | v2.0 | ✅ | Phase mapping support added |
+| Wave reorganization | 7 historical + 7 future | ✅ | WAVE01-07, WAVE-F2 through F7 |
+| Wave skills | 3 skills | ✅ | /start-wave, /complete-enhancement, /complete-wave |
+| Validation | All 57 enhancements | ✅ | Fixed to search flat directory |
 | Branding endpoint | /api/config | ✅ | Returns PROJECT_NAME and PROJECT_COLOR |
 | Title display | Project-specific | ✅ | Shows "Apportionment - Wave Manager" in blue |
 | Phase display | Accurate counts | ✅ | Shows "2/2 phases completed" instead of "0/0" |
@@ -58,14 +66,69 @@
 
 ## Phases
 
-### Phase 1: Enhancement 56 - Wave Manager Title Branding
+### Phase 1: Enhancement 53 - Schema v2.0 & Wave Reorganization (Foundation)
 **Status**: ✅ COMPLETED
 **Completed**: 2026-01-25
-**Effort**: 30 minutes
+**Effort**: 4 hours
 
-Added project-specific branding to wave manager title.
+Upgraded wave manager tool with schema v2.0 and reorganized all waves to reflect accurate chronological history.
 
 **Completed**:
+- ✅ Updated wave manager from appmanager with phase mapping support
+- ✅ Reorganized 7 historical waves (WAVE01-07) chronologically
+- ✅ Created 7 prioritized future waves (WAVE-F2 through F7)
+- ✅ Fixed INDEX.md status discrepancies (Enh 47, 50)
+- ✅ Validated all phase mappings
+- ✅ Added GitHub integration support
+- ✅ Updated schema documentation (SCHEMA.md)
+
+**Files Modified**:
+- `tools/wave-manager/parser.py` - Enhanced with phase mapping
+- `tools/wave-manager/SCHEMA.md` - v2.0 schema documentation
+- `tools/wave-manager/static/index.html` - Updated UI
+- `tools/wave-manager/config.py` - Added GITHUB_REPO field
+- All wave files (WAVE01-07, WAVE-F2 through F7)
+- `context/enhancements/INDEX.md` - Fixed status discrepancies
+
+**Enhancement**: [53](../enhancements/53_wave_manager_schema_v2.md)
+
+### Phase 2: Enhancements 54, 55 - Skills Integration & Validation (Configuration)
+**Status**: ✅ COMPLETED
+**Completed**: 2026-01-25
+**Effort**: 1 hour
+
+Configured wave management skills and fixed validation to work with new directory structure.
+
+**Enhancement 54 - Wave Skills Integration**:
+- ✅ Updated port references (5101 → 5104) in wave skills
+- ✅ Configured /start-wave, /complete-enhancement, /complete-wave
+- ✅ Updated EXECUTE_APPORTIONMENT.md with wave workflow
+- ✅ Tested wave management skills
+- ✅ Documented in CLAUDE.md
+
+**Enhancement 55 - Wave Phase Validation and Title Standardization**:
+- ✅ Fixed validator to search both enhancements/ and enhancements/active/
+- ✅ Updated path resolution to use absolute paths
+- ✅ Standardized title format (made optional)
+- ✅ Validated all 47 existing enhancements found
+- ✅ Documented title format decision
+
+**Files Modified**:
+- `.claude/skills/start-wave/`, `complete-enhancement/`, `complete-wave/`
+- `EXECUTE_APPORTIONMENT.md` - Wave workflow documentation
+- `CLAUDE.md` - Skills documentation
+- `tools/wave-manager/validate_phases.py` - Path resolution fixes
+
+**Enhancements**: [54](../enhancements/54_wave_skills_integration.md), [55](../enhancements/55_wave_phase_validation_fix.md)
+
+### Phase 3: Enhancements 56, 57 - Title Branding & Phase Display Fix (UI Fixes)
+**Status**: ✅ COMPLETED
+**Completed**: 2026-01-25
+**Effort**: 2 hours
+
+Added project branding and fixed critical phase display bug across all projects.
+
+**Enhancement 56 - Wave Manager Title Branding**:
 - ✅ Added `/api/config` endpoint to app.py
 - ✅ Imported PROJECT_NAME and PROJECT_COLOR from config
 - ✅ Updated index.html header with projectTitle element
@@ -74,20 +137,7 @@ Added project-specific branding to wave manager title.
 - ✅ Browser tab title updated correctly
 - ✅ Fallback to "Wave Manager" if config fetch fails
 
-**Files Modified**:
-- `tools/wave-manager/app.py` - Added import and /api/config endpoint
-- `tools/wave-manager/static/index.html` - Updated header and added loadConfig()
-
-**Applied to Project**: apportionment
-
-### Phase 2: Enhancement 57 - Wave Manager Phase Display Fix
-**Status**: ✅ COMPLETED
-**Completed**: 2026-01-25
-**Effort**: 1.5 hours
-
-Fixed bug where phases weren't displaying in wave cards and applied fixes to all projects.
-
-**Completed**:
+**Enhancement 57 - Wave Manager Phase Display Fix**:
 - ✅ Added `linkPhasesToWaves()` function to populate wave.phases
 - ✅ Called linking after both loadWaves() and loadPhases() complete
 - ✅ Fixed "No phases assigned" bug for all waves
@@ -97,7 +147,7 @@ Fixed bug where phases weren't displaying in wave cards and applied fixes to all
 - ✅ Updated validate_phases.py to remove active/ search
 - ✅ Added cache-busting meta tags to prevent stale JavaScript
 - ✅ Created WAVE_MANAGER_LINKING_FIX.md guide
-- ✅ Applied fixes to all 5 projects
+- ✅ Applied fixes to all 5 projects (apportionment, appmanager, TCM, NHL, Performance)
 
 **Files Modified - Apportionment**:
 - `tools/wave-manager/static/index.html` - Added linkPhasesToWaves() and cache-busting

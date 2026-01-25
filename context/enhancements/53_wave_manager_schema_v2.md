@@ -1,7 +1,7 @@
-# Enhancement 53: Wave Manager Schema v2.0 & Wave Reorganization
+# Enhancement 53 (Phase 1): Wave Manager Schema v2.0 & Wave Reorganization
 
 **Status**: ✅ COMPLETED
-**Wave**: Wave 9 (API-MIGRATION)
+**Wave**: Wave 8 (WAVE-MANAGER-IMPROVEMENTS)
 **Priority**: High
 **Completed**: 2026-01-25
 **Started**: 2026-01-25

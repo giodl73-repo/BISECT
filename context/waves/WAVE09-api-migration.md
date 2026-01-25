@@ -1,16 +1,14 @@
 # Wave 9: API Migration
 
-**Date**: 2026-01-25 (Started)
+**Date**: 2026-01-25 (Planned)
 **Focus**: Add FastAPI backend and React dashboard to existing pipeline without changing core functionality
-**Status**: 🔄 IN PROGRESS (Phase 2 Complete)
-**Started**: 2026-01-25
+**Status**: 📋 PLANNED
 **Estimated Duration**: 4-6 weeks
-**Enhancements**: 53, 54, 55, 58, 59, 60, 61, 62
+**Enhancements**: 58, 59, 60, 61, 62
 **Phases**:
-- Phase 1: Enhancement 53 (✅ COMPLETED 2026-01-25)
-- Phase 2: Enhancements 54, 55 (✅ COMPLETED 2026-01-25)
-- Phase 3: Enhancements 58, 59, 60 (📋 PLANNED)
-- Phase 4: Enhancements 61, 62 (📋 PLANNED)
+- Phase 1: Enhancement 58 (📋 PLANNED)
+- Phase 2: Enhancements 59, 60 (📋 PLANNED)
+- Phase 3: Enhancements 61, 62 (📋 PLANNED)
 
 ---
 
@@ -66,46 +64,20 @@
 
 ## Phases
 
-### Phase 1: Enhancement 53 - Wave Manager Schema v2.0 & Wave Reorganization
-**Status**: ✅ COMPLETED
-**Completed**: 2026-01-25
-**Effort**: 1 day
+### Phase 1: Enhancement 58 - Project Setup & Dependencies
+**Status**: 📋 PLANNED
+**Estimated Effort**: 12-16 hours
 
-Upgraded wave manager tool with schema v2.0 and reorganized all waves to reflect accurate chronological history with prioritized future planning.
+Set up backend and frontend infrastructure with database connection.
 
-**Completed**:
-- Updated wave manager from appmanager with phase mapping support
-- Reorganized 7 historical waves (WAVE01-07) chronologically
-- Created 7 prioritized future waves (WAVE-F2 through F7)
-- Fixed INDEX.md status discrepancies (Enh 47, 50)
-- Validated all phase mappings
+**Tasks**:
+- Backend directory structure (FastAPI, SQLAlchemy, Alembic)
+- Frontend directory structure (React, Vite, TypeScript, Tailwind)
+- PostgreSQL database connection
+- PM2 ecosystem configuration
+- Common package integration from appmanager
 
-### Phase 2: Setup & Configuration (Enhancements 54, 55)
-**Status**: ✅ COMPLETED 2026-01-25
-**Estimated Effort**: 9-13 hours
-**Actual Effort**: ~1 hour
-
-Configure wave skills and validate wave system.
-
-**Enhancement 54 - Wave Skills Integration** (✅ COMPLETED 2026-01-25):
-- ✅ Update port references (5101 → 5104) in wave skills
-- ✅ Configure /start-wave, /complete-enhancement, /complete-wave
-- ✅ Update EXECUTE_APPORTIONMENT.md with wave workflow
-- ✅ Test wave management skills
-- ✅ Document in CLAUDE.md
-
-**Enhancement 55 - Wave Phase Validation and Title Standardization** (✅ COMPLETED 2026-01-25):
-- ✅ Fix validator to search both enhancements/ and enhancements/active/
-- ✅ Update path resolution to use absolute paths
-- ✅ Standardize title format (made optional)
-- ✅ Validate all 47 existing enhancements found
-- ✅ Document title format decision
-
----
-
-**Note**: Wave Manager fixes (Enhancements 56, 57) moved to Wave 8 (Wave Manager Improvements).
-
-### Phase 3: Backend Setup (Enhancements 58, 59, 60)
+### Phase 2: Backend Implementation (Enhancements 59, 60)
 **Status**: 📋 PLANNED
 **Estimated Effort**: 42-50 hours
 
@@ -118,25 +90,21 @@ Backend infrastructure and database.
 - PM2 ecosystem configuration
 - Common package integration from appmanager
 
-### Phase 3: Backend Implementation (Enhancements 58, 59, 60)
+### Phase 2: Backend Implementation (Enhancements 59, 60)
 **Status**: 📋 PLANNED
-**Estimated Effort**: 42-50 hours
+**Estimated Effort**: 30-36 hours
 
-Database schema and API endpoints.
+Database schema, API endpoints, and pipeline integration.
 
-**Enhancement 58 - Database Schema & Models** (📋 PLANNED):
+**Enhancement 59 - Database Schema & Core API Endpoints** (📋 PLANNED):
 - Schema design (runs, states, districts, configurations)
 - SQLAlchemy models
 - Alembic migrations
 - Seed data (state configs)
-- Database utilities
-
-**Enhancement 59 - Core API Endpoints** (📋 PLANNED):
-- Run management (create, list, get, delete)
+- Run management endpoints (create, list, get, delete)
 - District data endpoints (by state, year, run)
 - State configuration endpoints
 - Pipeline execution endpoints
-- Result retrieval endpoints
 
 **Enhancement 60 - Pipeline Integration** (📋 PLANNED):
 - Wrap pipeline scripts in async functions
@@ -145,7 +113,7 @@ Database schema and API endpoints.
 - Result storage in database
 - Error handling and recovery
 
-### Phase 4: Frontend & Deployment (Enhancements 61, 62)
+### Phase 3: Frontend & Deployment (Enhancements 61, 62)
 **Status**: 📋 PLANNED
 **Estimated Effort**: 30-36 hours
 
@@ -189,7 +157,7 @@ Frontend components and production deployment.
 ## Dependencies
 
 **Prerequisites**:
-- Completed historical waves (WAVE01-08) ✅
+- Completed Wave 8 (Wave Manager Improvements) ✅
 - Stable pipeline with all features
 - PostgreSQL available (via Docker or system)
 - PM2 process manager configured
@@ -211,13 +179,11 @@ Frontend components and production deployment.
 
 ## Related Enhancements
 
-- [Enhancement 53](../enhancements/53_api_setup.md) - Project Setup & Dependencies (planned)
-- [Enhancement 54](../enhancements/54_database_schema.md) - Database Schema & Models (planned)
-- [Enhancement 55](../enhancements/55_api_endpoints.md) - Core API Endpoints (planned)
-- [Enhancement 56](../enhancements/56_pipeline_integration.md) - Pipeline Integration (planned)
-- [Enhancement 57](../enhancements/57_frontend_core.md) - Frontend Core Components (planned)
-- [Enhancement 58](../enhancements/58_map_visualization.md) - Interactive Map Visualization (planned)
-- [Enhancement 59](../enhancements/59_deployment.md) - Deployment & Testing (planned)
+- [Enhancement 58](../enhancements/58_api_setup.md) - Project Setup & Dependencies (planned)
+- [Enhancement 59](../enhancements/59_database_api.md) - Database Schema & Core API Endpoints (planned)
+- [Enhancement 60](../enhancements/60_pipeline_integration.md) - Pipeline Integration (planned)
+- [Enhancement 61](../enhancements/61_frontend_core.md) - Frontend Core Components (planned)
+- [Enhancement 62](../enhancements/62_map_deployment.md) - Interactive Map Visualization & Deployment (planned)
 
 ---
 

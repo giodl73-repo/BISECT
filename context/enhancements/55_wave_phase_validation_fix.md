@@ -2,7 +2,7 @@
 
 **Status**: ✅ COMPLETED
 **Completed**: 2026-01-25
-**Wave**: Wave 9 (API-MIGRATION)
+**Wave**: Wave 8 (WAVE-MANAGER-IMPROVEMENTS)
 **Priority**: Medium
 **Estimated Complexity**: Small
 
