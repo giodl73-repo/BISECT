@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Wave Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <style>
+        .markdown-content h1 { font-size: 1.875rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+        .markdown-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .markdown-content p { margin-bottom: 1rem; }
+        .markdown-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content code { background-color: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; }
+        .markdown-content pre { background-color: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+        .markdown-content pre code { background-color: transparent; padding: 0; color: inherit; }
+        .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        .markdown-content th, .markdown-content td { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; }
+        .markdown-content th { background-color: #f9fafb; font-weight: 600; }
+        .markdown-content blockquote { border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 1rem 0; color: #6b7280; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-in-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-planned { background-color: #fef3c7; color: #92400e; }
+        .priority-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .priority-critical { background-color: #fee2e2; color: #991b1b; }
+        .priority-high { background-color: #fed7aa; color: #9a3412; }
+        .priority-medium { background-color: #fef3c7; color: #92400e; }
+        .priority-low { background-color: #dbeafe; color: #1e40af; }
+        .priority-research { background-color: #e9d5ff; color: #6b21a8; }
+        .filter-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .filter-btn:hover { background-color: #f3f4f6; }
+        .filter-btn.active { background-color: #3b82f6; color: white; }
+        .wave-card { border: 2px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; background: white; transition: all 0.2s; margin-bottom: 1rem; }
+        .wave-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .phase-card { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; background: white; transition: all 0.2s; cursor: pointer; margin-bottom: 0.5rem; }
+        .phase-card:hover { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transform: translateX(4px); }
+        .modal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 1rem; max-width: 90%; max-height: 90%; overflow-y: auto; position: relative; }
+        .tab-btn { padding: 0.75rem 1.5rem; border-bottom: 2px solid transparent; font-weight: 500; transition: all 0.2s; }
+        .tab-btn:hover { background-color: #f9fafb; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .view-mode-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; border: 2px solid #e5e7eb; }
+        .view-mode-btn:hover { background-color: #f3f4f6; }
+        .view-mode-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm" id="pageHeader">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-3xl font-bold" id="projectTitle" style="color: #3b82f6;">Wave Manager</h1>
+                    <p class="text-sm text-gray-500 mt-1">Project Wave & Enhancement Tracking</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-500" id="lastUpdated"></div>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        Refresh
+                    </button>
+                    <button onclick="shutdownServer()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
+                        Shutdown Server
+                    </button>
+                </div>
+            </div>
+
+            <!-- View Mode Toggle -->
+            <div class="flex items-center gap-4 mb-6">
+                <div class="text-sm font-medium text-gray-700">View:</div>
+                <div class="flex gap-2">
+                    <button class="view-mode-btn active" data-view="waves" onclick="switchViewMode('waves')">Waves</button>
+                    <button class="view-mode-btn" data-view="phases" onclick="switchViewMode('phases')">All Enhancements</button>
+                </div>
+            </div>
+
+            <!-- Stats Summary -->
+            <div id="wavesStats" class="grid grid-cols-4 gap-4 mb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-gray-900" id="totalWavesCount">-</div>
+                    <div class="text-sm text-gray-600">Total Waves</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-700" id="completedWavesCount">-</div>
+                    <div class="text-sm text-green-600">Completed</div>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-blue-700" id="inProgressWavesCount">-</div>
+                    <div class="text-sm text-blue-600">In Progress</div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-yellow-700" id="plannedWavesCount">-</div>
+                    <div class="text-sm text-yellow-600">Planned</div>
+                </div>
+            </div>
+
+            <div id="phasesStats" class="grid grid-cols-4 gap-4 mb-6 hidden">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-gray-900" id="totalCount">-</div>
+                    <div class="text-sm text-gray-600">Total Enhancements</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-700" id="completedCount">-</div>
+                    <div class="text-sm text-green-600">Completed</div>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-blue-700" id="inProgressCount">-</div>
+                    <div class="text-sm text-blue-600">In Progress</div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-yellow-700" id="plannedCount">-</div>
+                    <div class="text-sm text-yellow-600">Planned</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div id="wavesFilters" class="space-y-3">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Status:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn active" data-filter="all" onclick="setWaveFilter('all')">All</button>
+                        <button class="filter-btn" data-filter="completed" onclick="setWaveFilter('completed')">Completed</button>
+                        <button class="filter-btn" data-filter="in-progress" onclick="setWaveFilter('in-progress')">In Progress</button>
+                        <button class="filter-btn" data-filter="planned" onclick="setWaveFilter('planned')">Planned</button>
+                    </div>
+                    <div class="ml-auto">
+                        <button id="toggleAllPhasesBtn" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition text-sm font-medium" onclick="toggleAllPhases()">
+                            Show All Phases
+                        </button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <input
+                        type="text"
+                        id="waveSearchInput"
+                        placeholder="Search waves..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="renderWaves()"
+                    />
+                </div>
+            </div>
+
+            <div id="phasesFilters" class="space-y-3 hidden">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Status:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn active" data-filter="all" onclick="setPhaseFilter('all')">All</button>
+                        <button class="filter-btn" data-filter="completed" onclick="setPhaseFilter('completed')">Completed</button>
+                        <button class="filter-btn" data-filter="in-progress" onclick="setPhaseFilter('in-progress')">In Progress</button>
+                        <button class="filter-btn" data-filter="planned" onclick="setPhaseFilter('planned')">Planned</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Sort by:</div>
+                    <select id="sortSelect" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" onchange="renderPhases()">
+                        <option value="number-desc">Number (Newest First)</option>
+                        <option value="number-asc">Number (Oldest First)</option>
+                        <option value="status">Status</option>
+                        <option value="title">Title (A-Z)</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="phaseSearchInput"
+                        placeholder="Search enhancements..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        oninput="renderPhases()"
+                    />
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Waves View -->
+        <div id="wavesView">
+            <div id="wavesContainer">
+                <!-- Wave cards will be inserted here -->
+            </div>
+            <div id="wavesEmptyState" class="text-center py-12 hidden">
+                <p class="text-gray-500 text-lg">No waves found</p>
+                <p class="text-gray-400 text-sm mt-2">Waves allow you to group related enhancements together. Create waves in context/waves/</p>
+            </div>
+        </div>
+
+        <!-- Phases View -->
+        <div id="phasesView" class="hidden">
+            <div id="phasesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Phase cards will be inserted here -->
+            </div>
+            <div id="phasesEmptyState" class="text-center py-12 hidden">
+                <p class="text-gray-500 text-lg">No enhancements found</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Wave Detail Modal -->
+    <div id="waveModal" class="modal">
+        <div class="modal-content w-full max-w-5xl m-4">
+            <div class="border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h2 class="text-2xl font-bold text-gray-900" id="waveModalTitle"></h2>
+                    <button onclick="closeWaveModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-t border-gray-200 px-6">
+                    <button class="tab-btn active" onclick="switchWaveTab('view')">View</button>
+                    <button class="tab-btn" onclick="switchWaveTab('commits')">Commits</button>
+                </div>
+            </div>
+
+            <!-- View Tab -->
+            <div id="waveViewTab" class="tab-content active">
+                <div class="px-6 py-4">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="waveModalStatus" class="status-badge"></span>
+                        <span class="text-sm text-gray-600" id="waveModalMetadata"></span>
+                    </div>
+                    <div id="waveModalContent" class="markdown-content prose max-w-none"></div>
+                </div>
+            </div>
+
+            <!-- Commits Tab -->
+            <div id="waveCommitsTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div id="waveCommitsContent">
+                        <!-- Commits will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content w-full max-w-5xl m-4">
+            <div class="border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h2 class="text-2xl font-bold text-gray-900" id="modalTitle"></h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-t border-gray-200 px-6">
+                    <button class="tab-btn active" onclick="switchTab('view')">View</button>
+                    <button class="tab-btn" onclick="switchTab('edit')">Edit</button>
+                    <button class="tab-btn" onclick="switchTab('commits')">Commits</button>
+                </div>
+            </div>
+
+            <!-- View Tab -->
+            <div id="viewTab" class="tab-content active">
+                <div class="px-6 py-4">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="modalStatus" class="status-badge"></span>
+                        <span class="text-sm text-gray-600" id="modalMetadata"></span>
+                    </div>
+                    <div id="modalContent" class="markdown-content prose max-w-none"></div>
+                </div>
+            </div>
+
+            <!-- Edit Tab -->
+            <div id="editTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="📋 PLANNED">📋 PLANNED</option>
+                            <option value="🔄 IN PROGRESS">🔄 IN PROGRESS</option>
+                            <option value="✅ COMPLETED">✅ COMPLETED</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea
+                            id="contentEditor"
+                            class="w-full h-96 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="savePhase()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            Save Changes
+                        </button>
+                        <button onclick="closeModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commits Tab -->
+            <div id="commitsTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div id="commitsContent">
+                        <!-- Commits will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let waves = [];
+        let phases = [];
+        let currentPhase = null;
+        let currentViewMode = 'waves';
+        let waveFilter = 'all';
+        let phaseFilter = 'all';
+        let phaseSort = 'number-desc';
+        let allPhasesVisible = false; // Track global phase visibility state
+
+        // Load project configuration for branding
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+
+                // Update page title
+                const titleEl = document.getElementById('projectTitle');
+                if (titleEl && config.projectName) {
+                    titleEl.textContent = `${config.projectName} - Wave Manager`;
+                    titleEl.style.color = config.projectColor || '#3b82f6';
+                }
+
+                // Update browser tab title
+                document.title = `${config.projectName} - Wave Manager`;
+            } catch (error) {
+                console.error('Failed to load config:', error);
+                // Fallback to default
+                document.title = 'Wave Manager';
+            }
+        }
+
+        // Initialize
+        async function init() {
+            await loadConfig();
+            await loadWaves();
+            await loadPhases();
+            linkPhasesToWaves();  // Link AFTER both are loaded
+            renderWaves();
+            updateLastUpdated();
+        }
+
+        // Load waves from API
+        async function loadWaves() {
+            try {
+                const response = await fetch('/api/waves');
+                const data = await response.json();
+                waves = data.waves || [];
+                updateWavesStats();
+            } catch (error) {
+                console.error('Failed to load waves:', error);
+                waves = [];
+            }
+        }
+
+        // Load phases from API
+        async function loadPhases() {
+            try {
+                const response = await fetch('/api/enhancements');
+                const data = await response.json();
+                phases = data.enhancements || [];
+                updatePhasesStats();
+            } catch (error) {
+                console.error('Failed to load phases:', error);
+                phases = [];
+            }
+        }
+
+        // Link phases to waves using phase_ids
+        function linkPhasesToWaves() {
+            waves.forEach(wave => {
+                if (wave.phase_ids && Array.isArray(wave.phase_ids)) {
+                    // Look up full phase objects from global phases array
+                    wave.phases = wave.phase_ids.map(id => {
+                        return phases.find(p => p.id === id);
+                    }).filter(p => p !== undefined); // Filter out any not found
+                } else {
+                    wave.phases = [];
+                }
+            });
+        }
+
+        // Update waves statistics
+        function updateWavesStats() {
+            const total = waves.length;
+            const completed = waves.filter(w => w.status.includes('✅')).length;
+            const inProgress = waves.filter(w => w.status.includes('🔄')).length;
+            const planned = waves.filter(w => w.status.includes('📋')).length;
+
+            document.getElementById('totalWavesCount').textContent = total;
+            document.getElementById('completedWavesCount').textContent = completed;
+            document.getElementById('inProgressWavesCount').textContent = inProgress;
+            document.getElementById('plannedWavesCount').textContent = planned;
+        }
+
+        // Update phases statistics
+        function updatePhasesStats() {
+            const total = phases.length;
+            const completed = phases.filter(p => p.status.includes('✅')).length;
+            const inProgress = phases.filter(p => p.status.includes('🔄')).length;
+            const planned = phases.filter(p => p.status.includes('📋')).length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('completedCount').textContent = completed;
+            document.getElementById('inProgressCount').textContent = inProgress;
+            document.getElementById('plannedCount').textContent = planned;
+        }
+
+        // Update last updated timestamp
+        function updateLastUpdated() {
+            document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleString()}`;
+        }
+
+        // Switch view mode between waves and phases
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+
+            // Update buttons
+            document.querySelectorAll('.view-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === mode);
+            });
+
+            // Toggle views
+            document.getElementById('wavesView').classList.toggle('hidden', mode !== 'waves');
+            document.getElementById('phasesView').classList.toggle('hidden', mode !== 'phases');
+
+            // Toggle stats
+            document.getElementById('wavesStats').classList.toggle('hidden', mode !== 'waves');
+            document.getElementById('phasesStats').classList.toggle('hidden', mode !== 'phases');
+
+            // Toggle filters
+            document.getElementById('wavesFilters').classList.toggle('hidden', mode !== 'waves');
+            document.getElementById('phasesFilters').classList.toggle('hidden', mode !== 'phases');
+
+            // Render appropriate view
+            if (mode === 'waves') {
+                renderWaves();
+            } else {
+                renderPhases();
+            }
+        }
+
+        // Set wave filter
+        function setWaveFilter(filter) {
+            waveFilter = filter;
+            document.querySelectorAll('#wavesFilters .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderWaves();
+        }
+
+        // Set phase filter
+        function setPhaseFilter(filter) {
+            phaseFilter = filter;
+            document.querySelectorAll('#phasesFilters .filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.filter === filter);
+            });
+            renderPhases();
+        }
+
+        // Render waves view
+        async function renderWaves() {
+            const container = document.getElementById('wavesContainer');
+            const emptyState = document.getElementById('wavesEmptyState');
+            const searchInput = document.getElementById('waveSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            // Filter waves
+            let filtered = waves.filter(w => {
+                // Status filter
+                if (waveFilter !== 'all') {
+                    if (waveFilter === 'completed' && !w.status.includes('✅')) return false;
+                    if (waveFilter === 'in-progress' && !w.status.includes('🔄')) return false;
+                    if (waveFilter === 'planned' && !w.status.includes('📋')) return false;
+                }
+
+                // Search filter
+                if (searchTerm) {
+                    const matchTitle = w.title.toLowerCase().includes(searchTerm);
+                    const matchName = w.name.toLowerCase().includes(searchTerm);
+                    const matchGoal = w.goal && w.goal.toLowerCase().includes(searchTerm);
+                    if (!matchTitle && !matchName && !matchGoal) return false;
+                }
+
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            // Fetch full wave details with phases for each wave
+            const wavePromises = filtered.map(async wave => {
+                try {
+                    const response = await fetch(`/api/waves/${wave.id}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error(`Failed to load wave ${wave.id}:`, error);
+                    return wave;
+                }
+            });
+
+            const fullWaves = await Promise.all(wavePromises);
+
+            container.innerHTML = fullWaves.map(w => createWaveCard(w)).join('');
+        }
+
+        // Create wave card HTML
+        function createWaveCard(wave) {
+            const statusClass =
+                wave.status.includes('✅') ? 'status-completed' :
+                wave.status.includes('🔄') ? 'status-in-progress' :
+                'status-planned';
+
+            // Use phase_mappings if available, otherwise use sequential numbering
+            let phasesList = '';
+            if (wave.phase_mappings && wave.phase_mappings.length > 0) {
+                // Build lookup map of enhancement ID to phase label and name
+                const enhToPhase = {};
+                const enhToPhaseName = {};
+                wave.phase_mappings.forEach(mapping => {
+                    mapping.enhancements.forEach(enhId => {
+                        enhToPhase[enhId] = mapping.phase;
+                        enhToPhaseName[enhId] = mapping.name || null;
+                    });
+                });
+
+                phasesList = (wave.phases || []).map(p => {
+                    const phaseLabel = enhToPhase[p.id] || (wave.phases.indexOf(p) + 1);
+                    const phaseName = enhToPhaseName[p.id] || null;
+                    return createPhaseCardInWave(p, phaseLabel, phaseName);
+                }).join('');
+            } else {
+                // Fall back to sequential numbering
+                phasesList = (wave.phases || []).map((p, index) => createPhaseCardInWave(p, index + 1, null)).join('');
+            }
+
+            const phaseCount = wave.phases ? wave.phases.length : 0;
+            const completedPhases = wave.phases ? wave.phases.filter(p => p.status.includes('✅')).length : 0;
+
+            // Collect all commits from all phases
+            const allCommits = [];
+            (wave.phases || []).forEach(phase => {
+                const commits = phase.commits || [];
+                const githubUrls = phase.github_urls || [];
+                commits.forEach((sha, index) => {
+                    allCommits.push({
+                        sha: sha,
+                        url: githubUrls[index] || '',
+                        enhancementId: phase.id
+                    });
+                });
+            });
+
+            const commitsList = allCommits.map(commit => {
+                return commit.url
+                    ? `<a href="${commit.url}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 font-mono text-xs">${commit.sha}</a>`
+                    : `<span class="text-gray-600 font-mono text-xs">${commit.sha}</span>`;
+            }).join(', ');
+
+            return `
+                <div class="wave-card">
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h2 class="text-2xl font-bold text-gray-900">Wave ${wave.id}: ${wave.name}</h2>
+                                <span class="status-badge ${statusClass}">
+                                    ${wave.status.replace(/[📋🔄✅]/g, '').trim()}
+                                </span>
+                            </div>
+                            ${wave.goal ? `<div class="text-gray-700 mb-3 markdown-content prose-sm max-w-none">${renderMarkdown(wave.goal)}</div>` : ''}
+                            <div class="flex items-center gap-4 text-sm text-gray-500">
+                                ${wave.start_date ? `<span>Start: ${wave.start_date}</span>` : ''}
+                                ${wave.end_date ? `<span>End: ${wave.end_date}</span>` : ''}
+                                <span class="font-semibold">${completedPhases}/${phaseCount} phases completed</span>
+                            </div>
+                            ${allCommits.length > 0 ? `
+                                <div class="mt-2 text-xs text-gray-600">
+                                    <span class="font-semibold">Commits (${allCommits.length}):</span> ${commitsList}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <button onclick="openWave(${wave.id})" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium">
+                            View Details
+                        </button>
+                    </div>
+
+                    ${phaseCount > 0 ? `
+                        <div class="mt-4 pt-4 border-t border-gray-200">
+                            <button class="w-full flex items-center justify-between cursor-pointer hover:bg-gray-100 -mx-2 px-3 py-2 rounded-lg transition-colors group" onclick="togglePhases(${wave.id})">
+                                <h3 class="text-base font-semibold text-gray-700 group-hover:text-gray-900">Phases (${phaseCount})</h3>
+                                <svg id="chevron-${wave.id}" class="w-6 h-6 text-gray-500 group-hover:text-gray-700 transition-transform" style="transform: rotate(-90deg);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div id="phases-${wave.id}" class="space-y-2 mt-3" style="display: none;">
+                                ${phasesList}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="mt-4 pt-4 border-t border-gray-200 text-center text-gray-400 text-sm">
+                            No phases assigned to this wave
+                        </div>
+                    `}
+                </div>
+            `;
+        }
+
+        // Create phase card within wave (using local phase numbering)
+        function createPhaseCardInWave(phase, localPhaseNumber, phaseName) {
+            const statusClass =
+                phase.status.includes('✅') ? 'status-completed' :
+                phase.status.includes('🔄') ? 'status-in-progress' :
+                'status-planned';
+
+            const priorityClass =
+                phase.priority && phase.priority.includes('Critical') ? 'priority-critical' :
+                phase.priority && phase.priority.includes('High') ? 'priority-high' :
+                phase.priority && phase.priority.includes('Medium') ? 'priority-medium' :
+                phase.priority && phase.priority.includes('Low') ? 'priority-low' :
+                '';
+
+            const priorityText = phase.priority ? phase.priority.split('|')[0].trim() : '';
+
+            // Build commits list
+            const commits = phase.commits || [];
+            const githubUrls = phase.github_urls || [];
+            const commitsList = commits.length > 0 ? commits.map((sha, index) => {
+                const url = githubUrls[index] || '';
+                return url
+                    ? `<a href="${url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-blue-600 hover:text-blue-800 font-mono text-xs">${sha}</a>`
+                    : `<span class="text-gray-600 font-mono text-xs">${sha}</span>`;
+            }).join(', ') : '';
+
+            // Clean up title - remove "Wave X Phase Y - " or "Wave X - " prefix since it's redundant in this context
+            // Keep "Enhancement X:" since that's the unique global identifier
+            let cleanTitle = phase.title;
+            cleanTitle = cleanTitle.replace(/Wave \d+ Phase [0-9A-Z]+\s*-\s*/, ''); // Remove "Wave X Phase Y - "
+            cleanTitle = cleanTitle.replace(/Wave \d+\s*-\s*/, ''); // Remove "Wave X - "
+            cleanTitle = cleanTitle.replace(/:\s*-\s*/, ': '); // Clean up "Enhancement X: - Description" to "Enhancement X: Description"
+            cleanTitle = cleanTitle.trim(); // Clean up whitespace
+
+            // Format phase label with name if available
+            const phaseLabel = phaseName ? `Phase ${localPhaseNumber}: ${phaseName}` : `Phase ${localPhaseNumber}`;
+
+            return `
+                <div class="phase-card" onclick="openPhase(${phase.id})">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-sm font-semibold text-gray-700">${phaseLabel}</span>
+                                ${priorityClass ? `<span class="priority-badge ${priorityClass}">${priorityText}</span>` : ''}
+                                <span class="status-badge ${statusClass} text-xs">
+                                    ${phase.status.replace(/[📋🔄✅]/g, '').trim()}
+                                </span>
+                            </div>
+                            <div class="text-sm font-medium text-gray-900 mb-1">${cleanTitle}</div>
+                            ${commitsList ? `<div class="text-xs text-gray-600">Commits: ${commitsList}</div>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Render phases view
+        function renderPhases() {
+            const grid = document.getElementById('phasesGrid');
+            const emptyState = document.getElementById('phasesEmptyState');
+            const searchInput = document.getElementById('phaseSearchInput');
+            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+            // Get current sort value from dropdown
+            const sortSelect = document.getElementById('sortSelect');
+            if (sortSelect) {
+                phaseSort = sortSelect.value;
+            }
+
+            // Filter phases
+            let filtered = phases.filter(p => {
+                // Status filter
+                if (phaseFilter !== 'all') {
+                    if (phaseFilter === 'completed' && !p.status.includes('✅')) return false;
+                    if (phaseFilter === 'in-progress' && !p.status.includes('🔄')) return false;
+                    if (phaseFilter === 'planned' && !p.status.includes('📋')) return false;
+                }
+
+                // Search filter
+                if (searchTerm) {
+                    const matchTitle = p.title.toLowerCase().includes(searchTerm);
+                    const matchSummary = p.summary && p.summary.toLowerCase().includes(searchTerm);
+                    if (!matchTitle && !matchSummary) return false;
+                }
+
+                return true;
+            });
+
+            // Sort phases
+            if (phaseSort === 'number-desc') {
+                filtered.sort((a, b) => b.id - a.id);
+            } else if (phaseSort === 'number-asc') {
+                filtered.sort((a, b) => a.id - b.id);
+            } else if (phaseSort === 'status') {
+                filtered.sort((a, b) => {
+                    const aStatus = a.status.includes('✅') ? 0 : a.status.includes('🔄') ? 1 : 2;
+                    const bStatus = b.status.includes('✅') ? 0 : b.status.includes('🔄') ? 1 : 2;
+                    if (aStatus !== bStatus) return aStatus - bStatus;
+                    return b.id - a.id;
+                });
+            } else if (phaseSort === 'title') {
+                filtered.sort((a, b) => a.title.localeCompare(b.title));
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(p => createPhaseCard(p)).join('');
+        }
+
+        // Create standalone phase card HTML
+        function createPhaseCard(phase) {
+            // Extract wave and phase info from the title
+            let waveInfo = '';
+            let phaseInfo = '';
+            let cleanTitle = phase.title;
+
+            // Extract wave number (always present)
+            const waveMatch = cleanTitle.match(/Wave (\d+)/);
+            if (waveMatch) {
+                waveInfo = `Wave ${waveMatch[1]}`;
+            }
+
+            // Extract phase number/label - handle both "Phase X" and "Phases X-Y"
+            const phaseMatchSingular = cleanTitle.match(/Phase ([0-9A-Z]+)(?:\s|$|-)/);
+            const phaseMatchPlural = cleanTitle.match(/Phases ([0-9A-Z\-]+)(?:\s|$|-)/);
+
+            if (phaseMatchPlural) {
+                // "Phases 9-11" or similar
+                phaseInfo = `Phase ${phaseMatchPlural[1]}`;
+            } else if (phaseMatchSingular) {
+                // "Phase 5" or "Phase 1A"
+                phaseInfo = `Phase ${phaseMatchSingular[1]}`;
+            }
+
+            // Clean the title - remove all Wave/Phase prefixes
+            cleanTitle = cleanTitle.replace(/^Enhancement \d+:\s*/, ''); // Remove "Enhancement X: "
+            cleanTitle = cleanTitle.replace(/Wave \d+ Phases? [0-9A-Z\-]+\s*-\s*/, ''); // Remove "Wave X Phase(s) Y - "
+            cleanTitle = cleanTitle.replace(/Wave \d+\s*-\s*/, ''); // Remove "Wave X - "
+            cleanTitle = cleanTitle.replace(/^\s*-\s*/, ''); // Remove any leading dash
+            cleanTitle = cleanTitle.trim();
+
+            // Build commits list
+            const commits = phase.commits || [];
+            const githubUrls = phase.github_urls || [];
+            const commitsList = commits.length > 0 ? commits.map((sha, index) => {
+                const url = githubUrls[index] || '';
+                return url
+                    ? `<a href="${url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-blue-600 hover:text-blue-800 font-mono text-xs">${sha}</a>`
+                    : `<span class="text-gray-600 font-mono text-xs">${sha}</span>`;
+            }).join(', ') : '';
+
+            // Build wave/phase info line
+            const contextInfo = [waveInfo, phaseInfo].filter(x => x).join(', ');
+
+            return `
+                <div class="border border-gray-200 rounded-lg p-3 bg-white hover:shadow-lg transition cursor-pointer" onclick="openPhase(${phase.id})">
+                    <div class="text-xs font-semibold text-gray-600 mb-1">Enhancement ${phase.id}${contextInfo ? ': ' + contextInfo : ''}</div>
+                    <div class="text-sm font-medium text-gray-900 mb-1">${cleanTitle}</div>
+                    ${commitsList ? `<div class="text-xs text-gray-600">Commits: ${commitsList}</div>` : ''}
+                </div>
+            `;
+        }
+
+        // Open phase detail modal
+        async function openPhase(id) {
+            try {
+                const response = await fetch(`/api/enhancements/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentPhase = data;
+
+                // Update modal
+                document.getElementById('modalTitle').textContent = `Enhancement ${id}`;
+
+                const statusClass =
+                    data.metadata.status.includes('✅') ? 'status-completed' :
+                    data.metadata.status.includes('🔄') ? 'status-in-progress' :
+                    'status-planned';
+
+                const statusBadge = document.getElementById('modalStatus');
+                statusBadge.textContent = data.metadata.status.replace(/[📋🔄✅]/g, '').trim();
+                statusBadge.className = `status-badge ${statusClass}`;
+
+                const metadata = [];
+                if (data.metadata.priority) metadata.push(`Priority: ${data.metadata.priority}`);
+                if (data.metadata.complexity) metadata.push(`Complexity: ${data.metadata.complexity}`);
+                if (data.metadata.created) metadata.push(`Created: ${data.metadata.created}`);
+                document.getElementById('modalMetadata').textContent = metadata.join(' • ');
+
+                // Render markdown
+                let html = marked.parse ? marked.parse(data.content) : marked(data.content);
+                if (typeof DOMPurify !== 'undefined') {
+                    html = DOMPurify.sanitize(html);
+                }
+                document.getElementById('modalContent').innerHTML = html;
+
+                // Setup edit tab
+                document.getElementById('statusSelect').value = data.metadata.status;
+                document.getElementById('contentEditor').value = data.content;
+
+                // Show modal
+                document.getElementById('detailModal').classList.add('active');
+                switchTab('view');
+            } catch (error) {
+                console.error('Failed to load phase:', error);
+                alert('Failed to load phase details: ' + error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            currentPhase = null;
+        }
+
+        // Open wave detail modal
+        let currentWave = null;
+
+        async function openWave(id) {
+            try {
+                const response = await fetch(`/api/waves/${id}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                currentWave = data;
+
+                // Update modal
+                document.getElementById('waveModalTitle').textContent = `Wave ${id}: ${data.name}`;
+
+                const statusClass =
+                    data.status.includes('✅') ? 'status-completed' :
+                    data.status.includes('🔄') ? 'status-in-progress' :
+                    'status-planned';
+
+                const statusBadge = document.getElementById('waveModalStatus');
+                statusBadge.textContent = data.status.replace(/[📋🔄✅]/g, '').trim();
+                statusBadge.className = `status-badge ${statusClass}`;
+
+                const metadata = [];
+                if (data.start_date) metadata.push(`<div>Start: ${data.start_date}</div>`);
+                if (data.end_date) metadata.push(`<div>End: ${data.end_date}</div>`);
+                const phaseCount = data.phases ? data.phases.length : 0;
+                const completedPhases = data.phases ? data.phases.filter(p => p.status.includes('✅')).length : 0;
+                metadata.push(`<div>${completedPhases}/${phaseCount} phases completed</div>`);
+                document.getElementById('waveModalMetadata').innerHTML = metadata.join('');
+
+                // Preprocess content to add line breaks after frontmatter fields
+                let processedContent = data.content;
+                // Add double spaces (markdown line breaks) after lines that start with **Field**:
+                processedContent = processedContent.replace(/(\*\*[^*]+\*\*:[^\n]+)(?=\n\*\*)/g, '$1  ');
+
+                // Render markdown
+                let html = marked.parse ? marked.parse(processedContent) : marked(processedContent);
+                if (typeof DOMPurify !== 'undefined') {
+                    html = DOMPurify.sanitize(html);
+                }
+                document.getElementById('waveModalContent').innerHTML = html;
+
+                // Show modal
+                document.getElementById('waveModal').classList.add('active');
+                switchWaveTab('view');
+            } catch (error) {
+                console.error('Failed to load wave:', error);
+                alert('Failed to load wave details: ' + error.message);
+            }
+        }
+
+        // Close wave modal
+        function closeWaveModal() {
+            document.getElementById('waveModal').classList.remove('active');
+            currentWave = null;
+        }
+
+        // Switch tabs in wave modal
+        function switchWaveTab(tab) {
+            document.querySelectorAll('#waveModal .tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#waveModal .tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'view') {
+                document.querySelector('#waveModal [onclick="switchWaveTab(\'view\')"]').classList.add('active');
+                document.getElementById('waveViewTab').classList.add('active');
+            } else if (tab === 'commits') {
+                document.querySelector('#waveModal [onclick="switchWaveTab(\'commits\')"]').classList.add('active');
+                document.getElementById('waveCommitsTab').classList.add('active');
+                renderWaveCommits();
+            }
+        }
+
+        // Render commits for wave (aggregated from all enhancements)
+        function renderWaveCommits() {
+            const commitsContent = document.getElementById('waveCommitsContent');
+
+            if (!currentWave || !currentWave.phases) {
+                commitsContent.innerHTML = '<p class="text-gray-500">No wave data loaded.</p>';
+                return;
+            }
+
+            // Aggregate all commits from all enhancements in this wave
+            const allCommits = [];
+            currentWave.phases.forEach(phase => {
+                const commits = phase.commits || [];
+                const githubUrls = phase.github_urls || [];
+                commits.forEach((sha, index) => {
+                    allCommits.push({
+                        sha: sha,
+                        url: githubUrls[index] || '',
+                        enhancementId: phase.id,
+                        enhancementTitle: phase.title
+                    });
+                });
+            });
+
+            if (allCommits.length === 0) {
+                commitsContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No commits found for this wave.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const commitsList = allCommits.map(commit => {
+                return `
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex items-center gap-3">
+                                ${commit.url ? `
+                                    <a href="${commit.url}" target="_blank" rel="noopener noreferrer"
+                                       class="text-blue-600 hover:text-blue-800 font-mono text-sm font-semibold">
+                                        ${commit.sha}
+                                    </a>
+                                ` : `
+                                    <span class="text-gray-700 font-mono text-sm font-semibold">${commit.sha}</span>
+                                `}
+                                ${commit.url ? '<span class="text-xs text-gray-500">View on GitHub</span>' : ''}
+                            </div>
+                            <button onclick="openPhase(${commit.enhancementId})"
+                                    class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                                Enhancement ${commit.enhancementId}
+                            </button>
+                        </div>
+                        <div class="text-sm text-gray-600 ml-1">${commit.enhancementTitle}</div>
+                    </div>
+                `;
+            }).join('');
+
+            commitsContent.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Git Commits</h3>
+                    <p class="text-sm text-gray-600 mb-4">${allCommits.length} commit${allCommits.length > 1 ? 's' : ''} across ${currentWave.phases.length} phase${currentWave.phases.length > 1 ? 's' : ''}</p>
+                </div>
+                ${commitsList}
+            `;
+        }
+
+        // Switch tabs in modal
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'view') {
+                document.querySelector('[onclick="switchTab(\'view\')"]').classList.add('active');
+                document.getElementById('viewTab').classList.add('active');
+            } else if (tab === 'edit') {
+                document.querySelector('[onclick="switchTab(\'edit\')"]').classList.add('active');
+                document.getElementById('editTab').classList.add('active');
+            } else if (tab === 'commits') {
+                document.querySelector('[onclick="switchTab(\'commits\')"]').classList.add('active');
+                document.getElementById('commitsTab').classList.add('active');
+                renderCommits();
+            }
+        }
+
+        // Render commits
+        function renderCommits() {
+            const commitsContent = document.getElementById('commitsContent');
+
+            if (!currentPhase || !currentPhase.metadata) {
+                commitsContent.innerHTML = '<p class="text-gray-500">No phase data loaded.</p>';
+                return;
+            }
+
+            const commits = currentPhase.metadata.commits || [];
+            const githubUrls = currentPhase.metadata.github_urls || [];
+
+            if (commits.length === 0) {
+                commitsContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No commits found for this enhancement.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const commitsList = commits.map((sha, index) => {
+                const url = githubUrls[index] || '';
+                return `
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer"
+                               class="text-blue-600 hover:text-blue-800 font-mono text-sm font-semibold">
+                                ${sha}
+                            </a>
+                            <span class="text-xs text-gray-500">View on GitHub</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            commitsContent.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Git Commits</h3>
+                    <p class="text-sm text-gray-600 mb-4">${commits.length} commit${commits.length > 1 ? 's' : ''} found</p>
+                </div>
+                ${commitsList}
+            `;
+        }
+
+        // Save phase
+        async function savePhase() {
+            if (!currentPhase) return;
+
+            const newStatus = document.getElementById('statusSelect').value;
+            const newContent = document.getElementById('contentEditor').value;
+
+            try {
+                // Update content
+                await fetch(`/api/enhancements/${currentPhase.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: newContent })
+                });
+
+                // Update status if changed
+                if (newStatus !== currentPhase.metadata.status) {
+                    const completedDate = newStatus === '✅ COMPLETED' ?
+                        new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : null;
+                    await fetch(`/api/enhancements/${currentPhase.id}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ status: newStatus, completed_date: completedDate })
+                    });
+                }
+
+                alert('Phase saved successfully!');
+                closeModal();
+                await refreshData();
+            } catch (error) {
+                console.error('Failed to save phase:', error);
+                alert('Failed to save phase: ' + error.message);
+            }
+        }
+
+        // Refresh all data
+        async function refreshData() {
+            await loadWaves();
+            await loadPhases();
+            linkPhasesToWaves();  // Link AFTER both are loaded
+            if (currentViewMode === 'waves') {
+                renderWaves();
+            } else {
+                renderPhases();
+            }
+            updateLastUpdated();
+        }
+
+        // Shutdown server
+        async function shutdownServer() {
+            if (!confirm('Are you sure you want to shutdown the server?')) {
+                return;
+            }
+
+            try {
+                await fetch('/api/shutdown', { method: 'POST' });
+                alert('Server is shutting down. You can close this tab.');
+                setTimeout(() => window.close(), 2000);
+            } catch (error) {
+                alert('Server has been shutdown. You can close this tab.');
+            }
+        }
+
+        // Initialize on load
+        init();
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeWaveModal();
+            }
+        });
+
+        // Close modal on background click
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target.id === 'detailModal') closeModal();
+        });
+
+        // Close wave modal on background click
+        document.getElementById('waveModal').addEventListener('click', (e) => {
+            if (e.target.id === 'waveModal') closeWaveModal();
+        });
+
+        // Toggle phases visibility in wave cards
+        // Helper function to render markdown safely
+        function renderMarkdown(text) {
+            if (!text) return '';
+            let html = marked.parse ? marked.parse(text) : marked(text);
+            if (typeof DOMPurify !== 'undefined') {
+                html = DOMPurify.sanitize(html);
+            }
+            return html;
+        }
+
+        function togglePhases(waveId) {
+            const phasesDiv = document.getElementById(`phases-${waveId}`);
+            const chevron = document.getElementById(`chevron-${waveId}`);
+
+            if (phasesDiv.style.display === 'none') {
+                phasesDiv.style.display = 'block';
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                phasesDiv.style.display = 'none';
+                chevron.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        // Toggle all phases visibility across all wave cards
+        function toggleAllPhases() {
+            const button = document.getElementById('toggleAllPhasesBtn');
+
+            // Toggle the global state
+            allPhasesVisible = !allPhasesVisible;
+
+            // Find all phase divs and chevrons
+            const allPhasesDivs = document.querySelectorAll('[id^="phases-"]');
+            const allChevrons = document.querySelectorAll('[id^="chevron-"]');
+
+            if (allPhasesVisible) {
+                // Show all phases
+                allPhasesDivs.forEach(div => {
+                    div.style.display = 'block';
+                });
+                allChevrons.forEach(chevron => {
+                    chevron.style.transform = 'rotate(0deg)';
+                });
+                button.textContent = 'Hide All Phases';
+                button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+                button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            } else {
+                // Hide all phases
+                allPhasesDivs.forEach(div => {
+                    div.style.display = 'none';
+                });
+                allChevrons.forEach(chevron => {
+                    chevron.style.transform = 'rotate(-90deg)';
+                });
+                button.textContent = 'Show All Phases';
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-gray-600', 'hover:bg-gray-700');
+            }
+        }
+    </script>
+</body>
+</html>
