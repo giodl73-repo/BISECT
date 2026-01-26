@@ -1,11 +1,14 @@
 # Enhancement 61: Run Management API
 
-**Status**: PLANNED
+**Status**: ✅ COMPLETED
 **Wave**: Wave 9 (API-MIGRATION)
 **Priority**: High
 **Estimated Complexity**: Medium
 **Estimated Hours**: 16-20 hours
+**Actual Hours**: ~6 hours
 **Created**: 2026-01-25
+**Completed**: January 25, 2026
+**Commits**: (To be added after git commit)
 
 ---
 
@@ -654,4 +657,116 @@ async def test_create_run_endpoint(client, db):
 
 ---
 
-**Enhancement 61 Summary**: Implement database schema and core API endpoints for run management with metadata-only storage and polling-based progress tracking.
+## Implementation Summary
+
+**Completion Date**: January 25, 2026
+
+**What Was Built**:
+- **Database Models** (backend/app/models/run.py):
+  - Run model with JSON config/progress columns
+  - RunYear model for per-year progress tracking
+  - RunStatus enum for status management
+  - Proper indexes for common query patterns
+- **Pydantic Schemas** (backend/app/schemas/run.py):
+  - RunCreate request schema with field validation
+  - RunResponse, RunDetailResponse, RunListResponse
+  - RunProgressResponse for polling endpoint
+  - StateConfigResponse for state configuration
+- **Service Layer** (backend/app/services/run_service.py):
+  - create_run, get_run, list_runs with filtering
+  - update_run_status, update_run_progress, update_run_pid
+  - delete_run (metadata only)
+  - Query optimization with eager loading
+- **API Endpoints** (backend/app/api/routes/runs.py):
+  - POST /api/v1/runs - Create new run
+  - GET /api/v1/runs - List with filtering (status, year, version) and pagination
+  - GET /api/v1/runs/{id} - Get run details with year tracking
+  - DELETE /api/v1/runs/{id} - Delete run metadata
+  - GET /api/v1/runs/{id}/progress - Progress polling endpoint
+  - GET /api/v1/runs/config/states - State configuration by year
+- **State Configuration** (backend/app/constants/states.py):
+  - 50-state configuration for 2000, 2010, 2020
+  - District counts and FIPS codes
+
+**Files Created**:
+- `backend/app/models/run.py` - SQLAlchemy models (Run, RunYear, RunStatus)
+- `backend/app/schemas/run.py` - Pydantic request/response schemas
+- `backend/app/services/__init__.py` - Service layer package
+- `backend/app/services/run_service.py` - Business logic for run management
+- `backend/app/api/routes/runs.py` - REST API endpoints
+- `backend/app/constants/__init__.py` - Constants package
+- `backend/app/constants/states.py` - State configuration data
+- `backend/tests/test_run_service.py` - 13 service layer tests
+- `backend/tests/test_run_api.py` - 16 API endpoint tests
+
+**Files Modified**:
+- `backend/app/models/__init__.py` - Export Run, RunYear, RunStatus
+- `backend/app/schemas/__init__.py` - Export all run schemas
+- `backend/app/main.py` - Register runs router, enable table creation
+
+**Testing Results**:
+- **37 tests passing** (8 from E60 + 29 new for E61)
+- **100% pass rate** in ~0.6 seconds
+- Service tests (13):
+  - create_run, create_run_multiple_years
+  - get_run, get_run_not_found
+  - list_runs, list_runs_with_status_filter, list_runs_with_version_filter, list_runs_pagination
+  - update_run_status, update_run_status_with_error
+  - update_run_progress
+  - delete_run, delete_run_not_found
+- API tests (16):
+  - create_run_endpoint
+  - Validation tests (empty_version, invalid_year, empty_years, workers_range)
+  - list_runs_endpoint, list_runs_with_status_filter, list_runs_pagination
+  - get_run_endpoint, get_run_not_found
+  - delete_run_endpoint, delete_run_not_found
+  - get_run_progress
+  - get_state_config_2020, get_state_config_2010, get_state_config_invalid_year
+
+**Technical Details**:
+- JSON columns for flexible config/progress (works with SQLite tests and PostgreSQL production)
+- Eager loading with joinedload for efficient queries
+- Pagination with offset/limit pattern
+- Progress polling optimized for 2-second intervals
+- ETA calculation based on elapsed time and progress rate
+
+**Database Schema**:
+```sql
+CREATE TABLE runs (
+    id SERIAL PRIMARY KEY,
+    version VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    config JSON NOT NULL,
+    progress JSON,
+    process_pid INTEGER,
+    created_at TIMESTAMP DEFAULT NOW(),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_message TEXT,
+    output_path VARCHAR(255)
+);
+
+CREATE TABLE run_years (
+    id SERIAL PRIMARY KEY,
+    run_id INTEGER REFERENCES runs(id) ON DELETE CASCADE,
+    year VARCHAR(4) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    states_completed INTEGER DEFAULT 0,
+    states_total INTEGER DEFAULT 50,
+    current_stage VARCHAR(50),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_message TEXT
+);
+```
+
+**Key Architectural Decisions**:
+- **Metadata-only storage**: District data stays in Parquet/CSV files, database only tracks run metadata
+- **JSON columns**: Flexible schema for config and progress without migrations
+- **Per-year tracking**: Enables detailed monitoring of multi-year pipeline execution
+- **Polling-based progress**: Simple HTTP polling (no WebSockets) for frontend updates
+- **State configuration in backend**: Eliminates dependency on scripts/ directory for API
+
+---
+
+**Enhancement 61 Summary**: Implemented complete database schema and REST API for run management with metadata-only storage, filtering, pagination, and progress tracking. All 29 tests passing.

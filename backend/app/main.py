@@ -14,7 +14,7 @@ from common_backend_utils.exceptions import AppException, create_exception_handl
 
 from app.config import settings
 from app.database import engine, Base
-from app.api.routes import health
+from app.api.routes import health, runs
 
 
 @asynccontextmanager
@@ -25,8 +25,9 @@ async def lifespan(app: FastAPI):
     Handles startup and shutdown events.
     """
     # Startup: Create database tables (in production, use Alembic migrations)
-    # For Enhancement 60, we don't have tables yet
-    # Base.metadata.create_all(bind=engine)
+    # For development, create tables automatically
+    # TODO: Use Alembic migrations in production
+    Base.metadata.create_all(bind=engine)
 
     yield
 
@@ -85,10 +86,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 # Register routers
 app.include_router(health.router, prefix="", tags=["Health"])
-
-# API v1 routes will be added in Enhancement 61
-# from app.api.routes import runs
-# app.include_router(runs.router, prefix="/api/v1", tags=["Runs"])
+app.include_router(runs.router, prefix="/api/v1/runs", tags=["Runs"])
 
 
 @app.get("/")
