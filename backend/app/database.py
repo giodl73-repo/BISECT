@@ -16,17 +16,29 @@ from app.config import settings
 # Create SQLAlchemy engine with connection pooling
 # For testing, this will be overridden in conftest.py
 try:
-    engine = create_engine(
-        settings.database_url,
-        pool_pre_ping=True,  # Verify connections before using
-        pool_size=5,
-        max_overflow=10,
-        echo=settings.debug,  # Log SQL queries in debug mode
-    )
+    # Check if using SQLite (requires special threading config)
+    if settings.database_url.startswith("sqlite"):
+        engine = create_engine(
+            settings.database_url,
+            connect_args={"check_same_thread": False},  # Required for FastAPI async
+            pool_pre_ping=True,
+            echo=settings.debug,
+        )
+    else:
+        engine = create_engine(
+            settings.database_url,
+            pool_pre_ping=True,  # Verify connections before using
+            pool_size=5,
+            max_overflow=10,
+            echo=settings.debug,  # Log SQL queries in debug mode
+        )
 except Exception:
     # During tests or when database is not available, create a dummy engine
     # Tests will override this in conftest.py
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite:///:memory:",
+        connect_args={"check_same_thread": False}
+    )
 
 # Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
