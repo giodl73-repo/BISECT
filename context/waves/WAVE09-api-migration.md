@@ -2,13 +2,38 @@
 
 **Date**: 2026-01-25 (Planned)
 **Focus**: Add FastAPI backend and React dashboard to existing pipeline without changing core functionality
-**Status**: PLANNED
-**Estimated Duration**: 4-6 weeks
+**Status**: APPROVED - PROCEED WITH CONTROLS
+**Estimated Duration**: 5-7 weeks (with buffer)
 **Enhancements**: 60, 61, 62, 63, 64
 **Phases**:
 - Phase 1: Enhancement 60 - Project Setup & Infrastructure (PLANNED)
 - Phase 2: Enhancements 61, 62 - Backend API & Pipeline Integration (PLANNED)
 - Phase 3: Enhancements 63, 64 - React Dashboard & Visualization (PLANNED)
+
+---
+
+## Management Summary
+
+**Executive Assessment**: Wave 9 represents a significant strategic investment to transform the Apportionment project from a CLI-only tool to a full web application with interactive dashboard capabilities.
+
+| Criterion | Rating | Notes |
+|-----------|--------|-------|
+| Strategic Value | **HIGH** | Expands user accessibility significantly |
+| Technical Feasibility | **GOOD** | Sound architecture, appropriate technology choices |
+| Timeline Realism | **MODERATE** | 5-7 weeks achievable with identified risks |
+| Resource Requirements | **REASONABLE** | Can be executed with 1-2 developers |
+| Risk Level | **MEDIUM-HIGH** | Enhancement 62 is critical path |
+| ROI Projection | **POSITIVE** | Long-term value exceeds investment |
+
+**Overall Score**: 8.1/10 - Strong plan, proceed with controls
+
+**Decision**: **GO** - Approved with mandatory controls
+
+**Mandatory Controls**:
+1. Weekly checkpoint reviews with documented progress assessment
+2. Enhancement 62 quality gate must pass before full integration work
+3. MVP delivery by end of week 4 (stretch) or week 5 (baseline)
+4. Change control for any scope changes > 4 hours
 
 ---
 
@@ -21,6 +46,293 @@
 5. Enable web-based pipeline execution and monitoring
 6. Provide interactive visualization of results
 7. Maintain backward compatibility with existing CLI tools
+
+---
+
+## Resource Plan
+
+### Team Size Recommendation
+
+| Configuration | Team Size | Pros | Cons |
+|---------------|-----------|------|------|
+| **Optimal** | 2 developers (1 backend, 1 frontend) | Enables parallelization, reduces calendar time | Coordination overhead |
+| **Minimum** | 1 full-stack developer | Lower coordination, simpler | Longer calendar time (6-7 weeks) |
+| **Maximum Useful** | 3 developers | Fastest timeline | Diminishing returns due to dependencies |
+
+### Skill Requirements Matrix
+
+| Skill | Requirement Level | Enhancement | Risk if Gap |
+|-------|-------------------|-------------|-------------|
+| FastAPI | **Strong** | 61, 62 | High |
+| asyncio/subprocess | **Strong** | 62 | **Critical** |
+| SQLAlchemy | Moderate | 60, 61 | Medium |
+| PostgreSQL | Moderate | 60, 61 | Low |
+| React + TypeScript | **Strong** | 63, 64 | High |
+| React Query | Moderate | 63 | Medium |
+| Leaflet | Moderate | 64 | Medium |
+| Docker/PM2 | Basic | 60, 64 | Low |
+| Windows development | Moderate | 62 | Medium |
+
+### Resource Allocation by Phase
+
+**Phase 1 (Weeks 1-2)**: 1 developer
+- Enhancement 60 (solo work)
+- Enhancement 61 (solo work)
+
+**Phase 2 (Weeks 3-4)**: 2 developers optimal
+- Developer A: Enhancement 62 (backend execution)
+- Developer B: Enhancement 63 (frontend with mocks)
+
+**Phase 3 (Weeks 5-6)**: 1-2 developers
+- Enhancement 64 (requires E63 complete)
+- Integration testing
+- Deployment setup
+
+**Week 7 (Buffer)**: As needed
+- Risk mitigation
+- Polish and optimization
+
+---
+
+## Timeline with Buffer
+
+### Realistic Timeline: 5-7 weeks (112-134 hours)
+
+| Phase | Allocated Hours | Buffer | Total Hours |
+|-------|-----------------|--------|-------------|
+| Setup (E60) | 12-16h | 2h | 14-18h |
+| Backend (E61+62) | 44-54h | 6h | 50-60h |
+| Frontend (E63+64) | 36-44h | 4h | 40-48h |
+| Integration/Polish | 0h | 8h | 8h |
+| **Total** | **92-114h** | **20h** | **112-134h** |
+
+### Critical Path Analysis
+
+```
+Week 1: E60 (Setup) ────────────────────────────┐
+                                                 │
+Week 2: E61 (Run API) ──────────────────────────┼──► DEPENDENCY GATE
+                                                 │
+Week 3-4: E62 (Execution) ◄────────────────────┘    CRITICAL PATH
+          E63 (Dashboard) [parallel if 2 devs]
+                      │
+Week 5:   E64 (Visualization) ◄─────────────────────
+                      │
+Week 6:   Integration, Polish, Deploy ◄─────────────
+                      │
+Week 7:   Buffer / Risk Mitigation (if needed)
+```
+
+**Critical Path Items**:
+1. Enhancement 60 blocks all subsequent work
+2. Enhancement 61 blocks Enhancement 62
+3. Enhancement 62 blocks full integration testing
+4. Enhancement 63 must complete before Enhancement 64
+
+---
+
+## Milestone Plan
+
+| Week | Milestone | Exit Criteria | Checkpoint |
+|------|-----------|---------------|------------|
+| 1 | Infrastructure Complete | Docker Compose running, health endpoint functional, frontend scaffold accessible | Team review |
+| 2 | API Layer Complete | CRUD endpoints complete, database migrations working, Swagger documentation available | Team review |
+| 3 | Execution Engine Part 1 | Subprocess spawning works, STATUS parsing functional, file fallback implemented | **E62 Quality Gate** |
+| 4 | **MVP Complete** | VT run executes via API, progress polling works, frontend shows progress, basic map displays | **Sponsor Demo** |
+| 5 | Full Features | Color-by-metric, sorting/filtering, error handling complete | Team review |
+| 6 | Production Ready | E2E tests pass, performance optimized, PM2 deployment configured | **Final Review** |
+| 7 | Buffer (if needed) | Risk mitigation, polish, optimization | Release approval |
+
+### Demo Checkpoints
+
+| Demo | Week | Content | Audience |
+|------|------|---------|----------|
+| Infrastructure | 1 | Health endpoint, DB connection | Team |
+| API Complete | 2 | Swagger UI, CRUD operations | Team |
+| **Execution Engine** | 4 | VT run via API, progress polling | **Sponsor, Team** |
+| **MVP Complete** | 4-5 | Full create-run-view flow | **Users, Sponsor** |
+| Full Wave | 6 | Maps, deployment, polish | All stakeholders |
+
+---
+
+## Risk Register
+
+| ID | Risk | Category | Likelihood | Impact | Score | Mitigation | Owner |
+|----|------|----------|------------|--------|-------|------------|-------|
+| R1 | Subprocess hangs | Technical | Medium | High | **HIGH** | Watchdog + file fallback | Backend Dev |
+| R2 | Windows subprocess issues | Technical | High | Medium | **HIGH** | Test early, taskkill fallback | Backend Dev |
+| R3 | Stdout buffering delays | Technical | Medium | Medium | MEDIUM | File-based progress fallback | Backend Dev |
+| R4 | Server restart orphans | Technical | Low | Medium | LOW | PID tracking, orphan detection | Backend Dev |
+| R5 | Frontend state sync bugs | Technical | Medium | Medium | MEDIUM | React Query patterns | Frontend Dev |
+| R6 | Map performance issues | Technical | Medium | Medium | MEDIUM | Canvas renderer, simplification | Frontend Dev |
+| R7 | Scope creep | Project | Medium | High | **HIGH** | Change control process | PM |
+| R8 | Integration failures | Technical | Medium | High | **HIGH** | Early integration testing | Team |
+| R9 | Key developer unavailable | Resource | Low | High | MEDIUM | Knowledge sharing, documentation | PM |
+| R10 | Dependency on stable pipeline | External | Low | High | MEDIUM | Regression tests before wave | Team |
+
+### Risk Monitoring Process
+
+**Weekly Risk Review**:
+1. Update risk scores based on actual progress
+2. Identify new risks discovered during implementation
+3. Verify mitigations are implemented, not just planned
+4. Escalate HIGH risks that are not decreasing
+
+**Escalation Criteria**:
+- Any risk score increases to CRITICAL
+- Enhancement 62 delays exceed 3 days
+- Integration testing reveals architectural issues
+
+### Contingency Plans
+
+| Trigger | Response |
+|---------|----------|
+| E62 exceeds 34 hours | Extend timeline, consider scope reduction |
+| E62 testing fails | Block subsequent work, intensive debugging |
+| Performance gates missed | Accept as warning, defer optimization |
+| MVP not achievable by week 4 | Evaluate full wave completion, consider partial delivery |
+
+---
+
+## Success Metrics & KPIs
+
+### Development Velocity Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Schedule variance | < 10% | (Actual - Planned) / Planned |
+| Scope delivered | 100% MVP, 90%+ full | Features delivered / planned |
+| Budget variance | < 15% | Hours invested / estimated |
+| Blocker resolution | < 24 hours | Time from identification to resolution |
+
+### Quality Metrics
+
+| Metric | Target | Measurement |
+|--------|--------|-------------|
+| Unit test coverage | ≥ 80% | Test coverage report |
+| Integration test pass rate | 100% | CI/CD pipeline |
+| E2E critical flows | 100% | Playwright test suite |
+| Bug escape rate | < 5% | Bugs found post-deployment / total bugs |
+
+### User Adoption Targets (Post-Launch)
+
+| Metric | 30-Day Target | 90-Day Target |
+|--------|---------------|---------------|
+| New users onboarded | 5 | 10 |
+| Web runs vs CLI runs | 30% | 50% |
+| User satisfaction | Positive feedback | NPS > 0 |
+| Support tickets | < 5 | < 2/month |
+
+---
+
+## Stakeholder Communication Plan
+
+### Communication Matrix
+
+| Stakeholder | Interest | Influence | Communication Need |
+|-------------|----------|-----------|-------------------|
+| Project Sponsor | ROI, timeline | High | Weekly status, demos |
+| Development Team | Technical details | High | Daily standups |
+| End Users | Usability, features | Medium | Demo at MVP, feedback |
+| Operations | Deployment, maintenance | Medium | Deployment plan review |
+| QA/Testing | Coverage, quality | Medium | Test plan review |
+
+### Communication Schedule
+
+| Audience | Format | Frequency | Content |
+|----------|--------|-----------|---------|
+| Sponsor | Status Email | Weekly | Progress %, risks, decisions needed |
+| Team | Standup | Daily | Yesterday, today, blockers |
+| Users | Demo | Week 4 (MVP), Week 6 | Working prototype, full features |
+| Operations | Meeting | Week 5 | Deployment walkthrough |
+
+---
+
+## Budget Estimate
+
+### Development Investment
+
+| Category | Hours | Notes |
+|----------|-------|-------|
+| Development | 92-114 | Enhancements 60-64 |
+| Testing | 40-50 | 30-35% of development time |
+| Documentation | 8-12 | API docs, deployment guide |
+| Buffer | 20 | Risk mitigation |
+| **Total** | **160-196** | ~4-5 FTE weeks |
+
+### Ongoing Costs (Post-Launch)
+
+| Item | Monthly Cost | Notes |
+|------|--------------|-------|
+| Infrastructure | Minimal | Docker container + PostgreSQL |
+| Maintenance | ~4 hours | Bug fixes, minor updates |
+| Operations | ~2 hours | Monitoring, restarts |
+
+### ROI Analysis
+
+**Investment**: 160-196 hours
+
+**Quantified Benefits**:
+| Benefit | Impact | Time Saved |
+|---------|--------|------------|
+| Reduced training time | 2h vs 8h per new user | 6h/user |
+| Faster result exploration | 5 min vs 30 min | 25 min/session |
+| Broader user accessibility | 10x potential user base | N/A |
+| Reduced support burden | Self-service vs CLI guidance | 2h/month |
+
+**Break-Even Analysis**:
+- If 10 new users avoid 6 hours training each = 60 hours saved
+- If 50 pipeline runs use web vs CLI, saving 20 min each = 17 hours saved
+- **Break-even**: Within 3-6 months of deployment
+
+---
+
+## Mandatory Controls
+
+The following controls are **required** for Wave 9 implementation:
+
+### 1. Weekly Checkpoint Reviews
+
+**Requirement**: Documented progress review every Friday
+**Content**: Progress %, completed tasks, blockers, risk updates, next week plan
+**Owner**: Team Lead
+**Escalation**: Any blocker > 24 hours unresolved
+
+### 2. Enhancement 62 Quality Gate
+
+**Requirement**: All Enhancement 62 critical tests must pass before starting E63/E64 integration
+**Criteria**:
+- [ ] Subprocess spawn and terminate works on Windows
+- [ ] STATUS protocol parsing functional
+- [ ] File-based fallback tested
+- [ ] Watchdog kills hung process
+- [ ] VT integration test passes
+**Owner**: Backend Dev + QA
+**Blocker**: Integration work cannot proceed until gate passed
+
+### 3. MVP-First Delivery Strategy
+
+**Requirement**: MVP features complete by week 4 (stretch) or week 5 (baseline)
+**MVP Criteria**:
+- [ ] Create run via web interface
+- [ ] Progress polling visible
+- [ ] Completed results viewable
+- [ ] Basic district map displayed
+- [ ] CLI tools unchanged
+**Owner**: Team Lead
+**Escalation**: If MVP not achievable by week 5, scope reduction required
+
+### 4. Change Control Process
+
+**Requirement**: Formal approval for any scope change > 4 hours
+
+| Change Size | Approval | Documentation |
+|-------------|----------|---------------|
+| Minor (< 4 hours) | Developer decision | Note in enhancement file |
+| Moderate (4-16 hours) | Team discussion | Documented decision |
+| Major (> 16 hours) | PM approval | Timeline impact assessment |
+
+**Change Request Fields**: Description, hours impact, risk impact, justification, affected enhancements
 
 ---
 
@@ -273,16 +585,28 @@ Frontend components and production deployment.
 
 ---
 
-## Risks & Mitigation (Revised per Senior Designer)
+## Risks & Mitigation (Comprehensive 10-Risk Register)
 
-| Risk | Impact | Likelihood | Mitigation |
-|------|--------|------------|------------|
-| Subprocess hangs | High | Medium | Add timeout + watchdog process, file-based heartbeat |
-| Database schema evolution | Medium | High | Use JSON columns for flexibility, Alembic migrations |
-| Frontend state sync | Medium | Medium | React Query with proper cache invalidation |
-| Memory usage (large geometries) | Medium | Low | Stream from files, don't load all to memory |
-| Buffering issues in subprocess | Medium | Medium | File-based progress fallback |
-| Error recovery on server restart | Medium | Low | Detect orphaned runs on startup, allow manual retry |
+See [Risk Register](#risk-register) section above for full risk management details.
+
+**Summary by Category**:
+
+| Category | HIGH Risks | MEDIUM Risks | LOW Risks |
+|----------|------------|--------------|-----------|
+| Technical | R1 (subprocess hangs), R2 (Windows issues), R8 (integration) | R3 (buffering), R5 (frontend sync), R6 (map performance) | R4 (orphans) |
+| Project | R7 (scope creep) | - | - |
+| Resource | - | R9 (developer unavailability) | - |
+| External | - | R10 (pipeline dependency) | - |
+
+**Enhancement 62 Risks (Highest Priority)**:
+| Risk ID | Risk | Mitigation Status |
+|---------|------|-------------------|
+| R1 | Subprocess hangs indefinitely | Watchdog + 60s timeout planned |
+| R2 | Windows subprocess issues | `process.terminate()` + `taskkill` fallback |
+| R3 | Stdout buffering delays | File-based progress fallback with atomic writes |
+| R4 | Server restart orphans | PID tracking in database |
+
+**Note**: R1-R4 are addressed with comprehensive mitigations identified by Senior Engineer. Mandatory testing of all failure scenarios required before proceeding past Enhancement 62.
 
 ---
 
@@ -396,7 +720,11 @@ frontend/
 - This wave maintains full backward compatibility with CLI tools
 - Web interface is additive, not replacement
 - Senior Designer review completed 2026-01-25 with PROCEED WITH MODIFICATIONS recommendation
-- Estimated timeline of 4-6 weeks is achievable with revised enhancement structure
+- Senior Engineer review completed 2026-01-25 with PROCEED recommendation
+- Senior Tester review completed 2026-01-25 with PROCEED WITH EXPANDED TESTING recommendation
+- **Senior Manager review completed 2026-01-25 with GO decision (8.1/10 overall score)**
+- Estimated timeline updated from 4-6 weeks to **5-7 weeks** (with 20h buffer)
+- Four mandatory controls apply: weekly reviews, E62 quality gate, MVP-first delivery, change control
 
 ---
 
@@ -405,6 +733,8 @@ frontend/
 - [Senior Designer Review](wave09/01_senior_designer_review.md) - Design review with recommendations
 - [Senior Engineer Review](wave09/02_senior_engineer_review.md) - Engineering review with implementation details
 - [Senior Tester Review](wave09/03_senior_tester_review.md) - Testing strategy and quality gates
+- [Senior Manager Review](wave09/04_senior_manager_review.md) - Management assessment and go/no-go decision
+- [Management Decision](wave09/05_management_decision.md) - Executive summary and approval
 - [Design Patterns](../DESIGN_PATTERNS.md) - API and frontend patterns for implementation
 
 ---
@@ -447,7 +777,7 @@ frontend/
 
 ## Implementation Timeline (from Senior Engineer)
 
-### Recommended 4-6 Week Build Order
+### Recommended 5-7 Week Build Order (with Buffer)
 
 ```
 Week 1-2: Enhancement 60 (Setup)
@@ -468,12 +798,14 @@ Week 3-4: Enhancement 62 (Execution Engine)  ** CRITICAL PATH **
   |-- File-based fallback
   |-- Watchdog implementation
   |-- VT integration test
+  |-- ** QUALITY GATE CHECKPOINT **
 
 Week 4-5: Enhancement 63 (React Dashboard)
   |-- UI component library
   |-- Run list + detail pages
   |-- Progress display with polling
   |-- Run creation form
+  |-- ** MVP DEMO CHECKPOINT **
 
 Week 5-6: Enhancement 64 (Visualization)
   |-- Leaflet map component
@@ -481,7 +813,19 @@ Week 5-6: Enhancement 64 (Visualization)
   |-- District table
   |-- PM2 deployment
   |-- E2E tests
+
+Week 7: Buffer / Risk Mitigation (+20 hours)
+  |-- Risk mitigation as needed
+  |-- Polish and optimization
+  |-- Final documentation
+  |-- Release preparation
 ```
+
+**Timeline Notes**:
+- Week 7 buffer provides 20 hours for risk mitigation
+- MVP checkpoint at week 4-5 is mandatory
+- Enhancement 62 quality gate is blocking
+- Parallelization of E62+E63 can reduce to 5 weeks if 2 developers available
 
 ---
 
@@ -607,4 +951,4 @@ CREATE INDEX idx_runs_pid ON runs(process_pid) WHERE process_pid IS NOT NULL;
 
 ---
 
-**Wave 9 Summary**: Transform apportionment project from CLI-only to full web application with interactive dashboard and real-time pipeline execution, using polling-based progress updates and file-backed data storage.
+**Wave 9 Summary**: Transform apportionment project from CLI-only to full web application with interactive dashboard and real-time pipeline execution, using polling-based progress updates and file-backed data storage. **Approved 2026-01-25** with 8.1/10 management score. Timeline: 5-7 weeks with mandatory controls.
