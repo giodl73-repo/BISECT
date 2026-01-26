@@ -70,7 +70,9 @@ class PipelineExecutor:
             env = os.environ.copy()
             env["PYTHONUNBUFFERED"] = "1"  # Disable Python output buffering
 
-            logger.info(f"Starting pipeline for run {self.run_id}: {' '.join(self.command)}")
+            logger.info(f"Starting pipeline for run {self.run_id}")
+            logger.info(f"Command: {' '.join(self.command)}")
+            logger.info(f"Working directory: {self.cwd}")
 
             self.process = await asyncio.create_subprocess_exec(
                 *self.command,
@@ -80,6 +82,8 @@ class PipelineExecutor:
                 cwd=str(self.cwd),
             )
 
+            logger.info(f"Process created for run {self.run_id}, PID: {self.process.pid}")
+
             # Monitor stdout and stderr concurrently
             await asyncio.gather(
                 self._monitor_stdout(),
@@ -88,8 +92,10 @@ class PipelineExecutor:
             )
 
         except Exception as e:
-            logger.error(f"Pipeline executor error for run {self.run_id}: {e}")
-            await self.on_error(str(e))
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            logger.error(f"Pipeline executor error for run {self.run_id}: {error_msg}")
+            logger.exception(f"Full traceback for run {self.run_id}")
+            await self.on_error(error_msg)
 
     async def cancel(self, timeout: float = 5.0):
         """
