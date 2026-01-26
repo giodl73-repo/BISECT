@@ -6,8 +6,8 @@
 **Estimated Duration**: 5-7 weeks (with buffer)
 **Enhancements**: 60, 61, 62, 63, 64
 **Phases**:
-- Phase 1: Enhancement 60 - Project Setup & Infrastructure (PLANNED)
-- Phase 2: Enhancements 61, 62 - Backend API & Pipeline Integration (PLANNED)
+- Phase 1: Enhancement 60 - Project Setup & Infrastructure ✅ COMPLETED
+- Phase 2: Enhancements 61, 62 - Backend API & Pipeline Integration ✅ COMPLETED
 - Phase 3: Enhancements 63, 64 - React Dashboard & Visualization (PLANNED)
 
 ---
@@ -521,12 +521,13 @@ Set up complete development environment with Docker Compose.
 - Health check endpoints (/health, /version)
 
 ### Phase 2: Backend Implementation (Enhancements 61, 62)
-**Status**: PLANNED
-**Estimated Effort**: 36-44 hours
+**Status**: COMPLETED
+**Actual Effort**: ~24 hours
+**Completed**: 2026-01-25
 
 Database schema, API endpoints, and pipeline integration.
 
-**Enhancement 61 - Run Management API** (16-20 hours):
+**Enhancement 61 - Run Management API** ✅ COMPLETED (16-20 hours):
 - Database schema (runs, run_years tables only)
 - Alembic migrations
 - JSON columns for config and progress flexibility
@@ -534,16 +535,30 @@ Database schema, API endpoints, and pipeline integration.
 - Progress polling endpoint
 - State configuration endpoint
 - Unit tests for all endpoints
+- **Commit**: 8b0aa7d
 
-**Enhancement 62 - Pipeline Execution Engine** (20-24 hours):
-- Subprocess manager class (async execution)
-- STATUS protocol parser (regex-based)
+**Enhancement 62 - Pipeline Execution Engine** ✅ COMPLETED (MVP ~8 hours):
+- Subprocess manager class (async execution) ✅
+- STATUS protocol parser (regex-based) ✅
+- Background task execution ✅
+- Cancellation support (terminate with timeout) ✅
+- Test isolation (ExecutionManager reset) ✅
+- **Commit**: b58cae6
+- **Tests**: 15/15 passing (9 STATUS parser + 6 execution API)
+- **Total Backend Suite**: 52/52 tests passing
+
+**MVP Scope Delivered**:
+- Basic subprocess execution and monitoring
+- STATUS protocol parsing from stdout
+- Progress callbacks to database
+- Graceful cancellation (terminate → kill)
+
+**Future Work (not MVP, ~20-25 hours)**:
 - File-based progress fallback
-- Progress aggregation service
-- Background task execution
-- Cancellation support (SIGTERM with timeout)
 - Watchdog for hung processes
-- Integration tests with VT
+- Heartbeat monitoring
+- Integration tests with Vermont pipeline
+- Advanced error recovery
 
 ### Phase 3: Frontend & Deployment (Enhancements 63, 64)
 **Status**: PLANNED
