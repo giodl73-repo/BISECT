@@ -7,12 +7,13 @@
 **Completed**: 2026-01-25
 **Estimated Duration**: 1 day
 **Actual Duration**: 1 day
-**Enhancements**: 53, 54, 55, 56, 57, 58
+**Enhancements**: 53, 54, 55, 56, 57, 58, 59
 **Phases**:
 - Phase 1: Enhancement 53 - Foundation (✅ COMPLETED 2026-01-25)
 - Phase 2: Enhancements 54, 55 - Configuration (✅ COMPLETED 2026-01-25)
 - Phase 3: Enhancements 56, 57 - UI Fixes (✅ COMPLETED 2026-01-25)
 - Phase 4: Enhancement 58 - Phase Names (✅ COMPLETED 2026-01-25)
+- Phase 5: Enhancement 59 - Archive Organization (✅ COMPLETED 2026-01-25)
 
 ---
 
@@ -162,6 +163,49 @@ Added project branding and fixed critical phase display bug across all projects.
 - **TCM**: Commit b7fe4d0 - Added linkPhasesToWaves() and cache-busting
 - **NHL**: Commit 71e1952 - Added linkPhasesToWaves() and cache-busting
 - **Performance**: Commit 34edc88 - Added linkPhasesToWaves() and cache-busting
+
+### Phase 4: Enhancement 58 - Phase Names Schema Support
+**Status**: ✅ COMPLETED
+**Completed**: 2026-01-25
+**Effort**: 30 minutes
+
+Added phase name support to wave manager schema v2.0, enabling descriptive names in phase definitions.
+
+**Completed**:
+- ✅ Updated SCHEMA.md to document optional phase names format
+- ✅ Parser enhanced to extract names after `-` separator
+- ✅ Wave 8 updated with example phase names
+- ✅ Display format: "Phase 1: Foundation" when name present, "Phase 1" without
+
+**Enhancement**: [58](../enhancements/58_phase_names_schema.md)
+
+### Phase 5: Enhancement 59 - Wave Documentation Organization (Archive Organization)
+**Status**: ✅ COMPLETED
+**Completed**: 2026-01-25
+**Effort**: 1 hour
+
+Added descriptive phase names to all waves and reorganized archive files into wave-specific directories.
+
+**Phase Names Addition**:
+- ✅ Analyzed 14 waves (WAVE01-07, WAVE09, WAVE-F2 through F7)
+- ✅ Created concise 1-3 word names for each phase
+- ✅ Examples: "Core Metrics", "State Refactoring", "Parallel Execution"
+- ✅ All waves now follow schema v2.0 format with descriptive names
+
+**Archive Reorganization**:
+- ✅ Identified wave associations for 37 archive files
+- ✅ Created wave-specific directories (wave01/, wave02/, wave05/, wave06/)
+- ✅ Merged pre-wave foundational docs into wave01/ (17 files total)
+- ✅ Moved all wave directories to context/waves/ for collocation
+- ✅ Removed obsolete waves-v1/ directory
+- ✅ Cleaned up context/archive/ (now empty)
+
+**Files Modified**:
+- All 14 wave files with phase names added
+- `context/waves/wave01/` through `wave06/` - New archive directories
+- `context/archive/` - 37 files deleted (moved to wave directories)
+
+**Enhancement**: [59](../enhancements/59_wave_documentation_organization.md)
 
 ---
 

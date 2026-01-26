@@ -2,7 +2,7 @@
 
 Master index of all congressional redistricting pipeline enhancements.
 
-**Last Updated**: January 18, 2026
+**Last Updated**: January 25, 2026
 
 ## Quick Links
 
@@ -34,7 +34,7 @@ These fields enable:
 
 ## Status Overview
 
-### ✅ Completed (29 enhancements)
+### ✅ Completed (38 enhancements)
 
 | # | Title | Completion Date | Files |
 |---|-------|----------------|-------|
@@ -67,7 +67,17 @@ These fields enable:
 | [38](38_streamline_claude_md.md) | Streamline CLAUDE.md Documentation | Jan 17, 2026 | [View](38_streamline_claude_md.md) |
 
 | [39](39_pipeline_error_logging.md) | Comprehensive Pipeline Error Logging (MVP) | Jan 17, 2026 | [View](39_pipeline_error_logging.md) |
-| [48](active/48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Jan 18, 2026 | [View](active/48_unified_download_orchestrator.md) |
+| [47](47_data_separation_restoration.md) | Census Data Processing & Path Reorganization | Jan 18, 2026 | [View](47_data_separation_restoration.md) |
+| [48](48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Jan 18, 2026 | [View](48_unified_download_orchestrator.md) |
+| [50](50_status_protocol_unification.md) | STATUS Protocol Unification | Jan 19, 2026 | [View](50_status_protocol_unification.md) |
+| [52](52_per_version_census_data.md) | Per-Version Census Data Structure | Jan 19, 2026 | 34 files across 6 phases |
+| [53](53_wave_manager_schema_v2.md) | Wave Manager Schema v2.0 & Wave Reorganization | Jan 25, 2026 | [View](53_wave_manager_schema_v2.md) |
+| [54](54_wave_skills_integration.md) | Wave Skills Integration | Jan 25, 2026 | [View](54_wave_skills_integration.md) |
+| [55](55_wave_phase_validation_fix.md) | Wave Phase Validation and Title Standardization | Jan 25, 2026 | [View](55_wave_phase_validation_fix.md) |
+| [56](56_wave_manager_title_branding.md) | Wave Manager Title Branding | Jan 25, 2026 | [View](56_wave_manager_title_branding.md) |
+| [57](57_wave_manager_phase_display_fix.md) | Wave Manager Phase Display Fix | Jan 25, 2026 | [View](57_wave_manager_phase_display_fix.md) |
+| [58](58_phase_names_schema.md) | Phase Names Schema Support | Jan 25, 2026 | [View](58_phase_names_schema.md) |
+| [59](59_wave_documentation_organization.md) | Wave Documentation Organization | Jan 25, 2026 | [View](59_wave_documentation_organization.md) |
 
 ### 🔄 In Progress (1 enhancement)
 
@@ -75,21 +85,19 @@ These fields enable:
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (20 enhancements)
+### 📋 Planned (18 enhancements)
 
 | # | Title | Priority | Files |
 |---|-------|----------|-------|
-| [51](active/51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | High | [View](active/51_pipeline_manager_web_app.md) |
-| [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | [View](49_pipeline_download_integration.md) |
-| [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Critical | [View](active/47_data_separation_restoration.md) |
-| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | High | [View](42_research_narrative_policy_questions.md) |
-| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | High | [View](45_baseline_data_organization.md) |
+| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | High | [View](51_pipeline_manager_web_app.md) |
+| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Critical | [View](42_research_narrative_policy_questions.md) |
+| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Critical | [View](45_baseline_data_organization.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
 | [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Medium | [View](43_cross_year_longitudinal_analysis.md) |
 | [44](44_real_world_constraints.md) | Real-World Redistricting Constraints (VRA, COI, County Splitting) | Medium | [View](44_real_world_constraints.md) |
 | [46](46_enhancement_priority_system.md) | Priority System for Enhancements and Enhancement Manager | Medium | [View](46_enhancement_priority_system.md) |
-| [50](active/50_status_protocol_unification.md) | STATUS Protocol Unification | Medium | [View](active/50_status_protocol_unification.md) |
 | [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | [View](41_public_distribution.md) |
+| [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | [View](49_pipeline_download_integration.md) |
 | [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
 | [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | [View](40_corner_adjacency_filter.md) |
 | [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](16_metro_2000.md) |
@@ -105,11 +113,10 @@ These fields enable:
 
 Enhancements organized by priority level for better planning and focus.
 
-### Critical (3 enhancements)
+### Critical (2 enhancements)
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
-| [47](active/47_data_separation_restoration.md) | Data Separation and Restoration | Proposed | [View](active/47_data_separation_restoration.md) |
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Proposed | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Proposed | [View](45_baseline_data_organization.md) |
 
@@ -117,7 +124,7 @@ Enhancements organized by priority level for better planning and focus.
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
-| [51](active/51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | Proposed | [View](active/51_pipeline_manager_web_app.md) |
+| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | Proposed | [View](51_pipeline_manager_web_app.md) |
 | [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | Proposed | [View](36_experimental_variants_config.md) |
 | [11](11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Completed (Jan 17, 2026) | [View](11_baseline_comparison.md) |
 | [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | [View](12_edge_weighted_analysis.md) |
@@ -127,11 +134,11 @@ Enhancements organized by priority level for better planning and focus.
 
 | # | Title | Status | Files |
 |---|-------|--------|-------|
-| [48](active/48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Completed (Jan 18, 2026) | [View](active/48_unified_download_orchestrator.md) |
+| [48](48_unified_download_orchestrator.md) | Unified Download Orchestrator with Parallel Processing | Completed (Jan 18, 2026) | [View](48_unified_download_orchestrator.md) |
 | [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Proposed | [View](43_cross_year_longitudinal_analysis.md) |
 | [44](44_real_world_constraints.md) | Real-World Redistricting Constraints | Proposed | [View](44_real_world_constraints.md) |
 | [46](46_enhancement_priority_system.md) | Priority System for Enhancements | In Progress | [View](46_enhancement_priority_system.md) |
-| [50](active/50_status_protocol_unification.md) | STATUS Protocol Unification | Proposed | [View](active/50_status_protocol_unification.md) |
+| [50](50_status_protocol_unification.md) | STATUS Protocol Unification | Proposed | [View](50_status_protocol_unification.md) |
 | [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Proposed | [View](41_public_distribution.md) |
 | [1](01_compactness_integration.md) | Compactness Integration | Completed | [View](01_compactness_integration.md) |
 | [2](02_seat_totals.md) | D/R Seat Totals | Completed | [View](02_seat_totals.md) |
