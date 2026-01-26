@@ -14,7 +14,7 @@ from common_backend_utils.exceptions import AppException, create_exception_handl
 
 from app.config import settings
 from app.database import engine, Base, SessionLocal
-from app.api.routes import health, runs
+from app.api.routes import health, runs, districts
 from app.services.execution_service import get_execution_manager
 
 
@@ -92,6 +92,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 # Register routers
 app.include_router(health.router, prefix="", tags=["Health"])
 app.include_router(runs.router, prefix="/api/v1/runs", tags=["Runs"])
+app.include_router(districts.router, prefix="/api/v1/runs", tags=["Districts"])
 
 
 @app.get("/")

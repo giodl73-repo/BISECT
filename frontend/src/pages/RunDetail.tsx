@@ -98,6 +98,11 @@ export function RunDetail() {
         </div>
 
         <div className="flex gap-2">
+          {run.status === 'completed' && (
+            <Link to={`/runs/${run.id}/districts`}>
+              <Button variant="primary">View Districts</Button>
+            </Link>
+          )}
           {run.status === 'pending' && (
             <Button
               variant="primary"
