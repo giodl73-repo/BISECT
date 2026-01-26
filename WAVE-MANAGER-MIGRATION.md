@@ -9,8 +9,11 @@ The Apportionment-specific wave-manager has been **removed** and replaced with t
 
 ## Old Structure (Removed)
 ```
-C:/src/apportionment/tools/wave-manager/  ❌ DELETED
+C:/src/apportionment/tools/wave-manager/        ❌ DELETED
+C:/src/apportionment/tools/enhancement_manager/  ❌ DELETED (obsolete, pre-wave-manager)
 ```
+
+**Note**: Both wave-manager and enhancement_manager were removed. Enhancement managers were the precursor to wave-managers and are no longer needed.
 
 ## New Structure
 All Apportionment waves are now managed by the unified wave-manager:
