@@ -1,6 +1,6 @@
 # System Architecture
 
-**Updated**: 2026-01-17
+**Updated**: 2026-01-25
 
 **Related**: [CODING_PATTERNS.md](CODING_PATTERNS.md), [enhancements/INDEX.md](enhancements/INDEX.md), [SKILLS.md](SKILLS.md), [../CLAUDE.md](../CLAUDE.md)
 
@@ -380,3 +380,411 @@ open outputs/index.html
 **Algorithm**: Recursive bisection w/ METIS → Fast (O(N log K)), quality (compact/balanced), scalable (all 50 states)
 
 **Philosophy**: Simple > complex, Fast > perfect, Reproducible > novel, Practical > academic
+
+---
+
+## API Layer Architecture (Wave 9)
+
+**Added**: Wave 9 (2026-01-25)
+**Status**: Planned
+
+The API layer adds web-based access to the redistricting pipeline without modifying existing CLI functionality.
+
+### System Overview
+
+```
+                                    ┌─────────────────────────────┐
+                                    │   React Frontend (3002)     │
+                                    │   - Run management UI       │
+                                    │   - Progress display        │
+                                    │   - District visualization  │
+                                    └──────────────┬──────────────┘
+                                                   │ REST + Polling
+                                                   ▼
+┌───────────────────────────────────────────────────────────────────────┐
+│                        FastAPI Backend (8002)                          │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │
+│  │  Routers    │  │  Services   │  │   Workers   │  │   Utils     │  │
+│  │  - runs     │  │  - run_svc  │  │  - executor │  │  - status   │  │
+│  │  - files    │  │  - progress │  │  - manager  │  │  - files    │  │
+│  │  - health   │  │  - pipeline │  │             │  │             │  │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────────────┘  │
+│         │                │                │                           │
+│         └────────────────┴────────────────┴─────────────┐             │
+│                                                         │             │
+│  ┌─────────────────────┐    ┌──────────────────────────┴───────────┐ │
+│  │   PostgreSQL (5434) │    │     Subprocess (CLI Pipeline)        │ │
+│  │   - Run metadata    │◄───┤     - STATUS protocol                │ │
+│  │   - Progress JSON   │    │     - File outputs                   │ │
+│  │   - No district data│    │     - Existing scripts               │ │
+│  └─────────────────────┘    └──────────────────────────────────────┘ │
+└───────────────────────────────────────────────────────────────────────┘
+                                                   │
+                                                   ▼
+                              ┌─────────────────────────────────────┐
+                              │           File System               │
+                              │  outputs/{version}/{year}/          │
+                              │    - states/                        │
+                              │    - data/                          │
+                              │    - maps/                          │
+                              └─────────────────────────────────────┘
+```
+
+### Directory Structure (API)
+
+```
+api/
+├── main.py                 # FastAPI app, lifespan, CORS, exception handlers
+├── config.py               # pydantic-settings configuration
+├── database.py             # SQLAlchemy engine, session factory
+├── models.py               # ORM models (Run, RunYear)
+├── schemas/
+│   ├── __init__.py
+│   ├── run.py              # RunCreate, RunResponse, RunProgressResponse
+│   └── common.py           # Pagination, ErrorResponse
+├── routers/
+│   ├── __init__.py
+│   ├── health.py           # /health, /version
+│   ├── runs.py             # /api/v1/runs CRUD + actions
+│   └── files.py            # /api/v1/files (serve maps/data)
+├── services/
+│   ├── __init__.py
+│   ├── run_service.py      # Run CRUD operations
+│   ├── pipeline_service.py # Build commands, validate config
+│   └── progress_service.py # Progress aggregation, ETA
+├── workers/
+│   ├── __init__.py
+│   ├── executor.py         # PipelineExecutor (async subprocess)
+│   └── manager.py          # PipelineManager (singleton)
+├── utils/
+│   ├── __init__.py
+│   ├── status_bridge.py    # STATUS protocol parser bridge
+│   ├── file_progress.py    # File-based progress fallback
+│   └── exceptions.py       # Custom HTTP exceptions
+├── alembic/                # Database migrations
+│   └── versions/
+├── requirements.txt
+└── Dockerfile
+```
+
+### Database Schema
+
+```sql
+-- Run metadata (not district data - kept in files)
+CREATE TABLE runs (
+    id SERIAL PRIMARY KEY,
+    version VARCHAR(50) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    config JSONB NOT NULL,           -- years, states, workers, dpi, partition_mode
+    progress JSONB,                   -- Aggregated progress from STATUS
+    created_at TIMESTAMP DEFAULT NOW(),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_message TEXT,
+    output_path VARCHAR(255),        -- Path to outputs/{version}/
+    process_pid INTEGER              -- For orphan detection
+);
+
+CREATE INDEX idx_runs_status ON runs(status);
+CREATE INDEX idx_runs_version ON runs(version);
+CREATE INDEX idx_runs_created_at ON runs(created_at DESC);
+
+-- Per-year tracking
+CREATE TABLE run_years (
+    id SERIAL PRIMARY KEY,
+    run_id INTEGER REFERENCES runs(id) ON DELETE CASCADE,
+    year VARCHAR(4) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    states_completed INTEGER DEFAULT 0,
+    states_total INTEGER DEFAULT 50,
+    current_stage VARCHAR(50),
+    started_at TIMESTAMP,
+    completed_at TIMESTAMP,
+    error_message TEXT
+);
+
+CREATE INDEX idx_run_years_run ON run_years(run_id);
+```
+
+### API Endpoints
+
+```
+Health:
+  GET  /health              # Database connectivity check
+  GET  /version             # API version info
+
+Runs:
+  GET  /api/v1/runs                     # List runs (filter: status, year, version)
+  POST /api/v1/runs                     # Create run
+  GET  /api/v1/runs/{id}                # Get run detail
+  DELETE /api/v1/runs/{id}              # Delete run metadata
+
+Run Actions:
+  POST /api/v1/runs/{id}/actions/start  # Start pipeline execution
+  POST /api/v1/runs/{id}/actions/cancel # Cancel running pipeline
+  GET  /api/v1/runs/{id}/progress       # Poll progress (2 second interval)
+
+Files:
+  GET  /api/v1/files/maps/{version}/{year}/...      # Serve map images
+  GET  /api/v1/files/data/{version}/{year}/...      # Serve CSV/JSON data
+  GET  /api/v1/files/geometry/{version}/{year}/...  # Serve GeoJSON
+```
+
+### Integration Pattern: API to CLI
+
+The API wraps existing CLI scripts without modification:
+
+```python
+# API builds CLI command from request
+def build_command(config: dict) -> list[str]:
+    return [
+        sys.executable,
+        "scripts/pipeline/run_complete_redistricting.py",
+        "--version", config["version"],
+        *[f"--year {y}" for y in config["years"]],
+        "--workers", str(config["workers"]),
+    ]
+
+# Subprocess environment enables STATUS protocol
+env = {
+    **os.environ,
+    "TQDM_POSITION": "999",           # Suppress tqdm bars
+    "MULTI_YEAR_SUBPROCESS": "1",      # Enable STATUS output
+    "PYTHONUNBUFFERED": "1",          # Real-time output
+}
+
+# Async subprocess for non-blocking execution
+proc = await asyncio.create_subprocess_exec(
+    *command, stdout=PIPE, stderr=PIPE, env=env
+)
+```
+
+### Progress Flow
+
+```
+CLI Pipeline                    API Layer                     Frontend
+     │                              │                             │
+     │  STATUS:YEAR:2020:COMPLETE:24/50                           │
+     ├──────────────────────────────►│                            │
+     │                              │ parse & aggregate           │
+     │                              │──────────────┐              │
+     │                              │              │              │
+     │                              │  Update DB   │              │
+     │                              │◄─────────────┘              │
+     │                              │                             │
+     │                              │◄───────── GET /progress ────┤
+     │                              │                             │
+     │                              │──────── JSON response ──────►│
+     │                              │                             │
+```
+
+---
+
+## Frontend Architecture (Wave 9)
+
+### Directory Structure
+
+```
+frontend/
+├── src/
+│   ├── main.tsx                 # Entry point, QueryClientProvider
+│   ├── App.tsx                  # Router configuration
+│   ├── api/
+│   │   ├── client.ts            # Axios instance with interceptors
+│   │   ├── runs.ts              # Run API functions
+│   │   └── districts.ts         # District API functions
+│   ├── components/
+│   │   ├── ui/                  # Reusable: Button, Card, Table, Input, Badge
+│   │   └── layout/              # Layout, Navbar, Breadcrumbs
+│   ├── features/
+│   │   ├── runs/
+│   │   │   ├── RunList.tsx      # List page with filters
+│   │   │   ├── RunDetail.tsx    # Detail with progress
+│   │   │   ├── RunForm.tsx      # Creation form
+│   │   │   ├── RunProgress.tsx  # Progress display
+│   │   │   └── hooks.ts         # useRuns, useRun, useCreateRun
+│   │   └── districts/
+│   │       ├── DistrictsPage.tsx
+│   │       ├── DistrictMap.tsx  # Leaflet map
+│   │       ├── DistrictTable.tsx
+│   │       └── hooks.ts
+│   ├── types/
+│   │   ├── run.ts
+│   │   └── district.ts
+│   └── utils/
+│       └── format.ts            # formatNumber, formatDuration
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.js
+└── Dockerfile
+```
+
+### Tech Stack
+
+- **React 18** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool (fast HMR)
+- **Tailwind CSS** - Styling
+- **React Query (TanStack)** - Server state management
+- **React Router** - Client-side routing
+- **Leaflet** - Map visualization
+- **Axios** - HTTP client
+
+### Component Architecture
+
+```
+App
+ └── Layout
+      ├── Navbar
+      └── Routes
+           ├── /runs         → RunList (container)
+           │                     └── RunTable (presentational)
+           │                     └── RunFilters (presentational)
+           │
+           ├── /runs/new     → RunForm (container)
+           │                     └── Input, Select, Button (ui)
+           │
+           ├── /runs/:id     → RunDetail (container)
+           │                     └── RunProgress (presentational)
+           │                     └── RunConfig (presentational)
+           │
+           └── /runs/:id/districts → DistrictsPage (container)
+                                       └── DistrictMap (Leaflet)
+                                       └── DistrictTable (sortable)
+```
+
+### Data Flow Pattern
+
+```typescript
+// Container fetches data
+function RunList() {
+  const { data, isLoading, error } = useRuns(filters);
+
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorBanner error={error} />;
+
+  return <RunTable runs={data.runs} />;
+}
+
+// Presentational receives props
+function RunTable({ runs, onRowClick }: Props) {
+  return (
+    <Table data={runs} columns={columns} onRowClick={onRowClick} />
+  );
+}
+```
+
+### Progress Polling Pattern
+
+```typescript
+function useRunProgress(runId: number, status: string) {
+  return useQuery({
+    queryKey: ['runs', runId, 'progress'],
+    queryFn: () => runApi.getProgress(runId),
+    // Only poll while running
+    refetchInterval: status === 'running' ? 2000 : false,
+    // Stop polling on completion
+    enabled: status === 'running',
+  });
+}
+```
+
+---
+
+## Deployment Architecture
+
+### Local Development (Docker Compose)
+
+```yaml
+# docker-compose.yml
+services:
+  postgres:
+    image: postgres:15
+    ports: ["5434:5432"]
+    environment:
+      POSTGRES_USER: apportionment
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: apportionment
+
+  api:
+    build: ./api
+    ports: ["8002:8000"]
+    environment:
+      DATABASE_URL: postgresql://apportionment:dev_password@postgres:5432/apportionment
+    volumes:
+      - ./outputs:/outputs
+      - ./scripts:/scripts
+    depends_on: [postgres]
+
+  frontend:
+    build: ./frontend
+    ports: ["3002:3000"]
+    environment:
+      VITE_API_URL: http://localhost:8002
+    depends_on: [api]
+```
+
+### Production (PM2)
+
+```javascript
+// ecosystem.config.js
+module.exports = {
+  apps: [
+    {
+      name: 'apportionment-api',
+      script: 'uvicorn',
+      args: 'main:app --host 0.0.0.0 --port 8002',
+      cwd: './api',
+      interpreter: 'python',
+      env: {
+        DATABASE_URL: process.env.DATABASE_URL,
+        DEBUG: 'false',
+      },
+    },
+    {
+      name: 'apportionment-frontend',
+      script: 'npm',
+      args: 'run preview -- --port 3002 --host 0.0.0.0',
+      cwd: './frontend',
+    },
+  ],
+};
+```
+
+### Port Assignments
+
+| Service | Development | Production |
+|---------|-------------|------------|
+| PostgreSQL | 5434 | 5434 |
+| FastAPI Backend | 8002 | 8002 |
+| React Frontend | 3002 | 3002 |
+
+---
+
+## Key Design Decisions (API Layer)
+
+### 8. Metadata-Only Database
+✅ Run metadata in PostgreSQL (small, queryable)
+✅ District data in files (large, already optimized as Parquet)
+❌ Alternative: Store districts in DB (duplicates data, slow, large DB)
+
+### 9. Polling over WebSocket (Initial)
+✅ Simple implementation, sufficient for 1-4 hour runs
+✅ Easy debugging, no connection management
+✅ React Query handles automatic polling
+❌ Alternative: WebSocket (complex, not needed for this use case)
+
+**Future**: Add WebSocket if polling proves inadequate for real-time needs.
+
+### 10. File-Based Progress Fallback
+✅ Subprocess stdout can buffer unexpectedly
+✅ Write progress to file as secondary channel
+✅ API reads from file if stdout silent
+❌ Alternative: Rely solely on stdout (unreliable)
+
+### 11. CLI Wrapper (Zero CLI Changes)
+✅ API wraps existing CLI via subprocess
+✅ CLI remains primary interface
+✅ No code changes to tested pipeline
+❌ Alternative: Import pipeline functions (breaks separation)

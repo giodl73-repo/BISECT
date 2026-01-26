@@ -1,6 +1,6 @@
 # Coding Patterns
 
-**Updated**: 2026-01-19
+**Updated**: 2026-01-25
 
 **Related**: [ARCHITECTURE.md](ARCHITECTURE.md), [ENHANCEMENT_WORKFLOW.md](ENHANCEMENT_WORKFLOW.md), [../CLAUDE.md](../CLAUDE.md)
 
@@ -627,3 +627,680 @@ with open('outputs/index.html', 'w') as f:
 - [ ] Detailed description
 - [ ] Co-Authored-By line
 - [ ] Test before commit
+
+---
+
+## API Patterns (FastAPI Backend) - Wave 9
+
+These patterns apply to the FastAPI backend added in Wave 9.
+
+### Configuration with pydantic-settings
+
+```python
+# api/config.py
+from pydantic_settings import BaseSettings
+from typing import List
+
+class Settings(BaseSettings):
+    database_url: str = "postgresql://apportionment:dev@localhost:5434/apportionment"
+    cors_origins: List[str] = ["http://localhost:3002"]
+    debug: bool = False
+    project_root: str = "."
+    outputs_dir: str = "outputs"
+
+    # Pipeline defaults
+    default_workers: int = 4
+    watchdog_timeout: int = 60
+
+    class Config:
+        env_file = ".env"
+
+settings = Settings()
+```
+
+### Database Session Dependency
+
+```python
+# api/database.py
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, Session
+from typing import Generator
+
+from .config import settings
+
+engine = create_engine(
+    settings.database_url,
+    pool_pre_ping=True,
+    pool_size=5,
+    max_overflow=10
+)
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI dependency for database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+```
+
+### REST Endpoint Pattern
+
+```python
+# api/routers/runs.py
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.orm import Session
+from typing import Optional
+
+from ..database import get_db
+from ..schemas.run import RunCreate, RunResponse, RunListResponse
+from ..services import run_service
+
+router = APIRouter(prefix="/api/v1/runs", tags=["runs"])
+
+@router.get("", response_model=RunListResponse)
+async def list_runs(
+    status: Optional[str] = Query(None, description="Filter by status"),
+    year: Optional[str] = Query(None, description="Filter by year"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db)
+):
+    """List all pipeline runs with optional filtering."""
+    runs, total = run_service.list_runs(db, status=status, year=year, limit=limit, offset=offset)
+    return RunListResponse(runs=runs, total=total, limit=limit, offset=offset)
+
+@router.post("", response_model=RunResponse, status_code=201)
+async def create_run(run_create: RunCreate, db: Session = Depends(get_db)):
+    """Create a new pipeline run."""
+    return run_service.create_run(db, run_create)
+
+@router.get("/{run_id}", response_model=RunDetailResponse)
+async def get_run(run_id: int, db: Session = Depends(get_db)):
+    """Get detailed run information."""
+    run = run_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    return run
+```
+
+### Pydantic Schema Pattern
+
+```python
+# api/schemas/run.py
+from pydantic import BaseModel, Field
+from typing import List, Optional
+from datetime import datetime
+from enum import Enum
+
+class RunStatus(str, Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+# Separate schemas for create vs response
+class RunCreate(BaseModel):
+    """Schema for creating a new run."""
+    version: str = Field(..., min_length=1, max_length=50)
+    years: List[str] = Field(..., min_items=1)
+    states: Optional[List[str]] = None  # None = all states
+    workers: int = Field(4, ge=1, le=16)
+    dpi: int = Field(150, ge=72, le=600)
+    partition_mode: str = Field("edge-weighted")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "version": "v1",
+                "years": ["2020"],
+                "workers": 4
+            }
+        }
+
+class RunResponse(BaseModel):
+    """Schema for run response."""
+    id: int
+    version: str
+    status: RunStatus
+    years: List[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True  # Enable ORM mode
+```
+
+### Error Handling Pattern
+
+```python
+# api/utils/exceptions.py
+from fastapi import HTTPException, status
+
+class APIError(HTTPException):
+    """Base API exception."""
+    def __init__(self, detail: str, status_code: int = 500):
+        super().__init__(status_code=status_code, detail=detail)
+
+class NotFoundError(APIError):
+    def __init__(self, resource: str, id: any):
+        super().__init__(f"{resource} with id {id} not found", status.HTTP_404_NOT_FOUND)
+
+class ConflictError(APIError):
+    def __init__(self, detail: str):
+        super().__init__(detail, status.HTTP_409_CONFLICT)
+
+# Usage
+@router.post("/{run_id}/actions/cancel")
+async def cancel_run(run_id: int, db: Session = Depends(get_db)):
+    run = run_service.get_run(db, run_id)
+    if not run:
+        raise NotFoundError("Run", run_id)
+    if run.status != RunStatus.RUNNING:
+        raise ConflictError(f"Cannot cancel run in {run.status} state")
+    return run_service.cancel_run(db, run_id)
+```
+
+### Async Subprocess Pattern
+
+```python
+# api/workers/executor.py
+import asyncio
+from pathlib import Path
+from typing import Callable, Optional
+
+class PipelineExecutor:
+    """Async wrapper for pipeline subprocess."""
+
+    def __init__(self, run_id: int, command: list[str], on_progress: Callable, on_complete: Callable):
+        self.run_id = run_id
+        self.command = command
+        self.on_progress = on_progress
+        self.on_complete = on_complete
+        self.process: Optional[asyncio.subprocess.Process] = None
+        self._cancelled = False
+
+    async def start(self):
+        """Start subprocess and monitor output."""
+        env = {
+            **os.environ,
+            "TQDM_POSITION": "999",
+            "PYTHONUNBUFFERED": "1",
+        }
+
+        self.process = await asyncio.create_subprocess_exec(
+            *self.command,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+            env=env,
+        )
+
+        # Monitor stdout for STATUS messages
+        asyncio.create_task(self._monitor_stdout())
+
+        # Wait for completion
+        returncode = await self.process.wait()
+        await self.on_complete(returncode)
+
+    async def _monitor_stdout(self):
+        """Parse STATUS messages from stdout."""
+        async for line in self.process.stdout:
+            decoded = line.decode().strip()
+            if decoded.startswith("STATUS:"):
+                progress = self._parse_status(decoded)
+                if progress:
+                    await self.on_progress(progress)
+
+    async def cancel(self, timeout: float = 5.0):
+        """Cancel with graceful shutdown."""
+        self._cancelled = True
+        if self.process:
+            self.process.terminate()
+            try:
+                await asyncio.wait_for(self.process.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                self.process.kill()
+```
+
+### STATUS Protocol Bridge Pattern
+
+```python
+# api/utils/status_bridge.py
+from scripts.utils.status_protocol import parse_status_message
+
+class StatusBridge:
+    """Bridge CLI STATUS protocol to API progress structure."""
+
+    def __init__(self):
+        self.progress = {}
+
+    def process_line(self, line: str) -> Optional[dict]:
+        """Parse STATUS line and update progress."""
+        msg_type, data = parse_status_message(line)
+        if msg_type is None:
+            return None
+
+        year = data.get("year")
+
+        if msg_type == "YEAR":
+            self.progress.setdefault("years", {})[year] = {
+                "states_completed": data["completed"],
+                "states_total": data["total"],
+                "status": "running"
+            }
+
+        elif msg_type == "WORKER":
+            workers = self.progress.setdefault("years", {}).setdefault(year, {}).setdefault("workers", {})
+            workers[str(data["worker_id"])] = {
+                "state": data["state_name"],
+                "stage": f"{data['stage']}/{data['stage_total']}",
+            }
+
+        return self.progress
+```
+
+### File-Based Progress Fallback Pattern
+
+```python
+# api/utils/file_progress.py
+import json
+import aiofiles
+from pathlib import Path
+
+class FileProgressManager:
+    """Atomic file-based progress for reliability."""
+
+    def __init__(self, progress_file: Path):
+        self.progress_file = progress_file
+
+    async def write(self, progress: dict):
+        """Atomic write: temp file + rename."""
+        temp = self.progress_file.with_suffix(".tmp")
+        async with aiofiles.open(temp, "w") as f:
+            await f.write(json.dumps(progress, indent=2))
+        temp.rename(self.progress_file)
+
+    async def read(self) -> Optional[dict]:
+        if not self.progress_file.exists():
+            return None
+        async with aiofiles.open(self.progress_file, "r") as f:
+            return json.loads(await f.read())
+```
+
+---
+
+## React Patterns (Frontend) - Wave 9
+
+These patterns apply to the React dashboard added in Wave 9.
+
+### Data Fetching with React Query
+
+```typescript
+// features/runs/hooks.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { runApi } from '@/api/runs';
+
+export function useRuns(filters?: RunFilters) {
+  return useQuery({
+    queryKey: ['runs', filters],
+    queryFn: () => runApi.list(filters),
+    staleTime: 30000,  // 30 seconds
+  });
+}
+
+export function useRun(runId: number) {
+  return useQuery({
+    queryKey: ['runs', runId],
+    queryFn: () => runApi.get(runId),
+    refetchInterval: (data) => {
+      // Poll every 2s while running, stop when complete
+      return data?.status === 'running' ? 2000 : false;
+    },
+  });
+}
+
+export function useCreateRun() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: RunCreate) => runApi.create(data),
+    onSuccess: () => {
+      // Invalidate runs list to refresh
+      queryClient.invalidateQueries({ queryKey: ['runs'] });
+    },
+  });
+}
+```
+
+### Container/Presentational Pattern
+
+```typescript
+// Container: Handles data fetching
+function RunList() {
+  const { data, isLoading, error, refetch } = useRuns();
+  const [filters, setFilters] = useState<RunFilters>({});
+
+  if (isLoading) return <Spinner size="lg" />;
+  if (error) return <ErrorBanner error={error} onRetry={refetch} />;
+
+  return (
+    <div className="space-y-4">
+      <RunFilters filters={filters} onChange={setFilters} />
+      <RunTable runs={data.runs} onRowClick={handleRowClick} />
+    </div>
+  );
+}
+
+// Presentational: Receives props, pure rendering
+interface RunTableProps {
+  runs: Run[];
+  onRowClick: (run: Run) => void;
+}
+
+function RunTable({ runs, onRowClick }: RunTableProps) {
+  return (
+    <table className="min-w-full">
+      <thead>...</thead>
+      <tbody>
+        {runs.map((run) => (
+          <tr key={run.id} onClick={() => onRowClick(run)}>
+            <td>{run.version}</td>
+            <td><StatusBadge status={run.status} /></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+```
+
+### Error Boundary Pattern
+
+```typescript
+// components/ui/ErrorBoundary.tsx
+import { Component, ReactNode } from 'react';
+
+interface Props {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+interface State {
+  hasError: boolean;
+  error?: Error;
+}
+
+export class ErrorBoundary extends Component<Props, State> {
+  state: State = { hasError: false };
+
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback || (
+        <div className="p-4 bg-red-50 border border-red-200 rounded">
+          <h2 className="text-red-800 font-semibold">Something went wrong</h2>
+          <p className="text-red-600">{this.state.error?.message}</p>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+```
+
+### Progress Polling Pattern
+
+```typescript
+// features/runs/RunProgress.tsx
+function RunProgress({ runId }: { runId: number }) {
+  const { data: progress, isLoading } = useQuery({
+    queryKey: ['runs', runId, 'progress'],
+    queryFn: () => runApi.getProgress(runId),
+    refetchInterval: 2000,  // Poll every 2 seconds
+  });
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="space-y-4">
+      <ProgressBar
+        value={progress.overall_progress * 100}
+        label={`${Math.round(progress.overall_progress * 100)}%`}
+      />
+      <p className="text-sm text-gray-500">
+        ETA: {formatDuration(progress.eta_seconds)}
+      </p>
+      {Object.entries(progress.years).map(([year, yearProgress]) => (
+        <YearProgress key={year} year={year} progress={yearProgress} />
+      ))}
+    </div>
+  );
+}
+```
+
+### Map Visualization Pattern (Leaflet)
+
+```typescript
+// features/districts/DistrictMap.tsx
+import { MapContainer, TileLayer, GeoJSON } from 'react-leaflet';
+import L from 'leaflet';
+
+interface DistrictMapProps {
+  districts: District[];
+  colorBy: 'default' | 'compactness' | 'partisan';
+  onDistrictClick?: (district: District) => void;
+}
+
+function DistrictMap({ districts, colorBy, onDistrictClick }: DistrictMapProps) {
+  // Use canvas renderer for better performance with many features
+  const renderer = L.canvas({ padding: 0.5 });
+
+  // Memoize GeoJSON conversion
+  const geojsonData = useMemo(() => ({
+    type: 'FeatureCollection',
+    features: districts.map(d => ({
+      type: 'Feature',
+      id: d.id,
+      geometry: d.geometry,
+      properties: d,
+    })),
+  }), [districts]);
+
+  const styleFeature = (feature: any) => ({
+    fillColor: getDistrictColor(feature.properties, colorBy),
+    weight: 1,
+    color: '#666',
+    fillOpacity: 0.7,
+  });
+
+  return (
+    <MapContainer center={[39.8, -98.6]} zoom={4} className="h-[600px]">
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <GeoJSON
+        data={geojsonData}
+        style={styleFeature}
+        renderer={renderer}
+        onEachFeature={(feature, layer) => {
+          layer.on('click', () => onDistrictClick?.(feature.properties));
+        }}
+      />
+    </MapContainer>
+  );
+}
+```
+
+### API Client Pattern
+
+```typescript
+// api/client.ts
+import axios from 'axios';
+
+export const apiClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8002',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Handle auth error
+    }
+    return Promise.reject(error);
+  }
+);
+
+// api/runs.ts
+export const runApi = {
+  list: (filters?: RunFilters) =>
+    apiClient.get<RunListResponse>('/api/v1/runs', { params: filters }).then(r => r.data),
+
+  get: (id: number) =>
+    apiClient.get<RunDetailResponse>(`/api/v1/runs/${id}`).then(r => r.data),
+
+  create: (data: RunCreate) =>
+    apiClient.post<RunResponse>('/api/v1/runs', data).then(r => r.data),
+
+  start: (id: number) =>
+    apiClient.post<RunResponse>(`/api/v1/runs/${id}/actions/start`).then(r => r.data),
+
+  cancel: (id: number) =>
+    apiClient.post<RunResponse>(`/api/v1/runs/${id}/actions/cancel`).then(r => r.data),
+
+  getProgress: (id: number) =>
+    apiClient.get<RunProgressResponse>(`/api/v1/runs/${id}/progress`).then(r => r.data),
+};
+```
+
+---
+
+## API/Frontend Anti-Patterns
+
+### API Anti-Patterns
+
+```python
+# ❌ Sync blocking in async endpoint
+@router.get("/slow")
+async def slow_endpoint():
+    subprocess.run(["long_command"])  # Blocks event loop!
+
+# ✅ Use asyncio subprocess
+@router.get("/slow")
+async def slow_endpoint():
+    proc = await asyncio.create_subprocess_exec(...)
+    await proc.wait()
+
+# ❌ N+1 queries
+@router.get("/runs")
+async def list_runs(db: Session = Depends(get_db)):
+    runs = db.query(Run).all()
+    for run in runs:
+        run.year_details  # N additional queries!
+
+# ✅ Eager loading
+@router.get("/runs")
+async def list_runs(db: Session = Depends(get_db)):
+    runs = db.query(Run).options(selectinload(Run.year_details)).all()
+
+# ❌ Unbounded queries
+@router.get("/runs")
+async def list_runs(db: Session = Depends(get_db)):
+    return db.query(Run).all()  # Could return millions!
+
+# ✅ Always paginate
+@router.get("/runs")
+async def list_runs(limit: int = Query(50, le=100), offset: int = Query(0)):
+    return db.query(Run).limit(limit).offset(offset).all()
+```
+
+### Frontend Anti-Patterns
+
+```typescript
+// ❌ Direct API calls in component
+function RunList() {
+  const [runs, setRuns] = useState([]);
+  useEffect(() => {
+    fetch('/api/runs').then(r => r.json()).then(setRuns);
+  }, []);  // No loading/error handling!
+}
+
+// ✅ Use React Query hooks
+function RunList() {
+  const { data, isLoading, error } = useRuns();
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorBanner error={error} />;
+  return <RunTable runs={data.runs} />;
+}
+
+// ❌ Prop drilling
+function App() {
+  const [selectedRun, setSelectedRun] = useState(null);
+  return (
+    <Layout selectedRun={selectedRun}>
+      <Page1 selectedRun={selectedRun} setSelectedRun={setSelectedRun}>
+        <Component selectedRun={selectedRun} />
+      </Page1>
+    </Layout>
+  );
+}
+
+// ✅ Use context or URL state
+function App() {
+  return (
+    <Routes>
+      <Route path="/runs/:runId" element={<RunDetail />} />
+    </Routes>
+  );
+}
+
+// ❌ Missing memoization for expensive computations
+function DistrictMap({ districts, colorBy }) {
+  // Recomputes on every render!
+  const geojson = {
+    features: districts.map(d => ({ geometry: d.geometry }))
+  };
+}
+
+// ✅ Memoize expensive computations
+function DistrictMap({ districts, colorBy }) {
+  const geojson = useMemo(() => ({
+    features: districts.map(d => ({ geometry: d.geometry }))
+  }), [districts]);
+}
+```
+
+---
+
+## Quick Reference: API/Frontend
+
+**Starting new API endpoint**:
+- [ ] Pydantic schema (request + response)
+- [ ] Service function (business logic)
+- [ ] Router function (HTTP handling)
+- [ ] Register in main.py
+- [ ] Add tests
+
+**Starting new React feature**:
+- [ ] Types (interfaces)
+- [ ] API client functions
+- [ ] Custom hooks (useQuery/useMutation)
+- [ ] Container component
+- [ ] Presentational components
+- [ ] Add route
+- [ ] Add tests
+
+**API Testing**:
+- [ ] Unit tests for services
+- [ ] Integration tests for endpoints
+- [ ] E2E test with VT
+
+**Frontend Testing**:
+- [ ] Unit tests for hooks/utils
+- [ ] Component tests with Testing Library
+- [ ] E2E tests with Playwright

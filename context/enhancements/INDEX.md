@@ -85,29 +85,34 @@ These fields enable:
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (18 enhancements)
+### 📋 Planned (23 enhancements)
 
-| # | Title | Priority | Files |
-|---|-------|----------|-------|
-| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | High | [View](51_pipeline_manager_web_app.md) |
-| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Critical | [View](42_research_narrative_policy_questions.md) |
-| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Critical | [View](45_baseline_data_organization.md) |
-| [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | [View](36_experimental_variants_config.md) |
-| [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Medium | [View](43_cross_year_longitudinal_analysis.md) |
-| [44](44_real_world_constraints.md) | Real-World Redistricting Constraints (VRA, COI, County Splitting) | Medium | [View](44_real_world_constraints.md) |
-| [46](46_enhancement_priority_system.md) | Priority System for Enhancements and Enhancement Manager | Medium | [View](46_enhancement_priority_system.md) |
-| [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | [View](41_public_distribution.md) |
-| [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | [View](49_pipeline_download_integration.md) |
-| [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | [View](32_reock_compactness_metric.md) |
-| [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | [View](40_corner_adjacency_filter.md) |
-| [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | [View](16_metro_2000.md) |
-| [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Research | [View](22_national_redistricting.md) |
-| [23](23_county_representation.md) | Direct County Representation | Research | [View](23_county_representation.md) |
-| [24](24_party_based_allocation.md) | Party-Based District Allocation | Research | [View](24_party_based_allocation.md) |
-| [25](25_committee_based_representation.md) | Committee-Based Representation | Research | [View](25_committee_based_representation.md) |
-| [26](26_demographic_similarity_districts.md) | Demographic Similarity Districts | Research | [View](26_demographic_similarity.md) |
-| [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Research | [View](27_electoral_college_county_reform.md) |
-| [28](28_multi_member_districts.md) | Multi-Member Districts | Research | [View](28_multi_member_districts.md) |
+| # | Title | Priority | Wave | Files |
+|---|-------|----------|------|-------|
+| [60](60_api_project_setup.md) | API Project Setup & Infrastructure | High | Wave 9 | [View](60_api_project_setup.md) |
+| [61](61_run_management_api.md) | Run Management API | High | Wave 9 | [View](61_run_management_api.md) |
+| [62](62_pipeline_execution_engine.md) | Pipeline Execution Engine | High | Wave 9 | [View](62_pipeline_execution_engine.md) |
+| [63](63_react_dashboard_core.md) | React Dashboard Core | High | Wave 9 | [View](63_react_dashboard_core.md) |
+| [64](64_district_visualization.md) | District Visualization | High | Wave 9 | [View](64_district_visualization.md) |
+| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | High | - | [View](51_pipeline_manager_web_app.md) |
+| [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Critical | - | [View](42_research_narrative_policy_questions.md) |
+| [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Critical | - | [View](45_baseline_data_organization.md) |
+| [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | High | - | [View](36_experimental_variants_config.md) |
+| [43](43_cross_year_longitudinal_analysis.md) | Cross-Year Longitudinal Analysis | Medium | - | [View](43_cross_year_longitudinal_analysis.md) |
+| [44](44_real_world_constraints.md) | Real-World Redistricting Constraints (VRA, COI, County Splitting) | Medium | - | [View](44_real_world_constraints.md) |
+| [46](46_enhancement_priority_system.md) | Priority System for Enhancements and Enhancement Manager | Medium | - | [View](46_enhancement_priority_system.md) |
+| [41](41_public_distribution.md) | Public Data and Dashboard Distribution | Medium | - | [View](41_public_distribution.md) |
+| [49](49_pipeline_download_integration.md) | Pipeline Download Integration (Opt-In) | Low | - | [View](49_pipeline_download_integration.md) |
+| [32](32_reock_compactness_metric.md) | Reock Compactness Metric | Low | - | [View](32_reock_compactness_metric.md) |
+| [40](40_corner_adjacency_filter.md) | Filter Corner Adjacencies from Adjacency Graphs | Low | - | [View](40_corner_adjacency_filter.md) |
+| [16](16_metro_2000.md) | 2000 Census Metro Area Maps | Low | - | [View](16_metro_2000.md) |
+| [22](22_national_redistricting.md) | National Redistricting (No State Boundaries) | Research | - | [View](22_national_redistricting.md) |
+| [23](23_county_representation.md) | Direct County Representation | Research | - | [View](23_county_representation.md) |
+| [24](24_party_based_allocation.md) | Party-Based District Allocation | Research | - | [View](24_party_based_allocation.md) |
+| [25](25_committee_based_representation.md) | Committee-Based Representation | Research | - | [View](25_committee_based_representation.md) |
+| [26](26_demographic_similarity_districts.md) | Demographic Similarity Districts | Research | - | [View](26_demographic_similarity.md) |
+| [27](27_electoral_college_county_reform.md) | Electoral College County-Based Reform | Research | - | [View](27_electoral_college_county_reform.md) |
+| [28](28_multi_member_districts.md) | Multi-Member Districts | Research | - | [View](28_multi_member_districts.md) |
 
 ## By Priority
 
@@ -120,15 +125,20 @@ Enhancements organized by priority level for better planning and focus.
 | [42](42_research_narrative_policy_questions.md) | Research Narrative and Policy Questions | Proposed | [View](42_research_narrative_policy_questions.md) |
 | [45](45_baseline_data_organization.md) | Baseline Data Organization and Analysis | Proposed | [View](45_baseline_data_organization.md) |
 
-### High (5 enhancements)
+### High (10 enhancements)
 
-| # | Title | Status | Files |
-|---|-------|--------|-------|
-| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | Proposed | [View](51_pipeline_manager_web_app.md) |
-| [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | Proposed | [View](36_experimental_variants_config.md) |
-| [11](11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Completed (Jan 17, 2026) | [View](11_baseline_comparison.md) |
-| [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | [View](12_edge_weighted_analysis.md) |
-| [10](10_per_state_urban.md) | Per-State Urban Area Processing | Completed (Jan 2026) | [View](10_per_state_urban.md) |
+| # | Title | Status | Wave | Files |
+|---|-------|--------|------|-------|
+| [60](60_api_project_setup.md) | API Project Setup & Infrastructure | Planned | Wave 9 | [View](60_api_project_setup.md) |
+| [61](61_run_management_api.md) | Run Management API | Planned | Wave 9 | [View](61_run_management_api.md) |
+| [62](62_pipeline_execution_engine.md) | Pipeline Execution Engine | Planned | Wave 9 | [View](62_pipeline_execution_engine.md) |
+| [63](63_react_dashboard_core.md) | React Dashboard Core | Planned | Wave 9 | [View](63_react_dashboard_core.md) |
+| [64](64_district_visualization.md) | District Visualization | Planned | Wave 9 | [View](64_district_visualization.md) |
+| [51](51_pipeline_manager_web_app.md) | Pipeline Manager Web Application | Proposed | - | [View](51_pipeline_manager_web_app.md) |
+| [36](36_experimental_variants_config.md) | Experimental Variants Configuration System | Proposed | - | [View](36_experimental_variants_config.md) |
+| [11](11_baseline_comparison.md) | Baseline Comparison to Enacted Districts | Completed (Jan 17, 2026) | - | [View](11_baseline_comparison.md) |
+| [12](12_edge_weighted_analysis.md) | Edge-Weighted Algorithm Analysis | Completed (Jan 17, 2026) | - | [View](12_edge_weighted_analysis.md) |
+| [10](10_per_state_urban.md) | Per-State Urban Area Processing | Completed (Jan 2026) | - | [View](10_per_state_urban.md) |
 
 ### Medium (33 enhancements)
 
