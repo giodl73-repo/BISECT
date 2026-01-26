@@ -1,0 +1,2 @@
+# App-specific components will be added in Enhancement 63
+# Using @common/ui for generic components (Button, LoadingSpinner, StatusIndicator)

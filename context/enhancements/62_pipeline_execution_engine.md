@@ -293,8 +293,8 @@ api/
 
 **Modified Files**:
 ```
-api/routers/runs.py              # Add start/cancel actions
-api/main.py                      # Initialize pipeline manager
+backend/app/api/routes/runs.py              # Add start/cancel actions
+backend/app/main.py                      # Initialize pipeline manager
 ```
 
 **Related DESIGN_PATTERNS.md Sections**:
@@ -831,7 +831,7 @@ On server start: running -> orphaned (allow retry)
 Per engineer recommendation, use singleton for single active run:
 
 ```python
-# api/services/pipeline_manager.py
+# backend/app/services/pipeline_manager.py
 class PipelineManager:
     """Singleton managing active pipeline execution."""
 

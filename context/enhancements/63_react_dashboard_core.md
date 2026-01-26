@@ -17,42 +17,35 @@ Build the React dashboard core with UI component library, run management pages, 
 
 ## Tasks
 
-### Phase 1: UI Component Library (5-6 hours)
+### Phase 1: Shared UI Components Integration (2-3 hours)
 
-- [ ] Create `frontend/src/components/ui/` directory with reusable components
-- [ ] Implement core UI components following Tailwind patterns:
-  ```typescript
-  // Button.tsx
-  interface ButtonProps {
-    variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-    size?: 'sm' | 'md' | 'lg';
-    loading?: boolean;
-    disabled?: boolean;
-    children: React.ReactNode;
-    onClick?: () => void;
-  }
-
-  // Card.tsx
-  interface CardProps {
-    title?: string;
-    description?: string;
-    children: React.ReactNode;
-    className?: string;
-  }
-
-  // Table.tsx
-  interface TableProps<T> {
-    data: T[];
-    columns: ColumnDef<T>[];
-    onRowClick?: (row: T) => void;
-    loading?: boolean;
-    emptyMessage?: string;
-  }
-
-  // Input.tsx, Select.tsx, Badge.tsx, Spinner.tsx, ErrorBanner.tsx
+- [ ] Install shared UI packages from App Manager
+  ```bash
+  cd frontend
+  pnpm add @common/ui@workspace:* @common/types@workspace:* @common/api-client@workspace:*
   ```
-- [ ] Add component documentation with examples
-- [ ] Create consistent color palette and spacing system
+- [ ] Configure symlinks to App Manager packages
+  - `pnpm link ../../appmanager/packages/common-ui`
+  - `pnpm link ../../appmanager/packages/common-types`
+  - `pnpm link ../../appmanager/packages/common-api-client`
+- [ ] **Use existing components from @common/ui**:
+  ```typescript
+  import { Button, LoadingSpinner, StatusIndicator } from '@common/ui';
+
+  // Available components (from appmanager/packages/common-ui):
+  // - Button: Primary/secondary variants with loading states
+  // - LoadingSpinner: Consistent loading indicator
+  // - StatusIndicator: Status badges (running, completed, failed)
+  ```
+- [ ] Build **app-specific** components only (not generic UI):
+  ```typescript
+  // frontend/src/components/app/
+  // - RunCard.tsx          # Display run summary card
+  // - ProgressBar.tsx      # Show pipeline progress
+  // - DistrictTable.tsx    # Show district data
+  // - StateSelector.tsx    # Multi-state selection
+  ```
+- [ ] Create Tailwind config extending App Manager color palette
 
 ### Phase 2: Navigation & Layout (2-3 hours)
 
@@ -702,15 +695,22 @@ it('should handle network disconnection gracefully', async () => {
 - Enhancement 60 (Project Setup) - REQUIRED (frontend scaffold)
 - Enhancement 61 (Run Management API) - REQUIRED (API endpoints)
 - Enhancement 62 (Pipeline Execution) - REQUIRED (progress endpoint)
+- **App Manager shared packages** (C:\src\appmanager\packages\)
+
+**Shared Packages** (workspace dependencies):
+- `@common/ui@workspace:*` - Button, LoadingSpinner, StatusIndicator
+- `@common/types@workspace:*` - TypeScript type definitions
+- `@common/api-client@workspace:*` - Axios instance and React Query setup
 
 **Node Packages** (add to package.json):
-- @tanstack/react-query
-- axios
+- @tanstack/react-query (may already be in @common/api-client)
+- axios (may already be in @common/api-client)
 - react-router-dom
-- @headlessui/react (for accessible UI components)
 - msw (for testing)
 - @testing-library/react
 - @playwright/test
+
+**Important**: Use `pnpm link` to symlink App Manager packages during development
 
 ---
 
@@ -730,11 +730,12 @@ it('should handle network disconnection gracefully', async () => {
 
 ## Design Notes (from Senior Designer)
 
-### UI Component Library First
-Build reusable components before feature components:
-- **Rationale**: Ensures consistent styling across app
-- **Components**: Button, Card, Table, Input, Select, Badge, Spinner, ErrorBanner
-- **Pattern**: Props-driven with TypeScript interfaces
+### Shared UI Components from App Manager
+**Use existing components from @common/ui** instead of building from scratch:
+- **Rationale**: Consistency across all apps (TCM, NHL, Apportionment), faster development
+- **Available**: Button, LoadingSpinner, StatusIndicator
+- **Build app-specific only**: RunCard, ProgressBar, DistrictTable, StateSelector
+- **Pattern**: Import from @common/ui, extend with composition for app-specific needs
 
 ### Container/Presentational Split
 Separate data fetching from presentation:

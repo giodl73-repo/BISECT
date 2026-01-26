@@ -417,7 +417,7 @@ frontend/src/
 ```
 frontend/src/App.tsx                 # Add districts route
 frontend/src/features/runs/RunDetail.tsx  # Link to districts
-api/routers/files.py                 # Add geometry file serving
+backend/app/api/routes/files.py                 # Add geometry file serving
 ecosystem.config.js                  # Update for production
 ```
 
@@ -881,7 +881,7 @@ export function useStateGeometry(runId: number, state: string, year: string) {
 Per engineer recommendation, use HTTP caching for geometry files:
 
 ```python
-# api/routers/files.py
+# backend/app/api/routes/files.py
 from fastapi.responses import FileResponse
 import hashlib
 

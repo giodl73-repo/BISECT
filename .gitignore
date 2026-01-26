@@ -96,6 +96,33 @@ env.bak/
 venv.bak/
 
 # ============================================================================
+# Node.js / Frontend (Wave 9)
+# ============================================================================
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+
+# Environment files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ============================================================================
+# Poetry / Backend (Wave 9)
+# ============================================================================
+# Poetry lock file (keep pyproject.toml, ignore lock for cross-platform compat)
+poetry.lock
+
+# Virtual environments
+.venv/
+backend/.venv/
+
+# ============================================================================
 # IDEs and Editors
 # ============================================================================
 # VS Code

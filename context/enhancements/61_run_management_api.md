@@ -55,10 +55,11 @@ Implement the database schema and core API endpoints for managing redistricting 
 
   CREATE INDEX idx_run_years_run ON run_years(run_id);
   ```
-- [ ] Implement SQLAlchemy models in `api/models.py`
+- [ ] Implement SQLAlchemy models in `backend/app/models/run.py`
   - `Run` model with JSON columns
   - `RunYear` model with relationship
   - RunStatus enum
+  - Import Base from `app.database`
 - [ ] Create Alembic migration for initial schema
   - `alembic init alembic`
   - Create migration script
@@ -66,7 +67,7 @@ Implement the database schema and core API endpoints for managing redistricting 
 
 ### Phase 2: Pydantic Schemas (2-3 hours)
 
-- [ ] Create request schemas in `api/schemas/run.py`
+- [ ] Create request schemas in `backend/app/schemas/run.py`
   ```python
   class RunCreate(BaseModel):
       version: str = Field(..., min_length=1, max_length=50)
@@ -108,7 +109,7 @@ Implement the database schema and core API endpoints for managing redistricting 
 
 ### Phase 3: Run Service Layer (3-4 hours)
 
-- [ ] Implement `api/services/run_service.py`
+- [ ] Implement `backend/app/services/run_service.py`
   ```python
   def create_run(db: Session, run_create: RunCreate) -> Run:
       """Create a new run with pending status."""
@@ -140,7 +141,7 @@ Implement the database schema and core API endpoints for managing redistricting 
 
 ### Phase 4: Run CRUD Endpoints (4-5 hours)
 
-- [ ] Implement `api/routers/runs.py`
+- [ ] Implement `backend/app/api/routes/runs.py`
   ```python
   @router.post("", response_model=RunResponse, status_code=201)
   async def create_run(run_create: RunCreate, db: Session = Depends(get_db)):
@@ -245,14 +246,16 @@ Implement the database schema and core API endpoints for managing redistricting 
 
 **New Files**:
 ```
-api/
-├── models.py                    # SQLAlchemy models (Run, RunYear)
-├── schemas/
-│   └── run.py                   # Pydantic schemas
-├── services/
-│   └── run_service.py           # Business logic
-├── routers/
-│   └── runs.py                  # API endpoints
+backend/
+├── app/
+│   ├── models/
+│   │   └── run.py               # SQLAlchemy models (Run, RunYear)
+│   ├── schemas/
+│   │   └── run.py               # Pydantic schemas
+│   ├── services/
+│   │   └── run_service.py       # Business logic
+│   └── api/routes/
+│       └── runs.py              # API endpoints
 └── alembic/
     └── versions/
         └── 001_initial_schema.py
@@ -260,7 +263,16 @@ api/
 
 **Modified Files**:
 ```
-api/main.py                      # Register runs router
+backend/app/main.py              # Register runs router
+```
+
+**Shared Packages Used**:
+```
+common-backend-utils              # Exceptions, pagination, CRUD patterns (from App Manager)
+  - NotFoundException             # 404 errors
+  - ValidationException           # 422 validation errors
+  - ConflictException             # 409 conflicts
+  - create_db_dependency          # Database session pattern
 ```
 
 **Database Tables**:
@@ -413,9 +425,16 @@ api/main.py                      # Register runs router
 - Enhancement 60 (Project Setup) - REQUIRED
 - PostgreSQL database running
 - Alembic configured
+- **App Manager shared packages** (C:\src\appmanager\packages\)
 
-**Python Packages** (add to requirements.txt):
-- alembic>=1.12.0 (if not already added)
+**Python Packages** (Poetry dependencies):
+- alembic>=1.12.0 (if not already added in pyproject.toml)
+- common-backend-utils (path dependency to ../../appmanager/packages/common-backend-utils)
+
+**Shared Utilities Used**:
+- `common_backend_utils.exceptions` - NotFoundException, ValidationException, ConflictException
+- `common_backend_utils.deps` - create_db_dependency (already used in Enhancement 60)
+- `common_backend_utils.pagination` - Pagination helpers (if needed for list endpoints)
 
 **Blocks**: Enhancement 62 (Pipeline Execution Engine)
 

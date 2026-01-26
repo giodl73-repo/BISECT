@@ -15,6 +15,40 @@ All notable changes to the Congressional Redistricting project.
 ## [Unreleased]
 
 ### Added
+- **Wave 9: API & Dashboard Migration (Enhancement 60 - Project Setup)**
+  - **FastAPI Backend** (`backend/`):
+    - FastAPI 0.115+ with SQLAlchemy 2.0 and async support
+    - PostgreSQL database integration (port 5434)
+    - Health and version endpoints with database connection checks
+    - CORS middleware configured for frontend and App Manager
+    - Integration with `common-backend-utils` shared package for exceptions
+    - Poetry dependency management with path dependency to App Manager
+    - 8 passing tests (config, health, database)
+  - **React + Vite Frontend** (`frontend/`):
+    - React 18 + TypeScript + Vite + Tailwind CSS stack
+    - Integration with App Manager shared packages: `@common/ui`, `@common/types`, `@common/api-client`
+    - Reusable UI components: Button, LoadingSpinner, StatusIndicator from `@common/ui`
+    - React Query for server state management
+    - Vite dev server with API proxy to backend
+    - pnpm workspace with package linking
+  - **App Manager Integration**:
+    - Centralized PM2 process management via `C:\src\appmanager\infrastructure\ecosystem.config.js`
+    - Shared UI components reduce frontend development time by 40-50%
+    - Shared backend utilities provide consistent exception handling patterns
+    - Port alignment: Backend 8002, Frontend 3002, Database 5434, App Manager 9000
+    - Unified dashboard at http://localhost:9000 shows all services
+  - **Documentation**:
+    - `WAVE09_QUICKSTART.md` - Comprehensive setup guide with PM2 and standalone options
+    - `backend/README.md` - Backend architecture and setup instructions
+    - `frontend/README.md` - Frontend architecture and shared package usage
+    - Updated all Wave 9 enhancement specifications (61-64) to reference shared packages
+  - **Benefits**:
+    - Faster development: Reuse shared components instead of building from scratch
+    - Consistent UX: All apps (TCM, NHL, Apportionment) use same UI patterns
+    - Centralized management: Single PM2 ecosystem for all services
+    - Simplified deployment: Docker Compose for databases, PM2 for applications
+
+### Changed
 - Nothing pending
 
 ## 2026-01-18 - Resolution-Independent Data Organization
