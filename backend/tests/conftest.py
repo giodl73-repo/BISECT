@@ -11,6 +11,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.main import app
 from app.database import Base, get_db
+from app.services.execution_service import get_execution_manager
 
 
 # Create in-memory SQLite database for testing
@@ -46,5 +47,14 @@ def test_db():
 def client(test_db):
     """Create test client with database override."""
     app.dependency_overrides[get_db] = override_get_db
+
+    # Reset execution manager state before each test
+    import asyncio
+    manager = asyncio.run(get_execution_manager())
+    manager.reset()
+
     yield TestClient(app)
+
+    # Clean up after test
+    manager.reset()
     app.dependency_overrides.clear()

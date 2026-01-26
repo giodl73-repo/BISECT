@@ -18,6 +18,8 @@ from app.schemas.run import (
     StateInfo,
 )
 from app.services import run_service
+from app.services.execution_service import get_execution_manager
+from app.models.run import RunStatus
 
 
 router = APIRouter()
@@ -218,3 +220,86 @@ async def get_state_config(
         year=year,
         states=states,
     )
+
+
+@router.post("/{run_id}/actions/start", response_model=RunResponse)
+async def start_run(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Start pipeline execution for a run.
+
+    Run must be in PENDING status. Will transition to RUNNING and begin
+    executing the redistricting pipeline in the background.
+    """
+    run = run_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found",
+        )
+
+    if run.status != RunStatus.PENDING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot start run in {run.status} status. Must be PENDING.",
+        )
+
+    # Update status to running
+    run = run_service.update_run_status(db, run_id, RunStatus.RUNNING)
+
+    # Start execution in background
+    execution_manager = await get_execution_manager()
+    try:
+        await execution_manager.start_run(run_id, run.config)
+    except ValueError as e:
+        # Run might already be active - revert status
+        run_service.update_run_status(db, run_id, RunStatus.PENDING)
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
+
+    return run
+
+
+@router.post("/{run_id}/actions/cancel", response_model=RunResponse)
+async def cancel_run(
+    run_id: int,
+    db: Session = Depends(get_db),
+):
+    """
+    Cancel an active run.
+
+    Run must be in RUNNING status. Will transition to CANCELLED and
+    terminate the pipeline subprocess.
+    """
+    run = run_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Run {run_id} not found",
+        )
+
+    if run.status != RunStatus.RUNNING:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot cancel run in {run.status} status. Must be RUNNING.",
+        )
+
+    # Cancel execution
+    execution_manager = await get_execution_manager()
+    try:
+        await execution_manager.cancel_run(run_id)
+    except ValueError as e:
+        # Run might have just completed
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
+        )
+
+    # Update status
+    run = run_service.update_run_status(db, run_id, RunStatus.CANCELLED)
+
+    return run

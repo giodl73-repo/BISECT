@@ -13,8 +13,9 @@ from datetime import datetime
 from common_backend_utils.exceptions import AppException, create_exception_handler
 
 from app.config import settings
-from app.database import engine, Base
+from app.database import engine, Base, SessionLocal
 from app.api.routes import health, runs
+from app.services.execution_service import get_execution_manager
 
 
 @asynccontextmanager
@@ -28,6 +29,10 @@ async def lifespan(app: FastAPI):
     # For development, create tables automatically
     # TODO: Use Alembic migrations in production
     Base.metadata.create_all(bind=engine)
+
+    # Initialize execution manager with database session maker
+    execution_manager = await get_execution_manager()
+    execution_manager.set_session_maker(SessionLocal)
 
     yield
 
