@@ -117,13 +117,16 @@ class ExecutionManager:
                 db.close()
 
         # Create executor
+        # Set working directory to project root (parent of backend/)
+        project_root = Path.cwd().parent if Path.cwd().name == "backend" else Path.cwd()
+
         executor = PipelineExecutor(
             run_id=run_id,
             command=command,
             on_progress=on_progress,
             on_complete=on_complete,
             on_error=on_error,
-            cwd=Path.cwd(),
+            cwd=project_root,
         )
 
         # Store in active runs
