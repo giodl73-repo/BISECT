@@ -37,9 +37,9 @@ Wave 9 is approved for implementation based on:
 
 ## Key Risks and Controls
 
-### Critical Risk: Enhancement 62 (Pipeline Execution Engine)
+### Critical Risk: E62 (Pipeline Execution Engine)
 
-Enhancement 62 is the highest-risk component due to subprocess management complexity on Windows.
+E62 is the highest-risk component due to subprocess management complexity on Windows.
 
 **Mandatory Control**: Quality gate must pass before E63/E64 integration:
 - [ ] Subprocess spawn and terminate works on Windows
@@ -53,7 +53,7 @@ Enhancement 62 is the highest-risk component due to subprocess management comple
 | # | Control | Owner | Frequency |
 |---|---------|-------|-----------|
 | 1 | Weekly checkpoint reviews | Team Lead | Every Friday |
-| 2 | Enhancement 62 quality gate | Backend Dev + QA | Week 3-4 |
+| 2 | E62 quality gate | Backend Dev + QA | Week 3-4 |
 | 3 | MVP-first delivery | Team | Week 4-5 |
 | 4 | Change control (>4 hours) | PM | As needed |
 

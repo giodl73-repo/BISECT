@@ -1,4 +1,4 @@
-# Enhancement 29: Artifacts Dashboard Tab
+# E29: Artifacts Dashboard Tab
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium
@@ -413,6 +413,6 @@ While implementing the enhancement, discovered and fixed several visualization i
 
 ## Related Documentation
 
-- [Enhancement 13: Directory Unification](../completed/13_directory_unification.md) - Context for artifacts/ organization
+- [E13: Directory Unification](../completed/13_directory_unification.md) - Context for artifacts/ organization
 - [ARCHITECTURE.md](../../ARCHITECTURE.md#dashboard-generation) - Dashboard architecture
 - [CLAUDE.md](../../CLAUDE.md#web-dashboard) - Quick reference for dashboard

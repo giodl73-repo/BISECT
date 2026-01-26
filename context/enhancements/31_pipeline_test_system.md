@@ -1,4 +1,4 @@
-# Enhancement 31: Pipeline Test System
+# E31: Pipeline Test System
 
 **Status**: ✅ COMPLETED
 **Started**: January 16, 2026
@@ -13,7 +13,7 @@ The project has limited testing infrastructure:
 
 **Existing Tests:**
 - **8 METIS integration tests** in `scripts/tests/` - basic algorithm validation
-- **75 Playwright dashboard tests** (Enhancement 30) - end-to-end browser testing
+- **75 Playwright dashboard tests** (E30) - end-to-end browser testing
 - **No unit tests** for individual pipeline scripts
 - **No mock data generators** for intermediate pipeline stages
 - **No integration tests** for multi-stage pipeline flows
@@ -608,7 +608,7 @@ Comprehensive testing framework for all pipeline scripts.
 2. `README.md` - Add testing section and badge
 3. `ARCHITECTURE.md` - Add testing architecture section
 4. `.gitignore` - Add test output directories
-5. `enhancements/INDEX.md` - Add Enhancement 31
+5. `enhancements/INDEX.md` - Add E31
 
 ## Testing Plan
 
@@ -677,7 +677,7 @@ Comprehensive testing framework for all pipeline scripts.
 3. **Regression prevention** - Catch breaking changes immediately
 4. **Refactoring confidence** - Make changes knowing tests will catch issues
 
-**For Dashboard Testing (Enhancement 30):**
+**For Dashboard Testing (E30):**
 5. **Realistic mock data** - Generate complete test fixtures for dashboard tests
 6. **Faster test execution** - Don't need 2-4 hour pipeline runs to generate test data
 7. **Complete coverage** - Test all dashboard features with mock data for all stages
@@ -705,7 +705,7 @@ Comprehensive testing framework for all pipeline scripts.
 - Pillow (^10.0.0) - For mock PNG generation
 
 **Internal:**
-- Enhancement 30 (Playwright tests) - Will use mock data from this enhancement
+- E30 (Playwright tests) - Will use mock data from this enhancement
 - All pipeline scripts (scripts/pipeline/, scripts/political/, etc.)
 
 ## Risks & Mitigations
@@ -753,7 +753,7 @@ Comprehensive testing framework for all pipeline scripts.
 - But: Well-defined phases, clear deliverables
 
 **Dependencies**:
-- Enhancement 30 (Playwright tests) provides pattern to follow
+- E30 (Playwright tests) provides pattern to follow
 - Existing test infrastructure (scripts/tests/) provides examples
 - CI/CD requires GitHub repository access
 
@@ -863,8 +863,8 @@ def test_complete_pipeline_flow(tmp_path):
 
 ## Related Documentation
 
-- **Enhancement 30**: [Playwright Dashboard Tests](30_playwright_testing.md) - Will use mock data from this enhancement
-- **Enhancement 14**: [Pipeline Output Validation](../completed/14_validation_framework.md) - Related validation patterns
+- **E30**: [Playwright Dashboard Tests](30_playwright_testing.md) - Will use mock data from this enhancement
+- **E14**: [Pipeline Output Validation](../completed/14_validation_framework.md) - Related validation patterns
 - **Architecture**: [ARCHITECTURE.md](../../ARCHITECTURE.md) - Pipeline architecture to test
 - **Testing**: [TESTING.md](../../TESTING.md) - Comprehensive testing guide (will be updated)
 
@@ -919,7 +919,7 @@ def test_complete_pipeline_flow(tmp_path):
 
 **Phase 7: Documentation ✓**
 - `tests/PIPELINE_TESTS.md` - Comprehensive documentation for pipeline test system
-- `tests/README.md` - Already exists from Enhancement 30 (E2E dashboard tests)
+- `tests/README.md` - Already exists from E30 (E2E dashboard tests)
 - Added detailed usage examples, patterns, troubleshooting guides
 
 ### Files Created (25 files)
@@ -1008,6 +1008,6 @@ def test_complete_pipeline_flow(tmp_path):
 
 3. **Add more tests** as pipeline scripts are modified or added
 
-4. **Integrate with Enhancement 30** - Use mock data generators for dashboard E2E tests
+4. **Integrate with E30** - Use mock data generators for dashboard E2E tests
 
 5. **Monitor coverage** - Ensure 90%+ coverage maintained as codebase evolves

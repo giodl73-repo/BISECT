@@ -5,15 +5,15 @@
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH (deferred until after core research)
 **Estimated Duration**: 6-8 weeks
-**Enhancements**: 22, 23, 24, 25, 26, 27, 28
+**E**: 22, 23, 24, 25, 26, 27, 28
 **Phases**:
-- Phase 1: Enhancement 22 - National Districts (📋 PLANNED)
-- Phase 2: Enhancement 23 - County Representation (📋 PLANNED)
-- Phase 3: Enhancement 24 - Party Allocation (📋 PLANNED)
-- Phase 4: Enhancement 25 - Committee System (📋 PLANNED)
-- Phase 5: Enhancement 26 - Demographic Districts (📋 PLANNED)
-- Phase 6: Enhancement 27 - Electoral Reform (📋 PLANNED)
-- Phase 7: Enhancement 28 - Multi-Member (📋 PLANNED)
+- Phase 1: E22 - National Districts (📋 PLANNED)
+- Phase 2: E23 - County Representation (📋 PLANNED)
+- Phase 3: E24 - Party Allocation (📋 PLANNED)
+- Phase 4: E25 - Committee System (📋 PLANNED)
+- Phase 5: E26 - Demographic Districts (📋 PLANNED)
+- Phase 6: E27 - Electoral Reform (📋 PLANNED)
+- Phase 7: E28 - Multi-Member (📋 PLANNED)
 
 ---
 
@@ -38,7 +38,7 @@
 
 ## Phases
 
-### Phase 1: Enhancement 22 - National Redistricting (No State Boundaries)
+### Phase 1: E22 - National Redistricting (No State Boundaries)
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1-2 weeks
@@ -47,7 +47,7 @@ Create 435 congressional districts nationwide without respecting state boundarie
 
 **Research Question**: How much better could district compactness be if we ignored state boundaries? What would "optimal" national redistricting look like?
 
-### Phase 2: Enhancement 23 - Direct County Representation
+### Phase 2: E23 - Direct County Representation
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1 week
@@ -56,7 +56,7 @@ Allocate representatives directly to counties based on population.
 
 **Research Question**: What if we used existing political boundaries (counties) instead of creating new districts? How would representation change?
 
-### Phase 3: Enhancement 24 - Party-Based District Allocation
+### Phase 3: E24 - Party-Based District Allocation
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1 week
@@ -65,7 +65,7 @@ Create districts to match statewide partisan vote shares (proportional represent
 
 **Research Question**: What if districts were drawn to match statewide party preferences? How different from current/algorithmic districts?
 
-### Phase 4: Enhancement 25 - Committee-Based Representation
+### Phase 4: E25 - Committee-Based Representation
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1 week
@@ -74,7 +74,7 @@ Design representation system based on policy committees instead of geography.
 
 **Research Question**: What if representation was organized by policy interests rather than location? Could voters choose committee representation?
 
-### Phase 5: Enhancement 26 - Demographic Similarity Districts
+### Phase 5: E26 - Demographic Similarity Districts
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1-2 weeks
@@ -83,7 +83,7 @@ Create districts by clustering demographically similar census tracts.
 
 **Research Question**: What if districts grouped people by demographic characteristics instead of geography? How would this change representation?
 
-### Phase 6: Enhancement 27 - Electoral College County-Based Reform
+### Phase 6: E27 - Electoral College County-Based Reform
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1 week
@@ -92,7 +92,7 @@ Reform Electoral College by allocating votes at county level instead of state le
 
 **Research Question**: How would presidential elections change if Electoral College votes were allocated by county rather than winner-take-all by state?
 
-### Phase 7: Enhancement 28 - Multi-Member Districts
+### Phase 7: E28 - Multi-Member Districts
 **Status**: 📋 PLANNED
 **Priority**: RESEARCH
 **Estimated Effort**: 1-2 weeks
@@ -125,13 +125,13 @@ Create larger districts with multiple representatives (proportional representati
 
 ## Related Enhancements
 
-- [Enhancement 22](../enhancements/22_national_redistricting.md) - National Redistricting (planned)
-- [Enhancement 23](../enhancements/23_county_representation.md) - Direct County Representation (planned)
-- [Enhancement 24](../enhancements/24_party_based.md) - Party-Based Allocation (planned)
-- [Enhancement 25](../enhancements/25_committee_based.md) - Committee-Based Representation (planned)
-- [Enhancement 26](../enhancements/26_demographic_similarity.md) - Demographic Similarity Districts (planned)
-- [Enhancement 27](../enhancements/27_electoral_college.md) - Electoral College Reform (planned)
-- [Enhancement 28](../enhancements/28_multi_member.md) - Multi-Member Districts (planned)
+- [E22](../enhancements/22_national_redistricting.md) - National Redistricting (planned)
+- [E23](../enhancements/23_county_representation.md) - Direct County Representation (planned)
+- [E24](../enhancements/24_party_based.md) - Party-Based Allocation (planned)
+- [E25](../enhancements/25_committee_based.md) - Committee-Based Representation (planned)
+- [E26](../enhancements/26_demographic_similarity.md) - Demographic Similarity Districts (planned)
+- [E27](../enhancements/27_electoral_college.md) - Electoral College Reform (planned)
+- [E28](../enhancements/28_multi_member.md) - Multi-Member Districts (planned)
 
 ---
 

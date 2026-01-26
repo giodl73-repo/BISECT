@@ -1,4 +1,4 @@
-# Enhancement 11: Baseline Comparison to Enacted 2020 Congressional Districts
+# E11: Baseline Comparison to Enacted 2020 Congressional Districts
 
 **Status**: ✅ COMPLETED
 **Priority**: High

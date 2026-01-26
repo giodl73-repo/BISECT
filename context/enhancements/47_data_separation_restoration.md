@@ -1,4 +1,4 @@
-# Enhancement 47: Census Data Processing and Path Reorganization
+# E47: Census Data Processing and Path Reorganization
 
 **Status**: ✅ COMPLETED
 **Priority**: Critical
@@ -639,5 +639,5 @@ _(To be filled during implementation)_
 - Architecture doc: [ARCHITECTURE.md](../../ARCHITECTURE.md)
 - Coding patterns: [CODING_PATTERNS.md](../../CODING_PATTERNS.md)
 - Data formats: [DATA_FORMATS.md](../../DATA_FORMATS.md)
-- Enhancement 13: [Directory Unification](13_directory_unification.md) - Previous path restructuring
-- Enhancement 15: [Multi-Year Support](15_multi_year_support.md) - Multi-year patterns
+- E13: [Directory Unification](13_directory_unification.md) - Previous path restructuring
+- E15: [Multi-Year Support](15_multi_year_support.md) - Multi-year patterns

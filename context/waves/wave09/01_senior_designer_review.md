@@ -64,7 +64,7 @@ WebSocket for progress streaming adds operational complexity:
 - Reconnection handling
 - State synchronization
 
-**Recommendation**: Start with polling (every 2 seconds) for simplicity. Add WebSocket as Enhancement 60 optimization if polling proves inadequate. Most pipeline runs are 1-4 hours - polling is sufficient.
+**Recommendation**: Start with polling (every 2 seconds) for simplicity. Add WebSocket as E60 optimization if polling proves inadequate. Most pipeline runs are 1-4 hours - polling is sufficient.
 
 ### 1.3 Architectural Risks
 
@@ -258,7 +258,7 @@ Benefits:
 
 ## 4. Detailed Phase Feedback
 
-### Phase 1: Enhancement 58 - Project Setup
+### Phase 1: E58 - Project Setup
 
 **Scope**: Correct. Setup and infrastructure first.
 
@@ -277,7 +277,7 @@ Benefits:
 
 **Recommendation**: Add Docker Compose setup as sub-task. This provides consistent development environment and simplifies onboarding.
 
-### Phase 2: Enhancement 59 - Database Schema & Core API
+### Phase 2: E59 - Database Schema & Core API
 
 **Scope**: Appropriate but potentially large.
 
@@ -304,7 +304,7 @@ Benefits:
 - Version endpoint (`/version`)
 - State configuration (`/api/v1/states/config`)
 
-### Phase 2: Enhancement 60 - Pipeline Integration
+### Phase 2: E60 - Pipeline Integration
 
 **Scope**: This is the most complex enhancement.
 
@@ -327,7 +327,7 @@ Benefits:
 - Integration tests with mock subprocess
 - E2E tests with small state (VT)
 
-### Phase 3: Enhancement 61 - Frontend Core
+### Phase 3: E61 - Frontend Core
 
 **Scope**: Appropriate.
 
@@ -344,7 +344,7 @@ Benefits:
 
 **Recommendation**: Create `@/components/ui/` library first with: Button, Card, Table, Input, Select, Badge, Spinner, ErrorBanner.
 
-### Phase 3: Enhancement 62 - Interactive Map & Deployment
+### Phase 3: E62 - Interactive Map & Deployment
 
 **Scope**: Potentially too large. Consider splitting.
 
@@ -371,7 +371,7 @@ Benefits:
 
 ### Revised Enhancement Structure
 
-**Enhancement 58: Project Setup & Infrastructure** (12-16 hours)
+**E58: Project Setup & Infrastructure** (12-16 hours)
 - Directory structure (api/, frontend/)
 - Docker Compose (postgres, api, frontend)
 - Environment configuration
@@ -380,14 +380,14 @@ Benefits:
 - CORS and API versioning
 - Health endpoints
 
-**Enhancement 59: Run Management API** (16-20 hours)
+**E59: Run Management API** (16-20 hours)
 - Database schema (runs, run_years)
 - Alembic migrations
 - Run CRUD endpoints
 - State configuration endpoint
 - Unit tests for all endpoints
 
-**Enhancement 60: Pipeline Execution Engine** (20-24 hours)
+**E60: Pipeline Execution Engine** (20-24 hours)
 - Subprocess manager class
 - STATUS protocol parser
 - Progress aggregation service
@@ -395,7 +395,7 @@ Benefits:
 - Cancellation support
 - Integration tests with VT
 
-**Enhancement 61: React Dashboard Core** (20-24 hours)
+**E61: React Dashboard Core** (20-24 hours)
 - Vite + TypeScript setup
 - UI component library
 - Run list page
@@ -403,7 +403,7 @@ Benefits:
 - Run creation form
 - API client with error handling
 
-**Enhancement 62: District Visualization** (16-20 hours)
+**E62: District Visualization** (16-20 hours)
 - Leaflet map component
 - GeoJSON district rendering
 - Color-by-metric selection
@@ -411,7 +411,7 @@ Benefits:
 - District table with sorting
 - Basic deployment (PM2)
 
-**Enhancement 62b (Optional/Future): Map Enhancements**
+**E62b (Optional/Future): Map Enhancements**
 - Alaska/Hawaii insets
 - Zoom to state
 - Print/export
@@ -573,7 +573,7 @@ Wave 9 is a well-conceived plan that adds significant value by making the redist
 1. Use polling before WebSocket (simpler)
 2. Minimize database scope (metadata only, files for data)
 3. Add Docker Compose for development
-4. Split Enhancement 62 (map is complex)
+4. Split E62 (map is complex)
 5. Create UI component library first
 
 **Risk Mitigation**:

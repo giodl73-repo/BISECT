@@ -1,4 +1,4 @@
-# Enhancement 22: National Redistricting (No State Boundaries)
+# E22: National Redistricting (No State Boundaries)
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -178,9 +178,9 @@ This is a **theoretical experiment** to explore:
 
 ## Related Enhancements
 
-- Enhancement 7: Edge-Weighted Recursive Bisection (algorithm foundation)
-- Enhancement 3: National Maps (visualization patterns)
-- Enhancement 12: Edge-Weighted Algorithm Analysis (comparison methodology)
+- E7: Edge-Weighted Recursive Bisection (algorithm foundation)
+- E3: National Maps (visualization patterns)
+- E12: Edge-Weighted Algorithm Analysis (comparison methodology)
 
 ## Constitutional Note
 

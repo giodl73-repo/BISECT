@@ -1,4 +1,4 @@
-# Enhancement 49: Pipeline Download Integration (Opt-In)
+# E49: Pipeline Download Integration (Opt-In)
 
 **Status**: 📋 PLANNED
 **Priority**: Low

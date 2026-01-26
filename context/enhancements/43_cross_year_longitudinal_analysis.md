@@ -1,4 +1,4 @@
-# Enhancement 43: Cross-Year Longitudinal Analysis
+# E43: Cross-Year Longitudinal Analysis
 
 **Status**: Proposed
 **Priority**: Medium
@@ -170,7 +170,7 @@ Track Polsby-Popper scores over time:
 **Already Available:**
 - District assignments for 2000/2010/2020 (algorithmic)
 - Compactness metrics for all years
-- Enacted district shapefiles (from Enhancement 11)
+- Enacted district shapefiles (from E11)
 - Population data from census
 
 **Need to Compute:**
@@ -197,9 +197,9 @@ Track Polsby-Popper scores over time:
 
 ## Related Enhancements
 
-- [Enhancement 11: Baseline Comparison](11_baseline_comparison.md) - Provides enacted district data for comparison
-- [Enhancement 42: Research Narrative](42_research_narrative_policy_questions.md) - Answers "how has redistricting evolved?"
-- [Enhancement 15: Multi-Year Pipeline](15_multi_year_support.md) - Enables processing all years
+- [E11: Baseline Comparison](11_baseline_comparison.md) - Provides enacted district data for comparison
+- [E42: Research Narrative](42_research_narrative_policy_questions.md) - Answers "how has redistricting evolved?"
+- [E15: Multi-Year Pipeline](15_multi_year_support.md) - Enables processing all years
 
 ## Notes
 

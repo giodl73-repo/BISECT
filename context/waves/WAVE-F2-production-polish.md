@@ -5,10 +5,10 @@
 **Status**: 📋 PLANNED
 **Priority**: HIGH - Strong candidate for Wave 08
 **Estimated Duration**: 2-3 weeks
-**Enhancements**: 36, 51
+**E**: 36, 51
 **Phases**:
-- Phase 1: Enhancement 36 - Variant System (📋 PLANNED)
-- Phase 2: Enhancement 51 - Pipeline Manager (📋 PLANNED)
+- Phase 1: E36 - Variant System (📋 PLANNED)
+- Phase 2: E51 - Pipeline Manager (📋 PLANNED)
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## Phases
 
-### Phase 1: Enhancement 36 - Experimental Variants Configuration System
+### Phase 1: E36 - Experimental Variants Configuration System
 **Status**: 📋 PLANNED
 **Priority**: HIGH
 **Estimated Effort**: 1-2 weeks
@@ -51,7 +51,7 @@ Build system for defining and running algorithm variants systematically.
 - Statistical analysis of variant performance
 - Reproducible experiment tracking
 
-### Phase 2: Enhancement 51 - Pipeline Manager Web App
+### Phase 2: E51 - Pipeline Manager Web App
 **Status**: 📋 PLANNED
 **Priority**: HIGH
 **Estimated Effort**: 1-2 weeks
@@ -93,8 +93,8 @@ Build web application for pipeline execution, monitoring, and result browsing.
 
 ## Related Enhancements
 
-- [Enhancement 36](../enhancements/36_experimental_variants.md) - Experimental Variants Configuration (planned)
-- [Enhancement 51](../enhancements/51_pipeline_manager.md) - Pipeline Manager Web App (planned)
+- [E36](../enhancements/36_experimental_variants.md) - Experimental Variants Configuration (planned)
+- [E51](../enhancements/51_pipeline_manager.md) - Pipeline Manager Web App (planned)
 
 ---
 

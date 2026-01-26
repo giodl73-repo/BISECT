@@ -24,10 +24,10 @@ The Wave Manager uses markdown files with structured frontmatter to track develo
 **Date**: YYYY-MM-DD [to YYYY-MM-DD]
 **Focus**: {Brief description of wave focus}
 **Status**: {Status emoji + text}
-**Enhancements**: {comma-separated enhancement IDs}
+**E**: {comma-separated enhancement IDs}
 **Phases**:
-- Phase {local-ID}: Enhancement {global-ID}
-- Phase {local-ID}: Enhancements {global-ID1}, {global-ID2}
+- Phase {local-ID}: E{global-ID}
+- Phase {local-ID}: E{global-ID1}, {global-ID2}
 
 ---
 
@@ -58,7 +58,7 @@ The Wave Manager uses markdown files with structured frontmatter to track develo
 | **Date** | `**Date**: YYYY-MM-DD` | `**Date**: 2026-01-21` | Wave start date (can include range) |
 | **Focus** | `**Focus**: {text}` | `**Focus**: Foundation establishment` | Brief wave objective |
 | **Status** | `**Status**: {emoji} {text}` | `**Status**: ✅ Complete` | Current wave status |
-| **Enhancements** | `**Enhancements**: {IDs}` | `**Enhancements**: 1, 2, 3` | Comma-separated enhancement IDs |
+| **E** | `**E**: {IDs}` | `**E**: 1, 2, 3` | Comma-separated enhancement IDs |
 
 #### Optional Fields
 
@@ -79,8 +79,8 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 
 ```markdown
 **Phases**:
-- Phase {label}: Enhancement {ID} [- {Name}] [(status)]
-- Phase {label}: Enhancements {ID1}, {ID2} [- {Name}] [(status)]
+- Phase {label}: E{ID} [- {Name}] [(status)]
+- Phase {label}: E{ID1}, {ID2} [- {Name}] [(status)]
 ```
 
 **Note**: Phase names (after `-`) are optional but recommended for clarity.
@@ -90,32 +90,32 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 **Sequential Numbering:**
 ```markdown
 **Phases**:
-- Phase 1: Enhancement 7
-- Phase 2: Enhancement 8
-- Phase 3: Enhancement 9
+- Phase 1: E7
+- Phase 2: E8
+- Phase 3: E9
 ```
 
 **With Phase Names (Recommended):**
 ```markdown
 **Phases**:
-- Phase 1: Enhancement 53 - Foundation (✅ COMPLETED 2026-01-25)
-- Phase 2: Enhancements 54, 55 - Configuration (✅ COMPLETED 2026-01-25)
-- Phase 3: Enhancements 56, 57 - UI Fixes (✅ COMPLETED 2026-01-25)
+- Phase 1: E53 - Foundation (✅ COMPLETED 2026-01-25)
+- Phase 2: E54, 55 - Configuration (✅ COMPLETED 2026-01-25)
+- Phase 3: E56, 57 - UI Fixes (✅ COMPLETED 2026-01-25)
 ```
 
 **Alphanumeric Labels with Names:**
 ```markdown
 **Phases**:
-- Phase 1A: Enhancement 1 - Data Setup (✅ COMPLETED)
-- Phase 1B: Enhancement 2 - Validation (✅ COMPLETED)
+- Phase 1A: E1 - Data Setup (✅ COMPLETED)
+- Phase 1B: E2 - Validation (✅ COMPLETED)
 ```
 
-**Multiple Enhancements per Phase:**
+**Multiple E per Phase:**
 ```markdown
 **Phases**:
-- Phase 1: Enhancement 3 - Foundation
-- Phase 2: Enhancements 4, 5, 6 - Core Features
-- Phase 3: Enhancement 7 - Polish
+- Phase 1: E3 - Foundation
+- Phase 2: E4, 5, 6 - Core Features
+- Phase 3: E7 - Polish
 ```
 
 #### Parser Behavior
@@ -123,8 +123,8 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 - **With Phases field**: Uses explicit phase labels (supports 1A, 1B, etc.)
 - **Without Phases field**: Falls back to sequential numbering (1, 2, 3...)
 - **Phase Names**: Extracts optional name after `-` separator
-  - Format: `Phase 1: Enhancement 53 - Foundation` → name = "Foundation"
-  - Without name: `Phase 1: Enhancement 53` → name = null
+  - Format: `Phase 1: E53 - Foundation` → name = "Foundation"
+  - Without name: `Phase 1: E53` → name = null
 - **Display**:
   - With name: "Phase 1: Foundation"
   - Without name: "Phase 1"
@@ -149,13 +149,13 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 **Focus**: Token optimization through AI-friendly formatting
 **Commit**: b5ebaac
 **Status**: ✅ Complete
-**Enhancements**: 7, 8, 9, 10, 11
+**E**: 7, 8, 9, 10, 11
 **Phases**:
-- Phase 1: Enhancement 7
-- Phase 2: Enhancement 8
-- Phase 3: Enhancement 9
-- Phase 4: Enhancement 10
-- Phase 5: Enhancement 11
+- Phase 1: E7
+- Phase 2: E8
+- Phase 3: E9
+- Phase 4: E10
+- Phase 5: E11
 
 ---
 
@@ -191,7 +191,7 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 
 ---
 
-## Enhancement Document Schema
+## E Document Schema
 
 ### File Location
 `context/enhancements/##_name.md`
@@ -199,7 +199,7 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 ### Required Format
 
 ```markdown
-# Enhancement {ID}: {Title}
+# E{ID}: {Title}
 
 **Status**: {Status emoji + text}
 **Wave**: Wave {ID} ({WAVE-NAME})
@@ -245,7 +245,7 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 
 ---
 
-**Enhancement {ID} Summary**: {One-line summary}
+**E{ID} Summary**: {One-line summary}
 ```
 
 ### Field Definitions
@@ -254,7 +254,7 @@ The `**Phases**:` field explicitly maps local phase numbers/labels to global enh
 
 | Field | Format | Example | Description |
 |-------|--------|---------|-------------|
-| **Title** | `# Enhancement {ID}: {Name}` | `# Enhancement 1: Initial POC` | First-level heading with ID |
+| **Title** | `# E{ID}: {Name}` | `# E1: Initial POC` | First-level heading with ID |
 | **Status** | `**Status**: {emoji} {text}` | `**Status**: ✅ Completed` | Current status |
 | **Wave** | `**Wave**: Wave {ID} ({NAME})` | `**Wave**: Wave 1 (INITIAL-POC)` | Parent wave reference |
 | **Priority** | `**Priority**: {level}` | `**Priority**: High` | Priority level |
@@ -318,10 +318,10 @@ Same as Wave status values (see above)
 | L | 1500-5000 | 15-30 | Large feature |
 | XL | >5000 | 30+ | Major refactor |
 
-### Complete Enhancement Example
+### Complete E Example
 
 ```markdown
-# Enhancement 7: Wave 3 Phase 1 - Quick Wins Tables
+# E7: Wave 3 Phase 1 - Quick Wins Tables
 
 **Status**: ✅ Completed
 **Wave**: Wave 3 (TABLE-FIRST-ARCHITECTURE)
@@ -392,7 +392,7 @@ This phase established the "table-first" pattern that was applied across 13 subs
 
 ---
 
-**Enhancement 7 Summary**: Converted impact levels and fiscal calendar to tables, achieving 62-64% token reduction.
+**E7 Summary**: Converted impact levels and fiscal calendar to tables, achieving 62-64% token reduction.
 ```
 
 ---
@@ -409,7 +409,7 @@ GITHUB_REPO = "https://github.com/org/repo"
 
 ### Commit URL Generation
 
-**Enhancement commits** in `## Git Commits` section:
+**E commits** in `## Git Commits` section:
 - Parser extracts: `` `abc1234` ``
 - Generates URL: `https://github.com/org/repo/commit/abc1234`
 - Displays in UI with clickable links
@@ -430,20 +430,20 @@ The parser recognizes multiple formats (backwards compatible):
 1. **Explicit Phases field** (v2.0 - Recommended)
    ```markdown
    **Phases**:
-   - Phase 1: Enhancement 7
+   - Phase 1: E7
    ```
 
-2. **Enhancements field** (v1.0 - Still supported)
+2. **E field** (v1.0 - Still supported)
    ```markdown
-   **Enhancements**: 7, 8, 9
+   **E**: 7, 8, 9
    ```
 
 3. **List items with links** (v1.0)
    ```markdown
-   - [Enhancement 7](../enhancements/7_name.md)
+   - [E7](../enhancements/7_name.md)
    ```
 
-### Enhancement Status
+### E Status
 
 Parser recognizes these patterns:
 - `**Status**: ✅ COMPLETED`
@@ -461,31 +461,31 @@ Parser recognizes these patterns:
 
 1. **Add Phases field**:
    ```markdown
-   **Enhancements**: 1, 2, 3
+   **E**: 1, 2, 3
    **Phases**:
-   - Phase 1: Enhancement 1
-   - Phase 2: Enhancement 2
-   - Phase 3: Enhancement 3
+   - Phase 1: E1
+   - Phase 2: E2
+   - Phase 3: E3
    ```
 
 2. **Use custom labels** (optional):
    ```markdown
    **Phases**:
-   - Phase 1A: Enhancement 1
-   - Phase 1B: Enhancement 2
+   - Phase 1A: E1
+   - Phase 1B: E2
    ```
 
 3. **Group enhancements** (optional):
    ```markdown
    **Phases**:
-   - Phase 1: Enhancements 1, 2
-   - Phase 2: Enhancement 3
+   - Phase 1: E1, 2
+   - Phase 2: E3
    ```
 
 ### Backwards Compatibility
 
 **Without Phases field**:
-- Parser falls back to Enhancements field
+- Parser falls back to E field
 - UI displays sequential numbers (1, 2, 3...)
 - All features still work
 
@@ -506,7 +506,7 @@ Parser recognizes these patterns:
 4. **Link to related enhancements** in text
 5. **Update status emoji** when wave completes
 
-### Enhancement Documents
+### E Documents
 
 1. **Use Git Commits section** with backticks (auto-generates URLs)
 2. **Include Size field** for tracking code changes
@@ -528,7 +528,7 @@ Parser recognizes these patterns:
 ### Wave Validation Checklist
 
 - [ ] Filename matches `WAVE##-NAME.md` pattern
-- [ ] Has required frontmatter (Date, Focus, Status, Enhancements)
+- [ ] Has required frontmatter (Date, Focus, Status, E)
 - [ ] Status uses emoji (📋/🔄/✅)
 - [ ] Enhancement IDs are comma-separated numbers
 - [ ] Phases field (if present) matches format

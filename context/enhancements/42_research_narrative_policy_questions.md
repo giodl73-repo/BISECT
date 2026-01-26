@@ -1,4 +1,4 @@
-# Enhancement 42: Research Narrative and Policy Questions
+# E42: Research Narrative and Policy Questions
 
 **Status**: Proposed
 **Priority**: Critical
@@ -14,7 +14,7 @@ The project has strong technical implementation but lacks a clear research narra
 - Three papers exist demonstrating algorithmic redistricting works
 - Technical excellence: METIS integration, edge-weighted optimization, multi-year pipeline
 - Comprehensive metrics: compactness, demographics, political analysis
-- Baseline comparison to enacted districts (Enhancement 11)
+- Baseline comparison to enacted districts (E11)
 
 **Missing:**
 - Clear research question or hypothesis
@@ -157,11 +157,11 @@ The project has strong technical implementation but lacks a clear research narra
 
 ## Related Enhancements
 
-- [Enhancement 11: Baseline Comparison](11_baseline_comparison.md) - Provides data for comparison research question
-- [Enhancement 12: Edge-Weighted Analysis](12_edge_weighted_analysis.md) - Answers edge-weighting research question
-- [Enhancement 41: Public Distribution](41_public_distribution.md) - Makes research accessible to broader audience
-- [Enhancement 44: Real-World Constraints](44_real_world_constraints.md) - Addresses practical adoption questions
-- [Enhancement 45: Baseline Data Organization](45_baseline_data_organization.md) - Organizes evidence for claims
+- [E11: Baseline Comparison](11_baseline_comparison.md) - Provides data for comparison research question
+- [E12: Edge-Weighted Analysis](12_edge_weighted_analysis.md) - Answers edge-weighting research question
+- [E41: Public Distribution](41_public_distribution.md) - Makes research accessible to broader audience
+- [E44: Real-World Constraints](44_real_world_constraints.md) - Addresses practical adoption questions
+- [E45: Baseline Data Organization](45_baseline_data_organization.md) - Organizes evidence for claims
 
 ## Notes
 
@@ -169,7 +169,7 @@ The project has strong technical implementation but lacks a clear research narra
 > "we have gathered baseline data for papers\03_ but i take your point it isnt organized enough"
 
 This suggests:
-- Data exists but needs better organization (Enhancement 45)
+- Data exists but needs better organization (E45)
 - Papers exist but may need narrative restructuring
 - Technical work is done; storytelling needs improvement
 

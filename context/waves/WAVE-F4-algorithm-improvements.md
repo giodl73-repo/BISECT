@@ -5,11 +5,11 @@
 **Status**: 📋 PLANNED
 **Priority**: MEDIUM
 **Estimated Duration**: 3-4 weeks
-**Enhancements**: 32, 40, 44
+**E**: 32, 40, 44
 **Phases**:
-- Phase 1: Enhancement 32 - Reock Metric (📋 PLANNED)
-- Phase 2: Enhancement 40 - Corner Filtering (📋 PLANNED)
-- Phase 3: Enhancement 44 - Legal Constraints (📋 PLANNED)
+- Phase 1: E32 - Reock Metric (📋 PLANNED)
+- Phase 2: E40 - Corner Filtering (📋 PLANNED)
+- Phase 3: E44 - Legal Constraints (📋 PLANNED)
 
 ---
 
@@ -35,7 +35,7 @@
 
 ## Phases
 
-### Phase 1: Enhancement 32 - Reock Compactness Metric
+### Phase 1: E32 - Reock Compactness Metric
 **Status**: 📋 PLANNED
 **Priority**: LOW
 **Estimated Effort**: 1 week
@@ -51,7 +51,7 @@ Add Reock compactness metric (circle-based) as complement to Polsby-Popper (peri
 - Create Reock visualization maps
 - Compare P-P vs Reock rankings
 
-### Phase 2: Enhancement 40 - Filter Corner Adjacencies
+### Phase 2: E40 - Filter Corner Adjacencies
 **Status**: 📋 PLANNED
 **Priority**: LOW
 **Estimated Effort**: 1 week
@@ -67,7 +67,7 @@ Remove corner-only adjacencies from adjacency graphs to enforce shared border re
 - Compare filtered vs unfiltered compactness
 - Document impact on district quality
 
-### Phase 3: Enhancement 44 - Real-World Redistricting Constraints
+### Phase 3: E44 - Real-World Redistricting Constraints
 **Status**: 📋 PLANNED
 **Priority**: MEDIUM
 **Estimated Effort**: 1-2 weeks
@@ -110,9 +110,9 @@ Implement legal constraints: Voting Rights Act (VRA) compliance and Communities 
 
 ## Related Enhancements
 
-- [Enhancement 32](../enhancements/32_reock_metric.md) - Reock Compactness Metric (planned)
-- [Enhancement 40](../enhancements/40_corner_adjacencies.md) - Filter Corner Adjacencies (planned)
-- [Enhancement 44](../enhancements/44_real_world_constraints.md) - Real-World Constraints (planned)
+- [E32](../enhancements/32_reock_metric.md) - Reock Compactness Metric (planned)
+- [E40](../enhancements/40_corner_adjacencies.md) - Filter Corner Adjacencies (planned)
+- [E44](../enhancements/44_real_world_constraints.md) - Real-World Constraints (planned)
 
 ---
 

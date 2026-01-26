@@ -1,4 +1,4 @@
-# Enhancement 27: Electoral College County-Based Reform
+# E27: Electoral College County-Based Reform
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -331,8 +331,8 @@ County-based electoral college is hybrid:
 
 ## Related Enhancements
 
-- Enhancement 23: Direct County Representation (also uses counties as units)
-- Enhancement 24: Party-Based District Allocation (alternative to winner-take-all)
+- E23: Direct County Representation (also uses counties as units)
+- E24: Party-Based District Allocation (alternative to winner-take-all)
 
 ## Research Value
 

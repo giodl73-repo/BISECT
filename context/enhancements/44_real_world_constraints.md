@@ -1,4 +1,4 @@
-# Enhancement 44: Real-World Redistricting Constraints
+# E44: Real-World Redistricting Constraints
 
 **Status**: Proposed
 **Priority**: Medium
@@ -183,8 +183,8 @@ Should algorithms consider partisan balance?
 
 ## Related Enhancements
 
-- [Enhancement 42: Research Narrative](42_research_narrative_policy_questions.md) - Provides policy context
-- [Enhancement 11: Baseline Comparison](11_baseline_comparison.md) - Compare VRA compliance vs. enacted
+- [E42: Research Narrative](42_research_narrative_policy_questions.md) - Provides policy context
+- [E11: Baseline Comparison](11_baseline_comparison.md) - Compare VRA compliance vs. enacted
 
 ## Notes
 

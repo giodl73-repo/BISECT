@@ -1,4 +1,4 @@
-# Enhancement 32: Reock Compactness Metric
+# E32: Reock Compactness Metric
 
 **Status**: 📋 PLANNED
 **Proposed**: January 16, 2026

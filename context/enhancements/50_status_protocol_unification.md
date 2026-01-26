@@ -1,4 +1,4 @@
-# Enhancement 50: STATUS Protocol Unification
+# E50: STATUS Protocol Unification
 
 **Status**: Completed
 **Priority**: Medium

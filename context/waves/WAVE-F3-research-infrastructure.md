@@ -5,10 +5,10 @@
 **Status**: 📋 PLANNED
 **Priority**: CRITICAL (for research papers)
 **Estimated Duration**: 2-3 weeks
-**Enhancements**: 42, 45
+**E**: 42, 45
 **Phases**:
-- Phase 1: Enhancement 42 - Research Narrative (📋 PLANNED)
-- Phase 2: Enhancement 45 - Baseline Data (📋 PLANNED)
+- Phase 1: E42 - Research Narrative (📋 PLANNED)
+- Phase 2: E45 - Baseline Data (📋 PLANNED)
 
 ---
 
@@ -34,7 +34,7 @@
 
 ## Phases
 
-### Phase 1: Enhancement 42 - Research Narrative & Policy Questions
+### Phase 1: E42 - Research Narrative & Policy Questions
 **Status**: 📋 PLANNED
 **Priority**: CRITICAL
 **Estimated Effort**: 1-2 weeks
@@ -50,7 +50,7 @@ Develop comprehensive research narrative addressing policy-relevant questions ab
 - Contribution statements for papers
 - Figures and tables structure
 
-### Phase 2: Enhancement 45 - Baseline Data Organization
+### Phase 2: E45 - Baseline Data Organization
 **Status**: 📋 PLANNED
 **Priority**: CRITICAL
 **Estimated Effort**: 1-2 weeks
@@ -90,8 +90,8 @@ Systematically organize baseline data (enacted districts, historical boundaries)
 
 ## Related Enhancements
 
-- [Enhancement 42](../enhancements/42_research_narrative.md) - Research Narrative & Policy Questions (planned)
-- [Enhancement 45](../enhancements/45_baseline_data.md) - Baseline Data Organization (planned)
+- [E42](../enhancements/42_research_narrative.md) - Research Narrative & Policy Questions (planned)
+- [E45](../enhancements/45_baseline_data.md) - Baseline Data Organization (planned)
 
 ---
 

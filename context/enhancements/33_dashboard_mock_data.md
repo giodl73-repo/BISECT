@@ -1,4 +1,4 @@
-# Enhancement 33: Dashboard Mock Data Integration
+# E33: Dashboard Mock Data Integration
 
 **Status**: ✅ COMPLETED
 **Proposed**: January 16, 2026
@@ -8,7 +8,7 @@
 
 ## Current State
 
-Dashboard E2E tests (Enhancement 30) currently:
+Dashboard E2E tests (E30) currently:
 - Use generic element checks (`h1`, `button`, etc.)
 - Don't test actual data rendering
 - Don't verify maps load correctly
@@ -310,7 +310,7 @@ def test_state_switching(page, mock_run):
 - No breaking changes
 - Straightforward integration
 
-**Dependencies**: Enhancement 30 (Playwright test harness)
+**Dependencies**: E30 (Playwright test harness)
 
 ## Implementation Notes
 
@@ -345,8 +345,8 @@ def test_state_switching(page, mock_run):
 
 ## References
 
-- Enhancement 30: Playwright Test Harness
-- Enhancement 31: Pipeline Test System
+- E30: Playwright Test Harness
+- E31: Pipeline Test System
 - Existing mock generators: `tests/mocks/*.py`
 
 ## Implementation Summary

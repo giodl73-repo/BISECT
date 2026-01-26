@@ -1,4 +1,4 @@
-# Enhancement 46: Priority System for Enhancements and Enhancement Manager
+# E46: Priority System for Enhancements and Enhancement Manager
 
 **Status**: Completed
 **Priority**: Medium
@@ -36,28 +36,28 @@ Enhancement proposals include priority in their markdown frontmatter, but:
 ### 5-Tier System (Recommended)
 
 **Critical** - Blocker for publication or core functionality
-- Example: Enhancement 42 (Research Narrative)
-- Example: Enhancement 45 (Baseline Data Organization)
+- Example: E42 (Research Narrative)
+- Example: E45 (Baseline Data Organization)
 - Timeline: Must do now
 
 **High** - Important for project goals, significant impact
-- Example: Enhancement 11 (Baseline Comparison) ✅ Completed
-- Example: Enhancement 36 (Experimental Variants Config)
+- Example: E11 (Baseline Comparison) ✅ Completed
+- Example: E36 (Experimental Variants Config)
 - Timeline: Next 1-2 sprints
 
 **Medium** - Valuable but not urgent
-- Example: Enhancement 43 (Longitudinal Analysis)
-- Example: Enhancement 41 (Public Distribution)
+- Example: E43 (Longitudinal Analysis)
+- Example: E41 (Public Distribution)
 - Timeline: Next quarter
 
 **Low** - Nice to have, quality-of-life improvements
-- Example: Enhancement 40 (Corner Adjacency Filter)
-- Example: Enhancement 32 (Reock Compactness)
+- Example: E40 (Corner Adjacency Filter)
+- Example: E32 (Reock Compactness)
 - Timeline: When time permits
 
 **Research** - Experimental/exploratory, uncertain value
-- Example: Enhancement 22 (National Redistricting - no state boundaries)
-- Example: Enhancement 24 (Party-Based Allocation)
+- Example: E22 (National Redistricting - no state boundaries)
+- Example: E24 (Party-Based Allocation)
 - Timeline: No timeline (pure research)
 
 ### Alternative: 3-Tier System (Simpler)
@@ -279,8 +279,8 @@ Enhancement proposals include priority in their markdown frontmatter, but:
 
 ## Related Enhancements
 
-- [Enhancement 35: Enhancement Manager App](35_enhancement_manager_app.md) - Base app being enhanced
-- [Enhancement 19: Create-Skill Meta-Skill](19_create_skill.md) - Similar meta-tooling enhancement
+- [E35: Enhancement Manager App](35_enhancement_manager_app.md) - Base app being enhanced
+- [E19: Create-Skill Meta-Skill](19_create_skill.md) - Similar meta-tooling enhancement
 
 ## Notes
 

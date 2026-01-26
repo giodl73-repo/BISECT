@@ -1,4 +1,4 @@
-# Enhancement 52: Per-Version Census Data Structure
+# E52: Per-Version Census Data Structure
 
 **Status**: ✅ COMPLETE
 **Priority**: High
@@ -16,7 +16,7 @@
 
 ## Current State
 
-After Enhancement 47, census data architecture is:
+After E47, census data architecture is:
 
 ```
 data/Census {year}/          # Raw census data (40GB, unchanging)
@@ -732,17 +732,17 @@ New functions to add:
 #### 7.2: Enhancement Documentation (MANUAL)
 
 - [ ] **`context/enhancements/active/47_data_separation_restoration.md`**
-  - Add note: "Superseded by Enhancement 52"
+  - Add note: "Superseded by E52"
   - Document evolution of structure
 
-- [ ] **Enhancement 52** (this file)
+- [ ] **E52** (this file)
   - Mark phases complete as done
   - Document final file counts
 
 #### 7.3: Other Documentation (MANUAL)
 
 - [ ] **`docs/CHANGELOG.md`**
-  - Add entry for Enhancement 52
+  - Add entry for E52
 
 - [ ] **`docs/GETTING_STARTED.md`** (if exists)
   - Update setup instructions with new paths
@@ -888,7 +888,7 @@ New functions to add:
 68. `context/CODING_PATTERNS.md` - Coding patterns
 69. `context/DATA_FORMATS.md` - Data formats
 70. `context/QUICK_REFERENCE.md` - Quick reference
-71. `context/enhancements/active/47_data_separation_restoration.md` - Enhancement 47
+71. `context/enhancements/active/47_data_separation_restoration.md` - E47
 72. `context/enhancements/active/52_per_version_census_data.md` - This file
 73. `docs/CHANGELOG.md` - Changelog
 74. `docs/GETTING_STARTED.md` - Getting started (if exists)
@@ -1374,7 +1374,7 @@ ls -lh outputs/v1/2020/data/adjacency/
 
 ## Dependencies
 
-- Enhancement 47 (Data Separation and Restoration) - Complete ✅
+- E47 (Data Separation and Restoration) - Complete ✅
 - Path utilities in `scripts/utils/paths.py` - Exist ✅
 - Download orchestrator - Complete ✅
 - Census data processing pipeline - Complete ✅
@@ -1410,7 +1410,7 @@ ls -lh outputs/v1/2020/data/adjacency/
 
 ### Key Architectural Changes
 
-**Before (Enhancement 47)**:
+**Before (E47)**:
 ```
 outputs/data/{year}/         # Shared across all versions
   ├─ units/
@@ -1423,7 +1423,7 @@ outputs/v1/{year}/           # Only district results
   └─ maps/
 ```
 
-**After (Enhancement 52)**:
+**After (E52)**:
 ```
 outputs/v1/{year}/data/      # Per-version census data
   ├─ units/                  # Census tracts
@@ -1536,9 +1536,9 @@ _(To be filled after completion)_
 
 ## Related Documentation
 
-- Enhancement 47: [Data Separation and Restoration](47_data_separation_restoration.md) - Previous census data restructuring
-- Enhancement 13: [Directory Unification](../completed/13_directory_unification.md) - Previous path restructuring
-- Enhancement 15: [Multi-Year Support](../completed/15_multi_year_support.md) - Multi-year patterns
+- E47: [Data Separation and Restoration](47_data_separation_restoration.md) - Previous census data restructuring
+- E13: [Directory Unification](../completed/13_directory_unification.md) - Previous path restructuring
+- E15: [Multi-Year Support](../completed/15_multi_year_support.md) - Multi-year patterns
 - Architecture doc: [ARCHITECTURE.md](../../ARCHITECTURE.md)
 - Coding patterns: [CODING_PATTERNS.md](../../CODING_PATTERNS.md)
 - Data formats: [DATA_FORMATS.md](../../DATA_FORMATS.md)

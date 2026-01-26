@@ -1,4 +1,4 @@
-# Enhancement 7: Edge-Weighted Recursive Bisection - Implementation Summary
+# E7: Edge-Weighted Recursive Bisection - Implementation Summary
 
 **Date:** January 12, 2026
 **Status:** COMPLETED
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Enhancement 7 implements an edge-weighted variant of the recursive bisection algorithm that uses actual boundary lengths as edge weights in METIS graph partitioning. By minimizing total boundary length directly (rather than just edge cuts), this produces significantly more compact congressional districts.
+E7 implements an edge-weighted variant of the recursive bisection algorithm that uses actual boundary lengths as edge weights in METIS graph partitioning. By minimizing total boundary length directly (rather than just edge cuts), this produces significantly more compact congressional districts.
 
 ## Key Results
 
@@ -338,7 +338,7 @@ Once the full 50-state edge-weighted run completes:
    - Requires custom METIS objective function or alternative solver
 
 3. **Block-Level Edge Weights:**
-   - Extension of Enhancement 8 (Block-Level Data Support)
+   - Extension of E8 (Block-Level Data Support)
    - Compute boundary lengths at census block granularity
    - Potential for even finer geographic optimization
 
@@ -379,13 +379,13 @@ Once the full 50-state edge-weighted run completes:
 
 **Related Work:**
 - Paper 1: Baseline recursive bisection algorithm (`papers/01_recursive_bisection/`)
-- Enhancement 1: Compactness integration
-- Enhancement 6: System architecture diagrams
+- E1: Compactness integration
+- E6: System architecture diagrams
 
 ## Conclusion
 
-Enhancement 7 successfully implements edge-weighted recursive bisection with dramatic compactness improvements. The Alabama test case demonstrates a 52.8% improvement in Polsby-Popper score and 22.2% reduction in total perimeter, far exceeding the original 5-10% target.
+E7 successfully implements edge-weighted recursive bisection with dramatic compactness improvements. The Alabama test case demonstrates a 52.8% improvement in Polsby-Popper score and 22.2% reduction in total perimeter, far exceeding the original 5-10% target.
 
 The implementation is clean, efficient, and maintainable. Edge weights integrate seamlessly with existing METIS infrastructure. The approach is now ready for full 50-state evaluation and academic publication.
 
-**Key Takeaway:** Direct optimization of the objective (boundary length) via edge weights is significantly more effective than indirect proxy metrics (edge cuts). This validates the core hypothesis of Enhancement 7 and suggests similar techniques could be applied to other redistricting objectives.
+**Key Takeaway:** Direct optimization of the objective (boundary length) via edge weights is significantly more effective than indirect proxy metrics (edge cuts). This validates the core hypothesis of E7 and suggests similar techniques could be applied to other redistricting objectives.

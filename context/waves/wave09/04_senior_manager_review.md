@@ -19,14 +19,14 @@ Wave 9 (API Migration) represents a significant strategic investment to transfor
 | Technical Feasibility | **GOOD** | Sound architecture, appropriate technology choices |
 | Timeline Realism | **MODERATE** | 4-6 weeks achievable with identified risks |
 | Resource Requirements | **REASONABLE** | Can be executed with 1-2 developers |
-| Risk Level | **MEDIUM-HIGH** | Enhancement 62 is critical path |
+| Risk Level | **MEDIUM-HIGH** | E62 is critical path |
 | ROI Projection | **POSITIVE** | Long-term value exceeds investment |
 
 ### Final Recommendation: **PROCEED WITH CONTROLS**
 
 The wave is approved for implementation with the following mandatory controls:
 1. Weekly checkpoint reviews
-2. Enhanced testing focus on Enhancement 62
+2. Enhanced testing focus on E62
 3. MVP-first delivery strategy
 4. Explicit scope change control
 
@@ -46,7 +46,7 @@ The wave is approved for implementation with the following mandatory controls:
 | 63 - Dashboard | 20-24 | 1.5-2.0 | Medium | No* |
 | 64 - Visualization | 16-20 | 1.0-1.5 | Medium | No |
 
-*Enhancement 63 can be parallelized with Enhancement 62
+*E63 can be parallelized with E62
 
 **Timeline Assessment**: The 4-6 week estimate is **realistic but aggressive**. Key factors:
 
@@ -57,7 +57,7 @@ The wave is approved for implementation with the following mandatory controls:
 - Parallelization opportunity (E62 + E63)
 
 **Concerns**:
-- Enhancement 62 complexity underestimated risk
+- E62 complexity underestimated risk
 - Testing effort (40-50h) may extend timeline
 - Integration testing not fully accounted
 - No explicit buffer time
@@ -80,10 +80,10 @@ Week 6:   Integration, Polish, Deploy ◄─────────────
 ```
 
 **Critical Path Items**:
-1. Enhancement 60 blocks all subsequent work
-2. Enhancement 61 blocks Enhancement 62
-3. Enhancement 62 blocks full integration testing
-4. Enhancement 63 must complete before Enhancement 64
+1. E60 blocks all subsequent work
+2. E61 blocks E62
+3. E62 blocks full integration testing
+4. E63 must complete before E64
 
 ### 1.3 Buffer & Contingency Recommendations
 
@@ -128,15 +128,15 @@ This extends the timeline to **5-7 weeks** but provides realistic delivery expec
 ### 2.3 Resource Allocation by Phase
 
 **Phase 1 (Weeks 1-2)**: 1 developer
-- Enhancement 60 (solo work)
-- Enhancement 61 (solo work)
+- E60 (solo work)
+- E61 (solo work)
 
 **Phase 2 (Weeks 3-4)**: 2 developers optimal
-- Developer A: Enhancement 62 (backend execution)
-- Developer B: Enhancement 63 (frontend with mocks)
+- Developer A: E62 (backend execution)
+- Developer B: E63 (frontend with mocks)
 
 **Phase 3 (Weeks 5-6)**: 1-2 developers
-- Enhancement 64 (requires E63 complete)
+- E64 (requires E63 complete)
 - Integration testing
 - Deployment setup
 
@@ -160,7 +160,7 @@ This extends the timeline to **5-7 weeks** but provides realistic delivery expec
 | E64 | 16-20 | 6-8 | 15% | Performance-sensitive |
 | **Total** | 84-104 | **40-50** | - | 30-35% of dev |
 
-**Observation**: Testing allocation is appropriate given risk profile. Enhancement 62's 40% allocation is justified by subprocess complexity.
+**Observation**: Testing allocation is appropriate given risk profile. E62's 40% allocation is justified by subprocess complexity.
 
 ---
 
@@ -183,13 +183,13 @@ This extends the timeline to **5-7 weeks** but provides realistic delivery expec
 
 ### 3.2 Risk Mitigation Status
 
-**R1-R4 (Enhancement 62 Risks)**: Expert reviews have identified comprehensive mitigations:
+**R1-R4 (E62 Risks)**: Expert reviews have identified comprehensive mitigations:
 - Watchdog with 60-second timeout
 - File-based progress fallback with atomic writes
 - PID tracking for orphan detection
 - Platform-specific signal handling
 
-**Assessment**: Mitigations are well-designed. Recommend **mandatory testing** of all failure scenarios before proceeding past Enhancement 62.
+**Assessment**: Mitigations are well-designed. Recommend **mandatory testing** of all failure scenarios before proceeding past E62.
 
 ### 3.3 Risk Monitoring Process
 
@@ -201,7 +201,7 @@ This extends the timeline to **5-7 weeks** but provides realistic delivery expec
 
 **Escalation Criteria**:
 - Any risk score increases to CRITICAL
-- Enhancement 62 delays exceed 3 days
+- E62 delays exceed 3 days
 - Integration testing reveals architectural issues
 
 ### 3.4 Contingency Plans
@@ -310,7 +310,7 @@ Unit Tests (60%)               71-89 tests
 
 ### 5.3 Testing Risk Assessment
 
-**Highest Risk Component**: Enhancement 62 (Pipeline Execution Engine)
+**Highest Risk Component**: E62 (Pipeline Execution Engine)
 
 The Senior Tester correctly identified this as requiring 40% of testing effort. Critical scenarios:
 
@@ -323,7 +323,7 @@ The Senior Tester correctly identified this as requiring 40% of testing effort. 
 | File progress fallback | 2-3 | Critical |
 | Orphan detection | 2-3 | High |
 
-**Recommendation**: Do not proceed to Enhancement 63/64 integration until all Enhancement 62 critical scenarios pass.
+**Recommendation**: Do not proceed to E63/64 integration until all E62 critical scenarios pass.
 
 ### 5.4 Regression Testing for CLI
 
@@ -331,7 +331,7 @@ The Senior Tester correctly identified this as requiring 40% of testing effort. 
 
 **Testing Strategy**:
 1. Run existing test suite before wave starts (baseline)
-2. Run existing test suite after Enhancement 62 (verify no changes)
+2. Run existing test suite after E62 (verify no changes)
 3. Run CLI-API equivalence test (same inputs produce same outputs)
 
 **Recommended Test**:
@@ -581,8 +581,8 @@ def test_cli_api_equivalence():
 ### 10.2 Process Controls
 
 **Required Reviews**:
-1. Enhancement 60 complete -> Team review before E61
-2. Enhancement 62 complete -> **Mandatory quality gate** before E63/E64
+1. E60 complete -> Team review before E61
+2. E62 complete -> **Mandatory quality gate** before E63/E64
 3. Week 4 MVP -> Demo and stakeholder feedback
 4. Week 6 -> Final review before production
 
@@ -607,7 +607,7 @@ def test_cli_api_equivalence():
 
 1. **Expert Review Process**: The triple-expert review (Designer, Engineer, Tester) is valuable. Consider formalizing for future high-risk waves.
 
-2. **Risk Concentration**: Identifying Enhancement 62 as highest risk early allowed proportionate testing allocation. Continue this practice.
+2. **Risk Concentration**: Identifying E62 as highest risk early allowed proportionate testing allocation. Continue this practice.
 
 3. **Parallelization**: The opportunity to parallel E62+E63 reduces timeline. Look for similar opportunities.
 
@@ -639,7 +639,7 @@ def test_cli_api_equivalence():
 Wave 9 is approved for implementation with the following mandatory conditions:
 
 1. **Weekly checkpoint reviews** with documented progress assessment
-2. **Enhancement 62 quality gate** must pass before full integration work
+2. **E62 quality gate** must pass before full integration work
 3. **MVP delivery** by end of week 4 (stretch) or week 5 (baseline)
 4. **Change control** for any scope changes > 4 hours
 
@@ -656,7 +656,7 @@ As the reviewing manager, I commit to:
 
 Wave 9 represents a well-planned, strategically valuable addition to the Apportionment project. The expert reviews have identified risks early, and the proposed mitigations are sound. The key to success is:
 
-1. **Don't underestimate Enhancement 62** - It is the critical path and highest risk
+1. **Don't underestimate E62** - It is the critical path and highest risk
 2. **Test thoroughly** - The 40-50 hour testing investment is appropriate
 3. **Deliver incrementally** - Week 4 MVP milestone keeps the team focused
 4. **Maintain CLI stability** - Zero changes to existing functionality

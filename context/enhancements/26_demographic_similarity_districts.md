@@ -1,4 +1,4 @@
-# Enhancement 26: Demographic Similarity Districts
+# E26: Demographic Similarity Districts
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -351,8 +351,8 @@ This model takes descriptive representation to logical extreme.
 
 ## Related Enhancements
 
-- Enhancement 22: National Redistricting (ignores state boundaries, still geographic)
-- Enhancement 24: Party-Based District Allocation (non-geographic, party-based)
+- E22: National Redistricting (ignores state boundaries, still geographic)
+- E24: Party-Based District Allocation (non-geographic, party-based)
 
 ## Research Value
 

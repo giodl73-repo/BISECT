@@ -1,4 +1,4 @@
-# Enhancement 17: Standardize Artifact Naming Conventions
+# E17: Standardize Artifact Naming Conventions
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium
@@ -173,9 +173,9 @@ Used **Clean Regeneration** approach:
 
 ### Related Enhancements
 
-- **Enhancement 14**: Pipeline Output Validation Framework (validation updates needed)
-- **Enhancement 15**: Fix 2010/2000 Pipeline Completeness (re-run with new naming)
-- **Enhancement 13**: Unify Directory Structure (this completes that work)
+- **E14**: Pipeline Output Validation Framework (validation updates needed)
+- **E15**: Fix 2010/2000 Pipeline Completeness (re-run with new naming)
+- **E13**: Unify Directory Structure (this completes that work)
 
 ---
 

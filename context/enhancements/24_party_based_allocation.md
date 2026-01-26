@@ -1,4 +1,4 @@
-# Enhancement 24: Party-Based District Allocation
+# E24: Party-Based District Allocation
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -272,9 +272,9 @@ This model is closest to Israel's system but retains geographic districting with
 
 ## Related Enhancements
 
-- Enhancement 22: National Redistricting (algorithmic baseline)
-- Enhancement 23: Direct County Representation (alternative apportionment)
-- Enhancement 28: Multi-Member Districts (another proportional approach)
+- E22: National Redistricting (algorithmic baseline)
+- E23: Direct County Representation (alternative apportionment)
+- E28: Multi-Member Districts (another proportional approach)
 
 ## Research Value
 

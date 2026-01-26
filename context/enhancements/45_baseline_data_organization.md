@@ -1,4 +1,4 @@
-# Enhancement 45: Baseline Data Organization and Analysis
+# E45: Baseline Data Organization and Analysis
 
 **Status**: Proposed
 **Priority**: Critical
@@ -14,7 +14,7 @@ Baseline comparison data has been gathered for Paper 03 (combined recursive bise
 > "we have gathered baseline data for papers\03_ but i take your point it isnt organized enough"
 
 **Current State:**
-- Enhancement 11 (Baseline Comparison) marked as completed
+- E11 (Baseline Comparison) marked as completed
 - Baseline data exists somewhere in `artifacts/papers/03_combined_recursive_bisection/`
 - Data not integrated into pipeline or dashboard
 - No systematic analysis scripts
@@ -252,9 +252,9 @@ Write summary answering:
 
 ## Related Enhancements
 
-- [Enhancement 11: Baseline Comparison](11_baseline_comparison.md) - Data collection (completed)
-- [Enhancement 42: Research Narrative](42_research_narrative_policy_questions.md) - Uses baseline data to answer research questions
-- [Enhancement 43: Longitudinal Analysis](43_cross_year_longitudinal_analysis.md) - Compare baseline trends over time
+- [E11: Baseline Comparison](11_baseline_comparison.md) - Data collection (completed)
+- [E42: Research Narrative](42_research_narrative_policy_questions.md) - Uses baseline data to answer research questions
+- [E43: Longitudinal Analysis](43_cross_year_longitudinal_analysis.md) - Compare baseline trends over time
 
 ## Notes
 
@@ -272,4 +272,4 @@ This could be completed quickly since data already gathered. Focus on:
 
 **Estimated Effort:** Medium (2-4 hours)
 - Mostly organization and scripting
-- Data collection already done (Enhancement 11)
+- Data collection already done (E11)

@@ -1,4 +1,4 @@
-# Enhancement 25: Committee-Based Representation
+# E25: Committee-Based Representation
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -288,8 +288,8 @@ This model is unprecedented in combining:
 
 ## Related Enhancements
 
-- Enhancement 24: Party-Based District Allocation (similar proportional approach)
-- Enhancement 22: National Redistricting (eliminates boundaries differently)
+- E24: Party-Based District Allocation (similar proportional approach)
+- E22: National Redistricting (eliminates boundaries differently)
 
 ## Research Value
 

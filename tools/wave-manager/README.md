@@ -1,4 +1,4 @@
-# Wave Manager - Unified Enhancement & Wave Tracking
+# Wave Manager - Unified E & Wave Tracking
 
 A Flask-based web application for managing development waves across all projects in the unified app manager system.
 
@@ -16,9 +16,9 @@ The Wave Manager implements a hierarchical model:
 
 ```
 Wave = High-level collection of related phases
-├── Phase 1 = Enhancement 01 (with metadata & commits)
-├── Phase 2 = Enhancement 02 (with metadata & commits)
-└── Phase 3 = Enhancement 03 (with metadata & commits)
+├── Phase 1 = E01 (with metadata & commits)
+├── Phase 2 = E02 (with metadata & commits)
+└── Phase 3 = E03 (with metadata & commits)
 
 File Structure:
 context/
@@ -165,7 +165,7 @@ The Wave Manager exposes REST API endpoints for integration:
 - `GET /api/waves/{id}` - Get wave details with linked phases
 - `GET /api/waves/{id}/phases` - Get all phases in a wave
 
-### Phases (Enhancements)
+### Phases (E)
 - `GET /api/enhancements` - List all phases
 - `GET /api/enhancements/{id}` - Get phase details with full content
 - `PUT /api/enhancements/{id}` - Update phase content
@@ -222,7 +222,7 @@ Description of wave objectives and what you're trying to achieve.
 
 ## Phases
 
-Enhancements: 1, 2, 3
+E: 1, 2, 3
 
 ### Phase Breakdown
 
@@ -235,9 +235,9 @@ Enhancements: 1, 2, 3
 
 The parser recognizes multiple formats:
 
-1. **Comma-separated**: `Enhancements: 1, 2, 3`
-2. **List items**: `- Enhancement 1: Description`
-3. **Links**: `- [Enhancement 1](../enhancements/1_name.md)`
+1. **Comma-separated**: `E: 1, 2, 3`
+2. **List items**: `- E1: Description`
+3. **Links**: `- [E1](../enhancements/1_name.md)`
 
 All formats work and can be mixed.
 
@@ -246,7 +246,7 @@ All formats work and can be mixed.
 Create `context/enhancements/##_name.md` files:
 
 ```markdown
-# Enhancement 1: Project Setup and Configuration
+# E1: Project Setup and Configuration
 
 **Status**: 🔄 IN PROGRESS
 **Priority**: Critical
@@ -308,7 +308,7 @@ Both waves and phases use these status indicators:
    - etc.
 
 3. **Link Phases to Waves**
-   - In each wave document, list phase IDs: `Enhancements: 1, 2, 3`
+   - In each wave document, list phase IDs: `E: 1, 2, 3`
 
 4. **Start Development**
    - Open Wave Manager at http://localhost:5101

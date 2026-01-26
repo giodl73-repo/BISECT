@@ -29,7 +29,7 @@ The Senior Software Engineering Manager has approved Wave 9 for implementation b
 | Technical Feasibility | GOOD | Sound architecture, appropriate technology |
 | Timeline Realism | MODERATE | 5-7 weeks achievable with buffer |
 | Resource Requirements | REASONABLE | 1-2 developers sufficient |
-| Risk Level | MEDIUM-HIGH | Enhancement 62 is critical path |
+| Risk Level | MEDIUM-HIGH | E62 is critical path |
 | ROI Projection | POSITIVE | Break-even in 3-6 months |
 
 ### Mandatory Controls
@@ -37,7 +37,7 @@ The Senior Software Engineering Manager has approved Wave 9 for implementation b
 The following controls are required for implementation:
 
 1. **Weekly checkpoint reviews** - Documented progress every Friday
-2. **Enhancement 62 quality gate** - All critical tests must pass before E63/E64 integration
+2. **E62 quality gate** - All critical tests must pass before E63/E64 integration
 3. **MVP-first delivery** - MVP complete by week 4 (stretch) or week 5 (baseline)
 4. **Change control** - Formal approval for scope changes > 4 hours
 
@@ -146,9 +146,9 @@ Risk distribution by enhancement:
 | 63 - Dashboard | MEDIUM | State sync | React Query, error boundaries |
 | 64 - Maps | MEDIUM | Performance | Canvas rendering, lazy loading |
 
-### Enhancement 62 Deep Dive
+### E62 Deep Dive
 
-Enhancement 62 (Pipeline Execution Engine) was identified by all three experts as the highest-risk component:
+E62 (Pipeline Execution Engine) was identified by all three experts as the highest-risk component:
 
 **Designer Concerns**:
 - Subprocess communication complexity
@@ -220,13 +220,13 @@ Unit Tests (70%)
 
 ### Recommended Build Order (5-7 weeks, with buffer)
 
-**Week 1: Foundation (Enhancement 60)**
+**Week 1: Foundation (E60)**
 - Docker Compose setup
 - FastAPI skeleton
 - PostgreSQL connection
 - Health endpoints
 
-**Week 2: API Layer (Enhancement 61)**
+**Week 2: API Layer (E61)**
 - Database schema
 - Run management CRUD
 - State configuration API
@@ -234,10 +234,10 @@ Unit Tests (70%)
 **Weeks 3-4: Critical Path (Enhancements 62 + 63 in parallel)**
 - **Backend Team**: Pipeline execution engine (highest risk, most complex)
 - **Frontend Team**: React dashboard core (can develop concurrently)
-- **CHECKPOINT**: Enhancement 62 Quality Gate (must pass before integration)
+- **CHECKPOINT**: E62 Quality Gate (must pass before integration)
 - **CHECKPOINT**: MVP Demo (week 4)
 
-**Week 5: Visualization (Enhancement 64)**
+**Week 5: Visualization (E64)**
 - Leaflet map integration
 - District rendering
 - Color-by-metric
@@ -305,11 +305,11 @@ Unit Tests (70%)
 - Test tools well-chosen (pytest, Playwright, RTL, MSW)
 
 **Key Recommendations**:
-1. **Enhancement 62 testing INSUFFICIENT** - expand from 15-20 to 25-30 unit tests
+1. **E62 testing INSUFFICIENT** - expand from 15-20 to 25-30 unit tests
 2. Add comprehensive integration tests for subprocess communication
 3. Add performance regression tests for map rendering
 4. Add accessibility testing for React components
-5. Allocate 40% of testing effort to Enhancement 62
+5. Allocate 40% of testing effort to E62
 
 **Testing Gaps Identified**:
 - Subprocess crash recovery tests
@@ -318,7 +318,7 @@ Unit Tests (70%)
 - Concurrent access race condition tests
 - Pagination boundary condition tests
 
-**Verdict**: PROCEED - With expanded testing for Enhancement 62
+**Verdict**: PROCEED - With expanded testing for E62
 
 ---
 
@@ -348,7 +348,7 @@ Unit Tests (70%)
 ## Parallelization Opportunities
 
 **Concurrent Development**:
-- Enhancement 62 (Pipeline Execution Engine) and Enhancement 63 (React Dashboard Core) can be developed in parallel
+- E62 (Pipeline Execution Engine) and E63 (React Dashboard Core) can be developed in parallel
 - Backend team works on subprocess management
 - Frontend team works on UI components and React Query integration
 - Both teams coordinate on API contracts
@@ -365,7 +365,7 @@ Unit Tests (70%)
 1. **Management Approval**: GO decision granted - proceed with mandatory controls
 2. **Team Assignment**: Assign backend and frontend developers (1-2 developers)
 3. **Sprint Planning**: Break enhancements into 2-week sprints
-4. **Kickoff**: Begin with Enhancement 60 (Project Setup)
+4. **Kickoff**: Begin with E60 (Project Setup)
 5. **Monitoring**: Track progress against 5-7 week timeline with weekly checkpoints
 6. **MVP Demo**: Schedule stakeholder demo for week 4
 
@@ -396,4 +396,4 @@ Unit Tests (70%)
 
 ---
 
-**Review Summary**: Wave 9 has undergone rigorous review by four senior experts (Designer, Engineer, Tester, Manager) and is **APPROVED FOR IMPLEMENTATION** with a score of 8.1/10. Mandatory controls include weekly checkpoint reviews, Enhancement 62 quality gate, MVP-first delivery, and change control. Timeline: 5-7 weeks (112-134 hours). Break-even expected within 3-6 months post-launch.
+**Review Summary**: Wave 9 has undergone rigorous review by four senior experts (Designer, Engineer, Tester, Manager) and is **APPROVED FOR IMPLEMENTATION** with a score of 8.1/10. Mandatory controls include weekly checkpoint reviews, E62 quality gate, MVP-first delivery, and change control. Timeline: 5-7 weeks (112-134 hours). Break-even expected within 3-6 months post-launch.

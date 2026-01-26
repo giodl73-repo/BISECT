@@ -1,4 +1,4 @@
-# Enhancement 34: Test Execution and Debugging Skills
+# E34: Test Execution and Debugging Skills
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium
@@ -164,7 +164,7 @@ Create two complementary skills for test execution and debugging:
   - Reference `/run-tests` and `/debug-tests`
   - Show examples of skill usage
 - [ ] Update `enhancements/INDEX.md`:
-  - Add Enhancement 34 to completed list
+  - Add E34 to completed list
   - Update completion date
 
 ## Files to Modify/Create
@@ -179,7 +179,7 @@ Create two complementary skills for test execution and debugging:
 - `CLAUDE.md` - Add skills to Phase 1 (Testing), update counts (29→31)
 - `SKILLS.md` - Add Testing & Validation Skills section
 - `tests/README.md` - Add "Running Tests with Skills" section
-- `enhancements/INDEX.md` - Mark Enhancement 34 as complete
+- `enhancements/INDEX.md` - Mark E34 as complete
 
 ## Testing Plan
 
@@ -239,10 +239,10 @@ Create two complementary skills for test execution and debugging:
 
 ## Dependencies
 
-- **Enhancement 30**: Playwright Test Harness (E2E tests exist)
-- **Enhancement 31**: Pipeline Test System (unit/integration tests exist)
-- **Enhancement 33**: Dashboard Mock Data Integration (mock fixtures exist)
-- **Enhancement 19**: Create-Skill Meta-Skill (used to generate skills)
+- **E30**: Playwright Test Harness (E2E tests exist)
+- **E31**: Pipeline Test System (unit/integration tests exist)
+- **E33**: Dashboard Mock Data Integration (mock fixtures exist)
+- **E19**: Create-Skill Meta-Skill (used to generate skills)
 - **pytest**: Test framework already installed
 - **pytest-playwright**: Playwright integration already installed
 
@@ -371,10 +371,10 @@ Claude Code provides skills for streamlined test execution:
 
 ## Related Documentation
 
-- Enhancement 19: Create-Skill Meta-Skill (used for generation)
-- Enhancement 30: Playwright Test Harness
-- Enhancement 31: Pipeline Test System
-- Enhancement 33: Dashboard Mock Data Integration
+- E19: Create-Skill Meta-Skill (used for generation)
+- E30: Playwright Test Harness
+- E31: Pipeline Test System
+- E33: Dashboard Mock Data Integration
 - [tests/README.md](../../tests/README.md) - Testing guide
 - [CLAUDE.md](../../CLAUDE.md) - AI assistant guide
 - [SKILLS.md](../SKILLS.md) - Skill documentation
@@ -404,7 +404,7 @@ Successfully created two complementary skills for test execution and debugging:
 
 ### Implementation Approach
 
-Used `/create-skill` meta-skill (Enhancement 19) to generate both skills:
+Used `/create-skill` meta-skill (E19) to generate both skills:
 - Interactive questions gathered skill purpose and configuration
 - Generated YAML frontmatter with appropriate tool permissions
 - Created structured markdown content following established patterns
@@ -435,7 +435,7 @@ Used `/create-skill` meta-skill (Enhancement 19) to generate both skills:
    - Linked to SKILLS.md for details
 
 4. **enhancements/INDEX.md**:
-   - Moved Enhancement 34 from Planned to Completed
+   - Moved E34 from Planned to Completed
    - Updated completion date
 
 ### Key Features Implemented
@@ -498,10 +498,10 @@ Skills can be invoked with natural language:
 ### Integration
 
 Skills integrate seamlessly with:
-- Enhancement 30 (Playwright Test Harness)
-- Enhancement 31 (Pipeline Test System)
-- Enhancement 33 (Dashboard Mock Data)
-- Enhancement 19 (Create-Skill - used for generation)
+- E30 (Playwright Test Harness)
+- E31 (Pipeline Test System)
+- E33 (Dashboard Mock Data)
+- E19 (Create-Skill - used for generation)
 
 ### Future Enhancements
 

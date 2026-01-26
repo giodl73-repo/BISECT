@@ -1,4 +1,4 @@
-# Enhancement 23: Direct County Representation
+# E23: Direct County Representation
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -241,8 +241,8 @@ Modified two-stage:
 
 ## Related Enhancements
 
-- Enhancement 22: National Redistricting (alternative constraint model)
-- Enhancement 4: Urban Metro Area Maps (county-level visualization patterns)
+- E22: National Redistricting (alternative constraint model)
+- E4: Urban Metro Area Maps (county-level visualization patterns)
 
 ## Research Value
 

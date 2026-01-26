@@ -4,11 +4,11 @@
 **Focus**: Add FastAPI backend and React dashboard to existing pipeline without changing core functionality
 **Status**: ✅ COMPLETED
 **Actual Duration**: ~40 hours over 1 day (MVP scope)
-**Enhancements**: 60, 61, 62, 63, 64
+**E**: 60, 61, 62, 63, 64
 **Phases**:
-- Phase 1: Enhancement 60 - Project Setup & Infrastructure ✅ COMPLETED
-- Phase 2: Enhancements 61, 62 - Backend API & Pipeline Integration ✅ COMPLETED
-- Phase 3: Enhancements 63, 64 - React Dashboard & Visualization ✅ COMPLETED
+- Phase 1: E60 - Project Setup & Infrastructure ✅ COMPLETED
+- Phase 2: E61, 62 - Backend API & Pipeline Integration ✅ COMPLETED
+- Phase 3: E63, 64 - React Dashboard & Visualization ✅ COMPLETED
 
 ---
 
@@ -22,7 +22,7 @@
 | Technical Feasibility | **GOOD** | Sound architecture, appropriate technology choices |
 | Timeline Realism | **MODERATE** | 5-7 weeks achievable with identified risks |
 | Resource Requirements | **REASONABLE** | Can be executed with 1-2 developers |
-| Risk Level | **MEDIUM-HIGH** | Enhancement 62 is critical path |
+| Risk Level | **MEDIUM-HIGH** | E62 is critical path |
 | ROI Projection | **POSITIVE** | Long-term value exceeds investment |
 
 **Overall Score**: 8.1/10 - Strong plan, proceed with controls
@@ -31,7 +31,7 @@
 
 **Mandatory Controls**:
 1. Weekly checkpoint reviews with documented progress assessment
-2. Enhancement 62 quality gate must pass before full integration work
+2. E62 quality gate must pass before full integration work
 3. MVP delivery by end of week 4 (stretch) or week 5 (baseline)
 4. Change control for any scope changes > 4 hours
 
@@ -76,15 +76,15 @@
 ### Resource Allocation by Phase
 
 **Phase 1 (Weeks 1-2)**: 1 developer
-- Enhancement 60 (solo work)
-- Enhancement 61 (solo work)
+- E60 (solo work)
+- E61 (solo work)
 
 **Phase 2 (Weeks 3-4)**: 2 developers optimal
-- Developer A: Enhancement 62 (backend execution)
-- Developer B: Enhancement 63 (frontend with mocks)
+- Developer A: E62 (backend execution)
+- Developer B: E63 (frontend with mocks)
 
 **Phase 3 (Weeks 5-6)**: 1-2 developers
-- Enhancement 64 (requires E63 complete)
+- E64 (requires E63 complete)
 - Integration testing
 - Deployment setup
 
@@ -124,10 +124,10 @@ Week 7:   Buffer / Risk Mitigation (if needed)
 ```
 
 **Critical Path Items**:
-1. Enhancement 60 blocks all subsequent work
-2. Enhancement 61 blocks Enhancement 62
-3. Enhancement 62 blocks full integration testing
-4. Enhancement 63 must complete before Enhancement 64
+1. E60 blocks all subsequent work
+2. E61 blocks E62
+3. E62 blocks full integration testing
+4. E63 must complete before E64
 
 ---
 
@@ -180,7 +180,7 @@ Week 7:   Buffer / Risk Mitigation (if needed)
 
 **Escalation Criteria**:
 - Any risk score increases to CRITICAL
-- Enhancement 62 delays exceed 3 days
+- E62 delays exceed 3 days
 - Integration testing reveals architectural issues
 
 ### Contingency Plans
@@ -298,9 +298,9 @@ The following controls are **required** for Wave 9 implementation:
 **Owner**: Team Lead
 **Escalation**: Any blocker > 24 hours unresolved
 
-### 2. Enhancement 62 Quality Gate
+### 2. E62 Quality Gate
 
-**Requirement**: All Enhancement 62 critical tests must pass before starting E63/E64 integration
+**Requirement**: All E62 critical tests must pass before starting E63/E64 integration
 **Criteria**:
 - [ ] Subprocess spawn and terminate works on Windows
 - [ ] STATUS protocol parsing functional
@@ -376,7 +376,7 @@ The following controls are **required** for Wave 9 implementation:
 
 **Overall Testing Risk Assessment**: MEDIUM-HIGH
 
-Enhancement 62 (Pipeline Execution Engine) is the **highest testing risk** and should receive disproportionate testing attention.
+E62 (Pipeline Execution Engine) is the **highest testing risk** and should receive disproportionate testing attention.
 
 ### Test Pyramid
 
@@ -394,11 +394,11 @@ Enhancement 62 (Pipeline Execution Engine) is the **highest testing risk** and s
 
 | Enhancement | Risk Level | Testing Priority | Recommended Effort |
 |------------|------------|------------------|-------------------|
-| Enhancement 62 (Pipeline Execution) | **HIGHEST** | 1 | 40% of testing effort |
-| Enhancement 61 (Run Management) | MEDIUM | 2 | 20% of testing effort |
-| Enhancement 63 (React Dashboard) | MEDIUM | 3 | 20% of testing effort |
-| Enhancement 64 (Visualization) | MEDIUM | 4 | 15% of testing effort |
-| Enhancement 60 (Project Setup) | LOW | 5 | 5% of testing effort |
+| E62 (Pipeline Execution) | **HIGHEST** | 1 | 40% of testing effort |
+| E61 (Run Management) | MEDIUM | 2 | 20% of testing effort |
+| E63 (React Dashboard) | MEDIUM | 3 | 20% of testing effort |
+| E64 (Visualization) | MEDIUM | 4 | 15% of testing effort |
+| E60 (Project Setup) | LOW | 5 | 5% of testing effort |
 
 ### Testing Timeline
 
@@ -436,11 +436,11 @@ Enhancement 62 (Pipeline Execution Engine) is the **highest testing risk** and s
 
 | Enhancement | Unit Tests | Integration Tests | E2E Tests | Total |
 |-------------|------------|-------------------|-----------|-------|
-| Enhancement 60 | 3-5 | 5-8 | 0 | 8-13 |
-| Enhancement 61 | 15-18 | 12-15 | 2-3 | 29-36 |
-| Enhancement 62 | 25-30 | 12-15 | 3-5 | 40-50 |
-| Enhancement 63 | 18-22 | 10-12 | 5-7 | 33-41 |
-| Enhancement 64 | 10-12 | 8-10 | 5-7 | 23-29 |
+| E60 | 3-5 | 5-8 | 0 | 8-13 |
+| E61 | 15-18 | 12-15 | 2-3 | 29-36 |
+| E62 | 25-30 | 12-15 | 3-5 | 40-50 |
+| E63 | 18-22 | 10-12 | 5-7 | 33-41 |
+| E64 | 10-12 | 8-10 | 5-7 | 23-29 |
 | **Total** | **71-87** | **47-60** | **15-22** | **133-169** |
 
 ---
@@ -503,7 +503,7 @@ Enhancement 62 (Pipeline Execution Engine) is the **highest testing risk** and s
 
 ## Phases (Revised per Senior Designer)
 
-### Phase 1: Enhancement 60 - Project Setup & Infrastructure
+### Phase 1: E60 - Project Setup & Infrastructure
 **Status**: PLANNED
 **Estimated Effort**: 12-16 hours
 
@@ -527,7 +527,7 @@ Set up complete development environment with Docker Compose.
 
 Database schema, API endpoints, and pipeline integration.
 
-**Enhancement 61 - Run Management API** ✅ COMPLETED (16-20 hours):
+**E61 - Run Management API** ✅ COMPLETED (16-20 hours):
 - Database schema (runs, run_years tables only)
 - Alembic migrations
 - JSON columns for config and progress flexibility
@@ -537,7 +537,7 @@ Database schema, API endpoints, and pipeline integration.
 - Unit tests for all endpoints
 - **Commit**: 8b0aa7d
 
-**Enhancement 62 - Pipeline Execution Engine** ✅ COMPLETED (MVP ~8 hours):
+**E62 - Pipeline Execution Engine** ✅ COMPLETED (MVP ~8 hours):
 - Subprocess manager class (async execution) ✅
 - STATUS protocol parser (regex-based) ✅
 - Background task execution ✅
@@ -567,7 +567,7 @@ Database schema, API endpoints, and pipeline integration.
 
 Frontend components and production deployment.
 
-**Enhancement 63 - React Dashboard Core** ✅ COMPLETED (MVP ~12 hours):
+**E63 - React Dashboard Core** ✅ COMPLETED (MVP ~12 hours):
 - Vite + TypeScript + Tailwind setup (from E60) ✅
 - UI component library integration (@common/ui) ✅
 - Navigation/layout component ✅
@@ -588,7 +588,7 @@ Frontend components and production deployment.
 - Form validation and error handling
 - Responsive layout with Tailwind CSS
 
-**Enhancement 64 - District Visualization** ✅ COMPLETED (MVP ~8 hours):
+**E64 - District Visualization** ✅ COMPLETED (MVP ~8 hours):
 - Leaflet map component ✅
 - GeoJSON district rendering ✅
 - Color-by-metric selection (compactness, population, partisan, demographic) ✅
@@ -641,7 +641,7 @@ See [Risk Register](#risk-register) section above for full risk management detai
 | Resource | - | R9 (developer unavailability) | - |
 | External | - | R10 (pipeline dependency) | - |
 
-**Enhancement 62 Risks (Highest Priority)**:
+**E62 Risks (Highest Priority)**:
 | Risk ID | Risk | Mitigation Status |
 |---------|------|-------------------|
 | R1 | Subprocess hangs indefinitely | Watchdog + 60s timeout planned |
@@ -649,7 +649,7 @@ See [Risk Register](#risk-register) section above for full risk management detai
 | R3 | Stdout buffering delays | File-based progress fallback with atomic writes |
 | R4 | Server restart orphans | PID tracking in database |
 
-**Note**: R1-R4 are addressed with comprehensive mitigations identified by Senior Engineer. Mandatory testing of all failure scenarios required before proceeding past Enhancement 62.
+**Note**: R1-R4 are addressed with comprehensive mitigations identified by Senior Engineer. Mandatory testing of all failure scenarios required before proceeding past E62.
 
 ---
 
@@ -750,11 +750,11 @@ frontend/
 
 ## Related Enhancements
 
-- [Enhancement 60](../enhancements/60_api_project_setup.md) - Project Setup & Infrastructure (planned)
-- [Enhancement 61](../enhancements/61_run_management_api.md) - Run Management API (planned)
-- [Enhancement 62](../enhancements/62_pipeline_execution_engine.md) - Pipeline Execution Engine (planned)
-- [Enhancement 63](../enhancements/63_react_dashboard_core.md) - React Dashboard Core (planned)
-- [Enhancement 64](../enhancements/64_district_visualization.md) - District Visualization (planned)
+- [E60](../enhancements/60_api_project_setup.md) - Project Setup & Infrastructure (planned)
+- [E61](../enhancements/61_run_management_api.md) - Run Management API (planned)
+- [E62](../enhancements/62_pipeline_execution_engine.md) - Pipeline Execution Engine (planned)
+- [E63](../enhancements/63_react_dashboard_core.md) - React Dashboard Core (planned)
+- [E64](../enhancements/64_district_visualization.md) - District Visualization (planned)
 
 ---
 
@@ -794,7 +794,7 @@ frontend/
 | 63 - Dashboard | **Medium** | State sync bugs | React Query invalidation |
 | 64 - Maps | **Medium** | Performance | Simplification, canvas |
 
-### Enhancement 62 Deep Dive (Highest Risk)
+### E62 Deep Dive (Highest Risk)
 
 **Risk 1: Subprocess stdout buffering**
 - **Impact**: Progress updates delayed or lost
@@ -823,19 +823,19 @@ frontend/
 ### Recommended 5-7 Week Build Order (with Buffer)
 
 ```
-Week 1-2: Enhancement 60 (Setup)
+Week 1-2: E60 (Setup)
   |-- Docker Compose working (postgres, API skeleton)
   |-- Frontend scaffold (Vite + Tailwind + empty routes)
   |-- Health endpoints verified
   |-- CI/CD for tests
 
-Week 2-3: Enhancement 61 (Run API)
+Week 2-3: E61 (Run API)
   |-- Database schema + migrations
   |-- Run CRUD endpoints
   |-- Progress polling endpoint
   |-- Unit + integration tests
 
-Week 3-4: Enhancement 62 (Execution Engine)  ** CRITICAL PATH **
+Week 3-4: E62 (Execution Engine)  ** CRITICAL PATH **
   |-- PipelineExecutor class
   |-- StatusBridge integration
   |-- File-based fallback
@@ -843,14 +843,14 @@ Week 3-4: Enhancement 62 (Execution Engine)  ** CRITICAL PATH **
   |-- VT integration test
   |-- ** QUALITY GATE CHECKPOINT **
 
-Week 4-5: Enhancement 63 (React Dashboard)
+Week 4-5: E63 (React Dashboard)
   |-- UI component library
   |-- Run list + detail pages
   |-- Progress display with polling
   |-- Run creation form
   |-- ** MVP DEMO CHECKPOINT **
 
-Week 5-6: Enhancement 64 (Visualization)
+Week 5-6: E64 (Visualization)
   |-- Leaflet map component
   |-- Color-by-metric
   |-- District table
@@ -867,7 +867,7 @@ Week 7: Buffer / Risk Mitigation (+20 hours)
 **Timeline Notes**:
 - Week 7 buffer provides 20 hours for risk mitigation
 - MVP checkpoint at week 4-5 is mandatory
-- Enhancement 62 quality gate is blocking
+- E62 quality gate is blocking
 - Parallelization of E62+E63 can reduce to 5 weeks if 2 developers available
 
 ---
@@ -877,13 +877,13 @@ Week 7: Buffer / Risk Mitigation (+20 hours)
 Enhancements 62 and 63 can be developed concurrently by different developers:
 
 ```
-Enhancement 60 ----+
+E60 ----+
                    |
-Enhancement 61 ----+---- Enhancement 62 (Developer A: backend execution)
+E61 ----+---- E62 (Developer A: backend execution)
                    |
-                   +---- Enhancement 63 (Developer B: frontend, mock API responses)
+                   +---- E63 (Developer B: frontend, mock API responses)
                          |
-                         +---- Enhancement 64 (after 63 complete)
+                         +---- E64 (after 63 complete)
 ```
 
 **Benefits**:

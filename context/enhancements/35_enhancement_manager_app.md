@@ -1,4 +1,4 @@
-# Enhancement 35: Enhancement Manager Web App
+# E35: Enhancement Manager Web App
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium
@@ -249,7 +249,7 @@ Create a simple web application to manage enhancements:
 ```json
 {
   "id": 34,
-  "content": "# Enhancement 34: Test Execution...",
+  "content": "# E34: Test Execution...",
   "metadata": {
     "status": "COMPLETED",
     "priority": "Medium",
@@ -297,7 +297,7 @@ Create a simple web application to manage enhancements:
 ├─────────────────────────────────────────────────────────────┤
 │                                                              │
 │ ┌─────────────────────────────┐ ┌──────────────────────┐  │
-│ │ Enhancement 34               │ │ Enhancement 33       │  │
+│ │ E34               │ │ E33       │  │
 │ │ Test Execution & Debug       │ │ Dashboard Mock Data  │  │
 │ │ Status: ✅ COMPLETED         │ │ Status: ✅ COMPLETED │  │
 │ │ Completed: Jan 16, 2026     │ │ Completed: Jan 16    │  │
@@ -306,7 +306,7 @@ Create a simple web application to manage enhancements:
 │ └─────────────────────────────┘ └──────────────────────┘  │
 │                                                              │
 │ ┌─────────────────────────────┐ ┌──────────────────────┐  │
-│ │ Enhancement 10               │ │ Enhancement 11       │  │
+│ │ E10               │ │ E11       │  │
 │ │ Per-State Urban Processing  │ │ Baseline Comparison  │  │
 │ │ Status: 📋 PLANNED          │ │ Status: 📋 PLANNED   │  │
 │ │ Priority: Medium            │ │ Priority: Low        │  │
@@ -481,7 +481,7 @@ Create a simple web application to manage enhancements:
 
 ## Related Documentation
 
-- Enhancement 29: Artifacts Dashboard Tab (similar HTML/JS patterns)
+- E29: Artifacts Dashboard Tab (similar HTML/JS patterns)
 - enhancements/INDEX.md - What we're managing
 - enhancements/templates/enhancement_template.md - Enhancement structure
 - web/dashboard.html - Reference for web app patterns

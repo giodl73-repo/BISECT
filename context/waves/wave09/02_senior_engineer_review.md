@@ -14,11 +14,11 @@ This review evaluates Wave 9 from an engineering perspective, focusing on implem
 **Overall Assessment**: **PROCEED** - The technical plan is well-structured with appropriate complexity allocation. The Senior Designer's recommendations significantly de-risk the implementation.
 
 **Key Engineering Verdict**:
-- Enhancement 60 (Setup): Low risk, well-scoped
-- Enhancement 61 (Run API): Medium risk, straightforward CRUD
-- Enhancement 62 (Pipeline Execution): **HIGH RISK** - Most complex, critical path
-- Enhancement 63 (React Dashboard): Medium risk, standard patterns
-- Enhancement 64 (Visualization): Medium risk, performance-sensitive
+- E60 (Setup): Low risk, well-scoped
+- E61 (Run API): Medium risk, straightforward CRUD
+- E62 (Pipeline Execution): **HIGH RISK** - Most complex, critical path
+- E63 (React Dashboard): Medium risk, standard patterns
+- E64 (Visualization): Medium risk, performance-sensitive
 
 ---
 
@@ -732,7 +732,7 @@ const geojsonData = useMemo(() => ({
 | 63 - Dashboard | Medium | State sync bugs | React Query invalidation |
 | 64 - Maps | Medium | Performance | Simplification, canvas |
 
-### 5.2 Enhancement 62 Deep Dive (Highest Risk)
+### 5.2 E62 Deep Dive (Highest Risk)
 
 **Risk 1: Subprocess stdout buffering**
 - **Impact**: Progress updates delayed or lost
@@ -783,32 +783,32 @@ const geojsonData = useMemo(() => ({
 ### 6.1 Recommended Implementation Sequence
 
 ```
-Week 1-2: Enhancement 60 (Setup)
+Week 1-2: E60 (Setup)
   |-- Docker Compose working (postgres, API skeleton)
   |-- Frontend scaffold (Vite + Tailwind + empty routes)
   |-- Health endpoints verified
   |-- CI/CD for tests
 
-Week 2-3: Enhancement 61 (Run API)
+Week 2-3: E61 (Run API)
   |-- Database schema + migrations
   |-- Run CRUD endpoints
   |-- Progress polling endpoint
   |-- Unit + integration tests
 
-Week 3-4: Enhancement 62 (Execution Engine)  ** CRITICAL PATH **
+Week 3-4: E62 (Execution Engine)  ** CRITICAL PATH **
   |-- PipelineExecutor class
   |-- StatusBridge integration
   |-- File-based fallback
   |-- Watchdog implementation
   |-- VT integration test
 
-Week 4-5: Enhancement 63 (React Dashboard)
+Week 4-5: E63 (React Dashboard)
   |-- UI component library
   |-- Run list + detail pages
   |-- Progress display with polling
   |-- Run creation form
 
-Week 5-6: Enhancement 64 (Visualization)
+Week 5-6: E64 (Visualization)
   |-- Leaflet map component
   |-- Color-by-metric
   |-- District table
@@ -819,18 +819,18 @@ Week 5-6: Enhancement 64 (Visualization)
 ### 6.2 Parallelization Opportunities
 
 ```
-Enhancement 60 ----+
+E60 ----+
                    |
-Enhancement 61 ----+---- Enhancement 62
+E61 ----+---- E62
                    |
-                   +---- Enhancement 63 (can start UI while 62 in progress)
+                   +---- E63 (can start UI while 62 in progress)
                          |
-                         +---- Enhancement 64 (after 63 complete)
+                         +---- E64 (after 63 complete)
 ```
 
 Enhancements 63 and 62 can be developed in parallel by different developers:
-- Developer A: Enhancement 62 (backend execution)
-- Developer B: Enhancement 63 (frontend, mock API responses)
+- Developer A: E62 (backend execution)
+- Developer B: E63 (frontend, mock API responses)
 
 ---
 
@@ -951,14 +951,14 @@ See updated CODING_PATTERNS.md file with new sections:
 Wave 9 is technically sound and well-scoped. The Senior Designer's recommendations (polling over WebSocket, metadata-only database, file-based fallback) significantly reduce implementation risk.
 
 **Key Success Factors**:
-1. **Enhancement 62 is critical path** - Start early, test thoroughly with VT
+1. **E62 is critical path** - Start early, test thoroughly with VT
 2. **STATUS protocol is proven** - Reuse existing parsing code
 3. **File-based fallback is essential** - Don't rely solely on stdout
 4. **Test on Windows early** - Subprocess behavior differs
 
 **Estimated Timeline**: 4-6 weeks is achievable with the phased approach:
 - Weeks 1-2: Infrastructure (Enhancements 60-61)
-- Weeks 3-4: Execution engine (Enhancement 62)
+- Weeks 3-4: Execution engine (E62)
 - Weeks 4-6: Frontend (Enhancements 63-64)
 
 The wave maintains full backward compatibility with CLI tools and adds significant value by making the redistricting system accessible via web interface.

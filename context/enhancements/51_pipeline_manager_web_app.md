@@ -1,4 +1,4 @@
-# Enhancement 51: Pipeline Manager Web Application
+# E51: Pipeline Manager Web Application
 
 **Status**: Proposed
 **Priority**: High
@@ -323,8 +323,8 @@ Create a web application for managing and monitoring redistricting pipeline runs
 
 ## Dependencies
 
-- **Enhancement 50** (STATUS Protocol Unification): Provides unified parse_status_message()
-- **Enhancement 37** (Parallel Multi-Year Pipeline): Existing hierarchical progress structure
+- **E50** (STATUS Protocol Unification): Provides unified parse_status_message()
+- **E37** (Parallel Multi-Year Pipeline): Existing hierarchical progress structure
 - **Python packages**: Flask only (no SocketIO needed with polling approach)
 
 ## Risks & Mitigations
@@ -403,7 +403,7 @@ setInterval(() => {
 
 ### STATUS Protocol Integration
 
-Leverage Enhancement 50's unified parser:
+Leverage E50's unified parser:
 ```python
 from scripts.utils.status_protocol import parse_status_message
 import json
@@ -443,8 +443,8 @@ for line in process.stdout:
 
 ## Related Documentation
 
-- Enhancement 35: [Enhancement Manager Web App](../35_enhancement_manager_app.md)
-- Enhancement 37: [Parallel Multi-Year Pipeline](../37_parallel_multi_year_pipeline.md)
-- Enhancement 50: [STATUS Protocol Unification](../50_status_protocol_unification.md)
+- E35: [Enhancement Manager Web App](../35_enhancement_manager_app.md)
+- E37: [Parallel Multi-Year Pipeline](../37_parallel_multi_year_pipeline.md)
+- E50: [STATUS Protocol Unification](../50_status_protocol_unification.md)
 - Architecture: [ARCHITECTURE.md](../../ARCHITECTURE.md)
 - Coding patterns: [CODING_PATTERNS.md](../../CODING_PATTERNS.md)

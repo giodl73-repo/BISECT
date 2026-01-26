@@ -1,4 +1,4 @@
-# Enhancement 28: Multi-Member Districts
+# E28: Multi-Member Districts
 
 **Status**: 📋 PLANNED
 **Priority**: Research
@@ -363,8 +363,8 @@ The current redistricting system:
 
 ## Related Enhancements
 
-- Enhancement 24: Party-Based District Allocation (another proportional approach)
-- Enhancement 22: National Redistricting (different approach to fairness)
+- E24: Party-Based District Allocation (another proportional approach)
+- E22: National Redistricting (different approach to fairness)
 
 ## Research Value
 

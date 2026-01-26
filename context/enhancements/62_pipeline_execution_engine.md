@@ -1,4 +1,4 @@
-# Enhancement 62: Pipeline Execution Engine
+# E62: Pipeline Execution Engine
 
 **Status**: PLANNED
 **Wave**: Wave 9 (API-MIGRATION)
@@ -596,8 +596,8 @@ def test_status_parser_edge_cases(line, expected_type):
 ## Dependencies
 
 **Prerequisites**:
-- Enhancement 60 (Project Setup) - REQUIRED
-- Enhancement 61 (Run Management API) - REQUIRED
+- E60 (Project Setup) - REQUIRED
+- E61 (Run Management API) - REQUIRED
 - Existing pipeline scripts must work unchanged
 
 **Python Packages** (add to requirements.txt):
@@ -961,4 +961,4 @@ async def debug_progress(run_id: int, db: Session = Depends(get_db)):
 
 ---
 
-**Enhancement 62 Summary**: Implement async pipeline execution engine with STATUS parsing, file-based progress fallback, cancellation support, and watchdog monitoring.
+**E62 Summary**: Implement async pipeline execution engine with STATUS parsing, file-based progress fallback, cancellation support, and watchdog monitoring.

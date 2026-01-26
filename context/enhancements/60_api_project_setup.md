@@ -1,4 +1,4 @@
-# Enhancement 60: API Project Setup & Infrastructure
+# E60: API Project Setup & Infrastructure
 
 **Status**: ✅ COMPLETED
 **Wave**: Wave 9 (API-MIGRATION)
@@ -429,7 +429,7 @@ class Settings(BaseSettings):
     project_root: str = "."
     outputs_dir: str = "outputs"
 
-    # Pipeline (for Enhancement 62)
+    # Pipeline (for E62)
     default_workers: int = 4
     watchdog_timeout: int = 60  # seconds
     progress_persist_interval: int = 5  # seconds
@@ -479,7 +479,7 @@ async def version():
 
 ### Testing Strategy
 
-**Testing Pyramid for Enhancement 60**:
+**Testing Pyramid for E60**:
 - Unit tests: 2-3 tests (config loading, database connection)
 - Integration tests: 3-4 tests (health endpoint, CORS, version endpoint)
 
@@ -567,7 +567,7 @@ Per engineer recommendation:
 - `.gitignore` - Updated for Node.js and Poetry
 
 **Files Modified**:
-- `docs/CHANGELOG.md` - Added Enhancement 60 completion entry
+- `docs/CHANGELOG.md` - Added E60 completion entry
 - `CLAUDE.md` - Added Wave 9 to Recent Changes and Documentation sections
 - `context/enhancements/61_run_management_api.md` - Updated for App Manager integration
 - `context/enhancements/62_pipeline_execution_engine.md` - Updated paths
@@ -605,4 +605,4 @@ This enhancement was initially implemented as standalone api/ and frontend/ dire
 
 ---
 
-**Enhancement 60 Summary**: Created foundational infrastructure for Wave 9 with FastAPI backend, React frontend, and App Manager integration. Established shared package patterns and centralized PM2 management.
+**E60 Summary**: Created foundational infrastructure for Wave 9 with FastAPI backend, React frontend, and App Manager integration. Established shared package patterns and centralized PM2 management.

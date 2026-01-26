@@ -182,12 +182,12 @@ def validate_enhancement(content):
     errors = []
 
     # Check for required fields (relaxed for older formats)
-    # Only require a title with "Enhancement"
-    has_title_level1 = re.search(r'^#\s+Enhancement', content, re.MULTILINE)
-    has_title_level2 = re.search(r'^##\s+Enhancement', content, re.MULTILINE)
+    # Support both "Enhancement" and "E#" format
+    has_title_level1 = re.search(r'^#\s+(?:Enhancement|E\d+)', content, re.MULTILINE)
+    has_title_level2 = re.search(r'^##\s+(?:Enhancement|E\d+)', content, re.MULTILINE)
 
     if not (has_title_level1 or has_title_level2):
-        errors.append('Missing required field: Title (must contain "Enhancement")')
+        errors.append('Missing required field: Title (must contain "Enhancement" or "E#")')
 
     # Check status value only if present (optional for older format)
     status_match = re.search(r'\*\*Status\*\*:\s*(.+)', content)
@@ -333,11 +333,11 @@ def extract_wave_metadata(content):
     if phases_section:
         phases_text = phases_section.group(1)
         phase_mappings = []
-        # Parse each line: - Phase 1: Enhancement 1 or - Phase 1: Enhancements 1, 2 [- Name] [(status)]
+        # Parse each line: - Phase 1: Enhancement 1 or - Phase 1: E1, 2 [- Name] [(status)]
         for line in phases_text.split('\n'):
-            # Match format: Phase {num}: Enhancement(s) {ids} [- {name}] [(status)]
+            # Match format: Phase {num}: Enhancement(s) {ids} or Phase {num}: E {ids} [- {name}] [(status)]
             phase_match = re.match(
-                r'[-*]\s+Phase\s+(\d+[A-Z]?):\s+Enhancement[s]?\s+([\d,\s]+)(?:\s+-\s+([^(]+?))?(?:\s+\([^)]+\))?\s*$',
+                r'[-*]\s+Phase\s+(\d+[A-Z]?):\s+(?:Enhancement[s]?|E)\s*([\d,\s]+)(?:\s+-\s+([^(]+?))?(?:\s+\([^)]+\))?\s*$',
                 line.strip()
             )
             if phase_match:
@@ -385,19 +385,22 @@ def extract_wave_metadata(content):
             phase_ids.extend(mapping['enhancements'])
     else:
         # Fall back to legacy parsing
-        # Pattern 1: "**Enhancements**: 1, 2, 3" (in frontmatter with markdown bold)
-        phases_match = re.search(r'\*\*(?:Enhancements|Phases)\*\*:\s*([\d,\s]+)', content, re.IGNORECASE)
+        # Pattern 1: "**Enhancements**: 1, 2, 3" or "**E**: 1, 2, 3" (in frontmatter with markdown bold)
+        phases_match = re.search(r'\*\*(?:Enhancements|Phases|E)\*\*:\s*([\d,\s]+)', content, re.IGNORECASE)
         if phases_match:
             numbers = phases_match.group(1)
             phase_ids.extend([int(n.strip()) for n in numbers.split(',') if n.strip().isdigit()])
 
-        # Pattern 2: List items with links like "- [Enhancement 1](../enhancements/1_name.md)"
+        # Pattern 2: List items with links like "- [Enhancement 1](../enhancements/1_name.md)" or "- [E1](../enhancements/1_name.md)"
         # Only match in the beginning of the document (before first ## heading after frontmatter)
         frontmatter_end = re.search(r'\n##\s+', content)
         if frontmatter_end:
             frontmatter_section = content[:frontmatter_end.start()]
             phase_links = re.findall(r'\[(?:Enhancement|Phase)\s+(\d+)\]', frontmatter_section, re.IGNORECASE)
             phase_ids.extend([int(n) for n in phase_links])
+            # Also support E# format links
+            e_format_links = re.findall(r'\[E(\d+)\]', frontmatter_section)
+            phase_ids.extend([int(n) for n in e_format_links])
 
     # Remove duplicates and sort
     metadata['phase_ids'] = sorted(list(set(phase_ids)))

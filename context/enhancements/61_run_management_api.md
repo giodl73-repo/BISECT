@@ -1,4 +1,4 @@
-# Enhancement 61: Run Management API
+# E61: Run Management API
 
 **Status**: ✅ COMPLETED
 **Wave**: Wave 9 (API-MIGRATION)
@@ -425,7 +425,7 @@ common-backend-utils              # Exceptions, pagination, CRUD patterns (from 
 ## Dependencies
 
 **Prerequisites**:
-- Enhancement 60 (Project Setup) - REQUIRED
+- E60 (Project Setup) - REQUIRED
 - PostgreSQL database running
 - Alembic configured
 - **App Manager shared packages** (C:\src\appmanager\packages\)
@@ -436,10 +436,10 @@ common-backend-utils              # Exceptions, pagination, CRUD patterns (from 
 
 **Shared Utilities Used**:
 - `common_backend_utils.exceptions` - NotFoundException, ValidationException, ConflictException
-- `common_backend_utils.deps` - create_db_dependency (already used in Enhancement 60)
+- `common_backend_utils.deps` - create_db_dependency (already used in E60)
 - `common_backend_utils.pagination` - Pagination helpers (if needed for list endpoints)
 
-**Blocks**: Enhancement 62 (Pipeline Execution Engine)
+**Blocks**: E62 (Pipeline Execution Engine)
 
 ---
 
@@ -769,4 +769,4 @@ CREATE TABLE run_years (
 
 ---
 
-**Enhancement 61 Summary**: Implemented complete database schema and REST API for run management with metadata-only storage, filtering, pagination, and progress tracking. All 29 tests passing.
+**E61 Summary**: Implemented complete database schema and REST API for run management with metadata-only storage, filtering, pagination, and progress tracking. All 29 tests passing.

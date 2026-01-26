@@ -12,19 +12,19 @@
 Wave 9 introduces a significant architectural change - transitioning from CLI-only to web-based run management. From a testing perspective, this wave presents **moderate-to-high testing complexity** due to:
 
 1. **New technology layers** (FastAPI, React, SQLAlchemy) requiring new test infrastructure
-2. **Critical subprocess integration** (Enhancement 62) with high failure mode complexity
+2. **Critical subprocess integration** (E62) with high failure mode complexity
 3. **Real-time progress polling** requiring state synchronization testing
 4. **Cross-layer integration** between CLI, API, database, and frontend
 
 **Overall Testing Risk Assessment**: **MEDIUM-HIGH**
 
-Enhancement 62 (Pipeline Execution Engine) is the **highest testing risk** and should receive disproportionate testing attention.
+E62 (Pipeline Execution Engine) is the **highest testing risk** and should receive disproportionate testing attention.
 
 ---
 
 ## Test Coverage Assessment by Enhancement
 
-### Enhancement 60: API Project Setup (LOW RISK)
+### E60: API Project Setup (LOW RISK)
 
 **Current Test Plan**:
 - Basic endpoint tests (health, docs)
@@ -59,7 +59,7 @@ def test_cors_preflight_request(client):
 
 ---
 
-### Enhancement 61: Run Management API (MEDIUM RISK)
+### E61: Run Management API (MEDIUM RISK)
 
 **Current Test Plan**:
 - Unit tests for run service (10-15)
@@ -140,7 +140,7 @@ def test_cors_preflight_request(client):
 
 ---
 
-### Enhancement 62: Pipeline Execution Engine (HIGHEST RISK)
+### E62: Pipeline Execution Engine (HIGHEST RISK)
 
 **Current Test Plan**:
 - Unit tests for STATUS parser (15-20)
@@ -343,7 +343,7 @@ def test_status_parser_edge_cases(line, expected_type):
 
 ---
 
-### Enhancement 63: React Dashboard Core (MEDIUM RISK)
+### E63: React Dashboard Core (MEDIUM RISK)
 
 **Current Test Plan**:
 - Unit tests for UI components (15-20)
@@ -482,7 +482,7 @@ def test_status_parser_edge_cases(line, expected_type):
 
 ---
 
-### Enhancement 64: District Visualization (MEDIUM RISK)
+### E64: District Visualization (MEDIUM RISK)
 
 **Current Test Plan**:
 - Unit tests (8-10)
@@ -643,11 +643,11 @@ Based on impact and likelihood analysis:
 
 | Enhancement | Risk Level | Testing Priority | Recommended Effort |
 |------------|------------|------------------|-------------------|
-| Enhancement 62 (Pipeline Execution) | **HIGHEST** | 1 | 40% of testing effort |
-| Enhancement 61 (Run Management) | MEDIUM | 2 | 20% of testing effort |
-| Enhancement 63 (React Dashboard) | MEDIUM | 3 | 20% of testing effort |
-| Enhancement 64 (Visualization) | MEDIUM | 4 | 15% of testing effort |
-| Enhancement 60 (Project Setup) | LOW | 5 | 5% of testing effort |
+| E62 (Pipeline Execution) | **HIGHEST** | 1 | 40% of testing effort |
+| E61 (Run Management) | MEDIUM | 2 | 20% of testing effort |
+| E63 (React Dashboard) | MEDIUM | 3 | 20% of testing effort |
+| E64 (Visualization) | MEDIUM | 4 | 15% of testing effort |
+| E60 (Project Setup) | LOW | 5 | 5% of testing effort |
 
 ### Critical Test Scenarios (Must Pass Before Launch)
 
@@ -915,7 +915,7 @@ Create test dashboard showing:
 
 ### During Implementation
 
-1. Require TDD for Enhancement 62 (Pipeline Execution)
+1. Require TDD for E62 (Pipeline Execution)
 2. Review test coverage at each PR
 3. Run E2E tests against staging before merge
 
@@ -931,7 +931,7 @@ Create test dashboard showing:
 
 ## Conclusion
 
-Wave 9 testing requires significant investment, particularly for Enhancement 62 (Pipeline Execution Engine). The recommended testing approach emphasizes:
+Wave 9 testing requires significant investment, particularly for E62 (Pipeline Execution Engine). The recommended testing approach emphasizes:
 
 1. **Risk-based prioritization** - Focus effort on highest-risk components
 2. **Comprehensive coverage** - Unit, integration, and E2E tests for each layer

@@ -1,4 +1,4 @@
-# Enhancement 64: District Visualization
+# E64: District Visualization
 
 **Status**: PLANNED
 **Wave**: Wave 9 (API-MIGRATION)
@@ -677,9 +677,9 @@ it('should handle 50k+ tract geometries', async ({ page }) => {
 ## Dependencies
 
 **Prerequisites**:
-- Enhancement 60 (Project Setup) - REQUIRED
-- Enhancement 61 (Run Management API) - REQUIRED
-- Enhancement 63 (React Dashboard Core) - REQUIRED
+- E60 (Project Setup) - REQUIRED
+- E61 (Run Management API) - REQUIRED
+- E63 (React Dashboard Core) - REQUIRED
 - Completed redistricting run with output files
 
 **Node Packages** (add to package.json):
@@ -708,7 +708,7 @@ it('should handle 50k+ tract geometries', async ({ page }) => {
 ### Deferred Alaska/Hawaii Insets
 Following Senior Designer recommendation:
 - **MVP**: Basic map without insets (AK/HI at actual locations)
-- **Future**: Add inset maps in Enhancement 64b
+- **Future**: Add inset maps in E64b
 - **Rationale**: Inset positioning is complex, not required for MVP
 
 ### Map Performance
@@ -740,7 +740,7 @@ Don't store geometries in database:
 ## Future Enhancements (Post-MVP)
 
 The following are explicitly deferred per Senior Designer recommendation:
-- Alaska/Hawaii insets (Enhancement 64b)
+- Alaska/Hawaii insets (E64b)
 - Zoom to state functionality
 - Print/export map as image
 - Compare two runs side-by-side
@@ -966,4 +966,4 @@ test.describe('District Map Performance', () => {
 
 ---
 
-**Enhancement 64 Summary**: Implement interactive district visualization with Leaflet maps, color-by-metric selection, district tooltips, sortable table, and basic PM2 deployment.
+**E64 Summary**: Implement interactive district visualization with Leaflet maps, color-by-metric selection, district tooltips, sortable table, and basic PM2 deployment.

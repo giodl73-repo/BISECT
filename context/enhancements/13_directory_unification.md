@@ -1,4 +1,4 @@
-# Enhancement 13: Unify Directory Structure Across Census Years
+# E13: Unify Directory Structure Across Census Years
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium

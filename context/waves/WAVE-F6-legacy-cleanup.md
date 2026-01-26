@@ -5,10 +5,10 @@
 **Status**: 📋 PLANNED
 **Priority**: LOW (nice-to-have)
 **Estimated Duration**: 1-2 weeks
-**Enhancements**: 8, 16
+**E**: 8, 16
 **Phases**:
-- Phase 1: Enhancement 8 - Block Data (🔄 IN PROGRESS)
-- Phase 2: Enhancement 16 - Metro Maps 2000 (📋 PLANNED)
+- Phase 1: E8 - Block Data (🔄 IN PROGRESS)
+- Phase 2: E16 - Metro Maps 2000 (📋 PLANNED)
 
 ---
 
@@ -31,7 +31,7 @@
 
 ## Phases
 
-### Phase 1: Enhancement 8 - Block-Level Data Support
+### Phase 1: E8 - Block-Level Data Support
 **Status**: 🔄 IN PROGRESS (Phase 0 complete for 2010, partial for 2000)
 **Priority**: LOW
 **Estimated Effort**: 1 week
@@ -51,7 +51,7 @@ Complete block-level census data support for higher-resolution redistricting.
 
 **Rationale**: Block-level data provides ~10x higher resolution than tracts, enabling finer-grained districts. However, computational cost is significant. Low priority because tract-level already produces good results.
 
-### Phase 2: Enhancement 16 - 2000 Census Metro Area Maps
+### Phase 2: E16 - 2000 Census Metro Area Maps
 **Status**: 📋 PLANNED
 **Priority**: LOW
 **Estimated Effort**: 3-5 days
@@ -87,8 +87,8 @@ Add metro area overlay maps for 2000 census year for consistency.
 
 ## Related Enhancements
 
-- [Enhancement 8](../enhancements/08_block_level_data.md) - Block-Level Data Support (in progress)
-- [Enhancement 16](../enhancements/16_metro_2000.md) - 2000 Census Metro Area Maps (planned)
+- [E8](../enhancements/08_block_level_data.md) - Block-Level Data Support (in progress)
+- [E16](../enhancements/16_metro_2000.md) - 2000 Census Metro Area Maps (planned)
 
 ---
 

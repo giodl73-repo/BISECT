@@ -13,7 +13,7 @@ All enhancements are stored in this directory. Status is indicated in the frontm
 
 ## Enhancement Metadata Fields
 
-As of Enhancement 48, all completed enhancements include:
+As of E48, all completed enhancements include:
 
 **Commits**: Links to GitHub commits that implemented the enhancement
 - Format: `[short_sha](github_url), [short_sha](github_url), ...`

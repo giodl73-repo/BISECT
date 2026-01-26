@@ -1,4 +1,4 @@
-# Enhancement 2: Add D/R Seat Totals to Political Maps
+# E2: Add D/R Seat Totals to Political Maps
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium

@@ -1,4 +1,4 @@
-# Enhancement 63: React Dashboard Core
+# E63: React Dashboard Core
 
 **Status**: PLANNED
 **Wave**: Wave 9 (API-MIGRATION)
@@ -692,9 +692,9 @@ it('should handle network disconnection gracefully', async () => {
 ## Dependencies
 
 **Prerequisites**:
-- Enhancement 60 (Project Setup) - REQUIRED (frontend scaffold)
-- Enhancement 61 (Run Management API) - REQUIRED (API endpoints)
-- Enhancement 62 (Pipeline Execution) - REQUIRED (progress endpoint)
+- E60 (Project Setup) - REQUIRED (frontend scaffold)
+- E61 (Run Management API) - REQUIRED (API endpoints)
+- E62 (Pipeline Execution) - REQUIRED (progress endpoint)
 - **App Manager shared packages** (C:\src\appmanager\packages\)
 
 **Shared Packages** (workspace dependencies):
@@ -775,9 +775,9 @@ Standard React patterns with medium risk around state synchronization bugs.
 
 ### Parallelization Opportunity
 
-**This enhancement can be developed in parallel with Enhancement 62** by different developers:
-- Developer A: Enhancement 62 (backend execution)
-- Developer B: Enhancement 63 (frontend, mock API responses using MSW)
+**This enhancement can be developed in parallel with E62** by different developers:
+- Developer A: E62 (backend execution)
+- Developer B: E63 (frontend, mock API responses using MSW)
 
 This reduces calendar time from 6 weeks to 4-5 weeks.
 
@@ -1076,4 +1076,4 @@ Per engineer recommendation:
 
 ---
 
-**Enhancement 63 Summary**: Build React dashboard with UI component library, run management pages, polling-based progress display, and comprehensive error handling.
+**E63 Summary**: Build React dashboard with UI component library, run management pages, polling-based progress display, and comprehensive error handling.

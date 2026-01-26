@@ -1,4 +1,4 @@
-# Enhancement 37: Parallel Multi-Year Pipeline with Enhanced Progress Visualization
+# E37: Parallel Multi-Year Pipeline with Enhanced Progress Visualization
 
 **Status**: ✅ COMPLETED
 **Priority**: High
@@ -554,8 +554,8 @@ def allocate_workers(total_workers, num_years=3):
 
 ## Related Documentation
 
-- [Enhancement 9: Per-State Analysis Refactoring](09_per_state_analysis.md) - Parallel state processing
-- [Enhancement 15: Multi-Year Pipeline Support](15_multi_year_support.md) - Sequential multi-year implementation
-- [Enhancement 36: Experimental Variants Config](36_experimental_variants_config.md) - Configuration system
+- [E9: Per-State Analysis Refactoring](09_per_state_analysis.md) - Parallel state processing
+- [E15: Multi-Year Pipeline Support](15_multi_year_support.md) - Sequential multi-year implementation
+- [E36: Experimental Variants Config](36_experimental_variants_config.md) - Configuration system
 - [ARCHITECTURE.md](../../ARCHITECTURE.md) - System design
 - [CODING_PATTERNS.md](../../CODING_PATTERNS.md) - Progress bar protocol (will be updated)

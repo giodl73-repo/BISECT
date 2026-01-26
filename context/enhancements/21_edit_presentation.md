@@ -1,4 +1,4 @@
-# Enhancement 21: Edit-Presentation Skill
+# E21: Edit-Presentation Skill
 
 **Status**: ✅ COMPLETED
 **Priority**: Medium
@@ -170,7 +170,7 @@ Create an `/edit-presentation` skill that acts as a **conference presentation ed
 - `presentations/{presentation_name}/*.tex` - Beamer LaTeX files (edited content)
 - `CLAUDE.md` - Add `/edit-presentation` to Phase 5 (Editorial) skills
 - `SKILLS.md` - Document skill usage and examples
-- `enhancements/INDEX.md` - Mark Enhancement 21 as complete
+- `enhancements/INDEX.md` - Mark E21 as complete
 
 ## Testing Plan
 
