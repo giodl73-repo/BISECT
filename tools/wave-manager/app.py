@@ -489,8 +489,15 @@ def find_enhancement_file(enhancement_id):
         Path object or None if not found
     """
     # Search in enhancements directory
-    for file_path in BASE_PATH.glob(f'{enhancement_id}_*.md'):
-        return file_path
+    # Try both zero-padded (01_) and non-padded (1_) formats
+    patterns = [
+        f'{enhancement_id}_*.md',           # Non-padded: 1_file.md, 10_file.md
+        f'{enhancement_id:02d}_*.md',       # Zero-padded: 01_file.md, 10_file.md
+    ]
+
+    for pattern in patterns:
+        for file_path in BASE_PATH.glob(pattern):
+            return file_path
 
     return None
 
