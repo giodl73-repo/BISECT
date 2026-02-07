@@ -1,7 +1,7 @@
 paper: slice-edge-weighted-bisection
 title: "Edge-Weighted Recursive Bisection for Compact Congressional Districts"
 venue: "KDD 2026"
-stage: synthesis
+stage: revision
 round: 1
 reviewers:
   - name: George Karypis
@@ -68,7 +68,22 @@ p1_items:
     description: Compute efficiency gap, mean-median, partisan symmetry, seats-votes curves for all 50 states
     reviewers: [Moon Duchin, Jowei Chen]
     severity: blocking
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: 6bf22ff
+      files:
+        - sections/results.tex (new subsection: Partisan Outcome Analysis)
+        - tables/partisan_comparison_table.tex (10 representative states)
+        - tables/partisan_improvement_summary.tex (national statistics)
+        - scripts/political/*.py (5 analysis scripts)
+      notes: |
+        Added comprehensive partisan metrics analysis with 3 standard metrics:
+        efficiency gap, mean-median difference, partisan bias. Results show
+        mixed outcomes (54% states improved on MMD, 36% on EG, 14% on bias),
+        demonstrating that compactness ≠ fairness due to geographic sorting.
+        Added 8 new citations. Acknowledged limitations of synthetic data and
+        suggested future work with real tract-level voting data.
   - id: P1.2
     title: VRA Compliance Evaluation
     description: Count majority-minority districts, discuss VRA vs compactness tradeoffs
@@ -112,3 +127,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "Revision plan created with 6 P1 (blocking) issues, 8 P2 (important), 10 P3 (optional) - estimated 2 weeks for P1"
+  - stage: revision
+    date: 2026-02-07
+    note: "P1.1 (Partisan Outcome Analysis) completed - added comprehensive partisan metrics analysis showing mixed results, demonstrating compactness ≠ fairness (commit 6bf22ff)"
