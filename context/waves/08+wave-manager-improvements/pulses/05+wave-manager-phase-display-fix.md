@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-manager-phase-display-fix
+uuid: bb3e90
+---
 # E57 (Phase 3): Wave Manager Phase Display Fix
 
 **Status**: ✅ COMPLETED

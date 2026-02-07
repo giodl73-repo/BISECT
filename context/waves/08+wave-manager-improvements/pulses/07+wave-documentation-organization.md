@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-documentation-organization
+uuid: f8868a
+---
 # E59: Wave Documentation Organization
 
 **Status**: ✅ COMPLETED

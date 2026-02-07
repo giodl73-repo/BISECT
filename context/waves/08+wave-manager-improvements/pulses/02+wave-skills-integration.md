@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-skills-integration
+uuid: d81492
+---
 # E54 (Phase 2): Wave Skills Integration
 
 **Status**: ✅ COMPLETED

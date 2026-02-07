@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-phase-validation-fix
+uuid: 7f2f5c
+---
 # E55 (Phase 2): Wave Phase Validation and Title Standardization
 
 **Status**: ✅ COMPLETED

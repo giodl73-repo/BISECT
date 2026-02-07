@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-manager-phase-names
+uuid: 7116dc
+---
 # E58 (Phase 4): Wave Manager Phase Names
 
 **Status**: ✅ COMPLETED

@@ -1,0 +1,14 @@
+project: apportionment
+slug: wave-manager-improvements
+uuid: 2ddc27
+name: Wave Manager Improvements
+created: '2026-01-25'
+status: COMPLETED
+pulses:
+  - "~e5ccad+wave-manager-schema-v2"  # Pulse 1
+  - "~d81492+wave-skills-integration"  # Pulse 2
+  - "~7f2f5c+wave-phase-validation-fix"  # Pulse 3
+  - "~d790f3+wave-manager-title-branding"  # Pulse 4
+  - "~bb3e90+wave-manager-phase-display-fix"  # Pulse 5
+  - "~7116dc+wave-manager-phase-names"  # Pulse 6
+  - "~f8868a+wave-documentation-organization"  # Pulse 7

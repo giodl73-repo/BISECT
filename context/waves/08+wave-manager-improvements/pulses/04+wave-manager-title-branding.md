@@ -1,3 +1,8 @@
+---
+wave_uuid: 2ddc27
+slug: wave-manager-title-branding
+uuid: d790f3
+---
 # E56 (Phase 3): Wave Manager Title Branding
 
 **Status**: ✅ COMPLETED
