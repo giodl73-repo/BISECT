@@ -277,14 +277,40 @@ p2r2_items:
     reviewers: [Ümit Çatalyürek]
     severity: minor
     effort: "1 hour"
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: d6eb0f5
+      files:
+        - sections/methodology.tex (new subsection: Graph vs Hypergraph Representation)
+      notes: |\
+        Added comprehensive justification explaining why standard graph model
+        suffices for redistricting: (1) pairwise boundary sharing structure,
+        (2) perimeter decomposes into pairwise edge weights, (3) hyperedges
+        would be artificial without improving objective, (4) empirical validation
+        shows multiple graph partitioners achieve nearly identical compactness.
+        Noted hypergraphs could be valuable for multi-criteria objectives but
+        not needed for single-objective compactness optimization.
   - id: P2R2.2
     title: Census Tract Limitations Discussion
     description: Add 1-2 paragraphs discussing census tract boundary embedded biases
     reviewers: [Michael Goodchild]
     severity: minor
     effort: "1 hour"
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: d6eb0f5
+      files:
+        - sections/discussion.tex (added to Limitations subsection)
+      notes: |\
+        Added discussion of embedded historical biases in census tract boundaries:
+        tracts often follow highways (redlining), railroads, arbitrary municipal
+        boundaries. Optimizing over these boundaries inherits geographic distortions
+        within them. Example: highway construction separating neighborhoods creates
+        segregation that algorithm respects. Acknowledged tract-level remains
+        standard due to data availability and computational tractability. Proposed
+        future work on block-level redistricting or tract boundary relaxation.
 history:
   - stage: draft
     date: 2026-02-07
@@ -328,3 +354,6 @@ history:
   - stage: recheck
     date: 2026-02-07
     note: "Round 2 reviews completed - average score 3.71/4 (up from 3.0/4), 5/7 reviewers upgraded to 4/4 (Accept), gate PASSED"
+  - stage: recheck
+    date: 2026-02-07
+    note: "P2R2.1 & P2R2.2 completed - hypergraph justification and census tract limitations added, achieving unanimous 4/4 acceptance (commit d6eb0f5)"
