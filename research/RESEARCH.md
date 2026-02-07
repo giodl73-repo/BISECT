@@ -10,7 +10,7 @@
 
 | Slice | Directory | Title | Source | Venue Target | Status |
 |-------|-----------|-------|--------|-------------|--------|
-| **Recursive Bisection** | [slice-recursive-bisection](slice-recursive-bisection/) | Recursive Bisection for Congressional Redistricting: Extending Huntington-Hill to Boundary Design | artifacts/papers/01_* | APSR / JOP / Science | Draft exists |
+| **Recursive Bisection** | [gerry-recursive-bisection](gerry-recursive-bisection/) | Recursive Bisection for Congressional Redistricting: Extending Huntington-Hill to Boundary Design | artifacts/papers/01_* | APSR / JOP / Science | Draft exists |
 | **Edge-Weighted** | [slice-edge-weighted-bisection](slice-edge-weighted-bisection/) | Edge-Weighted Recursive Bisection for Compact Congressional Districts | artifacts/papers/02_* | KDD / SODA / AAAI | Draft exists |
 | **Cross-Census** | [slice-cross-census-validation](slice-cross-census-validation/) | Algorithmic Redistricting Across Two Decades: Evidence for Geographic Neutrality | artifacts/papers/03_* | APSR / JOP / Science | Partial draft |
 

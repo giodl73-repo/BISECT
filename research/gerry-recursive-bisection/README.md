@@ -38,7 +38,7 @@ A redistricting algorithm with **structural immunity to partisan manipulation**:
 ## Compilation
 
 ```bash
-cd C:/src/apportionment/research/slice-recursive-bisection
+cd C:/src/apportionment/research/gerry-recursive-bisection
 pdflatex main.tex
 bibtex main
 pdflatex main.tex

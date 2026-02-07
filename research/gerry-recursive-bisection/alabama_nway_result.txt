@@ -1,0 +1,78 @@
+
+======================================================================
+Testing Alabama with DIRECT 7-way partitioning
+======================================================================
+  State: AL (Alabama)
+  Districts: 7
+  Target MM districts: 2
+  State minority %: 36.9%
+  MM target %: 60.0%
+  Year: 2020
+
+Loading tract data...
+  Loaded 1437 tracts
+Loading demographics...
+Creating VRA vertex weights...
+  Created weights for 1437 tracts
+Building adjacency...
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Built adjacency graph with 1437 nodes
+
+Calculating target weights...
+  Population per district: 0.142857 (14.29%)
+  MM districts (first 2):
+    Target: 60.0% minority
+    Minority fraction of total: 0.232288 (23.23%)
+  Non-MM districts (remaining 5):
+    Target: 27.7% minority
+    Minority fraction of total: 0.107085 (10.71%)
+
+tpwgts matrix (7 partitions x 2 constraints):
+  [MM] Partition 0: pop=0.142857, minority=0.232288
+  [MM] Partition 1: pop=0.142857, minority=0.232288
+       Partition 2: pop=0.142857, minority=0.107085
+       Partition 3: pop=0.142857, minority=0.107085
+       Partition 4: pop=0.142857, minority=0.107085
+       Partition 5: pop=0.142857, minority=0.107085
+       Partition 6: pop=0.142857, minority=0.107085
+
+Running METIS n-way partitioning (nparts=7)...
+  Using tpwgts only (no ubvec)
+Writing METIS graph without edge weights, multi-constraint (ncon=2) with 1,437 vertices to graph.txt...
+  Graph file written successfully
+  Multi-constraint mode: using ufactor=1.005, relying on tpwgts for guidance
+Running: C:\src\apportionment\bin\gpmetis.exe -contig -minconn -niter=100 -ufactor=1.005 -tpwgt=C:\Users\giodl\AppData\Local\Temp\tmpsrf20j69\tpwgts.txt C:\Users\giodl\AppData\Local\Temp\tmpsrf20j69\graph.txt 7
+
+Analyzing results...
+
+======================================================================
+RESULTS - Direct 7-way partitioning
+======================================================================
+MM Districts Created: 0 / 2 (target)
+
+Traceback (most recent call last):
+  File "C:\src\apportionment\scripts\pipeline\test_nway_partition.py", line 172, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "C:\src\apportionment\scripts\pipeline\test_nway_partition.py", line 155, in main
+    min_pop = dist['minority_pop']
+              ~~~~^^^^^^^^^^^^^^^^
+KeyError: 'minority_pop'

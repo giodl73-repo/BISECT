@@ -181,19 +181,25 @@ class ExecutionManager:
 
         # Build command
         # Using Python to run the pipeline script
+        # Note: Pipeline only accepts single year or "all", not comma-separated list
+        if len(years) > 1:
+            year_arg = "all"
+        else:
+            year_arg = years[0]
+
         command = [
             "python",
             "scripts/pipeline/run_complete_redistricting.py",
-            "--years", ",".join(years),
-            "--workers", str(workers),
+            "-y", year_arg,
+            "-w", str(workers),
             "--dpi", str(dpi),
-            "--partition-mode", partition_mode,
-            "--version", version,
+            "-pm", partition_mode,
+            "-v", version,
         ]
 
         # Add states filter if specified
         if states:
-            command.extend(["--states", ",".join(states)])
+            command.extend(["-st"] + states)
 
         return command
 

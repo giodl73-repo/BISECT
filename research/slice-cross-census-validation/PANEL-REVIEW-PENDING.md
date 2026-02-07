@@ -22,7 +22,7 @@ All P1 blocking issues have been addressed. All reviewers recommend acceptance.
 This paper is part of a module with related papers:
 - slice-cross-census-validation (this paper)
 - slice-edge-weighted-bisection
-- slice-recursive-bisection
+- gerry-recursive-bisection
 
 **Required action**: Run `panel:panel --review` to generate cross-portfolio REVIEW_PANEL.md that synthesizes findings across all three papers in the module.
 

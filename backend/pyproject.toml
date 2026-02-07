@@ -13,10 +13,10 @@ uvicorn = {extras = ["standard"], version = "^0.24.0"}
 sqlalchemy = "^2.0.0"
 pydantic = "^2.0.0"
 pydantic-settings = "^2.0.0"
-psycopg2-binary = "^2.9.0"
 alembic = "^1.12.0"
 aiofiles = "^23.0.0"
 common-backend-utils = {path = "../../appmanager/packages/common-backend-utils", develop = true}
+psycopg = {extras = ["binary"], version = "^3.3.2"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"

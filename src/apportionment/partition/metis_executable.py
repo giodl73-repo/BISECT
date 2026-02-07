@@ -68,6 +68,7 @@ def partition_graph_with_executable(
     nparts: int = 2,
     target_weights: Optional[List[float]] = None,
     ufactor: Optional[float] = None,
+    ubvec: Optional[List[float]] = None,
     niter: int = 100,
     debug: bool = False,
     edge_weights: Optional[Dict[Tuple[int, int], float]] = None
@@ -134,25 +135,58 @@ def partition_graph_with_executable(
         # Use provided ufactor or default to 1.005 (0.5% imbalance tolerance)
         ufactor_value = ufactor if ufactor is not None else 1.005
 
+        # Detect multi-constraint mode
+        is_multi_constraint = len(vertex_weights.shape) == 2 and vertex_weights.shape[1] > 1
+
         cmd = [
             gpmetis_exe,
             '-contig',        # Ensure contiguous districts (CRITICAL)
             '-minconn',       # Minimize subdomain connectivity
-            f'-ufactor={ufactor_value}', # Limit imbalance
             f'-niter={niter}',  # Number of refinement iterations
         ]
 
-        # Add target partition weights if specified
-        # gpmetis expects a file with format: "partition_id = weight" per line
-        if target_weights is not None and len(target_weights) == nparts:
-            # Normalize to ensure sum = 1.0
-            normalized = [w / sum(target_weights) for w in target_weights]
+        # For multi-constraint: use ufactor (no ubvec by default, let tpwgts guide)
+        # For single-constraint: use ufactor for imbalance tolerance
+        cmd.append(f'-ufactor={ufactor_value}')
 
-            # Write weights to file in format: "0 = 0.5\n1 = 0.5\n"
+        # Add ubvec if specified (per-constraint imbalance tolerance)
+        if ubvec is not None:
+            ubvec_str = ' '.join(str(v) for v in ubvec)
+            cmd.append(f'-ubvec={ubvec_str}')
+            if debug:
+                print(f"  Using ubvec: {ubvec_str}")
+
+        if debug and is_multi_constraint and ubvec is None:
+            print(f"  Multi-constraint mode: using ufactor={ufactor_value}, relying on tpwgts for guidance")
+
+
+        # Add target partition weights if specified
+        # gpmetis expects a file with format: "partition_id = weight" per line (single constraint)
+        # or "partition_id : constraint_id = weight" per line (multi-constraint)
+        if target_weights is not None and len(target_weights) == nparts:
             tpwgts_file = tmpdir / 'tpwgts.txt'
+
+            # Check if multi-constraint (2D list)
+            is_multi = isinstance(target_weights[0], (list, np.ndarray))
+
             with open(tpwgts_file, 'w') as f:
-                for partition_id, weight in enumerate(normalized):
-                    f.write(f'{partition_id} = {weight:.6f}\n')
+                if is_multi:
+                    # Multi-constraint format: partition_id : constraint_id = weight
+                    # target_weights = [[left_pop, left_min], [right_pop, right_min]]
+                    ncon = len(target_weights[0])
+                    for constraint_id in range(ncon):
+                        # Normalize weights for this constraint
+                        weights_for_constraint = [target_weights[p][constraint_id] for p in range(nparts)]
+                        total = sum(weights_for_constraint)
+
+                        for partition_id, weight in enumerate(weights_for_constraint):
+                            normalized_weight = weight / total if total > 0 else 1.0 / nparts
+                            f.write(f'{partition_id} : {constraint_id} = {normalized_weight:.6f}\n')
+                else:
+                    # Single constraint format: partition_id = weight
+                    normalized = [w / sum(target_weights) for w in target_weights]
+                    for partition_id, weight in enumerate(normalized):
+                        f.write(f'{partition_id} = {weight:.6f}\n')
 
             cmd.append(f'-tpwgt={tpwgts_file}')
 
@@ -206,10 +240,11 @@ def _write_metis_graph(
     METIS graph format:
     Line 1: <num_vertices> <num_edges> [fmt] [ncon]
       fmt = 010 (vertex weights, no edge weights) or 011 (vertex weights + edge weights)
-      ncon = 1 (one weight per vertex)
+      ncon = 1 (one weight per vertex) or 2 (multi-constraint: population + minority VAP)
     Line 2+:
-      Without edge weights: <vertex_weight> <neighbor1> <neighbor2> ...
-      With edge weights: <vertex_weight> <neighbor1> <edge_weight1> <neighbor2> <edge_weight2> ...
+      Single constraint: <vertex_weight> <neighbor1> <neighbor2> ...
+      Multi-constraint: <weight1> <weight2> <neighbor1> <neighbor2> ...
+      With edge weights: <vertex_weight(s)> <neighbor1> <edge_weight1> <neighbor2> <edge_weight2> ...
 
     Note: METIS uses 1-based indexing!
     Note: Edge weights must be positive integers (we scale boundary lengths to centimeters)
@@ -219,16 +254,21 @@ def _write_metis_graph(
 
     has_edge_weights = edge_weights is not None and len(edge_weights) > 0
 
+    # Detect multi-constraint mode (2D vertex_weights array)
+    is_multi_constraint = len(vertex_weights.shape) == 2 and vertex_weights.shape[1] > 1
+    ncon = vertex_weights.shape[1] if is_multi_constraint else 1
+
     # Use buffered writing for better performance
     if debug:
         mode_str = "with edge weights" if has_edge_weights else "without edge weights"
-        print(f"Writing METIS graph {mode_str} with {n_vertices:,} vertices to {file_path.name}...")
+        constraint_str = f"multi-constraint (ncon={ncon})" if is_multi_constraint else "single constraint"
+        print(f"Writing METIS graph {mode_str}, {constraint_str} with {n_vertices:,} vertices to {file_path.name}...")
 
     with open(file_path, 'w', buffering=8*1024*1024) as f:  # 8MB buffer
         # Header: n_vertices n_edges fmt ncon
         # fmt: 010 = vertex weights only, 011 = vertex weights + edge weights
         fmt_code = "011" if has_edge_weights else "010"
-        f.write(f"{n_vertices} {n_edges} {fmt_code} 1\n")
+        f.write(f"{n_vertices} {n_edges} {fmt_code} {ncon}\n")
 
         # Write vertices in chunks to avoid memory issues
         chunk_size = 50000
@@ -238,11 +278,18 @@ def _write_metis_graph(
             # Build chunk of lines
             lines = []
             for i in range(start_idx, end_idx):
-                weight = vertex_weights[i]
+                # Get vertex weights (handle both single and multi-constraint)
+                if is_multi_constraint:
+                    # Multi-constraint: format weights as space-separated integers
+                    weight_str = ' '.join(str(int(vertex_weights[i, j])) for j in range(ncon))
+                else:
+                    # Single constraint
+                    weight_str = str(int(vertex_weights[i]))
+
                 neighbors = adjacency[i]
 
                 if has_edge_weights:
-                    # Format: vertex_weight neighbor1 edge_weight1 neighbor2 edge_weight2 ...
+                    # Format: vertex_weight(s) neighbor1 edge_weight1 neighbor2 edge_weight2 ...
                     # Edge weights in centimeters (multiply by 100 for integer precision)
                     neighbor_pairs = []
                     for n in neighbors:
@@ -252,10 +299,10 @@ def _write_metis_graph(
                         neighbor_pairs.append(f"{n + 1} {edge_weight_cm}")
                     neighbors_str = ' '.join(neighbor_pairs)
                 else:
-                    # Format: vertex_weight neighbor1 neighbor2 ...
+                    # Format: vertex_weight(s) neighbor1 neighbor2 ...
                     neighbors_str = ' '.join(str(n + 1) for n in neighbors)
 
-                lines.append(f"{int(weight)} {neighbors_str}\n")
+                lines.append(f"{weight_str} {neighbors_str}\n")
 
             # Write chunk
             f.writelines(lines)

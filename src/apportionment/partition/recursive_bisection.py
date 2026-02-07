@@ -75,6 +75,12 @@ def _split_node_worker(task: dict) -> dict:
     vertex_weights = task['vertex_weights']
     debug = task['debug']
     edge_weights = task.get('edge_weights', None)
+    ufactor_override = task.get('ufactor_override', None)
+    niter = task.get('niter', 100)
+    objtype = task.get('objtype', 'cut')
+    seed = task.get('seed', None)
+    vra_mode = task.get('vra_mode', False)
+    vra_target_tree = task.get('vra_target_tree', None)
 
     k = target_districts
 
@@ -106,17 +112,46 @@ def _split_node_worker(task: dict) -> dict:
     subgraph_edge_weights = _extract_subgraph_edge_weights(edge_weights, block_indices, global_to_local)
 
     # Calculate target weights
-    target_weights = [k_left / k, k_right / k]
+    # Try to get VRA targets from tree if in VRA mode
+    if vra_mode and vra_target_tree is not None:
+        # Extract binary path from node name
+        node_name = task['name']
+        binary_path = ''.join(c for c in node_name if c in '01')
 
-    # Calculate ufactor
-    if depth == 1:
-        ufactor = 1.001
-    elif depth == 2:
-        ufactor = 1.002
-    elif depth == 3:
-        ufactor = 1.003
+        # Navigate tree
+        tree_node = vra_target_tree
+        for direction in binary_path:
+            if tree_node.get('is_leaf', False):
+                break
+            if direction == '0':
+                tree_node = tree_node.get('left', {})
+            else:
+                tree_node = tree_node.get('right', {})
+
+        # Check if found matching node
+        if tree_node.get('districts') == k and not tree_node.get('is_leaf', False):
+            target_weights = tree_node.get('target_weights')
+            if debug:
+                print(f"[VRA Worker] Using VRA targets for {node_name} ({k} districts): {target_weights}")
+        else:
+            target_weights = [k_left / k, k_right / k]
     else:
-        ufactor = 1.005
+        target_weights = [k_left / k, k_right / k]
+
+    # Calculate ufactor (use override if provided, otherwise depth-based)
+    if ufactor_override is not None:
+        # Convert integer to decimal (e.g., 5 -> 1.005)
+        ufactor = 1.0 + (ufactor_override / 1000.0)
+    else:
+        # Original depth-based calculation
+        if depth == 1:
+            ufactor = 1.001
+        elif depth == 2:
+            ufactor = 1.002
+        elif depth == 3:
+            ufactor = 1.003
+        else:
+            ufactor = 1.005
 
     # Call METIS
     parts = partition_graph(
@@ -126,8 +161,12 @@ def _split_node_worker(task: dict) -> dict:
         target_weights=target_weights,
         recursive=True,
         ufactor=ufactor,
+        niter=niter,
+        objtype=objtype,
+        seed=seed,
         debug=debug,
-        edge_weights=subgraph_edge_weights
+        edge_weights=subgraph_edge_weights,
+        multi_constraint=vra_mode
     )
 
     # Create result
@@ -137,8 +176,13 @@ def _split_node_worker(task: dict) -> dict:
     left_name = f"{name}0"
     right_name = f"{name}1"
 
-    left_pop = sum(vertex_weights[i] for i in left_blocks)
-    right_pop = sum(vertex_weights[i] for i in right_blocks)
+    # Calculate populations (handle VRA mode with 2D weights)
+    if vra_mode:
+        left_pop = float(sum(vertex_weights[i, 0] for i in left_blocks))
+        right_pop = float(sum(vertex_weights[i, 0] for i in right_blocks))
+    else:
+        left_pop = sum(vertex_weights[i] for i in left_blocks)
+        right_pop = sum(vertex_weights[i] for i in right_blocks)
 
     return {
         'left_blocks': left_blocks,
@@ -225,7 +269,13 @@ class RecursiveBisection:
         state_code: str = "",
         tqdm_position: int = 0,
         debug: bool = False,
-        edge_weights: Optional[Dict[Tuple[int, int], float]] = None
+        edge_weights: Optional[Dict[Tuple[int, int], float]] = None,
+        ufactor: int = 5,
+        niter: int = 100,
+        objtype: str = 'cut',
+        seed: Optional[int] = None,
+        vra_mode: bool = False,
+        vra_target_weights: Optional[List[List[float]]] = None
     ):
         """
         Initialize recursive bisection algorithm.
@@ -248,6 +298,19 @@ class RecursiveBisection:
             Print detailed statistics and progress messages
         edge_weights : dict, optional
             Dictionary mapping (i, j) tuples to edge weights (boundary lengths in meters)
+        ufactor : int, default 5
+            METIS imbalance tolerance factor (5 = 0.5%)
+        niter : int, default 100
+            METIS refinement iterations
+        objtype : str, default 'cut'
+            METIS objective function ('cut' or 'vol')
+        seed : int, optional
+            METIS random seed for reproducibility
+        vra_mode : bool, default False
+            Enable VRA-aware multi-constraint partitioning
+        vra_target_weights : Dict, optional
+            VRA target tree (from vra_targets.create_vra_target_tree)
+            Contains target weights for each node in the recursion tree
         """
         self.adjacency = adjacency
         self.vertex_weights = vertex_weights
@@ -260,12 +323,23 @@ class RecursiveBisection:
         self.tqdm_position = tqdm_position
         self.debug = debug
         self.edge_weights = edge_weights
+        self.ufactor = ufactor
+        self.niter = niter
+        self.objtype = objtype
+        self.seed = seed
+        self.vra_mode = vra_mode
+        self.vra_target_tree = vra_target_weights  # Renamed: now expects tree, not weights
 
         # Track intermediate results by depth
         self.intermediate_results = {}  # depth -> assignments dict
 
         # Statistics
-        self.total_population = int(vertex_weights.sum())
+        if vra_mode:
+            # VRA mode: vertex_weights is 2D (n_vertices, 2), use first column for population
+            self.total_population = int(vertex_weights[:, 0].sum())
+        else:
+            # Standard mode: vertex_weights is 1D
+            self.total_population = int(vertex_weights.sum())
 
         if num_districts == 0:
             raise ValueError(f"num_districts cannot be 0 (state: {state_code})")
@@ -274,6 +348,52 @@ class RecursiveBisection:
             raise ValueError(f"Total population is 0 - check input data (state: {state_code})")
 
         self.ideal_district_pop = self.total_population / num_districts
+
+    def _get_vra_target_weights_for_node(self, node) -> Optional[List[List[float]]]:
+        """
+        Get VRA target weights for a specific node from the target tree.
+
+        Parameters
+        ----------
+        node : PartitionNode
+            Node being split
+
+        Returns
+        -------
+        Optional[List[List[float]]]
+            Target weights [[left_pop, left_minority], [right_pop, right_minority]]
+            or None if not in VRA mode or node not found in tree
+        """
+        if not self.vra_mode or self.vra_target_tree is None:
+            return None
+
+        # Navigate tree based on node's target_districts count and path
+        # Node path is encoded in its name (e.g., "AL01" = left then right)
+        target_districts = node.target_districts
+
+        # Extract binary path from node name (remove state code prefix)
+        # E.g., "AL01" -> "01", "CA101" -> "101"
+        name = node.name
+        binary_path = ""
+        for char in name:
+            if char in '01':
+                binary_path += char
+
+        # Navigate to matching node in VRA tree
+        tree_node = self.vra_target_tree
+        for direction in binary_path:
+            if tree_node.get('is_leaf', False):
+                break
+            if direction == '0':
+                tree_node = tree_node.get('left', {})
+            else:
+                tree_node = tree_node.get('right', {})
+
+        # Check if we found the right node (matching district count)
+        if tree_node.get('districts') == target_districts and not tree_node.get('is_leaf', False):
+            return tree_node.get('target_weights')
+
+        return None
 
     def partition(self) -> Dict[int, int]:
         """
@@ -398,9 +518,17 @@ class RecursiveBisection:
         subgraph_edge_weights = _extract_subgraph_edge_weights(self.edge_weights, node.block_indices, global_to_local)
 
         # Calculate target weights for METIS
-        # Left partition should get k_left/k of total population
-        # Right partition should get k_right/k of total population
-        target_weights = [k_left / k, k_right / k]
+        # Try to get VRA target weights first if in VRA mode
+        vra_targets = self._get_vra_target_weights_for_node(node)
+        if vra_targets is not None:
+            target_weights = vra_targets
+            if self.debug:
+                print(f"[VRA] Using VRA targets for {node.name} ({k} districts): {target_weights}")
+        else:
+            # Standard mode: proportional split
+            # Left partition should get k_left/k of total population
+            # Right partition should get k_right/k of total population
+            target_weights = [k_left / k, k_right / k]
 
         # Calculate dynamic ufactor: tighter at early depths, looser at later depths
         # Depth 1 (2 regions): 1.001 (0.1% tolerance) - very tight
@@ -425,8 +553,12 @@ class RecursiveBisection:
                 target_weights=target_weights,
                 recursive=True,
                 ufactor=ufactor,
+                niter=self.niter,
+                objtype=self.objtype,
+                seed=self.seed,
                 debug=self.debug,
-                edge_weights=subgraph_edge_weights
+                edge_weights=subgraph_edge_weights,
+                multi_constraint=self.vra_mode
             )
         except Exception as e:
             raise RuntimeError(
@@ -451,9 +583,13 @@ class RecursiveBisection:
         node.left_child.target_districts = k_left
         node.right_child.target_districts = k_right
 
-        # Calculate populations
-        node.left_child.population = sum(self.vertex_weights[i] for i in left_blocks)
-        node.right_child.population = sum(self.vertex_weights[i] for i in right_blocks)
+        # Calculate populations (handle VRA mode with 2D weights)
+        if self.vra_mode:
+            node.left_child.population = float(sum(self.vertex_weights[i, 0] for i in left_blocks))
+            node.right_child.population = float(sum(self.vertex_weights[i, 0] for i in right_blocks))
+        else:
+            node.left_child.population = sum(self.vertex_weights[i] for i in left_blocks)
+            node.right_child.population = sum(self.vertex_weights[i] for i in right_blocks)
 
         # Update progress
         if pbar:
@@ -551,7 +687,13 @@ class RecursiveBisection:
                 'adjacency': self.adjacency,
                 'vertex_weights': self.vertex_weights,
                 'debug': self.debug,
-                'edge_weights': self.edge_weights
+                'edge_weights': self.edge_weights,
+                'ufactor_override': self.ufactor,
+                'niter': self.niter,
+                'objtype': self.objtype,
+                'seed': self.seed,
+                'vra_mode': self.vra_mode,
+                'vra_target_tree': self.vra_target_tree
             }
             split_tasks.append((node, task))
 
@@ -643,7 +785,15 @@ class RecursiveBisection:
         subgraph_edge_weights = _extract_subgraph_edge_weights(self.edge_weights, node.block_indices, global_to_local)
 
         # Calculate target weights for METIS
-        target_weights = [k_left / k, k_right / k]
+        # Try to get VRA-specific targets first, otherwise use proportional split
+        vra_targets = self._get_vra_target_weights_for_node(node)
+        if vra_targets is not None:
+            target_weights = vra_targets
+            if self.debug:
+                print(f"[VRA] Using VRA targets for node {node.name} ({k} districts): {vra_targets}")
+        else:
+            # Standard mode: proportional population split
+            target_weights = [k_left / k, k_right / k]
 
         # Calculate dynamic ufactor
         if node.depth == 1:
@@ -664,8 +814,12 @@ class RecursiveBisection:
                 target_weights=target_weights,
                 recursive=True,
                 ufactor=ufactor,
+                niter=self.niter,
+                objtype=self.objtype,
+                seed=self.seed,
                 debug=self.debug,
-                edge_weights=subgraph_edge_weights
+                edge_weights=subgraph_edge_weights,
+                multi_constraint=self.vra_mode
             )
         except Exception as e:
             raise RuntimeError(
@@ -685,8 +839,13 @@ class RecursiveBisection:
         node.left_child.target_districts = k_left
         node.right_child.target_districts = k_right
 
-        node.left_child.population = sum(self.vertex_weights[i] for i in left_blocks)
-        node.right_child.population = sum(self.vertex_weights[i] for i in right_blocks)
+        # Calculate populations (handle VRA mode with 2D weights)
+        if self.vra_mode:
+            node.left_child.population = float(sum(self.vertex_weights[i, 0] for i in left_blocks))
+            node.right_child.population = float(sum(self.vertex_weights[i, 0] for i in right_blocks))
+        else:
+            node.left_child.population = sum(self.vertex_weights[i] for i in left_blocks)
+            node.right_child.population = sum(self.vertex_weights[i] for i in right_blocks)
 
     def _create_subgraph(self, block_indices: Set[int]):
         """
@@ -936,10 +1095,17 @@ class RecursiveBisection:
             for region_id, node in enumerate(nodes):
                 pop = node.population
                 num_blocks = len(node.block_indices)
+                # Handle numpy types - convert to Python scalar
+                if isinstance(pop, np.ndarray):
+                    pop_int = int(pop.item())
+                elif isinstance(pop, (np.integer, np.floating)):
+                    pop_int = int(pop)
+                else:
+                    pop_int = int(pop)
                 region_stats.append({
                     'region_id': region_id,
                     'name': node.name,
-                    'population': int(pop),
+                    'population': pop_int,
                     'num_blocks': num_blocks,
                     'target_districts': node.target_districts
                 })

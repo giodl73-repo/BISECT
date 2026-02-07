@@ -10,7 +10,7 @@ Completely rewrote the paper from first principles while using the existing draf
 ## Files Created
 
 ```
-research/slice-recursive-bisection/
+research/gerry-recursive-bisection/
 ├── main.tex                    # Main document (12pt, 1-inch margins, double-spaced)
 ├── sections/
 │   ├── 01_introduction.tex     # Huntington-Hill precedent framing

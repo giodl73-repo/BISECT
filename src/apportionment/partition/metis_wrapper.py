@@ -20,8 +20,11 @@ def partition_graph(
     recursive: bool = True,
     ufactor: Optional[float] = None,
     niter: int = 100,
+    objtype: str = 'cut',
+    seed: Optional[int] = None,
     debug: bool = False,
-    edge_weights: Optional[Dict[Tuple[int, int], float]] = None
+    edge_weights: Optional[Dict[Tuple[int, int], float]] = None,
+    multi_constraint: bool = False
 ) -> np.ndarray:
     """
     Partition graph using METIS gpmetis algorithm.
@@ -33,19 +36,28 @@ def partition_graph(
         adjacency[i] = sorted list of neighbor indices for node i
     vertex_weights : np.ndarray
         Vertex weights (e.g., block populations)
+        - 1D array (n_vertices,) for single constraint
+        - 2D array (n_vertices, n_constraints) for multi-constraint (VRA mode)
     nparts : int, default 2
         Number of partitions
     target_weights : List[float], optional
         Target partition weights (must sum to 1.0)
-        e.g., [0.5, 0.5] for equal split, [0.54, 0.46] for 13→7/6
+        - Single constraint: [0.5, 0.5] for equal split
+        - Multi-constraint: [[0.5, 0.6], [0.5, 0.4]] for 2 partitions, 2 constraints
     recursive : bool, default True
         Use recursive bisection algorithm
     ufactor : float, optional
         Load imbalance tolerance factor (1.0 = strict balance, higher = more tolerance)
-    niter : int, default 20
-        Number of refinement iterations (default 10 in METIS, 20 for better compactness)
+    niter : int, default 100
+        Number of refinement iterations (default 10 in METIS, 100 for better compactness)
+    objtype : str, default 'cut'
+        METIS objective function: 'cut' (edge-cut) or 'vol' (volume)
+    seed : int, optional
+        METIS random seed for reproducibility (default: None = random)
     debug : bool, default False
         Print detailed error and fallback messages
+    multi_constraint : bool, default False
+        Enable multi-constraint partitioning (VRA mode)
 
     Returns
     -------
@@ -60,7 +72,7 @@ def partition_graph(
     """
     # Try pymetis first (best quality, fastest)
     try:
-        return _partition_with_pymetis(adjacency, vertex_weights, nparts, target_weights, recursive, ufactor, niter)
+        return _partition_with_pymetis(adjacency, vertex_weights, nparts, target_weights, recursive, ufactor, niter, objtype, seed, multi_constraint)
     except ImportError as e:
         if debug:
             print(f"pymetis not available: {e}")
@@ -95,25 +107,39 @@ def _partition_with_pymetis(
     target_weights: Optional[List[float]],
     recursive: bool,
     ufactor: Optional[float] = None,
-    niter: int = 100
+    niter: int = 100,
+    objtype: str = 'cut',
+    seed: Optional[int] = None,
+    multi_constraint: bool = False
 ) -> np.ndarray:
     """Partition using pymetis library."""
     import pymetis
 
-    # Convert vertex weights to list of integers
-    vweights = vertex_weights.astype(np.int32).tolist()
+    # Convert vertex weights to appropriate format
+    if multi_constraint:
+        # Multi-constraint: vertex_weights is 2D array (n_vertices, n_constraints)
+        # Convert to list of lists: vweights[i] = [constraint1, constraint2, ...]
+        vweights = vertex_weights.astype(np.int32).tolist()
+    else:
+        # Single constraint: vertex_weights is 1D array (n_vertices,)
+        # Convert to list of integers
+        vweights = vertex_weights.astype(np.int32).tolist()
 
     # Convert target weights if provided
     tpwgts = None
     if target_weights is not None:
-        # pymetis expects target weights as list per partition
-        # Normalize to ensure sum = 1.0
-        tpwgts = [w / sum(target_weights) for w in target_weights]
+        if multi_constraint and isinstance(target_weights[0], (list, tuple)):
+            # Multi-constraint: target_weights is 2D: [[p1_c1, p1_c2], [p2_c1, p2_c2], ...]
+            # Normalize each constraint separately
+            tpwgts = target_weights
+        else:
+            # Single constraint: normalize to sum = 1.0
+            tpwgts = [w / sum(target_weights) for w in target_weights]
 
     # Set METIS options for improved compactness
     # METIS options array: see METIS manual for details
     options = pymetis.Options()
-    options.niter = niter  # Number of refinement iterations (default 10, we use 20 for better compactness)
+    options.niter = niter  # Number of refinement iterations (default 10, we use 100 for better compactness)
 
     if ufactor is not None:
         # Convert ufactor (e.g., 1.001) to ubvec format expected by METIS
@@ -121,6 +147,16 @@ def _partition_with_pymetis(
         # METIS ubvec = (ufactor - 1.0) * 1000, capped at 1 for very tight tolerance
         ubvec_value = max(1, int((ufactor - 1.0) * 1000))
         options.ufactor = ubvec_value
+
+    # Set objective type: 1 = edge-cut (default), 2 = volume
+    if objtype == 'vol':
+        options.objtype = 2
+    else:
+        options.objtype = 1
+
+    # Set random seed if provided
+    if seed is not None:
+        options.seed = seed
 
     # Call pymetis
     if nparts == 2:

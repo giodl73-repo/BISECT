@@ -116,7 +116,7 @@
 ## Files Generated
 
 ```
-research/slice-recursive-bisection/
+research/gerry-recursive-bisection/
 ├── main.tex                           # Complete rewrite
 ├── sections/                          # 7 sections
 │   ├── 01_introduction.tex
@@ -189,7 +189,7 @@ The core contribution (impossibility defense + Huntington-Hill precedent) is gen
 To create the revision plan with specific implementation steps:
 
 ```
-/panel:paper --paper slice-recursive-bisection --stage revision
+/panel:paper --paper gerry-recursive-bisection --stage revision
 ```
 
 This will generate REVISION-PLAN.md with:
