@@ -149,6 +149,55 @@ Key examples from Table~\ref{tab:partisan-comparison}:
 \textbf{Limitations:} This analysis uses simulated vote aggregations, not actual tract-level election data. Future work should:
 (1) integrate precinct-level voting data, (2) aggregate votes to algorithmic districts using Census block assignments, and (3) compare against state legislative election results to control for presidential-election-specific patterns. The current results demonstrate \textit{methodology}—showing how to evaluate partisan outcomes of algorithmic districts—but should be verified with real voting data before drawing strong conclusions about specific states.
 
+\subsection{Geographic Sorting Quantification}
+
+\textbf{Research Question:} How much of the partisan bias in enacted districts is due to unavoidable geographic sorting of voters versus intentional gerrymandering?
+
+\textbf{Motivation:} The previous subsection showed that compact algorithmic districts exhibit partisan effects despite using no political data. This raises a fundamental question: when evaluating gerrymandering claims, how do we separate \textit{geographic baseline effects} (partisan bias inherent to voter distribution) from \textit{intentional manipulation} (additional bias introduced by partisan mapmakers)?
+
+\textbf{Methodology:} We use algorithmic districts as a \textbf{geographic baseline}—the partisan bias that emerges from compactness optimization without political data. Enacted districts show \textbf{total partisan bias} (geographic + intentional). The difference isolates the \textbf{gerrymandering premium}:
+
+\begin{equation*}
+\text{Gerrymandering Premium} = \text{Enacted Bias} - \text{Algorithmic Bias (Geographic Baseline)}
+\end{equation*}
+
+We compute the \textbf{geographic fraction}: the percentage of enacted partisan bias attributable to geography alone. States are classified as:
+\begin{itemize}
+    \item \textbf{Geography-Dominated} ($>$60\% geographic): Partisan outcomes mostly unavoidable
+    \item \textbf{Mixed} (30-60\% geographic): Significant contributions from both geography and gerrymandering
+    \item \textbf{Gerrymandering-Dominated} ($<$30\% geographic): Partisan outcomes mostly from intentional manipulation
+\end{itemize}
+
+\textbf{Results:} Table~\ref{tab:geographic_sorting} shows detailed analysis for 10 representative states covering all three classifications. Table~\ref{tab:geographic_sorting_summary} presents national statistics.
+
+\input{tables/geographic_sorting_table}
+\input{tables/geographic_sorting_summary}
+
+\textbf{Findings:}
+\begin{itemize}
+    \item \textbf{60\% of states are geography-dominated}: For 21 states, more than 60\% of partisan bias is geographic baseline—compact districts naturally favor one party due to voter distribution
+    \item \textbf{26\% are gerrymandering-dominated}: 9 states show substantial gerrymandering premiums beyond geographic baseline, including most states identified as heavily gerrymandered (Illinois, Maryland, North Carolina)
+    \item \textbf{Average geographic fraction: 63\%}: Nationally, about two-thirds of partisan bias in enacted districts would persist even with purely compact algorithmic redistricting
+    \item \textbf{Gerrymandering worsens bias in 20 states}: Most gerrymandered states amplify their natural geographic lean
+    \item \textbf{Gerrymandering improves balance in 9 states}: Some states use redistricting to counteract geographic sorting, creating more competitive districts than geography alone would produce (rare but notable)
+\end{itemize}
+
+\textbf{Interpretation:} These results have important implications for redistricting reform and gerrymandering litigation:
+
+\begin{enumerate}
+    \item \textbf{Compactness is necessary but insufficient}: Even perfect compactness leaves substantial partisan effects due to geographic sorting. States seeking proportional representation need additional safeguards beyond geometric quality.
+
+    \item \textbf{Quantifiable gerrymandering}: The gerrymandering premium provides an objective measure of intentional manipulation beyond geographic baseline. Courts and legislatures can use this metric to identify egregious cases where enacted plans show substantially worse partisan outcomes than the algorithmic baseline.
+
+    \item \textbf{Geography is not destiny everywhere}: While many states are geography-dominated, gerrymandering-dominated states (26\%) have room for substantial improvement. Adopting algorithmic baselines would significantly reduce partisan bias in these jurisdictions.
+
+    \item \textbf{Different standards for different states}: States with high geographic sorting (e.g., Massachusetts, Utah) may have legitimate reasons for partisan imbalance. States with low geographic fractions (e.g., Illinois, Maryland) have less justification—their partisan outcomes reflect choices, not geography.
+\end{enumerate}
+
+\textbf{Comparison to Partisan Outcome Analysis:} While Section~3.2 showed that compact districts have partisan effects, this analysis reveals that \textit{most of those effects are unavoidable}. The gerrymandering premium is typically smaller than the geographic baseline, explaining why compactness improvements don't always yield proportional improvements in partisan fairness. This separation of effects clarifies the relationship between geometry and politics.
+
+\textbf{Limitations:} As with Section~3.2, this analysis uses simulated partisan data. The geographic sorting quantification methodology is robust (comparing enacted to algorithmic baselines), but specific state classifications should be validated with tract-level voting data. Additionally, our classification thresholds (60\%, 30\%) are empirically motivated but not theoretically derived—future work should explore optimal threshold selection.
+
 \subsection{Voting Rights Act Compliance}
 
 \textbf{Research Question:} Does edge-weighted recursive bisection maintain minority representation required by the Voting Rights Act of 1965?
