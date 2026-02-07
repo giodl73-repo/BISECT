@@ -1,3 +1,8 @@
+---
+wave_uuid: f507d9
+slug: directory-unification
+uuid: 2bbe90
+---
 # E13: Unify Directory Structure Across Census Years
 
 **Status**: ✅ COMPLETED

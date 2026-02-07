@@ -1,3 +1,8 @@
+---
+wave_uuid: f507d9
+slug: per-state-urban
+uuid: 07fd09
+---
 # E10: Per-State Urban Area Processing
 
 **Status**: ✅ COMPLETED

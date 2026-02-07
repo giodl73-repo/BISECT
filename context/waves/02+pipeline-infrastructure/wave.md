@@ -1,3 +1,10 @@
+---
+slug: pipeline-infrastructure
+uuid: f507d9
+name: Pipeline Infrastructure
+created: '2026-01-12'
+status: COMPLETED
+---
 # Wave 2: Pipeline Infrastructure
 
 **Date**: 2026-01-12 to 2026-01-14
@@ -34,46 +41,6 @@
 
 ---
 
-## Phases
-
-### Phase 1: State-Level Refactoring (Enhancements 9, 10)
-**Completed**: 2026-01-12
-
-Refactor processing from national batch to per-state execution for scalability.
-
-**E9 - Per-State Analysis Refactoring**:
-- Political and demographic analysis per-state
-- Better parallelization
-- Reduced memory footprint
-- Improved error isolation
-
-**E10 - Per-State Urban Area Processing**:
-- Metro area visualizations per-state
-- Consistent with analysis refactoring
-- Scalable processing model
-
-### Phase 2: Multi-Year Infrastructure (Enhancements 13, 14, 15)
-**Completed**: 2026-01-14
-
-Build robust infrastructure for multi-year census support with validation.
-
-**E13 - Unify Directory Structure**:
-- Standardized directories across 2000/2010/2020
-- Consistent organization patterns
-- Easier multi-year development
-
-**E14 - Pipeline Output Validation**:
-- Comprehensive validation framework
-- Early error detection
-- Quality assurance checks
-
-**E15 - Fix 2010/2000 Pipeline Completeness**:
-- Complete 2010 pipeline support
-- Complete 2000 pipeline support
-- All three years fully functional
-
----
-
 ## Results
 
 ### Infrastructure Improvements
@@ -103,6 +70,27 @@ Build robust infrastructure for multi-year census support with validation.
 - `scripts/pipeline/run_complete_redistricting.py` - Multi-year orchestration
 - `scripts/utils/validation.py` - Validation framework
 - Directory structure standardization across `data/2000/`, `data/2010/`, `data/2020/`
+
+---
+
+
+## Roles Summary
+
+### Engineer Role
+**File**: `roles/engineer.md`
+
+**See individual role files for detailed phases, tasks, and testing.**
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | per-state-urban | Size: M - 862 lines changed (14 files) |
+| ~2 | Engineer | directory-unification | Date Added: January 13, 2026 |
+| ~3 | Engineer | validation-framework | --- |
+| ~4 | Engineer | multi-year-support | Implementation Time: ~4 hours (data acquisition, NHGIS conversion, pipeline re-runs, verification, documentation) |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 

@@ -1,0 +1,11 @@
+project: apportionment
+slug: pipeline-infrastructure
+uuid: f507d9
+name: Pipeline Infrastructure
+created: '2026-01-12'
+status: COMPLETED
+pulses:
+  - "~07fd09+per-state-urban"  # Pulse 1
+  - "~2bbe90+directory-unification"  # Pulse 2
+  - "~91efb6+validation-framework"  # Pulse 3
+  - "~11ed58+multi-year-support"  # Pulse 4

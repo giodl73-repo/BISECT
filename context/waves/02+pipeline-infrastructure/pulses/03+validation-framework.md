@@ -1,3 +1,8 @@
+---
+wave_uuid: f507d9
+slug: validation-framework
+uuid: 91efb6
+---
 # E14: Pipeline Output Validation Framework
 
 **Status**: ✅ COMPLETED
