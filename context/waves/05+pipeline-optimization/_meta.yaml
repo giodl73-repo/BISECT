@@ -9,3 +9,4 @@ pulses:
   - "~1ed8a1+parallel-multi-year-pipeline"  # Pulse 2
   - "~2d3f47+streamline-claude-md"  # Pulse 3
   - "~588e23+pipeline-error-logging"  # Pulse 4
+  - "~d61d68+experimental-variants-config"  # Pulse 5
