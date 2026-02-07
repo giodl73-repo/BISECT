@@ -1,3 +1,12 @@
+---
+uuid: cf47ae4d-f0af-386c-68a6-4357a102973a
+slug: block-level-data
+name: Block-Level Data
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: PLANNED
+---
+
 # E8: Block-Level Data Support for Multi-Year Census 📋 DATA AVAILABLE
 
 **Status**: 📋 PLANNED

@@ -5,3 +5,12 @@ name: Core Algorithm Foundation
 created: '2026-01-10'
 status: COMPLETED
 pulses:
+  - 01+compactness-integration
+  - 02+seat-totals
+  - 03+national-maps
+  - 04+metro-areas
+  - 05+national-rounds
+  - 06+architecture-diagrams
+  - 07+edge-weighted-bisection
+  - 08+block-level-data
+  - 09+per-state-analysis

@@ -1,3 +1,12 @@
+---
+uuid: ec114394-0302-984a-4c01-987c37f2c966
+slug: national-rounds
+name: National Rounds
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E5: Create National Round Progression Maps
 
 **Status**: ✅ COMPLETED

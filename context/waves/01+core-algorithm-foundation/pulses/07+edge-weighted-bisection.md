@@ -1,3 +1,12 @@
+---
+uuid: bfd4995d-8a54-88d4-ce50-7e345f6cad2d
+slug: edge-weighted-bisection
+name: Edge-Weighted Bisection
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E7: Edge-Weighted Recursive Bisection Variant
 
 **Status**: ✅ COMPLETED

@@ -1,3 +1,12 @@
+---
+uuid: a741bade-7e6c-99fc-3690-159e8cf86935
+slug: metro-areas
+name: Metro Areas
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E4: Create Urban Metro Area District Maps (MSA/MCSA)
 
 **Status**: ✅ COMPLETED

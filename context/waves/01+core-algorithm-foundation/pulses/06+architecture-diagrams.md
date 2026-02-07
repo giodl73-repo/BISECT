@@ -1,3 +1,12 @@
+---
+uuid: 188ac733-d7a7-700f-7ea0-cdffd57ed75f
+slug: architecture-diagrams
+name: Architecture Diagrams
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E6: Create System Architecture Diagrams
 
 **Status**: ✅ COMPLETED

@@ -1,3 +1,12 @@
+---
+uuid: 1f3bba38-65e4-952e-2c8b-deed1c537079
+slug: national-maps
+name: National Maps
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E3: Create National Political and Demographic Maps
 
 **Status**: ✅ COMPLETED

@@ -1,3 +1,12 @@
+---
+uuid: 127790cc-e691-90e6-2441-dc6c9fdee2bd
+slug: seat-totals
+name: Seat Totals
+wave_uuid: 79fae8
+created: '2026-01-10'
+status: COMPLETED
+---
+
 # E2: Add D/R Seat Totals to Political Maps
 
 **Status**: ✅ COMPLETED
