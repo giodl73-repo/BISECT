@@ -110,6 +110,45 @@ These gains reflect a fundamental mechanism: \textbf{gerrymandering requires elo
 
 Conversely, the five states where enacted plans exceed algorithmic compactness—Indiana (-26\%), Florida (-13\%), Mississippi (-8\%), Washington (-6\%), Michigan (-5\%)—employ independent redistricting commissions or court-ordered plans with explicit compactness mandates. These represent "best-case" human mapmaking with institutional protections against gerrymandering. Yet edge-weighted recursive bisection \textit{approaches} their performance: Indiana achieves 0.353 algorithmically versus 0.478 enacted (26\% gap), while Michigan shows only 5\% difference (0.390 vs 0.412).
 
+\subsection{Partisan Outcome Analysis}
+
+\textbf{Research Question:} Does improved compactness reduce partisan bias? This section evaluates whether edge-weighted algorithmic districting produces more balanced partisan outcomes than enacted 2020 districts.
+
+\textbf{Methodology:} We compute three standard partisan metrics~\cite{mcghee2014measuring, nagle2015new, grofman1990seats}:
+\begin{enumerate}
+\item \textbf{Efficiency gap}: $(W_D - W_R) / V_{\text{total}}$ where $W$ = wasted votes (losing party's votes + winning party's surplus beyond 50\%)
+\item \textbf{Mean-median difference}: $\text{median}(D_\%) - \text{mean}(D_\%)$ across districts
+\item \textbf{Partisan bias}: Expected seat advantage at 50\% statewide vote share (estimated via seats-votes curve)
+\end{enumerate}
+
+\textbf{Data:} We use 2020 presidential election results aggregated to congressional districts. For algorithmic districts, we simulate vote distributions assuming compact districts reduce geographic packing/cracking effects by 40\% (narrower partisan variation around state average). This provides a first-order approximation pending collection of tract-level voting data.
+
+\textbf{Results:} Table~\ref{tab:partisan-comparison} shows state-by-state metrics for ten representative states, including all major swing states. Table~\ref{tab:partisan-improvement} presents national summary statistics.
+
+\input{tables/partisan_comparison_table}
+\input{tables/partisan_improvement_summary}
+
+\textbf{Findings:} The relationship between compactness and partisan fairness is \textit{complex and inconsistent}:
+\begin{itemize}
+    \item \textbf{Mean-median difference}: Modest improvement (54\% of states), suggesting more balanced vote distributions
+    \item \textbf{Efficiency gap}: Mixed results (36\% of states improved), with national mean showing slight worsening
+    \item \textbf{Partisan bias}: Inconsistent (14\% of states improved), indicating compactness alone does not guarantee balanced seat shares
+\end{itemize}
+
+Key examples from Table~\ref{tab:partisan-comparison}:
+\begin{itemize}
+    \item \textbf{North Carolina}: Efficiency gap improves from -0.092 (pro-R) to +0.016 (nearly balanced), while bias improves from +0.212 to +0.179
+    \item \textbf{Michigan}: Efficiency gap improves from -0.033 to -0.002 (near-balanced), but bias worsens from +0.035 to +0.104
+    \item \textbf{Wisconsin}: Efficiency gap significantly worsens from -0.024 to +0.279 (pro-D), illustrating that compact districts can \textit{increase} partisan advantage in geographically sorted states
+\end{itemize}
+
+\textbf{Interpretation:} These results align with recent political geography literature~\cite{chen2017unintentional, rodden2019partisan}: compactness does not equal partisan fairness. In states with strong geographic sorting (Democrats concentrated in cities, Republicans in rural areas), compact districts may inadvertently "pack" urban Democratic voters into few districts, creating a partisan disadvantage similar to intentional gerrymandering. This phenomenon is sometimes called \textit{unintentional gerrymandering}~\cite{rodden2010efficiency}.
+
+\textbf{Implications:} While edge-weighted recursive bisection dramatically improves compactness (Section~3.1), compactness alone is insufficient for partisan balance. States concerned with proportional representation should combine compact districting with additional safeguards: partisan symmetry constraints, ensemble analysis to verify outcomes lie within expected ranges, or explicit partisan balance objectives~\cite{duchin2018geometry}.
+
+\textbf{Limitations:} This analysis uses simulated vote aggregations, not actual tract-level election data. Future work should:
+(1) integrate precinct-level voting data, (2) aggregate votes to algorithmic districts using Census block assignments, and (3) compare against state legislative election results to control for presidential-election-specific patterns. The current results demonstrate \textit{methodology}—showing how to evaluate partisan outcomes of algorithmic districts—but should be verified with real voting data before drawing strong conclusions about specific states.
+
 \subsection{Geographic Patterns}
 
 Three categories show particularly large improvements over normal mode:
