@@ -1,3 +1,10 @@
+---
+slug: testing-foundation
+uuid: 30d063
+name: Testing Foundation
+created: '2026-01-16'
+status: COMPLETED
+---
 # Wave 4: Testing Foundation
 
 **Date**: 2026-01-16
@@ -34,46 +41,6 @@
 
 ---
 
-## Phases
-
-### Phase 1: Dashboard & Testing Infrastructure (Enhancements 29, 30)
-**Completed**: 2026-01-16
-
-Build dashboard features and automated testing framework.
-
-**E29 - Artifacts Dashboard Tab**:
-- Dashboard tab for browsing outputs
-- Maps, CSVs, analysis files accessible
-- Web-based result exploration
-
-**E30 - Playwright Test Harness**:
-- E2E testing framework
-- Visual regression testing
-- Automated dashboard testing
-- 56 E2E tests created
-
-### Phase 2: Testing & Development (Enhancements 31, 33, 34)
-**Completed**: 2026-01-16
-
-Comprehensive test coverage and development workflows.
-
-**E31 - Pipeline Test System**:
-- 187 total tests (110 unit, 24 integration, 56 E2E)
-- 85% code coverage
-- ~24 second execution time
-
-**E33 - Dashboard Mock Data Integration**:
-- Realistic mock datasets
-- Development without full pipeline runs
-- Faster iteration cycles
-
-**E34 - Test Execution and Debugging Skills**:
-- /run-tests skill for test execution
-- /debug-tests skill for systematic debugging
-- Automated test workflows
-
----
-
 ## Results
 
 ### Test Infrastructure
@@ -104,6 +71,28 @@ Comprehensive test coverage and development workflows.
 - `tests/fixtures/mock_data/` - Mock datasets
 - `.claude/skills/run-tests/` - Test execution skill
 - `.claude/skills/debug-tests/` - Test debugging skill
+
+---
+
+
+## Roles Summary
+
+### Engineer Role
+**File**: `roles/engineer.md`
+
+**See individual role files for detailed phases, tasks, and testing.**
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | artifacts-dashboard-tab | - CLAUDE.md - Quick reference for dashboard |
+| ~2 | Engineer | playwright-testing | ``` |
+| ~3 | Engineer | pipeline-test-system | Comprehensive testing framework for all pipeline scripts. |
+| ~4 | Engineer | dashboard-mock-data | - `tests/e2e/test_run_dashboard.py` - Replaced 20 old tests with 9 comprehensive tests |
+| ~5 | Engineer | test-execution-skills | Skills library expanded by 2 from 29 to 31, testing workflow improved with guided execution and debugging. |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 

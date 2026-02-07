@@ -1,3 +1,8 @@
+---
+wave_uuid: 30d063
+slug: playwright-testing
+uuid: 188b02
+---
 # E30: Playwright Test Harness for Dashboard Testing
 
 **Status**: ✅ COMPLETED

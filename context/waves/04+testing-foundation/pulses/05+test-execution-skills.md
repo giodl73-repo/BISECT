@@ -1,3 +1,8 @@
+---
+wave_uuid: 30d063
+slug: test-execution-skills
+uuid: 756a01
+---
 # E34: Test Execution and Debugging Skills
 
 **Status**: ✅ COMPLETED

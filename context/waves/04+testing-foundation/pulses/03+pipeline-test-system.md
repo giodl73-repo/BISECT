@@ -1,3 +1,8 @@
+---
+wave_uuid: 30d063
+slug: pipeline-test-system
+uuid: 8738de
+---
 # E31: Pipeline Test System
 
 **Status**: ✅ COMPLETED

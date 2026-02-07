@@ -1,3 +1,8 @@
+---
+wave_uuid: 30d063
+slug: dashboard-mock-data
+uuid: fe4205
+---
 # E33: Dashboard Mock Data Integration
 
 **Status**: ✅ COMPLETED

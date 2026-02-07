@@ -1,3 +1,8 @@
+---
+wave_uuid: 30d063
+slug: artifacts-dashboard-tab
+uuid: 6bd4ef
+---
 # E29: Artifacts Dashboard Tab
 
 **Status**: ✅ COMPLETED
