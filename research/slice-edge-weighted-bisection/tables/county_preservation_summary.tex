@@ -1,0 +1,32 @@
+\begin{table}[t]
+\centering
+\caption{National County Preservation Summary}
+\label{tab:county_preservation_summary}
+\begin{tabular}{lr}
+\toprule
+\textbf{Metric} & \textbf{Value} \\
+\midrule
+Total States & 35 \\
+Total Counties Analyzed & 2,636 \\
+\midrule
+Average Enacted Split Rate & 27.4\% \\
+Average Algorithmic Split Rate & 28.4\% \\
+Average Difference (Alg - Enacted) & +1.0\% \\
+\midrule
+Algorithmic Splits More Counties & 21 states \\
+Algorithmic Splits Fewer Counties & 13 states \\
+Similar Split Rates & 1 states \\
+\midrule
+\textbf{Category Classification} & \\
+\quad Compactness-County Tradeoff & 4 states \\
+\quad Algorithmic Preserves Better & 12 states \\
+\quad Similar Preservation & 8 states \\
+\midrule
+Correlation (Splits $\leftrightarrow$ Compactness) & -0.68 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item \textit{Split Rate}: Percentage of counties split across multiple districts. \textit{Difference}: Positive means algorithmic splits more counties. \textit{Compactness-County Tradeoff}: States where algorithmic splits $>$3 more counties and gains $>$5\% compactness. \textit{Algorithmic Preserves Better}: States where algorithmic splits $<$3 fewer counties. \textit{Correlation}: Negative correlation ($-0.68$) indicates compactness gains often require splitting more counties.
+\end{tablenotes}
+\end{table}

@@ -364,6 +364,64 @@ However, this section demonstrates that the \textit{choice of partitioner is not
 
 This generalization has practical implications: states can choose partitioners based on their specific constraints (runtime, quality, licensing) without sacrificing compactness. The technique is portable across the entire family of multilevel graph partitioners.
 
+\subsection{County Preservation Analysis}
+
+\textbf{Research Question:} What is the relationship between compactness optimization and county preservation? Do algorithmic districts respect traditional county boundaries?
+
+\textbf{Motivation:} Many U.S. states have legal or traditional preferences for preserving county boundaries during redistricting. County integrity minimizes administrative complexity (counties are election administration units) and maintains communities of interest tied to county governance. However, counties are arbitrary administrative divisions that may conflict with geometric compactness. This section quantifies the compactness-county preservation tradeoff.
+
+\textbf{Methodology:} We count the number of counties split across multiple congressional districts for both enacted 2020 plans and algorithmic edge-weighted plans. A county is \textbf{split} if census tracts within that county are assigned to different districts. We compute:
+\begin{itemize}
+    \item \textbf{Number of counties split}: Absolute count of split counties
+    \item \textbf{Split rate}: Percentage of state's counties split across districts
+    \item \textbf{Split difference}: Algorithmic splits minus enacted splits (positive = algorithmic splits more)
+\end{itemize}
+
+States are classified into three categories:
+\begin{itemize}
+    \item \textbf{Compactness-County Tradeoff}: Algorithmic splits $>$3 more counties but gains $>$5\% compactness
+    \item \textbf{Algorithmic Preserves Better}: Algorithmic splits $\geq$3 fewer counties than enacted
+    \item \textbf{Similar Preservation}: Split difference within $\pm$3 counties
+\end{itemize}
+
+\textbf{Results:} Table~\ref{tab:county_preservation} shows state-by-state comparison for 10 representative states. Table~\ref{tab:county_preservation_summary} presents national statistics across 2,636 total counties.
+
+\input{tables/county_preservation_table}
+\input{tables/county_preservation_summary}
+
+\textbf{Findings:}
+\begin{itemize}
+    \item \textbf{Modest split rate increase}: Algorithmic plans split 28.4\% of counties on average versus 27.4\% for enacted plans (+1.0 percentage points)
+    \item \textbf{Directional consistency}: Algorithmic plans split more counties in 21 states, fewer in 13 states, similar in 1 state
+    \item \textbf{Limited tradeoff cases}: Only 4 states show clear compactness-county tradeoff (substantial split increase paired with large compactness gain)
+    \item \textbf{Strong negative correlation}: Correlation of $-0.68$ between split difference and compactness improvement confirms that gaining compactness often requires splitting additional counties
+\end{itemize}
+
+\textbf{State Examples from Table~\ref{tab:county_preservation}}:
+\begin{itemize}
+    \item \textbf{Illinois} (102 counties, 17 districts): Enacted splits 44 counties (43\%), algorithmic splits 51 (50\%), gaining +174\% compactness. Clear tradeoff: 7 additional county splits buy dramatic compactness improvement.
+
+    \item \textbf{Louisiana} (64 counties, 6 districts): Enacted splits 31 counties (48\%), algorithmic splits 28 (44\%), gaining +104\% compactness. Algorithmic preserves counties \textit{better} while improving compactness—gerrymandered enacted plan split counties unnecessarily for partisan advantage.
+
+    \item \textbf{Indiana} (92 counties, 9 districts): Enacted splits 29 counties (32\%), algorithmic splits 32 (35\%), but \textit{loses} -26\% compactness. Indiana's commission-drawn plan prioritized county preservation over compactness, achieving exceptional compactness (0.478) despite respecting counties. Our algorithm cannot match this human-crafted balance.
+\end{itemize}
+
+\textbf{Interpretation:} The compactness-county preservation tradeoff is \textit{real but modest}:
+
+\begin{enumerate}
+    \item \textbf{Not a fundamental conflict}: The 1.0 percentage point difference in split rates suggests that compactness and county preservation are largely compatible objectives. Most compact algorithmic plans respect most county boundaries.
+
+    \item \textbf{State-specific variation}: Some states show clear tradeoffs (Illinois, Texas), while others show no conflict or even improvement (Louisiana, Maryland). Geography, county sizes, and district counts all affect whether tradeoffs occur.
+
+    \item \textbf{Gerrymandering disrupts counties too}: Gerrymandered enacted plans (e.g., Maryland: 29\% split rate enacted vs 27\% algorithmic) often split counties for partisan advantage. Algorithmic plans may preserve counties better than intentionally manipulated maps.
+
+    \item \textbf{Multi-objective formulation needed}: States prioritizing county preservation should use multi-objective optimization: $\alpha \cdot \text{compactness} + \beta \cdot \text{county integrity}$. This allows explicit tuning of the tradeoff rather than optimizing compactness alone. See Section~3.6 (Future Work) for multi-objective discussion.
+\end{enumerate}
+
+\textbf{Comparison to Commission Plans:} Indiana's result is particularly instructive. Their independent commission achieved both high compactness (0.478) and high county preservation (only 32\% split rate). This demonstrates that skilled human mapmakers with multi-criteria objectives can outperform single-objective algorithms. Our algorithmic approach excels at compactness but does not inherently balance multiple criteria. Hybrid approaches (algorithmic initialization + human refinement for county preservation) may achieve best-of-both-worlds.
+
+\textbf{Limitations:} This analysis treats all county splits equally, but practical impact varies. Splitting a large urban county (e.g., Los Angeles County, 10M population) is administratively simpler than splitting many small rural counties. Future work should weight county splits by population or election administration burden. Additionally, our algorithmic approach makes no attempt to preserve counties—incorporating county boundaries as soft constraints in the optimization would reduce splits while maintaining most compactness gains.
+
 \subsection{Geographic Patterns}
 
 Three categories show particularly large improvements over normal mode:
