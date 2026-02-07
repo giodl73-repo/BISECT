@@ -1,3 +1,8 @@
+---
+wave_uuid: 12043a
+slug: enhancement-manager-app
+uuid: 22517a
+---
 # E35: Enhancement Manager Web App
 
 **Status**: ✅ COMPLETED

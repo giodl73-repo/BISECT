@@ -1,3 +1,8 @@
+---
+wave_uuid: 12043a
+slug: parallel-multi-year-pipeline
+uuid: 1ed8a1
+---
 # E37: Parallel Multi-Year Pipeline with Enhanced Progress Visualization
 
 **Status**: ✅ COMPLETED

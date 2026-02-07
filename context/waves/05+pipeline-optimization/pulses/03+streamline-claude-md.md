@@ -1,3 +1,8 @@
+---
+wave_uuid: 12043a
+slug: streamline-claude-md
+uuid: 2d3f47
+---
 # E38: Streamline CLAUDE.md Documentation
 
 **Status**: ✅ COMPLETED
