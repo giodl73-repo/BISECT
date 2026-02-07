@@ -2,7 +2,7 @@
 uuid: cf47ae4d-f0af-386c-68a6-4357a102973a
 slug: block-level-data
 name: Block-Level Data
-wave_uuid: 79fae8
+wave_uuid: c8f2c9
 created: '2026-01-10'
 status: PLANNED
 ---

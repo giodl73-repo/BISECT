@@ -2,7 +2,7 @@
 uuid: 072e98e9-332e-4c1c-6eea-7d05d5140dbc
 slug: per-state-analysis
 name: Per-State Analysis
-wave_uuid: 79fae8
+wave_uuid: c8f2c9
 created: '2026-01-10'
 status: COMPLETED
 ---

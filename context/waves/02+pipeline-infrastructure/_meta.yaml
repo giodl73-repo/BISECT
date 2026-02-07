@@ -10,3 +10,5 @@ pulses:
   - "~91efb6+validation-framework"  # Pulse 3
   - "~11ed58+multi-year-support"  # Pulse 4
   - "~141a3c+metro-2000"  # Pulse 5
+  - 06+block-level-data  # Pulse 6
+  - 07+per-state-analysis  # Pulse 7

@@ -12,5 +12,3 @@ pulses:
   - 05+national-rounds
   - 06+architecture-diagrams
   - 07+edge-weighted-bisection
-  - 08+block-level-data
-  - 09+per-state-analysis
