@@ -168,7 +168,24 @@ p1_items:
     description: Replace "partisan neutrality" with "political blindness", distinguish compactness from fairness
     reviewers: [Moon Duchin, Jowei Chen]
     severity: critical
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: 2b13b7a
+      files:
+        - main.tex (abstract updated with compactness ≠ fairness caveat)
+        - sections/introduction.tex (algorithmic objectivity, political blindness)
+        - sections/discussion.tex (three-part neutrality taxonomy, geometric baseline)
+        - sections/conclusion.tex (political blindness, Section 3.2 caveat)
+      notes: |\
+        Updated language throughout paper to distinguish three types of neutrality:
+        (1) Algorithmic neutrality - uses no political data
+        (2) Political blindness - cannot favor parties
+        (3) Partisan neutrality - equal outcomes (NOT GUARANTEED)
+        Key changes: "partisan neutrality" → "political blindness", "neutral baseline"
+        → "geometric baseline", removed "implicitly promotes fairness" claims.
+        Added caveats that compactness optimization resists intentional gerrymandering
+        but cannot eliminate geographic sorting effects.
 history:
   - stage: draft
     date: 2026-02-07
@@ -197,3 +214,9 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "P1.5 (Recursive Bisection Justification) completed - recursive guarantees contiguity, k-way 1.7% better but 20% failure rate (commit 61b5113)"
+  - stage: revision
+    date: 2026-02-07
+    note: "P1.6 (Soften Neutrality Claims) completed - updated language throughout to distinguish algorithmic neutrality from partisan fairness, added three-part taxonomy (commit 2b13b7a)"
+  - stage: revision
+    date: 2026-02-07
+    note: "ALL P1 BLOCKING ISSUES COMPLETED (6/6, 100%) - ready for P2 important issues"
