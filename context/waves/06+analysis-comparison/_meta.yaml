@@ -1,0 +1,9 @@
+project: apportionment
+slug: analysis-comparison
+uuid: 35ae86
+name: Analysis & Comparison
+created: '2026-01-17'
+status: COMPLETED
+pulses:
+  - "~e9ba21+baseline-comparison"  # Pulse 1
+  - "~ff9915+edge-weighted-analysis"  # Pulse 2

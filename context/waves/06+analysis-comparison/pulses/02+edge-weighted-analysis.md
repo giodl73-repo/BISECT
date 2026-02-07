@@ -1,3 +1,8 @@
+---
+wave_uuid: 35ae86
+slug: edge-weighted-analysis
+uuid: ff9915
+---
 # E12: Edge-Weighted Algorithm Analysis and Paper 2 Results
 
 **Status**: ✅ COMPLETED

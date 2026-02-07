@@ -1,3 +1,8 @@
+---
+wave_uuid: 35ae86
+slug: baseline-comparison
+uuid: e9ba21
+---
 # E11: Baseline Comparison to Enacted 2020 Congressional Districts
 
 **Status**: ✅ COMPLETED

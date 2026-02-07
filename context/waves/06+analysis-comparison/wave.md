@@ -1,3 +1,10 @@
+---
+slug: analysis-comparison
+uuid: 35ae86
+name: Analysis & Comparison
+created: '2026-01-17'
+status: COMPLETED
+---
 # Wave 6: Analysis & Comparison
 
 **Date**: 2026-01-17
@@ -27,20 +34,6 @@
 | Compactness vs enacted | Unknown | Quantified | +35% average | ✅ Quantified |
 | Edge-weighted analysis | None | Comprehensive | Paper-ready | ✅ 100% |
 | Statistical validation | None | Rigorous | Complete | ✅ 100% |
-
----
-
-## Phases
-
-### Phase 1: E11 - Baseline Comparison to Enacted Districts
-**Completed**: 2026-01-17
-
-Systematic comparison of algorithmic districts to enacted 2020 congressional districts across compactness, population balance, and partisan metrics.
-
-### Phase 2: E12 - Edge-Weighted Algorithm Analysis
-**Completed**: 2026-01-17
-
-Comprehensive analysis of edge-weighted vs unweighted algorithms for Paper 2: statistical tests, state-by-state comparisons, visualizations.
 
 ---
 
@@ -78,6 +71,25 @@ Comprehensive analysis of edge-weighted vs unweighted algorithms for Paper 2: st
 - `outputs/analysis/baseline/` - Comparison results
 - `outputs/analysis/edge_weighted/` - Algorithm analysis
 - `artifacts/papers/paper2/` - Research paper materials
+
+---
+
+
+## Roles Summary
+
+### Engineer Role
+**File**: `roles/engineer.md`
+
+**See individual role files for detailed phases, tasks, and testing.**
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | baseline-comparison | --- |
+| ~2 | Engineer | edge-weighted-analysis | --- |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 
