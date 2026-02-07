@@ -1,0 +1,24 @@
+\begin{table}[t]
+\caption{National Partitioning Quality Summary}
+\label{tab:partition-summary}
+\centering
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Metric} & \textbf{Unweighted} & \textbf{Weighted (Change)} \\
+\midrule
+Edge cuts (avg per state) & -- & +76.6\% \\
+Total perimeter (avg per state) & -- & -25.8\% \\
+Average edge length (avg per state) & -- & -57.7\% \\
+\midrule
+Coarsening levels & 2.5 & 2.5 \\
+Refinement iterations & 19.0 & 25.5 \\
+\bottomrule
+\end{tabular}
+\vspace{0.5em}
+
+\footnotesize
+\textit{Note:} Edge-weighted METIS increases edge cuts by 77\% but reduces
+total perimeter by 26\%, achieving net compactness improvement.
+The 58\% reduction in average edge length confirms geometric optimization:
+METIS explicitly prefers cuts along short boundaries even when this requires cutting more edges.
+\end{table}

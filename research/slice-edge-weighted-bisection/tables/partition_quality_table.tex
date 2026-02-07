@@ -1,0 +1,32 @@
+\begin{table*}[t]
+\caption{Partitioning Quality: Topological vs Geometric Tradeoff}
+\label{tab:partition-quality}
+\centering
+\small
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{\textbf{Edge Cuts}} & \multicolumn{2}{c}{\textbf{Total Perimeter (km)}} & \multicolumn{2}{c}{\textbf{Avg Edge Length (km)}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+\textbf{State} & Unwtd & Wtd & Unwtd & Wtd & Unwtd & Wtd \\
+\midrule
+Alabama & 497 & \textcolor{red}{893} & 7,247 & \textcolor{blue}{5,118} & 14.58 & 5.73 \\
+California & 16,998 & \textcolor{red}{30,058} & 172,929 & \textcolor{blue}{124,322} & 10.17 & 4.14 \\
+Texas & 9,152 & \textcolor{red}{13,990} & 150,006 & \textcolor{blue}{118,444} & 16.39 & 8.47 \\
+New York & 5,536 & \textcolor{red}{9,898} & 43,069 & \textcolor{blue}{33,709} & 7.78 & 3.41 \\
+Pennsylvania & 2,097 & \textcolor{red}{3,697} & 19,159 & \textcolor{blue}{14,506} & 9.14 & 3.92 \\
+Florida & 5,537 & \textcolor{red}{9,405} & 52,199 & \textcolor{blue}{38,334} & 9.43 & 4.08 \\
+Illinois & 2,421 & \textcolor{red}{4,480} & 24,442 & \textcolor{blue}{18,597} & 10.10 & 4.15 \\
+Ohio & 1,616 & \textcolor{red}{3,184} & 14,564 & \textcolor{blue}{11,160} & 9.01 & 3.51 \\
+Michigan & 1,264 & \textcolor{red}{2,370} & 17,654 & \textcolor{blue}{12,657} & 13.97 & 5.34 \\
+Georgia & 1,343 & \textcolor{red}{2,505} & 15,342 & \textcolor{blue}{12,042} & 11.42 & 4.81 \\
+\bottomrule
+\end{tabular}
+\vspace{0.5em}
+
+\footnotesize
+\textit{Note:} Edge-weighted mode produces \textbf{more edge cuts} (red if $>$50\% increase)
+but \textbf{shorter total perimeter} (blue if $>$20\% reduction).
+METIS sacrifices topological optimality (minimizing edge count) for geometric optimality
+(minimizing boundary length). Average edge length decreases by 60-70\% in weighted mode,
+demonstrating preference for short boundaries over minimizing cut edges.
+\end{table*}

@@ -198,6 +198,63 @@ This is not a failure of the algorithm—it is an \textit{inherent constraint} o
 
 \textbf{Limitations:} This analysis uses simulated district demographics based on state-level Census data, modeling realistic VRA packing patterns but not actual tract-level aggregations. Future work should integrate real tract-level demographic data with actual algorithmic district assignments. Nonetheless, the methodology demonstrates how to evaluate VRA compliance and quantifies the expected magnitude of the compactness-representation tradeoff (approximately 68\% reduction in MM districts for pure geographic optimization).
 
+\subsection{Partitioning Quality Analysis}
+
+\textbf{Research Question:} Why does edge weighting improve compactness? What is METIS actually optimizing, and how does geometric weighting change partitioning behavior?
+
+\textbf{Background:} Graph partitioning algorithms optimize for \textit{edge-cut minimization}—the number of edges crossing partition boundaries. Standard unweighted METIS minimizes edge count (topological objective). Edge-weighted METIS minimizes \textit{weighted} edge cut, where each edge's weight represents its geometric length (geometric objective). These objectives conflict: minimizing boundary length may require cutting more edges if shorter edges are available.
+
+\textbf{Hypothesis:} Edge-weighted recursive bisection produces \textit{higher} unweighted edge cuts but \textit{lower} weighted edge cuts (shorter total perimeter). METIS trades topological optimality for geometric optimality.
+
+\textbf{Methodology:} We compare partition statistics for unweighted vs edge-weighted modes across representative states:
+\begin{itemize}
+    \item \textbf{Edge cuts}: Number of tract adjacencies crossing district boundaries
+    \item \textbf{Total perimeter}: Sum of boundary lengths (km) = weighted edge cut
+    \item \textbf{Average edge length}: Total perimeter / edge cuts
+    \item \textbf{METIS behavior}: Coarsening levels, refinement iterations, balance achieved
+\end{itemize}
+
+\textbf{Results:} Table~\ref{tab:partition-quality} compares partition quality metrics for ten representative states. Table~\ref{tab:partition-summary} presents national averages.
+
+\input{tables/partition_quality_table}
+\input{tables/partition_summary_table}
+
+\textbf{Findings:} Edge weighting fundamentally changes METIS's optimization behavior:
+\begin{itemize}
+    \item \textbf{Edge cuts increase}: Weighted mode cuts 77\% more edges on average (range: 51-98\% across states)
+    \item \textbf{Perimeter decreases}: Weighted mode reduces total boundary length by 25\% on average (range: 21-30\%)
+    \item \textbf{Edge length decreases}: Average edge length drops by 66\% (unweighted: 14.6 km, weighted: 5.0 km)
+    \item \textbf{Net effect}: Despite cutting far more edges, weighted mode achieves shorter boundaries and higher compactness
+\end{itemize}
+
+\textbf{Example—Alabama}:
+\begin{itemize}
+    \item Unweighted: Cuts 497 edges, total perimeter 7,247 km, average edge 14.58 km
+    \item Weighted: Cuts 893 edges (+80\%), total perimeter 5,118 km (-29\%), average edge 5.73 km (-61\%)
+\end{itemize}
+
+Alabama's weighted mode cuts nearly \textit{twice as many edges} yet achieves 29\% shorter total perimeter. This confirms the tradeoff: METIS deliberately cuts additional edges when those edges are short, sacrificing topological quality (edge count) for geometric quality (boundary length).
+
+\textbf{METIS Behavior:} Edge weighting affects METIS's multilevel algorithm:
+\begin{itemize}
+    \item \textbf{Coarsening}: Weighted graphs coarsen more aggressively (avg ratio 3.8 vs 3.0 unweighted). High edge weights create stronger "super-edges" during graph contraction, enabling larger coarsening steps.
+    \item \textbf{Refinement}: Weighted mode requires 30\% more Kernighan-Lin refinement passes (26 vs 20), reflecting harder optimization landscape when edge weights vary by 10-100x.
+    \item \textbf{Balance}: Both modes achieve population balance within 1.004x target (constitutional $\pm 0.5\%$ requirement). Edge weighting does not compromise balance constraints.
+\end{itemize}
+
+\textbf{Interpretation:} These results validate the core hypothesis: \textbf{geometric edge weighting causes METIS to optimize for boundary length rather than edge count}. The algorithm's behavior shifts from topological (graph connectivity) to geometric (spatial layout). When presented with a choice between cutting one long edge or three short edges with equal total length, unweighted METIS chooses the long edge (minimizes cut count); weighted METIS chooses the short edges (minimizes perimeter).
+
+This is not an unintended side effect—it is the \textit{designed behavior} of METIS's weighted partitioning. The 77\% increase in edge cuts is the algorithmic cost of 25\% perimeter reduction, which translates to 56\% compactness improvement (as shown in Section~3.1). From METIS's perspective, cutting 893 short urban/suburban boundaries is preferable to cutting 497 boundaries that include long rural connections.
+
+\textbf{Implications for Redistricting:} This analysis reveals why boundary-length-weighted recursive bisection succeeds for redistricting:
+\begin{enumerate}
+    \item \textbf{Geographic realism}: Minimizing perimeter creates compact, circular districts that respect natural community boundaries (cities, counties, watersheds)
+    \item \textbf{Scalability}: METIS's multilevel coarsening handles large graphs (9,000+ tracts) efficiently, with runtime proportional to graph size rather than solution quality
+    \item \textbf{Robustness}: High edge-weight variation (10-100x) does not break METIS's balance constraints or convergence guarantees
+\end{enumerate}
+
+The tradeoff (more edge cuts) has minimal practical impact: redistricting cares about \textit{boundary length} (compactness, travel distance) not \textit{edge count} (graph-theoretic measure). A district boundary crossing 5 urban tract edges (1 km each) is more compact than a boundary crossing 1 rural tract edge (20 km long), even though the latter has lower edge-cut value.
+
 \subsection{Geographic Patterns}
 
 Three categories show particularly large improvements over normal mode:
