@@ -1,8 +1,8 @@
 paper: slice-edge-weighted-bisection
 title: "Edge-Weighted Recursive Bisection for Compact Congressional Districts"
 venue: "KDD 2026"
-stage: revision
-round: 1
+stage: recheck
+round: 2
 reviewers:
   - name: George Karypis
     affiliation: University of Minnesota
@@ -270,6 +270,21 @@ p2_items:
     reviewers: [Ümit Çatalyürek]
     severity: important
     addressed: false
+p2r2_items:
+  - id: P2R2.1
+    title: Hypergraph Justification
+    description: Add 1-2 paragraphs justifying graph vs hypergraph modeling choice
+    reviewers: [Ümit Çatalyürek]
+    severity: minor
+    effort: "1 hour"
+    addressed: false
+  - id: P2R2.2
+    title: Census Tract Limitations Discussion
+    description: Add 1-2 paragraphs discussing census tract boundary embedded biases
+    reviewers: [Michael Goodchild]
+    severity: minor
+    effort: "1 hour"
+    addressed: false
 history:
   - stage: draft
     date: 2026-02-07
@@ -310,3 +325,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "P2.4 (County Preservation Analysis) completed - modest tradeoff (+1.0pp splits), correlation -0.68, largely compatible objectives (commit b2c6d68)"
+  - stage: recheck
+    date: 2026-02-07
+    note: "Round 2 reviews completed - average score 3.71/4 (up from 3.0/4), 5/7 reviewers upgraded to 4/4 (Accept), gate PASSED"
