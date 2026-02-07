@@ -89,7 +89,22 @@ p1_items:
     description: Count majority-minority districts, discuss VRA vs compactness tradeoffs
     reviewers: [Moon Duchin, Jowei Chen]
     severity: blocking
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: b527008
+      files:
+        - sections/results.tex (new subsection: Voting Rights Act Compliance)
+        - tables/vra_compliance_table.tex (state-by-state comparison)
+        - tables/vra_summary_table.tex (national statistics)
+        - scripts/demographic/*.py (3 analysis scripts)
+      notes: |
+        Added comprehensive VRA compliance analysis showing 68% reduction in
+        majority-minority districts (65 enacted -> 21 algorithmic). Demonstrates
+        fundamental VRA-compactness tradeoff: geographic optimization conflicts
+        with minority representation when populations are concentrated. Proposes
+        3 solutions: hybrid objectives, protected communities, post-hoc adjustment.
+        9 states non-compliant, including AL, AZ, CA, GA, LA, MD, NC, SC, TX.
   - id: P1.3
     title: Partitioning Quality Analysis
     description: Report edge-cut values, coarsening statistics, convergence behavior
@@ -130,3 +145,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "P1.1 (Partisan Outcome Analysis) completed - added comprehensive partisan metrics analysis showing mixed results, demonstrating compactness ≠ fairness (commit 6bf22ff)"
+  - stage: revision
+    date: 2026-02-07
+    note: "P1.2 (VRA Compliance Evaluation) completed - showed 68% reduction in majority-minority districts, fundamental VRA-compactness tradeoff (commit b527008)"
