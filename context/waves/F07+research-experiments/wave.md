@@ -1,3 +1,10 @@
+---
+slug: research-experiments
+uuid: f7a1b7
+name: Research Experiments
+created: '2026-01-25'
+status: PLANNED
+---
 # Wave F7: Research Experiments
 
 **Date**: TBD (Planned)
@@ -132,18 +139,6 @@ Create larger districts with multiple representatives (proportional representati
 - [E26](../enhancements/26_demographic_similarity.md) - Demographic Similarity Districts (planned)
 - [E27](../enhancements/27_electoral_college.md) - Electoral College Reform (planned)
 - [E28](../enhancements/28_multi_member.md) - Multi-Member Districts (planned)
-
----
-
-## Why This Wave Should Be Deferred
-
-1. **Research Focus**: Core algorithmic redistricting research should be published first
-2. **Long Duration**: 6-8 weeks is significant time investment
-3. **Speculative**: Experiments may not yield publishable results
-4. **Lower Impact**: Alternative systems are less directly applicable than core work
-5. **Distraction Risk**: Could divert attention from high-priority research
-
-**Recommendation**: Complete WAVE-F2, F3, F4, F5 first. Revisit when core research is published and stable.
 
 ---
 

@@ -1,3 +1,10 @@
+---
+slug: production-polish
+uuid: f2a1b2
+name: Production Polish
+created: '2026-01-25'
+status: PLANNED
+---
 # Wave F2: Production Polish
 
 **Date**: TBD (Planned)
@@ -95,16 +102,6 @@ Build web application for pipeline execution, monitoring, and result browsing.
 
 - [E36](../enhancements/36_experimental_variants.md) - Experimental Variants Configuration (planned)
 - [E51](../enhancements/51_pipeline_manager.md) - Pipeline Manager Web App (planned)
-
----
-
-## Why This Wave Should Be Next (Wave 08)
-
-1. **High Impact**: Both enhancements are HIGH priority and enable critical research workflows
-2. **No Dependencies**: Can be executed immediately after WAVE07
-3. **Research Enablement**: Variant system unlocks systematic algorithm experimentation needed for papers
-4. **Usability**: Pipeline Manager makes system accessible to non-technical users
-5. **Moderate Scope**: 2-3 weeks is achievable without being too ambitious
 
 ---
 

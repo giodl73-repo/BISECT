@@ -1,0 +1,14 @@
+project: apportionment
+slug: research-experiments
+uuid: f7a1b7
+name: Research Experiments
+created: '2026-01-25'
+status: PLANNED
+pulses:
+  - 22+national-redistricting
+  - 23+county-representation
+  - 24+party-based-allocation
+  - 25+committee-based-representation
+  - 26+demographic-similarity-districts
+  - 27+electoral-college-county-reform
+  - 28+multi-member-districts

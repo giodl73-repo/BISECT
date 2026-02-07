@@ -1,0 +1,10 @@
+project: apportionment
+slug: algorithm-improvements
+uuid: f4a1b4
+name: Algorithm Improvements
+created: '2026-01-25'
+status: PLANNED
+pulses:
+  - 32+reock-compactness-metric
+  - 40+corner-adjacency-filter
+  - 44+real-world-constraints

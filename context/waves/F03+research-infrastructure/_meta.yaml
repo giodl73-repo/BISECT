@@ -1,0 +1,9 @@
+project: apportionment
+slug: research-infrastructure
+uuid: f3a1b3
+name: Research Infrastructure
+created: '2026-01-25'
+status: PLANNED
+pulses:
+  - 42+research-narrative-policy-questions
+  - 45+baseline-data-organization

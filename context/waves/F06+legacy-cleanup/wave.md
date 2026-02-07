@@ -1,3 +1,10 @@
+---
+slug: legacy-cleanup
+uuid: f6a1b6
+name: Legacy Cleanup
+created: '2026-01-25'
+status: PLANNED
+---
 # Wave F6: Legacy Cleanup
 
 **Date**: TBD (Planned)
@@ -89,17 +96,6 @@ Add metro area overlay maps for 2000 census year for consistency.
 
 - [E8](../enhancements/08_block_level_data.md) - Block-Level Data Support (in progress)
 - [E16](../enhancements/16_metro_2000.md) - 2000 Census Metro Area Maps (planned)
-
----
-
-## Why This Wave Is Low Priority
-
-1. **Tract-level sufficient**: Current tract-level resolution produces high-quality results
-2. **High computational cost**: Block-level increases runtime 5-10x for marginal quality improvement
-3. **Research impact**: Not required for current research papers
-4. **Nice-to-have**: Completeness is good but not essential
-
-**Recommendation**: Defer until after higher-priority waves (F2, F3, F4, F5)
 
 ---
 

@@ -1,3 +1,10 @@
+---
+slug: research-infrastructure
+uuid: f3a1b3
+name: Research Infrastructure
+created: '2026-01-25'
+status: PLANNED
+---
 # Wave F3: Research Infrastructure
 
 **Date**: TBD (Planned)
@@ -92,15 +99,6 @@ Systematically organize baseline data (enacted districts, historical boundaries)
 
 - [E42](../enhancements/42_research_narrative.md) - Research Narrative & Policy Questions (planned)
 - [E45](../enhancements/45_baseline_data.md) - Baseline Data Organization (planned)
-
----
-
-## Why This Wave Is Critical
-
-1. **Publication Requirement**: Papers need clear narrative and baseline comparisons
-2. **Research Quality**: Systematic baseline data enables rigorous analysis
-3. **Contribution Clarity**: Well-defined narrative shows academic contribution
-4. **Foundation for Papers**: Unlocks Paper 1 (algorithm), Paper 2 (edge weighting), Paper 3 (comparison)
 
 ---
 

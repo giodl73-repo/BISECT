@@ -1,3 +1,10 @@
+---
+slug: longitudinal-distribution
+uuid: f5a1b5
+name: Longitudinal & Distribution
+created: '2026-01-25'
+status: PLANNED
+---
 # Wave F5: Longitudinal & Distribution
 
 **Date**: TBD (Planned)
