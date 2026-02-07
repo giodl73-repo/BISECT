@@ -179,14 +179,17 @@ def partition_graph_with_executable(
                         weights_for_constraint = [target_weights[p][constraint_id] for p in range(nparts)]
                         total = sum(weights_for_constraint)
 
-                        for partition_id, weight in enumerate(weights_for_constraint):
+                        # Write n-1 partitions, METIS infers the last one (avoids floating point issues)
+                        for partition_id in range(nparts - 1):
+                            weight = weights_for_constraint[partition_id]
                             normalized_weight = weight / total if total > 0 else 1.0 / nparts
                             f.write(f'{partition_id} : {constraint_id} = {normalized_weight:.6f}\n')
                 else:
                     # Single constraint format: partition_id = weight
                     normalized = [w / sum(target_weights) for w in target_weights]
-                    for partition_id, weight in enumerate(normalized):
-                        f.write(f'{partition_id} = {weight:.6f}\n')
+                    # Write n-1 partitions, METIS infers the last one
+                    for partition_id in range(len(normalized) - 1):
+                        f.write(f'{partition_id} = {normalized[partition_id]:.6f}\n')
 
             cmd.append(f'-tpwgt={tpwgts_file}')
 
