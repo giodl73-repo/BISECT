@@ -210,7 +210,25 @@ p2_items:
     description: Measure county splits, compare to enacted, show compactness-county tradeoff
     reviewers: [Jowei Chen, Michael Goodchild]
     severity: important
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: b2c6d68
+      files:
+        - sections/results.tex (new subsection: County Preservation Analysis)
+        - tables/county_preservation_table.tex (10 representative states)
+        - tables/county_preservation_summary.tex (national statistics for 2,636 counties)
+        - scripts/analysis/compute_county_preservation.py (analysis script)
+        - scripts/analysis/create_county_preservation_tables.py (table generation)
+      notes: |\
+        Added quantitative analysis of compactness-county preservation tradeoff.
+        Key findings: modest increase in county splits (28.4% vs 27.4%, +1.0pp),
+        strong negative correlation (-0.68) between splits and compactness gains.
+        Only 4 states show clear tradeoff (>3 splits for >5% compactness). Indiana
+        case study demonstrates human commission can achieve both objectives
+        simultaneously (0.478 compactness, 32% split rate). Concludes tradeoff is
+        real but modest - objectives are largely compatible. Recommends multi-
+        objective formulation for states prioritizing county preservation.
   - id: P2.5
     title: Geographic Sorting Quantification
     description: Separate unavoidable geographic partisan effects from intentional gerrymandering
@@ -289,3 +307,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "P2.5 (Geographic Sorting Quantification) completed - separated geographic baseline from gerrymandering premium, 60% states geography-dominated (commit cef75e6)"
+  - stage: revision
+    date: 2026-02-07
+    note: "P2.4 (County Preservation Analysis) completed - modest tradeoff (+1.0pp splits), correlation -0.68, largely compatible objectives (commit b2c6d68)"
