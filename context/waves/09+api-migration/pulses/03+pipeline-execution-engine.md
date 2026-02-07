@@ -1,3 +1,8 @@
+---
+wave_uuid: 3861b5
+slug: pipeline-execution-engine
+uuid: ab4e83
+---
 # E62: Pipeline Execution Engine
 
 **Status**: PLANNED

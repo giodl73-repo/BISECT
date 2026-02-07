@@ -1,3 +1,8 @@
+---
+wave_uuid: 3861b5
+slug: react-dashboard-core
+uuid: ff7bf8
+---
 # E63: React Dashboard Core
 
 **Status**: PLANNED

@@ -1,3 +1,8 @@
+---
+wave_uuid: 3861b5
+slug: district-visualization
+uuid: d42441
+---
 # E64: District Visualization
 
 **Status**: PLANNED

@@ -1,3 +1,8 @@
+---
+wave_uuid: 3861b5
+slug: api-project-setup
+uuid: d5da1f
+---
 # E60: API Project Setup & Infrastructure
 
 **Status**: ✅ COMPLETED

@@ -1,7 +1,10 @@
 ---
 slug: api-migration
+uuid: 3861b5
+name: API Migration
+created: '2026-01-25'
+status: COMPLETED
 ---
-
 # Wave 9: API Migration
 
 **Date**: 2026-01-25
@@ -749,6 +752,21 @@ frontend/
 ├── vite.config.ts
 └── tailwind.config.js
 ```
+
+---
+
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | api-project-setup | Created foundational infrastructure for Wave 9 using FastAPI, React, and App Manager integration. |
+| ~2 | Engineer | run-management-api | Database schema and API implemented for run management with advanced features. |
+| ~3 | Engineer | pipeline-execution-engine | Async pipeline execution engine with status parsing, file-based progress fallback, and cancellation support. |
+| ~4 | Engineer | react-dashboard-core | Builds a React-based dashboard with a UI component library, manages pages, displays progress through polling, and... |
+| ~5 | Engineer | district-visualization | Interactive district visualization using Leaflet maps. |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 
