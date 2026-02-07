@@ -26,9 +26,9 @@ import matplotlib.patches as mpatches
 import matplotlib.patheffects as path_effects
 import matplotlib.cm as cm
 
-def run_state_redistricting(state_code: str, state_config: dict, year: str = '2020',
+def run_state_redistricting(state_code: str, state_config: dict, year: str = '2020', version: str = 'v1',
                            output_dir: str = None, print_only: bool = False, debug: bool = False, dpi: int = 150, position: int = 2, reset: bool = False):
-    """Run redistricting for a specific state."""
+    """Run redistricting for a specific state with version-specific data."""
 
     state_code = state_code.upper()
     if state_code not in state_config:
@@ -40,9 +40,9 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     state_name = config['name']
     num_districts = config['districts']
 
-    # File paths (unified directory structure)
-    graph_file = str(get_adjacency_file(state_code, year))
-    tracts_file = str(get_tract_file(state_code, year))
+    # File paths (version-specific directory structure)
+    graph_file = str(get_adjacency_file(state_code, year, version))
+    tracts_file = str(get_tract_file(state_code, year, version))
 
     # Show progress bars for integration with parent script
     operation_pos = position
@@ -291,6 +291,8 @@ if __name__ == '__main__':
                        help='Two-letter state code (e.g., CA, TX, FL)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1',
+                       help='Version identifier (default: v1)')
     parser.add_argument('--output-dir', type=str, default=None,
                        help='Output directory (default: auto-generated timestamped directory)')
     parser.add_argument('--dpi', type=int, default=150,
@@ -315,4 +317,4 @@ if __name__ == '__main__':
         print(f"ERROR: Could not load config for year {args.year}: {e}")
         sys.exit(1)
 
-    run_state_redistricting(args.state, STATE_CONFIG, args.year, args.output_dir, args.print_only, args.debug, args.dpi, args.position, args.reset)
+    run_state_redistricting(args.state, STATE_CONFIG, args.year, args.version, args.output_dir, args.print_only, args.debug, args.dpi, args.position, args.reset)

@@ -214,7 +214,7 @@ def create_rounds_hierarchy(run_dir: Path, num_districts: int, state_code: str, 
             assignments = pickle.load(f)
 
         # Load tract data
-        tracts_file = get_tract_file(state_code, census_year)
+        tracts_file = get_tract_file(state_code, census_year, version='v1')
         if not tracts_file.exists():
             if debug:
                 print(f"  Tracts file not found: {tracts_file}")
@@ -324,6 +324,8 @@ if __name__ == '__main__':
     parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, NY)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1',
+                       help='Version identifier (default: v1)')
     parser.add_argument('--print-only', action='store_true',
                        help='Print what would be done without executing')
     parser.add_argument('--debug', action='store_true',
@@ -348,8 +350,8 @@ if __name__ == '__main__':
     if args.debug: print(f"[DEBUG] State: {state_name} ({state_code})", file=sys.stderr, flush=True)
 
     # Load tract and places files (unified directory structure)
-    tracts_file = str(get_tract_file(state_code, args.year))
-    places_file = str(get_places_file(state_code, args.year))
+    tracts_file = str(get_tract_file(state_code, args.year, args.version))
+    places_file = str(get_places_file(state_code, args.year, args.version))
 
     # References to data/ subdirectory
     data_dir = run_dir / 'data'

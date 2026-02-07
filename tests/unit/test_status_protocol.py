@@ -172,6 +172,22 @@ class TestStatusReporter:
         captured = capsys.readouterr()
         assert captured.out == "STATUS:WORKER:2020:1:TASK:3/9:National_district_map\n"
 
+    def test_report_redistricting_stage_standalone(self, capsys):
+        """Test redistricting stage report in standalone mode (batch mode)."""
+        reporter = StatusReporter(position=-1)
+        reporter.report_redistricting_stage("2020", "metis", 25, 50)
+
+        captured = capsys.readouterr()
+        assert "[2020] metis: 25/50 states\n" == captured.out
+
+    def test_report_redistricting_stage_child_mode(self, capsys):
+        """Test redistricting stage report in child mode (batch mode)."""
+        reporter = StatusReporter(position=0)
+        reporter.report_redistricting_stage("2020", "metis", 25, 50)
+
+        captured = capsys.readouterr()
+        assert captured.out == "STATUS:REDISTRICTING:2020:STAGE:metis:25/50\n"
+
 
 class TestParseStatusMessage:
     """Tests for parse_status_message function."""
@@ -278,6 +294,30 @@ class TestParseStatusMessage:
             'task_index': 3,
             'task_total': 9,
             'task_name': 'National_district_map'
+        }
+
+    def test_parse_redistricting_stage(self):
+        """Test parsing REDISTRICTING_STAGE message (batch mode)."""
+        msg_type, data = parse_status_message("STATUS:REDISTRICTING:2020:STAGE:metis:25/50")
+
+        assert msg_type == 'REDISTRICTING_STAGE'
+        assert data == {
+            'year': '2020',
+            'stage_name': 'metis',
+            'completed': 25,
+            'total': 50
+        }
+
+    def test_parse_redistricting_stage_summary(self):
+        """Test parsing REDISTRICTING_STAGE message for summary stage."""
+        msg_type, data = parse_status_message("STATUS:REDISTRICTING:2020:STAGE:summary:50/50")
+
+        assert msg_type == 'REDISTRICTING_STAGE'
+        assert data == {
+            'year': '2020',
+            'stage_name': 'summary',
+            'completed': 50,
+            'total': 50
         }
 
 

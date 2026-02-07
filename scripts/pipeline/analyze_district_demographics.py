@@ -170,6 +170,8 @@ def main():
     parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, NY)')
     parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1',
+                       help='Version identifier (default: v1)')
     parser.add_argument('--output-dir', type=str, default=None,
                        help='Output directory (default: run_dir/demographic_analysis)')
     parser.add_argument('--force', action='store_true',
@@ -225,7 +227,7 @@ def main():
         # Load tract file to get GEOID mapping (unified directory structure)
         import geopandas as gpd
         state_code_lower = state_code.lower()
-        tracts_file = get_tract_file(state_code, str(args.census_year))
+        tracts_file = get_tract_file(state_code, str(args.census_year), args.version)
 
         if not tracts_file.exists():
             raise FileNotFoundError(f"Tract file not found: {tracts_file}")

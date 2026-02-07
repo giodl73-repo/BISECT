@@ -28,6 +28,9 @@ from .config import (
 
 # Path utilities
 from .paths import (
+    get_version_dir,
+    get_census_data_dir,
+    get_results_dir,
     get_tract_file,
     get_places_file,
     get_adjacency_file,
@@ -83,6 +86,9 @@ __all__ = [
     'build_state_name_to_districts_map',
 
     # Paths
+    'get_version_dir',
+    'get_census_data_dir',
+    'get_results_dir',
     'get_tract_file',
     'get_places_file',
     'get_adjacency_file',

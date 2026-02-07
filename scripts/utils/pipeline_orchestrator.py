@@ -181,7 +181,8 @@ class PipelineOrchestrator:
         coordinator,
         display_lock: threading.Lock,
         years: List[str],
-        output_dirs: Dict[str, Path]
+        output_dirs: Dict[str, Path],
+        processing_mode: str = 'batch'
     ):
         """
         Initialize pipeline orchestrator.
@@ -191,11 +192,13 @@ class PipelineOrchestrator:
             display_lock: Threading lock for display updates
             years: List of years to process (e.g., ['2020', '2010'])
             output_dirs: Dict mapping year -> output directory path
+            processing_mode: Processing mode ('batch' or 'streaming')
         """
         self.coordinator = coordinator
         self.display_lock = display_lock
         self.years = years
         self.output_dirs = output_dirs
+        self.processing_mode = processing_mode
 
         # Stage configuration: {stage_name: (command_builder, handlers, completion_callback)}
         self.stages: Dict[str, Tuple[Callable, Dict, Optional[Callable]]] = {}

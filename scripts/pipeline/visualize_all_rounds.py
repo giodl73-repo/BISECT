@@ -196,6 +196,8 @@ def main():
     parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, NY)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1',
+                       help='Version identifier (default: v1)')
     parser.add_argument('--print-only', action='store_true',
                        help='Print what would be done without executing')
     parser.add_argument('--dpi', type=int, default=150, help='DPI for output maps')
@@ -216,7 +218,7 @@ def main():
     state_name = config['name']
 
     # Load tracts (unified directory structure)
-    tracts_file = str(get_tract_file(state_code, args.year))
+    tracts_file = str(get_tract_file(state_code, args.year, args.version))
 
     intermediate_dir = run_dir / 'intermediate'
     output_dir = run_dir  # Function will add maps/rounds subdirectory

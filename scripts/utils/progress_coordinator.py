@@ -49,6 +49,15 @@ class ProgressCoordinator:
         self.census_progress = {year: {'stage': '', 'completed': 0, 'total': 50, 'active': False} for year in years}
         self.census_worker_status = {}  # {(year, worker_id): status_dict}
 
+        # Track redistricting stage completion across all states
+        # Maps year -> {stage_name: completed_count}
+        self.stage_progress = {year: {} for year in years}
+        self.stage_names = [
+            'redistricting', 'summary', 'cities', 'round_maps', 'district_maps',
+            'metro_area_maps', 'compactness', 'demographics_analysis',
+            'demographics_visualization', 'political_analysis', 'political_visualization'
+        ]
+
         self.lock = threading.Lock()
         self.wide_terminal = is_wide_terminal(120)
 
@@ -181,6 +190,18 @@ class ProgressCoordinator:
             self.census_progress[year]['active'] = False
             self.census_worker_status = {k: v for k, v in self.census_worker_status.items() if k[0] != year}
 
+    def update_stage_completion(self, year, stage_name, completed_count):
+        """
+        Update stage completion count for redistricting pipeline.
+
+        Args:
+            year: Census year
+            stage_name: Stage name (e.g., 'redistricting', 'summary', 'cities')
+            completed_count: Number of states that have completed this stage
+        """
+        with self.lock:
+            self.stage_progress[year][stage_name] = completed_count
+
     def render(self):
         """
         Render the current progress display.
@@ -250,56 +271,25 @@ class ProgressCoordinator:
 
                 lines.append(year_line)
 
-                # Worker bars
-                num_workers = self.workers_per_year[year]
-                year_complete = (completed >= total)
+                # Stage progress bars (if any stages have been completed)
+                if phase == 'states' and self.stage_progress.get(year):
+                    stage_lines = []
 
-                for worker_id in range(num_workers):
-                    worker_key = (year, worker_id)
-                    is_last = (worker_id == num_workers - 1)
-                    connector = format_tree_connector(is_last, wide_terminal=self.wide_terminal)
+                    for stage_name in self.stage_names:
+                        stage_completed = self.stage_progress[year].get(stage_name, 0)
+                        if stage_completed > 0:  # Only show stages that have started
+                            stage_bar = create_progress_bar(stage_completed, total, width=15)
+                            # Format stage name nicely
+                            display_name = stage_name.replace('_', ' ').title()
+                            stage_line = f"  {display_name:25s} {stage_completed:2d}/50 {stage_bar}"
+                            if stage_completed >= total:
+                                stage_line += " [OK]"
+                            stage_lines.append(stage_line)
 
-                    # If year is complete, show all workers as Idle
-                    if year_complete:
-                        worker_line = f"{connector}Worker {worker_id + 1}: Idle"
-                        lines.append(worker_line)
-                    elif worker_key in self.worker_status:
-                        status = self.worker_status[worker_key]
-                        status_type = status.get('type', 'state')
+                    if stage_lines:
+                        lines.extend(stage_lines)
 
-                        if status_type == 'state':
-                            # State processing worker
-                            # Format state name
-                            state_name = status['state_name']
-                            if not self.wide_terminal:
-                                state_name = abbreviate_state_name(state_name, max_length=10)
-
-                            # Format stage description (replace underscores, title case)
-                            stage_desc = format_stage_description(status['stage_desc'], wide_terminal=self.wide_terminal)
-
-                            # Worker line (include year for pipeline manager parsing)
-                            worker_line = (
-                                f"{connector}Worker {worker_id + 1} [{year}]: "
-                                f"[{status['state_num']:02d}/50] {state_name:15s} | "
-                                f"Stage {status['stage']}/{status['stage_total']}: {stage_desc}"
-                            )
-                            lines.append(worker_line)
-
-                        elif status_type == 'task':
-                            # Post-processing task worker (include year for pipeline manager parsing)
-                            task_name = status['task_name'].replace('_', ' ')
-                            task_index = status['task_index']
-                            task_total = status['task_total']
-
-                            worker_line = (
-                                f"{connector}Worker {worker_id + 1} [{year}]: "
-                                f"[Task {task_index}/{task_total}] {task_name}"
-                            )
-                            lines.append(worker_line)
-                    else:
-                        # Worker not yet started
-                        worker_line = f"{connector}Worker {worker_id + 1}: Idle"
-                        lines.append(worker_line)
+                # No worker bars during state processing - stage progress is sufficient
 
                 # Blank line between years
                 if year != self.years[-1]:

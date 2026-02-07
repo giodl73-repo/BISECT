@@ -101,12 +101,12 @@ except ImportError:
     STATE_CONFIG_2000 = None
 
 
-def check_prerequisites(state_code, year='2020'):
-    """Check if state has necessary data files."""
-    # Load data files (unified directory structure for all census years)
-    tracts_file = get_tract_file(state_code, year)
-    places_file = get_places_file(state_code, year)
-    graph_file = get_adjacency_file(state_code, year)
+def check_prerequisites(state_code, year='2020', version='v1'):
+    """Check if state has necessary data files for a specific version."""
+    # Load data files (version-specific structure)
+    tracts_file = get_tract_file(state_code, year, version)
+    places_file = get_places_file(state_code, year, version)
+    graph_file = get_adjacency_file(state_code, year, version)
 
     missing = []
     if not tracts_file.exists():
@@ -246,6 +246,8 @@ def create_argument_parser():
                         help='Enable debug mode with progress delays')
     parser.add_argument('-pm', '--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
                         help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
+    parser.add_argument('--processing-mode', type=str, default='batch', choices=['batch', 'streaming'],
+                        help='Processing mode: "batch" (all states per stage, default) or "streaming" (per-state pipeline). Batch mode processes all 50 states through stage N before any state starts stage N+1. Streaming mode lets each state flow through all stages independently.')
     parser.add_argument('--minimum-boundary-length', type=float, default=10.0,
                         help='Minimum shared boundary length (meters) to filter tiny adjacencies. Eliminates unrealistic corner touches. (default: 10, range: 0-100)')
     parser.add_argument('-rt', '--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
@@ -550,10 +552,12 @@ def main():
                 sys.executable,
                 str(census_script),
                 '--year', year,
+                '--version', args.version,
                 '--output-dir', str(year_output_dirs[year]),
                 '--stages', 'tracts', 'merge', 'adjacency', 'elections', 'demographics',
                 '--workers', str(worker_count),
                 '--minimum-boundary-length', str(args.minimum_boundary_length),
+                '--processing-mode', args.processing_mode,
                 '--position', '999'  # Signal deeply nested child - suppress verbose output
             ]
             if args.partition_mode == 'edge-weighted':
@@ -580,7 +584,8 @@ def main():
                 '--output-dir', str(year_output_dirs[year]),
                 '--workers', str(worker_count),
                 '--dpi', str(args.dpi),
-                '--partition-mode', args.partition_mode
+                '--partition-mode', args.partition_mode,
+                '--processing-mode', args.processing_mode
             ]
             if args.reprocess:
                 cmd.append('--reprocess')
@@ -620,6 +625,10 @@ def main():
                 cmd.append('--debug')
             return cmd
 
+        # Track stage completion counts for redistricting
+        # Maps year -> {stage_name: count}
+        stage_completion_counts = {year: {} for year in year_queue}
+
         # Message handlers for each stage
         census_handlers = {
             'CENSUS_STAGE': lambda data: coordinator.update_census_stage(
@@ -643,6 +652,15 @@ def main():
             )
         }
 
+        def handle_stage_complete(data):
+            """Handle STAGE_COMPLETE message - increment count and update coordinator."""
+            year = data['year']
+            stage_name = data['stage_name']
+            if year in stage_completion_counts:
+                current_count = stage_completion_counts[year].get(stage_name, 0)
+                stage_completion_counts[year][stage_name] = current_count + 1
+                coordinator.update_stage_completion(year, stage_name, current_count + 1)
+
         state_handlers = {
             'YEAR': lambda data: coordinator.update_year_progress(
                 data['year'],
@@ -665,6 +683,7 @@ def main():
                 data['task_total'],
                 data['task_name']
             ),
+            'STAGE_COMPLETE': handle_stage_complete,
             # State stage may also emit census messages if census runs inline
             **census_handlers
         }
@@ -682,7 +701,8 @@ def main():
             coordinator=coordinator,
             display_lock=display_lock,
             years=year_queue,
-            output_dirs=year_output_dirs
+            output_dirs=year_output_dirs,
+            processing_mode=args.processing_mode
         )
 
         # Register stages

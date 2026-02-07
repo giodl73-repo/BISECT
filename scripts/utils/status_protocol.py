@@ -20,6 +20,12 @@ STATUS Message Formats:
 4. WORKER: STATUS:WORKER:{year}:{worker_id}:STATE:{num}/{total}:{state}:STAGE:{stage}/{total}:{desc}
    Example: STATUS:WORKER:2020:1:STATE:12/50:california:STAGE:3/7:political_visualization
 
+5. STAGE_COMPLETE: STATUS:STAGE_COMPLETE:{year}:{stage_name}
+   Example: STATUS:STAGE_COMPLETE:2020:redistricting
+
+6. REDISTRICTING_STAGE (batch mode): STATUS:REDISTRICTING:{year}:STAGE:{stage_name}:{completed}/{total}
+   Example: STATUS:REDISTRICTING:2020:STAGE:metis:25/50
+
 Environment Variables:
 ---------------------
 TQDM_POSITION: Controls reporting mode
@@ -244,6 +250,50 @@ class StatusReporter:
         else:
             print(f"Worker {worker_id}: Task {task_index}/{task_total} - {task_name}", flush=True)
 
+    def report_stage_complete(self, year: str, stage_name: str, state_code: str = None):
+        """
+        Report completion of a stage for one state.
+
+        This message is aggregated by the orchestrator to track how many states
+        have completed each stage across all workers.
+
+        Args:
+            year: Census year
+            stage_name: Stage name (e.g., 'redistricting', 'summary', 'cities')
+            state_code: State code (e.g., 'CA', 'TX') - optional for backward compatibility
+
+        Example:
+            reporter.report_stage_complete("2020", "redistricting", "CA")
+            # Emits: STATUS:STAGE_COMPLETE:2020:redistricting:CA
+        """
+        if self.send_status:
+            if state_code:
+                print(f"STATUS:STAGE_COMPLETE:{year}:{stage_name}:{state_code}", flush=True)
+            else:
+                print(f"STATUS:STAGE_COMPLETE:{year}:{stage_name}", flush=True)
+
+    def report_redistricting_stage(self, year: str, stage_name: str, completed: int, total: int):
+        """
+        Report batch mode redistricting stage completion progress.
+
+        Used in batch processing mode to track how many states have completed
+        each redistricting stage (e.g., all 50 states through METIS before summary).
+
+        Args:
+            year: Census year
+            stage_name: Stage name (e.g., 'metis', 'summary', 'cities')
+            completed: Number of states completed
+            total: Total number of states
+
+        Example:
+            reporter.report_redistricting_stage("2020", "metis", 25, 50)
+            # Emits: STATUS:REDISTRICTING:2020:STAGE:metis:25/50
+        """
+        if self.send_status:
+            print(f"STATUS:REDISTRICTING:{year}:STAGE:{stage_name}:{completed}/{total}", flush=True)
+        else:
+            print(f"[{year}] {stage_name}: {completed}/{total} states", flush=True)
+
 
 class StatusReader:
     """
@@ -298,13 +348,15 @@ def parse_status_message(line: str) -> Tuple[Optional[str], Optional[Dict[str, A
     """
     Parse STATUS messages from child processes.
 
-    Supports four message types:
+    Supports message types:
     1. STATUS:YEAR:2020:COMPLETE:24/50 (state progress)
     2. STATUS:WORKER:2020:1:STATE:12/50:california:STAGE:3/7:political_visualization
     3. STATUS:YEAR:2020:POSTPROCESS:PHASE:2/3:Visualization (post-processing phase)
     4. STATUS:WORKER:2020:1:TASK:3/6:National_district_map (post-processing worker)
     5. STATUS:CENSUS:{year}:STAGE:{stage_num}/{total}:{stage_name}:{completed}/{total_states}
     6. STATUS:CENSUS:{year}:WORKER:{worker_id}:STATE:{num}/{total}:{state}:STAGE:{stage_num}/{total}:{stage_name}
+    7. STATUS:STAGE_COMPLETE:{year}:{stage_name} (stage completion for one state)
+    8. STATUS:REDISTRICTING:{year}:STAGE:{stage_name}:{completed}/{total} (batch mode stage progress)
 
     Args:
         line: Raw STATUS message line
@@ -318,6 +370,9 @@ def parse_status_message(line: str) -> Tuple[Optional[str], Optional[Dict[str, A
 
         >>> parse_status_message("STATUS:CENSUS:2020:WORKER:0:STATE:5/50:CA:STAGE:1/3:Parsing")
         ('CENSUS_WORKER', {'year': '2020', 'worker_id': 0, 'state_num': 5, ...})
+
+        >>> parse_status_message("STATUS:REDISTRICTING:2020:STAGE:metis:25/50")
+        ('REDISTRICTING_STAGE', {'year': '2020', 'stage_name': 'metis', 'completed': 25, 'total': 50})
     """
     if not line.startswith("STATUS:"):
         return (None, None)
@@ -462,5 +517,42 @@ def parse_status_message(line: str) -> Tuple[Optional[str], Optional[Dict[str, A
                         'task_total': int(task_total),
                         'task_name': task_name
                     })
+
+    elif msg_type == "STAGE_COMPLETE":
+        # STATUS:STAGE_COMPLETE:2020:redistricting:CA
+        if len(parts) >= 5:
+            year = parts[2]
+            stage_name = parts[3]
+            state_code = parts[4]
+            return ('STAGE_COMPLETE', {
+                'year': year,
+                'stage_name': stage_name,
+                'state_code': state_code
+            })
+        elif len(parts) >= 4:
+            # Old format without state_code (backward compatibility)
+            year = parts[2]
+            stage_name = parts[3]
+            return ('STAGE_COMPLETE', {
+                'year': year,
+                'stage_name': stage_name,
+                'state_code': None
+            })
+
+    elif msg_type == "REDISTRICTING":
+        # STATUS:REDISTRICTING:2020:STAGE:metis:25/50
+        if len(parts) >= 6 and parts[3] == "STAGE":
+            year = parts[2]
+            stage_name = parts[4]
+            progress_str = parts[5]  # "25/50"
+
+            if '/' in progress_str:
+                completed, total = progress_str.split('/')
+                return ('REDISTRICTING_STAGE', {
+                    'year': year,
+                    'stage_name': stage_name,
+                    'completed': int(completed),
+                    'total': int(total)
+                })
 
     return (None, None)

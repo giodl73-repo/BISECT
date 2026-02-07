@@ -197,9 +197,9 @@ def main():
     # Check data availability for optional analysis
     # Political analysis requires election data from same time period as census
     # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
-    election_data_file = get_election_data_file(args.election_year)
+    election_data_file = get_election_data_file(args.election_year, args.version)
     election_data_available = (args.year == '2020' and election_data_file.exists())
-    demographic_data_available = get_demographic_data_file(args.year).exists()
+    demographic_data_available = get_demographic_data_file(args.year, args.version).exists()
 
     # Log data availability status (only in standalone mode)
     if not is_multi_year:

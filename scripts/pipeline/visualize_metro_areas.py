@@ -25,6 +25,7 @@ from tqdm import tqdm
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.utils import get_state_config
+from scripts.utils.paths import get_tract_file, get_places_file
 
 # Top 20 MSAs by population (2020 Census)
 # Each metro pinned to its primary state for organization
@@ -59,22 +60,27 @@ TOP_METROS = {
 }
 
 
-def load_single_state_with_districts(state_code, state_dir, year='2020'):
+def load_single_state_with_districts(state_code, state_dir, year='2020', version='v1'):
     """Load a single state with district assignments.
 
     Args:
         state_code: Two-letter state code (e.g., 'CA')
         state_dir: Path to state output directory
         year: Census year
+        version: Version string for path lookup
 
     Returns:
         GeoDataFrame with tracts and district assignments
     """
     state_dir = Path(state_dir)
-    tracts_file = f'data/tracts/{year}/{state_code.lower()}_tracts_{year}.parquet'
+
+    # Build path to tracts file (uses state code, not state name)
+    # Path: outputs/{version}/data/{year}/units/{state_code}_tracts_{year}.parquet
+    project_root = Path(__file__).parent.parent.parent
+    tracts_file = project_root / 'outputs' / version / 'data' / year / 'units' / f'{state_code.lower()}_tracts_{year}.parquet'
     assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
-    if not Path(tracts_file).exists():
+    if not tracts_file.exists():
         raise FileNotFoundError(f"Tracts file not found: {tracts_file}")
 
     tracts = gpd.read_parquet(tracts_file)
@@ -93,7 +99,7 @@ def load_single_state_with_districts(state_code, state_dir, year='2020'):
     return tracts
 
 
-def load_all_states_with_districts(us_dir, year='2020'):
+def load_all_states_with_districts(us_dir, year='2020', version='v1'):
     """Load all states with their district assignments."""
     us_dir = Path(us_dir)
 
@@ -119,10 +125,14 @@ def load_all_states_with_districts(us_dir, year='2020'):
         state_name = config['name']
 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
-        tracts_file = f'data/tracts/{year}/{state_code.lower()}_tracts_{year}.parquet'
+
+        # Build path to tracts file (uses state code, not state name)
+        # Path: outputs/{version}/data/{year}/units/{state_code}_tracts_{year}.parquet
+        project_root = Path(__file__).parent.parent.parent
+        tracts_file = project_root / 'outputs' / version / 'data' / year / 'units' / f'{state_code.lower()}_tracts_{year}.parquet'
         assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
-        if not Path(tracts_file).exists():
+        if not tracts_file.exists():
             continue
 
         tracts = gpd.read_parquet(tracts_file)
@@ -502,11 +512,12 @@ def main():
 
         # Load state tracts and districts
         report_progress(f"{state_name} - Loading tract data")
-        state_tracts = load_single_state_with_districts(args.state, state_dir, year=str(args.year))
+        state_tracts = load_single_state_with_districts(args.state, state_dir, year=str(args.year), version=args.version)
 
         # Load places data for this state
-        places_file = f'data/places/{args.year}/{args.state.lower()}_places_{args.year}.parquet'
-        if Path(places_file).exists():
+        state_name = STATE_CONFIG[args.state]['name']
+        places_file = get_places_file(state_name, str(args.year), args.version)
+        if places_file.exists():
             places_gdf = gpd.read_parquet(places_file)
             places_gdf['state_code'] = args.state
         else:
@@ -584,11 +595,14 @@ def main():
             print(f"Metro Maps Complete for {state_name}")
             print(f"{'='*80}")
             print(f"Total: {total_metros}, Successful: {successful}, Failed: {failed}")
+            if failed > 0:
+                print(f"WARNING: {failed} metro map(s) failed but continuing (non-critical)")
             print(f"Output: {output_map_dir}")
             print(f"{'='*80}\n")
 
         report_progress(f"{state_name} - Metro maps complete ({successful}/{total_metros})")
-        return 0 if failed == 0 else 1
+        # Always return success - metro map failures shouldn't kill the pipeline
+        return 0
 
     #==========================================================================
     # SCOPE: ALL (LEGACY BATCH MODE) - Process all metros
@@ -639,14 +653,15 @@ def main():
 
     # Load all state districts
     report_progress("Loading state districts")
-    us_tracts = load_all_states_with_districts(output_dir, year=str(args.year))
+    us_tracts = load_all_states_with_districts(output_dir, year=str(args.year), version=args.version)
     print(f"Loaded {len(us_tracts)} tracts with district assignments")
 
     # Load places data for city labels
     places_all = []
     for state_code in STATE_CONFIG.keys():
-        places_file = f'data/places/{args.year}/{state_code.lower()}_places_{args.year}.parquet'
-        if Path(places_file).exists():
+        state_name = STATE_CONFIG[state_code]['name']
+        places_file = get_places_file(state_name, str(args.year), args.version)
+        if places_file.exists():
             places = gpd.read_parquet(places_file)
             places['state_code'] = state_code
             places_all.append(places)
@@ -741,10 +756,13 @@ def main():
         print(f"Total Metros: {total_metros}")
         print(f"Successful: {successful}")
         print(f"Failed: {failed}")
+        if failed > 0:
+            print(f"WARNING: {failed} metro map(s) failed but continuing (non-critical)")
         print(f"Output: {output_dir}/states/*/maps/metros/*.png")
         print(f"{'='*80}\n")
 
-    return 0 if failed == 0 else 1
+    # Always return success - metro map failures shouldn't kill the pipeline
+    return 0
 
 
 if __name__ == '__main__':

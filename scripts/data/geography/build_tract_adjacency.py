@@ -86,6 +86,7 @@ def main():
     parser = argparse.ArgumentParser(description='Build tract adjacency graph')
     parser.add_argument('--state', type=str, required=True, help='State code (e.g., CA, IA)')
     parser.add_argument('--year', type=int, default=2020, help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, help='Version identifier (for compatibility with parent scripts, not used directly)')
     parser.add_argument('--water-distance', type=float, default=1.0, help='Water distance threshold in km (default: 1.0)')
     parser.add_argument('--compute-boundary-lengths', action='store_true',
                         help='Compute boundary lengths for edge-weighted partitioning (slower but enables edge-weighted mode)')

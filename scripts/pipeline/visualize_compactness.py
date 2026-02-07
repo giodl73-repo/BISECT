@@ -38,6 +38,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 from scripts.constants import STATE_ABBREV
 from scripts.utils.config import build_state_name_to_districts_map
+from scripts.utils import get_tract_file
 
 
 def create_compactness_map(tracts_gdf, metric_name, metric_col, output_file, dpi=150):
@@ -89,7 +90,7 @@ def create_compactness_map(tracts_gdf, metric_name, metric_col, output_file, dpi
     plt.close()
 
 
-def visualize_state_compactness(state_dir, state_code, census_year, dpi=150):
+def visualize_state_compactness(state_dir, state_code, census_year, version, dpi=150):
     """Create compactness visualizations for a single state."""
     state_dir = Path(state_dir)
 
@@ -133,8 +134,8 @@ def visualize_state_compactness(state_dir, state_code, census_year, dpi=150):
 
     state_code = state_abbrev_map.get(state_name, state_name[:2]).lower()
 
-    # Load tracts (new directory structure)
-    tracts_file = Path(f'outputs/data/{census_year}/units/{state_code}_tracts_{census_year}.parquet')
+    # Load tracts (use version-specific path)
+    tracts_file = get_tract_file(state_code, census_year, version)
 
     if not tracts_file.exists():
         print(f"ERROR: {tracts_file} not found")
@@ -233,9 +234,9 @@ def visualize_national_compactness(output_dir, version, census_year, dpi=150, po
             if not state_dir.exists():
                 continue
 
-            # Load tracts (use state abbreviation for filename)
+            # Load tracts (use version-specific path)
             state_abbrev = STATE_ABBREV[state_name].lower()
-            tracts_file = Path(f'outputs/data/{census_year}/units/{state_abbrev}_tracts_{census_year}.parquet')
+            tracts_file = get_tract_file(state_abbrev, census_year, version)
 
             if not tracts_file.exists():
                 continue
@@ -396,10 +397,10 @@ def main():
     # National scope arguments
     parser.add_argument('--output-dir', type=str,
                        help='Base output directory (required if scope=national)')
-    parser.add_argument('--version', type=str,
-                       help='Version (required if scope=national)')
 
     # Common arguments
+    parser.add_argument('--version', type=str,
+                       help='Version identifier (required for both state and national scope)')
     parser.add_argument('--dpi', type=int, default=150,
                        choices=[72, 100, 150, 200, 300],
                        help='DPI for output maps')
@@ -415,9 +416,9 @@ def main():
 
     # Validate scope-specific requirements
     if args.scope == 'state':
-        if not args.state or not args.state_dir:
-            parser.error("--state and --state-dir required when scope=state")
-        return visualize_state_compactness(args.state_dir, args.state, args.census_year, args.dpi)
+        if not args.state or not args.state_dir or not args.version:
+            parser.error("--state, --state-dir, and --version required when scope=state")
+        return visualize_state_compactness(args.state_dir, args.state, args.census_year, args.version, args.dpi)
 
     elif args.scope == 'national':
         if not args.output_dir or not args.version:

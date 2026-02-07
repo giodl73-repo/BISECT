@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Process census data for a given year.
+Process census data for a given year and version.
 
 This script processes raw census data and generates all required files
 for the redistricting pipeline by calling existing processing scripts
-with the correct new paths (outputs/data/).
+with version-specific paths (outputs/{version}/data/{year}/).
 
 Stages:
   1. Parse PL 94-171 files (raw → CSV with population)
@@ -14,16 +14,16 @@ Stages:
   5. Demographics data (tract-level parquet)
 
 Input:  data/Census {year}/ (raw data)
-Output: outputs/data/ (processed data)
+Output: outputs/{version}/data/{year}/ (processed data)
 
 Called by run_complete_redistricting.py before state processing.
-Creates .downloads_complete marker when finished.
+Creates .census_complete marker when finished.
 
 Usage:
-  python scripts/data/process_census_data.py --year 2020
-  python scripts/data/process_census_data.py --year 2020 --stages tracts adjacency
-  python scripts/data/process_census_data.py --year 2020 --states CA TX NY
-  python scripts/data/process_census_data.py --year 2020 --dry-run
+  python scripts/data/process_census_data.py --year 2020 --version v1
+  python scripts/data/process_census_data.py --year 2020 --version v1 --stages tracts adjacency
+  python scripts/data/process_census_data.py --year 2020 --version test --states CA TX NY
+  python scripts/data/process_census_data.py --year 2020 --version v1 --dry-run
 """
 
 import argparse
@@ -38,6 +38,7 @@ import os
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from scripts.utils.paths import (
+    get_census_data_dir,
     get_tract_file,
     get_adjacency_file,
     get_places_file,
@@ -236,25 +237,26 @@ def run_command(cmd: List[str], description: str, error_log_file: Path,
         return False
 
 
-def create_directory_structure(year: int, is_standalone: bool = None):
-    """Create outputs/data/{year}/ directory structure."""
+def create_directory_structure(version: str, year: int, is_standalone: bool = None):
+    """Create outputs/{version}/data/{year}/ directory structure."""
     _reporter.report(f"[1/6] Creating directory structure")
 
+    census_data_dir = get_census_data_dir(version, str(year))
     dirs = [
-        f'outputs/data/{year}/units',
-        f'outputs/data/{year}/adjacency',
-        f'outputs/data/{year}/places',
-        f'outputs/data/{year}/elections',
-        f'outputs/data/{year}/demographics',
+        census_data_dir / 'units',
+        census_data_dir / 'adjacency',
+        census_data_dir / 'places',
+        census_data_dir / 'elections',
+        census_data_dir / 'demographics',
     ]
 
     for dir_path in dirs:
-        Path(dir_path).mkdir(parents=True, exist_ok=True)
+        dir_path.mkdir(parents=True, exist_ok=True)
 
     _reporter.report(f"[OK] Directory structure created")
 
 
-def process_census_tracts(year: int, error_log_file: Path, states: Optional[List[str]] = None,
+def process_census_tracts(version: str, year: int, error_log_file: Path, states: Optional[List[str]] = None,
                           workers: int = 1, force: bool = False, dry_run: bool = False,
                           is_standalone: bool = None):
     """
@@ -265,6 +267,7 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
     For 2020: Parse PL 94-171 pipe-delimited files
 
     Args:
+        version: Version identifier (e.g., v1, test)
         year: Census year (2000, 2010, 2020)
         error_log_file: Path to error log
         states: List of state codes to process (None = all)
@@ -306,7 +309,7 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
         log_error(error_log_file, "process_census_tracts", error_msg)
         return False
 
-    output_dir = Path(f'outputs/data/{year}/units')
+    output_dir = get_census_data_dir(version, str(year)) / 'units'
 
     # Check which states need processing
     states_to_process = []
@@ -450,13 +453,14 @@ def process_census_tracts(year: int, error_log_file: Path, states: Optional[List
     return True
 
 
-def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Optional[List[str]] = None,
+def merge_tracts_with_geometries(version: str, year: int, error_log_file: Path, states: Optional[List[str]] = None,
                                    workers: int = 1, force: bool = False, dry_run: bool = False,
                                    is_standalone: bool = None):
     """
     Merge population CSVs with TIGER/Line geometries to create GeoParquet files.
 
     Args:
+        version: Version identifier (e.g., v1, test)
         year: Census year (2000, 2010, 2020)
         error_log_file: Path to error log
         states: List of state codes to process (None = all)
@@ -484,10 +488,11 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
         log_error(error_log_file, "merge_tracts_with_geometries", error_msg)
         return False
 
-    # Set directories based on year
-    csv_dir = Path(f'outputs/data/{year}/units')
+    # Set directories based on year and version
+    census_data_dir = get_census_data_dir(version, str(year))
+    csv_dir = census_data_dir / 'units'
     tiger_dir = Path(f'data/{year}/tiger/tracts')
-    output_dir = Path(f'outputs/data/{year}/units')
+    output_dir = census_data_dir / 'units'
 
     # Check TIGER/Line directory exists
     if not tiger_dir.exists():
@@ -643,7 +648,7 @@ def merge_tracts_with_geometries(year: int, error_log_file: Path, states: Option
     return True
 
 
-def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[List[str]] = None,
+def build_adjacency_graphs(version: str, year: int, error_log_file: Path, states: Optional[List[str]] = None,
                            workers: int = 12, compute_boundary_lengths: bool = True, water_distance: float = 1.0,
                            minimum_boundary_length: float = 10.0, force: bool = False,
                            dry_run: bool = False, is_standalone: bool = None):
@@ -651,6 +656,7 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
     Build adjacency graphs for all states.
 
     Args:
+        version: Version identifier (e.g., v1, test)
         year: Census year
         error_log_file: Path to error log
         states: List of state codes (None = all states)
@@ -686,11 +692,13 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
         return False
 
     # Call build_all_adjacency_graphs.py with correct paths
+    census_data_dir = get_census_data_dir(version, str(year))
     cmd = [
         sys.executable, script,
         '--year', str(year),
-        '--input-dir', f'outputs/data/{year}/units',
-        '--output-dir', f'outputs/data/{year}/adjacency',
+        '--version', version,
+        '--input-dir', str(census_data_dir / 'units'),
+        '--output-dir', str(census_data_dir / 'adjacency'),
         '--workers', str(workers),
         '--water-distance', str(water_distance),
         '--minimum-boundary-length', str(minimum_boundary_length)
@@ -706,9 +714,9 @@ def build_adjacency_graphs(year: int, error_log_file: Path, states: Optional[Lis
     return success
 
 
-def process_election_data(year: int, error_log_file: Path, election_year: Optional[int] = None,
+def process_election_data(version: str, year: int, error_log_file: Path, election_year: Optional[int] = None,
                           force: bool = False, dry_run: bool = False, is_standalone: bool = None):
-    """Process election data to tract-level parquet."""
+    """Process election data to tract-level parquet for a specific version."""
     _reporter.report(f"[5/6] Processing election data")
 
     if election_year is None:
@@ -732,12 +740,13 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
         log_error(error_log_file, "process_election_data", error_msg)
         return False
 
-    output_dir = Path(f'outputs/data/{year}/elections')
+    output_dir = get_census_data_dir(version, str(year)) / 'elections'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = [
         sys.executable, script,
         '--year', str(election_year),
+        '--version', version,
         '--input-file', str(raw_csv),
         '--output-dir', str(output_dir)
     ]
@@ -746,9 +755,9 @@ def process_election_data(year: int, error_log_file: Path, election_year: Option
     return success
 
 
-def process_demographic_data(year: int, error_log_file: Path, force: bool = False,
+def process_demographic_data(version: str, year: int, error_log_file: Path, force: bool = False,
                               dry_run: bool = False, is_standalone: bool = None):
-    """Process demographic data to tract-level parquet."""
+    """Process demographic data to tract-level parquet for a specific version."""
     _reporter.report(f"[6/6] Processing demographic data")
 
     # Check if raw demographic data exists
@@ -765,12 +774,13 @@ def process_demographic_data(year: int, error_log_file: Path, force: bool = Fals
         log_error(error_log_file, "process_demographic_data", error_msg)
         return False
 
-    output_dir = Path(f'outputs/data/{year}/demographics')
+    output_dir = get_census_data_dir(version, str(year)) / 'demographics'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     cmd = [
         sys.executable, script,
         '--year', str(year),
+        '--version', version,
         '--input-dir', str(raw_data_dir),
         '--output-dir', str(output_dir)
     ]
@@ -779,8 +789,8 @@ def process_demographic_data(year: int, error_log_file: Path, force: bool = Fals
     return success
 
 
-def validate_outputs(year: int, states: Optional[List[str]] = None, is_standalone: bool = True):
-    """Validate all required outputs exist."""
+def validate_outputs(version: str, year: int, states: Optional[List[str]] = None, is_standalone: bool = True):
+    """Validate all required outputs exist for a specific version."""
     if is_standalone:
         print(f"\n[7/7] Validating outputs...")
 
@@ -792,14 +802,14 @@ def validate_outputs(year: int, states: Optional[List[str]] = None, is_standalon
 
     # Check tract files
     for state in states:
-        tract_file = get_tract_file(state, str(year))
+        tract_file = get_tract_file(state, str(year), version)
         required_files.append(tract_file)
         if not tract_file.exists():
             missing_files.append(tract_file)
 
     # Check adjacency files
     for state in states:
-        adj_file = get_adjacency_file(state, str(year))
+        adj_file = get_adjacency_file(state, str(year), version)
         required_files.append(adj_file)
         if not adj_file.exists():
             missing_files.append(adj_file)
@@ -847,11 +857,13 @@ Examples:
 
     parser.add_argument('--year', type=int, required=True, choices=[2000, 2010, 2020],
                        help='Census year')
+    parser.add_argument('--version', type=str, required=True,
+                       help='Version identifier (e.g., v1, test, edge_weighted)')
     parser.add_argument('--resolution', type=str, nargs='+', default=['tract'],
                        choices=['tract', 'block'],
                        help='Resolution levels to build (default: tract)')
     parser.add_argument('--output-dir', type=str,
-                       help='Output directory for results and error log (default: outputs/v1/{year} or outputs/dev/)')
+                       help='Output directory for marker files (default: outputs/{version}/data/{year})')
     parser.add_argument('--states', type=str, nargs='*',
                        help='Process only specific states (e.g., CA TX NY)')
     parser.add_argument('--stages', type=str, nargs='*',
@@ -873,6 +885,9 @@ Examples:
                        help='Show what would be done without executing')
     parser.add_argument('--position', type=int, default=-1,
                        help='Progress bar position (>=0 for child process, -1 for standalone)')
+    parser.add_argument('--processing-mode', type=str, default='batch',
+                       choices=['batch', 'streaming'],
+                       help='Processing mode: "batch" (all states per stage, default) or "streaming" (per-state pipeline)')
 
     args = parser.parse_args()
 
@@ -889,8 +904,8 @@ Examples:
     if args.output_dir:
         output_dir = Path(args.output_dir)
     else:
-        # Default to outputs/dev/ for testing
-        output_dir = Path(f'outputs/dev/census_data_{args.year}')
+        # Default to version-specific census data directory
+        output_dir = get_census_data_dir(args.version, str(args.year))
 
     output_dir.mkdir(parents=True, exist_ok=True)
     error_log_file = output_dir / 'error.log'
@@ -946,6 +961,7 @@ Examples:
         print("=" * 70)
         print("PROCESS CENSUS DATA")
         print("=" * 70)
+        print(f"Version: {args.version}")
         print(f"Census year: {args.year}")
         print(f"Resolution: {', '.join(args.resolution)}")
         print(f"States: {len(states) if states else len(ALL_STATES)} ({', '.join(states[:5]) if states else 'all'}{'...' if states and len(states) > 5 else ''})")
@@ -962,7 +978,7 @@ Examples:
     start_time = time.time()
 
     # Phase 1: Create directory structure
-    create_directory_structure(args.year, is_standalone)
+    create_directory_structure(args.version, args.year, is_standalone)
 
     # Phase 2-5: Run processing stages for each resolution level
     results = {}
@@ -973,9 +989,23 @@ Examples:
         # TODO: Update processing functions to accept resolution parameter
         # For now, tract is the only implemented resolution
 
+    # Choose processing mode
+    if args.processing_mode == 'streaming':
+        # Streaming mode: Per-state pipeline (each state flows through all stages)
+        # NOTE: Current implementation wraps batch mode since census operations
+        # are optimized for batch processing (e.g., geometry loading, graph building)
+        # TODO: Implement true streaming mode with per-state workers
+        if is_standalone:
+            print("\n[INFO] Streaming mode for census data wraps batch mode")
+            print("[INFO] Census operations are optimized for batch processing\n")
+
+        # For now, run batch mode underneath
+        # Future: Spawn parallel per-state workers that run all census stages
+
+    # Run batch mode processing (for both batch and streaming, for now)
     if 'tracts' in stages:
         results['tracts'] = process_census_tracts(
-            args.year, error_log_file, states,
+            args.version, args.year, error_log_file, states,
             args.workers, args.force, args.dry_run, is_standalone
         )
         if results['tracts']:
@@ -983,7 +1013,7 @@ Examples:
 
     if 'merge' in stages:
         results['merge'] = merge_tracts_with_geometries(
-            args.year, error_log_file, states,
+            args.version, args.year, error_log_file, states,
             args.workers, args.force, args.dry_run, is_standalone
         )
         if results['merge']:
@@ -991,7 +1021,7 @@ Examples:
 
     if 'adjacency' in stages:
         results['adjacency'] = build_adjacency_graphs(
-            args.year, error_log_file, states,
+            args.version, args.year, error_log_file, states,
             args.workers, args.compute_boundary_lengths, args.water_distance, args.minimum_boundary_length,
             args.force, args.dry_run, is_standalone
         )
@@ -999,12 +1029,12 @@ Examples:
             create_stage_marker(output_dir, 'adjacency', resolution, args.dry_run)
 
     if 'elections' in stages:
-        results['elections'] = process_election_data(args.year, error_log_file, args.election_year, args.force, args.dry_run, is_standalone)
+        results['elections'] = process_election_data(args.version, args.year, error_log_file, args.election_year, args.force, args.dry_run, is_standalone)
         if results['elections']:
             create_stage_marker(output_dir, 'elections', resolution, args.dry_run)
 
     if 'demographics' in stages:
-        results['demographics'] = process_demographic_data(args.year, error_log_file, args.force, args.dry_run, is_standalone)
+        results['demographics'] = process_demographic_data(args.version, args.year, error_log_file, args.force, args.dry_run, is_standalone)
         if results['demographics']:
             create_stage_marker(output_dir, 'demographics', resolution, args.dry_run)
 

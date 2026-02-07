@@ -4,17 +4,21 @@ Pipeline Manager Web Application - Flask Backend
 A minimal web application to manage pipeline runs, view progress, and manage versions.
 """
 
-print("[DEBUG] Loading app.py module - version 2026-01-19-09:20", flush=True)
-
 from flask import Flask, jsonify, request, send_from_directory
 from pathlib import Path
 import argparse
 import sys
+import os
 import webbrowser
 import threading
 import time
 import signal
 import logging
+
+# Verbosity control (set via environment variable DEBUG_PIPELINE_MANAGER)
+DEBUG = os.environ.get('DEBUG_PIPELINE_MANAGER', '0') == '1'
+
+if DEBUG: print("[DEBUG] Loading app.py module - version 2026-01-19-21:30", flush=True)
 
 # Import our manager modules
 from run_manager import RunManager
@@ -35,6 +39,17 @@ run_manager = RunManager(PROGRESS_FILE)
 def index():
     """Serve the main web interface"""
     response = send_from_directory('static', 'index.html')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
+
+@app.route('/dashboard')
+def dashboard():
+    """Serve the master dashboard"""
+    web_dir = project_root / 'web'
+    response = send_from_directory(web_dir, 'master_dashboard.html')
     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '0'
@@ -99,14 +114,14 @@ def start_run():
         JSON response with run_id or error
     """
     try:
-        print(f"[DEBUG] /api/runs/start called", flush=True)
-        print(f"[DEBUG] request.method: {request.method}", flush=True)
-        print(f"[DEBUG] request.content_type: {request.content_type}", flush=True)
-        print(f"[DEBUG] request.data: {request.data}", flush=True)
+        if DEBUG: print(f"[DEBUG] /api/runs/start called", flush=True)
+        if DEBUG: print(f"[DEBUG] request.method: {request.method}", flush=True)
+        if DEBUG: print(f"[DEBUG] request.content_type: {request.content_type}", flush=True)
+        if DEBUG: print(f"[DEBUG] request.data: {request.data}", flush=True)
 
         config = request.json
-        print(f"[DEBUG] parsed config: {config}", flush=True)
-        print(f"[DEBUG] config['years'] type: {type(config.get('years'))}, value: {config.get('years')}", flush=True)
+        if DEBUG: print(f"[DEBUG] parsed config: {config}", flush=True)
+        if DEBUG: print(f"[DEBUG] config['years'] type: {type(config.get('years'))}, value: {config.get('years')}", flush=True)
 
         if not config:
             print(f"[DEBUG] No config provided", flush=True)
@@ -124,12 +139,12 @@ def start_run():
         config.setdefault('dpi', 150)
         config.setdefault('partition_mode', 'edge-weighted')
 
-        print(f"[DEBUG] Final config: {config}", flush=True)
+        if DEBUG: print(f"[DEBUG] Final config: {config}", flush=True)
 
         # Start run
-        print(f"[DEBUG] Calling run_manager.start_run", flush=True)
+        if DEBUG: print(f"[DEBUG] Calling run_manager.start_run", flush=True)
         success, result = run_manager.start_run(config)
-        print(f"[DEBUG] start_run returned: success={success}, result={result}", flush=True)
+        if DEBUG: print(f"[DEBUG] start_run returned: success={success}, result={result}", flush=True)
 
         if success:
             return jsonify({'success': True, 'run_id': result})
@@ -137,9 +152,9 @@ def start_run():
             return jsonify({'success': False, 'error': result}), 400
 
     except Exception as e:
-        print(f"[DEBUG] Exception in start_run: {e}", flush=True)
+        if DEBUG: print(f"[DEBUG] Exception in start_run: {e}", flush=True)
         import traceback
-        print(f"[DEBUG] Traceback: {traceback.format_exc()}", flush=True)
+        if DEBUG: print(f"[DEBUG] Traceback: {traceback.format_exc()}", flush=True)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -163,7 +178,7 @@ def get_active_run():
                     worker_years[year] = []
                 worker_years[year].append(f"{wkey} ({worker.get('state', '?')})")
 
-            print(f"[API] Workers by year: {worker_years}", flush=True)
+            if DEBUG: print(f"[API] Workers by year: {worker_years}", flush=True)
 
         return jsonify({'success': True, 'active_run': active})
     except Exception as e:
@@ -200,10 +215,28 @@ def suggest_version():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/runs/<run_id>/pause', methods=['POST'])
+def pause_run(run_id):
+    """
+    Pause an active run (preserves files for resume).
+
+    Args:
+        run_id: Run ID to pause
+
+    Returns:
+        JSON response with success status
+    """
+    try:
+        success, message = run_manager.pause_run(run_id)
+        return jsonify({'success': success, 'message': message}), 200 if success else 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/runs/<run_id>', methods=['DELETE'])
 def cancel_run(run_id):
     """
-    Cancel an active run.
+    Cancel an active run and delete output files.
 
     Args:
         run_id: Run ID to cancel

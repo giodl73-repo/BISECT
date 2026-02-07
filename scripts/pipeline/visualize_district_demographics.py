@@ -296,7 +296,7 @@ def visualize_state_demographics(state_dir, state_code, census_year, dpi=150, fo
 
     # Now load data (only if we need to generate)
     state_code_lower = state_code.lower()
-    tracts_file = get_tract_file(state_code, str(census_year))
+    tracts_file = get_tract_file(state_code, str(census_year), version='v1')
 
     if not tracts_file.exists():
         print(f"ERROR: Tract geometries not found: {tracts_file}")
@@ -337,6 +337,8 @@ def main():
                        help='Scope: state (single state) or national (all states, default)')
     parser.add_argument('--census-year', type=str, default='2020', choices=['2020', '2010'],
                        help='Census year')
+    parser.add_argument('--version', type=str, default='v1',
+                       help='Version identifier (default: v1)')
 
     # State scope arguments
     parser.add_argument('--state', type=str,

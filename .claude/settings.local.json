@@ -158,7 +158,23 @@
       "Bash(awk:*)",
       "Bash(run_manager.bat)",
       "Bash(dir /O-D /B \"C:\\\\Users\\\\giodl\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--src-apportionment\\\\tasks\")",
-      "Bash(du -sh:*)"
+      "Bash(du -sh:*)",
+      "Bash(do if grep -q \"get_tract_file\\\\|get_adjacency_file\\\\|get_election_data_file\\\\|get_demographic_data_file\" \"$file\")",
+      "Bash(then echo \"$file\")",
+      "Bash(start C:srcapportionmenttoolspipeline_managercolor_preview.html)",
+      "Skill(complete-wave)",
+      "Skill(start-wave)",
+      "Skill(complete-enhancement)",
+      "Bash(git clean:*)",
+      "Bash(poetry install:*)",
+      "Bash(poetry run pytest:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(pm2 list:*)",
+      "Bash(npx pm2 list)",
+      "Bash(npx pm2:*)",
+      "Bash(wmic process where \"name=''python.exe'' or name=''python3.13.exe''\" get processid,commandline)",
+      "Bash(git check-ignore:*)"
     ]
   }
 }

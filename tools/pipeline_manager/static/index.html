@@ -286,50 +286,69 @@
             fill: #e0e0e0;
         }
 
-        /* Census stages (1-3) - distinct purple/pink progression */
+        /* 14 DISTINCT STAGES: Progressive intensity color scheme - Light to Dark */
+
+        /* Census stages (1-3) - Light to medium pinks */
         .us-map .state-census-stage-1 {
-            fill: #e8daef; /* Light purple - Parsing */
+            fill: #FCE4EC; /* Very light pink - Parsing PL-94171 (Lightest) */
         }
 
         .us-map .state-census-stage-2 {
-            fill: #bb8fce; /* Medium purple - Merging */
+            fill: #F8BBD0; /* Pale pink - Merging geometries */
         }
 
         .us-map .state-census-stage-3 {
-            fill: #8e44ad; /* Dark purple - Adjacency */
+            fill: #F48FB1; /* Medium pink - Building adjacency */
         }
 
-        /* Redistricting stages (1-7) */
+        /* Redistricting stages (1-11) - Orange to purple to blue (building complexity & darkening) */
         .us-map .state-stage-1 {
-            fill: #5dade2; /* Light blue - Redistricting */
+            fill: #FFCC80; /* Light orange - METIS bisection */
         }
 
         .us-map .state-stage-2 {
-            fill: #48c9b0; /* Teal - Summary */
+            fill: #FFB74D; /* Medium-light orange - Summary */
         }
 
         .us-map .state-stage-3 {
-            fill: #f4d03f; /* Yellow - Political */
+            fill: #FF9800; /* Vivid orange - Cities */
         }
 
         .us-map .state-stage-4 {
-            fill: #f39c12; /* Orange - Round maps */
+            fill: #F06292; /* Warm magenta-pink - Round maps */
         }
 
         .us-map .state-stage-5 {
-            fill: #e67e22; /* Dark orange - Demographics */
+            fill: #EC407A; /* Strong magenta - District maps */
         }
 
         .us-map .state-stage-6 {
-            fill: #d35400; /* Orange-red - Compactness */
+            fill: #AB47BC; /* Light purple - Metro areas */
         }
 
         .us-map .state-stage-7 {
-            fill: #e74c3c; /* Red - Metro areas */
+            fill: #8E24AA; /* Medium purple - Compactness */
+        }
+
+        .us-map .state-stage-8 {
+            fill: #5E35B1; /* Deep blue-purple - Demographics analysis */
+        }
+
+        /* Analytics stages (9-11) - Teal to deep green (darkest, final insights) */
+        .us-map .state-stage-9 {
+            fill: #26A69A; /* Medium teal-green - Demographics maps */
+        }
+
+        .us-map .state-stage-10 {
+            fill: #00897B; /* Dark teal-green - Political analysis */
+        }
+
+        .us-map .state-stage-11 {
+            fill: #004D40; /* Very dark forest green - Political maps (Darkest) */
         }
 
         .us-map .state-complete {
-            fill: #27ae60; /* Green - Complete */
+            fill: #1B5E20; /* Darkest forest green - Complete */
         }
 
         .us-map .state-failed {
@@ -337,7 +356,7 @@
         }
 
         .map-legend {
-            flex: 0 0 240px;
+            flex: 0 0 400px;
             font-size: 0.75rem;
             padding: 0.5rem;
             background: white;
@@ -360,18 +379,24 @@
             margin-bottom: 0.4rem;
             padding-bottom: 0.2rem;
             border-bottom: 1px solid #e0e0e0;
+            grid-column: 1 / -1;
+        }
+
+        .map-legend-items-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
         }
 
         .map-legend-item {
             display: flex;
             align-items: center;
             gap: 0.4rem;
-            margin-bottom: 0.25rem;
         }
 
         .map-legend-color {
-            width: 14px;
-            height: 14px;
+            width: 20px;
+            height: 20px;
             border-radius: 2px;
             border: 1px solid #ccc;
             flex-shrink: 0;
@@ -500,6 +525,14 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .history-card:hover {
+            background: #e9ecef;
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.15);
         }
 
         .history-header {
@@ -533,6 +566,11 @@
         .run-status.cancelled {
             background: #fff3cd;
             color: #856404;
+        }
+
+        .run-status.paused {
+            background: #d1ecf1;
+            color: #0c5460;
         }
 
         .history-meta {
@@ -937,7 +975,7 @@
                         <title>${state}</title>
                         </rect>
                         <text x="${x + tileSize/2}" y="${y + tileSize/2 + 4}"
-                        font-size="10" text-anchor="middle" fill="#333" pointer-events="none">${state}</text>`;
+                        font-size="10" font-weight="600" text-anchor="middle" fill="#fff" stroke="#000" stroke-width="0.5" pointer-events="none">${state}</text>`;
             });
 
             return svg;
@@ -969,6 +1007,11 @@
             }
             console.log(`[MAP] Found SVG element for year ${year}`);
 
+            // Determine processing mode
+            const processingMode = run.processing_mode || 'batch';
+            const isBatchMode = processingMode === 'batch';
+            console.log(`[MAP] Processing mode: ${processingMode}`);
+
             // Build authoritative state -> stage mapping from server data
             const stateStages = {};  // { 'CA': { stage: 3, isCensus: true }, ... }
 
@@ -995,8 +1038,20 @@
                                     else if (stage.name.toLowerCase().includes('adjacency')) stageNum = 3;
                                     else stageNum = 3; // Default to final census stage
                                 } else if (!stageNum) {
-                                    // Redistricting - default to final stage
-                                    stageNum = 7;
+                                    // Infer redistricting stage from name
+                                    const stageName = stage.name.toLowerCase();
+                                    if (stageName.includes('bisection') || stageName.includes('metis') || stageName.includes('redistricting')) stageNum = 1;
+                                    else if (stageName.includes('summary')) stageNum = 2;
+                                    else if (stageName.includes('cities') || stageName.includes('city')) stageNum = 3;
+                                    else if (stageName.includes('round') && stageName.includes('map')) stageNum = 4;
+                                    else if (stageName.includes('district') && stageName.includes('map')) stageNum = 5;
+                                    else if (stageName.includes('metro')) stageNum = 6;
+                                    else if (stageName.includes('compactness')) stageNum = 7;
+                                    else if (stageName.includes('demographics') && stageName.includes('analysis')) stageNum = 8;
+                                    else if (stageName.includes('demographics') && (stageName.includes('map') || stageName.includes('viz'))) stageNum = 9;
+                                    else if (stageName.includes('political') && stageName.includes('analysis')) stageNum = 10;
+                                    else if (stageName.includes('political') && (stageName.includes('map') || stageName.includes('viz'))) stageNum = 11;
+                                    else stageNum = 1; // Default to first redistricting stage
                                 }
 
                                 stateStages[stateCode] = {
@@ -1033,8 +1088,20 @@
                             else if (stage.name.toLowerCase().includes('adjacency')) stageNum = 3;
                             else stageNum = 3; // Default to final census stage
                         } else if (!stageNum) {
-                            // Redistricting - default to final stage
-                            stageNum = 7;
+                            // Infer redistricting stage from name
+                            const stageName = stage.name.toLowerCase();
+                            if (stageName.includes('bisection') || stageName.includes('metis') || stageName.includes('redistricting')) stageNum = 1;
+                            else if (stageName.includes('summary')) stageNum = 2;
+                            else if (stageName.includes('cities') || stageName.includes('city')) stageNum = 3;
+                            else if (stageName.includes('round') && stageName.includes('map')) stageNum = 4;
+                            else if (stageName.includes('district') && stageName.includes('map')) stageNum = 5;
+                            else if (stageName.includes('metro')) stageNum = 6;
+                            else if (stageName.includes('compactness')) stageNum = 7;
+                            else if (stageName.includes('demographics') && stageName.includes('analysis')) stageNum = 8;
+                            else if (stageName.includes('demographics') && (stageName.includes('map') || stageName.includes('viz'))) stageNum = 9;
+                            else if (stageName.includes('political') && stageName.includes('analysis')) stageNum = 10;
+                            else if (stageName.includes('political') && (stageName.includes('map') || stageName.includes('viz'))) stageNum = 11;
+                            else stageNum = 1; // Default to first redistricting stage
                         }
 
                         stateStages[stateCode] = {
@@ -1062,7 +1129,13 @@
                 return;
             }
 
+            // NOTE: Batch mode removed - we now color states individually as they complete
+            // This provides better visual feedback and matches census stage behavior
+            console.log(`[MAP] Processing individual state completions (no batch mode coloring)`);
+
             // Apply colors from server-tracked states
+            let colored = 0, missing = 0;
+            const missingStates = [];
             Object.entries(stateStages).forEach(([stateCode, stageInfo]) => {
                 const el = document.getElementById(`map-state-${year}-${stateCode}`);
                 if (el) {
@@ -1070,11 +1143,15 @@
                         ? `state-census-stage-${stageInfo.stage}`
                         : `state-stage-${stageInfo.stage}`;
                     el.setAttribute('class', `state ${stageClass}`);
+                    colored++;
                     console.log(`[MAP] Set ${year}/${stateCode} to ${stageClass} (from server data)`);
                 } else {
+                    missing++;
+                    missingStates.push(stateCode);
                     console.log(`[MAP] WARNING: Element not found: map-state-${year}-${stateCode}`);
                 }
             });
+            console.log(`[MAP] Summary: Colored ${colored} states, ${missing} missing${missing > 0 ? ': ' + missingStates.join(', ') : ''}`);
 
             // Overlay currently active worker colors (may override server-tracked states)
             const allWorkers = Object.values(run.workers);
@@ -1210,6 +1287,23 @@
                             <span class="text-muted">${data.completed}/${data.total} states (${percent}%)</span>
                         </div>
 
+                    `;
+
+                // Show census progress for this year if available
+                if (run.census_progress[year]) {
+                    const censusData = run.census_progress[year];
+                    const censusPercent = censusData.total > 0 ? (censusData.completed / censusData.total * 100).toFixed(1) : 0;
+                    html += `
+                        <div style="margin-top: 0.5rem; padding-left: 1rem;">
+                            <small class="text-muted">Census: ${censusData.stage} - ${censusData.completed}/${censusData.total}</small>
+                            <div class="progress-bar-container" style="height: 1rem; margin-top: 0.25rem;">
+                                <div class="progress-bar" style="width: ${censusPercent}%; font-size: 0.75rem;">${censusPercent}%</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                html += `
                         <!-- US Map -->
                         <div class="us-map-container">
                             <div class="us-map-wrapper">
@@ -1219,60 +1313,87 @@
                             </div>
                             <div class="map-legend">
                                 <div class="map-legend-section">
-                                    <div class="map-legend-title">Census Data</div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #e8daef;"></div>
-                                        <span class="map-legend-label">1. Parsing PL-94171</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #bb8fce;"></div>
-                                        <span class="map-legend-label">2. Merging geometries</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #8e44ad;"></div>
-                                        <span class="map-legend-label">3. Building adjacency</span>
+                                    <div class="map-legend-title">Census (1-3)</div>
+                                    <div class="map-legend-items-grid">
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #FCE4EC;"></div>
+                                            <span class="map-legend-label">1. Parsing PL-94171</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #F8BBD0;"></div>
+                                            <span class="map-legend-label">2. Merging geometries</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #F48FB1;"></div>
+                                            <span class="map-legend-label">3. Building adjacency</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="map-legend-section">
-                                    <div class="map-legend-title">Redistricting</div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #5dade2;"></div>
-                                        <span class="map-legend-label">1. METIS bisection</span>
+                                    <div class="map-legend-title">Redistricting (4-9)</div>
+                                    <div class="map-legend-items-grid">
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #FFCC80;"></div>
+                                            <span class="map-legend-label">4. METIS bisection</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #FFB74D;"></div>
+                                            <span class="map-legend-label">5. Summary</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #FF9800;"></div>
+                                            <span class="map-legend-label">6. Cities</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #F06292;"></div>
+                                            <span class="map-legend-label">7. Round maps</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #EC407A;"></div>
+                                            <span class="map-legend-label">8. District maps</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #AB47BC;"></div>
+                                            <span class="map-legend-label">9. Metro areas</span>
+                                        </div>
                                     </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #48c9b0;"></div>
-                                        <span class="map-legend-label">2. District summary</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #f4d03f;"></div>
-                                        <span class="map-legend-label">3. Political analysis</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #f39c12;"></div>
-                                        <span class="map-legend-label">4. Round progression</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #e67e22;"></div>
-                                        <span class="map-legend-label">5. Demographics viz</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #d35400;"></div>
-                                        <span class="map-legend-label">6. Compactness viz</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #e74c3c;"></div>
-                                        <span class="map-legend-label">7. Metro area maps</span>
+                                </div>
+                                <div class="map-legend-section">
+                                    <div class="map-legend-title">Analytics (10-14)</div>
+                                    <div class="map-legend-items-grid">
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #8E24AA;"></div>
+                                            <span class="map-legend-label">10. Compactness</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #5E35B1;"></div>
+                                            <span class="map-legend-label">11. Demographics analysis</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #26A69A;"></div>
+                                            <span class="map-legend-label">12. Demographics maps</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #00897B;"></div>
+                                            <span class="map-legend-label">13. Political analysis</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #004D40;"></div>
+                                            <span class="map-legend-label">14. Political maps</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="map-legend-section">
                                     <div class="map-legend-title">Status</div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #e0e0e0;"></div>
-                                        <span class="map-legend-label">Pending</span>
-                                    </div>
-                                    <div class="map-legend-item">
-                                        <div class="map-legend-color" style="background: #27ae60;"></div>
-                                        <span class="map-legend-label">Complete</span>
+                                    <div class="map-legend-items-grid">
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #e0e0e0;"></div>
+                                            <span class="map-legend-label">Pending</span>
+                                        </div>
+                                        <div class="map-legend-item">
+                                            <div class="map-legend-color" style="background: #1B5E20;"></div>
+                                            <span class="map-legend-label">Complete</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1286,64 +1407,53 @@
                         <small class="text-muted">Status: ${data.status}</small>
                     `;
 
-                // Show census progress for this year if available
-                if (run.census_progress[year]) {
-                    const censusData = run.census_progress[year];
-                    const censusPercent = censusData.total > 0 ? (censusData.completed / censusData.total * 100).toFixed(1) : 0;
-                    html += `
-                        <div style="margin-top: 0.5rem; padding-left: 1rem;">
-                            <small class="text-muted">Census: ${censusData.stage} - ${censusData.completed}/${censusData.total}</small>
-                            <div class="progress-bar-container" style="height: 1rem; margin-top: 0.25rem;">
-                                <div class="progress-bar" style="width: ${censusPercent}%; font-size: 0.75rem;">${censusPercent}%</div>
-                            </div>
-                    `;
+                // Show state processing stage progress bars (instead of worker cards)
+                const yearData = run.years[year];
+                if (yearData && yearData.stage_progress && Object.keys(yearData.stage_progress).length > 0) {
+                    html += '<div style="margin-top: 1rem; padding-left: 1rem;">';
+                    html += '<small class="text-muted" style="font-weight: 500;">Stage Progress:</small>';
 
-                    // Show census workers for this year (unique by worker_id)
-                    if (censusWorkersByYear[year] && censusWorkersByYear[year].length > 0) {
-                        html += '<div class="worker-grid" style="margin-top: 0.5rem;">';
+                    // Define all stages in order
+                    const stages = [
+                        {key: 'redistricting', label: 'Redistricting'},
+                        {key: 'summary', label: 'Summary'},
+                        {key: 'cities', label: 'Cities'},
+                        {key: 'round_maps', label: 'Round Maps'},
+                        {key: 'district_maps', label: 'District Maps'},
+                        {key: 'metro_area_maps', label: 'Metro Areas'},
+                        {key: 'compactness', label: 'Compactness'},
+                        {key: 'demographics_analysis', label: 'Demographics Analysis'},
+                        {key: 'demographics_visualization', label: 'Demographics Viz'},
+                        {key: 'political_analysis', label: 'Political Analysis'},
+                        {key: 'political_visualization', label: 'Political Viz'}
+                    ];
 
-                        // Get unique workers by worker_id (latest update wins)
-                        const uniqueCensusWorkers = {};
-                        censusWorkersByYear[year].forEach(worker => {
-                            uniqueCensusWorkers[worker.worker_id] = worker;
-                        });
+                    // Determine processing mode (default to batch if not specified)
+                    const processingMode = run.processing_mode || 'batch';
+                    const isBatchMode = processingMode === 'batch';
 
-                        Object.values(uniqueCensusWorkers).forEach(worker => {
+                    // Show stage progress bars based on mode
+                    stages.forEach(stage => {
+                        const count = yearData.stage_progress[stage.key] || 0;
+
+                        // In batch mode: only show stages that are in progress (0 < count < 50)
+                        // In streaming mode: show all stages with count > 0
+                        const shouldShow = isBatchMode ? (count > 0 && count < 50) : (count > 0);
+
+                        if (shouldShow) {
+                            const percent = (count / 50 * 100).toFixed(0);
+                            const isComplete = count >= 50;
                             html += `
-                                <div class="worker-card">
-                                    <div class="worker-title">Census Worker ${worker.worker_id}</div>
-                                    <div class="worker-detail">State: ${worker.state} (${worker.state_num})</div>
-                                    <div class="worker-detail">Stage: ${worker.stage} - ${worker.stage_desc}</div>
+                                <div style="margin-top: 0.4rem;">
+                                    <small style="color: #555;">${stage.label}: ${count}/50</small>
+                                    <div class="progress-bar-container" style="height: 0.8rem; margin-top: 0.2rem;">
+                                        <div class="progress-bar ${isComplete ? 'complete' : ''}" style="width: ${percent}%; font-size: 0.7rem;">${percent}%</div>
+                                    </div>
                                 </div>
                             `;
-                        });
-                        html += '</div>';
-                    }
-
-                    html += `</div>`;
-                }
-
-                // Show state workers for this year if available (limit to latest 12 workers)
-                if (stateWorkersByYear[year] && stateWorkersByYear[year].length > 0) {
-                    html += '<div class="worker-grid" style="margin-top: 0.5rem;">';
-
-                    // Get unique workers by worker_id (latest update wins)
-                    const uniqueWorkers = {};
-                    stateWorkersByYear[year].forEach(worker => {
-                        uniqueWorkers[worker.worker_id] = worker;
+                        }
                     });
 
-                    // Show only unique workers (max 12)
-                    const workersToShow = Object.values(uniqueWorkers).slice(0, 12);
-                    workersToShow.forEach(worker => {
-                        html += `
-                            <div class="worker-card">
-                                <div class="worker-title">Worker ${worker.worker_id}</div>
-                                <div class="worker-detail">State: ${worker.state} (${worker.state_num})</div>
-                                <div class="worker-detail">Stage: ${worker.stage} - ${worker.stage_desc}</div>
-                            </div>
-                        `;
-                    });
                     html += '</div>';
                 }
 
@@ -1443,10 +1553,11 @@
             });
             html += '</div>';
 
-            // Cancel button
+            // Pause and Cancel buttons
             html += `
-                <div class="mt-2">
-                    <button class="danger" onclick="cancelRun('${run.run_id}')">Cancel Run</button>
+                <div class="mt-2" style="display: flex; gap: 0.5rem;">
+                    <button class="primary" onclick="pauseRun('${run.run_id}')" style="background: #f39c12;">Pause (Keep Files)</button>
+                    <button class="danger" onclick="cancelRun('${run.run_id}')">Cancel (Delete Files)</button>
                 </div>
             `;
 
@@ -1470,9 +1581,28 @@
             `;
         }
 
-        // Cancel Run
+        // Pause Run (preserves files for resume)
+        async function pauseRun(runId) {
+            if (!confirm('Pause this run? Files will be preserved and you can resume later using skip logic.')) return;
+
+            try {
+                const response = await fetch(`/api/runs/${runId}/pause`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.success) {
+                    updateActiveRun();
+                    alert(data.message);
+                } else {
+                    showError(data.message || 'Failed to pause run');
+                }
+            } catch (error) {
+                showError('Network error: ' + error.message);
+            }
+        }
+
+        // Cancel Run (deletes all output files)
         async function cancelRun(runId) {
-            if (!confirm('Are you sure you want to cancel this run?')) return;
+            if (!confirm('Cancel this run and DELETE all output files? This cannot be undone.')) return;
 
             try {
                 const response = await fetch(`/api/runs/${runId}`, { method: 'DELETE' });
@@ -1576,8 +1706,15 @@
                             formatDuration(run.start_time, run.end_time) :
                             'Running...';
 
+                        // Get first year for dashboard URL
+                        const years = Object.keys(run.years);
+                        const firstYear = years.length > 0 ? years[0] : '2020';
+
+                        // Build dashboard URL served by this Flask app
+                        const dashboardUrl = `/dashboard?version=${run.version}&year=${firstYear}`;
+
                         html += `
-                            <div class="history-card">
+                            <div class="history-card" onclick="window.open('${dashboardUrl}', '_blank')" title="Click to view dashboard for ${run.version}">
                                 <div class="history-header">
                                     <h3>${run.version} (${run.run_id})</h3>
                                     <span class="run-status ${run.status}">${run.status}</span>
@@ -1588,6 +1725,9 @@
                                     <span>Years: ${Object.keys(run.years).join(', ')}</span>
                                 </div>
                                 ${run.error ? `<div class="mt-1 text-small" style="color: #e74c3c;">Error: ${run.error}</div>` : ''}
+                                <div class="mt-1 text-small" style="color: #3498db; font-weight: 500;">
+                                    &#128279; Click to open dashboard
+                                </div>
                             </div>
                         `;
                     });

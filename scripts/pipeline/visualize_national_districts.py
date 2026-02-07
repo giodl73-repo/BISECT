@@ -108,7 +108,7 @@ def load_all_states_with_districts(us_dir=None, year='2020', state_config=None, 
         state_dir = us_dir / 'states' / state_name.lower().replace(' ', '_')
 
         # Load tracts (unified directory structure)
-        tracts_file = get_tract_file(state_code, year)
+        tracts_file = get_tract_file(state_code, year, version='v1')
 
         assignments_file = state_dir / 'data' / 'final_assignments.pkl'
 
@@ -570,6 +570,8 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=str, help='Output directory (default: outputs/us_YEAR_v2)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                         help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str, default='v1',
+                        help='Version identifier (default: v1)')
     parser.add_argument('--print-only', action='store_true',
                         help='Print what would be done without executing')
     parser.add_argument('--debug', action='store_true',

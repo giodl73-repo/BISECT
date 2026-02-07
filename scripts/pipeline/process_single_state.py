@@ -25,6 +25,7 @@ def main():
     parser = argparse.ArgumentParser(description='Process a single state')
     parser.add_argument('--state', type=str, required=True)
     parser.add_argument('--year', type=str, default='2020')
+    parser.add_argument('--version', type=str, default='v1', help='Version identifier (e.g., v1, test)')
     parser.add_argument('--output-dir', type=str, required=True)
     parser.add_argument('--position', type=int, default=1, help='Progress bar position (1-50)')
     parser.add_argument('--dpi', type=int, default=150, help='DPI for output maps')
@@ -120,23 +121,51 @@ def main():
     # Only the wrapper shows a status indicator at the assigned position
     child_position = 999  # 999 = hide progress bars
 
+    # Core steps (always run)
     steps = [
         ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {child_position} {redistricting_flags_str}'.strip()),
-        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
+        ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("District maps", f'{sys.executable} {scripts_dir}/visualize_individual_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip())
     ]
 
-    # Add optional analysis steps
+    # Add optional analysis steps (in order: metro areas, compactness, demographics, political)
     if args.run_analysis:
         # Check data availability using utility functions
-        # Political analysis requires election data from same time period as census
-        # 2020 census -> use 2020 election, 2010 census -> would need 2010/2012 election (not available)
-        election_data_2020 = get_election_data_file('2020')
-        demographic_data = get_demographic_data_file(args.year)
+        election_data_2020 = get_election_data_file('2020', args.version)
+        demographic_data = get_demographic_data_file(args.year, args.version)
+
+        # Metro area visualization (if state has major metros)
+        metro_script = Path(__file__).parent / 'visualize_metro_areas.py'
+        steps.append((
+            "Metro area maps",
+            f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --dpi {args.dpi}'.strip()
+        ))
+
+        # Compactness visualization (metrics already calculated)
+        compactness_script = Path(__file__).parent / 'visualize_compactness.py'
+        steps.append((
+            "Compactness",
+            f'{sys.executable} {compactness_script} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --version {args.version} --dpi {args.dpi} --position {child_position}'.strip()
+        ))
+
+        # Demographic analysis (only if demographic data exists for this census year)
+        if demographic_data.exists():
+            demographic_analyze = Path(__file__).parent / 'analyze_district_demographics.py'
+            demographic_visualize = Path(__file__).parent / 'visualize_district_demographics.py'
+
+            steps.append((
+                "Demographics analysis",
+                f'{sys.executable} {demographic_analyze} {state_dir} --state {state_code} --census-year {args.year}'.strip()
+            ))
+            steps.append((
+                "Demographics visualization",
+                f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
+            ))
 
         # Political analysis (only if compatible election data exists for this census year)
+        # Always last in the pipeline
         can_do_political = (args.year == '2020' and election_data_2020.exists())
         if can_do_political:
             political_analyze = Path(__file__).parent / 'analyze_districts.py'
@@ -150,34 +179,6 @@ def main():
                 "Political visualization",
                 f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year 2020 --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
             ))
-
-        # Demographic analysis (only if demographic data exists for this census year)
-        if demographic_data.exists():
-            demographic_analyze = Path(__file__).parent / 'analyze_district_demographics.py'
-            demographic_visualize = Path(__file__).parent / 'visualize_district_demographics.py'
-
-            steps.append((
-                "Demographic analysis",
-                f'{sys.executable} {demographic_analyze} {state_dir} --state {state_code} --census-year {args.year}'.strip()
-            ))
-            steps.append((
-                "Demographic visualization",
-                f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
-            ))
-
-        # Compactness visualization (metrics already calculated)
-        compactness_script = Path(__file__).parent / 'visualize_compactness.py'
-        steps.append((
-            "Compactness visualization",
-            f'{sys.executable} {compactness_script} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
-        ))
-
-        # Metro area visualization (if state has major metros)
-        metro_script = Path(__file__).parent / 'visualize_metro_areas.py'
-        steps.append((
-            "Metro area maps",
-            f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --dpi {args.dpi}'.strip()
-        ))
 
     # Set up environment for child processes (inherit PARALLEL_MODE)
     env = os.environ.copy()
@@ -249,6 +250,13 @@ def main():
                             send_status(f"{state_name} [{num_districts}D] {i}/{len(steps)}: {step_label} ({progress})")
 
                 process.wait(timeout=3600)
+
+                if process.returncode == 0:
+                    # Emit stage completion message for aggregation (include state_code for tracking)
+                    # Normalize step_label to stage_name format (lowercase with underscores)
+                    stage_name = step_label.lower().replace(' ', '_')
+                    if is_multi_year:
+                        print(f"STATUS:STAGE_COMPLETE:{census_year}:{stage_name}:{state_code}", flush=True)
 
                 if process.returncode != 0:
                     send_status(f"{state_name} [{num_districts}D] FAILED at {step_label}")

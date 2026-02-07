@@ -13,6 +13,10 @@ warnings.filterwarnings('ignore')
 
 from tqdm import tqdm
 
+# Add parent directories to path for imports
+sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
+from scripts.utils.paths import get_census_data_dir
+
 def report(message, is_standalone=True):
     """Report progress using STATUS protocol when running as child process."""
     if is_standalone:
@@ -32,22 +36,28 @@ ALL_STATES = [
     'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
 ]
 
-def check_existing(state_code, year='2020', output_dir=None):
+def check_existing(state_code, year='2020', output_dir=None, version=None):
     """Check if adjacency graph already exists."""
     if output_dir is None:
-        output_dir = f'outputs/data/{year}/adjacency'
+        if version:
+            output_dir = get_census_data_dir(version, year) / 'adjacency'
+        else:
+            output_dir = Path(f'outputs/data/{year}/adjacency')
     graph_file = Path(output_dir) / f'{state_code.lower()}_adjacency_{year}.pkl'
     return graph_file.exists()
 
-def check_tracts_exist(state_code, year='2020', input_dir=None):
+def check_tracts_exist(state_code, year='2020', input_dir=None, version=None):
     """Check if tracts file exists."""
     if input_dir is None:
-        input_dir = f'outputs/data/{year}/units'
+        if version:
+            input_dir = get_census_data_dir(version, year) / 'units'
+        else:
+            input_dir = Path(f'outputs/data/{year}/units')
     tracts_file = Path(input_dir) / f'{state_code.lower()}_tracts_{year}.parquet'
     return tracts_file.exists()
 
 def build_adjacency_graph(state_code, year='2020', compute_boundary_lengths=False, water_distance=1.0,
-                          minimum_boundary_length=0.0, input_dir=None, output_dir=None, is_standalone=True):
+                          minimum_boundary_length=0.0, input_dir=None, output_dir=None, version=None, is_standalone=True):
     """Build adjacency graph for a single state."""
     mode_str = "with boundary lengths" if compute_boundary_lengths else "without boundary lengths"
     water_str = f" (water distance: {water_distance} km)"
@@ -56,18 +66,27 @@ def build_adjacency_graph(state_code, year='2020', compute_boundary_lengths=Fals
 
     scripts_dir = Path(__file__).parent
 
-    # Set input and output directories (use new default paths)
+    # Set input and output directories (version-aware)
     if input_dir is None:
-        input_dir = f'outputs/data/{year}/units'
+        if version:
+            input_dir = get_census_data_dir(version, year) / 'units'
+        else:
+            input_dir = Path(f'outputs/data/{year}/units')
     if output_dir is None:
-        output_dir = f'outputs/data/{year}/adjacency'
+        if version:
+            output_dir = get_census_data_dir(version, year) / 'adjacency'
+        else:
+            output_dir = Path(f'outputs/data/{year}/adjacency')
 
     cmd = [sys.executable, str(scripts_dir / 'build_tract_adjacency.py'),
            '--state', state_code, '--year', str(year),
            '--water-distance', str(water_distance),
            '--minimum-boundary-length', str(minimum_boundary_length),
-           '--input-dir', input_dir,
-           '--output-dir', output_dir]
+           '--input-dir', str(input_dir),
+           '--output-dir', str(output_dir)]
+
+    if version:
+        cmd.extend(['--version', version])
 
     if compute_boundary_lengths:
         cmd.append('--compute-boundary-lengths')
@@ -102,10 +121,12 @@ def main():
     parser = argparse.ArgumentParser(description='Build adjacency graphs for all 50 states')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                         help='Census year (default: 2020)')
+    parser.add_argument('--version', type=str,
+                        help='Version identifier (e.g., v1, test). If not provided, uses shared legacy paths.')
     parser.add_argument('--input-dir', type=str,
-                        help='Input directory for tract files (default: outputs/data/{year}/units)')
+                        help='Input directory for tract files (default: outputs/{version}/data/{year}/units)')
     parser.add_argument('--output-dir', type=str,
-                        help='Output directory for adjacency files (default: outputs/data/{year}/adjacency)')
+                        help='Output directory for adjacency files (default: outputs/{version}/data/{year}/adjacency)')
     parser.add_argument('--compute-boundary-lengths', action='store_true',
                         help='Compute boundary lengths for edge-weighted partitioning')
     parser.add_argument('--water-distance', type=float, default=1.0,
@@ -122,9 +143,20 @@ def main():
     position = int(os.environ.get('TQDM_POSITION', '-1'))
     is_standalone = position < 0
 
-    # Set default paths if not provided
-    input_dir = args.input_dir if args.input_dir else f'outputs/data/{args.year}/units'
-    output_dir = args.output_dir if args.output_dir else f'outputs/data/{args.year}/adjacency'
+    # Set default paths if not provided (version-aware)
+    if args.input_dir:
+        input_dir = args.input_dir
+    elif args.version:
+        input_dir = get_census_data_dir(args.version, args.year) / 'units'
+    else:
+        input_dir = Path(f'outputs/data/{args.year}/units')
+
+    if args.output_dir:
+        output_dir = args.output_dir
+    elif args.version:
+        output_dir = get_census_data_dir(args.version, args.year) / 'adjacency'
+    else:
+        output_dir = Path(f'outputs/data/{args.year}/adjacency')
 
     # Create output directory if it doesn't exist
     Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -148,9 +180,9 @@ def main():
     missing_tracts = []
 
     for state in ALL_STATES:
-        if check_existing(state, args.year, output_dir):
+        if check_existing(state, args.year, output_dir, args.version):
             already_exists.append(state)
-        elif not check_tracts_exist(state, args.year, input_dir):
+        elif not check_tracts_exist(state, args.year, input_dir, args.version):
             missing_tracts.append(state)
         else:
             to_build.append(state)
@@ -209,7 +241,7 @@ def main():
                     pbar.set_description(f"Building {state}")
 
                     if build_adjacency_graph(state, args.year, args.compute_boundary_lengths, args.water_distance,
-                                            args.minimum_boundary_length, input_dir, output_dir, is_standalone):
+                                            args.minimum_boundary_length, input_dir, output_dir, args.version, is_standalone):
                         successful.append(state)
                         pbar.set_postfix_str("OK Built")
                     else:
@@ -226,7 +258,7 @@ def main():
                 print(f"STATUS:CENSUS:{args.year}:WORKER:0:STATE:{i}/{total_states}:{state}:STAGE:{stage_num}/3:{stage_name}", flush=True)
 
                 if build_adjacency_graph(state, args.year, args.compute_boundary_lengths, args.water_distance,
-                                        args.minimum_boundary_length, input_dir, output_dir, is_standalone):
+                                        args.minimum_boundary_length, input_dir, output_dir, args.version, is_standalone):
                     successful.append(state)
                     # Emit completion status
                     print(f"STATUS:CENSUS:{args.year}:WORKER:0:STATE:{len(successful)}/{total_states}:{state}:COMPLETE", flush=True)
