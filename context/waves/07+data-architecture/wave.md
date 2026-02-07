@@ -1,3 +1,10 @@
+---
+slug: data-architecture
+uuid: 1c723c
+name: Data Architecture
+created: '2026-01-18'
+status: COMPLETED
+---
 # Wave 7: Data Architecture
 
 **Date**: 2026-01-18 to 2026-01-19
@@ -29,44 +36,6 @@
 | Download speed | Sequential | Parallel | 8-12x faster | ✅ 1000% |
 | Protocol consistency | Mixed | Unified STATUS | Unified | ✅ 100% |
 | Version independence | Shared data | Per-version | Per-version | ✅ 100% |
-
----
-
-## Phases
-
-### Phase 1: Data Processing & Downloads (Enhancements 47, 48)
-**Completed**: 2026-01-18
-
-Automate census data processing and achieve 8-12x download performance.
-
-**E47 - Census Data Processing Pipeline**:
-- Integrated parse → merge → adjacency pipeline
-- End-to-end automation
-- No manual intervention required
-- Validation integrated
-
-**E48 - Unified Download Orchestrator**:
-- 8-12x faster downloads (parallel workers)
-- Cache-aware (skip existing)
-- Stage-specific downloads
-- 4-8 worker parallelization
-
-### Phase 2: Architecture Improvements (Enhancements 50, 52)
-**Completed**: 2026-01-19
-
-Unify protocols and restructure for version independence.
-
-**E50 - STATUS Protocol Unification**:
-- Standardized subprocess communication
-- Consistent progress reporting across all scripts
-- Unified STATUS protocol
-- Better debugging visibility
-
-**E52 - Per-Version Census Data Structure**:
-- Per-version data isolation (`outputs/{version}/data/{year}/`)
-- Independent preprocessing experiments
-- Clean separation of concerns
-- Path utilities accept `version` parameter
 
 ---
 
@@ -105,6 +74,27 @@ Unify protocols and restructure for version independence.
 - `scripts/utils/paths.py` - Per-version path utilities
 - Directory restructure: `outputs/{version}/data/{year}/` pattern
 - All pipeline scripts: STATUS protocol integration
+
+---
+
+
+## Roles Summary
+
+### Engineer Role
+**File**: `roles/engineer.md`
+
+**See individual role files for detailed phases, tasks, and testing.**
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | data-separation-restoration | - E15: Multi-Year Support - Multi-year patterns |
+| ~2 | Engineer | unified-download-orchestrator | - ✅ Test suite expanded to 290 total tests |
+| ~3 | Engineer | status-protocol-unification | - Progress coordinator: scripts/utils/progress_coordinator.py |
+| ~4 | Engineer | per-version-census-data | - Data formats: DATA_FORMATS.md |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 

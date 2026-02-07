@@ -1,3 +1,8 @@
+---
+wave_uuid: 1c723c
+slug: per-version-census-data
+uuid: 008a94
+---
 # E52: Per-Version Census Data Structure
 
 **Status**: ✅ COMPLETE

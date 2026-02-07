@@ -1,3 +1,8 @@
+---
+wave_uuid: 1c723c
+slug: data-separation-restoration
+uuid: 24a795
+---
 # E47: Census Data Processing and Path Reorganization
 
 **Status**: ✅ COMPLETED

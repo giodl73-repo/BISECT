@@ -1,3 +1,8 @@
+---
+wave_uuid: 1c723c
+slug: unified-download-orchestrator
+uuid: 7bc096
+---
 # E48: Unified Download Orchestrator with Parallel Processing
 
 **Status**: ✅ COMPLETED
