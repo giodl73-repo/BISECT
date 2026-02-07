@@ -186,6 +186,72 @@ p1_items:
         → "geometric baseline", removed "implicitly promotes fairness" claims.
         Added caveats that compactness optimization resists intentional gerrymandering
         but cannot eliminate geographic sorting effects.
+p2_items:
+  - id: P2.1
+    title: Approximation Analysis / Optimality Bounds
+    description: MILP solutions for small states, lower bounds, approximation ratios
+    reviewers: [Bruce Hendrickson, Cynthia Phillips]
+    severity: important
+    addressed: false
+  - id: P2.2
+    title: Multi-Objective Formulation
+    description: Weighted objectives (compactness + county preservation + VRA), Pareto frontiers
+    reviewers: [Moon Duchin, Jowei Chen, Michael Goodchild]
+    severity: important
+    addressed: false
+  - id: P2.3
+    title: MCMC Ensemble Comparison
+    description: Run MCMC ensembles for 3-5 states, compare algorithmic plans to distributions
+    reviewers: [Jowei Chen, Moon Duchin]
+    severity: important
+    addressed: false
+  - id: P2.4
+    title: County Preservation Analysis
+    description: Measure county splits, compare to enacted, show compactness-county tradeoff
+    reviewers: [Jowei Chen, Michael Goodchild]
+    severity: important
+    addressed: false
+  - id: P2.5
+    title: Geographic Sorting Quantification
+    description: Separate unavoidable geographic partisan effects from intentional gerrymandering
+    reviewers: [Moon Duchin, Jowei Chen]
+    severity: important
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: cef75e6
+      files:
+        - sections/results.tex (new subsection: Geographic Sorting Quantification)
+        - tables/geographic_sorting_table.tex (10 representative states)
+        - tables/geographic_sorting_summary.tex (national statistics)
+        - scripts/political/compute_geographic_sorting.py (analysis script)
+        - scripts/political/create_geographic_sorting_tables.py (table generation)
+      notes: |\
+        Added quantitative analysis separating geographic baseline partisan effects
+        from gerrymandering premium. Key findings: 60% of states are geography-
+        dominated (>60% of bias is unavoidable), 26% are gerrymandering-dominated
+        (<30% geographic). Average geographic fraction: 63% - two-thirds of partisan
+        bias would persist even with perfectly compact districts. Provides objective
+        metric for courts/legislatures to evaluate gerrymandering claims. Clarifies
+        relationship between compactness and partisan fairness from Section 3.2.
+  - id: P2.6
+    title: Indiana Case Study Deep Dive
+    description: Investigate commission process achieving 0.478 compactness, reverse-engineer approach
+    reviewers: [Jowei Chen, George Karypis]
+    severity: important
+    addressed: false
+  - id: P2.7
+    title: Census Tract Boundary Limitations
+    description: Discuss embedded biases, compare tract vs block level for pilot states
+    reviewers: [Michael Goodchild]
+    severity: important
+    addressed: false
+  - id: P2.8
+    title: Hypergraph Formulation Exploration
+    description: Compare hypergraph partitioning (PaToH, Zoltan) on 2-3 states
+    reviewers: [Ümit Çatalyürek]
+    severity: important
+    addressed: false
 history:
   - stage: draft
     date: 2026-02-07
@@ -220,3 +286,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "ALL P1 BLOCKING ISSUES COMPLETED (6/6, 100%) - ready for P2 important issues"
+  - stage: revision
+    date: 2026-02-07
+    note: "P2.5 (Geographic Sorting Quantification) completed - separated geographic baseline from gerrymandering premium, 60% states geography-dominated (commit cef75e6)"
