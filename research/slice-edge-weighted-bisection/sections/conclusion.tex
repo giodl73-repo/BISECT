@@ -1,0 +1,50 @@
+\section{Conclusion}
+
+Congressional redistricting requires balancing constitutional mandates (population equality, contiguity) with geometric quality (compactness). While graph partitioning provides an efficient algorithmic framework, standard approaches minimize topological edge cuts rather than geometric perimeter, producing irregular districts despite satisfying legal constraints.
+
+We introduced \textbf{edge-weighted recursive bisection}, which incorporates actual boundary lengths as METIS edge weights, directly optimizing perimeter during partitioning. By aligning the algorithmic objective (minimize weighted edge cuts) with the geometric objective (minimize perimeter), we achieve substantial compactness improvements while maintaining near-linear computational complexity.
+
+\subsection{Key Results}
+
+Applied to all 435 congressional districts across 50 U.S. states using 2020 Census data:
+
+\begin{itemize}
+    \item \textbf{56\% improvement} over unweighted baseline (0.367 vs 0.235 Polsby-Popper)
+    \item \textbf{20\% improvement} over enacted 2020 congressional districts (0.367 vs 0.305)
+    \item \textbf{Surpasses enacted plans} in 37 of 50 states (74\%)
+    \item \textbf{Largest gains} in partisan-drawn maps: Illinois +174\%, Louisiana +104\%, Texas +86\%
+    \item \textbf{Competitive with commissions}: Within 5-13\% of best human plans (Michigan, Florida, Washington)
+    \item \textbf{Computational efficiency}: 2-3 hours for 50 states, 2-3 orders of magnitude faster than MCMC
+\end{itemize}
+
+\subsection{Core Contributions}
+
+\begin{enumerate}
+    \item \textbf{Methodological}: A graph construction pipeline computing boundary lengths for 60,000+ tract pairs per state, handling water crossings via county-based bridge connections with adaptive weight scaling.
+
+    \item \textbf{Algorithmic}: METIS integration using CSR format with centimeter-precision integer edge weights, enabling direct perimeter optimization during recursive bisection.
+
+    \item \textbf{Empirical}: National-scale validation demonstrating superiority over enacted districts, with particularly strong performance counteracting gerrymandered plans.
+
+    \item \textbf{Theoretical}: Demonstration that incorporating geometric information into graph partitioning—standard in other domains but novel for redistricting—yields fundamental improvements in solution quality.
+
+    \item \textbf{Practical}: Open-source implementation with reproducible results, enabling policy analysis and gerrymandering assessment.
+\end{enumerate}
+
+\subsection{Broader Impact}
+
+This work demonstrates that algorithmic redistricting can \textit{exceed} human mapmaking: edge-weighted recursive bisection surpasses enacted district compactness in three-quarters of states while maintaining complete partisan neutrality and transparency. The 20\% national improvement over enacted plans reveals that current redistricting practices leave substantial geometric quality on the table—compactness gains are achievable without sacrificing population balance or contiguity.
+
+Critically, gerrymandering requires boundary elongation. By minimizing perimeter without political data, edge-weighted bisection naturally resists partisan manipulation. The +174\% improvement over Illinois's enacted plan (one of the nation's most gerrymandered) illustrates how geometric optimization implicitly promotes fairness: compact districts emerge from mathematical principles, not human judgment.
+
+As redistricting reform efforts accelerate nationwide, computational tools that optimize geometric criteria while satisfying constitutional requirements offer a path toward restoring public confidence in electoral system fairness. Edge-weighted recursive bisection provides both a practical redistricting method and a neutral baseline for evaluating gerrymandering claims in legislative oversight and judicial review.
+
+\subsection{The Path Forward}
+
+Congressional redistricting sits at the intersection of computational geometry, graph theory, and democratic governance. For decades, the process has relied on human mapmakers whose incentives often misalign with geometric quality. This work demonstrates that algorithms—properly designed with geometric awareness—can achieve superior outcomes while eliminating partisan intent.
+
+The choice is clear: continue manual redistricting with its attendant opportunities for manipulation, or adopt algorithmic approaches that optimize mathematical criteria transparently and reproducibly. Edge-weighted recursive bisection shows that the computational and geometric foundations exist for fair, efficient redistricting at national scale.
+
+The question is no longer "Can algorithms match human redistricting?" but rather "When will we adopt algorithms that demonstrably exceed it?"
+
+\paragraph{Reproducibility} Open-source implementation, data, and results available at \url{https://github.com/TODO}.

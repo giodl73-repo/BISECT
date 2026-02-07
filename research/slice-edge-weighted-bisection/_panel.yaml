@@ -1,0 +1,111 @@
+paper: slice-edge-weighted-bisection
+title: "Edge-Weighted Recursive Bisection for Compact Congressional Districts"
+venue: "KDD 2026"
+stage: synthesis
+round: 1
+reviewers:
+  - name: George Karypis
+    affiliation: University of Minnesota
+    expertise: METIS, graph partitioning, multilevel algorithms
+    score: 3
+  - name: Ümit V. Çatalyürek
+    affiliation: Georgia Tech
+    expertise: Hypergraph partitioning, parallel algorithms
+    score: 3
+  - name: Bruce Hendrickson
+    affiliation: Sandia National Labs
+    expertise: Graph partitioning, load balancing, spectral methods
+    score: 3
+  - name: Moon Duchin
+    affiliation: Rutgers
+    expertise: Gerrymandering, metric geometry, fairness
+    score: 3
+  - name: Jowei Chen
+    affiliation: University of Michigan
+    expertise: Automated redistricting, compactness, neutrality
+    score: 3
+  - name: Michael Goodchild
+    affiliation: UC Santa Barbara
+    expertise: GIS theory, spatial analysis, geography
+    score: 3
+  - name: Cynthia A. Phillips
+    affiliation: Sandia National Labs
+    expertise: Combinatorial optimization, graph algorithms
+    score: 3
+reviews:
+  round_1:
+    - reviewer: George Karypis
+      file: reviews/REVIEW-KARYPIS.md
+      score: 3
+      verdict: Accept with Minor Revisions
+    - reviewer: Ümit V. Çatalyürek
+      file: reviews/REVIEW-CATALYUREK.md
+      score: 3
+      verdict: Accept with Minor Revisions
+    - reviewer: Bruce Hendrickson
+      file: reviews/REVIEW-HENDRICKSON.md
+      score: 3
+      verdict: Accept with Minor Revisions
+    - reviewer: Moon Duchin
+      file: reviews/REVIEW-DUCHIN.md
+      score: 3
+      verdict: Accept with Major Revisions
+    - reviewer: Jowei Chen
+      file: reviews/REVIEW-CHEN.md
+      score: 3
+      verdict: Accept with Major Revisions
+    - reviewer: Michael Goodchild
+      file: reviews/REVIEW-GOODCHILD.md
+      score: 3
+      verdict: Accept with Minor Revisions
+    - reviewer: Cynthia A. Phillips
+      file: reviews/REVIEW-PHILLIPS.md
+      score: 3
+      verdict: Accept with Minor Revisions
+p1_items:
+  - id: P1.1
+    title: Partisan Outcome Analysis
+    description: Compute efficiency gap, mean-median, partisan symmetry, seats-votes curves for all 50 states
+    reviewers: [Moon Duchin, Jowei Chen]
+    severity: blocking
+    addressed: false
+  - id: P1.2
+    title: VRA Compliance Evaluation
+    description: Count majority-minority districts, discuss VRA vs compactness tradeoffs
+    reviewers: [Moon Duchin, Jowei Chen]
+    severity: blocking
+    addressed: false
+  - id: P1.3
+    title: Partitioning Quality Analysis
+    description: Report edge-cut values, coarsening statistics, convergence behavior
+    reviewers: [George Karypis, Ümit Çatalyürek, Bruce Hendrickson]
+    severity: blocking
+    addressed: false
+  - id: P1.4
+    title: Alternative Partitioner Comparison
+    description: Compare to KaHIP/Scotch/Zoltan on 3-5 states
+    reviewers: [George Karypis, Ümit Çatalyürek, Bruce Hendrickson]
+    severity: blocking
+    addressed: false
+  - id: P1.5
+    title: Recursive Bisection Justification
+    description: Compare recursive to direct k-way METIS, justify choice
+    reviewers: [George Karypis, Ümit Çatalyürek, Bruce Hendrickson, Cynthia Phillips]
+    severity: blocking
+    addressed: false
+  - id: P1.6
+    title: Soften Neutrality Claims
+    description: Replace "partisan neutrality" with "political blindness", distinguish compactness from fairness
+    reviewers: [Moon Duchin, Jowei Chen]
+    severity: critical
+    addressed: false
+history:
+  - stage: draft
+    date: 2026-02-07
+    note: "Paper initialized for rewrite from first principles"
+  - stage: panel
+    date: 2026-02-07
+    note: "7 reviewers assigned (3 algorithms, 2 political science, 1 GIS, 1 optimization)"
+  - stage: synthesis
+    date: 2026-02-07
+    note: "Round 1 reviews completed - all 7 reviewers scored 3/4 (Accept), consensus for revisions"

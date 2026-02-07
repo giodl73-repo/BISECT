@@ -1,0 +1,93 @@
+\section{Discussion}
+
+\subsection{Why Edge Weighting Works}
+
+The dramatic improvement from edge weighting (56\% over unweighted baseline) stems from a fundamental mismatch between topological and geometric objectives. Standard graph partitioning minimizes \textit{edge cuts}—the count of edges crossing partition boundaries. This topological objective treats all adjacencies equally: cutting a 150-meter boundary has the same cost as cutting a 12.5-kilometer boundary.
+
+Congressional redistricting, however, is a \textit{geometric} problem: we partition physical regions with measurable areas and perimeters. Compactness metrics like Polsby-Popper ($PP = 4\pi A / P^2$) directly depend on perimeter length, not edge count. By weighting edges with boundary lengths, we align the algorithmic objective (minimize weighted edge cuts) with the geometric objective (minimize perimeter).
+
+This alignment manifests in three ways:
+
+\begin{enumerate}
+    \item \textbf{Direct optimization}: Weighted edge cuts \textit{equal} total district perimeters (up to constant factors), making METIS directly optimize compactness rather than a topological proxy.
+
+    \item \textbf{Natural feature following}: Long boundaries often correspond to natural geographic features (rivers, mountain ranges, coastlines). Avoiding high-weight cuts causes districts to follow these features, producing intuitive boundaries that align with geographic reality.
+
+    \item \textbf{Compactness emergence}: Minimizing perimeter for fixed area naturally produces circular regions—METIS "discovers" compactness without explicit shape constraints.
+\end{enumerate}
+
+\subsection{Gerrymandering and Boundary Minimization}
+
+The particularly strong results in gerrymandered states (Illinois +174\%, Louisiana +104\%, Texas +86\%) reveal a deeper connection between boundary minimization and partisan neutrality.
+
+\textbf{Gerrymandering requires elongation}. To "pack" opposition voters into few districts or "crack" them across many districts, partisan mapmakers must create long, irregular boundaries connecting geographically distant regions. Consider Illinois's 4th District (pre-2020), which connected two predominantly Hispanic neighborhoods via a narrow strip along Interstate 294—a textbook example of packing creating a 53-kilometer perimeter for a district with compact alternatives requiring only 30-35 kilometers.
+
+Boundary minimization naturally resists these manipulations: partisan advantage requires geographic distortion, and distortion increases perimeter. By optimizing perimeter \textit{without political data}, edge-weighted recursive bisection produces districts that are geometrically neutral—they cannot favor either party because they minimize the very metric that partisan gerrymandering exploits.
+
+This is not to say our method is \textit{politically} neutral—any redistricting plan has partisan effects due to geographic sorting of voters~\cite{rodden2019geography}. Rather, it is \textit{algorithmically} neutral: compactness emerges from geometric optimization, not partisan intent.
+
+\subsection{Comparison to Commission-Drawn Plans}
+
+Five states show enacted compactness exceeding our algorithmic results: Indiana (-26\%), Florida (-13\%), Mississippi (-8\%), Washington (-6\%), Michigan (-5\%). These states employ independent redistricting commissions (Michigan, Washington) or court-ordered plans (Florida) with explicit compactness mandates.
+
+This raises an important question: Does algorithmic redistricting match "best-case" human mapmaking?
+
+The answer is nuanced. Indiana's enacted plan (0.478 Polsby-Popper) represents exceptional human performance—their commission explicitly prioritized compactness and had skilled GIS staff. Our algorithm achieves 0.353 (26\% lower), suggesting room for improvement. However, \textit{Indiana is the outlier}. The other four states show 5-13\% differences, well within the range explainable by different optimization priorities (we optimize compactness alone; commissions balance compactness, county preservation, communities of interest, and political considerations).
+
+Critically, our method \textit{exceeds} enacted compactness in 37 of 50 states (74\%), including most partisan-drawn maps. This demonstrates that algorithms can outperform typical human mapmaking—the relevant comparison is not to ideal commission performance but to the \textit{actual} redistricting plans most states produce.
+
+\subsection{Structural Differences from Normal Mode}
+
+Alabama's 76\% tract reassignment rate (Table~\ref{tab:alabama}) indicates that edge weighting produces \textit{structurally different} districts, not incremental boundary refinements. This high reassignment rate appears across all states we examined.
+
+Why such dramatic changes? Unweighted partitioning makes locally optimal cuts based on edge count, potentially creating irregular boundaries. Once these irregularities exist, subsequent recursive bisections must work within suboptimal regions, compounding the problem. Edge weighting makes globally better decisions early in the recursion tree, leading to fundamentally different partition structures.
+
+This suggests that compactness cannot be easily added as a post-processing step—it must be integrated into the partitioning objective from the start.
+
+\subsection{Scalability and Practical Deployment}
+
+Edge-weighted recursive bisection achieves near-linear time complexity $O(N \log K)$ with 10-50\% overhead over unweighted baselines. Full 50-state execution in 2-3 hours on desktop hardware demonstrates practical scalability. For comparison:
+\begin{itemize}
+    \item \textbf{MILP approaches}: Days to weeks for large states, often requiring relaxations
+    \item \textbf{MCMC sampling}: Hours per state for statistical ensembles
+    \item \textbf{Genetic algorithms}: Hours with convergence uncertainty
+    \item \textbf{This work}: 2-3 minutes per state deterministically
+\end{itemize}
+
+This computational efficiency enables rapid exploration of alternative scenarios (what if district counts change? what if different population balance tolerances?) critical for policy analysis.
+
+\subsection{Limitations}
+
+\textbf{Single-objective optimization}: We optimize compactness (Polsby-Popper) exclusively. Real redistricting involves multiple criteria: county preservation, communities of interest, Voting Rights Act compliance. Future work should extend to multi-objective optimization, perhaps using weighted combinations of boundary length, county splits, and demographic constraints.
+
+\textbf{Integer weight precision}: Centimeter-scale discretization suffices for tract-level data but may constrain block-level applications. This could be addressed through higher-precision scaling or direct floating-point METIS modifications.
+
+\textbf{Metric specificity}: We directly optimize Polsby-Popper (perimeter-based). Other metrics (Reock, convex hull) improve as byproducts but less dramatically (+28-34\% vs +56\%). This is acceptable for most applications, but contexts requiring specific metrics may need alternative edge weight schemes.
+
+\textbf{Bridge edge weighting}: County-based median boundary lengths for water crossings are heuristic, not principled. More sophisticated approaches (shortest path distances, population-weighted centroids) might improve island and water-crossing states.
+
+\textbf{Political neutrality vs political outcomes}: While our method is algorithmically neutral (no partisan data), any redistricting plan has partisan consequences due to voter geography. Edge-weighted bisection cannot eliminate the "geography is destiny" problem inherent to single-member districts.
+
+\subsection{Policy Implications}
+
+As redistricting reform efforts continue nationwide, computational tools that optimize geometric criteria while satisfying constitutional requirements offer a path toward restoring public confidence in electoral fairness. Edge-weighted recursive bisection demonstrates that algorithms can exceed human mapmaking in compactness while maintaining complete reproducibility and transparency.
+
+The 20\% improvement over enacted 2020 districts (37 of 50 states) suggests that many state-drawn plans leave substantial room for geometric improvement. States considering redistricting reforms could adopt algorithmic baselines as starting points, allowing commissions to make adjustments for non-geometric criteria (Voting Rights Act, communities of interest) while maintaining compactness floors.
+
+Critically, edge-weighted recursive bisection provides a \textit{neutral baseline} for evaluating gerrymandering claims. If an enacted plan shows substantially lower compactness than the algorithmic result (e.g., Illinois: 0.148 enacted vs 0.406 algorithmic), this provides quantitative evidence of geometric manipulation, useful for both legislative oversight and judicial review.
+
+\subsection{Future Work}
+
+\begin{enumerate}
+    \item \textbf{Multi-objective optimization}: Extend to weighted combinations of compactness, county preservation, and communities of interest. METIS supports multi-constraint partitioning; additional objectives could be encoded through composite edge weights or post-processing filters.
+
+    \item \textbf{Block-level data}: Apply to Census blocks (1M+ units nationally vs 84K tracts), enabling finer-grained boundaries. This requires handling larger graphs and potentially higher-precision edge weights.
+
+    \item \textbf{Theoretical bounds}: Establish compactness guarantees for recursive bisection. What is the approximation ratio relative to optimal compactness? Can we prove properties about partition structure?
+
+    \item \textbf{Voting Rights Act integration}: Incorporate majority-minority district requirements as hard constraints. This requires demographic data integration and constraint satisfaction alongside geometric optimization.
+
+    \item \textbf{Dynamic redistricting}: Adapt to population changes between censuses. Can edge weights enable incremental updates that preserve district structure while maintaining compactness?
+
+    \item \textbf{Cross-census validation}: Apply to 2010 and 2000 Census data to measure temporal stability. Do compactness improvements persist across census cycles?
+\end{enumerate}

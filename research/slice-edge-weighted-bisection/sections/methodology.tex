@@ -1,0 +1,189 @@
+\section{Methodology}
+
+\subsection{Problem Formulation}
+
+\textbf{Input:} A state with $N$ census tracts, each with population $p_i$ and geometry $G_i$. Target: $K$ congressional districts with equal population $\bar{p} = (\sum_i p_i) / K$.
+
+\textbf{Constraints:}
+\begin{enumerate}
+    \item \textbf{Population balance}: $|p(D_j) - \bar{p}| \leq 0.005 \bar{p}$ for all districts $D_j$ (within 0.5\%)
+    \item \textbf{Contiguity}: Each district forms a connected component in the adjacency graph
+\end{enumerate}
+
+\textbf{Objective:} Minimize total district perimeters $\sum_{j=1}^{K} P(D_j)$, equivalently maximizing Polsby-Popper compactness since area is held constant.
+
+\textbf{Approach:} Model the state as a weighted graph $G = (V, E, w)$ where vertices $V$ are census tracts, edges $E$ connect adjacent tracts, and weights $w_{ij}$ are boundary lengths. Apply recursive METIS bisection with edge weights to minimize weighted edge cuts, which directly corresponds to minimizing total perimeter.
+
+\subsection{Graph Construction}
+
+\subsubsection{Adjacency Detection}
+
+We use \textbf{Queen contiguity}: tracts $i$ and $j$ are adjacent if their boundaries share an edge or vertex (not merely nearest neighbors). Implemented via spatial indexing (R-tree) with intersection tests:
+
+\begin{algorithmic}[1]
+\Function{DetectAdjacency}{$\{G_1, \ldots, G_N\}$}
+    \State $E \gets \emptyset$
+    \State Build R-tree index from tract bounding boxes
+    \For{each tract $i$}
+        \State candidates $\gets$ R-tree query($G_i$.bounds)
+        \For{each candidate $j > i$}
+            \If{$G_i$.intersects($G_j$)}
+                \State $E \gets E \cup \{(i, j)\}$
+            \EndIf
+        \EndFor
+    \EndFor
+    \State \Return $E$
+\EndFunction
+\end{algorithmic}
+
+Complexity: $O(N \log N)$ for R-tree construction, $O(Nd)$ for intersection tests with average degree $d \approx 6$.
+
+\subsubsection{Boundary Length Computation}
+
+For each edge $(i,j) \in E$, compute the geometric intersection of boundaries:
+
+\begin{equation}
+    I_{ij} = \partial G_i \cap \partial G_j
+\end{equation}
+
+where $\partial G_i$ denotes the boundary of geometry $G_i$. The intersection type determines the weight:
+
+\begin{equation}
+    w_{ij} = \begin{cases}
+        \text{length}(I_{ij}) & \text{if } I_{ij} \text{ is LineString/MultiLineString} \\
+        0.1 \text{ meters} & \text{if } I_{ij} \text{ is Point (corner contact)} \\
+        w_{\text{bridge}} & \text{if } I_{ij} = \emptyset \text{ (water crossing)}
+    \end{cases}
+\end{equation}
+
+\textbf{Geometric operations} use Shapely~\cite{shapely} with state-specific projections (e.g., California Albers EPSG:3310, Texas Conic EPSG:3083) for accurate length measurement. Point contacts receive near-zero weight (0.1m) to permit adjacency without contributing to perimeter.
+
+\subsubsection{County-Based Bridge Connections}
+
+For states with water barriers (30+ states including island states and those with major lakes/rivers), adjacency graphs may be disconnected. We add \textbf{bridge edges} to connect components:
+
+\begin{algorithmic}[1]
+\Function{AddBridges}{$V, E, w$}
+    \State components $\gets$ ConnectedComponents($V, E$)
+    \For{each disconnected component $C$}
+        \For{each tract $i \in C$}
+            \State county($i$) $\gets$ first 5 digits of 11-digit GEOID
+            \State target $\gets$ nearest tract $j$ with county($j$) = county($i$) and $j \notin C$
+            \If{target exists}
+                \State $E \gets E \cup \{(i, \text{target})\}$
+                \State $w_{i,\text{target}} \gets$ median($\{w_{kl} \mid (k,l) \in E_{\text{land}}\}$)
+            \EndIf
+        \EndFor
+    \EndFor
+\EndFunction
+\end{algorithmic}
+
+Bridge edges use \textit{median land boundary length} as weight, providing adaptive scaling: small states have shorter typical boundaries ($\sim$1 km), large states longer ($\sim$5-10 km). This balances permitting necessary water crossings while discouraging excessive splits.
+
+\textbf{County restriction} ensures geographic sensibility: Alaska's Aleutian Islands (~1700 km apart) connect within their shared county rather than to mainland tracts, and Hawaii's islands remain separated by county. This prevents unrealistic long-distance connections while ensuring all tracts are reachable.
+
+\subsection{METIS Integration}
+
+\subsubsection{CSR Format with Edge Weights}
+
+METIS requires Compressed Sparse Row (CSR) format. We use format code \texttt{011}: edge weights + vertex weights (populations).
+
+\begin{verbatim}
+<n_vertices> <n_edges> 011 1
+<vweight_1> <neighbor_1> <eweight_1> <neighbor_2> <eweight_2> ...
+<vweight_2> <neighbor_1> <eweight_1> ...
+...
+\end{verbatim}
+
+Boundary lengths (continuous meters) are scaled to \textbf{integer centimeters}:
+
+\begin{equation}
+    w_{ij}^{\text{METIS}} = \max(1, \lfloor w_{ij} \times 100 \rfloor)
+\end{equation}
+
+This provides 1cm precision (adequate for tract-level data) while avoiding METIS numerical issues with floating-point weights. METIS uses 1-based indexing; neighbor indices are incremented during file writing.
+
+\subsubsection{METIS Configuration}
+
+We invoke METIS via command line:
+
+\begin{verbatim}
+gpmetis -contig -minconn -ufactor=1.005 -niter=100 graph.txt 2
+\end{verbatim}
+
+\begin{itemize}
+    \item \texttt{-contig}: Enforce partition contiguity (required for redistricting)
+    \item \texttt{-minconn}: Minimize subgraph connectivity (reduces perimeter)
+    \item \texttt{-ufactor=1.005}: Allow 0.5\% population imbalance (constitutional threshold)
+    \item \texttt{-niter=100}: Refinement iterations for quality
+\end{itemize}
+
+METIS objective function with edge weights:
+
+\begin{equation}
+    \min_{P \in \{0,1\}^N} \sum_{(i,j) \in E} w_{ij} \cdot \mathbb{1}[P_i \neq P_j]
+\end{equation}
+
+subject to population balance and contiguity. Minimizing weighted edge cuts directly minimizes total perimeter.
+
+\subsection{Recursive Bisection Algorithm}
+
+Edge-weighted recursive bisection proceeds top-down:
+
+\begin{algorithm}
+\caption{Edge-Weighted Recursive Bisection}
+\begin{algorithmic}[1]
+\Function{RecursiveBisect}{$V, E, w, K$}
+    \If{$K = 1$}
+        \State \Return $\{V\}$ \Comment{Base case: single district}
+    \EndIf
+
+    \State $k_1 \gets \lfloor K/2 \rfloor$, $k_2 \gets K - k_1$ \Comment{Target sizes}
+    \State $(V_1, V_2) \gets$ \Call{METIS-Bisect}{$V, E, w, k_1, k_2$}
+
+    \State Extract subgraphs $G_1 = (V_1, E_1, w_1)$ and $G_2 = (V_2, E_2, w_2)$
+    \State $D_1 \gets$ \Call{RecursiveBisect}{$V_1, E_1, w_1, k_1$}
+    \State $D_2 \gets$ \Call{RecursiveBisect}{$V_2, E_2, w_2, k_2$}
+
+    \State \Return $D_1 \cup D_2$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Subgraph extraction} requires index remapping. For region with tracts $\{v_1, \ldots, v_m\}$, create mappings:
+\begin{itemize}
+    \item $L(i) = v_i$ (local-to-global index)
+    \item $G^{-1}(v_i) = i$ (global-to-local index)
+\end{itemize}
+
+Extract subgraph edges and weights:
+\begin{equation}
+    E' = \{(G^{-1}(i), G^{-1}(j)) \mid i,j \in \{v_1, \ldots, v_m\}, (i,j) \in E\}
+\end{equation}
+\begin{equation}
+    w' = \{w_{ij} \mid i,j \in \{v_1, \ldots, v_m\}, (i,j) \in E\}
+\end{equation}
+
+\textbf{Unequal splits} handle odd district counts. For $K = 7$, splits are $(4,3), (2,2), (2,1), (1,1), (1,1), (1,1), (1,1)$. METIS supports unequal target partition sizes through vertex weight ratios.
+
+\subsection{Complexity Analysis}
+
+\begin{itemize}
+    \item \textbf{Preprocessing}: $O(N \log N)$ for R-tree + $O(Nd)$ for intersections = $O(Nd)$ overall ($d \approx 6$)
+    \item \textbf{METIS calls}: $O(N)$ per bisection, $O(\log K)$ levels = $O(N \log K)$ total
+    \item \textbf{Overall}: $O(Nd + N \log K)$ dominated by $O(N \log K)$ for large $K$
+\end{itemize}
+
+\textbf{Runtime overhead}: Edge-weighted mode adds 10-50\% to baseline (larger METIS arrays, more refinement). Preprocessing (boundary computation) requires 10-30 seconds per state, cached for reuse.
+
+\textbf{Memory}: Edge weights require $\sim$100 KB per 1,000 edges (8-byte floats + indices). Full state graphs: 1-5 MB.
+
+\subsection{Implementation Details}
+
+\textbf{Software stack}: Python 3.13, GeoPandas for geometry, METIS 5.1.0, Shapely 2.0 for spatial operations. Adjacency and weights cached in Parquet format for reproducibility.
+
+\textbf{Parallelization}: States processed independently with 4-6 worker processes (bounded by memory for large states).
+
+\textbf{Validation}: Post-processing verifies population balance ($\pm 0.5\%$), contiguity (BFS traversal), and computes Polsby-Popper scores for all districts.
+
+Open-source implementation available at \url{https://github.com/TODO}.

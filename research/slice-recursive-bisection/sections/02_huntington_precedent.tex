@@ -1,0 +1,82 @@
+\section{The Huntington-Hill Precedent}
+\label{sec:huntington}
+
+Congressional apportionment—determining how many House seats each state receives—demonstrates that mathematical formulas can successfully govern politically sensitive decisions when properly designed. This section examines why Huntington-Hill succeeded where previous methods failed, and how its underlying principles extend to redistricting.
+
+\subsection{The Apportionment Problem and Its Political History}
+
+The Constitution requires that House seats be apportioned among states according to population, with each state guaranteed at least one representative. For a fixed House size (435 members since 1913), this creates a discrete allocation problem: states with fractional entitlements must be rounded either up or down, and different rounding rules advantage different states.
+
+From 1790 to 1940, Congress changed apportionment methods after nearly every census, selecting whichever formula benefited the politically dominant coalition \cite{balinski1982fair}. Methods varied—Jefferson (1792--1840), Webster (1840--1850, 1910--1930), Hamilton (1850--1900), and others—with each change sparking fierce debate about fairness. States that would lose seats under a new method inevitably claimed discrimination.
+
+This chronic instability demonstrated that \textit{any} apportionment method makes someone unhappy. The mathematical reality, proven rigorously by Balinski and Young \cite{balinski1982fair}, is that no apportionment method can simultaneously satisfy all reasonable fairness criteria. Every method embodies normative trade-offs between competing principles: minimizing maximum relative differences versus minimizing average absolute differences, favoring small states versus large states, maintaining proportionality versus avoiding quota violations.
+
+The choice of method necessarily involves value judgments. Yet Congress's repeated method-switching revealed that when political actors make those judgments, the result is perpetual conflict. Each census brought renewed fights as states maneuvered for favorable formulas.
+
+\subsection{The 1941 Resolution: Permanent Adoption of Huntington-Hill}
+
+In 1941, Congress made a crucial procedural change: it adopted the Huntington-Hill method \textit{permanently}, embedding it in statute rather than choosing it anew each census \cite{huntington1928method}. This decision transformed apportionment from a recurring political battle into settled policy.
+
+The Huntington-Hill method works as follows. After each state receives its guaranteed seat, remaining seats are allocated iteratively. Each state's priority for receiving its $n$-th seat is computed as:
+\[
+P_n = \frac{\text{Population}}{\sqrt{n(n-1)}}
+\]
+The state with the highest priority value receives the next seat. This process continues until all 435 seats are allocated.
+
+The geometric mean denominator $\sqrt{n(n-1)}$ minimizes the relative difference in representation between individuals across states. That is, it minimizes the maximum value of $|r_i - r_j| / \max(r_i, r_j)$ where $r_i$ is the representation ratio (population per seat) in state $i$. This particular fairness criterion has an appealing interpretation: it treats inequalities symmetrically, making an individual in an under-represented state's complaint equally valid to an individual in an over-represented state's complaint.
+
+But Huntington-Hill's success derives not from mathematical optimality—it still violates some fairness criteria, as all methods must—but from procedural characteristics that command political acceptance.
+
+\subsection{Why Huntington-Hill Works: Six Principles of Mathematical Governance}
+
+We identify six principles that explain Huntington-Hill's eighty-year success:
+
+\textbf{1. Objectivity:} The method operates deterministically on census population counts without requiring any human judgment or discretionary decisions. Given the census, the apportionment is mathematically determined. No committee deliberates, no commission votes, no official exercises discretion.
+
+\textbf{2. Transparency:} The mathematical foundation is fully documented and publicly available. The Census Bureau publishes not just final seat allocations but complete priority value tables showing every state's ranking for each incremental seat \cite{census2020apportionment}. Anyone can verify the calculation independently.
+
+\textbf{3. Uniformity:} The identical formula applies to all states without exception. Wyoming and California, Vermont and Texas—all treated by the same mathematical principles. No state receives special consideration or differential treatment.
+
+\textbf{4. Mathematical Rigor:} The method rests on explicit mathematical optimization of a well-defined fairness criterion (relative representation differences). While alternative criteria exist, Huntington-Hill's criterion has clear mathematical justification and formal proofs of its properties.
+
+\textbf{5. Reproducibility:} Given identical input data (census population counts), the method produces identical outputs (seat allocations). Anyone can re-run the calculation and verify results. There is no randomness, no variation across multiple runs, no sensitivity to who performs the calculation.
+
+\textbf{6. Non-Manipulability:} The method cannot be adjusted to achieve predetermined outcomes without changing the underlying data. States cannot game the system by strategic behavior (beyond population growth itself). Politicians cannot manipulate the method's operation to favor allies or punish enemies.
+
+Together, these six principles create \textit{procedural legitimacy}. Even states that lose seats accept the outcome because they understand the process is fair, transparent, and non-manipulable. No state can credibly claim Huntington-Hill discriminated against it when the same formula applied uniformly nationwide.
+
+Critically, this procedural legitimacy emerged not despite the method's inability to satisfy all fairness criteria, but \textit{because} its limitations are mathematical necessities rather than political choices. When Balinski and Young proved that no perfect apportionment method exists, they paradoxically strengthened acceptance of imperfect methods: if perfection is impossible, we can accept the Huntington-Hill trade-offs as legitimate compromises rather than evidence of bias.
+
+\subsection{Extending to Redistricting: Parallel Structure}
+
+Congressional redistricting exhibits striking parallels to pre-1941 apportionment:
+
+\textbf{Similar Stakes:} Both determine political power distribution. Apportionment allocates seats among states; redistricting allocates voters among districts. In both cases, different allocation decisions favor different political coalitions.
+
+\textbf{Similar Conflicts:} Both historically featured recurring disputes with no consensus resolution. Just as Congress changed apportionment methods repeatedly, states redraw district boundaries each census with ongoing controversy about fairness.
+
+\textbf{Similar Constitutional Constraints:} Both operate under Supreme Court mandates: apportionment must follow population (\textit{Wesberry v. Sanders}), redistricting must achieve population equality (\textit{Reynolds v. Sims}) and cannot engage in racial gerrymandering (\textit{Shaw v. Reno}). Yet both allow discretion in balancing competing criteria.
+
+\textbf{Similar Normative Trade-offs:} Both require balancing incommensurable values. Apportionment balances small-state versus large-state interests; redistricting balances compactness versus communities of interest, partisan fairness versus geographic coherence, and other competing principles. Neither admits perfect solutions.
+
+\textbf{Similar Need for Legitimacy:} Both require public acceptance to function effectively. Just as disputed apportionment undermined House legitimacy before 1941, disputed redistricting undermines electoral legitimacy today.
+
+The critical question is whether redistricting can adopt Huntington-Hill's solution: permanent mathematical methods that operate objectively on census data.
+
+\subsection{Can Redistricting Achieve Procedural Legitimacy?}
+
+Skeptics might argue that redistricting is fundamentally more complex than apportionment, making mathematical governance infeasible. Apportionment allocates 435 discrete seats—a finite combinatorial problem. Redistricting draws boundaries on continuous geographic space—an infinite-dimensional optimization problem.
+
+We acknowledge this complexity increase but argue it does not preclude algorithmic approaches. Modern graph partitioning algorithms can optimize explicit criteria (population balance, contiguity, compactness) subject to geographic constraints. The computational challenge is tractable: our implementation processes all 50 states in approximately 2-3 hours on commodity hardware.
+
+More fundamentally, the complexity argument misses Huntington-Hill's core lesson: the goal is not mathematical perfection but procedural legitimacy. Huntington-Hill does not produce perfect fairness—which mathematically cannot exist—but it produces defensible outcomes through transparent, reproducible processes that cannot be manipulated for partisan advantage.
+
+Algorithmic redistricting can achieve the same. Just as Huntington-Hill cannot simultaneously optimize all fairness criteria in apportionment, algorithms cannot simultaneously optimize all values in redistricting. But they can embody Huntington-Hill's six principles: objectivity (operating deterministically on census data), transparency (open-source code and public data), uniformity (identical treatment of all geographic units), mathematical rigor (explicit optimization of defined criteria), reproducibility (identical inputs produce identical outputs), and non-manipulability (boundaries cannot be adjusted to favor predetermined outcomes).
+
+\subsection{The Central Question}
+
+If mathematical objectivity resolved the politically charged question of \textit{how many} seats each state receives, why not apply similar principles to \textit{where} district boundaries are drawn?
+
+Both questions involve dividing political representation according to population. Both invite partisan manipulation when left to political actors. Both require trading off competing values that cannot all be perfectly satisfied. Both benefit from procedural legitimacy more than outcome optimality.
+
+The remainder of this paper demonstrates that algorithmic redistricting can extend Huntington-Hill's principles from apportionment to boundary design, creating a redistricting process that—like Huntington-Hill apportionment—commands acceptance not through perfection but through objectivity, transparency, and structural immunity to manipulation.

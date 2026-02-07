@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{setspace}
+
+% Formatting
+\onehalfspacing
+\captionsetup{font=small,labelfont=bf}
+
+% Title and Author
+\title{\textbf{From Apportionment to Boundary Design:\\
+Extending Huntington-Hill to Congressional Redistricting}}
+
+\author{
+Giovanni Della-Libera\\
+\textit{Stanford University}\\
+\texttt{giodl@stanford.edu}
+}
+
+\date{\today\\[0.5cm]\textit{Working Draft -- Do Not Cite}}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+For over eighty years, the Huntington-Hill method has governed congressional apportionment—determining how many seats each state receives—through transparent mathematical formulas that command universal acceptance. Yet the parallel problem of redistricting—drawing district boundaries within states—remains mired in partisan conflict, with the Supreme Court declaring such disputes non-justiciable in \textit{Rucho v. Common Cause} (2019). We ask: if mathematical objectivity resolved the politically charged question of \textit{how many} seats each state receives, why not apply similar principles to \textit{where} district boundaries are drawn? This paper presents a recursive graph bisection algorithm for congressional redistricting that extends Huntington-Hill's commitment to mathematical rigor from apportionment to boundary design. Applied to all 50 states using 2020 Census data, the algorithm produces 435 congressional districts with mean population deviation of 2.79\%, guaranteed geographic contiguity, and structural immunity to partisan manipulation—the algorithm cannot access voter registration, election results, or any partisan data. We analyze population balance, compactness, political characteristics, and demographic representation, finding that algorithmic redistricting can satisfy traditional criteria while eliminating direct opportunities for gerrymandering. Our results suggest that mathematical governance offers a viable path toward resolving redistricting conflicts and restoring public confidence in electoral fairness.
+\end{abstract}
+
+\section*{Keywords}
+Redistricting, Gerrymandering, Graph Partitioning, Congressional Apportionment, Electoral Reform, Huntington-Hill Method
+
+% Main sections
+\input{sections/01_introduction}
+\input{sections/02_huntington_precedent}
+\input{sections/03_methodology}
+\input{sections/04_results}
+\input{sections/05_political_analysis}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+\section*{Acknowledgments}
+We thank the U.S. Census Bureau for providing comprehensive redistricting data and the MIT Election Data + Science Lab for election results. This research was conducted using the METIS graph partitioning library developed by George Karypis and Vipin Kumar. We are grateful to [reviewers to be added] for helpful comments and suggestions.
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

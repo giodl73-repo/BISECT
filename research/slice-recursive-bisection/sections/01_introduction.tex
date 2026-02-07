@@ -1,0 +1,57 @@
+\section{Introduction}
+
+Every decade, American states redraw congressional district boundaries to reflect population changes revealed by the decennial census. This redistricting process determines political representation for over 330 million Americans across 435 House seats. Yet despite its profound impact on democratic governance, redistricting remains one of the most contentious and manipulated aspects of American electoral politics.
+
+The problem is not new. Partisan gerrymandering—the strategic manipulation of district boundaries to advantage one party over another—has plagued American democracy since Elbridge Gerry's salamander-shaped Massachusetts district in 1812. What has changed is the sophistication of the manipulation. Modern computing power enables unprecedented precision in identifying partisan voters and crafting districts to maximize electoral advantage \cite{daley2021unrigging}. Gerrymandered maps can virtually guarantee election outcomes before a single vote is cast, transforming the fundamental principle of representative democracy—that voters choose their representatives—into its inverse: representatives choosing their voters.
+
+The Supreme Court's 2019 decision in \textit{Rucho v. Common Cause} \cite{rucho2019} effectively removed federal judicial oversight of partisan gerrymandering, declaring such disputes non-justiciable political questions beyond the reach of federal courts. This ruling left redistricting primarily in the hands of state legislatures, where partisan incentives often dominate. The result is predictable: in states where one party controls the redistricting process, maps tend to favor that party. Public confidence in electoral fairness has eroded accordingly.
+
+Reform efforts have focused largely on institutional solutions: independent redistricting commissions, nonpartisan staff agencies, and enhanced transparency requirements. These approaches represent important progress. Yet they share a fundamental limitation—they replace one set of human decision-makers with another, substituting partisan operatives with "independent" commissioners. The humans change, but human judgment remains central. Commissioners must still decide where to draw lines, how to balance competing criteria, and which communities to unite or divide. Even well-intentioned humans possess political knowledge that inevitably influences their decisions, consciously or otherwise.
+
+This paper explores a different approach: removing human judgment from boundary-drawing decisions entirely through algorithmic redistricting. The algorithm we present uses only census data—population counts and geographic adjacency—to produce congressional district maps. It cannot access voter registration, election results, partisan affiliation, or any political information. The boundaries it draws reflect population distribution and geographic optimization, not strategic calculation or backroom negotiation.
+
+\subsection{The Huntington-Hill Precedent}
+
+Our proposal rests on a powerful precedent: for over 80 years, Congress has successfully used a mathematical formula—the Huntington-Hill method—to allocate House seats among states. This apportionment problem was historically even more contentious than redistricting, with Congress changing formulas after nearly every census between 1790 and 1940 to favor particular states or political coalitions \cite{balinski1982fair}. The instability ended in 1941 when Congress adopted the Huntington-Hill method \cite{huntington1928method}, which has operated without controversy ever since.
+
+The method's success stems not from optimal outcomes—mathematical proofs show that no apportionment method satisfies all reasonable fairness criteria simultaneously \cite{balinski1982fair}—but from procedural legitimacy. The Huntington-Hill formula is transparent, reproducible, and treats all states identically. Most critically, it removes human discretion from a politically sensitive decision. No state can credibly claim unfair treatment when seat allocation follows from explicit mathematical principles applied uniformly nationwide.
+
+We argue that the same philosophy can govern redistricting. If mathematical objectivity resolved the politically charged question of \textit{how many} seats each state receives, why not apply similar principles to \textit{where} district boundaries should be drawn? Both questions involve dividing political power according to population. Both invite partisan manipulation when left to political actors. Both require balancing competing criteria that cannot all be perfectly satisfied. And both can benefit from mathematical formalization that transforms contentious political disputes into technical implementation questions.
+
+\subsection{Our Contribution}
+
+This paper presents a recursive graph bisection algorithm for congressional redistricting inspired by the Huntington-Hill precedent. We model each state as a graph where census tracts form nodes and geographic adjacency defines edges. Using the METIS graph partitioning library \cite{karypis1998fast}, we recursively divide this graph to create districts that:
+
+\begin{itemize}
+    \item Achieve near-perfect population equality (mean deviation: 2.79\%)
+    \item Maintain geographic contiguity by construction
+    \item Optimize compactness through edge-cut minimization
+    \item Produce reproducible results from the same input data
+    \item Possess structural immunity to partisan manipulation
+\end{itemize}
+
+We apply this method to all 50 states using 2020 Census tract-level population data \cite{census2020redistricting}, creating a complete nationwide congressional district plan. We then overlay 2020 presidential election results \cite{medsl2020} onto the algorithmically-generated districts to analyze their political characteristics—examining what partisan patterns emerge when political data plays no role in boundary decisions.
+
+Our analysis reveals several key findings:
+
+\textbf{Technical feasibility:} Recursive bisection successfully handles diverse state characteristics—from Wyoming's single district to California's 52 districts, from compact states to island territories. The algorithm achieves population balance comparable to carefully-drawn human maps while guaranteeing geographic contiguity.
+
+\textbf{Partisan patterns reflect geography, not manipulation:} The resulting districts exhibit a systematic Democratic advantage in district count (56.5\% Democratic-leaning) despite the algorithm's complete ignorance of partisan data. This efficiency gap arises from well-documented geographic sorting: urban Democratic voters concentrate in compact areas while rural Republican voters disperse across larger regions \cite{chen2013unintentional,rodden2019why}. The pattern confirms that compactness-optimizing algorithms cannot eliminate efficiency gaps caused by political geography—but critically, the algorithm cannot intentionally create or amplify such gaps for partisan advantage.
+
+\textbf{The impossibility defense:} Traditional arguments against gerrymandering focus on intent—did mapmakers deliberately manipulate boundaries for partisan gain? This standard proves difficult to apply legally and institutionally, as \textit{Rucho} demonstrated. Our algorithm offers a stronger defense: \textit{impossibility}. The algorithm cannot gerrymander because it cannot see partisan data. It draws boundaries based on population and adjacency alone. Any partisan patterns in the results reflect the interaction between geographic voter distribution and compactness optimization, not strategic design.
+
+\textbf{Process fairness over outcome fairness:} Political scientists and legal scholars debate what constitutes "fair" political representation: proportional representation (seat share matching vote share), competitive districts (maximizing electoral contestability), partisan symmetry (equal treatment of parties), or communities of interest (keeping like-minded voters together). Our algorithm does not optimize for any single fairness metric. Instead, it prioritizes \textit{process fairness}—transparent, reproducible decision-making that treats all geographic units identically and cannot be manipulated to achieve predetermined outcomes. This philosophical stance aligns with Huntington-Hill: accept that political geography constrains outcomes, but ensure the process cannot be gamed.
+
+\subsection{Normative Implications}
+
+Algorithmic redistricting raises profound questions about democratic governance. When should mathematical formulas make political decisions? What role remains for human judgment when algorithms draw boundaries? How do we balance competing values—transparency versus flexibility, objectivity versus community input, neutrality versus affirmative obligations like Voting Rights Act compliance?
+
+We do not claim algorithms should replace all human judgment in redistricting. Values questions—how much weight to give compactness versus communities of interest, whether to prioritize competitive districts or partisan fairness—require normative choices that algorithms cannot make independently. Algorithms are tools, not oracles.
+
+But we contend that once humans establish redistricting criteria, algorithms can implement those criteria more objectively, transparently, and consistently than any human commission. More fundamentally, algorithmic redistricting addresses the core legitimacy crisis in American redistricting: the widespread belief that district maps serve politicians' interests rather than voters' interests. When an algorithm that cannot see political data draws boundaries, voters can trust that geographic and population considerations—not partisan calculation—determined the outcome.
+
+Eighty years ago, Congress faced an analogous legitimacy crisis in apportionment. Huntington-Hill resolved it not by finding perfect fairness—which mathematically cannot exist—but by establishing procedural legitimacy through mathematical objectivity. Redistricting today faces a similar crisis. Algorithmic approaches offer a similar solution.
+
+\subsection{Road Map}
+
+The remainder of this paper proceeds as follows. Section~\ref{sec:huntington} examines the Huntington-Hill precedent in detail, identifying the principles that enabled mathematical governance of apportionment and how those principles extend to redistricting. Section~\ref{sec:methodology} describes our recursive bisection algorithm, including graph construction, water-based adjacency handling, and the METIS partitioning library. Section~\ref{sec:results} presents population balance and compactness statistics for all 435 algorithmically-generated districts. Section~\ref{sec:analysis} overlays election data to analyze political characteristics and partisan patterns. Section~\ref{sec:discussion} discusses advantages and limitations, compares our approach to alternatives, and examines policy implications. Section~\ref{sec:conclusion} concludes with reflections on mathematical governance and democratic legitimacy.

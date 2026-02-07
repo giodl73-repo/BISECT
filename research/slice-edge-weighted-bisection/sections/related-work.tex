@@ -1,0 +1,27 @@
+\section{Related Work}
+
+\subsection{Redistricting Approaches}
+
+Congressional redistricting has been approached through multiple computational frameworks. \textbf{Integer programming} methods~\cite{garfinkel1970optimal,mehrotra1998optimal} encode complex objectives (compactness, county preservation, communities of interest) as constraints but face intractability for large states, with solve times exceeding days or requiring relaxations that sacrifice optimality guarantees. \textbf{Heuristic optimization} via simulated annealing~\cite{bozkaya2003zone} or genetic algorithms~\cite{bacao2005applying} can handle multiple objectives but lack convergence guarantees and may require extensive parameter tuning.
+
+\textbf{Markov Chain Monte Carlo} (MCMC) sampling~\cite{duchin2018outlier,fifield2020automated} enables statistical analysis by generating ensembles of redistricting plans, revealing whether enacted plans are outliers. This approach excels at detecting gerrymandering but does not optimize specific objectives—samples explore the space of legal plans rather than seeking geometrically optimal solutions. Our work complements MCMC by providing a deterministic optimization baseline for compactness.
+
+\textbf{Graph partitioning} provides a natural framework: vertices represent census units (tracts or blocks), edges connect adjacent units, and partitioning algorithms produce districts while satisfying population balance and contiguity~\cite{ricca2008local}. METIS~\cite{karypis1998metis}, KaHIP~\cite{sanders2013think}, and Scotch~\cite{pellegrini2008scotch} are mature multilevel partitioners achieving near-linear time through coarsening, partitioning, and refinement phases. Our companion paper~\cite{TODO-recursive-bisection} introduces baseline recursive bisection using METIS for congressional redistricting; here we enhance it with geometric edge weights.
+
+\subsection{Compactness Metrics}
+
+Compactness quantifies district regularity. \textbf{Polsby-Popper}~\cite{polsby1991third}, $PP = 4\pi A / P^2$, compares districts to circles (maximum PP = 1.0 for perfect circle). \textbf{Reock}~\cite{reock1961measuring} measures area relative to minimum bounding circle. \textbf{Convex hull ratio} compares area to convex hull. Each metric captures different geometric properties; courts have used Polsby-Popper in assessing gerrymandering claims~\cite{pildes2004democracy}.
+
+Post-processing approaches~\cite{ricca2008local,swamy2011least} iteratively swap census tracts between districts to improve compactness scores. While effective for local refinement, these methods risk becoming trapped in local optima and may violate contiguity when swapping boundary tracts. Our approach optimizes compactness \textit{during} partitioning, avoiding these pitfalls.
+
+\subsection{Edge Weighting in Graph Partitioning}
+
+Edge-weighted graph partitioning is standard in scientific computing: weights represent communication costs in parallel computing~\cite{hendrickson1995graph}, wire lengths in VLSI design~\cite{alpert1995spectral}, or interaction strengths in network analysis~\cite{karypis1999multilevel}. Minimizing weighted edge cuts directly optimizes domain-specific objectives rather than topological structure.
+
+To our knowledge, this is the \textbf{first application} of geometric boundary lengths as edge weights in redistricting. While edge weighting is conceptually straightforward, its application requires addressing redistricting-specific challenges: (1) Computing boundary lengths for 60,000+ census tract pairs per state via geometric intersections; (2) Handling water crossings, islands, and disconnected components through county-based bridge connections; (3) Scaling continuous lengths to integer METIS weights with sufficient precision; (4) Validating results against enacted districts at national scale.
+
+\subsection{Constitutional and Legal Context}
+
+The U.S. Supreme Court established equal population requirements in \textit{Reynolds v. Sims} (1964)~\cite{reynolds-v-sims}, mandating "one person, one vote." Modern redistricting must also comply with the Voting Rights Act (1965)~\cite{voting-rights-act}, preventing dilution of minority voting strength. While compactness is not constitutionally required, it serves as evidence of neutrality: courts view extremely non-compact districts as potential gerrymandering indicators~\cite{stephanopoulos2015partisan}.
+
+Our method achieves strict population balance ($\pm 0.5\%$), guarantees contiguity by construction, and optimizes compactness—providing three of the traditional redistricting criteria while remaining completely neutral to political data. This makes edge-weighted recursive bisection a strong baseline for evaluating partisan claims.

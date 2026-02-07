@@ -1,0 +1,77 @@
+paper: slice-cross-census-validation
+title: "Slice-Based Cross-Census Validation for Congressional Redistricting Algorithms"
+venue: "ACM SIGSPATIAL 2026"
+stage: ready
+round: 2
+reviewers:
+  - name: Michael Goodchild
+    affiliation: UC Santa Barbara
+    expertise: GIS theory, spatial analysis, geography
+    score: 3.5
+  - name: May Yuan
+    affiliation: University of Texas
+    expertise: Spatial algorithms, census data, temporal GIS
+    score: 3.5
+  - name: Ümit V. Çatalyürek
+    affiliation: Georgia Tech
+    expertise: Hypergraph partitioning, parallel algorithms
+    score: 3.5
+  - name: Moon Duchin
+    affiliation: Rutgers
+    expertise: Gerrymandering, metric geometry, fairness
+    score: 3.5
+  - name: George Karypis
+    affiliation: University of Minnesota
+    expertise: METIS, graph partitioning, multilevel algorithms
+    score: 4.0
+reviews:
+  round-1:
+    completed: 5
+    synthesis: true
+    avg_score: 2.7
+    verdict: "Major Revisions Required"
+  round-2:
+    completed: 5
+    synthesis: true
+    avg_score: 3.6
+    verdict: "Accept (Strong)"
+p1_items:
+  - item: "P1.1: Census tract correspondence methodology missing - specify tract matching algorithm, quantify instability, define persistent centroids"
+    addressed: true
+    notes: "Added section 3.1 with tract matching methodology, stability statistics table, supplementary data"
+  - item: "P1.2: METIS configuration not specified - document variant, parameters, population balance enforcement, stochasticity handling"
+    addressed: true
+    notes: "Added section 3.4 with full METIS configuration, 10-run stochasticity analysis, edge-cut statistics"
+  - item: "P1.3: Graph construction not detailed - define adjacency, edge weights, report statistics, document preprocessing"
+    addressed: true
+    notes: "Added section 3.3 with Rook contiguity definition, boundary-length weighting, graph statistics table"
+  - item: "P1.4: Spatial autocorrelation and MAUP not addressed - quantify autocorrelation, MAUP sensitivity, boundary effects"
+    addressed: true
+    notes: "Added section 4.4 with Moran's I analysis, K=3/5/7 sensitivity test, boundary handling methodology"
+  - item: "P1.5: Neutrality claim requires precision - distinguish process/outcome/intent neutrality, use precise terminology"
+    addressed: true
+    notes: "Revised abstract and intro with precise language, added Limitations section clarifying scope"
+history:
+  - stage: draft
+    date: 2026-02-07
+    note: "Initial paper state file created"
+  - stage: panel
+    date: 2026-02-07
+    round: 1
+    note: "5 reviewers assigned and reviews generated"
+  - stage: synthesis
+    date: 2026-02-07
+    round: 1
+    note: "Reviews consolidated - 5 P1 blocking issues identified, avg score 2.7/4"
+  - stage: revision
+    date: 2026-02-07
+    round: 1
+    note: "All 5 P1 items addressed - added 4 new methodology sections, revised neutrality language, added Limitations section"
+  - stage: recheck
+    date: 2026-02-07
+    round: 2
+    note: "Round 2 reviews completed - all reviewers raised scores, avg 3.6/4, gate passed"
+  - stage: ready
+    date: 2026-02-07
+    round: 2
+    note: "Paper ready for submission - Strong Accept recommendation from all reviewers"

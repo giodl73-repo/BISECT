@@ -1,0 +1,25 @@
+\section{Introduction}
+
+Congressional redistricting in the United States faces a fundamental tension: while legal requirements mandate population equality~\cite{reynolds-v-sims} and geographic contiguity, the geometric quality of districts—measured by compactness—remains largely discretionary. This discretion enables gerrymandering, where partisan actors manipulate district boundaries to maximize electoral advantage. Gerrymandered districts characteristically exhibit elongated, irregular shapes with unnecessarily long perimeters connecting disparate regions to achieve desired partisan outcomes.
+
+Automated redistricting via graph partitioning offers a promising path toward neutrality: represent geographic units (census tracts) as graph vertices, define adjacency edges, and partition the graph to satisfy population and contiguity constraints~\cite{duchin2018outlier,chen2013redistricting}. The METIS multilevel partitioning algorithm~\cite{karypis1998metis} provides near-linear time performance and produces contiguous partitions with strict population balance. However, standard METIS minimizes \textit{edge cuts}—the number of edges crossing partition boundaries—treating all adjacencies equally. This topological objective ignores a critical geometric property: \textit{boundary length}.
+
+Consider two adjacent census tracts sharing a 150-meter boundary versus two sharing a 12.5-kilometer boundary. Standard edge cut minimization assigns equal cost to cutting either edge, despite an 83-fold difference in perimeter contribution. This mismatch between topological optimization and geometric quality explains why unweighted partitioning produces irregular districts: METIS may select cuts that minimize edge count while dramatically increasing total perimeter.
+
+\paragraph{Key Insight} The Polsby-Popper compactness metric, $PP = 4\pi \cdot \text{Area} / \text{Perimeter}^2$, is directly optimized by minimizing perimeter when area (equivalently, population) is held constant through balance constraints. By weighting graph edges with actual boundary lengths, we align METIS's edge-cut objective with geometric compactness: minimizing weighted edge cuts directly minimizes total district perimeters.
+
+\paragraph{Contributions} We introduce \textbf{edge-weighted recursive bisection} for congressional redistricting and demonstrate its effectiveness at national scale:
+
+\begin{enumerate}
+    \item \textbf{Method}: A graph construction pipeline that computes boundary lengths for all adjacent census tract pairs, handling complex geography including water crossings, islands, and point adjacencies through county-based bridge connections.
+
+    \item \textbf{METIS Integration}: Implementation using CSR format with integer edge weights (centimeter precision), enabling direct optimization of perimeter during multilevel partitioning.
+
+    \item \textbf{National Evaluation}: Application to all 435 congressional districts across 50 U.S. states using 2020 Census data, achieving 56\% compactness improvement over unweighted baselines and 20\% improvement over enacted 2020 congressional districts.
+
+    \item \textbf{Partisan Neutrality Verification}: Particular effectiveness in states with partisan-drawn maps (Illinois +174\%, Louisiana +104\%), demonstrating that boundary minimization naturally counteracts elongated gerrymandered designs.
+
+    \item \textbf{Computational Tractability}: Near-linear time complexity $O(N \log K)$ for $N$ tracts and $K$ districts with 10-50\% runtime overhead; full 50-state execution in 2-3 hours on desktop hardware.
+\end{enumerate}
+
+This work demonstrates that incorporating geometric information into graph partitioning—a standard technique in other domains~\cite{hendrickson1995graph}—yields substantial improvements in redistricting quality. By minimizing perimeter directly during partitioning rather than via post-processing, we avoid local optima and contiguity violations while maintaining computational efficiency. Our results show that algorithmic redistricting not only matches human mapmaking but demonstrably exceeds it: edge-weighted partitioning surpasses enacted district compactness in 37 of 50 states, with particularly strong gains in gerrymandered jurisdictions.

@@ -1,0 +1,162 @@
+\section{Methodology: Recursive Graph Bisection}
+\label{sec:methodology}
+
+This section describes our algorithmic redistricting approach: how we represent states as graphs, how we partition those graphs into districts, and how design choices affect outcomes.
+
+\subsection{Redistricting as Graph Partitioning}
+
+We formalize redistricting as a balanced graph partitioning problem. Each state becomes a weighted, undirected graph $G = (V, E, w)$ where:
+
+\begin{itemize}
+    \item $V$ is the set of census tracts in the state
+    \item $E$ is the set of edges connecting geographically adjacent tracts
+    \item $w: V \to \mathbb{R}^+$ assigns each tract its 2020 Census population as node weight
+\end{itemize}
+
+The redistricting problem becomes: partition $V$ into $k$ disjoint subsets (districts) $D_1, D_2, \ldots, D_k$ such that:
+
+\begin{enumerate}
+    \item \textbf{Population Balance:} Each district has approximately equal total population: $\sum_{v \in D_i} w(v) \approx P/k$ where $P = \sum_{v \in V} w(v)$ is the state's total population.
+
+    \item \textbf{Contiguity:} Each district forms a connected subgraph—any tract in the district can reach any other tract in that district via paths using only edges within the district.
+
+    \item \textbf{Compactness:} Districts should be geographically compact—roughly as circular as geography allows rather than elongated or irregularly shaped.
+\end{enumerate}
+
+These three criteria—population equality, contiguity, and compactness—constitute the traditional core of redistricting law, established through Supreme Court precedent (\textit{Reynolds v. Sims}, \textit{Karcher v. Daggett}) and state constitutions \cite{reynolds1964,karcher1983}.
+
+\subsection{Graph Construction}
+
+For each state, we construct the graph as follows:
+
+\textbf{Nodes:} The 2020 Census divides the United States into approximately 84,000 census tracts—small, semi-permanent geographic areas designed for statistical data collection \cite{census2020redistricting}. Tracts vary in population (typically 1,200--8,000 people) and geographic size (compact in dense urban areas, expansive in rural regions). We create one node per census tract, weighted by the tract's total population count from the 2020 Census PL 94-171 Redistricting Data File.
+
+\textbf{Edges (Land-Based Adjacency):} We first create edges based on shared boundaries. Two tracts are adjacent if they share a non-zero-length border or touch at a corner point (queen contiguity). We extract tract boundaries from the Census Bureau's TIGER/Line Shapefiles \cite{census2020tigerline} and compute adjacency using spatial intersection operations in GeoPandas.
+
+\textbf{Water-Based Adjacency Augmentation:} Land-based adjacency produces disconnected graphs in 30+ states with islands, water barriers, or peninsulas (Alaska, Hawaii, Washington, Michigan, New York, California, Florida, Maine, and others). Disconnected graph components cannot form contiguous districts spanning islands and mainland.
+
+We address this through county-based bridge connections. For each disconnected component (island or separated region), we identify the nearest tract in the main component within the same county, measured by centroid-to-centroid Euclidean distance after projecting to state-specific coordinate systems (e.g., California Albers EPSG:3310 for California). We then add a bridge edge connecting the disconnected tract to its nearest within-county neighbor.
+
+This minimal bridging approach creates only necessary water crossings while respecting county boundaries—a traditional redistricting criterion. Counties share governance, infrastructure, and community identity; districts crossing county lines but not water are more common than districts crossing water but staying within counties.
+
+\textit{Alternative approaches}: Distance-threshold methods (connecting all tract pairs within threshold distance) create excessive edges, slowing computation and introducing spurious adjacencies. Pure distance-minimization without county constraints produces long-distance connections that violate community coherence. Our county-based bridges balance computational tractability, minimal edge introduction, and traditional redistricting principles.
+
+\textbf{Graph Statistics:} State graph sizes range from under 200 nodes (Wyoming, Vermont, Delaware) to over 8,000 nodes (California, Texas). The national graph contains approximately 84,000 nodes. Edge counts vary with state geography: Iowa (compact, agricultural) has high node-to-edge ratios; Michigan (peninsulas, islands) has lower ratios after bridge augmentation.
+
+\subsection{The METIS Graph Partitioning Library}
+
+Graph partitioning—dividing a graph into balanced, well-connected components—is NP-hard \cite{garey1979computers}. Exact optimization for census-tract-scale graphs (hundreds to thousands of nodes) is computationally infeasible. We employ heuristic methods that find high-quality solutions efficiently.
+
+Specifically, we use METIS 5.1.0 \cite{karypis1998fast}, a widely-used multilevel graph partitioning system. METIS operates in three phases:
+
+\textbf{1. Coarsening:} Iteratively merge adjacent nodes to create progressively smaller graphs that preserve the original's structure.
+
+\textbf{2. Initial Partitioning:} Partition the smallest coarsened graph using fast heuristics.
+
+\textbf{3. Uncoarsening and Refinement:} Project the partition back to the original graph, refining at each level through local moves (Kernighan-Lin algorithm) that reduce edge cuts while maintaining balance.
+
+This multilevel approach achieves near-optimal partitioning quality—typically within 5-10\% of the NP-hard optimum—while running in near-linear time $O((|V| + |E|) \log k)$ for $k$-way partitioning.
+
+\textbf{METIS Objectives:} We configure METIS to minimize edge cuts—the number of edges connecting different partitions. Fewer edge cuts correspond to more compact districts: when district boundaries align with few census tract boundaries, districts have less perimeter relative to area.
+
+METIS's contiguity constraint ensures every partition forms a connected component, guaranteeing legally valid districts. Its balance constraint ensures population deviations stay within specified tolerances (we use $\pm 0.5\%$ per partition).
+
+\subsection{Recursive Bisection Algorithm}
+
+Rather than partitioning each state's graph directly into $k$ districts (which METIS supports but which may not reflect hierarchical political geography), we use recursive bisection: iteratively split partitions in half until reaching the target district count.
+
+Recursive bisection has two advantages. First, it mirrors political geography: states naturally divide into regions (north/south, urban/rural, coastal/inland), which subdivide into smaller regions, which ultimately become districts. This hierarchical structure produces more interpretable districts than flat $k$-way partitioning. Second, it handles arbitrary district counts (odd or even) through a simple target-weight mechanism.
+
+The algorithm proceeds as follows:
+
+\begin{algorithm}[H]
+\caption{Recursive Bisection Redistricting}
+\label{alg:recursive_bisection}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E, w)$, district count $k$, total population $P = \sum_{v \in V} w(v)$
+\Ensure District assignment $d: V \to \{1, 2, \ldots, k\}$ for each tract
+
+\State Initialize: all tracts in partition 0
+\State $\mathcal{P} \gets \{0\}$ \Comment{Set of active partitions}
+\State $p_{target} \gets P / k$ \Comment{Ideal population per district}
+
+\While{$|\mathcal{P}| < k$}
+    \State $p^* \gets \argmax_{p \in \mathcal{P}} \text{population}(p)$ \Comment{Select largest partition}
+    \State $k_{\text{remaining}} \gets k - |\mathcal{P}| + 1$ \Comment{Districts needed from $p^*$}
+
+    \If{$k_{\text{remaining}}$ is even}
+        \State $k_1 \gets k_2 \gets k_{\text{remaining}} / 2$ \Comment{Equal split}
+    \Else
+        \State $k_1 \gets \lfloor k_{\text{remaining}} / 2 \rfloor$, $k_2 \gets \lceil k_{\text{remaining}} / 2 \rceil$ \Comment{Unequal split}
+    \EndIf
+
+    \State $w_1 \gets k_1 \cdot p_{target}$, $w_2 \gets k_2 \cdot p_{target}$ \Comment{Target partition weights}
+    \State Bisect $p^*$ using METIS with target weights $(w_1, w_2)$
+    \State Create new partitions $p_1$, $p_2$ from bisection result
+    \State $\mathcal{P} \gets (\mathcal{P} \setminus \{p^*\}) \cup \{p_1, p_2\}$
+\EndWhile
+
+\State Renumber partitions as districts $1, 2, \ldots, k$
+\State \Return district assignments $d$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Handling Odd District Counts}
+
+States with district counts equal to powers of two (4, 8, 16, 32) require only equal splits: $1 \to 2 \to 4 \to 8$. States with odd or composite district counts require unequal splits at some level.
+
+For example, Alabama's 7 districts require: $1 \to 2 \to 4 \to 7$. The final bisection creates partitions of size 3 and 4. Similarly, Minnesota's 8 districts use equal splits: $1 \to 2 \to 4 \to 8$.
+
+METIS supports unequal splits through target partition weights. We specify $w_1 = k_1 \cdot (P/k)$ and $w_2 = k_2 \cdot (P/k)$ where $k_1 + k_2 = k_{\text{remaining}}$. METIS then creates partitions with populations approximately proportional to these targets while still respecting the global balance constraint ($\pm 0.5\%$).
+
+This mechanism gracefully handles any district count without algorithm modification.
+
+\subsection{METIS Configuration Parameters}
+
+We invoke METIS with the following parameters for each bisection:
+
+\begin{itemize}
+    \item \texttt{nparts=2}: Always bisect (2-way partition)
+    \item \texttt{objtype=cut}: Minimize edge cuts
+    \item \texttt{contig=1}: Enforce contiguity
+    \item \texttt{minconn=1}: Minimize subdomain connectivity
+    \item \texttt{ufactor=5}: Allow 0.5\% population imbalance per partition
+    \item \texttt{niter=100}: Use 100 refinement iterations (default: 10)
+    \item \texttt{tpwgts}: Target partition weights for unequal splits
+\end{itemize}
+
+We do not set an explicit random seed, relying on METIS's default initialization. This introduces minor non-determinism: multiple runs produce slightly different results (typically varying by less than 1\% in compactness metrics). Perfect reproducibility would require fixing METIS's internal random number generator via the \texttt{seed} parameter—a straightforward modification for operational deployment.
+
+The current approach provides strong practical reproducibility (results cluster tightly across runs) while allowing flexibility for ensemble methods that analyze solution variation.
+
+\subsection{Computational Performance}
+
+We process all 50 states independently, executing 4-8 redistricting tasks in parallel on a 6-core desktop workstation (Intel Core i7, 32GB RAM). Total processing time for the complete nationwide redistricting run: approximately 2.5 hours.
+
+Per-state processing time varies with graph size: Wyoming (single district) completes in seconds; California (52 districts, 8,000+ tracts) requires 15-20 minutes. Memory consumption scales linearly with graph size, peaking below 2GB per state.
+
+This computational efficiency enables rapid iteration, parameter sensitivity analysis, and scenario testing—capabilities infeasible with manual redistricting.
+
+\subsection{Design Choices and Alternatives}
+
+Our approach makes several design choices worth examining:
+
+\textbf{Recursive Bisection vs. Direct k-way Partitioning:} METIS supports direct $k$-way partitioning. We chose recursive bisection for hierarchical interpretability and algorithmic simplicity. Direct $k$-way partitioning might produce slightly better compactness but loses the intuitive nested structure.
+
+\textbf{Census Tracts vs. Census Blocks:} Census blocks provide finer geographic resolution (8 million blocks nationwide vs. 84,000 tracts) enabling tighter population equality. We use tracts as a practical compromise: blocks would increase graph sizes 100-fold, slowing computation and complicating water-based adjacency. Tract-level implementation serves as proof-of-concept; block-level refinement is feasible for operational systems.
+
+\textbf{METIS vs. Alternative Partitioners:} Other libraries exist (Scotch, KaHIP, Zoltan). We chose METIS for its widespread adoption, mature implementation, and well-documented behavior. Alternative partitioners could substitute with minimal algorithmic changes.
+
+\textbf{Edge-Cut Minimization vs. Other Objectives:} METIS can optimize alternative objectives (communication volume, total edge weight). We use edge cuts as a proxy for compactness. Future work could explore edge-weighted variants where edge weights equal geographic boundary lengths—explicitly optimizing perimeter.
+
+\textbf{Single Run vs. Ensemble:} We present single-run results. Ensemble approaches—generating multiple district plans and analyzing their distribution—could strengthen statistical claims about partisan neutrality. This extension is straightforward given our computational efficiency.
+
+\subsection{Data Sources}
+
+\textbf{Population Data:} 2020 Census PL 94-171 Redistricting Data File \cite{census2020redistricting}, providing tract-level population counts used for congressional apportionment.
+
+\textbf{Geographic Boundaries:} 2020 Census TIGER/Line Shapefiles \cite{census2020tigerline}, providing census tract boundaries and geometries.
+
+\textbf{Election Data:} MIT Election Data + Science Lab precinct-level 2020 presidential election results \cite{medsl2020}, aggregated to census tracts for political analysis (Section~\ref{sec:analysis}).
+
+All data sources are publicly available and freely accessible, enabling complete result verification.
