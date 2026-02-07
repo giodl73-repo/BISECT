@@ -216,7 +216,7 @@ def generate_summary_table(stats: Dict, output_dir: Path):
 def main():
     # Paths
     metrics_dir = Path('outputs/data/2020/partisan_metrics')
-    output_dir = Path('research/slice-edge-weighted-bisection/tables')
+    output_dir = Path('research/gerry-edge-weighted-bisection/tables')
     output_dir.mkdir(parents=True, exist_ok=True)
 
     enacted_file = metrics_dir / 'partisan_metrics_2020_enacted.json'

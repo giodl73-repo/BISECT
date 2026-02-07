@@ -166,7 +166,7 @@ METIS explicitly prefers cuts along short boundaries even when this requires cut
 
 def main():
     data_dir = Path('outputs/data/2020/partitioning')
-    tables_dir = Path('research/slice-edge-weighted-bisection/tables')
+    tables_dir = Path('research/gerry-edge-weighted-bisection/tables')
 
     print("=" * 70)
     print("Generate Partitioning Quality LaTeX Tables")

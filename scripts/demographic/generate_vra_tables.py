@@ -146,7 +146,7 @@ Algorithmic (compact) districting loses """ + f"{total_loss} of {total_enacted} 
     return output_file
 
 def main():
-    tables_dir = Path('research/slice-edge-weighted-bisection/tables')
+    tables_dir = Path('research/gerry-edge-weighted-bisection/tables')
 
     print("=" * 70)
     print("Generate VRA Compliance LaTeX Tables")

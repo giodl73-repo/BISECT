@@ -92,7 +92,7 @@ def compute_vra_status(enacted_mm: int, algorithmic_mm: int, state_total_distric
 
 def main():
     demographics_dir = Path('outputs/data/2020/demographics')
-    output_dir = Path('research/slice-edge-weighted-bisection/tables')
+    output_dir = Path('research/gerry-edge-weighted-bisection/tables')
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("=" * 70)

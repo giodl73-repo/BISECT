@@ -118,7 +118,7 @@ Create comparison tables for paper:
 python scripts/political/compare_partisan_outcomes.py \
     --enacted outputs/data/2020/partisan_metrics/partisan_metrics_2020_enacted.csv \
     --algorithmic outputs/data/2020/partisan_metrics/partisan_metrics_2020_algorithmic.csv \
-    --output research/slice-edge-weighted-bisection/tables/
+    --output research/gerry-edge-weighted-bisection/tables/
 ```
 
 **Output Tables** (LaTeX format):

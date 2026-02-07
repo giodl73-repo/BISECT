@@ -93,7 +93,7 @@ validation in HPC community, (3) straightforward edge-weight integration.
 
 def main():
     data_dir = Path('outputs/data/2020/partitioner_comparison')
-    tables_dir = Path('research/slice-edge-weighted-bisection/tables')
+    tables_dir = Path('research/gerry-edge-weighted-bisection/tables')
 
     print("=" * 70)
     print("Generate Partitioner Comparison LaTeX Table")

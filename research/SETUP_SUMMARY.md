@@ -67,7 +67,7 @@
 
 **Directories Created**:
 - `slice-edge-weighted-algorithm/` - For Slice A
-- `slice-cross-census-validation/` - For Slice B
+- `gerry-cross-census-validation/` - For Slice B
 - `docs/` - For compiled PDFs
 
 ---
@@ -262,7 +262,7 @@ research/
 ├── slice-edge-weighted-algorithm/
 │   ├── sections/
 │   └── reviews/
-├── slice-cross-census-validation/
+├── gerry-cross-census-validation/
 │   ├── sections/
 │   └── reviews/
 └── docs/
