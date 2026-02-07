@@ -1,3 +1,8 @@
+---
+wave_uuid: b45d8d
+slug: edit-presentation
+uuid: 0cf701
+---
 # E21: Edit-Presentation Skill
 
 **Status**: ✅ COMPLETED

@@ -1,0 +1,12 @@
+project: apportionment
+slug: quality-skills
+uuid: b45d8d
+name: Quality & Skills
+created: '2026-01-14'
+status: COMPLETED
+pulses:
+  - "~f994cb+artifact-naming"  # Pulse 1
+  - "~8416f6+figure-quality"  # Pulse 2
+  - "~e07e16+create-skill"  # Pulse 3
+  - "~77daf3+edit-paper"  # Pulse 4
+  - "~0cf701+edit-presentation"  # Pulse 5

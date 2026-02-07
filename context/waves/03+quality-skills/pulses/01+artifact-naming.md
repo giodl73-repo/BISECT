@@ -1,3 +1,8 @@
+---
+wave_uuid: b45d8d
+slug: artifact-naming
+uuid: f994cb
+---
 # E17: Standardize Artifact Naming Conventions
 
 **Status**: ✅ COMPLETED

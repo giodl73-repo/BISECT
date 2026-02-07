@@ -1,3 +1,8 @@
+---
+wave_uuid: b45d8d
+slug: figure-quality
+uuid: 8416f6
+---
 # E18: Presentation Figure Quality Improvements
 
 **Status**: ✅ COMPLETED

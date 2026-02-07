@@ -1,3 +1,8 @@
+---
+wave_uuid: b45d8d
+slug: edit-paper
+uuid: 77daf3
+---
 # E20: Edit-Paper Skill
 
 **Status**: ✅ COMPLETED

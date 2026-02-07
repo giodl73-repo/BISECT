@@ -1,3 +1,8 @@
+---
+wave_uuid: b45d8d
+slug: create-skill
+uuid: e07e16
+---
 # E19: Create-Skill Meta-Skill
 
 **Status**: ✅ COMPLETED

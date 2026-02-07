@@ -1,3 +1,10 @@
+---
+slug: quality-skills
+uuid: b45d8d
+name: Quality & Skills
+created: '2026-01-14'
+status: COMPLETED
+---
 # Wave 3: Quality & Skills
 
 **Date**: 2026-01-14 to 2026-01-15
@@ -34,48 +41,6 @@
 
 ---
 
-## Phases
-
-### Phase 1: Quality Standards (Enhancements 17, 18)
-**Completed**: 2026-01-14 to 2026-01-15
-
-Establish publication-ready quality standards for all outputs.
-
-**E17 - Artifact Naming Standardization**:
-- Consistent naming conventions
-- Maps, CSVs, analysis files standardized
-- Easy file identification
-
-**E18 - Figure Quality Improvements**:
-- Higher DPI for publications
-- Better fonts and labels
-- Publication-ready styling
-- Professional presentation quality
-
-### Phase 2: Development Tools (Enhancements 19, 20, 21)
-**Completed**: 2026-01-15
-
-Build Claude Code skills for rapid development and academic workflows.
-
-**E19 - Create-Skill Meta-Skill**:
-- Rapid skill creation (30-60 min → 5-10 min)
-- Proper structure and permissions
-- Automated documentation
-
-**E20 - Edit-Paper Skill**:
-- Academic paper editing
-- Proofreading and condensing
-- Page limit targeting
-- Journal submission ready
-
-**E21 - Edit-Presentation Skill**:
-- Presentation editing
-- Clarity and conciseness
-- Visual balance
-- Time constraint fitting
-
----
-
 ## Results
 
 ### Quality Improvements
@@ -104,6 +69,28 @@ Build Claude Code skills for rapid development and academic workflows.
 - `.claude/skills/edit-presentation/` - Presentation editing skill
 - `scripts/pipeline/visualize_*.py` - Figure quality improvements
 - `docs/ARTIFACT_NAMING.md` - Naming conventions documentation
+
+---
+
+
+## Roles Summary
+
+### Engineer Role
+**File**: `roles/engineer.md`
+
+**See individual role files for detailed phases, tasks, and testing.**
+
+## Pulses
+
+| ID | Role | Slug | Overview |
+|----|------|------|----------|
+| ~1 | Engineer | artifact-naming | --- |
+| ~2 | Engineer | figure-quality | Actual Implementation Time: ~3-4 hours |
+| ~3 | Engineer | create-skill | - Existing skills in `.claude/skills/` - Pattern examples |
+| ~4 | Engineer | edit-paper | - LaTeX Best Practices |
+| ~5 | Engineer | edit-presentation | - Presentation Zen Principles |
+
+**See `pulses/` for detailed enhancement documentation.**
 
 ---
 
