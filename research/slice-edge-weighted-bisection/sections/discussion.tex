@@ -18,13 +18,23 @@ This alignment manifests in three ways:
 
 \subsection{Gerrymandering and Boundary Minimization}
 
-The particularly strong results in gerrymandered states (Illinois +174\%, Louisiana +104\%, Texas +86\%) reveal a deeper connection between boundary minimization and partisan neutrality.
+The particularly strong results in gerrymandered states (Illinois +174\%, Louisiana +104\%, Texas +86\%) reveal a deeper connection between boundary minimization and political blindness.
 
 \textbf{Gerrymandering requires elongation}. To "pack" opposition voters into few districts or "crack" them across many districts, partisan mapmakers must create long, irregular boundaries connecting geographically distant regions. Consider Illinois's 4th District (pre-2020), which connected two predominantly Hispanic neighborhoods via a narrow strip along Interstate 294—a textbook example of packing creating a 53-kilometer perimeter for a district with compact alternatives requiring only 30-35 kilometers.
 
-Boundary minimization naturally resists these manipulations: partisan advantage requires geographic distortion, and distortion increases perimeter. By optimizing perimeter \textit{without political data}, edge-weighted recursive bisection produces districts that are geometrically neutral—they cannot favor either party because they minimize the very metric that partisan gerrymandering exploits.
+Boundary minimization naturally resists these manipulations: partisan advantage requires geographic distortion, and distortion increases perimeter. By optimizing perimeter \textit{without political data}, edge-weighted recursive bisection produces politically blind districts—they cannot incorporate partisan intent because the algorithm has no access to political information.
 
-This is not to say our method is \textit{politically} neutral—any redistricting plan has partisan effects due to geographic sorting of voters~\cite{rodden2019geography}. Rather, it is \textit{algorithmically} neutral: compactness emerges from geometric optimization, not partisan intent.
+However, we must distinguish three types of neutrality:
+
+\begin{enumerate}
+    \item \textbf{Algorithmic neutrality}: Our method uses no political data—partisan outcomes arise from geographic facts (voter distribution), not algorithmic design choices.
+
+    \item \textbf{Political blindness}: The algorithm cannot favor either party because it has no access to voter preferences or election results.
+
+    \item \textbf{Partisan neutrality}: The resulting districts produce equal electoral outcomes for both parties. Our method \textbf{does NOT guarantee this}—compact districts may systematically advantage one party due to geographic sorting~\cite{rodden2019geography}.
+\end{enumerate}
+
+Our partisan analysis (Section~3.2) confirms this distinction: algorithmically drawn districts exhibit partisan effects in many states, though these effects are typically smaller than intentionally gerrymandered enacted plans. Compactness alone is insufficient for partisan balance when voters are geographically sorted.
 
 \subsection{Comparison to Commission-Drawn Plans}
 
@@ -66,7 +76,7 @@ This computational efficiency enables rapid exploration of alternative scenarios
 
 \textbf{Bridge edge weighting}: County-based median boundary lengths for water crossings are heuristic, not principled. More sophisticated approaches (shortest path distances, population-weighted centroids) might improve island and water-crossing states.
 
-\textbf{Political neutrality vs political outcomes}: While our method is algorithmically neutral (no partisan data), any redistricting plan has partisan consequences due to voter geography. Edge-weighted bisection cannot eliminate the "geography is destiny" problem inherent to single-member districts.
+\textbf{Algorithmic neutrality vs partisan outcomes}: While our method is algorithmically neutral (no partisan data), any redistricting plan has partisan consequences due to voter geography. Edge-weighted bisection cannot eliminate the "geography is destiny" problem inherent to single-member districts.
 
 \subsection{Policy Implications}
 
@@ -74,7 +84,7 @@ As redistricting reform efforts continue nationwide, computational tools that op
 
 The 20\% improvement over enacted 2020 districts (37 of 50 states) suggests that many state-drawn plans leave substantial room for geometric improvement. States considering redistricting reforms could adopt algorithmic baselines as starting points, allowing commissions to make adjustments for non-geometric criteria (Voting Rights Act, communities of interest) while maintaining compactness floors.
 
-Critically, edge-weighted recursive bisection provides a \textit{neutral baseline} for evaluating gerrymandering claims. If an enacted plan shows substantially lower compactness than the algorithmic result (e.g., Illinois: 0.148 enacted vs 0.406 algorithmic), this provides quantitative evidence of geometric manipulation, useful for both legislative oversight and judicial review.
+Critically, edge-weighted recursive bisection provides a \textit{geometric baseline} for evaluating gerrymandering claims. If an enacted plan shows substantially lower compactness than the algorithmic result (e.g., Illinois: 0.148 enacted vs 0.406 algorithmic), this provides quantitative evidence of geometric manipulation, useful for both legislative oversight and judicial review.
 
 \subsection{Future Work}
 
