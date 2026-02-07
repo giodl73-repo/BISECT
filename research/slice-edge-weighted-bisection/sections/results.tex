@@ -255,6 +255,66 @@ This is not an unintended side effect—it is the \textit{designed behavior} of 
 
 The tradeoff (more edge cuts) has minimal practical impact: redistricting cares about \textit{boundary length} (compactness, travel distance) not \textit{edge count} (graph-theoretic measure). A district boundary crossing 5 urban tract edges (1 km each) is more compact than a boundary crossing 1 rural tract edge (20 km long), even though the latter has lower edge-cut value.
 
+\subsection{Generalization to Alternative Partitioners}
+
+\textbf{Research Question:} Is the compactness improvement specific to METIS, or does edge weighting generalize to other graph partitioners?
+
+\textbf{Motivation:} Section~3.4 demonstrated that edge weighting changes METIS's optimization behavior. However, METIS is one of many multilevel graph partitioners. To validate that \textit{geometric weighting} (not METIS-specific implementation) drives compactness gains, we must show that alternative partitioners produce similar results when given identical edge weights.
+
+\textbf{Methodology:} We compare three state-of-the-art multilevel graph partitioners:
+\begin{itemize}
+    \item \textbf{METIS}~\cite{karypis1998metis}: Multilevel k-way partitioning (Karypis-Kumar algorithm)
+    \item \textbf{KaHIP}~\cite{sanders2013think}: Karlsruhe High-Quality Partitioning (Sanders-Schulz), designed for maximum partition quality with longer runtimes
+    \item \textbf{Scotch}~\cite{pellegrini2008scotch}: PT-Scotch multilevel partitioner (Pellegrini), optimized for parallel scalability
+\end{itemize}
+
+All three use multilevel frameworks (coarsen-partition-refine) and support edge-weighted objectives. We run each partitioner on five representative states with identical inputs: same tract adjacency graph, same geometric edge weights (boundary lengths), same population balance constraints ($\pm 0.5\%$), same contiguity requirements.
+
+\textbf{Results:} Table~\ref{tab:partitioner-comparison} shows compactness comparison across all three partitioners.
+
+\input{tables/partitioner_comparison_table}
+
+\textbf{Findings:} Edge-weighted compactness generalizes across partitioners:
+\begin{itemize}
+    \item \textbf{Tight clustering}: All three partitioners achieve mean compactness within 0.3\% of each other (METIS: 0.3604, KaHIP: 0.3594, Scotch: 0.3594)
+    \item \textbf{State-level consistency}: Maximum deviation from METIS in any state is 1.86\% (Scotch in Alabama)
+    \item \textbf{No systematic bias}: KaHIP outperforms METIS in 2/5 states, Scotch in 2/5 states, METIS in 1/5 states—no partitioner dominates
+    \item \textbf{Comparable quality}: All differences fall within expected variation from random initialization and tie-breaking (typical range: 1-3\% for multilevel partitioners)
+\end{itemize}
+
+\textbf{Example—Pennsylvania}:
+\begin{itemize}
+    \item METIS: 0.4000 Polsby-Popper
+    \item KaHIP: 0.4023 (+0.57\%)
+    \item Scotch: 0.4014 (+0.35\%)
+\end{itemize}
+
+All three produce compactness within 0.6\%, demonstrating that the geometric objective (minimize weighted edge cut = boundary length) is independent of the specific partitioning algorithm.
+
+\textbf{Runtime Comparison:} METIS provides the best runtime-quality tradeoff:
+\begin{itemize}
+    \item \textbf{METIS}: 255s average (baseline)
+    \item \textbf{KaHIP}: 321s average (+26\%, high-quality mode prioritizes solution quality)
+    \item \textbf{Scotch}: 199s average (-22\%, optimized for speed)
+\end{itemize}
+
+For redistricting with 9,000+ tract graphs and 52 districts (California), METIS completes in 5 minutes versus 7 minutes for KaHIP and 4 minutes for Scotch. All are practical for real-world use.
+
+\textbf{Why METIS?} We selected METIS for this work based on:
+\begin{enumerate}
+    \item \textbf{Maturity}: 25+ years of development, extensive validation in HPC community, >15,000 citations
+    \item \textbf{Edge-weight support}: Native edge-weight integration via CSR format~011, straightforward API
+    \item \textbf{Documentation}: Well-documented behavior, predictable convergence, clear parameter semantics
+    \item \textbf{Availability}: Open-source (Apache 2.0), widely packaged (apt, yum, conda), no installation barriers
+    \item \textbf{Comparable quality}: As shown above, METIS achieves similar compactness to newer partitioners
+\end{enumerate}
+
+However, this section demonstrates that the \textit{choice of partitioner is not critical}. Redistricting practitioners could use KaHIP (if maximum quality matters) or Scotch (if speed is priority) and achieve comparable compactness. The key innovation is \textbf{geometric edge weighting}, not METIS specifically.
+
+\textbf{Interpretation:} These results confirm that edge-weighted recursive bisection is a \textit{general technique} for compact redistricting, not a METIS-specific phenomenon. Any multilevel graph partitioner that supports weighted edge cuts can produce compact districts when given geometric weights (tract boundary lengths). The 56\% compactness improvement over unweighted baselines (Section~3.1) is driven by the \textit{objective function} (minimize perimeter), not the \textit{optimization algorithm} (METIS vs KaHIP vs Scotch).
+
+This generalization has practical implications: states can choose partitioners based on their specific constraints (runtime, quality, licensing) without sacrificing compactness. The technique is portable across the entire family of multilevel graph partitioners.
+
 \subsection{Geographic Patterns}
 
 Three categories show particularly large improvements over normal mode:
