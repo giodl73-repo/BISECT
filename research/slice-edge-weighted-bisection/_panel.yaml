@@ -150,7 +150,19 @@ p1_items:
     description: Compare recursive to direct k-way METIS, justify choice
     reviewers: [George Karypis, Ümit Çatalyürek, Bruce Hendrickson, Cynthia Phillips]
     severity: blocking
-    addressed: false
+    addressed: true
+    completion:
+      date: 2026-02-07
+      commit: 61b5113
+      files:
+        - sections/methodology.tex (added justification after algorithm)
+        - scripts/analysis/compare_recursive_kway.py (comparison script)
+      notes: |
+        Compared recursive bisection vs k-way on 10 states. K-way 1.7% better
+        compactness but 20% contiguity failure rate. Recursive guarantees 100%
+        contiguity, 1.7x faster, hierarchical structure. Justified choice:
+        contiguity is absolute legal requirement, robustness trumps marginal
+        quality gains. For redistricting, 100% contiguity > 1.7% compactness.
   - id: P1.6
     title: Soften Neutrality Claims
     description: Replace "partisan neutrality" with "political blindness", distinguish compactness from fairness
@@ -182,3 +194,6 @@ history:
   - stage: revision
     date: 2026-02-07
     note: "P1.4 (Alternative Partitioner Comparison) completed - METIS vs KaHIP vs Scotch within 0.3%, edge weighting generalizes (commit e70ddf7)"
+  - stage: revision
+    date: 2026-02-07
+    note: "P1.5 (Recursive Bisection Justification) completed - recursive guarantees contiguity, k-way 1.7% better but 20% failure rate (commit 61b5113)"
