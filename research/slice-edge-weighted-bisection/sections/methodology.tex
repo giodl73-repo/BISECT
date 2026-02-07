@@ -14,6 +14,18 @@
 
 \textbf{Approach:} Model the state as a weighted graph $G = (V, E, w)$ where vertices $V$ are census tracts, edges $E$ connect adjacent tracts, and weights $w_{ij}$ are boundary lengths. Apply recursive METIS bisection with edge weights to minimize weighted edge cuts, which directly corresponds to minimizing total perimeter.
 
+\subsection{Graph vs Hypergraph Representation}
+
+Congressional redistricting involves partitioning geographic regions where each census tract has well-defined pairwise adjacencies with neighboring tracts. While hypergraph models~\cite{catalyurek1999hypergraph} can represent higher-order relationships (e.g., a vertex shared by multiple tracts), redistricting fundamentally involves \textit{pairwise} boundary sharing: tract $i$ shares a specific boundary segment with tract $j$, and we must decide whether that boundary becomes an internal edge (same district) or a cut edge (different districts).
+
+\textbf{Why graphs suffice:} The perimeter minimization objective decomposes naturally into pairwise edge weights. When three tracts meet at a common vertex (a junction point), each \textit{pair} of adjacent tracts contributes independently to district perimeter. A hyperedge connecting all three would imply a shared multi-way boundary, which does not occur in planar geography—boundaries are always between exactly two regions. The graph representation with weighted edges $(i,j)$ carrying boundary length $w_{ij}$ exactly captures the geometry: total perimeter equals the sum of boundary lengths along cut edges.
+
+\textbf{Hypergraph limitations for redistricting:} Hypergraph partitioning minimizes hyperedge cuts, where cutting a hyperedge incurs a cost that depends on how the hyperedge's vertices are distributed across partitions~\cite{catalyurek2011recent}. This is valuable for applications like circuit partitioning (where a net connects multiple pins) or sparse matrix partitioning (where a nonzero row connects multiple columns). However, redistricting has no natural higher-order structures: a census tract's contribution to district perimeter is the sum of its boundary lengths with neighboring tracts in different districts—a pairwise, not hyperedge, phenomenon. Converting to hypergraphs would require artificial constructions (e.g., creating hyperedges for tract triplets sharing a vertex) that add complexity without improving the geometric objective.
+
+\textbf{Empirical validation:} Section~3.5 demonstrates that multiple graph partitioners (METIS, KaHIP, Scotch) achieve nearly identical compactness (within 0.3\%) when given identical edge weights, confirming that the \textit{graph representation with geometric weights} drives compactness, not partitioner-specific heuristics. If hypergraph modeling offered advantages, we would expect standard graph partitioners to systematically underperform—yet they match or exceed human-drawn districts in 37 of 50 states. This suggests that graph-based edge-weighted partitioning captures the essential structure of the redistricting problem.
+
+For completeness, we note that hypergraph partitioning could be valuable for multi-criteria redistricting objectives that involve non-pairwise constraints (e.g., preserving multi-county communities of interest), but for single-objective compactness optimization, the standard graph model is both theoretically appropriate and empirically sufficient.
+
 \subsection{Graph Construction}
 
 \subsubsection{Adjacency Detection}
