@@ -1,0 +1,77 @@
+\documentclass[12pt,letterpaper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{subfig}
+\usepackage{float}
+\usepackage{listings}
+
+% Hyperref settings
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Bibliography style
+\bibliographystyle{apalike}
+
+% Code listing style
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    numbers=left,
+    numberstyle=\tiny,
+    tabsize=2
+}
+
+% Title and authors
+\title{\textbf{Supplementary Materials:\\
+Quantifying the Voting Rights Act-Compactness Tradeoff}}
+
+\author{
+    Giovanni Della-Libera
+}
+
+\date{\today}
+
+% Document
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document provides supplementary materials for ``Quantifying the Voting Rights Act-Compactness Tradeoff: Non-Majority-Minority Districts Generally Benefit from Demographic-Aware Redistricting.'' It includes: (A) complete technical implementation details with pseudocode and METIS parameters, (B) extended methodology covering all metrics and statistical procedures, (C) additional results including urban-rural analysis, enacted plans comparison, and South Carolina infeasibility investigation, (D) ensemble validation with ReCom comparison, and (E) additional figures and tables referenced in the main text.
+\end{abstract}
+
+\singlespacing
+\tableofcontents
+\clearpage
+
+\doublespacing
+
+% Appendices
+\appendix
+
+\input{sections/supplement_a_implementation.tex}
+\input{sections/supplement_b_methodology.tex}
+\input{sections/supplement_c_results.tex}
+\input{sections/supplement_d_ensemble.tex}
+\input{sections/supplement_e_figures.tex}
+
+% Bibliography (shared with main paper)
+\singlespacing
+\bibliography{references}
+
+\end{document}
