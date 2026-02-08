@@ -65,16 +65,29 @@ Our Pareto frontier analysis provides courts with tools for assessing plan optim
 \input{sections/07_related_work.tex}
 \input{sections/08_conclusion.tex}
 
-% Figures
+% Figures (Key Figures Only - See Supplementary Materials for Additional Figures)
 \clearpage
-\input{sections/figures.tex}
+\input{sections/figures_main.tex}
 
 % Bibliography
 \singlespacing
 \bibliography{references}
 
-% Appendices
+% Note on Supplementary Materials
 \appendix
-\input{sections/appendix_a.tex}
+\section*{Supplementary Materials}
+\addcontentsline{toc}{section}{Supplementary Materials}
+
+Complete supplementary materials are available in a separate document (\texttt{main\_supplement.pdf}) containing:
+
+\begin{itemize}
+    \item \textbf{Appendix A}: Technical Implementation Details (Edge-weighted METIS integration, pseudocode, parameters)
+    \item \textbf{Appendix B}: Extended Methodology (Complete metric definitions, statistical procedures, CVAP processing)
+    \item \textbf{Appendix C}: Additional Results (Urban-rural analysis, enacted plans comparison, South Carolina infeasibility)
+    \item \textbf{Appendix D}: Ensemble Validation (ReCom comparison with 10,000 plans)
+    \item \textbf{Appendix E}: Additional Figures and Tables (Figures S1-S5, extended data tables)
+\end{itemize}
+
+All data, code, and supplementary materials are publicly available at: \url{https://github.com/giodellacitta/congressional-apportionment}
 
 \end{document}
