@@ -1,4 +1,4 @@
-# Expert Reviewer Database - Redistricting Research
+# Expert Reviewer Database
 
 > **AI Simulation Disclosure**: This database supports an AI-simulated peer review
 > system. The named researchers are **not** actual reviewers of this work. Their
@@ -7,112 +7,192 @@
 > their published work, public talks, and documented research philosophy. No
 > endorsement, affiliation, or participation by these individuals is implied.
 > All reviews generated from these personas are synthetic outputs produced by a
-> large language model (Claude, Anthropic).
+> large language model (Claude, Anthropic). See the project README for methodology.
 
-A comprehensive pool of 13 expert reviewers for AI-simulated paper reviews of redistricting algorithm research. This specialized panel covers graph algorithms, political science, constitutional law, GIS, and optimization.
+A comprehensive pool of expert reviewers for AI-simulated paper reviews across all research modules. Select reviewers based on paper topic and contribution type.
 
-**Scope**: Congressional Redistricting via Graph Partitioning
-**Core Topics**: METIS recursive bisection, compactness metrics, political neutrality, constitutional compliance
+**Scope**: Global - shared across all modules in this monorepo.
+**Per-module subsets**: See `{module}/REVIEWERS.md` for module-specific selections.
 
 ---
 
 ## Reviewer Categories
 
-### Category: Graph Algorithms & Partitioning
-*For papers on: graph partitioning, METIS, recursive bisection, edge-weighted algorithms*
+### Category: Systems & Infrastructure
+*For papers on: distributed systems, state management, fault tolerance, scalability*
 
 | Name | Affiliation | Expertise | Key Question |
 |------|-------------|-----------|--------------|
-| **George Karypis** | University of Minnesota | METIS, graph partitioning, multilevel algorithms | What's the partitioning quality vs speed tradeoff? |
-| **Ümit V. Çatalyürek** | Georgia Tech | Hypergraph partitioning, parallel algorithms | How does this scale with graph size? |
-| **Bruce Hendrickson** | Sandia National Labs | Graph partitioning, load balancing, spectral methods | What are the theoretical guarantees? |
+| **Matei Zaharia** | Databricks/Stanford | Spark, MLflow, data systems | How does this scale? What's the failure model? |
+| **Tri Dao** | Princeton/Together AI | FlashAttention, efficiency, systems | What's the compute/memory tradeoff? |
+| **Ion Stoica** | Berkeley/Databricks | RAY, distributed systems | How does this compose with existing infra? |
+| **Joseph Gonzalez** | Berkeley | GraphX, distributed ML | What's the communication pattern? |
+| **Reynold Xin** | Databricks | Spark SQL, query optimization | Can this be expressed declaratively? |
 
-### Category: Political Science & Redistricting
-*For papers on: gerrymandering, electoral systems, political geography, representation*
-
-| Name | Affiliation | Expertise | Key Question |
-|------|-------------|-----------|--------------|
-| **Jonathan Rodden** | Stanford | Political geography, gerrymandering, representation | How does geographic clustering affect partisan outcomes? |
-| **Jowei Chen** | University of Michigan | Automated redistricting, compactness, neutrality | How does this compare to other automated methods? |
-| **Moon Duchin** | Rutgers | Gerrymandering, metric geometry, fairness | What are the mathematical fairness properties? |
-| **Nicholas Stephanopoulos** | Harvard Law | Efficiency gap, partisan symmetry, legal standards | Does this meet judicial standards for neutrality? |
-
-### Category: Constitutional Law & Legal Standards
-*For papers on: constitutional compliance, one-person-one-vote, Voting Rights Act*
+### Category: Compilers & PL Theory
+*For papers on: code generation, DSLs, formal methods, type systems*
 
 | Name | Affiliation | Expertise | Key Question |
 |------|-------------|-----------|--------------|
-| **Richard Pildes** | NYU Law | Election law, constitutional doctrine, VRA | Does this comply with constitutional requirements? |
-| **Heather Gerken** | Yale Law | Election law, voting rights, federalism | What are the normative implications for democracy? |
+| **Chris Lattner** | Modular/LLVM | LLVM, Swift, MLIR, Mojo | Where's the IR? What optimizations? |
+| **Nada Amin** | Harvard | PL theory, Scala, staging | What are the formal semantics? |
+| **Jonathan Ragan-Kelley** | MIT | Halide, compilers, performance | Is there a search over the design space? |
+| **Emery Berger** | UMass | Performance, memory, profiling | What's the overhead? |
+| **Armando Solar-Lezama** | MIT | Program synthesis, Sketch | Can this be synthesized rather than templated? |
 
-### Category: GIS & Geospatial Analysis
-*For papers on: spatial algorithms, census geography, geographic data processing*
-
-| Name | Affiliation | Expertise | Key Question |
-|------|-------------|-----------|--------------|
-| **Michael Goodchild** | UC Santa Barbara | GIS theory, spatial analysis, geography | How are geographic adjacency and topology handled? |
-| **May Yuan** | University of Texas | Spatial algorithms, census data, temporal GIS | How does census tract resolution affect results? |
-
-### Category: Optimization & Operations Research
-*For papers on: combinatorial optimization, constraint satisfaction, heuristics*
+### Category: AI Agents & Orchestration
+*For papers on: LLM agents, multi-agent systems, workflow orchestration*
 
 | Name | Affiliation | Expertise | Key Question |
 |------|-------------|-----------|--------------|
-| **Cynthia A. Phillips** | Sandia National Labs | Combinatorial optimization, graph algorithms | What's the approximation quality? |
-| **William J. Cook** | University of Waterloo | Combinatorial optimization, exact algorithms | Are there better bounds on solution quality? |
+| **Harrison Chase** | LangChain | LangChain, LangGraph, agents | How does this integrate with existing frameworks? |
+| **Jerry Liu** | LlamaIndex | RAG, retrieval, agents | What's the overhead vs autonomous execution? |
+| **Omar Khattab** | Stanford/Databricks | DSPy, prompting, optimization | Can prompts be optimized automatically? |
+| **Shunyu Yao** | Princeton | ReAct, Tree of Thoughts | How does this structure reasoning? |
+| **Noah Shinn** | Princeton | Reflexion, self-improvement | Does the system learn from mistakes? |
+
+### Category: Prompting & LLM Capabilities
+*For papers on: prompt engineering, chain-of-thought, LLM reasoning*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Jason Wei** | OpenAI | Chain-of-thought, emergent abilities | What prompting strategy? Error analysis? |
+| **Denny Zhou** | Google DeepMind | Least-to-most, self-consistency | Is there structured decomposition? |
+| **Sewon Min** | Berkeley/AI2 | In-context learning, few-shot | How does this compare to few-shot? |
+| **Xiang Lisa Li** | Stanford | Prefix tuning, prompt tuning | Why not tune prompts? |
+
+### Category: Human-AI Interaction
+*For papers on: HITL systems, human oversight, decision support*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Ben Shneiderman** | UMD | HCAI, human agency, oversight | Does this preserve meaningful human control? |
+| **Michael Bernstein** | Stanford | Crowdsourcing, human computation | How does this compare to crowd workflows? |
+| **Ece Kamar** | Microsoft Research | Complementarity, deferral | Should blocking be confidence-based? |
+| **Saleema Amershi** | Microsoft Research | Interactive ML, HITL | Does the system learn from feedback? |
+| **Krzysztof Gajos** | Harvard | Adaptive interfaces, personalization | Does this adapt to user behavior? |
+| **Jeffrey Heer** | UW | Visualization, human-data interaction | How are decisions presented? |
+
+### Category: ML Systems & Efficiency
+*For papers on: training efficiency, inference optimization, model serving*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Song Han** | MIT | Pruning, quantization, efficiency | What's the latency? Memory footprint? |
+| **Tianqi Chen** | CMU | TVM, MLC, model optimization | Can this be compiled/optimized? |
+| **Ce Zhang** | ETH/Together | Data-centric AI, systems | How does data quality affect this? |
+| **Dan Fu** | Stanford | Efficient architectures, state space | What's the sequence length scaling? |
+
+### Category: ML Research / Learning
+*For papers on: learning algorithms, representations, generalization*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Chuang Gan** | MIT-IBM Watson | Vision-language, multimodal | Is there a learning component? |
+| **Pieter Abbeel** | Berkeley/Covariant | Robotics, RL, imitation | How does this relate to reward specification? |
+| **Chelsea Finn** | Stanford | Meta-learning, robotics | Can this generalize to new tasks? |
+| **Percy Liang** | Stanford | HELM, benchmarks, foundations | How was this evaluated? |
+| **Ludwig Schmidt** | UW | Distribution shift, robustness | Does this work out-of-distribution? |
+
+### Category: Software Engineering & DevOps
+*For papers on: code review, testing, CI/CD, developer tools*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Shreya Shankar** | Berkeley | ML ops, observability, pipelines | How do you debug this? Test it? |
+| **Sarah Bird** | Microsoft/Responsible AI | ML ops, responsible AI | What are the failure modes? |
+| **Nadia Polikarpova** | UCSD | Verification, synthesis, types | Can correctness be verified? |
+| **Sumit Gulwani** | Microsoft Research | Program synthesis, FlashFill | Can this be synthesized from examples? |
+
+### Category: NLP & Information Retrieval
+*For papers on: text generation, retrieval, QA systems*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Danqi Chen** | Princeton | Dense retrieval, QA | How does retrieval quality affect this? |
+| **Mike Lewis** | Meta AI | RAG, BART, generation | What's the retrieval-generation tradeoff? |
+| **Kenton Lee** | Google | QA, retrieval, entity linking | How does this handle ambiguity? |
+| **Luke Zettlemoyer** | UW/Meta | Semantic parsing, NLU | Is there structure in the output? |
+
+### Category: Security & Safety
+*For papers on: AI safety, alignment, security*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **Dan Hendrycks** | Center for AI Safety | Benchmarks, safety evaluation | What could go wrong? Edge cases? |
+| **Jacob Steinhardt** | Berkeley | Robustness, adversarial | What are the adversarial failure modes? |
+| **Nicholas Carlini** | Google DeepMind | Adversarial ML, extraction | Can this be attacked? |
+| **Florian Tramer** | ETH | Privacy, security, ML | What information leaks? |
 
 ---
 
-## Venue-Specific Selection Guides
+## Conference-Specific Selection Guides
 
-### Political Science Venues (APSR, AJPS, JOP)
-Focus: Political implications, representation, democratic theory
-**Recommended reviewers**: Jonathan Rodden, Jowei Chen, Moon Duchin, Nicholas Stephanopoulos, Richard Pildes
+### MLSys
+Focus: Systems + efficiency + scalability
+**Recommended reviewers**: Matei Zaharia, Tri Dao, Ion Stoica, Song Han, Tianqi Chen, Shreya Shankar
 
-### Law Reviews (Harvard, Yale, Stanford)
-Focus: Constitutional compliance, legal standards, judicial precedents
-**Recommended reviewers**: Richard Pildes, Heather Gerken, Nicholas Stephanopoulos, Moon Duchin
+### NeurIPS (Systems Track)
+Focus: Novel ML systems with learning component
+**Recommended reviewers**: Matei Zaharia, Pieter Abbeel, Chelsea Finn, Ce Zhang, Omar Khattab
 
-### Computer Science Venues (KDD, AAAI, SODA)
-Focus: Algorithms, computational complexity, optimization
-**Recommended reviewers**: George Karypis, Ümit Çatalyürek, Bruce Hendrickson, Cynthia Phillips, William Cook
+### ICML
+Focus: Learning algorithms, theoretical grounding
+**Recommended reviewers**: Percy Liang, Chuang Gan, Chelsea Finn, Denny Zhou, Ludwig Schmidt
 
-### GIS Venues (IJGIS, GeoInformatica, ACM SIGSPATIAL)
-Focus: Geospatial algorithms, census data, spatial analysis
-**Recommended reviewers**: Michael Goodchild, May Yuan, Ümit Çatalyürek, Moon Duchin
+### ACL/EMNLP
+Focus: NLP, text generation, language understanding
+**Recommended reviewers**: Danqi Chen, Mike Lewis, Luke Zettlemoyer, Sewon Min, Omar Khattab
 
-### Interdisciplinary Venues (Science, Nature, PNAS)
-Focus: Broad impact, methodological innovation, policy relevance
-**Recommended reviewers**: Moon Duchin, George Karypis, Jonathan Rodden, Michael Goodchild, Richard Pildes
+### CHI/UIST
+Focus: Human-AI interaction, interfaces
+**Recommended reviewers**: Ben Shneiderman, Michael Bernstein, Ece Kamar, Saleema Amershi, Jeffrey Heer
+
+### PLDI/OOPSLA
+Focus: Compilers, languages, verification
+**Recommended reviewers**: Chris Lattner, Nada Amin, Jonathan Ragan-Kelley, Armando Solar-Lezama, Emery Berger
+
+### OSDI/SOSP
+Focus: Operating systems, distributed systems
+**Recommended reviewers**: Ion Stoica, Matei Zaharia, Joseph Gonzalez, Reynold Xin
+
+### ICLR
+Focus: Representations, deep learning methods
+**Recommended reviewers**: Percy Liang, Chelsea Finn, Ludwig Schmidt, Dan Fu, Chuang Gan
 
 ---
 
 ## Paper Type to Reviewer Selection
 
-### Type: Core Algorithm Paper (METIS, Graph Partitioning)
-**Must have**: George Karypis, Ümit Çatalyürek, Bruce Hendrickson
-**Add for optimization**: Cynthia Phillips, William Cook
-**Add for political context**: Jowei Chen
+### Type: AI Workflow/Orchestration Paper
+**Must have**: Harrison Chase, Jerry Liu, Omar Khattab
+**Add for systems angle**: Matei Zaharia, Tri Dao
+**Add for HCI angle**: Michael Bernstein, Ece Kamar
 
-### Type: Compactness & Neutrality Paper
-**Must have**: Moon Duchin, Jowei Chen, Nicholas Stephanopoulos
-**Add for algorithms**: George Karypis
-**Add for legal standards**: Richard Pildes
+### Type: Code Generation/DSL Paper
+**Must have**: Chris Lattner, Nada Amin, Jonathan Ragan-Kelley
+**Add for AI angle**: Omar Khattab, Harrison Chase
+**Add for testing**: Shreya Shankar
 
-### Type: Political Analysis Paper
-**Must have**: Jonathan Rodden, Jowei Chen, Nicholas Stephanopoulos
-**Add for math**: Moon Duchin
-**Add for law**: Richard Pildes, Heather Gerken
+### Type: Human-AI Collaboration Paper
+**Must have**: Ben Shneiderman, Michael Bernstein, Ece Kamar, Saleema Amershi
+**Add for agents**: Harrison Chase, Jerry Liu
+**Add for prompting**: Jason Wei
 
-### Type: Data Pipeline & Infrastructure Paper
-**Must have**: Michael Goodchild, May Yuan, Ümit Çatalyürek
-**Add for algorithms**: George Karypis
-**Add for optimization**: Cynthia Phillips
+### Type: Efficiency/Systems Paper
+**Must have**: Song Han, Tri Dao, Tianqi Chen
+**Add for distributed**: Matei Zaharia, Ion Stoica
+**Add for serving**: Ce Zhang
 
-### Type: Constitutional Compliance Paper
-**Must have**: Richard Pildes, Heather Gerken, Nicholas Stephanopoulos
-**Add for political science**: Jonathan Rodden, Jowei Chen
-**Add for metrics**: Moon Duchin
+### Type: Prompting/Reasoning Paper
+**Must have**: Jason Wei, Denny Zhou, Omar Khattab
+**Add for evaluation**: Percy Liang
+**Add for learning**: Chuang Gan, Pieter Abbeel
+
+### Type: State Management/Checkpointing Paper
+**Must have**: Matei Zaharia, Tri Dao, Ion Stoica
+**Add for correctness**: Nada Amin
+**Add for ops**: Shreya Shankar
 
 ---
 
@@ -122,18 +202,18 @@ Quick reference for expertise matching:
 
 | Tag | Reviewers |
 |-----|-----------|
-| `graph-partitioning` | George Karypis, Ümit Çatalyürek, Bruce Hendrickson |
-| `metis` | George Karypis, Bruce Hendrickson |
-| `political-geography` | Jonathan Rodden, Jowei Chen |
-| `gerrymandering` | Moon Duchin, Jowei Chen, Nicholas Stephanopoulos |
-| `constitutional-law` | Richard Pildes, Heather Gerken |
-| `voting-rights` | Richard Pildes, Heather Gerken, Nicholas Stephanopoulos |
-| `gis` | Michael Goodchild, May Yuan |
-| `census-data` | May Yuan, Michael Goodchild |
-| `optimization` | Cynthia Phillips, William Cook |
-| `compactness` | Moon Duchin, Jowei Chen |
-| `fairness-metrics` | Moon Duchin, Nicholas Stephanopoulos |
-| `spatial-algorithms` | Michael Goodchild, Ümit Çatalyürek |
+| `distributed-systems` | Matei Zaharia, Ion Stoica, Joseph Gonzalez |
+| `compilers` | Chris Lattner, Jonathan Ragan-Kelley, Tianqi Chen |
+| `pl-theory` | Nada Amin, Armando Solar-Lezama |
+| `agents` | Harrison Chase, Jerry Liu, Shunyu Yao |
+| `prompting` | Jason Wei, Denny Zhou, Omar Khattab |
+| `human-ai` | Ben Shneiderman, Michael Bernstein, Ece Kamar |
+| `efficiency` | Song Han, Tri Dao, Dan Fu |
+| `ml-ops` | Shreya Shankar, Sarah Bird |
+| `retrieval` | Jerry Liu, Danqi Chen, Mike Lewis |
+| `safety` | Dan Hendrycks, Jacob Steinhardt |
+| `learning` | Pieter Abbeel, Chelsea Finn, Chuang Gan |
+| `evaluation` | Percy Liang, Ludwig Schmidt |
 
 ---
 
@@ -145,7 +225,7 @@ When adding reviewers from new papers or citations:
 2. **Find their "key question"** - what do they always ask?
 3. **Add affiliation** - current as of paper date
 4. **Tag with expertise** for quick lookup
-5. **Note venue preference** if known
+5. **Note conference preference** if known
 
 Template:
 ```markdown
@@ -154,26 +234,5 @@ Template:
 
 ---
 
-## Special Considerations for Redistricting Research
-
-### The 13-Person Panel (USA!)
-This reviewer database contains exactly 13 reviewers, mirroring the number of original U.S. colonies and providing comprehensive coverage across:
-- 3 graph algorithm/METIS experts
-- 4 political science/redistricting experts
-- 2 constitutional law experts
-- 2 GIS/geospatial experts
-- 2 optimization/operations research experts
-
-### Cross-Disciplinary Nature
-Redistricting research requires reviewers who understand:
-- **Technical**: Graph algorithms, computational geometry, optimization
-- **Political**: Electoral systems, representation, partisan effects
-- **Legal**: Constitutional standards, Voting Rights Act, judicial precedents
-- **Geographic**: Spatial adjacency, census data, administrative boundaries
-
-Select panels that balance these perspectives based on paper focus.
-
----
-
 *Last updated: February 2026*
-*Total reviewers: 13*
+*Total reviewers: 45+*
