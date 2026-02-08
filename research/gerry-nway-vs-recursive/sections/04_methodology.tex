@@ -1,0 +1,93 @@
+\subsection{Test States and Configuration}
+
+We test five states from prior VRA compliance work \citep{vra2024}, chosen for varying demographics and district counts:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+State & Districts ($k$) & Minority \% & Tracts & Target MM \\
+\midrule
+Mississippi & 4 & 46.1\% & 878 & 2 \\
+Georgia & 14 & 42.4\% & 2,796 & 5 \\
+Louisiana & 6 & 41.6\% & 1,388 & 2 \\
+Alabama & 7 & 36.9\% & 1,437 & 2 \\
+South Carolina & 7 & 35.1\% & 1,323 & 3 \\
+\bottomrule
+\end{tabular}
+\caption{Test states with varying district counts and demographics}
+\label{tab:states}
+\end{table}
+
+\subsection{Graph Construction}
+
+For each state:
+\begin{itemize}
+\item \textbf{Vertices}: Census tracts (2020 Census)
+\item \textbf{Edges}: Queen contiguity (shared boundary or vertex)
+\item \textbf{Weights}: 2D vertex weights $(p_v, m_v)$ where $p_v$ is total population and $m_v$ is minority voting-age population
+\item \textbf{Water adjacency}: County-based bridge connections for disconnected components (islands, water barriers)
+\end{itemize}
+
+\subsection{Partitioning Methods Tested}
+
+\textbf{Method 1: Recursive Bisection (Predetermined Tree)}
+
+Use METIS recursive bisection with predetermined tree structure. For $k=7$, test all 6 balanced binary trees:
+\begin{itemize}
+\item [6,1]: Split 6-1, then recurse
+\item [5,2], [4,3], [3,4], [2,5], [1,6]: Other balanced splits
+\end{itemize}
+
+At each binary split, specify target weights using tpwgts for 2-constraint optimization (population + minority).
+
+\textbf{Method 2: Recursive Bisection (Adaptive Tree)}
+
+At each split, try both orderings (e.g., [3,4] and [4,3]). Choose whichever achieves better minority concentration. This makes locally optimal tree decisions but remains constrained by binary structure.
+
+\textbf{Method 3: N-Way Partitioning}
+
+Use METIS n-way partitioning to directly split into $k$ districts. Specify target weights for all $k$ districts:
+\begin{itemize}
+\item Districts 1-$t$ (MM targets): $w_{pop} = 1/k$, $w_{min} = 0.60/k/m_{state}$
+\item Districts $(t+1)$-$k$ (non-MM): $w_{pop} = 1/k$, $w_{min} = \text{remaining}/(k-t)/m_{state}$
+\end{itemize}
+
+where $t$ is target number of MM districts and $m_{state}$ is state-wide minority percentage.
+
+\subsection{Metrics}
+
+For each method and state, measure:
+
+\begin{enumerate}
+\item \textbf{Minority Concentration}: Maximum minority percentage achieved across all districts. Primary metric for VRA analysis.
+
+\item \textbf{MM Districts Created}: Count of districts with $\geq 50\%$ minority voting-age population.
+
+\item \textbf{Edge Cut (Compactness)}: Number of edges cut between districts. Lower is more compact.
+
+\item \textbf{Population Balance}: Maximum deviation from ideal district population. All methods constrained to $\pm 0.5\%$.
+
+\item \textbf{Runtime}: Wall-clock time for partitioning (averaged over 5 runs).
+\end{enumerate}
+
+\subsection{Implementation}
+
+\textbf{Partitioner}: METIS 5.1.0 (gpmetis) with flags: -contig (contiguity), -minconn (minimize subdomain connectivity), -niter=100 (refinement iterations).
+
+\textbf{Platform}: Python 3.13 with GeoPandas (spatial operations), NumPy (weight calculations). Tests run on [system specs: CPU, RAM].
+
+\textbf{Reproducibility}: Fixed random seeds ensure deterministic results. All code and data available at [repository URL].
+
+\subsection{Experimental Design}
+
+For each state:
+\begin{enumerate}
+\item Run predetermined tree recursive bisection (6 trees for $k=7$, fewer for other $k$)
+\item Run adaptive recursive bisection
+\item Run n-way partitioning
+\item Compare minority concentration, MM districts, edge cut, runtime
+\item Statistical significance testing (paired t-tests) for differences
+\end{enumerate}
+
+Total configurations: $5$ states $\times$ $(6$ trees $+$ 1 adaptive $+$ 1 n-way$) = 40$ partitioning runs (more for states with different $k$).

@@ -1,0 +1,119 @@
+\subsection{Why N-Way Outperforms: Intuition}
+
+Consider partitioning into $k=4$ districts. Recursive bisection must first split into 2 groups of 2. If the target distribution is asymmetric (e.g., one district should be 60\% minority, three should be 30\% minority), recursive bisection faces a dilemma:
+
+\textbf{First split} $(2,2)$: Creates groups of size 2. Each group will contain districts with different demographic profiles, but the split happens \textit{before} knowing final district demographics. The algorithm must choose edge cuts based on intermediate targets (2-district aggregates), not final 4-district targets.
+
+\textbf{N-way approach}: Considers all 4 final districts from the start. Refinement moves vertices between districts based on final demographics, not intermediate groupings. This global view enables better demographic concentration.
+
+\subsection{Formal Analysis}
+
+\subsubsection{Greedy vs Global Optimization}
+
+\textbf{Recursive bisection optimization objective} (at split creating $k_L$ and $k_R$ partitions):
+\begin{equation}
+\min_{(V_L, V_R)} \text{EdgeCut}(V_L, V_R) \quad \text{s.t.} \quad w(V_L) \approx \frac{k_L}{k}W, \quad w(V_R) \approx \frac{k_R}{k}W
+\end{equation}
+
+This optimizes the \textit{intermediate} partition, not the final $k$-way partition.
+
+\textbf{N-way optimization objective}:
+\begin{equation}
+\min_{P_1, \ldots, P_k} \sum_{i < j} \text{EdgeCut}(P_i, P_j) \quad \text{s.t.} \quad w(P_i) \approx \frac{W}{k} \quad \forall i
+\end{equation}
+
+This directly optimizes the final $k$-way partition.
+
+\textbf{Theorem 1} (Informal): If target distributions are non-uniform (some partitions should be dense in specific vertex types), n-way partitioning achieves better objective value than recursive bisection with high probability.
+
+\textit{Proof sketch}: Recursive bisection makes $k-1$ binary decisions. Each decision is locally optimal but constrains future decisions. With probability $> 0$, early decisions place vertices in subgraphs where they cannot reach their optimal final partition. N-way refinement can move vertices between any partitions, avoiding early commitment. \qed
+
+\subsubsection{Tree Structure Dependency}
+
+For recursive bisection to approach n-way performance, tree structure must match target distribution. Given $k$ partitions with target demographics $\{d_1, d_2, \ldots, d_k\}$, optimal tree groups similar targets.
+
+\textbf{Example}: 7 districts, 2 with 60\% minority (districts 1-2), 5 with 30\% minority (districts 3-7).
+
+\textbf{Bad tree}: $[3,4]$ split creates:
+\begin{itemize}
+\item Left (3 districts): Must contain 1-2 MM districts + 1-2 non-MM → mixed demographics
+\item Right (4 districts): Must contain 0-1 MM districts + 3-4 non-MM → mixed demographics
+\end{itemize}
+First split doesn't cleanly separate MM from non-MM districts.
+
+\textbf{Better tree}: $[2,5]$ split creates:
+\begin{itemize}
+\item Left (2 districts): Both MM districts → homogeneous group
+\item Right (5 districts): All non-MM districts → homogeneous group
+\end{itemize}
+First split cleanly separates by demographic target.
+
+However, finding optimal tree structure requires knowing which final partitions should have which demographics—which depends on solving the partitioning problem! This creates a chicken-and-egg problem.
+
+\textbf{Adaptive recursive bisection} partially addresses this by choosing tree structure based on intermediate results, but remains constrained by binary tree structure.
+
+\subsection{Graph Properties Affecting Performance Gap}
+
+\subsubsection{Demographic Clustering}
+
+\textbf{Definition}: Minority vertices are \textit{clustered} if they form connected components or near-connected components in $G$.
+
+\textbf{Proposition 1}: When minority vertices are highly clustered and targets are asymmetric, n-way's advantage over recursive bisection increases.
+
+\textit{Intuition}: Clustered minorities can be naturally grouped into MM districts, but recursive bisection's intermediate splits may separate clusters before final partitions are determined. N-way's global view preserves clusters.
+
+\textbf{Empirical evidence} (Section~\ref{sec:results}): Alabama shows 4.3 percentage point gap (n-way 47.3\% vs recursive 43.0\%). Alabama has moderate minority clustering (Black Belt region) and asymmetric targets (2 MM, 5 non-MM).
+
+\subsubsection{Number of Partitions ($k$)}
+
+\textbf{Proposition 2}: Performance gap increases with $k$ (more partitions).
+
+\textit{Reasoning}: Larger $k$ means more binary decisions for recursive bisection, compounding greedy errors. N-way refinement complexity increases but remains tractable.
+
+\textbf{Empirical evidence}: Georgia ($k=14$) shows larger absolute gaps than Mississippi ($k=4$), though percentage improvements are similar.
+
+\subsubsection{Target Asymmetry}
+
+\textbf{Definition}: Targets are \textit{symmetric} if all partitions should have similar characteristics. Targets are \textit{asymmetric} if some partitions should differ substantially from others.
+
+\textbf{Proposition 3}: Performance gap is negligible for symmetric targets, substantial for asymmetric targets.
+
+\textit{Examples}:
+\begin{itemize}
+\item \textbf{Symmetric}: Pure population balance, no demographic targets → gap $\approx 0$
+\item \textbf{Asymmetric}: VRA compliance (2 MM at 60\%, 5 non-MM at 30\%) → gap $>$ 3 percentage points
+\end{itemize}
+
+\subsection{Computational Complexity}
+
+\textbf{Recursive bisection}: $O((k-1) \cdot T_{2-way})$ where $T_{2-way}$ is 2-way partitioning cost. With multilevel: $T_{2-way} = O(|E| + |V| \log |V|)$. Total: $O(k \cdot |E|)$.
+
+\textbf{N-way partitioning}: $O(T_{k-way})$ where refinement considers $k$ partitions. With multilevel: $T_{k-way} = O(|E| \log k + |V| \log |V|)$. Total: $O(|E| \log k)$.
+
+\textbf{Asymptotic comparison}: Both are $O(|E| \log k)$ in practice. Constants differ: recursive bisection is slightly faster (10-20\%) due to simpler 2-way decisions, but difference is negligible compared to quality gains for asymmetric targets.
+
+\subsection{Summary: When to Use Each Approach}
+
+Based on theoretical analysis:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Problem Characteristic} & \textbf{Recursive} & \textbf{N-Way} \\
+\midrule
+Symmetric targets (balance only) & $\checkmark$ & $\checkmark$ \\
+Asymmetric targets (demographics) & & $\checkmark \checkmark$ \\
+Small $k$ ($k \leq 4$) & $\checkmark$ & $\checkmark$ \\
+Large $k$ ($k > 10$) & & $\checkmark \checkmark$ \\
+Clustered target vertices & & $\checkmark \checkmark$ \\
+Scattered target vertices & $\checkmark$ & $\checkmark \checkmark$ \\
+Computational constraints (embedded) & $\checkmark$ & \\
+Quality priority (offline) & & $\checkmark \checkmark$ \\
+\bottomrule
+\end{tabular}
+\caption{Method selection based on problem characteristics. $\checkmark$: Acceptable, $\checkmark \checkmark$: Strongly recommended}
+\label{tab:method_selection}
+\end{table}
+
+Next section validates these theoretical predictions empirically across five redistricting cases.
