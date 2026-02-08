@@ -43,6 +43,11 @@ class PaperStatus:
         self.has_figures = self._check_figures()
         self.status_docs = self._count_status_docs()
 
+        # PDF page counts
+        self.main_pages = self._get_pdf_pages("main.pdf")
+        self.has_supplement = self._check_supplement()
+        self.supplement_pages = self._get_supplement_pages()
+
         # Determine phase and progress
         self.phase = self._determine_phase()
         self.progress = self._estimate_progress()
@@ -78,6 +83,66 @@ class PaperStatus:
         for pattern in patterns:
             count += len(list(self.directory.glob(pattern)))
         return count
+
+    def _get_pdf_pages(self, filename: str) -> int:
+        """Get page count from PDF file."""
+        pdf_path = self.directory / filename
+        if not pdf_path.exists():
+            return 0
+
+        # Try pypdf (new PyPDF2)
+        try:
+            from pypdf import PdfReader
+            with open(pdf_path, 'rb') as f:
+                reader = PdfReader(f)
+                return len(reader.pages)
+        except:
+            pass
+
+        # Try PyPDF2 (old)
+        try:
+            import PyPDF2
+            with open(pdf_path, 'rb') as f:
+                reader = PyPDF2.PdfReader(f)
+                return len(reader.pages)
+        except:
+            pass
+
+        # Try pdfinfo command-line tool
+        try:
+            import subprocess
+            result = subprocess.run(['pdfinfo', str(pdf_path)],
+                                  capture_output=True, text=True, timeout=5)
+            if result.returncode == 0:
+                for line in result.stdout.split('\n'):
+                    if line.startswith('Pages:'):
+                        return int(line.split(':')[1].strip())
+        except:
+            pass
+
+        # If all methods fail, return 0
+        return 0
+
+    def _check_supplement(self) -> bool:
+        """Check if supplementary document exists."""
+        supplement_names = ["main_supplement.pdf", "supplement.pdf", "supplementary.pdf",
+                           "main_suppl.pdf", "appendix.pdf"]
+        for name in supplement_names:
+            if (self.directory / name).exists():
+                return True
+        return False
+
+    def _get_supplement_pages(self) -> int:
+        """Get page count from supplementary document."""
+        if not self.has_supplement:
+            return 0
+        supplement_names = ["main_supplement.pdf", "supplement.pdf", "supplementary.pdf",
+                           "main_suppl.pdf", "appendix.pdf"]
+        for name in supplement_names:
+            pages = self._get_pdf_pages(name)
+            if pages > 0:
+                return pages
+        return 0
 
     def _determine_phase(self) -> str:
         """Determine current phase based on indicators."""
@@ -279,7 +344,12 @@ def print_detailed(papers: List[PaperStatus]):
             # Key indicators
             indicators = []
             if paper.has_pdf:
-                indicators.append("[OK] PDF")
+                pdf_info = "[OK] PDF"
+                if paper.main_pages > 0:
+                    pdf_info += f" ({paper.main_pages}p)"
+                    if paper.has_supplement and paper.supplement_pages > 0:
+                        pdf_info += f" + Suppl ({paper.supplement_pages}p)"
+                indicators.append(pdf_info)
             if paper.has_results:
                 indicators.append("[OK] Data")
             if paper.has_figures:
@@ -305,7 +375,15 @@ def print_paper_detail(paper: PaperStatus):
     print(f"Directory: {paper.path}")
 
     print("\nIndicators:")
-    print(f"  {'[OK]' if paper.has_pdf else '[ ]'} PDF (main.pdf)")
+    pdf_info = f"PDF (main.pdf)"
+    if paper.main_pages > 0:
+        pdf_info += f" - {paper.main_pages} pages"
+    print(f"  {'[OK]' if paper.has_pdf else '[ ]'} {pdf_info}")
+    if paper.has_supplement:
+        supp_info = f"Supplement"
+        if paper.supplement_pages > 0:
+            supp_info += f" - {paper.supplement_pages} pages"
+        print(f"  [OK] {supp_info}")
     print(f"  {'[OK]' if paper.has_results else '[ ]'} Results data")
     print(f"  {'[OK]' if paper.has_figures else '[ ]'} Figures")
     print(f"  {'[OK]' if paper.has_reviews else '[ ]'} Reviews ({paper.review_count} files)")
