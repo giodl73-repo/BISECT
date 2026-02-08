@@ -4,163 +4,52 @@
 \subsubsection{Case Studies: High-Sorting States}
 \label{sec:case_studies}
 
-To understand how geographic sorting constrains algorithmic redistricting in practice, we present detailed case studies of three states with high geographic sorting indices: Wisconsin, Pennsylvania, and Maryland. These states span different political contexts (competitive swing state, divided state, heavily Democratic state) but share extreme urban-rural partisan divides.
+To understand how geographic sorting constrains algorithmic redistricting in practice, we present case studies of Wisconsin, Pennsylvania, and Maryland---states spanning different political contexts but sharing extreme urban-rural partisan divides.
 
 \paragraph{Case Study 1: Wisconsin---The Paradigmatic Example}
 
-Wisconsin exemplifies the challenge of geographic sorting for Democrats. The state votes nearly 50-50 in statewide elections (49.4\% Democratic in 2020 presidential), yet any compact redistricting produces Republican-leaning congressional and legislative maps.
+Wisconsin exemplifies geographic sorting's challenge for Democrats. Despite voting nearly 50-50 in statewide elections (49.4\% Democratic in 2020), any compact redistricting produces Republican-leaning maps.
 
-\textbf{Geographic context.} Wisconsin has 8 congressional districts and a 2020 population of 5.9 million. Democratic voters are heavily concentrated in two urban centers:
-\begin{itemize}
-\item \textbf{Milwaukee metro} (1.6 million): City of Milwaukee votes 79\% Democratic; surrounding suburbs lean Republican
-\item \textbf{Madison metro} (680,000): University city votes 76\% Democratic; Dane County is 75\% Democratic
-\end{itemize}
+\textbf{Geographic context.} Democratic voters concentrate heavily in Milwaukee (1.6 million, 79\% D) and Madison (680,000, 76\% D). These two metros contain 38\% of Wisconsin's population but 58\% of Democratic votes. The remaining 62\% of population votes 41\% Democratic.
 
-Together, these two metros contain 38\% of Wisconsin's population but account for 58\% of Democratic votes. The remaining 62\% of population (small cities, towns, rural areas) votes 41\% Democratic, 59\% Republican.
+\textbf{Geographic sorting index: 0.64.} \citet{chen2017impact} demonstrate that over 95\% of neutral redistricting plans produce 5 Republican seats and 3 Democratic seats (5-3 R), despite the state's 50-50 partisan balance. Our algorithm produces exactly this 5-3 split.
 
-\textbf{Geographic sorting index: 0.64.} This high correlation between Democratic voting and population density creates strong constraints on redistricting. \citet{chen2017impact} demonstrate through simulation that over 95\% of neutral redistricting plans produce 5 Republican seats and 3 Democratic seats (5-3 R), despite the state's 50-50 partisan balance.
+\textbf{Why geography produces Republican advantage:} Districts 1-2 (Milwaukee, Madison) elect Democrats with 76\% and 72\% margins---wasting 26-27 percentage points beyond 50\%+1. Meanwhile, Republicans win 5 districts efficiently with 53-64\% margins. Creating additional Democratic seats would require either cracking Milwaukee with tentacle-like districts (PP $<$ 0.10) or pairing Milwaukee and Madison (geographically absurd, PP $<$ 0.05)---both obvious gerrymandering.
 
-\textbf{Algorithmic results.} Our recursive bisection algorithm produces a 5-3 Republican advantage, exactly matching geographic expectations:
-
-\begin{table}[ht]
-\centering
-\caption{Wisconsin Congressional Districts - Algorithmic Redistricting (2020)}
-\label{tab:wisconsin_districts}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-District & Population & PP Score & Dem \% & Winner \\
-\midrule
-1 (Milwaukee city) & 719,328 & 0.31 & 76.2 & D \\
-2 (Madison/Dane) & 732,562 & 0.28 & 71.8 & D \\
-3 (La Crosse/Eau Claire) & 730,129 & 0.24 & 51.3 & D \\
-4 (Milwaukee suburbs) & 722,891 & 0.27 & 47.1 & R \\
-5 (Waukesha County) & 728,452 & 0.29 & 35.6 & R \\
-6 (Fox Cities/Oshkosh) & 731,267 & 0.26 & 44.8 & R \\
-7 (Northern Wisconsin) & 727,804 & 0.21 & 42.9 & R \\
-8 (Green Bay/Appleton) & 726,923 & 0.25 & 43.2 & R \\
-\midrule
-\textbf{Statewide} & 5,819,356 & 0.26 & 49.4 & 3D-5R \\
-\bottomrule
-\end{tabular}
-\begin{tablenotes}
-\small
-\item \textit{Note}: PP Score is Polsby-Popper compactness (higher = more compact). Dem \% is 2020 presidential vote share. Districts 1-2 are overwhelmingly Democratic urban cores; District 3 is competitive; Districts 4-8 are moderately Republican.
-\end{tablenotes}
-\end{table}
-
-\textbf{Why geography produces Republican advantage:}
-\begin{enumerate}
-\item \textbf{Wasted urban votes.} Districts 1-2 (Milwaukee, Madison) are won by Democrats with 76\% and 72\% margins. The 26-27 percentage points beyond 50\%+1 are "wasted"---they contribute nothing to winning additional seats. Combined, these two urban districts contain 185,000 wasted Democratic votes.
-
-\item \textbf{Efficient Republican distribution.} Districts 4-8 are won by Republicans with 53-64\% margins (average: 57\%). This efficiency produces 5 Republican seats with minimal wasted votes.
-
-\item \textbf{One competitive district.} District 3 (La Crosse/Eau Claire) is genuinely competitive at 51\% Democratic, but its geography (western Wisconsin corridor) makes it vulnerable to Republican wins in less favorable Democratic years.
-
-\item \textbf{Compactness constraint.} All districts have PP scores of 0.21-0.31, indicating reasonable compactness. To create additional Democratic seats would require either:
-   \begin{itemize}
-   \item \textit{Cracking Milwaukee}: Drawing tentacle-like districts from Milwaukee through suburbs to exurban areas (PP $<$ 0.10),
-   \item \textit{Pairing cities}: Combining Milwaukee and Madison into a single district (geographically absurd, PP $<$ 0.05).
-   \end{itemize}
-   Both approaches would constitute obvious gerrymandering.
-\end{enumerate}
-
-\textbf{Comparison to enacted maps.} Wisconsin's Republican-drawn 2011 map produced a 5-3 Republican advantage with \textit{intentional} gerrymandering (struck down for extreme partisan bias). The 2022 court-drawn remedial map \textit{also} produces 5-3 Republican advantage despite being explicitly neutral. Our algorithmic map produces the same 5-3 split.
-
-The convergence across three very different processes (intentional Republican gerrymander, court neutrality, algorithmic optimization) demonstrates that 5-3 is Wisconsin's \textit{geographic equilibrium}. Partisan gerrymanders can exacerbate it (2011 map: 5-3 with very non-compact districts), but neutral processes cannot overcome it without violating compactness.
-
-\textbf{Chen's insight.} \citet{chen2017impact} explains why Wisconsin is an extreme case: ``Democratic voters are so heavily clustered in Milwaukee and Madison that \textit{any} redistricting respecting municipal boundaries will produce Republican advantages. This is not a bug in neutral processes---it's a feature of Wisconsin's political geography.''
+\textbf{Convergence across processes.} Wisconsin's Republican-drawn 2011 gerrymander, the 2022 court-drawn remedial map, and our algorithmic map all produce 5-3 Republican advantages. This convergence demonstrates that 5-3 is Wisconsin's \textit{geographic equilibrium}---neutral processes cannot overcome it without violating compactness.
 
 \paragraph{Case Study 2: Pennsylvania---Gerrymandering vs. Geography}
 
-Pennsylvania provides a stark contrast between gerrymandered and neutral redistricting in a state with moderate-high geographic sorting.
+Pennsylvania provides stark contrast between gerrymandered and neutral redistricting in a state with moderate-high geographic sorting.
 
-\textbf{Geographic context.} Pennsylvania has 17 congressional districts and 13 million residents. Democratic voters concentrate in two major metros:
-\begin{itemize}
-\item \textbf{Philadelphia metro} (6.2 million): City votes 81\% Democratic; suburbs are mixed
-\item \textbf{Pittsburgh metro} (2.4 million): City votes 74\% Democratic; surrounding areas lean Republican
-\end{itemize}
+\textbf{Geographic context.} Democratic voters concentrate in Philadelphia (6.2 million metro, 81\% D) and Pittsburgh (2.4 million metro, 74\% D). Philadelphia alone contains 12\% of Pennsylvania population but 19\% of Democratic votes.
 
-Philadelphia alone contains 12\% of Pennsylvania population but 19\% of Democratic votes. The remainder of the state (rural Pennsylvania, often called "Pennsyltucky") votes heavily Republican.
-
-\textbf{Geographic sorting index: 0.48.} Lower than Wisconsin but still substantial. Pennsylvania's geography creates moderate Democratic disadvantage---but not overwhelming.
+\textbf{Geographic sorting index: 0.48.} Lower than Wisconsin, Pennsylvania's geography creates moderate Democratic disadvantage---but not overwhelming.
 
 \textbf{Historical comparison:}
 \begin{itemize}
-\item \textbf{2011 Republican gerrymander}: 13R-5D despite 50-50 statewide vote (struck down by PA Supreme Court in 2018)
-\item \textbf{2018 court-drawn map}: 9R-9D in 2018 election (48\% D vote), 9R-8D in 2020 (50\% D vote)
-\item \textbf{Algorithmic map (our results)}: 8D-9R (50\% D vote in 2020)
+\item \textbf{2011 Republican gerrymander}: 13R-5D despite 50-50 statewide vote
+\item \textbf{2018 court-drawn map}: 9R-9D in 2018 election, 9R-8D in 2020
+\item \textbf{Algorithmic map}: 8D-9R (50\% D vote in 2020)
 \end{itemize}
 
-\textbf{Algorithmic approach.} Our recursive bisection produces 8 Democratic seats and 9 Republican seats---nearly proportional to the 50-50 statewide vote. This represents a dramatic improvement over the 2011 gerrymander (which produced 5D-13R) and is comparable to the court-drawn remedial map.
+Our algorithm produces near-proportional outcomes---a dramatic improvement over the gerrymander (which produced 5D-13R). Why does Pennsylvania allow proportionality while Wisconsin does not? Philadelphia metro (6.2 million) is large enough for 4-5 Democratic districts without extreme supermajorities, while Milwaukee (1.6 million) forces higher concentration. Additionally, Pennsylvania's sorting (0.48) is substantially lower than Wisconsin's (0.64).
 
-Why does Pennsylvania allow near-proportionality while Wisconsin does not? Geography:
-\begin{enumerate}
-\item \textbf{Philadelphia's size.} Philadelphia metro (6.2 million) is large enough to contain 4-5 Democratic districts without extreme supermajorities. Milwaukee (1.6 million) can only produce 1-2 districts, forcing higher Democratic concentration.
-
-\item \textbf{Suburban competitiveness.} Philadelphia suburbs (Montgomery, Delaware, Chester, Bucks counties) have trended Democratic in recent cycles, creating 2-3 genuinely competitive suburban districts. Wisconsin suburbs remain strongly Republican.
-
-\item \textbf{Lower overall sorting.} Pennsylvania's sorting index (0.48) is substantially lower than Wisconsin's (0.64), meaning Democratic voters are less concentrated in extreme urban cores.
-\end{enumerate}
-
-\textbf{The gerrymander's fingerprint.} Pennsylvania's 2011 Republican gerrymander achieved 13R-5D by:
-\begin{itemize}
-\item \textbf{Cracking Philadelphia}: Drawing tentacle-like districts from Philadelphia suburbs to exurban Republican areas (PP scores: 0.08-0.12)
-\item \textbf{Packing Pittsburgh}: Combining Pittsburgh with other Democratic areas into a single 80\%+ Democratic district
-\item \textbf{Strategic pairing}: Forcing Democratic incumbents into the same districts
-\end{itemize}
-
-Our algorithmic map avoids these manipulations through compactness optimization. The result is near-proportional outcomes that reflect Pennsylvania's genuine 50-50 partisan balance.
-
-\textbf{Lesson: Geography permits neutrality in Pennsylvania.} Unlike Wisconsin, Pennsylvania's moderate geographic sorting allows neutral processes to achieve near-proportional outcomes. This demonstrates that geographic disadvantage is not universal---it varies by state geography.
+\textbf{Lesson:} Pennsylvania's moderate geographic sorting allows neutral processes to achieve near-proportional outcomes, demonstrating that geographic disadvantage varies by state geography.
 
 \paragraph{Case Study 3: Maryland---Urban Concentration with Democratic Advantage}
 
-Maryland provides an important counterexample: a state where urban concentration produces \textit{Democratic} advantage, not Republican. This asymmetry is crucial for understanding geographic sorting.
+Maryland provides crucial counterexample: urban concentration producing \textit{Democratic} advantage, not Republican.
 
-\textbf{Geographic context.} Maryland has 8 congressional districts and 6.2 million residents. The Baltimore-Washington corridor dominates:
-\begin{itemize}
-\item \textbf{Baltimore metro} (2.8 million): City votes 87\% Democratic; suburbs lean Democratic
-\item \textbf{Washington, D.C. suburbs} (2.4 million): Montgomery and Prince George's counties vote 75-80\% Democratic
-\item \textbf{Eastern Shore + Western Maryland} (1.0 million): Rural areas vote 60-65\% Republican
-\end{itemize}
+\textbf{Geographic context.} The Baltimore-Washington corridor (Baltimore metro 2.8 million, DC suburbs 2.4 million) contains 84\% of Maryland population and votes 68\% Democratic.
 
-Combined, the Baltimore-Washington corridor contains 84\% of Maryland population and votes 68\% Democratic statewide.
+\textbf{Geographic sorting index: 0.68.} Among the nation's highest---similar to Wisconsin. But sorting favors Democrats because Maryland is majority-Democratic (65\% D in 2020), not 50-50, and urban concentration is so complete that even compact districts produce Democratic supermajorities.
 
-\textbf{Geographic sorting index: 0.68.} Among the highest in the nation---similar to Wisconsin. But the sorting works in Democrats' favor because:
-\begin{enumerate}
-\item Maryland is a majority-Democratic state (65\% D in 2020), not 50-50
-\item Urban concentration is so complete that even compact districts produce Democratic supermajorities
-\end{enumerate}
+\textbf{Algorithmic results:} 6D-2R, closely matching statewide proportions. Maryland's Democratic-controlled legislature drew an aggressive 7D-1R gerrymander with extremely non-compact districts (PP: 0.12-0.18). Our algorithmic map produces 6D-2R with higher compactness (PP: 0.28)---more generous to Republicans while respecting Maryland's Democratic lean.
 
-\textbf{Algorithmic results.} Our recursive bisection produces 6 Democratic seats and 2 Republican seats (6D-2R), closely matching statewide proportions:
+\textbf{Asymmetry insight:} Geographic sorting doesn't universally favor Republicans. When a state is both majority-Democratic (65\%+) and highly urbanized (80\%+), urban concentration produces Democratic advantages. The key is whether the concentrated party is the \textit{majority} or \textit{minority} statewide.
 
-\begin{itemize}
-\item \textbf{Districts 1-6 (Democratic)}: Encompass Baltimore city, Baltimore suburbs, and Washington suburbs. Won with 55-78\% Democratic margins.
-\item \textbf{Districts 7-8 (Republican)}: Eastern Shore and Western Maryland (rural/small town). Won with 58-62\% Republican margins.
-\end{itemize}
-
-\textbf{Why geography favors Democrats here:} Maryland's urban-suburban continuum is so extensive that drawing compact districts \textit{around} Democratic areas is impossible without grotesque non-compactness. Unlike Wisconsin, where Milwaukee and Madison are geographically isolated, Maryland's Baltimore-Washington corridor forms a continuous Democratic region covering most of the state.
-
-\textbf{Comparison to enacted map.} Maryland's Democratic-controlled legislature drew an aggressive 7D-1R gerrymander in 2011 (later 2021), achieving this by:
-\begin{itemize}
-\item Cracking the Eastern Shore across three districts
-\item Drawing extremely non-compact districts (PP scores: 0.12-0.18)
-\item Creating only one Republican district (heavily packed)
-\end{itemize}
-
-Our algorithmic map produces 6D-2R with much higher compactness (average PP: 0.28 vs. enacted 0.19). This represents a \textit{more generous} outcome for Republicans than the gerrymander, while still respecting Maryland's strong Democratic lean.
-
-\textbf{Asymmetry insight.} Maryland demonstrates that geographic sorting does not always favor Republicans. When a state is both:
-\begin{enumerate}
-\item Majority-Democratic (65\%+ statewide), \textit{and}
-\item Highly urbanized (80\%+ in metro areas),
-\end{enumerate}
-then urban concentration produces Democratic advantages. The key is whether the concentrated party is the \textit{majority} or \textit{minority} party statewide.
-
-\paragraph{Cross-Case Synthesis: What Determines Geographic Effects?}
-
-Comparing Wisconsin, Pennsylvania, and Maryland reveals the factors that determine whether geographic sorting produces partisan bias and in which direction:
+\paragraph{Cross-Case Synthesis}
 
 \begin{table}[ht]
 \centering
@@ -178,31 +67,14 @@ Maryland & 0.68 & 65.4 & 96 & 6D-2R & Pro-D (+10 pp) \\
 \end{tabular}
 \begin{tablenotes}
 \small
-\item \textit{Note}: Sorting is correlation between D vote\% and density. Bias direction indicates whether algorithmic outcomes favor Republicans (Pro-R), Democrats (Pro-D), or neither (Neutral), measured as percentage point deviation from proportional representation.
+\item \textit{Note}: Sorting is correlation between D vote\% and density. Bias direction measured as percentage point deviation from proportional representation.
 \end{tablenotes}
 \end{table}
 
-\textbf{Key insights:}
-\begin{enumerate}
-\item \textbf{Sorting magnitude matters, but direction depends on state-level partisanship.} Both Wisconsin (0.64) and Maryland (0.68) have extreme sorting, but produce opposite biases because Wisconsin is 50-50 while Maryland is 65\% Democratic.
+\textbf{Key insights:} (1) Sorting magnitude matters, but direction depends on state-level partisanship---both Wisconsin (0.64) and Maryland (0.68) have extreme sorting but produce opposite biases. (2) Pennsylvania's moderate sorting (0.48) permits neutrality, suggesting a threshold around 0.50-0.55 above which geography strongly constrains outcomes. (3) Urbanization amplifies sorting effects. (4) Algorithmic outcomes match geographic predictions in all three states without evidence of manipulation.
 
-\item \textbf{Pennsylvania's moderate sorting permits neutrality.} At 0.48 sorting, Pennsylvania's geography allows near-proportional outcomes. This suggests a sorting threshold around 0.50-0.55 above which geography strongly constrains outcomes.
+\paragraph{Implications}
 
-\item \textbf{Urbanization amplifies sorting effects.} Maryland's 96\% urbanization means compact districts inevitably capture Democratic voters. Wisconsin's 70\% urbanization creates more geographic separation between urban Democrats and suburban Republicans.
+These case studies demonstrate that context matters: Wisconsin's 5-3 Republican advantage looks biased until we understand that \textit{any} neutral process produces 5-3, while Pennsylvania's near-proportional split reflects geography that permits it. The relevant comparison is algorithmic vs. gerrymandered: Pennsylvania's algorithm produces 8D-9R vs. gerrymandered 5D-13R (3-seat improvement); Maryland's 6D-2R vs. gerrymandered 7D-1R (more generous to Republicans).
 
-\item \textbf{Algorithms respect these constraints without exploiting them.} In all three states, algorithmic outcomes closely match what geographic models predict. There is no evidence of algorithmic manipulation---the process simply reflects geographic reality.
-\end{enumerate}
-
-\paragraph{Implications for Algorithmic Redistricting Evaluation}
-
-These case studies carry clear lessons for evaluating algorithmic redistricting:
-
-\textbf{First, context matters.} We cannot evaluate algorithmic redistricting by comparing outcomes to proportional representation in the abstract. Wisconsin's 5-3 Republican advantage looks biased until we understand that \textit{any} neutral process produces 5-3. Pennsylvania's 9-8 split looks neutral because its geography permits it.
-
-\textbf{Second, the relevant comparison is algorithmic vs. gerrymandered.} In Pennsylvania, algorithmic redistricting produces 8D-9R compared to gerrymandered 5D-13R---a dramatic improvement of 3 Democratic seats. In Maryland, algorithmic 6D-2R is more generous to Republicans than gerrymandered 7D-1R. The algorithm consistently improves on partisan manipulation.
-
-\textbf{Third, geographic sorting creates irreducible constraints.} No redistricting process---algorithmic, commission-drawn, or court-ordered---can overcome extreme geographic sorting without violating compactness or pairing incompatible communities. Wisconsin will produce Republican advantages; Maryland will produce Democratic advantages. This is a feature of political geography, not a bug in neutral redistricting.
-
-\textbf{Fourth, transparency reveals these constraints.} Traditional redistricting hides geographic constraints behind closed-door negotiations. Algorithmic redistricting makes them explicit and measurable. We can definitively state: ``Wisconsin's geography produces 5-3 Republican outcomes under neutral processes.'' This transparency is democratically valuable even when outcomes are not proportional.
-
-The case studies demonstrate that algorithmic redistricting performs exactly as geographic constraints permit. In states where geography allows near-proportional outcomes (Pennsylvania), algorithms achieve them. In states where geography creates strong partisan tilts (Wisconsin, Maryland), algorithms respect those constraints without exacerbating them. This is the essence of neutral redistricting in a geographically sorted society.
+Geographic sorting creates irreducible constraints that no redistricting process can overcome without violating compactness. The transparency of algorithmic redistricting makes these constraints explicit and measurable, which is democratically valuable even when outcomes aren't proportional. In states where geography allows near-proportional outcomes, algorithms achieve them; where geography creates partisan tilts, algorithms respect those constraints without exacerbating them.
