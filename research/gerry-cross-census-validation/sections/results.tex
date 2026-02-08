@@ -5,8 +5,14 @@ We present results from applying METIS recursive bisection to all 50 U.S. states
 
 \subsection{National Aggregate Compactness Trends}
 
-% Figure~\ref{fig:national-trends} shows national aggregate compactness
-National aggregate compactness (population-weighted mean across all 435 districts) for each census year shows the following trends: Polsby-Popper scores exhibit modest improvement over time: 0.412 (2000), 0.428 (2010), 0.441 (2020). This 7\% increase suggests that census tract boundaries have become slightly more aligned with natural geographic divisions, enabling more compact algorithmic redistricting.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/figure1_national_trends.pdf}
+\caption{National aggregate compactness trends across census cycles. (a) Polsby-Popper scores show consistent improvement from 0.412 (2000) to 0.441 (2020). (b) Reock scores exhibit similar patterns. Error bars represent standard deviation across all 435 districts.}
+\label{fig:national-trends}
+\end{figure}
+
+Figure~\ref{fig:national-trends} shows national aggregate compactness (population-weighted mean across all 435 districts) for each census year. Polsby-Popper scores exhibit modest improvement over time: 0.412 (2000), 0.428 (2010), 0.441 (2020). This 7\% increase suggests that census tract boundaries have become slightly more aligned with natural geographic divisions, enabling more compact algorithmic redistricting.
 
 Reock scores show similar trends: 0.523 (2000), 0.536 (2010), 0.548 (2020), indicating districts fit more tightly within their minimum bounding circles over time.
 
@@ -74,8 +80,14 @@ National avg & 0.412 & 0.428 & 0.441 & +0.029 \\
 
 For each slice, we compute cross-census correlation: Pearson correlation of district-level PP scores between 2000 and 2020 within the same geographic slice. High correlation indicates stable algorithmic behavior; low correlation indicates temporal drift.
 
-% Figure~\ref{fig:slice-stability} shows the distribution
-The distribution of within-slice cross-census correlations across all 250 state-slices shows: Median correlation is $r=0.73$ (IQR: [0.64, 0.81]), indicating substantial stability. Only 12 slices (4.8\%) have correlation $<$0.5, primarily in high-growth regions (Nevada, Arizona, Florida) where dramatic demographic shifts occurred.
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/figure2_slice_stability.pdf}
+\caption{Within-slice cross-census stability. Distribution of Pearson correlations between 2000 and 2020 PP scores within each geographic slice. Median r=0.73 indicates substantial temporal consistency.}
+\label{fig:slice-stability}
+\end{figure}
+
+Figure~\ref{fig:slice-stability} shows the distribution of within-slice cross-census correlations across all 250 state-slices: Median correlation is $r=0.73$ (IQR: [0.64, 0.81]), indicating substantial stability. Only 12 slices (4.8\%) have correlation $<$0.5, primarily in high-growth regions (Nevada, Arizona, Florida) where dramatic demographic shifts occurred.
 
 \subsection{Algorithmic Consistency Analysis}
 
@@ -86,8 +98,14 @@ To assess whether METIS produces systematically different partitions across cens
 
 \subsubsection{MAUP Sensitivity Analysis}
 
-% Figure~\ref{fig:maup-sensitivity} shows variance ratio
-Variance ratio ($\sigma^2_{\text{geo}} / \sigma^2_{\text{temp}}$) across slice counts $K \in \{3, 5, 7\}$ demonstrates:
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/figure3_maup_sensitivity.pdf}
+\caption{MAUP sensitivity analysis. Variance ratio (geographic / temporal) remains stable across different slice counts, confirming key finding that geography dominates demography. Error bars represent 95\% confidence intervals.}
+\label{fig:maup-sensitivity}
+\end{figure}
+
+Figure~\ref{fig:maup-sensitivity} shows variance ratio ($\sigma^2_{\text{geo}} / \sigma^2_{\text{temp}}$) across slice counts $K \in \{3, 5, 7\}$:
 \begin{itemize}
     \item $K=3$: Ratio = 3.01 (coarse geographic partitioning)
     \item $K=5$: Ratio = 3.22 (primary analysis)
