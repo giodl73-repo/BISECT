@@ -1,0 +1,11 @@
+state,year,nway,recursive
+alabama,2010,0,0
+alabama,2020,1,0
+georgia,2010,1,1
+georgia,2020,8,7
+louisiana,2010,0,0
+louisiana,2020,1,1
+mississippi,2010,0,0
+mississippi,2020,2,2
+south_carolina,2010,0,0
+south_carolina,2020,0,0

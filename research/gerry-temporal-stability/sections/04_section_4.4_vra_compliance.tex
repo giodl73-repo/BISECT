@@ -1,0 +1,124 @@
+\subsection{VRA Compliance and the Stability-Representation Tradeoff}
+\label{sec:vra-compliance}
+
+This study uses VRA-motivated edge weighting (5x weight for tract pairs both $\geq$40\% minority) to encourage creation of majority-minority (MM) districts. However, the temporal stability analysis raises a critical question: when demographic compositions shift substantially, does stability \textit{prevent} creation of new MM districts required for fair representation?
+
+\subsubsection{MM District Counts}
+
+Table~\ref{tab:mm-counts} presents MM district counts (districts where minorities constitute $>$50\% of the population) for all states, years, and methods. Three key findings emerge:
+
+\begin{table}[htbp]
+\centering
+\caption{Majority-minority district counts by state, year, and method}
+\label{tab:mm-counts}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{State} & \multicolumn{2}{c}{\textbf{2010}} & \multicolumn{2}{c}{\textbf{2020}} \\
+               & Recursive & N-Way & Recursive & N-Way \\
+\midrule
+Alabama        & 0 & 0 & 0 & 1 \\
+Georgia        & 1 & 1 & 7 & 8 \\
+Louisiana      & 0 & 0 & 1 & 1 \\
+Mississippi    & 0 & 0 & 2 & 2 \\
+South Carolina & 0 & 0 & 0 & 0 \\
+\midrule
+\textbf{Total} & \textbf{1} & \textbf{1} & \textbf{10} & \textbf{12} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Similar VRA Compliance} Both methods create comparable MM district counts (10 vs 12 total in 2020). The 2-district difference represents a modest 20\% advantage for n-way partitioning. This similarity occurs because both methods use identical edge weighting (5x for minority-minority tract pairs), causing both algorithms to respect demographic clustering patterns.
+
+\paragraph{Dramatic Growth 2010$\rightarrow$2020} MM districts increased from 1 (2010) to 10-12 (2020) across five southern states---a 900-1100\% increase. This reflects substantial demographic shifts in the region over the decade, particularly growth in minority populations in urban and suburban areas.
+
+\paragraph{N-Way Slight Advantage} N-way partitioning creates 2 additional MM districts (12 vs 10), concentrated in Alabama and Georgia. This advantage arises from n-way's simultaneous $k$-way optimization, which can more flexibly adjust all district boundaries to maximize minority representation, whereas recursive bisection's hierarchical constraints limit flexibility at deep tree levels.
+
+\subsubsection{The Georgia Case: When Stability Conflicts with Representation}
+
+Georgia exemplifies the stability-representation tradeoff. Between 2010 and 2020:
+\begin{itemize}
+\item \textbf{Recursive bisection}: 1 MM district (2010) $\rightarrow$ 7 MM districts (2020), +6 districts
+\item \textbf{N-way partitioning}: 1 MM district (2010) $\rightarrow$ 8 MM districts (2020), +7 districts
+\end{itemize}
+
+This 600-700\% increase in MM districts reflects Georgia's rapid demographic transformation, driven by:
+\begin{itemize}
+\item Black population growth in Atlanta metro suburbs
+\item Hispanic population growth statewide (+60\% from 2010 to 2020)
+\item Increasing racial diversity in historically white suburban areas
+\end{itemize}
+
+Creating 6-7 new MM districts \textbf{requires substantial boundary disruption}. Maintaining 2010 district boundaries (high stability) would \textit{prevent} formation of these districts, violating the Voting Rights Act's mandate to provide minority communities opportunity to elect representatives of choice.
+
+\textbf{Implication}: In Georgia's case, \textit{disruption is necessary for representation}. The 1.1\% temporal stability advantage of recursive bisection becomes a \textit{disadvantage} when demographic shifts demand new MM districts.
+
+\subsubsection{MM District Stability Analysis}
+
+For states with MM districts in 2010, we measure \textit{MM district persistence}---whether a district that was MM in 2010 remains MM in 2020. Georgia provides the only case study (1 MM district in 2010):
+
+\begin{itemize}
+\item \textbf{Recursive bisection}: 0\% persistence (district 1 was MM in 2010, not MM in 2020)
+\item \textbf{N-way partitioning}: 100\% persistence (district 1 remains MM in both years)
+\end{itemize}
+
+This result appears to favor n-way, but closer inspection reveals complexity. The recursive bisection algorithm redistributed the 2010 MM district's population to create \textit{seven} new MM districts in 2020, maximizing overall minority representation at the expense of preserving the specific 2010 MM district boundary. N-way maintained the original MM district while creating seven \textit{additional} MM districts.
+
+Both strategies achieve strong minority representation (7-8 MM districts), but through different paths: recursive bisection prioritizes \textit{aggregate} MM district creation, while n-way balances \textit{preservation} of existing MM districts with creation of new ones.
+
+\subsubsection{Normative Framework: When Does Stability Matter?}
+
+The VRA compliance analysis suggests a context-dependent normative framework for evaluating temporal stability:
+
+\paragraph{Stability is Valuable When:}
+\begin{itemize}
+\item Demographic compositions remain relatively constant ($<$10\% shifts)
+\item Existing MM districts maintain majority-minority status
+\item Community boundaries (counties, municipalities) are stable
+\item Voters benefit from district continuity (familiarity with representatives)
+\end{itemize}
+
+\paragraph{Disruption is Necessary When:}
+\begin{itemize}
+\item Demographic compositions shift substantially ($>$20\% minority growth)
+\item New MM districts become geographically feasible
+\item Maintaining old boundaries would dilute minority voting power
+\item VRA compliance requires creation of opportunity districts
+\end{itemize}
+
+\paragraph{The Stability-Representation Balance}
+
+Figure~\ref{fig:stability-representation-tradeoff} conceptualizes the tradeoff. In stable demographic contexts (Alabama, South Carolina), the 1.1\% stability advantage of recursive bisection provides modest benefit without sacrificing representation. In dynamic contexts (Georgia), the advantage becomes irrelevant or harmful---demographic shifts demand boundary changes regardless of method.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/vra/mm_districts_comparison.png}
+\caption{MM district counts by state, year, and method. Georgia exhibits dramatic growth (1 $\rightarrow$ 7-8 MM districts), requiring substantial boundary disruption to achieve representation. Alabama and South Carolina show minimal change, contexts where stability provides greater value.}
+\label{fig:stability-representation-tradeoff}
+\end{figure}
+
+\subsubsection{Policy Implications}
+
+For redistricting practitioners and policymakers:
+
+\paragraph{Demographic Trend Analysis First} Before prioritizing temporal stability, analyze demographic trends from the previous decade. If minority populations grew $>$20\% or shifted geographically, expect that new MM districts will require boundary disruptions regardless of partitioning method.
+
+\paragraph{Method Selection Depends on Context}
+\begin{itemize}
+\item \textbf{Stable demographics}: Use recursive bisection for 1.1\% stability advantage
+\item \textbf{Dynamic demographics}: Use n-way partitioning for +2 MM district advantage and flexibility
+\item \textbf{Mixed contexts}: Consider hybrid approaches or allow different methods for different regions
+\end{itemize}
+
+\paragraph{Stability is a Means, Not an End} Temporal stability serves voters by maintaining district continuity, but representation is the paramount goal. When stability conflicts with fair representation (Georgia case), representation must prevail. The Voting Rights Act does not recognize "grandfathering" of old district boundaries when demographics shift to enable new opportunity districts.
+
+\subsubsection{Limitations and Caveats}
+
+This analysis has three important limitations:
+
+\paragraph{District ID Correspondence} MM persistence analysis assumes district IDs (1-14) correspond between 2010 and 2020. In practice, algorithms may assign different IDs to geographically similar districts, potentially understating persistence.
+
+\paragraph{50\% Threshold} We use a strict $>$50\% minority threshold for MM classification. The VRA's "opportunity district" concept is more nuanced, considering electoral performance, polarized voting, and cohesion, not just raw demographics. Our binary classification may not capture all legally relevant districts.
+
+\paragraph{Single State Deep Dive} Only Georgia provides sufficient MM district growth for detailed stability-representation analysis. Conclusions about the tradeoff generalize from this single case and may not apply to states with different demographic trajectories.
+
+Despite these limitations, the Georgia case clearly demonstrates that temporal stability and minority representation can conflict when demographics shift substantially, and in such cases, representation must take precedence.

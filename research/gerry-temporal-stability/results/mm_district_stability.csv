@@ -1,0 +1,11 @@
+state,method,mm_2010,mm_2020,persistent,lost,gained,persistence_rate
+alabama,recursive,0,0,0,0,0,0.0
+alabama,nway,0,1,0,0,1,0.0
+georgia,recursive,1,7,0,1,7,0.0
+georgia,nway,1,8,1,0,7,1.0
+louisiana,recursive,0,1,0,0,1,0.0
+louisiana,nway,0,1,0,0,1,0.0
+mississippi,recursive,0,2,0,0,2,0.0
+mississippi,nway,0,2,0,0,2,0.0
+south_carolina,recursive,0,0,0,0,0,0.0
+south_carolina,nway,0,0,0,0,0,0.0
