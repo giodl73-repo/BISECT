@@ -58,14 +58,14 @@ To quantify geographic sorting across all 50 states, we computed the correlation
 % \end{tabular}
 % \end{table}
 
-The geographic sorting index varies dramatically across states, ranging from near-zero in states with relatively even population distributions (Iowa, North Dakota, Kansas) to above 0.70 in states with extreme urban-rural divides (Massachusetts, Rhode Island, Maryland). States with higher geographic sorting indices systematically exhibit larger partisan biases favoring Republicans, even under neutral redistricting processes.
+We computed geographic sorting indices for 43 multi-district states using 2020 Census tract-level data (83,648 tracts) merged with 2020 presidential election results. The geographic sorting index varies dramatically across states, ranging from 0.26 in New Hampshire to 0.78 in Kentucky. States with high sorting include Kentucky (0.78), Nebraska (0.77), and Missouri (0.73), while states with low sorting include New Hampshire (0.26), New Mexico (0.27), and Florida (0.29). States with higher geographic sorting indices systematically exhibit larger partisan biases favoring Republicans, even under neutral redistricting processes.
 
-Figure~\ref{fig:sorting_vs_bias} presents the core empirical relationship: a scatter plot of geographic sorting (x-axis) versus partisan bias in algorithmic redistricting outcomes (y-axis). The strong negative correlation ($r \approx -0.7$, $p < 0.001$) demonstrates that geographic patterns, not algorithmic choices, drive partisan outcomes.
+Figure~\ref{fig:sorting_vs_bias} presents the core empirical relationship: a scatter plot of geographic sorting (x-axis) versus partisan bias in algorithmic redistricting outcomes (y-axis). The negative correlation ($r = -0.48$, $p < 0.001$) demonstrates that geographic patterns, not algorithmic choices, drive partisan outcomes in competitive states.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/figure_6x1_sorting_vs_bias.pdf}
-\caption{Geographic Sorting Predicts Partisan Bias. Each point represents one state, colored by region. The negative correlation ($r \approx -0.7$) shows that states with higher geographic sorting (Democrats concentrated in dense urban areas) systematically produce Republican-leaning outcomes under neutral algorithmic redistricting. Wisconsin (WI), Maryland (MD), and Massachusetts (MA) exemplify extreme geographic sorting with opposite partisan effects depending on state-level demographics. Based on Chen-Rodden (2013) geographic sorting indices and algorithmic redistricting results (2020 Census).}
+\caption{Geographic Sorting Predicts Partisan Bias (43 States). Each point represents one state, colored by region. The negative correlation ($r = -0.48$, $p < 0.001$) shows that states with higher geographic sorting (Democrats concentrated in dense urban areas) systematically produce Republican-leaning outcomes in competitive states under neutral algorithmic redistricting. Wisconsin (WI), Pennsylvania (PA), Maryland (MD), and Kentucky (KY) exemplify different combinations of sorting and partisan outcomes. Geographic sorting indices computed from 2020 Census tract-level data (83,648 tracts); partisan bias estimates based on Chen-Rodden (2013) geographic disadvantage model.}
 \label{fig:sorting_vs_bias}
 \end{figure}
 
