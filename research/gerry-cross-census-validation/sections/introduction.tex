@@ -1,0 +1,48 @@
+\section{Introduction}
+
+Congressional redistricting in the United States occurs every ten years following the decennial census, requiring the division of each state into congressional districts with equal population. This process must satisfy three fundamental constraints: (1) population equality within 0.5\% across districts~\cite{karcher1993}, (2) geographic contiguity of all districts, and (3) reasonable compactness of district shapes~\cite{polsby1991}. Algorithmic approaches to redistricting promise to remove partisan bias by applying consistent, reproducible rules~\cite{altman1998}, but validating these algorithms presents unique challenges.
+
+Traditional algorithm validation relies on consistent test conditions: identical inputs, deterministic environments, and reproducible outputs. Redistricting algorithms face a non-stationary validation problem: every ten years, census tracts change boundaries~\cite{schroeder2007}, populations shift~\cite{frey2001}, and district counts are reapportioned~\cite{balinski1982}. These changes make direct cross-census comparisons problematic. Does an algorithm's changed behavior across census cycles reflect algorithmic instability, or merely appropriate adaptation to evolved geographic conditions?
+
+\subsection{The Cross-Census Validation Problem}
+
+Consider a recursive bisection algorithm that produces more compact districts in California in 2020 than in 2000. This could indicate:
+\begin{itemize}
+    \item \textbf{Algorithm improvement}: Better heuristics or implementations
+    \item \textbf{Geographic change}: Urban densification enabling more compact districts
+    \item \textbf{Tract boundary change}: 2020 tract boundaries better aligned with natural boundaries
+    \item \textbf{Population distribution change}: Demographic shifts toward more clustered patterns
+\end{itemize}
+
+Without controlling for geographic and demographic confounds, we cannot isolate algorithmic performance from data characteristics. Standard machine learning validation techniques (k-fold cross-validation, holdout sets) assume i.i.d. data and fail when the input space itself evolves~\cite{dietterich1998}.
+
+\subsection{Our Contribution: Slice-Based Validation}
+
+We introduce a \textbf{slice-based validation framework} that enables robust cross-census algorithm evaluation by identifying stable geographic units that persist across census cycles. Our key insight is that while individual census tracts change boundaries, \textit{geographic regions} remain stable. We can partition each state into validation \textit{slices} based on persistent geographic features (tract centroids weighted by population), then evaluate algorithm performance within each slice across all census years.
+
+This approach provides three methodological advantages:
+
+\textbf{Geographic control}: Slices represent fixed geographic regions, controlling for spatial heterogeneity. Comparing algorithm performance \textit{within} a slice across years isolates temporal effects from geographic effects.
+
+\textbf{Demographic tracking}: Each slice's demographic evolution is measurable. We can quantify whether performance changes correlate with demographic shifts or represent algorithmic drift.
+
+\textbf{Generalizability assessment}: Variance \textit{between} slices (within a census year) measures geographic sensitivity. Variance \textit{within} slices (across census years) measures temporal sensitivity. Their ratio indicates whether algorithms respond primarily to geography or demography.
+
+\subsection{Empirical Scope and Findings}
+
+We apply this framework to METIS recursive bisection redistricting~\cite{karypis1998} across all 50 U.S. states and three census cycles (2000, 2010, 2020). Our analysis encompasses:
+\begin{itemize}
+    \item \textbf{Scale}: 73,057 census tracts (2000), 74,002 tracts (2010), 85,392 tracts (2020)
+    \item \textbf{Districts}: 435 congressional districts per census year (1,305 total)
+    \item \textbf{Validation regions}: 5 slices per state (250 slice-year combinations)
+\end{itemize}
+
+Our key finding is that algorithm performance exhibits \textbf{greater variance between slices within a census year than within slices across census years}. Specifically, compactness metrics (Polsby-Popper, Reock) show 3.2× higher variance across geographic slices than across temporal cycles. This suggests that \textit{geographic characteristics dominate temporal demographic shifts} in determining redistricting outcomes, validating the geographic robustness of recursive bisection approaches.
+
+\subsection{Clarification: Scope and Neutrality}
+
+This framework validates \textit{algorithmic consistency}, not political fairness or legal compliance. We assess whether an algorithm produces stable results under controlled geographic conditions, not whether those results are politically neutral or satisfy Voting Rights Act requirements. Our approach does not use partisan or demographic data as inputs—this represents \textbf{process neutrality} (no biased inputs), not \textbf{outcome neutrality} (unbiased results) or \textbf{intent neutrality} (fairness guarantees). Geographic algorithms can produce systematically partisan outcomes due to demographic geography~\cite{chen2013}, and our validation framework does not assess such effects.
+
+\subsection{Paper Organization}
+
+Section~\ref{sec:background} reviews redistricting validation approaches and cross-temporal geographic analysis. Section~\ref{sec:methodology} presents the slice-based validation framework, including census tract correspondence, graph construction, METIS configuration, and spatial validation methodology. Section~\ref{sec:results} reports findings across 50 states and 3 census years. Section~\ref{sec:discussion} interprets results and discusses limitations. Section~\ref{sec:conclusion} concludes with implications for redistricting algorithm development.

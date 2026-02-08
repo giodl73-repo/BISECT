@@ -1,0 +1,119 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Key Findings}
+
+Our central finding—that geographic variance exceeds temporal variance by 3.2×—has important implications for redistricting algorithm validation. It suggests that \textbf{algorithm performance is primarily determined by geographic context rather than temporal demographic change}. This validates a core assumption of algorithmic redistricting: if an algorithm uses only geographic and population data (no partisan or demographic information), its performance should be stable across census cycles for the same geographic region.
+
+The modest national compactness improvement (PP: +0.029 from 2000 to 2020) appears attributable to data quality improvements rather than algorithmic or demographic changes. Census tract boundaries have been progressively refined to better align with natural features (rivers, roads, topographic divides), enabling more compact algorithmic partitions. This suggests that future census cycles may continue to see slight compactness gains as geographic data quality improves.
+
+\subsection{Geographic vs. Demographic Determinism}
+
+The dominance of geographic over temporal variance raises a fundamental question: does redistricting primarily reflect \textit{geographic} constraints (terrain, settlement patterns) or \textit{demographic} characteristics (population density, racial composition, partisan affiliation)?
+
+Our results suggest geography is the primary determinant—at least for algorithmic redistricting that does not use demographic data beyond total population. This aligns with prior work showing that geographic compactness and population balance alone substantially constrain the space of possible redistricting plans~\cite{deford2021}.
+
+However, this does \textit{not} imply that demographic factors are unimportant for political outcomes. Geographic and demographic factors are confounded: urban areas have different political preferences than rural areas~\cite{rodden2019}, and geographic clustering of like-minded voters can produce systematic partisan outcomes even from "neutral" algorithms~\cite{chen2013}. Our validation framework assesses algorithmic \textit{consistency}, not outcome \textit{fairness}.
+
+\subsection{Implications for Redistricting Practice}
+
+\subsubsection{Algorithm Selection}
+
+Our framework enables principled comparison of redistricting algorithms. By evaluating across multiple census cycles and geographic slices, we can distinguish algorithms with:
+\begin{itemize}
+    \item \textbf{High geographic sensitivity}: Large between-slice variance, suggesting strong dependence on local geographic features
+    \item \textbf{High temporal sensitivity}: Large within-slice cross-census variance, suggesting instability or drift
+    \item \textbf{Geographic robustness}: Low between-slice variance, suggesting consistent behavior across diverse geographies
+    \item \textbf{Temporal robustness}: Low within-slice cross-census variance, suggesting stable behavior as demographics evolve
+\end{itemize}
+
+METIS recursive bisection exhibits high geographic sensitivity (variance 3.2× larger between slices than across time) and high temporal robustness (within-slice correlation $r=0.73$). This profile suggests the algorithm adapts well to local geography while maintaining consistent behavior over time.
+
+\subsubsection{Validation Requirements}
+
+Our results suggest that single-census evaluations may underestimate algorithm generalizability. An algorithm that performs well in a single census year might degrade in subsequent cycles if it overfits to specific tract boundary configurations. Cross-census validation provides a more stringent test of algorithmic robustness.
+
+Conversely, our results suggest that extensive temporal validation may be unnecessary for algorithms with strong geographic grounding. If geographic variance dominates, a thorough geographic evaluation (many states, diverse regions) may suffice, with limited temporal validation confirming stability.
+
+\subsection{Comparison to Alternative Validation Approaches}
+
+\subsubsection{Ensemble Methods}
+
+The MGGG GerryChain approach~\cite{gerrychain2018} generates large ensembles of valid plans via MCMC sampling, then assesses whether a proposed plan is an outlier relative to the ensemble. This provides a distributional baseline but operates within a single census cycle.
+
+Our slice-based approach is complementary: it could be combined with ensemble methods by generating ensembles for each slice-year combination, then comparing ensemble characteristics across census cycles. This would reveal whether the \textit{space} of valid plans changes over time, not just individual algorithmic outputs.
+
+\subsubsection{Spatial Cross-Validation}
+
+Roberts et al.~\cite{roberts2017} advocate spatial cross-validation for geographic algorithms, training on one region and testing on spatially separated regions. Our slice-based framework implements a form of spatial validation (slices are geographically separated), extended to multiple time points.
+
+The key difference is that spatial CV assesses \textit{spatial generalization} (does an algorithm trained on California work in Texas?), while our framework assesses \textit{temporal consistency} (does an algorithm's California behavior persist across census cycles?). Both are valuable, and future work could integrate them.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\subsubsection{Scope: Consistency vs. Fairness}
+
+This framework validates \textbf{algorithmic consistency}, not political fairness or Voting Rights Act compliance. We measure whether an algorithm produces stable results under controlled geographic conditions, not whether those results are politically neutral or equitable.
+
+Critically, our approach \textbf{does not assess outcome neutrality}. An algorithm can exhibit perfect temporal stability while producing systematically biased partisan outcomes due to demographic geography~\cite{rodden2019}. We assess \textit{process neutrality} (the algorithm uses no partisan data), not \textit{intent neutrality} (fairness guarantees) or \textit{outcome neutrality} (unbiased results).
+
+Slice-based validation could be extended to fairness analysis by incorporating partisan or demographic data and measuring whether fairness metrics (efficiency gap~\cite{stephanopoulos2015}, partisan symmetry~\cite{grofman1983}) vary systematically across census cycles. However, such analysis requires data we deliberately exclude to maintain process neutrality.
+
+\subsubsection{VRA Compliance Not Assessed}
+
+The Voting Rights Act requires that redistricting not dilute minority voting power~\cite{vra1965}. Assessing VRA compliance requires racial and ethnic demographic data, which our framework does not incorporate.
+
+Future work could integrate VRA analysis by computing minority representation metrics (e.g., number of majority-minority districts) for each slice-year and measuring whether representation changes over time. This would distinguish between: (1) demographic-driven representation changes (minority populations growing/shrinking) vs. (2) algorithm-driven changes (same demographics, different district boundaries).
+
+\subsubsection{Single Algorithm Evaluated}
+
+We evaluate only METIS recursive bisection. Different algorithms (simulated annealing~\cite{altman1998}, integer programming~\cite{mehrotra1998}, MCMC ensemble methods~\cite{gerrychain2018}) may exhibit different geographic vs. temporal variance profiles.
+
+However, our framework is algorithm-agnostic. Applying it to alternative algorithms would reveal whether high geographic sensitivity and temporal robustness is a general property of geographic optimization or specific to METIS.
+
+\subsubsection{Alaska, Hawaii, and U.S. Territories}
+
+Alaska and Hawaii present unique challenges: non-contiguous geography, extreme geographic diversity (Alaska's census areas span 1,500 km), and low population density. We include them in our analysis but acknowledge that slice-based validation may be less meaningful for states where geographic diversity exceeds the resolution of $K=5$ slices.
+
+U.S. territories (Puerto Rico, Guam, U.S. Virgin Islands, American Samoa, Northern Mariana Islands) elect non-voting delegates to Congress but are not included in standard congressional apportionment. Our framework could be extended to territories if they were to receive voting representation, though census data availability and quality may differ.
+
+\subsubsection{METIS Version and Reproducibility}
+
+We use METIS 5.1.0 throughout. Karypis noted that METIS 5.x introduced improved coarsening heuristics relative to METIS 4.x~\cite{karypis2013metis5}, potentially affecting compactness. Future work should test whether cross-census stability holds across METIS versions, or whether algorithmic refinements between versions produce temporal drift.
+
+We provide full source code and tract correspondence files as supplementary material to enable exact reproduction of our results.
+
+\subsubsection{Boundary District Artifacts}
+
+Our majority-overlap rule for assigning boundary-straddling districts to slices is simple but may introduce artifacts for near-equal splits (45-55\% population). However, such cases represent only 1.2\% of districts, and excluding boundary districts entirely changes results by $<$0.01 PP score, suggesting artifacts are minimal.
+
+A more sophisticated approach would be to compute separate compactness metrics for the within-slice portion of each district, avoiding assignment ambiguity. However, this substantially complicates analysis and provides little benefit given the low prevalence of boundary cases.
+
+\subsection{Future Work}
+
+\subsubsection{Multi-Algorithm Comparison}
+
+Applying slice-based validation to multiple algorithms (METIS, GerryChain, simulated annealing, integer programming) would reveal whether geographic dominance over temporal variance is algorithm-specific or a general property of redistricting optimization.
+
+\subsubsection{Fairness Integration}
+
+Incorporating partisan and demographic data would enable assessment of whether \textit{fairness} metrics exhibit geographic vs. temporal variance patterns. If partisan fairness shows high temporal sensitivity (within-slice variance across years), this would indicate that demographic shifts drive fairness outcomes more than algorithmic choices.
+
+\subsubsection{Finer Temporal Resolution}
+
+The American Community Survey (ACS) provides annual population estimates between decennial censuses. Validating algorithm performance on ACS mid-decade data would reveal whether demographic trends between census years produce performance drift, or whether algorithmic behavior remains stable throughout the decade.
+
+\subsubsection{Causal Analysis}
+
+Our current approach measures variance decomposition but does not identify \textit{causal factors}. Regression analysis predicting compactness from geographic features (terrain ruggedness, road network density, fractal dimension of boundaries) and demographic features (urbanization, population growth) would quantify which factors drive variance. This could inform algorithm design: if terrain is the dominant factor, algorithms should incorporate topographic data explicitly.
+
+\subsubsection{Extensions to State Legislative Redistricting}
+
+Congressional redistricting involves 435 districts across 50 states (average 8.7 districts per state). State legislative redistricting involves thousands of districts (e.g., 203 state house districts in Pennsylvania). Applying slice-based validation to state legislative redistricting would test whether results generalize to finer-grained partitioning problems.
+
+\subsection{Broader Impact}
+
+Algorithmic redistricting is increasingly used in practice: several states (Iowa, Ohio, Virginia) now employ algorithmic or commission-based approaches to reduce partisan gerrymandering~\cite{mcghee2020}. Ensuring these algorithms are robust across census cycles is essential for long-term trust in algorithmic governance.
+
+Our validation framework provides a principled methodology for assessing algorithmic consistency, complementing existing fairness and legal compliance analyses. By quantifying geographic vs. temporal sensitivity, we enable algorithm developers to diagnose instabilities and stakeholders to make informed decisions about algorithm adoption.

@@ -1,0 +1,22 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+Congressional redistricting algorithms must operate on evolving census geographies, where tract boundaries change, populations shift, and district counts are reapportioned every decade. Validating such algorithms requires methodologies that control for these confounds while measuring algorithmic consistency. Traditional validation approaches fail when the input space itself is non-stationary.
+
+We introduced a \textbf{slice-based cross-census validation framework} that creates temporally stable geographic regions (slices) within each state, then evaluates algorithm performance within each slice across multiple census cycles. This approach disentangles geographic effects (differences between regions) from temporal effects (changes over time), enabling principled assessment of algorithmic robustness.
+
+Applying this framework to METIS recursive bisection across 50 U.S. states and three census cycles (2000, 2010, 2020), we found that \textbf{geographic variance exceeds temporal variance by 3.2×}. This indicates that algorithm performance is primarily determined by geographic context (terrain, settlement patterns, tract geometry) rather than temporal demographic shifts. Algorithmic behavior within a given geographic region remains highly stable across census cycles (within-slice correlation $r=0.73$), validating the robustness of METIS for long-term redistricting applications.
+
+Our framework is algorithm-agnostic and can be applied to any redistricting method that operates on census tract graphs. It provides a complementary perspective to existing validation approaches: while ensemble methods assess the space of valid plans within a single census, and fairness metrics assess political outcomes, slice-based validation assesses algorithmic \textit{consistency}—whether an algorithm's behavior persists across evolving input conditions.
+
+The dominance of geographic over temporal variance has practical implications: redistricting algorithms with strong geographic foundations may generalize well across census cycles, while those optimized for specific demographic distributions may degrade as populations evolve. Future algorithm development should prioritize geographic robustness alongside traditional objectives like compactness and population balance.
+
+As algorithmic redistricting gains adoption in practice, ensuring temporal stability becomes critical for maintaining public trust. Our validation framework provides a rigorous methodology for assessing this stability, enabling algorithm developers to diagnose instabilities and policymakers to make informed decisions about algorithm deployment. By quantifying how algorithms respond to the same geography over time, we establish a foundation for robust, trustworthy algorithmic governance of redistricting.
+
+\subsection*{Data and Code Availability}
+
+All source code, census tract correspondence files, and complete validation results are available in the supplementary materials and at \texttt{https://github.com/[anonymous-for-review]/cross-census-validation}. METIS 5.1.0 is available at \texttt{http://glaros.dtc.umn.edu/gkhome/metis/metis/overview}.
+
+\subsection*{Acknowledgments}
+
+We thank the reviewers for their thorough and constructive feedback, which substantially improved this work. We thank the U.S. Census Bureau for providing open-access TIGER/Line and redistricting data. We thank George Karypis and Vipin Kumar for developing and maintaining METIS.

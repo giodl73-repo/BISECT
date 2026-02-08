@@ -1,26 +1,38 @@
-\documentclass[sigconf,review]{acmart}
+\documentclass[12pt]{article}
 
-\usepackage{booktabs}
+% Packages
+\usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
 \usepackage{subcaption}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{url}
 
+% Title and Authors
 \title{Slice-Based Cross-Census Validation for Congressional Redistricting Algorithms}
 
-\author{Anonymous Authors}
-\affiliation{%
-  \institution{Anonymous Institution}
-  \country{USA}
+\author{
+Anonymous Authors\\
+Anonymous Institution\\
+USA
 }
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
 
 \begin{abstract}
 Congressional redistricting algorithms must balance population equality, geographic compactness, and contiguity constraints while remaining neutral to political considerations. Validating such algorithms across multiple census cycles presents unique challenges: demographic shifts, tract boundary changes, and evolving district requirements create non-stationary evaluation conditions. We introduce a \textbf{slice-based validation framework} that enables robust cross-census algorithm evaluation by identifying stable geographic units that persist across census cycles (2000, 2010, 2020). Our approach slices each state into validation regions using spatial clustering of persistent tract centroids, then evaluates algorithm performance within each slice across all three census years. This methodology controls for geographic and demographic confounds while measuring algorithm consistency, revealing systematic behaviors that single-census evaluations miss. We apply this framework to METIS recursive bisection redistricting across all 50 states, demonstrating how compactness metrics, population balance, and computational efficiency evolve across census cycles. Our results show that algorithm performance exhibits greater variance \textit{between} slices within a census year than \textit{within} slices across census years, suggesting that geographic characteristics dominate temporal demographic shifts in determining redistricting outcomes. This validation framework provides a principled approach for assessing redistricting algorithm stability and generalizability.
 \end{abstract}
 
-\keywords{redistricting, validation, census data, spatial algorithms, cross-temporal analysis}
-
-\maketitle
+\noindent\textbf{Keywords:} redistricting, validation, census data, spatial algorithms, cross-temporal analysis
 
 \input{sections/introduction}
 \input{sections/background}
@@ -29,7 +41,7 @@ Congressional redistricting algorithms must balance population equality, geograp
 \input{sections/discussion}
 \input{sections/conclusion}
 
-\bibliographystyle{ACM-Reference-Format}
+\bibliographystyle{plain}
 \bibliography{references}
 
 \end{document}
