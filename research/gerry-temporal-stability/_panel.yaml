@@ -84,8 +84,9 @@ revision_items:
   - id: P1.4
     title: "Add theoretical foundation"
     priority: P1
-    status: not_started
-    addressed: false
+    status: complete
+    addressed: true
+    completed_date: 2026-02-08
 
 # History
 history:
