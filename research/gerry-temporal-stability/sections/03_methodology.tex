@@ -1,0 +1,92 @@
+\subsection{Multi-Census Dataset}
+
+We analyze five southern states with substantial minority populations and strict VRA scrutiny: Alabama (7 districts), Georgia (14 districts), Louisiana (6 districts), Mississippi (4 districts), and South Carolina (7 districts). For each state, we obtain:
+
+\textbf{2010 Census Data:}
+\begin{itemize}
+    \item Census tract shapefiles (TIGER/Line)
+    \item Demographic data (race, ethnicity, voting-age population)
+    \item Adjacency graphs (shared boundaries between tracts)
+\end{itemize}
+
+\textbf{2020 Census Data:} Identical data types for 2020 census.
+
+\textbf{Tract Relationship Files:} The Census Bureau provides relationship files mapping 2010 tract GEOIDs to 2020 tract GEOIDs, with population weights for splits and merges \citep{census_tract_relationships}. These enable mapping 2010 district assignments onto 2020 tract geography for direct comparison.
+
+\subsection{Redistricting Methods}
+
+We run two graph partitioning methods for each state and census year:
+
+\textbf{N-Way Partitioning:} Edge-weighted METIS with parameters from prior VRA compliance work:
+\begin{itemize}
+    \item Edge weights: $w_e = 5$ if both adjacent tracts exceed 40\% minority
+    \item Partitioning mode: Direct $k$-way
+    \item Population tolerance: $\pm 0.5\%$ of target
+\end{itemize}
+
+\textbf{Recursive Bisection:} Adaptive tree structure (from Paper 1):
+\begin{itemize}
+    \item Same edge weighting as n-way
+    \item Tree structure: Adaptive splits at each level
+    \item Population tolerance: $\pm 0.5\%$ of target
+\end{itemize}
+
+This produces 20 redistricting runs: 5 states $\times$ 2 years $\times$ 2 methods.
+
+\subsection{Temporal Stability Metrics}
+
+We define four metrics quantifying district boundary stability from 2010 to 2020:
+
+\subsubsection{Tract Reassignment Rate}
+
+Measures fraction of census tracts remaining in the same district:
+
+$$S_{tract} = \frac{|\{t : d_{2010}(t) = d_{2020}(t)\}|}{|T|}$$
+
+where $d_{year}(t)$ denotes tract $t$'s district assignment in a given year, after mapping 2010 tracts to 2020 geography using relationship files. Higher values indicate greater stability ($S_{tract} = 1$ means perfect stability, all tracts unchanged).
+
+\subsubsection{Population Disruption}
+
+Accounts for tract population sizes (large tracts matter more):
+
+$$S_{pop} = 1 - \frac{\sum_{t \in T} \mathbb{1}[d_{2010}(t) \neq d_{2020}(t)] \cdot p_t}{2 \cdot \sum_{t \in T} p_t}$$
+
+where $p_t$ is tract $t$'s population and $\mathbb{1}[\cdot]$ is the indicator function. The factor of 2 normalizes to $[0,1]$ range (worst case: every resident changes districts).
+
+\subsubsection{Boundary Stability}
+
+Measures physical boundary continuity:
+
+$$BS = \frac{|\{(i,j) \in E : b_{2010}(i,j) = b_{2020}(i,j)\}|}{|E|}$$
+
+where $E$ is the set of adjacent tract pairs and $b_{year}(i,j) = \mathbb{1}[d_{year}(i) \neq d_{year}(j)]$ indicates whether tracts $i,j$ are separated by a district boundary in that year. This measures what fraction of potential boundaries remain consistent (either both years have a boundary, or both years don't).
+
+\subsubsection{Hierarchical Coherence Change}
+
+For recursive bisection, measures preservation of tree structure. For n-way, measures implicit hierarchical organization:
+
+$$\Delta GC = |GC_{2020} - GC_{2010}|$$
+
+where $GC$ (geographic coherence) is the modularity of the district-level adjacency graph under hierarchical clustering. High $GC$ indicates districts naturally group into regions; low $\Delta GC$ indicates structure preservation.
+
+\subsection{Statistical Analysis}
+
+We test the hypothesis that recursive bisection provides greater stability than n-way partitioning:
+
+\textbf{Null hypothesis ($H_0$):} $\mu_{recursive} = \mu_{nway}$ for each stability metric
+
+\textbf{Alternative hypothesis ($H_1$):} $\mu_{recursive} > \mu_{nway}$ for each stability metric
+
+We use paired $t$-tests (paired by state) with $\alpha = 0.05$ significance level. Effect sizes computed via Cohen's $d$. With 5 states, statistical power is limited but sufficient for large effects ($d > 0.8$).
+
+\subsection{Communities of Interest Analysis}
+
+We measure county-level disruption as a proxy for communities of interest \citep{communities_of_interest}. For each state:
+
+\begin{enumerate}
+    \item Map census tracts to counties (from TIGER/Line files)
+    \item For each county, count how many districts it spans in 2010 and 2020
+    \item Compute fraction of counties whose district-split count changed
+\end{enumerate}
+
+This quantifies administrative disruption (counties needing to coordinate with different districts after redistricting).

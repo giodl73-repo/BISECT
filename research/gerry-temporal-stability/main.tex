@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{Cross-Census Temporal Stability:\\
+Recursive Bisection vs N-Way Partitioning Over Decades}
+\author{Giovanni Della-Libera}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting occurs every decade following the census, raising critical questions about boundary stability over time. While graph partitioning methods optimize current-census districts, their temporal stability across census cycles remains unexplored. This paper presents the first systematic comparison of hierarchical recursive bisection versus flat n-way partitioning methods for maintaining district continuity across the 2010-2020 decade.
+
+We analyze five southern states with significant minority populations, running both methods on 2010 and 2020 census data (20 total redistricting runs). Our key finding: \textbf{recursive bisection provides substantially greater temporal stability}, with 80\% tract retention versus 70\% for n-way partitioning (+14 percentage point improvement, $p<0.001$). This stability advantage derives from hierarchical structure preservation—recursive bisection's top-level geographic splits remain 94\% intact across the decade, while n-way partitioning shows no structural continuity.
+
+The performance-stability tradeoff proves modest: n-way offers +4.3 percentage points better minority concentration in 2020, but recursive bisection provides +14 percentage points better stability for 2030 redistricting. For jurisdictions with comfortable VRA margins, recursive bisection's stability benefits outweigh marginal performance costs. Communities of interest see 14 percentage points less disruption (22\% vs 36\% counties affected) with recursive methods.
+
+These findings suggest redistricting method choice should consider not only current optimization but also future continuity. States adopting recursive bisection in 2020 should experience substantially easier 2030 transitions, a prediction testable with forthcoming census data.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background}
+\input{sections/02_background}
+
+\section{Methodology}
+\input{sections/03_methodology}
+
+\section{Results}
+\input{sections/04_results}
+
+\section{Discussion}
+\input{sections/05_discussion}
+
+\section{Limitations}
+\input{sections/06_limitations}
+
+\section{Future Work}
+\input{sections/07_future_work}
+
+\section{Conclusion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

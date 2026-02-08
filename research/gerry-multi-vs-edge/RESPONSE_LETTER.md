@@ -94,13 +94,36 @@ Dr. Karypis predicted: *"If this fixes the problem, the entire paper's conclusio
 
 **Reviewer Concern** (Drs. Karypis, Hendrickson, Cook): Section 3.1.2 contains calculation errors, unclear reasoning about VAP vs total population, and impossible percentages (129%, 258%).
 
-**Our Response**: We acknowledge this concern and are currently revising Section 3.1.2. The confusion arose from mixing within-district percentages (which can exceed 100% of the state average) with absolute constraint violations (which cannot).
+**Our Response**: We acknowledge the reviewers' concerns and have completely rewritten Section 3.1.2 to provide a clear, formal treatment of constraint tightness.
 
-**Planned Revision**: We will either:
-1. Completely rewrite Section 3.1.2 with correct calculations and clear definitions, or
-2. Remove this subsection and rely on empirical validation of constraint conflict in Section 5
+#### What Was Wrong
 
-We will provide the revised version in our next submission.
+The original subsection contained confusing calculations that mixed relative constraint violations with impossibility. For example, stating "129% violation" was unclear—it could mean 29% over target (relative) or an impossible value over 100%.
+
+#### Changes Made
+
+1. **Formal definition**: Introduced the tightness ratio $\tau_c = \frac{\text{tolerance}}{\text{target}} = \epsilon$ for constraint $c$
+
+2. **Quantification**: For multi-constraint redistricting:
+   - Population constraint: $\tau_{\text{pop}} = 0.005$ (tight: $\pm$0.5%)
+   - Minority constraint: $\tau_{\text{min}} \in [0.3, 4.0]$ (loose: $\pm$30-400%)
+   - Tightness ratio differs by **60-800×** between constraints
+
+3. **Removed confusing calculations**: Eliminated the unclear 129%/258% calculations entirely
+
+4. **Clarified mechanism**: Explained how tighter constraints dominate METIS's local search decisions:
+   - Moves violating population constraint ($\tau = 0.005$) are rejected with high probability
+   - Moves violating minority constraint ($\tau \geq 0.3$) are accepted with high probability
+
+#### Why This Fixes the Issue
+
+The revised section now provides rigorous theoretical grounding for our constraint conflict hypothesis:
+- **Formal definition** of constraint tightness (standard in optimization literature)
+- **Quantified difference** between constraint tightness (60-800× gap)
+- **Clear mechanism** explaining why looser constraints provide insufficient guidance
+- **Empirical validation** in Section 5 (tests ubvec $\in$ {1.3, 1.5, 2.0, 5.0})
+
+The paper has been recompiled successfully with these changes (16 pages, 475 KB).
 
 ---
 
@@ -152,24 +175,28 @@ These state-level results are robust to configuration count asymmetry.
 
 ## Summary of Changes
 
-### Completed (P1-1)
-- ✅ Identified and corrected critical implementation bug
-- ✅ Verified correct formula mathematically
-- ✅ Re-ran all 20 multi-constraint experiments
-- ✅ Updated Section 2 equation
-- ✅ Updated Section 5 results throughout
-- ✅ Regenerated all 6 figures
-- ✅ Created detailed documentation of bug and fix (supplementary materials)
+### Completed (P1-1, P1-2)
+- ✅ Identified and corrected critical implementation bug (P1-1)
+- ✅ Verified correct formula mathematically (P1-1)
+- ✅ Re-ran all 20 multi-constraint experiments (P1-1)
+- ✅ Updated Section 2 equation (P1-1)
+- ✅ Updated Section 5 results throughout (P1-1)
+- ✅ Regenerated all 6 figures (P1-1)
+- ✅ Created detailed documentation of bug and fix (P1-1)
+- ✅ Rewritten Section 3.1.2 with formal constraint tightness definition (P1-2)
+- ✅ Removed confusing calculations (129%, 258%) (P1-2)
+- ✅ Quantified 60-800× tightness ratio difference (P1-2)
+- ✅ Paper recompiled successfully (P1-2)
 
-### In Progress (P1-2, P1-3, P1-4)
-- ⏳ Revising/removing Section 3.1.2 (P1-2)
+### In Progress (P1-3, P1-4)
 - ⏳ Planning balanced experimental design (P1-3)
 - ⏳ Running experiments with multiple seeds for statistical rigor (P1-4)
 
 ### Timeline for Complete Revision
-- **Week 1-2**: Complete P1-2 (theoretical section rewrite)
-- **Week 3-6**: Address P1-3 and P1-4 (balanced experiments with statistical tests)
-- **Week 7-8**: Integrate all changes, finalize manuscript
+- **Week 1** (COMPLETE): ✅ P1-1 (implementation fix) and ✅ P1-2 (theoretical section rewrite)
+- **Week 2-3**: Address P1-3 (balanced experimental design)
+- **Week 4-7**: Address P1-4 (statistical rigor with multiple seeds)
+- **Week 8**: Integrate all changes, finalize manuscript
 
 **Expected resubmission**: Late March 2026
 

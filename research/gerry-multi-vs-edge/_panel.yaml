@@ -59,7 +59,8 @@ p1_items:
     resolution: "Bug verified and fixed. Original implementation missing target_weights. Corrected version generates new results (30.0% success vs 35.0% original). This strengthens paper's conclusion."
   - id: P1-2
     title: "Theoretical section calculation errors"
-    addressed: false
+    addressed: true
+    resolution: "Section 3.1.2 completely rewritten. Removed confusing 129%/258% calculations. Added formal constraint tightness definition (τ_c = ε). Quantified 60-800× tightness ratio difference. Paper recompiled successfully (16 pages, 475 KB)."
   - id: P1-3
     title: "Asymmetric configuration counts (4 vs 140)"
     addressed: false
@@ -90,3 +91,6 @@ history:
   - date: "2026-02-08"
     stage: revision
     note: "P1-1 COMPLETE: Section 2 equation fixed, Section 5 updated, all figures regenerated. Response letter drafted. Paper ready for P1-1 aspects. P1-2/3/4 still in progress."
+  - date: "2026-02-08"
+    stage: revision
+    note: "P1-2 COMPLETE: Section 3.1.2 rewritten. Removed confusing 129%/258% calculations, added formal constraint tightness definition (τ_c = ε), quantified 60-800× tightness ratio. Paper recompiled successfully. P1-1 and P1-2 complete, P1-3/4 remaining."

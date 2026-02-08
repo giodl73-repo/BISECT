@@ -20,41 +20,42 @@ where $\epsilon \in [0.3, 4.0]$ is the minority imbalance tolerance.
 
 \textbf{Consequence:} Population balance dominates, and minority concentration becomes a secondary consideration. Even with target weights $t_i^{\text{min}}$ specifying 60\% minority concentration, METIS cannot achieve this if doing so requires violating population balance.
 
-\subsubsection{Theoretical Prediction}
+\subsubsection{Quantifying Constraint Tightness}
 
-For Alabama ($k=7$ districts, 36.9\% total minority, target 2 MM districts):
+We formalize the notion of ``constraint tightness'' to explain why multi-constraint optimization struggles. Define the tightness ratio $\tau$ for constraint $c$ as:
 
-\begin{itemize}
-    \item \textbf{Equal-population districts:} $100\% / 7 = 14.3\%$ of population per district
-    \item \textbf{Total minority available:} $36.9\%$ of total population
-    \item \textbf{Maximum possible in 2 districts:} If all minority population concentrated in 2 districts, each would have $36.9\% / 2 = 18.5\%$ of \textit{total state population}
-    \item \textbf{But equal-population constraint requires:} Each district has exactly $14.3\%$ of total population
-    \item \textbf{Maximum minority percentage:} $18.5\% / 14.3\% = 129\%$ of district population (impossible!)
-\end{itemize}
-
-\textbf{Corrected calculation:} Maximum achievable minority concentration in one district when all minority voters are concentrated:
 \begin{equation}
-\max(\% \text{ minority}) = \frac{\text{Total minority VAP}}{\text{Total population} / k} = \frac{0.369 \cdot P}{P / 7} = 2.58 \times 100\% = 258\%
+\tau_c = \frac{\text{tolerance}}{\text{target}} = \frac{\epsilon \cdot t_c}{t_c} = \epsilon
 \end{equation}
 
-This is impossible since minority percentage cannot exceed 100\%. The correct interpretation: if we concentrate all minority population into 2 districts (each with $1/7$ of total population), maximum achievable minority percentage per district is:
-\begin{equation}
-\frac{0.369 \cdot P / 2}{P / 7} = \frac{0.1845 \cdot P}{0.143 \cdot P} = 1.29 = 129\%
-\end{equation}
-
-Still impossible. Let's recalculate properly:
-
-\textbf{Correct Analysis:} Alabama has 36.9\% total minority \textit{voting-age population (VAP)}. If we concentrate minority VAP into 2 districts while maintaining equal total population:
+For multi-constraint redistricting:
 \begin{itemize}
-    \item Total minority VAP: $M = 0.369 \cdot \text{Total VAP}$
-    \item If concentrated in 2 districts: $M / 2$ per district
-    \item Each district's VAP: $\text{Total VAP} / 7$
-    \item Minority \% in these districts: $\frac{M / 2}{\text{VAP} / 7} = \frac{0.369 \cdot \text{VAP} / 2}{\text{VAP} / 7} = \frac{0.369 \cdot 7}{2} = 1.29 = 129\%$
+    \item \textbf{Population constraint:} $\tau_{\text{pop}} = 0.005$ (tight: $\pm$0.5\%)
+    \item \textbf{Minority constraint:} $\tau_{\text{min}} \in [0.3, 4.0]$ (loose: $\pm$30-400\%)
 \end{itemize}
 
-This is still wrong because it assumes we can arbitrarily concentrate minority population, but population balance constraint means each district must have equal \textit{total} population (not VAP). The issue is that minority VAP is not uniformly distributed geographically.
+The tightness ratio differs by \textbf{60-800×} between constraints. When METIS evaluates a vertex move during local refinement:
+\begin{itemize}
+    \item Moves violating population constraint ($\tau = 0.005$) are rejected with high probability
+    \item Moves violating minority constraint ($\tau \geq 0.3$) are accepted with high probability
+\end{itemize}
 
-\textbf{Actual Constraint Conflict:} The conflict arises because:
+\textbf{Consequence:} The tighter constraint (population) dominates local search, while the looser constraint (minority) provides insufficient guidance. Even with asymmetric target weights $t_i^{\text{min}}$ specifying 60\% minority concentration in MM districts, METIS prioritizes population balance over minority concentration when these goals conflict.
+
+\subsubsection{Geographic Dispersion and Feasibility}
+
+The conflict intensifies when minority population is geographically dispersed. For Alabama ($k=7$ districts, 36.9\% minority, target 2 MM districts at $\geq$50\%):
+
+\textbf{Sufficient minority population exists:} If perfectly packed, 2 districts of 60\% minority require $2 \times 0.60 \times (1/7) = 17.1\%$ of state population to be minority. Alabama has 36.9\% minority, so this is theoretically feasible ($36.9\% > 17.1\%$).
+
+\textbf{Geographic constraints prevent perfect packing:} Minority population is not uniformly distributed. Creating compact, contiguous districts with 60\% minority requires:
+\begin{enumerate}
+    \item Census tracts with high minority density exist in geographically clustered regions
+    \item These clusters contain sufficient population for entire districts ($\sim$1/7 of state)
+    \item Connecting these tracts maintains compactness (low edge cut)
+\end{enumerate}
+
+When these conditions fail, the three constraints conflict:
 \begin{enumerate}
     \item Population balance requires each district to have exactly $1/k$ of total population ($\pm0.5\%$).
     \item Minority concentration requires some districts to have $\geq60\%$ minority VAP.

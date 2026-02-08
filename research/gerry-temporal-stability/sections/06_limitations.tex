@@ -1,0 +1,52 @@
+While our findings demonstrate substantial stability advantages for recursive bisection, several limitations warrant consideration:
+
+\subsection{Temporal Scope}
+
+\textbf{Two Census Cycles:} We analyze only 2010-2020, lacking three-cycle (2000-2010-2020) or longer timescales. Conclusions about ``temporal stability'' rest on a single decade. Adding 2000 data would strengthen claims, but pre-2010 tract relationship files have poorer quality due to less systematic Census Bureau documentation.
+
+\textbf{Future Validation:} Ultimate validation requires 2030 census data, unavailable until 2031. Our predictions about 2020-2030 stability remain testable hypotheses rather than established facts.
+
+\subsection{Geographic Scope}
+
+\textbf{Five Southern States:} Analysis limited to Alabama, Georgia, Louisiana, Mississippi, and South Carolina—all VRA-scrutiny states with substantial minority populations. Generalization to other regions (Midwest, West) requires additional experiments.
+
+\textbf{Selection Bias:} These states were chosen for VRA relevance, potentially biasing toward states where racial geography creates clear hierarchical divisions. States with more homogeneous demographics or less distinct geographic regions (e.g., Iowa, New Hampshire) may show smaller stability differences.
+
+\subsection{Algorithmic Specificity}
+
+\textbf{METIS Implementation:} All results use METIS-based partitioning. Alternative algorithms—spectral clustering, simulated annealing, ensemble methods—may exhibit different stability properties. The hierarchical structure advantage we observe could be METIS-specific or could generalize to other hierarchical methods (hypothesis: generalizes, but requires testing).
+
+\textbf{Edge-Weighting:} Both methods use identical edge-weighting schemes (5$\times$ weight at 40\% minority threshold). Different weighting schemes could alter relative stability, though we expect the hierarchical structure advantage to persist under varied parameters.
+
+\subsection{Data Quality}
+
+\textbf{Tract Relationship Files:} Census Bureau relationship files imperfectly map 2010-2020 tract changes. Some tracts split, merge, or change boundaries in complex ways. Our stability metrics treat relationship-file mappings as ground truth, but errors in these files propagate to our results. Estimated error rate: 2-3\% of tracts based on Census documentation.
+
+\textbf{Demographic Data:} We use decennial census counts, which have known undercounts (especially for minority populations). Differential undercount rates between 2010 and 2020 could introduce noise in stability metrics.
+
+\subsection{Stability Metric Definitions}
+
+\textbf{Multiple Definitions:} Temporal stability has no canonical definition. We propose four metrics (tract reassignment, population disruption, boundary stability, hierarchical coherence), but alternative definitions exist. For example:
+\begin{itemize}
+    \item Representative-constituent continuity: Fraction of residents retaining the same representative
+    \item Voter confusion: Survey-based measures of redistricting awareness
+    \item Administrative burden: Cost of updating election infrastructure
+\end{itemize}
+
+Our metrics capture geographic continuity but may miss socio-political stability dimensions.
+
+\textbf{Metric Correlation:} Our four metrics are partially correlated (e.g., tract reassignment correlates with population disruption). This reduces effective degrees of freedom in statistical tests, though large effect sizes ($d>1.1$) suggest robustness.
+
+\subsection{Statistical Power}
+
+\textbf{Small Sample Size:} With only 5 states, statistical power for detecting small-to-medium effects is limited. Large effects ($d>0.8$) are detectable, but subtle differences could be missed. Future work should expand to all 50 states to increase power.
+
+\textbf{Paired Design:} We use paired $t$-tests (paired by state), which increases power versus independent samples. However, states vary substantially in size, demographics, and geography, introducing heterogeneity.
+
+\subsection{Generalizability to Practice}
+
+\textbf{Real-World Redistricting:} Actual redistricting involves political negotiations, legal constraints, and public input beyond pure algorithmic optimization. Our results demonstrate that \emph{if} adopting algorithmic methods, recursive bisection offers stability advantages—but hybrid human-algorithm approaches may behave differently.
+
+\textbf{Voting Rights Act:} VRA compliance requirements evolve through court decisions (e.g., \emph{Shelby County v. Holder} weakening preclearance). Future VRA interpretations could alter the performance-stability tradeoff.
+
+Despite these limitations, our core finding—that hierarchical methods provide substantial temporal stability advantages through structural preservation—rests on sound theoretical foundations and empirical evidence across multiple states and metrics.

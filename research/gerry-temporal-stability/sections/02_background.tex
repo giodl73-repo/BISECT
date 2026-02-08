@@ -1,0 +1,65 @@
+\subsection{Temporal Stability in Redistricting}
+
+The U.S. Constitution mandates congressional redistricting every ten years following the census (Article I, Section 2). This decadal cycle creates temporal dynamics largely ignored by redistricting literature, which focuses on single-census optimization. Yet stability matters for several reasons.
+
+\textbf{Communities of Interest:} Supreme Court jurisprudence recognizes communities sharing ``common social and economic interests'' that deserve unified representation \citep{communities_of_interest}. Frequent boundary changes fragment these communities, disrupting constituent-representative relationships built over years.
+
+\textbf{Political Accountability:} Representatives develop expertise and constituent relationships over multiple terms. Radical boundary changes every decade reset these relationships, potentially reducing government effectiveness.
+
+\textbf{Administrative Costs:} Each redistricting requires updating voter rolls, precinct assignments, and election infrastructure. Minimizing boundary changes reduces these administrative burdens.
+
+Despite these considerations, we know of no prior work measuring temporal stability of algorithmic redistricting methods across census cycles. This gap likely stems from data requirements—multi-census analysis requires historical census data, tract relationship files handling boundary changes, and consistent methodology across years.
+
+\subsection{Recursive Bisection: Hierarchical Structure}
+
+Recursive bisection partitions a graph through hierarchical binary decomposition \citep{karypis1998fast}. For redistricting:
+
+\begin{algorithmic}
+\STATE \textbf{Input:} Census tracts $T$, target districts $k$
+\STATE \textbf{Output:} District assignment $d: T \rightarrow \{1,\ldots,k\}$
+\STATE
+\STATE \textbf{function} RecursiveBisection($T$, $k$):
+\IF{$k = 1$}
+    \RETURN $T$ as single district
+\ELSE
+    \STATE Split $T$ into $T_1, T_2$ (bisection into regions)
+    \STATE $k_1 \leftarrow \lfloor k/2 \rfloor$, $k_2 \leftarrow k - k_1$
+    \STATE $D_1 \leftarrow$ RecursiveBisection($T_1$, $k_1$)
+    \STATE $D_2 \leftarrow$ RecursiveBisection($T_2$, $k_2$)
+    \RETURN $D_1 \cup D_2$
+\ENDIF
+\end{algorithmic}
+
+This creates a binary tree structure. For a 7-district state:
+\begin{itemize}
+    \item \textbf{Level 0:} State divides into regions A (3 districts) and B (4 districts)
+    \item \textbf{Level 1:} Region A divides into subregions A1 (1 district) and A2 (2 districts)
+    \item \textbf{Level 1:} Region B divides into subregions B1 (2 districts) and B2 (2 districts)
+    \item \textbf{Level 2:} Further subdivisions until individual districts
+\end{itemize}
+
+The critical temporal hypothesis: \textbf{top-level splits preserve fundamental geography}. If Region A represents the Black Belt and Region B represents the rest of Alabama, this urban-rural division may remain stable across decades even as specific district boundaries within each region adjust to demographic shifts.
+
+\subsection{N-Way Partitioning: Flat Structure}
+
+N-way partitioning (also called ``direct $k$-way'') simultaneously optimizes all $k$ districts without hierarchical decomposition \citep{karypis1998fast}. METIS implements this through multilevel refinement:
+
+\begin{enumerate}
+    \item \textbf{Coarsening:} Collapse graph into progressively smaller graphs
+    \item \textbf{Initial Partitioning:} Partition coarsest graph into $k$ parts
+    \item \textbf{Refinement:} Project back through finer graphs, optimizing edge-cut at each level
+\end{enumerate}
+
+Crucially, n-way has no inherent hierarchy—all districts optimize simultaneously. When re-run on 2020 data, there's no structural constraint to preserve 2010's geographic organization. This may cause cascading changes: adjusting District 1's boundary to accommodate demographic growth could ripple through Districts 2, 3, etc., ultimately affecting all districts.
+
+\subsection{Prior Comparative Work}
+
+Prior research comparing recursive bisection and n-way partitioning focused on single-instance quality metrics:
+
+\textbf{Edge-cut quality:} \citet{karypis1998fast} showed n-way achieves 10-20\% better edge-cuts than recursive bisection on irregular graphs, attributed to simultaneous global optimization versus greedy hierarchical splitting.
+
+\textbf{Runtime:} Recursive bisection typically faster due to solving smaller subproblems (2-way splits) versus full $k$-way optimization.
+
+\textbf{VRA compliance:} Recent work (Paper 2, unpublished) found both methods achieve equivalent minority-majority district counts when using edge-weighted total minority coalitions, with n-way offering slight (+4.3 percentage point) concentration advantages.
+
+However, \textbf{no prior work examined temporal stability}. This paper fills that gap by measuring how partitions evolve across census cycles.
