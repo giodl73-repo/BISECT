@@ -1,0 +1,5 @@
+max_minority_pct,mm_count,runtime,state,k,target_mm,state_minority_pct,method
+0.4960783813298982,0,0.0579829216003418,mississippi,4,2,0.461,nway_multiconstraint
+0.3746330861672207,0,0.10894465446472168,louisiana,6,2,0.416,nway_multiconstraint
+0.4182914287632481,0,0.09020686149597168,south_carolina,7,3,0.351,nway_multiconstraint
+0.6179786891217844,1,0.12155675888061523,georgia,14,5,0.424,nway_multiconstraint
