@@ -87,7 +87,7 @@ def partition_graph(
         if debug:
             print("Using gpmetis.exe executable...")
         from .metis_executable import partition_graph_with_executable
-        return partition_graph_with_executable(adjacency, vertex_weights, nparts, target_weights, ufactor, niter, debug=debug, edge_weights=edge_weights)
+        return partition_graph_with_executable(adjacency, vertex_weights, nparts, target_weights, ufactor, ubvec=None, niter=niter, debug=debug, edge_weights=edge_weights)
     except ImportError as e:
         raise RuntimeError(
             f"METIS not available: {e}\n"
