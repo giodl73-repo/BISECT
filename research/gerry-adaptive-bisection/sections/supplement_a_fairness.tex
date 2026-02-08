@@ -1,0 +1,61 @@
+% Supplement A: Algorithmic Fairness Framework
+% Extended discussion of fairness theory and redistricting implications
+
+Beyond the operational considerations of computational efficiency and VRA compliance, our finding connects to fundamental questions in algorithmic fairness~\cite{dwork2012fairness,hardt2016equality}. When multiple algorithms can produce different outcomes for the same task, a natural question arises: which outcome is ``fair''?
+
+\subsection{Individual Fairness and Algorithmic Determinism}
+
+The individual fairness framework~\cite{dwork2012fairness} posits that similar individuals should receive similar treatment. In our redistricting context, this translates to: \textit{similar tracts (nearby geographies with similar demographics) should be treated similarly across algorithmic choices}.
+
+When different algorithms produce different district assignments, they violate this principle---tract assignment depends not on geography or demographics but on the arbitrary choice of partitioning method. This creates a form of algorithmic unfairness where outcomes vary based on implementation details rather than problem characteristics.
+
+\textbf{Definition (Algorithmic Determinism)}: A redistricting procedure exhibits \textit{algorithmic determinism} if all valid algorithms produce identical (or near-identical) district assignments given the same input constraints and objective function.
+
+Edge-weighting with $\alpha \geq \alpha_{\text{crit}}$ induces algorithmic determinism by making the constraint structure (VRA compliance via minority clustering) so dominant that method choice becomes irrelevant.
+
+\subsection{Gaming Resistance}
+
+Algorithmic choice dependence creates vulnerability to strategic manipulation. If practitioners know that method $\mathcal{A}_1$ favors their party while method $\mathcal{A}_2$ does not, they can ``game'' the system by choosing $\mathcal{A}_1$ while claiming neutrality (``we used a standard algorithm'').
+
+Edge-weighting eliminates this gaming vector: once $\alpha \geq \alpha_{\text{crit}}$, all methods produce the same result, so strategic method selection confers no advantage. This \textit{gaming resistance} property strengthens transparency and trust in algorithmic redistricting.
+
+\subsection{Fairness-Transparency Trade-off}
+
+Traditional algorithmic fairness often involves trade-offs: more fairness requires more complexity, reducing transparency~\cite{lipton2018mythos}. Our result suggests a different pattern for redistricting:
+
+\begin{itemize}
+    \item \textbf{Traditional view}: Complex adaptive methods might be ``fairer'' because they can optimize multiple objectives simultaneously
+    \item \textbf{Our finding}: Simple predetermined bisection is \textit{equally fair} when using edge-weighting, while being more transparent and efficient
+\end{itemize}
+
+This \textit{fairness-transparency equivalence} has practical implications: policymakers can adopt simpler, more interpretable algorithms without sacrificing fairness or VRA compliance.
+
+\subsection{Connection to Procedural Fairness}
+
+Procedural fairness theory~\cite{rawls1971theory,leventhal1980fairness} emphasizes that fair outcomes require fair procedures. In redistricting, procedural fairness demands:
+
+\begin{enumerate}
+    \item \textbf{Consistency}: Same inputs should produce same outputs
+    \item \textbf{Transparency}: Process should be understandable to stakeholders
+    \item \textbf{Correctability}: Errors should be detectable and fixable
+\end{enumerate}
+
+Method independence satisfies all three:
+\begin{itemize}
+    \item Consistency holds because all algorithms converge to the same partition
+    \item Transparency improves because method choice is provably irrelevant
+    \item Correctability strengthens because deviations from the unique solution are immediately suspicious
+\end{itemize}
+
+\subsection{Implications for Redistricting Practice}
+
+These fairness connections suggest that edge-weighting does more than improve computational efficiency---it fundamentally alters the fairness landscape:
+
+\begin{itemize}
+    \item \textbf{Reduces discretion}: Eliminates strategic method selection
+    \item \textbf{Enhances legitimacy}: Outcomes are invariant to algorithmic details
+    \item \textbf{Simplifies litigation}: Plaintiffs can't argue that a different algorithm would have produced more favorable districts (all algorithms produce the same result)
+    \item \textbf{Enables verification}: Independent parties can verify results using any partitioning method
+\end{itemize}
+
+These properties align with calls for algorithmic accountability in high-stakes decision-making~\cite{kroll2017accountable,diakopoulos2016accountability}. We expand on these fairness guarantees in Appendix E.

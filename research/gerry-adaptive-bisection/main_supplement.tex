@@ -1,0 +1,99 @@
+\documentclass[12pt,letterpaper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\pgfplotsset{compat=1.18}
+
+% Theorem environments
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{property}{Property}
+\newtheorem{remark}{Remark}
+
+% Hyperref settings
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Bibliography style
+\bibliographystyle{apsr}
+
+% Title and authors
+\title{\textbf{Supplementary Materials:\\
+Edge-Weighting Makes Method Selection Irrelevant}}
+
+\author{
+    Giovanni Della-Libera
+}
+
+\date{\today}
+
+% Document
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This document provides supplementary materials for ``Edge-Weighting Makes Method Selection Irrelevant: Complete Equivalence of Recursive and N-Way Partitioning for VRA Compliance.'' It includes: (A) algorithmic fairness framework and redistricting implications, (B) advanced theoretical results including smoothed analysis and robustness to perturbations, (C) detailed spatial structure analysis with clustering metrics, (D) comprehensive compactness comparison to enacted 2020 congressional plans, (E) extended discussion of fairness guarantees and gaming resistance, and (F) complete experimental protocol details.
+\end{abstract}
+
+\singlespacing
+\tableofcontents
+\clearpage
+
+\doublespacing
+
+% Appendices
+\appendix
+
+\section{Algorithmic Fairness Framework}
+\label{sup:fairness}
+\input{sections/supplement_a_fairness.tex}
+
+\section{Advanced Theoretical Results}
+\label{sup:theory}
+\input{sections/supplement_b_smoothed_analysis.tex}
+
+\section{Spatial Structure Analysis}
+\label{sup:spatial}
+\input{sections/supplement_c_spatial_structure.tex}
+
+\section{Compactness Metrics and Enacted Plans Comparison}
+\label{sup:compactness}
+\input{sections/supplement_d_compactness.tex}
+
+\section{Fairness Guarantees and Gaming Resistance}
+\label{sup:guarantees}
+\input{sections/supplement_e_fairness_guarantees.tex}
+
+\section{Experimental Protocol Details}
+\label{sup:protocol}
+\input{sections/supplement_f_protocol.tex}
+
+% Bibliography (shared with main paper)
+\singlespacing
+\bibliography{references}
+
+\end{document}
