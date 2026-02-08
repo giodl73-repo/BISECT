@@ -6,7 +6,7 @@
 
 ---
 
-## Portfolio Overview (Auto-Detected Status)
+## Portfolio Overview (Auto-Detected from _panel.yaml)
 
 | # | Paper | Phase | Status | Progress |
 |---|-------|-------|--------|----------|
@@ -15,17 +15,36 @@
 | 3 | gerry-compactness-tradeoff | ✅ COMPLETE | Ready for submission | 75% |
 | 4 | gerry-nway-vs-recursive | ✅ COMPLETE | Ready for submission | 75% |
 | 5 | gerry-threshold-analysis | 🔬 REVIEW | Round 1 | 70% |
-| 6 | gerry-recursive-bisection | 🔬 REVIEW | Round 1 | 65% |
-| 7 | gerry-vra-compliance | 🔬 REVIEW | Round 2 | 65% |
+| 6 | gerry-vra-compliance | 🎉 **ACCEPTED** | **American Journal of Political Science** | 65% |
+| 7 | gerry-recursive-bisection | ✅ COMPLETE | Ready (stage: ready) | 65% |
 | 8 | gerry-adaptive-bisection | 🔬 REVIEW | Round 1 | 60% |
 | 9 | gerry-temporal-stability | 🔬 REVIEW | Round 1 | 60% |
-| 10 | gerry-edge-weighted-bisection | 🔬 REVIEW | Round 2 | 40% |
+| 10 | gerry-edge-weighted-bisection | ✅ COMPLETE | Ready (stage: ready) | 40% |
 
 ---
 
 ## Paper Status Details
 
-### ✅ COMPLETE (Ready for Submission) - 4 Papers
+### 🎉 ACCEPTED (Published/In Press) - 1 Paper
+
+#### Paper 6: VRA Compliance Methods (65%)
+**Directory**: `gerry-vra-compliance/`
+**Status**: **ACCEPTED** at **American Journal of Political Science**
+**PDF**: ❌ (in progress)
+**Data**: ✅ Present
+**Figures**: ✅ Present
+**Reviews**: ✅ 12 review files (2 rounds completed)
+
+**Reviewers**: Moon Duchin, Jowei Chen, Jonathan Rodden, Nicholas Stephanopoulos, Richard Pildes
+
+**Next Steps**:
+1. Final manuscript preparation for publication
+2. Respond to copy-editing queries
+3. Prepare supplementary materials
+
+---
+
+### ✅ COMPLETE (Ready for Submission) - 6 Papers
 
 #### Paper 1: Cross-Census Validation (85%)
 **Directory**: `gerry-cross-census-validation/`
@@ -95,7 +114,46 @@
 
 ---
 
-### 🔬 IN REVIEW (Active Peer Review) - 6 Papers
+#### Paper 7: Recursive Bisection for Partisan Neutrality (65%)
+**Directory**: `gerry-recursive-bisection/`
+**Status**: **Ready for submission** (stage: ready)
+**PDF**: ✅ main.pdf
+**Figures**: ✅ Multiple figures
+**Reviews**: ✅ 9 review files
+
+**Current Phase**: Final revisions complete
+- Geographic sorting section expansion ✅
+- Compactness gap analysis rewrite ✅
+- Ensemble comparison addition ✅
+- Edge-weighted optimization breakthrough ✅
+
+**Recent Work**:
+- P2.2: Section 4.3 compactness gap rewrite ✅
+- P2.3: Section 6.2.1 ensemble comparison ✅
+- P2.5: Edge-weighted optimization breakthrough ✅
+
+**Next Steps**:
+1. Final polish
+2. Select target journal
+3. Submit
+
+---
+
+#### Paper 10: Edge-Weighted Bisection (40%)
+**Directory**: `gerry-edge-weighted-bisection/`
+**Status**: **Ready for submission** (stage: ready)
+**PDF**: ❌ (needs regeneration)
+**Reviews**: ✅ 16 review files (most review files)
+
+**Next Steps**:
+1. Compile current version
+2. Final review of extensive feedback
+3. Regenerate figures
+4. Submit to journal
+
+---
+
+### 🔬 IN REVIEW (Active Peer Review) - 3 Papers
 
 #### Paper 5: Threshold Analysis (70%)
 **Directory**: `gerry-threshold-analysis/`
@@ -110,47 +168,6 @@
 1. Complete 50-state analysis integration
 2. Update paper with expanded results
 3. Address Round 1 feedback
-
----
-
-#### Paper 6: Recursive Bisection for Partisan Neutrality (65%)
-**Directory**: `gerry-recursive-bisection/`
-**Status**: Round 1 review
-**PDF**: ✅ main.pdf
-**Figures**: ✅ Multiple figures
-**Reviews**: ✅ 9 review files
-
-**Current Phase**: Implementing reviewer feedback
-- Geographic sorting section expansion
-- Compactness gap analysis rewrite
-- Ensemble comparison addition
-
-**Recent Work**:
-- P2.2: Section 4.3 compactness gap rewrite ✅
-- P2.3: Section 6.2.1 ensemble comparison ✅
-- P2.5: Edge-weighted optimization breakthrough ✅
-
-**Next Steps**:
-1. Complete Section 6 revisions
-2. Regenerate figures with updates
-3. Submit Round 2 revision
-
----
-
-#### Paper 7: VRA Compliance Methods (65%)
-**Directory**: `gerry-vra-compliance/`
-**Status**: Round 2 review
-**PDF**: ❌ (in progress)
-**Data**: ✅ Present
-**Figures**: ✅ Present
-**Reviews**: ✅ 12 review files (2 rounds)
-
-**Reviewers**: Moon Duchin, Jowei Chen, Jonathan Rodden, Nicholas Stephanopoulos, Richard Pildes
-
-**Next Steps**:
-1. Complete Round 2 revisions
-2. Compile full paper
-3. Submit Round 3
 
 ---
 
@@ -183,20 +200,6 @@
 1. Address Round 1 feedback
 2. Complete full analysis write-up
 3. Prepare for Round 2
-
----
-
-#### Paper 10: Edge-Weighted Bisection (40%)
-**Directory**: `gerry-edge-weighted-bisection/`
-**Status**: Round 2 review
-**PDF**: ❌ (needs regeneration)
-**Reviews**: ✅ 16 review files (most review files)
-
-**Next Steps**:
-1. Compile current version
-2. Address extensive reviewer feedback
-3. Regenerate figures
-4. Major revision needed
 
 
 ---
@@ -236,31 +239,32 @@
 
 ## Publication Pipeline (Updated)
 
+### Published/In Press
+1. **gerry-vra-compliance** (65%) - **ACCEPTED** at American Journal of Political Science
+
 ### Ready for Immediate Submission (This Month)
-1. **gerry-cross-census-validation** (85%) - Most advanced, Round 3 complete
-2. **gerry-multi-vs-edge** (80%) - Internal reviews complete
-3. **gerry-compactness-tradeoff** (75%) - Ready for journal
-4. **gerry-nway-vs-recursive** (75%) - Just completed, fresh!
+2. **gerry-cross-census-validation** (85%) - Most advanced, Round 3 complete
+3. **gerry-multi-vs-edge** (80%) - Internal reviews complete
+4. **gerry-recursive-bisection** (65%) - Stage: ready, all revisions complete
+5. **gerry-compactness-tradeoff** (75%) - Ready for journal
+6. **gerry-nway-vs-recursive** (75%) - Just completed, fresh!
 
 ### Short-term (1-2 Months)
-5. **gerry-threshold-analysis** (70%) - Incorporate 50-state expansion
-6. **gerry-recursive-bisection** (65%) - Complete Section 6 updates
-7. **gerry-vra-compliance** (65%) - Round 2 revisions
+7. **gerry-threshold-analysis** (70%) - Incorporate 50-state expansion
+8. **gerry-edge-weighted-bisection** (40%) - Stage: ready, needs compilation
 
 ### Medium-term (3-4 Months)
-8. **gerry-adaptive-bisection** (60%) - Round 1 revisions
-9. **gerry-temporal-stability** (60%) - Round 1 revisions
-
-### Needs Major Work (6+ Months)
-10. **gerry-edge-weighted-bisection** (40%) - Round 2 major revisions
+9. **gerry-adaptive-bisection** (60%) - Round 1 revisions
+10. **gerry-temporal-stability** (60%) - Round 1 revisions
 
 ---
 
 ## Key Metrics (Auto-Detected)
 
 ### Papers by Phase
-- Complete: 4 papers (40%)
-- In Review: 6 papers (60%)
+- Accepted: 1 paper (10%)
+- Complete: 6 papers (60%)
+- In Review: 3 papers (30%)
 - Writing: 0 papers
 - Analysis: 0 papers
 - Design: 0 papers
@@ -268,19 +272,20 @@
 ### Readiness Distribution
 - 80-90%: 2 papers (cross-census-validation 85%, multi-vs-edge 80%)
 - 70-80%: 3 papers (compactness-tradeoff 75%, nway-vs-recursive 75%, threshold-analysis 70%)
-- 60-70%: 4 papers (recursive-bisection 65%, vra-compliance 65%, adaptive-bisection 60%, temporal-stability 60%)
+- 60-70%: 4 papers (vra-compliance 65% ACCEPTED, recursive-bisection 65%, adaptive-bisection 60%, temporal-stability 60%)
 - 40-50%: 1 paper (edge-weighted-bisection 40%)
 
 ### Average Progress
-- **Overall: 67.5%** (up from initial estimate of 60.5%)
-- Complete papers average: 78.75%
-- Review papers average: 60.8%
+- **Overall: 67.5%**
+- Accepted papers average: 65.0%
+- Complete papers average: 72.5%
+- Review papers average: 63.3%
 
 ### Publication Timeline Estimate
-- Ready now: 4 papers (all in COMPLETE phase)
-- Ready in 1 month: 3 papers (threshold-analysis, recursive-bisection, vra-compliance)
-- Ready in 3 months: 2 papers (adaptive-bisection, temporal-stability)
-- Ready in 6 months: 1 paper (edge-weighted-bisection)
+- Published: 1 paper (vra-compliance - American Journal of Political Science)
+- Ready now: 6 papers (all in COMPLETE phase)
+- Ready in 1-2 months: 1 paper (threshold-analysis)
+- Ready in 3-4 months: 2 papers (adaptive-bisection, temporal-stability)
 
 ---
 

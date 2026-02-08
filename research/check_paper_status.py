@@ -81,6 +81,20 @@ class PaperStatus:
 
     def _determine_phase(self) -> str:
         """Determine current phase based on indicators."""
+        # Check _panel.yaml first (authoritative source)
+        panel_yaml = self.directory / "_panel.yaml"
+        if panel_yaml.exists():
+            try:
+                with open(panel_yaml, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    # Look for stage: accepted or stage: ready
+                    if 'stage: accepted' in content:
+                        return 'accepted'
+                    elif 'stage: ready' in content:
+                        return 'complete'
+            except:
+                pass
+
         # Check for completion markers
         if (self.directory / "PAPER_COMPLETE.md").exists():
             return 'complete'
@@ -135,10 +149,14 @@ class PaperStatus:
 
     def _get_status_text(self) -> str:
         """Get human-readable status."""
-        if self.phase == 'complete':
-            return "Ready for submission"
-        elif self.phase == 'accepted':
+        if self.phase == 'accepted':
+            # Try to get venue from _panel.yaml
+            venue = self._get_accepted_venue()
+            if venue:
+                return f"Accepted at {venue}"
             return "Accepted for publication"
+        elif self.phase == 'complete':
+            return "Ready for submission"
         elif self.phase == 'review':
             rounds = self._detect_review_round()
             return f"Round {rounds} review"
@@ -148,6 +166,21 @@ class PaperStatus:
             return "Data analysis phase"
         else:
             return "Experimental design"
+
+    def _get_accepted_venue(self) -> Optional[str]:
+        """Get accepted venue from _panel.yaml."""
+        panel_yaml = self.directory / "_panel.yaml"
+        if not panel_yaml.exists():
+            return None
+        try:
+            with open(panel_yaml, 'r', encoding='utf-8') as f:
+                for line in f:
+                    if 'accepted_venue:' in line:
+                        venue = line.split('accepted_venue:')[1].strip().strip('"').strip("'")
+                        return venue
+        except:
+            pass
+        return None
 
     def _detect_review_round(self) -> int:
         """Detect which review round."""
@@ -202,7 +235,7 @@ def print_summary(papers: List[PaperStatus]):
 
     print(f"\nTotal Papers: {len(papers)}")
     print("\nBy Phase:")
-    for phase in ['complete', 'review', 'writing', 'analysis', 'design']:
+    for phase in ['accepted', 'complete', 'review', 'writing', 'analysis', 'design']:
         count = by_phase.get(phase, 0)
         emoji = PaperStatus.PHASES[phase]
         print(f"  {emoji}: {count} papers")
