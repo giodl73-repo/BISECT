@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+"""
+Research Paper Status Checker
+
+Automatically determines the status of all research papers in the portfolio.
+
+Usage:
+    python research/check_paper_status.py                    # Show all papers
+    python research/check_paper_status.py --paper NAME       # Show specific paper
+    python research/check_paper_status.py --phase review     # Filter by phase
+    python research/check_paper_status.py --summary          # Brief summary only
+"""
+
+import os
+import sys
+from pathlib import Path
+from typing import Dict, List, Optional
+import argparse
+
+
+class PaperStatus:
+    """Represents the status of a research paper."""
+
+    PHASES = {
+        'design': '[DESIGN]',
+        'analysis': '[ANALYSIS]',
+        'writing': '[WRITING]',
+        'review': '[REVIEW]',
+        'complete': '[COMPLETE]',
+        'accepted': '[ACCEPTED]'
+    }
+
+    def __init__(self, directory: Path):
+        self.directory = directory
+        self.name = directory.name
+        self.path = directory
+
+        # Scan for indicators
+        self.has_pdf = (directory / "main.pdf").exists()
+        self.has_reviews = (directory / "reviews").exists()
+        self.review_count = self._count_reviews()
+        self.has_results = self._check_results()
+        self.has_figures = self._check_figures()
+        self.status_docs = self._count_status_docs()
+
+        # Determine phase and progress
+        self.phase = self._determine_phase()
+        self.progress = self._estimate_progress()
+        self.status_text = self._get_status_text()
+
+    def _count_reviews(self) -> int:
+        """Count review files."""
+        reviews_dir = self.directory / "reviews"
+        if not reviews_dir.exists():
+            return 0
+        return len(list(reviews_dir.glob("*.md")))
+
+    def _check_results(self) -> bool:
+        """Check if results directory exists and has data."""
+        results_dir = self.directory / "results"
+        if not results_dir.exists():
+            return False
+        csv_files = list(results_dir.glob("*.csv"))
+        return len(csv_files) > 0
+
+    def _check_figures(self) -> bool:
+        """Check if figures directory exists."""
+        figures_dir = self.directory / "figures"
+        if not figures_dir.exists():
+            return False
+        png_files = list(figures_dir.glob("*.png"))
+        return len(png_files) > 0
+
+    def _count_status_docs(self) -> int:
+        """Count status documentation files."""
+        patterns = ["*COMPLETE*.md", "*STATUS*.md", "*REVISION*.md", "*PLAN*.md"]
+        count = 0
+        for pattern in patterns:
+            count += len(list(self.directory.glob(pattern)))
+        return count
+
+    def _determine_phase(self) -> str:
+        """Determine current phase based on indicators."""
+        # Check for completion markers
+        if (self.directory / "PAPER_COMPLETE.md").exists():
+            return 'complete'
+
+        if (self.directory / "ACCEPTED.md").exists():
+            return 'accepted'
+
+        # Check for review phase
+        if self.has_reviews and self.review_count >= 5:
+            return 'review'
+
+        # Check for writing phase
+        if self.has_pdf and self.has_results:
+            if self.has_reviews:
+                return 'review'
+            return 'writing'
+
+        # Check for analysis phase
+        if self.has_results:
+            return 'analysis'
+
+        # Check for design phase
+        if self.status_docs > 0 or (self.directory / "README.md").exists():
+            return 'design'
+
+        return 'design'
+
+    def _estimate_progress(self) -> int:
+        """Estimate completion percentage."""
+        score = 0
+
+        # Base indicators (0-40)
+        if (self.directory / "README.md").exists(): score += 5
+        if (self.directory / "main.tex").exists(): score += 10
+        if self.has_results: score += 15
+        if self.has_figures: score += 10
+
+        # PDF and compilation (40-60)
+        if self.has_pdf: score += 20
+
+        # Review process (60-90)
+        if self.has_reviews:
+            score += 10
+            if self.review_count >= 5: score += 10
+            if self.review_count >= 10: score += 10
+
+        # Completion markers (90-100)
+        if (self.directory / "PAPER_COMPLETE.md").exists(): score += 10
+        if (self.directory / "REVISION_PLAN.md").exists(): score += 5
+
+        return min(100, score)
+
+    def _get_status_text(self) -> str:
+        """Get human-readable status."""
+        if self.phase == 'complete':
+            return "Ready for submission"
+        elif self.phase == 'accepted':
+            return "Accepted for publication"
+        elif self.phase == 'review':
+            rounds = self._detect_review_round()
+            return f"Round {rounds} review"
+        elif self.phase == 'writing':
+            return "Paper writing in progress"
+        elif self.phase == 'analysis':
+            return "Data analysis phase"
+        else:
+            return "Experimental design"
+
+    def _detect_review_round(self) -> int:
+        """Detect which review round."""
+        reviews_dir = self.directory / "reviews"
+        if not reviews_dir.exists():
+            return 0
+
+        # Check for round markers
+        if list(reviews_dir.glob("ROUND3*.md")):
+            return 3
+        elif list(reviews_dir.glob("ROUND2*.md")):
+            return 2
+        elif list(reviews_dir.glob("ROUND1*.md")) or self.review_count > 0:
+            return 1
+        return 0
+
+    def get_emoji_status(self) -> str:
+        """Get emoji for current phase."""
+        return self.PHASES.get(self.phase, '❓')
+
+    def get_progress_bar(self, width: int = 20) -> str:
+        """Generate progress bar."""
+        filled = int(width * self.progress / 100)
+        bar = '#' * filled + '-' * (width - filled)
+        return f"[{bar}] {self.progress}%"
+
+    def __str__(self) -> str:
+        """String representation."""
+        return f"{self.name}: {self.get_emoji_status()} {self.status_text} ({self.progress}%)"
+
+
+def scan_papers(research_dir: Path) -> List[PaperStatus]:
+    """Scan all paper directories."""
+    papers = []
+    for item in sorted(research_dir.iterdir()):
+        if item.is_dir() and item.name.startswith("gerry-"):
+            papers.append(PaperStatus(item))
+    return papers
+
+
+def print_summary(papers: List[PaperStatus]):
+    """Print brief summary."""
+    print("\n" + "="*70)
+    print(" Research Paper Portfolio Status")
+    print("="*70)
+
+    # Count by phase
+    by_phase = {}
+    for paper in papers:
+        phase = paper.phase
+        by_phase[phase] = by_phase.get(phase, 0) + 1
+
+    print(f"\nTotal Papers: {len(papers)}")
+    print("\nBy Phase:")
+    for phase in ['complete', 'review', 'writing', 'analysis', 'design']:
+        count = by_phase.get(phase, 0)
+        emoji = PaperStatus.PHASES[phase]
+        print(f"  {emoji}: {count} papers")
+
+    # Average progress
+    avg_progress = sum(p.progress for p in papers) / len(papers) if papers else 0
+    print(f"\nAverage Progress: {avg_progress:.1f}%")
+
+    print("\n" + "="*70)
+
+
+def print_detailed(papers: List[PaperStatus]):
+    """Print detailed status for all papers."""
+    print("\n" + "="*70)
+    print(" Research Paper Portfolio - Detailed Status")
+    print("="*70 + "\n")
+
+    # Group by phase
+    by_phase = {}
+    for paper in papers:
+        phase = paper.phase
+        if phase not in by_phase:
+            by_phase[phase] = []
+        by_phase[phase].append(paper)
+
+    # Print each phase
+    for phase in ['complete', 'review', 'writing', 'analysis', 'design', 'accepted']:
+        if phase not in by_phase:
+            continue
+
+        papers_in_phase = by_phase[phase]
+        emoji = PaperStatus.PHASES[phase]
+        print(f"\n{emoji} {phase.upper()} ({len(papers_in_phase)} papers)")
+        print("-" * 70)
+
+        for paper in sorted(papers_in_phase, key=lambda p: -p.progress):
+            print(f"\n  {paper.name.replace('gerry-', '').replace('-', ' ').title()}")
+            print(f"  Status: {paper.status_text}")
+            print(f"  Progress: {paper.get_progress_bar()}")
+
+            # Key indicators
+            indicators = []
+            if paper.has_pdf:
+                indicators.append("[OK] PDF")
+            if paper.has_results:
+                indicators.append("[OK] Data")
+            if paper.has_figures:
+                indicators.append("[OK] Figures")
+            if paper.has_reviews:
+                indicators.append(f"[OK] Reviews ({paper.review_count})")
+
+            if indicators:
+                print(f"  Indicators: {', '.join(indicators)}")
+
+    print("\n" + "="*70)
+
+
+def print_paper_detail(paper: PaperStatus):
+    """Print detailed info for single paper."""
+    print("\n" + "="*70)
+    print(f" {paper.name.replace('gerry-', '').replace('-', ' ').title()}")
+    print("="*70 + "\n")
+
+    print(f"Phase: {paper.get_emoji_status()} {paper.phase.upper()}")
+    print(f"Status: {paper.status_text}")
+    print(f"Progress: {paper.get_progress_bar(40)}")
+    print(f"Directory: {paper.path}")
+
+    print("\nIndicators:")
+    print(f"  {'[OK]' if paper.has_pdf else '[ ]'} PDF (main.pdf)")
+    print(f"  {'[OK]' if paper.has_results else '[ ]'} Results data")
+    print(f"  {'[OK]' if paper.has_figures else '[ ]'} Figures")
+    print(f"  {'[OK]' if paper.has_reviews else '[ ]'} Reviews ({paper.review_count} files)")
+    print(f"  {paper.status_docs} status documentation files")
+
+    # Check for specific files
+    print("\nKey Files:")
+    key_files = [
+        "main.tex", "main.pdf", "references.bib",
+        "PAPER_COMPLETE.md", "REVISION_PLAN.md", "README.md"
+    ]
+    for filename in key_files:
+        exists = (paper.path / filename).exists()
+        print(f"  {'[OK]' if exists else '[ ]'} {filename}")
+
+    print("\n" + "="*70)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Check research paper status")
+    parser.add_argument("--paper", help="Show details for specific paper")
+    parser.add_argument("--phase", choices=['design', 'analysis', 'writing', 'review', 'complete'],
+                       help="Filter papers by phase")
+    parser.add_argument("--summary", action="store_true", help="Show brief summary only")
+
+    args = parser.parse_args()
+
+    # Find research directory
+    if Path("research").exists():
+        research_dir = Path("research")
+    elif Path("../research").exists():
+        research_dir = Path("../research")
+    else:
+        print("Error: Could not find research directory")
+        sys.exit(1)
+
+    # Scan papers
+    papers = scan_papers(research_dir)
+
+    if not papers:
+        print("No research papers found in research/")
+        sys.exit(1)
+
+    # Show specific paper
+    if args.paper:
+        paper = next((p for p in papers if args.paper in p.name), None)
+        if not paper:
+            print(f"Paper '{args.paper}' not found")
+            print(f"Available papers: {', '.join(p.name for p in papers)}")
+            sys.exit(1)
+        print_paper_detail(paper)
+        return
+
+    # Filter by phase
+    if args.phase:
+        papers = [p for p in papers if p.phase == args.phase]
+        if not papers:
+            print(f"No papers in phase '{args.phase}'")
+            sys.exit(1)
+
+    # Show summary or detailed
+    if args.summary:
+        print_summary(papers)
+    else:
+        print_detailed(papers)
+        print_summary(papers)
+
+
+if __name__ == "__main__":
+    main()
