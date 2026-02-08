@@ -1,0 +1,22 @@
+title: "N-Way vs Recursive Partitioning"
+paper_type: "Algorithmic Comparison"
+venue: "Algorithmica"
+stage: ready
+round: 2
+
+abstract_summary: "Comparative analysis of n-way vs recursive partitioning methods for redistricting."
+
+keywords:
+  - "graph partitioning"
+  - "recursive bisection"
+  - "n-way partitioning"
+  - "redistricting algorithms"
+
+reviewers: []
+reviews_completed: 0
+reviews_total: 0
+
+history:
+  - date: "2026-02-08"
+    stage: ready
+    note: "Paper reviewed and ready for panel convene"

@@ -3,7 +3,7 @@
 
 paper_id: gerry-temporal-stability
 title: "Cross-Census Temporal Stability: Recursive Bisection vs N-Way Partitioning Over Decades"
-stage: revision
+stage: ready
 round: 1
 venue: ACM-KDD  # Knowledge Discovery and Data Mining (algorithm comparison, empirical analysis)
 venue_tier: A*

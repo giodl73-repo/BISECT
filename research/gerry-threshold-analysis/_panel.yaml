@@ -4,7 +4,7 @@
 title: "The 42% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting"
 paper_type: "VRA Legal Threshold & Empirical Analysis"
 venue: "Election Law Journal" # Target venue for VRA/legal analysis
-stage: "revision" # Current stage in review lifecycle
+stage: ready # Current stage in review lifecycle
 round: 1 # Review round number
 
 # Paper metadata

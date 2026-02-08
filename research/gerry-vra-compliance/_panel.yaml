@@ -1,7 +1,7 @@
 # Panel Review State - VRA Compliance Paper
 # Generated: 2026-02-07
 
-stage: accepted
+stage: ready
 round: 2
 reviews_completed: 10
 synthesis_completed: true
@@ -72,7 +72,7 @@ history:
     stage: submit
     note: "PP1-PP3 items completed (partisan analysis, compactness rebalancing, spatial clustering). Submitted to American Journal of Political Science."
   - date: "2026-02-07"
-    stage: accepted
+    stage: ready
     note: "Paper accepted at American Journal of Political Science. Final score projection: 3.8/4. Premier venue acceptance achieved through systematic review process and comprehensive revisions."
 
 p1_items:
