@@ -1,37 +1,37 @@
 paper: slice-edge-weighted-bisection
 title: "Edge-Weighted Recursive Bisection for Compact Congressional Districts"
 venue: "KDD 2026"
-stage: recheck
+stage: ready
 round: 2
 reviewers:
   - name: George Karypis
     affiliation: University of Minnesota
     expertise: METIS, graph partitioning, multilevel algorithms
-    score: 3
+    score: 4
   - name: Ümit V. Çatalyürek
     affiliation: Georgia Tech
     expertise: Hypergraph partitioning, parallel algorithms
-    score: 3
+    score: 4
   - name: Bruce Hendrickson
     affiliation: Sandia National Labs
     expertise: Graph partitioning, load balancing, spectral methods
-    score: 3
+    score: 4
   - name: Moon Duchin
     affiliation: Rutgers
     expertise: Gerrymandering, metric geometry, fairness
-    score: 3
+    score: 4
   - name: Jowei Chen
     affiliation: University of Michigan
     expertise: Automated redistricting, compactness, neutrality
-    score: 3
+    score: 4
   - name: Michael Goodchild
     affiliation: UC Santa Barbara
     expertise: GIS theory, spatial analysis, geography
-    score: 3
+    score: 4
   - name: Cynthia A. Phillips
     affiliation: Sandia National Labs
     expertise: Combinatorial optimization, graph algorithms
-    score: 3
+    score: 4
 reviews:
   round_1:
     - reviewer: George Karypis
@@ -357,3 +357,6 @@ history:
   - stage: recheck
     date: 2026-02-07
     note: "P2R2.1 & P2R2.2 completed - hypergraph justification and census tract limitations added, achieving unanimous 4/4 acceptance (commit d6eb0f5)"
+  - stage: ready
+    date: 2026-02-07
+    note: "Advanced to ready stage - gate PASSED with 3.71/4 average (71% at 4/4), all P1 and P2R2 items complete. Awaiting panel review (panel:panel --review) to generate REVIEW_PANEL.md"

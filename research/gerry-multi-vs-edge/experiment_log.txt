@@ -1,0 +1,529 @@
+================================================================================
+Multi-Constraint Partitioning Experiments (Paper 4)
+================================================================================
+
+States: 5
+ubvec configurations: 4
+Total experiments: 20
+
+
+================================================================================
+Alabama (AL): k=7, target=2 MM districts
+================================================================================
+  Loaded 1437 tracts
+  Total population: 5,024,279
+  Total minority VAP: 1,852,928 (36.9%)
+
+Testing ubvec=[1.005, 1.3]...
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 1.3]
+  Total minority: 1,852,928 (36.9%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 0/2 (FAIL)
+  Max minority %: 46.8%
+  Edge cut: 217
+  Runtime: 6.2s
+
+Testing ubvec=[1.005, 1.5]...
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 1.5]
+  Total minority: 1,852,928 (36.9%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 0/2 (FAIL)
+  Max minority %: 49.7%
+  Edge cut: 229
+  Runtime: 5.3s
+
+Testing ubvec=[1.005, 2.0]...
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 2.0]
+  Total minority: 1,852,928 (36.9%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 0/2 (FAIL)
+  Max minority %: 48.7%
+  Edge cut: 222
+  Runtime: 5.2s
+
+Testing ubvec=[1.005, 5.0]...
+Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 5.0]
+  Total minority: 1,852,928 (36.9%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 1/2 (FAIL)
+  Max minority %: 50.4%
+  Edge cut: 208
+  Runtime: 4.9s
+
+================================================================================
+Georgia (GA): k=14, target=5 MM districts
+================================================================================
+  Loaded 2796 tracts
+  Total population: 10,711,908
+  Total minority VAP: 5,349,752 (49.9%)
+
+Testing ubvec=[1.005, 1.3]...
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Testing multi-constraint with ubvec=[1.005, 1.3]
+  Total minority: 5,349,752 (49.9%)
+  Target: 5 MM districts (>= 50% minority)
+  MM districts: 7/5 (SUCCESS)
+  Max minority %: 64.8%
+  Edge cut: 654
+  Runtime: 7.3s
+
+Testing ubvec=[1.005, 1.5]...
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Testing multi-constraint with ubvec=[1.005, 1.5]
+  Total minority: 5,349,752 (49.9%)
+  Target: 5 MM districts (>= 50% minority)
+  MM districts: 5/5 (SUCCESS)
+  Max minority %: 74.7%
+  Edge cut: 655
+  Runtime: 7.7s
+
+Testing ubvec=[1.005, 2.0]...
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Testing multi-constraint with ubvec=[1.005, 2.0]
+  Total minority: 5,349,752 (49.9%)
+  Target: 5 MM districts (>= 50% minority)
+  MM districts: 4/5 (FAIL)
+  Max minority %: 85.0%
+  Edge cut: 682
+  Runtime: 8.6s
+
+Testing ubvec=[1.005, 5.0]...
+Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+  Testing multi-constraint with ubvec=[1.005, 5.0]
+  Total minority: 5,349,752 (49.9%)
+  Target: 5 MM districts (>= 50% minority)
+  MM districts: 4/5 (FAIL)
+  Max minority %: 84.7%
+  Edge cut: 596
+  Runtime: 7.7s
+
+================================================================================
+Louisiana (LA): k=6, target=2 MM districts
+================================================================================
+  Loaded 1388 tracts
+  Total population: 4,657,757
+  Total minority VAP: 2,061,055 (44.2%)
+
+Testing ubvec=[1.005, 1.3]...
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 1.3]
+  Total minority: 2,061,055 (44.2%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 1/2 (FAIL)
+  Max minority %: 50.6%
+  Edge cut: 381
+  Runtime: 3.8s
+
+Testing ubvec=[1.005, 1.5]...
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 1.5]
+  Total minority: 2,061,055 (44.2%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 1/2 (FAIL)
+  Max minority %: 53.8%
+  Edge cut: 208
+  Runtime: 3.7s
+
+Testing ubvec=[1.005, 2.0]...
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 2.0]
+  Total minority: 2,061,055 (44.2%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 1/2 (FAIL)
+  Max minority %: 50.1%
+  Edge cut: 191
+  Runtime: 4.1s
+
+Testing ubvec=[1.005, 5.0]...
+Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 5.0]
+  Total minority: 2,061,055 (44.2%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 2/2 (SUCCESS)
+  Max minority %: 53.2%
+  Edge cut: 267
+  Runtime: 4.2s
+
+================================================================================
+Mississippi (MS): k=4, target=2 MM districts
+================================================================================
+  Loaded 878 tracts
+  Total population: 2,961,279
+  Total minority VAP: 1,322,202 (44.6%)
+
+Testing ubvec=[1.005, 1.3]...
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Testing multi-constraint with ubvec=[1.005, 1.3]
+  Total minority: 1,322,202 (44.6%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 2/2 (SUCCESS)
+  Max minority %: 53.4%
+  Edge cut: 91
+  Runtime: 4.2s
+
+Testing ubvec=[1.005, 1.5]...
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Testing multi-constraint with ubvec=[1.005, 1.5]
+  Total minority: 1,322,202 (44.6%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 2/2 (SUCCESS)
+  Max minority %: 53.4%
+  Edge cut: 96
+  Runtime: 4.2s
+
+Testing ubvec=[1.005, 2.0]...
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Testing multi-constraint with ubvec=[1.005, 2.0]
+  Total minority: 1,322,202 (44.6%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 2/2 (SUCCESS)
+  Max minority %: 53.4%
+  Edge cut: 96
+  Runtime: 4.2s
+
+Testing ubvec=[1.005, 5.0]...
+Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+  Testing multi-constraint with ubvec=[1.005, 5.0]
+  Total minority: 1,322,202 (44.6%)
+  Target: 2 MM districts (>= 50% minority)
+  MM districts: 2/2 (SUCCESS)
+  Max minority %: 53.4%
+  Edge cut: 96
+  Runtime: 4.4s
+
+================================================================================
+South Carolina (SC): k=7, target=3 MM districts
+================================================================================
+  Loaded 1323 tracts
+  Total population: 5,118,425
+  Total minority VAP: 1,939,873 (37.9%)
+
+Testing ubvec=[1.005, 1.3]...
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+  Testing multi-constraint with ubvec=[1.005, 1.3]
+  Total minority: 1,939,873 (37.9%)
+  Target: 3 MM districts (>= 50% minority)
+  MM districts: 0/3 (FAIL)
+  Max minority %: 43.9%
+  Edge cut: 215
+  Runtime: 4.1s
+
+Testing ubvec=[1.005, 1.5]...
+Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1

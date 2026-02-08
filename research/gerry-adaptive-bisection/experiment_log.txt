@@ -1,0 +1,1432 @@
+================================================================================
+Paper 3: Adaptive Bisection Experiments
+================================================================================
+
+Testing 5 states:
+  - Alabama: k=7, minority=36.9%, target=2 MM
+  - Georgia: k=14, minority=42.4%, target=5 MM
+  - Louisiana: k=6, minority=41.6%, target=2 MM
+  - Mississippi: k=4, minority=46.1%, target=2 MM
+  - South Carolina: k=7, minority=35.1%, target=3 MM
+
+Parameters: alpha=5, tau=0.4, seed=42
+
+================================================================================
+PHASE 1: Predetermined Trees (29 runs)
+================================================================================
+
+Alabama (k=7):
+  Loading data... 1437 tracts
+  Testing 6 tree structures...
+  Testing tree (1, 6)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 6.1s
+  Testing tree (2, 5)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.0s
+  Testing tree (3, 4)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.0s
+  Testing tree (4, 3)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 4.9s
+  Testing tree (5, 2)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.0s
+  Testing tree (6, 1)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.3s
+
+Georgia (k=14):
+  Loading data... 2796 tracts
+  Testing 13 tree structures...
+  Testing tree (1, 13)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.5s
+  Testing tree (2, 12)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+  Testing tree (3, 11)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.6s
+  Testing tree (4, 10)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+  Testing tree (5, 9)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+  Testing tree (6, 8)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.4s
+  Testing tree (7, 7)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.5s
+  Testing tree (8, 6)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.6s
+  Testing tree (9, 5)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+  Testing tree (10, 4)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.9s
+  Testing tree (11, 3)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.5s
+  Testing tree (12, 2)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.3s
+  Testing tree (13, 1)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.1s
+
+Louisiana (k=6):
+  Loading data... 1388 tracts
+  Testing 5 tree structures...
+  Testing tree (1, 5)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.9s
+  Testing tree (2, 4)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.8s
+  Testing tree (3, 3)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.7s
+  Testing tree (4, 2)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.9s
+  Testing tree (5, 1)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.9s
+
+Mississippi (k=4):
+  Loading data... 878 tracts
+  Testing 3 tree structures...
+  Testing tree (1, 3)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.7s
+  Testing tree (2, 2)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.7s
+  Testing tree (3, 1)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.8s
+
+South Carolina (k=7):
+  Loading data... 1323 tracts
+  Testing 6 tree structures...
+  Testing tree (1, 6)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.2s
+  Testing tree (2, 5)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.1s
+  Testing tree (3, 4)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.3s
+  Testing tree (4, 3)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.3s
+  Testing tree (5, 2)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.3s
+  Testing tree (6, 1)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.2s
+
+Predetermined trees complete: 33 runs
+
+================================================================================
+PHASE 2: Adaptive Bisection (5 runs)
+================================================================================
+
+Alabama (k=7):
+  Loading data... 1437 tracts
+  Running adaptive bisection (k=7)...   Testing tree (1, 6)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.4s
+  Testing tree (2, 5)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.2s
+  Testing tree (3, 4)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.3s
+  Testing tree (4, 3)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 6.0s
+  Testing tree (5, 2)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.3s
+  Testing tree (6, 1)... Building adjacency graph for 1,437 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1437 nodes, 4376 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,437
+  Edges: 4,376 (undirected)
+  Average degree: 6.1
+2/2 MM, max=50.8%, 5.3s
+2/2 MM, max=50.8%, 32.6s
+
+Georgia (k=14):
+  Loading data... 2796 tracts
+  Running adaptive bisection (k=14)...   Testing tree (1, 13)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.2s
+  Testing tree (2, 12)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+  Testing tree (3, 11)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.3s
+  Testing tree (4, 10)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 8.6s
+  Testing tree (5, 9)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.6s
+  Testing tree (6, 8)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 8.0s
+  Testing tree (7, 7)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 8.7s
+  Testing tree (8, 6)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 10.4s
+  Testing tree (9, 5)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 9.9s
+  Testing tree (10, 4)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 9.8s
+  Testing tree (11, 3)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 10.0s
+  Testing tree (12, 2)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 10.0s
+  Testing tree (13, 1)... Building adjacency graph for 2,796 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 2796 nodes, 8706 edges
+  Average neighbors per block: 6.2
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 2,796
+  Edges: 8,706 (undirected)
+  Average degree: 6.2
+6/5 MM, max=83.8%, 7.7s
+6/5 MM, max=83.8%, 113.3s
+
+Louisiana (k=6):
+  Loading data... 1388 tracts
+  Running adaptive bisection (k=6)...   Testing tree (1, 5)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.9s
+  Testing tree (2, 4)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.8s
+  Testing tree (3, 3)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.8s
+  Testing tree (4, 2)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.8s
+  Testing tree (5, 1)... Building adjacency graph for 1,388 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1388 nodes, 4267 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32615 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,388
+  Edges: 4,267 (undirected)
+  Average degree: 6.1
+2/2 MM, max=55.8%, 3.8s
+2/2 MM, max=55.8%, 19.2s
+
+Mississippi (k=4):
+  Loading data... 878 tracts
+  Running adaptive bisection (k=4)...   Testing tree (1, 3)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.3s
+  Testing tree (2, 2)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.4s
+  Testing tree (3, 1)... Building adjacency graph for 878 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 878 nodes, 2594 edges
+  Average neighbors per block: 5.9
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32616 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 878
+  Edges: 2,594 (undirected)
+  Average degree: 5.9
+1/2 MM, max=60.1%, 4.4s
+1/2 MM, max=60.1%, 13.1s
+
+South Carolina (k=7):
+  Loading data... 1323 tracts
+  Running adaptive bisection (k=7)...   Testing tree (1, 6)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.6s
+  Testing tree (2, 5)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.6s
+  Testing tree (3, 4)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.1s
+  Testing tree (4, 3)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 4.0s
+  Testing tree (5, 2)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 3.9s
+  Testing tree (6, 1)... Building adjacency graph for 1,323 blocks...
+  Mode: Normal (binary adjacency)
+  Water-based adjacency: enabled
+  Water distance threshold: 1.0 km
+
+Step 1: Computing Queen contiguity (land-based adjacency)...
+  Found 1323 nodes, 4053 edges
+  Average neighbors per block: 6.1
+
+Step 2: Computing county-based bridge connections...
+  Projecting to EPSG:32617 for distance calculation...
+  Graph is already fully connected
+
+Step 3: Converting to METIS adjacency list format...
+
+Validating adjacency graph...
+  Nodes: 1,323
+  Edges: 4,053 (undirected)
+  Average degree: 6.1
+0/3 MM, max=47.6%, 3.9s
+0/3 MM, max=47.6%, 25.3s
+
+================================================================================
+PHASE 3: N-Way Baseline
+================================================================================
+
+Extracting n-way baseline from Paper 2...
+  Found 5 n-way results
+
+================================================================================
+Saving Results
+================================================================================
+
+Results saved to: C:\src\apportionment\research\gerry-adaptive-bisection\results\adaptive_experiments.csv
+Total experiments: 43
+  - Predetermined: 33
+  - Adaptive: 5
+  - N-way: 5
+
+================================================================================
+Quick Summary
+================================================================================
+
+Alabama:
+  Predetermined: best=50.8% (1, 6), worst=50.8% (1, 6), avg=50.8%
+  Adaptive: 50.8% (2.0/2.0 MM)
+  Nway: 50.8% (2.0/2.0 MM)
+
+Georgia:
+  Predetermined: best=83.8% (1, 13), worst=83.8% (1, 13), avg=83.8%
+  Adaptive: 83.8% (6.0/5.0 MM)
+  Nway: 83.8% (6.0/6.0 MM)
+
+Louisiana:
+  Predetermined: best=55.8% (1, 5), worst=55.8% (1, 5), avg=55.8%
+  Adaptive: 55.8% (2.0/2.0 MM)
+  Nway: 55.8% (2.0/2.0 MM)
+
+Mississippi:
+  Predetermined: best=60.1% (1, 3), worst=60.1% (1, 3), avg=60.1%
+  Adaptive: 60.1% (1.0/2.0 MM)
+  Nway: 60.1% (1.0/1.0 MM)
+
+South Carolina:
+  Predetermined: best=47.6% (1, 6), worst=47.6% (1, 6), avg=47.6%
+  Adaptive: 47.6% (0.0/3.0 MM)
+  Nway: 47.6% (0.0/2.0 MM)
+
+================================================================================
+Experiments Complete!
+================================================================================

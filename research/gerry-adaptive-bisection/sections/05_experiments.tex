@@ -1,0 +1,292 @@
+\subsection{State Selection}
+
+We test adaptive bisection on five states selected 	o represent diverse demographics, district counts, and geographic configurations:
+
+\textbf{1. Alabama} (k=7, 36.9\% total minority)
+\begin{itemize}
+\item Moderate district count with concentrated Black population in Black Belt region
+\item Target: 2 majority-minority districts (proportional 	o population)
+\item Geographic challenge: Black Belt spans multiple congressional districts
+\item Existing data from Paper 2: Predetermined [2,5] achieves 46.1\%, [3,4] achieves 43.0\%, n-way achieves 47.3\%
+\end{itemize}
+
+\textbf{2. Georgia} (k=14, 42.4\% total minority)
+\begin{itemize}
+\item Larger district count with mixed urban/rural minority concentration
+\item Target: 5 majority-minority districts
+\item Geographic challenge: Atlanta metro area (high concentration) vs rural counties (dispersion)
+\item Complex tree structure: Many possible balanced trees ([7,7], [8,6], [10,4], etc.)
+\end{itemize}
+
+\textbf{3. Mississippi} (k=4, 46.1\% total minority)
+\begin{itemize}
+\item Small district count with highest minority percentage of test states
+\item Target: 2 majority-minority districts
+\item Geographic challenge: Delta region (very high concentration) vs rest of state
+\item Simplest tree structure: Only 5 possible balanced trees
+\end{itemize}
+
+\textbf{4. Louisiana} (k=6, 41.6\% total minority)
+\begin{itemize}
+\item Moderate district count with concentrated minority population
+\item Target: 2 majority-minority districts
+\item Geographic challenge: New Orleans metro vs rural parishes
+\item Intermediate tree complexity: 14 possible balanced trees
+\end{itemize}
+
+\textbf{5. South Carolina} (k=7, 35.1\% total minority)
+\begin{itemize}
+\item Moderate district count with dispersed minority population
+\item Target: 3 majority-minority districts (above proportional 2.5 due 	o legal requirements)
+\item Geographic challenge: Coastal areas vs inland, no single dominant cluster
+\item Similar structure 	o Alabama but lower minority concentration
+\end{itemize}
+
+\textbf{Rationale for selection}:
+\begin{itemize}
+\item \textbf{District count variation}: k ranges from 4 	o 14, testing adaptive bisection at different scales
+\item \textbf{Demographic diversity}: Minority percentages span 35-46\%, covering states where VRA compliance is challenging
+\item \textbf{Geographic patterns}: Urban concentration (Georgia, Louisiana), rural concentration (Mississippi, Alabama), mixed (South Carolina)
+\item \textbf{Legal context}: All five states are covered by Section 2 of VRA with documented minority vote dilution concerns
+\end{itemize}
+
+\subsection{Methods Compared}
+
+For each state, we test three partitioning methods:
+
+\subsubsection{Method 1: Predetermined Recursive Bisection (Baseline)}
+
+Use predetermined balanced binary trees. For each state, test all distinct balanced trees:
+
+\textbf{Alabama/South Carolina} (k=7): Test 6 structures
+\begin{itemize}
+\item [6,1], [5,2], [4,3], [3,4], [2,5], [1,6]
+\item For each, recurse using balanced splits at subsequent levels
+\end{itemize}
+
+\textbf{Mississippi} (k=4): Test 5 structures
+\begin{itemize}
+\item [3,1], [2,2], [1,3] at top level
+\item Subsplits determined by balanced trees
+\end{itemize}
+
+\textbf{Louisiana} (k=6): Test 5 structures
+\begin{itemize}
+\item [5,1], [4,2], [3,3], [2,4], [1,5]
+\item Subsplits determined by balanced trees
+\end{itemize}
+
+\textbf{Georgia} (k=14): Test 7 structures
+\begin{itemize}
+\item [7,7], [8,6], [9,5], [10,4], [11,3], [12,2], [13,1]
+\item Subsplits determined by balanced trees
+\end{itemize}
+
+\textbf{Total predetermined runs}: 6 + 5 + 5 + 7 + 6 = 29 experiments
+
+\textbf{Metrics recorded}:
+\begin{itemize}
+\item Maximum minority percentage per district
+\item Count of majority-minority districts (≥50\%)
+\item Unweighted edge cuts (compactness)
+\item Runtime
+\end{itemize}
+
+\subsubsection{Method 2: Adaptive Recursive Bisection}
+
+Use adaptive tree selection algorithm (Section 3). At each split, evaluate all candidate split sizes with both orderings, choose locally optimal structure.
+
+\textbf{Parameters}:
+\begin{itemize}
+\item Weight factor: $\alpha = 5$ (from Paper 2 ablation studies)
+\item Minority threshold: $\tau = 0.40$ (from Paper 2 ablation studies)
+\item METIS seed: 42 (deterministic results)
+\item Population tolerance: ±0.5\% (constitutional requirement)
+\end{itemize}
+
+\textbf{Total adaptive runs}: 5 experiments (one per state)
+
+\subsubsection{Method 3: N-Way Partitioning (Upper Bound)}
+
+Use METIS direct k-way partitioning with identical edge-weighting parameters. This provides upper bound on achievable performance with same VRA optimization technique.
+
+\textbf{Data source}: Results from Paper 2 comprehensive ablation study (1,000 runs across 50 states). Extract n-way results for our five test states using optimal parameters ($\alpha = 5$, $\tau = 0.40$).
+
+\textbf{Total n-way runs}: 5 experiments (existing data)
+
+\subsection{Data Sources}
+
+\textbf{Census tract boundaries and demographics}:
+\begin{itemize}
+\item 2020 Census TIGER/Line Shapefiles
+\item 2020 Census PL 94-171 Redistricting Data
+\item Resolution: Census tracts (typically 1,000-8,000 population)
+\end{itemize}
+
+\textbf{Adjacency graphs}:
+\begin{itemize}
+\item Queen contiguity (shared boundaries or vertices)
+\item Water-based adjacency (for islands and water crossings)
+\item County-based bridges (connecting disconnected components)
+\end{itemize}
+
+\textbf{Minority population}:
+\begin{itemize}
+\item Total minority = 1.0 - pct\_white\_non\_hispanic
+\item Includes: Black, Hispanic, Asian, Native American, Pacific Islander, Multiracial
+\item Computed at voting-age population (18+) level, not total population
+\item Rationale: VRA uses voting-age population for Gingles preconditions
+\end{itemize}
+
+\textbf{Enacted plans baseline}:
+\begin{itemize}
+\item Current congressional districts (2022-2032 cycle)
+\item Used for comparison: How many MM districts exist in enacted plans vs algorithmic?
+\end{itemize}
+
+All data publicly available from Census Bureau and state redistricting commissions.
+
+\subsection{Metrics and Statistical Analysis}
+
+\subsubsection{Primary Metrics}
+
+\textbf{Maximum minority percentage}:
+\begin{equation}
+m_{max}(state) = \max_{i=1}^k \frac{\sum_{v \in P_i} m_v \cdot w_{pop}(v)}{\sum_{v \in P_i} w_{pop}(v)}
+\end{equation}
+
+Measures the highest minority representation achievable in any single district. Primary metric for VRA compliance.
+
+\textbf{Majority-minority district count}:
+\begin{equation}
+MM_{count}(state) = |\{i : m(P_i) \geq 0.50\}|
+\end{equation}
+
+Counts districts exceeding 50\% minority threshold. Binary success/failure metric.
+
+\textbf{Proportional representation ratio}:
+\begin{equation}
+\text{Proportional ratio} = \frac{MM_{count}}{k \cdot m_{state}}
+\end{equation}
+
+Measures whether MM district count matches state minority percentage. Ratio = 1.0 indicates perfect proportional representation.
+
+\subsubsection{Secondary Metrics}
+
+\textbf{Compactness (unweighted edge cuts)}:
+\begin{equation}
+\text{EdgeCuts}(state) = |\{(i,j) \in E : \exists u \in P_a, v \in P_b, a \neq b\}|
+\end{equation}
+
+Lower edge cuts indicate more compact districts. Used 	o verify adaptive bisection maintains compactness.
+
+\textbf{Polsby-Popper scores}:
+\begin{equation}
+PP(P_i) = \frac{4\pi \cdot \text{Area}(P_i)}{\text{Perimeter}(P_i)^2}
+\end{equation}
+
+Standard compactness metric. Range [0,1], higher is more compact. Averaged across all districts in state.
+
+\textbf{Runtime}:
+\begin{equation}
+t_{total} = t_{data\_load} + t_{partition} + t_{analysis}
+\end{equation}
+
+Measured in wall-clock seconds on standardized hardware (8-core Intel i7, 32GB RAM).
+
+\subsubsection{Statistical Tests}
+
+\textbf{Paired t-test}: Compare adaptive vs predetermined (best predetermined tree)
+\begin{itemize}
+\item Null hypothesis: $\mu_{adaptive} - \mu_{predetermined} = 0$
+\item Alternative: $\mu_{adaptive} > \mu_{predetermined}$
+\item Significance level: $\alpha = 0.05$
+\end{itemize}
+
+\textbf{Paired t-test}: Compare n-way vs adaptive
+\begin{itemize}
+\item Null hypothesis: $\mu_{nway} - \mu_{adaptive} = 0$
+\item Alternative: $\mu_{nway} > \mu_{adaptive}$
+\item Significance level: $\alpha = 0.05$
+\end{itemize}
+
+\textbf{Effect size (Cohen's d)}:
+\begin{equation}
+d = \frac{\bar{x}_{adaptive} - \bar{x}_{predetermined}}{s_{pooled}}
+\end{equation}
+
+Quantifies magnitude of improvement. Interpretation: $d < 0.5$ small, $0.5 \leq d < 0.8$ medium, $d \geq 0.8$ large.
+
+\textbf{Correlation analysis}: Test whether improvement correlates with:
+\begin{itemize}
+\item District count $k$ (more complex states benefit more?)
+\item Demographic asymmetry (higher minority concentration enables larger gains?)
+\item Geographic clustering (more clustered minorities easier 	o optimize?)
+\end{itemize}
+
+Use Pearson correlation with significance testing at $\alpha = 0.05$ level.
+
+\subsection{Experimental Protocol}
+
+\textbf{Phase 1: Predetermined trees} (1 week)
+\begin{enumerate}
+\item For each state, enumerate all balanced binary trees
+\item Run recursive bisection with edge-weighting ($\alpha=5$, $\tau=0.40$) for each tree
+\item Record all metrics (minority percentage, MM count, edge cuts, runtime)
+\item Identify best and worst performing trees per state
+\end{enumerate}
+
+\textbf{Phase 2: Adaptive bisection} (1 week)
+\begin{enumerate}
+\item For each state, run adaptive tree selection algorithm
+\item Record chosen tree structure at each split level
+\item Record all metrics
+\item Compare 	o best predetermined tree from Phase 1
+\end{enumerate}
+
+\textbf{Phase 3: N-way comparison} (1 day)
+\begin{enumerate}
+\item Extract n-way results from Paper 2 ablation study for five test states
+\item Verify parameters match ($\alpha=5$, $\tau=0.40$, seed=42)
+\item Record all metrics
+\end{enumerate}
+
+\textbf{Phase 4: Statistical analysis} (3 days)
+\begin{enumerate}
+\item Compute paired differences (adaptive - predetermined, n-way - adaptive)
+\item Run t-tests for statistical significance
+\item Compute effect sizes
+\item Correlation analysis with state characteristics
+\end{enumerate}
+
+\textbf{Phase 5: Visualization} (3 days)
+\begin{enumerate}
+\item Generate district maps for all methods × states (45 maps)
+\item Create comparison bar charts (max minority \%, MM count)
+\item Visualize tree structures chosen by adaptive algorithm
+\item Generate scatter plots for correlation analysis
+\end{enumerate}
+
+\subsection{Validation and Robustness Checks}
+
+\textbf{Replication}: Run each experiment 3 times with different METIS seeds (42, 43, 44). Report mean and standard deviation. Expect low variance (adaptive bisection should be robust 	o randomness).
+
+\textbf{Parameter sensitivity}: Test adaptive bisection with alternative weight factors ($\alpha \in \{3, 5, 10\}$) and thresholds ($\tau \in \{0.40, 0.45\}$). Expect consistent improvement over predetermined regardless of parameters.
+
+\textbf{Enacted plan comparison}: Compare all methods 	o enacted congressional districts. This provides real-world baseline showing current practice achieves much lower MM counts.
+
+\textbf{Manual verification}: For subset of states (Alabama, Mississippi), manually inspect chosen tree structures and verify they make geographic sense. Adaptive algorithm should discover structures that concentrate minority populations, not arbitrary splits.
+
+\subsection{Limitations and Assumptions}
+
+\textbf{Sample size}: Five states is modest but sufficient for paired comparisons with strong effect sizes. Future work should expand 	o all 50 states.
+
+\textbf{Census year}: Uses 2020 data. Demographic patterns may differ in other census cycles (2010, 2030).
+
+\textbf{VRA metric}: Focuses on maximum minority percentage and MM count. Does not assess political cohesion (second Gingles precondition) or racially polarized voting (third precondition).
+
+\textbf{Compactness}: Uses edge cuts and Polsby-Popper. Other compactness metrics (Reock, convex hull) may show different tradeoffs.
+
+\textbf{Determinism}: Fixes METIS seed for reproducibility but loses information about solution space distribution. Ensemble methods would provide better uncertainty quantification.
+
+Despite limitations, experimental design provides rigorous test of core hypothesis: adaptive tree selection significantly improves recursive bisection for VRA compliance.

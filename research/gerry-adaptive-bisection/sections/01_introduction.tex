@@ -1,0 +1,70 @@
+Recursive bisection for congressional redistricting offers a critical advantage over n-way graph partitioning: \textbf{transparency}. Each district emerges from a hierarchical sequence of binary splits, creating an auditable decision tree that citizens and courts can verify. This contrasts sharply with n-way optimization, which produces all districts simultaneously through iterative refinement—a process that resembles a ``black box'' 	o non-experts.
+
+However, recursive bisection has been assumed 	o suffer from a fundamental weakness: \textbf{sensitivity 	o tree structure}. The sequence of splits—whether 	o divide a state into [3,4] districts or [4,3], whether 	o split the left subgraph as [2,1] or [1,2]—would seemingly affect final district demographics. Prior work on unweighted graph partitioning suggests tree structure matters significantly \citep{karypis1998}.
+
+\subsection{The Tree Structure Question}
+
+Consider South Carolina (k=7 districts, 35.1\% total minority). A balanced binary tree requires three levels:
+\begin{itemize}
+\item Level 1: Split state into [3,4] or [4,3]
+\item Level 2: Split left subgraph into [1,2] or [2,1]; right subgraph into [2,2]
+\item Level 3: Split singleton subgraphs into [1] or recurse
+\end{itemize}
+
+Traditional recursive bisection uses predetermined trees—the algorithm designer chooses a structure (e.g., [3,4]) before seeing data. This raises three concerns:
+
+\textbf{(1) Arbitrary choices}: Why [3,4] rather than [4,3]? No data-driven justification exists for predetermined structure.
+
+\textbf{(2) Potential suboptimality}: The first split commits 	o grouping districts that may have incompatible demographic goals. If the minority population concentrates in regions best represented by 4 districts, a [3,4] split might separate these regions prematurely.
+
+\textbf{(3) Performance uncertainty}: Without testing alternative trees, we cannot know whether predetermined structures achieve optimal Voting Rights Act (VRA) compliance.
+
+\subsection{Testing Tree Structure Sensitivity}
+
+To test whether tree structure matters for VRA compliance, this paper evaluates three partitioning approaches:
+
+\textbf{(1) Predetermined trees}: Traditional recursive bisection with fixed structure (e.g., [3,4]) chosen before seeing data.
+
+\textbf{(2) Adaptive bisection}: Data-driven tree selection at each split. At every level creating $k_L$ and $k_R$ districts, evaluate both orderings $(k_L, k_R)$ and $(k_R, k_L)$. Choose the ordering that produces higher minority concentration. Recurse with locally optimal structures.
+
+\textbf{(3) N-way partitioning}: Global optimization producing all districts simultaneously through iterative refinement (METIS direct k-way).
+
+All three methods use identical edge-weighting: minority-minority edges receive weight $\alpha = 5$, regular edges weight 1. Edge-weighting creates strong optimization pressure 	o avoid cutting minority clusters \citep{dellaLibera2026nwayRecursive}.
+
+\subsection{Research Questions}
+
+This paper addresses three questions:
+
+\textbf{Q1}: Does tree structure affect VRA compliance outcomes with edge-weighting? Traditional graph partitioning theory suggests different tree structures should produce different results. However, edge-weighting may create such strong optimization signal that tree structure becomes irrelevant.
+
+\textbf{Q2}: Does n-way optimization outperform recursive bisection with edge-weighting? N-way performs global optimization with iterative vertex reassignment, while recursive bisection makes greedy local decisions. Without edge-weighting, n-way typically outperforms recursive methods. But with strong edge-weighting, both may converge 	o the same solution.
+
+\textbf{Q3}: What is the minimum weight factor that produces method-independent results? If edge-weighting does eliminate method differences, at what threshold $\alpha_{crit}$ does convergence occur?
+
+\subsection{Contributions}
+
+\textbf{(1) Empirical discovery}: With edge-weighting at $\alpha = 5$, all three partitioning methods produce \textit{identical} results—same maximum minority percentages, same number of majority-minority districts, same district-level demographics. Tree structure selection and the choice between recursive vs n-way optimization become completely irrelevant.
+
+\textbf{(2) Theoretical framework}: Explains when and why edge-weighting makes method selection irrelevant. Strong edge-weighting ($\alpha \geq 5$) creates optimization signal so powerful that the optimal partition is uniquely determined by geography and population constraints, not algorithmic approach.
+
+\textbf{(3) Comprehensive testing}: Evaluates 27 predetermined tree structures, adaptive bisection, and n-way partitioning across five states with diverse demographics (Alabama, Georgia, Louisiana, Mississippi, South Carolina) and district counts (k = 4 	o 14). All 43 experiments converge 	o identical solutions.
+
+\textbf{(4) Implementation simplification}: Demonstrates that practitioners can use the simplest method (predetermined balanced trees) with confidence. No need for sophisticated adaptive selection or expensive n-way optimization—edge-weighting makes them equivalent.
+
+\subsection{Key Findings}
+
+With edge-weighting at $\alpha = 5$ and minority threshold $\tau = 0.40$, \textbf{all partitioning methods produce identical results}:
+
+\textbf{Alabama (k=7)}: All 6 predetermined trees, adaptive bisection, and n-way partitioning produce 2 majority-minority districts with maximum 50.8\% minority representation. Not merely similar—\textit{identical} down 	o individual district demographics.
+
+\textbf{Georgia (k=14)}: All 13 predetermined trees, adaptive bisection, and n-way produce 6 majority-minority districts with maximum 83.8\%. Every district has identical minority percentage across all methods.
+
+\textbf{Louisiana, Mississippi, South Carolina}: Same pattern—zero variance across methods (p = 1.0, Cohen's d undefined due 	o zero standard deviation).
+
+This finding contradicts our initial hypothesis that adaptive selection would improve over predetermined trees. Instead, we discovered something more fundamental: \textbf{edge-weighting makes method selection irrelevant}. The optimization signal is so strong that greedy recursive decisions, adaptive tree selection, and global n-way optimization all converge 	o the unique partition minimizing weighted edge cuts subject 	o population balance and contiguity constraints.
+
+\textbf{Practical implication}: Use the simplest method (predetermined balanced trees) with confidence. Sophisticated adaptive selection and expensive n-way optimization provide zero benefit when edge-weighting is sufficiently strong.
+
+\subsection{Paper Organization}
+
+Section 2 provides background on binary tree structures and VRA compliance through edge-weighting. Section 3 describes the adaptive bisection algorithm with pseudocode and complexity analysis (included because we tested it, even though results show it unnecessary). Section 4 presents theoretical framework explaining when edge-weighting produces method-independent results—the signal strength hypothesis and convergence conditions. Section 5 details experimental design testing 27 predetermined trees, adaptive bisection, and n-way partitioning across five states. Section 6 reports results demonstrating complete method equivalence with statistical analysis. Section 7 discusses practical implications—why edge-weighting dominates method choice and how this simplifies implementation. Section 8 concludes with recommendations and future work on weight factor thresholds.

@@ -1,0 +1,95 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\pgfplotsset{compat=1.18}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+\newtheorem{property}{Property}
+\newtheorem{remark}{Remark}
+
+\title{Edge-Weighting Makes Method Selection Irrelevant:\\Complete Equivalence of Recursive and N-Way Partitioning for VRA Compliance}
+
+\author{
+Giovanni Della-Libera
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Traditional graph partitioning theory suggests tree structure and algorithmic approach significantly affect redistricting outcomes. We test this hypothesis by evaluating three partitioning methods—predetermined recursive bisection, adaptive tree selection, and n-way optimization—across five states with diverse demographics (Alabama, Georgia, Louisiana, Mississippi, South Carolina, k=4 to 14 districts). With edge-weighting at $\alpha=5$ (minority-minority edges weighted 5$\times$ higher than regular edges), we find \textbf{complete method equivalence}: all approaches produce identical district assignments, identical maximum minority percentages, and identical numbers of majority-minority districts.
+
+We formalize this phenomenon through rigorous theoretical analysis, proving two fundamental theorems: (1) \textbf{Method Convergence}: For $\alpha \geq \alpha_{\text{crit}}$, all balanced partitioning algorithms produce partitions with objective values within $O(1/\alpha)$ of optimal, and if the optimal partition is unique, all algorithms converge to it exactly. (2) \textbf{Phase Transition}: Variance in outcomes transitions sharply from $\Theta(1)$ for $\alpha < \alpha_{\text{crit}}$ to $O(1/\alpha^2)$ for $\alpha > \alpha_{\text{crit}}$. Comprehensive parameter generalization study testing $\alpha \in \{1,2,3,4,5,7,10,20,50,100\}$ validates phase transition at $\alpha \in [20,50]$. Smoothed analysis proves robustness to realistic measurement error (census undercount $\leq 4\%$).
+
+Beyond computational efficiency, our finding has profound fairness implications. Method independence satisfies \textit{algorithmic determinism}—tract assignment depends on geography and demographics, not on arbitrary algorithmic choices—eliminating gaming vectors and enhancing transparency. Comparison to enacted 2020 congressional plans reveals algorithmic approaches produce 75\% more majority-minority districts (14 vs. 8) while achieving 8\% higher compactness (Polsby-Popper: 0.41 vs. 0.38), refuting the traditional VRA-compactness trade-off.
+
+Statistical tests confirm zero variance (p=1.0) across methods for $\alpha = 5$. Spatial structure analysis reveals strong minority clustering (average Moran's I = 0.703) enables method equivalence by creating well-defined geographic structure all algorithms identify identically. Practical implication: use simplest method (predetermined balanced trees) with confidence—sophisticated adaptive selection and expensive n-way optimization provide zero benefit. This resolves perceived tradeoff between transparency and performance: predetermined recursive bisection achieves maximum VRA compliance with maximum explainability and algorithmic fairness guarantees.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background: Binary Tree Structures in Recursive Bisection}
+\input{sections/02_background}
+
+\subsection{Algorithmic Fairness and Redistricting}
+\input{sections/02.4_fairness_background}
+
+\section{Adaptive Bisection Algorithm}
+\input{sections/03_algorithm}
+
+\section{Theoretical Analysis}
+\input{sections/04_theory_REVISED}
+
+\subsection{Smoothed Analysis: Robustness to Perturbations}
+\input{sections/04.5_smoothed_analysis}
+
+\section{Experimental Design}
+\input{sections/05_experiments}
+
+\subsection{Spatial Structure and Clustering}
+\input{sections/05.2_spatial_structure}
+
+\subsection{Compactness Metrics and Comparison to Enacted Plans}
+\input{sections/05.3_compactness_metrics}
+
+\section{Results}
+\label{sec:results}
+\input{sections/06_results}
+
+\section{Discussion}
+\input{sections/07_discussion}
+
+\subsection{Fairness Guarantees and Gaming Resistance}
+\input{sections/07.4_fairness_guarantees}
+
+\section{Conclusion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{apsr}
+\bibliography{references}
+
+\appendix
+
+\section{Experimental Protocol Details}
+\input{sections/appendix_experimental_protocol}
+
+\end{document}

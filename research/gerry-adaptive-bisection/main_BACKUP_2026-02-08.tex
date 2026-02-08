@@ -1,0 +1,60 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{subcaption}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\newtheorem{definition}{Definition}
+
+\title{Edge-Weighting Makes Method Selection Irrelevant:\\Complete Equivalence of Recursive and N-Way Partitioning for VRA Compliance}
+
+\author{
+Giovanni Della-Libera
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Traditional graph partitioning theory suggests tree structure and algorithmic approach significantly affect redistricting outcomes. We test this hypothesis by evaluating three partitioning methods—predetermined recursive bisection, adaptive tree selection, and n-way optimization—across five states with diverse demographics (Alabama, Georgia, Louisiana, Mississippi, South Carolina, k=4 to 14 districts). With edge-weighting at $\alpha=5$ (minority-minority edges weighted 5× higher than regular edges), we find \textbf{complete method equivalence}: all approaches produce identical district assignments, identical maximum minority percentages, and identical numbers of majority-minority districts. Statistical tests confirm zero variance (p=1.0). This finding contradicts our initial hypothesis that adaptive selection would improve over predetermined trees by 3+ percentage points. Instead, we discover that edge-weighting creates such strong optimization signal that greedy recursive decisions, adaptive tree selection, and global n-way optimization all converge to the unique partition determined by geography and population constraints. Theoretical framework explains when edge-weighting produces method independence and predicts phase transition at critical weight factor $\alpha_{crit} \in [3,5]$. Practical implication: use simplest method (predetermined balanced trees) with confidence—sophisticated adaptive selection and expensive n-way optimization provide zero benefit. This resolves perceived tradeoff between transparency and performance: predetermined recursive bisection achieves maximum VRA compliance with maximum explainability. Method independence strengthens legal defensibility—no gaming through tree structure manipulation, no ``cherry-picking'' algorithmic approach.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background: Binary Tree Structures in Recursive Bisection}
+\input{sections/02_background}
+
+\section{Adaptive Bisection Algorithm}
+\input{sections/03_algorithm}
+
+\section{Theoretical Analysis}
+\input{sections/04_theory}
+
+\section{Experimental Design}
+\input{sections/05_experiments}
+
+\section{Results}
+\label{sec:results}
+\input{sections/06_results}
+
+\section{Discussion}
+\input{sections/07_discussion}
+
+\section{Conclusion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{apsr}
+\bibliography{references}
+
+\end{document}
