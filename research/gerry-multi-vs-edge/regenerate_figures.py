@@ -1,9 +1,9 @@
 """
-Regenerate all figures with corrected multi-constraint data.
+Regenerate all figures with P1-3 balanced comparison data.
 
 Uses:
-- results/edge_weighted_results.csv (from Paper 1 - unchanged)
-- results/multi_constraint_results_FIXED.csv (corrected implementation)
+- results/edge_weighted_results.csv (from Paper 1 - 140 configs)
+- results/multi_constraint_results_v2.csv (P1-3 - 140 configs, balanced)
 """
 
 import sys
@@ -22,7 +22,10 @@ sns.set_palette("husl")
 # Load data
 print("Loading data...")
 df_edge = pd.read_csv('../gerry-vra-compliance/results/edge_weighting_ablation_study.csv')
-df_multi = pd.read_csv('results/multi_constraint_results_FIXED.csv')
+df_multi = pd.read_csv('results/multi_constraint_results_v2.csv')
+
+# Rename multi-constraint columns for consistency with edge-weighted
+df_multi = df_multi.rename(columns={'num_mm': 'mm_count'})
 
 # Rename edge-weighted columns for consistency
 df_edge = df_edge.rename(columns={
