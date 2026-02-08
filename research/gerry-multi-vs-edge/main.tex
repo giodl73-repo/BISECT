@@ -1,0 +1,65 @@
+\documentclass[11pt,twocolumn]{article}
+
+% Packages
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{threeparttable}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{pifont}
+
+% Commands
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+
+% Title and authors
+\title{\textbf{Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Asymmetric Redistricting Goals}}
+
+\author{
+    Anonymous Authors\\
+    \small{Submission for Peer Review}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Multi-constraint graph partitioning is the standard approach for balancing multiple objectives in graph partitioning problems. However, we demonstrate that for congressional redistricting under the Voting Rights Act (VRA), edge-weighted single-objective optimization dramatically outperforms multi-constraint methods. Across 160 experiments on five states, edge-weighted optimization achieves a 47.9\% configuration success rate compared to multi-constraint's 35.0\%, with 7 percentage points higher minority concentration and only 13\% compactness penalty. We provide both theoretical and empirical evidence that constraint conflict---where tight population balance constraints dominate loose minority concentration constraints---fundamentally limits multi-constraint effectiveness. Through systematic experiments varying constraint tolerance from $\pm30\%$ to $\pm400\%$, we show that even extreme loosening of minority constraints fails to achieve VRA compliance targets. Our findings generalize beyond redistricting: when partitioning problems have one tight constraint and secondary aspirational goals, encoding the secondary goal in edge weights is more effective than multi-constraint formulation. This work provides practical guidance for algorithm selection in graph partitioning and challenges the assumption that multi-objective problems always benefit from multi-constraint methods.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background}
+\input{sections/02_background}
+
+\section{Theoretical Analysis}
+\input{sections/03_theory}
+
+\section{Experimental Design}
+\input{sections/04_experiments}
+
+\section{Results}
+\input{sections/05_results}
+
+\section{Discussion}
+\input{sections/06_discussion}
+
+\section{Related Work}
+\input{sections/07_related_work}
+
+\section{Conclusion}
+\input{sections/08_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

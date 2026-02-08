@@ -1,0 +1,92 @@
+\label{sec:background}
+
+\subsection{Graph Partitioning for Redistricting}
+
+Congressional redistricting partitions a state's census tracts into $k$ districts (where $k$ is the state's number of congressional seats) subject to constraints:
+
+\begin{enumerate}
+    \item \textbf{Population Balance:} Each district must have nearly equal population ($\pm0.5\%$ tolerance) per \textit{Reynolds v. Sims}~\cite{reynolds1964}.
+    \item \textbf{Contiguity:} Districts must be geographically connected.
+    \item \textbf{Compactness:} Districts should have regular shapes (aspirational).
+    \item \textbf{VRA Compliance:} States with significant minority populations must create majority-minority (MM) districts where feasible~\cite{thornburg1986}.
+\end{enumerate}
+
+We model this as a graph partitioning problem: $G = (V, E)$ where vertices $V$ represent census tracts and edges $E$ represent geographic adjacency. Each vertex $v$ has associated data: total population $p_v$ and minority voting-age population $m_v$.
+
+\subsection{Multi-Constraint Graph Partitioning}
+
+Multi-constraint partitioning~\cite{karypis1999multilevel} assigns each vertex $v$ a multi-dimensional weight vector $\mathbf{w}_v = (w_v^1, w_v^2, \ldots, w_v^c)$ where $c$ is the number of constraints. For redistricting, $c=2$ with weights $\mathbf{w}_v = (p_v, m_v)$ for population and minority population.
+
+The goal is to partition $G$ into $k$ parts $P = \{P_1, P_2, \ldots, P_k\}$ that:
+
+\begin{equation}
+\min \text{edge\_cut}(P) = \left| \{(u,v) \in E : P(u) \neq P(v)\} \right|
+\end{equation}
+
+Subject to balance constraints for each dimension $d \in \{1, 2\}$:
+
+\begin{equation}
+W_i^d \leq (1 + \text{ubvec}[d]) \cdot \frac{W_{\text{total}}^d}{k} \quad \forall i \in \{1, \ldots, k\}
+\end{equation}
+
+where $W_i^d = \sum_{v \in P_i} w_v^d$ is the total weight of partition $i$ in dimension $d$, and $\text{ubvec}[d]$ is the imbalance tolerance for dimension $d$.
+
+For redistricting, $\text{ubvec}[1] = 1.005$ (population: $\pm0.5\%$) and $\text{ubvec}[2] \in [1.3, 5.0]$ (minority: $\pm30-400\%$).
+
+\textbf{Target Weights:} To create MM districts, we specify per-partition target weights $\mathbf{t}_i = (t_i^{\text{pop}}, t_i^{\text{min}})$ where:
+\begin{equation}
+t_i^{\text{pop}} = \frac{1}{k}, \quad
+t_i^{\text{min}} = \begin{cases}
+\frac{c_{\text{MM}} \cdot (P_{\text{total}} / k)}{M_{\text{total}}} & \text{if } i \in \{\text{MM districts}\} \\
+\frac{M_{\text{total}} - N \cdot c_{\text{MM}} \cdot (P_{\text{total}} / k)}{(k - N) \cdot M_{\text{total}}} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $N$ is the target number of MM districts, $M_{\text{total}}$ is total minority VAP, $P_{\text{total}}$ is total population, and $c_{\text{MM}} = 0.60$ is the desired minority concentration in MM districts. This ensures each MM district has minority VAP equal to $c_{\text{MM}}$ times its population, while remaining districts share the residual minority population proportionally. Equivalently, using the state-wide minority fraction $m_{\text{state}} = M_{\text{total}} / P_{\text{total}}$:
+\begin{equation}
+t_i^{\text{min}} = \begin{cases}
+\frac{c_{\text{MM}}}{k \cdot m_{\text{state}}} & \text{if } i \in \{\text{MM districts}\} \\
+\frac{1 - N \cdot t_{\text{MM}}^{\text{min}}}{k - N} & \text{otherwise}
+\end{cases}
+\end{equation}
+
+\subsection{Edge-Weighted Single-Objective Partitioning}
+
+Edge-weighted partitioning assigns weights to edges rather than using multi-dimensional vertex weights. Each vertex has 1D weight $w_v = p_v$ (population only), and edges $(u,v) \in E$ have weights:
+
+\begin{equation}
+w_{uv} = \begin{cases}
+\alpha & \text{if } m_u/p_u \geq \theta \text{ and } m_v/p_v \geq \theta \\
+1 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $\theta$ is the minority threshold (typically 0.40-0.50) and $\alpha \gg 1$ is the weight factor (typically 5-100).
+
+The objective minimizes \textit{weighted} edge cut:
+
+\begin{equation}
+\min \sum_{(u,v) \in E} w_{uv} \cdot \mathbb{1}[P(u) \neq P(v)]
+\end{equation}
+
+Subject to single population balance constraint:
+
+\begin{equation}
+W_i \leq (1 + \text{ufactor}) \cdot \frac{W_{\text{total}}}{k} \quad \forall i
+\end{equation}
+
+where $\text{ufactor} = 1.005$ ($\pm0.5\%$ population balance).
+
+\textbf{Key Difference:} Edge-weighting encodes VRA goals in the \textit{objective function} (avoiding cuts between minority-dense tracts) rather than in \textit{constraints}. This fundamentally changes how METIS navigates the solution space.
+
+\subsection{METIS Algorithm}
+
+Both approaches use METIS~\cite{karypis1998fast}, a multilevel graph partitioning algorithm with three phases:
+
+\begin{enumerate}
+    \item \textbf{Coarsening:} Iteratively collapse edges to create smaller graphs.
+    \item \textbf{Initial Partitioning:} Partition the coarsest graph.
+    \item \textbf{Uncoarsening:} Project partitions back to original graph, refining at each level using local search (Kernighan-Lin / Fiduccia-Mattheyses~\cite{fiduccia1982linear}).
+\end{enumerate}
+
+For multi-constraint partitioning, METIS uses the \texttt{gpmetis} executable with \texttt{-ncon=2} and target weights (\texttt{-tpwgts}). For edge-weighted partitioning, METIS uses \texttt{gpmetis} with edge weights (\texttt{-edgeweights}) and standard balancing (\texttt{-ufactor}).

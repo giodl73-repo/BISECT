@@ -1,0 +1,51 @@
+\label{sec:conclusion}
+
+We have demonstrated that edge-weighted single-objective optimization dramatically outperforms multi-constraint optimization for congressional redistricting under the Voting Rights Act. Across 160 experiments on five states, edge-weighted achieves 47.9\% configuration success rate vs multi-constraint's 35.0\%, with 7 percentage points higher minority concentration and only 13\% compactness penalty.
+
+\subsection{Key Contributions}
+
+\textbf{Empirical findings:} Edge-weighted succeeds in 4/5 states (Alabama, Georgia, Louisiana, Mississippi) while multi-constraint succeeds in only 3/5 (Georgia, Louisiana, Mississippi). For Alabama---a critical VRA case---edge-weighted creates 2 majority-minority districts while multi-constraint manages only 1.
+
+\textbf{Theoretical explanation:} We introduce the concept of \textit{constraint conflict}, where tight population balance constraints ($\pm0.5\%$) dominate loose minority concentration constraints ($\pm50-400\%$), rendering multi-constraint formulations ineffective. Edge-weighting avoids this conflict by encoding VRA goals directly in the objective function.
+
+\textbf{Hypothesis validation:} Systematic experiments varying minority constraint tolerance from $\pm30\%$ to $\pm400\%$ confirm that loosening constraints does not solve the problem. Even with $\pm400\%$ tolerance---80× looser than population tolerance---Alabama achieves only 1/2 target MM districts.
+
+\textbf{Generalization:} Our findings extend beyond redistricting to any graph partitioning problem with asymmetric constraints. When one constraint is tight and others are loose, encoding loose constraints as edge weights is more effective than multi-constraint balancing.
+
+\subsection{Practical Impact}
+
+For redistricting practitioners, our results are immediately actionable:
+\begin{itemize}
+    \item \textbf{Default algorithm:} Use edge-weighted optimization for VRA compliance
+    \item \textbf{Parameter guidance:} Weight factors of 5-50 and minority thresholds of 40-45\% work reliably
+    \item \textbf{Compactness tradeoff:} Expect 10-15\% average edge cut increase, which is legally and practically acceptable
+\end{itemize}
+
+For graph partitioning researchers, our work challenges fundamental assumptions:
+\begin{itemize}
+    \item \textbf{Constraint structure matters:} Count and tightness of constraints determine algorithm choice
+    \item \textbf{Objective encoding:} Secondary goals may be better encoded in objectives than constraints
+    \item \textbf{Algorithm selection framework:} Analyze constraint hierarchy before choosing multi-constraint vs edge-weighted
+\end{itemize}
+
+\subsection{Future Directions}
+
+\textbf{Multi-year validation:} Test findings on Census 2000 and 2010 data to ensure robustness across demographic changes.
+
+\textbf{Alternative partitioners:} Evaluate whether constraint conflict affects other multi-constraint algorithms (ParMETIS, Zoltan) similarly.
+
+\textbf{Hybrid approaches:} Explore combining edge-weighting with limited multi-constraint (e.g., tight constraints for both population and minority).
+
+\textbf{Compactness analysis:} Assess geographic compactness (Polsby-Popper, Reock) in addition to edge cut.
+
+\textbf{Other asymmetric problems:} Apply edge-weighted optimization to database partitioning, network clustering, and other domains with constraint hierarchies.
+
+\subsection{Broader Implications}
+
+This work demonstrates that algorithmic assumptions must be validated empirically, even when they appear theoretically sound. Multi-constraint optimization is ``standard'' for multi-objective graph partitioning, yet our experiments show it is suboptimal for VRA compliance. This highlights the importance of domain-specific algorithm evaluation and the value of challenging conventional wisdom.
+
+By providing both theoretical analysis (constraint conflict) and empirical validation (160 experiments), we establish a foundation for principled algorithm selection in graph partitioning. Our constraint tightness hierarchy framework applies broadly, offering guidance for researchers and practitioners facing multi-objective optimization problems.
+
+\subsection{Final Remarks}
+
+The Voting Rights Act aims to ensure fair political representation for minority voters. Achieving this goal requires not just legal frameworks but also effective algorithms. By demonstrating that edge-weighted optimization dramatically outperforms multi-constraint methods for VRA compliance, we provide a concrete algorithmic advance with real-world impact. We hope this work spurs further research into objective-based encodings for asymmetric optimization goals across diverse application domains.

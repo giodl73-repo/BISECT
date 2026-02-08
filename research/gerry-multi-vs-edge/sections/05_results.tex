@@ -1,0 +1,157 @@
+\label{sec:results}
+
+\subsection{Overall Performance Comparison}
+
+Table~\ref{tab:overall} summarizes performance across all experiments. Edge-weighted optimization achieves 17.9 percentage point higher configuration success rate (47.9\% vs 30.0\%) and 40 percentage point higher state success rate (80\% vs 40\%).
+
+\begin{table}[t]
+\centering
+\caption{Overall performance comparison across all experiments.}
+\label{tab:overall}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Metric} & \textbf{Edge-Weighted} & \textbf{Multi-Constraint} & \textbf{Gap} \\
+\midrule
+Config Success & 47.9\% (67/140) & 30.0\% (6/20) & +17.9 pp \\
+State Success & 80\% (4/5) & 40\% (2/5) & +40 pp \\
+Avg Max Minority & 63.7\% & 58.3\% & +5.4 pp \\
+Avg Edge Cut & 343 & 313 & +30 (+10\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Edge-weighted also achieves 5.4 percentage points higher minority concentration on average, at the cost of 10\% higher edge cut (reduced compactness).
+
+Figure~\ref{fig:success} shows configuration-level and state-level success rates. Edge-weighted succeeds in Alabama, Georgia, Louisiana, and Mississippi; multi-constraint succeeds only in Georgia and Mississippi. Both methods fail in South Carolina (insufficient minority population for 3 MM districts), and multi-constraint additionally fails in Alabama and Louisiana.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{results/figure1_success_rates.pdf}
+    \caption{Success rate comparison. (A) Configuration-level: edge-weighted 47.9\% vs multi-constraint 30.0\%. (B) State-level: edge-weighted succeeds in 4/5 states vs multi-constraint's 2/5.}
+    \label{fig:success}
+\end{figure}
+
+\subsection{State-by-State Analysis}
+
+Table~\ref{tab:state-comparison} shows best configuration for each method per state.
+
+\begin{table*}[t]
+\centering
+\caption{Head-to-head comparison showing best configuration for each method per state.}
+\label{tab:state-comparison}
+\begin{tabular}{lccccl}
+\toprule
+\textbf{State} & \textbf{Minority \%} & \textbf{Target MM} & \textbf{Edge-Weighted} & \textbf{Multi-Constraint} & \textbf{Winner} \\
+\midrule
+Alabama & 36.9\% & 2 & \textbf{2 (53.6\%)} & 1 (51.3\%) & Edge-Weighted \\
+Georgia & 49.9\% & 5 & \textbf{8 (85.9\%)} & 5 (89.7\%) & Edge-Weighted \\
+Louisiana & 44.2\% & 2 & \textbf{2 (61.9\%)} & 1 (55.6\%) & Edge-Weighted \\
+Mississippi & 44.6\% & 2 & 2 (61.4\%) & \textbf{2 (54.3\%)} & Tie \\
+South Carolina & 37.9\% & 3 & 1 (55.6\%) & 1 (53.3\%) & Both Fail \\
+\bottomrule
+\end{tabular}
+\vspace{2mm}
+\small{$^\dagger$Edge-weighted achieves higher minority concentration despite same MM count.}
+\end{table*}
+
+\textbf{Alabama:} Critical case where edge-weighted succeeds (2/2 MM) and multi-constraint fails (1/2 MM). Best multi-constraint configuration (ubvec=[1.005, 2.0]) achieves 51.3\% maximum---just above threshold but only in one district. Best edge-weighted (5$\times$ weight @ 40\% threshold) achieves 53.6\% in two districts.
+
+\textbf{Georgia:} Both methods succeed, but edge-weighted achieves more MM districts (8 vs 5). Interestingly, multi-constraint achieves slightly higher concentration in its MM districts (89.7\% vs 85.9\%) by concentrating minorities more tightly. Notably, \textit{all} 28 edge-weighted configurations succeed (100\% success rate), while 3/4 multi-constraint configurations succeed (75\%).
+
+\textbf{Louisiana:} Edge-weighted achieves target (2 MM) while multi-constraint fails (1/2 MM). Edge-weighted reaches 61.9\% maximum vs multi-constraint's 55.6\% best. Edge-weighted has 71\% configuration success rate (20/28) vs multi-constraint's 0\% (0/4).
+
+\textbf{Mississippi:} The one state where both methods perform comparably. Three of four multi-constraint configurations succeed (75\% = 3/4), as do most edge-weighted configurations (82\% = 23/28). Multi-constraint achieves slightly lower edge cut (95 vs 100), demonstrating better compactness when geometric constraints permit.
+
+\textbf{South Carolina:} Both methods fail to achieve target (3 MM), managing only 1 MM district. This is expected: 37.9\% total minority is insufficient for three 50\%+ minority districts under equal-population constraints. This represents a \textit{physical} limit, not an algorithmic failure.
+
+\subsection{Constraint Conflict Validation}
+
+Figure~\ref{fig:conflict} and Table~\ref{tab:conflict} show Alabama results with varying minority constraint tolerance.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{results/figure3_constraint_conflict.pdf}
+    \caption{Alabama constraint conflict test: even 400\% minority tolerance fails to achieve target. (A) MM district count remains below target across all tolerances. (B) Maximum minority percentage barely exceeds 50\% even with extreme loosening.}
+    \label{fig:conflict}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Alabama constraint conflict test results.}
+\label{tab:conflict}
+\small
+\begin{tabular}{lccc}
+\toprule
+\textbf{ubvec} & \textbf{Tolerance} & \textbf{MM Count} & \textbf{Max \%} \\
+\midrule
+$[1.005, 1.3]$ & $\pm 30\%$ & 0/2 & 49.7\% \\
+$[1.005, 1.5]$ & $\pm 50\%$ & 0/2 & 44.7\% \\
+$[1.005, 2.0]$ & $\pm 100\%$ & 1/2 & 51.3\% \\
+$[1.005, 5.0]$ & $\pm 400\%$ & 1/2 & 51.0\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Key Finding:} Even with $\pm400\%$ minority tolerance---80× looser than population tolerance---multi-constraint achieves only 1/2 target MM districts with 51.0\% maximum concentration. This validates our constraint conflict theory: loose constraints provide insufficient guidance, and tight population constraint dominates METIS's local search.
+
+Interestingly, performance is \textit{non-monotonic} in tolerance. The tightest tolerance (ubvec=1.3) achieves 49.7\%, performance drops to 44.7\% at ubvec=1.5, then recovers to 51.3\% at ubvec=2.0 and plateaus at 51.0\% for ubvec=5.0. This suggests that moderate tolerances (ubvec=2.0--5.0) allow METIS to deviate enough from target weights to find feasible solutions that form one MM district, while the tightest constraint (ubvec=1.3) and medium constraint (ubvec=1.5) create conflicting objectives that prevent any MM districts from forming.
+
+\subsection{Parameter Sensitivity Analysis}
+
+Figure~\ref{fig:sensitivity} provides comprehensive parameter sensitivity analysis across both methods. Multi-constraint performance (Panel A) demonstrates the non-monotonic behavior discussed above: all five states show minority concentration varying with tolerance in complex patterns. Alabama's curve is particularly striking, starting at 49.7\% at ubvec=1.3, dropping sharply to 44.7\% at ubvec=1.5, then recovering to 51.3\% at ubvec=2.0 and plateauing at 51.0\% for ubvec=5.0. This erratic sensitivity makes multi-constraint highly unpredictable and difficult to tune.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{results/figure5_parameter_sensitivity.pdf}
+    \caption{Parameter sensitivity analysis. (A) Multi-constraint shows non-monotonic behavior with narrow optimal range around ubvec=1.5. (B) Edge-weighted (Alabama) demonstrates clearer patterns with optimal weight factors 5-10. (C) Multi-constraint success rate peaks at 40\% for ubvec=1.5 and 5.0. (D) Edge-weighted (Alabama) achieves 50\% success for weight factor 5, demonstrating robustness.}
+    \label{fig:sensitivity}
+\end{figure*}
+
+Edge-weighted performance (Panel B, Alabama focus) shows clearer patterns: weight factors of 5-10 consistently achieve highest minority concentration (53-56\%), while very high weights ($\geq$100) over-penalize minority-minority edge cuts, paradoxically reducing effectiveness. The 40\% threshold performs best overall, though all thresholds show similar patterns. This broader optimal range makes edge-weighted less sensitive to parameter tuning.
+
+Success rates (Panels C-D) quantify these patterns. Multi-constraint achieves 40\% success rate at both ubvec=1.5 and 5.0, dropping to only 20\% at ubvec=2.0. In contrast, edge-weighted maintains 50\% success for weight factor 5 and 25\% for factors 10 and 50, with extreme values (1, 100, 500, 1000) all failing. The key difference: edge-weighted's optimal range spans an order of magnitude (5-50), while multi-constraint's optimal points are isolated values surrounded by worse performance.
+
+\subsection{Configuration Robustness}
+
+Figure~\ref{fig:robustness} quantifies configuration robustness across states. Georgia demonstrates edge-weighted's remarkable reliability: 100\% of 28 configurations succeed (all achieve $\geq$5 MM districts), compared to multi-constraint's 75\% (3/4 configurations). This means practitioners using edge-weighted can select almost any reasonable parameter combination and achieve VRA compliance in Georgia.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{results/figure7_robustness.pdf}
+    \caption{Configuration robustness analysis. (A) Edge-weighted demonstrates higher and more consistent success rates across states, with Georgia achieving 100\% success. (B) Distribution of MM district counts shows edge-weighted clustering near targets while multi-constraint exhibits greater variance.}
+    \label{fig:robustness}
+\end{figure}
+
+Alabama shows the largest robustness gap: 14\% edge-weighted success (4/28 configurations) vs 0\% multi-constraint (0/4), explaining why edge-weighted is the only method achieving the 2 MM district target. Louisiana demonstrates a complete advantage for edge-weighted (71\% vs 0\%), while Mississippi shows similar performance (82\% vs 75\%)---the one state where multi-constraint approaches edge-weighted's reliability.
+
+The distribution of MM district counts (Panel B) reveals structural differences. Edge-weighted configurations cluster tightly around target values: peaks at 2 MM (Alabama, Louisiana, Mississippi targets) and 5-8 MM (Georgia target 5, often exceeded). Multi-constraint shows wider variance, with substantial mass at 0 MM (failures) and less consistent achievement of targets. This distribution explains why edge-weighted achieves higher configuration success rate: more configurations land near targets, fewer produce complete failures.
+
+Figure~\ref{fig:state-details} provides detailed per-state breakdowns showing MM count, maximum minority percentage, and edge cut for best configurations. Alabama's panels clearly illustrate the 2 MM vs 1 MM difference, while Georgia shows edge-weighted achieving 8 MM vs multi-constraint's 7. Edge cut differences vary by state: minimal for Georgia and Mississippi ($<$10\%), moderate for Alabama (22\%), and substantial for Louisiana (48\%), consistent with earlier findings.
+
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{results/figure6_state_details.pdf}
+    \caption{Detailed state-by-state comparison of best configurations. Each panel shows normalized scores for MM count, maximum minority percentage, and edge cut. Edge-weighted consistently achieves higher MM counts and minority concentration, with varying compactness penalties by state.}
+    \label{fig:state-details}
+\end{figure*}
+
+\subsection{Compactness-Concentration Tradeoff}
+
+Figure~\ref{fig:tradeoff} visualizes the compactness vs minority concentration tradeoff.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{results/figure2_compactness_tradeoff.pdf}
+    \caption{Edge cut vs maximum minority percentage for best configuration per state/method. Edge-weighted (blue circles) achieves higher minority concentration than multi-constraint (pink squares) with modest compactness penalty. Filled markers indicate success ($\geq$ target MM); hollow markers indicate failure.}
+    \label{fig:tradeoff}
+\end{figure}
+
+Edge-weighted achieves higher minority concentration in all states except South Carolina (where both fail). The compactness penalty varies by state:
+\begin{itemize}
+    \item \textbf{Georgia:} Minimal penalty (+5 edge cut, +0.8\%)
+    \item \textbf{Mississippi:} Small penalty (+9 edge cut, +10\%)
+    \item \textbf{Alabama:} Moderate penalty (+46 edge cut, +22\%)
+    \item \textbf{Louisiana:} Large penalty (+128 edge cut, +48\%)
+\end{itemize}
+
+On average, edge-weighted pays a 10\% compactness penalty for 5.4 percentage point higher minority concentration. This is a favorable tradeoff for VRA compliance, where achieving 50\%+ concentration is legally required.

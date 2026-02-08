@@ -1,0 +1,92 @@
+# Panel Review State for Paper: gerry-multi-vs-edge
+# Generated: 2026-02-08
+
+paper_id: gerry-multi-vs-edge
+title: "Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Asymmetric Redistricting Goals"
+stage: revision
+round: 1
+
+# Target venue
+venue:
+  primary: "INFORMS Journal on Computing"
+  secondary:
+    - "SIAM Journal on Scientific Computing"
+    - "Operations Research"
+
+# Reviewers (assigned in panel stage)
+reviewers:
+  - name: "George Karypis"
+    affiliation: "University of Minnesota"
+    expertise: "METIS, graph partitioning, multilevel algorithms"
+    rationale: "Creator of METIS - essential for evaluating multi-constraint vs edge-weighted comparison"
+  - name: "Cynthia A. Phillips"
+    affiliation: "Sandia National Labs"
+    expertise: "Combinatorial optimization, graph algorithms"
+    rationale: "Operations research perspective for INFORMS venue; optimization quality assessment"
+  - name: "Bruce Hendrickson"
+    affiliation: "Sandia National Labs"
+    expertise: "Graph partitioning, load balancing, spectral methods"
+    rationale: "Theoretical foundations and guarantees for constraint conflict analysis"
+  - name: "William J. Cook"
+    affiliation: "University of Waterloo"
+    expertise: "Combinatorial optimization, exact algorithms"
+    rationale: "Rigorous analysis of algorithm selection framework and generalizability"
+  - name: "Moon Duchin"
+    affiliation: "Rutgers"
+    expertise: "Gerrymandering, metric geometry, fairness"
+    rationale: "VRA compliance and redistricting domain expertise; fairness implications"
+
+# Scores by round
+scores:
+  round1:
+    - reviewer: "George Karypis"
+      score: 2
+    - reviewer: "Cynthia A. Phillips"
+      score: 2
+    - reviewer: "Bruce Hendrickson"
+      score: 3
+    - reviewer: "William J. Cook"
+      score: 3
+    - reviewer: "Moon Duchin"
+      score: 3
+  average_round1: 2.6
+
+# P1 items from synthesis
+p1_items:
+  - id: P1-1
+    title: "Multi-constraint implementation verification"
+    addressed: true
+    resolution: "Bug verified and fixed. Original implementation missing target_weights. Corrected version generates new results (30.0% success vs 35.0% original). This strengthens paper's conclusion."
+  - id: P1-2
+    title: "Theoretical section calculation errors"
+    addressed: false
+  - id: P1-3
+    title: "Asymmetric configuration counts (4 vs 140)"
+    addressed: false
+  - id: P1-4
+    title: "No statistical rigor"
+    addressed: false
+
+# PP1 items from panel review
+pp1_items: []
+
+# History
+history:
+  - date: "2026-02-08"
+    stage: draft
+    note: "Paper initialized with 19 pages, 7 figures, 160 experiments across 5 states"
+  - date: "2026-02-08"
+    stage: panel
+    note: "5 reviewers assigned and reviews generated"
+  - date: "2026-02-08"
+    stage: synthesis
+    note: "Reviews synthesized. Average score: 2.6/4. 4 P1 items, 7 P2 items, 10 P3 items identified"
+  - date: "2026-02-08"
+    stage: revision
+    note: "Revision plan created. Awaiting author revisions to address P1 blocking issues"
+  - date: "2026-02-08"
+    stage: revision
+    note: "P1-1 RESOLVED: Implementation bug confirmed (missing target_weights). Fixed version run with corrected tpwgts. Results: 30.0% success (down from 35.0%). Strengthens paper conclusion (edge-weighted now wins by 17.9 pp vs 12.9 pp). See P1-1_IMPLEMENTATION_ANALYSIS.md"
+  - date: "2026-02-08"
+    stage: revision
+    note: "P1-1 COMPLETE: Section 2 equation fixed, Section 5 updated, all figures regenerated. Response letter drafted. Paper ready for P1-1 aspects. P1-2/3/4 still in progress."

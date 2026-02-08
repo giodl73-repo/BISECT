@@ -1,0 +1,29 @@
+Congressional redistricting aims to divide states into equal-population districts while achieving multiple objectives: population balance, compactness, and Voting Rights Act (VRA) compliance~\cite{altman2011redistricting}. The VRA requires creation of ``majority-minority'' (MM) districts where minority voters comprise $\geq50\%$ of the voting-age population, enabling effective political representation~\cite{grofman2001impact}.
+
+Graph partitioning offers a natural framework for redistricting, where census tracts form vertices, adjacencies form edges, and the goal is to partition into $k$ connected components (districts)~\cite{karypis1998fast}. Population balance is a hard constraint ($\pm0.5\%$ tolerance), while VRA compliance and compactness are aspirational goals. The standard algorithmic approach uses \textbf{multi-constraint optimization}: vertices have 2D weights $(p_v, m_v)$ for population and minority voting-age population, and METIS partitions the graph while respecting balance constraints on both dimensions~\cite{karypis1999multilevel}.
+
+However, recent work~\cite{anonymous2025vra} discovered that multi-constraint optimization \textit{fails} to achieve VRA compliance in several states. For Alabama, which requires 2 MM districts, multi-constraint achieves \textit{zero} MM districts with maximum minority concentration of 49.6\%---just below the 50\% threshold. In contrast, \textbf{edge-weighted single-objective optimization}---where minority-dense census tract edges receive higher weights---achieves 2 MM districts with 53.6\% maximum concentration.
+
+This raises a fundamental question: \textit{Why does single-objective optimization with edge weights outperform the ``standard'' multi-constraint approach for VRA compliance?}
+
+\subsection{Our Contributions}
+
+We provide the first comprehensive analysis of why edge-weighted single-objective optimization dramatically outperforms multi-constraint methods for asymmetric redistricting goals:
+
+\begin{enumerate}
+    \item \textbf{Empirical Evidence:} Across 160 experiments (5 states $\times$ 32 configurations), edge-weighted achieves 47.9\% configuration success rate vs.~multi-constraint's 35.0\% (12.9 percentage point gap). At the state level, edge-weighted succeeds in 4/5 states vs.~multi-constraint's 3/5.
+
+    \item \textbf{Theoretical Explanation:} We demonstrate that \textit{constraint conflict} fundamentally limits multi-constraint effectiveness. When population balance requires tight constraints ($\pm0.5\%$) and minority concentration requires loose constraints ($\pm50-400\%$), METIS prioritizes the tight constraint, rendering the loose constraint ineffective. Edge-weighting avoids this conflict by encoding VRA goals directly in the objective function.
+
+    \item \textbf{Constraint Conflict Validation:} Through systematic experiments varying minority constraint tolerance from $\pm30\%$ to $\pm400\%$, we show that even extreme loosening fails to achieve VRA targets. Alabama with $\pm400\%$ minority tolerance achieves only 1/2 target MM districts (50.4\% maximum), proving that ``just loosen the constraint'' does not solve the problem.
+
+    \item \textbf{Generalization:} Our findings extend beyond redistricting to any graph partitioning problem with asymmetric goals: one tight primary constraint (e.g., load balance) and secondary aspirational objectives (e.g., data locality). We provide practical guidance on when to use edge-weighting vs.~multi-constraint optimization.
+\end{enumerate}
+
+\subsection{Impact and Implications}
+
+This work challenges a fundamental assumption in graph partitioning: that multi-objective problems inherently require multi-constraint formulations. We show that \textit{constraint structure matters more than constraint count}. When constraints differ significantly in tightness, encoding loose constraints as edge weights is more effective than multi-constraint balancing.
+
+For redistricting practitioners, our results are immediately actionable: edge-weighted optimization should replace multi-constraint as the default algorithm for VRA compliance. More broadly, our constraint conflict theory applies to parallel computing, database partitioning, network clustering, and any domain where graph partitioning balances multiple objectives with asymmetric importance.
+
+The remainder of this paper is organized as follows: Section~\ref{sec:background} reviews multi-constraint and edge-weighted graph partitioning; Section~\ref{sec:theory} provides theoretical analysis of constraint conflict; Section~\ref{sec:experiments} describes our experimental design; Section~\ref{sec:results} presents empirical findings; Section~\ref{sec:discussion} discusses implications and generalization; Section~\ref{sec:related} reviews related work; and Section~\ref{sec:conclusion} concludes.

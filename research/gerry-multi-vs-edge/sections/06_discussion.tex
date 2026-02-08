@@ -1,0 +1,119 @@
+\label{sec:discussion}
+
+\subsection{Why Constraint Conflict Matters}
+
+Our results demonstrate that constraint conflict---where tight and loose constraints compete---fundamentally limits multi-constraint optimization effectiveness. This has important implications for algorithm design in graph partitioning.
+
+\subsubsection{Constraint Tightness Hierarchy}
+
+Graph partitioning problems often have natural constraint hierarchies:
+\begin{enumerate}
+    \item \textbf{Hard constraints:} Must be satisfied exactly (e.g., population balance $\pm0.5\%$)
+    \item \textbf{Soft constraints:} Aspirational goals with large tolerances (e.g., minority concentration $\pm50-400\%$)
+\end{enumerate}
+
+Multi-constraint formulations treat all constraints equally in the METIS objective. But in practice, local search moves that violate tight constraints are rejected far more often than moves violating loose constraints. This creates an implicit prioritization where tight constraints dominate.
+
+\textbf{Key Insight:} When constraint tightness differs by 10-100×, encoding loose constraints as edge weights is more effective than multi-constraint balancing.
+
+\subsubsection{Why Loosening Constraints Fails}
+
+Our Alabama constraint conflict test (Table~\ref{tab:conflict}) shows that increasing minority tolerance from $\pm30\%$ to $\pm400\%$ provides minimal benefit. Why?
+
+\begin{enumerate}
+    \item \textbf{Too tight:} With ubvec=1.3, minority constraint may reject beneficial moves, leading to 46.8\% max concentration.
+    \item \textbf{Goldilocks zone:} With ubvec=1.5, constraint provides some guidance, achieving 49.7\% (best multi-constraint result).
+    \item \textbf{Too loose:} With ubvec=5.0, constraint provides almost no guidance. METIS relies primarily on edge cut minimization, which may accidentally create 1 MM district (50.4\%).
+\end{enumerate}
+
+This non-monotonic behavior suggests there is an \textit{optimal} constraint tolerance, but even the best tolerance (ubvec=1.5) fails to achieve VRA targets. Edge-weighting avoids this tuning problem by encoding goals directly in the objective.
+
+\subsection{When to Use Edge-Weighting vs Multi-Constraint}
+
+Our findings provide practical guidance for algorithm selection in graph partitioning:
+
+\subsubsection{Use Edge-Weighting When:}
+
+\begin{itemize}
+    \item \textbf{Asymmetric partition goals:} Some partitions should differ substantially from others (e.g., 2 MM districts with 60\% minority, 5 non-MM districts with 20\%)
+    \item \textbf{One tight constraint:} Primary constraint has tight tolerance ($\pm0.5-5\%$)
+    \item \textbf{Secondary soft goals:} Additional objectives have loose tolerances ($\pm50-400\%$) or are aspirational
+    \item \textbf{Edge weight encodability:} Secondary goal can be expressed as edge weights (e.g., keep similar vertices together)
+\end{itemize}
+
+\textbf{Example applications:}
+\begin{itemize}
+    \item \textbf{Redistricting:} VRA compliance (this work)
+    \item \textbf{Database partitioning:} Hot/cold data separation with load balance
+    \item \textbf{Network clustering:} Community detection with size constraints
+\end{itemize}
+
+\subsubsection{Use Multi-Constraint When:}
+
+\begin{itemize}
+    \item \textbf{Symmetric partition goals:} All partitions should be similar (e.g., parallel computing with uniform load)
+    \item \textbf{Multiple tight constraints:} All constraints have similar tolerances ($\pm1-10\%$)
+    \item \textbf{Hard balance requirements:} All constraints must be satisfied (not aspirational)
+    \item \textbf{Cannot encode as edges:} Secondary goals don't naturally map to edge weights
+\end{itemize}
+
+\textbf{Example applications:}
+\begin{itemize}
+    \item \textbf{Parallel computing:} Load balancing with memory and CPU constraints
+    \item \textbf{Circuit partitioning:} Multiple resource types with tight limits
+    \item \textbf{Image segmentation:} Color and texture balance
+\end{itemize}
+
+\subsection{Compactness-Concentration Tradeoff}
+
+Our results show edge-weighted pays an average 13\% compactness penalty for 7 percentage point higher minority concentration. Is this tradeoff acceptable?
+
+\subsubsection{Legal Perspective}
+
+The Voting Rights Act requires creation of MM districts where feasible~\cite{thornburg1986}. Courts have consistently held that some compactness reduction is acceptable to achieve VRA compliance~\cite{bush1995}. A 13\% average penalty---with some states (Georgia, Mississippi, South Carolina) experiencing $<10\%$ penalty---is well within acceptable bounds.
+
+\subsubsection{Practical Perspective}
+
+Edge cut is a proxy for compactness, measuring how many tract boundaries are crossed. However, \textit{geographic} compactness (shape regularity) matters more than edge cut. Two districts may have similar edge cuts but vastly different shapes. Future work should evaluate Polsby-Popper scores~\cite{polsby1991third} and Reock scores~\cite{reock1961measure} to assess true compactness impact.
+
+\subsection{Limitations and Future Work}
+
+\subsubsection{Single Census Year}
+
+We use Census 2020 data only. Demographics change over time, so results may differ for 2000 or 2010 data. Future work should validate findings across multiple census years.
+
+\subsubsection{METIS-Specific Results}
+
+Our results are specific to METIS. Other multi-constraint partitioners (e.g., ParMETIS~\cite{karypis2003parmetis}, Zoltan~\cite{devine2002zoltan}) may handle constraint conflicts differently. However, METIS is the most widely used graph partitioner, so our findings are broadly applicable.
+
+\subsubsection{Parameter Sensitivity}
+
+We test 4 multi-constraint configurations per state (varying ubvec) and 28 edge-weighted configurations (varying weight factor and threshold). Larger parameter sweeps might reveal better multi-constraint configurations. However, our systematic ubvec sweep (1.3 to 5.0) covers the reasonable parameter space.
+
+\subsubsection{Alternative Objectives}
+
+We focus on edge cut minimization. METIS supports other objectives (volume, communication). These may interact differently with multi-constraint vs edge-weighted approaches.
+
+\subsection{Broader Implications}
+
+\subsubsection{Rethinking Multi-Constraint Optimization}
+
+Multi-constraint optimization is often presented as the ``standard'' approach for multi-objective graph partitioning~\cite{karypis1999multilevel}. Our work challenges this assumption, showing that constraint \textit{structure} matters more than constraint \textit{count}.
+
+\textbf{New paradigm:} When selecting a partitioning algorithm, analyze constraint tightness hierarchy \textit{first}. If constraints differ substantially in tightness, consider edge-weighting or other objective-based encodings.
+
+\subsubsection{Connections to Multi-Objective Optimization}
+
+In multi-objective optimization, Pareto-optimal solutions balance competing objectives~\cite{deb2001multi}. Multi-constraint formulations implicitly search Pareto frontier by varying target weights. However, when constraints have vastly different tightness, the Pareto frontier degenerates: tight constraints dominate, and varying loose constraints has minimal effect.
+
+Edge-weighting provides an alternative search strategy: encode secondary objectives in the primary objective, creating a single aggregate objective. This is similar to scalarization in multi-objective optimization~\cite{marler2004survey}.
+
+\subsubsection{Policy Recommendations for Redistricting}
+
+Based on our findings, we recommend:
+\begin{enumerate}
+    \item \textbf{Default to edge-weighted:} For VRA compliance, edge-weighted optimization should be the default algorithm.
+    \item \textbf{Parameter guidance:} Weight factors of 5-50 and thresholds of 40-45\% work reliably across states.
+    \item \textbf{Multi-state analysis:} Always test multiple states when developing redistricting algorithms; single-state results may not generalize.
+    \item \textbf{Compactness evaluation:} Assess geographic compactness (Polsby-Popper, Reock) in addition to edge cut.
+\end{enumerate}

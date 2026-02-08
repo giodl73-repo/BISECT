@@ -1,0 +1,97 @@
+\label{sec:theory}
+
+We now provide theoretical analysis explaining why edge-weighted optimization outperforms multi-constraint for asymmetric redistricting goals.
+
+\subsection{Constraint Conflict in Multi-Constraint Optimization}
+
+Multi-constraint optimization fails for VRA compliance due to \textbf{constraint conflict}: when constraints have vastly different tightness, the tighter constraint dominates, rendering looser constraints ineffective.
+
+\subsubsection{Formalization}
+
+Consider multi-constraint partitioning with constraints:
+\begin{align}
+\left| W_i^{\text{pop}} - \frac{W_{\text{total}}^{\text{pop}}}{k} \right| &\leq 0.005 \cdot \frac{W_{\text{total}}^{\text{pop}}}{k} \label{eq:pop-constraint} \\
+\left| W_i^{\text{min}} - t_i^{\text{min}} \right| &\leq \epsilon \cdot t_i^{\text{min}} \label{eq:min-constraint}
+\end{align}
+
+where $\epsilon \in [0.3, 4.0]$ is the minority imbalance tolerance.
+
+\textbf{Problem:} When $\epsilon$ is large (loose constraint), Equation~\ref{eq:min-constraint} provides minimal guidance. METIS's local search moves vertices between partitions to reduce edge cut while respecting constraints. If a move violates Equation~\ref{eq:pop-constraint} (tight, $\pm0.5\%$), it is rejected. If it violates Equation~\ref{eq:min-constraint} (loose, $\pm50-400\%$), it is rarely rejected because the tolerance is enormous.
+
+\textbf{Consequence:} Population balance dominates, and minority concentration becomes a secondary consideration. Even with target weights $t_i^{\text{min}}$ specifying 60\% minority concentration, METIS cannot achieve this if doing so requires violating population balance.
+
+\subsubsection{Theoretical Prediction}
+
+For Alabama ($k=7$ districts, 36.9\% total minority, target 2 MM districts):
+
+\begin{itemize}
+    \item \textbf{Equal-population districts:} $100\% / 7 = 14.3\%$ of population per district
+    \item \textbf{Total minority available:} $36.9\%$ of total population
+    \item \textbf{Maximum possible in 2 districts:} If all minority population concentrated in 2 districts, each would have $36.9\% / 2 = 18.5\%$ of \textit{total state population}
+    \item \textbf{But equal-population constraint requires:} Each district has exactly $14.3\%$ of total population
+    \item \textbf{Maximum minority percentage:} $18.5\% / 14.3\% = 129\%$ of district population (impossible!)
+\end{itemize}
+
+\textbf{Corrected calculation:} Maximum achievable minority concentration in one district when all minority voters are concentrated:
+\begin{equation}
+\max(\% \text{ minority}) = \frac{\text{Total minority VAP}}{\text{Total population} / k} = \frac{0.369 \cdot P}{P / 7} = 2.58 \times 100\% = 258\%
+\end{equation}
+
+This is impossible since minority percentage cannot exceed 100\%. The correct interpretation: if we concentrate all minority population into 2 districts (each with $1/7$ of total population), maximum achievable minority percentage per district is:
+\begin{equation}
+\frac{0.369 \cdot P / 2}{P / 7} = \frac{0.1845 \cdot P}{0.143 \cdot P} = 1.29 = 129\%
+\end{equation}
+
+Still impossible. Let's recalculate properly:
+
+\textbf{Correct Analysis:} Alabama has 36.9\% total minority \textit{voting-age population (VAP)}. If we concentrate minority VAP into 2 districts while maintaining equal total population:
+\begin{itemize}
+    \item Total minority VAP: $M = 0.369 \cdot \text{Total VAP}$
+    \item If concentrated in 2 districts: $M / 2$ per district
+    \item Each district's VAP: $\text{Total VAP} / 7$
+    \item Minority \% in these districts: $\frac{M / 2}{\text{VAP} / 7} = \frac{0.369 \cdot \text{VAP} / 2}{\text{VAP} / 7} = \frac{0.369 \cdot 7}{2} = 1.29 = 129\%$
+\end{itemize}
+
+This is still wrong because it assumes we can arbitrarily concentrate minority population, but population balance constraint means each district must have equal \textit{total} population (not VAP). The issue is that minority VAP is not uniformly distributed geographically.
+
+\textbf{Actual Constraint Conflict:} The conflict arises because:
+\begin{enumerate}
+    \item Population balance requires each district to have exactly $1/k$ of total population ($\pm0.5\%$).
+    \item Minority concentration requires some districts to have $\geq60\%$ minority VAP.
+    \item These goals conflict when minority population is geographically dispersed.
+\end{enumerate}
+
+METIS's local search algorithm moves vertices between partitions to minimize edge cut. When evaluating a move:
+\begin{itemize}
+    \item If move violates population balance ($\pm0.5\%$): \textbf{REJECT} (constraint is tight)
+    \item If move violates minority balance ($\pm50\%$): \textbf{ACCEPT} (constraint is loose)
+\end{itemize}
+
+Because population constraint is 100× tighter, it dominates decision-making. Minority constraint provides minimal guidance.
+
+\subsection{Why Edge-Weighting Succeeds}
+
+Edge-weighted optimization avoids constraint conflict by encoding VRA goals in the \textit{objective function} rather than constraints:
+
+\begin{equation}
+\min \sum_{(u,v) \in E} w_{uv} \cdot \mathbb{1}[P(u) \neq P(v)]
+\end{equation}
+
+where $w_{uv} = \alpha$ if both $u$ and $v$ are minority-dense tracts ($\alpha \gg 1$), and $w_{uv} = 1$ otherwise.
+
+\textbf{Key Insight:} By setting $\alpha$ large (e.g., 5-100), cuts between minority-dense tracts become \textit{expensive}. METIS's objective is to minimize total weighted cut, so it strongly prefers keeping minority-dense tracts together, even if this slightly increases total edge count.
+
+\textbf{No Constraint Conflict:} Population balance is the \textit{only} constraint ($\pm0.5\%$). Minority concentration is not a constraint---it emerges naturally from the objective function's structure. METIS has clear guidance: minimize weighted edge cut while respecting population balance.
+
+\subsection{Hypothesis: Constraint Conflict Test}
+
+If our theory is correct, then \textbf{loosening the minority constraint should not significantly improve multi-constraint performance}. We test this by varying $\epsilon$ (minority tolerance) from 30\% to 400\% while holding population tolerance fixed at 0.5\%.
+
+\textbf{Prediction:} Even with $\epsilon = 400\%$ ($\pm4\times$ target minority weight), multi-constraint will fail to achieve VRA targets because:
+\begin{enumerate}
+    \item Loose constraints provide minimal guidance to METIS.
+    \item Population constraint still dominates local search decisions.
+    \item Geographic dispersion of minority population creates fundamental conflict.
+\end{enumerate}
+
+We validate this prediction empirically in Section~\ref{sec:results}.
