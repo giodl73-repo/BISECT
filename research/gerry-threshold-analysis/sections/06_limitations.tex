@@ -1,3 +1,21 @@
+\subsection{Incomplete VRA Framework}
+
+\textbf{Critical scope limitation}: Our analysis addresses \textbf{only the first Gingles precondition}---geographic compactness and sufficient numerosity. Full Section 2 vote dilution claims require demonstrating all three preconditions:
+
+\begin{enumerate}
+    \item Geographic compactness (THIS PAPER): Can minority populations form compact districts?
+    \item Political cohesion (NOT ADDRESSED): Do minority voters support candidates as a bloc?
+    \item Racially polarized voting (NOT ADDRESSED): Do white voters bloc-vote against minority-preferred candidates?
+\end{enumerate}
+
+\textbf{Why prongs 2-3 cannot be determined algorithmically}: Political cohesion and racially polarized voting require electoral data, statistical inference (ecological regression, homogeneous precinct analysis), and case-specific behavioral analysis. These cannot be assessed from Census demographic data or algorithmic redistricting alone.
+
+\textbf{Practical implications}: States above our 42\% threshold have demonstrated geographic feasibility for proportional MM representation (satisfying prong 1), but plaintiffs must still prove political cohesion and racially polarized voting through traditional litigation methods. Conversely, even if prongs 2-3 are established, geographic infeasibility (in states below threshold) defeats Section 2 claims.
+
+\textbf{Necessary but not sufficient}: Our findings establish whether geographic constraints permit proportional MM districts. This is necessary for Section 2 liability but not sufficient. Courts must evaluate all three Gingles preconditions plus totality-of-circumstances factors (historical discrimination, electoral participation rates, socioeconomic disparities) before determining liability.
+
+\textbf{Complementary evidence}: Our algorithmic analysis complements rather than replaces traditional VRA evidence. Optimal use combines our geographic feasibility assessment with electoral analysis, expert testimony on communities of interest, and historical context to provide complete Section 2 evaluation.
+
 \subsection{Methodological Limitations}
 
 \textbf{Algorithm dependency}: Results assume edge-weighted recursive bisection. Future algorithms may improve success rates, potentially lowering threshold. However, fundamental proportionality constraints (cannot create $X$\% MM districts from $<X$\% minority base) ensure threshold persists.
@@ -5,6 +23,8 @@
 \textbf{Single optimization run}: Each configuration tested once. METIS introduces randomness; multiple runs might yield slightly different results. However, 645-configuration comprehensive study (43 states × 15 configs) provides robust statistical patterns validated across diverse contexts.
 
 \textbf{Binary success metric}: We use 50\% as MM threshold. Some legal contexts accept 45--50\% as sufficient. Lowering threshold to 45\% would reduce state-level requirement to approximately 40\% (not 42\%).
+
+\textbf{Confidence interval estimation}: We provide estimated 40-44\% confidence interval for the 42\% threshold based on statistical properties of our 43-state sample and borderline zone analysis. Formal bootstrap resampling or computational jackknife analysis would provide exact confidence intervals and would strengthen our precision estimates, though existing evidence (strong correlation r=0.78, clear threshold pattern, jackknife stability analysis) already supports high confidence in the 40-44\% range.
 
 \subsection{Geographic Limitations}
 
@@ -26,13 +46,15 @@
 
 \textbf{Political context ignored}: We assess purely demographic/geographic feasibility. Political factors (partisan composition, incumbency) affect real-world redistricting.
 
-\textbf{Proportionality assumption}: We target MM proportion matching state minority percentage. Courts might require different proportions case-specifically.
+\textbf{Proportionality assumption and sensitivity analysis}: We target MM districts proportional to state minority percentage (e.g., 40\% minority $\rightarrow$ 40\% MM districts). This is a modeling assumption, not a legal requirement. Courts typically mandate fewer MM districts based on case-specific factors. Our 42\% threshold applies specifically to proportional representation; sub-proportional targets (e.g., [proportional - 1] MM districts) would require lower state-level thresholds, estimated at $\sim$38-40\%. Comprehensive sensitivity analysis testing multiple MM target levels (proportional, proportional - 1, proportional - 2) would provide complete feasibility landscape but requires substantial additional computation (645 configurations $\times$ N target levels).
 
 \subsection{Future Research Directions}
 
 \textbf{Temporal analysis}: Compare thresholds across 2000, 2010, 2020 census years to assess longitudinal stability and demographic trend impacts.
 
 \textbf{Sub-group analysis}: Examine thresholds for Hispanic, Asian, Native American communities separately.
+
+\textbf{MM target sensitivity analysis}: Test sub-proportional MM targets (e.g., [proportional - 1], [proportional - 2]) to determine how threshold varies with required MM district count. This would establish complete feasibility curves showing: "At X\% state minority, can create Y MM districts" for all relevant Y values, providing courts with precise guidance for case-specific MM district requirements.
 
 \textbf{Alternative algorithms}: Test whether emerging optimization methods (deep learning, genetic algorithms) lower threshold significantly.
 

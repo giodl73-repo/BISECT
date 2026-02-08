@@ -11,6 +11,104 @@ Section 2 of the VRA prohibits voting practices that ``result in a denial or abr
 
 Our work addresses the first precondition: \emph{What constitutes ``sufficiently large''?}
 
+\subsection{Gingles Framework and Study Scope}
+
+The three Gingles preconditions establish a structured framework for evaluating Section 2 vote dilution claims. Understanding what each prong requires---and critically, which aspects can be assessed algorithmically---is essential for properly scoping our empirical analysis.
+
+\subsubsection{The Three Gingles Preconditions}
+
+\textbf{Prong 1: Sufficiently Large and Geographically Compact}
+
+The minority group must be sufficiently numerous and geographically concentrated to constitute a majority in a reasonably compact single-member district. This prong has two components:
+
+\begin{itemize}
+    \item \textbf{Numerosity}: Enough minority population to form a majority ($>$50\%) in at least one district
+    \item \textbf{Geographic compactness}: Minority population concentrated enough that a district containing them would satisfy traditional compactness requirements (contiguity, reasonable shape)
+\end{itemize}
+
+Courts assess geographic compactness using both quantitative metrics (Polsby-Popper scores, Reock scores, edge-cut minimization) and qualitative factors (respecting political subdivisions, maintaining communities of interest, following natural boundaries).
+
+\textbf{Prong 2: Politically Cohesive}
+
+The minority group must demonstrate political cohesion---voting as a bloc for its preferred candidates with sufficient consistency to constitute a politically unified community. This requires:
+
+\begin{itemize}
+    \item Analysis of past election results showing minority voters' preferred candidates
+    \item Statistical demonstration that minority voters support these candidates at rates significantly higher than chance
+    \item Evidence of cohesion across multiple elections and election types (presidential, congressional, state/local)
+\end{itemize}
+
+Courts typically use ecological regression, homogeneous precinct analysis, or ecological inference to estimate minority voting patterns from aggregate precinct-level data.
+
+\textbf{Prong 3: Majority Bloc Voting}
+
+White voters (or the majority group) must vote as a bloc sufficiently to usually defeat the minority's preferred candidates in the absence of special circumstances (like incumbency or unusual candidate characteristics). This requires:
+
+\begin{itemize}
+    \item Demonstration that white voters consistently support candidates opposed to minority-preferred candidates
+    \item Evidence of racially polarized voting patterns---minority and majority groups supporting different candidates
+    \item Analysis across multiple elections showing the pattern is persistent, not anomalous
+\end{itemize}
+
+This prong ensures that minority vote dilution actually occurs---that district configurations matter because majority voting patterns prevent minority electoral success.
+
+\subsubsection{What This Study Addresses: Prong 1 Only}
+
+Our algorithmic analysis addresses \textbf{only the geographic compactness component of Gingles prong 1}. Specifically, we examine:
+
+\begin{itemize}
+    \item \textbf{Numerosity question}: Given a state's minority percentage, can optimization create districts with $\geq$50\% minority population?
+    \item \textbf{Proportionality question}: Can optimization create MM districts in proportion to state minority percentage?
+    \item \textbf{Geographic feasibility}: Do demographic-geographic constraints prevent proportional MM representation even with optimal algorithms?
+\end{itemize}
+
+We operationalize "geographically compact" as districts that:
+\begin{enumerate}
+    \item Are contiguous (all parts connected)
+    \item Minimize edge-cut (number of census tract boundaries crossed between districts)
+    \item Maintain population equality within $\pm$0.5\% of target
+\end{enumerate}
+
+Edge-cut minimization serves as proxy for traditional compactness. Lower edge-cuts correlate with districts that respect political subdivisions, maintain communities of interest, and produce reasonably regular shapes.
+
+\subsubsection{What This Study Does Not Address: Prongs 2-3}
+
+Our analysis \textbf{cannot and does not address political cohesion or racially polarized voting}. These preconditions require:
+
+\textbf{Election data}: Precinct-level voting results showing minority and majority candidate preferences. Our demographic analysis uses only Census population data.
+
+\textbf{Statistical inference}: Ecological regression or homogeneous precinct analysis to estimate group voting patterns. These methods require electoral data and sophisticated statistical modeling beyond algorithmic redistricting.
+
+\textbf{Case-specific context}: Political cohesion and racially polarized voting vary by jurisdiction, election type, candidate characteristics, and temporal period. They cannot be determined from demographic data alone.
+
+\textbf{Behavioral analysis}: Prongs 2-3 concern voter behavior and electoral outcomes, not geographic configurations. Algorithmic redistricting addresses district shapes and demographic composition, not voting patterns.
+
+\subsubsection{Implications for VRA Analysis}
+
+This scope limitation has critical implications:
+
+\textbf{Necessary but not sufficient}: Our findings establish whether geographic feasibility for proportional MM representation exists (Gingles prong 1). This is necessary for Section 2 liability but not sufficient. Even if proportional MM districts are geographically feasible, plaintiffs must still demonstrate political cohesion and racially polarized voting.
+
+\textbf{Burden allocation}: Our threshold helps allocate burdens of proof. In states above 42\% minority, geographic feasibility is demonstrated empirically, so litigation focuses on prongs 2-3. In states below 37\%, proportional MM representation faces systematic geographic constraints, so plaintiffs bear heavier burden on prong 1.
+
+\textbf{Partial answer}: We answer "Can optimization create proportional MM districts?" not "Must states create such districts?" or "Do electoral conditions warrant such districts?" Geographic feasibility is one input to legal analysis, not the complete answer.
+
+\textbf{Complementary evidence}: Our algorithmic analysis complements traditional VRA litigation evidence (electoral analysis, expert testimony on communities of interest, historical discrimination analysis) but does not replace it.
+
+\subsubsection{Why Algorithmic Analysis Is Valuable Despite Scope Limits}
+
+Even addressing only prong 1, our analysis provides substantial value:
+
+\textbf{Eliminates geographic uncertainty}: Before litigating expensive prongs 2-3 analyses, parties can assess whether geographic feasibility exists. If proportional MM representation is geographically infeasible, prongs 2-3 become moot.
+
+\textbf{Quantifies "sufficiently large"}: Courts have struggled to define this term. Our 42\% threshold operationalizes it based on comprehensive empirical evidence.
+
+\textbf{Reduces expert dispute}: Traditional prong 1 litigation involves expert witnesses drawing alternative maps. Our systematic optimization across 645 configurations provides objective baseline for feasibility assessment.
+
+\textbf{Enables ex ante planning}: Legislatures and redistricting commissions can assess geographic feasibility before drawing maps, potentially avoiding litigation entirely.
+
+\textbf{Establishes feasibility precedents}: Our 43-state analysis creates empirical foundation for evaluating prong 1 claims across diverse contexts, reducing litigation costs and increasing predictability.
+
 \subsection{Prior Quantitative Analysis}
 
 Limited prior work has attempted to quantify VRA feasibility thresholds:

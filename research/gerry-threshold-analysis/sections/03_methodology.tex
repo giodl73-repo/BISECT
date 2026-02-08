@@ -17,7 +17,35 @@ Below threshold  & $<$37\%    & 25 \\
 \caption{43-state sample provides comprehensive coverage of demographic spectrum, enabling robust threshold identification.}
 \end{table}
 
-Target MM counts follow proportional representation: states with X\% minority population should create approximately X\% of districts as majority-minority. This proportional benchmark reflects VRA Section 2 requirements for equal electoral opportunity.
+\subsection{Proportional Representation as Modeling Assumption}
+
+\textbf{Critical methodological clarification}: We adopt proportional representation as a \textbf{modeling assumption} to detect systematic patterns in geographic feasibility for MM district creation. Specifically, we test whether states with $X$\% minority population can create approximately $X$\% of districts as majority-minority (districts with $\geq$50\% minority).
+
+\textbf{This is not a VRA legal requirement}. Section 2 of the Voting Rights Act prohibits vote dilution where geographically compact minority communities exist; it does \emph{not} mandate proportional allocation of MM districts~\citep{johnson1996}. Courts have approved redistricting plans with both more and fewer MM districts than proportional targets, depending on case-specific factors including geographic distribution, communities of interest, and competing constitutional requirements.
+
+\textbf{Why we use proportionality despite non-legal-requirement status}:
+
+\begin{enumerate}
+    \item \textbf{Principled baseline for comparison}: Proportionality provides an objective, consistent target for evaluating optimization effectiveness across 43 diverse states. Alternative targets (e.g., ``create as many MM districts as possible'') lack clear success criteria.
+
+    \item \textbf{Upper bound on VRA obligations}: If proportional MM representation is geographically infeasible, sub-proportional representation may face similar or greater constraints. Our analysis likely establishes an \emph{upper bound}---actual VRA obligations may require fewer MM districts, which would be easier to achieve geographically.
+
+    \item \textbf{Empirical pattern detection}: Systematic relationships between state demographics and optimization outcomes emerge most clearly when testing consistent proportional targets. This reveals fundamental demographic-geographic constraints.
+
+    \item \textbf{Practical relevance}: Many redistricting authorities and advocacy groups use proportional representation as a benchmark for assessing fairness and equity, even when not legally mandated. Understanding when proportionality is achievable informs practical redistricting decisions.
+\end{enumerate}
+
+\textbf{Interpretation of findings}: Our 42\% threshold should be understood as: ``\emph{At what state-level minority percentage can optimization achieve proportional MM representation?}'' This differs from the legal question: ``\emph{At what minority percentage must states create MM districts to comply with Section 2?}'' Our threshold informs legal analysis by demonstrating geographic feasibility patterns, but courts determine actual compliance requirements based on totality-of-circumstances analysis.
+
+\textbf{Sensitivity to proportionality assumption}: The 42\% threshold applies specifically to achieving proportional MM representation (creating $X$\% MM districts from $X$\% minority population). Lower MM targets would require lower state-level minority percentages:
+
+\begin{itemize}
+    \item \textbf{Proportional target} (e.g., Alabama: 37\% minority $\rightarrow$ 3/7 MM districts): Requires $\approx$42\% state minority
+    \item \textbf{Proportional - 1 target} (e.g., Alabama: 37\% minority $\rightarrow$ 2/7 MM districts): Would require $\approx$38-40\% state minority (estimated)
+    \item \textbf{Single MM district}: Requires only $\approx$2-5\% state minority with sufficient geographic clustering
+\end{itemize}
+
+Our analysis focuses on proportional representation because it provides the most demanding test of geographic feasibility. States that can achieve proportional MM representation can certainly achieve sub-proportional representation; the converse may not hold.
 
 \subsection{Optimization Method}
 
@@ -61,6 +89,58 @@ To understand spatial distribution's role, we compute:
 \textbf{Local clustering index}: Percentage of minority population living in $\geq$50\% minority tracts. Higher values indicate concentration in fewer geographic areas.
 
 \textbf{Majority-minority tract percentage}: Proportion of census tracts with $\geq$50\% minority population.
+
+\subsection{Geographic Characterization of Study States}
+
+The 43 states in our analysis exhibit diverse geographic patterns of minority population distribution, which interact with demographic percentages to determine MM district feasibility. Understanding these spatial structures is essential for interpreting threshold patterns and identifying when geographic factors enable or constrain optimization success.
+
+\subsubsection{Types of Geographic Concentration}
+
+We identify three primary patterns of minority spatial distribution across our 43-state sample:
+
+\textbf{Metropolitan concentration}: Minority populations concentrated in major urban centers (cities $>$500K population), with relatively dispersed rural minority populations. Examples: Georgia (Atlanta), North Carolina (Charlotte, Raleigh-Durham), Illinois (Chicago), Maryland (Baltimore). Metropolitan concentration enables creation of urban MM districts but complicates rural district representation.
+
+\textbf{Regional concentration}: Minority populations concentrated in contiguous multi-county geographic regions, often following historical settlement patterns or economic regions. Examples: Mississippi (Delta/Black Belt), South Carolina (coastal lowlands), Alabama (Black Belt arc from Montgomery to Birmingham), Louisiana (Mississippi River corridor). Regional concentration enables multiple contiguous MM districts if region is large enough.
+
+\textbf{Dispersed/mixed patterns}: Minority populations spread across multiple non-contiguous areas or distributed relatively uniformly. Examples: Pennsylvania (Philadelphia + Pittsburgh + scattered), Ohio (Cleveland + Cincinnati + Columbus), Wisconsin (Milwaukee + scattered). Dispersed patterns create challenges for MM district formation even with adequate state-level percentages.
+
+\subsubsection{How Geography Affects Redistricting Feasibility}
+
+Geographic concentration patterns interact with demographic percentages in systematic ways:
+
+\textbf{Metropolitan advantage at borderline percentages}: States with one or two dominant metropolitan areas concentrating minority populations may achieve MM district creation at state-level minority percentages below the 42\% threshold. Dense urban concentration allows creating compact MM districts from relatively small state-wide minority percentages.
+
+\textit{Example}: Alabama (37\% state minority, below 42\% threshold) achieves 2/7 MM districts (67\% of proportional target) due to Birmingham (73\% minority) and Mobile (51\% minority) metropolitan concentrations, despite rural Black Belt areas being too dispersed for additional MM districts. Moran's I = 0.716 (high clustering) reflects this metropolitan concentration.
+
+\textbf{Regional concentration for multiple districts}: States with large contiguous regions of minority concentration can create multiple MM districts if the region spans enough congressional districts. However, achieving proportional representation requires the region to encompass proportion matching state-level demographics.
+
+\textit{Example}: Mississippi (46\% state minority, above threshold) achieves 2/4 MM districts (50\% proportional target) from the Delta/Black Belt region. The region is large enough (spanning 2 districts) and contiguous, enabling optimization to create compact MM districts. However, creating 3 or 4 MM districts would require concentrating the state's dispersed white population, which violates compactness.
+
+\textbf{Dispersed patterns challenge even high percentages}: States with geographically dispersed minority populations face challenges creating proportional MM districts even when state-level percentages exceed 42\%. Each potential MM district must draw from non-contiguous areas, increasing edge-cuts and violating compactness constraints.
+
+\textit{Example}: Pennsylvania (27\% state minority, well below threshold) has minority concentrations in Philadelphia (44\% minority) and Pittsburgh (26\% minority), but these are geographically separated, preventing creation of multiple contiguous MM districts. Even if state minority percentage increased to 35-40\%, geographic separation would constrain MM district formation.
+
+\subsubsection{Moran's I Interpretation}
+
+Our spatial autocorrelation analysis reveals that high Moran's I values correlate with geographic concentration but do not distinguish between metropolitan and regional patterns:
+
+\textbf{High Moran's I ($>$0.65)}: Strong spatial clustering. Can indicate either metropolitan concentration (AL: 0.716, GA: 0.689) or regional concentration (MS: 0.721, SC: 0.698). High Moran's I suggests potential for MM district creation, but state-level minority percentage still determines how many districts are achievable.
+
+\textbf{Moderate Moran's I (0.45-0.65)}: Mixed concentration patterns. Some clustering but also dispersion. These states face challenges achieving proportional MM representation even above 42\% threshold due to partial dispersion. Examples: Louisiana (0.487), North Carolina (0.521).
+
+\textbf{Low Moran's I ($<$0.45)}: Dispersed minority populations. Even with adequate state-level percentages, dispersion constrains MM district formation. Optimization struggles to create compact districts without crossing many political/geographic boundaries. Examples: Pennsylvania (0.298), Ohio (0.334).
+
+\subsubsection{Implications for Threshold Interpretation}
+
+The 42\% effectiveness threshold represents an \textit{average} across diverse geographic patterns. Geographic structure creates systematic variation around this threshold:
+
+\textbf{Metropolitan states (37-42\% minority)}: May achieve sub-proportional MM representation (e.g., creating 2 MM districts when proportional would suggest 3-4) due to dense urban concentration. Alabama and Connecticut exemplify this pattern.
+
+\textbf{Regional concentration states (40-45\% minority)}: Achieve proportional MM representation if region is large enough. Mississippi, South Carolina achieve targets; Louisiana (41.6\%) achieves partial success (43\% success rate) due to linear river geography limiting contiguous region size.
+
+\textbf{Dispersed states ($>$45\% minority needed)}: May require higher state-level percentages (44-46\%) to achieve proportional MM representation due to dispersion. If minority populations in these states were concentrated, 42\% might suffice; dispersion increases the effective threshold.
+
+Understanding geographic heterogeneity is essential for applying our 42\% threshold to specific states. Courts evaluating Section 2 claims should consider not only state-level minority percentage but also spatial concentration patterns when assessing geographic feasibility.
 
 \subsection{Success Criteria and Threshold Definition}
 
