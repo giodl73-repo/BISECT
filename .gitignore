@@ -216,3 +216,7 @@ docs/_templates/
 !setup.py
 !pyproject.toml
 .git.old/
+
+# Process ID tracking files
+*.pid
+.redistricting_pid.txt
