@@ -1,0 +1,12 @@
+\section{Background}
+\label{sec:background}
+
+\textbf{Redistricting validation.} Algorithmic redistricting uses simulated annealing~\cite{altman1998}, integer programming~\cite{mehrotra1998}, graph partitioning~\cite{ricca2008}, and ensemble methods~\cite{duchin2018, gerrychain2018}. Existing validation approaches compare plans within a single census~\cite{deford2021, fifield2020}, but cannot assess cross-census consistency due to changing geographic units.
+
+\textbf{Temporal geographic analysis.} The Modifiable Areal Unit Problem (MAUP)~\cite{openshaw1984} complicates temporal comparisons when spatial units change. Prior approaches include areal interpolation~\cite{goodchild1980}, population-weighted centroids~\cite{cromley1996}, and spatial clustering~\cite{logan2014}. We synthesize these techniques: persistent centroids provide stable reference points, while spatial clustering creates validation slices.
+
+\textbf{Graph partitioning.} Redistricting formulates as graph partitioning~\cite{hess1965}: census tracts are nodes (weighted by population), adjacency defines edges (weighted by boundary length), and districts are partitions satisfying population balance, contiguity, and compactness (minimized edge-cut). METIS~\cite{karypis1998} uses multilevel recursive bisection with $O(n \log k)$ complexity.
+
+\textbf{Census tract changes.} The Census Bureau redefines tract boundaries decennially to maintain population stability~\cite{census2020tracts}. Approximately 18\% of tracts split or merge between censuses~\cite{schroeder2007}, preventing direct algorithmic comparison. Census relationship files~\cite{census2020relationships} document correspondences but don't enable performance evaluation across boundary changes.
+
+\textbf{Spatial autocorrelation.} Geographic proximity induces correlation (Tobler's First Law~\cite{tobler1970}), violating independence assumptions~\cite{legendre1993}. Moran's I~\cite{moran1950} quantifies autocorrelation. Roberts et al.~\cite{roberts2017} recommend spatial cross-validation for geographic algorithms. Our framework implements spatial validation via slice-based partitioning and MAUP sensitivity testing.
