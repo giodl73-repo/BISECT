@@ -1,0 +1,8 @@
+state,method,k,target_mm,state_minority_pct,weight_factor,minority_threshold,runtime,max_minority_pct,mm_count,success
+mississippi,edge_weighted_total_minority,4,2,0.4464969359523368,5,0.4,4.77143669128418,0.6007478688848393,1,False
+louisiana,edge_weighted_total_minority,6,2,0.44249946916509386,5,0.4,3.533376455307007,0.5879086927636629,1,False
+alabama,edge_weighted_total_minority,7,2,0.3687948061801504,5,0.4,4.89634895324707,0.5007808057693641,1,False
+south_carolina,edge_weighted_total_minority,7,3,0.37899803162105533,5,0.4,3.6684927940368652,0.4845952673880586,0,False
+georgia,edge_weighted_total_minority,14,5,0.49942101817902096,5,0.4,6.604837894439697,0.745716273583055,6,True
+california,edge_weighted_total_minority,52,33,0.653130920931879,5,0.4,6.674057960510254,0.9401721716896508,43,True
+texas,edge_weighted_total_minority,38,22,0.6025254323093733,5,0.4,5.906163930892944,0.9399028709550762,25,True

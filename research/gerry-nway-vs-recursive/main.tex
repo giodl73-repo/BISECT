@@ -3,14 +3,16 @@
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{hyperref}
 \usepackage{natbib}
 \usepackage{algorithm}
 \usepackage{algorithmic}
 
-\title{N-Way vs Recursive Bisection for Graph Partitioning: \\
-A Systematic Comparison for Redistricting Applications}
-\author{Anonymous}
+\title{N-way vs Recursive Bisection for VRA-Compliant Redistricting:\\
+A Comprehensive 50-State Comparison}
+\author{Giovanni Della-Libera\\
+University of California, Davis}
 \date{\today}
 
 \begin{document}
@@ -18,11 +20,13 @@ A Systematic Comparison for Redistricting Applications}
 \maketitle
 
 \begin{abstract}
-Graph partitioning algorithms must choose between recursive bisection (hierarchical binary splits) and n-way partitioning (direct k-way split). While both approaches minimize edge cuts subject to balance constraints, their performance differs in practice. We systematically compare these methods for congressional redistricting across five states, measuring minority concentration, compactness, and computational cost.
+Graph partitioning algorithms offer two fundamental approaches to congressional redistricting: n-way partitioning (direct division into $k$ districts) and recursive bisection (hierarchical binary splitting). This paper presents the first comprehensive empirical comparison of these methods for Voting Rights Act (VRA) compliance using edge-weighted graph partitioning across all 50 states.
 
-Key findings: (1) N-way partitioning achieves 3-7 percentage point higher minority concentration than recursive bisection, representing the difference between VRA compliance and failure in borderline cases (Alabama: 47.3\% n-way vs 43.0\% recursive). (2) N-way's advantage stems from global optimization—considering all k districts simultaneously rather than making greedy intermediate decisions. (3) Computational cost scales similarly (both $O(|E| \log k)$), making n-way preferable when final district demographics matter. (4) Recursive bisection remains competitive when tree structure can be carefully designed to match target distribution.
+We conduct ablation studies testing five weight factors (1$\times$--100$\times$) and four minority thresholds (40\%--55\%) for both methods, totaling 1,760 redistricting runs across 44 multi-district states. Our key finding challenges conventional assumptions: \textbf{both methods achieve statistically equivalent success rates} (n-way: 47.5\%, recursive: 48.3\%, $p=0.634$), with negligible effect size (Cohen's $d=-0.018$).
 
-We provide theoretical analysis of when each approach excels, empirical validation across multiple objective functions (population balance, compactness, demographic concentration), and practical guidance for practitioners. Results demonstrate n-way partitioning should be the default choice for redistricting applications where demographic targets exist, with recursive bisection reserved for simpler balance-only objectives.
+However, methods exhibit distinct characteristics. N-way partitioning offers \textbf{67.5\% faster runtime} (3.68s vs 11.33s average), making it preferable for rapid prototyping and large-scale analysis. Recursive bisection achieves a \textbf{higher performance ceiling} with optimal parameters (56.8\% vs 52.3\% best configuration), benefiting careful parameter tuning. Methods show different parameter sensitivities—n-way prefers lower thresholds (40\%), recursive prefers higher thresholds (50\%)—and state-specific advantages, with n-way winning in Virginia (+35\%) and recursive in Connecticut (+45\%).
+
+This equivalence finding has important implications for redistricting reform: practitioners can confidently choose either method based on computational constraints (speed vs optimization) rather than effectiveness concerns. Both approaches produce comparable VRA compliance when properly configured with edge-weighting and total minority coalitions.
 \end{abstract}
 
 \section{Introduction}

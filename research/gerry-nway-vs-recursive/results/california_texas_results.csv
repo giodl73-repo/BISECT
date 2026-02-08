@@ -1,0 +1,3 @@
+state,method,k,target_mm,state_minority_pct,weight_factor,minority_threshold,runtime,max_minority_pct,mm_count,success
+california,edge_weighted,52,33,0.653130920931879,5,0.4,7.155886173248291,0.9401721716896508,43,True
+texas,edge_weighted,38,22,0.6025254323093733,5,0.4,5.82588529586792,0.9399028709550762,25,True

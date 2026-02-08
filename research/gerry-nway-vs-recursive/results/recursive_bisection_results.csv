@@ -1,0 +1,6 @@
+state,method,tree_structure,k,target_mm,state_minority_pct,runtime,max_minority_pct,mm_count
+mississippi,recursive_predetermined,"[3,4]",4,2,0.461,11.385112047195435,0.5283662390013437,2
+louisiana,recursive_predetermined,"[3,4]",6,2,0.416,10.004718542098999,0.4506209760306346,0
+alabama,recursive_predetermined,"[3,4]",7,2,0.369,13.782792568206787,0.4317457110203257,0
+south_carolina,recursive_predetermined,"[3,4]",7,3,0.351,11.235976696014404,0.3615587588183249,0
+georgia,recursive_predetermined,"[3,4]",14,5,0.424,17.57927632331848,0.5187241728853836,1

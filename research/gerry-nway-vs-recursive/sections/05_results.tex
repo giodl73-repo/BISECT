@@ -1,161 +1,273 @@
-\subsection{Primary Finding: N-Way Consistently Outperforms}
+\subsection{Overall Performance Comparison}
 
-Table \ref{tab:main_results} shows maximum minority concentration achieved by each method across all five states.
+Table~\ref{tab:overall_comparison} presents aggregate results across all 50 states for both methods.
 
 \begin{table}[h]
 \centering
 \begin{tabular}{lcccc}
 \toprule
-& \multicolumn{2}{c}{\textbf{Recursive Bisection}} & & \\
-\cmidrule(lr){2-3}
-\textbf{State} & Predetermined & Adaptive & \textbf{N-Way} & \textbf{Gap} \\
+\textbf{Method} & \textbf{Configs} & \textbf{Success Rate} & \textbf{Avg Runtime} & \textbf{Total Time} \\
 \midrule
-Alabama & 43.0\% & 46.1\% & \textbf{47.3\%} & +4.3 pts \\
-Georgia & -- & -- & -- & -- \\
-Louisiana & -- & -- & -- & -- \\
-Mississippi & -- & -- & -- & -- \\
-South Carolina & -- & -- & -- & -- \\
+N-way          & 880 & 47.5\% (418/880) & 3.68s & 0.90h \\
+Recursive      & 880 & \textbf{48.3\%} (425/880) & 11.33s & 2.77h \\
 \midrule
-\textbf{Average Gap} & & & & \textbf{+5.2 pts} \\
+Difference     & --  & +0.8 pts & +7.65s (+208\%) & +1.87h \\
 \bottomrule
 \end{tabular}
-\caption{Maximum minority concentration by method. N-way consistently outperforms recursive bisection. Gap = N-Way minus best recursive approach.}
-\label{tab:main_results}
+\caption{Overall performance comparison across 44 multi-district states, 20 configurations per method per state (5 weight factors $\times$ 4 thresholds). Success rate = fraction achieving proportional MM district target. Single-district states (Alaska, Delaware, Montana, North Dakota, South Dakota, Vermont, Wyoming) excluded from analysis.}
+\label{tab:overall_comparison}
 \end{table}
 
-\textbf{Key Finding 1}: N-way partitioning achieves 3-7 percentage points higher minority concentration than recursive bisection across all five states (average +5.2 points).
+\textbf{Finding 1: Nearly Identical Success Rates} — Recursive bisection achieves 48.3\% success rate vs n-way's 47.5\%, a difference of only 0.8 percentage points. This small difference contradicts expectations that architectural choices substantially impact VRA performance.
 
-\subsection{Alabama: Detailed Analysis}
+\textbf{Finding 2: Dramatic Speed Difference} — N-way executes in 3.68s average vs recursive's 11.33s, making n-way \textbf{67.5\% faster} (208\% slower for recursive). Total runtime for complete ablation: 0.90 hours (n-way) vs 2.77 hours (recursive). Speed advantage scales linearly with number of redistricting runs.
 
-Alabama ($k=7$, 36.9\% minority, target 2 MM districts) provides detailed view of method differences.
+\subsection{Statistical Significance Testing}
 
-\subsubsection{Tree Structure Matters for Recursive Bisection}
+To rigorously assess whether the 0.8 percentage point difference represents meaningful performance gap or sampling noise, we conduct paired statistical tests on state-level success rates.
+
+\textbf{Paired t-test}: For each of 44 states, we compute average success rate across 20 configurations for each method, yielding paired samples. Test statistic: $t = -0.480$, $p = 0.634$. At conventional $\alpha = 0.05$ significance level, we \textbf{fail to reject the null hypothesis of equal means}. The observed difference is not statistically significant.
+
+\textbf{Effect size (Cohen's d)}: We compute Cohen's d = -0.018, indicating \textbf{negligible effect size} by conventional standards (small: 0.2, medium: 0.5, large: 0.8). The negative sign indicates recursive's slight advantage, but magnitude is trivial.
+
+\textbf{Interpretation}: The 0.8 percentage point difference (425 vs 418 successes out of 880 trials) likely reflects random variation rather than systematic performance gap. With negligible effect size and non-significant p-value, we conclude \textbf{methods perform equivalently for VRA compliance}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fig1_overall_success_rates.png}
+\caption{Overall VRA compliance success rates for n-way and recursive bisection methods across 44 multi-district states with 20 parameter configurations each (880 runs per method). The difference of 0.8 percentage points is not statistically significant (paired t-test, $p=0.634$, Cohen's $d=-0.018$).}
+\label{fig:overall_success}
+\end{figure}
+
+\subsection{Parameter Sensitivity Analysis}
+
+While overall performance is equivalent, methods may respond differently to edge-weighting parameters.
+
+\subsubsection{Weight Factor Sensitivity}
+
+Table~\ref{tab:weight_sensitivity} shows success rates by weight factor for both methods.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Weight ($\alpha$)} & \textbf{N-way} & \textbf{Recursive} & \textbf{Difference} & \textbf{Winner} \\
+\midrule
+1$\times$  (baseline) & 43.2\% (76/176) & 43.2\% (76/176) & 0.0 pts & Tie \\
+5$\times$            & 46.6\% (82/176) & 48.3\% (85/176) & +1.7 pts & Recursive \\
+10$\times$           & 48.3\% (85/176) & 47.7\% (84/176) & -0.6 pts & N-way \\
+50$\times$           & 50.0\% (88/176) & 50.6\% (89/176) & +0.6 pts & Recursive \\
+100$\times$          & 49.4\% (87/176) & \textbf{51.7\%} (91/176) & +2.3 pts & Recursive \\
+\bottomrule
+\end{tabular}
+\caption{Success rate by weight factor (collapsed across all thresholds). Each weight factor tested on 44 states $\times$ 4 thresholds = 176 configurations. Winner indicates which method achieves higher success rate for that weight factor.}
+\label{tab:weight_sensitivity}
+\end{table}
+
+\textbf{Baseline equivalence}: At $\alpha=1$ (no edge-weighting), methods achieve identical 43.2\% success, confirming that performance differences emerge from edge-weight interaction, not base algorithm.
+
+\textbf{Divergence at high weights}: Gap widens at extreme weights. At $\alpha=100$, recursive leads by 2.3 points (51.7\% vs 49.4\%). This suggests recursive's hierarchical structure better leverages strong edge weights—each binary split fully respects edge weights, while n-way's simultaneous $k$-way optimization may dilute edge weight influence.
+
+\textbf{Monotonic improvement}: Both methods show generally increasing success rates from $\alpha=1$ to $\alpha=100$ (with minor non-monotonicity). This confirms edge-weighting improves VRA compliance for both architectures.
+
+\subsubsection{Minority Threshold Sensitivity}
+
+Table~\ref{tab:threshold_sensitivity} shows success rates by minority threshold.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ccccc}
+\toprule
+\textbf{Threshold ($\tau$)} & \textbf{N-way} & \textbf{Recursive} & \textbf{Difference} & \textbf{Winner} \\
+\midrule
+0.40 & \textbf{49.1\%} (108/220) & 47.3\% (104/220) & -1.8 pts & N-way \\
+0.45 & 48.6\% (107/220) & 48.6\% (107/220) & 0.0 pts & Tie \\
+0.50 & 46.4\% (102/220) & \textbf{50.9\%} (112/220) & +4.5 pts & Recursive \\
+0.55 & 45.9\% (101/220) & 46.4\% (102/220) & +0.5 pts & Recursive \\
+\bottomrule
+\end{tabular}
+\caption{Success rate by minority threshold (collapsed across all weight factors). Each threshold tested on 44 states $\times$ 5 weights = 220 configurations.}
+\label{tab:threshold_sensitivity}
+\end{table}
+
+\textbf{Opposite threshold preferences}: N-way optimizes at low threshold ($\tau=0.40$, 49.1\%), recursive at mid-high threshold ($\tau=0.50$, 50.9\%). This reveals fundamental difference in optimization dynamics.
+
+\textbf{Threshold crossover}: At $\tau=0.40$, n-way leads (+1.8 pts). At $\tau=0.50$, recursive leads (+4.5 pts). Methods exhibit different parameter landscapes requiring independent tuning.
+
+\textbf{Mechanistic interpretation}: N-way benefits from broad minority definition ($\tau=0.40$) because simultaneous $k$-way optimization can selectively concentrate high-minority tracts while ignoring moderate-minority tracts. Recursive benefits from sharp minority definition ($\tau=0.50$) because hierarchical splits need clear boundaries—ambiguous tracts at $\tau=0.40$ create suboptimal early splits that cascade through tree.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig2_parameter_sensitivity.png}
+\caption{Parameter sensitivity analysis showing success rates across weight factors ($\alpha$) and minority thresholds ($\tau$) for both methods. N-way (left) achieves optimal performance at $\alpha=50, \tau=0.40$ (52.3\%), while recursive (right) peaks at $\alpha=100, \tau=0.50$ (56.8\%). Blue boxes indicate best configurations. Color scale: green (higher success) to red (lower success).}
+\label{fig:parameter_sensitivity}
+\end{figure*}
+
+\subsubsection{Best Parameter Configurations}
+
+Table~\ref{tab:best_configs} presents top-performing configurations for each method.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{clcc}
+\toprule
+\textbf{Method} & \textbf{Configuration} & \textbf{States} & \textbf{Success Rate} \\
+\midrule
+\multirow{3}{*}{N-way}
+& $\alpha=50$, $\tau=0.40$ & 23/44 & 52.3\% \\
+& $\alpha=100$, $\tau=0.45$ & 23/44 & 52.3\% \\
+& $\alpha=5$, $\tau=0.40$ & 23/44 & 52.3\% \\
+\midrule
+\multirow{3}{*}{Recursive}
+& \textbf{$\alpha=100$, $\tau=0.50$} & \textbf{25/44} & \textbf{56.8\%} \\
+& $\alpha=50$, $\tau=0.50$ & 24/44 & 54.5\% \\
+& $\alpha=10$, $\tau=0.50$ & 23/44 & 52.3\% \\
+\bottomrule
+\end{tabular}
+\caption{Top three parameter configurations by success rate for each method. Recursive's best configuration achieves 56.8\% success rate, exceeding n-way's best (52.3\%) by 4.5 percentage points.}
+\label{tab:best_configs}
+\end{table}
+
+\textbf{Performance ceiling difference}: Recursive's best configuration (56.8\%) exceeds n-way's best (52.3\%) by 4.5 points, demonstrating \textbf{higher optimization ceiling} with careful parameter tuning. This trades off against n-way's speed advantage.
+
+\textbf{Plateau effect in n-way}: Three distinct n-way configurations tie at 52.3\%, suggesting performance plateau—further parameter exploration unlikely to improve beyond this ceiling.
+
+\textbf{Configuration consensus}: Recursive's top three configurations all use $\tau=0.50$, confirming threshold preference identified in Table~\ref{tab:threshold_sensitivity}. N-way's top configurations cluster around $\tau=0.40$ and $\tau=0.45$.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig5_best_configs.png}
+\caption{Top 5 parameter configurations ranked by success rate for each method. N-way (left) achieves 52.3\% peak with $\alpha=50, \tau=0.40$ (gold border). Recursive (right) reaches 56.8\% with $\alpha=100, \tau=0.50$ (gold border). The 4.5 percentage point gap represents recursive's higher optimization ceiling, though requiring more careful parameter tuning.}
+\label{fig:best_configs}
+\end{figure*}
+
+\subsection{State-by-State Comparison}
+
+\subsubsection{Overall State-Level Performance}
+
+Across 44 multi-district states:
+\begin{itemize}
+\item \textbf{N-way wins}: 5 states (11.4\%)
+\item \textbf{Recursive wins}: 8 states (18.2\%)
+\item \textbf{Ties}: 31 states (70.4\%)
+\end{itemize}
+
+The high tie rate (70.4\%) supports overall equivalence finding—most states show no method preference.
+
+\subsubsection{Largest Method Advantages}
+
+Table~\ref{tab:state_advantages} shows states with largest performance differences.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\multicolumn{4}{c}{\textbf{States Where N-way Excels}} \\
+\textbf{State} & \textbf{N-way} & \textbf{Recursive} & \textbf{Margin} \\
+\midrule
+Virginia       & 70.0\% & 35.0\% & +35.0 pts \\
+Missouri       & 100.0\% & 80.0\% & +20.0 pts \\
+Wisconsin      & 65.0\% & 45.0\% & +20.0 pts \\
+Maryland       & 100.0\% & 95.0\% & +5.0 pts \\
+\midrule
+\multicolumn{4}{c}{\textbf{States Where Recursive Excels}} \\
+\textbf{State} & \textbf{N-way} & \textbf{Recursive} & \textbf{Margin} \\
+\midrule
+Connecticut    & 0.0\% & 45.0\% & +45.0 pts \\
+Louisiana      & 30.0\% & 55.0\% & +25.0 pts \\
+Georgia        & 65.0\% & 80.0\% & +15.0 pts \\
+Florida        & 5.0\% & 15.0\% & +10.0 pts \\
+Arizona        & 30.0\% & 40.0\% & +10.0 pts \\
+\bottomrule
+\end{tabular}
+\caption{States with largest performance differences between methods. Success rate = average across 20 configurations per method. Shows method-specific advantages exist but concentrate in minority of states.}
+\label{tab:state_advantages}
+\end{table}
+
+\textbf{Virginia: N-way's strongest advantage} (+35 points) — Virginia has 11 districts, 41.4\% minority, moderately clustered (Washington DC suburbs, Hampton Roads, Richmond). N-way's global $k$-way optimization effectively balances minority concentration across 11 districts. Recursive's early binary splits fragment minorities between northern and southern regions.
+
+\textbf{Connecticut: Recursive's strongest advantage} (+45 points) — Connecticut has 5 districts, 36.8\% minority, dispersed across small cities (Hartford, New Haven, Bridgeport, Stamford). Recursive's hierarchical splits isolate city clusters. N-way's simultaneous 5-way partition struggles to concentrate dispersed minorities without violating compactness.
+
+\textbf{Pattern hypothesis}: N-way excels in moderate-district-count states (8-12 districts) with concentrated minorities. Recursive excels in low-district-count states (4-7 districts) with dispersed minorities. Testing this hypothesis requires additional analysis beyond this paper's scope.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig3_state_comparison.png}
+\caption{State-specific method advantages showing top 10 states favoring each method. Positive values indicate n-way advantage (blue); negative values indicate recursive advantage (orange). Most states (31/44) show ties within $\pm$5 percentage points. Notable patterns: n-way excels in states with 8-12 districts and concentrated urban minorities, while recursive performs better in states with 4-7 districts and dispersed minorities.}
+\label{fig:state_comparison}
+\end{figure*}
+
+\subsubsection{Success Tier Distribution}
+
+Table~\ref{tab:success_tiers} categorizes states by success rate tier for each method.
 
 \begin{table}[h]
 \centering
 \begin{tabular}{lcc}
 \toprule
-Tree Structure & Max Minority \% & Gap from N-Way \\
+\textbf{Success Tier} & \textbf{N-way} & \textbf{Recursive} \\
 \midrule
-[6,1] & 43.0\% & -4.3 pts \\
-[5,2] & 43.0\% & -4.3 pts \\
-[4,3] & 43.0\% & -4.3 pts \\
-[3,4] & 43.0\% & -4.3 pts \\
-[2,5] & 43.0\% & -4.3 pts \\
-[1,6] & 43.0\% & -4.3 pts \\
-\midrule
-Adaptive & 46.1\% & -1.2 pts \\
-\midrule
-N-Way & \textbf{47.3\%} & -- \\
+100\% (always achieves target) & 17 states & 15 states \\
+50-99\% (usually achieves target) & 4 states & 5 states \\
+1-49\% (rarely achieves target) & 7 states & 9 states \\
+0\% (never achieves target) & 16 states & 15 states \\
 \bottomrule
 \end{tabular}
-\caption{Alabama results by tree structure. All predetermined trees achieve identical results, suggesting geography dominates tree choice. Adaptive improves but remains inferior to n-way.}
-\label{tab:alabama_trees}
+\caption{State distribution by success rate tier (average across 20 configurations). Tier counts similar between methods, confirming overall equivalence.}
+\label{tab:success_tiers}
 \end{table}
 
-\textbf{Surprising finding}: All 6 predetermined tree structures produce identical results (43.0\%). This suggests Alabama's geography constrains recursive bisection regardless of tree choice—no tree structure can overcome greedy decision-making.
+\textbf{Bimodal distribution}: Both methods show pronounced bimodality—states either succeed consistently (100\%) or fail consistently (0\%), with few intermediate cases. This indicates VRA compliance depends primarily on state characteristics (minority percentage, geographic clustering, district count) rather than method choice or parameter tuning.
 
-\textbf{Adaptive helps but isn't sufficient}: Adaptive tree selection improves to 46.1\% (+3.1 points over predetermined), but still falls 1.2 points short of n-way (47.3\%).
+\textbf{Tier stability}: Tier distributions nearly identical between methods (±2 states per tier), confirming statistical equivalence. Methods rarely shift states across success tiers.
 
-\subsubsection{Performance Components}
+\subsection{Runtime Analysis}
 
-Decomposing minority concentration by district:
+\subsubsection{Runtime Distribution}
 
 \begin{table}[h]
 \centering
-\small
-\begin{tabular}{lccc}
+\begin{tabular}{lccccc}
 \toprule
-& Recursive [3,4] & Adaptive & N-Way \\
+\textbf{Method} & \textbf{Mean} & \textbf{Median} & \textbf{Std Dev} & \textbf{Min} & \textbf{Max} \\
 \midrule
-District 1 (highest minority) & 43.0\% & 46.1\% & 47.3\% \\
-District 2 (2nd highest) & 40.2\% & 43.8\% & 45.1\% \\
-District 3 & 38.5\% & 38.9\% & 39.2\% \\
-Districts 4-7 (remaining) & 32-35\% & 31-34\% & 30-35\% \\
+N-way     & 3.68s & 3.48s & 2.05s & 0.38s & 10.28s \\
+Recursive & 11.33s & 10.20s & 7.54s & 0.38s & 39.10s \\
+\midrule
+Speedup   & 3.08$\times$ & 2.93$\times$ & -- & 1.0$\times$ & 3.80$\times$ \\
 \bottomrule
 \end{tabular}
-\caption{Alabama district-level minority percentages. N-way achieves higher concentration in top districts without sacrificing balance in others.}
-\label{tab:alabama_districts}
+\caption{Runtime statistics across 880 configurations per method. Speedup = recursive runtime / n-way runtime. N-way consistently faster across all percentiles.}
+\label{tab:runtime_distribution}
 \end{table}
 
-N-way's advantage is concentrated in top 2 districts (potential MM districts). This aligns with theory: n-way better concentrates minority populations where needed.
+\textbf{Consistent speed advantage}: N-way faster at every percentile (minimum, median, mean, maximum). Speedup ranges from 1.0$\times$ (small states, both fast) to 3.80$\times$ (large states like California, Texas).
 
-\subsection{Compactness (Edge Cut) Comparison}
+\textbf{Variance difference}: Recursive shows higher runtime variance (std dev 7.54s vs 2.05s), indicating less predictable performance. Large states with complex geometries show extreme slowdown under recursive (39.10s maximum).
 
-\begin{table}[h]
+\textbf{Scaling behavior}: Runtime scales with state complexity (district count, tract count, geographic irregularity). N-way's single $k$-way optimization scales polynomially. Recursive's $\log_2(k)$ split depth partially offsets this, but each split operates on full remaining graph, leading to worse constant factors.
+
+\begin{figure*}[t]
 \centering
-\begin{tabular}{lccc}
-\toprule
-\textbf{State} & Recursive & N-Way & Difference \\
-\midrule
-Alabama & 278 & 281 & +1.1\% \\
--- & -- & -- & -- \\
-\midrule
-\textbf{Average} & & & \textbf{+2.3\%} \\
-\bottomrule
-\end{tabular}
-\caption{Edge cut comparison. N-way increases edge cuts slightly (+2.3\% average) to achieve better minority concentration.}
-\label{tab:edge_cuts}
-\end{table}
+\includegraphics[width=\textwidth]{figures/fig4_runtime_comparison.png}
+\caption{Runtime distribution comparison. Left: box plots showing median, quartiles, and outliers. N-way (blue) has tighter distribution and lower median (3.68s) compared to recursive (orange, 11.33s). Right: histograms showing frequency distributions. N-way exhibits 67.5\% speed advantage, crucial for ensemble generation and interactive applications.}
+\label{fig:runtime_distribution}
+\end{figure*}
 
-\textbf{Key Finding 2}: N-way achieves better demographics at minimal compactness cost (average +2.3\% edge cut). This tradeoff is favorable when demographic targets exist.
+\subsubsection{Runtime vs Success Rate Trade-off}
 
-\subsection{Runtime Comparison}
+\textbf{Efficiency analysis}: To gain 0.8 percentage points (5 additional state successes out of 880 trials), recursive requires 208\% more computation time. Cost per marginal success: 1.53s. For ensemble generation (10,000 maps), this translates to 15,300s (4.25 hours) additional computation for ~8 additional state successes.
 
-\begin{table}[h]
-\centering
-\begin{tabular}{lcccc}
-\toprule
-\textbf{State} & $k$ & Recursive & N-Way & Ratio \\
-\midrule
-Mississippi & 4 & 2.1s & 2.3s & 1.10$\times$ \\
-Alabama & 7 & 3.4s & 3.8s & 1.12$\times$ \\
-Georgia & 14 & 8.2s & 9.6s & 1.17$\times$ \\
-\bottomrule
-\end{tabular}
-\caption{Runtime comparison (averaged over 5 runs). N-way is 10-17\% slower, but absolute difference is negligible (<2 seconds).}
-\label{tab:runtime}
-\end{table}
+\textbf{Practical implication}: For applications prioritizing speed (ensemble generation, rapid prototyping, real-time optimization), n-way dominates. For applications prioritizing maximum success rate (single carefully-tuned plan, official redistricting), recursive's 0.8 point advantage may justify runtime cost—but only if parameter tuning can reliably access the 56.8\% ceiling.
 
-\textbf{Key Finding 3}: Computational cost difference is negligible in practice. Both methods complete in seconds, making runtime non-factor for redistricting applications.
+\subsection{Summary of Key Results}
 
-\subsection{Statistical Significance}
+\textbf{Result 1: Statistical Equivalence} — Both methods achieve ~48\% success rate with negligible difference (0.8 points, $p=0.634$, $d=-0.018$). Architectural choice does not substantially affect VRA compliance.
 
-Paired t-test comparing n-way vs best recursive approach across 5 states:
-\begin{itemize}
-\item Mean difference: +5.2 percentage points
-\item 95\% CI: [+3.8, +6.6] points
-\item $t = 8.31$, $p < 0.001$
-\end{itemize}
+\textbf{Result 2: Speed-Quality Trade-off} — N-way is 67.5\% faster (3.68s vs 11.33s). Recursive achieves slightly higher average (48.3\% vs 47.5\%) and substantially higher ceiling (56.8\% vs 52.3\% best config). Trade-off depends on application requirements.
 
-N-way's advantage is statistically significant and practically meaningful (sufficient to determine VRA compliance in borderline cases).
+\textbf{Result 3: Different Parameter Landscapes} — N-way optimizes at $\tau=0.40$, recursive at $\tau=0.50$. Weight preferences also differ, requiring independent parameter tuning per method.
 
-\subsection{Correlation with Theoretical Predictions}
+\textbf{Result 4: State-Specific Advantages} — Methods tie in 70.4\% of states. N-way excels in Virginia-type states (moderate districts, concentrated minorities). Recursive excels in Connecticut-type states (few districts, dispersed minorities).
 
-\subsubsection{Asymmetric Targets}
-
-States with more asymmetric targets (larger gap between MM and non-MM district targets) show larger performance gaps:
-
-\begin{itemize}
-\item Alabama (2 MM @ 60\%, 5 non-MM @ 30\%): +4.3 points gap
-\item Georgia (5 MM @ 60\%, 9 non-MM @ 35\%): +X points gap
-\end{itemize}
-
-Correlation: $r = 0.82$, $p = 0.09$ (marginally significant with $n=5$).
-
-\subsubsection{Number of Partitions}
-
-Larger $k$ shows larger absolute gaps but similar percentage improvements:
-
-\begin{itemize}
-\item Mississippi ($k=4$): +X\% improvement
-\item Georgia ($k=14$): +X\% improvement
-\end{itemize}
-
-Theory prediction confirmed: Gap increases with $k$, though effect is modest in tested range ($k=4$-$14$).
-
-\subsubsection{Geographic Clustering}
-
-[Analysis of minority clustering metrics and correlation with performance gap]
-
-Theory prediction: Partially confirmed. Clustering amplifies differences, but even dispersed minorities show n-way advantage.
+\textbf{Result 5: Bimodal Success Distribution} — Both methods show strong bimodality (100\% or 0\% success). State characteristics (demographics, geography) dominate over method choice, explaining overall equivalence despite architectural differences.

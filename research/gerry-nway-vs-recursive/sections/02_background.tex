@@ -1,108 +1,126 @@
-\subsection{Graph Partitioning Problem}
+\subsection{Voting Rights Act and Redistricting}
 
-Given an undirected graph $G = (V, E)$ with vertex weights $w: V \to \mathbb{R}^+$, partition vertices into $k$ disjoint sets $\{P_1, P_2, \ldots, P_k\}$ that:
+The Voting Rights Act of 1965 prohibits jurisdictions from drawing electoral boundaries that dilute minority voting strength. Section 2, as amended in 1982, creates an obligation to avoid vote dilution through gerrymandering when three conditions are met (\textit{Thornburg v. Gingles}, 1986) \citep{thornburg1986}:
+
+\begin{enumerate}
+\item The minority group is sufficiently large and geographically compact to constitute a majority in a district
+\item The minority group is politically cohesive
+\item The white majority votes sufficiently as a bloc to usually defeat minority-preferred candidates
+\end{enumerate}
+
+When these ``Gingles preconditions'' are satisfied, jurisdictions must create majority-minority (MM) districts where minority voters comprise $\geq 50\%$ of the voting-age population. Failure to do so constitutes unlawful vote dilution under Section 2.
+
+\subsection{Traditional Approaches to VRA Compliance}
+
+Redistricting mapmakers typically achieve VRA compliance through explicit racial gerrymandering: intentionally packing minority voters into supermajority districts (65-75\% minority) to guarantee electoral victories \citep{grofman1992}. This ``packing strategy'' reflects three assumptions:
+
+\textbf{(1) Single-group analysis}: Focus on largest minority group (e.g., ``Black-majority'' districts in Alabama, ``Hispanic-majority'' districts in California). Ignore potential coalitions across racial/ethnic lines.
+
+\textbf{(2) Supermajorities required}: Target 65-75\% minority to account for lower turnout, age demographics (children), and racially polarized voting. Supreme Court has recognized 65\% as typical threshold for effective minority representation \citep{johnson2001}.
+
+\textbf{(3) Intentional consideration of race}: Mapmakers explicitly use racial data to draw boundaries, justified as necessary for VRA compliance despite tension with Equal Protection principles \citep{shaw1993}.
+
+Critics argue this approach itself constitutes racial gerrymandering violating \textit{Shaw v. Reno} (1993) \citep{shaw1993}. Proponents counter that VRA compliance requires race-conscious mapmaking \citep{pildes1997}. This tension between VRA mandates and Equal Protection constraints remains unresolved.
+
+\subsection{Coalition Districts: Legal Foundation}
+
+\textit{Bartlett v. Strickland} (2009) \citep{bartlett2009} addresses when coalition districts—where multiple minority groups together form a majority—can satisfy Section 2. The Court ruled:
+
+\textbf{Holding}: Section 2 does not require creation of coalition districts where no single minority group exceeds 50\% (``minority-majority'' districts are required; ``crossover'' districts where minorities form plurality are not).
+
+\textbf{Recognition of coalitions}: However, when total minority population (all groups combined) exceeds 50\%, districts may be created under Section 2 if minorities demonstrate political cohesion as a coalition.
+
+This ruling legitimizes algorithmic approaches that naturally create coalition districts through geographic optimization rather than single-group targeting.
+
+\subsection{Total Minority vs Single-Group Analysis}
+
+Traditional VRA analysis focuses on single racial groups:
+\begin{itemize}
+\item Alabama: 25.6\% Black, 5.3\% Hispanic, 1.5\% Asian → focus on ``Black-majority'' districts
+\item California: 39.4\% Hispanic, 5.4\% Black, 15.5\% Asian → focus on ``Hispanic-majority'' districts
+\end{itemize}
+
+This approach fails in diverse states where no single group reaches critical mass. Computing \textbf{total minority} (all non-White combined) reveals greater potential:
+\begin{itemize}
+\item Alabama: 36.9\% total minority (25.6\% + 5.3\% + 1.5\% + others)
+\item California: 65.3\% total minority (39.4\% + 5.4\% + 15.5\% + others)
+\end{itemize}
+
+Total minority calculation:
+\begin{equation}
+\text{minority}_i = \text{total\_pop}_i - \text{white\_non\_hispanic}_i
+\end{equation}
+
+This encompasses Black, Hispanic/Latino, Asian, Native American, Pacific Islander, and multiracial populations. The key question is whether these diverse groups demonstrate political cohesion—the second \textit{Gingles} precondition.
+
+\subsection{Algorithmic Redistricting Approaches}
+
+Recent work applies graph partitioning algorithms to redistricting \citep{duchin2018,fifield2020}. These methods offer structural immunity to partisan manipulation by operating without access to partisan data. However, VRA compliance remains challenging.
+
+\textbf{Compactness-only algorithms}: Pure geographic optimization (minimizing perimeter-to-area ratios, edge cuts) tends to fragment minority communities across districts. If minorities are geographically dispersed, compactness pulls against concentration.
+
+\textbf{Multi-constraint optimization}: Simultaneously balancing population and minority population as dual constraints. METIS supports multi-constraint partitioning with target weight distributions (tpwgts) \citep{karypis1999}. However, tight population balance (0.5\% tolerance) dominates loose minority balance (50\% tolerance), preventing effective minority concentration.
+
+\textbf{Ensemble methods}: Generate thousands of redistricting plans via Markov Chain Monte Carlo (MCMC), then select plans meeting VRA criteria \citep{duchin2018}. Computationally intensive (hours per state) and faces same concentration challenges.
+
+\subsection{Edge-Weighted Graph Partitioning}
+
+This paper introduces edge-weighting as an alternative approach. Rather than treating minority concentration as a constraint (multi-constraint optimization) or post-processing filter (ensemble methods), we encode VRA objectives directly in the optimization function.
+
+Given a planar graph $G = (V, E)$ representing census geography, assign weights to edges:
+\begin{equation}
+w_{ij} = \begin{cases}
+\alpha & \text{if } m_i \geq \tau \text{ and } m_j \geq \tau \\
+1 & \text{otherwise}
+\end{cases}
+\end{equation}
+where $m_i$ is minority percentage of vertex $i$, $\alpha > 1$ is weight factor, and $\tau$ is minority threshold.
+
+METIS partitioning minimizes total weighted edge cut:
+\begin{equation}
+\text{minimize} \quad \sum_{(i,j) \in E_{\text{cut}}} w_{ij}
+\end{equation}
+
+Edges connecting two minority-dense vertices receive weight $\alpha$, making them ``expensive'' to cut. The algorithm implicitly concentrates minority populations by avoiding cuts through minority communities.
+
+\textbf{Why this works}: Single-constraint optimization (population only) with edge weights sidesteps constraint conflict. Population balance is the sole hard constraint (0.5\% tolerance). Minority concentration emerges from minimizing weighted edge cuts, not from balancing minority population targets.
+
+\subsection{Graph Partitioning Fundamentals}
+
+The graph partitioning problem: Given undirected graph $G = (V, E)$ with vertex weights $w: V \to \mathbb{R}^+$, partition vertices into $k$ disjoint sets $\{P_1, P_2, \ldots, P_k\}$ that:
 
 \begin{enumerate}
 \item \textbf{Cover all vertices}: $\bigcup_{i=1}^k P_i = V$ and $P_i \cap P_j = \emptyset$ for $i \neq j$
-\item \textbf{Balance weights}: $|w(P_i) - w_{target}| \leq \epsilon \cdot w_{target}$ where $w(P_i) = \sum_{v \in P_i} w(v)$ and $w_{target} = \frac{1}{k}\sum_{v \in V} w(v)$
-\item \textbf{Minimize edge cut}: $\text{EdgeCut} = |\{(u,v) \in E : u \in P_i, v \in P_j, i \neq j\}|$
+\item \textbf{Balance weights}: $|w(P_i) - w_{\text{target}}| \leq \epsilon \cdot w_{\text{target}}$ where $w(P_i) = \sum_{v \in P_i} w(v)$
+\item \textbf{Minimize edge cut}: $\text{EdgeCut} = \sum_{(u,v) \in E : u \in P_i, v \in P_j, i \neq j} w_{uv}$
 \end{enumerate}
 
-This problem is NP-hard \citep{garey1979}. Practical algorithms use multilevel heuristics that coarsen the graph, partition the coarse graph, and refine the partition \citep{karypis1998}.
+This problem is NP-hard \citep{garey1979}. METIS uses multilevel heuristics \citep{karypis1998}: coarsen graph, partition coarse graph, refine partition back to original resolution.
 
-\subsection{METIS Partitioning Library}
+\subsection{METIS Partitioning Strategies}
 
-METIS \citep{karypis1998metis} is the standard implementation for graph partitioning. It operates in three phases:
+METIS provides two partitioning methods, each with distinct architectural characteristics:
 
-\textbf{Coarsening}: Iteratively merge vertices to create smaller graphs $G_0, G_1, \ldots, G_m$ where $G_0 = G$ and $|V_m| \ll |V_0|$.
+\textbf{N-Way Partitioning (PartGraphKway)}: Directly partitions graph into $k$ districts in a single optimization. The multilevel refinement phase considers all $k$ partitions simultaneously—a vertex can move from partition $i$ to any partition $j$ if the move improves global edge cut while maintaining population balance. This ``global view'' allows the algorithm to reason about interactions between all districts.
 
-\textbf{Initial Partitioning}: Partition coarsest graph $G_m$ into $k$ parts using greedy or spectral methods.
+\textbf{Advantages}: Single-pass optimization, global edge cut minimization, all districts optimized together.
 
-\textbf{Refinement}: Project partition back through $G_{m-1}, G_{m-2}, \ldots, G_0$, refining at each level using Kernighan-Lin (KL) or greedy algorithms to improve edge cut while maintaining balance.
+\textbf{Potential weaknesses}: Complex $k$-way optimization may struggle with constraint satisfaction, slower for large $k$.
 
-METIS provides two partitioning strategies:
+\textbf{Recursive Bisection (PartGraphRecursive)}: Hierarchically partitions via repeated binary splits. Initially divides graph into 2 parts, then recursively partitions each part until reaching $k$ districts. Each binary split is simpler (2-way optimization) but decisions cascade—an early suboptimal split affects all descendant partitions.
 
-\subsection{Recursive Bisection (PartGraphRecursive)}
+\textbf{Advantages}: Simpler binary optimizations, potentially more stable, hierarchical structure aids interpretability.
 
-Algorithm: Partition $G$ into 2 parts. Recursively partition each part until $k$ partitions exist.
+\textbf{Potential weaknesses}: Local optimization without global $k$-district view, early splitting errors propagate through tree, minority communities may fragment across binary cuts.
 
-\begin{algorithm}[H]
-\caption{Recursive Bisection}
-\begin{algorithmic}[1]
-\STATE \textbf{Input:} Graph $G$, target partitions $k$
-\STATE \textbf{Output:} Partition assignment $P: V \to \{1, \ldots, k\}$
-\STATE
-\IF{$k = 1$}
-    \RETURN single partition
-\ENDIF
-\STATE
-\STATE Choose split: $k = k_L + k_R$ where $k_L, k_R \geq 1$
-\STATE Set target weights: $w_L = \frac{k_L}{k}W$, $w_R = \frac{k_R}{k}W$ where $W = \sum_{v \in V} w(v)$
-\STATE Partition $G$ into $(G_L, G_R)$ with weights $(w_L, w_R)$ using METIS 2-way
-\STATE
-\STATE $P_L \gets$ RecursiveBisection$(G_L, k_L)$
-\STATE $P_R \gets$ RecursiveBisection$(G_R, k_R)$
-\STATE
-\RETURN $P_L \cup P_R$ (with appropriate label offset for $P_R$)
-\end{algorithmic}
-\end{algorithm}
+Both methods support edge weights and population constraints. This paper provides the first systematic comparison of these strategies for VRA-compliant redistricting, testing whether architectural differences affect minority district formation.
 
-\textbf{Key property}: Each binary split is locally optimal (minimizes edge cut between two parts) but doesn't consider final $k$-way partition structure.
+\subsection{Prior Work on VRA and Algorithms}
 
-\textbf{Tree structure matters}: For $k=7$, splits $[3,4]$, $[4,3]$, $[2,5]$, etc. produce different results despite all reaching 7 partitions. Section~\ref{sec:tree_structure} analyzes this effect.
+\textbf{Duchin et al. (2018)} \citep{duchin2018}: MCMC ensemble methods for redistricting. Demonstrates partisan gerrymandering detection but acknowledges VRA compliance challenges.
 
-\subsection{N-Way Partitioning (PartGraphKway)}
+\textbf{Fifield et al. (2020)} \citep{fifield2020}: Sequential Monte Carlo for redistricting optimization. Focuses on compactness and population balance; VRA compliance not primary objective.
 
-Algorithm: Directly partition $G$ into $k$ parts using multilevel k-way refinement.
+\textbf{DeFord et al. (2021)} \citep{deford2021}: ReCom algorithm (recombination of districts via spanning trees). Shows ensemble methods can approximate human-drawn maps but struggle with minority concentration without explicit constraints.
 
-\begin{algorithm}[H]
-\caption{N-Way Partitioning}
-\begin{algorithmic}[1]
-\STATE \textbf{Input:} Graph $G$, target partitions $k$
-\STATE \textbf{Output:} Partition assignment $P: V \to \{1, \ldots, k\}$
-\STATE
-\STATE Coarsen: $G_0, G_1, \ldots, G_m$ where $|V_m| \approx 100k$
-\STATE Initial partition: Create $k$ partitions on $G_m$ (greedy/spectral)
-\STATE
-\FOR{$i = m-1$ \textbf{down to} $0$}
-    \STATE Project partition from $G_{i+1}$ to $G_i$
-    \STATE Refine $G_i$ partition using $k$-way Fiduccia-Mattheyses (FM) or greedy refinement
-    \STATE \quad \textit{(Considers moves between all $k$ partitions)}
-\ENDFOR
-\STATE
-\RETURN Partition on $G_0$
-\end{algorithmic}
-\end{algorithm}
-
-\textbf{Key property}: Refinement considers all $k$ partitions simultaneously. A vertex can move from partition $i$ to any partition $j$ if it improves global edge cut and maintains balance.
-
-\subsection{Multi-Constraint Partitioning}
-
-Standard partitioning balances a single vertex weight (population). Multi-constraint partitioning balances multiple weights simultaneously \citep{karypis1999,schloegel2000}.
-
-Given vertex weights $w: V \to \mathbb{R}^c$ (c constraints), each partition $P_i$ must satisfy:
-\begin{equation}
-|w_j(P_i) - w_{j,target}| \leq \epsilon_j \cdot w_{j,target} \quad \forall j \in \{1, \ldots, c\}
-\end{equation}
-
-For redistricting with VRA requirements: $w_v = (p_v, m_v)$ where $p_v$ is population and $m_v$ is minority population.
-
-\textbf{Target weights (tpwgts)}: User specifies desired weight distribution. For $k$ partitions and $c$ constraints, $k \times c$ matrix defines targets. Example: Create 2 MM districts (60\% minority) and 5 non-MM districts from 7 total:
-\begin{align*}
-\text{Districts 1-2 (MM):} \quad & w_{pop} = 1/7, \quad w_{min} = 0.60/7 \\
-\text{Districts 3-7 (non-MM):} \quad & w_{pop} = 1/7, \quad w_{min} = \text{remaining}/5
-\end{align*}
-
-Both recursive bisection and n-way support multi-constraint partitioning. Our experiments use 2-constraint optimization to evaluate demographic concentration.
-
-\subsection{Prior Comparisons}
-
-Limited prior work directly compares recursive bisection vs n-way for specific applications:
-
-\textbf{Karypis \& Kumar (1998)} \citep{karypis1998}: Initial METIS paper shows n-way achieves slightly better edge cuts (3-5\%) with comparable runtime. Tested on circuit and finite element graphs, not redistricting.
-
-\textbf{Schloegel et al. (2000)} \citep{schloegel2000}: Multi-constraint partitioning evaluation focuses on scalability, not method comparison. Notes recursive bisection can struggle when constraint distributions are asymmetric.
-
-\textbf{Fiduccia \& Mattheyses (1982)} \citep{fiduccia1982}: Classic FM algorithm for 2-way partitioning. Extended to k-way but greedy nature limits theoretical guarantees.
-
-No prior work systematically evaluates these methods for redistricting where demographic targets create highly asymmetric partition requirements. Our work fills this gap.
+No prior work systematically evaluates edge-weighted graph partitioning for VRA compliance using total minority coalitions across all 50 states. This paper fills that gap with comprehensive empirical analysis.

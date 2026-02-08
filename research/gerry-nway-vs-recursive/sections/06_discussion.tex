@@ -1,213 +1,201 @@
-\subsection{Why N-Way Outperforms: Empirical Validation}
+\subsection{Interpreting the Equivalence Finding}
 
-Results validate theoretical predictions:
+The central result—statistical equivalence between n-way and recursive bisection ($p=0.634$, $d=-0.018$)—challenges expectations that architectural differences substantially affect VRA compliance. Three explanations account for this surprising equivalence.
 
-\textbf{(1) Global vs Greedy Optimization}: N-way's 3-7 point advantage stems from considering all $k$ partitions during refinement. Recursive bisection's greedy binary decisions accumulate suboptimality.
+\subsubsection{Edge-Weight Dominance Hypothesis}
 
-\textbf{(2) Asymmetric Targets}: Performance gap correlates with target asymmetry ($r=0.82$). VRA requirements create highly asymmetric targets (60\% vs 30\% minority), precisely where n-way excels.
+Both methods minimize weighted edge cuts, making edge-weighting parameters ($\alpha$, $\tau$) the primary determinant of VRA performance. Architectural differences (global vs hierarchical optimization) affect \textit{how} cuts are minimized but not \textit{what} gets minimized. As long as both methods effectively respect edge weights, they converge to similar minority concentration patterns.
 
-\textbf{(3) Tree Structure Limitations}: Alabama's uniform results across 6 tree structures (all 43.0\%) demonstrate that no tree choice can overcome greedy decision-making. Even adaptive selection (+3.1 points) can't match n-way's global view.
+\textbf{Evidence}: At $\alpha=1$ (no edge-weighting), methods achieve identical 43.2\% success rates. Performance divergence emerges only at higher weights, and even then remains modest (maximum 2.3 percentage points at $\alpha=100$). This suggests base algorithms are equivalent; edge-weighting provides the signal for VRA compliance.
 
-\subsection{Practical Implications}
+\textbf{Implication}: Future algorithmic development should prioritize edge-weighting innovation over architectural refinements. Diminishing returns from switching between n-way and recursive suggest gains lie in better parameter selection, not method choice.
 
-\subsubsection{Redistricting Applications}
+\subsubsection{State Demographics as Hard Constraint}
 
-For congressional redistricting with VRA requirements:
+Bimodal success distributions (states achieve either 100\% or 0\% success across configurations) indicate state characteristics impose hard constraints that optimization cannot overcome. When minority percentage, geographic clustering, and district count align favorably (California: 65\% minority, compact, 52 districts), both methods succeed. When alignment is poor (Connecticut: 37\% minority, dispersed, 5 districts), both struggle.
+
+\textbf{Evidence}: Tier distributions nearly identical (n-way: 17/4/7/16, recursive: 15/5/9/15 across 100\%/50-99\%/1-49\%/0\% tiers). Methods rarely shift states between tiers, confirming that state feasibility dominates over method choice.
+
+\textbf{Implication}: For challenging states (those in 0\% tier for both methods), alternative approaches—hybrid methods, manual adjustments, or accepting proportional shortfalls—may be necessary regardless of partitioning architecture.
+
+\subsubsection{METIS Refinement Quality}
+
+Both methods use identical METIS refinement algorithms (Kernighan-Lin, Fiduccia-Mattheyses). The multilevel coarsening phase differs (k-way vs binary), but refinement—where most optimization occurs—is shared. This commonality may explain performance equivalence despite structural differences.
+
+\textbf{Evidence}: Runtime differences (3.68s vs 11.33s) suggest recursive performs more partitioning operations, but refinement quality remains comparable. Higher recursive variance (std dev 7.54s vs 2.05s) indicates less predictable coarsening but doesn't degrade final solution quality.
+
+\textbf{Implication}: METIS refinement is sufficiently powerful that initial partitioning structure (k-way vs binary tree) matters less than refinement iterations. Increasing \texttt{-niter} parameter may yield greater gains than architectural changes.
+
+\subsection{Different Parameter Landscapes}
+
+Despite overall equivalence, methods exhibit different parameter sensitivities, revealing underlying optimization mechanisms.
+
+\subsubsection{Threshold Preference Divergence}
+
+N-way optimizes at $\tau=0.40$ (49.1\% success), recursive at $\tau=0.50$ (50.9\% success). This 4.5 percentage point crossover effect indicates methods interact differently with minority definitions.
+
+\textbf{N-way benefits from broad thresholds}: Simultaneous $k$-way optimization can selectively concentrate high-minority tracts while ignoring moderate-minority tracts. Lower $\tau=0.40$ provides more options—algorithm chooses which minority tracts to consolidate based on global edge cut minimization.
+
+\textbf{Recursive benefits from sharp thresholds}: Hierarchical binary splits require clear boundaries. Ambiguous tracts (40-50\% minority) create suboptimal early splits that propagate through tree. Higher $\tau=0.50$ provides cleaner signal, reducing cascading errors.
+
+\textbf{Practical consequence}: Practitioners must tune methods independently. Applying n-way's optimal $\tau=0.40$ to recursive yields 47.3\% success (suboptimal). Applying recursive's optimal $\tau=0.50$ to n-way yields 46.4\% success (suboptimal). Universal parameters sacrifice 2-4 percentage points.
+
+\subsubsection{Weight Factor Sensitivity}
+
+Recursive shows stronger response to high weights ($\alpha=100$: 51.7\% vs n-way's 49.4\%). This suggests hierarchical structure amplifies edge-weight influence—each binary split fully respects weights, while n-way's simultaneous optimization may dilute weight effects across $k$ partitions.
+
+However, recursive's higher ceiling (56.8\% best vs n-way's 52.3\%) comes with greater parameter sensitivity. Suboptimal weight-threshold combinations degrade recursive more than n-way, explaining similar averages despite different ceilings.
+
+\textbf{Bias-variance analogy}: Recursive exhibits high variance (sensitive to parameters) but high ceiling. N-way exhibits lower variance (robust to parameter changes) but lower ceiling. Trade-off parallels machine learning model selection.
+
+\subsection{State-Specific Advantages}
+
+While methods tie in 70.4\% of states, systematic patterns emerge in the remaining 30\%.
+
+\subsubsection{When N-way Excels}
+
+\textbf{Virginia (+35 points)}: 11 districts, 41\% minority, moderate clustering (DC suburbs, Hampton Roads, Richmond). N-way's global $k$-way optimization effectively balances minority concentration across 11 districts. Recursive's initial binary split (North vs South) fragments minorities between regions, and subsequent refinement cannot recover.
+
+\textbf{Missouri (+20 points)}: 8 districts, 24\% minority. Similar pattern—n-way's simultaneous optimization finds minority pockets in St. Louis and Kansas City. Recursive's early splits isolate these cities in separate subtrees.
+
+\textbf{Wisconsin (+20 points)}: 8 districts, 21\% minority. Milwaukee concentration benefits from global view.
+
+\textbf{Pattern}: Moderate district counts (8-12) with minority populations concentrated in 2-3 urban centers. N-way's global optimization recognizes these patterns; recursive's binary tree structure misaligns with geography.
+
+\subsubsection{When Recursive Excels}
+
+\textbf{Connecticut (+45 points)}: 5 districts, 37\% minority, dispersed across small cities (Hartford, New Haven, Bridgeport, Stamford). Recursive's hierarchical splits naturally isolate city clusters. N-way's simultaneous 5-way partition struggles—too many options dilute optimization focus.
+
+\textbf{Louisiana (+25 points)}: 6 districts, 44\% minority. New Orleans forms natural first-level split (South vs North). Recursive exploits this; n-way must discover pattern amid 6-way optimization complexity.
+
+\textbf{Georgia (+15 points)}: 14 districts, 50\% minority. Atlanta metro forms natural split. Recursive's tree structure aligns with state geography.
+
+\textbf{Pattern}: Low-to-moderate district counts (4-7) with dispersed minorities or strong geographic divisions (metro vs rural). Recursive's hierarchical structure matches natural geographic splits; n-way's global view becomes liability when $k$ is small.
+
+\subsubsection{Predictive Model (Hypothesis)}
+
+District count appears predictive:
 \begin{itemize}
-\item \textbf{Always use n-way partitioning} when demographic targets exist
-\item 3-7 point improvements can determine VRA compliance (Alabama: 47.3\% vs 43.0\%)
-\item Minimal runtime cost (<20\% slower) is negligible for offline redistricting
-\item Compactness tradeoff (+2.3\% edge cut) is acceptable for demographic goals
+\item $k \leq 7$: Favor recursive (hierarchical structure matches natural divisions)
+\item $k \in [8, 12]$: Favor n-way (global optimization balances multiple urban centers)
+\item $k \geq 13$: Mixed (neither method systematically better)
 \end{itemize}
 
-\subsubsection{General Graph Partitioning}
+Testing this hypothesis requires additional analysis beyond this paper's scope, but state-specific results support the pattern.
 
-Beyond redistricting:
-\begin{itemize}
-\item \textbf{N-way for heterogeneous targets}: When partitions should differ (load balancing with specialized processors, database partitioning with hot/cold data)
-\item \textbf{Recursive for homogeneous targets}: When all partitions identical (parallel computing with uniform processors)
-\item \textbf{Recursive for large $k$}: May be only option when $k > 100$ due to k-way refinement complexity
-\end{itemize}
+\subsection{Performance Ceiling vs Average Trade-off}
 
-\subsection{Adaptive Bisection Analysis}
+Recursive's best configuration (56.8\%) exceeds n-way's best (52.3\%) by 4.5 points, demonstrating higher optimization potential with careful tuning. However, recursive's average (48.3\%) barely exceeds n-way's (47.5\%), indicating sensitivity to parameters.
 
-Adaptive tree selection improves recursive bisection significantly (Alabama: +3.1 points) but remains inferior to n-way (-1.2 points from optimal).
-
-\textbf{Why adaptive helps}: Makes locally optimal decisions rather than predetermined trees. For Alabama, adaptive likely chooses [2,5] or similar split that groups MM districts together initially.
-
-\textbf{Why adaptive insufficient}: Still constrained by binary tree structure. Each split creates two subgraphs that cannot exchange vertices in future steps. N-way avoids this limitation through global refinement.
-
-\textbf{When adaptive valuable}: If n-way is unavailable or $k$ is very large, adaptive bisection provides middle ground between predetermined trees and full n-way optimization.
-
-\subsection{Computational Cost Analysis}
-
-Runtime differences are negligible in practice:
-\begin{itemize}
-\item Mississippi (878 tracts, $k=4$): 2.3s vs 2.1s (0.2s difference)
-\item Georgia (2,796 tracts, $k=14$): 9.6s vs 8.2s (1.4s difference)
-\end{itemize}
-
-\textbf{Why so similar?}: Both use multilevel coarsening/refinement. Bottleneck is coarsening (graph traversal), not partitioning method. K-way refinement is more complex per iteration but converges faster.
-
-\textbf{When runtime matters}: Embedded systems or online partitioning (streaming graphs). For offline applications like redistricting, quality dominates runtime.
-
-\subsection{The Transparency-Performance Tradeoff}
-
-While n-way outperforms recursive bisection for demographic concentration, recursive bisection offers important \textit{transparency and auditability} advantages often overlooked in purely technical comparisons.
-
-\subsubsection{Recursive Bisection as Verifiable Process}
-
-Each binary split in recursive bisection represents a clear, inspectable decision:
-\begin{enumerate}
-\item \textbf{Step-by-step transparency}: Public can audit each split independently
-\item \textbf{Geographic coherence}: Each split creates two geographically separated regions (e.g., "North vs South", "Urban core vs Suburbs")
-\item \textbf{Natural boundaries}: Binary divisions often align with existing geographic features (rivers, mountain ranges, county lines)
-\item \textbf{Limited manipulation potential}: Each split is a forced geographic alignment—less room for "juggling" tracts between distant districts
-\end{enumerate}
-
-\textbf{Example (Alabama)}: Recursive bisection might first split [2,5] creating:
-\begin{itemize}
-\item Group 1 (2 districts): Black Belt + Montgomery region (naturally high-minority)
-\item Group 2 (5 districts): Northern Alabama + Gulf Coast (naturally lower-minority)
-\end{itemize}
-
-This division is \textit{geographically legible}—anyone can see "these 2 districts are the southern/central region."
-
-\subsubsection{N-Way as "Black Box" Optimization}
-
-N-way partitioning produces all $k$ districts simultaneously through refinement:
-\begin{itemize}
-\item \textbf{Tract juggling}: During refinement, any tract can move between any districts
-\item \textbf{No hierarchical structure}: Districts emerge from optimization without clear geographic groupings
-\item \textbf{Harder to audit}: No intermediate steps to inspect—just initial state and final result
-\item \textbf{Perception risk}: May appear as "computer gerrymandeirng" despite algorithmic objectivity
-\end{itemize}
-
-\textbf{Public trust concern}: Stakeholders may question: "Why is this tract in District 3 instead of District 5?" N-way's answer: "Because k-way refinement determined this minimizes edge cut while achieving target demographics." This is technically correct but harder to communicate than "This tract is in District 3 because it was on the south side of the first split."
-
-\subsubsection{Stability Over Time}
-
-Recursive bisection's hierarchical structure may provide \textit{temporal stability}:
-
-\textbf{Geographic nesting}: Binary tree structure creates nested regions:
-\begin{align*}
-\text{State} &\to \text{[Region A, Region B]} \\
-\text{Region A} &\to \text{[District 1, District 2]} \\
-\text{Region B} &\to \text{[Districts 3-7]}
-\end{align*}
-
-When demographics shift over decades:
-\begin{itemize}
-\item \textbf{Recursive}: Changes may be localized within nested regions. District 1-2 boundaries might adjust, but overall [Region A, Region B] split remains stable.
-\item \textbf{N-way}: Without hierarchical structure, demographic changes could cascade across all $k$ districts, creating more disruption between census cycles.
-\end{itemize}
-
-\textbf{Hypothesis}: Recursive bisection districts may be more stable across 2020→2030→2040 redistricting cycles, reducing "communities of interest" disruption.
-
-\subsubsection{Measuring Transparency and Stability}
-
-We propose three metrics for future work:
-
-\textbf{(1) Hierarchical Coherence Score}:
-\begin{equation}
-H = \frac{1}{k-1} \sum_{i=1}^{k-1} \text{ModularityCut}(\text{split}_i)
-\end{equation}
-
-Measures whether districts naturally group into hierarchical clusters. Higher score = better alignment with geographic divisions that binary splits would create.
-
-\textbf{(2) Temporal Stability} (requires multi-census data):
-\begin{equation}
-S = 1 - \frac{1}{k}\sum_{i=1}^k \frac{|\Delta \text{tracts}_i|}{|\text{tracts}_i|}
-\end{equation}
-
-Measures what fraction of tracts change districts between census cycles. Higher = more stable.
-
-\textbf{(3) Explainability Score}:
-
-Human-evaluated metric: How easily can districting plan be described using geographic references? "District 1 is the Black Belt region" (high explainability) vs "District 1 includes tracts from 8 scattered counties" (low explainability).
-
-\subsubsection{The Tradeoff}
-
-\begin{table}[h]
+\begin{figure*}[t]
 \centering
-\begin{tabular}{lcc}
-\toprule
-\textbf{Criterion} & \textbf{Recursive} & \textbf{N-Way} \\
-\midrule
-Demographic concentration & Lower & \textbf{Higher} \\
-Compactness (edge cut) & Better & Slightly worse \\
-Transparency & \textbf{Higher} & Lower \\
-Auditability & \textbf{Easier} & Harder \\
-Public trust potential & \textbf{Higher} & Lower \\
-Geographic coherence & \textbf{Stronger} & Weaker \\
-Temporal stability (est.) & \textbf{Higher} & Lower \\
-\midrule
-\textbf{Best for:} & Legitimacy & Performance \\
-\bottomrule
-\end{tabular}
-\caption{Recursive bisection vs n-way tradeoffs beyond technical performance}
-\label{tab:transparency_tradeoff}
-\end{table}
+\includegraphics[width=\textwidth]{figures/fig6_speed_quality_tradeoff.png}
+\caption{Speed-quality trade-off visualization. Each point represents one parameter configuration's average performance across 44 states. N-way configurations (circles, blue) cluster at faster runtimes with moderate success rates. Recursive configurations (squares, orange) spread wider with higher peak but also higher variance. Trade-off: n-way offers 67.5\% speed advantage for only 0.8 point average performance sacrifice, but recursive achieves 4.5 point higher ceiling (56.8\% vs 52.3\%) with careful tuning.}
+\label{fig:speed_quality_tradeoff}
+\end{figure*}
 
-\textbf{Policy implication}: When VRA compliance is not at stake (demographic targets met by either method), recursive bisection may be \textit{preferable} despite lower performance due to transparency advantages. When VRA compliance requires n-way's performance gains, the transparency cost may be necessary and should be addressed through:
+\textbf{Implications for practice}:
+
+\textbf{Single-plan adoption}: If deploying one carefully-tuned redistricting plan (e.g., for official state use), recursive's 56.8\% ceiling justifies effort. Parameter search (testing 20 configurations) to identify optimal $\alpha=100$, $\tau=0.50$ yields 4.5 percentage point improvement over n-way's best.
+
+\textbf{Ensemble generation}: If generating thousands of maps for analysis (MCMC, ensemble methods), n-way's speed (3.68s vs 11.33s) dominates. For 10,000 maps, n-way saves 21 hours while sacrificing only 0.8 percentage points average performance—favorable trade-off.
+
+\textbf{Default/naive usage}: Without parameter tuning, methods perform equivalently. Practitioners using default parameters can choose either method with confidence.
+
+\subsection{Runtime and Scalability}
+
+N-way's 67.5\% speed advantage (3.68s vs 11.33s) has practical implications for different use cases.
+
+\subsubsection{Ensemble Generation}
+
+MCMC redistricting generates 10,000-100,000 maps per state. Using our measured runtimes:
 \begin{itemize}
-\item Detailed documentation of METIS algorithm and parameters
-\item Visualization of refinement process (animate how districts form)
-\item Post-hoc analysis showing districts align with natural geographic regions where possible
-\item Public explanation of why algorithmic objectivity prevents gerrymandering even without step-by-step transparency
+\item N-way: 10,000 maps = 10.2 hours
+\item Recursive: 10,000 maps = 31.5 hours
 \end{itemize}
 
-\textbf{Open question}: Can we design hybrid approaches that achieve n-way performance with recursive bisection's transparency? For example:
+Speed advantage scales linearly with ensemble size. For research applications requiring large samples, n-way offers ~3$\times$ throughput.
+
+\subsubsection{Interactive Tools}
+
+Real-time redistricting tools (e.g., DistrictBuilder) require responsive user experience. N-way's 3.68s average enables interactive feedback; recursive's 11.33s creates noticeable lag. For maximum states (California: 10.28s n-way vs 39.10s recursive), difference affects usability.
+
+\subsubsection{Scalability Beyond Congressional Redistricting}
+
+State legislative redistricting requires larger $k$ (e.g., California: 40 Senate districts, 80 Assembly districts). Runtime complexity:
 \begin{itemize}
-\item Recursive bisection with n-way refinement as final step
-\item Constrained n-way that respects pre-specified regional groupings
-\item Hierarchical n-way that partitions at multiple levels (state → regions → districts)
+\item N-way: $O(k \cdot |E| \cdot \log k)$ (single k-way refinement)
+\item Recursive: $O(\log k \cdot |E| \cdot \log k)$ (fewer levels but larger subproblems)
 \end{itemize}
 
-\subsection{Limitations and Future Work}
+Asymptotic analysis suggests recursive may scale better for very large $k$, but empirical testing at $k=40$-$80$ needed to confirm.
 
-\subsubsection{Limited $k$ Range}
+\subsection{Methodological Insights}
 
-We test $k \in [4, 14]$. Performance gap may change for very large $k$:
+\subsubsection{Importance of Comprehensive Comparison}
+
+Prior work assumed n-way superiority (global optimization) or recursive superiority (simpler problems). Our comprehensive 50-state evaluation reveals neither assumption holds—methods are equivalent for most states, with context-dependent advantages.
+
+Lesson: Architectural intuitions require empirical validation. Optimization performance depends on data characteristics (state demographics, geography), not just algorithm design.
+
+\subsubsection{Parameter Tuning Necessity}
+
+The 4.5 percentage point gap between methods' best configurations highlights parameter tuning importance. Neither method achieves optimal performance with default parameters. This suggests redistricting practice should invest in systematic parameter search rather than assuming universal configurations.
+
+Bayesian optimization, grid search, or evolutionary algorithms could efficiently explore continuous parameter spaces beyond our discrete ablation (5 weights $\times$ 4 thresholds).
+
+\subsubsection{Statistical Rigor in Algorithmic Evaluation}
+
+Many algorithmic redistricting papers report anecdotal comparisons ("method A beats method B on Texas"). Our approach—50-state coverage, 20 configurations per method, paired statistical tests, effect size calculation—provides rigorous evidence for equivalence.
+
+Recommendation: Future comparative studies should adopt similar statistical frameworks (paired tests, effect sizes, comprehensive state coverage) rather than cherry-picking examples.
+
+\subsection{Limitations}
+
+\textbf{Single random seed}: We test each configuration once with fixed METIS seed (42). Multiple seeds would quantify stochastic variance, revealing whether some states' near-50\% success rates reflect instability or genuine edge cases.
+
+\textbf{Fixed tree structure (recursive)}: Our recursive implementation uses balanced binary trees (e.g., [3,4] for $k=7$). Alternative tree structures (geographically-guided splits, unbalanced trees) might improve performance. Exploration requires separate study.
+
+\textbf{Parameter discretization}: We test discrete weight factors [1, 5, 10, 50, 100]. Continuous optimization might reveal narrow optimal ranges (e.g., $\alpha=7.3$). However, practical impact likely small given plateau effects observed.
+
+\textbf{Compactness-VRA trade-off not analyzed}: We focus on VRA compliance (MM district count). Both methods sacrifice compactness to varying degrees. Future work should characterize Pareto frontiers—do methods differ in compactness cost for equivalent VRA performance?
+
+\textbf{Single census year (2020)}: Demographic stability across decades (2000, 2010, 2020) requires validation. Methods may respond differently to demographic shifts, affecting long-term viability.
+
+\subsection{Implications for Algorithmic Redistricting}
+
+\subsubsection{Method Selection Simplified}
+
+Pre-study uncertainty: "Which algorithm should we use for VRA compliance?" Post-study clarity: "Both work equivalently; choose based on computational constraints."
+
+This simplification reduces barriers to algorithmic redistricting adoption. Jurisdictions need not develop expertise in both methods—either provides comparable VRA performance.
+
+\subsubsection{Focus on Parameters, Not Architecture}
+
+Our finding that edge-weighting parameters matter more than architecture suggests future research should prioritize:
 \begin{itemize}
-\item \textbf{$k > 50$}: K-way refinement complexity may become prohibitive
-\item \textbf{$k > 100$}: Recursive bisection may be only practical choice
+\item State-specific parameter optimization
+\item Adaptive weight factor selection based on clustering metrics
+\item Continuous parameter spaces (not discrete ablation)
 \end{itemize}
 
-Future work should evaluate scalability to larger $k$.
+Returns from architectural innovations appear limited given equivalence result.
 
-\subsubsection{Single Application Domain}
+\subsubsection{Hybrid Approaches}
 
-We focus on redistricting. Other domains (circuit partitioning, finite element analysis, load balancing) may show different patterns. However, theoretical analysis (asymmetric targets favor n-way) should generalize.
+Given state-specific advantages (n-way for Virginia, recursive for Connecticut), hybrid systems could dynamically select methods based on state characteristics:
+\begin{itemize}
+\item If $k \leq 7$ and minorities dispersed: use recursive
+\item If $k \in [8,12]$ and minorities concentrated: use n-way
+\item Otherwise: use n-way (default, faster)
+\end{itemize}
 
-\subsubsection{Single Partitioner}
+Such adaptive systems require formalized state characterization metrics beyond this paper's scope.
 
-We use METIS exclusively. Other partitioners (Scotch, KaHIP, Zoltan) may show different relative performance. However, METIS is the standard, and results should indicate general trends.
+\subsection{Theoretical Contributions}
 
-\subsubsection{Multi-Constraint Complexity}
+\textbf{Architecture-agnostic optimization}: Both global (n-way) and local (recursive) optimization structures achieve similar results when objective function (weighted edge cut) is well-designed. This parallels findings in other domains (e.g., neural architecture search showing diverse architectures converge given sufficient capacity).
 
-We use 2-constraint optimization. Performance gap may change with more constraints ($c > 2$). Future work should evaluate high-dimensional constraint spaces.
+\textbf{Bias-variance trade-off in discrete optimization}: Recursive's higher ceiling but greater parameter sensitivity mirrors supervised learning's bias-variance dilemma. Methods differ not in average performance but in sensitivity to hyperparameters.
 
-\subsection{Comparison to Prior Work}
-
-Karypis \& Kumar (1998) \citep{karypis1998} found n-way achieves 3-5\% better edge cuts on circuit graphs. We find 3-7 \textit{percentage point} improvements for demographic concentration—a different but related metric.
-
-Key difference: Circuit partitioning has symmetric targets (equal-sized partitions with no preference for specific vertices). Redistricting has asymmetric targets (some districts should be minority-majority). This confirms theoretical prediction: asymmetry amplifies n-way's advantage.
-
-\subsection{Alternative Explanations}
-
-Could factors other than global optimization explain n-way's advantage?
-
-\textbf{Initial partitioning quality}: N-way uses different initial partitioning on coarsest graph. Could this advantage propagate through refinement?
-
-\textit{Unlikely}: Initial partitioning is on highly coarsened graph ($|V| \approx 100k$). Refinement on finer graphs dominates quality. Experiments with random initial partitions (not shown) produce similar results.
-
-\textbf{Refinement iterations}: N-way uses k-way refinement which may converge faster/better than 2-way.
-
-\textit{Partially true}: But we ensure both methods run same number of iterations (niter=100). Quality gap persists even with more recursive bisection iterations.
-
-\textbf{Implementation details}: Perhaps METIS's n-way implementation is simply better engineered than recursive bisection.
-
-\textit{Possible but unlikely}: METIS team extensively optimized both methods. Consistent 3-7 point gaps across five different states with varying characteristics suggest fundamental algorithmic difference, not implementation artifact.
-
-Most parsimonious explanation: Global optimization (n-way) outperforms greedy optimization (recursive) for asymmetric targets, as theory predicts.
+\textbf{Hard constraints dominate soft objectives}: State demographics impose hard feasibility constraints that optimization cannot overcome. When minority percentage and geography align poorly (Connecticut), no method succeeds consistently. This suggests limits to algorithmic VRA compliance—some states may require hybrid or manual approaches.
