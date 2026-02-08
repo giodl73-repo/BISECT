@@ -1,0 +1,62 @@
+Graph partitioning is fundamental to scientific computing, load balancing, and geographic districting \citep{karypis1998,hendrickson2000}. Given a graph $G = (V, E)$ with vertex weights, the goal is to partition vertices into $k$ disjoint sets that balance vertex weights while minimizing edges cut between partitions. Two algorithmic paradigms dominate:
+
+\textbf{Recursive Bisection}: Hierarchically split graph into two partitions, recurse on each part until reaching $k$ partitions. Each binary split is locally optimized.
+
+\textbf{N-Way Partitioning}: Directly partition graph into $k$ partitions simultaneously. All edge cuts considered globally during optimization.
+
+While both minimize edge cuts subject to balance constraints, their practical performance differs. Recursive bisection makes greedy decisions at each binary split—once a partition is divided, that structure is fixed. N-way partitioning considers all $k$ partitions throughout optimization, potentially finding better global solutions at the cost of increased computational complexity.
+
+\subsection{Motivation: Redistricting and the VRA}
+
+Congressional redistricting exemplifies a domain where partitioning method choice matters critically. Districts must satisfy multiple objectives:
+\begin{itemize}
+\item \textbf{Population equality}: Each district contains approximately equal population
+\item \textbf{Geographic compactness}: Minimize district perimeter relative to area
+\item \textbf{Demographic representation}: Voting Rights Act compliance requires majority-minority districts where feasible
+\end{itemize}
+
+The Voting Rights Act (VRA) creates explicit demographic targets: certain states must create districts with $\geq 50\%$ minority voting-age population. Achieving these targets requires concentrating minority populations into specific districts—a task where partitioning method choice significantly impacts outcomes.
+
+Our prior work on VRA compliance \citep{vra2024} revealed n-way partitioning consistently outperforms recursive bisection for minority concentration (3-7 percentage points improvement). Alabama illustrated this starkly: n-way achieved 47.3\% maximum minority concentration vs 43.0\% for recursive bisection—both failing the 50\% VRA threshold, but n-way coming 4.3 points closer. This performance gap motivates systematic investigation: \textit{When and why does n-way partitioning outperform recursive bisection?}
+
+\subsection{Research Questions}
+
+We investigate four fundamental questions:
+
+\begin{enumerate}
+\item \textbf{Performance Gap}: How much better does n-way perform than recursive bisection across different objectives (demographic concentration, compactness, balance)?
+
+\item \textbf{Theoretical Basis}: Why does n-way outperform? What graph properties and target distributions favor each approach?
+
+\item \textbf{Computational Cost}: What is the runtime difference? Does n-way's global optimization justify increased computational cost?
+
+\item \textbf{Practical Guidance}: When should practitioners choose n-way vs recursive bisection for real-world applications?
+\end{enumerate}
+
+\subsection{Contributions}
+
+We make four primary contributions:
+
+\textbf{(1) Systematic Empirical Comparison}: First comprehensive evaluation of n-way vs recursive bisection for redistricting applications, testing across five states with varying demographics and district counts (4-14 districts).
+
+\textbf{(2) Theoretical Analysis}: Formal characterization of when n-way's global optimization provides advantage over recursive bisection's greedy approach. We identify graph properties (demographic clustering, target distribution asymmetry) that determine performance gap.
+
+\textbf{(3) Algorithmic Insights}: Analysis of how tree structure choice in recursive bisection can partially close performance gap. We show adaptive tree selection (choosing split points based on intermediate results) improves recursive bisection but cannot match n-way's global view.
+
+\textbf{(4) Practical Guidelines}: Clear decision framework for practitioners choosing between approaches based on problem characteristics (number of partitions, existence of demographic targets, computational constraints).
+
+\subsection{Key Findings Preview}
+
+Our investigation reveals:
+
+\begin{itemize}
+\item N-way achieves 3-7 percentage point improvement over recursive bisection for minority concentration across five states
+\item Performance gap increases with: (a) larger $k$ (more districts), (b) asymmetric demographic targets, (c) spatially clustered minority populations
+\item Computational cost difference is minimal—both scale $O(|E| \log k)$ with similar constants
+\item Adaptive tree selection improves recursive bisection (Alabama: 43.0\% → 46.1\%) but remains inferior to n-way (47.3\%)
+\item When targets exist (VRA compliance, demographic representation), n-way should be default choice; recursive bisection sufficient only for simple balance objectives
+\end{itemize}
+
+\subsection{Paper Organization}
+
+Section 2 reviews graph partitioning algorithms and METIS implementation. Section 3 provides theoretical analysis of performance differences. Section 4 describes experimental design across five states. Section 5 presents empirical results. Section 6 discusses implications and practical guidance. Section 7 concludes with recommendations for practitioners.

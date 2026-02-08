@@ -1,0 +1,52 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{N-Way vs Recursive Bisection for Graph Partitioning: \\
+A Systematic Comparison for Redistricting Applications}
+\author{Anonymous}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Graph partitioning algorithms must choose between recursive bisection (hierarchical binary splits) and n-way partitioning (direct k-way split). While both approaches minimize edge cuts subject to balance constraints, their performance differs in practice. We systematically compare these methods for congressional redistricting across five states, measuring minority concentration, compactness, and computational cost.
+
+Key findings: (1) N-way partitioning achieves 3-7 percentage point higher minority concentration than recursive bisection, representing the difference between VRA compliance and failure in borderline cases (Alabama: 47.3\% n-way vs 43.0\% recursive). (2) N-way's advantage stems from global optimization—considering all k districts simultaneously rather than making greedy intermediate decisions. (3) Computational cost scales similarly (both $O(|E| \log k)$), making n-way preferable when final district demographics matter. (4) Recursive bisection remains competitive when tree structure can be carefully designed to match target distribution.
+
+We provide theoretical analysis of when each approach excels, empirical validation across multiple objective functions (population balance, compactness, demographic concentration), and practical guidance for practitioners. Results demonstrate n-way partitioning should be the default choice for redistricting applications where demographic targets exist, with recursive bisection reserved for simpler balance-only objectives.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background: Graph Partitioning Methods}
+\input{sections/02_background}
+
+\section{Theoretical Analysis}
+\input{sections/03_theory}
+
+\section{Experimental Design}
+\input{sections/04_methodology}
+
+\section{Results}
+\input{sections/05_results}
+
+\section{Discussion}
+\input{sections/06_discussion}
+
+\section{Conclusion}
+\input{sections/07_conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
