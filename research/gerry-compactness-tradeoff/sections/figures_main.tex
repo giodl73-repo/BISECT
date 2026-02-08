@@ -1,0 +1,47 @@
+% Key Figures for Main Paper
+% Additional figures (S1-S5) available in Supplementary Materials
+
+% Figure 1: Alabama District-Level Comparison
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{results/district_level_comparison.png}
+\caption{\textbf{Alabama District-Level Compactness Comparison.}
+Polsby-Popper scores for all 7 Alabama congressional districts comparing baseline partitioning (no VRA optimization, 0 MM districts) to best edge-weighted configuration (5×@45\%, 2 MM districts). Green bars indicate majority-minority (MM) districts (Districts 2 and 5, both 50\%+ Black population), coral bars indicate non-MM districts. Non-MM districts average +23.0\% compactness improvement, while MM districts sacrifice compactness ($-46.2$\%) to concentrate minority voters. Overall state compactness improves by +3.2\%, demonstrating that VRA compliance can enhance rather than degrade geometric quality.}
+\label{fig:district-comparison}
+\end{figure}
+
+% Figure 2: Key Finding - Non-MM Districts Benefit
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{results/key_finding_non_mm_dont_suffer.png}
+\caption{\textbf{Non-MM Districts Generally Benefit from VRA Optimization.}
+Five-panel visualization showing district-level compactness changes (Polsby-Popper \%) for majority-minority (MM) and non-majority-minority (non-MM) districts across four successful states. Top panel: Alabama shows stark contrast with non-MM gaining +23.0\% while MM loses $-46.2$\%. Panel 2: Georgia achieves win-win with both types gaining (+14.3\% MM, +28.1\% non-MM). Panel 3: Mississippi redistributes compactness (+17.9\% non-MM, $-17.9$\% MM). Panel 4: Louisiana shows both sacrifice, but non-MM loses less ($-39.0$\% vs $-51.2$\%). Bottom panel: Cross-state average reveals non-MM districts gain +7.5\% while MM districts lose $-25.3$\%, fundamentally challenging the assumption that VRA compliance imposes compactness costs on non-minority voters.}
+\label{fig:mm-vs-nonmm}
+\end{figure}
+
+% Figure 3: Cross-State Comparison
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{results/cross_state_analysis.png}
+\caption{\textbf{Cross-State Compactness-VRA Tradeoff Patterns.}
+Six-panel comprehensive comparison across all five states. \textbf{Panel 1}: Edge cut percentage change showing Alabama and Georgia improve ($-9.3$\%, $-11.2$\%) while Louisiana degrades substantially (+83.0\%). \textbf{Panel 2}: Polsby-Popper percentage change revealing Georgia's exceptional +22.2\% improvement and Louisiana's $-43.1$\% decline. \textbf{Panel 3}: MM vs non-MM Polsby-Popper breakdown demonstrating that in 3 of 4 successful states, non-MM districts gain while MM districts sacrifice. \textbf{Panel 4}: Absolute compactness scores (baseline vs best) showing Georgia achieves highest final compactness (0.250) despite VRA optimization. \textbf{Panel 5}: Majority-minority district achievement (baseline vs target vs achieved) revealing Mississippi naturally achieves target (46.1\% minority baseline), Georgia exceeds target (6 vs 5), and South Carolina fails (1 vs 3). \textbf{Panel 6}: Optimal parameter identification showing convergence at 5× weight factor for three states (AL, GA, LA) but state-specific threshold variation (40\%-55\%). See Supplementary Materials Figure S1 for per-state district-level breakdown.}
+\label{fig:cross-state-patterns}
+\end{figure}
+
+% Figure 4: Pareto Frontiers (Multi-State)
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{results/pareto_frontiers_multistate.png}
+\caption{\textbf{State-Dependent Pareto Frontiers for VRA-Compactness Tradeoffs.}
+Four-panel comparison of Pareto-optimal configurations across successful states. Each point represents a tested configuration (weight factor × threshold combination); red points indicate Pareto-optimal configurations where no alternative achieves both better compactness and more MM districts. \textbf{Alabama (top-left)}: Frontier exhibits negative initial slope---moving from 0 to 2 MM districts improves edge cut (280 → 254), creating a win-win region. Baseline (blue triangle) is dominated by edge-weighted configurations. \textbf{Georgia (top-right)}: All Pareto points lie in positive region; 5×@55\% configuration (6 MM districts, $-11.2$\% edge cut) is globally optimal. \textbf{Louisiana (bottom-left)}: Steep positive slope indicates substantial compactness sacrifice required per additional MM district. Frontier begins at 1 MM (baseline) and reaches 2 MM with +83\% edge cut penalty. \textbf{Mississippi (bottom-right)}: Flat frontier---baseline naturally achieves 2 MM districts with 46.1\% minority population; edge-weighting provides minimal gains. State-specific frontier shapes demonstrate tradeoffs are determined by demographic geography, not universal properties of VRA-compactness relationship. See Supplementary Materials Figure S2 for South Carolina feasibility analysis and Figure S3 for detailed Alabama Pareto frontier.}
+\label{fig:pareto-frontiers}
+\end{figure}
+
+% Figure 5: Ensemble Comparison - Scatter
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{results/ensemble_comparison/ensemble_comparison_scatter.png}
+\caption{\textbf{Edge-Weighted METIS vs ReCom Ensemble: Compactness-VRA Tradeoff Space (Alabama).}
+Gray points (n=10,000) show ReCom ensemble plans generated via Markov Chain Monte Carlo exploration of valid redistricting configurations. Colored stars indicate our METIS solutions: blue (baseline 1×, 0 MM districts), orange (5×@40\%, 2 MM), red (5×@45\% optimal, 2 MM). The 5×@45\% configuration (red star) achieves 2 MM districts with 0.242 mean Polsby-Popper, outperforming 99.6\% of ensemble on compactness while matching only 10.1\% on VRA compliance. Only 35/10,000 ensemble plans (0.4\%) dominate this solution (achieve equal or better compactness with equal or more MM districts), placing it near the Pareto frontier. The ensemble's heavy concentration at 0 MM districts (70.0\% of plans) confirms that VRA compliance requires intentional optimization, not geographic luck. Baseline METIS (blue star) ranks at 50th percentile for edge cut but 99.3rd percentile for Polsby-Popper, validating METIS's compactness optimization even without VRA considerations. See Supplementary Materials Appendix D for complete ensemble analysis and Figure S5 for edge cut distribution.}
+\label{fig:ensemble-scatter}
+\end{figure}
