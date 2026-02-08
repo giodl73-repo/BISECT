@@ -1,14 +1,14 @@
 \label{sec:conclusion}
 
-We have demonstrated that edge-weighted single-objective optimization dramatically outperforms multi-constraint optimization for congressional redistricting under the Voting Rights Act. Across 160 experiments on five states, edge-weighted achieves 47.9\% configuration success rate vs multi-constraint's 35.0\%, with 7 percentage points higher minority concentration and only 13\% compactness penalty.
+We have demonstrated that edge-weighted single-objective optimization dramatically outperforms multi-constraint optimization for congressional redistricting under the Voting Rights Act. In a balanced experimental design (140 configurations each), edge-weighted achieves 47.9\% success versus multi-constraint's 35.7\% (12.1 pp gap, $p=0.039$).
 
 \subsection{Key Contributions}
 
-\textbf{Empirical findings:} Edge-weighted succeeds in 4/5 states (Alabama, Georgia, Louisiana, Mississippi) while multi-constraint succeeds in only 3/5 (Georgia, Louisiana, Mississippi). For Alabama---a critical VRA case---edge-weighted creates 2 majority-minority districts while multi-constraint manages only 1.
+\textbf{Empirical findings:} Edge-weighted succeeds robustly in 4/5 states (Alabama, Georgia, Louisiana, Mississippi) while multi-constraint succeeds in only 2/5 (Georgia, Mississippi). Critically, multi-constraint exhibits \textit{extreme state dependency}: it completely fails in Alabama, Louisiana, and South Carolina across all 28 parameter values tested per state (84 configurations total). For Alabama---a critical VRA case---edge-weighted achieves 2 majority-minority districts in 14\% of configurations while multi-constraint achieves 0\% success despite comprehensive parameter exploration.
 
-\textbf{Theoretical explanation:} We introduce the concept of \textit{constraint conflict}, where tight population balance constraints ($\pm0.5\%$) dominate loose minority concentration constraints ($\pm50-400\%$), rendering multi-constraint formulations ineffective. Edge-weighting avoids this conflict by encoding VRA goals directly in the objective function.
+\textbf{Theoretical explanation:} We introduce and validate the concept of \textit{constraint conflict}, where tight population balance constraints ($\pm$0.5\%) dominate loose minority concentration constraints ($\pm$10--1000\%), rendering multi-constraint formulations ineffective. Edge-weighting avoids this conflict by encoding VRA goals directly in the objective function rather than as constraints.
 
-\textbf{Hypothesis validation:} Systematic experiments varying minority constraint tolerance from $\pm30\%$ to $\pm400\%$ confirm that loosening constraints does not solve the problem. Even with $\pm400\%$ tolerance---80× looser than population tolerance---Alabama achieves only 1/2 target MM districts.
+\textbf{Hypothesis validation:} Comprehensive experiments testing 28 parameter values per state (spanning $\pm$10\% to $\pm$1000\% minority tolerance) confirm that loosening constraints cannot resolve fundamental constraint conflict. Even with $\pm$1000\% tolerance---2000× looser than population tolerance---Alabama, Louisiana, and South Carolina achieve 0\% success. This parameter-independent failure pattern validates that constraint conflict is fundamental, not an artifact of poor parameter selection.
 
 \textbf{Generalization:} Our findings extend beyond redistricting to any graph partitioning problem with asymmetric constraints. When one constraint is tight and others are loose, encoding loose constraints as edge weights is more effective than multi-constraint balancing.
 
@@ -44,7 +44,9 @@ For graph partitioning researchers, our work challenges fundamental assumptions:
 
 This work demonstrates that algorithmic assumptions must be validated empirically, even when they appear theoretically sound. Multi-constraint optimization is ``standard'' for multi-objective graph partitioning, yet our experiments show it is suboptimal for VRA compliance. This highlights the importance of domain-specific algorithm evaluation and the value of challenging conventional wisdom.
 
-By providing both theoretical analysis (constraint conflict) and empirical validation (160 experiments), we establish a foundation for principled algorithm selection in graph partitioning. Our constraint tightness hierarchy framework applies broadly, offering guidance for researchers and practitioners facing multi-objective optimization problems.
+By providing both theoretical analysis (constraint conflict formalization) and comprehensive empirical validation (280 experiments in balanced design), we establish a foundation for principled algorithm selection in graph partitioning. Our balanced experimental design (140 configurations each method) addresses fairness concerns about asymmetric parameter exploration and reveals that edge-weighted's advantage persists in fair comparison. Moreover, the discovery of extreme state dependency---multi-constraint's complete failure in 3/5 states regardless of parameter tuning---demonstrates that the limitation is fundamental rather than methodological.
+
+Our constraint tightness hierarchy framework applies broadly, offering guidance for researchers and practitioners facing multi-objective optimization problems. The key insight---that objectives with vastly different constraint tightness (60-800× difference) should be encoded differently---generalizes beyond redistricting to database partitioning, network clustering, and other asymmetric optimization domains.
 
 \subsection{Final Remarks}
 
