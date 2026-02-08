@@ -61,9 +61,10 @@ def load_tracts_and_demographics(state_name, fips_code, year='2020'):
     demographics = pd.read_csv(demographics_file)
     print(f"    Loaded demographics for {len(demographics)} tracts")
 
-    # Ensure GEOID types match (convert both to string)
+    # Ensure GEOID types match (convert both to string with zero-padding)
     tracts['GEOID'] = tracts['GEOID'].astype(str)
-    demographics['GEOID'] = demographics['GEOID'].astype(str)
+    # Demographics GEOIDs may be integers - convert and zero-pad to 11 digits
+    demographics['GEOID'] = demographics['GEOID'].astype(str).str.zfill(11)
 
     # Merge
     tracts = tracts.merge(demographics, on='GEOID', how='inner')
@@ -210,9 +211,8 @@ def main():
     """Run n-way comparison for all states"""
     results = []
 
-    # Test states (all 5)
-    test_states = ['mississippi', 'louisiana', 'south_carolina', 'georgia']
-    # Note: Skipping Alabama for now due to merge issue (0 tracts merged)
+    # All 5 VRA states
+    test_states = ['mississippi', 'louisiana', 'alabama', 'south_carolina', 'georgia']
 
     for state_name in test_states:
         try:
