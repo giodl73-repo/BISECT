@@ -1,0 +1,6 @@
+state,enacted_plan,enacted_authority,enacted_mm,enacted_pp,baseline_mm,baseline_pp,edge_weighted_mm,edge_weighted_pp,baseline_vs_enacted_pp_pct,edge_vs_enacted_pp_pct,notes
+AL,Alabama 2021 Plan (Legislature),State Legislature (Republican),1,0.185,0,0.2342450203323992,1,0.1474648319157379,26.61892990940497,-20.289280045547084,"Challenged in Milligan v. Allen (2022), found to violate VRA"
+GA,Georgia 2021 Plan (Legislature),State Legislature (Republican),4,0.21,5,0.2044123102399144,5,0.2044123102399144,-2.660804647659802,-2.660804647659802,"Challenged in multiple lawsuits, some settled"
+LA,Louisiana 2022 Plan (Legislature),State Legislature (Republican),1,0.22,1,0.2111745539926664,1,0.2111745539926664,-4.011566366969815,-4.011566366969815,"Challenged in Robinson v. Ardoin, court ordered 2nd MM district"
+MS,Mississippi 2022 Plan (Legislature),State Legislature (Republican),2,0.24,2,0.2840382534144188,2,0.2840382534144188,18.349272256007836,18.349272256007836,Less controversial than neighboring states
+SC,South Carolina 2022 Plan (Legislature),State Legislature (Republican),1,0.2,0,0.2382714687648257,1,0.1173857749116747,19.13573438241284,-41.30711254416265,"Challenged in SC NAACP v. Alexander, found to violate VRA"

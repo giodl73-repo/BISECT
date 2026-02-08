@@ -1,0 +1,80 @@
+\documentclass[12pt,letterpaper]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{subfig}
+\usepackage{float}
+
+% Hyperref settings
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Bibliography style
+\bibliographystyle{apalike}
+
+% Title and authors
+\title{\textbf{Quantifying the Voting Rights Act-Compactness Tradeoff:\\
+Non-Majority-Minority Districts Generally Benefit from\\
+Demographic-Aware Redistricting}}
+
+\author{
+    Giovanni Della-Libera
+}
+
+\date{\today}
+
+% Document
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting requires balancing competing objectives: population equality, district compactness, and minority representation under the Voting Rights Act (VRA). Courts, legislatures, and scholars commonly assume that creating majority-minority (MM) districts necessitates sacrificing compactness, often citing examples like North Carolina's ``I-85 district.'' We challenge this assumption through comprehensive algorithmic experiments across five Southern states (Alabama, Georgia, Louisiana, Mississippi, South Carolina) using edge-weighted graph partitioning.
+
+Testing 105 configurations with four compactness metrics and three VRA metrics, we find that \textbf{non-MM districts generally gain compactness} when MM districts are created, averaging +7.5\% improvement in Polsby-Popper scores. In Georgia, both MM and non-MM districts improve simultaneously (+14.3\% and +28.1\%, respectively), achieving +22.2\% overall compactness with six MM districts. Alabama improves compactness (+3.2\%) while creating two MM districts, directly contradicting the assumption that VRA compliance degrades geometric quality.
+
+We identify three mechanisms: (1) geographic clustering of minority populations enables joint optimization, (2) non-MM districts benefit from clearer boundaries, and (3) baseline algorithms are suboptimal for both objectives. However, South Carolina cannot achieve three MM districts even with extreme parameters, revealing a \textbf{geographic feasibility threshold}: feasibility ratios (MM\% / minority\%) above ~1.2 are arithmetically infeasible.
+
+Our Pareto frontier analysis provides courts with tools for assessing plan optimality, legislatures with transparent tradeoff communication, and redistricting practitioners with algorithmic guidance. These findings demonstrate that the perceived VRA-compactness conflict is often an artifact of suboptimal algorithms rather than an inherent geometric constraint. Edge-weighted optimization should replace multi-constraint approaches as the standard for VRA-compliant redistricting.
+
+\textbf{Keywords}: redistricting, Voting Rights Act, compactness, graph partitioning, Pareto frontier, majority-minority districts
+\end{abstract}
+
+\doublespacing
+
+% Include sections
+\input{sections/01_introduction.tex}
+\input{sections/02_background.tex}
+\input{sections/03_methodology.tex}
+\input{sections/04_results.tex}
+\input{sections/05_discussion.tex}
+\input{sections/06_limitations.tex}
+\input{sections/07_related_work.tex}
+\input{sections/08_conclusion.tex}
+
+% Figures
+\clearpage
+\input{sections/figures.tex}
+
+% Bibliography
+\singlespacing
+\bibliography{references}
+
+% Appendices
+\appendix
+\input{sections/appendix_a.tex}
+
+\end{document}

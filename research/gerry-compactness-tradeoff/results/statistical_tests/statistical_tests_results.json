@@ -1,0 +1,28 @@
+[
+  {
+    "test": "state_level_paired_t",
+    "comparison": "edge_weighted_vs_baseline_pp",
+    "n": 5,
+    "mean_diff": 0.013266583942626248,
+    "ci_lower": 0.0029781445838881647,
+    "ci_upper": 0.029919638715560765,
+    "t_statistic": 1.632211913168561,
+    "p_value": 0.17797127775778745,
+    "cohens_d": 0.4419032808979824,
+    "interpretation": "not_significant"
+  },
+  {
+    "test": "mm_vs_nonmm_two_sample_t",
+    "comparison": "non_mm_vs_mm_pp",
+    "n_mm": 207,
+    "n_non_mm": 553,
+    "mean_diff": 0.013030543181728055,
+    "ci_lower": 0.0015927242304454895,
+    "ci_upper": 0.024663837339974275,
+    "t_statistic": 2.0700299148439543,
+    "p_value_t": 0.03878770675536233,
+    "p_value_permutation": 0.0412,
+    "cohens_d": 0.16866915897077653,
+    "interpretation": "significant"
+  }
+]

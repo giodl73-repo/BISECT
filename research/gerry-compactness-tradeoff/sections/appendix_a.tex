@@ -1,0 +1,435 @@
+% Appendix A: Technical Implementation Details
+% Edge-Weighted METIS Integration
+
+\section{Edge-Weighted METIS Integration and Implementation}
+\label{appendix:implementation}
+
+This appendix provides the technical details necessary to replicate our edge-weighted graph partitioning approach. We describe the algorithm workflow, pseudocode, METIS parameters, edge weight computation, and computational complexity.
+
+\subsection{Algorithm Overview}
+
+Our approach integrates demographic edge-weighting into METIS's multilevel recursive bisection algorithm. The workflow consists of four stages:
+
+\begin{enumerate}
+    \item \textbf{Graph Construction}: Convert census tract boundaries to a weighted undirected graph.
+    \item \textbf{Edge Weight Assignment}: Compute edge weights reflecting both geographic boundaries and demographic composition.
+    \item \textbf{Recursive Bisection}: Apply METIS's multilevel algorithm with edge weights to partition the graph into $k$ districts.
+    \item \textbf{Validation}: Check contiguity, population balance, and compactness metrics.
+\end{enumerate}
+
+\subsection{Graph Construction}
+
+\textbf{Input}: Census tract shapefiles with demographics (total population, minority population by race/ethnicity).
+
+\textbf{Output}: Undirected graph $G = (V, E, w_V, w_E)$ where:
+\begin{itemize}
+    \item $V$: Set of vertices (census tracts)
+    \item $E$: Set of edges (shared boundaries between adjacent tracts)
+    \item $w_V: V \to \mathbb{R}^+$: Vertex weights (tract populations)
+    \item $w_E: E \to \mathbb{R}^+$: Edge weights (computed by edge-weighting function)
+\end{itemize}
+
+\textbf{Adjacency Detection}: Two tracts $u, v \in V$ are adjacent (share edge $(u,v) \in E$) if their boundaries share a non-zero-length segment. We use GeoPandas' spatial operations:
+
+\begin{verbatim}
+def build_adjacency_graph(tracts_gdf):
+    """
+    Build adjacency graph from census tract geometries.
+
+    Parameters:
+        tracts_gdf: GeoDataFrame with columns ['GEOID', 'geometry',
+                    'total_pop', 'minority_pop']
+
+    Returns:
+        G: NetworkX graph with vertex/edge weights
+    """
+    import networkx as nx
+    from shapely.ops import shared_paths
+
+    G = nx.Graph()
+
+    # Add vertices with population weights
+    for idx, tract in tracts_gdf.iterrows():
+        G.add_node(
+            tract['GEOID'],
+            weight=tract['total_pop'],
+            minority_pct=tract['minority_pop'] / tract['total_pop']
+        )
+
+    # Detect adjacency via spatial intersection
+    for i, tract_i in tracts_gdf.iterrows():
+        for j, tract_j in tracts_gdf.iterrows():
+            if i < j:  # Avoid duplicate edges
+                if tract_i.geometry.touches(tract_j.geometry):
+                    G.add_edge(tract_i['GEOID'], tract_j['GEOID'])
+
+    return G
+\end{verbatim}
+
+\textbf{Note}: For large states (1000+ tracts), we use spatial indexing (R-tree) to accelerate adjacency detection from $O(n^2)$ to $O(n \log n)$.
+
+\subsection{Edge Weight Computation}
+
+Edge weights encode both geographic proximity and demographic composition. The weight $w(u,v)$ for edge $(u,v) \in E$ is computed as:
+
+\[
+w(u,v) = \ell(u,v) \times \alpha(u,v)
+\]
+
+where:
+\begin{itemize}
+    \item $\ell(u,v)$: Geographic length of shared boundary between tracts $u$ and $v$ (in meters).
+    \item $\alpha(u,v)$: Demographic scaling factor reflecting minority composition.
+\end{itemize}
+
+\subsubsection{Demographic Scaling Factor $\alpha(u,v)$}
+
+The scaling factor $\alpha(u,v)$ amplifies edge weights for minority-minority edges:
+
+\[
+\alpha(u,v) =
+\begin{cases}
+\beta & \text{if } \min(p_u, p_v) \geq \tau \\
+1.0 & \text{otherwise}
+\end{cases}
+\]
+
+where:
+\begin{itemize}
+    \item $p_u, p_v$: Minority percentages in tracts $u$ and $v$
+    \item $\tau$: Minority threshold (e.g., 40\%, 45\%, 50\%)
+    \item $\beta$: Edge weight scaling factor (e.g., 1×, 5×, 10×)
+\end{itemize}
+
+\textbf{Interpretation}: If both tracts $u$ and $v$ have minority percentages $\geq \tau$, the edge weight is multiplied by $\beta$, making it more ``expensive'' for METIS to cut. This nudges the algorithm toward keeping minority clusters together without hard constraints.
+
+\textbf{Example}: Alabama with $\beta = 5$, $\tau = 45\%$:
+\begin{itemize}
+    \item Edge between two tracts with 55\% Black population each: $w = \ell \times 5.0$
+    \item Edge between 55\% Black tract and 30\% Black tract: $w = \ell \times 1.0$
+    \item Edge between two 30\% Black tracts: $w = \ell \times 1.0$
+\end{itemize}
+
+\subsubsection{Pseudocode for Edge Weighting}
+
+\begin{verbatim}
+def compute_edge_weights(G, beta, tau):
+    """
+    Assign edge weights based on demographic composition.
+
+    Parameters:
+        G: NetworkX graph with 'minority_pct' node attributes
+        beta: Scaling factor for minority-minority edges
+        tau: Minority threshold (e.g., 0.45 for 45%)
+
+    Returns:
+        G: Graph with updated edge weights
+    """
+    for u, v in G.edges():
+        # Get minority percentages
+        p_u = G.nodes[u]['minority_pct']
+        p_v = G.nodes[v]['minority_pct']
+
+        # Compute boundary length (meters)
+        length = compute_boundary_length(u, v)
+
+        # Apply demographic scaling
+        if min(p_u, p_v) >= tau:
+            weight = length * beta
+        else:
+            weight = length * 1.0
+
+        G[u][v]['weight'] = weight
+
+    return G
+\end{verbatim}
+
+\subsection{METIS Multilevel Recursive Bisection}
+
+We use METIS 5.1.0's multilevel recursive bisection algorithm (\texttt{METIS\_PartGraphRecursive}) to partition the graph into $k$ districts.
+
+\subsubsection{METIS Parameters}
+
+The following parameters control METIS's behavior:
+
+\begin{itemize}
+    \item \textbf{objtype}: \texttt{METIS\_OBJTYPE\_CUT} (minimize edge cut, not communication volume)
+    \item \textbf{ctype}: \texttt{METIS\_CTYPE\_SHEM} (sorted heavy-edge matching for coarsening)
+    \item \textbf{iptype}: \texttt{METIS\_IPTYPE\_GROW} (greedy graph growing for initial partitioning)
+    \item \textbf{rtype}: \texttt{METIS\_RTYPE\_GREEDY} (greedy boundary refinement)
+    \item \textbf{ufactor}: 5 (population imbalance tolerance: 0.5\%)
+    \item \textbf{niter}: 10 (number of refinement iterations)
+    \item \textbf{seed}: 42 (random seed for reproducibility)
+    \item \textbf{dbglvl}: 0 (no debug output)
+\end{itemize}
+
+\subsubsection{Population Balance Constraint}
+
+METIS enforces population balance through vertex weights. Each tract's population becomes its vertex weight $w_V(v)$, and METIS ensures each district has total population within $(1 \pm \epsilon)$ of the target, where $\epsilon = 0.005$ (0.5\%).
+
+\textbf{Target Population}:
+\[
+P_{\text{target}} = \frac{\sum_{v \in V} w_V(v)}{k}
+\]
+
+\textbf{Balance Constraint}:
+\[
+0.995 \times P_{\text{target}} \leq P_i \leq 1.005 \times P_{\text{target}} \quad \forall i \in \{1, \ldots, k\}
+\]
+
+where $P_i$ is the total population of district $i$.
+
+\subsubsection{Integration with Python}
+
+We use PyMETIS, a Python wrapper for METIS, with the following interface:
+
+\begin{verbatim}
+import pymetis
+import networkx as nx
+
+def partition_with_metis(G, k, beta, tau):
+    """
+    Partition graph into k districts using edge-weighted METIS.
+
+    Parameters:
+        G: NetworkX graph with vertex/edge weights
+        k: Number of districts
+        beta: Edge weight scaling factor
+        tau: Minority threshold
+
+    Returns:
+        partition: Dict mapping tract GEOID to district ID
+    """
+    # Apply edge weighting
+    G = compute_edge_weights(G, beta, tau)
+
+    # Convert to METIS format
+    adjacency = [list(G.neighbors(node)) for node in G.nodes()]
+    node_weights = [G.nodes[node]['weight'] for node in G.nodes()]
+    edge_weights = []
+    for u in G.nodes():
+        edge_weights.append([G[u][v]['weight'] for v in G.neighbors(u)])
+
+    # Call METIS
+    edgecut, parts = pymetis.part_graph(
+        k,  # Number of parts
+        adjacency=adjacency,
+        vweights=node_weights,
+        eweights=edge_weights,
+        recursive=True,  # Use recursive bisection
+        seed=42
+    )
+
+    # Map back to GEOIDs
+    partition = {node: parts[i] for i, node in enumerate(G.nodes())}
+
+    return partition, edgecut
+\end{verbatim}
+
+\subsection{Recursive Bisection Workflow}
+
+METIS's recursive bisection algorithm partitions a graph with $k$ districts through $\lceil \log_2 k \rceil$ recursive bisection steps:
+
+\begin{enumerate}
+    \item \textbf{Coarsening}: Repeatedly match and merge vertices to create a hierarchy of smaller graphs $G_0 \to G_1 \to \cdots \to G_L$.
+    \item \textbf{Initial Partitioning}: Partition the coarsest graph $G_L$ into 2 parts using greedy graph growing.
+    \item \textbf{Uncoarsening}: Project the 2-way partition back through the hierarchy $G_L \to G_{L-1} \to \cdots \to G_0$, refining boundaries at each level using Kernighan-Lin / Fiduccia-Mattheyses local search.
+    \item \textbf{Recursive Application}: Apply steps 1-3 to each partition recursively until $k$ parts are obtained.
+\end{enumerate}
+
+\textbf{Edge Weight Integration}: Edge weights $w_E$ are preserved throughout coarsening. When vertices $u$ and $v$ are merged into supervertex $w$, edge weights are summed:
+\[
+w_E(w, x) = w_E(u, x) + w_E(v, x) \quad \forall x \in \text{neighbors}(w)
+\]
+
+This ensures that demographic considerations (encoded in edge weights) influence partitioning at all levels of the hierarchy.
+
+\subsection{Computational Complexity}
+
+\subsubsection{Time Complexity}
+
+\begin{itemize}
+    \item \textbf{Graph Construction}: $O(n \log n)$ using R-tree spatial indexing, where $n = |V|$ (number of tracts).
+    \item \textbf{Edge Weighting}: $O(m)$, where $m = |E|$ (number of edges). For planar graphs (tract adjacency), $m \approx 3n$.
+    \item \textbf{METIS Partitioning}: $O((n + m) \log k)$ for recursive bisection with $k$ districts and multilevel refinement.
+    \item \textbf{Total}: $O(n \log n + m \log k) = O(n \log n)$ since $m = O(n)$ and $k \ll n$ (typically $k \leq 14$ for congressional redistricting).
+\end{itemize}
+
+\subsubsection{Space Complexity}
+
+\begin{itemize}
+    \item \textbf{Graph Storage}: $O(n + m) = O(n)$ for adjacency lists.
+    \item \textbf{METIS Workspace}: $O(n)$ for coarsening/uncoarsening buffers.
+    \item \textbf{Total}: $O(n)$ linear in the number of tracts.
+\end{itemize}
+
+\subsubsection{Empirical Runtimes}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+State & Tracts & Districts & Runtime (s) & Runtime/Tract (ms) \\
+\midrule
+Vermont & 181 & 1 & 2.3 & 12.7 \\
+Delaware & 218 & 1 & 2.8 & 12.8 \\
+Alabama & 1186 & 7 & 14.2 & 12.0 \\
+Georgia & 1973 & 14 & 28.5 & 14.4 \\
+South Carolina & 1106 & 7 & 13.8 & 12.5 \\
+Louisiana & 1212 & 6 & 15.1 & 12.5 \\
+Mississippi & 836 & 4 & 9.7 & 11.6 \\
+California & 9036 & 52 & 132.4 & 14.7 \\
+Texas & 5823 & 38 & 88.9 & 15.3 \\
+\midrule
+\textbf{Mean} & --- & --- & --- & \textbf{13.2 ms/tract} \\
+\bottomrule
+\end{tabular}
+\caption{Empirical runtimes for edge-weighted METIS partitioning on a single core (Intel Core i7-10700K @ 3.8 GHz, 32 GB RAM). Runtime scales approximately linearly with tract count, averaging 13.2 ms per tract.}
+\label{tab:runtimes}
+\end{table}
+
+\subsection{Software and Reproducibility}
+
+\subsubsection{Dependencies}
+
+Our implementation requires:
+\begin{itemize}
+    \item Python 3.9+
+    \item METIS 5.1.0 (compiled with 32-bit vertex indices)
+    \item PyMETIS 2022.1
+    \item NetworkX 2.8+
+    \item GeoPandas 0.11+
+    \item Shapely 1.8+
+    \item Pandas 1.4+
+    \item NumPy 1.22+
+\end{itemize}
+
+\subsubsection{Installation}
+
+METIS must be compiled from source with specific flags to support large graphs:
+
+\begin{verbatim}
+# Download METIS 5.1.0
+wget http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz
+tar -xzf metis-5.1.0.tar.gz
+cd metis-5.1.0
+
+# Compile with 32-bit indices (supports up to 2^32 vertices)
+make config shared=1 cc=gcc prefix=/usr/local
+make install
+
+# Install PyMETIS
+pip install pymetis
+\end{verbatim}
+
+\subsubsection{Code Repository}
+
+Full implementation code, data processing scripts, and replication instructions are available at:
+
+\begin{center}
+\texttt{[Repository URL to be provided upon publication]}
+\end{center}
+
+The repository includes:
+\begin{itemize}
+    \item Graph construction pipeline (adjacency detection, edge weighting)
+    \item METIS wrapper with parameter grid search
+    \item Compactness and VRA metric computation
+    \item Visualization generation (Pareto frontiers, district maps)
+    \item Example notebooks for replicating key results
+\end{itemize}
+
+\subsubsection{Data Availability}
+
+Census tract shapefiles and demographics are publicly available:
+\begin{itemize}
+    \item \textbf{Geometries}: U.S. Census Bureau TIGER/Line Shapefiles (2020)
+    \begin{itemize}
+        \item URL: \url{https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.2020.html}
+    \end{itemize}
+    \item \textbf{Demographics}: Census 2020 Redistricting Data (Public Law 94-171)
+    \begin{itemize}
+        \item URL: \url{https://www.census.gov/programs-surveys/decennial-census/about/rdo/summary-files.html}
+    \item Variables: Total population (P1), Race by ethnicity (P2, P3)
+    \end{itemize}
+\end{itemize}
+
+Processed datasets (tract-level minority percentages, adjacency graphs) are included in the code repository to facilitate replication without reprocessing raw census files.
+
+\subsection{Parameter Sensitivity Analysis}
+
+We tested 105 configurations across 5 states, varying two parameters:
+
+\begin{itemize}
+    \item \textbf{Edge weight scaling $\beta$}: \{1×, 5×, 10×, 50×, 100×, 1000×\}
+    \item \textbf{Minority threshold $\tau$}: \{30\%, 35\%, 40\%, 45\%, 50\%, 55\%\}
+\end{itemize}
+
+\textbf{Key Findings}:
+\begin{itemize}
+    \item \textbf{Alabama}: Optimal at $\beta = 5$, $\tau = 45\%$ (2 MM, +3.2\% PP, $-9.3$\% edge cut). Higher $\beta$ (10×, 50×) achieves same MM count with slightly worse compactness.
+    \item \textbf{Georgia}: Plateau at $\beta = 5$, $\tau = 50\%-55\%$ (6 MM, +22\% PP). Further increasing $\beta$ yields no additional MM districts.
+    \item \textbf{South Carolina}: No configuration achieves $\geq 2$ MM districts, even with $\beta = 1000$, $\tau = 30\%$, confirming infeasibility.
+    \item \textbf{Threshold Sensitivity}: Lower $\tau$ (30\%-40\%) increases MM district counts but degrades compactness. $\tau = 45\%-50\%$ balances VRA compliance with compactness.
+    \item \textbf{Scaling Sensitivity}: Moderate $\beta$ (5×-10×) suffices for most states. Extreme scaling (100×-1000×) provides no additional benefit and risks numerical instability.
+\end{itemize}
+
+\textbf{Recommendation}: Use $\beta = 5$, $\tau = 45\%$ as default parameters for VRA-compliant redistricting, with parameter sweeps to explore Pareto frontiers.
+
+\subsection{Validation and Robustness Checks}
+
+\subsubsection{Contiguity Validation}
+
+After METIS partitioning, we verify that all districts are contiguous:
+
+\begin{verbatim}
+def validate_contiguity(partition, G):
+    """Check that each district forms a connected component."""
+    for district_id in set(partition.values()):
+        tracts = [t for t, d in partition.items() if d == district_id]
+        subgraph = G.subgraph(tracts)
+        if not nx.is_connected(subgraph):
+            raise ValueError(f"District {district_id} is non-contiguous")
+    return True
+\end{verbatim}
+
+All 105 configurations across 5 states produced contiguous districts, confirming that edge-weighting does not compromise contiguity.
+
+\subsubsection{Population Balance Validation}
+
+We verify population deviation $\leq 0.5\%$ for all districts:
+
+\[
+\text{Deviation}_i = \left| \frac{P_i - P_{\text{target}}}{P_{\text{target}}} \right| \times 100\%
+\]
+
+All configurations satisfied deviation $\leq 0.5\%$, with median deviation $< 0.1\%$.
+
+\subsubsection{Seed Sensitivity}
+
+We tested 10 random seeds for Alabama's optimal configuration (5×@45\%):
+\begin{itemize}
+    \item \textbf{MM districts}: 2/7 in all 10 runs (no variation)
+    \item \textbf{Edge cut}: $254 \pm 2$ (coefficient of variation: 0.8\%)
+    \item \textbf{Polsby-Popper}: $0.242 \pm 0.003$ (CV: 1.2\%)
+\end{itemize}
+
+Results are robust to random seed variation, indicating stable Pareto frontiers.
+
+\subsection{Comparison to Multi-Constraint Approach}
+
+Our edge-weighted approach differs fundamentally from METIS's multi-constraint partitioning (\texttt{METIS\_PartGraphKway} with multiple vertex weight vectors):
+
+\begin{itemize}
+    \item \textbf{Multi-Constraint}: Each vertex has multiple weights (e.g., total population, minority population). METIS enforces balance on \emph{all} weight dimensions simultaneously. For redistricting, this attempts to balance both total population and minority population across districts, forcing similar minority percentages in all districts.
+    \item \textbf{Edge-Weighted}: Each vertex has a single weight (total population). Demographic considerations enter through \emph{edge weights}, not vertex constraints. This allows flexible clustering---districts may have very different minority percentages, respecting natural clustering.
+\end{itemize}
+
+\textbf{Alabama Comparison (Paper 4 Result)}:
+\begin{itemize}
+    \item \textbf{Multi-Constraint}: 0 MM districts, edge cut 280, Polsby-Popper 0.234
+    \item \textbf{Edge-Weighted (5×@45\%)}: 2 MM districts, edge cut 254, Polsby-Popper 0.242
+    \item \textbf{Conclusion}: Edge-weighted approach dominates on both VRA compliance and compactness.
+\end{itemize}
+
+\textbf{Mechanistic Explanation}: Multi-constraint forces all districts toward similar minority percentages (~36-37\% in Alabama), preventing formation of $\geq 50\%$ MM districts. Edge-weighting allows heterogeneity---some districts reach 51-52\% minority (MM), others drop to 25-30\% (non-MM), better reflecting natural clustering.

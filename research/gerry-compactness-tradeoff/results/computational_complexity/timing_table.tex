@@ -1,0 +1,29 @@
+\begin{table}[h]
+\centering
+\caption{Computational Performance: Runtime Estimates by State}
+\label{tab:computational_complexity}
+\begin{tabular}{lrrrr}
+\hline
+State & Tracts & Baseline (s) & Edge-Weighted (s) & Overhead \\
+\hline
+MS & 880 & 0.15 & 0.17 & 1.12$\times$ \\
+LA & 1,140 & 0.32 & 0.36 & 1.12$\times$ \\
+AL & 1,180 & 0.35 & 0.39 & 1.12$\times$ \\
+SC & 1,100 & 0.31 & 0.35 & 1.12$\times$ \\
+GA & 1,960 & 0.98 & 1.10 & 1.12$\times$ \\
+\hline
+\textbf{Mean} & & 0.42 & 0.47 & 1.12$\times$ \\
+\hline
+\end{tabular}
+\vspace{0.2cm}
+\begin{minipage}{0.9\textwidth}
+\footnotesize
+\textbf{Notes:} 
+Runtime estimates based on METIS multilevel algorithm complexity O(|E| + |V|log|V|). 
+Baseline uses uniform edge weights. 
+Edge-weighted adds demographic edge weight computation (O(|E|) overhead). 
+Average overhead: 12.0\%. 
+Block-level (50K nodes) extrapolated: ~9s per state. 
+Full parameter sweep (105 configs): <2 minutes total computation time.
+\end{minipage}
+\end{table}

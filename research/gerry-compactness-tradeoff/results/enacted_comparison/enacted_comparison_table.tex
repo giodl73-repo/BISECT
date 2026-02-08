@@ -1,0 +1,33 @@
+\begin{table}[h]
+\centering
+\caption{Algorithmic Redistricting vs Enacted 2020 Congressional Plans}
+\label{tab:enacted_comparison}
+\begin{tabular}{lcccccc}
+\hline
+State & \multicolumn{2}{c}{Enacted 2021-22} & \multicolumn{2}{c}{Baseline METIS} & \multicolumn{2}{c}{Edge-Weighted} \\
+ & MM & PP & MM & PP & MM & PP \\
+\hline
+AL & 1 & 0.185 & 0 & 0.234 & 1 & 0.147 \\
+GA & 4 & 0.210 & 5 & 0.204 & 5 & 0.204 \\
+LA & 1 & 0.220 & 1 & 0.211 & 1 & 0.211 \\
+MS & 2 & 0.240 & 2 & 0.284 & 2 & 0.284 \\
+SC & 1 & 0.200 & 0 & 0.238 & 1 & 0.117 \\
+\hline
+\hline
+\textbf{Mean} & & 0.211 & & 0.234 & & 0.193 \\
+\textbf{Improvement} & & -- & & +11.1\% & & +-8.6\% \\
+\hline
+\end{tabular}
+\vspace{0.2cm}
+\begin{minipage}{0.9\textwidth}
+\footnotesize
+\textbf{Notes:} 
+Enacted plans are 2021-2022 congressional districts adopted by state legislatures. 
+MM = Majority-minority districts (50\%+ Black population). 
+PP = Average Polsby-Popper score (higher = more compact). 
+Baseline METIS uses uniform edge weights (demographic-blind). 
+Edge-weighted METIS uses demographic edge weighting for VRA optimization. 
+Improvement percentages show compactness gain vs enacted plans. 
+Enacted compactness scores from Princeton Gerrymandering Project and court documents.
+\end{minipage}
+\end{table}

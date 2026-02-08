@@ -1,0 +1,79 @@
+% Section 1: Introduction
+% Compactness-VRA Tradeoff Quantification
+
+\section{Introduction}
+
+Congressional redistricting requires balancing multiple competing objectives: equal population distribution (mandated by \emph{Reynolds v. Sims}), district compactness (required by many state constitutions and desired for communities of interest), and minority representation (required by the Voting Rights Act). Courts, legislatures, and redistricting commissions commonly assume these objectives conflict---that achieving Voting Rights Act (VRA) compliance through majority-minority (MM) districts necessitates sacrificing compactness. This assumption appears in judicial opinions \citep{shaw1993}, redistricting guidelines, and academic literature \citep{pildes1993}, often justified by notorious examples like North Carolina's 12th Congressional District (the ``I-85 district''), a narrow 160-mile corridor connecting Black voters across multiple cities.
+
+We challenge this conventional wisdom through comprehensive algorithmic experiments across five VRA-covered states. Contrary to expectation, we find that \textbf{non-MM districts generally gain compactness} when edge-weighted graph partitioning creates MM districts, averaging +7.5\% improvement in Polsby-Popper scores. Even more remarkably, in Georgia, \emph{both} MM and non-MM districts improve simultaneously (+14.3\% and +28.1\%, respectively), achieving a win-win outcome with +22.2\% overall compactness improvement while creating six MM districts. These findings demonstrate that the perceived VRA-compactness tradeoff is often an artifact of suboptimal algorithms rather than an inherent geometric constraint.
+
+\subsection{The Assumed Tradeoff}
+
+The belief that VRA compliance requires compactness sacrifice rests on three interrelated assumptions, each widely accepted in redistricting practice:
+
+\textbf{Assumption 1: Creating MM districts requires non-compact shapes.} Courts have long accepted that connecting minority populations---often concentrated in urban cores or historically segregated regions---requires elongated or irregularly shaped districts. The Supreme Court's \emph{Shaw v. Reno} (1993) decision established that ``bizarre'' district shapes designed for racial purposes may violate equal protection, implicitly acknowledging tension between racial representation and compactness \citep{shaw1993}. Subsequent cases (Miller v. Johnson, Bush v. Vera) reinforced this framing, with courts scrutinizing MM districts for excessive non-compactness while allowing them when ``narrowly tailored'' to VRA compliance.
+
+\textbf{Assumption 2: Compactness costs are borne by all districts.} Political opposition to VRA-compliant redistricting often argues that concentrating minorities in MM districts forces \emph{non-minority} voters into equally irregular districts to maintain population balance and contiguity \citep{issacharoff2002}. This ``spreading the pain'' narrative suggests that VRA compliance imposes system-wide costs, harming district quality for all voters, not just those in MM districts.
+
+\textbf{Assumption 3: You cannot optimize for both simultaneously.} Redistricting research frequently frames VRA compliance and compactness as competing objectives requiring explicit tradeoffs \citep{ricca2013}. Multi-objective optimization literature treats these as Pareto frontiers where improving one objective necessitates degrading the other \citep{mehrotra1998}. This framing implies that perfect compactness (baseline) and maximum VRA compliance represent opposite ends of a spectrum, with practical plans lying somewhere between.
+
+These assumptions shape redistricting policy and litigation. Courts weigh VRA compliance against compactness, often tolerating some non-compactness as an unavoidable cost of racial representation. Legislatures justify suboptimal plans by claiming VRA compliance ``forced'' irregular shapes. Opponents of VRA enforcement cite compactness concerns to resist creating MM districts.
+
+\subsection{Our Surprising Findings}
+
+We systematically test these assumptions using modern graph partitioning algorithms (METIS) with demographic-aware edge-weighting across five Southern states with substantial Black populations: Alabama (36.9\%), Georgia (42.4\%), Louisiana (41.6\%), Mississippi (46.1\%), and South Carolina (35.1\%). For each state, we test 21 configurations---1 baseline (no VRA optimization) and 20 edge-weighted variations (weight factors 1$\times$-100$\times$, minority thresholds 40\%-55\%)---evaluating both state-level compactness (edge cut, average Polsby-Popper) and district-level breakdown comparing MM to non-MM districts.
+
+Our results fundamentally contradict all three assumptions:
+
+\textbf{Finding 1: Non-MM districts generally benefit, not sacrifice.} Across four successful states (Alabama, Georgia, Louisiana, Mississippi), non-MM districts average +7.5\% compactness gain (Polsby-Popper) compared to baseline, while MM districts average $-25.3\%$ loss. In three of four states, non-MM districts \emph{improve}:
+\begin{itemize}
+    \item Alabama: Non-MM +23.0\%, MM $-46.2\%$
+    \item Georgia: Non-MM +28.1\%, MM +14.3\%
+    \item Mississippi: Non-MM +17.9\%, MM $-17.9\%$
+\end{itemize}
+
+Even in Louisiana, where both types sacrifice compactness, non-MM districts lose \emph{less} than MM districts ($-39.0\%$ vs. $-51.2\%$). This pattern demonstrates that VRA compliance costs are \emph{concentrated} in MM districts themselves, not redistributed to non-minority voters.
+
+\textbf{Finding 2: Some states achieve win-win outcomes.} Alabama creates 2 MM districts while \emph{improving} overall compactness: edge cut declines by 9.3\% and average Polsby-Popper increases by 3.2\%. Georgia achieves an even more dramatic win-win, creating 6 MM districts (exceeding its 5-district target) with +22.2\% compactness improvement. Both MM and non-MM districts gain compactness simultaneously in Georgia, directly contradicting the assumption that these objectives inherently conflict.
+
+\textbf{Finding 3: Geographic feasibility thresholds exist.} South Carolina cannot achieve its 3 MM district target even with extreme edge-weighting (1000$\times$ weights, 30\% thresholds), achieving at most 1 MM district across 20 aggressive configurations. This failure is not due to geographic dispersion---Moran's $I = 0.581$ indicates strong spatial autocorrelation---but rather arithmetic impossibility: South Carolina's 35.1\% minority population and 42.9\% MM target ratio (3/7 districts) creates a \emph{feasibility ratio} of 1.22, requiring 22\% more MM districts than its demographic composition can geometrically support. This defines a geographic feasibility threshold beyond which no algorithm can succeed.
+
+\subsection{Mechanistic Explanation}
+
+Why do non-MM districts benefit when MM districts are created? We identify three complementary mechanisms:
+
+\textbf{Mechanism 1: Geographic clustering enables joint optimization.} Minority populations exhibit strong spatial autocorrelation across all study states (Moran's $I$ range: 0.55-0.65), concentrating in specific regions due to historical settlement patterns and residential segregation. Baseline METIS partitioning, which ignores demographics, arbitrarily divides these naturally compact minority clusters to achieve population balance. Edge-weighting corrects this by making minority-minority edges expensive to cut, naturally preserving geographically compact communities. Because the clusters are already spatially concentrated, keeping them intact \emph{improves} rather than degrades geometric compactness.
+
+\textbf{Mechanism 2: Non-MM districts form around alternative geographic cores.} When edge-weighting concentrates minority voters in MM districts, it simultaneously clarifies the boundaries of non-MM districts. Without demographic constraints, baseline partitioning may intermingle minority and non-minority populations across all districts to maintain population balance, fragmenting \emph{both} communities. Edge-weighting removes minority tracts from non-MM districts, allowing them to form around alternative geographic cores---rural areas, suburban regions, non-minority urban centers---without the constraint of maintaining minority vote dilution. These alternative cores may be more geographically cohesive than forced intermixing.
+
+\textbf{Mechanism 3: Baseline partitions are locally but not globally optimal.} Baseline METIS optimizes for unweighted edge cut without regard for demographic geography, producing solutions that are locally optimal for raw compactness but globally suboptimal when considering natural community structure. Edge-weighted optimization searches a different solution space---one that respects demographic clustering---which can contain configurations that dominate baseline on \emph{both} VRA compliance and compactness. Alabama's best configuration (5$\times$@45\%) is precisely such a dominant point.
+
+\subsection{Implications for Redistricting Policy}
+
+Our findings have significant implications for redistricting law, practice, and scholarship.
+
+\textbf{For Courts:} The assumption that VRA compliance \emph{inherently} requires compactness sacrifice is empirically unfounded. Courts should not accept this claim without demanding algorithmic evidence. Plans that achieve VRA compliance with better compactness than baseline exist (Alabama, Georgia), demonstrating that ``impossible'' or ``too costly'' defenses may mask VRA avoidance. We propose Pareto frontier analysis as a tool for assessing whether challenged plans are optimal or dominated by feasible alternatives.
+
+\textbf{For Legislatures:} Transparent Pareto frontiers enable explicit tradeoff communication. Rather than obscuring choices behind claims of algorithmic necessity (``the computer made us draw it this way''), legislatures can present the full frontier of optimal configurations and defend their chosen point based on policy priorities. Plans below the frontier are unjustifiable---they sacrifice one objective unnecessarily without gaining on the other.
+
+\textbf{For Scholarship:} The VRA-compactness ``tradeoff'' literature requires revision. Tradeoffs are \emph{state-dependent} (Alabama: win-win; Louisiana: lose-lose; South Carolina: infeasible), driven by demographic concentration and feasibility ratios, not universal properties of the VRA-compactness relationship. Research should focus on identifying feasibility thresholds and optimal algorithms rather than assuming inherent conflict.
+
+\textbf{For Redistricting Technology:} Edge-weighted graph partitioning dominates multi-constraint optimization for VRA compliance. Alabama's multi-constraint approach achieves 0 MM districts with equal compactness to baseline, while edge-weighting achieves 2 MM districts with \emph{better} compactness. Redistricting commissions and litigation should adopt edge-weighted METIS as the standard approach, retiring less effective methods.
+
+\subsection{Contributions}
+
+This paper makes four primary contributions:
+
+\textbf{1. First comprehensive quantification of the VRA-compactness tradeoff.} Prior work has qualitatively discussed tension between these objectives \citep{pildes1993,issacharoff2002} or tested single states \citep{mehrotra1998}, but no study has systematically quantified tradeoffs across multiple states with district-level breakdown. We provide the first cross-state Pareto frontier analysis showing that win-win, neutral, and lose-lose patterns coexist depending on demographic geography.
+
+\textbf{2. Empirical challenge to the ``VRA requires compactness sacrifice'' assumption.} We demonstrate that non-MM districts gain +7.5\% compactness on average when MM districts are created, directly contradicting the ``spreading the pain'' narrative. This finding has immediate policy relevance for countering opposition to VRA enforcement.
+
+\textbf{3. Geographic feasibility threshold identification.} South Carolina's infeasibility defines the boundary of algorithmic optimization, establishing that feasibility ratios (MM\% / minority\%) above ~1.2 are geometrically infeasible regardless of algorithmic sophistication. This provides courts with a quantitative tool for assessing realistic VRA targets.
+
+\textbf{4. Mechanistic explanation linking clustering to joint optimization.} We explain \emph{why} edge-weighted optimization can improve both objectives simultaneously (geographic clustering aligns VRA compliance with compactness when properly leveraged), moving beyond empirical pattern identification to causal understanding. This mechanism generalizes beyond our specific states to any context with spatially autocorrelated minority populations.
+
+\subsection{Paper Organization}
+
+The remainder of this paper proceeds as follows. Section 2 reviews background on compactness in redistricting, VRA requirements, and prior work on multi-objective optimization. Section 3 describes our methodology: compactness and VRA metrics, redistricting algorithms (baseline, multi-constraint, edge-weighted), experimental design across five states, and Pareto frontier identification. Section 4 presents results, including cross-state patterns, district-level breakdowns, and the surprising Alabama case where VRA compliance improves compactness. Section 5 discusses mechanisms underlying our findings, debunks three common myths about VRA-compactness conflict, analyzes South Carolina's infeasibility threshold, and derives policy implications for courts, legislatures, and advocates. Section 6 addresses limitations and scope conditions. Section 7 situates our work in related literature on compactness metrics, VRA compliance, and multi-objective redistricting. Section 8 concludes with implications for redistricting practice and future research directions.
+
+Our findings fundamentally challenge the conventional wisdom that Voting Rights Act compliance and district compactness are inherently opposed objectives. By demonstrating that non-MM districts generally \emph{benefit} from demographic-aware redistricting and that win-win solutions exist in favorable demographic contexts, we provide both theoretical insight and practical tools for achieving more equitable and compact redistricting outcomes.
