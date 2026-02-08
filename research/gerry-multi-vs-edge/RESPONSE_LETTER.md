@@ -131,23 +131,60 @@ The paper has been recompiled successfully with these changes (16 pages, 475 KB)
 
 **Reviewer Concern** (Dr. Phillips, primary): Comparing 140 edge-weighted configurations vs 4 multi-constraint configurations is fundamentally unfair. More configurations = more chances to succeed, inflating edge-weighted success rate.
 
-**Our Response**: We acknowledge this is a valid methodological concern. The asymmetry arose because:
-- Edge-weighted has 2 parameters (weight factor, threshold): 7 × 4 = 28 configs per state
-- Multi-constraint has 1 parameter (ubvec minority): 4 configs per state
-- 5 states × 28 = 140 edge-weighted vs 5 states × 4 = 20 multi-constraint
+**Our Response**: We have completely addressed this concern by expanding multi-constraint experiments to create a fair 140 vs 140 comparison.
 
-**Planned Actions** (for next revision):
-1. Run additional multi-constraint experiments with multiple random seeds to balance configuration counts
-2. Conduct paired comparisons (best-of-N for each method)
-3. Report per-state success rates more prominently (already done in corrected manuscript)
-4. Add statistical significance tests (see P1-4 response)
+#### Changes Made
 
-**Current Mitigation**: Our corrected manuscript already emphasizes state-level outcomes over aggregate success rates. For example:
-- Alabama: Edge-weighted is the **only** method achieving 2 MM districts (critical outcome)
-- Louisiana: Edge-weighted is the **only** method achieving 2 MM districts (after correction)
-- Mississippi: Both methods achieve 2 MM districts reliably (comparable performance)
+1. **Expanded parameter space**: Increased multi-constraint from 4 to 28 ubvec values per state
+   - Original: {1.3, 1.5, 2.0, 5.0}
+   - Expanded: {1.10, 1.15, 1.20, 1.25, 1.30, ..., 5.0, 6.0, 7.0, 10.0}
+   - Tests full constraint tightness spectrum from very tight (±10%) to very loose (±1000%)
 
-These state-level results are robust to configuration count asymmetry.
+2. **Balanced configuration counts**: 28 configs × 5 states = 140 total (matches edge-weighted exactly)
+
+3. **Fair comparison**: Both methods now have equal "chances" to find optimal parameters
+
+#### Results: Fair 140 vs 140 Comparison
+
+**Overall Performance**:
+```
+Method              Success Rate    Configs
+-----------------   ------------    -------
+Multi-constraint    35.7%          50/140
+Edge-weighted       47.9%          67/140
+Gap                 12.1 pp        17 configs
+```
+
+**Impact of expansion**:
+- Multi-constraint improved: 30.0% (4 configs) → 35.7% (28 configs) [+5.7 pp]
+- Gap narrowed: 17.9 pp → 12.1 pp [-5.8 pp]
+- Edge-weighted advantage **persists** despite fair comparison
+
+#### Critical Finding: Extreme State Dependency
+
+The expanded experiments reveal that multi-constraint shows **severe brittleness**:
+
+| State | Multi-Constraint | Edge-Weighted | Notes |
+|-------|------------------|---------------|-------|
+| Alabama | 0/28 (0%) | 4/28 (14%) | **MC fails across all 28 parameters!** |
+| Georgia | 27/28 (96%) | 28/28 (100%) | Both succeed, EW perfect |
+| Louisiana | 0/28 (0%) | 12/28 (43%) | **MC fails across all 28 parameters!** |
+| Mississippi | 23/28 (82%) | 23/28 (82%) | Equivalent performance |
+| South Carolina | 0/28 (0%) | 0/28 (0%) | Both fail (infeasible target) |
+
+**State success counts**:
+- Multi-constraint: 2/5 states (GA, MS only)
+- Edge-weighted: 4/5 states (AL, GA, LA, MS)
+
+#### Why This Strengthens Our Conclusion
+
+1. **Addresses fairness concern**: 140 vs 140 is genuinely fair
+2. **Advantage persists**: 12.1 pp gap remains despite equal configurations
+3. **Reveals fundamental limitation**: Multi-constraint completely fails in 3/5 states (AL, LA, SC) **regardless of parameter tuning**
+4. **Shows robustness difference**: Edge-weighted succeeds across diverse state demographics; multi-constraint works only in favorable cases
+5. **Validates constraint conflict theory**: States with geographic dispersion (AL, LA) show complete failure across entire parameter sweep
+
+**Conclusion**: The edge-weighted advantage is **not** an artifact of unfair configuration counts. In a fair comparison, edge-weighted outperforms multi-constraint by 12.1 pp and demonstrates superior robustness across states.
 
 ---
 
@@ -175,7 +212,7 @@ These state-level results are robust to configuration count asymmetry.
 
 ## Summary of Changes
 
-### Completed (P1-1, P1-2)
+### Completed (P1-1, P1-2, P1-3)
 - ✅ Identified and corrected critical implementation bug (P1-1)
 - ✅ Verified correct formula mathematically (P1-1)
 - ✅ Re-ran all 20 multi-constraint experiments (P1-1)
@@ -187,15 +224,16 @@ These state-level results are robust to configuration count asymmetry.
 - ✅ Removed confusing calculations (129%, 258%) (P1-2)
 - ✅ Quantified 60-800× tightness ratio difference (P1-2)
 - ✅ Paper recompiled successfully (P1-2)
+- ✅ Expanded multi-constraint to 28 configs per state (140 total) (P1-3)
+- ✅ Fair 140 vs 140 comparison: MC 35.7% vs EW 47.9%, gap 12.1 pp (P1-3)
+- ✅ Demonstrated extreme state dependency and brittleness (P1-3)
 
-### In Progress (P1-3, P1-4)
-- ⏳ Planning balanced experimental design (P1-3)
+### In Progress (P1-4)
 - ⏳ Running experiments with multiple seeds for statistical rigor (P1-4)
 
 ### Timeline for Complete Revision
-- **Week 1** (COMPLETE): ✅ P1-1 (implementation fix) and ✅ P1-2 (theoretical section rewrite)
-- **Week 2-3**: Address P1-3 (balanced experimental design)
-- **Week 4-7**: Address P1-4 (statistical rigor with multiple seeds)
+- **Week 1** (COMPLETE): ✅ P1-1 (implementation fix), ✅ P1-2 (theoretical rewrite), ✅ P1-3 (balanced experiments)
+- **Week 2-7**: Address P1-4 (statistical rigor with multiple seeds and significance tests)
 - **Week 8**: Integrate all changes, finalize manuscript
 
 **Expected resubmission**: Late March 2026
