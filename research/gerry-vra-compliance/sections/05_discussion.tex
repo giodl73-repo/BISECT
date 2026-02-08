@@ -1,0 +1,160 @@
+\subsection{Geographic Constraints Dominate Algorithm Choice}
+
+Our results demonstrate that VRA compliance feasibility depends primarily on geographic distribution of minority populations, not algorithmic sophistication. While n-way partitioning outperforms recursive bisection by 3-7 percentage points, this advantage is insufficient to change outcomes in states with dispersed minority populations.
+
+Alabama illustrates this starkly: After testing six different tree structures, three partitioning methods, and constraint relaxation, the best result (49.6\% minority) still falls short of the 50\% MM threshold. The 0.4 percentage point gap represents a fundamental geographic limit, not an algorithmic deficiency.
+
+\subsection{The VRA-Compactness Tradeoff}
+
+VRA compliance and compactness optimization are fundamentally in tension:
+
+\textbf{VRA requires}: Concentrated minority populations in specific districts (non-uniform distribution).
+
+\textbf{Compactness requires}: Minimizing edge cuts, which favors uniform population distribution.
+
+METIS edge-cut minimization naturally produces districts with similar demographic profiles. Creating MM districts at 60\% minority in a 37\% minority state requires deliberately non-compact boundaries to reach sufficient minority population.
+
+Our 42\% threshold reflects the point where these goals become compatible: States above this threshold can achieve VRA compliance while maintaining compact districts. Below this threshold, one goal must be sacrificed.
+
+\subsection{Policy Implications}
+
+\subsubsection{Feasibility Assessment}
+
+Jurisdictions can estimate VRA compliance feasibility before detailed redistricting:
+\begin{equation}
+\text{Feasible} \iff m_{\text{state}} \gtrsim 0.42 \text{ and clustering favorable}
+\end{equation}
+
+For borderline states (40-42\%), success depends on geographic clustering patterns. Louisiana (41.6\%) achieves 1 of 2 MM districts - might achieve 2 with less emphasis on compactness.
+
+\subsubsection{Algorithmic vs. Political Redistricting}
+
+Our findings suggest limits of purely algorithmic approaches for VRA compliance:
+
+\textbf{Where algorithms work} (GA, MS): High minority percentage + favorable geography enable VRA compliance with compact districts. Algorithmic methods appropriate.
+
+\textbf{Where algorithms struggle} (AL, SC): Low minority percentage + dispersed geography require tradeoffs. Current practice of political map-drawing may be necessary, but creates opportunities for partisan manipulation \citep{stephanopoulos2015}.
+
+\subsubsection{Legal Considerations}
+
+Courts must balance competing redistricting principles \citep{pildes2002}. Our results inform this balance:
+
+\begin{itemize}
+\item \textbf{If $m \geq 0.42$}: VRA compliance achievable with compact districts. No excuse for failure.
+\item \textbf{If $0.40 \leq m < 0.42$}: Tradeoffs necessary. Slight compactness reduction may enable compliance.
+\item \textbf{If $m < 0.37$}: VRA compliance may be infeasible without substantial compactness sacrifice. Alternative remedies (proportional representation, at-large elections with cumulative voting) merit consideration.
+\end{itemize}
+
+\subsection{Comparison to Prior Work}
+
+\subsubsection{MCMC Approaches}
+
+Duchin et al. \citep{duchin2020alabama} analyze Alabama through MCMC ensembles, finding difficulty creating 2 MM districts. Our results align: Alabama's geography fundamentally limits VRA compliance. However, our multi-constraint optimization approach provides:
+\begin{itemize}
+\item Deterministic results (vs. stochastic sampling)
+\item Explicit target specification
+\item Clear feasibility thresholds
+\end{itemize}
+
+\subsubsection{Single-State Studies}
+
+Chen \citep{chen2020texas} examines Texas (42.6\% minority) and finds VRA compliance achievable. This aligns with our 42\% threshold - Texas sits just above it. Our multi-state comparison provides broader context than single-state analyses.
+
+\subsubsection{Optimization Approaches}
+
+Integer programming methods \citep{shirabe2005} can explicitly encode VRA constraints but scale poorly ($>1000$ tracts). METIS handles large graphs efficiently while producing reasonable solutions, though not provably optimal.
+
+\subsection{Methodological Insights}
+
+\subsubsection{Why N-Way Outperforms Recursive Bisection}
+
+N-way partitioning considers all edge cuts simultaneously, enabling global optimization. Recursive bisection makes greedy decisions at each split, potentially missing better configurations.
+
+For Alabama, n-way achieves 47.3\% vs. recursive's 43.0\%. The 4.3 percentage point difference reflects n-way's ability to consider the full problem structure rather than intermediate constraints.
+
+\subsubsection{Adaptive Bisection Improvements}
+
+Adaptive bisection's 3.1 percentage point gain over predetermined trees (46.1\% vs. 43.0\%) shows value of data-driven split decisions. However, adaptive remains bounded by recursive framework's greedy nature - cannot match n-way's global view.
+
+\subsubsection{Diminishing Returns of Constraint Relaxation}
+
+ubvec provides 2-3 percentage points in difficult states but hits geographic ceiling. Alabama's 49.6\% with ubvec=1000 suggests further relaxation (ubvec=10000+) would yield minimal additional gain.
+
+\subsection{Limitations and Future Work}
+
+\subsubsection{Compactness Metrics}
+
+We use edge-cut minimization as compactness proxy. Alternative metrics (Polsby-Popper, Reock) might yield different results. However, Alabama's 49.6\% ceiling suggests geography dominates metric choice.
+
+\subsubsection{Target MM Percentage}
+
+We target 60\% minority for MM districts. Reducing to 55\% or 52\% might enable more states to meet VRA requirements, at cost of less secure MM districts. Future work could explore this tradeoff systematically.
+
+\subsubsection{Block-Level Data}
+
+Census block data (higher resolution than tracts) might enable more precise minority concentration. However, computational cost increases substantially (10$\times$ more vertices). Preliminary tests show minimal improvement - geography remains limiting factor.
+
+\subsubsection{Multi-Objective Optimization}
+
+Explicit multi-objective optimization (Pareto frontier of VRA vs. compactness) could quantify tradeoffs more precisely. Current work uses implicit tradeoff through constraint relaxation.
+
+\subsubsection{Additional States}
+
+Testing additional VRA-covered states (Texas, North Carolina, Florida) would strengthen threshold estimates. Texas (42.6\%) particularly interesting as borderline case.
+
+\subsection{Edge-Weighting: A Breakthrough Approach}
+
+Multi-constraint optimization (Methods 1-3) achieved limited success (40\%), but edge-weighted single-objective optimization (Method 4) doubled this rate to 80\%. Three factors explain this breakthrough:
+
+\subsubsection{Direct Encoding of VRA Goals}
+
+Multi-constraint treats VRA as an optimization constraint: balance population and minority VAP simultaneously. This is indirect—METIS must discover which tracts to group to achieve target minority percentages.
+
+Edge-weighting directly encodes the VRA principle: \textit{"don't split minority communities"}. Edges between minority tracts receive high weights, making them expensive to cut. METIS's edge-cut minimization naturally preserves these communities without explicit minority balancing.
+
+This is conceptually cleaner: rather than telling the algorithm \textit{what outcome we want} (60\% minority districts), we tell it \textit{which structures to preserve} (minority community boundaries).
+
+\subsubsection{Single-Objective Simplicity}
+
+Multi-constraint optimization requires balancing competing objectives. When population balance demands one split and minority concentration demands another, METIS must compromise. The ubvec parameter (allowing 1000$\times$ minority imbalance) attempts to resolve this but fundamentally maintains the dual-objective framework.
+
+Edge-weighting uses single-objective optimization (minimize weighted edge cut) with only population balance as a constraint. This simplifies the optimization landscape, potentially enabling better solutions.
+
+\subsubsection{Alabama as Critical Case}
+
+Alabama's 49.6\% ceiling with multi-constraint (0.4 points short of 50\%) appeared to be a fundamental limit. Edge-weighting crosses this threshold, achieving 50.8\% and creating 2 MM districts.
+
+The key: identifying \textit{which} 0.4\% of minority population to concentrate. Multi-constraint spreads minority population more uniformly across districts. Edge-weighting preserves concentrated minority clusters by protecting their internal boundaries, enabling the marginal concentration needed for VRA compliance.
+
+\subsubsection{Compactness Preservation}
+
+Surprisingly, edge-weighting maintains similar compactness to baseline (average +4\% edge cut, Alabama actually -1.4\%). Why?
+
+\textbf{Mechanism}: Only edges between minority tracts receive high weights. METIS still optimizes overall edge cut, so it maintains compact districts where possible. The only edges bearing higher cost are minority community boundaries—precisely the edges VRA principles suggest we should avoid cutting.
+
+Non-MM districts remain compact because their internal edges have normal weights. The compactness "cost" is localized to minority district boundaries, not distributed across the entire state.
+
+\subsection{Broader Implications}
+
+Edge-weighting resolves a tension previously thought fundamental: achieving VRA compliance without sacrificing algorithmic principles or compactness. The approach:
+
+\begin{itemize}
+\item \textbf{Maintains algorithmic transparency}: Single-objective optimization with explicit, reproducible parameters
+\item \textbf{Achieves minority representation}: 80\% success rate (4/5 states) vs 40\% for multi-constraint
+\item \textbf{Preserves compactness}: Minimal edge cut increase (average +4\%)
+\end{itemize}
+
+This suggests limits of algorithmic redistricting are \textit{methodological}, not fundamental. Prior approaches (multi-constraint) couldn't achieve VRA compliance in dispersed-minority states. Edge-weighting overcomes this limitation by better encoding the underlying principle.
+
+\subsubsection{When Edge-Weighting Fails}
+
+South Carolina (35.1\% minority) remains challenging even with edge-weighting (maximum 49.2\%, 0.8 points short). This likely represents a true geographic limit: state-wide minority percentage is too low to concentrate into 3 MM districts at 50\%+ without extreme compactness sacrifice.
+
+For such states, alternatives remain necessary:
+\begin{enumerate}
+\item \textbf{Accept tradeoffs}: Prioritize VRA compliance over strict compactness
+\item \textbf{Alternative systems}: Proportional representation, ranked-choice voting, multi-member districts
+\item \textbf{Hybrid approaches}: Algorithmic baseline with targeted adjustments
+\end{enumerate}
+
+But edge-weighting \textit{narrows} the set of states requiring these alternatives from 60\% (3/5: AL, LA, SC) to 20\% (1/5: SC only).

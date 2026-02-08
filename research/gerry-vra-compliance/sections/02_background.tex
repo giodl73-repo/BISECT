@@ -1,0 +1,42 @@
+\subsection{Voting Rights Act Requirements}
+
+Section 2 of the Voting Rights Act, as amended in 1982, prohibits any voting practice that ``results in a denial or abridgement of the right to vote on account of race or color'' \citep{vra1982}. Courts apply the \emph{Gingles} test \citep{thornburg1986} to determine whether redistricting plans violate Section 2:
+
+\begin{enumerate}
+\item The minority group must be sufficiently large and geographically compact to constitute a majority in a single-member district.
+\item The minority group must be politically cohesive.
+\item The majority votes sufficiently as a bloc to enable it to defeat the minority's preferred candidate.
+\end{enumerate}
+
+When these conditions are met, jurisdictions must create majority-minority (MM) districts where the minority voting-age population (VAP) exceeds 50\%. In practice, courts often require higher thresholds (55-65\%) to account for lower registration and turnout rates \citep{katz2020}.
+
+\subsection{Algorithmic Redistricting}
+
+Recent work on algorithmic redistricting emphasizes compactness, contiguity, and population balance as core principles \citep{duchin2018, fifield2020, deford2021}. Common approaches include:
+
+\textbf{Recursive Bisection}: Hierarchically partitioning geography into districts by repeatedly splitting regions in two \citep{barnes1982, karypis1998}. METIS graph partitioning \citep{karypis1998metis} minimizes edge cuts (compactness proxy) while balancing population.
+
+\textbf{Markov Chain Monte Carlo (MCMC)}: Generating ensembles of valid redistricting plans through random perturbations \citep{duchin2018, deford2021}. Enables statistical analysis of partisan bias and outlier detection.
+
+\textbf{Optimization}: Direct optimization of redistricting criteria using integer programming \citep{hess1965, shirabe2005} or metaheuristics \citep{bacao2005}.
+
+However, existing work focuses primarily on compactness and partisan fairness, with limited attention to VRA compliance as a hard constraint.
+
+\subsection{Multi-Constraint Graph Partitioning}
+
+METIS supports multi-constraint partitioning where vertices have multiple weights (e.g., population + minority VAP) and optimization balances all constraints simultaneously \citep{karypis1998metis}. Target partition weights (\texttt{tpwgts}) specify desired distribution for each constraint. Per-constraint imbalance tolerance (\texttt{ubvec}) allows relaxation of specific constraints.
+
+Prior work uses multi-constraint partitioning for heterogeneous computing \citep{catalyurek2011} and scientific computing \citep{hendrickson2000}, but not for VRA-aware redistricting.
+
+\subsection{VRA Compliance in Practice}
+
+Real-world redistricting combines algorithmic tools with political negotiation and legal review \citep{pildes2002}. States with VRA requirements often create ``packed'' MM districts with 60-70\% minority VAP, sometimes at the expense of compactness \citep{lublin1997}.
+
+Recent work \citep{duchin2020alabama, chen2020texas} analyzes VRA compliance in specific states but lacks systematic comparison of algorithmic approaches or identification of feasibility thresholds.
+
+\subsection{Gap in Literature}
+
+No prior work systematically evaluates whether principled multi-constraint optimization can achieve VRA compliance across multiple covered states. Our work fills this gap by:
+(1) Testing four optimization approaches on five VRA states,
+(2) Identifying critical demographic thresholds for feasibility,
+(3) Quantifying the tradeoff between VRA compliance and compactness.

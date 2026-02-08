@@ -1,0 +1,29 @@
+The Voting Rights Act of 1965, particularly Section 2 as amended in 1982, prohibits electoral systems that dilute minority voting strength. Courts have interpreted this to require creation of majority-minority (MM) districts where geographically possible \citep{thornburg1986, bartlett2009}. However, achieving VRA compliance through principled, algorithmic methods that avoid partisan gerrymandering remains an open challenge.
+
+Traditional redistricting approaches face a fundamental tension: VRA compliance requires concentrating minority populations into specific districts (non-uniform distribution), while principled redistricting emphasizes compactness and contiguity (favoring uniform distribution). Recent work on algorithmic redistricting \citep{duchin2018, deford2021} focuses primarily on compactness and population balance, with limited attention to VRA constraints.
+
+\subsection{Research Questions}
+
+This paper investigates three fundamental questions:
+
+\begin{enumerate}
+\item \textbf{Feasibility}: Can principled, multi-constraint optimization methods achieve VRA compliance without resorting to partisan map-drawing?
+
+\item \textbf{Geographic Constraints}: What demographic and geographic factors determine whether a state can achieve VRA targets through algorithmic methods?
+
+\item \textbf{Methodological Comparison}: How do different optimization approaches (n-way partitioning, adaptive recursive bisection, constraint relaxation) perform for VRA compliance?
+\end{enumerate}
+
+\subsection{Key Contributions}
+
+We make three primary contributions:
+
+\textbf{(1) Comprehensive VRA Testing}: First systematic evaluation of multi-constraint optimization for VRA compliance across multiple covered states, using METIS graph partitioning with 2D vertex weights (population + minority voting-age population).
+
+\textbf{(2) Critical Threshold Discovery}: We identify a critical threshold around 42\% state-wide minority population, above which VRA compliance is achievable with compact districts, below which it becomes infeasible without relaxing compactness.
+
+\textbf{(3) Geographic Dominance}: We demonstrate that geographic clustering of minority populations is the primary determinant of VRA compliance feasibility, not algorithmic sophistication. Advanced methods (n-way partitioning, adaptive bisection) improve concentration by 3-7 percentage points but cannot overcome fundamental geographic constraints.
+
+\subsection{Overview}
+
+Section 2 reviews VRA requirements and prior algorithmic redistricting work. Section 3 describes our multi-constraint optimization methodology and four tested approaches. Section 4 presents results across five VRA-covered states. Section 5 discusses implications for redistricting practice and policy. Section 6 concludes with recommendations for future work.

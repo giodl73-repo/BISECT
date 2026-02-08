@@ -1,0 +1,48 @@
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+
+\title{Voting Rights Act Compliance Through Edge-Weighted Graph Partitioning}
+\author{Anonymous}
+\date{\today}
+
+\begin{document}
+
+\maketitle}
+
+\begin{abstract}
+The Voting Rights Act (VRA) mandates creation of majority-minority (MM) districts where feasible, but achieving this through principled algorithmic methods remains challenging. We systematically evaluate VRA compliance across five covered states (Alabama, Georgia, Louisiana, Mississippi, South Carolina) using four optimization approaches: recursive bisection, n-way partitioning, adaptive bisection, and edge-weighted single-objective optimization.
+
+Multi-constraint methods (first three approaches) achieve limited success (40\%, 2/5 states), with Alabama failing to reach the 50\% MM threshold despite extensive testing (maximum 49.6\%). We introduce edge-weighted graph partitioning, which assigns higher weights to edges between minority tracts, directly encoding the principle "don't split minority communities" into graph structure. This novel approach doubles success rate to 80\% (4/5 states), achieving VRA compliance in Alabama (2 MM districts at 50.8\% minority) while maintaining compactness (average +4\% edge cut increase).
+
+Through ablation study of 140 configurations (7 weight factors × 4 thresholds × 5 states), we identify optimal parameters: weight factors 5x-10x with 40-45\% minority thresholds achieve VRA compliance at minimal compactness cost. Results demonstrate edge-weighting resolves the perceived tension between VRA compliance and algorithmic principles, revising feasibility thresholds from 42\% (multi-constraint) to ~36\% state-wide minority population.
+
+This work provides both methodological innovation (edge-weighted optimization) and practical guidance for algorithmic redistricting in VRA-covered jurisdictions.
+\end{abstract}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Background and Related Work}
+\input{sections/02_background}
+
+\section{Methodology}
+\input{sections/03_methodology}
+
+\section{Results}
+\input{sections/04_results}
+
+\section{Discussion}
+\input{sections/05_discussion}
+
+\section{Conclusion}
+\input{sections/06_conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

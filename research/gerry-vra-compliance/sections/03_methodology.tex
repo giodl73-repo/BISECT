@@ -1,0 +1,179 @@
+\subsection{Problem Formulation}
+
+We model redistricting as constrained graph partitioning. Census tracts form graph vertices with 2D weights $w_v = (p_v, m_v)$ representing total population and minority VAP. Edges connect geographically adjacent tracts. Goal: partition into $k$ districts minimizing edge cuts (compactness proxy) while satisfying:
+
+\begin{align}
+\text{Population balance:} \quad & \left|\frac{\sum_{v \in D_i} p_v}{\sum_v p_v} - \frac{1}{k}\right| \leq \epsilon_p && \forall i \label{eq:pop}\\
+\text{Contiguity:} \quad & D_i \text{ forms connected subgraph} && \forall i \label{eq:contig}\\
+\text{MM target:} \quad & \frac{\sum_{v \in D_i} m_v}{\sum_{v \in D_i} p_v} \geq 0.50 && \text{for } t \text{ districts} \label{eq:vra}
+\end{align}
+
+where $D_i$ is district $i$, $\epsilon_p = 0.005$ is population tolerance, and $t$ is the target number of MM districts (typically 2-5 depending on state).
+
+\subsection{States and Targets}
+
+We test five VRA-covered states with varying demographics and district counts:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+State & Districts & Target MM & Minority \% & Tracts \\
+\midrule
+Alabama (AL) & 7 & 2 & 36.9\% & 1,437 \\
+Georgia (GA) & 14 & 5 & 42.4\% & 2,796 \\
+Louisiana (LA) & 6 & 2 & 41.6\% & 1,388 \\
+Mississippi (MS) & 4 & 2 & 46.1\% & 878 \\
+South Carolina (SC) & 7 & 3 & 35.1\% & 1,323 \\
+\bottomrule
+\end{tabular}
+\caption{VRA test states with 2020 Census demographics}
+\label{tab:states}
+\end{table}
+
+Target MM district counts reflect statutory requirements and recent legal precedent. Minority VAP includes Black and Hispanic populations, following standard VRA analysis \citep{katz2020}.
+
+\subsection{Data}
+
+\textbf{Geographic}: Census 2020 TIGER/Line shapefiles for tract boundaries and adjacency.
+
+\textbf{Demographic}: Census 2020 redistricting files (PL 94-171) for total population and voting-age population by race/ethnicity.
+
+\textbf{Graph Construction}: Queen contiguity (shared boundary or vertex) with water-based connections for disconnected components. Final graphs: 878-2,796 vertices, average degree 6.1.
+
+\subsection{Optimization Approaches}
+
+We test four approaches combining two partitioning methods with two constraint modes:
+
+\subsubsection{Method 1: Recursive Bisection}
+
+Hierarchically split into districts by repeated binary partitioning. At each split of $n$ districts into $(n_L, n_R)$:
+
+\begin{enumerate}
+\item Calculate target weights for left/right parts based on desired MM distribution
+\item Run METIS 2-way partition with target weights
+\item Recurse on each part until all districts formed
+\end{enumerate}
+
+Tree structure matters: different binary trees yield different intermediate constraints. We test predetermined balanced trees (e.g., $7 \to [3,4] \to \ldots$).
+
+\subsubsection{Method 2: N-Way Partitioning}
+
+Partition directly into all $k$ districts simultaneously. Specify target weights for each final district:
+\begin{itemize}
+\item MM districts ($i = 1, \ldots, t$): Equal population, high minority share
+\item Non-MM districts ($i = t+1, \ldots, k$): Equal population, remaining minority
+\end{itemize}
+
+N-way considers all edge cuts globally, avoiding intermediate constraint limitations of recursive bisection.
+
+\subsubsection{Method 3: Adaptive Recursive Bisection}
+
+At each split, evaluate both $(n_L, n_R)$ and $(n_R, n_L)$ orderings. Choose whichever achieves better minority concentration. Makes locally optimal decisions rather than following predetermined tree.
+
+\subsubsection{Constraint Modes}
+
+\textbf{Strict (tpwgts only)}: Specify target weights $w_{ij}$ for partition $i$, constraint $j$. METIS balances both population and minority constraints simultaneously with tolerance $\epsilon = 0.005$.
+
+\textbf{Relaxed (tpwgts + ubvec)}: Additionally specify per-constraint imbalance: $\text{ubvec} = [1.005, 1000]$. Allows 1000$\times$ more imbalance in minority distribution, enabling concentration while maintaining population balance.
+
+\subsection{Target Weight Calculation}
+
+For $k$ districts with target $t$ MM districts at 60\% minority:
+
+\begin{align}
+\text{MM districts:} \quad w_{i,\text{pop}} &= \frac{1}{k}, \quad w_{i,\text{min}} = \frac{0.60/k}{m_{\text{state}}} && i \leq t\\
+\text{Non-MM:} \quad w_{i,\text{pop}} &= \frac{1}{k}, \quad w_{i,\text{min}} = \frac{(m_{\text{state}} - 0.60t/k)/k_{\text{non}}}{m_{\text{state}}} && i > t
+\end{align}
+
+where $m_{\text{state}}$ is state-wide minority fraction and $k_{\text{non}} = k - t$ is number of non-MM districts.
+
+\subsection{Method 4: Edge-Weighted Single-Objective Optimization}
+
+Multi-constraint optimization (Methods 1-3) treats VRA compliance as a dual-objective problem, simultaneously balancing population and minority VAP. However, this approach proved insufficient for states with dispersed minority populations. We develop an alternative: \textbf{single-objective optimization with weighted edges}.
+
+\subsubsection{Edge Weighting Strategy}
+
+Rather than multi-constraint balancing, we modify the graph structure itself. For each edge $(u, v) \in E$ connecting tracts $u$ and $v$:
+
+\begin{equation}
+w_{edge}(u, v) = \begin{cases}
+\alpha & \text{if } m_u \geq \tau \text{ and } m_v \geq \tau \\
+1 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+where $m_u$ is the minority percentage in tract $u$, $\tau$ is a minority threshold (e.g., 0.45 or 0.50), and $\alpha$ is a weight factor (e.g., 5, 10, 100).
+
+\textbf{Key insight}: Edges between high-minority tracts receive higher weights, making them "expensive" to cut. METIS minimizes total weighted edge cut, so it naturally preserves minority communities.
+
+\subsubsection{Optimization Objective}
+
+Unlike Methods 1-3 which use 2D vertex weights $w_v = (p_v, m_v)$, Method 4 uses:
+\begin{itemize}
+\item \textbf{Vertex weights}: 1D (population only): $w_v = p_v$
+\item \textbf{Edge weights}: As defined above
+\item \textbf{No target weights} (no tpwgts file)
+\item \textbf{No constraint relaxation} (no ubvec parameter)
+\end{itemize}
+
+This is pure single-objective edge-cut minimization with a modified graph. METIS minimizes:
+\begin{equation}
+\text{EdgeCut} = \sum_{(u,v) \in E : D_u \neq D_v} w_{edge}(u, v)
+\end{equation}
+
+subject only to population balance constraint (\ref{eq:pop}).
+
+\subsubsection{Ablation Study Design}
+
+We systematically test edge weighting across parameter space:
+\begin{itemize}
+\item \textbf{Weight factors} $\alpha$: 1, 5, 10, 50, 100, 500, 1000
+\item \textbf{Minority thresholds} $\tau$: 0.40, 0.45, 0.50, 0.55
+\item \textbf{States}: All 5 VRA-covered (AL, GA, LA, MS, SC)
+\end{itemize}
+
+Total configurations: $7 \times 4 \times 5 = 140$ tests.
+
+For each configuration, we measure:
+\begin{enumerate}
+\item MM districts achieved (primary metric)
+\item Maximum minority concentration
+\item Edge cut (compactness proxy): unweighted and weighted
+\item Average internal edges per district
+\end{enumerate}
+
+\subsubsection{Comparison to Multi-Constraint}
+
+Edge weighting differs fundamentally from Methods 1-3:
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lcc}
+\toprule
+& Multi-Constraint & Edge-Weighted \\
+\midrule
+Vertex weights & 2D (pop + minority) & 1D (pop only) \\
+Edge weights & Uniform (1.0) & Variable ($1$ or $\alpha$) \\
+Optimization & Dual-objective & Single-objective \\
+Target weights & Yes (tpwgts) & No \\
+Constraint relaxation & Optional (ubvec) & Not applicable \\
+Complexity & High & Low \\
+\bottomrule
+\end{tabular}
+\caption{Multi-constraint vs edge-weighted optimization}
+\label{tab:method_comparison}
+\end{table}
+
+\textbf{Hypothesis}: Edge weighting directly encodes the VRA goal ("don't split minority communities") into graph structure, potentially achieving better results than indirect multi-constraint balancing.
+
+\subsection{Implementation}
+
+\textbf{Partitioner}: METIS 5.1.0 (\texttt{gpmetis}) with flags \texttt{-contig} (enforce contiguity), \texttt{-minconn} (minimize subdomain connectivity), \texttt{-niter=100} (refinement iterations).
+
+\textbf{Platform}: Python 3.13 with GeoPandas for spatial operations, NumPy for weight calculations.
+
+\textbf{Analysis}: Count MM districts with $\geq 50\%$ minority VAP. Report maximum minority concentration achieved and number of districts meeting threshold. For edge-weighted approach, additionally measure edge cut (unweighted and weighted) to assess compactness tradeoff.
+
+All code and data available at [repository URL upon acceptance].

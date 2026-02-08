@@ -1,0 +1,79 @@
+We systematically evaluated VRA compliance through principled optimization methods, testing four approaches across five covered states. Our investigation yields four primary conclusions:
+
+\textbf{(1) Multi-Constraint Limitations}: Multi-constraint optimization (n-way partitioning, adaptive bisection, constraint relaxation) achieved only 40\% success (2/5 states). Advanced methods improved concentration by 3-7 percentage points but could not overcome geographic constraints.
+
+\textbf{(2) Edge-Weighting Breakthrough}: Single-objective optimization with weighted edges doubled success rate to 80\% (4/5 states). By directly encoding "don't split minority communities" into graph structure, edge-weighting achieves VRA compliance where multi-constraint failed. Alabama breakthrough: 0 MM → 2 MM districts (50.8\% minority).
+
+\textbf{(3) Minimal Compactness Cost}: Edge-weighting increases average edge cut by only +4\% compared to baseline. Alabama actually improves compactness (-1.4\%) while gaining 2 MM districts. This resolves the perceived tension between VRA compliance and algorithmic principles.
+
+\textbf{(4) Revised Feasibility Threshold}: With edge-weighting, states with $\geq 37\%$ minority can achieve VRA compliance (AL: 36.9\% succeeds). Only states with $<35\%$ minority remain challenging (SC: 35.1\% reaches 49.2\%, 0.8 points short). The critical threshold shifts downward from 42\% to ~36\%.
+
+\subsection{Contributions}
+
+This work makes four key contributions to redistricting science and VRA compliance:
+
+\textbf{(1) Methodological Innovation}: Novel edge-weighted single-objective optimization approach that doubles VRA success rate (40\% → 80\%) compared to multi-constraint methods. Direct encoding of community preservation principle into graph structure.
+
+\textbf{(2) Systematic Evaluation}: First comprehensive comparison of four optimization approaches (recursive bisection, n-way, adaptive, edge-weighted) across multiple VRA-covered states. Ablation study of 140 configurations (7 weight factors × 4 thresholds × 5 states) quantifies parameter sensitivity.
+
+\textbf{(3) Empirical Thresholds}: Identification of revised feasibility threshold (~36% state-wide minority with edge-weighting, vs 42% with multi-constraint). Quantification of compactness tradeoffs (average +4% edge cut for VRA compliance).
+
+\textbf{(4) Policy Framework}: Clear methodology for assessing VRA compliance feasibility and selecting appropriate optimization approach based on state demographics. Demonstrates algorithmic redistricting can achieve VRA compliance in most covered jurisdictions.
+
+\subsection{Recommendations}
+
+For practitioners and policymakers:
+
+\textbf{Jurisdictions with $\boldsymbol{m \geq 0.37}$}: Use edge-weighted single-objective optimization. Start with weight factor 5x-10x at 40-45\% threshold. VRA compliance achievable with minimal compactness cost (+4\% average edge cut). Algorithmic methods fully appropriate.
+
+\textbf{Jurisdictions with $\boldsymbol{0.35 \leq m < 0.37}$}: Edge-weighting may approach but not achieve VRA compliance. Test with higher weight factors (50x-100x) and lower thresholds (40\%). If unsuccessful, consider:
+\begin{itemize}
+\item Hybrid approach: algorithmic baseline with targeted adjustments
+\item Modest compactness reduction for VRA priority
+\item Alternative electoral systems (proportional representation, multi-member districts)
+\end{itemize}
+
+\textbf{Jurisdictions with $\boldsymbol{m < 0.35}$}: Algorithmic single-member districts likely insufficient. Alternative remedies necessary: proportional representation, multi-member districts with ranked-choice voting, or cumulative voting.
+
+\textbf{Courts}: Use 36% threshold (not 42%) for feasibility assessment with edge-weighted methods. When state-wide demographics fall below 36\%, recognize genuine geographic limits. Above 36\%, edge-weighting demonstrates VRA compliance is algorithmically achievable—non-compliance suggests alternative motives.
+
+\textbf{Parameter Selection}:
+\begin{itemize}
+\item \textbf{Weight factor}: Start low (5x-10x) for principled approach. Increase to 50x-100x only if necessary. Avoid 500x+ (causes over-clustering).
+\item \textbf{Threshold}: Use 40-45\% for borderline states (includes "near-minority" tracts), 50\% for high-minority states.
+\item \textbf{Validation}: Measure both VRA compliance and compactness. Accept configurations with <10\% edge cut increase.
+\end{itemize}
+
+\subsection{Future Directions}
+
+This work opens several research directions:
+
+\textbf{(1) Full National Analysis}: Extend to all 50 states with complete demographic data. Characterize feasibility across full range of minority percentages (10-50\%).
+
+\textbf{(2) N-Way vs. Recursive Bisection Theory}: Formal analysis of when n-way and recursive bisection produce equivalent results. Our empirical work shows differences, but theoretical characterization remains open.
+
+\textbf{(3) Block-Level Analysis}: Rerun analysis with census block data (10$\times$ resolution). Determine whether finer granularity enables better minority concentration or whether geographic patterns dominate at all scales.
+
+\textbf{(4) Multi-Objective Optimization}: Explicit Pareto frontier analysis of VRA compliance vs. compactness. Quantify exact tradeoff curves rather than binary success/failure.
+
+\textbf{(5) Alternative VRA Targets}: Explore 52\%, 55\%, 65\% MM district thresholds. Determine how threshold choice affects feasibility and representation security.
+
+\textbf{(6) Temporal Analysis}: Apply methods to 2010 and 2000 Census data. Examine how changing demographics affect VRA compliance feasibility over time.
+
+\textbf{(7) Alternative Electoral Systems}: Design proportional representation or ranked-choice systems that achieve minority representation without geographic concentration constraints. Compare representation quality to single-member districts.
+
+\subsection{Closing Remarks}
+
+The Voting Rights Act represents a crucial protection against minority vote dilution, but our results demonstrate fundamental limits to achieving VRA compliance through algorithmic redistricting in states with dispersed minority populations. In these cases, the choice is not between gerrymandering and principled methods, but between:
+
+\begin{itemize}
+\item \textbf{Prioritizing compactness} at the expense of minority representation
+\item \textbf{Prioritizing VRA compliance} at the expense of compactness
+\item \textbf{Adopting alternative systems} that avoid the geographic concentration problem
+\end{itemize}
+
+Our work provides the quantitative foundation for making this choice informed by data rather than rhetoric. For states above the 42\% threshold, there is no excuse for VRA non-compliance - algorithmic methods prove compliance is geometrically feasible. For states below 37\%, policymakers must confront the inherent tension between competing principles.
+
+As redistricting reform efforts nationwide emphasize independent commissions and objective criteria \citep{levitt2010}, our findings highlight the importance of geographic and demographic context. One-size-fits-all approaches may be insufficient. Instead, redistricting standards should be calibrated to jurisdictional demographics, with VRA compliance feasibility assessments informing appropriate criteria weights.
+
+Ultimately, achieving both compact districts and minority representation may require rethinking the single-member geographic district paradigm itself. Multi-member districts, proportional representation, or ranked-choice voting systems can provide minority representation without the geographic constraints that limit algorithmic redistricting. Our work quantifies exactly when these alternatives merit serious consideration.
