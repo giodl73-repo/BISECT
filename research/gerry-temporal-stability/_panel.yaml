@@ -1,0 +1,106 @@
+# Panel Review State for gerry-temporal-stability
+# Paper 7: Cross-Census Temporal Stability
+
+paper_id: gerry-temporal-stability
+title: "Cross-Census Temporal Stability: Recursive Bisection vs N-Way Partitioning Over Decades"
+stage: revision
+round: 1
+venue: ACM-KDD  # Knowledge Discovery and Data Mining (algorithm comparison, empirical analysis)
+venue_tier: A*
+target_date: 2026-08-15
+
+# Paper metadata
+focus_areas:
+  - Temporal stability analysis
+  - Graph partitioning algorithms
+  - Redistricting methodology
+  - Algorithmic comparison
+
+key_contributions:
+  - First empirical quantification of temporal stability differences
+  - Hierarchical vs flat partitioning comparison
+  - Performance-stability tradeoff analysis
+  - 10-year longitudinal study (2010-2020)
+
+# Review state
+reviewers:
+  - name: "Dr. George Karypis"
+    affiliation: "University of Minnesota"
+    expertise: ["METIS algorithm", "graph partitioning", "multilevel algorithms"]
+    rationale: "Creator of METIS - essential for validating technical implementation"
+
+  - name: "Dr. Moon Duchin"
+    affiliation: "Tufts University"
+    expertise: ["redistricting", "gerrymandering", "computational geometry"]
+    rationale: "Leading redistricting researcher - validates practical implications"
+
+  - name: "Dr.Inderjit Dhillon"
+    affiliation: "UT Austin"
+    expertise: ["graph clustering", "scalable algorithms", "temporal analysis"]
+    rationale: "Expert in temporal graph analysis - evaluates stability metrics"
+
+  - name: "Dr. Vipin Kumar"
+    affiliation: "University of Minnesota"
+    expertise: ["data mining", "parallel algorithms", "scientific computing"]
+    rationale: "ACM-KDD program chair - assesses venue fit and significance"
+
+  - name: "Dr. Justin Solomon"
+    affiliation: "MIT"
+    expertise: ["computational geometry", "optimal transport", "hierarchical structures"]
+    rationale: "Geometry expert - evaluates hierarchical structure claims"
+reviews_completed: 5
+review_scores:
+  - reviewer: "Karypis"
+    score: 3.5
+  - reviewer: "Duchin"
+    score: 3.0
+  - reviewer: "Dhillon"
+    score: 3.5
+  - reviewer: "Kumar"
+    score: 2.5
+  - reviewer: "Solomon"
+    score: 3.0
+average_score: 3.1
+synthesis_completed: true
+revision_items:
+  - id: P1.1
+    title: "Rewrite abstract with correct numbers"
+    priority: P1
+    status: complete
+    addressed: true
+    completed_date: 2026-02-08
+  - id: P1.2
+    title: "Add hierarchical structure validation"
+    priority: P1
+    status: complete
+    addressed: true
+    completed_date: 2026-02-08
+  - id: P1.3
+    title: "Add VRA compliance analysis"
+    priority: P1
+    status: not_started
+    addressed: false
+  - id: P1.4
+    title: "Add theoretical foundation"
+    priority: P1
+    status: not_started
+    addressed: false
+
+# History
+history:
+  - date: 2026-02-08
+    stage: draft
+    note: "Paper created with complete abstract and 100% core analysis"
+    status: "20 partition files, metrics computed, visualizations generated"
+  - date: 2026-02-08
+    stage: panel
+    note: "5 reviewers assigned and reviews generated"
+    status: "Average score: 3.1/4.0 (Accept with revisions)"
+  - date: 2026-02-08
+    stage: synthesis
+    note: "Reviews consolidated into SYNTHESIS.md with P1/P2/P3 prioritization"
+    status: "4 P1 items (blocking), 7 P2 items (important), 6 P3 items (nice-to-have)"
+  - date: 2026-02-08
+    stage: revision
+    note: "REVISION-PLAN.md created with actionable tasks"
+    status: "Awaiting P1 completion before resubmission"
