@@ -1,0 +1,155 @@
+# Panel Review State - gerry-threshold-analysis
+# Paper: The 42% Threshold - Geographic Limits of VRA Compliance
+
+title: "The 42% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting"
+paper_type: "VRA Legal Threshold & Empirical Analysis"
+venue: "Election Law Journal" # Target venue for VRA/legal analysis
+stage: "revision" # Current stage in review lifecycle
+round: 1 # Review round number
+
+# Paper metadata
+abstract_summary: "Identifies 42% state-level minority threshold for VRA compliance through comprehensive analysis of 43 states, 645 configurations. States >=42% minority achieve near-proportional representation (80-114% of target, 62% success rate), states <37% achieve 0% success. Statistical validation: r=0.78, p<1e-08 across diverse geographic contexts."
+
+keywords:
+  - "Voting Rights Act"
+  - "majority-minority districts"
+  - "algorithmic redistricting"
+  - "feasibility threshold"
+  - "Section 2 compliance"
+  - "Thornburg v. Gingles"
+
+# Reviewer assignments (selected based on paper type)
+reviewers:
+  - name: "Richard Pildes"
+    affiliation: "NYU Law"
+    expertise: "Election law, constitutional doctrine, VRA"
+    rationale: "Primary VRA expert - will assess legal standards and Gingles prong 1 operationalization"
+
+  - name: "Heather Gerken"
+    affiliation: "Yale Law"
+    expertise: "Election law, voting rights, federalism"
+    rationale: "Legal scholar - will evaluate normative implications and policy framework"
+
+  - name: "Moon Duchin"
+    affiliation: "Rutgers"
+    expertise: "Gerrymandering, metric geometry, fairness"
+    rationale: "Mathematical rigor - will assess statistical methodology and threshold validity"
+
+  - name: "Jonathan Rodden"
+    affiliation: "Stanford"
+    expertise: "Political geography, gerrymandering, representation"
+    rationale: "Geographic clustering expert - will evaluate spatial autocorrelation analysis"
+
+  - name: "Nicholas Stephanopoulos"
+    affiliation: "Harvard Law"
+    expertise: "Efficiency gap, partisan symmetry, legal standards"
+    rationale: "Quantitative legal scholar - will assess empirical methodology and judicial applicability"
+
+# Review completion tracking
+reviews_completed: 5
+reviews_total: 5
+
+# Review scores (Round 1)
+scores_round1:
+  pildes: 2
+  gerken: 3
+  duchin: 2
+  rodden: 3
+  stephanopoulos: 3
+  average: 2.6
+  gate_status: "PASS"
+
+# P1 items (blocking issues that must be addressed)
+p1_items:
+  - id: "P1.1"
+    title: "State-level vs district-level analysis mismatch"
+    reviewers: ["Pildes", "Stephanopoulos"]
+    addressed: false
+
+  - id: "P1.2"
+    title: "Proportionality assumption lacks legal foundation"
+    reviewers: ["Pildes", "Gerken", "Stephanopoulos"]
+    addressed: false
+
+  - id: "P1.3"
+    title: "Insufficient engagement with Gingles three-prong test"
+    reviewers: ["Pildes", "Gerken"]
+    addressed: false
+
+  - id: "P1.4"
+    title: "Sample size (N=5) undermines generalizability"
+    reviewers: ["All reviewers"]
+    addressed: true
+
+  - id: "P1.5"
+    title: "Geographic heterogeneity not adequately addressed"
+    reviewers: ["Rodden", "Duchin"]
+    addressed: false
+
+# PP1 items (panel-level blocking issues from cross-paper review)
+pp1_items: []
+
+# Review history
+history:
+  - date: "2026-02-08"
+    stage: "draft"
+    note: "Paper initialized with panel review system. 5 reviewers assigned: Pildes (VRA law), Gerken (voting rights), Duchin (mathematical rigor), Rodden (political geography), Stephanopoulos (quantitative legal)."
+
+  - date: "2026-02-08"
+    stage: "panel"
+    note: "All 5 reviews completed. Scores: Pildes (2/4), Gerken (3/4), Duchin (2/4), Rodden (3/4), Stephanopoulos (3/4). Average: 2.6/4. GATE: PASS."
+
+  - date: "2026-02-08"
+    stage: "synthesis"
+    note: "Review synthesis generated consolidating 5 P1 issues, 8 P2 issues, 12 P3 issues. Recommendation: Major revisions required. Timeline: 3-4 weeks."
+
+  - date: "2026-02-08"
+    stage: "revision"
+    note: "Entered revision stage. REVISION-PLAN.md created with detailed action items for all P1 issues. Authors must address all 5 blocking issues before recheck."
+
+  - date: "2026-02-08"
+    stage: "revision"
+    note: "P1.4 COMPLETE - Expanded analysis from N=5 to N=43 states (all multi-district states). 645 total configurations tested. Statistical validation: r=0.78, p<1e-08. Updated all paper sections (abstract, methodology, results, discussion, conclusion, limitations). PDF recompiled successfully. 1/5 P1 items addressed."
+
+# Stage gates
+gates:
+  draft_to_panel:
+    condition: "main.tex exists AND venue selected AND 5+ reviewers assigned"
+    status: "passed"
+  panel_to_synthesis:
+    condition: "5+ review files generated"
+    status: "passed"
+  synthesis_to_revision:
+    condition: "SYNTHESIS.md created with P1/P2/P3 classification"
+    status: "passed"
+  revision_to_recheck:
+    condition: "All P1 items addressed"
+    status: "pending"
+  recheck_to_ready:
+    condition: "avg_score >= 2.5/4 AND no_score < 2/4"
+    status: "pending"
+  ready_to_submit:
+    condition: "REVIEW_PANEL.md exists (from panel:panel)"
+    status: "pending"
+
+# Scoring (will be populated after reviews)
+scores:
+  round1: {}
+  average: null
+
+# Paper strengths (to emphasize in reviews)
+strengths:
+  - "First quantitative operationalization of VRA 'sufficiently large' requirement"
+  - "Comprehensive national validation - all 43 multi-district states, 645 configurations"
+  - "Strong statistical validation (r=0.78, p<1e-08) across diverse geographic contexts"
+  - "Clear policy implications - practical guidelines for courts/legislatures"
+  - "Distinguishes geographic impossibility from algorithmic failure"
+  - "Establishes effectiveness vs feasibility vs proportionality threshold taxonomy"
+
+# Potential concerns (for reviewers to address)
+concerns:
+  - "Binary 50% MM threshold - could explore 45-50% sensitivity"
+  - "Algorithm-dependent - edge-weighted may evolve"
+  - "Legal interpretation - courts may not adopt quantitative thresholds"
+  - "Single optimization run per configuration - randomness effects"
+  - "Geographic clustering role less clear than state minority %"

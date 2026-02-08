@@ -1,0 +1,6 @@
+,state_minority_pct,state_minority_pct,state_minority_pct,state_minority_pct,success_rate,success_rate,achieves_target
+,count,min,max,mean,mean,std,mean
+category,,,,,,,
+Below (<37%),25,0.0984,0.3688,0.2547,0.0,0.0,0.0
+Borderline (37-42%),5,0.379,0.4168,0.3994,0.0133,0.0298,0.2
+Above (>=42%),13,0.4425,0.784,0.5415,0.6205,0.4255,0.9231

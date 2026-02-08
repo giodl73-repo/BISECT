@@ -1,0 +1,76 @@
+\subsection{Comprehensive State Analysis}
+
+We analyze all 43 states with multiple congressional districts, spanning the full range of minority demographics (9.8\%--78.4\%). Single-district states (Alaska, Delaware, Montana, North Dakota, South Dakota, Vermont, Wyoming) are excluded as they involve no redistricting decisions.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcc}
+\toprule
+\textbf{Category} & \textbf{Minority Range} & \textbf{States (n)} \\
+\midrule
+High minority    & $\geq$50\% & 6 \\
+Above threshold  & 42--50\%   & 7 \\
+Borderline       & 37--42\%   & 5 \\
+Below threshold  & $<$37\%    & 25 \\
+\bottomrule
+\end{tabular}
+\caption{43-state sample provides comprehensive coverage of demographic spectrum, enabling robust threshold identification.}
+\end{table}
+
+Target MM counts follow proportional representation: states with X\% minority population should create approximately X\% of districts as majority-minority. This proportional benchmark reflects VRA Section 2 requirements for equal electoral opportunity.
+
+\subsection{Optimization Method}
+
+We employ \textbf{edge-weighted recursive bisection}~\citep{dellaLibera2026edgeWeighted}, which has proven most effective for VRA compliance:
+
+\begin{enumerate}
+    \item \textbf{Graph construction}: Census tracts as vertices, shared boundaries as edges
+    \item \textbf{Edge weighting}: Edges between minority tracts ($\geq$ threshold) receive weight factor $w$ (1x--1000x); other edges weight 1.0
+    \item \textbf{Recursive bisection}: METIS optimizes by minimizing total edge cut weight
+    \item \textbf{MM threshold}: Districts with $\geq$50\% minority deemed majority-minority
+\end{enumerate}
+
+\textbf{Key insight}: Higher-weight edges are ``expensive'' to cut, so METIS keeps minority tracts together.
+
+\subsection{Experimental Design}
+
+\textbf{Comprehensive ablation study} tests 645 configurations across parameter space:
+\begin{itemize}
+    \item \textbf{States}: 43 multi-district states (all US states except 7 single-district)
+    \item \textbf{Weight factors}: 1x, 5x, 10x, 50x, 100x (5 values)
+    \item \textbf{Minority thresholds}: 40\%, 45\%, 50\% (3 values)
+    \item \textbf{Total}: 43 states $\times$ 5 weights $\times$ 3 thresholds = 645 configurations
+\end{itemize}
+
+For each configuration, we record:
+\begin{itemize}
+    \item Number of MM districts created
+    \item Proportional target achievement (actual MM / target MM)
+    \item Success (MM count $\geq$ proportional target)
+    \item District-level minority percentages
+\end{itemize}
+
+This design provides statistical power (N=43) to validate threshold patterns across diverse geographic and demographic contexts.
+
+\subsection{Geographic Clustering Metrics}
+
+To understand spatial distribution's role, we compute:
+
+\textbf{Moran's I}: Global spatial autocorrelation measuring clustering of minority population. Range: $[-1, +1]$ where +1 indicates perfect clustering, 0 random, -1 perfect dispersion.
+
+\textbf{Local clustering index}: Percentage of minority population living in $\geq$50\% minority tracts. Higher values indicate concentration in fewer geographic areas.
+
+\textbf{Majority-minority tract percentage}: Proportion of census tracts with $\geq$50\% minority population.
+
+\subsection{Success Criteria and Threshold Definition}
+
+A configuration ``succeeds'' if it creates MM count $\geq$ proportional target. This defines the \textbf{effectiveness threshold}: the minimum minority percentage at which edge-weighted optimization can achieve near-proportional representation (80-100\%+ of target).
+
+We report per-state metrics:
+\begin{itemize}
+    \item \textbf{Success rate}: Percentage of 15 configurations (5 weights $\times$ 3 thresholds) achieving proportional target
+    \item \textbf{Best result}: Highest MM count and percentage of target achieved
+    \item \textbf{Achieves target}: Whether any configuration reached or exceeded proportional target
+\end{itemize}
+
+This differs from a \textit{feasibility threshold} (can create any MM districts) or \textit{proportionality threshold} (achieves 100\% of target). The 42\% effectiveness threshold marks where optimization becomes highly effective (80-114\% achievement) versus partially effective (33-66\% achievement).

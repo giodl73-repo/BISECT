@@ -1,0 +1,111 @@
+\subsection{Voting Rights Act and Section 2}
+
+Section 2 of the VRA prohibits voting practices that ``result in a denial or abridgement of the right to vote on account of race.'' The 1982 amendments established that plaintiffs need not prove discriminatory intent; demonstrating discriminatory effect suffices~\citep{vra1982}.
+
+\textbf{Thornburg v. Gingles} (1986) established three preconditions for Section 2 liability:
+\begin{enumerate}
+    \item The minority group is ``sufficiently large and geographically compact''
+    \item The minority group is politically cohesive
+    \item The majority votes sufficiently as a bloc to defeat minority-preferred candidates
+\end{enumerate}
+
+Our work addresses the first precondition: \emph{What constitutes ``sufficiently large''?}
+
+\subsection{Prior Quantitative Analysis}
+
+Limited prior work has attempted to quantify VRA feasibility thresholds:
+
+\textbf{Legal scholarship} provides qualitative guidance but lacks systematic empirical analysis. Courts evaluate ``sufficiency'' case-by-case using expert testimony about specific geographic configurations.
+
+\textbf{Political science} literature examines MM district creation but typically assumes feasibility rather than testing threshold conditions systematically.
+
+\textbf{Algorithmic redistricting} research has demonstrated various optimization methods but has not explicitly studied minimum population requirements for VRA compliance.
+
+\subsection{Gap in Literature}
+
+\textbf{No existing work systematically identifies the minimum state-level minority percentage required for VRA compliance through algorithmic methods.} This gap leaves courts, legislatures, and advocates without quantitative tools to assess feasibility ex ante.
+
+Our contribution fills this gap through:
+\begin{itemize}
+    \item Systematic testing across multiple states with varying demographics
+    \item Rigorous algorithmic optimization (edge-weighted partitioning)
+    \item Statistical validation of threshold patterns
+    \item Geographic clustering analysis to understand spatial constraints
+\end{itemize}
+
+\subsection{Scope and Modeling Assumptions}
+
+This study addresses a specific, bounded question: \textbf{At what state-level minority percentage can edge-weighted algorithmic redistricting create majority-minority districts in proportion to the minority population?} We must clarify what this analysis does and does not establish regarding VRA compliance.
+
+\subsubsection{Research Question vs Legal Standard}
+
+Our empirical analysis examines \emph{feasibility patterns}---whether optimization algorithms can achieve specified MM district targets given demographic and geographic constraints. This differs fundamentally from establishing \emph{legal requirements}:
+
+\textbf{Research Question}: Can a state with $X$\% minority population create $Y$ MM districts (where $Y \approx X\% \times \text{total districts}$) while maintaining contiguity and reasonable compactness?
+
+\textbf{Legal Question}: Must a state with $X$\% minority population create $Y$ MM districts to comply with VRA Section 2?
+
+The answer to the research question informs but does not determine the answer to the legal question. Courts consider many factors beyond algorithmic feasibility when evaluating Section 2 claims.
+
+\subsubsection{Proportional Representation as Modeling Assumption}
+
+We adopt \textbf{proportional representation as a modeling assumption}: if a state has $X$\% minority population, we test whether optimization can create $\approx X$\% of districts as majority-minority. This assumption serves three purposes:
+
+\begin{enumerate}
+    \item \textbf{Baseline for comparison}: Proportionality provides a principled, objective target for cross-state analysis
+    \item \textbf{Upper bound test}: If proportional representation is infeasible, sub-proportional representation may also face geographic constraints
+    \item \textbf{Empirical regularity detection}: Systematic patterns emerge most clearly when testing consistent targets across diverse states
+\end{enumerate}
+
+\textbf{Critical clarification}: Proportional MM representation is \emph{not} a VRA legal requirement. Section 2 prohibits vote dilution where geographically compact minority communities exist; it does not mandate proportional allocation of MM districts~\citep{johnson1996}. Courts have approved plans with both more and fewer MM districts than proportional targets, depending on case-specific factors including:
+
+\begin{itemize}
+    \item Geographic distribution and clustering of minority population
+    \item Communities of interest and traditional districting principles
+    \item Competing constitutional requirements (equal population, contiguity)
+    \item Political cohesion and racially polarized voting patterns (Gingles prongs 2-3)
+\end{itemize}
+
+Our proportionality assumption likely provides an \emph{upper bound} on VRA obligations. If states cannot achieve proportional MM representation through optimization, courts are unlikely to mandate it. Conversely, if proportional representation is readily achievable, it demonstrates geographic feasibility for at least that level of minority representation.
+
+\subsubsection{State-Level Threshold vs District-Level Feasibility}
+
+Our analysis identifies \emph{state-level empirical patterns}: states with $\geq$42\% minority achieve near-proportional MM representation through optimization, while states below 37\% fail to achieve proportional targets. This state-level threshold provides \textbf{contextual guidance} for evaluating VRA claims, not a bright-line legal test.
+
+\textbf{Distinction}:
+\begin{itemize}
+    \item \textbf{State-level threshold (this paper)}: Empirical regularity observed across 43 states---minority percentage correlates strongly with optimization success in creating proportional MM districts
+    \item \textbf{District-level feasibility (legal requirement)}: Courts evaluate whether specific districts can be drawn for specific minority communities in specific geographic configurations
+\end{itemize}
+
+VRA Section 2 operates at the district level: plaintiffs must demonstrate that a \emph{particular} minority community is sufficiently large and compact to constitute a district. Our state-level findings inform this analysis by showing that:
+
+\begin{enumerate}
+    \item \textbf{Above 42\% state minority}: Geographic feasibility for multiple MM districts is empirically demonstrated; burden shifts to defendants to explain why specific districts cannot be drawn
+    \item \textbf{Below 37\% state minority}: Proportional MM representation faces systematic geographic constraints; plaintiffs face higher burden to demonstrate specific district feasibility
+    \item \textbf{Borderline (37-42\%)}: Case-specific geographic analysis essential; state-level percentage alone insufficient to determine feasibility
+\end{enumerate}
+
+\subsubsection{Algorithmic Feasibility vs Legal Compliance}
+
+Edge-weighted optimization demonstrates \emph{one approach} to MM district creation. Legal compliance involves additional considerations beyond algorithmic optimization:
+
+\textbf{Traditional redistricting principles}: Courts balance VRA compliance against other legitimate state interests including preserving political subdivisions, maintaining communities of interest, and respecting traditional boundaries.
+
+\textbf{Gingles prongs 2-3}: Our analysis addresses geographic compactness (prong 1) but not political cohesion (prong 2) or racially polarized voting (prong 3), which require case-specific electoral and behavioral analysis.
+
+\textbf{Partisan considerations}: While our algorithm ignores partisan composition, real-world redistricting must consider how MM districts affect overall partisan balance and incumbency protection.
+
+\textbf{Alternative configurations}: Our optimization finds \emph{one feasible plan}; many other configurations may exist with different tradeoffs between MM district creation and other objectives.
+
+\subsubsection{Contribution and Scope}
+
+This paper's contribution is \textbf{empirical and descriptive}, not normative or prescriptive:
+
+\textbf{What we establish}: At 42\% state-level minority, edge-weighted optimization reliably creates near-proportional MM representation across diverse geographic contexts. This threshold reflects fundamental demographic-geographic constraints, not algorithmic artifacts.
+
+\textbf{What we do not claim}: That states must create proportional MM districts, that 42\% is a legal bright-line test, or that algorithmic feasibility alone determines VRA compliance.
+
+\textbf{Practical value}: Courts, legislatures, and redistricting commissions can use the 42\% threshold as \emph{one factor} in feasibility assessment, understanding that specific geographic configurations, community structures, and legal requirements drive ultimate compliance determinations.
+
+Our findings transform VRA feasibility assessment from purely qualitative expert testimony to quantitatively-informed analysis, while recognizing that judicial discretion and case-specific factors remain essential to Section 2 adjudication.

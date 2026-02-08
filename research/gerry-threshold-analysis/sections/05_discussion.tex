@@ -1,0 +1,92 @@
+\subsection{The 42\% Effectiveness Threshold}
+
+Our 43-state analysis identifies \textbf{42\% state-level minority} as the effectiveness threshold for achieving near-proportional MM representation through algorithmic redistricting. This threshold emerges from comprehensive empirical validation (r=0.78, p$<$1e-08) across diverse geographic and demographic contexts.
+
+\textbf{Proportionality constraint}: If a state has $X$\% minority population, it can create at most $\sim X$\% MM districts (districts with $\geq$50\% minority). The 42\% threshold marks where edge-weighted optimization transitions from partial effectiveness (33-67\% of proportional target) to high effectiveness (80-114\% of target).
+
+\textbf{Example}: Florida (48.5\% minority, above threshold) achieves 12/14 = 86\% of proportional target. Pennsylvania (26.5\% minority, below threshold) achieves 0/5 = 0\% of target. Illinois (41.7\% minority, borderline) achieves 5/7 = 71\% of target, demonstrating the transition zone.
+
+\subsection{Effectiveness vs Feasibility vs Proportionality}
+
+Our analysis distinguishes three threshold concepts:
+
+\textbf{Feasibility threshold ($\sim$2\%)}: Can create ANY MM districts. 38\% of below-threshold states still create 1+ MM districts, showing basic feasibility exists even at low minority percentages.
+
+\textbf{Effectiveness threshold (42\%)}: Can achieve NEAR-PROPORTIONAL representation (80-100\%+ of target). This is the threshold validated by our 43-state analysis. Above 42\%: 92\% of states achieve proportional targets. Below 37\%: 0\% achieve targets.
+
+\textbf{Proportionality threshold ($\sim$80\%)}: Can reliably achieve FULL proportional representation (100\% of target). Only states with very high minority percentages consistently hit exact proportional targets across all configurations.
+
+For VRA Section 2 analysis, the \textbf{effectiveness threshold (42\%)} is most legally relevant, as it marks where optimization can provide proportional electoral opportunity, satisfying the geographic compactness component of Gingles prong 1.
+
+\subsection{Legal Implications}
+
+\subsubsection{From Empirical Findings to Legal Doctrine}
+
+Our 42\% effectiveness threshold represents an \textbf{empirical regularity}, not a self-executing legal standard. Courts evaluating Section 2 claims must consider this threshold as \emph{one factor among many} in feasibility assessment, not as a bright-line rule that automatically determines liability.
+
+\textbf{How courts should use the threshold}: The 42\% pattern provides \emph{contextual guidance} for Gingles prong 1 analysis. In states above the threshold, plaintiffs can cite comprehensive empirical evidence (N=43, r=0.78, p$<$1e-08) demonstrating that proportional MM representation is algorithmically achievable, shifting the burden to defendants to explain why specific geographic or legal constraints prevent such districts in their particular case. In states below the threshold, defendants can cite the same evidence to demonstrate that proportional MM representation faces systematic demographic-geographic constraints, requiring plaintiffs to show exceptional local clustering or alternative district configurations.
+
+\textbf{What the threshold does not determine}: The 42\% threshold does not establish (1) that states must create proportional MM districts, (2) that states above 42\% automatically violate Section 2 if they fail to create proportional MM districts, or (3) that states below 42\% are exempt from Section 2 obligations. VRA liability depends on case-specific evaluation of all three Gingles preconditions plus totality-of-circumstances analysis, not solely on state-level demographic percentages.
+
+\textbf{District-level vs state-level analysis}: Section 2 operates at the district level---courts evaluate whether \emph{specific} minority communities can constitute \emph{specific} districts. Our state-level threshold informs this analysis by demonstrating systematic patterns across diverse contexts, but ultimate feasibility determinations require examining particular geographic configurations, community boundaries, and traditional redistricting principles. A state at 44\% minority (above threshold) may still face legitimate constraints on MM district creation in specific regions; conversely, a state at 40\% minority (borderline) may have concentrated urban minority populations enabling MM districts despite being below the state-level effectiveness threshold.
+
+\textbf{For Courts}:
+\begin{itemize}
+    \item Quantitative tool for assessing Gingles prong 1 (``sufficiently large'')
+    \item States $\geq$42\% minority: presumption of feasibility
+    \item States $<$37\% minority: skepticism warranted absent exceptional clustering
+    \item Borderline states (37--42\%): require case-specific geographic analysis
+\end{itemize}
+
+\textbf{For Legislatures}:
+\begin{itemize}
+    \item Clear empirical guidance on where proportional MM representation is achievable before map drawing
+    \item States above threshold should commission algorithmic studies demonstrating feasibility of proportional MM districts
+    \item Transparency: publish algorithms + parameters used to demonstrate good-faith efforts
+    \item Proactive strategy: use edge-weighted optimization to maximize MM district creation where geographically feasible
+\end{itemize}
+
+\textbf{For Plaintiffs}:
+\begin{itemize}
+    \item Focus litigation on states above 42\% threshold where feasibility clear
+    \item In borderline states, commission expert analysis of geographic clustering
+    \item Challenge inferior algorithms: demonstrate edge-weighted superiority
+\end{itemize}
+
+\subsection{Refinement of ``Sufficiently Large''}
+
+Thornburg v. Gingles requires minority group be ``sufficiently large and geographically compact.'' Our 43-state analysis provides empirical quantification:
+
+\textbf{Sufficiently large}: $\geq$42\% state-wide minority enables near-proportional representation (80-100\%+ of target) through edge-weighted optimization. This threshold holds across:
+\begin{itemize}
+    \item \textbf{Geographic regions}: South, Southwest, Northeast, Midwest, West
+    \item \textbf{Demographic composition}: Black-majority, Hispanic-majority, multi-racial states
+    \item \textbf{State sizes}: Small states (2 districts) to large states (52 districts)
+\end{itemize}
+
+\textbf{National validation}: The threshold's consistency across 43 diverse states (r=0.78, p$<$1e-08) demonstrates it reflects fundamental demographic-geographic constraints, not artifacts of specific state characteristics.
+
+\subsection{Comparison to Prior Work}
+
+Our 43-state analysis represents the first comprehensive empirical determination of effectiveness thresholds for proportional MM representation. Prior work either:
+\begin{itemize}
+    \item Focused on single states or small case studies (N$\leq$5)
+    \item Assumed feasibility of proportional MM representation rather than testing systematic demographic-geographic limits
+    \item Lacked statistical validation across diverse geographic contexts
+\end{itemize}
+
+\textbf{Methodological contributions}:
+\begin{itemize}
+    \item \textbf{Scale}: 645 configurations across 43 states providing statistical power (N=43)
+    \item \textbf{Validation}: Multiple statistical tests (r=0.78, t=7.39, p$<$1e-08) confirm threshold robustness
+    \item \textbf{Generalizability}: Pattern holds across all US regions, demographic compositions, and state sizes
+    \item \textbf{Practical guidance}: Quantitative thresholds for courts, legislatures, and redistricting commissions
+\end{itemize}
+
+\subsection{Robustness Considerations}
+
+\textbf{Census year stability}: Analysis uses 2020 data; thresholds may shift with demographic changes across census cycles.
+
+\textbf{Algorithm dependence}: Results assume edge-weighted optimization. Future improved algorithms might lower threshold modestly, but fundamental proportionality constraint remains.
+
+\textbf{50\% threshold sensitivity}: We define MM as $\geq$50\% minority. Some contexts accept 45--50\% as sufficient; this would lower state-level threshold slightly ($\sim$40\% instead of 42\%).

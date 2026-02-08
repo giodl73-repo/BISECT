@@ -1,0 +1,41 @@
+\subsection{Methodological Limitations}
+
+\textbf{Algorithm dependency}: Results assume edge-weighted recursive bisection. Future algorithms may improve success rates, potentially lowering threshold. However, fundamental proportionality constraints (cannot create $X$\% MM districts from $<X$\% minority base) ensure threshold persists.
+
+\textbf{Single optimization run}: Each configuration tested once. METIS introduces randomness; multiple runs might yield slightly different results. However, 645-configuration comprehensive study (43 states × 15 configs) provides robust statistical patterns validated across diverse contexts.
+
+\textbf{Binary success metric}: We use 50\% as MM threshold. Some legal contexts accept 45--50\% as sufficient. Lowering threshold to 45\% would reduce state-level requirement to approximately 40\% (not 42\%).
+
+\subsection{Geographic Limitations}
+
+\textbf{Clustering metrics}: Moran's I captures global spatial autocorrelation but not local complexities. Other metrics (Geary's C, LISA) might provide additional insights.
+
+\textbf{Contiguity requirement}: Analysis assumes districts must be geographically contiguous. Relaxing this constraint (allowing non-contiguous districts) would lower threshold, but violates standard redistricting principles.
+
+\textbf{Compactness vs VRA tradeoff}: Our edge-weighted approach balances both. Abandoning compactness entirely might enable VRA compliance at lower state percentages, but creates gerrymandered districts.
+
+\subsection{Data Limitations}
+
+\textbf{Census resolution}: Analysis uses census tracts as atomic units. Finer resolution (blocks) might enable better minority concentration, marginally lowering threshold. However, tracts provide computationally feasible resolution for METIS optimization across 43 states.
+
+\textbf{Temporal stability}: Analysis uses 2020 Census demographics. Threshold patterns likely stable across decades absent major demographic shifts, but periodic revalidation as new census data becomes available would strengthen findings.
+
+\subsection{Policy Limitations}
+
+\textbf{Coalition districts}: Analysis considers single minority group (non-white vs white). Multi-racial coalition districts might achieve VRA goals at lower single-group percentages.
+
+\textbf{Political context ignored}: We assess purely demographic/geographic feasibility. Political factors (partisan composition, incumbency) affect real-world redistricting.
+
+\textbf{Proportionality assumption}: We target MM proportion matching state minority percentage. Courts might require different proportions case-specifically.
+
+\subsection{Future Research Directions}
+
+\textbf{Temporal analysis}: Compare thresholds across 2000, 2010, 2020 census years to assess longitudinal stability and demographic trend impacts.
+
+\textbf{Sub-group analysis}: Examine thresholds for Hispanic, Asian, Native American communities separately.
+
+\textbf{Alternative algorithms}: Test whether emerging optimization methods (deep learning, genetic algorithms) lower threshold significantly.
+
+\textbf{Coalition analysis}: Study feasibility of multi-racial coalition districts in states below single-group threshold.
+
+\textbf{Synthetic geography}: Generate controlled synthetic states with varying minority percentages and clustering to isolate causal factors.
