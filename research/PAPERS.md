@@ -7,11 +7,11 @@
 
 ## Overview
 
-This portfolio comprises **17 papers** organized into 5 categories:
+This portfolio comprises **18 papers** organized into 5 categories:
 - **Synthesis** (1 paper): Meta-analysis for Science/Nature
 - **Core Portfolio** (10 papers): Foundation + extensions + investigations
 - **Validation** (2 papers): Robustness testing
-- **Experimental** (4 papers): Alternative representation systems
+- **Experimental** (5 papers): Alternative representation systems
 
 ---
 
@@ -61,7 +61,7 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 
 ---
 
-### 13-16. Experimental / Alternative Systems
+### 13-17. Experimental / Alternative Systems
 
 | # | Slug | Title | Status | Target Venue | Priority |
 |---|------|-------|--------|--------------|----------|
@@ -69,6 +69,7 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 | **14** | county-representation | Direct County Representation: Using Existing Political Boundaries | Planned | State Politics & Policy | Research |
 | **15** | party-based-allocation | Proportional Representation Through Party-Based District Allocation | Planned | Electoral Studies | Research |
 | **16** | multi-member-districts | Multi-Member Districts and Proportional Representation | Planned | Electoral Studies | Research |
+| **17** | partisan-similarity-districts | Partisan Similarity Districts: Algorithmic Safe Seats | Planned | AJPS | Research |
 
 **Status**: All experimental papers planned, ready to implement at any time.
 
@@ -100,8 +101,8 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 ### Temporal Analysis (1 paper)
 - **12**: longitudinal-analysis — 20-year trends (2000/2010/2020)
 
-### Experimental (4 papers)
-- **13-16**: Alternative representation systems (national, county, party-based, multi-member)
+### Experimental (5 papers)
+- **13-17**: Alternative representation systems (national, county, party-based, multi-member, partisan-similarity)
 
 ### Synthesis (1 paper)
 - **00**: synthesis-metapaper — Capstone for Science/Nature
@@ -138,7 +139,7 @@ Temporal:
   12 (longitudinal) ← uses data from 01-10
 
 Experimental:
-  13-16 ← use infrastructure from 01-02
+  13-17 ← use infrastructure from 01-02
 ```
 
 ---
@@ -182,8 +183,8 @@ When adding papers:
 | Status | Count | Papers |
 |--------|-------|--------|
 | Ready for submission | 10 | 01-10 (after PP1/PP2 revisions) |
-| Planned | 7 | 00, 11-16 |
-| **Total** | **17** | |
+| Planned | 8 | 00, 11-17 |
+| **Total** | **18** | |
 
 ---
 
