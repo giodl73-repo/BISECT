@@ -59,7 +59,7 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
 
     # Load adjacency graph
     print("\nLoading adjacency graph...")
-    adj_path = Path(f"outputs/data/{year}/adjacency/tract_adjacency.parquet")
+    adj_path = Path(f"outputs/data/{year}/adjacency/tract_adjacency.pkl")
 
     if not adj_path.exists():
         raise FileNotFoundError(
@@ -67,7 +67,28 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
             f"Run adjacency generation first"
         )
 
-    graph = load_adjacency_graph(adj_path)
+    # Load adjacency dict and convert to networkx graph
+    import pickle
+    import networkx as nx
+
+    print("Loading adjacency from pickle...")
+    with open(adj_path, 'rb') as f:
+        adj_data = pickle.load(f)
+
+    # Convert adjacency list to networkx graph
+    print("Converting to networkx graph...")
+    graph = nx.Graph()
+
+    # Add nodes with population weights
+    for idx, geoid in adj_data['index_to_geoid'].items():
+        graph.add_node(geoid, population=adj_data['vertex_weights'][idx])
+
+    # Add edges from adjacency list
+    for idx, neighbors in enumerate(adj_data['adjacency']):
+        geoid = adj_data['index_to_geoid'][idx]
+        for neighbor_idx in neighbors:
+            neighbor_geoid = adj_data['index_to_geoid'][neighbor_idx]
+            graph.add_edge(geoid, neighbor_geoid)
     print(f"Loaded graph with {graph.number_of_nodes():,} nodes, {graph.number_of_edges():,} edges")
 
     # Calculate population target

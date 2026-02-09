@@ -4,8 +4,9 @@ venue: "American Political Science Review"
 stage: draft
 round: 0
 content_mode: full
-content_mode_confirmed: false
-writing_completed: false
+content_mode_confirmed: true
+writing_completed: true
+writing_completion_date: 2026-02-08
 reviewers: []
 reviews: {}
 p1_items: []
@@ -13,3 +14,6 @@ history:
   - stage: draft
     date: 2026-02-08
     note: "Paper created from synthesis paper efficiency gap analysis"
+  - stage: draft
+    date: 2026-02-08
+    note: "Writing completed via panel:author - all sections, tables, and figures complete"
