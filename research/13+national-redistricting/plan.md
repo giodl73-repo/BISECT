@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (Paper #13 - Experimental)
 **Goal**: Establish geometric baseline for redistricting without constitutional state boundary constraints
 **Estimated Effort**: 2-3 weeks
-**Status**: Planned (Deferred until 3+ core papers published)
+**Status**: Planned
 **Source**: Enhancement E22
 
 ---
@@ -355,6 +355,5 @@ Create 435 congressional districts nationwide **without respecting state boundar
 **Created**: 2026-02-08
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E22 (National Redistricting)
-**Deferral**: Wait until 3+ core papers published (Wave F07 guidance)
 **Risk Level**: Low (theoretical experiment, clear academic framing)
 **Scientific Value**: High (first quantification of federalism's geometric cost)

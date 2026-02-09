@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (Paper #14 - Experimental)
 **Goal**: Test whether existing county boundaries could serve as redistricting units
 **Estimated Effort**: 2 weeks
-**Status**: Planned (Deferred until 3+ core papers published)
+**Status**: Planned
 **Source**: Enhancement E23
 
 ---
@@ -326,6 +326,5 @@ Explore an alternative representation system: **allocate representatives directl
 **Created**: 2026-02-08
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E23 (County Representation)
-**Deferral**: Wait until 3+ core papers published (Wave F07 guidance)
 **Risk Level**: Medium (requires constitutional analysis expertise)
 **Scientific Value**: Medium-High (novel alternative to redistricting)

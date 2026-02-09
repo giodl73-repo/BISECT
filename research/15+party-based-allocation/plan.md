@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (Paper #15 - Experimental)
 **Goal**: Design districts to match statewide partisan vote shares (proportional representation)
 **Estimated Effort**: 2 weeks
-**Status**: Planned (Deferred until 3+ core papers published)
+**Status**: Planned
 **Source**: Enhancement E24
 
 ---
@@ -312,6 +312,5 @@ where $w_1, w_2$ are weights balancing compactness vs proportionality
 **Created**: 2026-02-08
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E24 (Party-Based Allocation)
-**Deferral**: Wait until 3+ core papers published
 **Risk Level**: Medium (politically contentious)
 **Scientific Value**: High (novel approach to proportional FPTP)

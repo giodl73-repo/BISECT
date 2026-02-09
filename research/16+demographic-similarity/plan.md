@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (Paper #16 - Experimental)
 **Goal**: Create districts by clustering demographically similar census tracts instead of optimizing geography
 **Estimated Effort**: 2-3 weeks
-**Status**: Planned (Deferred until 3+ core papers published)
+**Status**: Planned
 **Source**: Enhancement E26
 
 ---
@@ -348,6 +348,5 @@ Explore radical alternative: **What if districts grouped people by demographic c
 **Created**: 2026-02-08
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E26 (Demographic Similarity)
-**Deferral**: Wait until 3+ core papers published
 **Risk Level**: Low (clearly theoretical, not policy proposal)
 **Scientific Value**: High (reveals role of geographic constraint in representation)

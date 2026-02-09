@@ -71,7 +71,7 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 | **16** | demographic-similarity | Demographic Similarity Districts: Clustering Beyond Geography | Planned | Demography / APSR | Research |
 | **17** | multi-member-districts | Multi-Member Districts and Proportional Representation | Planned | Electoral Studies | Research |
 
-**Status**: All experimental papers deferred until 3+ core papers published (per Wave F07 guidance).
+**Status**: All experimental papers planned, ready to implement at any time.
 
 **Purpose**: Explore alternative representation systems, generate novel research ideas for future conferences/publications.
 

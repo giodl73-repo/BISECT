@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (Paper #17 - Experimental)
 **Goal**: Design larger districts with multiple representatives elected proportionally
 **Estimated Effort**: 2-3 weeks
-**Status**: Planned (Deferred until 3+ core papers published)
+**Status**: Planned
 **Source**: Enhancement E28
 
 ---
@@ -405,6 +405,5 @@ Explore **multi-member districts (MMDs)**: Fewer, larger districts with 3-5 repr
 **Created**: 2026-02-08
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E28 (Multi-Member Districts)
-**Deferral**: Wait until 3+ core papers published
 **Risk Level**: Medium (requires federal legislation)
 **Scientific Value**: High (international precedent, proven PR system)
