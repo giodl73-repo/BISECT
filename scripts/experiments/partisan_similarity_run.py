@@ -407,7 +407,7 @@ def main():
     parser.add_argument('--year', type=int, default=2020, help="Census year")
     parser.add_argument('--states', nargs='+', help="State abbreviations (e.g., CA TX NY)")
     parser.add_argument('--alpha', nargs='+', help="Alpha values (e.g., 1 10 50) or 'all'")
-    parser.add_argument('--tau', nargs='+', type=float, help="Tau values (e.g., 10 15 20) or 'all'")
+    parser.add_argument('--tau', nargs='+', help="Tau values (e.g., 10 15 20) or 'all'")
     parser.add_argument('--output', type=str, help="Output directory")
 
     args = parser.parse_args()
@@ -421,10 +421,10 @@ def main():
         alphas = [1, 10, 50]  # Default: baseline, moderate, strong
 
     # Parse tau values
-    if args.tau and 'all' in [str(t) for t in args.tau]:
+    if args.tau and 'all' in args.tau:
         taus = [10, 15, 20]
     elif args.tau:
-        taus = args.tau
+        taus = [float(t) for t in args.tau]
     else:
         taus = [15]  # Default: moderate threshold
 

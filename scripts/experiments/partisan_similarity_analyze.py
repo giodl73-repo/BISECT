@@ -57,7 +57,7 @@ def load_all_results(year: int, base_dir: Path = None) -> pd.DataFrame:
 
         all_results.append(stats)
 
-        print(f"  Loaded: α={alpha}, τ={tau} ({len(stats)} districts)")
+        print(f"  Loaded: alpha={alpha}, tau={tau} ({len(stats)} districts)")
 
     if not all_results:
         raise ValueError("No results found")
@@ -122,14 +122,14 @@ def plot_compactness_homogeneity_tradeoff(agg: pd.DataFrame, output_dir: Path):
 
     # Annotate alpha values
     for _, row in data.iterrows():
-        ax.annotate(f"α={row['alpha']:.0f}",
+        ax.annotate(f"alpha={row['alpha']:.0f}",
                     (row['mean_abs_lean'], row['mean_polsby_popper']),
                     textcoords="offset points", xytext=(0, 10),
                     ha='center', fontsize=10)
 
     ax.set_xlabel('Mean Partisan Lean (abs, pp)', fontsize=12)
     ax.set_ylabel('Mean Polsby-Popper Compactness', fontsize=12)
-    ax.set_title('Compactness-Homogeneity Trade-Off (τ=15pp)', fontsize=14)
+    ax.set_title('Compactness-Homogeneity Trade-Off (tau=15pp)', fontsize=14)
     ax.grid(alpha=0.3)
 
     plt.tight_layout()
@@ -151,9 +151,9 @@ def plot_safe_seats_by_alpha(agg: pd.DataFrame, output_dir: Path):
     ax.plot(data['alpha'], data['safe_15_pct'], 's-', label='>15pp', linewidth=2)
     ax.plot(data['alpha'], data['safe_20_pct'], '^-', label='>20pp', linewidth=2)
 
-    ax.set_xlabel('Edge Weight Scaling Factor (α)', fontsize=12)
+    ax.set_xlabel('Edge Weight Scaling Factor (alpha)', fontsize=12)
     ax.set_ylabel('Safe Seats (%)', fontsize=12)
-    ax.set_title('Safe Seat Creation by Partisan Similarity Weighting (τ=15pp)', fontsize=14)
+    ax.set_title('Safe Seat Creation by Partisan Similarity Weighting (tau=15pp)', fontsize=14)
     ax.set_xscale('log')
     ax.legend(fontsize=11)
     ax.grid(alpha=0.3)
@@ -181,7 +181,7 @@ def generate_summary_table(agg: pd.DataFrame, output_dir: Path):
     table_data['mean_polsby_popper'] = table_data['mean_polsby_popper'].round(3)
 
     # Column names for LaTeX
-    table_data.columns = ['α', 'Mean |Lean| (pp)', 'Safe >10pp (%)',
+    table_data.columns = ['alpha', 'Mean |Lean| (pp)', 'Safe >10pp (%)',
                           'Super-Safe >20pp (%)', 'Polsby-Popper']
 
     # Generate LaTeX
@@ -206,7 +206,7 @@ def compare_to_baseline(agg: pd.DataFrame):
     baseline = agg[(agg['alpha'] == 1) & (agg['tau'] == 15)].iloc[0]
     strong = agg[(agg['alpha'] == 50) & (agg['tau'] == 15)].iloc[0]
 
-    print(f"\nComparison: Baseline (α=1) vs Strong (α=50), τ=15pp")
+    print(f"\nComparison: Baseline (alpha=1) vs Strong (alpha=50), tau=15pp")
     print(f"{'='*70}")
     print(f"                      Baseline      Strong      Change")
     print(f"{'-'*70}")
