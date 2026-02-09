@@ -1,7 +1,7 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 4
+**Papers**: 6
 **Author**: Giovanni De Luca
 
 ---
@@ -14,6 +14,8 @@
 | 2 | [13+national-redistricting](13+national-redistricting/) | National Redistricting Without State Boundaries: Quantifying the Geometric Cost of Federalism | [PDF](docs/13+national-redistricting.pdf) | Comparative Political Studies | — | — |
 | 3 | [11+maup-sensitivity](11+maup-sensitivity/) | Spatial Resolution and Algorithmic Redistricting: A Test of the Modifiable Areal Unit Problem | [PDF](docs/11+maup-sensitivity.pdf) | IJGIS | — | — |
 | 4 | [12+longitudinal-analysis](12+longitudinal-analysis/) | Twenty Years of Congressional Redistricting: A Longitudinal Analysis of Algorithmic Redistricting Across Three Census Decades | [PDF](docs/12+longitudinal-analysis.pdf) | Science | — | — |
+| 5 | [17+multi-member-districts](17+multi-member-districts/) | Multi-Member Districts and Proportional Representation: Exploring Alternatives to Single-Member Redistricting | [PDF](docs/17+multi-member-districts.pdf) | Electoral Studies | — | — |
+| 6 | [15+party-based-allocation](15+party-based-allocation/) | Partisan Fairness through Algorithmic Districting: An Alternative to Proportional Representation | [PDF](docs/15+party-based-allocation.pdf) | Electoral Studies | — | — |
 
 ---
 
@@ -48,4 +50,4 @@ make -C <paper-dir> pdf
 ---
 
 *Apportionment research module — established February 2026*
-*Papers: 4*
+*Papers: 6*
