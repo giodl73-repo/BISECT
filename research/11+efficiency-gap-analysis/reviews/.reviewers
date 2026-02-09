@@ -1,0 +1,54 @@
+# Selected Reviewers for 11+efficiency-gap-analysis
+
+Paper: Measuring Partisan Fairness in Algorithmic Redistricting
+Venue: American Political Science Review (APSR)
+Topic: Efficiency gap analysis, algorithmic redistricting, partisan gerrymandering
+
+## Selected Panel (5 reviewers)
+
+### Reviewer 1: Nicholas O. Stephanopoulos
+- **Affiliation**: Harvard Law School
+- **Expertise**: Efficiency gap metric (co-creator), partisan gerrymandering law, redistricting reform
+- **Key Question**: Does this establish clear legal standards for partisan gerrymandering claims?
+- **Why selected**: Co-created the efficiency gap metric; critical evaluator of its application
+
+### Reviewer 2: Jonathan Rodden
+- **Affiliation**: Stanford University, Political Science
+- **Expertise**: Geographic sorting, urban-rural divide, electoral geography
+- **Key Question**: How much of this bias is geographic determinism vs. manipulation?
+- **Why selected**: Leading expert on geographic sorting and Democratic urban concentration
+
+### Reviewer 3: Jowei Chen
+- **Affiliation**: University of Michigan, Political Science
+- **Expertise**: Computational redistricting, simulations, neutral benchmarks
+- **Key Question**: Are the algorithmic baselines truly neutral and legally defensible?
+- **Why selected**: Pioneer in computational redistricting methods and legal expert testimony
+
+### Reviewer 4: Bernard Grofman
+- **Affiliation**: UC Irvine, Political Science & Law
+- **Expert**: Voting Rights Act, redistricting law, electoral systems
+- **Key Question**: How do these findings interact with VRA compliance and minority representation?
+- **Why selected**: Veteran redistricting scholar with deep legal and quantitative expertise
+
+### Reviewer 5: Michael D. McDonald
+- **Affiliation**: Binghamton University, Political Science
+- **Expertise**: Electoral bias measurement, partisan asymmetry, seats-votes analysis
+- **Key Question**: How does efficiency gap compare to other partisan bias metrics?
+- **Why selected**: Expert in multiple partisan fairness metrics and their comparative performance
+
+## Review Criteria (APSR standards)
+
+1. **Theoretical Contribution**: Does this advance understanding of partisan gerrymandering?
+2. **Methodological Rigor**: Are the computational methods sound and replicable?
+3. **Empirical Evidence**: Is the national-scale analysis comprehensive and convincing?
+4. **Legal Relevance**: Does this provide actionable insights for courts and reformers?
+5. **Writing Quality**: Is the paper clear, well-structured, and appropriate for APSR?
+
+## Expected Scores (1-4 scale)
+
+- 4 = Accept (strong contribution, minor revisions)
+- 3 = Weak Accept (revisions needed)
+- 2 = Weak Reject (major concerns)
+- 1 = Reject (fundamental flaws)
+
+Target: Average >= 2.5 for advancement

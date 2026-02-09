@@ -1,14 +1,44 @@
 paper: 11+efficiency-gap-analysis
 title: "Measuring Partisan Fairness in Algorithmic Redistricting: A National Efficiency Gap Analysis"
 venue: "American Political Science Review"
-stage: draft
+stage: synthesis
 round: 0
 content_mode: full
 content_mode_confirmed: true
 writing_completed: true
 writing_completion_date: 2026-02-08
-reviewers: []
-reviews: {}
+reviewers:
+  - name: "Nicholas O. Stephanopoulos"
+    affiliation: "Harvard Law School"
+    expertise: "Efficiency gap metric, partisan gerrymandering law"
+  - name: "Jonathan Rodden"
+    affiliation: "Stanford University"
+    expertise: "Geographic sorting, electoral geography"
+  - name: "Jowei Chen"
+    affiliation: "University of Michigan"
+    expertise: "Computational redistricting, neutral benchmarks"
+  - name: "Bernard Grofman"
+    affiliation: "UC Irvine"
+    expertise: "Voting Rights Act, redistricting law"
+  - name: "Michael D. McDonald"
+    affiliation: "Binghamton University"
+    expertise: "Electoral bias measurement, partisan asymmetry"
+reviews:
+  stephanopoulos:
+    file: "reviews/REVIEW-STEPHANOPOULOS.md"
+    score: 3.0
+  rodden:
+    file: "reviews/REVIEW-RODDEN.md"
+    score: 3.5
+  chen:
+    file: "reviews/REVIEW-CHEN.md"
+    score: 3.0
+  grofman:
+    file: "reviews/REVIEW-GROFMAN.md"
+    score: 2.5
+  mcdonald:
+    file: "reviews/REVIEW-MCDONALD.md"
+    score: 3.5
 p1_items: []
 history:
   - stage: draft
@@ -17,3 +47,9 @@ history:
   - stage: draft
     date: 2026-02-08
     note: "Writing completed via panel:author - all sections, tables, and figures complete"
+  - stage: panel
+    date: 2026-02-08
+    note: "Reviewers assigned: 5 political science experts in redistricting and partisan fairness"
+  - stage: synthesis
+    date: 2026-02-08
+    note: "Individual reviews complete: 5 reviewers, average score 3.1/4"
