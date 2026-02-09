@@ -1,0 +1,154 @@
+%% Guide to the Algorithmic Redistricting Portfolio
+%% 2-3 page reader's guide for interdisciplinary audiences
+
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+% Title
+\title{\textbf{Guide to the Algorithmic Redistricting Portfolio}\\
+\large An 11-Paper Research Program}
+
+\author{Giovanni Della-Libera}
+\date{February 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Overview}
+
+Congressional redistricting in the United States suffers a legitimacy crisis: partisan mapmakers manipulate district boundaries to predetermine election outcomes, eroding public confidence in representative democracy. This portfolio demonstrates that \textbf{recursive graph bisection}---a computational method used for supercomputer workload distribution---provides an algorithmic alternative that \emph{cannot gerrymander because it cannot access partisan data}.
+
+Applied to all 50 states across three census decades (2000/2010/2020), this method produces 435 congressional districts with near-perfect population equality, geographic contiguity, and geometric compactness. Algorithmic plans create \textbf{69 more majority-minority districts} than enacted maps, exceeding Voting Rights Act requirements without explicit racial targeting. We identify a \textbf{42\% demographic threshold} determining where proportional minority representation becomes geographically feasible.
+
+\subsection*{The Big Picture: Four Contributions}
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
+    \item \textbf{Philosophical}: \emph{Impossibility defense}---algorithm cannot see partisan data, therefore cannot gerrymander
+    \item \textbf{Technical}: Edge-weighted graph partitioning achieves +56\% compactness improvement while enabling VRA compliance
+    \item \textbf{Empirical}: National-scale validation across 50 states × 3 census decades (150 redistricting scenarios)
+    \item \textbf{Legal}: 42\% state minority threshold determines VRA feasibility; algorithmic surplus of +69 majority-minority districts
+\end{itemize}
+
+\subsection*{Portfolio Architecture}
+
+The 11-paper portfolio follows a hierarchical structure:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
+    \item \textbf{Foundation} (Paper 01): Recursive bisection method and impossibility defense
+    \item \textbf{Primary Extensions} (Papers 02-03): Compactness optimization and demographic awareness
+    \item \textbf{Systematic Investigations} (Papers 04-10): Seven papers exploring properties, limits, and alternatives
+\end{itemize}
+
+\section*{Paper Summaries}
+
+All 11 papers are complete and ready for submission.
+
+\vspace{6pt}
+
+{\small
+\begin{tabular}{@{}clp{8cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Paper} & \textbf{Key Finding} \\
+\midrule
+\textbf{01} & Recursive Bisection & Impossibility defense: algorithm can't see partisan data \\
+\textbf{02} & Edge-Weighted Bisection & +56\% compactness improvement with edge-weighting \\
+\textbf{03} & VRA Compliance & +69 MM district surplus over enacted plans \\
+\textbf{04} & Threshold Analysis & 42\% state minority threshold for VRA feasibility \\
+\textbf{05} & Cross-Census Validation & 3.2× variance geography $>$ time (algorithm stable) \\
+\textbf{06} & Compactness Tradeoff & Non-MM districts gain +7.5\% compactness (not sacrifice) \\
+\textbf{07} & Temporal Stability & +14pt tract retention: recursive $>$ n-way stability \\
+\textbf{08} & Multi vs Edge & Edge-weighting beats multi-constraint optimization \\
+\textbf{09} & Adaptive Bisection & Tree structure irrelevant with $\alpha \geq 5$ edge-weighting \\
+\textbf{10} & N-Way vs Recursive & Statistical equivalence: both methods viable \\
+\textbf{11} & Efficiency Gap Analysis & 62\% partisan bias reduction compared to enacted plans \\
+\bottomrule
+\end{tabular}
+}
+
+\section*{Recommended Reading Order}
+
+\subsection*{For Political Scientists}
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{Paper 01} (Recursive Bisection): Impossibility defense, philosophical foundation, Huntington-Hill precedent
+    \item \textbf{Paper 03} (VRA Compliance): +69 MM district surplus, demographic representation
+    \item \textbf{Paper 04} (Threshold Analysis): 42\% finding, legal implications, Gingles test
+\end{enumerate}
+
+\subsection*{For Computer Scientists}
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{Paper 02} (Edge-Weighted Bisection): Algorithm innovation, compactness optimization
+    \item \textbf{Paper 08} (Multi vs Edge): Constraint conflict theory, why single-objective wins
+    \item \textbf{Paper 09} (Adaptive Bisection): Parameter sensitivity analysis
+\end{enumerate}
+
+\subsection*{For Legal Scholars}
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{Paper 01} (Recursive Bisection): \emph{Rucho} implications, mathematical governance
+    \item \textbf{Paper 03} (VRA Compliance): Section 2 feasibility without racial targeting
+    \item \textbf{Paper 04} (Threshold Analysis): 42\% threshold, Gingles preconditions
+    \item \textbf{Paper 06} (Compactness Tradeoff): VRA-compactness myths debunked
+\end{enumerate}
+
+\subsection*{For Practitioners (Redistricting Commissions)}
+\begin{enumerate}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{Paper 01} (Recursive Bisection): Core method overview
+    \item \textbf{Paper 02} (Edge-Weighted Bisection): Implementation details for compact districts
+    \item \textbf{Paper 03} (VRA Compliance): Approach for achieving VRA objectives
+    \item Skim others as needed for specific questions
+\end{enumerate}
+
+\section*{Glossary of Key Terms}
+
+\begin{description}[leftmargin=2cm,style=nextline,noitemsep,topsep=4pt]
+    \item[Census tracts] Geographic units used as atomic partitioning units ($\sim$4,000 residents)
+    \item[METIS] Multilevel graph partitioning library by Karypis \& Kumar
+    \item[Edge-weighted partitioning] Assigning higher costs to edges between similar nodes (making them expensive to cut), encouraging spatially compact districts
+    \item[Majority-minority districts] Districts where minority voters $\geq$50\% of voting-age population
+    \item[Polsby-Popper] Compactness measure: $4\pi \times \text{Area} / \text{Perimeter}^2$, range [0,1]
+    \item[Recursive bisection] Hierarchical method splitting graph into two parts repeatedly
+    \item[Impossibility defense] Algorithm cannot gerrymander because it cannot access partisan data
+    \item[VRA] Voting Rights Act (1965)---federal law prohibiting minority vote dilution
+\end{description}
+
+\section*{Code and Data}
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=4pt]
+    \item \textbf{Replication repository}: [Available upon request or publication]
+    \item \textbf{Census data sources}: U.S. Census Bureau redistricting files (2000/2010/2020)
+    \item \textbf{METIS library}: \url{http://glaros.dtc.umn.edu/gkhome/metis/metis/overview}
+    \item \textbf{Contact}: giovanni.deluca@example.com
+\end{itemize}
+
+\section*{Citation Guide}
+
+\textbf{Publication status}: All 10 papers are complete and ready for submission (as of February 2026). Preprints will be available on arXiv upon initial submission.
+
+\textbf{For the entire research program}:
+
+\begin{quote}
+Della-Libera, G. (2026). Recursive bisection for congressional redistricting: A 10-paper research program. Preprint series.
+\end{quote}
+
+\textbf{For specific papers} (example):
+
+\begin{quote}
+Della-Libera, G. (2026). Recursive bisection for congressional redistricting. Preprint, submitted to \emph{American Political Science Review}.
+\end{quote}
+
+\vspace{12pt}
+
+\noindent\rule{\textwidth}{0.4pt}
+
+\vspace{6pt}
+
+\noindent\textbf{About this guide}: This 2-page overview introduces readers to the 10-paper algorithmic redistricting portfolio. For detailed findings, see individual papers. For synthesis across papers, see Paper 00 (Synthesis Metapaper for \emph{Science}).
+
+\end{document}

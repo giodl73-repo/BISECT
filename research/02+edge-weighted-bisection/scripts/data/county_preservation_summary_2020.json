@@ -1,0 +1,14 @@
+{
+  "total_states": 35,
+  "total_counties": 2636,
+  "avg_enacted_split_rate": 0.274,
+  "avg_alg_split_rate": 0.284,
+  "avg_split_rate_difference": 0.01,
+  "alg_splits_more_states": 21,
+  "alg_splits_less_states": 13,
+  "alg_splits_same_states": 1,
+  "compactness_county_tradeoff_states": 4,
+  "alg_preserves_better_states": 12,
+  "similar_preservation_states": 8,
+  "split_compactness_correlation": -0.681
+}

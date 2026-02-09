@@ -1,24 +1,67 @@
 % Section 3: Methodology (800 words)
-%
-% 3.1: National Graph Construction
-% - Load 85,331 census tracts (2020)
-% - Build unified adjacency graph (all 50 states)
-% - Cross-state boundaries treated as normal adjacencies
-% - Graph size: ~85K nodes, ~240K edges
-%
-% 3.2: National Recursive Bisection
-% - Target: 435 districts of ~769,000 residents each (2020 population)
-% - No state boundary constraints
-% - Population balance: ±0.5% (same as state-based)
-% - Edge weights: α = 5.0 (for VRA compliance)
-%
-% 3.3: Comparison Baseline
-% - Compare to 50-state optimization (Paper 01)
-% - Metrics: Polsby-Popper compactness, perimeter, district sizes
-%
-% 3.4: State Boundary Crossing Analysis
-% - Count districts that cross state lines
-% - Quantify "constitutional incompatibility"
-% - Map showing cross-state districts
 
-[Methodology to be written]
+\subsection{Data and Graph Construction}
+
+We construct a national redistricting graph from 2020 Census data. The analysis uses 84,414 census tracts covering all 50 states, obtained from the U.S. Census Bureau TIGER/Line shapefiles (2020 vintage). Each tract serves as a graph node weighted by its total population from the 2020 Decennial Census. We exclude Puerto Rico and other territories, focusing on the 435 House districts allocated to states.
+
+Adjacency relationships are determined using rook contiguity (shared boundaries) from tract geometries. The national graph contains 266,466 edges representing adjacent tract pairs. Crucially, we identify 4,544 \textit{cross-state edges}---adjacencies between tracts in different states---which are typically prohibited in conventional redistricting but treated as valid connections in our national optimization. These cross-state edges occur at all state boundaries and represent potential locations where districts could span state lines.
+
+The resulting graph has weighted nodes (tract populations) and unweighted edges (unit adjacency). Total U.S. population in 2020 is 331,108,434, implying a target district population of 761,169 residents ($ 331,108,434 \div 435 $).
+
+\subsection{National Recursive Bisection Algorithm}
+
+We apply the METIS graph partitioning algorithm \citep{karypis1998fast} via recursive bisection to partition the national graph into 435 districts. METIS is a multilevel $k$-way partitioning method that minimizes edge cuts---the number of edges connecting vertices in different partitions---while balancing vertex weights across partitions.
+
+The algorithm operates in three phases: \textbf{(1) Coarsening:} successively merge vertices to create smaller graphs while preserving structure; \textbf{(2) Initial Partitioning:} partition the coarsest graph using spectral or greedy methods; \textbf{(3) Uncoarsening:} project the partition back to the original graph, applying Kernighan-Lin refinement at each level to improve edge cut.
+
+We configure the algorithm with:
+\begin{itemize}
+    \item \textbf{Population balance:} $ \pm 0.5\% $ tolerance (ufactor = 5), matching the constraint used in state-based redistricting
+    \item \textbf{Objective:} Minimize edge cut (equivalent to maximizing within-district contiguity)
+    \item \textbf{Iterations:} 100 refinement iterations per bisection level
+    \item \textbf{Seed:} Fixed random seed (42) for reproducibility
+\end{itemize}
+
+The algorithm does not distinguish cross-state edges from within-state edges; both have unit weight in the baseline configuration. This design choice allows METIS to freely cross state boundaries when doing so improves the edge cut objective.
+
+\subsection{Boundary Crossing Penalty Ablation}
+
+To explore the trade-off between compactness and boundary crossing, we conduct an ablation study varying the penalty $ \beta $ for crossing state lines. For each cross-state edge $ (i,j) $, we multiply its weight by $ (1 + \beta) $:
+
+\begin{equation}
+w_{ij} = \begin{cases}
+1 & \text{if tracts } i, j \text{ in same state} \\
+1 + \beta & \text{if tracts } i, j \text{ in different states}
+\end{cases}
+\end{equation}
+
+We test $ \beta \in \{0.0, 0.5, 1.0, 2.0, 5.0, 10.0\} $. Higher $ \beta $ values increase the cost of cutting cross-state edges, incentivizing the algorithm to avoid boundary crossings. At $ \beta = 0 $, no penalty is applied (baseline national optimization). At $ \beta = \infty $, cross-state edges are effectively prohibited, recovering state-based redistricting.
+
+\subsection{Compactness Measurement}
+
+We measure district compactness using the Polsby-Popper (PP) score \citep{polsby1991third}, computed as:
+
+\begin{equation}
+\text{PP} = \frac{4\pi \times \text{Area}}{\text{Perimeter}^2}
+\end{equation}
+
+PP scores range from 0 (least compact) to 1 (perfect circle). We compute PP scores for all 435 districts in both national and state-based configurations, projecting geometries to the Albers Equal Area Conic projection (ESRI:102003) for accurate area and perimeter measurements.
+
+District geometries are constructed by dissolving census tract geometries within each assigned district. We use the GeoPandas library \citep{geopandas} for spatial operations and Matplotlib for visualization.
+
+\subsection{Comparison Baseline}
+
+We compare national optimization results to state-based redistricting, where each state independently partitions its tracts into its allocated districts. The state-based configuration uses identical algorithm parameters (METIS recursive bisection, $ \pm 0.5\% $ tolerance, 100 iterations), differing only in treating each state as a separate graph. This baseline represents the current constitutional structure and provides a reference for quantifying the geometric cost of federalism.
+
+State-based baseline compactness statistics (mean PP = 0.461) are taken from prior analyses using the same methodology, ensuring consistent measurement across configurations.
+
+\subsection{Cross-State District Analysis}
+
+We identify cross-state districts by checking whether any census tract pair $ (i,j) $ in the same district belongs to different states. For each cross-state district, we compute:
+\begin{itemize}
+    \item \textbf{Primary state:} the state contributing the most population
+    \item \textbf{Primary state fraction:} the proportion of district population from the primary state
+    \item \textbf{State count:} the number of states contributing tracts
+\end{itemize}
+
+This analysis quantifies the extent of fractional representation implied by national optimization and identifies which state pairs most frequently share districts.

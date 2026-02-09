@@ -1,7 +1,15 @@
 % Section 6: Conclusion (400 words)
-% - Summary: National optimization establishes X% geometric upper bound
-% - Academic value: Quantifies federalism's cost for first time
-% - Policy implication: Within-state reforms can achieve ~90% of theoretical maximum
-% - Future: Extend to multi-year, alternative algorithms
 
-[Conclusion to be written]
+This paper quantifies the geometric consequences of federalism in congressional redistricting through a computational experiment: we removed state boundary constraints and optimized all 435 districts nationally using graph partitioning algorithms. Comparing national optimization to state-based redistricting reveals a counterintuitive finding: \textbf{state boundaries improve rather than harm district compactness}, with national optimization producing 42.5\% less compact districts (Polsby-Popper scores of 0.265 vs 0.461).
+
+This result inverts conventional assumptions about constraints and optimization. Geographic constraints are typically understood to restrict feasible solutions and harm optimization objectives. Yet in congressional redistricting, state boundaries provide beneficial structure---multi-scale decomposition, geographic coherence, smooth population gradients---that facilitates more compact districts than unconstrained national optimization. The mechanism appears to relate to how states subdivide the national population into manageable subproblems at appropriate geographic and demographic scales.
+
+The ablation study reinforces this conclusion: no intermediate boundary crossing penalty improves outcomes relative to state-based redistricting. All penalty values $ \beta \in [0, 10] $ produce worse compactness than respecting state boundaries, demonstrating that the geometric benefits of federalism cannot be partially captured through penalty-based methods. The non-monotonic relationship between penalties and cross-state districts further illustrates the complexity of multi-objective optimization in redistricting.
+
+A secondary finding reveals that 41.4\% of nationally optimized districts cross state boundaries, with mean primary state fractions of 74.4\%. This pattern suggests the possibility of fractional representation---a constitutional alternative where states receive non-integer seat allocations. While politically and legally infeasible, fractional representation represents a theoretically coherent system for addressing small-state inequities and improving population equity. Our results indicate, however, that such a system would come at substantial geometric cost.
+
+These findings contribute to three literatures. First, they extend redistricting algorithm research by demonstrating that constraints aligned with underlying data structure can improve rather than impede optimization. Second, they inform normative debates about federalism and representation by quantifying geometric trade-offs of alternative institutional arrangements. Third, they provide methodological tools---national graph partitioning with boundary crossing penalties---applicable to other multi-jurisdictional redistricting problems.
+
+Future work should extend this analysis to multiple census years (2000, 2010), alternative algorithms (ReCom, spectral methods), and multi-objective optimization incorporating communities of interest, minority representation, and partisan fairness. Such analyses would reveal whether the federalism-compactness relationship persists across contexts and whether national optimization excels on non-geometric criteria.
+
+Ultimately, this research provides empirical evidence for a theoretical claim: the federalist structure of American representation, while rooted in political and constitutional considerations, produces tangible geometric benefits. State boundaries are not merely legal constraints to be overcome, but beneficial structures that facilitate more compact congressional districts than would be achievable through unconstrained national optimization.

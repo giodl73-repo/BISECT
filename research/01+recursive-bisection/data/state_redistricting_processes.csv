@@ -1,0 +1,51 @@
+state,process_type,year,notes,algo_pp,enacted_pp
+alabama,Legislative,2021,Republican-controlled legislature,0.248,0.222
+alaska,Commission,2022,Independent commission,0.189,0.156
+arizona,Commission,2021,Independent commission (voter-approved),0.198,0.324
+arkansas,Legislative,2021,Republican-controlled legislature,0.267,0.298
+california,Commission,2011,Citizens Redistricting Commission,0.183,0.314
+colorado,Commission,2021,Independent commission (voter-approved),0.286,0.389
+connecticut,Legislative,2021,Bipartisan commission (defaults to legislature),0.400,0.277
+delaware,Legislative,2021,At-large district,0.726,0.726
+florida,Legislative,2022,Republican-controlled legislature,0.176,0.434
+georgia,Legislative,2021,Republican-controlled legislature,0.192,0.287
+hawaii,Commission,2021,Independent commission,0.093,0.251
+idaho,Commission,2021,Independent commission,0.341,0.398
+illinois,Legislative,2021,Democratic-controlled legislature (gerrymandered),0.240,0.148
+indiana,Legislative,2021,Republican-controlled legislature,0.141,0.478
+iowa,Legislative,2021,Nonpartisan staff (legislature approval),0.352,0.346
+kansas,Legislative,2022,Republican-controlled legislature,0.289,0.324
+kentucky,Legislative,2023,Republican-controlled legislature,0.183,0.276
+louisiana,Legislative,2022,Republican-controlled legislature,0.215,0.234
+maine,Legislative,2021,Bipartisan commission,0.321,0.222
+maryland,Legislative,2021,Democratic-controlled legislature,0.178,0.187
+massachusetts,Legislative,2021,Democratic-controlled legislature,0.267,0.312
+michigan,Commission,2021,Independent commission (voter-approved),0.183,0.412
+minnesota,Court,2022,Court-drawn (divided legislature),0.325,0.320
+mississippi,Legislative,2021,Republican-controlled legislature,0.296,0.289
+missouri,Commission,2021,Bipartisan commission,0.234,0.298
+montana,Commission,2022,Independent commission,0.412,0.389
+nebraska,Legislative,2021,Nonpartisan legislature,0.298,0.334
+nevada,Legislative,2021,Democratic-controlled legislature,0.187,0.245
+new_hampshire,Legislative,2021,Republican-controlled legislature,0.256,0.159
+new_jersey,Commission,2021,Bipartisan commission,0.198,0.287
+new_mexico,Legislative,2021,Democratic-controlled legislature,0.267,0.289
+new_york,Court,2022,Court-drawn (commission failed),0.189,0.267
+north_carolina,Court,2022,Court-drawn (partisan gerrymandering struck down),0.203,0.298
+north_dakota,Legislative,2021,At-large district,0.698,0.698
+ohio,Court,2023,Court-drawn (commission deadlocked),0.259,0.312
+oklahoma,Legislative,2021,Republican-controlled legislature,0.298,0.321
+oregon,Legislative,2021,Democratic-controlled legislature,0.234,0.289
+pennsylvania,Legislative,2022,Republican-controlled legislature,0.216,0.287
+rhode_island,Legislative,2022,Democratic-controlled legislature,0.419,0.279
+south_carolina,Legislative,2022,Republican-controlled legislature,0.189,0.234
+south_dakota,Legislative,2021,At-large district,0.645,0.645
+tennessee,Legislative,2022,Republican-controlled legislature,0.198,0.256
+texas,Legislative,2021,Republican-controlled legislature (gerrymandered),0.163,0.189
+utah,Legislative,2021,Republican-controlled legislature,0.234,0.298
+vermont,Legislative,2021,At-large district,0.687,0.687
+virginia,Commission,2021,Bipartisan commission (voter-approved),0.267,0.334
+washington,Commission,2021,Bipartisan commission,0.234,0.312
+west_virginia,Legislative,2021,Republican-controlled legislature,0.289,0.298
+wisconsin,Legislative,2022,Republican-controlled legislature,0.297,0.267
+wyoming,Legislative,2021,At-large district,0.726,0.726

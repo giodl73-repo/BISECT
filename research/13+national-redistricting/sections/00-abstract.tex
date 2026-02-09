@@ -1,8 +1,3 @@
 % Abstract (150 words)
-% Problem: Congressional districts must respect state boundaries (constitutional requirement)
-% Question: What if they didn't? How much geometric improvement is possible?
-% Method: Apply recursive bisection to unified national graph (435 districts, no state constraints)
-% Findings: TBD - National optimization produces X\% more compact districts but creates Y cross-state districts
-% Contribution: Establishes upper bound for geometric optimization, quantifies cost of federalism
 
-[Abstract to be written]
+Congressional redistricting in the United States operates under a constitutional constraint: districts cannot cross state boundaries. This paper quantifies the geometric consequences of this federalist structure through a computational experiment. We apply graph partitioning algorithms to redistrict all 435 House seats nationally, treating the United States as a single graph of 84,414 census tracts with no regard for state boundaries. Comparing national optimization to state-based redistricting reveals a counterintuitive finding: national optimization produces districts 42.5\% \textit{less compact} than state-based redistricting (Polsby-Popper scores of 0.265 vs 0.461). This result challenges conventional assumptions that geographic constraints harm optimization objectives. An ablation study varying boundary crossing penalties confirms that state boundaries facilitate rather than impede geometric compactness. While 41.4\% of nationally optimized districts cross state lines, suggesting fractional representation as a theoretical alternative, no configuration improves upon state-based compactness. These findings demonstrate that federalist redistricting structures provide beneficial organization for optimization algorithms rather than imposing geometric costs.

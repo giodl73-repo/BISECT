@@ -1,0 +1,102 @@
+# Compactness Metrics: Polsby-Popper Scores 2000-2020
+# NOTE: These are HYPOTHESIZED values from plan.md
+# TODO: Run actual compactness analysis scripts to generate real data
+#
+# Required script: scripts/compactness/compute_pp_scores.py
+# Input: outputs/v1/{2000,2010,2020}/states/*/data/districts.shp
+# Output: Mean, median, std dev of PP scores for all 435 districts per year
+
+## Table 2: Algorithmic District Compactness by Year
+
+Year | Mean PP | Median PP | Std Dev | Min PP | Max PP | Districts
+-----|---------|-----------|---------|--------|--------|----------
+2000 | 0.452   | 0.447     | 0.088   | 0.21   | 0.68   | 435
+2010 | 0.458   | 0.454     | 0.085   | 0.23   | 0.71   | 435
+2020 | 0.461   | 0.456     | 0.083   | 0.24   | 0.72   | 435
+
+# Key Finding: Algorithmic compactness improves slightly (+2.0% from 2000 to 2020)
+# Variance decreases (0.088 → 0.083), indicating more consistent districts
+
+## Table 3: Enacted District Compactness by Year (for comparison)
+# Source: Dave's Redistricting App (DRA) shapefiles
+# TODO: Download and process enacted district shapefiles
+
+Year | Mean PP | Median PP | Change from previous | Gap from algorithmic
+-----|---------|-----------|---------------------|---------------------
+2000 | 0.324   | 0.318     | —                   | -39.5%
+2010 | 0.301   | 0.295     | -7.1%               | -51.9%
+2020 | 0.285   | 0.279     | -12.0%              | -61.8%
+
+# Key Finding: Enacted districts became 12% less compact from 2000 to 2020
+# Gap between algorithmic and enacted widened from 40% to 62%
+
+## State-Level Algorithmic Compactness (Top 10 and Bottom 10)
+
+# Most Compact States (2020):
+State | Mean PP | Median PP | Districts | Geography
+------|---------|-----------|-----------|----------
+Wyoming | 0.72 | 0.72 | 1 | Square shape
+Colorado | 0.68 | 0.67 | 8 | Rectangular, few geographic barriers
+Kansas | 0.66 | 0.65 | 4 | Flat, rectangular
+Iowa | 0.65 | 0.64 | 4 | Rectangular, flat
+Nebraska | 0.63 | 0.62 | 3 | Flat plains
+
+# Least Compact States (2020):
+State | Mean PP | Median PP | Districts | Geography
+------|---------|-----------|-----------|----------
+Hawaii | 0.18 | 0.16 | 2 | Islands
+Alaska | 0.21 | 0.21 | 1 | Irregular coastline
+Maryland | 0.28 | 0.26 | 8 | Chesapeake Bay
+Florida | 0.32 | 0.30 | 28 | Long peninsula
+Louisiana | 0.33 | 0.31 | 6 | Coastal, wetlands
+
+## Compactness Changes by State (2000 → 2020)
+
+# Improved Compactness (Top 5):
+State | 2000 PP | 2020 PP | Change | Reason
+------|---------|---------|--------|-------
+California | 0.41 | 0.45 | +8.2% | Commission adopted 2010
+Michigan | 0.38 | 0.42 | +6.4% | Commission adopted 2018
+Arizona | 0.43 | 0.46 | +5.1% | Commission adopted 2010
+Virginia | 0.39 | 0.41 | +4.2% | Commission adopted 2020
+Colorado | 0.64 | 0.68 | +3.8% | Commission adopted 2018
+
+# Worsened Compactness (Top 5):
+State | 2000 PP | 2020 PP | Change | Reason
+------|---------|---------|--------|-------
+North Carolina | 0.46 | 0.39 | -14.7% | Aggressive gerrymandering (documented in legal challenges)
+Wisconsin | 0.48 | 0.42 | -11.2% | Partisan gerrymandering (2011 REDMAP)
+Pennsylvania | 0.44 | 0.39 | -10.8% | Partisan redistricting (struck down 2018)
+Ohio | 0.47 | 0.42 | -9.6% | Partisan gerrymandering
+Texas | 0.45 | 0.45 | +0.2% | Stable despite +6 seats (algorithmic maintained compactness)
+
+# Texas is notable: Added 6 seats but maintained compactness
+# This demonstrates that growth need not compromise geometric quality
+
+## Distribution Statistics
+
+# 2000 Distribution:
+Q1 (25th percentile): 0.38
+Q2 (50th percentile / median): 0.447
+Q3 (75th percentile): 0.52
+IQR: 0.14
+
+# 2010 Distribution:
+Q1: 0.39
+Q2: 0.454
+Q3: 0.53
+IQR: 0.14
+
+# 2020 Distribution:
+Q1: 0.40
+Q2: 0.456
+Q3: 0.54
+IQR: 0.14
+
+# Distributions are remarkably stable across decades
+# Slight rightward shift indicates overall improvement
+
+## TODO: Generate actual data
+# Script needed: scripts/compactness/compute_longitudinal_pp.py
+# Should process all district shapefiles and compute exact PP scores
+# Current values are estimates from plan.md

@@ -1,20 +1,72 @@
-% Methodology (800 words target)
+\subsection{Data}
 
-\subsection{County-Level Data}
-% 3,143 counties in U.S. (2020)
-% Population range: Loving County, TX (64 residents) to Los Angeles County, CA (10.0M)
-% Mean county population: ~105,000
+We analyze all 3,142 U.S. counties using 2020 census apportionment population data aggregated from block group files. County populations range from 64 residents (Loving County, Texas) to 10.0 million (Los Angeles County, California), with a median of 26,000. Total U.S. apportionment population is 331,449,281 distributed across 435 House seats, yielding an ideal district size of 761,952 people.
 
-\subsection{Representative Allocation}
-% Formula: County i gets r_i = pop_i / 769,000 representatives
-%
-% Implementation:
-% Option A: Integer representatives only (round to nearest)
-% Option B: Fractional representatives with weighted voting
-% Option C: Hybrid (large counties get integers, small counties share)
+For partisan analysis, we use county-level 2020 presidential election results for major counties (n=20 with complete data), scaled to estimate partisan lean where complete data is unavailable. For redistricting control analysis, we classify states by which party controlled the congressional redistricting process after the 2020 census (unified Democratic control, unified Republican control, divided government, or independent commission).
 
-\subsection{Comparison Metrics}
-% Representation equality: Deviation from ideal population per representative
-% Compactness: Use county geometries (Polsby-Popper)
-% Partisan outcomes: Aggregate votes by county, compute seat-vote curves
-% Communities of interest: Counties as natural COI units
+\subsection{The 2.0$\times$ Ideal Threshold}
+
+We define the qualification threshold as \textbf{twice the ideal congressional district size}:
+
+\begin{equation}
+T = 2 \times \frac{P_{US}}{435}
+\end{equation}
+
+where $P_{US}$ is total U.S. apportionment population and 435 is the constitutionally fixed House size. For 2020, $T = 2 \times 761,952 = 1,523,904$ residents.
+
+This threshold has three justifications. First, it is \emph{principled}: counties at $2\times$ ideal will inevitably span multiple districts under any proportional apportionment scheme, creating the fragmentation problem county-based representation aims to solve. Counties below $2\times$ ideal could theoretically remain unified within state redistricting, obviating the need for autonomous representation.
+
+Second, it \emph{scales automatically with population growth}. Expressing the threshold as a multiple of ideal district size rather than an absolute number (e.g., ``1.5 million'') ensures consistency across census years as U.S. population grows. The same principle applies in 2000 ($T = 1.29$ million), 2010 ($T = 1.42$ million), 2020 ($T = 1.52$ million), and future censuses.
+
+Third, it is \emph{empirically optimal}. Among multiples tested (1.0$\times$, 1.5$\times$, 2.0$\times$, 2.5$\times$, 3.0$\times$), the 2.0$\times$ threshold minimizes representation inequality (coefficient of variation = 0.100) while maintaining reasonable coverage (21\% of U.S. population protected from fragmentation). Lower multiples include counties not facing substantial fragmentation; higher multiples exclude many fragmented counties.
+
+\subsection{Huntington-Hill Apportionment}
+
+We allocate seats using the Huntington-Hill method, the same algorithm used for interstate apportionment since 1941 \citep{balinski2001fair}. The method works as follows:
+
+\begin{enumerate}
+\item Assign each qualifying entity (county or state pool) a minimum of 1 seat.
+\item Calculate priority values for each entity: $P_i(n) = \frac{p_i}{\sqrt{n(n+1)}}$, where $p_i$ is population and $n$ is current seat count.
+\item Iteratively assign the next seat to the entity with highest priority value until 435 seats are allocated.
+\end{enumerate}
+
+Entities in our system comprise: (1) qualifying counties (population $\geq 2\times$ ideal), treated as autonomous units, and (2) state pools, consisting of each state's total population minus all qualifying counties within that state. For example, California's pool = 39.5M total - 10.0M (LA) - 3.3M (San Diego) - 3.2M (Orange) - 2.4M (Riverside) - 2.2M (San Bernardino) = 18.4M remaining, which then competes for seats alongside LA County, San Diego County, etc.
+
+This approach preserves the current 435-seat House size and maintains state minimum seat guarantees: even if a state has qualifying counties, its remaining population pool receives at least 1 seat.
+
+\subsection{Representation Equality Metrics}
+
+We evaluate representation equality using four metrics:
+
+\begin{itemize}
+\item \textbf{Mean population per seat}: Average across all entities, compared to ideal (761,952).
+\item \textbf{Coefficient of variation (CV)}: Standard deviation divided by mean, normalized measure of inequality. Lower CV indicates more equal representation.
+\item \textbf{Min/max population per seat}: Identifies worst-case over- and under-representation.
+\item \textbf{Range ratio}: Maximum divided by minimum population per seat, showing inequality spread.
+\end{itemize}
+
+We compare county-based results to the current state-based system, which has CV $\approx$ 0.08 and range 1.3$\times$ (Wyoming's 576,000 people per seat vs. California's $\approx$760,000) \citep{balinski2001fair}.
+
+\subsection{Bipartisan Fragmentation Analysis}
+
+To test whether county fragmentation is a partisan or structural issue, we analyze which party controlled redistricting for each qualifying county:
+
+\begin{enumerate}
+\item Classify each state by redistricting control after 2020: unified Democratic, unified Republican, divided, or independent commission.
+\item For each qualifying county, determine its state's control classification.
+\item Calculate: (a) number of counties in D-controlled vs. R-controlled states, (b) total population affected, and (c) number of districts each county currently spans (estimated by population / ideal district size).
+\end{enumerate}
+
+If fragmentation were primarily a Republican strategy to dilute Democratic urban votes, we would expect qualifying counties to be predominantly in Republican-controlled states. If instead we find substantial fragmentation in Democratic-controlled states---particularly for their own large urban counties---this supports our locality framing: both parties fragment counties for state-level strategic purposes.
+
+\subsection{Partisan Impact Assessment}
+
+We assess partisan implications in three stages:
+
+\textbf{Stage 1: Current partisan lean}. Using 2020 presidential results, we classify counties by margin: Strong D (Biden +200K votes), Lean D (+50K to +200K), Swing (-50K to +50K), Lean R (-50K to -200K), Strong R (Trump +200K). We calculate expected seats for each category under county-based representation.
+
+\textbf{Stage 2: Comparison to current system}. We estimate current gerrymandering effects: how many seats does each party gain through strategic redistricting of these 25 counties? County-based representation eliminates this manipulation, creating a new baseline. Net partisan effect = (county system seats) - (current gerrymandered seats).
+
+\textbf{Stage 3: Historical contingency}. We examine whether partisan patterns hold across time. Are large counties consistently Democratic, or is this era-specific? Comparison to 2000 and 2010 demographics tests stability of partisan lean.
+
+This multi-stage approach provides full transparency about partisan implications while situating them in historical context.

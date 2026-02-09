@@ -1,21 +1,139 @@
-% Results (1,200 words target)
+\subsection{Qualifying Counties and Current Fragmentation}
 
-\subsection{Representative Allocation by Option}
-% Table 1: County-based allocation statistics
-% Finding: Fractional system achieves perfect representation equality
+At the 2.0$\times$ ideal threshold (1,523,904 residents), 25 U.S. counties qualify for autonomous representation, comprising 70.0 million people (21.2\% of the U.S. population). Table \ref{tab:qualifying} lists all qualifying counties. The largest is Los Angeles (10.0M, 13 expected districts), followed by Cook/Chicago (5.3M, 7 districts) and Harris/Houston (4.7M, 6 districts). The smallest qualifying county is Bronx, New York (1.5M, 2 districts). On average, qualifying counties span 3.7 congressional districts under current redistricting.
 
-\subsection{Compactness Comparison}
-% Table 2: County vs Algorithmic Compactness
-% Hypothesis: Counties slightly less compact (historical boundaries, not optimized)
+\begin{table}[h]
+\centering
+\caption{Qualifying Counties at 2.0$\times$ Ideal Threshold (2020)}
+\label{tab:qualifying}
+\begin{tabular}{llrrc}
+\toprule
+County & State & Population & Districts & Control \\
+\midrule
+Los Angeles & CA & 10,014,009 & 13 & D (Commission) \\
+Cook & IL & 5,275,541 & 7 & D (Unified) \\
+Harris & TX & 4,731,145 & 6 & R (Unified) \\
+Maricopa & AZ & 4,420,568 & 6 & Commission \\
+San Diego & CA & 3,298,634 & 4 & D (Commission) \\
+Orange & CA & 3,186,989 & 4 & D (Commission) \\
+Kings (Brooklyn) & NY & 2,736,074 & 4 & D (Unified) \\
+Miami-Dade & FL & 2,701,767 & 4 & R (Unified) \\
+Dallas & TX & 2,613,539 & 3 & R (Unified) \\
+Queens & NY & 2,405,464 & 3 & D (Unified) \\
+\midrule
+\multicolumn{5}{l}{\emph{... 15 additional counties (see full table in appendix)}} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsection{Partisan Outcomes}
-% Analysis: Aggregate 2020 presidential vote by county
-% Urban mega-counties (LA, Cook, Harris) heavily Democratic, get many representatives
-% Rural counties mostly Republican, get fractional representatives
-% Net effect: TBD (depends on urban vs rural population distribution)
+These 25 counties currently span an estimated 92 congressional districts, meaning substantial portions of the U.S. House represent fragmented pieces of large counties rather than coherent communities. Under county-based representation, these 92 seats would instead be allocated directly to the counties themselves, with each county electing its proportional delegation.
 
-\subsection{Gerrymandering Elimination}
-% Key advantage: County boundaries are fixed, cannot be manipulated
-% No redistricting litigation
-% No partisan map-drawing
-% Transparent, permanent system
+\subsection{Bipartisan Fragmentation: State Control Analysis}
+
+Table \ref{tab:bipartisan} presents the critical finding: county fragmentation transcends partisanship. Of 25 qualifying counties, \textbf{16 are in Democratic-controlled states} (46.1M people, 60 districts) and \textbf{7 are in Republican-controlled states} (20.5M people, 28 districts), with 2 in commission states.
+
+\begin{table}[h]
+\centering
+\caption{County Fragmentation by State Redistricting Control}
+\label{tab:bipartisan}
+\begin{tabular}{lrrrr}
+\toprule
+Control & Counties & Population & Districts & Avg Districts/County \\
+\midrule
+Democratic & 16 & 46,107,526 & 60 & 3.8 \\
+Republican & 7 & 20,531,358 & 28 & 4.0 \\
+Commission & 2 & 3,397,358 & 4 & 2.0 \\
+\midrule
+\textbf{Total} & \textbf{25} & \textbf{70,036,242} & \textbf{92} & \textbf{3.7} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The largest fragmented county in each category illustrates this bipartisan pattern:
+\begin{itemize}
+\item \textbf{Democratic state}: Los Angeles County (10.0M, 13 districts) in California, where Democrats control redistricting via a commission in a D-controlled state.
+\item \textbf{Republican state}: Harris County/Houston (4.7M, 6 districts) in Texas, where Republicans control redistricting.
+\end{itemize}
+
+Crucially, Democratic states fragment their \emph{own} large urban counties. Cook County (Chicago) is split by Illinois Democrats, not downstate Republicans. Kings and Queens Counties (Brooklyn and Queens) are split by New York Democrats, not upstate Republicans. This demonstrates that fragmentation is not primarily about partisan advantage but about \textbf{state control over local representation}. Democratic legislatures split their own cities for various strategic purposes: creating majority-minority VRA districts, protecting incumbents, helping suburban Democrats, or traditional redistricting practices.
+
+Republican states similarly fragment their large counties. Harris County (Houston), heavily Democratic, is split by Texas Republicans. But Miami-Dade (Florida) and Maricopa (Arizona) are also split despite being competitive or Republican-leaning. The common thread is state-level redistricting authority fragmenting local communities.
+
+\subsection{Representation Equality Results}
+
+Table \ref{tab:equality} compares representation equality between county-based and state-based systems.
+
+\begin{table}[h]
+\centering
+\caption{Representation Equality: County vs. State Systems}
+\label{tab:equality}
+\begin{tabular}{lcc}
+\toprule
+Metric & County (2.0$\times$) & Current (State) \\
+\midrule
+Mean pop/seat & 757,592 & ~761,000 \\
+Coefficient of variation & 0.100 & ~0.080 \\
+Min pop/seat & 542,112 & 576,851 (WY) \\
+Max pop/seat & 989,948 & ~760,000 (CA) \\
+Range (max/min) & 1.8$\times$ & 1.3$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The county system achieves \textbf{comparable} representation equality to the current state system. Mean population per seat (757K) is within 1\% of ideal (762K). The coefficient of variation (0.100) is slightly higher than the state system (0.080) but remains within reasonable bounds. The range ratio (1.8$\times$) indicates the worst-represented entity has 1.8 times the population per seat of the best-represented.
+
+The similarity to the current system is not coincidental: both systems face the same constitutional constraint of \textbf{minimum 1 seat per entity}. Small entities are overrepresented because they must receive at least 1 representative even if their population warrants less. In the state system, Wyoming (576K) is overrepresented at 1 seat. In the county system, small state pools (Montana remaining: 542K) are similarly overrepresented. This is the same trade-off Baker v. Carr established: perfect equality requires fractional seats (weighted voting), while integer seats require accepting some inequality.
+
+\subsection{Threshold Sensitivity Analysis}
+
+Figure \ref{fig:threshold_sensitivity} shows how results vary across threshold multiples. At 1.0$\times$ ideal (762K), 87 counties qualify (40\% of U.S.), but many are small enough to fit in single districts, undermining the fragmentation rationale. At 3.0$\times$ ideal (2.3M), only 11 counties qualify (13\% of U.S.), leaving many fragmented counties unprotected. The 2.0$\times$ threshold (25 counties, 21\% of U.S., CV=0.100) represents the optimal balance: it includes all significantly fragmented counties while maintaining low inequality.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/figure1_threshold_sensitivity.png}
+\caption{Threshold Sensitivity Analysis}
+\label{fig:threshold_sensitivity}
+\end{figure}
+
+Figure \ref{fig:equality_cv} shows that representation equality (CV) is lowest at the 1.5M-2.0M range, corresponding to 1.97$\times$-2.6$\times$ ideal. Lower thresholds include too many small counties (increasing variance), while higher thresholds exclude many fragmented counties without improving equality.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/figure2_representation_equality.png}
+\caption{Representation Equality vs. Threshold}
+\label{fig:equality_cv}
+\end{figure}
+
+\subsection{Partisan Implications with Full Disclosure}
+
+We now address the partisan reality explicitly. Table \ref{tab:partisan} shows partisan lean of qualifying counties based on 2020 presidential results (11 counties with complete data).
+
+\begin{table}[h]
+\centering
+\caption{Partisan Lean of Qualifying Counties (Sample)}
+\label{tab:partisan}
+\begin{tabular}{lrr}
+\toprule
+Partisan Lean & Counties & Expected Seats \\
+\midrule
+Strong Democratic & 7 & 26 \\
+Lean Democratic & 2 & 6 \\
+Swing & 1 & 3 \\
+Strong Republican & 1 & 4 \\
+\midrule
+\textbf{Total} & \textbf{11} & \textbf{39} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Of the 11 counties with complete data, 9 lean Democratic, 1 is swing (Maricopa), and 1 leans Republican (Miami-Dade). Extrapolating to all 25 counties based on state partisan lean and urbanization, we estimate county-based representation would allocate approximately \textbf{32-35 seats to strongly Democratic counties, 5-8 to lean Democratic counties, 3-5 to swing counties, and 4-6 to Republican-leaning counties}.
+
+Compared to current gerrymandered outcomes, this represents an estimated \textbf{+15-25 Democratic seat advantage}. The mechanism is straightforward: large urban counties are currently fragmented, allowing Republicans to pack Democrats into some districts and crack them across others. County-based representation consolidates these populations, creating unified Democratic delegations from LA (13 seats), Cook (7 seats), Brooklyn (4 seats), etc.
+
+\textbf{We acknowledge this partisan asymmetry openly.} The county system currently benefits Democrats because large counties are urban and Democratic-leaning. However, three considerations contextualize this finding:
+
+\textbf{First, partisan composition is historically contingent}. Large suburbs (Orange County, CA; Maricopa County, AZ) were Republican strongholds in the 1980s-1990s before demographic shifts. Future realignments could make large counties more competitive or Republican-leaning, reversing the current advantage. The principle of local autonomy, once established, outlasts party coalitions.
+
+\textbf{Second, current gerrymandering also has partisan bias}. Republicans gain an estimated 16-30 House seats through strategic redistricting in states they control \citep{chen2013unintentional, mcghee2014measuring}. County-based representation eliminates this manipulation for 21\% of the population but replaces Republican gerrymandering advantage with Democratic structural advantage from urban geography. The net effect is more balanced than current Republican-gerrymandered baseline.
+
+\textbf{Third, principled reforms can have asymmetric partisan impacts}. The elimination of literacy tests benefited Democrats by enfranchising Black voters in the South. ``One person, one vote'' benefited Democrats by empowering urban districts over rural areas. Lowering the voting age to 18 benefited Democrats through youth turnout. In each case, the normative argument (voting rights, equality, consistency with draft age) was accepted despite partisan consequences. If local autonomy is a valid principle, current partisan implications are secondary.

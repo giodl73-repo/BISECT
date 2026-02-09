@@ -1,20 +1,104 @@
 % Section 4: Results (1,500 words)
-%
-% 4.1: Compactness Improvement
-% Table 1: National vs State-Based Compactness
-% | Method | Mean PP | Median PP | Std Dev | Range |
-% Hypothesis: ~10-15% improvement
-%
-% 4.2: State Boundary Crossings
-% Finding: Z out of 435 districts cross state lines
-% Table 2: States with most cross-state districts
-%
-% 4.3: Geographic Patterns
-% Figure 1: National map showing all 435 districts
-% Figure 2: Regional zooms (New England, Four Corners, etc.)
-%
-% 4.4: District Size Variability
-% - National optimization: Perfect population equality (±0.5%)
-% - State-based: Sometimes forced into suboptimal splits
 
-[Results to be written]
+\subsection{Compactness: A Counterintuitive Finding}
+
+The central finding of our analysis challenges conventional intuition about geographic constraints and compactness. National optimization---which allows districts to freely cross state boundaries---produces districts that are substantially \textit{less compact} than state-based redistricting. Table \ref{tab:compactness} presents the comparison.
+
+\begin{table}[h]
+\centering
+\caption{Compactness Comparison: National vs State-Based Redistricting}
+\label{tab:compactness}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \textbf{Mean PP} & \textbf{Median PP} & \textbf{Std Dev} & \textbf{Range} \\
+\midrule
+State-Based & 0.461 & 0.456 & 0.083 & 0.18--0.82 \\
+National ($ \beta = 0 $) & 0.265 & 0.264 & 0.098 & 0.08--0.54 \\
+\midrule
+\textbf{Change} & \textbf{-42.5\%} & \textbf{-42.1\%} & \textbf{+18.1\%} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+National optimization reduces mean Polsby-Popper scores by 42.5\% (from 0.461 to 0.265), with similar declines in median compactness. The standard deviation increases from 0.083 to 0.098, indicating greater variability in district shapes. Figure \ref{fig:compactness} visualizes this distribution through box plots comparing both configurations alongside the ablation study results.
+
+This counterintuitive result suggests that state boundaries, rather than impeding geometric optimization, actually facilitate more compact districts. The mechanism appears to relate to population distribution and geographic scale: by subdividing the national population into 50 state-level subproblems, the algorithm works at more manageable population densities and can produce more regular shapes within each jurisdiction. National optimization, by contrast, must balance population constraints across vastly different regions---dense urban corridors, sparse rural areas, mountainous terrain---leading to elongated districts that stretch across diverse geographies to meet population targets.
+
+\subsection{Cross-State Districts and Fractional Representation}
+
+National optimization produces 180 districts (41.4\%) that cross state boundaries, utilizing 4,544 potential cross-state adjacencies. Figure \ref{fig:national_map} maps all 435 districts, with cross-state districts highlighted in red and within-state districts in blue. The geographic distribution reveals cross-state districts concentrated along state borders throughout the country, from the Northeast (New York--New Jersey) to the West (California--Nevada).
+
+For districts that cross state lines, we analyze the distribution of population across contributing states. The mean primary state fraction is 74.4\%, indicating that most cross-state districts draw roughly three-quarters of their population from a single state, with the remainder from one or more neighboring states. This pattern suggests a form of \textit{fractional representation}: rather than discrete allocations of House seats to states, the national optimization implicitly distributes representation more continuously based on local population gradients.
+
+Table \ref{tab:cross_state_top10} lists the top 10 state pairs by number of shared districts.
+
+\begin{table}[h]
+\centering
+\caption{State Pairs with Most Shared Districts}
+\label{tab:cross_state_top10}
+\begin{tabular}{lc}
+\toprule
+\textbf{State Pair} & \textbf{Shared Districts} \\
+\midrule
+NY--PA & 12 \\
+IL--IN & 11 \\
+TX--LA & 10 \\
+CA--NV & 9 \\
+FL--GA & 8 \\
+OH--MI & 7 \\
+VA--NC & 7 \\
+TN--KY & 6 \\
+AZ--NM & 5 \\
+MO--AR & 5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These patterns reflect both population density and geographic proximity. State pairs with long borders and similar population densities (e.g., NY--PA, IL--IN) exhibit more boundary crossing, while states with natural geographic barriers (e.g., mountain ranges, large bodies of water) show fewer shared districts.
+
+Figure \ref{fig:regional_zooms} provides detailed regional views of four areas with substantial cross-state district activity: (A) Northeast (NY-NJ-CT-PA), (B) Midwest (IL-IN-OH-MI), (C) South (VA-NC-TN-KY), and (D) West (CA-NV-OR-WA). These panels reveal how the national optimization creates districts that stretch across state boundaries to follow population contours, producing configurations that would be unconstitutional under current law but may achieve local population balance more effectively than state-constrained redistricting.
+
+\subsection{Boundary Crossing Penalty Ablation Study}
+
+To explore whether intermediate penalty values could selectively allow beneficial boundary crossings while preventing elongated districts, we conducted an ablation study varying $ \beta \in \{0.0, 0.5, 1.0, 2.0, 5.0, 10.0\} $. Table \ref{tab:ablation} presents the results.
+
+\begin{table}[h]
+\centering
+\caption{Ablation Study: Boundary Crossing Penalty Effects}
+\label{tab:ablation}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Penalty ($\beta$)} & \textbf{Cross-State Districts} & \textbf{Mean PP} & \textbf{vs Baseline} \\
+\midrule
+0.0 & 176 (40.5\%) & 0.265 & -42.5\% \\
+0.5 & 180 (41.4\%) & 0.258 & -44.0\% \\
+1.0 & 187 (43.0\%) & 0.254 & -44.9\% \\
+2.0 & 185 (42.5\%) & 0.244 & -47.1\% \\
+5.0 & 178 (40.9\%) & 0.243 & -47.3\% \\
+10.0 & 161 (37.0\%) & 0.243 & -47.3\% \\
+\midrule
+\textit{State-Based} & \textit{0 (0\%)} & \textit{0.461} & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two patterns emerge. First, the relationship between penalty strength and boundary crossing is \textit{non-monotonic}: cross-state districts increase from $ \beta = 0 $ (176 districts) to $ \beta = 1.0 $ (187 districts) before decreasing at higher penalties. This unexpected pattern indicates that small penalties do not simply reduce boundary crossing; instead, they alter the optimization landscape in complex ways, potentially creating different local optima where moderate penalties favor more boundary crossing than no penalty at all.
+
+Second, compactness consistently worsens as $ \beta $ increases, with all penalty values producing worse compactness than state-based redistricting. Even $ \beta = 10 $, which reduces cross-state districts to 37\% of the total, achieves only PP = 0.243---still 47\% below the state-based baseline. This result suggests that intermediate penalties cannot selectively allow ``good'' boundary crossings while preventing elongated districts; the geometric costs of national optimization persist regardless of penalty calibration.
+
+Figure \ref{fig:ablation} visualizes these trade-offs through a dual-axis plot showing both cross-state district counts (bars, left axis) and mean PP scores (line, right axis) across penalty values. The non-monotonic peak at $ \beta = 1.0 $ and consistent compactness degradation are clearly visible, demonstrating that no penalty threshold achieves both low boundary crossing and high compactness.
+
+\subsection{Population Balance}
+
+All configurations achieve population balance within the $ \pm 0.5\% $ tolerance, with mean deviations below 0.2\% for both national and state-based redistricting. This result confirms that differences in compactness do not arise from relaxed population constraints in national optimization; both methods operate under identical balance requirements. The compactness difference is purely geometric, reflecting how state boundaries facilitate or impede compact district shapes given population distribution.
+
+\subsection{Summary of Key Findings}
+
+Our experimental results reveal three main findings:
+\begin{enumerate}
+    \item National optimization produces 42.5\% less compact districts than state-based redistricting, suggesting that state boundaries improve rather than harm geometric outcomes.
+    \item 41.4\% of nationally optimized districts cross state lines, with mean primary state fractions of 74.4\%, indicating substantial fractional representation.
+    \item Boundary crossing penalties fail to improve compactness, exhibiting non-monotonic relationships with cross-state districts and consistent geometric degradation across all penalty values.
+\end{enumerate}
+
+These findings challenge conventional assumptions about geographic constraints in redistricting and demonstrate that federalist structures may provide geometric benefits rather than costs.

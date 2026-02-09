@@ -1,22 +1,53 @@
 % Section 5: Discussion (1,200 words)
-%
-% 5.1: Geometric Cost of Federalism
-% Key Finding: State boundaries impose X% compactness cost
-%
-% 5.2: Natural Regions
-% Do algorithmic districts follow natural geography?
-%
-% 5.3: Constitutional Implications
-% What does this mean for reform?
-%
-% 5.4: Limitations
-% - Single algorithm: Only recursive bisection tested
-% - 2020 only: Single census year
-% - Theoretical only: Not a policy proposal
-%
-% 5.5: Future Work
-% - Multi-year national optimization (2000/2010/2020)
-% - Ensemble methods (ReCom, spectral)
-% - Partial relaxation
 
-[Discussion to be written]
+\subsection{The Geometric Benefits of Federalism}
+
+Our central finding---that national optimization produces 42.5\% less compact districts than state-based redistricting---inverts conventional intuition about geographic constraints. Typically, constraints are understood to harm optimization objectives by restricting the feasible solution space. Yet in congressional redistricting, state boundary constraints appear to \textit{improve} geometric outcomes rather than impede them.
+
+We propose three complementary mechanisms to explain this phenomenon. First, \textbf{multi-scale decomposition}: states subdivide the national population into 50 manageable subproblems, each containing 1--52 districts. This hierarchical structure allows the partitioning algorithm to work at appropriate population scales, producing more regular shapes within each jurisdiction. National optimization, lacking this decomposition, must directly balance population across regions with vastly different densities and geographies, leading to elongated districts that stretch across diverse terrain.
+
+Second, \textbf{geographic coherence}: state boundaries often align with natural features (rivers, mountain ranges) and historical settlement patterns. By respecting these boundaries, redistricting algorithms implicitly work within geographic regions that share topographic, demographic, and infrastructural characteristics. National optimization, by contrast, creates districts that may span the Appalachian Mountains, cross major rivers, or connect disconnected urban centers, producing geometrically irregular shapes.
+
+Third, \textbf{local population gradients}: within states, population density typically varies more smoothly than across state boundaries, where rural and urban regions may abut. State-constrained algorithms can follow these local gradients to create compact districts, while national optimization must bridge sharp density discontinuities at borders, necessitating irregular shapes to achieve population balance.
+
+These mechanisms suggest that federalist redistricting structures---far from being geometric obstacles---provide beneficial organization for optimization algorithms. This finding has implications beyond congressional redistricting: any multi-jurisdictional partitioning problem may benefit from respecting existing boundaries that align with natural subdivisions of the underlying space.
+
+\subsection{Fractional Representation: A Theoretical Alternative}
+
+The prevalence of cross-state districts in national optimization (41.4\%) raises the question of whether fractional representation could serve as a constitutional alternative to current apportionment. Under such a system, states would not receive integer seat allocations; instead, congressional districts could span state boundaries, with states receiving fractional representation based on their contribution to shared districts.
+
+Consider the example of a district drawing 60\% of its population from Vermont and 40\% from New Hampshire. Under fractional representation, Vermont would receive 0.6 seats and New Hampshire 0.4 seats from this district. Aggregated across all districts, each state's total representation would equal its Huntington-Hill apportionment, but individual districts need not respect state boundaries.
+
+This system would require constitutional amendment, as Article I, Section 2 mandates apportionment ``among the several States''---language that courts have consistently interpreted to require integer allocations. The political feasibility of such an amendment is vanishingly small, given state sovereignty concerns and the supermajority requirements for constitutional change.
+
+Yet fractional representation offers theoretical advantages. It would eliminate the ``Wyoming rule'' problem, where the smallest state determines the size of all other states' delegations. It could improve population equity by allowing districts to follow natural population contours rather than political boundaries. And it might reduce gerrymandering by expanding the solution space available to redistricting commissions.
+
+Our results, however, demonstrate that these theoretical advantages do not translate to improved geometric compactness. Even with fractional representation, national optimization produces substantially less compact districts than state-based redistricting, suggesting that the geometric benefits of federalism outweigh the flexibility of boundary-crossing districts.
+
+\subsection{Implications for Redistricting Theory}
+
+These findings contribute to ongoing debates about constraints and objectives in redistricting algorithms. The literature typically assumes that constraints---whether legal (one person, one vote), political (protecting incumbents), or geographic (county preservation)---necessarily harm optimization objectives like compactness or minority representation. Our results challenge this assumption, demonstrating that certain constraints may actually facilitate achieving optimization objectives by providing beneficial structure to the problem space.
+
+This insight extends beyond redistricting to other graph partitioning applications. In community detection, for instance, respecting known organizational boundaries might improve partition quality rather than impede it. In logistics and facility location, geographic constraints aligned with natural service regions could facilitate better solutions than unconstrained optimization. The key appears to be whether constraints align with underlying structure in the data---when they do, they help rather than hurt.
+
+The non-monotonic relationship between boundary crossing penalties and outcomes (cross-state districts peak at $ \beta = 1.0 $ rather than decreasing monotonically) further illustrates the complexity of constrained optimization. Small penalties do not simply interpolate between unconstrained and fully constrained solutions; instead, they create qualitatively different optimization landscapes with distinct local optima. This finding suggests caution in using penalty-based methods to achieve intermediate solutions in multi-objective optimization problems.
+
+\subsection{Limitations and Scope}
+
+Several limitations qualify our findings. First, we use a single partitioning algorithm (METIS recursive bisection). Other methods---ReCom \citep{deford2019recombination}, spectral partitioning, simulated annealing---might produce different trade-offs between compactness and boundary crossing. However, METIS is widely used in computational redistricting and provides a strong baseline for comparing state-based and national configurations.
+
+Second, we analyze only the 2020 Census. Historical data (2000, 2010) might reveal different patterns as population distribution evolves. The consistency of our findings across ablation studies suggests they reflect fundamental properties of U.S. geography and population distribution, but multi-year analysis would strengthen this conclusion.
+
+Third, our analysis is purely computational and theoretical. We do not propose fractional representation or national redistricting as practical reforms; rather, we use these counterfactuals to understand the geometric consequences of federalist redistricting structures. The political, legal, and administrative barriers to national redistricting are insurmountable under current constitutional frameworks.
+
+Fourth, we focus exclusively on geometric compactness, ignoring other redistricting criteria: communities of interest, county/municipal preservation, minority representation, competitiveness, and partisan fairness. National optimization might perform better on some of these criteria while performing worse on compactness. A full evaluation would require multidimensional analysis across all redistricting objectives.
+
+Finally, we do not model the political economy of national redistricting. Who would draw national districts? How would interstate conflicts be resolved? What role would state governments play? These questions have no clear answers and represent fundamental obstacles to any national redistricting scheme beyond the geometric considerations we analyze.
+
+\subsection{Future Research Directions}
+
+Our findings open several avenues for future work. First, \textbf{algorithmic variation}: comparing METIS to ensemble methods (ReCom chains, spectral partitioning) would reveal whether the compactness-federalism relationship holds across redistricting approaches. Second, \textbf{temporal analysis}: extending the analysis to 2000 and 2010 would test whether the pattern persists across census cycles and population shifts.
+
+Third, \textbf{partial relaxation}: rather than fully removing state boundaries, researchers could explore allowing boundary crossing only for small states (Wyoming, Vermont, Delaware) to address the Wyoming rule without compromising compactness in larger states. Fourth, \textbf{alternative geographies}: applying the methodology to state legislative districts, school districts, or international electoral boundaries would test the generality of the federalism-compactness relationship.
+
+Finally, \textbf{multi-objective optimization}: incorporating communities of interest, minority representation, and partisan fairness alongside compactness would provide a more complete picture of the trade-offs inherent in national versus state-based redistricting. Such analysis might reveal scenarios where national optimization excels on non-geometric criteria despite underperforming on compactness.
