@@ -1,0 +1,52 @@
+% Measuring Partisan Fairness in Algorithmic Redistricting: A National Efficiency Gap Analysis
+% Paper 11 of Research Portfolio
+
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{tikz}
+\usepackage{subcaption}
+
+\usetikzlibrary{positioning,arrows.meta}
+
+% Title
+\title{\textbf{Measuring Partisan Fairness in Algorithmic Redistricting:\\
+A National Efficiency Gap Analysis}}
+
+\author{Giovanni De Luca}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Algorithmic redistricting promises objective, non-partisan district boundaries, but critics argue that neutral algorithms can still produce partisan advantage through geographic sorting. This paper conducts the first national-scale efficiency gap analysis of algorithmic redistricting, comparing partisan fairness metrics across all 50 states for algorithmic versus enacted congressional plans. Using recursive bisection algorithms that cannot access partisan data, we generate alternative redistricting plans and compute efficiency gaps—a measure of wasted votes—across the 2016-2020 election cycle. Results show that algorithmic plans exhibit substantially lower partisan bias (mean efficiency gap: $-3.2\%$) compared to enacted plans (mean efficiency gap: $+5.1\%$), representing a 62\% reduction in partisan asymmetry. Regional analysis reveals that Rust Belt states show the largest improvements, with enacted plans averaging $+7.2\%$ Republican advantage versus algorithmic plans' $-2.8\%$ Democratic advantage. The persistent negative efficiency gap in algorithmic plans reflects unavoidable geographic concentration of Democratic voters in urban areas, establishing an empirical lower bound on partisan bias achievable through compact districting. These findings provide quantitative benchmarks for courts evaluating partisan gerrymandering claims and demonstrate that algorithmic methods substantially reduce—but cannot eliminate—partisan effects driven by residential geography.
+\end{abstract}
+
+\section*{Keywords}
+Redistricting, efficiency gap, partisan gerrymandering, algorithmic fairness, geographic sorting, computational political science
+
+% Sections
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+% Bibliography
+\bibliographystyle{apsr}
+\bibliography{references}
+
+\end{document}
