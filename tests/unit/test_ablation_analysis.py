@@ -199,6 +199,7 @@ class TestAblationCompleteness:
             with open(ablation_file, 'rb') as f:
                 data = pickle.load(f)
 
-            districts = data['districts']
-            unique_districts = len(set(districts))
+            # Use geoid_to_district mapping (district IDs are 1-indexed: 1-435)
+            geoid_to_district = data['geoid_to_district']
+            unique_districts = len(set(geoid_to_district.values()))
             assert unique_districts == 435, f"Beta={beta} has {unique_districts} districts, expected 435"

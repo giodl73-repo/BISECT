@@ -371,19 +371,8 @@
       </div>
     </ScrollSection>
 
-    <!-- Next Chapter -->
-    <ScrollSection bg-class="bg-white">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl font-heading font-bold mb-6">What's Next?</h2>
-        <p class="text-xl text-gray-700 mb-8">
-          Now that we have a graph, how do we split it into two balanced parts?
-          That's where METIS comes in...
-        </p>
-        <router-link to="/chapter-2" class="btn btn-secondary btn-lg">
-          Continue to Chapter 2 →
-        </router-link>
-      </div>
-    </ScrollSection>
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="1" />
   </div>
 </template>
 
@@ -393,4 +382,5 @@ import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
 import GraphBuilder from '@/components/GraphBuilder.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 </script>

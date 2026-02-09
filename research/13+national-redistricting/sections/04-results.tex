@@ -60,7 +60,7 @@ Figure \ref{fig:regional_zooms} provides detailed regional views of four areas w
 
 \subsection{Boundary Crossing Penalty Ablation Study}
 
-To explore whether intermediate penalty values could selectively allow beneficial boundary crossings while preventing elongated districts, we conducted an ablation study varying $ \beta \in \{0.0, 0.5, 1.0, 2.0, 5.0, 10.0\} $. Table \ref{tab:ablation} presents the results.
+To explore whether intermediate penalty values could selectively allow beneficial boundary crossings while preventing elongated districts, we conducted an ablation study varying $ \beta $ from 0 to 300 across 21 values. Table \ref{tab:ablation} presents results for representative penalty values.
 
 \begin{table}[h]
 \centering
@@ -76,6 +76,9 @@ To explore whether intermediate penalty values could selectively allow beneficia
 2.0 & 185 (42.5\%) & 0.244 & -47.1\% \\
 5.0 & 178 (40.9\%) & 0.243 & -47.3\% \\
 10.0 & 161 (37.0\%) & 0.243 & -47.3\% \\
+50.0 & 144 (33.1\%) & 0.239 & -48.2\% \\
+100.0 & 142 (32.6\%) & 0.237 & -48.6\% \\
+300.0 & 146 (33.6\%) & 0.236 & -48.8\% \\
 \midrule
 \textit{State-Based} & \textit{0 (0\%)} & \textit{0.461} & --- \\
 \bottomrule
@@ -86,7 +89,9 @@ Two patterns emerge. First, the relationship between penalty strength and bounda
 
 Second, compactness consistently worsens as $ \beta $ increases, with all penalty values producing worse compactness than state-based redistricting. Even $ \beta = 10 $, which reduces cross-state districts to 37\% of the total, achieves only PP = 0.243---still 47\% below the state-based baseline. This result suggests that intermediate penalties cannot selectively allow ``good'' boundary crossings while preventing elongated districts; the geometric costs of national optimization persist regardless of penalty calibration.
 
-Figure \ref{fig:ablation} visualizes these trade-offs through a dual-axis plot showing both cross-state district counts (bars, left axis) and mean PP scores (line, right axis) across penalty values. The non-monotonic peak at $ \beta = 1.0 $ and consistent compactness degradation are clearly visible, demonstrating that no penalty threshold achieves both low boundary crossing and high compactness.
+The extended ablation study ($ \beta $ up to 300) reveals a plateau effect: beyond $ \beta \approx 50 $, both cross-state districts and compactness stabilize. At $ \beta = 300 $---applying a 301$\times$ penalty to boundary crossings---the algorithm still produces 146 cross-state districts (33.6\%), with cross-state counts varying only between 139--147 districts for $ \beta \in [50, 300] $. This plateau demonstrates that the algorithm \\textit{requires} boundary crossings to achieve population balance and minimize edge cuts, even when such crossings incur extreme penalties. The optimization fundamentally cannot avoid crossing state boundaries while maintaining its objectives.
+
+Figure \ref{fig:ablation} visualizes these trade-offs through a dual-axis plot showing both cross-state district counts (bars, left axis) and mean PP scores (line, right axis) across penalty values. The non-monotonic peak at $ \beta = 1.0 $, consistent compactness degradation, and the plateau at high penalties are clearly visible, demonstrating that no penalty threshold achieves both low boundary crossing and high compactness.
 
 \subsection{Population Balance}
 
