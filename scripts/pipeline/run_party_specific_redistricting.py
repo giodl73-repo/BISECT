@@ -21,15 +21,34 @@ import json
 from typing import Dict, Optional
 import subprocess
 
-# Add project root to path
+# Add project root and src to path
 project_root = Path(__file__).parent.parent.parent
+src_path = project_root / "src"
 sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(src_path))
 
 from apportionment.proportional.dhondt import allocate_seats_dhondt, suggest_threshold
 from scripts.data.load_presidential_results import get_vote_shares
-from scripts.config_2020 import STATE_SEATS_2020
+from scripts.config_2020 import STATE_CONFIG_2020
 
 logger = logging.getLogger(__name__)
+
+# State name to abbreviation mapping
+STATE_ABBREV = {
+    'alabama': 'AL', 'alaska': 'AK', 'arizona': 'AZ', 'arkansas': 'AR',
+    'california': 'CA', 'colorado': 'CO', 'connecticut': 'CT', 'delaware': 'DE',
+    'florida': 'FL', 'georgia': 'GA', 'hawaii': 'HI', 'idaho': 'ID',
+    'illinois': 'IL', 'indiana': 'IN', 'iowa': 'IA', 'kansas': 'KS',
+    'kentucky': 'KY', 'louisiana': 'LA', 'maine': 'ME', 'maryland': 'MD',
+    'massachusetts': 'MA', 'michigan': 'MI', 'minnesota': 'MN', 'mississippi': 'MS',
+    'missouri': 'MO', 'montana': 'MT', 'nebraska': 'NE', 'nevada': 'NV',
+    'new_hampshire': 'NH', 'new_jersey': 'NJ', 'new_mexico': 'NM', 'new_york': 'NY',
+    'north_carolina': 'NC', 'north_dakota': 'ND', 'ohio': 'OH', 'oklahoma': 'OK',
+    'oregon': 'OR', 'pennsylvania': 'PA', 'rhode_island': 'RI', 'south_carolina': 'SC',
+    'south_dakota': 'SD', 'tennessee': 'TN', 'texas': 'TX', 'utah': 'UT',
+    'vermont': 'VT', 'virginia': 'VA', 'washington': 'WA', 'west_virginia': 'WV',
+    'wisconsin': 'WI', 'wyoming': 'WY'
+}
 
 
 def setup_logging(verbose: bool = False):
@@ -54,16 +73,22 @@ def get_state_seat_count(state: str, year: int) -> int:
         Number of House seats allocated to the state.
     """
     if year == 2020:
-        seat_config = STATE_SEATS_2020
+        seat_config = STATE_CONFIG_2020
     else:
         raise ValueError(f"Year {year} not supported yet")
 
     state_normalized = state.lower().replace(' ', '_').replace('-', '_')
 
-    if state_normalized not in seat_config:
+    # Convert to abbreviation if needed
+    if state_normalized in STATE_ABBREV:
+        state_abbrev = STATE_ABBREV[state_normalized]
+    else:
+        state_abbrev = state_normalized.upper()
+
+    if state_abbrev not in seat_config:
         raise ValueError(f"State '{state}' not found in configuration")
 
-    return seat_config[state_normalized]
+    return seat_config[state_abbrev]['districts']
 
 
 def run_recursive_bisection_for_party(
@@ -341,7 +366,7 @@ def main():
 
     # Determine which states to process
     if args.all_states:
-        states = list(STATE_SEATS_2020.keys())
+        states = list(STATE_CONFIG_2020.keys())
         logger.info(f"Processing all 50 states")
     elif args.states:
         states = [s.lower().replace(' ', '_').replace('-', '_') for s in args.states]

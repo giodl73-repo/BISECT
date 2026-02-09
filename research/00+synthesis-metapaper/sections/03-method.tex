@@ -8,7 +8,11 @@ The process begins with 85,000 census tracts (2020 data) forming a single connec
 
 \begin{enumerate}
 \item \textbf{Graph construction}: Census tracts become nodes weighted by population; edges connect adjacent tracts based on shared boundaries (queen contiguity).
-\item \textbf{Edge weighting}: Each edge receives a weight inversely proportional to distance and proportional to demographic similarity. Higher weights between minority-majority tracts preserve communities of interest, addressing Voting Rights Act requirements without explicit racial targeting.
+\item \textbf{Edge weighting}: Each edge $(i,j)$ connecting adjacent tracts receives weight:
+\[
+w(i,j) = \frac{\alpha \cdot s_{demo}(i,j)}{d(i,j) + \epsilon}
+\]
+where $d(i,j)$ is centroid distance (km), $s_{demo}(i,j) \in [0,1]$ measures demographic similarity via cosine similarity of racial/ethnic composition vectors, $\alpha$ is a scaling parameter balancing VRA objectives with compactness, and $\epsilon = 0.1$ prevents division by zero for adjacent tracts. Higher weights between demographically similar tracts preserve communities of interest, addressing Voting Rights Act requirements without explicit racial targeting. Full specification and weight distribution statistics provided in Supplementary Materials.
 \item \textbf{Bisection}: The METIS graph partitioning library~\cite{karypis1998metis} splits the graph into two balanced parts, minimizing the total weight of cut edges. This optimization produces compact districts by preferring cuts that separate dissimilar communities over those that split cohesive neighborhoods.
 \item \textbf{Recursion}: Each resulting partition becomes input for the next round until reaching the target number of districts.
 \end{enumerate}

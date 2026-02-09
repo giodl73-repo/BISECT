@@ -141,14 +141,13 @@ def compute_hybrid_apportionment(
         - state_impacts: How each state's seats changed
     """
     # Identify qualifying counties
-    qualifying = county_data[county_data['population'] >= threshold_population].copy()
-    qualifying_counties = qualifying.to_dict('records')
+    qualifying_counties = county_data[county_data['population'] >= threshold_population].copy()
 
     # Calculate remaining state populations (total - large counties)
     remaining_state_pops = state_populations.copy()
     county_seats_by_state = defaultdict(int)
 
-    for county in qualifying_counties:
+    for _, county in qualifying_counties.iterrows():
         state = county['state']
         pop = county['population']
         remaining_state_pops[state] -= pop
@@ -189,10 +188,10 @@ def compute_hybrid_apportionment(
         state_seats = allocation.get(state_key, 0)
 
         # Seats allocated to state's large counties
+        state_large_counties = qualifying_counties[qualifying_counties['state'] == state]
         county_seats = sum(
-            allocation.get(f"{c['county']} County, {state}", 0)
-            for c in qualifying_counties
-            if c['state'] == state
+            allocation.get(f"County {row['fips']}, {state}", 0)
+            for _, row in state_large_counties.iterrows()
         )
 
         total_seats = state_seats + county_seats

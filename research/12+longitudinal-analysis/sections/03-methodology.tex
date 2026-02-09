@@ -41,6 +41,18 @@ We apply recursive bisection using METIS 5.1.0 with \textit{identical parameters
 
 \textbf{Why consistency matters}: Using identical parameters isolates temporal effects (population change, geographic shifts) from methodological variations. Any differences in outcomes across years reflect genuine demographic trends, not algorithmic artifacts.
 
+\subsubsection{Voting Rights Act Considerations}
+
+\textbf{Important limitation}: This algorithmic approach generates districts based solely on population balance and geographic compactness, without considering Voting Rights Act (VRA) Section 2 requirements for majority-minority districts. Real-world implementation would require VRA-compliant post-processing to ensure:
+
+\begin{enumerate}
+    \item \textbf{Gingles preconditions}: Where racial/ethnic minorities are sufficiently large and geographically compact to constitute a majority in a district, and where voting is racially polarized, Section 2 may require creating majority-minority districts \citep{gingles1986}.
+    \item \textbf{Retrogression}: Districts must not diminish minority voting strength relative to existing plans \citep{beer1976}.
+    \item \textbf{Proportionality consideration}: While not requiring strict proportional representation, VRA analysis considers whether minority groups have opportunities to elect candidates of choice proportional to their population \citep{johnson1997}.
+\end{enumerate}
+
+We frame our algorithmic districts as a \textit{pre-VRA baseline}—a starting point demonstrating what purely geometric optimization produces before legal mandates are applied. In practice, redistricting authorities would need to adjust these algorithmically-generated boundaries to comply with VRA requirements, potentially reducing geometric compactness in favor of minority representation. Our longitudinal analysis shows how this baseline evolves over time, providing context for evaluating both enacted districts and VRA-compliant alternatives.
+
 \subsection{Metrics}
 
 \subsubsection{Compactness}
