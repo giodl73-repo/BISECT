@@ -7,10 +7,12 @@
 
 ## Overview
 
-This portfolio comprises **18 papers** organized into 5 categories:
+This portfolio comprises **20 papers** organized into 6 categories:
 - **Synthesis** (1 paper): Meta-analysis for Science/Nature
 - **Core Portfolio** (10 papers): Foundation + extensions + investigations
-- **Validation** (2 papers): Robustness testing
+- **Validation** (2 papers): Robustness testing — ⚠️ **NOTE**: Two papers currently numbered #11 (efficiency-gap, maup-sensitivity) — renumbering pending
+- **Temporal Analysis** (1 paper): Longitudinal trends 2000-2020
+- **Methodological** (1 paper): Architectural comparison studies
 - **Experimental** (5 papers): Alternative representation systems
 
 ---
@@ -50,14 +52,26 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 
 ---
 
-### 11-12. Validation & Temporal Analysis
+### 11. Validation (⚠️ DUPLICATE NUMBERING - AWAITING RENUMBERING)
 
 | # | Slug | Title | Status | Target Venue | Priority |
 |---|------|-------|--------|--------------|----------|
+| **11** | efficiency-gap-analysis | Efficiency Gap and Partisan Bias in Algorithmic Redistricting | Planned | Election Law Journal | High |
 | **11** | maup-sensitivity | Spatial Resolution Sensitivity in Algorithmic Redistricting: Tracts, Block Groups, and Blocks | Planned | IJGIS / Political Analysis | High |
+
+**⚠️ NOTE**: Two papers currently numbered #11. Renumbering scheme pending.
+
+**Purpose**: Test robustness (MAUP) and partisan fairness (efficiency gap) of core findings.
+
+---
+
+### 12. Temporal Analysis
+
+| # | Slug | Title | Status | Target Venue | Priority |
+|---|------|-------|--------|--------------|----------|
 | **12** | longitudinal-analysis | Twenty Years of Congressional Redistricting: Temporal Trends 2000-2020 | Planned | APSR / Political Analysis | High |
 
-**Purpose**: Test robustness of core findings (MAUP) and analyze temporal evolution (longitudinal).
+**Purpose**: Analyze temporal evolution and demographic shifts across census decades.
 
 ---
 
@@ -77,6 +91,16 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 
 ---
 
+### 18. Methodological Comparison
+
+| # | Slug | Title | Status | Target Venue | Priority |
+|---|------|-------|--------|--------------|----------|
+| **18** | nway-vs-recursive-general | N-Way vs Recursive Bisection: General Architectural Comparison | Planned | ACM TSAS / SIAM | High |
+
+**Purpose**: Definitive general comparison of n-way partitioning vs recursive bisection across all performance dimensions (compactness, runtime, stability, scalability). Broader than Paper 10 which focuses only on VRA compliance.
+
+---
+
 ## Paper Categories by Function
 
 ### Foundation (1 paper)
@@ -93,13 +117,17 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 - **07**: temporal-stability — Hierarchical advantage (recursive > n-way)
 - **08**: multi-vs-edge — Constraint conflict theory
 - **09**: adaptive-bisection — Parameter sensitivity (tree structure)
-- **10**: nway-vs-recursive — Architectural comparison (statistical equivalence)
+- **10**: nway-vs-recursive — VRA-specific architectural comparison
 
-### Validation (1 paper)
+### Validation (2 papers — ⚠️ both currently #11, renumbering pending)
+- **11**: efficiency-gap-analysis — Partisan fairness metrics
 - **11**: maup-sensitivity — Tests generalizability across spatial resolutions
 
 ### Temporal Analysis (1 paper)
 - **12**: longitudinal-analysis — 20-year trends (2000/2010/2020)
+
+### Methodological (1 paper)
+- **18**: nway-vs-recursive-general — General architectural comparison (all dimensions)
 
 ### Experimental (5 papers)
 - **13-17**: Alternative representation systems (national, county, party-based, multi-member, partisan-similarity)
@@ -112,7 +140,7 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 ## Dependency Graph
 
 ```
-00 (synthesis) ← depends on all papers 01-17
+00 (synthesis) ← depends on all papers 01-18
 
 Foundation:
   01 (recursive-bisection)
@@ -124,7 +152,7 @@ Foundation:
   ├─→ 06 (compactness-tradeoff)
   ├─→ 08 (multi-vs-edge)
   ├─→ 09 (adaptive-bisection)
-  └─→ 10 (nway-vs-recursive)
+  └─→ 10 (nway-vs-recursive-vra)
             ↓
           04 (threshold)
             ↓
@@ -133,10 +161,16 @@ Foundation:
           07 (temporal-stability)
 
 Validation:
-  11 (maup) ← tests all 01-10
+  11a (efficiency-gap) ← tests partisan fairness of 01-10
+  11b (maup) ← tests generalizability across resolutions
 
 Temporal:
   12 (longitudinal) ← uses data from 01-10
+
+Methodological:
+  18 (nway-vs-recursive-general) ← general architectural comparison (foundation-level)
+      ↑
+      └─ Complements 10 (VRA-specific) with broader scope
 
 Experimental:
   13-17 ← use infrastructure from 01-02
@@ -183,8 +217,8 @@ When adding papers:
 | Status | Count | Papers |
 |--------|-------|--------|
 | Ready for submission | 10 | 01-10 (after PP1/PP2 revisions) |
-| Planned | 8 | 00, 11-17 |
-| **Total** | **18** | |
+| Planned | 10 | 00, 11 (×2), 12-18 |
+| **Total** | **20** | ⚠️ Includes duplicate #11 (renumbering pending) |
 
 ---
 

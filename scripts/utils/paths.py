@@ -76,6 +76,8 @@ def get_tract_file(state, year, version):
     """
     Get census tract file path for state, year, and version.
 
+    DEPRECATED: Use get_unit_file() with resolution='tract' for new code.
+
     Args:
         state: State name (case-insensitive, spaces/underscores normalized)
         year: Census year as string ('2000', '2010', '2020')
@@ -89,8 +91,34 @@ def get_tract_file(state, year, version):
         >>> print(path)
         outputs/v1/data/2020/units/california_tracts_2020.parquet
     """
+    return get_unit_file(state, year, version, resolution='tract')
+
+
+def get_unit_file(state, year, version, resolution='tract'):
+    """
+    Get census unit file path for state, year, version, and resolution.
+
+    Args:
+        state: State name (case-insensitive, spaces/underscores normalized)
+        year: Census year as string ('2000', '2010', '2020')
+        version: Version identifier (e.g., 'v1', 'test', 'edge_weighted')
+        resolution: Geographic resolution ('tract', 'block_group', 'block')
+
+    Returns:
+        Path: Path to unit parquet file (processed data)
+
+    Examples:
+        >>> path = get_unit_file('California', '2020', 'v1', 'tract')
+        >>> print(path)
+        outputs/v1/data/2020/units/california_tracts_2020.parquet
+
+        >>> path = get_unit_file('California', '2020', 'v1', 'block_group')
+        >>> print(path)
+        outputs/v1/data/2020/units/california_block_groups_2020.parquet
+    """
     state_normalized = state.lower().replace(' ', '_')
-    return get_census_data_dir(version, year) / 'units' / f'{state_normalized}_tracts_{year}.parquet'
+    resolution_suffix = 'tracts' if resolution == 'tract' else f'{resolution}s'
+    return get_census_data_dir(version, year) / 'units' / f'{state_normalized}_{resolution_suffix}_{year}.parquet'
 
 
 def get_places_file(state, year, version):
@@ -114,25 +142,35 @@ def get_places_file(state, year, version):
     return get_census_data_dir(version, year) / 'places' / f'{state_normalized}_places_{year}.parquet'
 
 
-def get_adjacency_file(state, year, version):
+def get_adjacency_file(state, year, version, resolution='tract'):
     """
-    Get adjacency graph file path for state, year, and version.
+    Get adjacency graph file path for state, year, version, and resolution.
 
     Args:
         state: State name (case-insensitive, spaces/underscores normalized)
         year: Census year as string ('2000', '2010', '2020')
         version: Version identifier (e.g., 'v1', 'test', 'edge_weighted')
+        resolution: Geographic resolution ('tract', 'block_group', 'block') - default 'tract' for backward compatibility
 
     Returns:
         Path: Path to adjacency pickle file (processed data)
 
-    Example:
-        >>> path = get_adjacency_file('california', '2020', 'v1')
+    Examples:
+        >>> path = get_adjacency_file('california', '2020', 'v1', 'tract')
         >>> print(path)
         outputs/v1/data/2020/adjacency/california_adjacency_2020.pkl
+
+        >>> path = get_adjacency_file('california', '2020', 'v1', 'block')
+        >>> print(path)
+        outputs/v1/data/2020/adjacency/california_block_adjacency_2020.pkl
     """
     state_normalized = state.lower().replace(' ', '_')
-    return get_census_data_dir(version, year) / 'adjacency' / f'{state_normalized}_adjacency_{year}.pkl'
+    if resolution == 'tract':
+        # Backward compatibility: tracts use old naming without resolution prefix
+        return get_census_data_dir(version, year) / 'adjacency' / f'{state_normalized}_adjacency_{year}.pkl'
+    else:
+        # New format: include resolution in filename
+        return get_census_data_dir(version, year) / 'adjacency' / f'{state_normalized}_{resolution}_adjacency_{year}.pkl'
 
 
 def get_election_data_file(year, version):

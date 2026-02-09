@@ -175,6 +175,41 @@
       </div>
     </ScrollSection>
 
+    <!-- Interactive Split Simulator -->
+    <ScrollSection bg-class="bg-white">
+      <div class="max-w-5xl mx-auto">
+        <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-2-accent">
+          ⚡ Interactive: Run METIS Yourself
+        </h2>
+
+        <p class="text-story text-center mb-8">
+          Click <strong>"Run METIS Split"</strong> to watch the algorithm split a state
+          into two perfectly balanced regions!
+        </p>
+
+        <SplitSimulator
+          title="METIS Split Simulator"
+          description="See the 4-step METIS process in action"
+        />
+
+        <div class="mt-8 card bg-gradient-to-r from-orange-100 to-yellow-100">
+          <h3 class="text-xl font-heading font-bold mb-3 text-schoolhouse-orange">
+            🎯 What Just Happened?
+          </h3>
+          <p class="text-sm mb-4">
+            METIS analyzed thousands of possible ways to split the state and found the one
+            that minimizes edge cut while balancing population. The whole process took
+            milliseconds!
+          </p>
+          <p class="text-sm">
+            Notice how the split isn't perfectly equal (42.8% vs 57.2% for Alabama) because
+            census tracts are indivisible units. The algorithm gets as close as possible while
+            respecting tract boundaries.
+          </p>
+        </div>
+      </div>
+    </ScrollSection>
+
     <!-- Alabama's First Split -->
     <ScrollSection bg-class="bg-white">
       <div class="max-w-4xl mx-auto">
@@ -357,4 +392,5 @@ import Hero from '@/components/Hero.vue'
 import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
+import SplitSimulator from '@/components/SplitSimulator.vue'
 </script>

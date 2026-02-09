@@ -341,9 +341,9 @@ def main():
 
         # Distribution
         print(f"\nDistribution:")
-        print(f"  PP ≥ 0.5: {(mmd_compactness['polsby_popper'] >= 0.5).sum()} ({(mmd_compactness['polsby_popper'] >= 0.5).mean()*100:.1f}%)")
-        print(f"  PP ≥ 0.4: {(mmd_compactness['polsby_popper'] >= 0.4).sum()} ({(mmd_compactness['polsby_popper'] >= 0.4).mean()*100:.1f}%)")
-        print(f"  PP ≥ 0.3: {(mmd_compactness['polsby_popper'] >= 0.3).sum()} ({(mmd_compactness['polsby_popper'] >= 0.3).mean()*100:.1f}%)")
+        print(f"  PP >= 0.5: {(mmd_compactness['polsby_popper'] >= 0.5).sum()} ({(mmd_compactness['polsby_popper'] >= 0.5).mean()*100:.1f}%)")
+        print(f"  PP >= 0.4: {(mmd_compactness['polsby_popper'] >= 0.4).sum()} ({(mmd_compactness['polsby_popper'] >= 0.4).mean()*100:.1f}%)")
+        print(f"  PP >= 0.3: {(mmd_compactness['polsby_popper'] >= 0.3).sum()} ({(mmd_compactness['polsby_popper'] >= 0.3).mean()*100:.1f}%)")
 
         # Compare to baseline
         try:

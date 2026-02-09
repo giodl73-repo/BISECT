@@ -28,10 +28,10 @@ RESEARCH = PROJECT_ROOT / "research"
 
 # Asset mapping: (source_path, destination_path, chapter)
 ASSET_MAP = [
-    # Chapter 1: Tracts to Graphs
+    # Chapter 1: Tracts to Graphs - Alabama
     (
-        ARTIFACTS / "papers" / "03_combined_recursive_bisection" / "figures" / "census_tracts_example.png",
-        DOCS_PUBLIC / "figures" / "chapter1" / "census_tracts_example.png",
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "all_districts.png",
+        DOCS_PUBLIC / "figures" / "chapter1" / "alabama_tracts.png",
         1,
     ),
     (
@@ -40,57 +40,68 @@ ASSET_MAP = [
         1,
     ),
 
-    # Chapter 2: Splitting
+    # Chapter 2: Splitting - Alabama Round 1
     (
-        OUTPUTS / "v1" / "2020" / "states" / "alabama" / "maps" / "rounds" / "round_1_2_regions.png",
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "rounds" / "round_01.png",
         DOCS_PUBLIC / "figures" / "chapter2" / "alabama_round_1_2_regions.png",
         2,
     ),
 
-    # Chapter 3: Recursion
+    # Chapter 3: Recursion - Alabama Rounds 1-3
     (
-        OUTPUTS / "v1" / "2020" / "states" / "minnesota" / "maps" / "rounds" / "round_1_2_regions.png",
-        DOCS_PUBLIC / "figures" / "chapter3" / "minnesota_round_1.png",
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "rounds" / "round_01.png",
+        DOCS_PUBLIC / "figures" / "chapter3" / "alabama_round_1_2_regions.png",
         3,
     ),
     (
-        OUTPUTS / "v1" / "2020" / "states" / "minnesota" / "maps" / "rounds" / "round_2_4_regions.png",
-        DOCS_PUBLIC / "figures" / "chapter3" / "minnesota_round_2.png",
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "rounds" / "round_02.png",
+        DOCS_PUBLIC / "figures" / "chapter3" / "alabama_round_2_4_regions.png",
         3,
     ),
     (
-        OUTPUTS / "v1" / "2020" / "states" / "minnesota" / "maps" / "rounds" / "round_3_8_regions.png",
-        DOCS_PUBLIC / "figures" / "chapter3" / "minnesota_round_3.png",
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "rounds" / "round_03.png",
+        DOCS_PUBLIC / "figures" / "chapter3" / "alabama_round_3_7_districts.png",
+        3,
+    ),
+    # Chapter 3: Alabama vs Colorado Comparison
+    (
+        OUTPUTS / "V1" / "2020" / "states" / "alabama" / "maps" / "all_districts.png",
+        DOCS_PUBLIC / "figures" / "chapter3" / "alabama_final.png",
+        3,
+    ),
+    (
+        OUTPUTS / "V1" / "2020" / "states" / "colorado" / "maps" / "all_districts.png",
+        DOCS_PUBLIC / "figures" / "chapter3" / "colorado_final.png",
         3,
     ),
 
     # Chapter 4: Compactness
     (
-        ARTIFACTS / "papers" / "02_edge_weighted_bisection" / "figures" / "national_comparison_bar.png",
+        ARTIFACTS / "papers" / "03_combined_recursive_bisection" / "figures" / "national_comparison_bar.png",
         DOCS_PUBLIC / "figures" / "chapter4" / "national_comparison_bar.png",
         4,
     ),
     (
-        ARTIFACTS / "papers" / "02_edge_weighted_bisection" / "figures" / "state_scatter.png",
+        ARTIFACTS / "papers" / "03_combined_recursive_bisection" / "figures" / "state_scatter.png",
         DOCS_PUBLIC / "figures" / "chapter4" / "state_scatter.png",
         4,
     ),
 
     # Chapter 5: VRA
     (
-        RESEARCH / "gerry-multi-vs-edge" / "results" / "figure1_success_rates.png",
+        RESEARCH / "03+vra-compliance" / "figures" / "approach_comparison.png",
         DOCS_PUBLIC / "figures" / "chapter5" / "figure1_success_rates.png",
         5,
     ),
     (
-        RESEARCH / "gerry-threshold-analysis" / "results" / "figure1_50state_threshold.png",
+        RESEARCH / "04+threshold-analysis" / "results" / "figure1_50state_threshold.png",
         DOCS_PUBLIC / "figures" / "chapter5" / "figure1_50state_threshold.png",
         5,
     ),
 
     # Chapter 6: Edge-Factor
     (
-        RESEARCH / "gerry-multi-vs-edge" / "results" / "figure2_compactness_tradeoff.png",
+        RESEARCH / "03+vra-compliance" / "figures" / "vra_compactness_tradeoff.png",
         DOCS_PUBLIC / "figures" / "chapter6" / "figure2_compactness_tradeoff.png",
         6,
     ),

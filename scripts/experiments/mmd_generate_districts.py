@@ -16,11 +16,12 @@ import sys
 from pathlib import Path
 import pandas as pd
 import geopandas as gpd
+import numpy as np
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 
-from apportionment.partition.recursive_bisection import partition_graph
+from apportionment.partition.recursive_bisection import RecursiveBisection
 from apportionment.data.adjacency import load_adjacency_graph
 
 
@@ -34,14 +35,14 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
     print(f"\n[MMD Generation] {members_per_district}-member configuration")
     print("=" * 70)
 
-    # Calculate target districts
-    total_reps = 435
+    # Calculate target districts (exclude AK=1, HI=2 seats for contiguous US only)
+    total_reps = 432  # 435 - 3 (AK+HI)
     num_districts = calculate_districts_for_members(total_reps, members_per_district)
     actual_total = num_districts * members_per_district
 
-    print(f"Target: {num_districts} districts × {members_per_district} reps = {actual_total} total")
-    if actual_total != 435:
-        print(f"WARNING: Actual total ({actual_total}) differs from 435")
+    print(f"Target: {num_districts} districts × {members_per_district} reps = {actual_total} total (continental US)")
+    if actual_total != 432:
+        print(f"Note: Actual total ({actual_total}) differs from 432 due to rounding")
 
     # Load census data
     print(f"\nLoading Census {year} data...")
@@ -56,6 +57,15 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
     tracts = gpd.read_parquet(tract_data_path)
     print(f"Loaded {len(tracts):,} census tracts")
     print(f"Total population: {tracts['population'].sum():,}")
+
+    # Filter out non-contiguous states (Alaska, Hawaii) - they create disconnected graph components
+    # AK GEOID starts with '02', HI starts with '15'
+    original_count = len(tracts)
+    tracts = tracts[~tracts['GEOID'].str.startswith(('02', '15'))]
+    filtered_count = original_count - len(tracts)
+    if filtered_count > 0:
+        print(f"Filtered {filtered_count:,} units from AK/HI (continental US only)")
+        print(f"Remaining: {len(tracts):,} census tracts, {tracts['population'].sum():,} population")
 
     # Load adjacency graph
     print("\nLoading adjacency graph...")
@@ -79,17 +89,20 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
     print("Converting to networkx graph...")
     graph = nx.Graph()
 
-    # Add nodes with population weights
+    # Add nodes with population weights (filter out AK and HI)
     for idx, geoid in adj_data['index_to_geoid'].items():
-        graph.add_node(geoid, population=adj_data['vertex_weights'][idx])
+        if not geoid.startswith(('02', '15')):  # Exclude AK and HI
+            graph.add_node(geoid, population=adj_data['vertex_weights'][idx])
 
-    # Add edges from adjacency list
+    # Add edges from adjacency list (only between continental US nodes)
     for idx, neighbors in enumerate(adj_data['adjacency']):
         geoid = adj_data['index_to_geoid'][idx]
-        for neighbor_idx in neighbors:
-            neighbor_geoid = adj_data['index_to_geoid'][neighbor_idx]
-            graph.add_edge(geoid, neighbor_geoid)
-    print(f"Loaded graph with {graph.number_of_nodes():,} nodes, {graph.number_of_edges():,} edges")
+        if not geoid.startswith(('02', '15')):  # Source node in continental US
+            for neighbor_idx in neighbors:
+                neighbor_geoid = adj_data['index_to_geoid'][neighbor_idx]
+                if not neighbor_geoid.startswith(('02', '15')):  # Neighbor also in continental US
+                    graph.add_edge(geoid, neighbor_geoid)
+    print(f"Loaded graph with {graph.number_of_nodes():,} nodes, {graph.number_of_edges():,} edges (continental US only)")
 
     # Calculate population target
     total_population = tracts['population'].sum()
@@ -103,22 +116,44 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
     print(f"\nRunning recursive bisection for {num_districts} districts...")
     print("(This may take 20-30 minutes)")
 
-    assignments = partition_graph(
-        graph=graph,
-        populations=tracts.set_index('geoid')['population'].to_dict(),
+    # Create node index mapping
+    sorted_nodes = sorted(graph.nodes())
+    node_to_idx = {node: idx for idx, node in enumerate(sorted_nodes)}
+
+    # Convert networkx graph to adjacency list format (with integer indices)
+    adjacency_list = []
+    for node in sorted_nodes:
+        # Get neighbors and convert to integer indices
+        neighbors = [node_to_idx[neighbor] for neighbor in graph[node]]
+        adjacency_list.append(sorted(neighbors))
+
+    # Get vertex weights (populations) in node order
+    vertex_weights = np.array([graph.nodes[node]['population'] for node in sorted_nodes])
+
+    # Create and run recursive bisection
+    rb = RecursiveBisection(
+        adjacency=adjacency_list,
+        vertex_weights=vertex_weights,
         num_districts=num_districts,
-        population_tolerance=tolerance,
-        compactness_weight=1.0
+        state_code="US",
+        debug=False,
+        ufactor=int(tolerance * 1000)  # Convert 0.005 to 5
     )
+
+    assignments_by_idx = rb.partition()
+
+    # Convert from node indices back to GEOIDs
+    idx_to_node = {idx: node for node, idx in node_to_idx.items()}
+    assignments = {idx_to_node[idx]: district_id for idx, district_id in assignments_by_idx.items()}
 
     # Convert to dataframe
     districts_df = pd.DataFrame([
-        {'geoid': geoid, 'district': district_id}
+        {'GEOID': geoid, 'district': district_id}
         for geoid, district_id in assignments.items()
     ])
 
     # Validate
-    tract_districts = tracts.merge(districts_df, on='geoid')
+    tract_districts = tracts.merge(districts_df, on='GEOID')
     district_pops = tract_districts.groupby('district')['population'].sum()
 
     print(f"\n[Validation]")
@@ -184,8 +219,8 @@ def generate_mmd_configuration(year: int, members_per_district: int, output_dir:
 def main():
     parser = argparse.ArgumentParser(description="Generate MMD configurations")
     parser.add_argument('--members', type=int, nargs='+', required=True,
-                        choices=[3, 4, 5],
-                        help='Members per district to generate (e.g., --members 3 4 5)')
+                        choices=[3, 4, 5, 7],
+                        help='Members per district to generate (e.g., --members 3 5 7)')
     parser.add_argument('--year', type=int, default=2020, choices=[2000, 2010, 2020],
                         help='Census year (default: 2020)')
     parser.add_argument('--output-dir', type=Path, default=Path('outputs/mmd'),

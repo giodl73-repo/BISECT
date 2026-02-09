@@ -219,7 +219,18 @@
       "Bash(git ls-files:*)",
       "Bash(if [ -d \"research/17+partisan-similarity-districts\" ])",
       "Bash(then echo \"EXISTS\")",
-      "Bash(else echo \"NEW\")"
+      "Bash(else echo \"NEW\")",
+      "Bash(start main.pdf)",
+      "Bash(C:\\\\src\\\\apportionment\\\\bin\\\\gpmetis.exe:*)",
+      "Bash(\"C:/src/apportionment/bin/gpmetis.exe\":*)",
+      "Bash(research/14+county-representation/references.bib << 'EOF'\n@article{cox2016efficient,\n  title={Efficient Gerrymandering},\n  author={Cox, Gary and Katz, Jonathan},\n  journal={American Political Science Review},\n  year={2016}\n}\n\n@article{chen2013unintentional,\n  title={Unintentional Gerrymandering},\n  author={Chen, Jowei and Rodden, Jonathan},\n  journal={Quarterly Journal of Political Science},\n  year={2013}\n}\n\n@book{putnam2000bowling,\n  title={Bowling Alone},\n  author={Putnam, Robert},\n  year={2000}\n}\n\n@article{baker1962carr,\n  title={Baker v. Carr},\n  journal={Supreme Court Reporter},\n  year={1962}\n}\n\n@article{reynolds1964sims,\n  title={Reynolds v. Sims},\n  journal={Supreme Court Reporter},\n  year={1964}\n}\n\n@article{stephanopoulos2015partisan,\n  title={Partisan Gerrymandering and the Efficiency Gap},\n  author={Stephanopoulos, Nicholas and McGhee, Eric},\n  journal={University of Chicago Law Review},\n  year={2015}\n}\n\n@article{mcghee2014measuring,\n  title={Measuring Partisan Bias in Single-Member District Systems},\n  author={McGhee, Eric},\n  journal={Legislative Studies Quarterly},\n  year={2014}\n}\n\n@article{rucho2019,\n  title={Rucho v. Common Cause},\n  journal={Supreme Court Reporter},\n  year={2019}\n}\n\n@book{balinski2001fair,\n  title={Fair Representation},\n  author={Balinski, Michel and Young, H. Peyton},\n  year={2001}\n}\n\n@book{tocqueville1835democracy,\n  title={Democracy in America},\n  author={de Tocqueville, Alexis},\n  year={1835}\n}\nEOF)",
+      "WebFetch(domain:statewidedatabase.org)",
+      "Bash(for dir in outputs/partisan_similarity/2020/alpha*/)",
+      "Bash(do if [ -f \"$dir/district_statistics.csv\" ])",
+      "WebFetch(domain:github.com)",
+      "Bash(npm run dev:*)",
+      "Bash(for members in 3 7)",
+      "Bash(do)"
     ]
   }
 }

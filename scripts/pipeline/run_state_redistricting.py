@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # Import utility functions
-from scripts.utils import get_state_config, get_tract_file, get_adjacency_file
+from scripts.utils import get_state_config, get_tract_file, get_unit_file, get_adjacency_file
 
 from apportionment.partition.recursive_bisection import RecursiveBisection
 import geopandas as gpd
@@ -28,7 +28,7 @@ import matplotlib.cm as cm
 
 def run_state_redistricting(state_code: str, state_config: dict, year: str = '2020', version: str = 'v1',
                            output_dir: str = None, print_only: bool = False, debug: bool = False, dpi: int = 150, position: int = 2, reset: bool = False,
-                           ufactor: int = 5, niter: int = 100, objtype: str = 'cut', seed: int = None, partition_mode: str = 'edge-weighted', target_mm_districts: int = None, tree_structure: str = None):
+                           ufactor: int = 5, niter: int = 100, objtype: str = 'cut', seed: int = None, partition_mode: str = 'edge-weighted', target_mm_districts: int = None, tree_structure: str = None, resolution: str = 'tract'):
     """Run redistricting for a specific state with version-specific data."""
 
     state_code = state_code.upper()
@@ -42,8 +42,10 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     num_districts = config['districts']
 
     # File paths (version-specific directory structure)
-    graph_file = str(get_adjacency_file(state_code, year, version))
-    tracts_file = str(get_tract_file(state_code, year, version))
+    graph_file = str(get_adjacency_file(state_code, year, version, resolution))
+    units_file = str(get_unit_file(state_code, year, version, resolution))
+    # Backward compatibility alias
+    tracts_file = units_file
 
     # Show progress bars for integration with parent script
     operation_pos = position
@@ -411,6 +413,8 @@ if __name__ == '__main__':
                        help='Two-letter state code (e.g., CA, TX, FL)')
     parser.add_argument('--year', type=str, default='2020', choices=['2020', '2010', '2000'],
                        help='Census year (default: 2020)')
+    parser.add_argument('--resolution', type=str, default='tract', choices=['tract', 'block_group', 'block'],
+                       help='Geographic resolution: tract (default), block_group, or block')
     parser.add_argument('--version', type=str, default='v1',
                        help='Version identifier (default: v1)')
     parser.add_argument('--output-dir', type=str, default=None,
@@ -450,4 +454,4 @@ if __name__ == '__main__':
         sys.exit(1)
 
     run_state_redistricting(args.state, STATE_CONFIG, args.year, args.version, args.output_dir, args.print_only, args.debug, args.dpi, args.position, args.reset,
-                            args.ufactor, args.niter, args.objtype, args.seed, args.partition_mode, args.target_mm_districts, args.tree_structure)
+                            args.ufactor, args.niter, args.objtype, args.seed, args.partition_mode, args.target_mm_districts, args.tree_structure, args.resolution)

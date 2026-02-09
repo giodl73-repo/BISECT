@@ -95,7 +95,13 @@ def load_district_assignments(mmd_dir: Path) -> pd.DataFrame:
             f"Run mmd_generate_districts.py first"
         )
 
-    return pd.read_csv(assignments_path)
+    df = pd.read_csv(assignments_path)
+
+    # Standardize column name (handle both 'geoid' and 'GEOID')
+    if 'GEOID' in df.columns:
+        df = df.rename(columns={'GEOID': 'geoid'})
+
+    return df
 
 
 def load_election_data(year: int) -> pd.DataFrame:
@@ -151,8 +157,17 @@ def simulate_mmd_election(
     print(f"Districts: {districts['district'].nunique()}")
     print(f"Members per district: {members_per_district}")
 
-    # Merge district assignments with election data
-    merged = districts.merge(elections, on='geoid', how='left')
+    # Convert block group GEOIDs to tract GEOIDs (first 11 digits)
+    # Block group: SSCCCTTTTTTG (12 digits)
+    # Tract: SSCCCTTTTTT (11 digits)
+    districts['geoid_str'] = districts['geoid'].astype(str).str.zfill(12)
+    districts['tract_geoid'] = districts['geoid_str'].str[:11]
+
+    # Ensure election GEOIDs are also strings with proper padding
+    elections['geoid'] = elections['geoid'].astype(str).str.zfill(11)
+
+    # Merge district assignments with election data (using tract GEOID)
+    merged = districts.merge(elections, left_on='tract_geoid', right_on='geoid', how='left', suffixes=('', '_elec'))
 
     # Check for missing election data
     missing = merged[merged['dem_votes'].isna()]

@@ -377,25 +377,184 @@ function partition(region, num_districts):
     </ScrollSection>
 
     <!-- Interactive Tree Placeholder -->
+    <!-- Interactive Recursion Tree -->
     <ScrollSection bg-class="bg-white">
-      <div class="max-w-4xl mx-auto">
+      <div class="max-w-5xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-3-accent">
-          Interactive Recursion Tree (Coming in Phase 4)
+          🌳 Interactive Recursion Tree
         </h2>
 
-        <div class="card bg-white">
-          <div class="bg-green-100 rounded-lg p-12 text-center">
-            <p class="text-xl font-heading text-gray-700 mb-4">
-              🌳 Interactive Partition Tree
-            </p>
-            <p class="text-gray-600 mb-4">
-              In Phase 4, you'll be able to click on any node in the tree to see that region
-              split in real-time. Watch Alabama transform from 1→2→4→7 step-by-step!
-            </p>
-            <p class="text-sm text-gray-500">
-              Hover over leaf nodes to highlight districts on the map.
+        <p class="text-story text-center mb-8">
+          Click <strong>"Start"</strong> to watch Alabama's 7 districts emerge through recursive
+          bisection. Each step shows one region splitting into two!
+        </p>
+
+        <InteractiveTree
+          :target-districts="7"
+          state-name="Alabama"
+          color="#10b981"
+        />
+
+        <div class="mt-8 grid md:grid-cols-2 gap-6">
+          <div class="card bg-green-50">
+            <h3 class="text-lg font-heading font-bold mb-3 text-green-600">
+              👀 What to Watch
+            </h3>
+            <ul class="text-sm space-y-2">
+              <li>• Start with 1 node (Alabama, 7 districts)</li>
+              <li>• Round 1: Split [3, 4] → 2 regions</li>
+              <li>• Round 2: Split both regions → 4 parts</li>
+              <li>• Round 3: Final splits → 7 districts!</li>
+            </ul>
+          </div>
+
+          <div class="card bg-blue-50">
+            <h3 class="text-lg font-heading font-bold mb-3 text-schoolhouse-blue">
+              🎯 Key Insight
+            </h3>
+            <p class="text-sm">
+              Green circles = final districts (leaves). Orange circles = regions that still need
+              splitting. The tree grows until every leaf is a single district!
             </p>
           </div>
+        </div>
+      </div>
+    </ScrollSection>
+
+    <!-- Odd vs Even: Alabama vs Colorado -->
+    <ScrollSection bg-class="bg-white">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-4xl font-heading font-bold mb-6 chapter-3-accent">
+            Odd vs Even: Alabama (7) vs Colorado (8)
+          </h2>
+          <p class="text-story">
+            Let's compare Alabama's <strong>asymmetric</strong> splits with Colorado's
+            <strong>perfectly symmetric</strong> splits. Same algorithm, totally different trees!
+          </p>
+        </div>
+
+        <!-- Side-by-Side Partition Trees -->
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+          <div class="card bg-orange-50 border-l-4 border-schoolhouse-orange">
+            <h3 class="text-2xl font-heading font-bold mb-4 text-schoolhouse-orange">
+              Alabama (7) - "The Messy One"
+            </h3>
+            <div class="font-mono text-sm leading-relaxed mb-4 bg-white p-4 rounded">
+              <pre>
+       7
+       |
+    [3, 4] ← Odd!
+    /    \
+  [1,2] [2,2]
+   / \   / \
+  D1 R  D4 D5
+     |
+   [1,1]
+    / \
+   D2 D3
+              </pre>
+            </div>
+            <ul class="space-y-2 text-sm">
+              <li><strong>Round 1:</strong> Asymmetric [3, 4]</li>
+              <li><strong>Round 2:</strong> [1, 2] and [2, 2]</li>
+              <li><strong>Round 3:</strong> Final splits</li>
+              <li><strong>Depth:</strong> 3 rounds</li>
+              <li class="text-schoolhouse-orange font-bold">Every split different!</li>
+            </ul>
+          </div>
+
+          <div class="card bg-blue-50 border-l-4 border-schoolhouse-blue">
+            <h3 class="text-2xl font-heading font-bold mb-4 text-schoolhouse-blue">
+              Colorado (8) - "The Clean One"
+            </h3>
+            <div class="font-mono text-sm leading-relaxed mb-4 bg-white p-4 rounded">
+              <pre>
+        8
+        |
+     [4, 4] ← Even!
+     /    \
+  [2,2] [2,2]
+   / \   / \
+ [1,1][1,1][1,1][1,1]
+  / \ / \ / \ / \
+ D1 D2...    ...D8
+              </pre>
+            </div>
+            <ul class="space-y-2 text-sm">
+              <li><strong>Round 1:</strong> Perfectly symmetric [4, 4]</li>
+              <li><strong>Round 2:</strong> All [2, 2]</li>
+              <li><strong>Round 3:</strong> All [1, 1]</li>
+              <li><strong>Depth:</strong> 3 rounds</li>
+              <li class="text-schoolhouse-blue font-bold">Perfect binary tree!</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Visual Comparison -->
+        <div class="grid md:grid-cols-2 gap-8 mb-12">
+          <div>
+            <h3 class="text-xl font-heading font-bold mb-4 text-center">Alabama Final Districts</h3>
+            <FigureCard
+              src="/figures/chapter3/alabama_final.png"
+              alt="Alabama's 7 congressional districts"
+            >
+              Alabama's 7 districts created through asymmetric recursive bisection.
+              Notice how the splits adapt to the odd number!
+            </FigureCard>
+          </div>
+
+          <div>
+            <h3 class="text-xl font-heading font-bold mb-4 text-center">Colorado Final Districts</h3>
+            <FigureCard
+              src="/figures/chapter3/colorado_final.png"
+              alt="Colorado's 8 congressional districts"
+            >
+              Colorado's 8 districts created through perfectly symmetric splits.
+              Power of 2 creates a clean binary tree!
+            </FigureCard>
+          </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+          <ConceptCard color="green" icon="🎯">
+            <template #title>Same Algorithm</template>
+            <p class="text-sm">
+              Both states use the exact same recursive bisection algorithm. The algorithm
+              automatically adapts to the target number of districts.
+            </p>
+          </ConceptCard>
+
+          <ConceptCard color="green" icon="🌳">
+            <template #title>Different Trees</template>
+            <p class="text-sm">
+              Alabama's odd number creates an <strong>unbalanced tree</strong>. Colorado's power
+              of 2 creates a <strong>perfect binary tree</strong>. Both work perfectly!
+            </p>
+          </ConceptCard>
+
+          <ConceptCard color="green" icon="⏱️">
+            <template #title>Same Depth</template>
+            <p class="text-sm">
+              Both take 3 rounds! Alabama: log₂(7) ≈ 2.8 rounds up to 3.
+              Colorado: log₂(8) = 3 exactly. Similar performance!
+            </p>
+          </ConceptCard>
+        </div>
+
+        <div class="card bg-gradient-to-r from-orange-500 via-green-500 to-blue-500 text-white">
+          <h3 class="text-2xl font-heading font-bold mb-4">The Beauty of Adaptability</h3>
+          <p class="text-lg leading-relaxed mb-4">
+            The recursive bisection algorithm doesn't care if your number is odd, even, prime,
+            or a power of 2. It <strong>automatically finds the optimal splitting strategy</strong>
+            for any target number of districts.
+          </p>
+          <p class="text-lg leading-relaxed">
+            Alabama (7) gets asymmetric splits that adapt to its odd constraint. Colorado (8)
+            gets perfectly balanced splits that leverage its power-of-2 structure. Both create
+            fair, balanced, contiguous districts!
+          </p>
         </div>
       </div>
     </ScrollSection>
@@ -440,4 +599,5 @@ import Hero from '@/components/Hero.vue'
 import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
+import InteractiveTree from '@/components/InteractiveTree.vue'
 </script>
