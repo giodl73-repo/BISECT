@@ -3,8 +3,8 @@
 # ============================================================================
 # Data Files (Large - Do Not Commit)
 # ============================================================================
-# Exclude entire data directory from GitHub
-data/
+# Exclude entire data directory from GitHub (root level only)
+/data/
 
 # ============================================================================
 # Output Files (Generated Results)
