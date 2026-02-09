@@ -33,7 +33,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root / "src"))
 sys.path.insert(0, str(project_root / "scripts"))
 
-from apportionment.partition.recursive_bisection import partition_graph_recursive
+from apportionment.partition.recursive_bisection import RecursiveBisection
 from config.download_sources import STATE_FIPS, STATE_NAMES
 
 
@@ -156,9 +156,10 @@ def run_national_redistricting(
     adjacency: List[List[int]],
     populations: np.ndarray,
     n_districts: int = 435,
-    ufactor: float = 1.005,
+    ufactor: int = 5,
     edge_weights: Dict[Tuple[int, int], float] = None,
-    seed: int = None
+    seed: int = None,
+    output_dir: Path = None
 ) -> np.ndarray:
     """
     Run METIS recursive bisection for national redistricting.
@@ -167,32 +168,47 @@ def run_national_redistricting(
         adjacency: National adjacency graph
         populations: Tract populations
         n_districts: Number of districts (435 for U.S. House)
-        ufactor: Population imbalance tolerance (1.005 = ±0.5%)
+        ufactor: Population imbalance factor (5 = 1.005 = ±0.5%)
         edge_weights: Edge weights for VRA compliance
         seed: Random seed for reproducibility
+        output_dir: Output directory for intermediate results
 
     Returns:
         districts: Array of district assignments (0 to n_districts-1)
     """
     print(f"\nRunning national redistricting...")
     print(f"  Target: {n_districts} districts")
-    print(f"  Population tolerance: ±{(ufactor - 1.0) * 100:.1f}%")
+    print(f"  Population tolerance: ±{ufactor/1000:.1f}%")
     print(f"  Total population: {populations.sum():,}")
     print(f"  Target per district: {populations.sum() / n_districts:,.0f}")
 
     start_time = time.time()
 
-    # Run recursive bisection
-    districts = partition_graph_recursive(
+    # Create output directory for intermediate results
+    intermediate_dir = output_dir / 'intermediate' if output_dir else None
+    if intermediate_dir:
+        intermediate_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create partitioner
+    partitioner = RecursiveBisection(
         adjacency=adjacency,
         vertex_weights=populations,
-        target_districts=n_districts,
-        ufactor_override=5,  # 1.005 tolerance
+        num_districts=n_districts,
+        save_intermediate=True if intermediate_dir else False,
+        intermediate_dir=str(intermediate_dir) if intermediate_dir else None,
+        state_code='NATIONAL',
+        tqdm_position=0,
+        debug=True,
         edge_weights=edge_weights,
+        ufactor=ufactor,
+        niter=100,
+        objtype='cut',
         seed=seed,
-        parallel=False,  # Single-threaded for national (too large for parallel overhead)
-        debug=True
+        vra_mode=False
     )
+
+    # Run the algorithm
+    districts = partitioner.partition()
 
     elapsed = time.time() - start_time
     print(f"\n  Redistricting complete in {elapsed:.1f}s ({elapsed/60:.1f} minutes)")
@@ -352,9 +368,10 @@ def main():
         adjacency=adjacency,
         populations=populations,
         n_districts=args.n_districts,
-        ufactor=1.005,
+        ufactor=5,  # 1.005 tolerance
         edge_weights=edge_weights,
-        seed=args.seed
+        seed=args.seed,
+        output_dir=args.output_dir
     )
 
     # Validate results
