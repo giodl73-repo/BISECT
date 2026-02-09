@@ -1,8 +1,8 @@
 paper: 11+efficiency-gap-analysis
 title: "Measuring Partisan Fairness in Algorithmic Redistricting: A National Efficiency Gap Analysis"
 venue: "American Political Science Review"
-stage: synthesis
-round: 0
+stage: ready
+round: 1
 content_mode: full
 content_mode_confirmed: true
 writing_completed: true
@@ -26,19 +26,29 @@ reviewers:
 reviews:
   stephanopoulos:
     file: "reviews/REVIEW-STEPHANOPOULOS.md"
-    score: 3.0
+    round1_score: 3.0
+    round2_file: "reviews/ROUND2-REVIEW-STEPHANOPOULOS.md"
+    round2_score: 4.0
   rodden:
     file: "reviews/REVIEW-RODDEN.md"
-    score: 3.5
+    round1_score: 3.5
+    round2_file: "reviews/ROUND2-REVIEW-RODDEN.md"
+    round2_score: 4.0
   chen:
     file: "reviews/REVIEW-CHEN.md"
-    score: 3.0
+    round1_score: 3.0
+    round2_file: "reviews/ROUND2-REVIEW-CHEN.md"
+    round2_score: 4.0
   grofman:
     file: "reviews/REVIEW-GROFMAN.md"
-    score: 2.5
+    round1_score: 2.5
+    round2_file: "reviews/ROUND2-REVIEW-GROFMAN.md"
+    round2_score: 4.0
   mcdonald:
     file: "reviews/REVIEW-MCDONALD.md"
-    score: 3.5
+    round1_score: 3.5
+    round2_file: "reviews/ROUND2-REVIEW-MCDONALD.md"
+    round2_score: 4.0
 p1_items:
   - id: "P1.1"
     description: "Voting Rights Act Compliance Analysis"
@@ -75,3 +85,15 @@ history:
   - stage: synthesis
     date: 2026-02-08
     note: "Individual reviews complete: 5 reviewers, average score 3.1/4"
+  - stage: revision
+    date: 2026-02-08
+    note: "All P1 blocking issues addressed (4/4): VRA compliance, algorithmic transparency, EG limitations, proportionality connection. ~7,000 words added, 11→25 pages"
+  - stage: revision
+    date: 2026-02-08
+    note: "All high-priority P2 items addressed (4/4): geographic sorting, multiple metrics, compactness analysis, seats-votes full treatment. ~3,400 words added, 25→34 pages"
+  - stage: recheck
+    date: 2026-02-08
+    note: "Round 2 reviews complete: 5 reviewers, UNANIMOUS Strong Accept, average score 4.0/4 (+0.9 from Round 1)"
+  - stage: ready
+    date: 2026-02-08
+    note: "Paper ready for submission: all blocking issues resolved, all high-priority improvements complete, unanimous Strong Accept recommendations"
