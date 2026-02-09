@@ -81,3 +81,6 @@ history:
   - stage: ready
     date: 2026-02-08
     note: "P2.1 addressed (Shaw v. Reno discussion added); P2.5 addressed (repository URLs updated with specific GitHub/Zenodo links)"
+  - stage: ready
+    date: 2026-02-08
+    note: "P2.3 addressed (commission type heterogeneity); P2.4 addressed (Methods Supplement contents specified); P2.6 addressed (terminology harmonized - gerrymandering → geometric compactness)"

@@ -44,7 +44,7 @@ Enacted districts show a starkly different pattern:
 
 \textbf{Key finding}: Enacted districts became 12\% less compact from 2000 to 2020. This decline accelerated between 2000--2010 (-7.1\%) compared to 2010--2020 (-5.3\%), suggesting the REDMAP effect in 2010 but continued erosion thereafter.
 
-\textbf{Interpretation}: As GIS technology and optimization techniques improved, partisan mapmakers exploited these tools to draw increasingly gerrymandered districts. The gap between algorithmic (0.46) and enacted (0.28) compactness widened from 40\% in 2000 to 62\% in 2020.
+\textbf{Interpretation}: As GIS technology and optimization techniques improved, mapmakers exploited these tools to draw increasingly non-compact districts. The gap between algorithmic (0.46) and enacted (0.28) compactness widened from 40\% in 2000 to 62\% in 2020.
 
 \subsection{State-by-State Analysis}
 
@@ -90,3 +90,5 @@ We test the robustness of this finding through several analyses:
 \textbf{Temporal check}: Comparing commission states' pre-adoption trends (2000-2010) to post-adoption (2010-2020), we find no pre-existing positive trend (2000-2010: -0.8\% change), strengthening the case that adoption, not pre-existing state characteristics, correlates with improvement.
 
 \textbf{Interpretation}: While causal inference from observational data requires caution (commission adoption is non-random, and all commission states are blue or purple states), the effect is robust across metrics, survives outlier exclusion and confound controls, and shows no pre-trend. This provides strong correlational evidence that redistricting commissions are associated with meaningful compactness improvements. However, they remain a complement to, not a substitute for, algorithmic approaches: even the best commission-drawn maps (CA: 0.45 PP) approach but do not exceed algorithmic baselines (0.46 PP).
+
+\textbf{Commission type heterogeneity}: Not all commissions are equivalent. Our sample includes five independent commissions (CA, AZ, CO, MI, VA) with full redistricting authority and one advisory commission (NY) with limited power. The outlier sensitivity analysis reveals that excluding NY strengthens the effect from +7.3pp to +9.4pp, suggesting independent commissions with binding authority may outperform advisory bodies. Future research should systematically compare commission types (independent vs advisory vs bipartisan) to identify which structural features drive effectiveness.
