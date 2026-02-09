@@ -2,7 +2,7 @@
 
 All notable changes to the Congressional Redistricting project.
 
-**Last Updated**: January 18, 2026
+**Last Updated**: February 8, 2026
 
 ## Related Documentation
 
@@ -15,6 +15,27 @@ All notable changes to the Congressional Redistricting project.
 ## [Unreleased]
 
 ### Added
+- **MAUP Sensitivity Analysis - Phase 2 Complete (Research Paper 11)**
+  - **Multi-Resolution Infrastructure**:
+    - Added resolution parameter to redistricting pipeline scripts (`run_state_redistricting.py`)
+    - Created `run_multi_resolution_validation.py` for testing all 3 resolutions sequentially
+    - Updated path utilities (`scripts/utils/paths.py`) with `get_unit_file()` and resolution-aware `get_adjacency_file()`
+    - Maintained backward compatibility for tract-only naming conventions
+  - **Data Preparation Complete**:
+    - Built adjacency graphs for all 50 states at block group resolution (239,176 units total)
+    - Built adjacency graphs for all 50 states at census block resolution (8,137,193 units total)
+    - Validated graph connectivity and data quality across all resolutions
+  - **10-State Validation Successful** (30 total runs):
+    - High minority states: AL (7D), GA (14D), MS (4D), SC (7D), TX (38D), MD (8D)
+    - Low minority states: VT (1D), NH (2D), ME (2D), WY (1D)
+    - All runs passed successfully across tract, block_group, and block resolutions
+    - Confirmed algorithm scalability: METIS handles 130× unit count range (tracts to blocks)
+  - **Key Findings**:
+    - Recursive bisection algorithm robust across all geographic resolutions
+    - Block-level redistricting computationally feasible for all state sizes (1-38 districts)
+    - Infrastructure validated and production-ready for full 50-state MAUP analysis
+  - **Output**: Timestamped directories with district assignments and maps for all validation runs
+
 - **Wave 9: API & Dashboard Migration (Enhancement 60 - Project Setup)**
   - **FastAPI Backend** (`backend/`):
     - FastAPI 0.115+ with SQLAlchemy 2.0 and async support

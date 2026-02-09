@@ -136,6 +136,8 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 - No political/racial data
 
 ## Recent Changes
+- **2026-02-08**: MAUP Sensitivity Analysis (Paper 11) - Phase 2 complete: Built adjacency graphs for all 50 states at block group (239K units) and block (8.1M units) resolutions, validated multi-resolution infrastructure with 10-state subset (30 successful runs), confirmed algorithm scalability across 130× unit count range
+- **2026-02-08**: Multi-resolution redistricting infrastructure - Added resolution parameter to pipeline scripts, created `run_multi_resolution_validation.py`, updated path utilities with backward compatibility for tract naming
 - **2026-01-25**: Wave 9 API Project Setup (Enhancement 60) - FastAPI backend + React frontend integrated with App Manager shared packages, PM2 centralized management, 8 passing tests
 - **2026-01-18**: Resolution-independent restructuring - `units/` directory, `tiger/tracts/` + `tiger/blocks/` structure
 - **2026-01-18**: Script renames - `download_tiger_units.py`, `merge_units_with_geometries.py` (resolution-aware)

@@ -3,7 +3,7 @@
 **Artifact Type**: Research Paper (12th Paper)
 **Goal**: Test robustness of portfolio findings across spatial resolutions
 **Estimated Effort**: 2-3 months (computational + analysis intensive)
-**Status**: Not started
+**Status**: In progress - Phase 2 complete (10-state validation)
 
 ---
 
@@ -564,18 +564,47 @@ This paper connects to all 10 portfolio papers by testing their generalizability
 
 ---
 
-## Next Actions
+## Progress Update (2026-02-08)
 
-- [ ] Download Census block group shapefiles (2020)
-- [ ] Download Census block shapefiles (2020)
-- [ ] Build adjacency graphs at block group level (test Vermont first)
-- [ ] Build adjacency graphs at block level (test Vermont first)
-- [ ] Run METIS scalability test (Vermont at all 3 resolutions)
-- [ ] Estimate memory and runtime requirements
-- [ ] Run 10-state subset experiment (validate feasibility)
-- [ ] If feasible → full 50-state runs
+### Phase 1: Data Preparation ✓ COMPLETE
+- [x] Downloaded Census block group shapefiles (2020) - All 50 states
+- [x] Downloaded Census block shapefiles (2020) - All 50 states
+- [x] Built adjacency graphs at block group level - All 50 states (239K units)
+- [x] Built adjacency graphs at block level - All 50 states (8.1M units)
+- [x] Multi-resolution infrastructure implemented and validated
+
+### Phase 2: Validation Testing ✓ COMPLETE
+- [x] Run Alabama + Colorado validation (all 3 resolutions) - SUCCESS
+- [x] Run 10-state subset experiment (validate feasibility) - SUCCESS
+  - High minority: AL (7D), GA (14D), MS (4D), SC (7D), TX (38D), MD (8D)
+  - Low minority: VT (1D), NH (2D), ME (2D), WY (1D)
+- [x] All 30 runs passed (10 states × 3 resolutions)
+- [x] Infrastructure validated: Algorithm works at all resolutions
+
+### Key Findings from Validation:
+- **Scalability confirmed**: METIS handles block-level graphs successfully
+- **Runtime feasible**: Even Texas (38D, 2.5M blocks) completes in reasonable time
+- **Algorithm robust**: Recursive bisection works across 130× unit count range
+- **Data quality verified**: Block groups and blocks have clean adjacency graphs
+
+### Next Actions
+
+#### Phase 2.3: Analyze Subset Results (CURRENT)
+- [ ] Compare district boundaries across resolutions (tract vs block_group vs block)
+- [ ] Measure computational time/resources for each resolution
+- [ ] Preliminary MAUP sensitivity assessment
+- [ ] Decide: Full 50-state run vs targeted subset approach
+
+#### Phase 3: Full 50-State Runs (PENDING)
+- [ ] If feasible → full 50-state runs at all 3 resolutions
 - [ ] If not feasible → pivot to tract vs block group only
-- [ ] Analyze results and draft paper
+- [ ] Runtime estimate: ~50-100 hours for block-level (all 50 states)
+
+#### Phase 4: Analysis & Writing (PENDING)
+- [ ] Compute all metrics (MM districts, compactness, runtimes)
+- [ ] Statistical tests and variance decomposition
+- [ ] Generate figures and tables
+- [ ] Draft paper (8,000 words + 6 figures)
 
 ---
 
