@@ -40,36 +40,24 @@ def load_county_data(year: int) -> pd.DataFrame:
     """
     Load county population data.
 
-    Returns DataFrame with columns: state, county, fips, population
+    Returns DataFrame with columns: fips, state, population
     """
-    # TODO: Load from actual census data
-    # For now, use hardcoded top counties as example
+    # Load from prepared county dataset
+    county_file = Path(__file__).parent.parent.parent.parent / f'outputs/data/{year}/counties/all_counties_{year}.csv'
 
-    # Top 20 counties by population (2020 Census)
-    data = [
-        {'state': 'CA', 'county': 'Los Angeles', 'population': 10_014_009},
-        {'state': 'IL', 'county': 'Cook', 'population': 5_275_541},
-        {'state': 'TX', 'county': 'Harris', 'population': 4_731_145},
-        {'state': 'AZ', 'county': 'Maricopa', 'population': 4_420_568},
-        {'state': 'CA', 'county': 'San Diego', 'population': 3_298_634},
-        {'state': 'CA', 'county': 'Orange', 'population': 3_186_989},
-        {'state': 'FL', 'county': 'Miami-Dade', 'population': 2_716_940},
-        {'state': 'NY', 'county': 'Kings', 'population': 2_736_074},
-        {'state': 'NY', 'county': 'Queens', 'population': 2_405_464},
-        {'state': 'CA', 'county': 'Riverside', 'population': 2_418_185},
-        {'state': 'CA', 'county': 'San Bernardino', 'population': 2_181_654},
-        {'state': 'WA', 'county': 'King', 'population': 2_269_675},
-        {'state': 'TX', 'county': 'Dallas', 'population': 2_613_539},
-        {'state': 'CA', 'county': 'Santa Clara', 'population': 1_936_259},
-        {'state': 'FL', 'county': 'Broward', 'population': 1_944_375},
-        {'state': 'TX', 'county': 'Tarrant', 'population': 2_110_640},
-        {'state': 'TX', 'county': 'Bexar', 'population': 2_009_324},
-        {'state': 'CA', 'county': 'Alameda', 'population': 1_682_353},
-        {'state': 'NY', 'county': 'New York', 'population': 1_694_251},
-        {'state': 'PA', 'county': 'Philadelphia', 'population': 1_603_797},
-    ]
+    if not county_file.exists():
+        print(f"ERROR: County data file not found: {county_file}")
+        print("Run: python scripts/prepare_county_data.py --year {year}")
+        sys.exit(1)
 
-    return pd.DataFrame(data)
+    df = pd.read_csv(county_file)
+
+    # Ensure required columns exist
+    if 'fips' not in df.columns or 'population' not in df.columns or 'state' not in df.columns:
+        print(f"ERROR: County data missing required columns (fips, state, population)")
+        sys.exit(1)
+
+    return df
 
 
 def load_state_populations(year: int) -> Dict[str, int]:
@@ -171,12 +159,13 @@ def compute_hybrid_apportionment(
     entities = []
 
     # Add large counties
-    for county in qualifying_counties:
+    for _, county in qualifying_counties.iterrows():
         entities.append({
-            'name': f"{county['county']} County, {county['state']}",
+            'name': f"County {county['fips']}, {county['state']}",
             'population': county['population'],
             'type': 'county',
-            'state': county['state']
+            'state': county['state'],
+            'fips': county['fips']
         })
 
     # Add remaining state populations
@@ -212,7 +201,7 @@ def compute_hybrid_apportionment(
             'total_seats': total_seats,
             'state_pool_seats': state_seats,
             'county_direct_seats': county_seats,
-            'num_qualifying_counties': sum(1 for c in qualifying_counties if c['state'] == state)
+            'num_qualifying_counties': len(qualifying_counties[qualifying_counties['state'] == state])
         }
 
     return {
@@ -266,12 +255,11 @@ def run_threshold_analysis(year: int = 2020):
         # Show top qualifying counties
         if num_counties > 0:
             print("  Top qualifying counties:")
-            for county in sorted(result['qualifying_counties'],
-                                key=lambda x: x['population'],
-                                reverse=True)[:5]:
-                name = f"{county['county']} County, {county['state']}"
+            top_counties = result['qualifying_counties'].nlargest(5, 'population')
+            for _, county in top_counties.iterrows():
+                name = f"County {county['fips']}, {county['state']}"
                 seats = result['allocation'][name]
-                print(f"    {name:40s} {county['population']:>10,} pop  ->  {seats:2d} seats")
+                print(f"    {county['fips']} ({county['state']})  {county['population']:>12,} pop  ->  {seats:2d} seats")
             print()
 
         # Show state impacts

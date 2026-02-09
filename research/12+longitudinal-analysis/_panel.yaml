@@ -1,7 +1,7 @@
 paper: 12+longitudinal-analysis
 title: "Twenty Years of Congressional Redistricting: A Longitudinal Analysis of Algorithmic Redistricting Across Three Census Decades"
 venue: "Science"
-stage: synthesis
+stage: revision
 round: 0
 content_mode: full
 content_mode_confirmed: true
@@ -32,7 +32,27 @@ reviews:
   Levitt: "REVIEW-Levitt.md"
   Altman: "REVIEW-Altman.md"
   Grofman: "REVIEW-Grofman.md"
-p1_items: []
+p1_items:
+  - id: "P1.1"
+    description: "Add partisan metrics or reframe scope"
+    addressed: false
+    note: "Requires new election data analysis - substantial work"
+  - id: "P1.2"
+    description: "Strengthen statistical analysis"
+    addressed: false
+    note: "Needs Cohen's d, CIs, robustness checks"
+  - id: "P1.3"
+    description: "Address VRA compliance"
+    addressed: false
+    note: "Needs methodology and discussion additions"
+  - id: "P1.4"
+    description: "Provide code and data access"
+    addressed: false
+    note: "Infrastructure task - GitHub/Zenodo setup"
+  - id: "P1.5"
+    description: "Temper causality claims"
+    addressed: true
+    note: "Applied to abstract - causality language tempered"
 history:
   - stage: draft
     date: 2026-02-08
@@ -46,3 +66,6 @@ history:
   - stage: synthesis
     date: 2026-02-08
     note: "5 reviews generated (scores: 3.0, 3.5, 2.5, 3.0, 3.0; avg: 3.0)"
+  - stage: revision
+    date: 2026-02-08
+    note: "REVISION-PLAN.md created with 5 P1 + 4 P2 improvements; P1.5 partially applied"

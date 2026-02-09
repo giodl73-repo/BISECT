@@ -22,8 +22,9 @@ import pandas as pd
 import geopandas as gpd
 from tqdm import tqdm
 
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent / 'src'))
+# Add src to path and get project root
+PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT / 'src'))
 
 # State FIPS codes for reference
 STATE_FIPS = {
@@ -53,7 +54,7 @@ def load_tract_data(year: int, state: str) -> Optional[pd.DataFrame]:
         DataFrame with units and population, or None if file doesn't exist
     """
     # Try block groups CSV first (most likely to exist)
-    bg_path = Path(f'outputs/data/{year}/units/{state.lower()}_block_groups_{year}_population.csv')
+    bg_path = PROJECT_ROOT / f'outputs/data/{year}/units/{state.lower()}_block_groups_{year}_population.csv'
     if bg_path.exists():
         try:
             df = pd.read_csv(bg_path)
@@ -63,9 +64,9 @@ def load_tract_data(year: int, state: str) -> Optional[pd.DataFrame]:
 
     # Try parquet paths as fallback
     possible_paths = [
-        Path(f'outputs/data/{year}/units/tracts/{state.lower()}_tracts_{year}.parquet'),
-        Path(f'data/{year}/tracts/{state.lower()}_tracts_{year}.parquet'),
-        Path(f'outputs/data/{year}/tracts/{state.lower()}_tracts_{year}.parquet'),
+        PROJECT_ROOT / f'outputs/data/{year}/units/tracts/{state.lower()}_tracts_{year}.parquet',
+        PROJECT_ROOT / f'data/{year}/tracts/{state.lower()}_tracts_{year}.parquet',
+        PROJECT_ROOT / f'outputs/data/{year}/tracts/{state.lower()}_tracts_{year}.parquet',
     ]
 
     for path in possible_paths:
@@ -195,7 +196,7 @@ def prepare_county_data(
 
     # Setup output directory
     if output_dir is None:
-        output_dir = Path(f'outputs/data/{year}/counties')
+        output_dir = PROJECT_ROOT / f'outputs/data/{year}/counties'
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Determine states to process
