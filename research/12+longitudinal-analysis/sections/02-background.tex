@@ -1,0 +1,34 @@
+% Background
+
+\subsection{Redistricting as a Decadal Process}
+
+The U.S. Constitution mandates that congressional seats be reapportioned among states following each decennial census, with districts redrawn to reflect new population counts. This creates a natural 10-year cycle that has operated consistently since 1790. The three most recent redistricting cycles—2000, 2010, and 2020—occurred during distinct political and technological contexts:
+
+\begin{itemize}
+    \item \textbf{2000}: Pre-REDMAP era, traditional redistricting methods
+    \item \textbf{2010}: Post-REDMAP era, sophisticated partisan gerrymandering enabled by modern GIS tools
+    \item \textbf{2020}: Post-commission era, with several states adopting independent redistricting commissions
+\end{itemize}
+
+\subsection{Prior Longitudinal Work}
+
+Several studies have examined redistricting trends over time. \citet{altman2011gerrymandering} documented increasing partisan bias from 1972--2010. \citet{henderson2018measuring} analyzed compactness measures across multiple redistricting cycles but used different analytical approaches for different years. \citet{mcghee2014redistricting} examined efficiency gaps across decades but focused on partisan metrics rather than geometric properties.
+
+\textbf{Gap}: No prior work has applied a consistent algorithmic methodology across multiple census decades, making it impossible to separate genuine temporal trends from methodological variations.
+
+\subsection{Algorithmic Redistricting}
+
+Algorithmic redistricting uses computational optimization to generate districts based on explicit criteria (population balance, compactness, contiguity) without partisan data. The recursive bisection approach \citep{karypis1998metis} treats census tracts as a graph and recursively partitions it to minimize edge cuts (maximizing compactness) while balancing population.
+
+\textbf{Key advantage for longitudinal analysis}: By applying the identical algorithm with identical parameters across 2000, 2010, and 2020 data, we isolate temporal effects from methodological changes.
+
+\subsection{Research Program Context}
+
+This paper extends our prior work on recursive bisection redistricting:
+\begin{itemize}
+    \item \textbf{Paper 01}: Established recursive bisection as the core methodology
+    \item \textbf{Paper 05}: Developed cross-census validation techniques
+    \item \textbf{Paper 07}: Examined temporal stability within single census years
+\end{itemize}
+
+This paper represents the first \textit{inter-census} longitudinal analysis across 20 years.

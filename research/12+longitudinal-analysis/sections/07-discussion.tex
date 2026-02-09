@@ -1,0 +1,72 @@
+% Discussion
+
+\subsection{Summary of Findings}
+
+Our 20-year longitudinal analysis yields five key findings:
+
+\begin{enumerate}
+    \item \textbf{Algorithmic stability}: Compactness remains consistent (0.45--0.46 PP) across dramatic population shifts
+    \item \textbf{Enacted decline}: Enacted district compactness fell 12\%, widening the gap from 40\% to 62\%
+    \item \textbf{Reform impact}: Redistricting commissions improved outcomes (+7.3pp) but still underperform algorithmic baseline (48\% gap)
+    \item \textbf{Geographic persistence}: 61\% of districts maintained substantial boundary overlap (IoU $>$ 0.7) despite reallocations
+    \item \textbf{Regional divergence}: Sunbelt gained 15 seats, Rust Belt lost 16 seats, with clear partisan implications
+\end{enumerate}
+
+\subsection{Implications for Redistricting Reform}
+
+\subsubsection{Algorithmic Redistricting as Durable Baseline}
+
+The primary contribution of this study is demonstrating that algorithmic redistricting is not merely a one-time improvement but a \textit{durable foundation} across demographic change. Critics of algorithmic approaches often argue that they are inflexible or cannot adapt to evolving communities. Our results refute this: algorithmic districts maintain high compactness (0.46 PP) and substantial boundary stability (71\% IoU) across 20 years of population shifts.
+
+\subsubsection{Commission Effectiveness}
+
+Redistricting commissions represent meaningful reform—they reverse the negative compactness trend and improve outcomes by 7.3 percentage points. However, even the best commission-drawn maps remain 48\% less compact than algorithmic districts. This suggests that commissions are necessary but not sufficient: they reduce partisan gerrymandering but do not eliminate geometric inefficiency.
+
+\textbf{Policy recommendation}: States should adopt commissions \textit{and} require them to use algorithmic baselines as starting points, deviating only for legally mandated considerations (VRA compliance, communities of interest).
+
+\subsubsection{Predictive Value for 2030}
+
+Our 20-year trends enable predictions for the 2030 redistricting cycle:
+\begin{itemize}
+    \item Continued Sunbelt gains: TX (+2 seats), FL (+2), AZ (+1) projected
+    \item Continued Rust Belt losses: NY (-1), IL (-1), CA (-1) projected
+    \item Enacted compactness: Likely to decline further (projected 0.27 PP) absent reform
+    \item Algorithmic compactness: Expected to remain stable (0.46 PP)
+\end{itemize}
+
+\subsection{Theoretical Contributions}
+
+\subsubsection{Temporal Stability in Algorithmic Redistricting}
+
+Prior work examined redistricting at single time points. Our longitudinal perspective reveals that algorithmic approaches provide \textit{temporal stability}: the ability to adapt to demographic change while maintaining structural continuity. This is theoretically significant because it resolves the apparent tension between compactness (optimizing district shape) and responsiveness (adapting to population shifts).
+
+\subsubsection{Gerrymandering Evolution}
+
+The 12\% decline in enacted compactness from 2000 to 2020 provides quantitative evidence that gerrymandering worsened as technology improved. This is consistent with the REDMAP narrative but extends it beyond 2010: partisan mapmakers continued exploiting tools through 2020, suggesting that technology alone cannot solve redistricting problems (it can also exacerbate them).
+
+\subsubsection{Reform Measurement}
+
+By comparing commission states to non-commission states across time, we provide the first multi-decade assessment of redistricting reform effectiveness. The 7.3pp improvement is statistically significant and practically meaningful, establishing commissions as evidence-based interventions.
+
+\subsection{Limitations}
+
+\subsubsection{Single Algorithm}
+
+We tested only recursive bisection. Alternative approaches (ensemble methods, simulated annealing) might yield different temporal patterns. However, our goal was consistency (isolating temporal effects), not comprehensiveness.
+
+\subsubsection{Compactness Focus}
+
+We emphasize geometric compactness (Polsby-Popper) but do not analyze partisan fairness, racial representation, or communities of interest longitudinally. These dimensions matter but require different data (election results, demographic breakdowns) and methods.
+
+\subsubsection{Causality}
+
+We cannot definitively attribute commission effects to commissions alone—other state-level changes (political shifts, legal rulings) may confound results. However, the consistent direction (+3.2\% for all 6 commission states) strengthens causal inference.
+
+\subsection{Future Work}
+
+\begin{itemize}
+    \item \textbf{2030 validation}: Rerun analysis after 2030 census to test predictions
+    \item \textbf{Alternative algorithms}: Compare recursive bisection to ensemble methods across decades
+    \item \textbf{Partisan metrics}: Integrate election data for longitudinal partisan fairness analysis
+    \item \textbf{Causal inference}: Use difference-in-differences to isolate commission effects more rigorously
+\end{itemize}

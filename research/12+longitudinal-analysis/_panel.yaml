@@ -1,0 +1,12 @@
+paper: 12+longitudinal-analysis
+title: "Twenty Years of Congressional Redistricting: A Longitudinal Analysis of Algorithmic Redistricting Across Three Census Decades"
+venue: "Science"
+stage: draft
+round: 0
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-02-08
+    note: "Paper initialized via panel:setup"

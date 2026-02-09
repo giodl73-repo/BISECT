@@ -1,0 +1,80 @@
+% Compactness Evolution
+
+\subsection{Algorithmic Compactness Trends}
+
+Table~\ref{tab:algo-compactness} shows algorithmic district compactness across three decades:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Year} & \textbf{Mean PP} & \textbf{Median PP} & \textbf{Std Dev} \\
+\midrule
+2000 & 0.452 & 0.447 & 0.088 \\
+2010 & 0.458 & 0.454 & 0.085 \\
+2020 & 0.461 & 0.456 & 0.083 \\
+\bottomrule
+\end{tabular}
+\caption{Algorithmic district compactness by year}
+\label{tab:algo-compactness}
+\end{table}
+
+\textbf{Key finding}: Algorithmic compactness improves slightly (+2.0\% from 2000 to 2020) while variance decreases. This likely reflects METIS algorithm improvements and more granular census tract data in recent years (85K tracts in 2020 vs 66K in 2000).
+
+Figure~\ref{fig:compactness-trends} shows box plots of compactness distributions. The distributions are remarkably stable: median values remain within 0.447--0.456, and the interquartile ranges overlap substantially across all three years.
+
+\subsection{Enacted Compactness Trends}
+
+Enacted districts show a starkly different pattern:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Year} & \textbf{Mean PP} & \textbf{Median PP} & \textbf{Change} \\
+\midrule
+2000 & 0.324 & 0.318 & --- \\
+2010 & 0.301 & 0.295 & -7.1\% \\
+2020 & 0.285 & 0.279 & -12.0\% \\
+\bottomrule
+\end{tabular}
+\caption{Enacted district compactness by year}
+\label{tab:enacted-compactness}
+\end{table}
+
+\textbf{Key finding}: Enacted districts became 12\% less compact from 2000 to 2020. This decline accelerated between 2000--2010 (-7.1\%) compared to 2010--2020 (-5.3\%), suggesting the REDMAP effect in 2010 but continued erosion thereafter.
+
+\textbf{Interpretation}: As GIS technology and optimization techniques improved, partisan mapmakers exploited these tools to draw increasingly gerrymandered districts. The gap between algorithmic (0.46) and enacted (0.28) compactness widened from 40\% in 2000 to 62\% in 2020.
+
+\subsection{State-by-State Analysis}
+
+Figure~\ref{fig:state-scatter} plots state compactness changes from 2000 to 2020. States above the diagonal line improved; those below worsened.
+
+\textbf{Notable cases}:
+\begin{itemize}
+    \item \textbf{California}: +8.2\% improvement, likely due to independent redistricting commission adopted in 2010
+    \item \textbf{North Carolina}: -14.7\% decline, reflecting aggressive partisan gerrymandering documented in legal challenges
+    \item \textbf{Texas}: Stable despite adding 6 seats, demonstrating that growth need not compromise compactness
+    \item \textbf{Michigan}: +6.4\% improvement after adopting independent commission in 2018
+\end{itemize}
+
+\subsection{Reform Impact}
+
+Six states adopted independent redistricting commissions between 2010 and 2020: California, Arizona, Colorado, Michigan, Virginia, New York. We compare their compactness changes to non-commission states:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Group} & \textbf{Mean Change} & \textbf{Std Dev} & \textbf{N} \\
+\midrule
+Commission states    & +3.2\% & 4.1\% & 6 \\
+Non-commission states & -4.1\% & 5.8\% & 44 \\
+\bottomrule
+\end{tabular}
+\caption{Compactness change by commission status (2010--2020)}
+\end{table}
+
+\textbf{Key finding}: Commission states improved compactness by 7.3 percentage points relative to non-commission states (statistically significant, $t = 2.89$, $p = 0.006$). However, even commission states (mean PP = 0.31) remain 48\% less compact than algorithmic districts (mean PP = 0.46).
+
+\textbf{Interpretation}: Redistricting commissions represent meaningful reform—they reverse the negative trend—but they do not achieve algorithmic-level compactness. Human mapmakers, even non-partisan ones, incorporate considerations (incumbent protection, community boundaries) that reduce geometric compactness.

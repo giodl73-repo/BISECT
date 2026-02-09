@@ -1,0 +1,68 @@
+% Data and Methodology
+
+\subsection{Census Data}
+
+We use decennial census data from three redistricting cycles:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Year} & \textbf{Census Tracts} & \textbf{Total Population} & \textbf{Districts} \\
+\midrule
+2000 & 66,304 & 281,421,906 & 435 \\
+2010 & 74,002 & 308,745,538 & 435 \\
+2020 & 85,331 & 331,449,281 & 435 \\
+\bottomrule
+\end{tabular}
+\caption{Census data summary across three decades}
+\end{table}
+
+Census tracts provide the finest-grained units with stable boundaries suitable for temporal comparison. Population data comes from the decennial census PL 94-171 redistricting files.
+
+\textbf{Apportionment}: Congressional seats are allocated among states using the Huntington-Hill method:
+\begin{itemize}
+    \item 2000: Baseline allocation (435 seats across 50 states)
+    \item 2010: 8 states gained, 10 states lost seats
+    \item 2020: 6 states gained, 7 states lost seats
+\end{itemize}
+
+\subsection{Algorithmic Redistricting}
+
+We apply recursive bisection using METIS 5.1.0 with \textit{identical parameters} across all three years:
+
+\begin{itemize}
+    \item \textbf{Algorithm}: Recursive bisection (graph partitioning)
+    \item \textbf{Population balance}: $\pm0.5\%$ of target
+    \item \textbf{Edge weights}: $\alpha = 5.0$ for minority-minority edges (maintaining communities of interest)
+    \item \textbf{Contiguity}: Enforced via graph connectivity
+    \item \textbf{No partisan data}: Algorithm has no access to voter registration or election results
+\end{itemize}
+
+\textbf{Why consistency matters}: Using identical parameters isolates temporal effects (population change, geographic shifts) from methodological variations. Any differences in outcomes across years reflect genuine demographic trends, not algorithmic artifacts.
+
+\subsection{Metrics}
+
+\subsubsection{Compactness}
+
+We measure compactness using the Polsby-Popper score:
+\[
+PP = \frac{4\pi \cdot \text{Area}}{\text{Perimeter}^2}
+\]
+PP ranges from 0 (infinitely elongated) to 1 (perfect circle). We compute PP for all 435 districts in each year.
+
+\subsubsection{Geographic Stability}
+
+To measure boundary stability across census cycles, we compute Intersection-over-Union (IoU):
+\[
+\text{IoU}(D_t, D_{t+10}) = \frac{|D_t \cap D_{t+10}|}{|D_t \cup D_{t+10}|}
+\]
+where $D_t$ is a district in year $t$ and $D_{t+10}$ is the geographically closest district 10 years later. IoU ranges from 0 (no overlap) to 1 (identical boundaries).
+
+\subsubsection{Enacted Comparison}
+
+We compare algorithmic districts to enacted districts using shapefiles from Dave's Redistricting App (DRA), which provides standardized enacted district boundaries for all three census cycles.
+
+\subsection{Statistical Analysis}
+
+We perform paired t-tests to assess compactness changes within states across years, ANOVA to compare commission vs non-commission states, and correlation analysis to examine relationships between population growth and district characteristics.

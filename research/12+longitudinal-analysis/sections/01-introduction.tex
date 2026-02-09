@@ -1,0 +1,27 @@
+% Introduction
+
+Every ten years following the decennial census, the United States redraws its 435 congressional districts to reflect population changes. This redistricting cycle has occurred consistently since 1790, yet the process remains politically contentious and methodologically inconsistent. Each redistricting event is typically analyzed in isolation—a snapshot of a particular moment—without examining how districts, representation, and gerrymandering practices evolve across multiple census cycles.
+
+This temporal myopia has left critical questions unanswered: Do districts become more or less compact over time? How stable are district boundaries when population shifts occur? Has gerrymandering worsened as mapping technology improved? And crucially, how do algorithmic approaches perform not just once, but consistently across demographic change?
+
+\subsection{Research Gap}
+
+Prior longitudinal studies of redistricting have examined partisan trends \citep{altman2011gerrymandering} and compactness measures over time \citep{henderson2018measuring}, but none have applied a consistent algorithmic baseline across multiple census decades. Without methodological consistency, it is impossible to separate genuine temporal trends from artifacts of varying analytical approaches.
+
+\subsection{This Paper}
+
+We conduct the first 20-year longitudinal study of algorithmic redistricting, applying recursive bisection (METIS graph partitioning) to census tract data from 2000, 2010, and 2020. Our analysis spans 66,304 to 85,331 census tracts and all 50 states, producing directly comparable district maps across three redistricting cycles.
+
+We address four research questions:
+\begin{enumerate}
+    \item \textbf{Apportionment}: How has congressional seat allocation shifted between states?
+    \item \textbf{Compactness}: Have algorithmic and enacted districts become more or less compact?
+    \item \textbf{Stability}: How stable are district boundaries across census cycles?
+    \item \textbf{Reform}: Did redistricting commissions (adopted post-2010) improve outcomes?
+\end{enumerate}
+
+\subsection{Preview of Findings}
+
+Our results demonstrate that algorithmic redistricting maintains remarkable consistency: compactness remains stable at 0.45--0.46 Polsby-Popper across two decades, even as population distributions shift dramatically. In contrast, enacted districts declined from 0.32 to 0.28 PP (12\% worse), suggesting that partisan mapmakers exploited improving technology to draw increasingly gerrymandered maps. States adopting redistricting commissions showed meaningful improvements (+3.2\% vs -4.1\% for non-commission states), but still underperformed the algorithmic baseline by 40\%.
+
+Geographic stability analysis reveals that 61\% of districts maintained substantial boundary overlap (IoU $>$ 0.7) from 2010 to 2020, demonstrating that algorithmic approaches can adapt to demographic change without wholesale boundary disruption.
