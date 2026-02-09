@@ -20,6 +20,9 @@ import sys
 import json
 from typing import Dict, Optional
 import subprocess
+import numpy as np
+import geopandas as gpd
+import pandas as pd
 
 # Add project root and src to path
 project_root = Path(__file__).parent.parent.parent
@@ -100,7 +103,7 @@ def run_recursive_bisection_for_party(
     dry_run: bool = False
 ) -> bool:
     """
-    Run recursive bisection to create party-specific districts.
+    Run recursive bisection to create party-specific districts using party-vote weighting.
 
     Args:
         state: State name
@@ -124,47 +127,142 @@ def run_recursive_bisection_for_party(
     if dry_run:
         logger.info(f"[DRY RUN] Would create directory: {party_dir}")
         logger.info(
-            f"[DRY RUN] Would run redistricting: {num_districts} districts"
+            f"[DRY RUN] Would run redistricting: {num_districts} districts with party-vote weighting"
         )
         return True
 
     # Create output directory
     party_dir.mkdir(parents=True, exist_ok=True)
 
-    # Run the existing recursive bisection script
-    # We'll use the existing run_state_redistricting.py but with party-specific output
-    script_path = project_root / "scripts" / "pipeline" / "run_state_redistricting.py"
-
-    cmd = [
-        sys.executable,
-        str(script_path),
-        "--state", state,
-        "--year", str(year),
-        "--version", f"{version}_{party}",
-        "--num-districts", str(num_districts)
-    ]
-
     try:
-        result = subprocess.run(
-            cmd,
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=3600  # 1 hour max per party
+        # Import required modules
+        import geopandas as gpd
+        import pandas as pd
+        from apportionment.partition.recursive_bisection import RecursiveBisection
+        from apportionment.data.adjacency import build_adjacency_graph
+        from scripts.data.load_tract_votes import disaggregate_votes_to_tracts, get_party_vote_weights, validate_tract_votes
+        from scripts.utils import get_tract_file
+
+        # 1. Load tract geometries
+        state_abbrev = STATE_ABBREV.get(state.lower())
+        tracts_file = get_tract_file(state_abbrev, str(year), 'v1')
+
+        logger.info(f"{state.title()} {party}: Loading tract geometries from {tracts_file}")
+        tracts = gpd.read_parquet(tracts_file)
+        n_tracts = len(tracts)
+
+        # 2. Build adjacency graph
+        logger.info(f"{state.title()} {party}: Building adjacency graph")
+        adjacency, tract_populations, idx_to_geoid, geoid_to_idx, _ = build_adjacency_graph(
+            tracts,
+            compute_boundary_lengths=False
         )
+
+        # 3. Load tract-level votes and extract party-specific weights
+        logger.info(f"{state.title()} {party}: Loading tract-level votes")
+        tract_votes = disaggregate_votes_to_tracts(state, year)
+        validate_tract_votes(tract_votes, state)
+
+        # 4. Extract party-specific vote weights aligned with adjacency graph
+        logger.info(f"{state.title()} {party}: Extracting {party} vote weights")
+
+        # Create a mapping from tract_id to votes
+        party_col = f"{party.lower()}_votes"
+        vote_dict = dict(zip(tract_votes['tract_id'], tract_votes[party_col]))
+
+        # Build vertex_weights array in the same order as adjacency list
+        vertex_weights = np.zeros(len(idx_to_geoid), dtype=np.int32)
+        for idx in range(len(idx_to_geoid)):
+            geoid = idx_to_geoid[idx]
+            vertex_weights[idx] = vote_dict.get(geoid, 1)  # Default to 1 if missing
+
+        # Verify alignment
+        if len(vertex_weights) != n_tracts:
+            raise ValueError(
+                f"Vote weight count ({len(vertex_weights)}) doesn't match tract count ({n_tracts})"
+            )
+
+        # 5. Run recursive bisection with party-vote weights
+        logger.info(
+            f"{state.title()} {party}: Running recursive bisection "
+            f"({num_districts} districts, {vertex_weights.sum():,.0f} {party} votes)"
+        )
+
+        rb = RecursiveBisection(
+            adjacency=adjacency,
+            vertex_weights=vertex_weights,  # CRITICAL: Party-specific weights!
+            num_districts=num_districts,
+            state_code=state_abbrev,
+            debug=False,
+            seed=42  # Reproducible results
+        )
+
+        district_assignments = rb.partition()
+
+        # 6. Save results
+        logger.info(f"{state.title()} {party}: Saving results")
+
+        # Add district assignments to tracts
+        tracts['district'] = district_assignments
+        tracts['party'] = party
+
+        # Save shapefile
+        output_file = party_dir / f"{state}_{party.lower().replace(' ', '_')}_districts.shp"
+        tracts.to_file(output_file)
+
+        # Save CSV with district summaries
+        district_summary = tracts.groupby('district').agg({
+            'population': 'sum',
+            'GEOID': 'count'
+        }).rename(columns={'GEOID': 'num_tracts'})
+
+        # Add party vote totals
+        tracts_with_votes = tracts.merge(
+            tract_votes,
+            left_on='GEOID',
+            right_on='tract_id',
+            how='left'
+        )
+
+        party_col = f"{party.lower()}_votes"
+        district_summary[party_col] = tracts_with_votes.groupby('district')[party_col].sum()
+
+        csv_file = party_dir / f"{state}_{party.lower().replace(' ', '_')}_summary.csv"
+        district_summary.to_csv(csv_file)
+
+        # Save metadata
+        metadata = {
+            "state": state,
+            "party": party,
+            "num_districts": num_districts,
+            "type": "party_vote_weighted",
+            "year": year,
+            "version": version,
+            "total_tracts": n_tracts,
+            "total_party_votes": int(vertex_weights.sum()),
+            "avg_votes_per_district": int(vertex_weights.sum() / num_districts)
+        }
+
+        metadata_path = party_dir / "metadata.json"
+        with open(metadata_path, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
         logger.info(f"{state.title()} {party}: Redistricting complete")
+        logger.info(
+            f"  -> {num_districts} districts, "
+            f"{vertex_weights.sum():,.0f} {party} votes "
+            f"({vertex_weights.sum()/num_districts:,.0f} votes/district)"
+        )
+
         return True
 
-    except subprocess.CalledProcessError as e:
+    except Exception as e:
         logger.error(
             f"{state.title()} {party}: Redistricting failed\n"
-            f"Command: {' '.join(cmd)}\n"
-            f"Error: {e.stderr}"
+            f"Error: {str(e)}"
         )
-        return False
-
-    except subprocess.TimeoutExpired:
-        logger.error(f"{state.title()} {party}: Redistricting timed out")
+        import traceback
+        logger.debug(traceback.format_exc())
         return False
 
 

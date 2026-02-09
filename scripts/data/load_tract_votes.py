@@ -108,7 +108,7 @@ def disaggregate_votes_to_tracts(
     tracts_file = get_tract_file(state_abbrev, str(year), 'v1')
 
     logger.info(f"{state}: Loading tract geometries from {tracts_file}")
-    tracts = gpd.read_file(tracts_file)
+    tracts = gpd.read_parquet(tracts_file)
 
     # Get statewide vote shares
     from scripts.data.load_presidential_results import get_vote_shares
