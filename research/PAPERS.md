@@ -8,22 +8,22 @@
 
 ## Overview
 
-This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E), where each track has a **head paper** (A.0, B.0, etc.) that tells the complete story, with **sub-papers** providing detailed evidence.
+This portfolio comprises **35 papers** organized into **5 thematic tracks** (A-E), where each track has a **head paper** (A.0, B.0, etc.) that tells the complete story, with **sub-papers** providing detailed evidence.
 
 **Key Principle**: A reader can read **only the 5 track head papers** (A.0, B.0, C.0, D.0, E.0) and understand the entire research program.
 
 **Track Structure**:
-- **Track A** (Overview & Synthesis): 5 papers — What we did, why it matters, how to use it
-- **Track B** (Algorithm Design): 6 papers — How we designed the algorithm and why these choices
-- **Track C** (Validation & Analysis): 6 papers — How we validated it works (robustness, stability, fairness)
-- **Track D** (VRA Compliance): 4 papers — How it handles minority representation
-- **Track E** (Experimental Systems): 6 papers — What we learned from alternative systems
+- **Track A** (Overview & Synthesis): 6 papers — What we did, why it matters, how to use it
+- **Track B** (Algorithm Design): 7 papers — How we designed the algorithm and why these choices
+- **Track C** (Validation & Analysis): 8 papers — How we validated it works (robustness, stability, fairness)
+- **Track D** (VRA Compliance): 5 papers — How it handles minority representation
+- **Track E** (Experimental Systems): 8 papers — What we learned from alternative systems
 
-**Total**: 28 papers (5 track heads + 23 sub-papers)
+**Total**: 35 papers (5 track heads + 30 sub-papers)
 
 ---
 
-## Track A — Overview & Synthesis (5 papers)
+## Track A — Overview & Synthesis (6 papers)
 
 **Audience**: Interdisciplinary, general scientific community, policymakers
 **Narrative**: What we did, why it matters, how to use it
@@ -33,8 +33,9 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 | **A.0** | synthesis-metapaper | Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration | Science/Nature synthesis | Planned | Science / Nature |
 | **A.1** | portfolio-guide | Portfolio Guide: Reader's Introduction | 2-page guide | Ready | Supplementary material |
 | **A.2** | portfolio-summary | Portfolio Summary: Research Statement | 6-page statement | Ready | Supplementary material |
-| **A.3** | portfolio-visualization | Interactive Portfolio Visualization | Web app | Planned | GitHub Pages |
-| **A.4** | replication-materials | Replication Materials and Data Archive | Archive | Planned | Zenodo / Dataverse |
+| **A.3** | portfolio-visualization | Navigating the Portfolio: Visual Guide to 35 Papers | 10-15 page document | Planned | Supplementary material |
+| **A.4** | replication-materials | Replication Materials and Data Archive | Comprehensive package | Planned | Zenodo / Dataverse |
+| **A.5** | policy-brief | Policy Brief: Algorithmic Redistricting for State Legislatures | 4-page brief | Planned | Policy distribution |
 
 **Track Head (A.0) Purpose**:
 - Capstone synthesis for Science/Nature
@@ -47,7 +48,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 
 ---
 
-## Track B — Algorithm Design (6 papers)
+## Track B — Algorithm Design (7 papers)
 
 **Audience**: Computer scientists, operations researchers, algorithm designers
 **Narrative**: How we designed the redistricting algorithm and why these architectural choices
@@ -60,6 +61,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 | **B.3** | multi-vs-edge | Why Single-Objective Edge-Weighting Outperforms Multi-Constraint Optimization | Ready (panel-reviewed) | OR/MS journals | 7.3/10 (B) |
 | **B.4** | adaptive-bisection | Parameter Sensitivity in Recursive Bisection: Tree Structure Irrelevance with Edge-Weighting | Ready (panel-reviewed) | Algorithmic venues | 7.1/10 (B) |
 | **B.5** | nway-vs-recursive-general | N-Way vs Recursive Bisection: General Architectural Comparison | Planned | ACM TSAS / SIAM | TBD |
+| **B.6** | computational-complexity | Computational Complexity and Scalability Analysis | Planned | SODA / Algorithmica | TBD |
 
 **Track Head (B.0) Purpose**:
 - Comprehensive justification of all algorithmic architecture decisions
@@ -75,7 +77,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 
 ---
 
-## Track C — Validation & Analysis (6 papers)
+## Track C — Validation & Analysis (8 papers)
 
 **Audience**: Political scientists, statisticians, election law scholars
 **Narrative**: How we validated that the algorithm works across multiple dimensions
@@ -88,6 +90,8 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 | **C.3** | temporal-stability | Temporal Stability in Algorithmic Redistricting: Hierarchical Advantage Across Census Cycles | Ready (panel-reviewed) | Political Analysis | 7.5/10 (B+) |
 | **C.4** | longitudinal-analysis | Twenty Years of Congressional Redistricting: Temporal Trends 2000-2020 | Planned | APSR / Political Analysis | TBD |
 | **C.5** | efficiency-gap-analysis | Efficiency Gap and Partisan Bias in Algorithmic Redistricting | Ready (panel-reviewed) | Election Law Journal | TBD |
+| **C.6** | user-study | Public Perceptions of Algorithmic Redistricting: A Survey Experiment | Planned | AJPS / POQ | TBD |
+| **C.7** | uncertainty-quantification | Uncertainty Quantification in Redistricting Metrics: Confidence Intervals for Compactness | Planned | Annals App Stat / JASA | TBD |
 
 **Track Head (C.0) Purpose**:
 - Multi-faceted validation framework across 5 dimensions
@@ -103,7 +107,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 
 ---
 
-## Track D — Voting Rights Act Compliance (4 papers)
+## Track D — Voting Rights Act Compliance (5 papers)
 
 **Audience**: Constitutional law scholars, civil rights advocates, election officials
 **Narrative**: How algorithmic redistricting handles minority representation
@@ -114,6 +118,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 | **D.1** | threshold-analysis | The 42% Threshold: State Minority Percentage and Majority-Minority District Feasibility | Ready (panel-reviewed) | APSR / Law Review | 7.9/10 (B+) |
 | **D.2** | nway-vs-recursive-vra | N-Way vs Recursive Bisection: Statistical Equivalence for VRA Compliance | Ready (panel-reviewed) | Comparative study | 6.8/10 (B-) |
 | **D.3** | compactness-tradeoff | The VRA-Compactness Tradeoff: Pareto Frontiers in Algorithmic Redistricting | Ready (panel-reviewed) | APSR | 7.7/10 (B+) |
+| **D.4** | legal-implementation | Legal Pathways for Algorithmic Redistricting Adoption: State Constitutional Analysis | Planned | Election Law Journal | TBD |
 
 **Track Head (D.0) Purpose**:
 - **EXISTING PAPER** — vra-compliance already works as standalone track head
@@ -130,7 +135,7 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 
 ---
 
-## Track E — Experimental Systems (6 papers)
+## Track E — Experimental Systems (8 papers)
 
 **Audience**: Political theorists, electoral reform advocates, comparative politics scholars
 **Narrative**: What if we redesigned representation from scratch?
@@ -143,6 +148,8 @@ This portfolio comprises **28 papers** organized into **5 thematic tracks** (A-E
 | **E.3** | national-redistricting | National Redistricting Without State Boundaries: A Geometric Baseline | Planned | Comparative Politics | Research |
 | **E.4** | partisan-similarity-districts | Partisan Similarity Districts: Algorithmic Safe Seats | Planned | AJPS | Research |
 | **E.5** | party-based-allocation | Proportional Representation Through Party-Based District Allocation | Planned | Electoral Studies | Research |
+| **E.6** | international-applications | Beyond American Federalism: Algorithmic Redistricting in Parliamentary Democracies | Planned | Comparative Pol Studies | Research |
+| **E.7** | lessons-learned | Design Space Lessons: What We Learned from Algorithmic Explorations | Planned | Annual Rev Pol Sci | Research |
 
 **Track Head (E.0) Purpose**:
 - Synthesis of lessons learned from 5 experimental alternative systems
