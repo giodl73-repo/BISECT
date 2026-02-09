@@ -1,7 +1,97 @@
-% Background and Related Work
+% System Design
 
-% TODO: Review relevant literature
-% - Proportional representation systems (MMP, party-list)
-% - Partisan fairness metrics (efficiency gap, mean-median difference)
-% - Algorithmic redistricting approaches
-% - Legal and constitutional considerations
+This section describes the mechanics of overlapping party-specific districts: how seats are allocated proportionally, how each party independently creates districts, how these districts overlap in geographic space, and how edge cases are handled.
+
+\subsection{Proportional Seat Allocation}
+
+The first step is seat allocation based on statewide vote shares. We use the D'Hondt method \citep{gallagher2011election}, the most common proportional allocation formula used in European democracies. For a state with $N$ congressional seats and parties receiving vote shares $v_1, v_2, \ldots, v_k$, we compute quotients:
+
+\begin{equation}
+q_{i,j} = \frac{v_i}{j}
+\end{equation}
+
+where $i$ indexes parties and $j$ ranges from 1 to $N$. Seats are allocated in descending order of quotients: the party with the highest quotient receives the first seat, the party with the second-highest quotient receives the second seat, and so on until all $N$ seats are allocated.
+
+\textbf{Example: Pennsylvania (17 seats)}
+
+Suppose Democrats receive 51\% of the statewide vote and Republicans receive 49\%. The D'Hondt quotients are:
+
+\begin{center}
+\begin{tabular}{lcccccc}
+\hline
+Party & Seat 1 & Seat 2 & Seat 3 & \ldots & Seat 8 & Seat 9 \\
+\hline
+Democrats (51\%) & 51.0 & 25.5 & 17.0 & \ldots & 6.4 & 5.7 \\
+Republicans (49\%) & 49.0 & 24.5 & 16.3 & \ldots & 6.1 & 5.4 \\
+\hline
+\end{tabular}
+\end{center}
+
+Following the descending sequence of quotients, Democrats win seats 1, 2, 3, 5, 7, 10, 12, 14, and 17 (9 total), while Republicans win seats 4, 6, 8, 9, 11, 13, 15, and 16 (8 total). The seat shares (53\% Democratic, 47\% Republican) closely approximate vote shares, with minor rounding due to integer constraints.
+
+\textbf{Threshold rule}
+
+To prevent excessive fragmentation, we impose a threshold: a party must receive at least $\frac{1}{N+1}$ of the statewide vote to qualify for seats \citep{taagepera1989seats}. For Pennsylvania's 17 seats, the threshold is $\frac{1}{18} \approx 5.6\%$. A party receiving 4\% of votes would win zero seats. This threshold balances proportionality with governability, preventing the legislature from splintering into dozens of micro-parties.
+
+\subsection{Party-Specific Redistricting}
+
+After seat allocation, each party with two or more seats independently creates districts. If Democrats are allocated 9 seats, they draw 9 districts covering the entire state. If Republicans are allocated 8 seats, they separately draw 8 districts, also covering the entire state. These two processes occur \emph{independently}—Democratic districting does not constrain Republican districting and vice versa.
+
+We implement party-specific redistricting using \textbf{recursive bisection} \citep{author2024recursive}, a graph partitioning algorithm that recursively divides geographic units (census tracts) into two balanced halves until reaching the target number of districts. The algorithm optimizes for two objectives:
+
+\begin{equation}
+\text{minimize: } \alpha \cdot \text{EdgeCut} + \beta \cdot \text{PopulationImbalance}
+\end{equation}
+
+where EdgeCut measures compactness (minimizing district perimeter) and PopulationImbalance penalizes deviations from equal population. The weights $\alpha$ and $\beta$ balance these objectives; we use $\alpha = 0.7$ and $\beta = 0.3$ following \citet{author2024recursive}.
+
+\textbf{Key property}: Party-specific districting is purely geometric. We do not input partisan data, voter registration, or election results into the redistricting algorithm itself. Seats have already been allocated proportionally at the statewide level; the districting phase simply divides geographic space into compact, equal-population regions. This contrasts sharply with partisan gerrymandering, where district boundaries are deliberately manipulated to maximize one party's seat advantage \citep{mcghee2020partisan}.
+
+\textbf{Algorithmic neutrality within parties}
+
+Each party's districting process is algorithmically neutral: boundaries are drawn to optimize compactness and population balance, not to favor particular candidates or factions within the party. A Democratic district in Philadelphia is created using the same objective function as a Democratic district spanning rural Pennsylvania. This intra-party neutrality prevents gerrymander-like manipulation within party-specific maps.
+
+\subsection{Overlapping Geography}
+
+The result of independent party-specific redistricting is a set of \emph{overlapping} district maps. Consider again Pennsylvania with 9 Democratic districts and 8 Republican districts. Every census tract—indeed, every address—belongs to exactly one Democratic district and exactly one Republican district. Figure \ref{fig:overlay-example} illustrates this for a hypothetical 4-seat state where Democrats win 3 seats and Republicans win 1 seat.
+
+\textbf{Voter assignment}
+
+How do voters know which district(s) they belong to? Each voter is assigned to:
+\begin{itemize}
+    \item One district per party that won seats in their state
+    \item Based on residential address (determined by census tract)
+\end{itemize}
+
+For Pennsylvania, a voter in Philadelphia might reside in Democratic District 4 (urban Philadelphia core) and Republican District 2 (southeastern Pennsylvania region including Philadelphia suburbs). They vote in the Democratic primary for PA-D-4 and the Republican primary for PA-R-2 (if they registered for that party's primary). In the general election, the outcomes of both races affect their representation: they will be represented by the Democratic winner of PA-D-4 \emph{and} the Republican winner of PA-R-2.
+
+\textbf{Ballot structure}
+
+Ballots under this system list multiple House races per voter:
+\begin{itemize}
+    \item One race for each party-district the voter resides in
+    \item Typically 2 races in a two-party system (Democratic district, Republican district)
+    \item Potentially 3+ races if minor parties exceed the threshold
+\end{itemize}
+
+This contrasts with the current system, where each voter votes in exactly one House race. The added complexity is the price of proportional representation while maintaining single-member districts.
+
+\subsection{Edge Cases}
+
+\textbf{Single-seat parties}
+
+If a party is allocated exactly 1 seat, the entire state becomes that party's district. There is no subdivision: the statewide party-list vote serves as a de facto at-large election. This occurs for small parties in large states (e.g., Green Party winning 1 of California's 52 seats) or for major parties in small states (e.g., Wyoming has 1 seat total, likely going entirely to Republicans).
+
+\textbf{Zero-seat parties}
+
+Parties below the threshold win zero seats and create zero districts. Their voters are not represented by a co-partisan House member from their state, though they remain represented by the party-specific representatives from parties that did win seats. For instance, a Libertarian voter in a state where Libertarians won 0 seats is still represented by their state's Democratic and Republican representatives.
+
+\textbf{Tie-breaking}
+
+When vote shares yield ambiguous seat allocation (e.g., exact ties between parties' quotients), we use the largest remainder method \citep{gallagher2011election}: allocate each party $\lfloor v_i \cdot N \rfloor$ seats initially, then assign remaining seats to parties with the largest fractional remainders. This ensures deterministic, replicable outcomes.
+
+\textbf{Population constraints}
+
+Districts must satisfy the Supreme Court's ``one person, one vote'' standard \citep{reynolds1964}, requiring population equality within each party's set of districts. We enforce a maximum deviation of 0.5\% from the ideal district population, consistent with current redistricting practice. Importantly, \emph{districts from different parties need not have equal population to each other}, as they are elected separately. Democratic District 1 might have 765,000 residents while Republican District 1 has 780,000 residents; what matters is that all Democratic districts have roughly equal population (within the party's map) and all Republican districts have roughly equal population (within their map).
+
+This system design achieves proportional representation through a simple two-stage process: proportional seat allocation followed by independent geometric districting. The overlap of party-specific districts is the key innovation, enabling proportionality without abandoning single-member geographic representation.

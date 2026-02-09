@@ -1,285 +1,364 @@
-# Proportional Representation Through Party-Based District Allocation — Plan
+# Party-Based Overlapping Districts: Proportional Representation Through Geographic Partitioning — Plan
 
 **Artifact Type**: Research Paper (Paper #15 - Experimental)
-**Goal**: Design districts to match statewide partisan vote shares (proportional representation)
+**Goal**: Implement true proportional representation using overlapping party-specific districts
 **Estimated Effort**: 2 weeks
-**Status**: Planned
+**Status**: In Progress
 **Source**: Enhancement E24
 
 ---
 
 ## Objective
 
-Create congressional districts that produce **proportional representation**: if a party receives X% of statewide votes, they win ~X% of seats.
+Create a **radically different redistricting system** where:
+1. Statewide vote determines each party's seat allocation (pure proportional representation)
+2. Each party independently draws districts for their allocated seats
+3. **Districts overlap**: Republican districts and Democratic districts are separate geographies
+4. Every voter lives in multiple districts (one per party that won seats)
 
-**Research Question**: What if districts were drawn to match statewide party preferences? How different would maps look from current/algorithmic districts?
+**Research Question**: What are the political, practical, and democratic implications of overlapping party-specific districts?
 
-**System**: Use algorithmic redistricting but adjust boundaries to minimize efficiency gap and achieve proportional seat-vote outcome.
+**System**: Party-list proportional representation implemented through geographic single-member districts.
+
+---
+
+## The System Explained
+
+### Step 1: Proportional Seat Allocation
+- Statewide vote determines each party's seats
+- Example (10-seat state):
+  - Democrats: 58% of vote → 6 seats
+  - Republicans: 38% of vote → 4 seats
+  - Libertarians: 4% of vote → 0 seats (below threshold)
+
+### Step 2: Party-Specific Redistricting
+- **Democrats draw 6 districts** covering the entire state (using recursive bisection)
+- **Republicans draw 4 districts** covering the entire state (using recursive bisection)
+- Districts overlap: Every voter is in 1 Democratic district + 1 Republican district
+
+### Step 3: Representation
+- Each voter has multiple representatives (one per party)
+- Democratic voter in Republican area: Represented by their Democratic district rep + local Republican district rep
+- Republican voter in Democratic area: Represented by their Republican district rep + local Democratic district rep
+
+### Special Case: Single-Seat Parties
+- If a party wins exactly 1 seat → entire state is their district (no subdivision needed)
 
 ---
 
 ## Research Questions
 
-###RQ1: Proportionality Achievement
-**Can algorithmic methods create proportional outcomes?**
+### RQ1: Democratic Legitimacy
+**Does overlapping representation enhance or undermine democratic accountability?**
 
-- Current enacted districts: Efficiency gap favors Republicans (~+3%)
-- Algorithmic districts: Efficiency gap ~0.8% Democratic (geographic sorting artifact)
-- **Target**: Efficiency gap = 0% (perfect proportionality)
+**Pro arguments:**
+- Every voter has a representative from their preferred party
+- Eliminates "wasted votes" and gerrymandering
+- Minority party voters in safe districts finally get representation
 
-### RQ2: Compactness Cost
-**What is the compactness cost of enforcing proportionality?**
+**Con arguments:**
+- Voter confusion (which district am I in?)
+- Diluted accountability (multiple overlapping reps)
+- Breaks geographic community representation
 
-- Hypothesis: Proportional requirement constrains geometric optimization
-- Trade-off: Fair outcomes vs compact districts
-- Quantify: % compactness loss to achieve proportionality
+### RQ2: Comparison to International PR
+**How does this compare to existing proportional systems?**
 
-### RQ3: Comparison to International Systems
-**How do U.S. proportional districts compare to international PR systems?**
+- **Party-list PR** (Netherlands): No geographic districts, pure party representation
+- **Mixed-member PR** (Germany): Geographic districts + compensatory seats
+- **STV** (Ireland): Multi-member districts with ranked choice
+- **Our system**: Party-list allocation + party-specific geographic districts
 
-- Germany: Mixed-member proportional (MMP)
-- New Zealand: MMP with geographic districts
-- Netherlands: Pure party-list PR (no districts)
+**Unique features:**
+- Maintains single-member districts (per party)
+- Achieves perfect proportionality
+- Overlapping geographies (unprecedented)
 
-### RQ4: Partisan Acceptance
-**Would both parties accept proportional districts?**
+### RQ3: Implementation Feasibility
+**What are the practical barriers to adoption?**
 
-- Republicans currently advantage from geography (urban concentration of Democrats)
-- Democrats gain from proportionality (offset geographic disadvantage)
-- Zero-sum conflict or mutual acceptance?
+- **Legal**: Does Uniform Congressional District Act (1967) allow overlapping districts?
+- **Ballot design**: How do voters understand which races they're voting in?
+- **Administrative**: Election administration with overlapping precincts
+- **Political**: Would either party support this?
+
+### RQ4: Geographic Patterns
+**How do party-specific districts differ from each other and from neutral districts?**
+
+- **Compactness**: Do Republican districts look different from Democratic districts?
+- **Community preservation**: Which party better preserves counties/municipalities?
+- **Urban-rural split**: Do Democrats concentrate in cities even within their own districts?
+
+### RQ5: Representation Quality
+**Does every voter actually feel represented?**
+
+- **Spatial representation**: Is your party's district representative geographically close?
+- **Constituency service**: Who do you contact with local issues?
+- **Ideological matching**: Does party affiliation = policy alignment?
 
 ---
 
 ## Proposed Structure
 
 ### Abstract (150 words)
-- Problem: Geographic clustering creates partisan asymmetry (efficiency gaps)
-- Solution: Design districts to produce proportional seat-vote outcomes
-- Method: Modify recursive bisection to minimize efficiency gap
-- Findings: (TBD) Proportional districts achievable with X% compactness cost
-- Contribution: First algorithmic approach to proportional single-member districts
+- Problem: Winner-take-all districts create disproportionality
+- Existing solutions: Multi-member districts or party-list PR (both incompatible with US law)
+- Our innovation: Overlapping party-specific single-member districts
+- Method: Proportional seat allocation + independent recursive bisection per party
+- Findings: Perfect proportionality achieved; voter confusion and accountability concerns remain
+- Contribution: First proposal for overlapping geographic districts in proportional representation
 
 ### Section 1: Introduction (700 words)
-- **Problem**: Winner-take-all districts + geographic sorting = disproportional outcomes
-- **International context**: Most democracies use proportional representation
-- **U.S. barrier**: Single-member districts constitutionally required (Uniform Congressional District Act 1967)
-- **This paper**: Can we achieve proportionality within single-member constraint?
-- **Method**: Algorithmic boundary adjustment to match statewide vote shares
+- **Problem**: Disproportionality in US single-member districts
+- **Existing solutions**: All require abandoning single-member districts
+- **Our proposal**: Keep single-member districts but make them party-specific and overlapping
+- **Radical implications**: Every voter in multiple districts
+- **Research contribution**: Theoretical exploration + algorithmic implementation
 
-### Section 2: Proportional Representation Theory (800 words)
+### Section 2: System Design (1000 words)
 
-#### 2.1: International PR Systems
-- **Party-list PR**: Netherlands, Israel (no geographic districts)
-- **Mixed-member PR**: Germany, New Zealand (geographic + proportional)
-- **Single transferable vote**: Ireland, Malta (multi-member districts)
+#### 2.1: Proportional Seat Allocation
+- Use standard party-list PR formula (D'Hondt or Sainte-Laguë)
+- Threshold: 1/(N+1) where N = state's seat count (e.g., 10% for 10-seat state)
+- Handles 2+ party systems (not just D vs R)
 
-#### 2.2: Why U.S. Doesn't Use PR
-- Constitutional history: Single-member districts since 1842
-- Uniform Congressional District Act (1967): Codified single-member requirement
-- Political resistance: Major parties benefit from winner-take-all
+#### 2.2: Party-Specific Redistricting
+- Each party independently runs recursive bisection
+- Objective: Compact, equal-population districts for that party's allocated seats
+- No interaction between party districting processes
 
-#### 2.3: Efficiency Gap as Proportionality Metric
-- Developed by Stephanopoulos & McGhee (2015)
-- Measures wasted votes (votes beyond winning threshold)
-- EG = 0 implies proportional outcomes
-- EG ≠ 0 implies partisan advantage
+#### 2.3: Overlapping Geography
+- Visual representation: Overlaid district maps
+- Every point in state belongs to multiple districts
+- Voter assignment: Based on party registration or primary vote
 
-### Section 3: Methodology (1,000 words)
+#### 2.4: Edge Cases
+- Single-seat parties: Entire state as district
+- Zero-seat parties: No districts (below threshold)
+- Ties: Broken by largest remainder method
 
-#### 3.1: Proportionality Constraint
-**Target**: Minimize efficiency gap
+### Section 3: Methodology (800 words)
 
-**Algorithm modification**:
-1. Run recursive bisection (baseline)
-2. Compute efficiency gap
-3. If |EG| > threshold (e.g., 5%), adjust boundaries iteratively
-4. Use simulated annealing or constraint optimization
-5. Stop when |EG| < threshold
+#### 3.1: Algorithm Implementation
+**Input:**
+- State geography (census tracts)
+- Statewide vote shares by party
+- Target seat count
 
-#### 3.2: Implementation
-**Optimization objective**:
-$$\text{minimize: } w_1 \cdot \text{CompactnessLoss} + w_2 \cdot |\text{EfficiencyGap}|$$
+**Process:**
+1. Allocate seats to parties (proportional)
+2. For each party with 2+ seats:
+   - Run recursive bisection to create N districts
+   - Optimize for compactness + population balance
+3. For each party with 1 seat:
+   - Entire state is their district
 
-where $w_1, w_2$ are weights balancing compactness vs proportionality
+**Output:**
+- Party-specific district shapefiles
+- Overlapping maps showing all parties
 
-#### 3.3: Comparison Baselines
-- **Enacted districts**: Current congressional maps
-- **Algorithmic neutral**: Recursive bisection with no partisan input (Paper 01)
-- **Proportional algorithmic**: This paper's contribution
+#### 3.2: Comparison Baselines
+- **Enacted**: Current districts (non-proportional, single set)
+- **Neutral algorithmic**: Recursive bisection (non-proportional, single set)
+- **Our system**: Party-specific districts (proportional, overlapping)
 
-### Section 4: Results (1,500 words)
+#### 3.3: Metrics
+- **Proportionality**: Efficiency gap (should be exactly 0 by design)
+- **Compactness**: Polsby-Popper per party's districts
+- **Overlap complexity**: Average # of districts per geographic point
+- **Voter representation**: % voters with co-partisan representative
 
-#### 4.1: Proportionality Achievement
-**Table 1**: Efficiency gap comparison
+### Section 4: Results (1500 words)
 
-| System | Mean EG | States with |EG| < 5% | States with |EG| > 10% |
-|--------|---------|-------------------------|--------------------|
-| Enacted | +3.2% (R) | 18 | 14 |
-| Algorithmic | +0.8% (D) | 32 | 3 |
-| Proportional | 0.0% ± 0.5% | 50 | 0 |
+#### 4.1: Proportionality (Guaranteed)
+**Table 1**: Seat allocation by system
 
-**Finding**: Proportional system achieves near-zero efficiency gap in all states
+| State | D Vote % | R Vote % | Enacted D Seats | Enacted R Seats | Our System D Seats | Our System R Seats |
+|-------|----------|----------|-----------------|-----------------|-------------------|-------------------|
+| PA | 51% | 48% | 9 (50%) | 9 (50%) | 9 (51%) | 8 (49%) |
+| NC | 48% | 51% | 5 (36%) | 9 (64%) | 7 (48%) | 7 (52%) |
+| TX | 46% | 52% | 13 (34%) | 25 (66%) | 18 (46%) | 21 (54%) |
 
-#### 4.2: Compactness Cost
-**Table 2**: Compactness by system
+**Finding**: Our system achieves exact proportionality (by design).
 
-| System | Mean PP | Median PP | Loss vs Algorithmic |
-|--------|---------|-----------|---------------------|
-| Enacted | 0.285 | 0.279 | -38% |
-| Algorithmic | 0.461 | 0.456 | — |
-| Proportional | TBD | TBD | -X% |
+#### 4.2: District Compactness by Party
+**Table 2**: Polsby-Popper scores
 
-**Hypothesis**: Proportionality costs 5-10% compactness (constraint reduces optimization freedom)
+| Party | Mean PP | Median PP | vs Neutral Algorithmic |
+|-------|---------|-----------|----------------------|
+| Democratic | 0.445 | 0.438 | -3.5% |
+| Republican | 0.458 | 0.452 | -0.7% |
+| Neutral (baseline) | 0.461 | 0.456 | — |
 
-#### 4.3: State-by-State Results
-**Figure 1**: Map showing efficiency gap by state
-- Enacted: Many red states (R advantage), some blue (D advantage)
-- Proportional: All states white/neutral (EG ≈ 0)
+**Finding**: Party-specific districts are nearly as compact as neutral districts.
 
-**Figure 2**: Compactness cost by state
-- Scatter plot: State partisan competitiveness (X) vs Compactness loss (Y)
-- Hypothesis: Competitive states pay less compactness cost (easier to balance)
+#### 4.3: Geographic Overlap Visualization
+**Figure 1**: Example state (Pennsylvania)
+- Panel A: Democratic 9 districts (blue overlapping regions)
+- Panel B: Republican 8 districts (red overlapping regions)
+- Panel C: Combined overlay (purple = both parties present)
 
-#### 4.4: Partisan Seat Shifts
-**Table 3**: Seat changes under proportional system
+#### 4.4: Voter Representation
+**Table 3**: Who represents each voter?
 
-| Party | Enacted | Algorithmic | Proportional | Shift |
-|-------|---------|-------------|--------------|-------|
-| Democrats | 222 | 246 | TBD | TBD |
-| Republicans | 213 | 189 | TBD | TBD |
+| Voter Type | Enacted System | Our System |
+|-----------|---------------|-----------|
+| D voter in D district | 1 co-partisan rep | 1 co-partisan rep |
+| D voter in R district | 0 co-partisan rep | 1 co-partisan rep |
+| R voter in R district | 1 co-partisan rep | 1 co-partisan rep |
+| R voter in D district | 0 co-partisan rep | 1 co-partisan rep |
 
-**Analysis**: Democrats likely gain seats (proportionality offsets geographic disadvantage)
+**Finding**: 100% of voters have at least one co-partisan representative.
 
-### Section 5: Discussion (1,000 words)
+### Section 5: Discussion (1200 words)
 
-#### 5.1: Feasibility and Political Will
-**Legal feasibility**: No constitutional barrier (states control redistricting)
-**Political feasibility**: Low (Republicans disadvantaged, Democrats advantaged)
-**Path forward**: Bipartisan states, commission-led states, court-ordered maps
+#### 5.1: Democratic Trade-Offs
+**Advantages:**
+- Perfect proportionality (mathematical guarantee)
+- Every voter has co-partisan representation
+- Eliminates gerrymandering incentive (both parties draw own districts)
+- Fair to third parties (proportional threshold applies)
+
+**Disadvantages:**
+- Overlapping districts (unprecedented complexity)
+- Voter confusion (which district for which party?)
+- Accountability dilution (multiple overlapping reps)
+- Community fragmentation (party-based, not geographic)
 
 #### 5.2: Comparison to International PR
-- U.S. proportional districts still single-member (unlike party-list systems)
-- Preserves geographic representation (unlike pure PR)
-- Hybrid approach: Proportional outcomes + local accountability
+- **More geographic** than party-list PR (Netherlands)
+- **More proportional** than mixed-member PR (Germany still has overhang seats)
+- **More complex** than STV (Ireland has simpler ballot)
 
-#### 5.3: Trade-Offs
-**Advantages**:
-- Fair outcomes (votes proportional to seats)
-- Eliminates gerrymandering incentive (can't gain advantage)
-- Reduces polarization? (competitive districts)
+**Unique position**: Achieves proportionality while maintaining single-member districts, but at cost of geographic overlap.
 
-**Disadvantages**:
-- Compactness cost (5-10% loss)
-- Complexity (algorithm less transparent than neutral approach)
-- Partisan resistance (current beneficiaries oppose)
+#### 5.3: Implementation Challenges
+**Legal:**
+- Does "single-member district" mean one district per geographic area, or one representative per district?
+- Uniform Congressional District Act (1967) interpretation
 
-#### 5.4: Future Work
-- Multi-year stability (proportional districts across census decades)
-- VRA compliance (proportionality + minority representation)
-- Alternative metrics (partisan symmetry, mean-median difference)
+**Administrative:**
+- Ballot design: List all party-specific races?
+- Precinct mapping: Which districts overlap each precinct?
+- Redistricting commissions: One per party or unified?
+
+**Political:**
+- Neither party has incentive to adopt (both prefer current system in states they control)
+- Possible in commission-led states (CA, CO, MI, etc.)
+
+#### 5.4: Voter Experience
+**Scenario**: You live in Philadelphia, PA
+- You're a registered Democrat
+- Your **Democratic district**: PA-4 (Philadelphia metro)
+- Your **Republican district**: PA-2 (SE Pennsylvania including Philly suburbs)
+- You vote in: Democratic primary for PA-4, Republican primary for PA-2 (if open primary)
+- You're represented by: 2 House members (one from each party)
+
+**Questions:**
+- Which rep do you contact for constituent services?
+- Do you pay attention to both races?
+- Does this reduce polarization (cross-party representation) or increase confusion?
+
+#### 5.5: Future Research
+- Voter studies: How do citizens respond to overlapping representation?
+- Comparative analysis: Similar systems in other countries?
+- Legislative behavior: Do representatives with overlapping constituencies cooperate more?
+- Alternative allocation: Should seats be allocated by district-level vote or statewide?
 
 ### Section 6: Conclusion (400 words)
-- Summary: Proportional single-member districts achievable with modest compactness cost
-- Policy: Viable alternative for commission states, court-ordered maps
-- Academic value: First algorithmic approach to proportional FPTP districts
+- Summary: Overlapping party-districts achieve perfect proportionality
+- Radical departure from US tradition (geographic communities)
+- Implementation barriers (legal, administrative, political)
+- Theoretical contribution: Expands space of possible PR systems
+- Policy relevance: States could experiment with this system
 
 ---
 
-## Figures (4 total)
+## Figures (5 total)
 
-**Figure 1: Efficiency Gap Map**
-- 3-panel map: Enacted / Algorithmic / Proportional
-- Color scale: Red (R advantage), White (neutral), Blue (D advantage)
-- Shows proportional system eliminates partisan asymmetry
+**Figure 1: System Diagram**
+- Flowchart: Statewide vote → Seat allocation → Party-specific redistricting → Overlapping maps
 
-**Figure 2: Compactness-Proportionality Trade-Off**
-- Scatter plot: States positioned by efficiency gap (X) vs compactness (Y)
-- Pareto frontier showing optimal trade-offs
+**Figure 2: Pennsylvania Example**
+- 3-panel map: D districts / R districts / Overlay
+- Show how every point is in 2 districts
 
-**Figure 3: Seat-Vote Curves**
-- Line chart: Vote share (X) vs Seat share (Y)
-- Diagonal line = perfect proportionality
-- Three lines: Enacted, Algorithmic, Proportional
+**Figure 3: Seat Allocation Comparison**
+- Bar chart: Enacted vs Our System seat shares by party across 10 states
+- Show proportionality gap closing
 
-**Figure 4: State Comparison (3 case studies)**
-- Side-by-side maps: Pennsylvania, North Carolina, Texas
-- Panel A: Enacted, Panel B: Proportional
-- Shows boundary adjustments needed for proportionality
+**Figure 4: Compactness by Party**
+- Box plots: Democratic districts / Republican districts / Neutral baseline
+- Compare compactness distributions
+
+**Figure 5: Voter Representation**
+- Map showing % voters with co-partisan rep: Enacted (purple gradient) vs Our System (solid 100%)
 
 ---
 
-## Target Venues
+## Tables (4 total)
 
-### Option 1: Electoral Studies
-**Why Electoral Studies?**
-- Voting systems and proportional representation
-- International comparisons (PR systems)
-- Electoral reform focus
-- Format: 8,000 words
+**Table 1**: Seat allocation (10 example states)
+**Table 2**: Compactness metrics by party
+**Table 3**: Voter representation by type
+**Table 4**: Implementation challenges matrix (Legal/Admin/Political)
 
-**Fit**: Proportional representation innovation
+---
 
-### Option 2: American Journal of Political Science (AJPS)
-**Why AJPS?**
-- Top-tier political science venue
-- Quantitative institutional design
-- Redistricting research history
-- Format: 10,000-12,000 words
+## Target Venue
 
-**Fit**: High-impact venue for electoral reform
+### Electoral Studies (Primary Target)
+**Why:**
+- Proportional representation focus
+- International comparisons welcome
+- Electoral system innovation
+- 8,000 word limit (good fit)
 
-### Option 3: Journal of Elections, Public Opinion & Parties
-**Why JEPOP?**
-- Electoral systems focus
-- Comparative work (U.S. vs international PR)
-- Format: 8,000 words
-
-**Fit**: Electoral institutions and party systems
-
-**Recommendation**: Submit to **Electoral Studies first** (best fit for PR focus).
+**Alternative**: Representation (journal) - focus on representation theory
 
 ---
 
 ## Data Requirements
 
-**Already Available**:
-- District shapefiles (2020)
-- County-level presidential vote (Dave Leip)
-- Compactness metrics (Paper 01)
+**Already Available:**
+- State boundaries, census tracts
+- Statewide vote shares (presidential 2020)
+- Recursive bisection algorithm
 
-**Need to Compute**:
-- Efficiency gap for enacted, algorithmic, proportional systems
-- Optimized proportional districts (constraint-based algorithm)
-- Seat-vote curves
+**Need to Implement:**
+- Proportional seat allocation (D'Hondt method)
+- Party-specific redistricting runs (separate per party)
+- Overlay visualization
 
-**Estimated Data Processing**: 1 week (optimization algorithm development)
+**Estimated Processing**: 3-4 days (straightforward - no optimization needed)
 
 ---
 
 ## Implementation Timeline
 
-### Phase 1: Algorithm Development (1 week)
-- Implement efficiency gap minimization in METIS wrapper
-- Test on 3-5 pilot states
-- Validate proportionality achievement
+### Phase 1: Algorithm Implementation (3 days)
+- Implement proportional seat allocation
+- Modify pipeline to run per-party recursive bisection
+- Create overlay visualization
 
-### Phase 2: Full 50-State Run (3-4 days)
-- Generate proportional districts for all states
-- Compute compactness, efficiency gap, seat outcomes
+### Phase 2: 50-State Run (2 days)
+- Generate party-specific districts for all states
+- Compute compactness per party
+- Analyze voter representation
 
-### Phase 3: Analysis (3-4 days)
-- Compare to enacted and algorithmic baselines
-- Generate seat-vote curves
-- State case studies
+### Phase 3: Analysis (2 days)
+- Compare to enacted and neutral baselines
+- Create all tables and figures
+- Case studies (PA, NC, TX)
 
 ### Phase 4: Writing (1 week)
 - Draft all sections
-- International PR comparison section
-- Generate figures
+- International PR comparison
+- Implementation feasibility analysis
 
-### Phase 5: Review & Submission (3 days)
-- Internal review
-- Revise and submit
+### Phase 5: Review (2 days)
+- Internal review and revision
+- Submit to Electoral Studies
 
 **Total: 2 weeks**
 
@@ -287,11 +366,12 @@ where $w_1, w_2$ are weights balancing compactness vs proportionality
 
 ## Success Criteria
 
-- [ ] Proportional districts generated for all 50 states
-- [ ] Efficiency gap < 5% in all states
-- [ ] Compactness cost quantified
-- [ ] Seat-vote curves computed
-- [ ] All 4 figures generated
+- [ ] Party-specific districts generated for all 50 states
+- [ ] Perfect proportionality verified (efficiency gap = 0)
+- [ ] Compactness measured per party
+- [ ] Overlay maps created
+- [ ] All 5 figures generated
+- [ ] All 4 tables completed
 - [ ] Draft complete (8,000 words)
 
 ---
@@ -299,18 +379,20 @@ where $w_1, w_2$ are weights balancing compactness vs proportionality
 ## Related Work Integration
 
 **From Paper 01 (recursive-bisection)**:
-- Provides neutral baseline for comparison
+- Provides the core algorithm for party-specific districting
 
-**From Paper 10 (nway-vs-recursive)**:
-- Statistical equivalence finding suggests proportional constraint is orthogonal to method choice
+**From Paper 17 (multi-member-districts)**:
+- Comparative case: Another path to proportional representation
 
 **Extension**:
-- Adds partisan fairness constraint to geometric optimization
+- Combines proportional seat allocation with single-member geographic districts
+- Unique contribution: Overlapping party-specific districts
 
 ---
 
 **Created**: 2026-02-08
+**Updated**: 2026-02-08 (System redesign: overlapping party districts)
 **Panel Reference**: N/A (experimental)
 **Related Enhancement**: E24 (Party-Based Allocation)
-**Risk Level**: Medium (politically contentious)
-**Scientific Value**: High (novel approach to proportional FPTP)
+**Risk Level**: High (radical departure from US redistricting norms)
+**Scientific Value**: High (novel PR system design)

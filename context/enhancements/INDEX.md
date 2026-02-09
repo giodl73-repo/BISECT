@@ -85,10 +85,11 @@ These fields enable:
 |---|-------|--------|-------|
 | [8](08_block_level_data.md) | Block-Level Data Support | Phase 0 Complete (2010), Partial (2000) | [View](08_block_level_data.md) |
 
-### 📋 Planned (23 enhancements)
+### 📋 Planned (24 enhancements)
 
 | # | Title | Priority | Wave | Files |
 |---|-------|----------|------|-------|
+| [65](active/65_huntington_hill_module.md) | Shared Huntington-Hill Apportionment Module | High | Research | [View](active/65_huntington_hill_module.md) |
 | [60](60_api_project_setup.md) | API Project Setup & Infrastructure | High | Wave 9 | [View](60_api_project_setup.md) |
 | [61](61_run_management_api.md) | Run Management API | High | Wave 9 | [View](61_run_management_api.md) |
 | [62](62_pipeline_execution_engine.md) | Pipeline Execution Engine | High | Wave 9 | [View](62_pipeline_execution_engine.md) |
