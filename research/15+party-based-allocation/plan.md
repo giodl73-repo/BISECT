@@ -334,12 +334,175 @@ Create a **radically different redistricting system** where:
 
 ---
 
+## Implementation Details
+
+### Component 1: Proportional Seat Allocation Module
+
+**File**: `src/apportionment/proportional/dhondt.py`
+
+**Function**: `allocate_seats_dhondt(vote_shares: dict, num_seats: int, threshold: float) -> dict`
+
+**Algorithm**:
+```python
+def allocate_seats_dhondt(vote_shares, num_seats, threshold):
+    """
+    Allocate seats using D'Hondt method.
+
+    Args:
+        vote_shares: {"Democratic": 0.51, "Republican": 0.49}
+        num_seats: Total seats for state (e.g., 17 for PA)
+        threshold: Minimum vote share to qualify (e.g., 1/(num_seats+1))
+
+    Returns:
+        {"Democratic": 9, "Republican": 8}
+    """
+    # Filter parties above threshold
+    eligible_parties = {p: v for p, v in vote_shares.items() if v >= threshold}
+
+    # Compute quotients for each seat
+    quotients = []
+    for party, votes in eligible_parties.items():
+        for divisor in range(1, num_seats + 1):
+            quotients.append((votes / divisor, party, divisor))
+
+    # Sort by quotient descending
+    quotients.sort(reverse=True, key=lambda x: x[0])
+
+    # Allocate seats
+    seat_allocation = {p: 0 for p in eligible_parties}
+    for i in range(num_seats):
+        _, party, _ = quotients[i]
+        seat_allocation[party] += 1
+
+    return seat_allocation
+```
+
+**Testing**:
+- Unit tests: Known examples (Germany, Netherlands)
+- Edge cases: Ties, single-seat states, threshold boundaries
+
+### Component 2: Party-Specific Redistricting Wrapper
+
+**File**: `scripts/pipeline/run_party_specific_redistricting.py`
+
+**Function**: Wrap existing `run_state_redistricting.py` to run multiple times per party
+
+**Algorithm**:
+```python
+def run_party_specific_redistricting(state, year, version):
+    """
+    Generate overlapping party-specific districts.
+
+    1. Load statewide vote shares (from presidential election)
+    2. Allocate seats to parties using D'Hondt
+    3. For each party with 2+ seats:
+       - Run recursive_bisection(state, year, version, party, num_seats)
+       - Save to outputs/{version}_{year}/{state}/{party}/districts.shp
+    4. For parties with 1 seat:
+       - Create whole-state district
+    5. Generate overlay visualization
+    """
+    # Step 1: Get vote shares
+    vote_shares = load_presidential_results(state, year)
+    # {"Democratic": 0.51, "Republican": 0.49, "Other": 0.00}
+
+    # Step 2: Allocate seats
+    num_seats = get_state_seat_count(state, year)
+    threshold = 1.0 / (num_seats + 1)
+    seat_allocation = allocate_seats_dhondt(vote_shares, num_seats, threshold)
+    # {"Democratic": 9, "Republican": 8}
+
+    # Step 3: Run redistricting per party
+    for party, seats in seat_allocation.items():
+        if seats >= 2:
+            # Run recursive bisection
+            run_recursive_bisection(
+                state=state,
+                year=year,
+                version=version,
+                party=party,
+                num_districts=seats
+            )
+        elif seats == 1:
+            # Create whole-state district
+            create_whole_state_district(state, year, version, party)
+
+    # Step 4: Overlay visualization
+    create_overlay_map(state, year, version, seat_allocation)
+```
+
+### Component 3: Modified Recursive Bisection
+
+**Modification**: Existing `src/apportionment/partition/recursive_bisection.py` needs NO changes
+
+**Why**: Already takes `num_districts` parameter. Just call it multiple times with different `num_districts` values per party.
+
+**Output Structure**:
+```
+outputs/party_v1_2020/
+├── pennsylvania/
+│   ├── democratic/
+│   │   ├── districts.shp  (9 districts)
+│   │   ├── compactness.csv
+│   │   └── metadata.json
+│   ├── republican/
+│   │   ├── districts.shp  (8 districts)
+│   │   ├── compactness.csv
+│   │   └── metadata.json
+│   └── overlay/
+│       ├── combined_map.png
+│       └── overlap_analysis.csv
+├── texas/
+│   ├── democratic/
+│   │   └── districts.shp  (18 districts)
+│   ├── republican/
+│   │   └── districts.shp  (21 districts)
+│   └── overlay/
+...
+```
+
+### Component 4: Overlay Visualization
+
+**File**: `scripts/visualization/create_party_overlay.py`
+
+**Function**: Generate maps showing overlapping districts
+
+**Visualization Types**:
+1. **3-panel map**: Democratic districts | Republican districts | Overlay
+2. **Animated GIF**: Cycle between party maps
+3. **Interactive HTML**: Leaflet map with party toggle
+
+**Key Metrics**:
+- Overlap depth: How many districts cover each point? (should be 2 in two-party system)
+- Compactness comparison: Democratic PP vs Republican PP vs Neutral PP
+- Population balance: Deviation within each party's districts
+
+### Component 5: Analysis Scripts
+
+**Proportionality Check** (`scripts/analysis/verify_proportionality.py`):
+- Compute efficiency gap (should be 0.0 by design)
+- Compare to enacted and neutral baselines
+- Generate Table 1 data
+
+**Compactness Analysis** (`scripts/analysis/compute_party_compactness.py`):
+- Polsby-Popper per party
+- Compare Democratic vs Republican vs Neutral
+- Generate Table 2 data
+
+**Voter Representation** (`scripts/analysis/analyze_representation.py`):
+- Assign voters to party districts
+- Compute % with co-partisan rep (should be 100%)
+- Compare to enacted baseline (60-70%)
+- Generate Table 3 data
+
+---
+
 ## Implementation Timeline
 
 ### Phase 1: Algorithm Implementation (3 days)
-- Implement proportional seat allocation
-- Modify pipeline to run per-party recursive bisection
-- Create overlay visualization
+- Day 1: Implement D'Hondt allocation (dhondt.py + tests)
+- Day 2: Create party-specific wrapper (run_party_specific_redistricting.py)
+- Day 3: Test on 3 pilot states (PA, TX, CA)
 
 ### Phase 2: 50-State Run (2 days)
 - Generate party-specific districts for all states
