@@ -52,6 +52,10 @@ But we contend that once humans establish redistricting criteria, algorithms can
 
 Eighty years ago, Congress faced an analogous legitimacy crisis in apportionment. Huntington-Hill resolved it not by finding perfect fairness—which mathematically cannot exist—but by establishing procedural legitimacy through mathematical objectivity. Redistricting today faces a similar crisis. Algorithmic approaches offer a similar solution.
 
+\subsection{Research Program Context}
+
+This paper introduces the foundational method for a broader research program investigating recursive bisection for congressional redistricting. Subsequent work extends this baseline approach with compactness optimization through edge-weighted graph partitioning, adds demographic awareness for Voting Rights Act compliance, and systematically investigates the method's properties across parameter variations, temporal stability over multiple census decades, and comparisons to alternative partitioning strategies. Together, these studies demonstrate that graph-based redistricting offers a computationally efficient, legally defensible, and democratically legitimate approach to boundary design that addresses the core legitimacy crisis identified above.
+
 \subsection{Road Map}
 
 The remainder of this paper proceeds as follows. Section~\ref{sec:huntington} examines the Huntington-Hill precedent in detail, identifying the principles that enabled mathematical governance of apportionment and how those principles extend to redistricting. Section~\ref{sec:methodology} describes our recursive bisection algorithm, including graph construction, water-based adjacency handling, and the METIS partitioning library. Section~\ref{sec:results} presents population balance and compactness statistics for all 435 algorithmically-generated districts. Section~\ref{sec:analysis} overlays election data to analyze political characteristics and partisan patterns. Section~\ref{sec:discussion} discusses advantages and limitations, compares our approach to alternatives, and examines policy implications. Section~\ref{sec:conclusion} concludes with reflections on mathematical governance and democratic legitimacy.
