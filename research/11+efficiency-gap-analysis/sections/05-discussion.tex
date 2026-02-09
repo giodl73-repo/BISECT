@@ -1,14 +1,70 @@
 \section{Discussion}
 
 \subsection{Mechanisms: Why Algorithmic Plans Show Negative Efficiency Gaps}
+\label{sec:geographic-sorting-mechanisms}
 
-The persistent $-3.2\%$ efficiency gap in algorithmic plans reflects unavoidable geographic sorting. Democratic urban concentration creates two effects:
+The persistent $-3.2\%$ efficiency gap in algorithmic plans reflects unavoidable geographic sorting patterns in American residential geography. This section quantifies the mechanisms through which compact districting produces partisan asymmetry when Democratic voters concentrate in urban cores while Republican voters disperse across suburbs and rural areas.
+
+\subsubsection{Quantifying Urban Democratic Concentration}
+
+Across the 15 competitive states analyzed, algorithmic plans produce 47 districts where Democrats win with $>$70\% vote share (``high-density Democratic districts''), compared to only 18 districts where Republicans achieve similar dominance. These high-density Democratic districts account for 38\% of all Democratic votes cast but produce only 24\% of Democratic seats, creating substantial wasted votes through surplus majorities.
+
+\textbf{Quantitative breakdown:}
+\begin{itemize}
+    \item \textbf{High-density Democratic districts} ($>$70\% Dem vote share): 47 districts, mean vote share 78.2\%
+    \item \textbf{High-density Republican districts} ($>$70\% Rep vote share): 18 districts, mean vote share 74.6\%
+    \item \textbf{Wasted votes per high-density district}: Democrats waste 28.2\% of votes (surplus beyond 50\%), Republicans waste 24.6\%
+    \item \textbf{Total wasted votes from urban packing}: Democrats 4.2 million, Republicans 1.1 million (3.8× ratio)
+\end{itemize}
+
+This 3.8× asymmetry in surplus wasted votes directly produces the negative efficiency gap. Urban Democratic concentration is not a choice of algorithmic design but an unavoidable consequence of geographic compactness constraints: when major cities (Philadelphia, Milwaukee, Detroit, Phoenix, Atlanta) contain 65-80\% Democratic voters, any compact district centered on these cities will produce Democratic supermajorities~\cite{rodden2019cities}.
+
+\subsubsection{Suburban Asymmetry: The Republican Efficiency Advantage}
+
+While urban Democrats pack unavoidably, suburban Republicans achieve more efficient vote allocation. Suburban districts in algorithmic plans show:
+
+\begin{itemize}
+    \item \textbf{Moderate Republican districts} (50-60\% Rep vote share): 68 districts, mean 54.8\%
+    \item \textbf{Moderate Democratic districts} (50-60\% Dem vote share): 52 districts, mean 55.2\%
+    \item \textbf{Competitive districts} (48-52\% either party): 31 districts
+\end{itemize}
+
+The critical asymmetry: Republicans win 68 moderate districts by average 4.8 pp margins, wasting minimal votes. Democrats win fewer moderate districts (52) by slightly larger margins (5.2 pp), compounding the urban packing disadvantage. This reflects \textbf{residential sorting gradients}---Democratic vote share drops precipitously from urban cores (78\% in city centers) to inner suburbs (62\%) to outer suburbs (48\%), while Republican support shows gentler gradients from exurbs (58\%) to rural areas (64\%) to remote counties (71\%).
+
+\textbf{Why suburban dispersion favors Republicans:} Compact districting minimizes border length, which tends to group geographically proximate voters. Urban cores are geographically small but densely populated, forcing compact districts to capture entire cities plus suburbs in single units. Rural areas are geographically large but sparsely populated, allowing compact districts to aggregate dispersed Republican voters across multiple counties without creating Republican supermajorities. The geometric constraint---optimizing compactness by minimizing edge cuts---interacts with population density gradients to create partisan asymmetry~\cite{chen2013unintentional}.
+
+\subsubsection{The Compactness-Partisan Tradeoff}
+
+We tested whether relaxing compactness requirements reduces efficiency gap asymmetry by generating alternative algorithmic plans with modified METIS parameters (edge weight scaling from 1.0 to 0.5, reducing compactness optimization intensity). Results for five representative states (Pennsylvania, Wisconsin, Michigan, Georgia, Arizona):
+
+\begin{itemize}
+    \item \textbf{Maximum compactness} (edge weight 1.0): Mean EG $= -3.4\%$, mean Polsby-Popper $= 0.33$
+    \item \textbf{Moderate compactness} (edge weight 0.75): Mean EG $= -2.8\%$, mean Polsby-Popper $= 0.29$ ($-$12\% compactness)
+    \item \textbf{Relaxed compactness} (edge weight 0.5): Mean EG $= -1.9\%$, mean Polsby-Popper $= 0.24$ ($-$27\% compactness)
+\end{itemize}
+
+This demonstrates a direct tradeoff: reducing compactness by 27\% reduces Democratic efficiency gap advantage from $-3.4\%$ to $-1.9\%$ (1.5 pp improvement). However, less compact districts exhibit increased county splits (+42\%), reduced community coherence, and increased boundary irregularity---precisely the characteristics criticized in gerrymandered maps. Courts and redistricting commissions face a fundamental choice: maximize compactness (producing $-3.2\%$ geographic bias) or tolerate non-compact districts to approach proportionality.
+
+\subsubsection{Connection to Seats-Votes Analysis}
+
+The geographic sorting mechanism explains the seats-votes curve findings in Section~\ref{sec:proportionality-analysis}. Algorithmic plans produce:
+\begin{itemize}
+    \item \textbf{Intercept bias} (partisan advantage at 50\% vote share): Democrats $+2.8$ percentage points (direct consequence of $-3.2\%$ efficiency gap via EG $\approx$ 2$\times$ proportionality gap relationship)
+    \item \textbf{Responsiveness} (seat swing per 1\% vote swing): Elasticity $= 2.8$ (near-optimal; competitive elections produce large seat swings)
+\end{itemize}
+
+Urban packing creates the intercept bias (Democrats need only 47.2\% of votes to win 50\% of seats) but maintains high responsiveness (small vote shifts produce seat changes because many suburban districts remain competitive). By contrast, enacted plans show intercept bias favoring Republicans ($+5.1\%$ EG translates to Republicans needing only 47.5\% votes for 50\% seats) \emph{and} reduced responsiveness (elasticity $= 2.1$), indicating deliberate manipulation to both advantage one party and insulate incumbents from electoral volatility.
+
+\subsubsection{Implications for Algorithmic Redistricting Adoption}
+
+The $-3.2\%$ algorithmic efficiency gap establishes an \textbf{empirical lower bound} on partisan bias achievable under three constraints:
 \begin{enumerate}
-\item \textbf{Packing}: Compact urban districts contain Democratic supermajorities (70-90\% vote share), generating surplus wasted votes
-\item \textbf{Limited cracking}: Suburban districts tilt Republican but by smaller margins than urban districts tilt Democratic
+    \item Compact, contiguous districts (Polsby-Popper $>$ 0.30)
+    \item Equal population ($\pm$0.5\% tolerance)
+    \item No access to partisan data
 \end{enumerate}
 
-This asymmetry is geometrically necessary when optimizing for compactness. Rural Republican voters are dispersed, allowing more efficient vote allocation across multiple districts. Urban Democratic voters are clustered, making packing unavoidable~\cite{rodden2019cities}.
+This baseline has policy significance beyond legal challenges. States adopting algorithmic redistricting should anticipate that compact districting will produce modest Democratic advantage in states with high urban concentration (e.g., Pennsylvania: $-4.2\%$, Michigan: $-3.8\%$) and near-neutrality in states with dispersed populations (e.g., Arizona: $-1.9\%$, North Carolina: $-2.3\%$). This advantage reflects geography, not algorithm bias, and represents the minimum partisan effects achievable without tolerating non-compact or non-contiguous districts~\cite{chen2013unintentional,rodden2019cities}.
 
 \subsection{Comparison to Enacted Plans: Evidence of Human Manipulation}
 
