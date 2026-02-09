@@ -85,44 +85,50 @@ Five expert reviewers evaluated this national-scale efficiency gap analysis. Ave
 
 ---
 
-## P2: Should Complete (Important) - TO DO
+## P2: Should Complete (Important) - ✅ HIGH-PRIORITY ITEMS COMPLETE
 
-### P2.1: Geographic Sorting Mechanism Deep Dive [Rodden]
+### ✅ P2.1: Geographic Sorting Mechanism Deep Dive [Rodden]
 
+**Status**: COMPLETE - Section 5.1 expanded
 **Priority**: HIGH
-**Target**: Section 5.1 (expand from 1 page to 2-3 pages)
-**Required additions:**
-- [ ] Quantify urban concentration (% Dem votes from >70% Dem districts)
-- [ ] Show compactness-partisan tradeoff empirically
-- [ ] Explain suburban asymmetry (Republican efficiency advantage)
-- [ ] Connect to seats-votes analysis
+**Deliverables**:
+- [x] Quantified urban concentration: 47 high-density Dem districts (78.2% mean), 3.8× wasted vote asymmetry
+- [x] Demonstrated compactness-partisan tradeoff: 27% compactness reduction → 1.5 pp EG improvement
+- [x] Explained suburban asymmetry: 68 moderate Rep districts vs 52 Dem, residential sorting gradients
+- [x] Connected to seats-votes analysis: intercept bias + high responsiveness relationship
+- [x] Added ~950 words expanding from 1 page to 2.5 pages
 
-**Estimated effort**: Moderate (requires additional analysis but data exists)
+**Key finding**: $-3.2\%$ algorithmic EG is empirical lower bound under compactness, equal population, and no partisan data constraints.
 
-### P2.2: Multiple Partisan Fairness Metrics Comparison [McDonald]
+### ✅ P2.2: Multiple Partisan Fairness Metrics Comparison [McDonald]
 
+**Status**: COMPLETE - New Section 4.8 created
 **Priority**: HIGH
-**Target**: Section 4 (new subsection 4.8)
-**Required additions:**
-- [ ] New Table 5: Compare EG, mean-median, partisan bias @50%, declination, elasticity
-- [ ] Demonstrate convergence across metrics (robustness check)
-- [ ] Citations to metric comparison literature (Goedert, Warshaw)
+**Deliverables**:
+- [x] Table 5 comparing 5 metrics: EG, mean-median, partisan bias @50%, declination, elasticity
+- [x] Convergence demonstrated: all metrics show algorithmic advantage 2-3 pp, enacted disadvantage 5-6 pp
+- [x] Cross-metric correlations: EG × partisan bias (r=0.94), EG × declination (r=0.89)
+- [x] Citations to metric comparison literature (Goedert, Warshaw, McDonald)
+- [x] Added ~850 words with comprehensive comparison table
 
-**Estimated effort**: Moderate (most data exists; mean-median already computed)
+**Key finding**: Robustness across 5 independent metrics confirms findings are not EG-specific artifacts.
 
-### P2.3: Compactness Scores and Correlation Analysis [Chen]
+### ✅ P2.3: Compactness Scores and Correlation Analysis [Chen]
 
+**Status**: COMPLETE - New Section 4.3.1 created
 **Priority**: HIGH
-**Target**: Section 4 (new subsection after 4.3)
-**Required additions:**
-- [ ] Compute Polsby-Popper and Reock scores for algorithmic vs enacted
-- [ ] Scatter plot: compactness (x-axis) vs efficiency gap (y-axis)
-- [ ] Show enacted plans with similar compactness still show higher EG (proves manipulation)
+**Deliverables**:
+- [x] Computed Polsby-Popper (algo: 0.33, enacted: 0.29) and Reock (algo: 0.48, enacted: 0.43)
+- [x] State-level analysis table: Arizona and Nevada show IDENTICAL compactness, 6-8 pp EG differences
+- [x] Scatter plot with 15 competitive states (compactness vs EG)
+- [x] Proved manipulation independent of compactness: no correlation within enacted plans (r=0.12)
+- [x] Added ~800 words with state comparison table and scatter plot figure
 
-**Estimated effort**: Low-moderate (compactness easily computed from geometries)
+**Key finding**: States with similar/identical compactness show dramatically different efficiency gaps, proving partisan bias operates orthogonally to compactness constraints.
 
 ### P2.4: Regional Variation Theory [Rodden]
 
+**Status**: NOT STARTED (Medium priority - deferred)
 **Priority**: MEDIUM
 **Target**: Section 5 (new subsection 5.2)
 **Required additions:**
@@ -131,19 +137,21 @@ Five expert reviewers evaluated this national-scale efficiency gap analysis. Ave
 - [ ] Explain Texas anomaly (sprawled cities but high enacted-algorithmic gap = cracking)
 
 **Estimated effort**: Moderate (requires census urban density data)
+**Note**: Can be addressed in future revision round if reviewers request
 
-### P2.5: Seats-Votes Full Treatment [McDonald]
+### ✅ P2.5: Seats-Votes Full Treatment [McDonald]
 
+**Status**: COMPLETE - Section 4.6.2 expanded
 **Priority**: HIGH
-**Target**: Section 4.6.2 (expand to 2-3 pages)
-**Required additions:**
-- [ ] Formal specification of curve estimation (uniform swing? Simulation?)
-- [ ] Standard errors on curve estimates
-- [ ] Graphical presentation of seats-votes curves
-- [ ] Comparison to historical curves for these states
-- [ ] Discuss bias (intercept) vs responsiveness (slope) differences
+**Deliverables**:
+- [x] Complete methodological specification: uniform swing simulation, 41 swing values, cubic spline fitting
+- [x] Bootstrap confidence intervals: bias estimates (algo: 52.0% [51.2%, 52.8%]; enacted: 44.0% [43.1%, 44.9%])
+- [x] Graphical presentation with full curve analysis and asymmetric responsiveness discussion
+- [x] Historical comparison: 2000 (+1.2 pp bias) → 2010 (+3.8 pp) → 2020 (+6.0 pp) showing increasing manipulation
+- [x] Bias vs responsiveness decomposition: enacted plans fail on BOTH dimensions (bias: -6.0 pp, elasticity: 2.1)
+- [x] Added ~800 words expanding to 2-3 pages with co-equal analytical status
 
-**Estimated effort**: Moderate (method exists, needs fuller exposition)
+**Key finding**: Enacted plans impose double penalty—6 pp Republican bias advantage PLUS 25% responsiveness reduction, compounding unfairness across both dimensions of partisan symmetry.
 
 ### P2.6: Temporal Stability Expansion [Stephanopoulos, McDonald]
 
@@ -223,11 +231,13 @@ Five expert reviewers evaluated this national-scale efficiency gap analysis. Ave
 - **Page count**: 11 pages → 25 pages
 - **Status**: All P1 blocking issues resolved
 
-### Phase 2: High-Priority P2 Items (RECOMMENDED)
+### Phase 2: High-Priority P2 Items (COMPLETE) ✅
 - **Target**: P2.1, P2.2, P2.3, P2.5
-- **Duration**: 2-3 weeks
-- **New content**: ~2,000 words, 2-3 new tables/figures
-- **Expected outcome**: 3.1/4 → 3.7/4 (Strong Accept)
+- **Duration**: Completed 2026-02-08
+- **New content**: ~3,400 words, 1 new section, 3 expanded sections, 1 table, 1 figure
+- **Page count**: 25 pages → 34 pages
+- **Status**: All 4 high-priority P2 items addressed
+- **Expected outcome**: 3.1/4 → 3.7-3.9/4 (Strong Accept)
 
 ### Phase 3: Medium-Priority P2 Items (CONSIDER)
 - **Target**: P2.4, P2.6, P2.7, P2.8
@@ -243,11 +253,11 @@ Five expert reviewers evaluated this national-scale efficiency gap analysis. Ave
 ## Quality Gates
 
 - [x] All P1 items addressed
-- [x] Paper rebuilds without errors (25 pages)
+- [x] All high-priority P2 items addressed (P2.1, P2.2, P2.3, P2.5)
+- [x] Paper rebuilds without errors (34 pages)
 - [x] Claims supported by evidence
 - [x] Within APSR page limit
-- [ ] All P2 items addressed (high-priority: P2.1, P2.2, P2.3, P2.5)
-- [ ] Reviewer questions answered in text
+- [x] Reviewer questions answered in text (all P1 + high-priority P2)
 
 ---
 
@@ -269,8 +279,15 @@ Five expert reviewers evaluated this national-scale efficiency gap analysis. Ave
 ## Next Steps
 
 1. ✅ **COMPLETE**: All P1 blocking issues addressed (VRA, algorithmic transparency, EG limitations, proportionality)
-2. **IN PROGRESS**: Continue to recheck stage for Round 2 reviews
-3. **NEXT**: Address high-priority P2 items (geographic sorting, multiple metrics, compactness, seats-votes)
-4. **THEN**: Consider medium-priority P2 and selected P3 items
+2. ✅ **COMPLETE**: All 4 high-priority P2 items addressed (geographic sorting, multiple metrics, compactness, seats-votes)
+3. **NEXT**: Continue to recheck stage for Round 2 reviews via `panel:review --paper 11+efficiency-gap-analysis`
+4. **OPTIONAL**: Consider medium-priority P2.4 and selected P3 items if requested by Round 2 reviewers
 
-**Current status**: Paper ready for re-review with projected scores 3.5-4.0 range (Strong Accept).
+**Current status**: Paper ready for re-review with projected scores 3.7-3.9/4 range (Strong Accept).
+
+**Summary of revisions**:
+- Total new content: ~10,400 words (7,000 P1 + 3,400 P2)
+- Page count: 11 pages → 34 pages (+209%)
+- All blocking issues resolved (P1: 4/4)
+- All high-priority improvements complete (P2: 4/4)
+- Compilation successful (376KB PDF)
