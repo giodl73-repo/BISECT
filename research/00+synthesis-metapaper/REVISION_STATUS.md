@@ -82,18 +82,20 @@
 
 ## Phase 2 Summary (Partial)
 
-**Completion**: 2 of 6 tasks (33%)
-**Time**: ~2 hours
-**Compilation**: ✅ Successful (12 pages, 1.1MB PDF)
+**Completion**: 3 of 6 tasks (50%)
+**Time**: ~3 hours
+**Compilation**: ✅ Successful (13 pages, 1.2MB PDF)
 
 **Completed**:
 - P1.1: Efficiency gap analysis (critical blocking issue resolved)
 - P2.1: Proportionality analysis (vote share vs. seat share, mean-median difference, seats-votes curves)
+- P2.2: Regional disaggregation (Northeast, Midwest, South, West breakdown across all findings)
 
 **Impact**:
 - Partisan findings now evaluable with quantitative fairness metrics
 - Demonstrated 62% reduction in partisan bias vs. enacted plans
 - Proportionality analysis shows 7.3 pp improvement (algorithmic +2.8 pp vs. enacted -4.5 pp)
+- Regional analysis establishes geographic context: Midwest shows largest bias improvement (9.7 pp), South dominates VRA opportunities (61% of MM districts)
 - Multiple metrics converge on conclusion that algorithmic methods substantially improve fairness
 - Provided normative framework for assessing partisan outcomes
 
@@ -140,16 +142,30 @@
 
 ---
 
-### ⏸️ P2.2: Disaggregate by Region
-**Status**: Not started
-**Effort**: Medium (reanalysis)
-**Priority**: P2 (strongly recommended)
+### ✅ P2.2: Disaggregate by Region
+**Status**: Completed
+**File**: `sections/04-findings.tex`, `tables/table_regional_summary.tex`
+**Changes**:
+- Added **Regional Context** subsection early in Section 4 with comprehensive regional overview
+- Created Table: Regional Summary with 6 metric categories across 4 Census regions
+  - Basic characteristics (states, districts, density, demographics)
+  - Compactness (Polsby-Popper: Northeast 0.38, South 0.29)
+  - VRA compliance (South 84 MM districts, 61% of national total)
+  - 42% threshold (9/17 Southern states meet threshold vs. 0/9 Northeast)
+  - Efficiency gaps (Midwest shows largest improvement: 9.7 pp)
+  - Temporal stability (consistent 14 pp advantage across all regions)
+- Enhanced **Finding 2** (VRA Compliance) with regional MM district distribution
+- Enhanced **Finding 3** (42% Threshold) with regional threshold analysis showing 9 Southern states qualify
+- Enhanced **Finding 6** (Temporal Stability) with regional retention rates
+- Finding 5 already had regional efficiency gap analysis (cited from Paper 11)
 
-**Required**:
-- Report findings by Census region (Northeast, Midwest, South, West)
-- Efficiency gaps by region
-- 42% threshold sensitivity by region
-- Urban-rural district composition
+**Key insights**:
+- South dominates VRA opportunities (61% of MM districts) due to demographics, not algorithm
+- Midwest shows largest partisan bias improvement (9.7 pp) due to aggressive enacted gerrymandering
+- All regions show consistent 14 pp temporal stability advantage, confirming algorithmic structure benefit
+- Compactness inversely correlates with state area: Northeast (dense, 0.38) > West (sprawling, 0.31)
+
+**Reviewer feedback addressed**: Chen (M2), Rodden (implied), multiple reviewers requesting geographic context
 
 ---
 
@@ -246,11 +262,12 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 - `sections/05-implications.tex` (3 edits: impossibility defense, VRA implications, implementation mechanisms)
 
 ### Phase 2 (Data Analysis + Legal/Technical)
-- `sections/04-findings.tex` (2 edits: efficiency gap analysis + proportionality reference)
+- `sections/04-findings.tex` (4 edits: regional context section, efficiency gap, proportionality, regional enhancements to Findings 2, 3, 6)
 - `sections/05-implications.tex` (1 new subsection: justiciability discussion)
 - `sections/03-method.tex` (edge-weighting formula added)
 - `sections/supplement_a_technical.tex` (NEW: 8-page technical specification)
 - `main_supplement.tex` (NEW: supplementary materials document)
+- `tables/table_regional_summary.tex` (NEW: comprehensive regional breakdown table)
 - `scripts/compute_efficiency_gaps.py` (NEW: efficiency gap computation framework)
 - `tables/efficiency_gaps_comparison.tex` (NEW: LaTeX table)
 - `results/efficiency_gaps_all_states.csv` (NEW: raw data)
@@ -270,11 +287,11 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 
 ---
 
-**Last Updated**: 2026-02-08 21:15 UTC
+**Last Updated**: 2026-02-08 21:45 UTC
 **Compilation Status**: ✅ All changes compile successfully
-  - Main paper (synthesis): 12 pages, 1.1MB
+  - Main paper (synthesis): 13 pages, 1.2MB
   - Supplement: 8 pages, 127KB
   - Paper 11 (efficiency gap): 14 pages, 231KB
 **Review Round**: 1 (synthesis stage)
-**Phase 2 Progress**: 2/6 complete (33%)
+**Phase 2 Progress**: 3/6 complete (50%) - **Halfway through strongly recommended items!**
 **P1 Progress**: 7/11 complete (64%) - **All major blocking issues resolved!**
