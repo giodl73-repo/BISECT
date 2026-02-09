@@ -26,40 +26,109 @@ Create a **radically different redistricting system** where:
 
 ### Step 1: Proportional Seat Allocation
 - Statewide vote determines each party's seats
-- Example (10-seat state):
+- Example (10-seat state with 5% threshold):
   - Democrats: 58% of vote → 6 seats
   - Republicans: 38% of vote → 4 seats
   - Libertarians: 4% of vote → 0 seats (below threshold)
+  - Nonpartisan (optional): 1 seat (if guaranteed)
 
-### Step 2: Party-Specific Redistricting
-- **Democrats draw 6 districts** covering the entire state (using recursive bisection)
-- **Republicans draw 4 districts** covering the entire state (using recursive bisection)
-- Districts overlap: Every voter is in 1 Democratic district + 1 Republican district
+### Step 2: Party-Vote Weighted Redistricting (CRITICAL)
+**Each party's districts are balanced by THEIR OWN VOTERS, not total population:**
 
-### Step 3: Representation
-- Each voter has multiple representatives (one per party)
-- Democratic voter in Republican area: Represented by their Democratic district rep + local Republican district rep
-- Republican voter in Democratic area: Represented by their Republican district rep + local Democratic district rep
+- **Democrats draw 6 districts** covering the entire state
+  - **Vertex weights = Democratic votes per tract** (not total population!)
+  - Each district has ~equal number of Democratic voters
+  - Naturally concentrates in urban areas where Democrats are strong
 
-### Special Case: Single-Seat Parties
-- If a party wins exactly 1 seat → entire state is their district (no subdivision needed)
+- **Republicans draw 4 districts** covering the entire state
+  - **Vertex weights = Republican votes per tract**
+  - Each district has ~equal number of Republican voters
+  - Naturally concentrates in rural/suburban areas where Republicans are strong
+
+- **Districts overlap**: Every geographic point is in multiple districts (one per party)
+
+**Why party-vote weighting?**
+- Ensures proportional representation WITHIN each party's caucus
+- Without this: urban Democratic district might have 3x more Dem voters than rural Democratic district
+- With this: all Democratic districts have equal Democratic representation
+
+### Step 3: Multi-Party Support
+**All parties above threshold get representation:**
+- Democratic districts (weighted by Dem votes)
+- Republican districts (weighted by Rep votes)
+- Libertarian districts (if above threshold, weighted by Libertarian votes)
+- Green districts (if above threshold, weighted by Green votes)
+- Nonpartisan district(s) (optional guaranteed seat, weighted by third-party/unaffiliated votes)
+
+### Step 4: Representation
+- Each voter has multiple representatives (one per party above threshold)
+- Democratic voter: Gets 1 Democratic rep + 1 Republican rep (+ others if applicable)
+- Republican voter: Gets 1 Republican rep + 1 Democratic rep (+ others if applicable)
+- Libertarian voter: Gets 1 Libertarian rep (if party > threshold) + major party reps
+- **100% of voters have at least one co-partisan representative** (if their party > threshold)
+
+### Special Cases
+- **Single-seat parties**: Entire state is their district (no subdivision needed)
+- **Below-threshold parties**: Get 0 seats, voters represented by above-threshold parties
+- **Non-voters**: Not represented (but could be studied as separate category)
 
 ---
 
 ## Research Questions
 
-### RQ1: Democratic Legitimacy
+### RQ1: Party-Vote Weighting vs Population Weighting
+**Does weighting districts by party votes (not total population) improve representation?**
+
+**Hypothesis:**
+- Party-vote weighting ensures equal representation within each party's caucus
+- Population weighting creates imbalances (urban districts have more co-partisans)
+
+**Analysis:**
+- Compare district voter counts with both methods
+- Measure variance in co-partisan representation
+
+### RQ2: Threshold Sensitivity (Ablation Study)
+**How does seat allocation change with different thresholds?**
+
+**Thresholds to test:**
+- 0% (pure proportionality - all parties get seats)
+- 2.5% (low barrier)
+- 5.0% (European standard)
+- Natural 1/(N+1) (varies by state size)
+- 10% (high barrier)
+
+**Questions:**
+- How many parties win seats at each threshold?
+- Do Libertarians/Greens ever reach threshold?
+- Which states are most friendly to third parties?
+
+### RQ3: Nonpartisan/Independent Voters
+**Should nonpartisan voters get guaranteed representation?**
+
+**Options to compare:**
+- **Threshold-based**: Nonpartisan gets seats only if "Other" vote > threshold
+- **Guaranteed 1 seat**: Always allocate 1 nonpartisan district
+- **Proportional with no threshold**: Even small parties get fractional representation
+
+**Research questions:**
+- Where do nonpartisan districts concentrate geographically? (suburbs?)
+- Do nonpartisan voters prefer their own rep or diverse representation?
+- What's the partisan composition of nonpartisan districts?
+
+### RQ4: Democratic Legitimacy
 **Does overlapping representation enhance or undermine democratic accountability?**
 
 **Pro arguments:**
 - Every voter has a representative from their preferred party
 - Eliminates "wasted votes" and gerrymandering
 - Minority party voters in safe districts finally get representation
+- Third parties get representation if they reach threshold
 
 **Con arguments:**
 - Voter confusion (which district am I in?)
 - Diluted accountability (multiple overlapping reps)
 - Breaks geographic community representation
+- Violates "one person, one vote" (districts have unequal total population)
 
 ### RQ2: Comparison to International PR
 **How does this compare to existing proportional systems?**
@@ -321,16 +390,33 @@ Create a **radically different redistricting system** where:
 ## Data Requirements
 
 **Already Available:**
-- State boundaries, census tracts
-- Statewide vote shares (presidential 2020)
+- State boundaries, census tracts (2020 Census)
+- Census tract geometries and adjacency graphs
 - Recursive bisection algorithm
+- Statewide vote shares (2020 presidential)
+
+**Need to Acquire:**
+- **Tract-level presidential vote data (2020)**
+  - Democratic votes per tract
+  - Republican votes per tract
+  - Libertarian/Green/Other votes per tract
+  - Non-voter counts per tract
+  - Source: Precinct-to-tract disaggregation (VEST, Dave Leip)
 
 **Need to Implement:**
-- Proportional seat allocation (D'Hondt method)
-- Party-specific redistricting runs (separate per party)
-- Overlay visualization
+- ✅ Proportional seat allocation (D'Hondt method) - DONE
+- ✅ Party-specific wrapper - DONE
+- Tract-level vote data loader
+- Party-vote weighted recursive bisection
+- Threshold ablation framework (0%, 2.5%, 5%, natural, 10%)
+- Multi-party support (D, R, L, G, Nonpartisan)
+- Overlay visualization (multiple party maps)
 
-**Estimated Processing**: 3-4 days (straightforward - no optimization needed)
+**Estimated Processing**:
+- Data acquisition: 1-2 days (tract-level votes)
+- Implementation: 3-4 days
+- 50-state runs: 4-6 hours (multiple parties × multiple thresholds)
+- Analysis: 2-3 days
 
 ---
 
@@ -381,26 +467,62 @@ def allocate_seats_dhondt(vote_shares, num_seats, threshold):
 - Unit tests: Known examples (Germany, Netherlands)
 - Edge cases: Ties, single-seat states, threshold boundaries
 
-### Component 2: Party-Specific Redistricting Wrapper
+### Component 2: Tract-Level Vote Data Loader
 
-**File**: `scripts/pipeline/run_party_specific_redistricting.py`
+**File**: `scripts/data/load_tract_votes.py`
 
-**Function**: Wrap existing `run_state_redistricting.py` to run multiple times per party
+**Function**: Load presidential vote counts at tract level
 
 **Algorithm**:
 ```python
-def run_party_specific_redistricting(state, year, version):
+def load_tract_votes(state, year=2020):
     """
-    Generate overlapping party-specific districts.
+    Load tract-level presidential vote data.
 
-    1. Load statewide vote shares (from presidential election)
-    2. Allocate seats to parties using D'Hondt
+    Returns:
+        DataFrame with columns:
+        - tract_id (GEOID)
+        - total_votes
+        - democratic_votes
+        - republican_votes
+        - libertarian_votes
+        - green_votes
+        - other_votes
+        - nonvoters (voting_age_pop - total_votes)
+    """
+    # Load from VEST or Dave Leip tract-level files
+    # Disaggregate precinct data to tracts if needed
+    # Return vote counts per tract
+```
+
+**Data sources:**
+- VEST (Voting and Election Science Team) - tract-level estimates
+- Dave Leip's Atlas - precinct data → tract disaggregation
+- Census voting-age population for non-voter calculation
+
+### Component 3: Party-Vote Weighted Recursive Bisection
+
+**File**: `scripts/pipeline/run_party_specific_redistricting.py` (updated)
+
+**Critical change**: Weight vertices by party votes, not total population
+
+**Algorithm**:
+```python
+def run_party_specific_redistricting(state, year, version, threshold=None):
+    """
+    Generate overlapping party-specific districts with party-vote weighting.
+
+    1. Load tract-level vote data (not just statewide!)
+    2. Allocate seats to parties using D'Hondt with threshold
     3. For each party with 2+ seats:
-       - Run recursive_bisection(state, year, version, party, num_seats)
+       - Load adjacency graph (same for all parties)
+       - **Weight vertices by PARTY VOTES** (not total pop!)
+         Example Democratic district: vertex_weights = tract['democratic_votes']
+       - Run recursive_bisection(adjacency, party_vote_weights, num_seats)
        - Save to outputs/{version}_{year}/{state}/{party}/districts.shp
     4. For parties with 1 seat:
        - Create whole-state district
-    5. Generate overlay visualization
+    5. Generate overlay visualization showing all party maps
     """
     # Step 1: Get vote shares
     vote_shares = load_presidential_results(state, year)
@@ -477,23 +599,71 @@ outputs/party_v1_2020/
 - Compactness comparison: Democratic PP vs Republican PP vs Neutral PP
 - Population balance: Deviation within each party's districts
 
-### Component 5: Analysis Scripts
+### Component 5: Threshold Ablation Framework
+
+**File**: `scripts/analysis/threshold_ablation.py`
+
+**Function**: Run full system with different thresholds
+
+**Algorithm**:
+```python
+THRESHOLDS = {
+    'zero': 0.0,           # Pure proportionality
+    'low': 0.025,          # 2.5%
+    'european': 0.05,      # 5% (standard)
+    'natural': None,       # 1/(N+1) per state
+    'high': 0.10           # 10%
+}
+
+for threshold_name, threshold_value in THRESHOLDS.items():
+    for state in all_states:
+        # Run party-specific redistricting
+        results = run_party_specific_redistricting(
+            state, year,
+            version=f"party_{threshold_name}",
+            threshold=threshold_value
+        )
+
+        # Analyze:
+        # - How many parties got seats?
+        # - Did Libertarians/Greens reach threshold?
+        # - Geographic distribution of parties
+        # - Voter representation coverage
+```
+
+**Output**: Comparison tables across all thresholds
+
+### Component 6: Analysis Scripts
 
 **Proportionality Check** (`scripts/analysis/verify_proportionality.py`):
 - Compute efficiency gap (should be 0.0 by design)
 - Compare to enacted and neutral baselines
+- Per-party voter balance (equal Dem voters per Dem district?)
 - Generate Table 1 data
 
 **Compactness Analysis** (`scripts/analysis/compute_party_compactness.py`):
 - Polsby-Popper per party
-- Compare Democratic vs Republican vs Neutral
+- Compare Democratic vs Republican vs Libertarian vs Neutral
+- Do third-party districts have different compactness?
 - Generate Table 2 data
 
 **Voter Representation** (`scripts/analysis/analyze_representation.py`):
 - Assign voters to party districts
-- Compute % with co-partisan rep (should be 100%)
-- Compare to enacted baseline (60-70%)
+- Compute % with co-partisan rep (should be 100% if party > threshold)
+- Coverage by threshold level
+- Nonpartisan voter analysis
 - Generate Table 3 data
+
+**Threshold Impact** (`scripts/analysis/analyze_thresholds.py`):
+- Compare results across all 5 thresholds
+- Number of parties represented by state
+- Third-party viability
+- Generate Table 4 (threshold comparison)
+
+**Nonpartisan Analysis** (`scripts/analysis/analyze_nonpartisan.py`):
+- Geographic distribution of nonpartisan districts
+- Partisan composition within nonpartisan districts
+- Suburban vs urban vs rural concentration
 
 ---
 
