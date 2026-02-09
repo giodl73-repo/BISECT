@@ -209,7 +209,8 @@
       "Bash(then echo \"✓ $dir\")",
       "Bash(else echo \"✗ $dir\")",
       "Bash([ -n \"$CLAUDE_PLUGIN_ROOT\" ])",
-      "Skill(create-presentation-figures)"
+      "Skill(create-presentation-figures)",
+      "Bash(make:*)"
     ]
   }
 }

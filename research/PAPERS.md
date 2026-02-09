@@ -100,8 +100,8 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 ### Temporal Analysis (1 paper)
 - **12**: longitudinal-analysis — 20-year trends (2000/2010/2020)
 
-### Experimental (5 papers)
-- **13-17**: Alternative representation systems (national, county, party-based, demographic, multi-member)
+### Experimental (4 papers)
+- **13-16**: Alternative representation systems (national, county, party-based, multi-member)
 
 ### Synthesis (1 paper)
 - **00**: synthesis-metapaper — Capstone for Science/Nature
@@ -138,7 +138,7 @@ Temporal:
   12 (longitudinal) ← uses data from 01-10
 
 Experimental:
-  13-17 ← use infrastructure from 01-02
+  13-16 ← use infrastructure from 01-02
 ```
 
 ---
@@ -182,8 +182,8 @@ When adding papers:
 | Status | Count | Papers |
 |--------|-------|--------|
 | Ready for submission | 10 | 01-10 (after PP1/PP2 revisions) |
-| Planned | 8 | 00, 11-17 |
-| **Total** | **18** | |
+| Planned | 7 | 00, 11-16 |
+| **Total** | **17** | |
 
 ---
 
