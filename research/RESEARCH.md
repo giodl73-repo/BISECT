@@ -1,7 +1,7 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 6
+**Papers**: 7
 **Author**: Giovanni De Luca
 
 ---
@@ -16,6 +16,7 @@
 | 4 | [12+longitudinal-analysis](12+longitudinal-analysis/) | Twenty Years of Congressional Redistricting: A Longitudinal Analysis of Algorithmic Redistricting Across Three Census Decades | [PDF](docs/12+longitudinal-analysis.pdf) | Science | — | — |
 | 5 | [17+multi-member-districts](17+multi-member-districts/) | Multi-Member Districts and Proportional Representation: Exploring Alternatives to Single-Member Redistricting | [PDF](docs/17+multi-member-districts.pdf) | Electoral Studies | — | — |
 | 6 | [15+party-based-allocation](15+party-based-allocation/) | Partisan Fairness through Algorithmic Districting: An Alternative to Proportional Representation | [PDF](docs/15+party-based-allocation.pdf) | Electoral Studies | — | — |
+| 7 | [14+county-representation](14+county-representation/) | Direct County Representation: An Alternative to Congressional Redistricting | [PDF](docs/14+county-representation.pdf) | State Politics & Policy Quarterly | — | — |
 
 ---
 
@@ -50,4 +51,4 @@ make -C <paper-dir> pdf
 ---
 
 *Apportionment research module — established February 2026*
-*Papers: 6*
+*Papers: 7*
