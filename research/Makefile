@@ -1,12 +1,11 @@
-PAPERS = $(wildcard gerry-*/)
+PAPERS = $(wildcard panel-*/)
 DIST_DIR = docs
 
 .PHONY: all clean dist
 
 all:
 	@for dir in $(PAPERS); do \
-		echo "Building $$dir..."; \
-		cd $$dir && pdflatex -interaction=nonstopmode main.tex && cd ..; \
+		$(MAKE) -C $$dir pdf; \
 	done
 
 dist: all
@@ -19,5 +18,5 @@ dist: all
 
 clean:
 	@for dir in $(PAPERS); do \
-		cd $$dir && rm -f *.aux *.log *.bbl *.blg *.out *.toc *.nav *.snm *.vrb && cd ..; \
+		$(MAKE) -C $$dir clean; \
 	done

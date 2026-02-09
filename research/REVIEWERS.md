@@ -1,10 +1,10 @@
-# {MODULE} Module — Expert Reviewer Subset
+# Apportionment Module — Expert Reviewer Subset
 
 > **AI Simulation Disclosure**: The reviewers listed below are AI personas, not
 > actual participants. See [REVIEWER-DATABASE.md](REVIEWER-DATABASE.md) for full
 > methodology disclosure.
 
-**Module**: {MODULE_DESCRIPTION}
+**Module**: Congressional redistricting via METIS recursive bisection
 **Papers**: 0
 **Global database**: See [REVIEWER-DATABASE.md](REVIEWER-DATABASE.md)
 
@@ -18,7 +18,7 @@
 
 ## Cross-Portfolio Panel (Planned)
 
-7 reviewers to be selected for breadth across {MODULE} papers.
+7 reviewers to be selected for breadth across Apportionment papers.
 
 | # | Reviewer | Affiliation | Role | Anchored Papers |
 |---|---------|-------------|------|-----------------|
@@ -29,4 +29,4 @@
 
 ---
 
-*{MODULE} module reviewer assignments — {DATE}*
+*Apportionment module reviewer assignments — February 2026*
