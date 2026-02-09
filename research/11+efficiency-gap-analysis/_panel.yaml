@@ -39,7 +39,29 @@ reviews:
   mcdonald:
     file: "reviews/REVIEW-MCDONALD.md"
     score: 3.5
-p1_items: []
+p1_items:
+  - id: "P1.1"
+    description: "Voting Rights Act Compliance Analysis"
+    section: "sections/04g-vra-compliance.tex"
+    addressed: true
+    date_completed: "2026-02-08"
+  - id: "P1.2"
+    description: "Algorithmic Transparency and Sensitivity Analysis"
+    section: "sections/03a-algorithm-specification.tex"
+    addressed: true
+    date_completed: "2026-02-08"
+  - id: "P1.3"
+    description: "Efficiency Gap Limitations and Legal Context"
+    section: "sections/02c-efficiency-gap-utility-and-limitations.tex"
+    addressed: true
+    date_completed: "2026-02-08"
+  - id: "P1.4"
+    description: "Proportionality-Efficiency Gap Connection"
+    section: "sections/04f-proportionality-eg-connection.tex"
+    addressed: true
+    date_completed: "2026-02-08"
+revision_completed: true
+revision_completion_date: "2026-02-08"
 history:
   - stage: draft
     date: 2026-02-08
