@@ -1,8 +1,8 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 0
-**Author**: Author
+**Papers**: 1
+**Author**: Giovanni De Luca
 
 ---
 
@@ -10,13 +10,16 @@
 
 | # | Directory | Title | PDF | Venue Target | Score | Tier |
 |---|-----------|-------|-----|-------------|-------|------|
+| 1 | [00+synthesis-metapaper](00+synthesis-metapaper/) | Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration | [PDF](docs/00+synthesis-metapaper.pdf) | Science | — | — |
 
 ---
 
 ## Paper Dependency Graph
 
 ```
-(no papers yet — use panel:setup <name> [venue] to add papers)
+00+synthesis-metapaper (Science)
+├─ Synthesizes all 10 papers
+└─ Targets highest-impact interdisciplinary venue
 ```
 
 ---
@@ -42,4 +45,4 @@ make -C <paper-dir> pdf
 ---
 
 *Apportionment research module — established February 2026*
-*Papers: 0 (use panel:setup <name> to add)*
+*Papers: 1*

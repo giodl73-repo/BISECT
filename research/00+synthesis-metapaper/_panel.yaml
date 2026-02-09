@@ -1,0 +1,14 @@
+paper: 00+synthesis-metapaper
+title: "Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration"
+venue: "Science"
+stage: draft
+round: 0
+content_mode: full
+content_mode_confirmed: true
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-02-08
+    note: "Paper initialized via panel:setup"

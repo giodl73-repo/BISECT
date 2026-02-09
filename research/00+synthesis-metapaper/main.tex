@@ -1,0 +1,60 @@
+%% Synthesis Metapaper for Science
+%% Algorithmic Objectivity for Congressional Redistricting
+
+\documentclass[11pt]{article}
+
+% Science journal style packages
+\usepackage[utf8]{inputenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{times}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+
+% Title and authors
+\title{Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration}
+
+\author{
+Giovanni De Luca \\
+\small Independent Researcher \\
+\small \texttt{giovanni.deluca@example.com}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting in the United States suffers a legitimacy crisis:
+partisan mapmakers manipulate district boundaries to predetermine election outcomes,
+eroding public confidence in representative democracy. We demonstrate that recursive
+graph bisection—a computational method used for supercomputer workload distribution—
+provides an algorithmic alternative that cannot gerrymander because it cannot access
+partisan data. Applied to all 50 states across three census decades (2000/2010/2020),
+this method produces 435 congressional districts with near-perfect population equality,
+geographic contiguity, and geometric compactness. Algorithmic plans create 69 more
+majority-minority districts than enacted maps, exceeding Voting Rights Act requirements
+without explicit racial targeting. We identify a 42\% demographic threshold determining
+where proportional minority representation becomes geographically feasible. These
+findings establish that mathematical governance—successful for congressional
+apportionment since 1941—can extend to redistricting, offering a path toward restoring
+electoral legitimacy through structural objectivity rather than institutional reform.
+\end{abstract}
+
+% Main sections
+\input{sections/01-introduction}
+\input{sections/02-huntington-hill-precedent}
+\input{sections/03-method}
+\input{sections/04-findings}
+\input{sections/05-implications}
+\input{sections/06-conclusion}
+
+% Bibliography
+\bibliographystyle{Science}
+\bibliography{../references}
+
+\end{document}
