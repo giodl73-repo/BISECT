@@ -1,7 +1,7 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 8
+**Papers**: 9
 **Author**: Giovanni De Luca
 
 ---
@@ -18,6 +18,7 @@
 | 6 | [15+party-based-allocation](15+party-based-allocation/) | Partisan Fairness through Algorithmic Districting: An Alternative to Proportional Representation | [PDF](docs/15+party-based-allocation.pdf) | Electoral Studies | — | — |
 | 7 | [14+county-representation](14+county-representation/) | Direct County Representation: An Alternative to Congressional Redistricting | [PDF](docs/14+county-representation.pdf) | State Politics & Policy Quarterly | — | — |
 | 8 | [11+efficiency-gap-analysis](11+efficiency-gap-analysis/) | Measuring Partisan Fairness in Algorithmic Redistricting: A National Efficiency Gap Analysis | [PDF](docs/11+efficiency-gap-analysis.pdf) | American Political Science Review | — | — |
+| 9 | [17+partisan-similarity-districts](17+partisan-similarity-districts/) | Partisan Similarity Districts: Algorithmic Safe Seats | [PDF](docs/17+partisan-similarity-districts.pdf) | American Journal of Political Science | — | — |
 
 ---
 
@@ -52,4 +53,4 @@ make -C <paper-dir> pdf
 ---
 
 *Apportionment research module — established February 2026*
-*Papers: 8*
+*Papers: 9*

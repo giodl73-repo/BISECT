@@ -1,0 +1,12 @@
+paper: 17+partisan-similarity-districts
+title: "Partisan Similarity Districts: Algorithmic Safe Seats"
+venue: "American Journal of Political Science"
+stage: draft
+round: 0
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-02-08
+    note: "Paper initialized via panel:setup"
