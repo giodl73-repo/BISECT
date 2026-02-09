@@ -369,21 +369,8 @@
       </div>
     </ScrollSection>
 
-    <!-- Next Chapter -->
-    <ScrollSection bg-class="chapter-2-bg">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl font-heading font-bold mb-6">What's Next?</h2>
-        <p class="text-xl text-gray-700 mb-4">
-          We can split Alabama into 2 regions. But Alabama needs <strong>7 districts</strong>!
-        </p>
-        <p class="text-xl text-gray-700 mb-8">
-          How do we go from 2 regions to 7 districts? That's where <strong>recursion</strong> comes in...
-        </p>
-        <router-link to="/chapter-3" class="btn btn-primary btn-lg">
-          Continue to Chapter 3 →
-        </router-link>
-      </div>
-    </ScrollSection>
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="2" />
   </div>
 </template>
 
@@ -393,4 +380,5 @@ import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
 import SplitSimulator from '@/components/SplitSimulator.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 </script>

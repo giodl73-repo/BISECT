@@ -230,7 +230,9 @@
       "WebFetch(domain:github.com)",
       "Bash(npm run dev:*)",
       "Bash(for members in 3 7)",
-      "Bash(do)"
+      "Bash(do)",
+      "Bash(for chapter in {2..6})",
+      "Bash(do tail -15 /c/src/apportionment/web/docs/src/pages/Chapter$chapter_*.vue)"
     ]
   }
 }
