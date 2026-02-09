@@ -206,17 +206,7 @@ def run_recursive_bisection_for_party(
         tracts['district'] = district_assignments
         tracts['party'] = party
 
-        # Save shapefile
-        output_file = party_dir / f"{state}_{party.lower().replace(' ', '_')}_districts.shp"
-        tracts.to_file(output_file)
-
-        # Save CSV with district summaries
-        district_summary = tracts.groupby('district').agg({
-            'population': 'sum',
-            'GEOID': 'count'
-        }).rename(columns={'GEOID': 'num_tracts'})
-
-        # Add party vote totals
+        # Merge with vote data to get party vote shares per tract
         tracts_with_votes = tracts.merge(
             tract_votes,
             left_on='GEOID',
@@ -224,8 +214,45 @@ def run_recursive_bisection_for_party(
             how='left'
         )
 
+        # Calculate party-weighted population for each tract
+        # Population weighted by party vote share (votes / total_votes)
         party_col = f"{party.lower()}_votes"
-        district_summary[party_col] = tracts_with_votes.groupby('district')[party_col].sum()
+
+        # Handle division by zero for tracts with no votes
+        tracts_with_votes['party_vote_share'] = np.where(
+            tracts_with_votes['total_votes'] > 0,
+            tracts_with_votes[party_col] / tracts_with_votes['total_votes'],
+            0
+        )
+
+        # Use population from tract_votes (population_y after merge)
+        # Select the population column - prefer from tracts geometry (population_x)
+        if 'population_x' in tracts_with_votes.columns:
+            pop_col = 'population_x'
+        elif 'population_y' in tracts_with_votes.columns:
+            pop_col = 'population_y'
+        else:
+            pop_col = 'population'
+
+        tracts_with_votes['weighted_population'] = (
+            tracts_with_votes[pop_col] * tracts_with_votes['party_vote_share']
+        )
+
+        # Save shapefile (with vote data)
+        output_file = party_dir / f"{state}_{party.lower().replace(' ', '_')}_districts.shp"
+        tracts_with_votes.to_file(output_file)
+
+        # Save CSV with district summaries
+        district_summary = tracts_with_votes.groupby('district').agg({
+            'weighted_population': 'sum',  # Party-weighted population
+            pop_col: 'sum',                 # Total population (for reference)
+            'GEOID': 'count',
+            party_col: 'sum'
+        }).rename(columns={
+            'GEOID': 'num_tracts',
+            'weighted_population': 'party_weighted_population',
+            pop_col: 'total_population'
+        })
 
         csv_file = party_dir / f"{state}_{party.lower().replace(' ', '_')}_summary.csv"
         district_summary.to_csv(csv_file)
@@ -247,11 +274,15 @@ def run_recursive_bisection_for_party(
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
 
+        # Calculate actual averages
+        avg_weighted_pop = district_summary['party_weighted_population'].mean()
+        avg_party_votes = district_summary[party_col].mean()
+
         logger.info(f"{state.title()} {party}: Redistricting complete")
         logger.info(
             f"  -> {num_districts} districts, "
-            f"{vertex_weights.sum():,.0f} {party} votes "
-            f"({vertex_weights.sum()/num_districts:,.0f} votes/district)"
+            f"{avg_weighted_pop:,.0f} {party}-weighted pop/district, "
+            f"{avg_party_votes:,.0f} {party} votes/district"
         )
 
         return True
