@@ -1,81 +1,28 @@
-# Improvement Plan: [Paper Title]
+# Revision Plan: Algorithmic Objectivity for Congressional Redistricting
 
-**Paper**: [directory name]
-**Round**: [N] → [N+1]
-**Date**: [YYYY-MM-DD]
-**Source**: [Quality assessment from synthesis]
-
-> **Purpose**: This plan is based on AI-generated quality assessment feedback. Use it to strengthen your work, not as "reviewer responses." These are suggestions for improvement, not requirements.
-
----
-
-## Summary
-
-[1-2 sentences on what the quality assessment found and the overall improvement strategy.]
-
-## Simulated Feedback Panel
-
-| # | AI Persona | Based On | Score | Assessment |
-|---|---------|-------------|-------|---------|
-| 1 | [Name] | [Affiliation] | [X]/4 | [Assessment] |
-| ... | | | | |
+**Paper**: 00+synthesis-metapaper  
+**Stage**: synthesis → revision  
+**Round**: 1  
+**Date**: 2026-02-08  
+**Mean Score**: 3.00/4.00 (unanimous Accept with revisions)
 
 ---
 
-## P1: Critical Enhancements (High Impact)
+## Executive Summary
 
-### P1.1: [Improvement area from synthesis]
-**Source**: P1.1 in quality assessment
-**Identified by**: [Persona names]
-**Enhancement**:
-- [ ] [Specific improvement task]
-- [ ] [Specific improvement task]
-**Target section**: sections/[XX]-[name].tex
+All 6 reviewers scored 3/4 and recommended acceptance pending substantial revisions in three critical areas:
 
-### P1.2: [Improvement area from synthesis]
-[...]
+1. **Legal Analysis** (Pildes, Stephanopoulos): Impossibility defense oversold; VRA analysis incomplete; population deviation wrong; justiciability unresolved
+2. **Partisan Analysis** (Chen, Rodden, Stephanopoulos): Missing efficiency gap, proportionality assessment, normative framework  
+3. **Technical Specification** (Karypis, Duchin): Edge-weighting underspecified; algorithmic metrics missing; parameter sensitivity unexplored
+
+**Path to Acceptance**: Address all P1 blocking issues + strongly recommended P2 items.
 
 ---
 
-## P2: Substantial Improvements (Medium Impact)
+## Priority 1: Blocking Issues
 
-### P2.1: [Improvement area from synthesis]
-**Source**: P2.1 in quality assessment
-**Identified by**: [Persona names]
-**Enhancement**:
-- [ ] [Specific improvement task]
-**Target section**: sections/[XX]-[name].tex
+See reviews/SYNTHESIS.md for complete details of all 11 P1 items, 6 P2 items, and 8 P3 items.
 
-### P2.2: [Improvement area from synthesis]
-[...]
+**Next Steps**: Review this plan and begin Phase 1 (quick wins) implementation.
 
----
-
-## P3: Refinements (Optional Polish)
-
-### P3.1: [Suggestion from synthesis]
-- [ ] [Task]
-
----
-
-## Improvement Timeline
-
-| Day | Focus | Deliverable |
-|-----|-------|-------------|
-| 1-2 | P1.1 — [description] | Enhanced section [X] |
-| 3-4 | P1.2 — [description] | Enhanced section [Y] |
-| 5-7 | P2 items | Strengthened sections |
-| 8-9 | P3 + polish | Final refinements |
-| 10 | Rebuild + self-review | Ready for next round |
-
-## Quality Checkpoints
-
-- [ ] P1 items addressed (if you agree they strengthen the work)
-- [ ] Paper builds without errors
-- [ ] Claims supported by evidence
-- [ ] Consistent with your research goals
-- [ ] Ready for another simulation round (optional)
-
----
-
-*Use this plan as a guide for strengthening your work. Adapt based on your research goals and constraints.*

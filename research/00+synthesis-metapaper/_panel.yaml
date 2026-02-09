@@ -1,14 +1,65 @@
 paper: 00+synthesis-metapaper
 title: "Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration"
 venue: "Science"
-stage: draft
-round: 0
+stage: synthesis
+round: 1
 content_mode: full
 content_mode_confirmed: true
 writing_completed: true
 writing_completion_date: 2026-02-08
-reviewers: []
-reviews: {}
+reviewers:
+  - name: "Moon Duchin"
+    affiliation: "Tufts University"
+    expertise: "Mathematical redistricting, gerrymandering, MGGG Redistricting Lab"
+    score: 3
+  - name: "George Karypis"
+    affiliation: "University of Minnesota"
+    expertise: "METIS algorithm, graph partitioning, parallel computing"
+    score: 3
+  - name: "Jowei Chen"
+    affiliation: "University of Michigan"
+    expertise: "Redistricting, political geography, computational political science"
+    score: 3
+  - name: "Richard Pildes"
+    affiliation: "NYU School of Law"
+    expertise: "Election law, Voting Rights Act, constitutional law"
+    score: 3
+  - name: "Jonathan Rodden"
+    affiliation: "Stanford University"
+    expertise: "Political geography, urban-rural divide, electoral systems"
+    score: 3
+  - name: "Nicholas Stephanopoulos"
+    affiliation: "University of Pennsylvania Law School"
+    expertise: "Gerrymandering, efficiency gap, election law"
+    score: 3
+reviews:
+  round1:
+    - reviewer: "Moon Duchin"
+      file: "reviews/REVIEW-DUCHIN.md"
+      score: 3
+      verdict: "Accept (pending revisions)"
+    - reviewer: "George Karypis"
+      file: "reviews/REVIEW-KARYPIS.md"
+      score: 3
+      verdict: "Accept (substantial technical revisions)"
+    - reviewer: "Jowei Chen"
+      file: "reviews/REVIEW-CHEN.md"
+      score: 3
+      verdict: "Accept (political science revisions)"
+    - reviewer: "Richard Pildes"
+      file: "reviews/REVIEW-PILDES.md"
+      score: 3
+      verdict: "Accept (legal analysis revisions)"
+    - reviewer: "Jonathan Rodden"
+      file: "reviews/REVIEW-RODDEN.md"
+      score: 3
+      verdict: "Accept (political geography revisions)"
+    - reviewer: "Nicholas Stephanopoulos"
+      file: "reviews/REVIEW-STEPHANOPOULOS.md"
+      score: 3
+      verdict: "Accept (partisan fairness revisions)"
+mean_score: 3.00
+synthesis_file: "reviews/SYNTHESIS.md"
 p1_items: []
 history:
   - stage: draft
@@ -17,3 +68,11 @@ history:
   - stage: draft
     date: 2026-02-08
     note: "Writing completed via panel:author - all 6 sections + 4 figures"
+  - stage: panel
+    date: 2026-02-08
+    round: 1
+    note: "6 expert reviews completed - all scored 3/4 (Accept with revisions)"
+  - stage: synthesis
+    date: 2026-02-08
+    round: 1
+    note: "Synthesis completed - identified 3 critical themes (legal, partisan, technical)"

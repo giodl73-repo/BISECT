@@ -1,0 +1,302 @@
+/* Schoolhouse Rock Educational Site - Custom Styles */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== BASE STYLES ===== */
+@layer base {
+  body {
+    @apply font-body text-schoolhouse-gray-dark bg-schoolhouse-gray-light;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading font-bold;
+  }
+
+  h1 {
+    @apply text-5xl md:text-6xl lg:text-7xl;
+  }
+
+  h2 {
+    @apply text-4xl md:text-5xl;
+  }
+
+  h3 {
+    @apply text-3xl md:text-4xl;
+  }
+
+  h4 {
+    @apply text-2xl md:text-3xl;
+  }
+}
+
+/* ===== COMPONENTS ===== */
+@layer components {
+  /* Buttons */
+  .btn {
+    @apply px-6 py-3 rounded-full font-heading font-semibold transition-all duration-300 ease-out;
+    @apply hover:scale-105 hover:shadow-lg active:scale-95;
+  }
+
+  .btn-primary {
+    @apply bg-schoolhouse-blue text-white hover:bg-blue-600;
+  }
+
+  .btn-secondary {
+    @apply bg-schoolhouse-orange text-white hover:bg-orange-600;
+  }
+
+  .btn-outline {
+    @apply border-2 border-schoolhouse-blue text-schoolhouse-blue hover:bg-schoolhouse-blue hover:text-white;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl shadow-md p-6 transition-all duration-300;
+    @apply hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:scale-[1.02];
+  }
+
+  /* Sections */
+  .section {
+    @apply py-16 md:py-24 lg:py-32 px-4 md:px-8;
+  }
+
+  .section-hero {
+    @apply section min-h-screen flex items-center justify-center;
+  }
+
+  /* Container */
+  .container-custom {
+    @apply max-w-7xl mx-auto;
+  }
+
+  /* Text Styles */
+  .text-hero {
+    @apply text-6xl md:text-8xl lg:text-9xl font-heading font-black;
+  }
+
+  .text-subhero {
+    @apply text-2xl md:text-3xl lg:text-4xl font-body;
+  }
+
+  .text-story {
+    @apply text-lg md:text-xl leading-relaxed;
+  }
+
+  /* Colorful Backgrounds */
+  .bg-gradient-schoolhouse {
+    background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 50%, #f97316 100%);
+  }
+
+  .bg-gradient-blue-purple {
+    background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 100%);
+  }
+
+  .bg-gradient-orange-red {
+    background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+  }
+
+  .bg-gradient-green-blue {
+    background: linear-gradient(135deg, #10b981 0%, #2563eb 100%);
+  }
+}
+
+/* ===== UTILITIES ===== */
+@layer utilities {
+  /* Scroll Animations - Base State */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .reveal-left.active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .reveal-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+
+  .reveal-right.active {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* Figure Animations */
+  .figure-reveal {
+    opacity: 0;
+    transform: scale(1.05);
+    filter: blur(4px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out, filter 0.6s ease-out;
+  }
+
+  .figure-reveal.active {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  /* Interactive Elements */
+  .interactive-hover {
+    @apply transition-all duration-300 ease-out;
+    @apply hover:shadow-2xl hover:-translate-y-2;
+  }
+
+  /* Playful Borders */
+  .border-playful {
+    border: 4px solid;
+    border-image: linear-gradient(135deg, #2563eb, #f97316, #10b981, #8b5cf6) 1;
+  }
+
+  /* Text Shadows for Emphasis */
+  .text-shadow-soft {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .text-shadow-strong {
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  /* Colorful Accent Underlines */
+  .underline-blue {
+    @apply underline decoration-4 decoration-schoolhouse-blue underline-offset-4;
+  }
+
+  .underline-orange {
+    @apply underline decoration-4 decoration-schoolhouse-orange underline-offset-4;
+  }
+
+  .underline-green {
+    @apply underline decoration-4 decoration-schoolhouse-green underline-offset-4;
+  }
+
+  .underline-purple {
+    @apply underline decoration-4 decoration-schoolhouse-purple underline-offset-4;
+  }
+}
+
+/* ===== CHAPTER-SPECIFIC STYLES ===== */
+
+/* Chapter 1: Tracts to Graphs */
+.chapter-1-accent {
+  @apply text-schoolhouse-blue;
+}
+
+.chapter-1-bg {
+  @apply bg-gradient-to-br from-blue-50 to-purple-50;
+}
+
+/* Chapter 2: Splitting */
+.chapter-2-accent {
+  @apply text-schoolhouse-orange;
+}
+
+.chapter-2-bg {
+  @apply bg-gradient-to-br from-orange-50 to-red-50;
+}
+
+/* Chapter 3: Recursion */
+.chapter-3-accent {
+  @apply text-schoolhouse-green;
+}
+
+.chapter-3-bg {
+  @apply bg-gradient-to-br from-green-50 to-blue-50;
+}
+
+/* Chapter 4: Compactness */
+.chapter-4-accent {
+  @apply text-schoolhouse-purple;
+}
+
+.chapter-4-bg {
+  @apply bg-gradient-to-br from-purple-50 to-pink-50;
+}
+
+/* Chapter 5: VRA */
+.chapter-5-accent {
+  @apply text-schoolhouse-red;
+}
+
+.chapter-5-bg {
+  @apply bg-gradient-to-br from-red-50 to-orange-50;
+}
+
+/* Chapter 6: Edge-Factor */
+.chapter-6-accent {
+  @apply text-schoolhouse-yellow;
+}
+
+.chapter-6-bg {
+  @apply bg-gradient-to-br from-yellow-50 to-green-50;
+}
+
+/* ===== NAVIGATION ===== */
+.nav-sticky {
+  @apply fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md shadow-md;
+}
+
+.nav-progress {
+  @apply h-1 bg-gradient-schoolhouse transition-all duration-300;
+}
+
+/* ===== LOADING STATES ===== */
+.loading-spinner {
+  @apply inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid;
+  @apply border-schoolhouse-blue border-r-transparent;
+}
+
+/* ===== RESPONSIVE UTILITIES ===== */
+@media (max-width: 768px) {
+  .hide-on-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .show-on-mobile-only {
+    display: none;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+.focus-ring {
+  @apply focus:outline-none focus:ring-4 focus:ring-schoolhouse-blue focus:ring-opacity-50;
+}
+
+/* Skip to main content link */
+.skip-link {
+  @apply absolute left-0 top-0 bg-schoolhouse-blue text-white px-4 py-2 z-50;
+  @apply transform -translate-y-full focus:translate-y-0 transition-transform;
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .section {
+    page-break-inside: avoid;
+  }
+}

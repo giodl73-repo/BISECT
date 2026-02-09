@@ -204,7 +204,12 @@
       "Bash(then echo \"$dir: has main.tex\")",
       "Bash(else echo \"$dir: NO main.tex\")",
       "Bash(dir:*)",
-      "Bash(for dir in 12+longitudinal-analysis 13+national-redistricting 14+county-representation 15+party-based-allocation 16+demographic-similarity 17+multi-member-districts)"
+      "Bash(for dir in 12+longitudinal-analysis 13+national-redistricting 14+county-representation 15+party-based-allocation 16+demographic-similarity 17+multi-member-districts)",
+      "Bash(for dir in research/[0-9][0-9]+*/)",
+      "Bash(then echo \"✓ $dir\")",
+      "Bash(else echo \"✗ $dir\")",
+      "Bash([ -n \"$CLAUDE_PLUGIN_ROOT\" ])",
+      "Skill(create-presentation-figures)"
     ]
   }
 }

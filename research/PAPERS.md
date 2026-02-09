@@ -7,11 +7,11 @@
 
 ## Overview
 
-This portfolio comprises **18 papers** organized into 5 categories:
+This portfolio comprises **17 papers** organized into 5 categories:
 - **Synthesis** (1 paper): Meta-analysis for Science/Nature
 - **Core Portfolio** (10 papers): Foundation + extensions + investigations
 - **Validation** (2 papers): Robustness testing
-- **Experimental** (5 papers): Alternative representation systems
+- **Experimental** (4 papers): Alternative representation systems
 
 ---
 
@@ -61,15 +61,14 @@ Ordered by panel consensus ranking (contribution novelty, technical rigor, impac
 
 ---
 
-### 13-17. Experimental / Alternative Systems
+### 13-16. Experimental / Alternative Systems
 
 | # | Slug | Title | Status | Target Venue | Priority |
 |---|------|-------|--------|--------------|----------|
 | **13** | national-redistricting | National Redistricting Without State Boundaries: A Geometric Baseline | Planned | Comparative Politics | Research |
 | **14** | county-representation | Direct County Representation: Using Existing Political Boundaries | Planned | State Politics & Policy | Research |
 | **15** | party-based-allocation | Proportional Representation Through Party-Based District Allocation | Planned | Electoral Studies | Research |
-| **16** | demographic-similarity | Demographic Similarity Districts: Clustering Beyond Geography | Planned | Demography / APSR | Research |
-| **17** | multi-member-districts | Multi-Member Districts and Proportional Representation | Planned | Electoral Studies | Research |
+| **16** | multi-member-districts | Multi-Member Districts and Proportional Representation | Planned | Electoral Studies | Research |
 
 **Status**: All experimental papers planned, ready to implement at any time.
 
