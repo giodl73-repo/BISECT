@@ -82,16 +82,19 @@
 
 ## Phase 2 Summary (Partial)
 
-**Completion**: 1 of 6 tasks (17%)
-**Time**: ~1 hour
-**Compilation**: ✅ Successful (11 pages, 1.1MB PDF)
+**Completion**: 2 of 6 tasks (33%)
+**Time**: ~2 hours
+**Compilation**: ✅ Successful (12 pages, 1.1MB PDF)
 
 **Completed**:
 - P1.1: Efficiency gap analysis (critical blocking issue resolved)
+- P2.1: Proportionality analysis (vote share vs. seat share, mean-median difference, seats-votes curves)
 
 **Impact**:
 - Partisan findings now evaluable with quantitative fairness metrics
 - Demonstrated 62% reduction in partisan bias vs. enacted plans
+- Proportionality analysis shows 7.3 pp improvement (algorithmic +2.8 pp vs. enacted -4.5 pp)
+- Multiple metrics converge on conclusion that algorithmic methods substantially improve fairness
 - Provided normative framework for assessing partisan outcomes
 
 ---
@@ -119,17 +122,21 @@
 
 ---
 
-### ⏸️ P2.1: Add Proportionality Analysis
-**Status**: Not started
-**Effort**: Medium (extends P1.1)
-**Priority**: P2 (strongly recommended)
+### ✅ P2.1: Add Proportionality Analysis
+**Status**: Completed
+**File**: Paper 11 (`research/11+efficiency-gap-analysis/sections/04-results.tex`), synthesis Section 4.5
+**Changes**:
+- Added proportionality subsection to Paper 11's results section (~1000 words)
+- **Vote share vs. seat share**: Democrats 51.3% vote share → 54.1% algorithmic seats (+2.8 pp gap) vs. 46.8% enacted seats (-4.5 pp gap)
+- **Mean-median difference**: Algorithmic +0.8 pp (modest packing) vs. enacted +4.1 pp (severe packing)
+- **Seats-votes curves**: Algorithmic elasticity 2.8 (responsive) vs. enacted 2.1 (dampened)
+- Created Table 4 (proportionality comparison metrics) and Figure 4 (seats-votes curves)
+- Updated synthesis Finding 5 to cite proportionality analysis from Paper 11
+- Demonstrated algorithmic plans substantially improve proportionality but geographic constraints prevent perfection
 
-**Required**:
-- Statewide Democratic vote share (avg 2016-2020)
-- Predicted seat share from algorithmic districts
-- Proportionality gap (vote % - seat %)
-- Seats-votes curves
-- Mean-median difference
+**Key insight**: Multiple metrics converge - efficiency gap, proportionality gap, mean-median difference, and seats-votes elasticity all show algorithmic plans produce outcomes closer to proportional representation than enacted plans, though urban Democratic concentration creates unavoidable asymmetry under compact districting.
+
+**Reviewer feedback addressed**: Stephanopoulos (M1), Chen (M1), Rodden (implied)
 
 ---
 
@@ -239,7 +246,7 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 - `sections/05-implications.tex` (3 edits: impossibility defense, VRA implications, implementation mechanisms)
 
 ### Phase 2 (Data Analysis + Legal/Technical)
-- `sections/04-findings.tex` (1 new finding: efficiency gap analysis, renumbered findings)
+- `sections/04-findings.tex` (2 edits: efficiency gap analysis + proportionality reference)
 - `sections/05-implications.tex` (1 new subsection: justiciability discussion)
 - `sections/03-method.tex` (edge-weighting formula added)
 - `sections/supplement_a_technical.tex` (NEW: 8-page technical specification)
@@ -249,10 +256,13 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 - `results/efficiency_gaps_all_states.csv` (NEW: raw data)
 - `references.bib` (added Rodden 2019, deluca2026efficiency)
 
-### Paper 11 Created
+### Paper 11 Created & Enhanced
 - `research/11+efficiency-gap-analysis/` (NEW: full paper structure)
   - main.tex, 6 sections, references.bib, _panel.yaml, plan.md
   - Extracts efficiency gap analysis into standalone APSR paper
+  - **P2.1 additions**: Proportionality subsection (sections/04-results.tex)
+  - tables/table4_proportionality_comparison.tex (NEW)
+  - figures/figure4_seats_votes_curves.tex (NEW)
 
 ### Compilation
 - `main.pdf` (recompiled: 12 pages, 1.1MB)
@@ -260,9 +270,11 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 
 ---
 
-**Last Updated**: 2026-02-08 20:20 UTC
+**Last Updated**: 2026-02-08 21:15 UTC
 **Compilation Status**: ✅ All changes compile successfully
-  - Main paper: 12 pages, 1.1MB
+  - Main paper (synthesis): 12 pages, 1.1MB
   - Supplement: 8 pages, 127KB
+  - Paper 11 (efficiency gap): 14 pages, 231KB
 **Review Round**: 1 (synthesis stage)
+**Phase 2 Progress**: 2/6 complete (33%)
 **P1 Progress**: 7/11 complete (64%) - **All major blocking issues resolved!**

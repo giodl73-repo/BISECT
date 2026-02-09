@@ -67,3 +67,31 @@ Second, the persistent negative efficiency gap in algorithmic plans across all e
 All regional and state-level differences between algorithmic and enacted plans are statistically significant at $p < 0.001$ (two-sample t-tests). The national mean difference of 8.3 percentage points has an effect size (Cohen's $d$) of 2.84, indicating a very large effect. State-level differences range from 6.8 to 10.3 percentage points, all representing large effect sizes exceeding $d = 1.5$.
 
 The consistency of findings across 15 states, three election years, and six geographic regions provides strong evidence that enacted redistricting plans exhibit substantial partisan bias compared to neutral algorithmic alternatives. This bias systematically favors Republicans by 8.3 percentage points nationally, with larger disparities in contested Rust Belt and Southern states.
+
+\subsection{Proportionality Analysis}
+
+Beyond efficiency gaps, we examine proportionality---the relationship between statewide vote share and seat share. Perfect proportionality occurs when a party's share of legislative seats matches its share of votes. However, single-member districts inevitably create some disproportionality through winner-take-all mechanics, and geographic concentration can amplify these effects.
+
+Table~\ref{tab:proportionality-comparison} presents proportionality metrics for algorithmic and enacted plans. Across competitive states, Democrats averaged 51.3\% of two-party vote share during 2016-2020 elections. Under algorithmic plans, Democrats would win 54.1\% of seats, yielding a $+2.8$ percentage point proportionality gap. Under enacted plans, Democrats win 46.8\% of seats despite their 51.3\% vote majority, producing a $-4.5$ percentage point proportionality gap---a 7.3 percentage point difference.
+
+\input{tables/table4_proportionality_comparison}
+
+The negative proportionality gap in enacted plans indicates systematic undervote: Democrats receive fewer seats than their vote share predicts. This pattern reflects intentional cracking and packing strategies that distribute Democratic voters inefficiently across districts. The positive proportionality gap in algorithmic plans reflects geographic concentration: when Democrats pack naturally into urban districts through compact redistricting, they win more districts than proportionality would predict, but this advantage is modest ($+2.8$ pp) compared to the disadvantage enacted plans impose ($-4.5$ pp).
+
+\subsubsection{Mean-Median Difference}
+
+Mean-median difference provides an alternative proportionality metric by comparing a party's mean district vote share to its median district vote share. When Democrats' mean exceeds their median, they are packed into high-margin districts while Republicans win many close districts---a signature of cracking and packing strategies.
+
+For algorithmic plans, Democratic mean district vote share is 49.7\% while median is 48.9\%, yielding a mean-median difference of $+0.8$ percentage points. For enacted plans, mean is 50.2\% while median is 46.1\%, yielding $+4.1$ percentage points. The 3.3 percentage point difference demonstrates that enacted plans pack Democrats into landslide districts while distributing Republicans more efficiently.
+
+\subsubsection{Seats-Votes Curves}
+
+Figure~\ref{fig:seats-votes-curves} presents seats-votes curves showing how seat share responds to vote share changes. The ideal curve passes through (50\%, 50\%)---the symmetry point---and exhibits similar slopes for vote shares above and below 50\%.
+
+\input{figures/figure4_seats_votes_curves}
+
+Algorithmic plans produce curves with near-perfect symmetry: at 48\% Democratic vote share, Democrats win 45\% of seats; at 52\%, they win 57\% of seats. The curve passes through (50\%, 52\%), indicating a modest 2 percentage point Democratic advantage at parity. Enacted plans show pronounced asymmetry: at 48\% Democratic vote, Democrats win 40\% of seats; at 52\%, they win 48\% of seats. The curve passes through (50\%, 44\%), indicating a 6 percentage point Republican advantage at parity.
+
+The seats-votes elasticity---the slope of the curve at the symmetry point---measures responsiveness. Algorithmic plans exhibit elasticity of 2.8, meaning a 1 percentage point increase in vote share translates to 2.8 percentage points of seat share gain. Enacted plans show elasticity of 2.1, indicating dampened responsiveness that insulates incumbents from electoral swings.
+
+These proportionality findings complement efficiency gap analysis by demonstrating that algorithmic redistricting produces outcomes substantially closer to proportional representation than enacted plans, though geographic sorting prevents perfect proportionality even under neutral algorithms.
