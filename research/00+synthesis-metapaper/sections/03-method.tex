@@ -1,11 +1,22 @@
 \section{Recursive Bisection Method}
 
-% Target: 400 words
-% Key points from plan:
-% - Graph representation: Census tracts = nodes, adjacency = edges
-% - Algorithm: Repeatedly split into two parts until reaching k districts
-% - METIS library: Multilevel coarsening, near-linear time O(n log k)
-% - Key innovation: Edge-weighted partitioning for compactness and VRA compliance
-% - Impossibility defense: Algorithm structurally cannot see partisan data
+Recursive graph bisection, originally developed for distributing computational workloads across parallel processors~\cite{karypis1998metis}, adapts naturally to redistricting. The method represents a state's geography as a mathematical graph: census tracts become nodes, geographic adjacency defines edges. An algorithm then partitions this graph into $k$ districts of equal population by recursively splitting it in two.
 
-[Section content to be written during panel:author phase]
+\subsection{Algorithm Overview}
+
+The process begins with 85,000 census tracts (2020 data) forming a single connected graph. To create $k$ districts, the algorithm performs $\lceil \log_2 k \rceil$ rounds of bisection:
+
+\begin{enumerate}
+\item \textbf{Graph construction}: Census tracts become nodes weighted by population; edges connect adjacent tracts based on shared boundaries (queen contiguity).
+\item \textbf{Edge weighting}: Each edge receives a weight inversely proportional to distance and proportional to demographic similarity. Higher weights between minority-majority tracts preserve communities of interest, addressing Voting Rights Act requirements without explicit racial targeting.
+\item \textbf{Bisection}: The METIS graph partitioning library~\cite{karypis1998metis} splits the graph into two balanced parts, minimizing the total weight of cut edges. This optimization produces compact districts by preferring cuts that separate dissimilar communities over those that split cohesive neighborhoods.
+\item \textbf{Recursion}: Each resulting partition becomes input for the next round until reaching the target number of districts.
+\end{enumerate}
+
+The method runs in near-linear time $O(n \log k)$ for $n$ census tracts and $k$ districts, enabling rapid iteration essential for ensemble analysis~\cite{deluca2026recursive}.
+
+\subsection{The Impossibility Defense}
+
+Critically, the algorithm operates on population and geographic data only---it cannot access partisan information. While human mapmakers can gerrymander by splitting cities or packing opposition voters, recursive bisection lacks the input data required to identify partisan targets. This ``impossibility defense'' provides stronger protection against gerrymandering than intent-based tests: the algorithm cannot gerrymander not because it chooses fairness over manipulation, but because it structurally cannot distinguish Democratic from Republican neighborhoods.
+
+The edge-weighting scheme permits human values to guide optimization---preserving minority communities, favoring compactness---while maintaining the impossibility defense. Parameters affect district characteristics but cannot target partisan outcomes without partisan data. This separation of normative goals from technical implementation parallels how Huntington-Hill apportionment embeds equality principles in a formula immune to partisan manipulation.

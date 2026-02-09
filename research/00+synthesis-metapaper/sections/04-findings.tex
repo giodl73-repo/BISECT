@@ -1,11 +1,33 @@
 \section{National-Scale Findings}
 
-% Target: 800 words
-% Subsections from plan:
-% - Finding 1: Technical Feasibility (150 words)
-% - Finding 2: VRA Compliance Exceeds Enacted Plans (200 words)
-% - Finding 3: The 42% Feasibility Threshold (150 words)
-% - Finding 4: Partisan Patterns Reflect Geography (150 words)
-% - Finding 5: Temporal Stability Across Census Cycles (150 words)
+We applied recursive bisection to all 50 states across three census decades (2000, 2010, 2020), generating 1,305 congressional districts total (435 per decade). Five findings emerge from this national-scale demonstration.
 
-[Section content to be written during panel:author phase]
+\subsection{Finding 1: Technical Feasibility at National Scale}
+
+Algorithmic redistricting meets all constitutional and practical requirements. Across 1,305 districts, mean population deviation from the ideal (total population ÷ number of districts) reached 2.79\%, comparable to human-drawn maps and well within the Supreme Court's one-person-one-vote tolerance~\cite{deluca2026recursive}. Every district achieved geographic contiguity---the algorithm guarantees this by construction through graph connectivity. Compactness scores (Polsby-Popper metric) improved 56\% over unweighted baseline partitions, demonstrating that edge-weighting successfully balances population equality with geometric optimization~\cite{deluca2026edgeweighted}.
+
+Computational efficiency enables policy adoption: individual states partition in seconds, and the full 50-state redistricting completes in under two hours on standard hardware. This speed permits ensemble generation---producing thousands of alternative plans to assess statistical properties---impossible with human mapmaking. The method scales from Vermont's single district to California's 52 districts without algorithmic modification.
+
+\subsection{Finding 2: VRA Compliance Exceeds Enacted Plans}
+
+Algorithmic plans created 137 majority-minority districts compared to 68 in enacted maps, a surplus of 69 districts (+101\% increase). This result contradicts the assumption that maximizing minority representation requires race-conscious district drawing. Instead, edge-weighting that preserves geographically compact minority communities produces more VRA-compliant outcomes than human efforts explicitly targeting racial composition~\cite{deluca2026vra}.
+
+State-level examples illustrate: Alabama, with zero majority-minority districts in its enacted 2020 plan (later ruled unconstitutional), generates two algorithmically; Georgia increases from five to six; Louisiana from one to two. The method achieves these gains without accessing racial data during partitioning---weights embed community preservation, not racial quotas. This distinction carries constitutional significance: \emph{Shaw v. Reno} (1993) scrutinizes race-conscious redistricting, but neutral algorithms pursuing geographic optimization face no such burden even when producing racially equitable outcomes~\cite{deluca2026vra}.
+
+\subsection{Finding 3: The 42\% Demographic Threshold}
+
+Empirical analysis reveals a feasibility threshold: states with minority populations exceeding 42\% achieve near-proportional minority representation (within 5 percentage points), while states below 37\% minority fail regardless of algorithmic sophistication. This 42\% threshold provides a quantitative tool for assessing \emph{Thornburg v. Gingles} (1986) requirements---specifically, whether a minority group is ``sufficiently large and geographically compact'' to constitute a majority in a single-member district~\cite{deluca2026threshold}.
+
+The threshold reflects geographic clustering, not population percentage alone. Mississippi (38\% Black) creates two majority-Black districts through favorable spatial distribution, while New York (24\% Hispanic) creates only three Hispanic-majority districts despite larger absolute population. Courts adjudicating Section 2 VRA claims currently rely on expert testimony about geographic compactness; the 42\% threshold offers empirical benchmarks derived from national-scale algorithmic analysis~\cite{deluca2026threshold}.
+
+\subsection{Finding 4: Partisan Patterns Reflect Geography}
+
+Without accessing partisan data, the algorithm produces districts with 56.5\% Democratic vote share (estimated from precinct-level election results post-facto). This partisan asymmetry arises from geographic sorting: Democratic voters concentrate in urban cores while Republican voters disperse across suburbs and rural areas. Recursive bisection, optimizing for geographic compactness, unavoidably packs urban Democrats while splitting rural Republicans---the opposite pattern emerges from geography, not algorithmic intent~\cite{chen2013unintentional,deluca2026edgeweighted}.
+
+This finding strengthens the impossibility defense. Critics might argue that ``neutral'' algorithms still produce partisan advantage, but the advantage reflects voter distribution, not gerrymandering. Human mapmakers can amplify or reverse geographic patterns by strategic cracking and packing; algorithms cannot. The efficiency gap---a metric measuring ``wasted votes''---measures geographic artifacts when the mapmaker cannot see partisan data~\cite{deluca2026edgeweighted}.
+
+\subsection{Finding 5: Temporal Stability Across Census Cycles}
+
+Recursive bisection maintains 80\% census tract retention when redistricting from 2010 to 2020 boundaries, a 14-percentage-point advantage over n-way partitioning methods. The algorithm's hierarchical structure---districts emerge from nested binary divisions---creates geographic scaffolding that persists across demographic change. Statistical analysis reveals variance between geographic regions exceeds temporal variance by 3.2×, indicating district boundaries reflect durable geographic structure rather than decade-specific population quirks~\cite{deluca2026temporal}.
+
+Stability matters for democratic accountability: voters can build relationships with representatives, and representatives can develop district expertise when boundaries change minimally. Temporal consistency validates the method as policy infrastructure rather than one-time experiment, suitable for repeated application across multiple census cycles~\cite{deluca2026temporal}.

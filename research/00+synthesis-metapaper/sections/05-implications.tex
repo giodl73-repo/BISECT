@@ -1,11 +1,21 @@
 \section{Implications for Democratic Governance}
 
-% Target: 400 words
-% Key points from plan:
-% - For Courts: Impossibility defense, 42% threshold tool, Pareto frontier analysis
-% - For Legislatures: Transparent alternative, exceeds VRA without race-conscious design
-% - For Redistricting Commissions: Actionable method, parameters under human control
-% - Broader Lessons: Mathematical governance implements human values objectively
-% - Limitations: Geography constrains outcomes, MAUP sensitivity, single-ecosystem study
+These findings suggest actionable paths for courts, legislatures, and redistricting commissions confronting the gerrymandering crisis.
 
-[Section content to be written during panel:author phase]
+\subsection{Implications for Courts}
+
+The impossibility defense offers courts a structural rather than intent-based standard for evaluating redistricting. Rather than attempting to prove partisan intent---difficult when mapmakers claim geography caused observed patterns---courts could require algorithms that cannot access partisan data. Districts drawn without partisan input cannot be partisan gerrymanders, regardless of resulting vote shares. This standard sidesteps \emph{Rucho}'s concern about judicially manageable tests: the question becomes whether partisan data entered the redistricting process, not whether outcomes appear biased~\cite{deluca2026edgeweighted}.
+
+For VRA litigation, the 42\% threshold provides empirical benchmarks for the \emph{Gingles} geographic compactness prong. Plaintiffs arguing that a state could create additional majority-minority districts can reference national patterns; defendants can demonstrate geographic constraints that make proportional representation infeasible. Pareto frontier analysis---mapping tradeoffs between VRA compliance and compactness---distinguishes achievable from impossible targets~\cite{deluca2026vra,deluca2026compactness}.
+
+\subsection{Implications for Legislatures and Commissions}
+
+State legislatures seeking transparent alternatives to partisan mapmaking can adopt algorithmic redistricting without constitutional amendment. The method exceeds VRA requirements while maintaining race-neutral partitioning, avoiding constitutional tensions between color-blindness and minority representation. Computational efficiency enables ensemble generation: producing thousands of plans to explore tradeoff spaces rather than defending a single map~\cite{deluca2026recursive}.
+
+Independent redistricting commissions, established in 14 states to reduce partisan influence, can use algorithms as technical implementation of normative goals. Commissioners retain control over parameters---edge-weighting schemes, compactness metrics, community preservation priorities---while delegating geometric optimization to computational methods. This division parallels how Huntington-Hill apportionment: Congress sets House size (normative choice), the formula allocates seats (technical implementation).
+
+\subsection{Broader Lessons and Limitations}
+
+Mathematical governance need not replace human judgment but can implement human values through objective procedures. Algorithms serve as legitimacy-restoring tools, not decision-making oracles. The distinction between \emph{procedural fairness} (transparent, reproducible process) and \emph{outcome fairness} (partisan symmetry) matters: recursive bisection guarantees the former, geography constrains the latter.
+
+Important limitations remain. Algorithms cannot eliminate efficiency gaps caused by voter sorting---they can only avoid amplifying geographic patterns through manipulation. Results depend on census tract definitions (MAUP sensitivity), though findings replicate across multiple census years. This research derives from a single computational ecosystem; independent replication would strengthen confidence. These caveats notwithstanding, algorithmic redistricting offers a path toward restoring electoral legitimacy through structural objectivity accessible to contemporary policymakers.

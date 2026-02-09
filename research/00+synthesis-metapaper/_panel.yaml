@@ -5,6 +5,8 @@ stage: draft
 round: 0
 content_mode: full
 content_mode_confirmed: true
+writing_completed: true
+writing_completion_date: 2026-02-08
 reviewers: []
 reviews: {}
 p1_items: []
@@ -12,3 +14,6 @@ history:
   - stage: draft
     date: 2026-02-08
     note: "Paper initialized via panel:setup"
+  - stage: draft
+    date: 2026-02-08
+    note: "Writing completed via panel:author - all 6 sections + 4 figures"

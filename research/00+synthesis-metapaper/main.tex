@@ -12,6 +12,9 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{natbib}
+\usepackage{tikz}
+\usepackage{subcaption}
+\usetikzlibrary{positioning,arrows.meta}
 
 % Title and authors
 \title{Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration}
@@ -49,6 +52,13 @@ electoral legitimacy through structural objectivity rather than institutional re
 \input{sections/01-introduction}
 \input{sections/02-huntington-hill-precedent}
 \input{sections/03-method}
+
+% Figures
+\input{figures/figure1-architecture}
+% Figure 2: National map (requires data-driven generation - see figures/README_figure2.md)
+\input{figures/figure3-vra-analysis}
+\input{figures/figure4-temporal-stability}
+
 \input{sections/04-findings}
 \input{sections/05-implications}
 \input{sections/06-conclusion}

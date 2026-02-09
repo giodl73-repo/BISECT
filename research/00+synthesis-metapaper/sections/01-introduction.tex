@@ -1,11 +1,9 @@
 \section{The Redistricting Crisis}
 
-% Target: 300 words
-% Key points from plan:
-% - Problem: Partisan gerrymandering undermines democracy
-% - Scale: 435 districts, 330M Americans, every 10 years
-% - Failure of reform: Independent commissions still involve human judgment
-% - Legal void: Rucho v. Common Cause (2019) removed federal oversight
-% - Research question: Can algorithms provide structural objectivity?
+Every ten years, American democracy faces a constitutional requirement with no constitutional solution: redrawing 435 congressional district boundaries to reflect population changes from the decennial census. This process, affecting 330 million Americans and determining electoral outcomes for a decade, suffers from a fundamental legitimacy crisis. Partisan legislatures manipulate district boundaries to predetermine election results---a practice known as gerrymandering---eroding public confidence in representative government~\cite{stephanopoulos2015partisan}.
 
-[Section content to be written during panel:author phase]
+The problem is ancient but newly precise. While gerrymandering dates to 1812, modern computing power enables manipulation with surgical accuracy~\cite{cho2016measuring}. Reformers have proposed independent redistricting commissions to remove partisan incentives, yet these still rely on human judgment about what constitutes ``fair'' districts. Even well-intentioned commissioners must balance competing values---compactness, community preservation, competitiveness---with no objective formula to guide their choices~\cite{duchin2018geometry}.
+
+The legal landscape offers no remedy. In \emph{Rucho v. Common Cause} (2019), the Supreme Court ruled that partisan gerrymandering claims present ``political questions beyond the reach of federal courts,'' effectively removing federal oversight~\cite{rucho2019}. Chief Justice Roberts acknowledged the practice ``incompatible with democratic principles'' but declared courts institutionally incapable of policing it. This ruling created a governance vacuum: states may gerrymander with impunity, and no mathematical standard exists to distinguish legitimate from illegitimate maps.
+
+We demonstrate that recursive graph bisection---a computational method developed for distributing workloads across supercomputer processors---provides structural objectivity for redistricting. Applied to all 50 states across three census decades (2000, 2010, 2020), this algorithm produces districts meeting constitutional requirements while structurally unable to see partisan data. The method cannot gerrymander not because it chooses not to, but because it cannot access the information required to do so. This ``impossibility defense'' offers a path toward restoring electoral legitimacy through mathematical governance rather than institutional reform.
