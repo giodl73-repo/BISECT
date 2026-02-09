@@ -1,5 +1,38 @@
 % Conclusion
 
-% TODO: Summarize findings and future work
-% - Key takeaways on algorithmic districting for partisan fairness
-% - Limitations and future research directions
+\section{Conclusion}
+
+This paper demonstrates that perfect proportional representation is achievable in single-member district systems through party-specific overlapping districts. By separating the problem of proportional seat allocation from the problem of geographic districting, we escape the fundamental impossibility of achieving both proportionality and traditional districting criteria simultaneously.
+
+Our key insight is that fairness operates on two dimensions: fairness \emph{between} parties (proportionality) and fairness \emph{within} parties (equal representation per voter). Traditional redistricting sacrifices one or both. Single-member plurality districts sacrifice proportionality. Proportional representation systems sacrifice within-party geographic balance or abandon single-member districts entirely. Our system achieves both by allowing each party to independently draw districts balanced by party-specific populations.
+
+Ohio and California demonstrate practical viability. Moderate delegations achieve two-party proportionality with perfect internal balance. Large delegations enable third-party representation through low natural thresholds. The algorithmic approach requires no discretionary commission decisions---proportionality and balance emerge from transparent mathematical procedures.
+
+The most radical element---overlapping districts---is less radical than it appears. Citizens already navigate overlapping jurisdictions (federal, state, local). Representatives already serve partisan rather than geographic constituencies in practice. Our system makes explicit what traditional districts obscure: in polarized democracies, party matters more than place for representation quality.
+
+\subsection{Future Research}
+
+Several extensions merit investigation:
+
+\paragraph{Empirical Analysis}
+Full 50-state implementation would reveal how delegation size affects representation quality, whether
+
+ geographic constraints bind differentially across regions, and how compactness trades off against party-vote balance in practice.
+
+\paragraph{Dynamic Effects}
+Behavioral modeling could illuminate how parties, voters, and candidates adapt to proportional rules. Would parties fragment knowing representation is guaranteed? Would gerrymandering shift to manipulating party registration? Would primary elections retain importance?
+
+\paragraph{Comparative Systems}
+How does our approach compare empirically to mixed-member PR, ranked-choice voting in multi-member districts, or independent commission redistricting? Systematic comparison across metrics (proportionality, geographic representation, voter satisfaction, policy outcomes) would clarify relative advantages.
+
+\paragraph{Constitutional Viability}
+What legal barriers exist to implementing overlapping districts? Does the Constitution's requirement that representatives be "apportioned among the several States" preclude this approach? Could states adopt party-specific districts for state legislatures without federal constitutional amendment?
+
+\paragraph{Nonpartisan Representation}
+Should nonvoters or independents receive guaranteed representation through at-large seats or reserved districts? How should we balance parties' proportional claims against nonpartisans' representation interests?
+
+\subsection{Closing Thoughts}
+
+American democracy faces a crisis of representation. Gerrymandering undermines fairness. Winner-take-all districts waste votes. Geographic sorting makes competitive districts scarce. Our system offers a path forward: achieve proportionality through seat allocation, achieve intra-party fairness through party-weighted districts, and maintain geographic representation through overlapping coverage.
+
+The approach is technically feasible---our implementation proves this. The question is whether political will exists to reconceptualize representation around parties rather than exclusive geography. For a nation that accepts overlapping school districts, water districts, and municipal boundaries, overlapping congressional districts may be less radical than clinging to 18th-century assumptions about representation in a 21st-century partisan environment.

@@ -1,6 +1,69 @@
 % Discussion
 
-% TODO: Interpret results
-% - Can algorithmic districting achieve proportional-like outcomes?
-% - Trade-offs between partisan fairness and geographic compactness
-% - Policy implications
+\section{Discussion}
+
+Our party-specific overlapping district system fundamentally reconceptualizes congressional representation by separating proportionality from geography. Rather than forcing geographic districts to achieve proportional outcomes---an often impossible constraint---we achieve proportionality through seat allocation and use districts to ensure equal representation \emph{within} each party.
+
+\subsection{Representational Quality}
+
+\paragraph{Dual Representation}
+Every citizen gains dual representation: a party-specific representative elected by co-partisans, and implicit representation through their party's proportional seat allocation. A Democrat in rural Kentucky and a Democrat in San Francisco both have equal influence in selecting Democratic representatives, while the overall 7D-8R allocation reflects Kentucky's partisan balance.
+
+This differs fundamentally from traditional systems where geographic accidents determine representation quality. A Democrat in a 70\%-Republican district has virtually no influence on representative selection, despite comprising 30\% of the district. Our system ensures every voter has equal influence within their chosen party.
+
+\paragraph{Within-Party Fairness}
+Traditional redistricting discourse focuses on fairness \emph{between} parties---eliminating partisan gerrymandering through efficiency gaps or proportional outcomes. We demonstrate equal importance of fairness \emph{within} parties. When urban and rural co-partisans have vastly different numbers of voters per representative, internal party factions gain unequal influence.
+
+Ohio's results illustrate this starkly: traditional balanced districts create a 1.7$\times$ imbalance in Democratic representation based on geography. Our party-weighted approach eliminates this, ensuring every Democratic voter has equal say in Democratic representative selection regardless of residence.
+
+\subsection{Comparison to Alternative Systems}
+
+\paragraph{Proportional Representation}
+Our system achieves PR-like proportionality while maintaining single-member districts and geographic ties. Unlike party-list PR, voters elect specific representatives accountable to geographic constituencies. Unlike mixed-member PR (as in Germany or New Zealand), we eliminate the distinction between constituency and list MPs---all representatives serve geographic districts.
+
+The key innovation is overlapping rather than exclusive geography. Multiple representatives can serve overlapping regions, each accountable to different partisan constituencies.
+
+\paragraph{Ranked-Choice Voting and Multi-Member Districts}
+RCV in single-winner elections cannot guarantee proportionality without multi-member districts. Multi-member RCV (STV) achieves proportionality but requires large constituencies that sacrifice geographic representation. Our system maintains small, geographically meaningful districts while achieving proportionality through overlapping coverage.
+
+\paragraph{Independent Redistricting Commissions}
+Commissions reduce partisan gerrymandering but cannot guarantee proportionality without sacrificing traditional districting criteria (compactness, contiguity, community preservation). Our system achieves proportionality by design while maintaining algorithmic objectivity---no commission discretion required.
+
+\subsection{Practical Implementation}
+
+\paragraph{Ballot Design}
+Voters would receive a party-specific ballot listing only candidates from their declared party preference (or all candidates for independents choosing the nonpartisan ballot). This simplifies rather than complicates voting---most voters already identify with a party and prefer choosing among co-partisans.
+
+Primary elections become less critical since general elections now serve the function of intra-party choice. States could eliminate or consolidate primaries, reducing election costs and voter fatigue.
+
+\paragraph{Representative Duties}
+Representatives serve geographically-defined districts but are elected by party-specific constituencies. A Democratic representative covers specific census tracts, responding to all constituent service requests in that geography while being accountable to Democratic voters for re-election.
+
+This clarifies rather than complicates representation. Current representatives claim to serve "all constituents" while being elected by and accountable to only their party's voters. Our system makes this reality explicit while ensuring proportional voice for all parties.
+
+\paragraph{Third-Party Viability}
+The natural threshold formula creates different representation possibilities across delegation sizes. Small states (2-4 seats) require 20-33\% vote share for third-party representation---difficult but not impossible. Large states (California's 1.89\% threshold) enable meaningful third-party representation.
+
+This gradualism is arguably optimal: minor parties must demonstrate substantial support to gain representation, but the barrier is achievable. California's ``Other'' seat, representing 900,000 voters (2.3\% of 39.5M), provides more representation than those voters receive under current plurality rules.
+
+\subsection{Limitations and Extensions}
+
+\paragraph{Data Requirements}
+Our implementation uses statewide vote disaggregation to estimate tract-level party support. Real deployment would benefit from precinct-level data aggregated to tracts, capturing geographic variation in party support. However, our results demonstrate the system's viability even with simplified data.
+
+\paragraph{Nonpartisan and Independent Voters}
+Our current model allocates seats only to parties receiving votes. Future work should consider whether nonvoters or registered independents deserve guaranteed representation through at-large districts or reserved seats. If 30\% of eligible voters abstain, does proportional representation require explicitly representing their interests?
+
+\paragraph{Compactness Trade-offs}
+Party-weighted districts prioritize party-vote balance over total-population balance, potentially creating less compact districts than traditional approaches. However, our recursive bisection algorithm still optimizes compactness within the constraint of party-vote balance. Empirical analysis of resulting district shapes remains future work.
+
+\paragraph{Dynamic Effects}
+How would this system affect political behavior? Would party switching become more common? Would parties splinter knowing representation is proportional? Would gerrymandering shift to manipulating party registration? These questions require modeling beyond this initial implementation.
+
+\subsection{Normative Implications}
+
+Our system embodies a specific theory of representation: political parties, not geography, are the primary axis of political identity and interest aggregation in modern democracies. Geographic representation matters for constituent services and local accountability, but proportional representation matters more for legislative outcomes.
+
+This challenges American exceptionalism in clinging to single-member plurality districts. Most advanced democracies use proportional or mixed systems. Our approach offers a path to proportionality while preserving the geographic representation Americans value.
+
+The overlapping districts concept may seem radical, but it formalizes existing reality. Congressional districts already overlap with state legislative districts, county boundaries, and municipal governments. Citizens already navigate multiple overlapping governmental jurisdictions. Adding party-specific congressional districts simply makes explicit the partisan nature of representation while achieving proportionality impossible under traditional constraints.
