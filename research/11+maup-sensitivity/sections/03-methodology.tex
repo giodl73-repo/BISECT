@@ -1,0 +1,54 @@
+% Section 3: Methodology (1,000 words target)
+
+\subsection{Data Preparation}
+
+\subsubsection{Census Tracts (Baseline)}
+
+We use census tract shapefiles and demographics from the 2020 Census Redistricting Data (PL 94-171 Summary File), yielding approximately 85,000 tracts nationally. Adjacency graphs were constructed using Rook contiguity (shared edges, excluding corner-only contact).
+
+\subsubsection{Block Groups (Finer Resolution)}
+
+Block group shapefiles and demographics were obtained from the Census Bureau TIGER/Line files. With approximately 240,000 block groups nationally ($\sim$3$\times$ more units than tracts), this resolution provides intermediate granularity. Adjacency graphs were constructed identically to the tract-level approach.
+
+\subsubsection{Census Blocks (Finest Resolution)}
+
+Census blocks represent the finest available resolution with approximately 11 million blocks nationally ($\sim$130$\times$ more units than tracts). Block-level shapefiles were obtained from TIGER/Line files, with demographics aggregated from the PL 94-171 file. This resolution poses significant computational challenges due to graph size (estimated 35 million edges nationally).
+
+% TODO: Add memory and disk space requirements after implementation
+
+\subsection{Algorithm Configuration}
+
+To isolate resolution effects, we maintain identical parameters across all spatial scales:
+
+\begin{itemize}
+    \item \textbf{Population balance}: $\pm 0.5\%$ deviation from ideal district size
+    \item \textbf{Edge-weighting}: $\alpha = 5.0$ weight multiplier for minority-minority edges
+    \item \textbf{Minority threshold}: $\tau = 0.40$ (units with $\geq 40\%$ minority population)
+    \item \textbf{Partitioning method}: METIS 5.1.0 recursive bisection with multilevel coarsening
+\end{itemize}
+
+This ensures that any observed differences arise from spatial resolution rather than parameter variation.
+
+\subsection{Experimental Design}
+
+We conduct redistricting for all 50 states at three resolutions (150 total runs) using 2020 Census data. To validate computational feasibility, we first test a 10-state subset:
+
+\begin{itemize}
+    \item \textbf{High minority}: Texas, California, Florida, Georgia, New York
+    \item \textbf{Low minority}: Vermont, Maine, West Virginia, New Hampshire, Idaho
+\end{itemize}
+
+If subset results confirm METIS scalability at block-level resolution, we proceed to the full 50-state analysis.
+
+\subsection{Metrics}
+
+For each state and resolution, we compute:
+
+\begin{itemize}
+    \item \textbf{Majority-minority (MM) district count}: Districts where minority population $> 50\%$
+    \item \textbf{Polsby-Popper compactness}: $\frac{4\pi \cdot \text{Area}}{\text{Perimeter}^2}$ (higher is more compact)
+    \item \textbf{Population deviation}: Verify $\pm 0.5\%$ constraint maintained
+    \item \textbf{Runtime}: Computational performance and scalability analysis
+\end{itemize}
+
+% TODO: Add statistical testing methodology (paired t-tests, regression models)

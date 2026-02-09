@@ -1,0 +1,32 @@
+% Section 1: Introduction (800 words target)
+
+\subsection{The MAUP Problem}
+
+The Modifiable Areal Unit Problem (MAUP), first systematically analyzed by \citet{openshaw1984modifiable}, describes a fundamental challenge in spatial analysis: results can vary depending on how space is divided into units, even when the underlying data remains constant. This problem has two components: the \emph{scale effect} (aggregating from fine to coarse resolution changes values) and the \emph{zoning effect} (different boundaries at the same scale produce different results).
+
+\subsection{Redistricting Context}
+
+Congressional redistricting in the United States relies on census geographic units as atomic building blocks. The Census Bureau provides a nested hierarchy of spatial units: blocks ($\sim$100 residents each), block groups ($\sim$1,200 residents), and tracts ($\sim$4,000 residents). Nearly all algorithmic redistricting research uses census tracts as the default aggregation level---a choice motivated by computational tractability, historical precedent, and balance between granularity and stability. However, this choice remains an untested assumption.
+
+\subsection{Portfolio Findings}
+
+Recent work on automated redistricting using recursive bisection has produced several key empirical findings:
+\begin{itemize}
+    \item A 42\% minority population threshold determines majority-minority district formation success \citep{threshold-paper}
+    \item Algorithmic approaches can produce 69 more majority-minority districts than enacted plans \citep{vra-compliance-paper}
+    \item Edge-weighted partitioning improves compactness by 56\% \citep{edge-weighted-paper}
+    \item Recursive partitioning provides greater temporal stability than n-way methods \citep{temporal-stability-paper}
+\end{itemize}
+
+All of these findings were derived using census tracts as spatial units.
+
+\subsection{The Critique}
+
+% TODO: Add citation to Duchin if available
+A natural question arises: are these findings artifacts of tract-level aggregation, or do they persist at finer (block groups, blocks) or coarser resolutions? This question has both methodological and substantive implications. Methodologically, it tests the robustness of computational findings to unit choice. Substantively, it matters for redistricting practice: if finer resolutions yield better outcomes (more majority-minority districts, more compact shapes), practitioners should use the finest feasible resolution.
+
+\subsection{This Paper}
+
+We conduct the first systematic empirical test of MAUP in algorithmic redistricting by rerunning the complete redistricting pipeline at three spatial resolutions: census tracts (baseline), block groups (3$\times$ finer), and census blocks (130$\times$ finer). We test whether key findings from prior work replicate across resolutions or vary systematically with spatial scale.
+
+% TODO: Add preview of findings once results are available

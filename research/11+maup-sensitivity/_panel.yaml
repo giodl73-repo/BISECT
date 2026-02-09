@@ -1,0 +1,12 @@
+paper: 11+maup-sensitivity
+title: "Spatial Resolution and Algorithmic Redistricting: A Test of the Modifiable Areal Unit Problem"
+venue: "International Journal of Geographical Information Science (IJGIS)"
+stage: draft
+round: 0
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-02-08
+    note: "Paper initialized via panel:setup"

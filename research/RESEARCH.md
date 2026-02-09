@@ -1,7 +1,7 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 2
+**Papers**: 3
 **Author**: Giovanni De Luca
 
 ---
@@ -12,6 +12,7 @@
 |---|-----------|-------|-----|-------------|-------|------|
 | 1 | [00+synthesis-metapaper](00+synthesis-metapaper/) | Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration | [PDF](docs/00+synthesis-metapaper.pdf) | Science | — | — |
 | 2 | [13+national-redistricting](13+national-redistricting/) | National Redistricting Without State Boundaries: Quantifying the Geometric Cost of Federalism | [PDF](docs/13+national-redistricting.pdf) | Comparative Political Studies | — | — |
+| 3 | [11+maup-sensitivity](11+maup-sensitivity/) | Spatial Resolution and Algorithmic Redistricting: A Test of the Modifiable Areal Unit Problem | [PDF](docs/11+maup-sensitivity.pdf) | IJGIS | — | — |
 
 ---
 
@@ -46,4 +47,4 @@ make -C <paper-dir> pdf
 ---
 
 *Apportionment research module — established February 2026*
-*Papers: 2*
+*Papers: 3*
