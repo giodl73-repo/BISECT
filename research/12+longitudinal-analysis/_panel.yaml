@@ -78,3 +78,6 @@ history:
   - stage: ready
     date: 2026-02-08
     note: "Advanced to ready stage; P1 revisions successfully addressed all blocking concerns; recommended for Political Analysis, Political Geography, or Election Law Journal"
+  - stage: ready
+    date: 2026-02-08
+    note: "P2.1 addressed (Shaw v. Reno discussion added); P2.5 addressed (repository URLs updated with specific GitHub/Zenodo links)"

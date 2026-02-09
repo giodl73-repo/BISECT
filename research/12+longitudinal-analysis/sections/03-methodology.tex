@@ -51,6 +51,8 @@ We apply recursive bisection using METIS 5.1.0 with \textit{identical parameters
     \item \textbf{Proportionality consideration}: While not requiring strict proportional representation, VRA analysis considers whether minority groups have opportunities to elect candidates of choice proportional to their population \citep{johnson1997}.
 \end{enumerate}
 
+\textbf{Legal tension}: Redistricting authorities face a difficult balance: the VRA requires considering race when necessary to prevent vote dilution \citep{gingles1986}, but the Equal Protection Clause prohibits using race as the "predominant factor" in districting \citep{shaw1993}. In \textit{Shaw v. Reno}, the Supreme Court held that districts drawn predominantly on racial grounds, subordinating traditional redistricting principles like compactness, may constitute unconstitutional racial gerrymandering. This creates a narrow corridor: mapmakers must consider race enough to comply with Section 2, but not so much as to violate Equal Protection. Algorithmic approaches cannot navigate this legal tension automatically—human judgment remains essential.
+
 We frame our algorithmic districts as a \textit{pre-VRA baseline}—a starting point demonstrating what purely geometric optimization produces before legal mandates are applied. In practice, redistricting authorities would need to adjust these algorithmically-generated boundaries to comply with VRA requirements, potentially reducing geometric compactness in favor of minority representation. Our longitudinal analysis shows how this baseline evolves over time, providing context for evaluating both enacted districts and VRA-compliant alternatives.
 
 \subsection{Metrics}

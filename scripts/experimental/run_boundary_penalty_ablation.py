@@ -239,41 +239,54 @@ def main():
     # Run ablation study
     all_results = []
 
-    for beta in tqdm(beta_values, desc="Beta sweep"):
-        # Run redistricting
-        districts = run_redistricting_with_penalty(
-            adjacency=adjacency,
-            populations=populations,
-            base_edge_weights=base_edge_weights,
-            cross_state_edges=cross_state_edges,
-            beta=beta,
-            n_districts=435,
-            output_dir=args.output_dir,
-            seed=args.seed
-        )
+    for i, beta in enumerate(beta_values):
+        print(f"\n{'='*70}")
+        print(f"Beta sweep: {i+1}/{len(beta_values)} (beta={beta})")
+        print(f"{'='*70}")
 
-        # Analyze results
-        results = analyze_results(
-            districts=districts,
-            populations=populations,
-            geoid_to_index=geoid_to_index,
-            index_to_geoid=index_to_geoid,
-            cross_state_edges=cross_state_edges,
-            state_abbrs=state_abbrs,
-            beta=beta
-        )
+        try:
+            # Run redistricting
+            districts = run_redistricting_with_penalty(
+                adjacency=adjacency,
+                populations=populations,
+                base_edge_weights=base_edge_weights,
+                cross_state_edges=cross_state_edges,
+                beta=beta,
+                n_districts=435,
+                output_dir=args.output_dir,
+                seed=args.seed
+            )
 
-        # Save individual result
-        beta_file = args.output_dir / f"ablation_beta_{beta}_{args.year}.pkl"
-        with open(beta_file, 'wb') as f:
-            pickle.dump({
-                'beta': beta,
-                'districts': districts,
-                'results': results,
-                'geoid_to_district': {index_to_geoid[i]: int(districts[i]) for i in range(len(districts))}
-            }, f)
+            # Analyze results
+            results = analyze_results(
+                districts=districts,
+                populations=populations,
+                geoid_to_index=geoid_to_index,
+                index_to_geoid=index_to_geoid,
+                cross_state_edges=cross_state_edges,
+                state_abbrs=state_abbrs,
+                beta=beta
+            )
 
-        all_results.append(results)
+            # Save individual result
+            beta_file = args.output_dir / f"ablation_beta_{beta}_{args.year}.pkl"
+            with open(beta_file, 'wb') as f:
+                pickle.dump({
+                    'beta': beta,
+                    'districts': districts,
+                    'results': results,
+                    'geoid_to_district': {index_to_geoid[i]: int(districts[i]) for i in range(len(districts))}
+                }, f)
+
+            print(f"  [OK] Saved results for beta={beta}")
+            all_results.append(results)
+
+        except Exception as e:
+            print(f"  [ERROR] Failed for beta={beta}: {e}")
+            import traceback
+            traceback.print_exc()
+            print(f"  Continuing with next beta value...")
+            continue
 
     # Save summary
     summary_file = args.output_dir / f"ablation_summary_{args.year}.pkl"

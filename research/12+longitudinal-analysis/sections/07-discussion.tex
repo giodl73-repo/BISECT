@@ -7,7 +7,7 @@ Our 20-year longitudinal analysis yields five key findings:
 \begin{enumerate}
     \item \textbf{Algorithmic stability}: Compactness remains consistent (0.45--0.46 PP) across dramatic population shifts
     \item \textbf{Enacted decline}: Enacted district compactness fell 12\%, widening the gap from 40\% to 62\%
-    \item \textbf{Reform impact}: Redistricting commissions improved outcomes (+7.3pp) but still underperform algorithmic baseline (48\% gap)
+    \item \textbf{Reform impact}: Redistricting commissions were associated with improved outcomes (+7.3pp) but still underperform algorithmic baseline (48\% gap)
     \item \textbf{Geographic persistence}: 61\% of districts maintained substantial boundary overlap (IoU $>$ 0.7) despite reallocations
     \item \textbf{Regional divergence}: Sunbelt gained 15 seats, Rust Belt lost 16 seats, with clear partisan implications
 \end{enumerate}
@@ -20,9 +20,9 @@ The primary contribution of this study is demonstrating that algorithmic redistr
 
 \subsubsection{Commission Effectiveness}
 
-Redistricting commissions represent meaningful reform—they reverse the negative compactness trend and improve outcomes by 7.3 percentage points. However, even the best commission-drawn maps remain 48\% less compact than algorithmic districts. This suggests that commissions are necessary but not sufficient: they reduce partisan gerrymandering but do not eliminate geometric inefficiency.
+Redistricting commissions represent meaningful reform—they are associated with reversing the negative compactness trend, showing 7.3 percentage point better outcomes relative to non-commission states. However, even the best commission-drawn maps remain 48\% less compact than algorithmic districts. This suggests that commissions correlate with reduced partisan gerrymandering but do not eliminate geometric inefficiency, though causality cannot be definitively established given selection effects (commission adoption is non-random).
 
-\textbf{Policy recommendation}: States should adopt commissions \textit{and} require them to use algorithmic baselines as starting points, deviating only for legally mandated considerations (VRA compliance, communities of interest).
+\textbf{Policy consideration}: Given the observed associations, states may benefit from adopting commissions that use algorithmic baselines as starting points, deviating only for legally mandated considerations (VRA compliance, communities of interest). However, causal claims require further research with more rigorous identification strategies.
 
 \subsubsection{Predictive Value for 2030}
 
@@ -46,7 +46,7 @@ The 12\% decline in enacted compactness from 2000 to 2020 provides quantitative 
 
 \subsubsection{Reform Measurement}
 
-By comparing commission states to non-commission states across time, we provide the first multi-decade assessment of redistricting reform effectiveness. The 7.3pp improvement is statistically significant and practically meaningful, establishing commissions as evidence-based interventions.
+By comparing commission states to non-commission states across time, we provide the first multi-decade assessment of redistricting reform associations. The 7.3pp difference is statistically significant and practically meaningful, providing correlational evidence that commissions are associated with improved geometric outcomes, though observational data cannot establish causation.
 
 \subsection{Limitations}
 
@@ -54,13 +54,22 @@ By comparing commission states to non-commission states across time, we provide 
 
 We tested only recursive bisection. Alternative approaches (ensemble methods, simulated annealing) might yield different temporal patterns. However, our goal was consistency (isolating temporal effects), not comprehensiveness.
 
-\subsubsection{Compactness Focus}
+\subsubsection{Geometric Fairness Only}
 
-We emphasize geometric compactness (Polsby-Popper) but do not analyze partisan fairness, racial representation, or communities of interest longitudinally. These dimensions matter but require different data (election results, demographic breakdowns) and methods.
+\textbf{Important limitation}: This paper analyzes \textit{geometric fairness} (compactness, boundary stability) but does \textit{not} examine partisan fairness, electoral outcomes, or partisan gerrymandering effects. We use terms like "gerrymandering" to describe non-compact districts, but we do not measure partisan advantage.
+
+Comprehensive redistricting analysis requires examining multiple dimensions:
+\begin{itemize}
+    \item \textbf{Geometric fairness}: Compactness, contiguity, boundary stability (this paper)
+    \item \textbf{Partisan fairness}: Efficiency gap, mean-median difference, seats-votes curves (not analyzed)
+    \item \textbf{Representational fairness}: Racial representation, VRA compliance, communities of interest (not analyzed)
+\end{itemize}
+
+Geometric compactness is a necessary but not sufficient condition for fair redistricting. Future work should integrate election data to assess whether algorithmic approaches also improve partisan fairness, and demographic data to measure representational equity.
 
 \subsubsection{Causality}
 
-We cannot definitively attribute commission effects to commissions alone—other state-level changes (political shifts, legal rulings) may confound results. However, the consistent direction (+3.2\% for all 6 commission states) strengthens causal inference.
+We cannot definitively attribute commission effects to commissions alone—commission adoption is non-random (all commission states are blue or purple states), and other state-level changes (political shifts, legal rulings, civic culture) may confound results. While our robustness checks (alternative metrics, outlier sensitivity, confound controls, pre-trend analysis) strengthen the correlational evidence, observational data cannot establish causation. The consistent positive association (+3.2\% mean for all 6 commission states) is suggestive but not definitive.
 
 \subsection{Future Work}
 

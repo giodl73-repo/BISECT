@@ -24,11 +24,11 @@
         </div>
 
         <FigureCard
-          src="/figures/chapter1/census_tracts_example.png"
-          alt="Census tracts in Vermont"
+          src="/figures/chapter1/alabama_tracts.png"
+          alt="Census tracts in Alabama"
         >
-          Vermont's 182 census tracts. Each colored region represents one tract—
-          these are the building blocks we'll use to create congressional districts.
+          Alabama's 1,181 census tracts. Each colored region represents one tract—
+          these are the building blocks we'll use to create 7 congressional districts.
         </FigureCard>
       </div>
     </ScrollSection>
@@ -168,44 +168,47 @@
       </div>
     </ScrollSection>
 
-    <!-- Real Example: Vermont -->
+    <!-- Real Example: Alabama -->
     <ScrollSection bg-class="bg-white">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-1-accent">
-          Real Example: Vermont
+          Real Example: Alabama
         </h2>
 
         <div class="grid md:grid-cols-2 gap-8 mb-8">
           <div>
             <h3 class="text-2xl font-heading font-bold mb-4">The Numbers</h3>
             <ul class="space-y-3 text-story">
-              <li><strong>182 census tracts</strong> cover the entire state</li>
-              <li><strong>~503 edges</strong> connect neighboring tracts</li>
-              <li><strong>1 congressional district</strong> (Vermont has just one!)</li>
-              <li><strong>625,000 people</strong> total population (2020 census)</li>
+              <li><strong>1,181 census tracts</strong> cover the entire state</li>
+              <li><strong>~3,200 edges</strong> connect neighboring tracts</li>
+              <li><strong>7 congressional districts</strong> to create</li>
+              <li><strong>5.03 million people</strong> total population (2020 census)</li>
             </ul>
           </div>
 
           <div>
-            <h3 class="text-2xl font-heading font-bold mb-4">The Graph</h3>
+            <h3 class="text-2xl font-heading font-bold mb-4">The Challenge</h3>
             <p class="text-story mb-4">
-              Vermont's graph is relatively simple because it's a small state. But the same
-              process works for California (8,057 tracts) or Texas (5,265 tracts)!
+              Here's where it gets interesting: <strong>7 districts can't be split evenly!</strong>
+              This means we need asymmetric splits like [3,4] or [4,3]. You'll see this play out
+              in Chapters 2 and 3.
             </p>
             <p class="text-sm text-gray-600 italic">
-              Average degree: ~5.5 neighbors per tract<br />
-              Diameter: ~32 tracts from corner to corner
+              Average degree: ~5.4 neighbors per tract<br />
+              Target population per district: ~718,700 people
             </p>
           </div>
         </div>
 
         <div class="card bg-gradient-green-blue text-white">
-          <h3 class="text-2xl font-heading font-bold mb-4">Try It Yourself!</h3>
+          <h3 class="text-2xl font-heading font-bold mb-4">Follow Alabama's Journey</h3>
           <p class="text-lg mb-4">
-            Click on any state to see its census tracts transform into a network graph.
+            We'll use Alabama as our example throughout all 6 chapters, showing how 1,181 census
+            tracts become 7 congressional districts through recursive bisection.
           </p>
-          <div class="bg-white/20 rounded-lg p-8 text-center">
-            <p class="italic">[Interactive state selector will go here]</p>
+          <div class="bg-white/20 rounded-lg p-8">
+            <p class="text-sm mb-2">Coming in Chapter 2:</p>
+            <p class="font-bold">How do we split Alabama's graph into 2 balanced regions?</p>
           </div>
         </div>
       </div>

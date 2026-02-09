@@ -305,11 +305,18 @@ python scripts/analyze_with_constraints.py --year 2020 --min-state 1500000  # 1.
 2. ✅ **Threshold analysis**: 8 thresholds tested
 3. ✅ **Representation equality**: Pop/seat statistics computed
 4. ✅ **Constraint analysis**: Minimum state rule tested
-5. ⏳ **Figures**: Generate 4 figures for paper
-6. ⏳ **Writing**: Draft results and discussion sections
-7. ⏳ **VRA analysis**: Test with/without VRA for affected states
-8. ⏳ **Compactness**: Compare county geometries to METIS districts
+5. ✅ **Figures**: 4 figures generated (threshold sensitivity, equality, distribution, constraint)
+6. ⏳ **Fragmentation analysis**: REQUIRES enacted district shapefiles (2000, 2010, 2020)
+7. ⏳ **County boundaries**: REQUIRES county geometry shapefiles for spatial overlay
+8. ⏳ **Writing**: Draft results and discussion sections
+9. ⏳ **VRA analysis**: Test with/without VRA for affected states (optional)
 
 ---
 
-**Status**: Representation equality analysis complete. Core findings established. Ready for paper writing and figure generation.
+**Status**: Representation equality analysis complete. Figures generated. Core argument established.
+
+**Data Needed for Fragmentation Analysis**:
+- Enacted congressional district shapefiles (2000, 2010, 2020) - from Census Bureau or DRA
+- County boundary shapefiles with geometries - from Census TIGER/Line
+
+**Current Focus**: Paper can be written with existing analyses. Fragmentation analysis would strengthen the autonomy argument but requires external spatial data.
