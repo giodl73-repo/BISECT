@@ -1,12 +1,48 @@
 paper: 12+longitudinal-analysis
 title: "Twenty Years of Congressional Redistricting: A Longitudinal Analysis of Algorithmic Redistricting Across Three Census Decades"
 venue: "Science"
-stage: draft
+stage: synthesis
 round: 0
-reviewers: []
-reviews: {}
+content_mode: full
+content_mode_confirmed: true
+reviewers:
+  - name: "Eric McGhee"
+    affiliation: "Public Policy Institute of California"
+    expertise: "Partisan gerrymandering, efficiency gap, quantitative political science"
+    focus: "Statistical rigor, partisan metrics, reform implications"
+  - name: "Moon Duchin"
+    affiliation: "Tufts University / MGGG Redistricting Lab"
+    expertise: "Geometric algorithms for redistricting, ensemble methods, compactness"
+    focus: "Mathematical foundations, algorithmic approach, metric validity"
+  - name: "Justin Levitt"
+    affiliation: "Loyola Law School"
+    expertise: "Voting Rights Act, redistricting law, commission effectiveness"
+    focus: "Legal compliance, VRA implications, reform policy"
+  - name: "Micah Altman"
+    affiliation: "MIT Libraries"
+    expertise: "Redistricting algorithms, computational methods, reproducibility"
+    focus: "Methodology transparency, data quality, reproducibility"
+  - name: "Bernard Grofman"
+    affiliation: "UC Irvine"
+    expertise: "Electoral systems, representation theory, empirical political science"
+    focus: "Theoretical contributions, empirical validity, comparative analysis"
+reviews:
+  McGhee: "REVIEW-McGhee.md"
+  Duchin: "REVIEW-Duchin.md"
+  Levitt: "REVIEW-Levitt.md"
+  Altman: "REVIEW-Altman.md"
+  Grofman: "REVIEW-Grofman.md"
 p1_items: []
 history:
   - stage: draft
     date: 2026-02-08
     note: "Paper initialized via panel:setup"
+  - stage: draft
+    date: 2026-02-08
+    note: "Content mode set to full (3,223 words, complete structure)"
+  - stage: panel
+    date: 2026-02-08
+    note: "5 reviewers assigned (domain-appropriate for redistricting paper)"
+  - stage: synthesis
+    date: 2026-02-08
+    note: "5 reviews generated (scores: 3.0, 3.5, 2.5, 3.0, 3.0; avg: 3.0)"

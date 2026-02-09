@@ -146,18 +146,23 @@
 
 ---
 
-### ⏸️ P1.5: Add Justiciability Discussion
-**Status**: Not started
-**Effort**: Medium (new subsection)
-**Priority**: P1 (blocking)
+### ✅ P1.5: Add Justiciability Discussion
+**Status**: Completed
+**File**: `sections/05-implications.tex` (new subsection 5.4)
+**Changes**:
+- Added new subsection: "Justiciability and Judicial Review"
+- **Key point**: Algorithmic redistricting doesn't solve Rucho's standards problem—it relocates it
+- Parameter disputes (VRA weight 2× vs 3×) are inherently political, not technical
+- Courts would apply **rational basis review** to parameter choices
+- Standard of review: Highly deferential, rejects only arbitrary/capricious choices
+- **Value**: Procedural improvements (transparency, accountability, reproducibility) not substantive justiciability
+- Shifts from **unconstrained discretion** to **bounded discretion**
+- State courts retain broader authority under state constitutions
+- Concrete example: Pennsylvania dispute over parameter choices producing 9D-8R outcome
 
-**Required**:
-- New subsection 5.4: "Justiciability and Judicial Review"
-- Address parameter dispute standards
-- Distinguish procedural improvements from substantive justiciability
-- Discuss parameter choices as inherently political
+**Key insight**: Algorithmic methods separate normative choices (parameters) from technical implementation (optimization), enabling public scrutiny, ensemble comparison, reproducibility, and audit trails. These are genuine procedural safeguards even without solving justiciability.
 
-**Reviewer feedback**: Pildes (M3), Stephanopoulos (M3)
+**Reviewer feedback addressed**: Pildes (M3), Stephanopoulos (M3)
 
 ---
 
@@ -198,15 +203,15 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 
 **Immediate (next session)**:
 1. ✅ ~~P1.1: Efficiency gap analysis~~ (COMPLETED)
-2. P1.5: Justiciability discussion (blocking issue)
-3. P1.6: Edge-weighting specification (blocking issue)
+2. ✅ ~~P1.5: Justiciability discussion~~ (COMPLETED)
+3. P1.6: Edge-weighting specification (blocking issue - last P1 item!)
 
 **Then**:
 4. P2.1: Proportionality analysis (extends P1.1)
 5. P2.2: Regional disaggregation
 6. P2.6: Algorithmic metrics
 
-**Progress**: 5 of 11 P1 items complete (45%)
+**Progress**: 6 of 11 P1 items complete (55%)
 
 ---
 
@@ -216,19 +221,25 @@ P3.3, P3.6, P3.7, P3.8 - See REVISION-PLAN.md for details
 - `sections/04-findings.tex` (3 edits: VRA, threshold, population deviation)
 - `sections/05-implications.tex` (3 edits: impossibility defense, VRA implications, implementation mechanisms)
 
-### Phase 2 (Data Analysis)
+### Phase 2 (Data Analysis + Justiciability)
 - `sections/04-findings.tex` (1 new finding: efficiency gap analysis, renumbered findings)
+- `sections/05-implications.tex` (1 new subsection: justiciability discussion)
 - `scripts/compute_efficiency_gaps.py` (NEW: efficiency gap computation framework)
 - `tables/efficiency_gaps_comparison.tex` (NEW: LaTeX table)
 - `results/efficiency_gaps_all_states.csv` (NEW: raw data)
-- `references.bib` (added Rodden 2019)
+- `references.bib` (added Rodden 2019, deluca2026efficiency)
+
+### Paper 11 Created
+- `research/11+efficiency-gap-analysis/` (NEW: full paper structure)
+  - main.tex, 6 sections, references.bib, _panel.yaml, plan.md
+  - Extracts efficiency gap analysis into standalone APSR paper
 
 ### Compilation
-- `main.pdf` (recompiled: 11 pages, 1.1MB)
+- `main.pdf` (recompiled: 12 pages, 1.1MB)
 
 ---
 
-**Last Updated**: 2026-02-08 18:50 UTC
-**Compilation Status**: ✅ All changes compile successfully
+**Last Updated**: 2026-02-08 19:15 UTC
+**Compilation Status**: ✅ All changes compile successfully (12 pages)
 **Review Round**: 1 (synthesis stage)
-**P1 Progress**: 5/11 complete (45%)
+**P1 Progress**: 6/11 complete (55%)

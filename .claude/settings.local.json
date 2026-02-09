@@ -210,7 +210,10 @@
       "Bash(else echo \"✗ $dir\")",
       "Bash([ -n \"$CLAUDE_PLUGIN_ROOT\" ])",
       "Skill(create-presentation-figures)",
-      "Bash(make:*)"
+      "Bash(make:*)",
+      "Bash(if [ -d \"C:\\\\src\\\\apportionment\\\\research\" ])",
+      "Bash(then echo \"research dir exists\")",
+      "Bash(else echo \"research dir missing\")"
     ]
   }
 }

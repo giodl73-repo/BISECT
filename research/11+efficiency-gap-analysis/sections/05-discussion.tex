@@ -1,0 +1,53 @@
+\section{Discussion}
+
+\subsection{Mechanisms: Why Algorithmic Plans Show Negative Efficiency Gaps}
+
+The persistent $-3.2\%$ efficiency gap in algorithmic plans reflects unavoidable geographic sorting. Democratic urban concentration creates two effects:
+\begin{enumerate}
+\item \textbf{Packing}: Compact urban districts contain Democratic supermajorities (70-90\% vote share), generating surplus wasted votes
+\item \textbf{Limited cracking}: Suburban districts tilt Republican but by smaller margins than urban districts tilt Democratic
+\end{enumerate}
+
+This asymmetry is geometrically necessary when optimizing for compactness. Rural Republican voters are dispersed, allowing more efficient vote allocation across multiple districts. Urban Democratic voters are clustered, making packing unavoidable~\cite{rodden2019cities}.
+
+\subsection{Comparison to Enacted Plans: Evidence of Human Manipulation}
+
+The 8.3 percentage point difference between algorithmic ($-3.2\%$) and enacted ($+5.1\%$) efficiency gaps suggests enacted plans amplify rather than merely reflect geographic patterns. Human mapmakers can:
+\begin{itemize}
+\item Crack urban cores to dilute Democratic votes
+\item Pack Democrats into even fewer districts
+\item Draw non-compact districts to achieve partisan advantage
+\end{itemize}
+
+Algorithmic plans provide a neutral baseline; deviations from this baseline indicate partisan manipulation.
+
+\subsection{Empirical Lower Bound on Partisan Bias}
+
+The $-3.2\%$ algorithmic efficiency gap establishes an empirical lower bound on partisan bias achievable with:
+\begin{itemize}
+\item Compact, contiguous districts
+\item Equal population
+\item No access to partisan data
+\end{itemize}
+
+This baseline has legal significance: courts evaluating partisan gerrymandering claims under state constitutions can compare enacted plans to algorithmic benchmarks. A plan showing $+7\%$ efficiency gap when neutral algorithms produce $-3\%$ exhibits 10 percentage points of excess bias attributable to human choices.
+
+\subsection{Implications for Proportional Representation}
+
+Algorithmic redistricting reduces partisan bias but does not achieve proportional representation. If Democrats win 52\% of votes nationally, algorithmic plans producing 56.5\% Democratic seats show modest over-representation. Achieving strict proportionality may require:
+\begin{itemize}
+\item Relaxing compactness requirements to allow strategic district shapes
+\item Abandoning single-member districts in favor of multi-member districts with proportional voting
+\item Accepting geographic constraints as fundamental limitations
+\end{itemize}
+
+The tension between compact districts and proportional outcomes is not a failure of algorithmic methods—it reflects the geographic structure of the American electorate~\cite{chen2013unintentional}.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+\item \textbf{Precinct aggregation}: Efficiency gaps computed from precinct results allocated to districts. Block-level analysis would be more precise but computationally intensive.
+\item \textbf{Election selection}: We use presidential and midterm elections. Off-year or local elections might show different patterns.
+\item \textbf{Single algorithm}: Results based on recursive bisection. Other algorithmic approaches (ReCom, shortest splitline) might produce different efficiency gaps.
+\item \textbf{Competitive states focus}: Detailed analysis limited to 15 competitive states. Non-competitive states (e.g., Wyoming, Vermont) omitted as efficiency gap less meaningful in landslide contexts.
+\end{enumerate}
