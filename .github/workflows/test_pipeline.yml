@@ -1,0 +1,116 @@
+name: Pipeline Tests
+
+on:
+  push:
+    branches: [ master, main, develop ]
+  pull_request:
+    branches: [ master, main, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run unit tests
+      run: |
+        python -m pytest tests/unit -v --tb=short --cov=apportionment --cov-report=xml --cov-report=term
+
+    - name: Run integration tests
+      run: |
+        python -m pytest tests/integration -v --tb=short
+
+    - name: Upload coverage to Codecov
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  test-e2e:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install Playwright browsers
+      run: |
+        python -m playwright install chromium
+
+    - name: Generate test data
+      run: |
+        python -c "
+        from tests.mocks.mock_tracts import generate_mock_tracts
+        from tests.mocks.mock_districts import generate_mock_districts
+        from tests.mocks.mock_analysis import generate_mock_political_analysis, generate_mock_demographic_analysis, generate_mock_compactness_analysis
+        from tests.mocks.mock_maps import generate_mock_state_map, generate_mock_national_map
+        from pathlib import Path
+
+        # Generate test data
+        output_dir = Path('outputs/test_2020_ci')
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Generate small dataset for CI
+        tracts = generate_mock_tracts(num_tracts=50, state='vermont', year='2020')
+        districts = generate_mock_districts(tracts, num_districts=1)
+
+        # Generate analysis
+        political = generate_mock_political_analysis(districts, state='vermont')
+        demographics = generate_mock_demographic_analysis(districts)
+        compactness = generate_mock_compactness_analysis(districts)
+
+        # Save CSVs
+        (output_dir / 'csvs').mkdir(exist_ok=True)
+        political.to_csv(output_dir / 'csvs' / 'political.csv', index=False)
+        demographics.to_csv(output_dir / 'csvs' / 'demographics.csv', index=False)
+        compactness.to_csv(output_dir / 'csvs' / 'compactness.csv', index=False)
+
+        # Generate maps
+        (output_dir / 'maps').mkdir(exist_ok=True)
+        generate_mock_state_map(output_dir / 'maps' / 'districts.png', state='vermont', map_type='districts')
+        generate_mock_national_map(output_dir / 'maps' / 'national.png', map_type='districts')
+
+        print('[OK] Test data generated for CI')
+        "
+
+    - name: Run E2E tests
+      run: |
+        python -m pytest tests/e2e -v --tb=short --headed
+
+    - name: Upload test artifacts
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-artifacts-${{ matrix.os }}
+        path: |
+          tests/e2e/screenshots/
+          tests/e2e/videos/

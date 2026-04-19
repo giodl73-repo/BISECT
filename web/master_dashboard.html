@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Redistricting - Cross-Census Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .main-content {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        th:hover {
+            background: #5568d3;
+        }
+
+        th.sortable::after {
+            content: ' ↕';
+            opacity: 0.5;
+            font-size: 0.8em;
+        }
+
+        th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .improvement-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .improvement-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .metric-highlight {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .run-selector {
+            margin-bottom: 2rem;
+        }
+
+        .run-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #495057;
+        }
+
+        .run-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            font-size: 0.95rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .run-selector select:hover {
+            border-color: #667eea;
+        }
+
+        .run-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .run-selector button {
+            width: 100%;
+            padding: 0.75rem;
+            margin-top: 1rem;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .run-selector button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        .run-selector button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .version-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+
+        .version-card:hover {
+            box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .version-card-clickable {
+            /* This area is clickable and navigates to version dashboard */
+        }
+
+        .version-card-runs {
+            /* Run cards inside here are NOT clickable by version card */
+            pointer-events: none;
+        }
+
+        .version-card-runs .run-card {
+            /* Re-enable pointer events for run cards */
+            pointer-events: auto;
+        }
+
+        .run-details {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: #666;
+            display: none;
+        }
+
+        .run-details.show {
+            display: block;
+        }
+
+        .run-details strong {
+            color: #333;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .year-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .year-2000 { background: #ffeaa7; color: #d63031; }
+        .year-2010 { background: #fab1a0; color: #e17055; }
+        .year-2020 { background: #a29bfe; color: #6c5ce7; }
+
+        /* View tabs */
+        .view-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .view-tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .view-tab:hover {
+            background: #e9ecef;
+            color: #495057;
+        }
+
+        .view-tab.active {
+            color: #667eea;
+            background: white;
+            border-bottom-color: #667eea;
+        }
+
+        .view-content {
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Run cards styles */
+        .runs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .run-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .run-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            border-color: #667eea;
+        }
+
+        .run-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .run-card-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .run-card-mode {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .mode-edge-weighted {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .mode-unweighted {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .run-card-details {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .run-card-detail {
+            margin-bottom: 0.5rem;
+        }
+
+        .run-card-detail strong {
+            color: #333;
+        }
+
+        /* Artifacts styles */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 2rem;
+        }
+
+        .artifact-category {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: box-shadow 0.2s;
+        }
+
+        .artifact-category:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .artifact-category h3 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .category-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .artifact-list {
+            list-style: none;
+        }
+
+        .artifact-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .artifact-item:hover {
+            background: #e7f3ff;
+            transform: translateX(4px);
+        }
+
+        .artifact-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .artifact-type {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .figures-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .figure-thumbnail {
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .figure-thumbnail:hover {
+            border-color: #667eea;
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        }
+
+        .figure-thumbnail img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+
+        .figure-name {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+            background: #f8f9fa;
+        }
+
+        .pdf-viewer-container {
+            margin: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .pdf-viewer-header {
+            background: #667eea;
+            color: white;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-viewer-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .pdf-viewer-guide,
+        .pdf-viewer-presentation,
+        .pdf-viewer-paper {
+            width: 100%;
+            border: none;
+        }
+
+        .pdf-viewer-guide,
+        .pdf-viewer-paper {
+            height: 1100px;
+            max-height: 80vh;
+        }
+
+        .pdf-viewer-presentation {
+            height: 540px;
+            max-height: 80vh;
+        }
+
+        .figure-modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+
+        .modal-caption {
+            text-align: center;
+            color: #ccc;
+            padding: 20px;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                border-left: none;
+                border-top: 1px solid #e0e0e0;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>Algorithmic Redistricting</h1>
+            <div class="subtitle">Experimental Variants & Analysis (2000-2020)</div>
+        </div>
+
+        <!-- View Tabs -->
+        <div class="view-tabs">
+            <div class="view-tab active" onclick="switchView('versions')">🔬 Versions</div>
+            <div class="view-tab" onclick="switchView('compactness')">📐 Compactness</div>
+            <div class="view-tab" onclick="switchView('artifacts')">📄 Artifacts</div>
+        </div>
+
+        <!-- Overview Content (removed - versions is now primary) -->
+        <div id="overview-view" class="view-content" style="display: none;">
+            <div style="padding: 2rem;">
+                <div class="section">
+                    <h2 class="section-title">Available Redistricting Runs</h2>
+                    <div class="section-subtitle">
+                        Click on a run to view its detailed dashboard
+                    </div>
+
+                    <div id="runsGrid" class="runs-grid">
+                        <!-- Run cards will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div><!-- end overview-view -->
+
+        <!-- Versions Content -->
+        <div id="versions-view" class="view-content active">
+            <div style="padding: 2rem;">
+                <div class="section">
+                    <h2 class="section-title">Experimental Variants & Runs</h2>
+                    <p class="section-subtitle">Each version represents a single experimental configuration tested across all census decades</p>
+
+                    <div id="versionsContainer">
+                        <!-- VERSIONS_HTML_PLACEHOLDER -->
+                    </div>
+                </div>
+            </div>
+        </div><!-- end versions-view -->
+
+        <!-- Compactness Content -->
+        <div id="compactness-view" class="view-content">
+        <div class="content-grid">
+            <div class="main-content">
+                <div class="section">
+                    <h2 class="section-title">Cross-Census Compactness Analysis</h2>
+                    <div class="section-subtitle">
+                        Comparing algorithmic vs enacted district compactness across three census cycles
+                    </div>
+
+                    <div id="overviewStats" class="stats-grid">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Note:</strong> Polsby-Popper scores range from 0 to 1, with higher values indicating more compact districts.
+                        The improvement percentages show how much more compact the algorithmic districts are compared to enacted districts.
+                    </div>
+
+                    <h3 style="margin-bottom: 1rem; color: #495057;">Overall Compactness Comparison</h3>
+                    <table id="overallTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable">Census Year</th>
+                                <th class="sortable">Enacted PP</th>
+                                <th class="sortable">Algorithmic PP</th>
+                                <th class="sortable">Improvement</th>
+                                <th class="sortable">Districts</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overallTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2 class="section-title">State-by-State Breakdown</h2>
+                    <div class="section-subtitle">
+                        Select a census year to view detailed state-level compactness data
+                    </div>
+
+                    <div style="margin-bottom: 1rem; display: flex; gap: 2rem; align-items: center;">
+                        <div>
+                            <label for="yearFilter" style="font-weight: 600; margin-right: 0.5rem;">Year:</label>
+                            <select id="yearFilter" onchange="updateTables()" style="padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 4px;">
+                                <option value="all">All Years</option>
+                                <option value="2000">2000</option>
+                                <option value="2010">2010</option>
+                                <option value="2020">2020</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="versionFilter" style="font-weight: 600; margin-right: 0.5rem;">Version:</label>
+                            <select id="versionFilter" onchange="updateTables()" style="padding: 0.5rem; border: 2px solid #e0e0e0; border-radius: 4px;">
+                                <option value="v1" selected>v1 (baseline)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <table id="stateTable">
+                        <thead>
+                            <tr>
+                                <th class="sortable">Year</th>
+                                <th class="sortable">State</th>
+                                <th class="sortable">Districts</th>
+                                <th class="sortable">Enacted PP</th>
+                                <th class="sortable">Algo PP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stateTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="run-selector">
+                    <h3 style="margin-bottom: 1rem; color: #667eea;">View Individual Run</h3>
+                    <label for="runSelect">Select Run:</label>
+                    <select id="runSelect" onchange="updateRunDetails()">
+                        <option value="">-- Choose Year and Version --</option>
+                        <!-- OPTIONS_PLACEHOLDER -->
+                    </select>
+
+                    <div id="runDetails" class="run-details">
+                        <strong>Run Details:</strong><br>
+                        <span id="runDetailsText"></span>
+                    </div>
+
+                    <button onclick="viewDashboard()" id="viewButton" disabled>
+                        View Dashboard
+                    </button>
+                </div>
+
+                <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+                    <h4 style="margin-bottom: 0.5rem; color: #495057;">Available Runs</h4>
+                    <div id="runsList" style="font-size: 0.85rem; color: #666;">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div><!-- end compactness-view -->
+
+        <!-- Artifacts Content -->
+        <div id="artifacts-view" class="view-content">
+            <div id="artifactsContainer" style="padding: 2rem;">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div><!-- end main-container -->
+
+    <script>
+        // Run data embedded by generator
+        const RUNS = /* RUNS_DATA_PLACEHOLDER */;
+
+        // Comparison data embedded by generator
+        const COMPARISON_DATA = /* COMPARISON_DATA_PLACEHOLDER */;
+
+        // Versions data embedded by generator
+        const VERSIONS = /* VERSIONS_DATA_PLACEHOLDER */;
+
+        // Initialize comparison data
+        let comparisonData = COMPARISON_DATA;
+
+        // Load comparison data (now synchronous since it's embedded)
+        function loadComparisonData() {
+            if (Object.keys(comparisonData).length === 0) {
+                console.error('No comparison data available');
+                document.getElementById('overviewStats').innerHTML =
+                    '<div style="grid-column: 1/-1; text-align: center; color: #dc3545; padding: 2rem;">No comparison data available.<br>Please run generate_enhanced_master_dashboard.py to create comparison.json.</div>';
+                return;
+            }
+
+            populateVersionSelector();
+            populateOverviewStats();
+            populateOverallTable();
+            populateStateTable();
+        }
+
+        function populateVersionSelector() {
+            // Find all available versions across all years
+            const allVersions = new Set();
+            Object.values(comparisonData).forEach(yearData => {
+                Object.keys(yearData).forEach(version => allVersions.add(version));
+            });
+
+            const versionSelect = document.getElementById('versionFilter');
+            versionSelect.innerHTML = '';
+
+            // Sort versions (v1, v2, v3, ...)
+            const sortedVersions = Array.from(allVersions).sort();
+            sortedVersions.forEach(version => {
+                const option = document.createElement('option');
+                option.value = version;
+                option.textContent = version === 'v1' ? `${version} (baseline)` : version;
+                if (version === 'v1') option.selected = true;
+                versionSelect.appendChild(option);
+            });
+        }
+
+        function populateOverviewStats() {
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Census Years</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">435</div>
+                    <div class="stat-label">Districts per Year</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${RUNS.length}</div>
+                    <div class="stat-label">Total Runs</div>
+                </div>
+            `;
+            document.getElementById('overviewStats').innerHTML = statsHtml;
+        }
+
+        function populateOverallTable() {
+            const selectedVersion = document.getElementById('versionFilter').value;
+            const tbody = document.getElementById('overallTableBody');
+            let html = '';
+
+            ['2000', '2010', '2020'].forEach(year => {
+                const yearData = comparisonData[year];
+                if (!yearData) return;
+
+                // Get data for selected version, fall back to v1 if not available
+                const data = yearData[selectedVersion] || yearData['v1'];
+                if (!data) return;
+
+                const improvement = data.improvement_pct || 0;
+                const improvementClass = improvement >= 0 ? 'improvement-positive' : 'improvement-negative';
+                const improvementSign = improvement >= 0 ? '+' : '';
+
+                html += `
+                    <tr>
+                        <td><span class="year-badge year-${year}">${year}</span></td>
+                        <td>${data.enacted ? data.enacted.mean_pp.toFixed(4) : 'N/A'}</td>
+                        <td class="metric-highlight">${data.algorithmic.mean_pp.toFixed(4)}</td>
+                        <td class="${improvementClass}">${improvementSign}${improvement.toFixed(1)}%</td>
+                        <td>${data.algorithmic.total_districts}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function updateTables() {
+            populateOverallTable();
+            updateStateTable();
+        }
+
+        function populateStateTable() {
+            updateStateTable();
+        }
+
+        function updateStateTable() {
+            const yearFilter = document.getElementById('yearFilter').value;
+            const selectedVersion = document.getElementById('versionFilter').value;
+            const tbody = document.getElementById('stateTableBody');
+            let html = '';
+            let allStates = [];
+
+            ['2000', '2010', '2020'].forEach(year => {
+                if (yearFilter !== 'all' && yearFilter !== year) return;
+
+                const yearData = comparisonData[year];
+                if (!yearData) return;
+
+                // Get data for selected version, fall back to v1
+                const data = yearData[selectedVersion] || yearData['v1'];
+                if (!data || !data.states) return;
+
+                data.states.forEach(state => {
+                    allStates.push({
+                        year: year,
+                        state: state.state,
+                        districts: state.num_districts,
+                        algo_pp: state.mean_pp,
+                        enacted_pp: state.enacted_mean_pp || null,
+                        improvement: state.improvement_pct || null
+                    });
+                });
+            });
+
+            // Sort by state name then year
+            allStates.sort((a, b) => {
+                if (a.state !== b.state) return a.state.localeCompare(b.state);
+                return a.year.localeCompare(b.year);
+            });
+
+            allStates.forEach(state => {
+                const enactedPP = state.enacted_pp ? state.enacted_pp.toFixed(4) : '-';
+
+                html += `
+                    <tr>
+                        <td><span class="year-badge year-${state.year}">${state.year}</span></td>
+                        <td style="text-transform: capitalize;">${state.state.replace(/_/g, ' ')}</td>
+                        <td>${state.districts}</td>
+                        <td>${enactedPP}</td>
+                        <td class="metric-highlight">${state.algo_pp.toFixed(4)}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html || '<tr><td colspan="5" style="text-align: center; color: #999;">No data available</td></tr>';
+        }
+
+        // Table sorting functionality
+        function setupTableSorting() {
+            document.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const table = th.closest('table');
+                    const tbody = table.querySelector('tbody');
+                    const rows = Array.from(tbody.querySelectorAll('tr'));
+                    const columnIndex = Array.from(th.parentElement.children).indexOf(th);
+                    const isNumeric = th.textContent.includes('PP') || th.textContent.includes('%') || th.textContent.includes('Districts');
+
+                    // Determine sort direction
+                    const isAsc = th.classList.contains('sorted-asc');
+
+                    // Clear all sorting indicators
+                    table.querySelectorAll('th').forEach(h => {
+                        h.classList.remove('sorted-asc', 'sorted-desc');
+                    });
+
+                    // Set new sorting indicator
+                    th.classList.add(isAsc ? 'sorted-desc' : 'sorted-asc');
+
+                    // Sort rows
+                    rows.sort((a, b) => {
+                        let aVal = a.children[columnIndex].textContent.trim();
+                        let bVal = b.children[columnIndex].textContent.trim();
+
+                        if (isNumeric) {
+                            aVal = parseFloat(aVal.replace(/[^0-9.-]/g, '')) || 0;
+                            bVal = parseFloat(bVal.replace(/[^0-9.-]/g, '')) || 0;
+                            return isAsc ? bVal - aVal : aVal - bVal;
+                        } else {
+                            return isAsc ? bVal.localeCompare(aVal) : aVal.localeCompare(bVal);
+                        }
+                    });
+
+                    // Reattach rows in sorted order
+                    rows.forEach(row => tbody.appendChild(row));
+                });
+            });
+        }
+
+        function updateRunDetails() {
+            const select = document.getElementById('runSelect');
+            const detailsDiv = document.getElementById('runDetails');
+            const detailsText = document.getElementById('runDetailsText');
+            const button = document.getElementById('viewButton');
+
+            if (select.value) {
+                const run = RUNS.find(r => r.path === select.value);
+                if (run) {
+                    detailsText.innerHTML = `
+                        <strong>Year:</strong> ${run.year} Census<br>
+                        <strong>Version:</strong> ${run.version}<br>
+                        <strong>Mode:</strong> ${run.mode}<br>
+                        <strong>States:</strong> ${run.num_states}/50<br>
+                        <strong>Path:</strong> ${run.path}/
+                    `;
+                    detailsDiv.classList.add('show');
+                    button.disabled = false;
+                }
+            } else {
+                detailsDiv.classList.remove('show');
+                button.disabled = true;
+            }
+        }
+
+        function viewDashboard() {
+            const select = document.getElementById('runSelect');
+            if (select.value) {
+                window.location.href = select.value + '/index.html';
+            }
+        }
+
+        function populateRunsGrid() {
+            const runsGridDiv = document.getElementById('runsGrid');
+
+            let html = '';
+            // Sort runs by year (desc) then version
+            const sortedRuns = [...RUNS].sort((a, b) => {
+                if (b.year !== a.year) return b.year.localeCompare(a.year);
+                return a.version_full.localeCompare(b.version_full);
+            });
+
+            sortedRuns.forEach(run => {
+                const modeClass = run.mode.toLowerCase().includes('edge') ? 'mode-edge-weighted' : 'mode-unweighted';
+                const yearClass = `year-${run.year}`;
+
+                html += `
+                    <div class="run-card" onclick="openRun('${run.path}/index.html')">
+                        <div class="run-card-header">
+                            <div class="run-card-title">${run.year}</div>
+                            <span class="year-badge ${yearClass}">${run.year}</span>
+                        </div>
+                        <div class="run-card-details">
+                            <div class="run-card-detail">
+                                <strong>Version:</strong> ${run.version_full}
+                            </div>
+                            <div class="run-card-detail">
+                                <strong>Mode:</strong>
+                                <span class="run-card-mode ${modeClass}">${run.mode}</span>
+                            </div>
+                            <div class="run-card-detail">
+                                <strong>States:</strong> ${run.num_states}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            runsGridDiv.innerHTML = html || '<p style="color: #999; text-align: center; grid-column: 1/-1;">No runs available</p>';
+        }
+
+        function openRun(path) {
+            window.location.href = path;
+        }
+
+        function openVersionDashboard(versionName) {
+            window.location.href = `${versionName}/index.html`;
+        }
+
+        function populateRunsList() {
+            const runsListDiv = document.getElementById('runsList');
+            const runsByYear = {};
+
+            RUNS.forEach(run => {
+                if (!runsByYear[run.year]) runsByYear[run.year] = [];
+                runsByYear[run.year].push(run);
+            });
+
+            let html = '';
+            Object.keys(runsByYear).sort().reverse().forEach(year => {
+                html += `<div style="margin-bottom: 0.5rem;"><strong>${year}:</strong> ${runsByYear[year].length} run(s)</div>`;
+            });
+
+            runsListDiv.innerHTML = html;
+        }
+
+        function populateVersionsView() {
+            const container = document.getElementById('versionsContainer');
+
+            if (!container) {
+                console.error('versionsContainer element not found!');
+                return;
+            }
+
+            if (!VERSIONS || VERSIONS.length === 0) {
+                console.error('No VERSIONS data:', VERSIONS);
+                container.innerHTML = '<p style="color: #999;">No versions found. Run redistricting with new directory structure to create versions.</p>';
+                return;
+            }
+
+            console.log('Populating', VERSIONS.length, 'versions');
+            let html = '';
+
+            VERSIONS.forEach(version => {
+                const partitionMode = version.partition_mode.replace('_', '-').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                const dataLevel = version.data_level.charAt(0).toUpperCase() + version.data_level.slice(1);
+
+                html += `
+                <div class="version-card" onclick="openVersionDashboard('${version.name}')">
+                    <div class="version-card-clickable">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                            <div>
+                                <h3 style="color: #667eea; margin: 0; font-size: 1.5rem;">${version.name}</h3>
+                                ${version.description ? `<p style="color: #666; margin: 0.5rem 0 0 0; font-size: 0.95rem;">${version.description}</p>` : ''}
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: #999;">${version.num_runs} run(s)</div>
+                                <div style="font-size: 0.85rem; color: #667eea; margin-top: 0.25rem;">Click to view &rarr;</div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Partition Mode</div>
+                                <div style="font-weight: 600; color: #333;">${partitionMode}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Data Level</div>
+                                <div style="font-weight: 600; color: #333;">${dataLevel}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.25rem;">Completed Years</div>
+                                <div style="font-weight: 600; color: #333;">${version.completed_years.join(', ') || 'None'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="version-card-runs" style="border-top: 1px solid #e0e0e0; padding-top: 1rem;">
+                        <h4 style="color: #495057; font-size: 1rem; margin-bottom: 0.75rem;">Individual Runs:</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                `;
+
+                version.runs.forEach(run => {
+                    const modeClass = run.mode.toLowerCase().includes('edge') ? 'mode-edge-weighted' : 'mode-unweighted';
+                    const yearClass = `year-${run.year}`;
+
+                    html += `
+                        <div class="run-card ${modeClass} ${yearClass}" onclick="openRun('${run.path}')">
+                            <div class="run-card-header">
+                                <span class="run-card-year">${run.year}</span>
+                                <span class="run-card-states">${run.num_states} states</span>
+                            </div>
+                            <div class="run-card-mode">${run.mode}</div>
+                            <div class="run-card-footer">
+                                ${run.created ? new Date(run.created).toLocaleDateString() : 'Unknown date'}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                </div>
+                `;
+            });
+
+            console.log('Setting container.innerHTML with', html.length, 'characters');
+            container.innerHTML = html;
+            console.log('Versions populated successfully');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadComparisonData();
+            setupTableSorting();
+            populateRunsGrid();
+            populateRunsList();
+            // populateVersionsView(); // No longer needed - versions are statically generated
+            loadArtifacts();
+        });
+
+        // Allow Enter key in run selector
+        document.getElementById('runSelect').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                viewDashboard();
+            }
+        });
+
+        // View switching
+        function switchView(viewName) {
+            // Update tabs
+            document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.view-content').forEach(view => view.classList.remove('active'));
+            document.getElementById(viewName + '-view').classList.add('active');
+        }
+
+        // Artifacts data will be embedded here by generator
+        const ARTIFACTS = /* ARTIFACTS_DATA_PLACEHOLDER */;
+
+        // Load artifacts
+        function loadArtifacts() {
+            const container = document.getElementById('artifactsContainer');
+
+            if (typeof ARTIFACTS === 'undefined' || !ARTIFACTS) {
+                container.innerHTML = '<p>No artifacts data available.</p>';
+                return;
+            }
+
+            let html = '<h2 style="color: #667eea; margin-bottom: 1rem;">📄 Research Artifacts</h2>';
+            html += '<p style="color: #666; margin-bottom: 2rem;">Compiled PDFs and shared figures from the redistricting project.</p>';
+            html += '<div class="artifacts-grid">';
+
+            // Guides
+            if (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📖 Guides</h3>';
+                html += '<p class="category-description">Educational guides for general audiences</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.guides.forEach(guide => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${guide.path}', 'guide', '${guide.title}')">`;
+                    html += `<span class="artifact-title">${guide.title}</span>`;
+                    html += '<span class="artifact-type">Letter (8.5" × 11")</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Presentations
+            if (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📊 Presentations</h3>';
+                html += '<p class="category-description">Conference presentations</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.presentations.forEach(pres => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${pres.path}', 'presentation', '${pres.title}')">`;
+                    html += `<span class="artifact-title">${pres.title}</span>`;
+                    html += '<span class="artifact-type">Widescreen (16:9)</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Papers
+            if (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) {
+                html += '<div class="artifact-category">';
+                html += '<h3>📝 Papers</h3>';
+                html += '<p class="category-description">Academic research papers</p>';
+                html += '<ul class="artifact-list">';
+                ARTIFACTS.papers.forEach(paper => {
+                    html += `<li class="artifact-item" onclick="displayPDF('${paper.path}', 'paper', '${paper.title}')">`;
+                    html += `<span class="artifact-title">${paper.title}</span>`;
+                    html += '<span class="artifact-type">Letter (8.5" × 11")</span>';
+                    html += '</li>';
+                });
+                html += '</ul></div>';
+            }
+
+            // Figures
+            if (ARTIFACTS.figures) {
+                const hasSchematic = ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0;
+                const hasRealTracts = ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0;
+                const hasRoundProgression = ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0;
+
+                if (hasSchematic || hasRealTracts || hasRoundProgression) {
+                    html += '<div class="artifact-category" style="grid-column: 1 / -1;">';
+                    html += '<h3>🖼️ Figures</h3>';
+                    html += '<p class="category-description">Shared figures used across documents</p>';
+
+                    if (hasSchematic) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Schematic Diagrams</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.schematic.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    if (hasRealTracts) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Real Census Tract Examples</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.real_tracts.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    if (hasRoundProgression) {
+                        html += '<h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Round Progression</h4>';
+                        html += '<div class="figures-gallery">';
+                        ARTIFACTS.figures.round_progression.forEach(fig => {
+                            html += `<div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">`;
+                            html += `<img src="${fig.path}" alt="${fig.name}">`;
+                            html += `<div class="figure-name">${fig.name}</div>`;
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    html += '</div>';
+                }
+            }
+
+            html += '</div>';
+
+            // Add PDF viewer and modal containers
+            html += `
+                <div id="pdfViewerContainer" class="pdf-viewer-container" style="display: none;">
+                    <div class="pdf-viewer-header">
+                        <h3 id="pdfViewerTitle"></h3>
+                        <button class="pdf-viewer-close" onclick="closePDFViewer()">✕</button>
+                    </div>
+                    <embed id="pdfViewerEmbed" type="application/pdf" class="pdf-viewer-guide">
+                </div>
+
+                <div id="figureModal" class="figure-modal" onclick="closeFigureModal()" style="display: none;">
+                    <span class="modal-close" onclick="closeFigureModal()">&times;</span>
+                    <img id="modalImage" class="modal-content">
+                    <div id="modalCaption" class="modal-caption"></div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Display PDF
+        function displayPDF(path, type, title) {
+            const container = document.getElementById('pdfViewerContainer');
+            const titleEl = document.getElementById('pdfViewerTitle');
+            const embedEl = document.getElementById('pdfViewerEmbed');
+
+            titleEl.textContent = title;
+            embedEl.src = path;
+            embedEl.className = `pdf-viewer-${type}`;
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Close PDF viewer
+        function closePDFViewer() {
+            document.getElementById('pdfViewerContainer').style.display = 'none';
+        }
+
+        // Open figure modal
+        function openFigureModal(path, name) {
+            const modal = document.getElementById('figureModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('modalCaption');
+
+            modal.style.display = 'flex';
+            modalImg.src = path;
+            caption.textContent = name;
+        }
+
+        // Close figure modal
+        function closeFigureModal() {
+            document.getElementById('figureModal').style.display = 'none';
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFigureModal();
+                closePDFViewer();
+            }
+        });
+    </script>
+</body>
+</html>

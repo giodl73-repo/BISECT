@@ -1,0 +1,79 @@
+```mermaid
+graph LR
+    subgraph "Raw Data (Census)"
+        A1[Tract Shapefiles<br/>.shp]
+        A2[PL94-171<br/>.txt]
+    end
+
+    subgraph "Processed Data"
+        B1[Tract Geometries<br/>.parquet<br/>GEOID, geometry, population]
+        B2[Adjacency Graphs<br/>.pkl<br/>NetworkX Graph]
+    end
+
+    subgraph "Intermediate Results"
+        C1[Round Assignments<br/>.json<br/>round_N_assignments.json]
+        C2[Round Metadata<br/>.json<br/>round_N_metadata.json]
+    end
+
+    subgraph "District Outputs"
+        D1[Final Assignments<br/>.pkl<br/>tract_id → district_num]
+        D2[District Summary<br/>.csv<br/>population, compactness]
+        D3[District Cities<br/>.csv<br/>major cities per district]
+        D4[Rounds Hierarchy<br/>.csv<br/>bisection tree structure]
+    end
+
+    subgraph "Analysis Data"
+        E1[Political Analysis<br/>.csv<br/>district_political_2020.csv]
+        E2[Demographics<br/>.csv<br/>district_demographics.csv]
+    end
+
+    subgraph "Visualization"
+        F1[District Maps<br/>.png<br/>State & Individual]
+        F2[Round Maps<br/>.png<br/>Bisection Progression]
+        F3[Analysis Maps<br/>.png<br/>Political, Demographic]
+        F4[National Maps<br/>.png<br/>All 435 Districts]
+    end
+
+    subgraph "Web Output"
+        G1[Dashboard<br/>index.html<br/>Interactive Explorer]
+    end
+
+    A1 -->|download_tract_shapefiles.py| B1
+    A2 -->|process_census_data.py| B1
+    B1 -->|build_adjacency_graphs.py| B2
+
+    B1 --> |process_single_state.py| C1
+    B2 --> |process_single_state.py| C1
+    C1 --> C2
+
+    C1 -->|final round| D1
+    C2 -->|aggregate| D4
+    D1 -->|create_final_district_summary.py| D2
+    D1 -->|add_cities_to_districts.py| D3
+
+    D1 -->|analyze_districts.py| E1
+    D1 -->|analyze_district_demographics.py| E2
+
+    D1 -->|visualize_districts.py| F1
+    C1 -->|visualize_all_rounds.py| F2
+    C2 -->|visualize_all_rounds.py| F2
+    E1 -->|visualize_partisan_lean.py| F3
+    E2 -->|visualize_district_demographics.py| F3
+    D1 -->|create_us_national_map.py| F4
+    C1 -->|create_us_national_rounds_progression.py| F4
+
+    D2 --> G1
+    D3 --> G1
+    E1 --> G1
+    E2 --> G1
+    F1 --> G1
+    F2 --> G1
+    F3 --> G1
+    F4 --> G1
+
+    style B1 fill:#E8F5E9
+    style B2 fill:#E8F5E9
+    style D1 fill:#FFF3E0
+    style D2 fill:#FFF3E0
+    style G1 fill:#E3F2FD
+```

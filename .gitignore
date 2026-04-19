@@ -1,0 +1,191 @@
+# Congressional Redistricting Project - Git Ignore
+
+# ============================================================================
+# Data Files (Large - Do Not Commit)
+# ============================================================================
+# Exclude entire data directory from GitHub
+data/
+
+# ============================================================================
+# Output Files (Generated Results)
+# ============================================================================
+# Excludes all generated outputs:
+#   outputs/v1/         - Production runs
+#   outputs/experiments/ - Research variants
+#   outputs/dev/        - Development/test runs
+#   outputs/artifacts/  - Academic outputs (PDFs, figures)
+outputs/
+*.png
+*.jpg
+*.jpeg
+*.pdf
+
+# Exception: Keep documentation images if any
+!docs/**/*.png
+!docs/**/*.jpg
+
+# ============================================================================
+# Python
+# ============================================================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Playwright test results
+tests/test-results/
+tests/screenshots/diff/
+tests/.pytest_cache/
+playwright-report/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Environment variables
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ============================================================================
+# IDEs and Editors
+# ============================================================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# ============================================================================
+# Operating System Files
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+# ============================================================================
+# Project Specific
+# ============================================================================
+# Temporary files
+*.tmp
+*.temp
+*.log
+tmpclaude-*-cwd
+
+# LaTeX compilation artifacts
+*.aux
+*.bbl
+*.blg
+*.out
+*.toc
+*.lof
+*.lot
+
+# METIS executable (large binary - should be downloaded separately)
+# Uncomment if METIS is in the repo
+# bin/gpmetis.exe
+# bin/gpmetis
+
+# Session summaries (keep if you want to track them)
+# SESSION_SUMMARY_*.md
+
+# Backup files
+*.bak
+*.backup
+
+# ============================================================================
+# Documentation Build Files (if using Sphinx or similar)
+# ============================================================================
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# ============================================================================
+# Keep These Important Files
+# ============================================================================
+# Explicitly track certain files even if pattern matches above
+!README.md
+!LICENSE
+!requirements.txt
+!setup.py
+!pyproject.toml
+.git.old/

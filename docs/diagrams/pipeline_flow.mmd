@@ -1,0 +1,60 @@
+```mermaid
+graph TD
+    START[run_complete_redistricting.py] --> PARALLEL{Parallel or<br/>Sequential?}
+
+    PARALLEL -->|Parallel| P1[Process 4-8 States<br/>Simultaneously]
+    PARALLEL -->|Sequential| S1[Process States<br/>One at a Time]
+
+    P1 --> STATE[Per-State Processing]
+    S1 --> STATE
+
+    subgraph "State Processing (run_state_redistricting.py)"
+        STATE --> ST1[Load Tract Data<br/>& Adjacency Graph]
+        ST1 --> ST2[Recursive Bisection<br/>METIS Partitioning]
+        ST2 --> ST3[Create District Summary<br/>Population, Compactness]
+        ST3 --> ST4[Assign Cities to Districts]
+        ST4 --> ST5[Generate Maps<br/>Districts, Rounds, Individual]
+    end
+
+    ST5 --> CHECK{All 50 States<br/>Complete?}
+    CHECK -->|No| STATE
+    CHECK -->|Yes| AGG[Aggregation Phase]
+
+    subgraph "US Aggregation"
+        AGG --> AG1[Create US District Summary<br/>All 435 Districts]
+        AG1 --> AG2[Create US Rounds Hierarchy<br/>National Bisection Tree]
+        AG2 --> AG3[Create US National Maps<br/>Base, With Cities]
+        AG3 --> AG4[Create US Round Progression<br/>Rounds 1-6]
+    end
+
+    AG4 --> ANALYSIS[Analysis Phase]
+
+    subgraph "Political Analysis"
+        ANALYSIS --> PA1[Analyze Districts<br/>Partisan Lean per State]
+        PA1 --> PA2[Visualize Partisan Lean<br/>Maps with D/R Counts]
+        PA2 --> PA3[Create National Political Map<br/>All 435 Districts]
+    end
+
+    PA3 --> DEMO[Demographic Phase]
+
+    subgraph "Demographic Analysis"
+        DEMO --> DM1[Analyze Demographics<br/>Race, Gender per State]
+        DM1 --> DM2[Visualize Demographics<br/>Diversity, Majority Maps]
+        DM2 --> DM3[Create National Demographic Map<br/>All 435 Districts]
+    end
+
+    DM3 --> COMPACT[Compactness Phase]
+
+    subgraph "Compactness Visualization"
+        COMPACT --> CP1[Visualize Compactness<br/>Polsby-Popper, Reock Maps]
+    end
+
+    CP1 --> FINISH[Pipeline Complete<br/>Generate Dashboard]
+
+    style STATE fill:#FFE4B5
+    style AGG fill:#E0BBE4
+    style ANALYSIS fill:#B4E7CE
+    style DEMO fill:#FFDAB9
+    style COMPACT fill:#B0E0E6
+    style FINISH fill:#90EE90
+```

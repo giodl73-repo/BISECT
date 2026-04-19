@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Redistricting Dashboard - U.S. 2020</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-rows: 60px 1fr;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header-info {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .header-select {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .header-select:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: rgba(255,255,255,0.5);
+        }
+
+        .header-select option {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .sidebar-controls {
+            padding: 0.75rem 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .sort-select {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .state-list {
+            list-style: none;
+        }
+
+        .state-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .state-item:hover {
+            background: #f8f9fa;
+            padding-left: 1.5rem;
+        }
+
+        .state-item.active {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+
+        .state-districts {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            background: rgba(0,0,0,0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 12px;
+        }
+
+        .state-item.active .state-districts {
+            background: rgba(255,255,255,0.2);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Top Navigation (Dimensions) */
+        .dimensions {
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            overflow-x: auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .dimension-tab {
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            font-weight: 500;
+            border: 2px solid transparent;
+            color: #495057;
+        }
+
+        .dimension-tab:hover {
+            background: #f8f9fa;
+            border-color: #e0e0e0;
+        }
+
+        .dimension-tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .content-card h2 {
+            margin-bottom: 1.5rem;
+            color: #2c3e50;
+            font-size: 1.5rem;
+        }
+
+        .content-card h3 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #495057;
+            font-size: 1.2rem;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        /* Map Container */
+        .map-container {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);  /* 1 column on mobile */
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .map-container {
+                grid-template-columns: repeat(2, 1fr);  /* 2 columns on tablet */
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .map-container {
+                grid-template-columns: repeat(3, 1fr);  /* 3 columns on desktop */
+            }
+        }
+
+        .map-container.rounds-layout {
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            max-width: 100%;
+        }
+
+        @media (min-width: 900px) {
+            .map-container.rounds-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Metro maps for USA (national view) - 2 per row */
+        .map-container.metros-layout {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            .map-container.metros-layout {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Metro maps for individual states - 1 per row */
+        .map-container.metros-layout-state {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1400px;
+        }
+
+        /* Full-width single map (for political, compactness, etc.) */
+        .map-container.full-width {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .map-item {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .map-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .map-label {
+            margin-top: 0.75rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: #6c757d;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Artifacts Tab Styles */
+        .artifacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .artifact-category {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .artifact-category:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+        }
+
+        .artifact-category h3 {
+            margin: 0 0 1rem 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .artifact-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .artifact-item {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .artifact-item:last-child {
+            border-bottom: none;
+        }
+
+        .artifact-item:hover {
+            background: #f8f9fa;
+        }
+
+        .artifact-item-icon {
+            font-size: 1.2rem;
+        }
+
+        .artifact-item-text {
+            flex: 1;
+        }
+
+        .artifact-item-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .artifact-item-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* PDF Viewers */
+        .pdf-viewer {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 1rem;
+        }
+
+        .pdf-viewer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .pdf-viewer-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .pdf-viewer-close {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .pdf-viewer-close:hover {
+            background: #c82333;
+        }
+
+        .pdf-embed-container {
+            text-align: center;
+        }
+
+        .pdf-viewer-guide {
+            width: 850px;
+            height: 1100px;
+            max-width: 100%;
+        }
+
+        .pdf-viewer-presentation {
+            width: 960px;
+            height: 540px;
+            max-width: 100%;
+        }
+
+        .pdf-viewer-paper {
+            width: 850px;
+            height: 1100px;
+            max-width: 100%;
+        }
+
+        .pdf-fallback {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .pdf-fallback a {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            margin-top: 1rem;
+            transition: background 0.2s;
+        }
+
+        .pdf-fallback a:hover {
+            background: #5568d3;
+        }
+
+        /* Figures Gallery */
+        .figures-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .figure-thumbnail {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .figure-thumbnail:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .figure-thumbnail img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .figure-thumbnail-caption {
+            padding: 1rem;
+            font-size: 0.9rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Modal for full-size figures */
+        .figure-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .figure-modal.active {
+            display: flex;
+        }
+
+        .figure-modal-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .figure-modal-img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .figure-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .figure-modal-close:hover {
+            background: #c82333;
+        }
+
+        .figure-modal-caption {
+            color: white;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.1rem;
+        }
+
+        .empty-artifacts {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .empty-artifacts-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-artifacts h3 {
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .empty-artifacts p {
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-artifacts code {
+            background: #f8f9fa;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🗺️ Algorithmic Redistricting Dashboard</h1>
+            <div class="header-controls">
+                <a href="../index.html" class="header-select" style="text-decoration: none; display: inline-block;">
+                    ← Cross-Census Overview
+                </a>
+                <div class="dropdown" style="position: relative; display: inline-block;">
+                    <button class="header-select" onclick="togglePapersMenu()" style="cursor: pointer; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+                        📄 Research Papers
+                    </button>
+                    <div id="papersMenu" style="display: none; position: absolute; right: 0; top: 100%; background: white; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); z-index: 1000; margin-top: 4px; min-width: 300px;">
+                        <a href="../papers/01_recursive_bisection/recursive_bisection.pdf" target="_blank" style="display: block; padding: 12px 16px; text-decoration: none; color: #333; border-bottom: 1px solid #eee;">
+                            <strong>Paper 1:</strong> Recursive Bisection for Congressional Redistricting
+                        </a>
+                        <a href="../papers/02_edge_weighted_bisection/edge_weighted_bisection.pdf" target="_blank" style="display: block; padding: 12px 16px; text-decoration: none; color: #333;">
+                            <strong>Paper 2:</strong> Edge-Weighted Recursive Bisection
+                        </a>
+                    </div>
+                </div>
+                <div class="header-info">
+                    📅 2020 Census | 435 Districts | 50 States
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar - States -->
+        <div class="sidebar">
+            <div class="sidebar-header">States</div>
+            <div class="sidebar-controls">
+                <select class="sort-select" id="sortSelect" onchange="sortStates()">
+                    <option value="alpha-asc">Sort: A → Z</option>
+                    <option value="alpha-desc">Sort: Z → A</option>
+                    <option value="districts-desc">Sort: Districts ↓</option>
+                    <option value="districts-asc">Sort: Districts ↑</option>
+                </select>
+            </div>
+            <ul class="state-list" id="stateList">
+                <!-- States will be populated by JavaScript -->
+            </ul>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation - Dimensions -->
+            <div class="dimensions" id="dimensions">
+                <div class="dimension-tab active" data-dimension="overview">📊 Overview</div>
+                <div class="dimension-tab" data-dimension="configuration">⚙️ Configuration</div>
+                <div class="dimension-tab" data-dimension="rounds">🔄 Rounds</div>
+                <div class="dimension-tab" data-dimension="districts">🗺️ Districts</div>
+                <div class="dimension-tab" data-dimension="political">🏛️ Political</div>
+                <div class="dimension-tab" data-dimension="demographic">👥 Demographics</div>
+                <div class="dimension-tab" data-dimension="compactness">📐 Compactness</div>
+                <div class="dimension-tab" data-dimension="cities">🏙️ Cities</div>
+                <div class="dimension-tab" data-dimension="urban">🏙️ Urban Areas</div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area" id="contentArea">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Select a state to view redistricting data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State data (districts per state from 2020 apportionment)
+        const stateData = {
+            'alabama': 7, 'alaska': 1, 'arizona': 9, 'arkansas': 4, 'california': 52,
+            'colorado': 8, 'connecticut': 5, 'delaware': 1, 'florida': 28, 'georgia': 14,
+            'hawaii': 2, 'idaho': 2, 'illinois': 17, 'indiana': 9, 'iowa': 4,
+            'kansas': 4, 'kentucky': 6, 'louisiana': 6, 'maine': 2, 'maryland': 8,
+            'massachusetts': 9, 'michigan': 13, 'minnesota': 8, 'mississippi': 4, 'missouri': 8,
+            'montana': 2, 'nebraska': 3, 'nevada': 4, 'new_hampshire': 2, 'new_jersey': 12,
+            'new_mexico': 3, 'new_york': 26, 'north_carolina': 14, 'north_dakota': 1, 'ohio': 15,
+            'oklahoma': 5, 'oregon': 6, 'pennsylvania': 17, 'rhode_island': 2, 'south_carolina': 7,
+            'south_dakota': 1, 'tennessee': 9, 'texas': 38, 'utah': 4, 'vermont': 1,
+            'virginia': 11, 'washington': 10, 'west_virginia': 2, 'wisconsin': 8, 'wyoming': 1
+        };
+
+        // State data configuration
+        // Note: DISTRICT_DATA will be injected here during deployment
+
+        let currentState = null;
+        let currentDimension = 'overview';
+        let currentYear = '2020';
+        let currentVersion = 'v1';
+        let currentSort = 'alpha-asc';
+        let statesArray = [];
+        let runConfig = null;  // Will be loaded from config.json
+        let versionConfig = null;  // Will be loaded from ../version.json
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            prepareStatesArray();
+            populateStates();
+            setupDimensionTabs();
+            loadConfig();  // Load config.json and version.json asynchronously
+
+            // Hide Urban Areas tab for Census 2000 (CBSA classification not available)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+            if (censusYear === '2000') {
+                const urbanTab = document.querySelector('[data-dimension="urban"]');
+                if (urbanTab) {
+                    urbanTab.style.display = 'none';
+                }
+            }
+
+            // Default to USA Overview on load
+            selectState('usa');
+        });
+
+        // Toggle research papers dropdown menu
+        function togglePapersMenu() {
+            const menu = document.getElementById('papersMenu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close papers menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = event.target.closest('.dropdown');
+            const menu = document.getElementById('papersMenu');
+            if (!dropdown && menu) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Get base path for current year/version
+        function getBasePath() {
+            // Dashboard is deployed inside the year/version directory,
+            // so use relative paths (current directory)
+            return '.';
+        }
+
+        // Prepare states array for sorting
+        function prepareStatesArray() {
+            // Calculate total districts
+            const totalDistricts = Object.values(stateData).reduce((sum, d) => sum + d, 0);
+
+            // Add USA entry first
+            statesArray = [{
+                key: 'usa',
+                name: 'United States',
+                districts: totalDistricts
+            }];
+
+            // Add all states
+            Object.entries(stateData).forEach(([state, districts]) => {
+                const stateName = state.split('_').map(word =>
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+
+                statesArray.push({
+                    key: state,
+                    name: stateName,
+                    districts: districts
+                });
+            });
+        }
+
+        // Sort states based on current sort mode
+        function sortStates() {
+            const sortMode = document.getElementById('sortSelect').value;
+            currentSort = sortMode;
+
+            // Keep USA at the top, sort the rest
+            const usa = statesArray[0];
+            const states = statesArray.slice(1);
+
+            switch (sortMode) {
+                case 'alpha-asc':
+                    states.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+                case 'alpha-desc':
+                    states.sort((a, b) => b.name.localeCompare(a.name));
+                    break;
+                case 'districts-desc':
+                    states.sort((a, b) => b.districts - a.districts);
+                    break;
+                case 'districts-asc':
+                    states.sort((a, b) => a.districts - b.districts);
+                    break;
+            }
+
+            statesArray = [usa, ...states];
+            populateStates();
+        }
+
+        // Populate state list
+        function populateStates() {
+            const stateList = document.getElementById('stateList');
+            stateList.innerHTML = ''; // Clear existing
+
+            statesArray.forEach(({ key, name, districts }) => {
+                const li = document.createElement('li');
+                li.className = 'state-item';
+                li.dataset.state = key;
+
+                li.innerHTML = `
+                    <span>${name}</span>
+                    <span class="state-districts">${districts}</span>
+                `;
+
+                li.addEventListener('click', () => selectState(key));
+                stateList.appendChild(li);
+            });
+        }
+
+        // Setup dimension tabs
+        function setupDimensionTabs() {
+            const tabs = document.querySelectorAll('.dimension-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentDimension = tab.dataset.dimension;
+                    if (currentState) loadContent();
+                });
+            });
+        }
+
+        // Select state
+        function selectState(state) {
+            currentState = state;
+
+            // Update sidebar
+            document.querySelectorAll('.state-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-state="${state}"]`).classList.add('active');
+
+            // Reset to overview tab when switching states
+            document.querySelectorAll('.dimension-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector('[data-dimension="overview"]').classList.add('active');
+            currentDimension = 'overview';
+
+            // Load content
+            loadContent();
+        }
+
+        // Load content based on state and dimension
+        function loadContent() {
+            const contentArea = document.getElementById('contentArea');
+
+            // Handle USA (national) specially
+            if (currentState === 'usa') {
+                let html = '';
+                switch (currentDimension) {
+                    case 'overview':
+                        html = generateUSAOverview();
+                        break;
+                    case 'configuration':
+                        html = generateConfiguration();
+                        break;
+                    case 'cities':
+                        html = generateUSACities();
+                        break;
+                    case 'political':
+                        html = generateUSAPolitical();
+                        break;
+                    case 'demographic':
+                        html = generateUSADemographic();
+                        break;
+                    case 'compactness':
+                        html = generateUSACompactness();
+                        break;
+                    case 'rounds':
+                        html = generateUSARounds();
+                        break;
+                    case 'districts':
+                        html = `
+                            <div class="content-card">
+                                <h2>United States - Districts</h2>
+                                <p>This view is specific to individual states. Select a state from the sidebar to view districts data.</p>
+                            </div>
+                        `;
+                        break;
+                    case 'urban':
+                        html = generateUSAMetros();
+                        break;
+                }
+                contentArea.innerHTML = html;
+                return;
+            }
+
+            // Handle regular states
+            const stateName = currentState.split('_').map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            const districts = stateData[currentState];
+
+            let html = '';
+
+            switch (currentDimension) {
+                case 'overview':
+                    html = generateOverview(stateName, currentState, districts);
+                    break;
+                case 'configuration':
+                    html = generateConfiguration();
+                    break;
+                case 'cities':
+                    html = generateCities(stateName, currentState, districts);
+                    break;
+                case 'districts':
+                    html = generateDistricts(stateName, currentState, districts);
+                    break;
+                case 'rounds':
+                    html = generateRounds(stateName, currentState, districts);
+                    break;
+                case 'political':
+                    html = generatePolitical(stateName, currentState, districts);
+                    break;
+                case 'demographic':
+                    html = generateDemographic(stateName, currentState, districts);
+                    break;
+                case 'compactness':
+                    html = generateCompactness(stateName, currentState, districts);
+                    break;
+                case 'urban':
+                    html = generateUrban(stateName, currentState, districts);
+                    break;
+            }
+
+            contentArea.innerHTML = html;
+        }
+
+        // Load config.json and version.json
+        async function loadConfig() {
+            try {
+                const basePath = getBasePath();
+                // Load run config
+                const response = await fetch(`${basePath}/config.json`);
+                if (response.ok) {
+                    runConfig = await response.json();
+                    console.log('Loaded config:', runConfig);
+                } else {
+                    console.warn('config.json not found');
+                }
+
+                // Load version config (one level up)
+                const versionResponse = await fetch(`${basePath}/../version.json`);
+                if (versionResponse.ok) {
+                    versionConfig = await versionResponse.json();
+                    console.log('Loaded version config:', versionConfig);
+                } else {
+                    console.warn('version.json not found');
+                }
+            } catch (error) {
+                console.warn('Error loading config:', error);
+            }
+        }
+
+        // Generate configuration content
+        function generateConfiguration() {
+            if (!runConfig && !versionConfig) {
+                return `
+                    <div class="content-card">
+                        <h2>Configuration</h2>
+                        <p style="color: #6c757d;">Configuration data not available. This may be an older run without config.json.</p>
+                    </div>
+                `;
+            }
+
+            let html = '';
+
+            // Show version configuration first (if available)
+            if (versionConfig) {
+                const vAlgorithm = versionConfig.algorithm || {};
+                const vPipeline = versionConfig.pipeline || {};
+                const completedYears = versionConfig.completed_years || [];
+
+                html += `
+                    <div class="content-card">
+                        <h2>Version Configuration: ${versionConfig.version || 'Unknown'}</h2>
+                        <p style="color: #6c757d; margin-bottom: 1.5rem;">Shared configuration for this experimental variant (version.json)</p>
+
+                        ${versionConfig.description ? `
+                        <div style="padding: 1rem; background: #f8f9fa; border-left: 4px solid #007bff; margin-bottom: 1.5rem;">
+                            <strong>Description:</strong> ${versionConfig.description}
+                        </div>
+                        ` : ''}
+
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Algorithm Configuration</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Partition Mode</td>
+                                <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${vAlgorithm.partition_mode === 'edge_weighted' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${vAlgorithm.partition_mode || 'N/A'}</span></td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600;">Data Level</td>
+                                <td style="padding: 0.75rem;">${vAlgorithm.data_level || 'N/A'}</td>
+                            </tr>
+                        </table>
+
+                        <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Pipeline Configuration</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600; width: 40%;">DPI</td>
+                                <td style="padding: 0.75rem;">${vPipeline.dpi || 'N/A'}</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 0.75rem; font-weight: 600;">Completed Years</td>
+                                <td style="padding: 0.75rem;">${completedYears.join(', ') || 'None'}</td>
+                            </tr>
+                        </table>
+                    </div>
+                `;
+            }
+
+            // Show run-specific configuration
+            if (!runConfig) {
+                return html;
+            }
+
+            const config = runConfig;
+            const metadata = config.metadata || {};
+            const algorithm = config.algorithm || {};
+            const pipeline = config.pipeline || {};
+            const system = config.system || {};
+
+            html += `
+                <div class="content-card" style="margin-top: 2rem;">
+                    <h2>Run-Specific Configuration</h2>
+                    <p style="color: #6c757d; margin-bottom: 1.5rem;">Configuration for this specific census year run (config.json)</p>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Metadata</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Schema Version</td>
+                            <td style="padding: 0.75rem;">${config.schema_version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Created</td>
+                            <td style="padding: 0.75rem;">${metadata.created ? new Date(metadata.created).toLocaleString() : 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Version</td>
+                            <td style="padding: 0.75rem;">${metadata.version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Census Year</td>
+                            <td style="padding: 0.75rem;">${metadata.census_year || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Election Year</td>
+                            <td style="padding: 0.75rem;">${metadata.election_year || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Run Type</td>
+                            <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${metadata.run_type === 'production' ? '#28a745' : metadata.run_type === 'experiment' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${metadata.run_type || 'N/A'}</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Scope</td>
+                            <td style="padding: 0.75rem;">${metadata.scope || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">States</td>
+                            <td style="padding: 0.75rem;">${metadata.states ? metadata.states.join(', ') : 'N/A'}</td>
+                        </tr>
+                        ${metadata.experiment_name ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Experiment Name</td>
+                            <td style="padding: 0.75rem;">${metadata.experiment_name}</td>
+                        </tr>
+                        ` : ''}
+                        ${metadata.description ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Description</td>
+                            <td style="padding: 0.75rem;">${metadata.description}</td>
+                        </tr>
+                        ` : ''}
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Algorithm</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Partition Mode</td>
+                            <td style="padding: 0.75rem;"><span style="padding: 0.25rem 0.75rem; background: ${algorithm.partition_mode === 'edge_weighted' ? '#007bff' : '#6c757d'}; color: white; border-radius: 12px; font-size: 0.85rem;">${algorithm.partition_mode || 'N/A'}</span></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Data Level</td>
+                            <td style="padding: 0.75rem;">${algorithm.data_level || 'N/A'}</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">Pipeline Settings</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Skip Political</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_political ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Demographic</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_demographic ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Compactness</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_compactness ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Skip Metro</td>
+                            <td style="padding: 0.75rem;">${pipeline.skip_metro ? 'Yes' : 'No'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">DPI</td>
+                            <td style="padding: 0.75rem;">${pipeline.dpi || 'N/A'}</td>
+                        </tr>
+                    </table>
+
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 1rem; color: #495057;">System Info</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600; width: 40%;">Python Version</td>
+                            <td style="padding: 0.75rem;">${system.python_version || 'N/A'}</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">METIS Version</td>
+                            <td style="padding: 0.75rem;">${system.metis_version || 'N/A'}</td>
+                        </tr>
+                        ${system.execution_time_seconds ? `
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Execution Time</td>
+                            <td style="padding: 0.75rem;">${Math.floor(system.execution_time_seconds / 60)} minutes ${system.execution_time_seconds % 60} seconds</td>
+                        </tr>
+                        ` : ''}
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 0.75rem; font-weight: 600;">Hostname</td>
+                            <td style="padding: 0.75rem;">${system.hostname || 'N/A'}</td>
+                        </tr>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Generate overview content
+        function generateOverview(stateName, state, districts) {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Overview</h2>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Districts</div>
+                            <div class="stat-value">${districts}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Algorithm</div>
+                            <div class="stat-value">METIS</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Method</div>
+                            <div class="stat-value">Recursive</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Year</div>
+                            <div class="stat-value">${currentYear}</div>
+                        </div>
+                    </div>
+
+                    <h3>State Map</h3>
+                    <img src="${basePath}/states/${state}/maps/all_districts.png"
+                         alt="${stateName} Districts"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
+                    <p style="margin-top: 1rem; color: #6c757d;">${districts} congressional ${districts === 1 ? 'district' : 'districts'} generated using METIS recursive bisection.</p>
+                </div>
+            `;
+        }
+
+        // Generate cities content
+        function generateCities(stateName, state, districts) {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Districts with Major Cities</h2>
+
+                    <h3>State Map with Cities</h3>
+                    <img src="${basePath}/states/${state}/maps/all_districts_with_cities.png"
+                         alt="${stateName} Districts with Cities"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
+                    <p style="margin-top: 1rem; color: #6c757d;">Districts with major cities and urban areas labeled.</p>
+
+                    <h3>District Cities</h3>
+                    <p><a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                </div>
+            `;
+        }
+
+        // Generate districts content
+        function generateDistricts(stateName, state, districts) {
+            const basePath = getBasePath();
+
+            // For single-district states, show overview
+            if (districts === 1) {
+                return `
+                    <div class="content-card">
+                        <h2>${stateName} - At-Large District</h2>
+                        <p>${stateName} has one at-large congressional district.</p>
+
+                        <div class="map-container">
+                            <div class="map-item">
+                                <img src="${basePath}/states/${state}/maps/all_districts.png"
+                                     alt="${stateName} District"
+                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EMap Not Available%3C/text%3E%3C/svg%3E'">
+                                <div class="map-label">At-Large District</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Multi-district state: load district cities and show all individual maps
+            const placeholder = `
+                <div class="content-card">
+                    <h2>${stateName} - ${districts} District Maps</h2>
+                    <p>Loading district maps...</p>
+                    <div id="district-maps-container"></div>
+                </div>
+            `;
+
+            // Use pre-generated district data (injected during deployment)
+            setTimeout(() => {
+                const container = document.getElementById('district-maps-container');
+
+                // Check if pre-generated data exists for this state
+                if (typeof DISTRICT_DATA === 'undefined' || !DISTRICT_DATA[state]) {
+                    if (container) {
+                        container.innerHTML = '<p>District data not available for this state.</p>';
+                    }
+                    return;
+                }
+
+                const districts = DISTRICT_DATA[state];
+                let mapsHtml = '<div class="map-container">';
+
+                for (const district of districts) {
+                    const districtNum = district.num;
+                    const cityName = district.city;
+                    const cityFilename = district.filename;
+                    const districtNumPadded = districtNum.padStart(2, '0');
+                    const imagePath = basePath + '/states/' + state + '/maps/districts/district_' + districtNumPadded + '.png';
+
+                    mapsHtml += '<div class="map-item">';
+                    mapsHtml += '<img src="' + imagePath + '"';
+                    mapsHtml += ' alt="District ' + districtNum + ' - ' + cityName + '"';
+                    mapsHtml += ' onerror="this.src=\'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22300%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EDistrict ' + districtNum + '%3C/text%3E%3C/svg%3E\'">';
+                    mapsHtml += '<div class="map-label">District ' + districtNum + ' - ' + cityName + '</div>';
+                    mapsHtml += '</div>';
+                }
+
+                mapsHtml += '</div>';
+                mapsHtml += `
+                    <h3>District Data</h3>
+                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download Summary CSV</a> |
+                       <a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">🏙️ Download Cities CSV</a></p>
+                `;
+
+                if (container) {
+                    container.innerHTML = mapsHtml;
+                }
+            }, 100);
+
+            return placeholder;
+        }
+
+        // Generate rounds content
+        function generateRounds(stateName, state, districts) {
+            const basePath = getBasePath();
+
+            // Calculate the round progression
+            let mapsHtml = '';
+            let currentRegions = 1;
+            let roundNum = 1;
+
+            while (currentRegions < districts) {
+                const nextRegions = Math.min(currentRegions * 2, districts);
+                const roundNumPadded = roundNum.toString().padStart(2, '0');
+                mapsHtml += `
+                    <div class="map-item">
+                        <img src="${basePath}/states/${state}/maps/rounds/round_${roundNumPadded}.png"
+                             alt="Round ${roundNum}: ${currentRegions} → ${nextRegions} regions"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ERound ${roundNum}%3C/text%3E%3C/svg%3E'">
+                        <div class="map-label">Round ${roundNum}: ${currentRegions} → ${nextRegions} regions</div>
+                    </div>
+                `;
+                currentRegions = nextRegions;
+                roundNum++;
+            }
+
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Recursive Bisection Rounds</h2>
+                    <p>Visual progression of the recursive bisection algorithm creating ${districts} districts.</p>
+
+                    <div class="map-container rounds-layout">
+                        ${mapsHtml}
+                    </div>
+
+                    <h3>Round Hierarchy</h3>
+                    <p><a href="${basePath}/states/${state}/data/rounds_hierarchy.csv" target="_blank">📊 Download CSV</a></p>
+                </div>
+            `;
+        }
+
+        // Generate political analysis content
+        function generatePolitical(stateName, state, districts) {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Political Analysis</h2>
+                    <p>2020 presidential election results overlaid on algorithmically-generated districts.</p>
+
+                    <div class="map-container full-width">
+                        <div class="map-item">
+                            <img src="${basePath}/states/${state}/political/maps/partisan_lean.png"
+                                 alt="Partisan Lean Map"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EPolitical Analysis Not Available%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun political analysis for this state%3C/text%3E%3C/svg%3E'">
+                            <div class="map-label">Partisan Lean by District</div>
+                        </div>
+                    </div>
+
+                    <h3>Political Data</h3>
+                    <p><a href="${basePath}/states/${state}/political/district_political.csv" target="_blank">📊 Download District Political CSV</a></p>
+
+                    <h3>Round Progression</h3>
+                    <p>Political lean maps for each bisection round:</p>
+                    <ul>
+                        <li><a href="${basePath}/states/${state}/political/maps/rounds/" target="_blank">📁 View Round Maps</a></li>
+                        <li><a href="${basePath}/states/${state}/political/rounds_political.csv" target="_blank">📊 Download Rounds CSV</a></li>
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Generate demographic content
+        function generateDemographic(stateName, state, districts) {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Demographics</h2>
+                    <p>Racial and ethnic composition of districts based on 2020 Census data.</p>
+
+                    <h3>Majority Race by District</h3>
+                    <img src="${basePath}/states/${state}/demographic/maps/majority_race.png"
+                         alt="Majority Race Map"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;">
+
+                    <h3>Diversity Index by District</h3>
+                    <img src="${basePath}/states/${state}/demographic/maps/diversity_index.png"
+                         alt="Diversity Index Map"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;">
+
+                    <h3>Gender Balance by District</h3>
+                    <img src="${basePath}/states/${state}/demographic/maps/gender_balance.png"
+                         alt="Gender Balance Map"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;">
+
+                    <h3>Demographic Data</h3>
+                    <p><a href="${basePath}/states/${state}/demographic/district_demographics.csv" target="_blank">📊 Download District Demographics CSV</a></p>
+                </div>
+            `;
+        }
+
+        // Generate compactness content
+        function generateCompactness(stateName, state, districts) {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Compactness Analysis</h2>
+                    <p>Polsby-Popper and Reock compactness scores for each district. Higher scores indicate more compact districts.</p>
+
+                    <h3>Polsby-Popper Compactness</h3>
+                    <img src="${basePath}/states/${state}/compactness/maps/polsby_popper.png"
+                         alt="Polsby-Popper Compactness"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px;"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ECompactness Map Not Available%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun compactness visualization for this state%3C/text%3E%3C/svg%3E'">
+
+                    <h3>Reock Compactness</h3>
+                    <img src="${basePath}/states/${state}/compactness/maps/reock.png"
+                         alt="Reock Compactness"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 4px; margin-top: 1rem;"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ECompactness Map Not Available%3C/text%3E%3C/svg%3E'">
+
+                    <h3>Compactness Data</h3>
+                    <p>Compactness scores are included in the district summary file:</p>
+                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download District Summary CSV</a></p>
+                </div>
+            `;
+        }
+
+        // Generate urban areas content
+        function generateUrban(stateName, state, districts) {
+            const basePath = getBasePath();
+
+            // Detect census year from path (e.g., us_2000_v1 -> 2000)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+
+            // Census 2000: CBSA classification not available
+            if (censusYear === '2000') {
+                return `
+                    <div class="content-card">
+                        <h2>${stateName} - Metropolitan Areas</h2>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong>📍 Metro area maps not available for Census 2000</strong><br>
+                                The CBSA (Core Based Statistical Area) classification system was introduced after 2000.
+                                Metro area district maps are available for 2010 and 2020 census data.
+                            </p>
+                        </div>
+
+                        <h3>Major Cities</h3>
+                        <p><a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                    </div>
+                `;
+            }
+
+            // Define metros for each state
+            const stateMetros = {
+                'new_york': [{file: 'new_york', display: 'New York-Newark-Jersey City'}],
+                'california': [
+                    {file: 'los_angeles', display: 'Los Angeles'},
+                    {file: 'san_francisco', display: 'San Francisco Bay Area'},
+                    {file: 'riverside', display: 'Riverside-San Bernardino'},
+                    {file: 'san_diego', display: 'San Diego'}
+                ],
+                'illinois': [{file: 'chicago', display: 'Chicago'}],
+                'texas': [
+                    {file: 'dallas', display: 'Dallas-Fort Worth'},
+                    {file: 'houston', display: 'Houston'}
+                ],
+                'virginia': [{file: 'washington', display: 'Washington DC Metro'}],
+                'pennsylvania': [{file: 'philadelphia', display: 'Philadelphia'}],
+                'florida': [
+                    {file: 'miami', display: 'Miami-Fort Lauderdale'},
+                    {file: 'tampa', display: 'Tampa-St. Petersburg'}
+                ],
+                'georgia': [{file: 'atlanta', display: 'Atlanta'}],
+                'massachusetts': [{file: 'boston', display: 'Boston-Cambridge'}],
+                'arizona': [{file: 'phoenix', display: 'Phoenix'}],
+                'michigan': [{file: 'detroit', display: 'Detroit'}],
+                'washington': [{file: 'seattle', display: 'Seattle-Tacoma'}],
+                'minnesota': [{file: 'minneapolis', display: 'Minneapolis-St. Paul'}],
+                'colorado': [{file: 'denver', display: 'Denver'}],
+                'missouri': [{file: 'st_louis', display: 'St. Louis'}]
+            };
+
+            const metros = stateMetros[state] || [];
+
+            // Check if state has metros
+            if (metros.length === 0) {
+                return `
+                    <div class="content-card">
+                        <h2>${stateName} - Urban Areas</h2>
+                        <p>No major metropolitan areas in top 20 MSAs for this state.</p>
+
+                        <h3>Major Cities</h3>
+                        <p><a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                    </div>
+                `;
+            }
+
+            // Generate metro maps HTML
+            let mapsHtml = '';
+            metros.forEach(metro => {
+                mapsHtml += `
+                    <div class="map-item">
+                        <img src="${basePath}/states/${state}/maps/metros/${metro.file}.png"
+                             alt="${metro.display}"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3E${metro.display}%3C/text%3E%3C/svg%3E'">
+                        <div class="map-label">${metro.display}</div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - Metropolitan Areas</h2>
+                    <p>Focused district maps showing how congressional districts are configured within major metropolitan areas.</p>
+
+                    <div class="map-container metros-layout-state">
+                        ${mapsHtml}
+                    </div>
+
+                    <h3>Major Cities</h3>
+                    <p><a href="${basePath}/states/${state}/data/district_cities.csv" target="_blank">📊 Download District Cities CSV</a></p>
+                </div>
+            `;
+        }
+
+        // ========== USA NATIONAL VIEWS ==========
+
+        // Generate USA overview content
+        function generateUSAOverview() {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>United States - National Overview</h2>
+
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Total Districts</div>
+                            <div class="stat-value">435</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">States</div>
+                            <div class="stat-value">50</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Algorithm</div>
+                            <div class="stat-value">METIS</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Year</div>
+                            <div class="stat-value">${currentYear}</div>
+                        </div>
+                    </div>
+
+                    <h3>National Map</h3>
+                    <img src="${basePath}/maps/us_all_districts.png"
+                         alt="US National Map - 435 Districts"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational District Map Not Available%3C/text%3E%3C/svg%3E'">
+                    <p style="margin-top: 1rem; color: #6c757d;">All 435 congressional districts algorithmically generated using METIS recursive bisection.</p>
+
+                    <h3>National Summary</h3>
+                    <p><a href="${basePath}/data/us_all_districts.csv" target="_blank">📊 All Districts CSV</a> |
+                       <a href="${basePath}/data/us_district_summary.csv" target="_blank">📊 District Summary CSV</a> |
+                       <a href="${basePath}/data/us_rounds_hierarchy.csv" target="_blank">📊 Rounds Hierarchy CSV</a></p>
+
+                    <h3>Report</h3>
+                    <p><a href="${basePath}/US_${currentYear}_Redistricting_Report.md" target="_blank">📄 Comprehensive Redistricting Report</a></p>
+
+                    <h3>State-by-State Data</h3>
+                    <p>Select a state from the sidebar to view detailed redistricting results, maps, and analysis for that state.</p>
+                </div>
+            `;
+        }
+
+        // Generate USA political analysis content
+        function generateUSAPolitical() {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>United States - National Political Map</h2>
+                    <p>All 435 congressional districts colored by partisan lean based on 2020 presidential election results.</p>
+
+                    <div class="map-container">
+                        <div class="map-item">
+                            <img src="${basePath}/maps/political/partisan_lean.png"
+                                 alt="US National Political Map"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Political Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun create_us_aggregate.py to generate%3C/text%3E%3C/svg%3E'">
+                            <div class="map-label">National Political Lean</div>
+                        </div>
+                    </div>
+
+                    <h3>State Political Analysis</h3>
+                    <p>For detailed political analysis, select individual states from the sidebar and navigate to the Political tab.</p>
+                </div>
+            `;
+        }
+
+        // Generate USA demographic content
+        function generateUSADemographic() {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>United States - National Demographic Map</h2>
+                    <p>All 435 congressional districts colored by majority demographic group based on 2020 Census data.</p>
+
+                    <div class="map-container">
+                        <div class="map-item">
+                            <img src="${basePath}/maps/demographic/majority_demographics.png"
+                                 alt="US National Demographic Map"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Demographic Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun create_us_aggregate.py to generate%3C/text%3E%3C/svg%3E'">
+                            <div class="map-label">National Demographic Composition</div>
+                        </div>
+                    </div>
+
+                    <h3>State Demographic Analysis</h3>
+                    <p>For detailed demographic data, select individual states from the sidebar and navigate to the Demographics tab.</p>
+                </div>
+            `;
+        }
+
+        // Generate USA compactness content
+        function generateUSACompactness() {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>United States - National Compactness Map</h2>
+                    <p>All 435 congressional districts colored by Polsby-Popper compactness score. Higher scores (green) indicate more compact, geometrically regular districts. Lower scores (red) indicate more irregular districts.</p>
+
+                    <div class="map-container">
+                        <div class="map-item">
+                            <img src="${basePath}/maps/compactness/polsby_popper.png"
+                                 alt="US National Compactness Map"
+                                 style="max-width: 100%; height: auto;"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ENational Compactness Map Not Yet Generated%3C/text%3E%3Ctext x=%2250%25%22 y=%2260%25%22 text-anchor=%22middle%22 font-size=%2212%22 fill=%22%23999%22%3ERun compactness visualization pipeline%3C/text%3E%3C/svg%3E'">
+                            <div class="map-label">National Compactness (Polsby-Popper)</div>
+                        </div>
+                    </div>
+
+                    <h3>About Compactness Metrics</h3>
+                    <p><strong>Polsby-Popper Score:</strong> Calculated as 4π × area / perimeter². Scores range from 0 (highly irregular) to 1 (perfect circle).</p>
+                    <p><strong>Reock Score:</strong> Calculated as area / minimum_bounding_circle_area. Also ranges from 0 to 1.</p>
+
+                    <h3>State Compactness Analysis</h3>
+                    <p>For detailed compactness maps showing both Polsby-Popper and Reock scores, select individual states from the sidebar and navigate to the Compactness tab.</p>
+                </div>
+            `;
+        }
+
+        // Generate USA cities content
+        function generateUSACities() {
+            const basePath = getBasePath();
+            return `
+                <div class="content-card">
+                    <h2>United States - Districts with Major Cities</h2>
+
+                    <h3>National Map with Cities</h3>
+                    <img src="${basePath}/maps/us_all_districts_with_cities.png"
+                         alt="US National Map - Districts with Cities"
+                         style="max-width: 100%; height: auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"
+                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22500%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22800%22 height=%22500%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3EDistricts with Cities Map Not Available%3C/text%3E%3C/svg%3E'">
+                    <p style="margin-top: 1rem; color: #6c757d;">All 435 congressional districts with major cities labeled by population.</p>
+
+                    <h3>State-by-State Cities</h3>
+                    <p>For detailed city information by district, select individual states from the sidebar and navigate to the Cities tab.</p>
+                </div>
+            `;
+        }
+
+        // Generate USA rounds content
+        function generateUSARounds() {
+            const basePath = getBasePath();
+
+            // Generate round progression maps (rounds 1-6)
+            let mapsHtml = '';
+            for (let round = 1; round <= 6; round++) {
+                const expectedRegions = Math.pow(2, round);
+                const roundNumPadded = round.toString().padStart(2, '0');
+                mapsHtml += `
+                    <div class="map-item">
+                        <img src="${basePath}/maps/rounds/round_${roundNumPadded}.png"
+                             alt="Round ${round}: ${expectedRegions} regions nationwide"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ERound ${round}%3C/text%3E%3C/svg%3E'">
+                        <div class="map-label">Round ${round}: ${expectedRegions} regions (2^${round})</div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="content-card">
+                    <h2>United States - Recursive Bisection Progression</h2>
+                    <p>National-level visualization showing how all 435 congressional districts are progressively created through recursive bisection across all 50 states.</p>
+
+                    <div class="map-container rounds-layout">
+                        ${mapsHtml}
+                    </div>
+
+                    <h3>Understanding Round Progression</h3>
+                    <p><strong>Round 1:</strong> Each state is divided into 2 regions (left/right split)</p>
+                    <p><strong>Round 2:</strong> Each region is divided into 2 sub-regions (4 total per state)</p>
+                    <p><strong>Round 3:</strong> 8 regions per state</p>
+                    <p><strong>Round 4:</strong> 16 regions per state</p>
+                    <p><strong>Round 5:</strong> 32 regions per state</p>
+                    <p><strong>Round 6:</strong> 64 regions per state</p>
+                    <p>States with fewer districts complete earlier and show their final districts in subsequent rounds.</p>
+
+                    <h3>State-by-State Rounds</h3>
+                    <p>For detailed round-by-round progression showing how individual states are divided, select a state from the sidebar and navigate to the Rounds tab.</p>
+
+                    <h3>National Round Hierarchy</h3>
+                    <p><a href="${basePath}/us_rounds_hierarchy.csv" target="_blank">📊 Download CSV</a> - Complete hierarchy showing all regions across all states and rounds</p>
+                </div>
+            `;
+        }
+
+        // Generate USA metros content
+        function generateUSAMetros() {
+            const basePath = getBasePath();
+
+            // Detect census year from path (e.g., us_2000_v1 -> 2000)
+            const censusYear = window.location.pathname.match(/us_(\d{4})_/)?.[1] || '2020';
+
+            // Census 2000: CBSA classification not available
+            if (censusYear === '2000') {
+                return `
+                    <div class="content-card">
+                        <h2>USA - Metropolitan Areas</h2>
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 15px 0;">
+                            <p style="margin: 0; color: #856404;">
+                                <strong>📍 Metro area maps not available for Census 2000</strong><br>
+                                The CBSA (Core Based Statistical Area) classification system was introduced after 2000.
+                                Metro area district maps are available for 2010 and 2020 census data.
+                            </p>
+                        </div>
+
+                        <h3>Available Data</h3>
+                        <p>District-level city data is available for all states. Navigate to individual states to view major cities in each district.</p>
+                    </div>
+                `;
+            }
+
+            // Define metro map data (state code, display name)
+            const metrosData = [
+                {state: 'new_york', name: 'New York-Newark-Jersey City', file: 'new_york'},
+                {state: 'california', name: 'Los Angeles', file: 'los_angeles'},
+                {state: 'california', name: 'San Francisco Bay Area', file: 'san_francisco'},
+                {state: 'california', name: 'Riverside-San Bernardino', file: 'riverside'},
+                {state: 'california', name: 'San Diego', file: 'san_diego'},
+                {state: 'illinois', name: 'Chicago', file: 'chicago'},
+                {state: 'texas', name: 'Dallas-Fort Worth', file: 'dallas'},
+                {state: 'texas', name: 'Houston', file: 'houston'},
+                {state: 'virginia', name: 'Washington DC Metro', file: 'washington'},
+                {state: 'pennsylvania', name: 'Philadelphia', file: 'philadelphia'},
+                {state: 'florida', name: 'Miami-Fort Lauderdale', file: 'miami'},
+                {state: 'florida', name: 'Tampa-St. Petersburg', file: 'tampa'},
+                {state: 'georgia', name: 'Atlanta', file: 'atlanta'},
+                {state: 'massachusetts', name: 'Boston-Cambridge', file: 'boston'},
+                {state: 'arizona', name: 'Phoenix', file: 'phoenix'},
+                {state: 'michigan', name: 'Detroit', file: 'detroit'},
+                {state: 'washington', name: 'Seattle-Tacoma', file: 'seattle'},
+                {state: 'minnesota', name: 'Minneapolis-St. Paul', file: 'minneapolis'},
+                {state: 'colorado', name: 'Denver', file: 'denver'},
+                {state: 'missouri', name: 'St. Louis', file: 'st_louis'}
+            ];
+
+            // Generate HTML for all metros (3 per row)
+            let mapsHtml = '';
+            metrosData.forEach(metro => {
+                mapsHtml += `
+                    <div class="map-item">
+                        <img src="${basePath}/states/${metro.state}/maps/metros/${metro.file}.png"
+                             alt="${metro.name}"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22300%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22400%22 height=%22300%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3E${metro.name}%3C/text%3E%3C/svg%3E'">
+                        <div class="map-label">${metro.name}</div>
+                    </div>
+                `;
+            });
+
+            return `
+                <div class="content-card">
+                    <h2>United States - Major Metropolitan Areas</h2>
+                    <p>Focused district maps for the top 20 Metropolitan Statistical Areas (MSAs) showing how congressional districts are configured within major urban centers.</p>
+
+                    <div class="map-container metros-layout">
+                        ${mapsHtml}
+                    </div>
+
+                    <h3>About Metropolitan Statistical Areas (MSAs)</h3>
+                    <p>MSAs are defined by the U.S. Census Bureau as geographic regions with high population density and economic integration. These maps show how congressional districts intersect with major urban areas, providing insight into urban representation.</p>
+
+                    <h3>Coverage</h3>
+                    <p>The maps cover the 20 largest MSAs by population, spanning 16 states and encompassing over 170 million people.</p>
+                </div>
+            `;
+        }
+
+        // Generate artifacts content
+        function generateArtifacts() {
+            const basePath = getBasePath();
+
+            // Check if ARTIFACTS is defined (baked in by generate_dashboard.py)
+            if (typeof ARTIFACTS === 'undefined') {
+                return `
+                    <div class="content-card">
+                        <h2>📄 Artifacts</h2>
+                        <div class="empty-artifacts">
+                            <p>Artifacts data not available.</p>
+                            <p>Run <code>python scripts/web/generate_dashboard.py</code> to regenerate dashboard with artifacts.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="content-card">
+                    <h2>📄 Artifacts</h2>
+                    <p>Compiled PDFs and shared figures from the redistricting project.</p>
+
+                    <div class="artifacts-grid">
+            `;
+
+            // Guides section
+            if (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📖 Guides</h3>
+                        <p class="category-description">Educational guides for general audiences</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.guides.forEach(guide => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${guide.path}', 'guide', '${guide.title}')">
+                            <span class="artifact-title">${guide.title}</span>
+                            <span class="artifact-type">Letter (8.5" × 11")</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Presentations section
+            if (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📊 Presentations</h3>
+                        <p class="category-description">Conference presentations and slides</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.presentations.forEach(pres => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${pres.path}', 'presentation', '${pres.title}')">
+                            <span class="artifact-title">${pres.title}</span>
+                            <span class="artifact-type">Widescreen (16:9)</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Papers section
+            if (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) {
+                html += `
+                    <div class="artifact-category">
+                        <h3>📝 Papers</h3>
+                        <p class="category-description">Academic research papers</p>
+                        <ul class="artifact-list">
+                `;
+                ARTIFACTS.papers.forEach(paper => {
+                    html += `
+                        <li class="artifact-item" onclick="displayPDF('${paper.path}', 'paper', '${paper.title}')">
+                            <span class="artifact-title">${paper.title}</span>
+                            <span class="artifact-type">Letter (8.5" × 11")</span>
+                        </li>
+                    `;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+
+            // Figures section
+            if (ARTIFACTS.figures) {
+                const hasSchematic = ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0;
+                const hasRealTracts = ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0;
+                const hasRoundProgression = ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0;
+
+                if (hasSchematic || hasRealTracts || hasRoundProgression) {
+                    html += `
+                        <div class="artifact-category" style="grid-column: 1 / -1;">
+                            <h3>🖼️ Figures</h3>
+                            <p class="category-description">Shared figures used across documents</p>
+                    `;
+
+                    // Schematic figures
+                    if (hasSchematic) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Schematic Diagrams</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.schematic.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Real tracts examples
+                    if (hasRealTracts) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Real Census Tract Examples</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.real_tracts.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    // Round progression
+                    if (hasRoundProgression) {
+                        html += `
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Round Progression</h4>
+                            <div class="figures-gallery">
+                        `;
+                        ARTIFACTS.figures.round_progression.forEach(fig => {
+                            html += `
+                                <div class="figure-thumbnail" onclick="openFigureModal('${fig.path}', '${fig.name}')">
+                                    <img src="${fig.path}" alt="${fig.name}">
+                                    <div class="figure-name">${fig.name}</div>
+                                </div>
+                            `;
+                        });
+                        html += `</div>`;
+                    }
+
+                    html += `
+                        </div>
+                    `;
+                }
+            }
+
+            // Empty state if no artifacts
+            const hasAnyArtifacts = (ARTIFACTS.guides && ARTIFACTS.guides.length > 0) ||
+                                    (ARTIFACTS.presentations && ARTIFACTS.presentations.length > 0) ||
+                                    (ARTIFACTS.papers && ARTIFACTS.papers.length > 0) ||
+                                    (ARTIFACTS.figures && (
+                                        (ARTIFACTS.figures.schematic && ARTIFACTS.figures.schematic.length > 0) ||
+                                        (ARTIFACTS.figures.real_tracts && ARTIFACTS.figures.real_tracts.length > 0) ||
+                                        (ARTIFACTS.figures.round_progression && ARTIFACTS.figures.round_progression.length > 0)
+                                    ));
+
+            if (!hasAnyArtifacts) {
+                html += `
+                    <div class="empty-artifacts" style="grid-column: 1 / -1;">
+                        <p>No artifacts available.</p>
+                        <p>Compile artifacts using: <code>cd artifacts && compile.bat</code></p>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                </div>
+
+                <!-- PDF Viewer Container (hidden by default) -->
+                <div id="pdfViewerContainer" class="pdf-viewer-container" style="display: none;">
+                    <div class="pdf-viewer-header">
+                        <h3 id="pdfViewerTitle"></h3>
+                        <button class="pdf-viewer-close" onclick="closePDFViewer()">✕</button>
+                    </div>
+                    <embed id="pdfViewerEmbed" type="application/pdf" class="pdf-viewer-guide">
+                    <div class="pdf-viewer-fallback" style="display: none;">
+                        <p>Your browser does not support inline PDF viewing.</p>
+                        <p><a id="pdfDownloadLink" href="#" target="_blank">Download PDF</a></p>
+                    </div>
+                </div>
+
+                <!-- Figure Modal (hidden by default) -->
+                <div id="figureModal" class="figure-modal" onclick="closeFigureModal()" style="display: none;">
+                    <span class="modal-close" onclick="closeFigureModal()">&times;</span>
+                    <img id="modalImage" class="modal-content">
+                    <div id="modalCaption" class="modal-caption"></div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        // Display PDF in viewer
+        function displayPDF(path, type, title) {
+            const basePath = getBasePath();
+            const fullPath = basePath + '/' + path;
+
+            const container = document.getElementById('pdfViewerContainer');
+            const titleEl = document.getElementById('pdfViewerTitle');
+            const embedEl = document.getElementById('pdfViewerEmbed');
+            const downloadLink = document.getElementById('pdfDownloadLink');
+
+            // Set title
+            titleEl.textContent = title;
+
+            // Set PDF source
+            embedEl.src = fullPath;
+            downloadLink.href = fullPath;
+
+            // Set appropriate dimensions based on type
+            embedEl.className = `pdf-viewer-${type}`;
+
+            // Show container
+            container.style.display = 'block';
+
+            // Scroll to top of viewer
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Close PDF viewer
+        function closePDFViewer() {
+            const container = document.getElementById('pdfViewerContainer');
+            container.style.display = 'none';
+        }
+
+        // Open figure modal
+        function openFigureModal(path, name) {
+            const modal = document.getElementById('figureModal');
+            const modalImg = document.getElementById('modalImage');
+            const caption = document.getElementById('modalCaption');
+
+            modal.style.display = 'flex';
+            modalImg.src = path;
+            caption.textContent = name;
+        }
+
+        // Close figure modal
+        function closeFigureModal() {
+            const modal = document.getElementById('figureModal');
+            modal.style.display = 'none';
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeFigureModal();
+                closePDFViewer();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhancement Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.8/dist/purify.min.js"></script>
+    <style>
+        .markdown-content h1 { font-size: 1.875rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content h2 { font-size: 1.5rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+        .markdown-content h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+        .markdown-content p { margin-bottom: 1rem; }
+        .markdown-content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
+        .markdown-content code { background-color: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; }
+        .markdown-content pre { background-color: #1f2937; color: #f9fafb; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; margin-bottom: 1rem; }
+        .markdown-content pre code { background-color: transparent; padding: 0; color: inherit; }
+        .markdown-content table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+        .markdown-content th, .markdown-content td { border: 1px solid #e5e7eb; padding: 0.5rem; text-align: left; }
+        .markdown-content th { background-color: #f9fafb; font-weight: 600; }
+        .markdown-content blockquote { border-left: 4px solid #e5e7eb; padding-left: 1rem; margin: 1rem 0; color: #6b7280; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 500; }
+        .status-completed { background-color: #d1fae5; color: #065f46; }
+        .status-in-progress { background-color: #dbeafe; color: #1e40af; }
+        .status-planned { background-color: #fef3c7; color: #92400e; }
+        .priority-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .priority-critical { background-color: #fee2e2; color: #991b1b; }
+        .priority-high { background-color: #fed7aa; color: #9a3412; }
+        .priority-medium { background-color: #fef3c7; color: #92400e; }
+        .priority-low { background-color: #dbeafe; color: #1e40af; }
+        .priority-research { background-color: #e9d5ff; color: #6b21a8; }
+        .filter-btn { padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; transition: all 0.2s; }
+        .filter-btn:hover { background-color: #f3f4f6; }
+        .filter-btn.active { background-color: #3b82f6; color: white; }
+        .enhancement-card { border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem; background: white; transition: all 0.2s; cursor: pointer; }
+        .enhancement-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
+        .modal { display: none; position: fixed; inset: 0; background-color: rgba(0, 0, 0, 0.5); z-index: 50; }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; border-radius: 1rem; max-width: 90%; max-height: 90%; overflow-y: auto; position: relative; }
+        .tab-btn { padding: 0.75rem 1.5rem; border-bottom: 2px solid transparent; font-weight: 500; transition: all 0.2s; }
+        .tab-btn:hover { background-color: #f9fafb; }
+        .tab-btn.active { border-bottom-color: #3b82f6; color: #3b82f6; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 py-6">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-3xl font-bold text-gray-900">Enhancement Manager</h1>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-500" id="lastUpdated"></div>
+                    <button onclick="refreshData()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        Refresh
+                    </button>
+                    <button onclick="shutdownServer()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm">
+                        Shutdown Server
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-4 gap-4 mb-6" id="statsGrid">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-gray-900" id="totalCount">-</div>
+                    <div class="text-sm text-gray-600">Total</div>
+                </div>
+                <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-700" id="completedCount">-</div>
+                    <div class="text-sm text-green-600">Completed</div>
+                </div>
+                <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-blue-700" id="inProgressCount">-</div>
+                    <div class="text-sm text-blue-600">In Progress</div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-yellow-700" id="plannedCount">-</div>
+                    <div class="text-sm text-yellow-600">Planned</div>
+                </div>
+            </div>
+
+            <!-- Priority Summary -->
+            <div class="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                <div class="text-sm font-semibold text-gray-700 mb-2">Priority Distribution</div>
+                <div class="flex flex-wrap gap-3 text-sm" id="prioritySummary">
+                    <span class="text-gray-500">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="space-y-3">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Status:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                        <button class="filter-btn" data-filter="in-progress">In Progress</button>
+                        <button class="filter-btn" data-filter="planned">Planned</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Priority:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn priority-filter active" data-priority="all">All</button>
+                        <button class="filter-btn priority-filter" data-priority="Critical">Critical</button>
+                        <button class="filter-btn priority-filter" data-priority="High">High</button>
+                        <button class="filter-btn priority-filter" data-priority="Medium">Medium</button>
+                        <button class="filter-btn priority-filter" data-priority="Low">Low</button>
+                        <button class="filter-btn priority-filter" data-priority="Research">Research</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Size:</div>
+                    <div class="flex gap-2">
+                        <button class="filter-btn size-filter active" data-size="all">All</button>
+                        <button class="filter-btn size-filter" data-size="XS">XS</button>
+                        <button class="filter-btn size-filter" data-size="S">S</button>
+                        <button class="filter-btn size-filter" data-size="M">M</button>
+                        <button class="filter-btn size-filter" data-size="L">L</button>
+                        <button class="filter-btn size-filter" data-size="XL">XL</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-medium text-gray-700">Sort by:</div>
+                    <select id="sortSelect" class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="priority">Priority (High to Low)</option>
+                        <option value="number-desc">Number (Newest First)</option>
+                        <option value="number-asc">Number (Oldest First)</option>
+                        <option value="status">Status (Completed → In Progress → Planned)</option>
+                        <option value="title">Title (A-Z)</option>
+                        <option value="size-desc">Size (Largest First)</option>
+                        <option value="size-asc">Size (Smallest First)</option>
+                    </select>
+                    <input
+                        type="text"
+                        id="searchInput"
+                        placeholder="Search enhancements..."
+                        class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <div id="enhancementGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Enhancement cards will be inserted here -->
+        </div>
+        <div id="emptyState" class="text-center py-12 hidden">
+            <p class="text-gray-500 text-lg">No enhancements found</p>
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content w-full max-w-5xl m-4">
+            <div class="border-b border-gray-200">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h2 class="text-2xl font-bold text-gray-900" id="modalTitle"></h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex border-t border-gray-200 px-6">
+                    <button class="tab-btn active" onclick="switchTab('view')">View</button>
+                    <button class="tab-btn" onclick="switchTab('edit')">Edit</button>
+                    <button class="tab-btn" onclick="switchTab('commits')">Commits</button>
+                </div>
+            </div>
+
+            <!-- View Tab -->
+            <div id="viewTab" class="tab-content active">
+                <div class="px-6 py-4">
+                    <div class="flex items-center gap-3 mb-6">
+                        <span id="modalStatus" class="status-badge"></span>
+                        <span class="text-sm text-gray-600" id="modalMetadata"></span>
+                    </div>
+                    <div id="modalContent" class="markdown-content prose max-w-none"></div>
+                </div>
+            </div>
+
+            <!-- Edit Tab -->
+            <div id="editTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="📋 PLANNED">📋 PLANNED</option>
+                            <option value="🔄 IN PROGRESS">🔄 IN PROGRESS</option>
+                            <option value="✅ COMPLETED">✅ COMPLETED</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                        <textarea
+                            id="contentEditor"
+                            class="w-full h-96 px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        ></textarea>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="saveEnhancement()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            Save Changes
+                        </button>
+                        <button onclick="closeModal()" class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Commits Tab -->
+            <div id="commitsTab" class="tab-content">
+                <div class="px-6 py-4">
+                    <div id="commitsContent">
+                        <!-- Commits will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let enhancements = [];
+        let currentEnhancement = null;
+        let currentFilter = 'all';
+        let currentPriorityFilter = 'all';
+        let currentSizeFilter = 'all';
+        let currentSearch = '';
+        let currentSort = 'priority'; // 'priority', 'number', 'status', 'size-desc', 'size-asc'
+
+        // Initialize
+        async function init() {
+            await loadEnhancements();
+            await loadStats();
+            setupEventListeners();
+        }
+
+        // Load enhancements from API
+        async function loadEnhancements() {
+            try {
+                const response = await fetch('/api/enhancements');
+                const data = await response.json();
+                enhancements = data.enhancements;
+                renderEnhancements();
+                document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleString()}`;
+            } catch (error) {
+                console.error('Failed to load enhancements:', error);
+                alert('Failed to load enhancements. Make sure the Flask server is running.');
+            }
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+                document.getElementById('totalCount').textContent = stats.total;
+                document.getElementById('completedCount').textContent = stats.completed;
+                document.getElementById('inProgressCount').textContent = stats.in_progress;
+                document.getElementById('plannedCount').textContent = stats.planned;
+
+                // Update priority summary
+                const prioritySummary = document.getElementById('prioritySummary');
+                if (stats.priority_distribution) {
+                    const priorityOrder = ['Critical', 'High', 'Medium', 'Low', 'Research'];
+                    const priorityColors = {
+                        'Critical': 'text-red-700',
+                        'High': 'text-orange-700',
+                        'Medium': 'text-yellow-700',
+                        'Low': 'text-blue-700',
+                        'Research': 'text-purple-700'
+                    };
+                    const priorityHTML = priorityOrder
+                        .filter(p => stats.priority_distribution[p])
+                        .map(p => `<span class="font-semibold ${priorityColors[p]}">${p}: ${stats.priority_distribution[p]}</span>`)
+                        .join('<span class="text-gray-300">|</span>');
+                    prioritySummary.innerHTML = priorityHTML || '<span class="text-gray-500">No priority data</span>';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Render enhancement cards
+        function renderEnhancements() {
+            const grid = document.getElementById('enhancementGrid');
+            const emptyState = document.getElementById('emptyState');
+
+            // Filter enhancements
+            let filtered = enhancements.filter(e => {
+                // Filter by status
+                let statusMatch = true;
+                if (currentFilter !== 'all') {
+                    if (currentFilter === 'completed') statusMatch = e.status.includes('✅');
+                    else if (currentFilter === 'in-progress') statusMatch = e.status.includes('🔄');
+                    else if (currentFilter === 'planned') statusMatch = e.status.includes('📋');
+                }
+
+                // Filter by priority
+                let priorityMatch = true;
+                if (currentPriorityFilter !== 'all') {
+                    priorityMatch = e.priority && e.priority.includes(currentPriorityFilter);
+                }
+
+                // Filter by size
+                let sizeMatch = true;
+                if (currentSizeFilter !== 'all') {
+                    sizeMatch = e.size_category === currentSizeFilter;
+                }
+
+                // Filter by search
+                let searchMatch = true;
+                if (currentSearch) {
+                    const searchLower = currentSearch.toLowerCase();
+                    searchMatch =
+                        e.title.toLowerCase().includes(searchLower) ||
+                        (e.summary && e.summary.toLowerCase().includes(searchLower));
+                }
+
+                return statusMatch && priorityMatch && sizeMatch && searchMatch;
+            });
+
+            // Sort enhancements
+            if (currentSort === 'priority') {
+                const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3, 'Research': 4, 'Unknown': 5 };
+                filtered.sort((a, b) => {
+                    const aPriority = priorityOrder[a.priority] ?? 5;
+                    const bPriority = priorityOrder[b.priority] ?? 5;
+                    if (aPriority !== bPriority) return aPriority - bPriority;
+                    return b.id - a.id; // Secondary sort by ID (descending)
+                });
+            } else if (currentSort === 'number-desc') {
+                filtered.sort((a, b) => b.id - a.id); // Newest first
+            } else if (currentSort === 'number-asc') {
+                filtered.sort((a, b) => a.id - b.id); // Oldest first
+            } else if (currentSort === 'status') {
+                filtered.sort((a, b) => {
+                    const aStatus = a.status.includes('✅') ? 0 : a.status.includes('🔄') ? 1 : 2;
+                    const bStatus = b.status.includes('✅') ? 0 : b.status.includes('🔄') ? 1 : 2;
+                    if (aStatus !== bStatus) return aStatus - bStatus;
+                    return b.id - a.id; // Secondary sort by ID
+                });
+            } else if (currentSort === 'title') {
+                filtered.sort((a, b) => {
+                    const titleA = a.title.toLowerCase();
+                    const titleB = b.title.toLowerCase();
+                    if (titleA < titleB) return -1;
+                    if (titleA > titleB) return 1;
+                    return 0;
+                });
+            } else if (currentSort === 'size-desc') {
+                filtered.sort((a, b) => {
+                    const aSize = a.size_lines || 0;
+                    const bSize = b.size_lines || 0;
+                    if (aSize !== bSize) return bSize - aSize; // Largest first
+                    return b.id - a.id; // Secondary sort by ID
+                });
+            } else if (currentSort === 'size-asc') {
+                filtered.sort((a, b) => {
+                    const aSize = a.size_lines || 0;
+                    const bSize = b.size_lines || 0;
+                    if (aSize !== bSize) return aSize - bSize; // Smallest first
+                    return b.id - a.id; // Secondary sort by ID
+                });
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = filtered.map(e => createEnhancementCard(e)).join('');
+        }
+
+        // Create enhancement card HTML
+        function createEnhancementCard(enhancement) {
+            const statusClass =
+                enhancement.status.includes('✅') ? 'status-completed' :
+                enhancement.status.includes('🔄') ? 'status-in-progress' :
+                'status-planned';
+
+            const priorityClass =
+                enhancement.priority && enhancement.priority.includes('Critical') ? 'priority-critical' :
+                enhancement.priority && enhancement.priority.includes('High') ? 'priority-high' :
+                enhancement.priority && enhancement.priority.includes('Medium') ? 'priority-medium' :
+                enhancement.priority && enhancement.priority.includes('Low') ? 'priority-low' :
+                enhancement.priority && enhancement.priority.includes('Research') ? 'priority-research' :
+                '';
+
+            const priorityText = enhancement.priority ? enhancement.priority.split('|')[0].trim() : '';
+
+            const dateInfo =
+                enhancement.completed ? `Completed: ${enhancement.completed}` :
+                enhancement.started ? `Started: ${enhancement.started}` :
+                enhancement.created ? `Created: ${enhancement.created}` :
+                '';
+
+            // Build size and commit badges
+            let sizeBadge = '';
+            if (enhancement.size_category && enhancement.size_category !== 'Unknown') {
+                const sizeLines = enhancement.size_lines || 0;
+                const sizeFiles = enhancement.size_files || 0;
+                sizeBadge = `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" title="${sizeLines.toLocaleString()} lines / ${sizeFiles} files">${enhancement.size_category} - ${sizeLines.toLocaleString()} lines</span>`;
+            }
+
+            let commitBadge = '';
+            if (enhancement.commits && enhancement.commits.length > 0) {
+                commitBadge = `<span class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded">${enhancement.commits.length} commit${enhancement.commits.length > 1 ? 's' : ''}</span>`;
+            }
+
+            return `
+                <div class="enhancement-card" onclick="openEnhancement(${enhancement.id})">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="text-lg font-semibold text-gray-900">
+                                Enhancement ${enhancement.id}
+                            </div>
+                            ${priorityClass ? `<span class="priority-badge ${priorityClass}">${priorityText}</span>` : ''}
+                        </div>
+                        <span class="status-badge ${statusClass}">
+                            ${enhancement.status.replace(/[📋🔄✅]/g, '').trim()}
+                        </span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">${enhancement.title}</h3>
+                    ${enhancement.summary ? `<p class="text-gray-600 text-sm mb-3">${enhancement.summary}</p>` : ''}
+                    <div class="flex items-center justify-between text-sm text-gray-500 gap-2">
+                        <span>${dateInfo}</span>
+                        <div class="flex items-center gap-2">
+                            ${sizeBadge}
+                            ${commitBadge}
+                            ${enhancement.complexity ? `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${enhancement.complexity}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Open enhancement detail modal
+        async function openEnhancement(id) {
+            try {
+                console.log('Loading enhancement:', id);
+                const response = await fetch(`/api/enhancements/${id}`);
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('Data received:', data);
+                currentEnhancement = data;
+
+                // Update modal
+                document.getElementById('modalTitle').textContent = `Enhancement ${id}`;
+
+                const statusClass =
+                    data.metadata.status.includes('✅') ? 'status-completed' :
+                    data.metadata.status.includes('🔄') ? 'status-in-progress' :
+                    'status-planned';
+
+                const statusBadge = document.getElementById('modalStatus');
+                statusBadge.textContent = data.metadata.status.replace(/[📋🔄✅]/g, '').trim();
+                statusBadge.className = `status-badge ${statusClass}`;
+
+                const metadata = [];
+                if (data.metadata.priority) metadata.push(`Priority: ${data.metadata.priority}`);
+                if (data.metadata.complexity) metadata.push(`Complexity: ${data.metadata.complexity}`);
+                if (data.metadata.created) metadata.push(`Created: ${data.metadata.created}`);
+                document.getElementById('modalMetadata').textContent = metadata.join(' • ');
+
+                // Render markdown
+                console.log('Rendering markdown...');
+                let html;
+                if (typeof marked !== 'undefined') {
+                    // Try marked.parse() for v11+, fall back to marked() for older versions
+                    html = marked.parse ? marked.parse(data.content) : marked(data.content);
+                } else {
+                    console.error('marked.js not loaded');
+                    html = '<pre>' + data.content + '</pre>';
+                }
+
+                if (typeof DOMPurify !== 'undefined') {
+                    html = DOMPurify.sanitize(html);
+                } else {
+                    console.warn('DOMPurify not loaded, using unsanitized HTML');
+                }
+
+                document.getElementById('modalContent').innerHTML = html;
+                console.log('Markdown rendered successfully');
+
+                // Setup edit tab
+                document.getElementById('statusSelect').value = data.metadata.status;
+                document.getElementById('contentEditor').value = data.content;
+
+                // Show modal
+                document.getElementById('detailModal').classList.add('active');
+                switchTab('view');
+            } catch (error) {
+                console.error('Failed to load enhancement:', error);
+                console.error('Error stack:', error.stack);
+                alert('Failed to load enhancement details: ' + error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+            currentEnhancement = null;
+        }
+
+        // Switch tabs
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            if (tab === 'view') {
+                document.querySelector('[onclick="switchTab(\'view\')"]').classList.add('active');
+                document.getElementById('viewTab').classList.add('active');
+            } else if (tab === 'edit') {
+                document.querySelector('[onclick="switchTab(\'edit\')"]').classList.add('active');
+                document.getElementById('editTab').classList.add('active');
+            } else if (tab === 'commits') {
+                document.querySelector('[onclick="switchTab(\'commits\')"]').classList.add('active');
+                document.getElementById('commitsTab').classList.add('active');
+                // Render commits when tab is opened
+                renderCommits();
+            }
+        }
+
+        // Render commits in the commits tab
+        function renderCommits() {
+            const commitsContent = document.getElementById('commitsContent');
+
+            if (!currentEnhancement || !currentEnhancement.metadata) {
+                commitsContent.innerHTML = '<p class="text-gray-500">No enhancement data loaded.</p>';
+                return;
+            }
+
+            const commits = currentEnhancement.metadata.commits || [];
+            const githubUrls = currentEnhancement.metadata.github_urls || [];
+
+            if (commits.length === 0) {
+                commitsContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <p class="text-gray-500">No commits found for this enhancement.</p>
+                        <p class="text-sm text-gray-400 mt-2">This enhancement may not have been implemented yet, or commit metadata hasn't been added.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Build commits list
+            const commitsList = commits.map((sha, index) => {
+                const url = githubUrls[index] || '';
+                return `
+                    <div class="border-b border-gray-200 pb-4 mb-4">
+                        <div class="flex items-center gap-3 mb-2">
+                            <a href="${url}" target="_blank" rel="noopener noreferrer"
+                               class="text-blue-600 hover:text-blue-800 font-mono text-sm font-semibold">
+                                ${sha}
+                            </a>
+                            <span class="text-xs text-gray-500">View on GitHub →</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            commitsContent.innerHTML = `
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Git Commits</h3>
+                    <p class="text-sm text-gray-600 mb-4">${commits.length} commit${commits.length > 1 ? 's' : ''} found for this enhancement</p>
+                </div>
+                ${commitsList}
+            `;
+        }
+
+        // Save enhancement
+        async function saveEnhancement() {
+            if (!currentEnhancement) return;
+
+            const newStatus = document.getElementById('statusSelect').value;
+            const newContent = document.getElementById('contentEditor').value;
+
+            try {
+                // Update content
+                await fetch(`/api/enhancements/${currentEnhancement.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: newContent })
+                });
+
+                // Update status if changed
+                if (newStatus !== currentEnhancement.metadata.status) {
+                    const completedDate = newStatus === '✅ COMPLETED' ? new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : null;
+                    await fetch(`/api/enhancements/${currentEnhancement.id}/status`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            status: newStatus,
+                            completed_date: completedDate
+                        })
+                    });
+                }
+
+                alert('Enhancement saved successfully!');
+                closeModal();
+                await loadEnhancements();
+                await loadStats();
+            } catch (error) {
+                console.error('Failed to save enhancement:', error);
+                alert('Failed to save enhancement');
+            }
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Status filter buttons
+            document.querySelectorAll('.filter-btn:not(.priority-filter):not(.size-filter)').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn:not(.priority-filter):not(.size-filter)').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderEnhancements();
+                });
+            });
+
+            // Priority filter buttons
+            document.querySelectorAll('.priority-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.priority-filter').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentPriorityFilter = e.target.dataset.priority;
+                    renderEnhancements();
+                });
+            });
+
+            // Size filter buttons
+            document.querySelectorAll('.size-filter').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.size-filter').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentSizeFilter = e.target.dataset.size;
+                    renderEnhancements();
+                });
+            });
+
+            // Search input
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                renderEnhancements();
+            });
+
+            // Sort dropdown
+            document.getElementById('sortSelect').addEventListener('change', (e) => {
+                currentSort = e.target.value;
+                renderEnhancements();
+            });
+
+            // Close modal on escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+
+            // Close modal on background click
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target.id === 'detailModal') closeModal();
+            });
+        }
+
+        // Refresh data from server
+        async function refreshData() {
+            try {
+                await loadEnhancements();
+                await loadStats();
+                alert('Data refreshed successfully!');
+            } catch (error) {
+                console.error('Failed to refresh data:', error);
+                alert('Failed to refresh data: ' + error.message);
+            }
+        }
+
+        // Shutdown server
+        async function shutdownServer() {
+            if (!confirm('Are you sure you want to shutdown the server? This will close the Enhancement Manager.')) {
+                return;
+            }
+
+            try {
+                await fetch('/api/shutdown', { method: 'POST' });
+                alert('Server is shutting down. You can close this browser tab.');
+                // Close the window after a delay (may not work due to browser security)
+                setTimeout(() => {
+                    window.close();
+                }, 2000);
+            } catch (error) {
+                // Expected to fail since server will be down
+                alert('Server has been shutdown. You can close this browser tab.');
+            }
+        }
+
+        // Initialize on load
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,802 @@
+{
+  "47": {
+    "enhancement_id": 47,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "0972568eeba402ec80c92e76af371342207cf5f6",
+        "short_sha": "0972568",
+        "message": "Enhancement 47 Phase 2: Update path abstraction layer",
+        "date": "2026-01-18T07:47:57-08:00",
+        "lines_added": 18,
+        "lines_deleted": 15,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/0972568eeba402ec80c92e76af371342207cf5f6"
+      },
+      {
+        "sha": "da418c7c0b0329276c6c26eb1ae4c5e3a7d14ad8",
+        "short_sha": "da418c7",
+        "message": "Enhancement 47 Phase 1: Data directory reorganization",
+        "date": "2026-01-18T07:36:02-08:00",
+        "lines_added": 756,
+        "lines_deleted": 3,
+        "files_modified": 4,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/da418c7c0b0329276c6c26eb1ae4c5e3a7d14ad8"
+      }
+    ],
+    "total_lines_changed": 792,
+    "total_lines_added": 774,
+    "total_lines_deleted": 18,
+    "total_files_modified": 5
+  },
+  "46": {
+    "enhancement_id": 46,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "471716de6b23c50d37ba4c3ca97524626acb1cf7",
+        "short_sha": "471716d",
+        "message": "Mark Enhancement 46 as Completed",
+        "date": "2026-01-17T23:50:15-08:00",
+        "lines_added": 2,
+        "lines_deleted": 1,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/471716de6b23c50d37ba4c3ca97524626acb1cf7"
+      },
+      {
+        "sha": "ad542e9efb96bd2ee745b6ab6e77f2ee721b1789",
+        "short_sha": "ad542e9",
+        "message": "Add Enhancements 42-46: Research gaps and priority system",
+        "date": "2026-01-17T23:40:16-08:00",
+        "lines_added": 1179,
+        "lines_deleted": 12,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789"
+      }
+    ],
+    "total_lines_changed": 1194,
+    "total_lines_added": 1181,
+    "total_lines_deleted": 13,
+    "total_files_modified": 7
+  },
+  "42": {
+    "enhancement_id": 42,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "ad542e9efb96bd2ee745b6ab6e77f2ee721b1789",
+        "short_sha": "ad542e9",
+        "message": "Add Enhancements 42-46: Research gaps and priority system",
+        "date": "2026-01-17T23:40:16-08:00",
+        "lines_added": 1179,
+        "lines_deleted": 12,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789"
+      }
+    ],
+    "total_lines_changed": 1191,
+    "total_lines_added": 1179,
+    "total_lines_deleted": 12,
+    "total_files_modified": 6
+  },
+  "43": {
+    "enhancement_id": 43,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "ad542e9efb96bd2ee745b6ab6e77f2ee721b1789",
+        "short_sha": "ad542e9",
+        "message": "Add Enhancements 42-46: Research gaps and priority system",
+        "date": "2026-01-17T23:40:16-08:00",
+        "lines_added": 1179,
+        "lines_deleted": 12,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789"
+      }
+    ],
+    "total_lines_changed": 1191,
+    "total_lines_added": 1179,
+    "total_lines_deleted": 12,
+    "total_files_modified": 6
+  },
+  "44": {
+    "enhancement_id": 44,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "ad542e9efb96bd2ee745b6ab6e77f2ee721b1789",
+        "short_sha": "ad542e9",
+        "message": "Add Enhancements 42-46: Research gaps and priority system",
+        "date": "2026-01-17T23:40:16-08:00",
+        "lines_added": 1179,
+        "lines_deleted": 12,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789"
+      }
+    ],
+    "total_lines_changed": 1191,
+    "total_lines_added": 1179,
+    "total_lines_deleted": 12,
+    "total_files_modified": 6
+  },
+  "45": {
+    "enhancement_id": 45,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "ad542e9efb96bd2ee745b6ab6e77f2ee721b1789",
+        "short_sha": "ad542e9",
+        "message": "Add Enhancements 42-46: Research gaps and priority system",
+        "date": "2026-01-17T23:40:16-08:00",
+        "lines_added": 1179,
+        "lines_deleted": 12,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ad542e9efb96bd2ee745b6ab6e77f2ee721b1789"
+      }
+    ],
+    "total_lines_changed": 1191,
+    "total_lines_added": 1179,
+    "total_lines_deleted": 12,
+    "total_files_modified": 6
+  },
+  "39": {
+    "enhancement_id": 39,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "2f4cb7f2c5517a161e27df8747a19c1b5e0bba6a",
+        "short_sha": "2f4cb7f",
+        "message": "Enhancement 39: Pipeline Error Logging System + Move completed enhancements",
+        "date": "2026-01-17T23:18:31-08:00",
+        "lines_added": 2601,
+        "lines_deleted": 944,
+        "files_modified": 20,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/2f4cb7f2c5517a161e27df8747a19c1b5e0bba6a"
+      }
+    ],
+    "total_lines_changed": 3545,
+    "total_lines_added": 2601,
+    "total_lines_deleted": 944,
+    "total_files_modified": 20
+  },
+  "37": {
+    "enhancement_id": 37,
+    "commit_count": 3,
+    "commits": [
+      {
+        "sha": "e3a554713b8e82ff7ec64835d318cde752f43199",
+        "short_sha": "e3a5547",
+        "message": "Complete Enhancement 37 documentation and worker allocation improvements",
+        "date": "2026-01-17T19:08:26-08:00",
+        "lines_added": 250,
+        "lines_deleted": 90,
+        "files_modified": 6,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/e3a554713b8e82ff7ec64835d318cde752f43199"
+      },
+      {
+        "sha": "f5000e0bd3303d53da8ea92f1c6ef09ff6a0f95f",
+        "short_sha": "f5000e0",
+        "message": "Phase 4: Complete Enhancement 37 documentation",
+        "date": "2026-01-17T16:56:20-08:00",
+        "lines_added": 128,
+        "lines_deleted": 6,
+        "files_modified": 4,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/f5000e0bd3303d53da8ea92f1c6ef09ff6a0f95f"
+      },
+      {
+        "sha": "39e6f6f53227389c868e97795a745954215ed52e",
+        "short_sha": "39e6f6f",
+        "message": "Add Enhancement 37: Parallel Multi-Year Pipeline",
+        "date": "2026-01-17T16:51:01-08:00",
+        "lines_added": 463,
+        "lines_deleted": 1,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/39e6f6f53227389c868e97795a745954215ed52e"
+      }
+    ],
+    "total_lines_changed": 938,
+    "total_lines_added": 841,
+    "total_lines_deleted": 97,
+    "total_files_modified": 12
+  },
+  "36": {
+    "enhancement_id": 36,
+    "commit_count": 6,
+    "commits": [
+      {
+        "sha": "eaf579be099723453406b4a6d6cc578ec1afd6bb",
+        "short_sha": "eaf579b",
+        "message": "Implement Enhancement 36: Two-level configuration system and multi-year pipeline",
+        "date": "2026-01-17T13:21:28-08:00",
+        "lines_added": 1385,
+        "lines_deleted": 199,
+        "files_modified": 19,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/eaf579be099723453406b4a6d6cc578ec1afd6bb"
+      },
+      {
+        "sha": "461edd2cb4700c2542084388733ac0640410134a",
+        "short_sha": "461edd2",
+        "message": "Enhancement 36 Phase 2: Implement New Output Directory Structure",
+        "date": "2026-01-17T11:29:12-08:00",
+        "lines_added": 188,
+        "lines_deleted": 10604,
+        "files_modified": 57,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/461edd2cb4700c2542084388733ac0640410134a"
+      },
+      {
+        "sha": "e30792c69ab0f4032479687dd9d062dd8f0fba97",
+        "short_sha": "e30792c",
+        "message": "Enhancement 36 Phase 1: Define Configuration Schema and Writer",
+        "date": "2026-01-17T11:25:02-08:00",
+        "lines_added": 529,
+        "lines_deleted": 1,
+        "files_modified": 4,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/e30792c69ab0f4032479687dd9d062dd8f0fba97"
+      },
+      {
+        "sha": "b6f90b82ac3b87d07c3b1112ee8e2451b43fa83e",
+        "short_sha": "b6f90b8",
+        "message": "Update Enhancement 36: Remove _noedge suffix, add test updates, handle single-state runs",
+        "date": "2026-01-17T11:14:34-08:00",
+        "lines_added": 55,
+        "lines_deleted": 7,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/b6f90b82ac3b87d07c3b1112ee8e2451b43fa83e"
+      },
+      {
+        "sha": "18c5fe516e72b94d68681dfa888b54f9a8ebb59d",
+        "short_sha": "18c5fe5",
+        "message": "Update Enhancement 36: Add tests/ directory for dev runs",
+        "date": "2026-01-17T11:10:01-08:00",
+        "lines_added": 37,
+        "lines_deleted": 22,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/18c5fe516e72b94d68681dfa888b54f9a8ebb59d"
+      },
+      {
+        "sha": "1de416ca4bea97fd6081c0fc8505f8223f1dbc07",
+        "short_sha": "1de416c",
+        "message": "Plan Enhancement 36: Experimental Variants Configuration System",
+        "date": "2026-01-17T11:07:02-08:00",
+        "lines_added": 442,
+        "lines_deleted": 1,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/1de416ca4bea97fd6081c0fc8505f8223f1dbc07"
+      }
+    ],
+    "total_lines_changed": 13470,
+    "total_lines_added": 2636,
+    "total_lines_deleted": 10834,
+    "total_files_modified": 84
+  },
+  "11": {
+    "enhancement_id": 11,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "c3211966fa915625c3ef678c058f1c272cd672a0",
+        "short_sha": "c321196",
+        "message": "Mark Enhancements 11 and 12 as completed",
+        "date": "2026-01-17T10:23:15-08:00",
+        "lines_added": 8,
+        "lines_deleted": 6,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/c3211966fa915625c3ef678c058f1c272cd672a0"
+      },
+      {
+        "sha": "6e99bb17955ffe7a3d1a1a5b86acd9bd58091579",
+        "short_sha": "6e99bb1",
+        "message": "Add Enhancements 11-12 for tomorrow's work",
+        "date": "2026-01-13T02:51:45-08:00",
+        "lines_added": 79,
+        "lines_deleted": 0,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/6e99bb17955ffe7a3d1a1a5b86acd9bd58091579"
+      }
+    ],
+    "total_lines_changed": 93,
+    "total_lines_added": 87,
+    "total_lines_deleted": 6,
+    "total_files_modified": 4
+  },
+  "12": {
+    "enhancement_id": 12,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "c3211966fa915625c3ef678c058f1c272cd672a0",
+        "short_sha": "c321196",
+        "message": "Mark Enhancements 11 and 12 as completed",
+        "date": "2026-01-17T10:23:15-08:00",
+        "lines_added": 8,
+        "lines_deleted": 6,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/c3211966fa915625c3ef678c058f1c272cd672a0"
+      },
+      {
+        "sha": "6e99bb17955ffe7a3d1a1a5b86acd9bd58091579",
+        "short_sha": "6e99bb1",
+        "message": "Add Enhancements 11-12 for tomorrow's work",
+        "date": "2026-01-13T02:51:45-08:00",
+        "lines_added": 79,
+        "lines_deleted": 0,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/6e99bb17955ffe7a3d1a1a5b86acd9bd58091579"
+      }
+    ],
+    "total_lines_changed": 93,
+    "total_lines_added": 87,
+    "total_lines_deleted": 6,
+    "total_files_modified": 4
+  },
+  "10": {
+    "enhancement_id": 10,
+    "commit_count": 3,
+    "commits": [
+      {
+        "sha": "f922592d0835e0c07ffcd4642f24cbf25d3973e3",
+        "short_sha": "f922592",
+        "message": "Mark Enhancement 10 as completed (Per-State Urban Area Processing)",
+        "date": "2026-01-17T09:50:23-08:00",
+        "lines_added": 186,
+        "lines_deleted": 129,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/f922592d0835e0c07ffcd4642f24cbf25d3973e3"
+      },
+      {
+        "sha": "73060b5c067f5c442577083edf01822df44c77b8",
+        "short_sha": "73060b5",
+        "message": "Enhancement 10: Move metro area processing to per-state pipeline",
+        "date": "2026-01-12T17:54:24-08:00",
+        "lines_added": 225,
+        "lines_deleted": 4,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/73060b5c067f5c442577083edf01822df44c77b8"
+      },
+      {
+        "sha": "790023da0954a468f9a78d5653252ed87cb8cd60",
+        "short_sha": "790023d",
+        "message": "Documentation improvements and Alaska/Hawaii political analysis fix",
+        "date": "2026-01-12T17:43:44-08:00",
+        "lines_added": 274,
+        "lines_deleted": 44,
+        "files_modified": 8,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/790023da0954a468f9a78d5653252ed87cb8cd60"
+      }
+    ],
+    "total_lines_changed": 862,
+    "total_lines_added": 685,
+    "total_lines_deleted": 177,
+    "total_files_modified": 14
+  },
+  "15": {
+    "enhancement_id": 15,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "e8641cdf6acd6e159c6238ca1829029a696e91c6",
+        "short_sha": "e8641cd",
+        "message": "Fix parser to support older enhancements and upgrade all to new format",
+        "date": "2026-01-17T09:36:16-08:00",
+        "lines_added": 254,
+        "lines_deleted": 39,
+        "files_modified": 20,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/e8641cdf6acd6e159c6238ca1829029a696e91c6"
+      }
+    ],
+    "total_lines_changed": 293,
+    "total_lines_added": 254,
+    "total_lines_deleted": 39,
+    "total_files_modified": 20
+  },
+  "34": {
+    "enhancement_id": 34,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "cb447b52a82ec6edbd9efa618def41ff9d058d1b",
+        "short_sha": "cb447b5",
+        "message": "Update documentation for Enhancement 34",
+        "date": "2026-01-16T22:56:20-08:00",
+        "lines_added": 45,
+        "lines_deleted": 1,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/cb447b52a82ec6edbd9efa618def41ff9d058d1b"
+      },
+      {
+        "sha": "431796e6df8d4612cac8191d94e7eef6b7edeb3f",
+        "short_sha": "431796e",
+        "message": "Complete Enhancement 34: Test Execution and Debugging Skills",
+        "date": "2026-01-16T17:16:59-08:00",
+        "lines_added": 1798,
+        "lines_deleted": 12,
+        "files_modified": 7,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/431796e6df8d4612cac8191d94e7eef6b7edeb3f"
+      }
+    ],
+    "total_lines_changed": 1856,
+    "total_lines_added": 1843,
+    "total_lines_deleted": 13,
+    "total_files_modified": 10
+  },
+  "33": {
+    "enhancement_id": 33,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "4aba1b0b08a1b23d5daa02579312c3181b1d4761",
+        "short_sha": "4aba1b0",
+        "message": "Complete Enhancement 33: Dashboard Mock Data Integration",
+        "date": "2026-01-16T16:47:08-08:00",
+        "lines_added": 1416,
+        "lines_deleted": 267,
+        "files_modified": 5,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4aba1b0b08a1b23d5daa02579312c3181b1d4761"
+      }
+    ],
+    "total_lines_changed": 1683,
+    "total_lines_added": 1416,
+    "total_lines_deleted": 267,
+    "total_files_modified": 5
+  },
+  "29": {
+    "enhancement_id": 29,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "960e964269fcdc0c57ebb539d20256f278f5ea48",
+        "short_sha": "960e964",
+        "message": "Update documentation for Enhancement 29",
+        "date": "2026-01-16T13:06:49-08:00",
+        "lines_added": 187,
+        "lines_deleted": 31,
+        "files_modified": 5,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/960e964269fcdc0c57ebb539d20256f278f5ea48"
+      },
+      {
+        "sha": "0e90dcc0be457c1e5c5b560ba24a6de8440c2499",
+        "short_sha": "0e90dcc",
+        "message": "Reorganize artifacts directory and implement Enhancement 29",
+        "date": "2026-01-16T13:01:00-08:00",
+        "lines_added": 12399,
+        "lines_deleted": 9725,
+        "files_modified": 126,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/0e90dcc0be457c1e5c5b560ba24a6de8440c2499"
+      }
+    ],
+    "total_lines_changed": 22342,
+    "total_lines_added": 12586,
+    "total_lines_deleted": 9756,
+    "total_files_modified": 131
+  },
+  "18": {
+    "enhancement_id": 18,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "3792a5796b8585b01d35f7426612fc8d74c60338",
+        "short_sha": "3792a57",
+        "message": "Enhancement 18: Improve real census tract example quality",
+        "date": "2026-01-15T10:11:12-08:00",
+        "lines_added": 1101,
+        "lines_deleted": 12,
+        "files_modified": 5,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/3792a5796b8585b01d35f7426612fc8d74c60338"
+      }
+    ],
+    "total_lines_changed": 1113,
+    "total_lines_added": 1101,
+    "total_lines_deleted": 12,
+    "total_files_modified": 5
+  },
+  "17": {
+    "enhancement_id": 17,
+    "commit_count": 7,
+    "commits": [
+      {
+        "sha": "2eb7ed768a8bcd8b4ad72421a4b50255a1c6bcd6",
+        "short_sha": "2eb7ed7",
+        "message": "Fix validation script: correct report locations and national round maps path",
+        "date": "2026-01-14T20:14:36-08:00",
+        "lines_added": 69,
+        "lines_deleted": 5,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/2eb7ed768a8bcd8b4ad72421a4b50255a1c6bcd6"
+      },
+      {
+        "sha": "9e35aafaecb39078640165d0757dccc2723ff558",
+        "short_sha": "9e35aaf",
+        "message": "Docs: Update documentation for recent enhancements",
+        "date": "2026-01-14T17:38:07-08:00",
+        "lines_added": 85,
+        "lines_deleted": 10,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/9e35aafaecb39078640165d0757dccc2723ff558"
+      },
+      {
+        "sha": "54bf030c615359f04df80c6601a033b9b53b6dbc",
+        "short_sha": "54bf030",
+        "message": "Fix: Update demographic runner scripts to use 'demographic' directory",
+        "date": "2026-01-14T17:31:59-08:00",
+        "lines_added": 4,
+        "lines_deleted": 4,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/54bf030c615359f04df80c6601a033b9b53b6dbc"
+      },
+      {
+        "sha": "5ab531ad0fc676b9276fef17638b4bf96aa301e5",
+        "short_sha": "5ab531a",
+        "message": "Fix: Correct political analysis output directory structure",
+        "date": "2026-01-14T17:27:18-08:00",
+        "lines_added": 8,
+        "lines_deleted": 4,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/5ab531ad0fc676b9276fef17638b4bf96aa301e5"
+      },
+      {
+        "sha": "67ed99896b0a67f1346d225b4d8150873e2fa1b8",
+        "short_sha": "67ed998",
+        "message": "Fix: Update political and demographic analysis for Enhancement 17 paths",
+        "date": "2026-01-14T17:13:46-08:00",
+        "lines_added": 9,
+        "lines_deleted": 9,
+        "files_modified": 7,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/67ed99896b0a67f1346d225b4d8150873e2fa1b8"
+      },
+      {
+        "sha": "cf3b65576b7b5931efbf20675b06401ca26da22f",
+        "short_sha": "cf3b655",
+        "message": "Fix: Update compactness visualization for Enhancement 17 paths",
+        "date": "2026-01-14T16:54:24-08:00",
+        "lines_added": 8,
+        "lines_deleted": 8,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/cf3b65576b7b5931efbf20675b06401ca26da22f"
+      },
+      {
+        "sha": "22a9f532c759350f2f8903a501c15f4fa5fd8171",
+        "short_sha": "22a9f53",
+        "message": "Enhancement 17: Standardize artifact naming conventions",
+        "date": "2026-01-14T16:40:18-08:00",
+        "lines_added": 2719,
+        "lines_deleted": 199,
+        "files_modified": 29,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/22a9f532c759350f2f8903a501c15f4fa5fd8171"
+      }
+    ],
+    "total_lines_changed": 3141,
+    "total_lines_added": 2902,
+    "total_lines_deleted": 239,
+    "total_files_modified": 44
+  },
+  "13": {
+    "enhancement_id": 13,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "1944a24d3afa09e55a04870628647bdf13c98e16",
+        "short_sha": "1944a24",
+        "message": "Fix: Update metro area maps script for Enhancement 13 directory structure",
+        "date": "2026-01-14T18:12:55-08:00",
+        "lines_added": 6,
+        "lines_deleted": 6,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/1944a24d3afa09e55a04870628647bdf13c98e16"
+      }
+    ],
+    "total_lines_changed": 12,
+    "total_lines_added": 6,
+    "total_lines_deleted": 6,
+    "total_files_modified": 1
+  },
+  "7": {
+    "enhancement_id": 7,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "919b074e81007f8edbd9305f806e335be3d8b70a",
+        "short_sha": "919b074",
+        "message": "Mark Enhancement 7 as COMPLETED with test results",
+        "date": "2026-01-12T20:33:15-08:00",
+        "lines_added": 70,
+        "lines_deleted": 8,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/919b074e81007f8edbd9305f806e335be3d8b70a"
+      },
+      {
+        "sha": "4a08bd4e2be0173b8b7bbe61116fab72b828e643",
+        "short_sha": "4a08bd4",
+        "message": "Align future enhancements documentation",
+        "date": "2026-01-12T11:13:10-08:00",
+        "lines_added": 717,
+        "lines_deleted": 60,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643"
+      }
+    ],
+    "total_lines_changed": 855,
+    "total_lines_added": 787,
+    "total_lines_deleted": 68,
+    "total_files_modified": 3
+  },
+  "9": {
+    "enhancement_id": 9,
+    "commit_count": 7,
+    "commits": [
+      {
+        "sha": "790023da0954a468f9a78d5653252ed87cb8cd60",
+        "short_sha": "790023d",
+        "message": "Documentation improvements and Alaska/Hawaii political analysis fix",
+        "date": "2026-01-12T17:43:44-08:00",
+        "lines_added": 274,
+        "lines_deleted": 44,
+        "files_modified": 8,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/790023da0954a468f9a78d5653252ed87cb8cd60"
+      },
+      {
+        "sha": "4bc07f9eb1b57c7fe98c6957bb2d2411e3761e36",
+        "short_sha": "4bc07f9",
+        "message": "feat: Complete Enhancement 9 - Per-State Analysis Integration",
+        "date": "2026-01-12T17:15:45-08:00",
+        "lines_added": 166,
+        "lines_deleted": 69,
+        "files_modified": 9,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4bc07f9eb1b57c7fe98c6957bb2d2411e3761e36"
+      },
+      {
+        "sha": "ec1cd357f6e21c2e03900b3f6b7928cc841bf3af",
+        "short_sha": "ec1cd35",
+        "message": "docs: Enhancement 9 Phase 1 complete - Compactness prototype validated",
+        "date": "2026-01-12T16:00:23-08:00",
+        "lines_added": 43,
+        "lines_deleted": 9,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/ec1cd357f6e21c2e03900b3f6b7928cc841bf3af"
+      },
+      {
+        "sha": "50b5e55074f304e957962fc3920ad7f7a085407e",
+        "short_sha": "50b5e55",
+        "message": "docs: Update Enhancement 9 progress (Phases 1-2 complete)",
+        "date": "2026-01-12T15:56:28-08:00",
+        "lines_added": 40,
+        "lines_deleted": 1,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/50b5e55074f304e957962fc3920ad7f7a085407e"
+      },
+      {
+        "sha": "547fcf72e13ee2a8eff23a0f8f7866cb9e6430e9",
+        "short_sha": "547fcf7",
+        "message": "refactor: Use scope-based compactness in main pipeline (Enhancement 9 Phase 2 complete)",
+        "date": "2026-01-12T15:45:45-08:00",
+        "lines_added": 5,
+        "lines_deleted": 18,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/547fcf72e13ee2a8eff23a0f8f7866cb9e6430e9"
+      },
+      {
+        "sha": "1e0d26601534b5fb213bd589c7be7e62b5e8db1e",
+        "short_sha": "1e0d266",
+        "message": "refactor: Implement scope-based compactness visualization (Enhancement 9 Phase 1-2)",
+        "date": "2026-01-12T15:44:12-08:00",
+        "lines_added": 458,
+        "lines_deleted": 113,
+        "files_modified": 3,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/1e0d26601534b5fb213bd589c7be7e62b5e8db1e"
+      },
+      {
+        "sha": "80e8d706bc03f007baf2277d56a0bcb8dddb2028",
+        "short_sha": "80e8d70",
+        "message": "Document Enhancement 9: Per-State Analysis Refactoring",
+        "date": "2026-01-12T15:15:10-08:00",
+        "lines_added": 268,
+        "lines_deleted": 4,
+        "files_modified": 1,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/80e8d706bc03f007baf2277d56a0bcb8dddb2028"
+      }
+    ],
+    "total_lines_changed": 1512,
+    "total_lines_added": 1254,
+    "total_lines_deleted": 258,
+    "total_files_modified": 24
+  },
+  "4": {
+    "enhancement_id": 4,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "466165117c35c0200606a85edc0396ceede43c76",
+        "short_sha": "4661651",
+        "message": "Implement Enhancement 4: Urban Metro Area District Maps",
+        "date": "2026-01-12T12:54:43-08:00",
+        "lines_added": 593,
+        "lines_deleted": 2,
+        "files_modified": 4,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/466165117c35c0200606a85edc0396ceede43c76"
+      },
+      {
+        "sha": "4a08bd4e2be0173b8b7bbe61116fab72b828e643",
+        "short_sha": "4a08bd4",
+        "message": "Align future enhancements documentation",
+        "date": "2026-01-12T11:13:10-08:00",
+        "lines_added": 717,
+        "lines_deleted": 60,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643"
+      }
+    ],
+    "total_lines_changed": 1372,
+    "total_lines_added": 1310,
+    "total_lines_deleted": 62,
+    "total_files_modified": 6
+  },
+  "6": {
+    "enhancement_id": 6,
+    "commit_count": 2,
+    "commits": [
+      {
+        "sha": "062f177489dd4c5718107d09fd9540caf6451071",
+        "short_sha": "062f177",
+        "message": "Implement Enhancement 6: System Architecture Diagrams",
+        "date": "2026-01-12T11:53:03-08:00",
+        "lines_added": 545,
+        "lines_deleted": 9,
+        "files_modified": 8,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/062f177489dd4c5718107d09fd9540caf6451071"
+      },
+      {
+        "sha": "4a08bd4e2be0173b8b7bbe61116fab72b828e643",
+        "short_sha": "4a08bd4",
+        "message": "Align future enhancements documentation",
+        "date": "2026-01-12T11:13:10-08:00",
+        "lines_added": 717,
+        "lines_deleted": 60,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643"
+      }
+    ],
+    "total_lines_changed": 1331,
+    "total_lines_added": 1262,
+    "total_lines_deleted": 69,
+    "total_files_modified": 10
+  },
+  "5": {
+    "enhancement_id": 5,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "9bb05e1060041db5b8aeabb601543877124e54d9",
+        "short_sha": "9bb05e1",
+        "message": "Implement Enhancement 5: National Round Progression Maps",
+        "date": "2026-01-12T11:22:49-08:00",
+        "lines_added": 399,
+        "lines_deleted": 7,
+        "files_modified": 5,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/9bb05e1060041db5b8aeabb601543877124e54d9"
+      }
+    ],
+    "total_lines_changed": 406,
+    "total_lines_added": 399,
+    "total_lines_deleted": 7,
+    "total_files_modified": 5
+  },
+  "8": {
+    "enhancement_id": 8,
+    "commit_count": 1,
+    "commits": [
+      {
+        "sha": "4a08bd4e2be0173b8b7bbe61116fab72b828e643",
+        "short_sha": "4a08bd4",
+        "message": "Align future enhancements documentation",
+        "date": "2026-01-12T11:13:10-08:00",
+        "lines_added": 717,
+        "lines_deleted": 60,
+        "files_modified": 2,
+        "github_url": "https://github.com/giodl_microsoft/redistricting/commit/4a08bd4e2be0173b8b7bbe61116fab72b828e643"
+      }
+    ],
+    "total_lines_changed": 777,
+    "total_lines_added": 717,
+    "total_lines_deleted": 60,
+    "total_files_modified": 2
+  }
+}
