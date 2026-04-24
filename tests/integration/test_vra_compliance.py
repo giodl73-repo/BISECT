@@ -13,6 +13,11 @@ import json
 import pytest
 from pathlib import Path
 
+from .conftest import get_outputs_root, get_years
+
+OUTPUTS_ROOT = get_outputs_root()
+YEARS = get_years(OUTPUTS_ROOT)
+
 VRA_OUTPUTS = Path('outputs/V4/2020/states')
 
 # (state_dir_name, expected_mm_districts, comparison, note)

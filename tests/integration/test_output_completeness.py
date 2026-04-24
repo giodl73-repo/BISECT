@@ -14,14 +14,17 @@ Skips gracefully if a year hasn't been run yet.
 import pytest
 from pathlib import Path
 
-OUTPUTS_ROOT = Path('outputs/V3')
+from .conftest import get_outputs_root, get_years
+
+OUTPUTS_ROOT = get_outputs_root()
+YEARS = get_years(OUTPUTS_ROOT)
+
 REQUIRED_FILES = [
     'data/district_summary.csv',
     'data/rounds_hierarchy.csv',
     'data/final_assignments.pkl',
     'maps/all_districts.png',
 ]
-YEARS = ['2020', '2010', '2000']
 
 
 def get_completed_states(year: str):

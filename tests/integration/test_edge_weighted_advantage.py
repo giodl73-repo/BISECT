@@ -11,6 +11,11 @@ import csv
 import pytest
 from pathlib import Path
 
+from .conftest import get_outputs_root, get_years
+
+OUTPUTS_ROOT = get_outputs_root()
+YEARS = get_years(OUTPUTS_ROOT)
+
 OUTPUTS_ROOT = Path('outputs')
 COMPARISON_CSV = OUTPUTS_ROOT / 'data' / '2020' / 'partitioner_comparison' / 'partitioner_comparison_2020.csv'
 MIN_IMPROVEMENT = 0.40  # ≥40% improvement (paper finds +56%)

@@ -14,8 +14,11 @@ import csv
 import pytest
 from pathlib import Path
 
-OUTPUTS_ROOT = Path('outputs/V3')
-YEARS = ['2020', '2010', '2000']
+from .conftest import get_outputs_root, get_years
+
+OUTPUTS_ROOT = get_outputs_root()
+YEARS = get_years(OUTPUTS_ROOT)
+
 TOLERANCE = 0.005  # ±0.5%
 
 # States with known 2010 geographic constraint imbalance (METIS -contig issue).

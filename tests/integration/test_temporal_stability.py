@@ -12,7 +12,11 @@ import csv
 import pytest
 from pathlib import Path
 
-OUTPUTS_ROOT = Path('outputs/V3')
+from .conftest import get_outputs_root, get_years
+
+OUTPUTS_ROOT = get_outputs_root()
+YEARS = get_years(OUTPUTS_ROOT)
+
 MAX_VARIATION = 0.50  # 50% max decade-to-decade change per state
 # Note: Paper C.3's stability finding is about the NATIONAL mean (~15% variation),
 # not individual states. States can vary more based on demographic/geographic shifts.
