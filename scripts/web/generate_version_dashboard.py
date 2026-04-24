@@ -82,8 +82,19 @@ def generate_version_dashboard(version, output_dir='outputs', template_file='web
 
     # 5. Replace placeholders
     description = version_config.get('description', '')
+
+    # Build version switcher options from all known versions
+    all_versions = sorted(set(r.get('version', '') for r in all_runs if r.get('version')))
+    version_labels = {'v1': 'v1 (baseline)', 'v4': 'v4 (VRA)'}
+    options_html = '\n'.join(
+        f'<option value="{v}"{" selected" if v == version else ""}>'
+        f'{version_labels.get(v, v)}</option>'
+        for v in all_versions
+    )
+
     html = html.replace('{VERSION}', version)
     html = html.replace('{DESCRIPTION}', description)
+    html = html.replace('/* VERSION_OPTIONS_PLACEHOLDER */', options_html)
     html = html.replace('/* VERSION_CONFIG_PLACEHOLDER */', json.dumps(version_config, indent=4))
     html = html.replace('/* COMPARISON_DATA_PLACEHOLDER */', json.dumps(comparison_data, indent=4))
     html = html.replace('/* RUNS_PLACEHOLDER */', json.dumps(version_runs, indent=4))

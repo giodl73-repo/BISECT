@@ -362,8 +362,15 @@
 <body>
     <div class="main-container">
         <div class="header">
-            <div class="breadcrumb">
+            <div class="breadcrumb" style="display:flex; align-items:center; gap:1.5rem;">
                 <a href="../index.html">&larr; Master Dashboard</a>
+                <span style="color:#ccc;">|</span>
+                <label for="versionSwitcher" style="color:#ccc; font-size:0.9rem;">Version:</label>
+                <select id="versionSwitcher" onchange="switchVersion(this.value)"
+                        style="padding:4px 8px; border-radius:4px; border:1px solid #555;
+                               background:#2d3748; color:#fff; font-size:0.9rem; cursor:pointer;">
+                    /* VERSION_OPTIONS_PLACEHOLDER */
+                </select>
             </div>
             <h1>{VERSION}: {DESCRIPTION}</h1>
             <div class="subtitle">Cross-Census Year Analysis</div>
@@ -736,6 +743,12 @@
 
             // Re-append rows in sorted order
             rows.forEach(row => tbody.appendChild(row));
+        }
+
+        function switchVersion(version) {
+            if (version) {
+                window.location.href = '../' + version + '/index.html';
+            }
         }
     </script>
 </body>
