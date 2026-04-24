@@ -352,49 +352,7 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
     # Inject run selector into header (before papers dropdown)
     import re
 
-    current_path = output_dir.name  # us_2020_v1, etc.
-
-    # Load runs from runs.json (or find them if it doesn't exist)
-    runs_json_path = Path('outputs/runs.json')
-    if runs_json_path.exists():
-        with open(runs_json_path, 'r') as f:
-            all_runs = json.load(f)
-    else:
-        all_runs = find_all_runs()
-
-    # Generate options HTML
-    options_html = []
-    for run in all_runs:
-        label = f"{run['year']} - {run['version_full']} ({run['mode']})"
-        selected = ' selected' if run['path'] == current_path else ''
-        options_html.append(f'                    <option value="{run["path"]}"{selected}>{label}</option>')
-
-    # Run selector HTML (pre-populated with all runs)
-    run_selector_html = f'''<select id="runSelector" class="header-select" onchange="switchRun(this.value)" style="margin-right: 1rem;">
-{chr(10).join(options_html)}
-                </select>
-                '''
-
-    # Inject before papers dropdown
-    papers_dropdown_pattern = r'(<div class="dropdown" style="position: relative; display: inline-block;">[\s\S]*?📄 Research Papers)'
-    dashboard_html = re.sub(
-        papers_dropdown_pattern,
-        run_selector_html + r'\1',
-        template_html,
-        count=1
-    )
-
-    # Add switchRun function to JavaScript (simple, no async loading needed)
-    switch_run_js = f'''
-        function switchRun(runPath) {{
-            if (runPath) {{
-                window.location.href = '../../' + runPath + '/index.html';
-            }}
-        }}
-    '''
-
-    # Inject before closing </script> tag
-    dashboard_html = dashboard_html.replace('</script>', switch_run_js + '\n    </script>')
+    dashboard_html = template_html
 
     # Inject district data into template
     # Find the line with the comment about DISTRICT_DATA
