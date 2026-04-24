@@ -65,6 +65,8 @@ def process_single_state(args_tuple: Tuple) -> Tuple[str, bool]:
         cmd.append('--run-analysis')
     if args_dict.get('partition_mode') != 'edge-weighted':
         cmd.extend(['--partition-mode', args_dict['partition_mode']])
+    if args_dict.get('version'):
+        cmd.extend(['--version', args_dict['version']])
     if args_dict.get('reprocess'):
         cmd.append('--reprocess')
 
@@ -159,7 +161,8 @@ def main():
         'run_analysis': args.run_analysis,
         'partition_mode': args.partition_mode,
         'dpi': args.dpi,
-        'reprocess': args.reprocess
+        'reprocess': args.reprocess,
+        'version': args.version,
     }
 
     max_workers = min(args.workers, len(states_to_process), 8)
