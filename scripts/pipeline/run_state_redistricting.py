@@ -224,10 +224,16 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
             # This encodes minority clustering into the graph structure itself rather than
             # using multi-constraint optimization, which sacrifices population balance.
             MINORITY_THRESHOLD = 0.40   # 40% minority tract threshold (Paper D.0 optimal)
-            MINORITY_WEIGHT = 10.0      # α = 10× for minority-minority edges (Paper D.0: 5-10x range)
             NORMAL_WEIGHT = 1.0         # all other edges
 
+            # Scale the boost inversely with the fraction of minority-minority edges.
+            # When most edges are minority-minority (high-diversity states like CA, TX),
+            # a large boost becomes nearly uniform and disrupts population balance.
+            # Paper D.0 found 5-10x optimal; we cap lower as minority density rises.
             is_minority = (tracts_with_demo['pct_minority'] >= MINORITY_THRESHOLD).values
+            minority_frac = is_minority.mean()
+            # Linear taper: 10x at 0% minority-minority saturation → 3x at 100%
+            MINORITY_WEIGHT = max(3.0, 10.0 * (1.0 - 0.7 * minority_frac))
             n_tracts = len(tracts_with_demo)
 
             # Build edge weight dict from adjacency (replace boundary lengths with

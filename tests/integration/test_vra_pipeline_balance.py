@@ -126,6 +126,18 @@ class TestVRAPopulationBalance:
         assignments, vw = run_redistricting('GA', tmp)
         self._check_balance(assignments, vw, 14, 'Georgia')
 
+    @pytest.mark.skipif(not adjacency_exists('CA'), reason='California adjacency not found')
+    def test_california_vra_population_balance(self, tmp):
+        """California VRA: 52 districts, very high minority (63.5%) — must still balance."""
+        assignments, vw = run_redistricting('CA', tmp)
+        self._check_balance(assignments, vw, 52, 'California')
+
+    @pytest.mark.skipif(not adjacency_exists('TX'), reason='Texas adjacency not found')
+    def test_texas_vra_population_balance(self, tmp):
+        """Texas VRA: 38 districts, high minority — must still balance."""
+        assignments, vw = run_redistricting('TX', tmp)
+        self._check_balance(assignments, vw, 38, 'Texas')
+
 
 @pytest.mark.skipif(not SCRIPT.exists(), reason='Pipeline script not found')
 class TestVRACodePathIntegrity:

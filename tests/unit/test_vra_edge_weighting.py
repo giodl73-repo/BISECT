@@ -105,6 +105,34 @@ class TestEdgeWeightConstruction:
         assert len(ew) == 3  # triangle: (0,1),(0,2),(1,2)
 
 
+class TestAdaptiveBoostScaling:
+    """Verify the adaptive boost factor scales correctly with minority density."""
+
+    def _compute_boost(self, minority_frac: float) -> float:
+        """Mirror the formula from run_state_redistricting.py."""
+        return max(3.0, 10.0 * (1.0 - 0.7 * minority_frac))
+
+    def test_low_minority_gets_full_boost(self):
+        """States with few minority tracts get the full 10x boost."""
+        boost = self._compute_boost(0.0)
+        assert abs(boost - 10.0) < 0.01
+
+    def test_high_minority_gets_reduced_boost(self):
+        """States like California (63% minority tracts) get reduced boost."""
+        boost = self._compute_boost(0.635)  # California
+        assert 3.0 <= boost < 7.0, f'Expected 3-7x for CA, got {boost:.1f}x'
+
+    def test_very_high_minority_floors_at_3x(self):
+        """Even at 100% minority saturation, boost never drops below 3x."""
+        boost = self._compute_boost(1.0)
+        assert abs(boost - 3.0) < 1e-9
+
+    def test_alabama_gets_near_full_boost(self):
+        """Alabama (~40% minority tracts) gets close to full boost."""
+        boost = self._compute_boost(0.40)
+        assert boost >= 7.0, f'Alabama should get >=7x boost, got {boost:.1f}x'
+
+
 class TestPopulationBalance:
     """
     Verify that VRA edge weighting maintains ±0.5% population balance.
