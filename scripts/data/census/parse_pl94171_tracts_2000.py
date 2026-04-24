@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 import warnings
 
+# Ensure project root is on sys.path so 'scripts' package is importable
+_project_root = Path(__file__).resolve().parents[3]
+if str(_project_root) not in sys.path:
+    sys.path.insert(0, str(_project_root))
+
 # Suppress ALL warnings at every level
 warnings.filterwarnings('ignore')
 os.environ['PYTHONWARNINGS'] = 'ignore'
