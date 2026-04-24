@@ -4,6 +4,8 @@ Algorithmic congressional redistricting for all 50 U.S. states using recursive g
 
 **Headline result (2020 Census, edge-weighted mode):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states exceed enacted compactness; Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
+**[View interactive results dashboard →](https://giodl73-repo.github.io/DEXTRO/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
+
 ## Research
 
 Three papers document the method and results. Sources live under [`artifacts/papers/`](artifacts/papers/) and compile to PDF via each paper's `compile.bat` / `compile.sh`.
