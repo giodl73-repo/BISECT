@@ -245,11 +245,12 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
                             vra_edge_weights[(i, j)] = NORMAL_WEIGHT
 
             minority_tracts = is_minority.sum()
-            print(f"[VRA] {minority_tracts} tracts ≥{MINORITY_THRESHOLD*100:.0f}% minority, "
-                  f"{boosted} minority-minority edges weighted {MINORITY_WEIGHT:.0f}× "
+            print(f"[VRA] {minority_tracts} tracts >={MINORITY_THRESHOLD*100:.0f}% minority, "
+                  f"{boosted} minority-minority edges weighted {MINORITY_WEIGHT:.0f}x "
                   f"(of {len(vra_edge_weights)} total)")
 
             edge_weights = vra_edge_weights
+            vra_mode = False  # Edge-weighting uses single-constraint — clear flag
 
     partitioner = RecursiveBisection(
         adjacency=adjacency,

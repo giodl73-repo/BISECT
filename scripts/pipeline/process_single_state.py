@@ -33,6 +33,8 @@ def main():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--run-analysis', action='store_true',
                        help='Run per-state analysis (compactness, political, demographic)')
+    parser.add_argument('--reprocess', action='store_true',
+                       help='Force re-run even if output already exists')
     parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted', 'metis-vra'],
                        help='Partitioning mode: "edge-weighted" (boundary length minimization, default), "unweighted" (edge cut minimization), or "metis-vra" (VRA-aware multi-constraint)')
     args = parser.parse_args()
