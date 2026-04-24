@@ -10,9 +10,7 @@ Split the state into two equal halves by population. Split each half again. Keep
 
 **Headline result (2020 Census):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
-**[View results dashboard →](https://giodl73-repo.github.io/REDIST/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
-
-**[View VRA dashboard →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html)** — same 50 states with multi-constraint minority district optimization.
+**[View 2020 results dashboard →](https://giodl73-repo.github.io/REDIST/dashboard_2020.html)** — all 50 states, 435 districts, round-by-round bisection maps.
 
 ---
 
@@ -327,6 +325,25 @@ Short guides for understanding the core ideas — each has a TL;DR followed by a
 - [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — version history
 - [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
+
+## Interactive Dashboards
+
+All dashboards are self-contained — no server needed, open directly in a browser.
+
+| Dashboard | Census year | Algorithm | Link |
+|-----------|-------------|-----------|------|
+| 2020 Results | 2020 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2020.html) |
+| 2010 Results | 2010 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2010.html) |
+| 2000 Results | 2000 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2000.html) |
+| VRA (2020) | 2020 | Multi-constraint minority | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
+
+To regenerate after a new pipeline run:
+```bash
+python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
+python scripts/web/deploy_docs.py --version V3 --year 2010 --out dashboard_2010.html
+python scripts/web/deploy_docs.py --version V3 --year 2000 --out dashboard_2000.html
+python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
+```
 
 ## License
 
