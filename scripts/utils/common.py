@@ -125,29 +125,25 @@ def normalize_state_name(state):
     return state.lower().replace(' ', '_')
 
 
-def check_data_availability(state, year):
+def check_data_availability(state, year, version='v1'):
     """
     Check if required data files exist for state and year.
 
     Args:
         state: State name (case-insensitive)
         year: Census year as string ('2000', '2010', '2020')
+        version: Pipeline version identifier (default: 'v1')
 
     Returns:
         dict: Dictionary with keys 'tracts', 'adjacency', 'places'
               Values are True if file exists, False otherwise
-
-    Example:
-        >>> avail = check_data_availability('California', '2020')
-        >>> if not avail['tracts']:
-        ...     print("ERROR: Missing tract data")
     """
     from .paths import get_tract_file, get_adjacency_file, get_places_file
 
     state_normalized = normalize_state_name(state)
 
     return {
-        'tracts': get_tract_file(state_normalized, year).exists(),
-        'adjacency': get_adjacency_file(state_normalized, year).exists(),
-        'places': get_places_file(state_normalized, year).exists()
+        'tracts': get_tract_file(state_normalized, year, version).exists(),
+        'adjacency': get_adjacency_file(state_normalized, year, version).exists(),
+        'places': get_places_file(state_normalized, year, version).exists()
     }

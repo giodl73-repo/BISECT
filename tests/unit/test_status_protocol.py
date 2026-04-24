@@ -263,7 +263,9 @@ class TestParseStatusMessage:
         assert data == {
             'year': '2020',
             'completed': 5,
-            'total': 50
+            'total': 50,
+            'worker_id': 0,
+            'state_code': 'CA'
         }
 
     def test_parse_worker_state(self):

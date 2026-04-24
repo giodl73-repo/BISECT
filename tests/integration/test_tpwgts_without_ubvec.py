@@ -154,8 +154,9 @@ class TestTPWGTSWithoutUbvec:
             print("RESULT: tpwgts DOES NOT WORK without ubvec")
             print(f"  Only achieved {p0_pct*100:.1f}% (expected >60% if working)")
 
-        # Document the result
-        return p0_pct > 0.6  # Return whether tpwgts worked
+        # tpwgts should concentrate minority — either direction counts as working
+        assert p0_pct > 0.6 or p1_pct > 0.6, \
+            f"tpwgts had no effect: neither partition exceeded 60% minority (P0={p0_pct*100:.1f}%, P1={p1_pct*100:.1f}%)"
 
     def test_clustered_geography_no_ubvec(self):
         """

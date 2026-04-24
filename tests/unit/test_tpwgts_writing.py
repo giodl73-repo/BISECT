@@ -82,17 +82,20 @@ class TestTpwgtsWriting:
         assert len(result) == 4
 
     def test_edge_case_one_side_all_minority(self):
-        """Test when one side should get all minority population."""
+        """Test that METIS rejects tpwgts with weight of exactly 1.0.
+
+        METIS requires all tpwgts values to be strictly < 1.0. A weight of 1.0
+        (meaning one partition gets 100% of a constraint) causes gpmetis to exit
+        with "Invalid partition weight" in stderr, which we surface as RuntimeError.
+        """
         adjacency = [[1], [0, 2], [1, 3], [2]]
         vertex_weights = np.array([[1, 1], [1, 1], [1, 1], [1, 1]])
 
-        # Left side gets all minority
         target_weights = [
-            [0.5, 1.0],  # 50% pop, 100% minority
-            [0.5, 0.0]   # 50% pop, 0% minority
+            [0.5, 1.0],  # 50% pop, 100% minority — tpwgts value of 1.0 is invalid
+            [0.5, 0.0]
         ]
 
-        # This might fail - test if it does
         with pytest.raises(RuntimeError, match="Invalid partition weight"):
             partition_graph_with_executable(
                 adjacency=adjacency,
