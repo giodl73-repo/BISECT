@@ -27,6 +27,10 @@ Consolidated treatment with cross-census validation. Running the same algorithm 
 - **Presentation**: [`presentations/edge_weighted_bisection/`](artifacts/presentations/edge_weighted_bisection/) — conference-style deck
 - **Guides**: [`guides/edge_weighted_bisection/`](artifacts/guides/edge_weighted_bisection/) (layman's guide) and [`guides/command_reference/`](artifacts/guides/command_reference/)
 
+## Dashboard
+
+**[View results dashboard →](docs/dashboard.html)** — per-state compactness scores, population balance, and comparison against enacted 2020 congressional districts for all 50 states. Self-contained HTML, no server needed.
+
 ## Figures
 
 ### Bisection rounds — Minnesota (8 districts, 3 rounds)

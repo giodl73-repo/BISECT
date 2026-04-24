@@ -20,9 +20,10 @@ outputs/
 *.jpeg
 *.pdf
 
-# Exception: Keep documentation images if any
+# Exception: Keep documentation images and dashboard
 !docs/**/*.png
 !docs/**/*.jpg
+!docs/**/*.html
 
 # ============================================================================
 # Python
