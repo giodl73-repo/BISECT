@@ -138,7 +138,7 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 ## Recent Changes
 - **2026-02-08**: MAUP Sensitivity Analysis (Paper 11) - Phase 2 complete: Built adjacency graphs for all 50 states at block group (239K units) and block (8.1M units) resolutions, validated multi-resolution infrastructure with 10-state subset (30 successful runs), confirmed algorithm scalability across 130× unit count range
 - **2026-02-08**: Multi-resolution redistricting infrastructure - Added resolution parameter to pipeline scripts, created `run_multi_resolution_validation.py`, updated path utilities with backward compatibility for tract naming
-- **2026-01-25**: Wave 9 API Project Setup (Enhancement 60) - FastAPI backend + React frontend integrated with App Manager shared packages, PM2 centralized management, 8 passing tests
+- **2026-04-24**: Removed Wave 9 FastAPI/React app (api/, backend/, frontend/) — replaced by static dashboard + planned Rust CLI port
 - **2026-01-18**: Resolution-independent restructuring - `units/` directory, `tiger/tracts/` + `tiger/blocks/` structure
 - **2026-01-18**: Script renames - `download_tiger_units.py`, `merge_units_with_geometries.py` (resolution-aware)
 - **2026-01-18**: Download orchestrator (Enhancement 48) - Parallel downloads, cache checking, 4-8x faster
@@ -159,13 +159,8 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 7. **Error logs**: Check `outputs/{version}/{year}/error.log` for failures
 
 ## Documentation
-**Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md), [WAVE09_QUICKSTART.md](docs/WAVE09_QUICKSTART.md) (Wave 9 API setup)
+**Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md)
 **System**: [ARCHITECTURE.md](context/ARCHITECTURE.md), [RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)
 **Dev**: [CODING_PATTERNS.md](context/CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](docs/CONTRIBUTING.md)
 **Ref**: [QUICK_REFERENCE.md](context/QUICK_REFERENCE.md), [SKILLS.md](context/SKILLS.md), [DATA_FORMATS.md](context/DATA_FORMATS.md), [TESTING.md](context/TESTING.md)
 **History**: [CHANGELOG.md](docs/CHANGELOG.md), [enhancements/INDEX.md](context/enhancements/INDEX.md), [archive/](context/archive/)
-**Wave 9**: [backend/README.md](backend/README.md), [frontend/README.md](frontend/README.md)
-
-## Tools
-**App Manager**: `cd C:\src\appmanager && pm2 start infrastructure/ecosystem.config.js` → http://localhost:9000
-**Enhancement Manager**: `cd tools/enhancement_manager && run.bat` → http://localhost:5001
