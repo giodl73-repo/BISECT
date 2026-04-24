@@ -100,20 +100,23 @@ def find_all_runs(outputs_dir='outputs'):
             if num_states == 0:
                 continue
 
-            # Read config.json to get partition mode
-            config_path = year_dir / 'config.json'
+            # Read partition mode from config.json (year-level) or version.json (version-level)
             partition_mode = 'edge_weighted'  # Default
-            if config_path.exists():
-                try:
-                    with open(config_path, 'r', encoding='utf-8') as f:
-                        config = json.load(f)
-                        partition_mode = config.get('algorithm', {}).get('partition_mode', 'edge_weighted')
-                except Exception as e:
-                    print(f"Warning: Could not read {config_path}: {e}")
+            for cfg_path in [year_dir / 'config.json', year_dir.parent / 'version.json']:
+                if cfg_path.exists():
+                    try:
+                        with open(cfg_path, 'r', encoding='utf-8') as f:
+                            cfg = json.load(f)
+                            partition_mode = cfg.get('algorithm', {}).get('partition_mode', 'edge_weighted')
+                        break
+                    except Exception:
+                        pass
 
             # Determine mode label
             if partition_mode == 'unweighted':
                 mode = 'Unweighted'
+            elif partition_mode == 'metis_vra':
+                mode = 'VRA'
             else:
                 mode = 'Edge-Weighted'
 
@@ -418,8 +421,8 @@ def generate_versions_html(versions):
 
     for version in versions:
         # Format partition mode and data level
-        partition_mode = version['partition_mode'].replace('_', '-').split('-')
-        partition_mode = ' '.join(w.capitalize() for w in partition_mode)
+        _mode_labels = {'metis_vra': 'VRA', 'unweighted': 'Unweighted', 'edge_weighted': 'Edge-Weighted'}
+        partition_mode = _mode_labels.get(version['partition_mode'], version['partition_mode'].replace('_', ' ').title())
         data_level = version['data_level'].capitalize()
 
         # Start version card
@@ -663,7 +666,8 @@ def regenerate_all_dashboards(runs):
     for run in runs:
         year = run['year']
         version = run['version']
-        mode = 'unweighted' if run['mode'] == 'Unweighted' else 'edge-weighted'
+        _mode_map = {'Unweighted': 'unweighted', 'VRA': 'metis-vra'}
+        mode = _mode_map.get(run['mode'], 'edge-weighted')
 
         print(f"  Generating {year} {run['version_full']} ({run['mode']})...")
 

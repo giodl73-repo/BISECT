@@ -807,11 +807,13 @@
 
             // Sort versions (v1, v2, v3, ...)
             const sortedVersions = Array.from(allVersions).sort();
+            const versionLabels = { 'v1': 'v1 (baseline)', 'v4': 'v4 (VRA)' };
+            const defaultVersion = allVersions.has('v3') ? 'v3' : 'v1';
             sortedVersions.forEach(version => {
                 const option = document.createElement('option');
                 option.value = version;
-                option.textContent = version === 'v1' ? `${version} (baseline)` : version;
-                if (version === 'v1') option.selected = true;
+                option.textContent = versionLabels[version] || version;
+                if (version === defaultVersion) option.selected = true;
                 versionSelect.appendChild(option);
             });
         }

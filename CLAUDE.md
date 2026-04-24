@@ -159,7 +159,7 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 7. **Error logs**: Check `outputs/{version}/{year}/error.log` for failures
 
 ## Documentation
-**Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md), [WAVE09_QUICKSTART.md](WAVE09_QUICKSTART.md) (Wave 9 API setup)
+**Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md), [WAVE09_QUICKSTART.md](docs/WAVE09_QUICKSTART.md) (Wave 9 API setup)
 **System**: [ARCHITECTURE.md](context/ARCHITECTURE.md), [RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)
 **Dev**: [CODING_PATTERNS.md](context/CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](docs/CONTRIBUTING.md)
 **Ref**: [QUICK_REFERENCE.md](context/QUICK_REFERENCE.md), [SKILLS.md](context/SKILLS.md), [DATA_FORMATS.md](context/DATA_FORMATS.md), [TESTING.md](context/TESTING.md)
