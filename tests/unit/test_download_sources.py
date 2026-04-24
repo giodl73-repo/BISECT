@@ -251,7 +251,7 @@ class TestTIGERURLUtilities:
     def test_get_cbsa_url_invalid_year(self):
         """get_cbsa_url should raise ValueError for invalid years."""
         with pytest.raises(ValueError, match="not supported"):
-            get_cbsa_url(2000)  # 2000 not supported for CBSA
+            get_cbsa_url(1990)  # 1990 not in supported CBSA years
 
 
 class TestValidation:

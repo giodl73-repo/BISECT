@@ -309,7 +309,19 @@ apportionment/
 
 ## Documentation
 
-- [`docs/RECURSIVE_BISECTION.md`](docs/RECURSIVE_BISECTION.md) — algorithm walkthrough
+### Concepts
+Short guides for understanding the core ideas — each has a TL;DR followed by a deep dive.
+
+- [`docs/concepts/recursive-bisection.md`](docs/concepts/recursive-bisection.md) — why bisection, how METIS splits the graph, the binary tree structure
+- [`docs/concepts/edge-weighted-bisection.md`](docs/concepts/edge-weighted-bisection.md) — how boundary-length weights improve compactness automatically
+- [`docs/concepts/polsby-popper.md`](docs/concepts/polsby-popper.md) — the compactness metric: formula, benchmarks, intuition
+- [`docs/concepts/vra-compliance.md`](docs/concepts/vra-compliance.md) — VRA majority-minority districts, the 42% threshold, the V4 algorithm
+- [`docs/concepts/census-data.md`](docs/concepts/census-data.md) — TIGER shapefiles, PL 94-171 files, GEOID format, downloading
+- [`docs/concepts/pipeline-stages.md`](docs/concepts/pipeline-stages.md) — the five pipeline stages and how they connect
+
+### Reference
+- [`docs/RECURSIVE_BISECTION.md`](docs/RECURSIVE_BISECTION.md) — detailed algorithm walkthrough with pseudocode
+- [`docs/PIPELINE_OUTPUTS.md`](docs/PIPELINE_OUTPUTS.md) — every file the pipeline writes (per-state and national)
 - [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — version history
 - [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
