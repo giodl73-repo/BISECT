@@ -188,7 +188,7 @@ def create_district_summary(
     return df
 
 
-def create_rounds_hierarchy(run_dir: Path, num_districts: int, state_code: str, census_year: str, debug: bool = False):
+def create_rounds_hierarchy(run_dir: Path, num_districts: int, state_code: str, census_year: str, debug: bool = False, version: str = 'v1'):
     """
     Create rounds_hierarchy.csv from intermediate round metadata.
 
@@ -214,14 +214,16 @@ def create_rounds_hierarchy(run_dir: Path, num_districts: int, state_code: str, 
             assignments = pickle.load(f)
 
         # Load tract data
-        tracts_file = get_tract_file(state_code, census_year, version='v1')
+        tracts_file = get_tract_file(state_code, census_year, version=version)
         if not tracts_file.exists():
             if debug:
                 print(f"  Tracts file not found: {tracts_file}")
             return None
 
         tracts = pd.read_parquet(tracts_file)
-        total_pop = int(tracts['population'].sum())
+        # Column name varies by year/version: 'population' (new) or 'total_pop' (legacy)
+        pop_col = 'population' if 'population' in tracts.columns else 'total_pop'
+        total_pop = int(tracts[pop_col].sum())
         num_tracts = len(tracts)
 
         # Create 6 rounds with the same single district
@@ -428,7 +430,7 @@ if __name__ == '__main__':
         # (it has its own existence check and might need to be generated)
         if args.debug:
             print("\nCreating rounds hierarchy (skip path)...")
-        create_rounds_hierarchy(run_dir, num_districts, state_code, args.year, debug=args.debug)
+        create_rounds_hierarchy(run_dir, num_districts, state_code, args.year, debug=args.debug, version=args.version)
 
         if args.debug: print(f"[DEBUG] Exiting (skip path)", file=sys.stderr, flush=True)
         sys.stdout.flush()
