@@ -25,6 +25,12 @@ outputs/
 !docs/**/*.jpg
 !docs/**/*.html
 
+# Exception: Keep paper figures in research/ and artifacts/
+!research/**/*.png
+!research/**/*.jpg
+!artifacts/papers/**/figures/*.png
+!artifacts/papers/**/figures/*.jpg
+
 # ============================================================================
 # Python
 # ============================================================================

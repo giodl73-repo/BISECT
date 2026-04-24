@@ -365,7 +365,7 @@ def generate_dashboard(year, version, partition_mode='normal', output_dir=None, 
     switch_run_js = f'''
         function switchRun(runPath) {{
             if (runPath) {{
-                window.location.href = '../' + runPath + '/index.html';
+                window.location.href = '../../' + runPath + '/index.html';
             }}
         }}
     '''
