@@ -123,8 +123,8 @@ def main():
 
     # Core steps (always run)
     steps = [
-        ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {args.year} --output-dir {state_dir} --position {child_position} {redistricting_flags_str}'.strip()),
-        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
+        ("Redistricting", f'{sys.executable} {scripts_dir}/run_state_redistricting.py --state {state_code} --year {args.year} --version {args.version} --output-dir {state_dir} --position {child_position} {redistricting_flags_str}'.strip()),
+        ("Summary", f'{sys.executable} {scripts_dir}/create_final_district_summary.py {state_dir} --state {state_code} --year {args.year} --version {args.version} --position {child_position} {common_flags_str}'.strip()),
         ("Cities", f'{sys.executable} {scripts_dir}/add_cities_to_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("Round maps", f'{sys.executable} {scripts_dir}/visualize_all_rounds.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip()),
         ("District maps", f'{sys.executable} {scripts_dir}/visualize_individual_districts.py {state_dir} --state {state_code} --year {args.year} --position {child_position} {common_flags_str}'.strip())
