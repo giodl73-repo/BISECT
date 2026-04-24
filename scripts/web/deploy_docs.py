@@ -114,7 +114,12 @@ def main():
     out_filename = args.out
     if out_filename is None:
         vnum = version.upper().lstrip('V')
-        out_filename = 'dashboard.html' if vnum == '3' else f'dashboard_v{vnum.lower()}.html'
+        if vnum == '3':
+            out_filename = 'dashboard.html'
+        elif mode in ('metis-vra', 'metis_vra'):
+            out_filename = 'dashboard_vra.html'
+        else:
+            out_filename = f'dashboard_v{vnum.lower()}.html'
     out_path = f'docs/{out_filename}'
 
     print()
