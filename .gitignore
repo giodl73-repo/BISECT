@@ -18,9 +18,7 @@ outputs/
 *.png
 *.jpg
 *.jpeg
-*.pdf
-
-# Exception: Keep documentation images and dashboard
+# Exception: Keep documentation images, dashboard, and paper figures
 !docs/**/*.png
 !docs/**/*.jpg
 !docs/**/*.html
