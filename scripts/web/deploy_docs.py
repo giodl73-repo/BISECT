@@ -65,6 +65,9 @@ def main():
     parser.add_argument('--year', '-y', default='2020',
                         choices=['2020', '2010', '2000'],
                         help='Census year (default: 2020)')
+    parser.add_argument('--out', '-o', default=None,
+                        help='Output filename in docs/ (default: dashboard.html for V3, '
+                             'dashboard_v4.html for V4, etc.)')
     parser.add_argument('--dry-run', action='store_true',
                         help='Show what would be done without writing')
     args = parser.parse_args()
@@ -107,17 +110,24 @@ def main():
         description = meta.get('description', description)
         mode = meta.get('algorithm', {}).get('partition_mode', 'edge_weighted').replace('_', '-')
 
+    # Determine output filename
+    out_filename = args.out
+    if out_filename is None:
+        vnum = version.upper().lstrip('V')
+        out_filename = 'dashboard.html' if vnum == '3' else f'dashboard_v{vnum.lower()}.html'
+    out_path = f'docs/{out_filename}'
+
     print()
     print('=== Deploy Dashboard to GitHub Pages ===')
     print(f'  Version : {version.upper()} — {description}')
     print(f'  Mode    : {mode}')
     print(f'  Year    : {args.year}')
     print(f'  Source  : {year_dir.relative_to(PROJECT_ROOT)}/index.html')
-    print(f'  Output  : docs/dashboard.html')
+    print(f'  Output  : {out_path}')
     print()
 
     if args.dry_run:
-        print('[dry-run] Skipping embed. Would write docs/dashboard.html.')
+        print(f'[dry-run] Would write {out_path}.')
         return
 
     # Delegate to embed_maps_dashboard.py
@@ -126,7 +136,7 @@ def main():
         sys.executable, str(embed_script),
         '--version', version,
         '--year', args.year,
-        '--out', 'docs/dashboard.html',
+        '--out', out_path,
     ]
 
     print('Embedding maps (this takes a few minutes)...')
@@ -136,13 +146,13 @@ def main():
         print('\n[ERROR] Embed failed.')
         sys.exit(1)
 
-    out = PROJECT_ROOT / 'docs' / 'dashboard.html'
+    out = PROJECT_ROOT / out_path
     size_mb = out.stat().st_size / 1_048_576
     print()
-    print(f'[OK] docs/dashboard.html ready ({size_mb:.1f} MB)')
+    print(f'[OK] {out_path} ready ({size_mb:.1f} MB)')
     print()
     print('Next steps:')
-    print(f'  git add docs/dashboard.html')
+    print(f'  git add {out_path}')
     print(f'  git commit -m "Deploy dashboard: {version.upper()}/{args.year}"')
     print(f'  git push origin master:main')
     print()

@@ -10,7 +10,9 @@ Split the state into two equal halves by population. Split each half again. Keep
 
 **Headline result (2020 Census):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
-**[View interactive results dashboard →](https://giodl73-repo.github.io/REDIST/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
+**[View results dashboard (V3 — Edge-Weighted) →](https://giodl73-repo.github.io/REDIST/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
+
+**[View VRA dashboard (V4 — Minority Districts) →](https://giodl73-repo.github.io/REDIST/dashboard_v4.html)** — same 50 states with multi-constraint minority district optimization.
 
 ---
 

@@ -113,6 +113,25 @@ def build_map_table() -> dict[str, str]:
     return table
 
 
+def strip_navigation(html: str, version_label: str = '') -> str:
+    """Remove header controls that only work when served from outputs/.
+
+    The ← Cross-Census Overview link and run selector both point to relative
+    paths that don't exist in the standalone docs/ deployment. Strip them and
+    replace with a simple static label showing which version this is.
+    """
+    # Remove the entire header-controls div (contains broken nav links)
+    html = re.sub(
+        r'<div class="header-controls">.*?</div>\s*(?=</div>)',
+        (f'<div class="header-controls" style="color:#ccc;font-size:0.9rem;padding:8px 0;">'
+         f'{version_label}</div>\n            ') if version_label else '',
+        html,
+        count=1,
+        flags=re.DOTALL,
+    )
+    return html
+
+
 def patch_html(html: str, table: dict[str, str]) -> str:
     """Patch the dashboard HTML to use embedded images."""
 
@@ -282,6 +301,11 @@ def main():
     table = build_map_table()
     total_kb = sum(len(v) for v in table.values()) // 1024
     print(f'\nEmbedded {len(table)} images (~{total_kb}KB base64 total)')
+
+    print('Stripping navigation...')
+    v = args.version.upper() if args.version else 'V3'
+    version_label = f'{v} / {args.year}'
+    html = strip_navigation(html, version_label)
 
     print('Patching HTML...')
     html = patch_html(html, table)
