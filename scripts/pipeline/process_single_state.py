@@ -115,6 +115,8 @@ def main():
     redistricting_flags = common_flags.copy()
     if args.partition_mode != 'edge-weighted':
         redistricting_flags.append(f'--partition-mode {args.partition_mode}')
+    if hasattr(args, 'reprocess') and args.reprocess:
+        redistricting_flags.append('--reset')  # force re-run even if output exists
     redistricting_flags_str = ' '.join(redistricting_flags)
 
     # In parallel mode, suppress child progress bars (use position 999)
