@@ -29,7 +29,7 @@ Consolidated treatment with cross-census validation. Running the same algorithm 
 
 ## Dashboard
 
-**[View results dashboard →](docs/dashboard.html)** — per-state compactness scores, population balance, and comparison against enacted 2020 congressional districts for all 50 states. Self-contained HTML, no server needed.
+**[View results dashboard →](https://giodl73-repo.github.io/DEXTRO/dashboard.html)** — per-state compactness scores, population balance, and comparison against enacted 2020 congressional districts for all 50 states.
 
 ## Figures
 
