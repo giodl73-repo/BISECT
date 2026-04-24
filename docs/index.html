@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REDIST — Algorithmic Congressional Redistricting</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f1923;
+            color: #e8eaed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 1.5rem;
+        }
+
+        .container { max-width: 760px; width: 100%; }
+
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #fff;
+            margin-bottom: 0.4rem;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: #8ab4f8;
+            margin-bottom: 2.5rem;
+        }
+
+        .lead {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #bdc1c6;
+            margin-bottom: 2.5rem;
+        }
+
+        .lead strong { color: #e8eaed; }
+
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #5f6368;
+            margin-bottom: 0.75rem;
+        }
+
+        .cards {
+            display: grid;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e2a38;
+            border: 1px solid #2d3f53;
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .card:hover {
+            border-color: #8ab4f8;
+            background: #1e3045;
+        }
+
+        .card-left { flex: 1; }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e8eaed;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-desc {
+            font-size: 0.85rem;
+            color: #8ab4f8;
+        }
+
+        .card-arrow {
+            font-size: 1.2rem;
+            color: #5f6368;
+            margin-left: 1rem;
+        }
+
+        .card:hover .card-arrow { color: #8ab4f8; }
+
+        .card.vra { border-color: #3d2b4a; }
+        .card.vra:hover { border-color: #b388ff; background: #1e1a2e; }
+        .card.vra .card-desc { color: #b388ff; }
+        .card.vra:hover .card-arrow { color: #b388ff; }
+
+        .card.secondary {
+            background: #161f2b;
+            border-color: #232f3e;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #2d3f53;
+            margin: 2rem 0;
+        }
+
+        .links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .links a {
+            color: #8ab4f8;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .links a:hover { text-decoration: underline; }
+
+        .stat-row {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat { text-align: left; }
+        .stat-value { font-size: 1.6rem; font-weight: 700; color: #fff; }
+        .stat-label { font-size: 0.8rem; color: #5f6368; }
+
+        .badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+        }
+        .badge-coming { background: #2d3f53; color: #8ab4f8; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>REDIST</h1>
+    <p class="tagline">Algorithmic Congressional Redistricting</p>
+
+    <div class="stat-row">
+        <div class="stat">
+            <div class="stat-value">435</div>
+            <div class="stat-label">districts</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">50</div>
+            <div class="stat-label">states</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">0.367</div>
+            <div class="stat-label">mean Polsby–Popper (2020)</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">+56%</div>
+            <div class="stat-label">vs unweighted baseline</div>
+        </div>
+    </div>
+
+    <p class="lead">
+        The fairest redistricting method is the oldest one: <strong>divide it in half</strong>.
+        Split each state's census tracts into two equal populations. Split each half again.
+        Repeat until you have the right number of districts. Edge weights on the graph
+        equal shared boundary lengths, so minimizing the cut automatically minimizes
+        district perimeter — compactness without ever optimizing for it.
+        <strong>No political or racial data enters the algorithm at any stage.</strong>
+    </p>
+
+    <div class="section-label">Results Dashboards</div>
+    <div class="cards">
+        <a class="card" href="dashboard_2020.html">
+            <div class="card-left">
+                <div class="card-title">2020 Census</div>
+                <div class="card-desc">Edge-weighted bisection · all 50 states · 435 districts</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="dashboard_2010.html">
+            <div class="card-left">
+                <div class="card-title">2010 Census</div>
+                <div class="card-desc">Cross-decade validation · same algorithm · same geography</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="dashboard_2000.html">
+            <div class="card-left">
+                <div class="card-title">2000 Census
+                    <span class="badge badge-coming">coming soon</span>
+                </div>
+                <div class="card-desc">Historical baseline · 2000 tract boundaries</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card vra" href="dashboard_vra.html">
+            <div class="card-left">
+                <div class="card-title">2020 — VRA Multi-Constraint</div>
+                <div class="card-desc">Minority district optimization · metis-vra algorithm · ⚖️ VRA tab</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Research</div>
+    <div class="cards">
+        <a class="card secondary" href="https://github.com/giodl73-repo/REDIST" target="_blank">
+            <div class="card-left">
+                <div class="card-title">GitHub Repository</div>
+                <div class="card-desc">Source code, 20 research papers, pipeline documentation</div>
+            </div>
+            <div class="card-arrow">↗</div>
+        </a>
+        <a class="card secondary" href="https://github.com/giodl73-repo/REDIST/tree/main/research" target="_blank">
+            <div class="card-left">
+                <div class="card-title">Research Papers</div>
+                <div class="card-desc">Tracks A–E: algorithm, validation, VRA compliance, extensions</div>
+            </div>
+            <div class="card-arrow">↗</div>
+        </a>
+    </div>
+
+    <hr class="divider">
+
+    <div class="links">
+        <a href="https://github.com/giodl73-repo/REDIST/blob/main/README.md">README</a>
+        <a href="https://github.com/giodl73-repo/REDIST/blob/main/docs/concepts/recursive-bisection.md">How it works</a>
+        <a href="https://github.com/giodl73-repo/REDIST/blob/main/docs/concepts/polsby-popper.md">Compactness metric</a>
+        <a href="https://github.com/giodl73-repo/REDIST/blob/main/docs/concepts/vra-compliance.md">VRA compliance</a>
+        <a href="https://github.com/giodl73-repo/REDIST/blob/main/LICENSE">MIT License · Gio Della-Libera</a>
+    </div>
+
+</div>
+</body>
+</html>
