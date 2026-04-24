@@ -195,6 +195,45 @@ The three papers in [`artifacts/papers/`](artifacts/papers/) are earlier standal
 
 ---
 
+## Getting the Data
+
+Data is distributed via GitHub Releases — no Git LFS, no account required beyond `gh auth login`.
+
+```bash
+pip install -r requirements.txt
+
+# Download curated inputs (~740MB: elections, demographics, baseline, adjacency graphs)
+python setup_data.py --inputs
+
+# Download pre-computed results (skip running the pipeline)
+python setup_data.py --outputs v3    # edge-weighted, 50 states, 2020
+python setup_data.py --outputs v4    # VRA multi-constraint, 50 states, 2020
+
+# Download both outputs
+python setup_data.py --all
+```
+
+Requires the [GitHub CLI](https://cli.github.com/) (`gh auth login` once).
+
+### What's in each release
+
+| Release | Contents | Size |
+|---------|----------|------|
+| [`data-inputs-v1`](https://github.com/giodl73-repo/REDIST/releases/tag/data-inputs-v1) | Elections, demographics, baseline enacted districts, metro areas, MAUP adjacency graphs | 736MB |
+| [`outputs-v3`](https://github.com/giodl73-repo/REDIST/releases/tag/outputs-v3) | V3 edge-weighted results: district CSVs, compactness, political analysis | 3MB |
+| [`outputs-v4`](https://github.com/giodl73-repo/REDIST/releases/tag/outputs-v4) | V4 VRA results: district CSVs with minority compliance analysis | 3MB |
+
+### Raw Census data (~55GB)
+
+TIGER/Line shapefiles and PL 94-171 redistricting files are downloaded directly from the US Census Bureau — no redistribution needed since they're already public:
+
+```bash
+python scripts/data/download_orchestrator.py --stages redistricting --year 2020
+python scripts/data/download_orchestrator.py --stages redistricting --year 2010
+```
+
+---
+
 ## Quick Start
 
 ```bash
