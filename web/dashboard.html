@@ -712,6 +712,7 @@
                 <div class="dimension-tab" data-dimension="compactness">📐 Compactness</div>
                 <div class="dimension-tab" data-dimension="cities">🏙️ Cities</div>
                 <div class="dimension-tab" data-dimension="urban">🏙️ Urban Areas</div>
+                <div class="dimension-tab" data-dimension="vra" id="vra-tab" style="display:none;">⚖️ VRA</div>
             </div>
 
             <!-- Content Area -->
@@ -765,6 +766,12 @@
                 if (urbanTab) {
                     urbanTab.style.display = 'none';
                 }
+            }
+
+            // Show VRA tab only when VRA_DATA is available (V4 metis-vra runs)
+            if (typeof VRA_DATA !== 'undefined' && VRA_DATA && Object.keys(VRA_DATA).length > 0) {
+                const vraTab = document.getElementById('vra-tab');
+                if (vraTab) vraTab.style.display = '';
             }
 
             // Default to USA Overview on load
@@ -941,6 +948,9 @@
                     case 'urban':
                         html = generateUSAMetros();
                         break;
+                    case 'vra':
+                        html = `<div class="content-card"><h2>United States - VRA Overview</h2><p>Select an individual state to view its VRA minority district analysis.</p></div>`;
+                        break;
                 }
                 contentArea.innerHTML = html;
                 return;
@@ -981,6 +991,9 @@
                     break;
                 case 'urban':
                     html = generateUrban(stateName, currentState, districts);
+                    break;
+                case 'vra':
+                    html = generateVRA(stateName, currentState, districts);
                     break;
             }
 
@@ -1449,10 +1462,63 @@
                          onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22600%22 height=%22400%22%3E%3Crect fill=%22%23f0f0f0%22 width=%22600%22 height=%22400%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23999%22%3ECompactness Map Not Available%3C/text%3E%3C/svg%3E'">
 
                     <h3>Compactness Data</h3>
-                    <p>Compactness scores are included in the district summary file:</p>
-                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download District Summary CSV</a></p>
+                    <p><a href="${basePath}/states/${state}/data/district_summary.csv" target="_blank">📊 Download District Summary CSV</a> (includes Polsby-Popper per district) |
+                       <a href="${basePath}/states/${state}/compactness/district_compactness.csv" target="_blank">📊 Download Detailed Compactness CSV</a> (Polsby-Popper + Reock per district)</p>
                 </div>
             `;
+        }
+
+        // Generate VRA analysis content
+        function generateVRA(stateName, state, districts) {
+            const basePath = getBasePath();
+            const vra = VRA_DATA && VRA_DATA[state];
+            if (!vra) {
+                return `
+                    <div class="content-card">
+                        <h2>${stateName} - VRA Analysis</h2>
+                        <p style="color:#888;">VRA analysis not available for this run. Run with <code>--partition-mode metis-vra</code> to enable.</p>
+                    </div>`;
+            }
+            const mmDistricts = vra.mm_districts || [];
+            const allDistricts = vra.districts || [];
+            const rows = allDistricts.map(d => `
+                <tr style="${d.is_mm ? 'background:#fff3cd;font-weight:600;' : ''}">
+                    <td>District ${d.district}${d.is_mm ? ' ★' : ''}</td>
+                    <td>${(d.pct_minority * 100).toFixed(1)}%</td>
+                    <td>${(d.pct_black * 100).toFixed(1)}%</td>
+                    <td>${(d.pct_hispanic * 100).toFixed(1)}%</td>
+                    <td>${(d.pct_asian * 100).toFixed(1)}%</td>
+                    <td>${d.is_mm ? '✓ Majority-Minority' : ''}</td>
+                </tr>`).join('');
+            return `
+                <div class="content-card">
+                    <h2>${stateName} - VRA Minority District Analysis</h2>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-label">Majority-Minority Districts</div>
+                            <div class="stat-value">${mmDistricts.length}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Total Districts</div>
+                            <div class="stat-value">${allDistricts.length}</div>
+                        </div>
+                    </div>
+                    <p style="font-size:0.85rem;color:#888;margin-top:0.5rem;">★ Highlighted rows = majority-minority districts (&gt;50% minority population)</p>
+                    <table style="width:100%;border-collapse:collapse;margin-top:1rem;font-size:0.9rem;">
+                        <thead>
+                            <tr style="background:#f0f0f0;">
+                                <th style="padding:8px;text-align:left;">District</th>
+                                <th style="padding:8px;text-align:left;">Total Minority %</th>
+                                <th style="padding:8px;text-align:left;">Black %</th>
+                                <th style="padding:8px;text-align:left;">Hispanic %</th>
+                                <th style="padding:8px;text-align:left;">Asian %</th>
+                                <th style="padding:8px;text-align:left;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <p style="margin-top:1rem;"><a href="${basePath}/states/${state}/data/vra_analysis.json" target="_blank">📊 Download VRA Analysis JSON</a></p>
+                </div>`;
         }
 
         // Generate urban areas content
@@ -1738,7 +1804,7 @@
                     <p>For detailed round-by-round progression showing how individual states are divided, select a state from the sidebar and navigate to the Rounds tab.</p>
 
                     <h3>National Round Hierarchy</h3>
-                    <p><a href="${basePath}/us_rounds_hierarchy.csv" target="_blank">📊 Download CSV</a> - Complete hierarchy showing all regions across all states and rounds</p>
+                    <p><a href="${basePath}/data/us_rounds_hierarchy.csv" target="_blank">📊 Download CSV</a> - Complete hierarchy showing all regions across all states and rounds</p>
                 </div>
             `;
         }
