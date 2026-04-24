@@ -7,7 +7,6 @@ Master index of all congressional redistricting pipeline enhancements.
 ## Quick Links
 
 - **[Enhancement Template](templates/enhancement_template.md)** - Template for new enhancements
-- **[Enhancement Manager](../../tools/enhancement_manager/)** - Web UI for viewing/editing enhancements
 
 All enhancements are stored in this directory. Status is indicated in the frontmatter and table below.
 

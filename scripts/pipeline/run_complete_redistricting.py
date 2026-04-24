@@ -573,9 +573,7 @@ def main():
             year_idx = year_queue.index(year)
             worker_count = workers_per_year[year_idx]
 
-            # For now, use a wrapper script that spawns state workers
-            # TODO: Create dedicated scripts/pipeline/run_states_parallel.py
-            # For backwards compatibility, call orchestrator with special flag to prevent recursion
+            # Delegate to run_states_parallel.py which manages parallel state workers
             cmd = [
                 sys.executable,
                 str(scripts_dir / 'run_states_parallel.py'),  # Dedicated worker manager
