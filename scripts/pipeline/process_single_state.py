@@ -140,7 +140,7 @@ def main():
         metro_script = Path(__file__).parent / 'visualize_metro_areas.py'
         steps.append((
             "Metro area maps",
-            f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --dpi {args.dpi}'.strip()
+            f'{sys.executable} {metro_script} --scope state --state {state_code} --state-dir {state_dir} --year {args.year} --version {args.version} --dpi {args.dpi}'.strip()
         ))
 
         # Compactness visualization (metrics already calculated)
