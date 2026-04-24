@@ -1,37 +1,40 @@
 # Apportionment
 
-Algorithmic congressional redistricting for all 50 U.S. states using recursive graph bisection and the METIS partitioner. Given only census-tract geometry and population, the pipeline produces 435 compact, population-balanced, contiguous districts — with no political or racial data as input.
+Every ten years, after the census, each state redraws its congressional districts. The process is notoriously political — legislators choose their voters, not the other way around. Salamander-shaped districts, packed minorities, cracked communities. It's been this way for two centuries.
 
-**Headline result (2020 Census, edge-weighted mode):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states exceed enacted compactness; Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
+This project asks a simple question: **what would the map look like if a computer drew it instead — using only geography and population, with no knowledge of party registration, race, or voting history?**
+
+The answer turns out to be pretty good. Fairer-shaped districts than most states draw for themselves. Population balance within a fraction of a percent. And the results are remarkably stable across census years, which suggests the algorithm is responding to geography — not to political opportunity.
+
+**Headline result (2020 Census):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
 **[View interactive results dashboard →](https://giodl73-repo.github.io/DEXTRO/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
 
-## Research
+---
 
-Three papers document the method and results. Sources live under [`artifacts/papers/`](artifacts/papers/) and compile to PDF via each paper's `compile.bat` / `compile.sh`.
+## How it works
 
-### Paper 1 — Introducing Recursive Bisection to Redistricting
-[`artifacts/papers/01_recursive_bisection/`](artifacts/papers/01_recursive_bisection/)
+The algorithm treats each state as a graph. Census tracts are nodes; two tracts are connected if they share a border. The weight on each edge is the length of that shared border — so cuts through long shared boundaries cost more than cuts through short ones.
 
-Baseline method. Represents a state's census tracts as a graph, then applies METIS recursive bisection under a population-balance constraint to produce districts from only population and adjacency. Evaluated on all 50 states (2020 Census) with a mean population deviation of 2.79%.
+Then it bisects. METIS, a high-performance graph partitioner, splits the state into two halves of roughly equal population. Each half is split again. This continues for `⌈log₂ N⌉` rounds until there are exactly `N` districts. Minnesota's 8 districts take 3 rounds. California's 52 take 6.
 
-### Paper 2 — Edge-Weighted Recursive Bisection for Compact Congressional Redistricting
-[`artifacts/papers/02_edge_weighted_bisection/`](artifacts/papers/02_edge_weighted_bisection/)
+Because the algorithm minimizes the total weight of the edges it cuts — and edge weight equals shared boundary length — it is directly minimizing the total perimeter of the resulting districts. Shorter perimeter at fixed area means more compact, more sensible shapes. The Polsby–Popper score (the standard compactness metric) goes up automatically, without ever being told to.
 
-Core contribution. Weights graph edges by actual shared boundary length, so minimizing the weighted cut directly minimizes district perimeter — the denominator of Polsby–Popper. Achieves mean Polsby–Popper **0.367** nationally (+56% vs. unweighted, +20% vs. enacted 2020). Introduces county-based bridge edges for water crossings using state-specific median boundary lengths.
+**No political or racial data enters the algorithm at any stage.** The inputs are geometry and population, nothing else.
 
-### Paper 3 — Algorithmic Congressional Redistricting via Edge-Weighted Recursive Bisection
-[`artifacts/papers/03_combined_recursive_bisection/`](artifacts/papers/03_combined_recursive_bisection/)
+## Why bisection
 
-Consolidated treatment with cross-census validation. Running the same algorithm on 2010 data yields Polsby–Popper 0.320 (vs. 0.367 for 2020) — only 10.3% variation across vastly different political environments, evidence that geographic structure rather than political opportunity drives performance. The gap between algorithmic and enacted districts shrinks ~50% from 2010 to 2020, quantifying the impact of redistricting reforms.
+Most redistricting algorithms either solve the whole problem at once (computationally intractable at scale) or use local search heuristics that can get stuck. Recursive bisection is fast, deterministic, and produces contiguous districts by construction. The METIS `-contig` flag guarantees no district is split into disconnected pieces.
 
-### Also under `artifacts/`
-- **Presentation**: [`presentations/edge_weighted_bisection/`](artifacts/presentations/edge_weighted_bisection/) — conference-style deck
-- **Guides**: [`guides/edge_weighted_bisection/`](artifacts/guides/edge_weighted_bisection/) (layman's guide) and [`guides/command_reference/`](artifacts/guides/command_reference/)
+The recursive structure also makes the results interpretable: you can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 binary decisions.
 
-## Dashboard
+## Track record
 
-**[View results dashboard →](https://giodl73-repo.github.io/DEXTRO/dashboard.html)** — per-state compactness scores, population balance, and comparison against enacted 2020 congressional districts for all 50 states.
+The same algorithm, unchanged, run on 2010 Census data produces Polsby–Popper **0.320** — only 10% lower than the 2020 result, despite vastly different political environments, different state legislatures, and a decade of demographic change. Geographic structure drives the outcome, not political opportunity.
+
+The gap between algorithmic and enacted districts has also been shrinking: from 2010 to 2020, enacted maps improved as redistricting reform spread across states. The algorithm's advantage narrowed by roughly half. That's the reform working — and a good sign that the benchmark this project sets is a meaningful one.
+
+---
 
 ## Figures
 
@@ -45,7 +48,32 @@ Consolidated treatment with cross-census validation. Running the same algorithm 
 | :---: | :---: | :---: |
 | ![](docs/figures/alabama_round_1.png) | ![](docs/figures/alabama_round_2.png) | ![](docs/figures/alabama_round_3.png) |
 
-Maps are produced by the pipeline at `outputs/V1/{year}/states/{state}/maps/rounds/round_*.png`.
+---
+
+## Research
+
+Three papers document the method and results in full. Sources live under [`artifacts/papers/`](artifacts/papers/) and compile to PDF via each paper's `compile.bat` / `compile.sh`.
+
+### Paper 1 — Introducing Recursive Bisection to Redistricting
+[`artifacts/papers/01_recursive_bisection/`](artifacts/papers/01_recursive_bisection/)
+
+Baseline method. Represents a state's census tracts as a graph, then applies METIS recursive bisection under a population-balance constraint to produce districts from only population and adjacency. Evaluated on all 50 states (2020 Census) with a mean population deviation of 2.79%.
+
+### Paper 2 — Edge-Weighted Recursive Bisection for Compact Congressional Redistricting
+[`artifacts/papers/02_edge_weighted_bisection/`](artifacts/papers/02_edge_weighted_bisection/)
+
+Core contribution. Weights graph edges by actual shared boundary length, so minimizing the weighted cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.367** nationally (+56% vs. unweighted, +20% vs. enacted 2020). Introduces county-based bridge edges for water crossings.
+
+### Paper 3 — Algorithmic Congressional Redistricting via Edge-Weighted Recursive Bisection
+[`artifacts/papers/03_combined_recursive_bisection/`](artifacts/papers/03_combined_recursive_bisection/)
+
+Consolidated treatment with cross-census validation. Demonstrates 10% variation across census years as evidence that geography — not politics — drives performance. Quantifies the shrinking gap between algorithmic and enacted districts from 2010 to 2020.
+
+### Also under `artifacts/`
+- **Presentation**: [`presentations/edge_weighted_bisection/`](artifacts/presentations/edge_weighted_bisection/) — conference-style deck
+- **Guides**: [`guides/edge_weighted_bisection/`](artifacts/guides/edge_weighted_bisection/) (layman's guide) and [`guides/command_reference/`](artifacts/guides/command_reference/)
+
+---
 
 ## Quick Start
 
@@ -83,16 +111,8 @@ python scripts/pipeline/run_state_redistricting.py --state CA --year 2020
 
 ```bash
 python scripts/web/generate_master_dashboard.py
-# → outputs/index.html
+python scripts/web/embed_maps_dashboard.py   # → docs/dashboard.html (self-contained)
 ```
-
-## Algorithm
-
-Recursive bisection produces `N` districts in `⌈log₂ N⌉` rounds. At each step, METIS splits the current region into two subregions under a ±0.5% population-balance constraint with the `-contig` flag enforcing connectedness. Odd counts (e.g. 9 → 4+5) adjust the target partition weights so each child gets its share.
-
-The **edge-weighted** variant weights every graph edge by the shared boundary length between the two adjacent tracts. Minimizing the weighted edge cut then directly minimizes the total perimeter of the resulting districts — which, at fixed area, maximizes Polsby–Popper compactness. Water crossings use county-based bridge edges with state-specific median boundary lengths.
-
-Full details: [`docs/RECURSIVE_BISECTION.md`](docs/RECURSIVE_BISECTION.md).
 
 ## Data
 
@@ -101,7 +121,7 @@ Inputs, per census year (2000, 2010, 2020):
 - **Population**: P.L. 94-171 redistricting files
 - **Places**: TIGER/Line places shapefiles (for city labels)
 
-All census-year data lives under `data/{year}/` (gitignored). Download with:
+All census-year data lives under `data/{year}/` (gitignored — ~55GB). Download with:
 
 ```bash
 python scripts/data/download_orchestrator.py --stages redistricting --year 2020
@@ -116,42 +136,21 @@ apportionment/
 ├── artifacts/               # Papers, presentations, guides (LaTeX sources)
 ├── data/{year}/             # Raw census data (gitignored)
 ├── outputs/                 # Pipeline outputs (gitignored)
-├── web/                     # Dashboard templates
-├── docs/                    # Human-facing documentation
+├── docs/                    # Human-facing documentation + dashboard
 ├── context/                 # Developer / AI-assistant docs
 └── tests/                   # unit/, integration/, e2e/ (215 tests, ~24s)
 ```
 
-## Testing
+## Constraints
 
-```bash
-pytest tests/ -v             # All 215 tests (~24s)
-pytest tests/unit/ -v        # Unit only (135 tests)
-```
-
-See [`tests/README.md`](tests/README.md) for categories and fixtures.
+- Population: within ±0.5% of state target per district
+- Contiguity: all districts connected (enforced by METIS `-contig`)
+- Compactness: edge-cut minimization = perimeter minimization = Polsby–Popper maximization
+- **No political or racial data used at any stage**
 
 ## Documentation
 
-**Start here**
-- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
 - [`docs/RECURSIVE_BISECTION.md`](docs/RECURSIVE_BISECTION.md) — algorithm walkthrough
-- [`docs/DATA_DICTIONARY.md`](docs/DATA_DICTIONARY.md) — output field reference
-
-**Deeper**
-- [`docs/VISUALIZATION_GUIDE.md`](docs/VISUALIZATION_GUIDE.md), [`docs/CENSUS_DATA_PROCESSING.md`](docs/CENSUS_DATA_PROCESSING.md), [`docs/DEPENDENCIES.md`](docs/DEPENDENCIES.md), [`docs/TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md)
-
-**Contributing**
-- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
+- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — version history
-- [`context/ENHANCEMENT_WORKFLOW.md`](context/ENHANCEMENT_WORKFLOW.md) — 6-phase process for new features
-
-**For AI assistants**
-- [`CLAUDE.md`](CLAUDE.md), [`context/ARCHITECTURE.md`](context/ARCHITECTURE.md), [`context/CODING_PATTERNS.md`](context/CODING_PATTERNS.md), [`context/SKILLS.md`](context/SKILLS.md)
-
-## Constraints
-
-- Population: within ±0.5% of state target
-- Contiguity: all districts connected (enforced by METIS `-contig`)
-- Compactness: minimized via METIS edge cut (weighted = perimeter-minimizing)
-- **No political or racial data** used as input at any stage
+- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
