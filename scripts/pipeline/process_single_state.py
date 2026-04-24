@@ -182,6 +182,7 @@ def main():
 
     # Set up environment for child processes (inherit PARALLEL_MODE)
     env = os.environ.copy()
+    env['PYTHONUNBUFFERED'] = '1'  # Ensure STATUS messages reach parent in real-time
     if 'PARALLEL_MODE' not in env:
         env['PARALLEL_MODE'] = '1'
 
@@ -306,7 +307,12 @@ def main():
                     error_logger.write_summary()
                     error_logger.close()
 
-                process.kill()
+                # Graceful shutdown: terminate first, force-kill if needed
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
                 sys.exit(1)
 
         # Validate outputs after all steps complete

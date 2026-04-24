@@ -70,6 +70,7 @@ def process_single_state(args_tuple: Tuple) -> Tuple[str, bool]:
 
     # Set environment variables for STATUS protocol
     env = os.environ.copy()
+    env['PYTHONUNBUFFERED'] = '1'  # Ensure STATUS messages reach parent in real-time
     env['DPI'] = str(args_dict['dpi'])
     env['STATE_NUMBER'] = str(state_number)
     env['WORKER_ID'] = str(worker_id)
