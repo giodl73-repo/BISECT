@@ -95,20 +95,59 @@ def build_map_table() -> dict[str, str]:
                 if src:
                     table[key] = src
 
-    # National map
-    national_candidates = [
-        OUTPUTS_DIR / 'maps' / 'us_all_districts.png',
-        OUTPUTS_DIR / 'us_all_districts.png',
-        Path('outputs') / 'figures' / '2020' / 'us_all_districts.png',
-    ]
-    for candidate in national_candidates:
-        src = encode_image(candidate, NATIONAL_WIDTH)
+        # metro / urban area maps
+        metros_dir = maps_dir / 'metros'
+        if metros_dir.exists():
+            for m in sorted(metros_dir.glob('*.png')):
+                key = f'{state}/maps/metros/{m.stem}'
+                src = encode_image(m, MAP_WIDTH)
+                if src:
+                    table[key] = src
+
+        # compactness maps
+        compactness_dir = state_dir / 'compactness' / 'maps'
+        for img in ['polsby_popper', 'reock']:
+            src = encode_image(compactness_dir / f'{img}.png', MAP_WIDTH)
+            if src:
+                table[f'{state}/compactness/maps/{img}'] = src
+
+        # political maps
+        src = encode_image(state_dir / 'political' / 'maps' / 'partisan_lean.png', MAP_WIDTH)
         if src:
-            table['national/us_all_districts'] = src
-            print(f'  [national] us_all_districts ({len(src)//1024}KB)')
-            break
-    else:
-        print('  [national] us_all_districts.png not found — skipping', file=sys.stderr)
+            table[f'{state}/political/maps/partisan_lean'] = src
+
+        # demographic maps
+        demographic_dir = state_dir / 'demographic' / 'maps'
+        for img in ['majority_race', 'diversity_index', 'gender_balance']:
+            src = encode_image(demographic_dir / f'{img}.png', MAP_WIDTH)
+            if src:
+                table[f'{state}/demographic/maps/{img}'] = src
+
+    # National maps
+    maps_dir = OUTPUTS_DIR / 'maps'
+    national_imgs = {
+        'national/us_all_districts':            maps_dir / 'us_all_districts.png',
+        'national/us_all_districts_with_cities': maps_dir / 'us_all_districts_with_cities.png',
+        'national/political/partisan_lean':      maps_dir / 'political' / 'partisan_lean.png',
+        'national/demographic/majority_demographics': maps_dir / 'demographic' / 'majority_demographics.png',
+        'national/compactness/polsby_popper':    maps_dir / 'compactness' / 'polsby_popper.png',
+    }
+    for key, path in national_imgs.items():
+        src = encode_image(path, NATIONAL_WIDTH)
+        if src:
+            table[key] = src
+            print(f'  [national] {path.name} ({len(src)//1024}KB)')
+        else:
+            print(f'  [national] {path.name} not found — skipping', file=sys.stderr)
+
+    # National round maps
+    national_rounds_dir = maps_dir / 'rounds'
+    if national_rounds_dir.exists():
+        for rnd in sorted(national_rounds_dir.glob('round_*.png')):
+            key = f'national/rounds/{rnd.stem}'
+            src = encode_image(rnd, NATIONAL_WIDTH)
+            if src:
+                table[key] = src
 
     return table
 
@@ -224,11 +263,33 @@ function getEmbeddedNational(relPath) {{
     )
 
     # -------------------------------------------------------------------------
-    # Patch 6: Metro maps (dynamic ${metro.file})
-    #
-    # Pattern:
-    #   src="${basePath}/states/${state}/maps/metros/${metro.file}.png"
-    # Leave as-is (no embedded metro maps); just ensure fallback works.
+    # Patch 6: Metro maps — state view (dynamic ${state} + ${metro.file})
+    # -------------------------------------------------------------------------
+    html = html.replace(
+        'src="${basePath}/states/${state}/maps/metros/${metro.file}.png"',
+        "src=\"${getEmbeddedMap(state, 'maps/metros/' + metro.file) || `${basePath}/states/${state}/maps/metros/${metro.file}.png`}\""
+    )
+
+    # -------------------------------------------------------------------------
+    # Patch 7: Metro maps — national view (uses metro.state, not state)
+    #   src="${basePath}/states/${metro.state}/maps/metros/${metro.file}.png"
+    # -------------------------------------------------------------------------
+    html = html.replace(
+        'src="${basePath}/states/${metro.state}/maps/metros/${metro.file}.png"',
+        "src=\"${getEmbeddedMap(metro.state, 'maps/metros/' + metro.file) || `${basePath}/states/${metro.state}/maps/metros/${metro.file}.png`}\""
+    )
+
+    # -------------------------------------------------------------------------
+    # Patch 8: District maps — string-concatenation style (line 1303)
+    #   const imagePath = basePath + '/states/' + state + '/maps/districts/district_' + ...
+    #   mapsHtml += '<img src="' + imagePath + '"'
+    # The imagePath expression itself is already patched by Patch 3.
+    # But ensure the inline src= also works if expressed differently.
+    # -------------------------------------------------------------------------
+
+    # -------------------------------------------------------------------------
+    # Patch 9: National static maps not caught by Patch 4 (none needed —
+    # Patch 4's regex handles all ${basePath}/maps/X.png patterns already)
     # -------------------------------------------------------------------------
 
     # Inject the lookup table before </body>
