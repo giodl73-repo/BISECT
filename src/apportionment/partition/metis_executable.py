@@ -16,48 +16,52 @@ import numpy as np
 
 def find_gpmetis_executable() -> Optional[str]:
     """
-    Find gpmetis.exe executable.
+    Find gpmetis executable (cross-platform: Windows .exe or Linux/macOS binary).
 
     Searches in:
-    1. Repository's bin/ directory (bundled with code)
-    2. System PATH
+    1. Repository's bin/ directory (bundled Windows binary)
+    2. System PATH (works for Linux after: apt-get install metis)
     3. Common installation directories
-    4. User's Apportionment tools directory
 
     Returns
     -------
     str or None
-        Path to gpmetis.exe if found
+        Path to gpmetis if found
     """
-    # Check repository's bin/ directory FIRST (bundled with code)
-    # This ensures the repo is portable across machines
-    repo_bin = Path(__file__).parent.parent.parent.parent / 'bin' / 'gpmetis.exe'
-    if repo_bin.exists():
-        return str(repo_bin.absolute())
+    import platform
+    is_windows = platform.system() == 'Windows'
 
-    # Check PATH
-    gpmetis_path = subprocess.run(
-        ['where', 'gpmetis'],
-        capture_output=True,
-        text=True
-    ).stdout.strip()
+    # Check repository's bin/ directory (bundled Windows binary)
+    for name in ['gpmetis.exe', 'gpmetis']:
+        repo_bin = Path(__file__).parent.parent.parent.parent / 'bin' / name
+        if repo_bin.exists():
+            return str(repo_bin.absolute())
 
-    if gpmetis_path and Path(gpmetis_path).exists():
-        return gpmetis_path
+    # Check system PATH (cross-platform)
+    path_cmd = ['where', 'gpmetis'] if is_windows else ['which', 'gpmetis']
+    try:
+        result = subprocess.run(path_cmd, capture_output=True, text=True)
+        gpmetis_path = result.stdout.strip()
+        if gpmetis_path and Path(gpmetis_path).exists():
+            return gpmetis_path
+    except (FileNotFoundError, OSError):
+        pass
 
-    # Check common installation directories
-    common_paths = [
-        r'C:\users\giodl\gpmetis\local\bin\gpmetis.exe',
-        r'C:\Users\giodl\sources\repo\Apportionment\tools\metis-build-vs\programs\Release\gpmetis.exe',
-        r'C:\metis\bin\gpmetis.exe',
-        r'C:\Program Files\metis\bin\gpmetis.exe',
-        r'C:\Users\giodl\sources\repo\Apportionment\tools\METIS-5.2.1\build\windows\programs\Release\gpmetis.exe',
-        r'C:\Users\giodl\sources\repo\Apportionment\tools\metis\METIS-5.2.1\build\windows\programs\Release\gpmetis.exe',
-    ]
-
-    for path in common_paths:
+    # Common Linux/macOS paths (e.g. after apt-get install metis)
+    unix_paths = ['/usr/bin/gpmetis', '/usr/local/bin/gpmetis', '/opt/homebrew/bin/gpmetis']
+    for path in unix_paths:
         if Path(path).exists():
             return path
+
+    # Common Windows paths
+    if is_windows:
+        windows_paths = [
+            r'C:\metis\bin\gpmetis.exe',
+            r'C:\Program Files\metis\bin\gpmetis.exe',
+        ]
+        for path in windows_paths:
+            if Path(path).exists():
+                return path
 
     return None
 
