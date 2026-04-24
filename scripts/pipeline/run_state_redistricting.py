@@ -256,7 +256,8 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
                   f"(of {len(vra_edge_weights)} total)")
 
             edge_weights = vra_edge_weights
-            vra_mode = False  # Edge-weighting uses single-constraint — clear flag
+            # vra_mode stays True — this IS a VRA run.
+            # multi_constraint is determined by vra_target_weights (None here → False).
 
     partitioner = RecursiveBisection(
         adjacency=adjacency,
@@ -272,23 +273,22 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
         niter=niter,
         objtype=objtype,
         seed=seed,
-        vra_mode=False,          # VRA is now pure edge weighting — no multi-constraint
-        vra_target_weights=None
+        vra_mode=vra_mode,       # True for VRA runs (for logging/analysis)
+        vra_target_weights=None  # No target tree: multi_constraint=False in METIS calls
     )
 
     # Run the algorithm
     final_assignments = partitioner.partition()
 
-    # Calculate overall statistics (no prints during progress)
-    # Handle VRA mode (2D vertex_weights) vs standard mode (1D vertex_weights)
-    if vra_mode:
-        # VRA mode: vertex_weights is 2D, use first column for population
-        populations = [sum(vertex_weights[block_idx, 0] for block_idx, assigned_dist in final_assignments.items() if assigned_dist == district_id)
-                       for district_id in range(1, num_districts + 1)]
-    else:
-        # Standard mode: vertex_weights is 1D
-        populations = [sum(vertex_weights[block_idx] for block_idx, assigned_dist in final_assignments.items() if assigned_dist == district_id)
-                       for district_id in range(1, num_districts + 1)]
+    # Calculate overall statistics.
+    # vertex_weights is always 1D (population only) — VRA mode uses edge weights,
+    # not 2D multi-constraint vertex weights.
+    populations = [
+        sum(vertex_weights[block_idx]
+            for block_idx, assigned_dist in final_assignments.items()
+            if assigned_dist == district_id)
+        for district_id in range(1, num_districts + 1)
+    ]
     ideal = total_pop / num_districts
     deviations = [(p - ideal) / ideal * 100 for p in populations]
     max_dev = max(abs(d) for d in deviations)

@@ -166,7 +166,7 @@ def _split_node_worker(task: dict) -> dict:
         seed=seed,
         debug=debug,
         edge_weights=subgraph_edge_weights,
-        multi_constraint=vra_mode
+        multi_constraint=(vra_target_tree is not None)  # only when using 2D vertex weights
     )
 
     # Create result
@@ -176,8 +176,8 @@ def _split_node_worker(task: dict) -> dict:
     left_name = f"{name}0"
     right_name = f"{name}1"
 
-    # Calculate populations (handle VRA mode with 2D weights)
-    if vra_mode:
+    # Calculate populations — always use first dim (handles both 1D and 2D weights)
+    if vertex_weights.ndim == 2:
         left_pop = float(sum(vertex_weights[i, 0] for i in left_blocks))
         right_pop = float(sum(vertex_weights[i, 0] for i in right_blocks))
     else:
@@ -333,13 +333,11 @@ class RecursiveBisection:
         # Track intermediate results by depth
         self.intermediate_results = {}  # depth -> assignments dict
 
-        # Statistics
-        if vra_mode:
-            # VRA mode: vertex_weights is 2D (n_vertices, 2), use first column for population
-            self.total_population = int(vertex_weights[:, 0].sum())
-        else:
-            # Standard mode: vertex_weights is 1D
-            self.total_population = int(vertex_weights.sum())
+        # Statistics — vertex_weights is always 1D (population only).
+        # VRA edge-weighting does not use 2D multi-constraint vertex weights.
+        self.total_population = int(
+            vertex_weights[:, 0].sum() if vertex_weights.ndim == 2 else vertex_weights.sum()
+        )
 
         if num_districts == 0:
             raise ValueError(f"num_districts cannot be 0 (state: {state_code})")
@@ -558,7 +556,7 @@ class RecursiveBisection:
                 seed=self.seed,
                 debug=self.debug,
                 edge_weights=subgraph_edge_weights,
-                multi_constraint=self.vra_mode
+                multi_constraint=(self.vra_target_tree is not None)  # only with 2D vertex weights
             )
         except Exception as e:
             raise RuntimeError(
@@ -583,8 +581,8 @@ class RecursiveBisection:
         node.left_child.target_districts = k_left
         node.right_child.target_districts = k_right
 
-        # Calculate populations (handle VRA mode with 2D weights)
-        if self.vra_mode:
+        # Calculate populations — always use first dim (handles both 1D and 2D weights)
+        if self.vertex_weights.ndim == 2:
             node.left_child.population = float(sum(self.vertex_weights[i, 0] for i in left_blocks))
             node.right_child.population = float(sum(self.vertex_weights[i, 0] for i in right_blocks))
         else:
@@ -819,7 +817,7 @@ class RecursiveBisection:
                 seed=self.seed,
                 debug=self.debug,
                 edge_weights=subgraph_edge_weights,
-                multi_constraint=self.vra_mode
+                multi_constraint=(self.vra_target_tree is not None)  # only with 2D vertex weights
             )
         except Exception as e:
             raise RuntimeError(
@@ -839,8 +837,8 @@ class RecursiveBisection:
         node.left_child.target_districts = k_left
         node.right_child.target_districts = k_right
 
-        # Calculate populations (handle VRA mode with 2D weights)
-        if self.vra_mode:
+        # Calculate populations — always use first dim (handles both 1D and 2D weights)
+        if self.vertex_weights.ndim == 2:
             node.left_child.population = float(sum(self.vertex_weights[i, 0] for i in left_blocks))
             node.right_child.population = float(sum(self.vertex_weights[i, 0] for i in right_blocks))
         else:
