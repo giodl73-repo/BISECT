@@ -31,9 +31,9 @@ jobs:
       run: |
         python -m pytest tests/unit -v --tb=short --cov=apportionment --cov-report=xml --cov-report=term
 
-    - name: Run integration tests
-      run: |
-        python -m pytest tests/integration -v --tb=short
+    # Integration tests require actual pipeline outputs (outputs/V3/) which are
+    # gitignored and only exist locally after running the redistricting pipeline.
+    # Run them locally with: pytest tests/integration -v
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
