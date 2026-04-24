@@ -18,7 +18,7 @@ from pathlib import Path
 
 from PIL import Image
 
-OUTPUTS_DIR = Path('outputs/V1/2020')
+OUTPUTS_DIR = Path('outputs/V3/2020')   # default; overridden by --version/--year
 DASHBOARD_SRC = OUTPUTS_DIR / 'index.html'
 DASHBOARD_OUT = Path('docs/dashboard.html')
 
@@ -238,24 +238,61 @@ function getEmbeddedNational(relPath) {{
 
 
 def main():
+    import argparse
+    parser = argparse.ArgumentParser(
+        description='Embed maps into dashboard HTML for GitHub Pages deployment'
+    )
+    parser.add_argument('--version', '-v', default=None,
+                        help='Pipeline version (e.g. V3, V4). Default: V3')
+    parser.add_argument('--year', '-y', default='2020',
+                        choices=['2020', '2010', '2000'],
+                        help='Census year (default: 2020)')
+    parser.add_argument('--out', default='docs/dashboard.html',
+                        help='Output path (default: docs/dashboard.html)')
+    args = parser.parse_args()
+
+    global OUTPUTS_DIR, DASHBOARD_SRC, DASHBOARD_OUT
+
+    if args.version:
+        # Try exact case, then uppercase, then lowercase
+        for v in [args.version, args.version.upper(), args.version.lower()]:
+            candidate = Path(f'outputs/{v}/{args.year}')
+            if candidate.exists():
+                OUTPUTS_DIR = candidate
+                break
+        else:
+            print(f'[ERROR] outputs/{args.version}/{args.year}/ not found', file=sys.stderr)
+            sys.exit(1)
+    else:
+        OUTPUTS_DIR = Path(f'outputs/V3/{args.year}')
+
+    DASHBOARD_SRC = OUTPUTS_DIR / 'index.html'
+    DASHBOARD_OUT = Path(args.out)
+
     if not DASHBOARD_SRC.exists():
-        print(f'[ERROR] Source dashboard not found: {DASHBOARD_SRC}', file=sys.stderr)
+        print(f'[ERROR] Source not found: {DASHBOARD_SRC}', file=sys.stderr)
+        print(f'        Run: python scripts/web/generate_master_dashboard.py', file=sys.stderr)
         sys.exit(1)
 
-    print(f'Reading {DASHBOARD_SRC}...')
+    print(f'Source:  {DASHBOARD_SRC}')
+    print(f'Output:  {DASHBOARD_OUT}')
+    print(f'Reading HTML...')
     html = DASHBOARD_SRC.read_text(encoding='utf-8')
 
     table = build_map_table()
     total_kb = sum(len(v) for v in table.values()) // 1024
-    print(f'\nBuilt table: {len(table)} images, ~{total_kb}KB base64 total')
+    print(f'\nEmbedded {len(table)} images (~{total_kb}KB base64 total)')
 
     print('Patching HTML...')
     html = patch_html(html, table)
 
     DASHBOARD_OUT.parent.mkdir(parents=True, exist_ok=True)
     DASHBOARD_OUT.write_text(html, encoding='utf-8')
-    size_kb = DASHBOARD_OUT.stat().st_size // 1024
-    print(f'[OK] Written to {DASHBOARD_OUT} ({size_kb}KB)')
+    size_mb = DASHBOARD_OUT.stat().st_size / 1_048_576
+    print(f'[OK] {DASHBOARD_OUT} ({size_mb:.1f} MB)')
+    print()
+    print('Commit and push:')
+    print('  git add docs/dashboard.html && git commit -m "Deploy dashboard" && git push origin master:main')
 
 
 if __name__ == '__main__':
