@@ -183,6 +183,11 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     vra_mode = False
     vra_target_weights = None
 
+    if partition_mode == 'metis-vra' and num_districts == 1:
+        print(f"[VRA] Skipping VRA mode for single-district state (no split needed)")
+        partition_mode = 'edge-weighted'
+        edge_weights = graph_data.get('edge_weights', None)
+
     if partition_mode == 'metis-vra':
         from apportionment.partition import vra_utils
         from apportionment.partition import vra_targets

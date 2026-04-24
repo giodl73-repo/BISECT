@@ -25,118 +25,6 @@ sys.path.insert(0, str(project_root / 'src'))
 from scripts.utils import get_state_config
 
 
-def run_batch_mode(
-    states_to_process: List[str],
-    year: str,
-    version: str,
-    output_dir: Path,
-    args_dict: Dict[str, Any],
-    max_workers: int,
-    run_analysis: bool
-) -> Tuple[List[str], List[str]]:
-    """
-    Run redistricting in batch mode: all states complete stage N before any state starts N+1.
-
-    Args:
-        states_to_process: List of state codes to process
-        year: Census year
-        version: Version identifier
-        output_dir: Output directory
-        args_dict: Arguments dict
-        max_workers: Number of parallel workers
-        run_analysis: Whether to run analysis stages
-
-    Returns:
-        (successful_states, failed_states)
-    """
-    # Define stages to run
-    core_stages = ['metis', 'summary', 'cities', 'round_maps', 'district_maps']
-    analysis_stages = []
-
-    if run_analysis:
-        analysis_stages = [
-            'metro_areas',
-            'compactness',
-            'demographics_analysis',
-            'demographics_visualization',
-            'political_analysis',
-            'political_visualization'
-        ]
-
-    all_stages = core_stages + analysis_stages
-
-    # Build command for run_redistricting_stage.py
-    scripts_dir = Path(__file__).parent
-    stage_runner = scripts_dir / 'run_redistricting_stage.py'
-
-    successful_states = set(states_to_process)
-    failed_states = []
-
-    # Run each stage for all states
-    for stage_idx, stage_name in enumerate(all_stages, 1):
-        print(f"[{year}] Stage {stage_idx}/{len(all_stages)}: {stage_name}", flush=True)
-
-        # Build command
-        cmd = [
-            sys.executable,
-            str(stage_runner),
-            '--stage', stage_name,
-            '--year', year,
-            '--version', version,
-            '--output-dir', str(output_dir),
-            '--workers', str(max_workers),
-            '--dpi', str(args_dict['dpi']),
-            '--partition-mode', args_dict['partition_mode']
-        ]
-
-        if args_dict.get('print_only'):
-            cmd.append('--print-only')
-        if args_dict.get('debug'):
-            cmd.append('--debug')
-        if args_dict.get('reprocess'):
-            cmd.append('--reprocess')
-
-        # Add states that haven't failed yet
-        if successful_states:
-            cmd.append('--states')
-            cmd.extend(successful_states)
-
-        # Run stage
-        env = os.environ.copy()
-        env['TQDM_POSITION'] = '999'
-
-        proc = subprocess.Popen(
-            cmd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1
-        )
-
-        # Forward stdout (STATUS messages)
-        for line in proc.stdout:
-            sys.stdout.write(line)
-            sys.stdout.flush()
-
-        proc.wait()
-
-        if proc.returncode != 0:
-            # Stage failed - read stderr
-            stderr_output = proc.stderr.read() if proc.stderr else ""
-            sys.stderr.write(f"[{year}] Stage {stage_name} failed\n")
-            if stderr_output:
-                sys.stderr.write(stderr_output)
-            sys.stderr.flush()
-
-            # Mark all remaining states as failed
-            failed_states.extend(successful_states)
-            successful_states = set()
-            break
-
-    return (list(successful_states), failed_states)
-
-
 def process_single_state(args_tuple: Tuple) -> Tuple[str, bool]:
     """
     Process a single state in parallel mode.
@@ -189,7 +77,6 @@ def process_single_state(args_tuple: Tuple) -> Tuple[str, bool]:
     env['TQDM_POSITION'] = str(999)  # Suppress verbose output from child
 
     # Spawn subprocess and forward STATUS messages
-    # Suppress stderr to avoid flickering in hierarchical display
     proc = subprocess.Popen(
         cmd,
         env=env,
@@ -222,7 +109,7 @@ def main():
     parser.add_argument('--dpi', type=int, default=150,
                        help='DPI for output maps')
     parser.add_argument('--partition-mode', type=str, default='edge-weighted',
-                       choices=['unweighted', 'edge-weighted'],
+                       choices=['unweighted', 'edge-weighted', 'metis-vra'],
                        help='Partitioning mode')
     parser.add_argument('--states', nargs='*', default=None,
                        help='Specific states to process (default: all)')
@@ -234,9 +121,9 @@ def main():
                        help='Enable debug mode')
     parser.add_argument('--run-analysis', action='store_true', default=True,
                        help='Run per-state analysis')
-    parser.add_argument('--processing-mode', type=str, default='batch',
+    parser.add_argument('--processing-mode', type=str, default='streaming',
                        choices=['batch', 'streaming'],
-                       help='Processing mode: "batch" (all states per stage) or "streaming" (per-state pipeline)')
+                       help='Processing mode (streaming uses process_single_state.py per state)')
 
     args = parser.parse_args()
 
@@ -254,13 +141,10 @@ def main():
     states_complete_marker = output_dir / '.states_complete'
 
     if states_complete_marker.exists() and not args.reprocess:
-        # Read list of completed states
         completed_states = set()
-        if states_complete_marker.exists():
-            with open(states_complete_marker, 'r') as f:
-                completed_states = {line.strip() for line in f if line.strip()}
+        with open(states_complete_marker, 'r') as f:
+            completed_states = {line.strip() for line in f if line.strip()}
 
-        # Filter out completed states
         states_to_process = [s for s in states_to_process if s not in completed_states]
 
         if not states_to_process:
@@ -277,60 +161,31 @@ def main():
         'reprocess': args.reprocess
     }
 
-    # Determine max workers
     max_workers = min(args.workers, len(states_to_process), 8)
 
-    # Choose processing mode
-    if args.processing_mode == 'batch':
-        # Batch mode: all states complete stage N before any state starts N+1
-        print(f"[{args.year}] Running in BATCH mode: all states per stage", flush=True)
-        successful, failed = run_batch_mode(
-            states_to_process,
-            args.year,
-            args.version,
-            output_dir,
-            args_dict,
-            max_workers,
-            args.run_analysis
-        )
+    # Pre-assign states to workers in round-robin fashion
+    state_args_list = [
+        (state_code, i, args.year, str(output_dir), args_dict, i % max_workers)
+        for i, state_code in enumerate(states_to_process, 1)
+    ]
 
-        # Update completion markers for successful states
-        for state_code in successful:
-            with open(states_complete_marker, 'a') as f:
-                f.write(f"{state_code}\n")
+    successful = []
+    failed = []
 
-    else:
-        # Streaming mode: each state flows through all stages independently
-        print(f"[{args.year}] Running in STREAMING mode: per-state pipeline", flush=True)
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for state_code, success in executor.map(process_single_state, state_args_list):
+            if success:
+                successful.append(state_code)
+                sys.stdout.write(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/{len(states_to_process)}\n")
+                sys.stdout.flush()
+                with open(states_complete_marker, 'a') as f:
+                    f.write(f"{state_code}\n")
+            else:
+                failed.append(state_code)
+                state_name = STATE_CONFIG[state_code]['name']
+                sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
+                sys.stderr.flush()
 
-        # Pre-assign states to workers in round-robin fashion
-        state_args_list = [
-            (state_code, i, args.year, str(output_dir), args_dict, i % max_workers)
-            for i, state_code in enumerate(states_to_process, 1)
-        ]
-
-        successful = []
-        failed = []
-
-        # Process states in parallel
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            for state_code, success in executor.map(process_single_state, state_args_list):
-                if success:
-                    successful.append(state_code)
-                    # Emit year-level progress for orchestrator
-                    sys.stdout.write(f"STATUS:YEAR:{args.year}:COMPLETE:{len(successful)}/{len(states_to_process)}\n")
-                    sys.stdout.flush()
-
-                    # Update completion marker
-                    with open(states_complete_marker, 'a') as f:
-                        f.write(f"{state_code}\n")
-                else:
-                    failed.append(state_code)
-                    state_name = STATE_CONFIG[state_code]['name']
-                    sys.stderr.write(f"[{args.year}] Failed: {state_name}\n")
-                    sys.stderr.flush()
-
-    # Report final status
     if failed:
         sys.stderr.write(f"\n[{args.year}] {len(failed)} states failed: {', '.join(failed)}\n")
         sys.stderr.flush()

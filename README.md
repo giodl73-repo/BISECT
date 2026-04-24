@@ -10,7 +10,7 @@ Split the state into two equal halves by population. Split each half again. Keep
 
 **Headline result (2020 Census):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
-**[View interactive results dashboard →](https://giodl73-repo.github.io/DEXTRO/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
+**[View interactive results dashboard →](https://giodl73-repo.github.io/REDIST/dashboard.html)** — all 50 states, 435 districts, round-by-round bisection maps.
 
 ---
 
@@ -54,26 +54,144 @@ The gap between algorithmic and enacted districts has also been shrinking: from 
 
 ## Research
 
-Three papers document the method and results in full. Sources live under [`artifacts/papers/`](artifacts/papers/) and compile to PDF via each paper's `compile.bat` / `compile.sh`.
+20 papers across five tracks. All PDFs are pre-built and open directly from the links below. LaTeX sources live under [`research/`](research/) and [`artifacts/papers/`](artifacts/papers/).
 
-### Paper 1 — Introducing Recursive Bisection to Redistricting
-[`artifacts/papers/01_recursive_bisection/`](artifacts/papers/01_recursive_bisection/)
+---
 
-Baseline method. Represents a state's census tracts as a graph, then applies METIS recursive bisection under a population-balance constraint to produce districts from only population and adjacency. Evaluated on all 50 states (2020 Census) with a mean population deviation of 2.79%.
+### Track A — Synthesis
 
-### Paper 2 — Edge-Weighted Recursive Bisection for Compact Congressional Redistricting
-[`artifacts/papers/02_edge_weighted_bisection/`](artifacts/papers/02_edge_weighted_bisection/)
+**A.0 · Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration**
+[PDF](research/A.0+synthesis-metapaper/main.pdf) · [Source](research/A.0+synthesis-metapaper/)
 
-Core contribution. Weights graph edges by actual shared boundary length, so minimizing the weighted cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.367** nationally (+56% vs. unweighted, +20% vs. enacted 2020). Introduces county-based bridge edges for water crossings.
+Synthesis metapaper. Frames the full research program: why bisection is the right method, what the national-scale results show, and what the implications are for redistricting reform. Covers all 50 states across three census decades.
 
-### Paper 3 — Algorithmic Congressional Redistricting via Edge-Weighted Recursive Bisection
-[`artifacts/papers/03_combined_recursive_bisection/`](artifacts/papers/03_combined_recursive_bisection/)
+**A.1 · Research Portfolio Guide**
+[PDF](research/A.1+portfolio-guide/guide.pdf) · [Source](research/A.1+portfolio-guide/)
 
-Consolidated treatment with cross-census validation. Demonstrates 10% variation across census years as evidence that geography — not politics — drives performance. Quantifies the shrinking gap between algorithmic and enacted districts from 2010 to 2020.
+Reader's guide to the paper portfolio — how the tracks relate, what order to read them in, and how findings build on each other.
 
-### Also under `artifacts/`
-- **Presentation**: [`presentations/edge_weighted_bisection/`](artifacts/presentations/edge_weighted_bisection/) — conference-style deck
-- **Guides**: [`guides/edge_weighted_bisection/`](artifacts/guides/edge_weighted_bisection/) (layman's guide) and [`guides/command_reference/`](artifacts/guides/command_reference/)
+**A.2 · Portfolio Summary**
+[PDF](research/A.2+portfolio-summary/summary.pdf) · [Source](research/A.2+portfolio-summary/)
+
+One-document summary of all major findings across the portfolio for readers who want the headlines without the full papers.
+
+---
+
+### Track B — Algorithm
+
+**B.1 · From Apportionment to Boundary Design: Recursive Bisection for Congressional Redistricting**
+[PDF](research/B.1+recursive-bisection/main.pdf) · [Source](research/B.1+recursive-bisection/)
+
+Baseline method paper. Establishes the graph-theoretic formulation, METIS recursive bisection under population balance, and unweighted baseline results on all 50 states (2020 Census).
+
+**B.2 · Edge-Weighted Recursive Bisection for Compact Congressional Districts**
+[PDF](research/B.2+edge-weighted-bisection/main.pdf) · [Source](research/B.2+edge-weighted-bisection/)
+
+Core algorithmic contribution. Weights edges by shared boundary length so minimizing the cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.367** (+56% vs. unweighted, +20% vs. enacted 2020 maps).
+
+**B.3 · Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Redistricting**
+[PDF](research/B.3+multi-vs-edge/main.pdf) · [Source](research/B.3+multi-vs-edge/)
+
+Theoretical and empirical comparison of edge-weighted (single-objective) vs. multi-constraint METIS. Shows why single-objective formulation produces better compactness: the objectives don't compete.
+
+**B.4 · Edge-Weighting Makes Method Selection Irrelevant: Complete Equivalence of Recursive and N-Way Bisection**
+[PDF](research/B.4+adaptive-bisection/main.pdf) · [Source](research/B.4+adaptive-bisection/)
+
+Proves that once edge weights are introduced, recursive bisection and direct n-way partitioning converge to the same solution. Method choice doesn't matter — the weighting does.
+
+---
+
+### Track C — Validation
+
+**C.1 · Spatial Resolution and Algorithmic Redistricting: MAUP Sensitivity Analysis**
+[PDF](research/C.1+maup-sensitivity/main.pdf) · [Source](research/C.1+maup-sensitivity/)
+
+Tests whether results depend on the choice of geographic unit (census tracts vs. block groups vs. blocks). Finds the algorithm is robust across 130× range in unit count — geography drives outcomes, not resolution.
+
+**C.2 · Cross-Census Validation for Congressional Redistricting Algorithms**
+[PDF](research/C.2+cross-census-validation/main.pdf) · [Source](research/C.2+cross-census-validation/)
+
+Validates the algorithm on 2000, 2010, and 2020 Census data. Compactness scores vary only ~10% across decades, confirming that stable geography — not political cycles — drives performance.
+
+**C.3 · Cross-Census Temporal Stability**
+[PDF](research/C.3+temporal-stability/main.pdf) · [Source](research/C.3+temporal-stability/)
+
+Deep analysis of why the algorithm is temporally stable. Identifies the geographic clustering properties that make bisection outcomes predictable across different political environments.
+
+**C.4 · Twenty Years of Congressional Redistricting: A Longitudinal Analysis**
+[PDF](research/C.4+longitudinal-analysis/main.pdf) · [Source](research/C.4+longitudinal-analysis/)
+
+Tracks algorithmic vs. enacted district quality from 2000 to 2020. Quantifies the shrinking gap as redistricting reform spread across states — and shows the algorithm's benchmark is a meaningful target.
+
+**C.5 · Measuring Partisan Fairness in Algorithmic Redistricting: Efficiency Gap Analysis**
+[PDF](research/C.5+efficiency-gap-analysis/main.pdf) · [Source](research/C.5+efficiency-gap-analysis/)
+
+Applies the efficiency gap metric to algorithmic districts. Shows that purely geographic bisection produces near-zero efficiency gaps in most states — fairness as a byproduct of geometric neutrality.
+
+---
+
+### Track D — Voting Rights Act
+
+**D.0 · Voting Rights Act Compliance Through Edge-Weighted Graph Partitioning**
+[PDF](research/D.0+vra-compliance/main.pdf) · [Source](research/D.0+vra-compliance/)
+
+Introduces the `metis-vra` multi-constraint formulation (2D vertex weights: population + minority VAP). Tests VRA Section 2 compliance on covered states. This is the algorithm behind the V4 pipeline run.
+
+**D.1 · The 42% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting**
+[PDF](research/D.1+threshold-analysis/main.pdf) · [Source](research/D.1+threshold-analysis/)
+
+Discovers the critical empirical finding: states where minority population exceeds ~42% statewide achieve all statutory majority-minority district targets with principled methods. Below that threshold, geography makes compliance impossible without sacrificing compactness.
+
+**D.2 · N-Way vs. Recursive Bisection for VRA-Compliant Redistricting**
+[PDF](research/D.2+nway-vs-recursive-vra/main.pdf) · [Source](research/D.2+nway-vs-recursive-vra/)
+
+Compares n-way and recursive approaches specifically for minority district formation. N-way's global optimization concentrates minority population slightly better, but neither method overcomes geographic constraints in low-minority states.
+
+**D.3 · Quantifying the Voting Rights Act–Compactness Tradeoff**
+[PDF](research/D.3+compactness-tradeoff/main.pdf) · [Source](research/D.3+compactness-tradeoff/)
+
+Measures the exact compactness cost of VRA compliance in borderline states. Finds the tradeoff is real but bounded — even in Alabama, the compactness penalty is modest relative to typical enacted maps.
+
+---
+
+### Track E — Experimental Extensions
+
+> These papers explore structural alternatives to the current redistricting system — different units, different scopes, different rules. They are forward-looking and speculative rather than empirical validations of the core method.
+
+**E.1 · Multi-Member Districts and Proportional Representation**
+[PDF](research/E.1+multi-member-districts/main.pdf) · [Source](research/E.1+multi-member-districts/)
+
+Extends the bisection algorithm to multi-member districts. Shows that 3- and 5-member districts dramatically reduce the compactness–VRA tension by allowing minority communities to elect representatives without requiring majority-concentration districts.
+
+**E.2 · Direct County Representation: An Alternative to Congressional Redistricting**
+[PDF](research/E.2+county-representation/main.pdf) · [Source](research/E.2+county-representation/)
+
+Proposes using counties as the unit of congressional representation, weighted by population. Eliminates district-drawing entirely. Evaluates compactness, county integrity, and VRA implications.
+
+**E.3 · National Redistricting Without State Boundaries**
+[PDF](research/E.3+national-redistricting/main.pdf) · [Source](research/E.3+national-redistricting/)
+
+Asks what would happen if congressional districts could cross state lines. Applies the algorithm nationally — treating the entire US as one graph — and examines the resulting 435-district map.
+
+**E.4 · Partisan Similarity Districts: Algorithmic Safe Seats**
+[PDF](research/E.4+partisan-similarity-districts/main.pdf) · [Source](research/E.4+partisan-similarity-districts/)
+
+Investigates whether geographic bisection inadvertently creates partisan safe seats by clustering politically similar communities. Finds that compactness and partisan homogeneity are correlated — a natural consequence of geographic sorting.
+
+**E.5 · Partisan Fairness Through Algorithmic Districting**
+[PDF](research/E.5+party-based-allocation/main.pdf) · [Source](research/E.5+party-based-allocation/)
+
+Evaluates whether algorithmic redistricting produces partisan-fair outcomes without intentionally targeting fairness. Compares to proportional representation benchmarks and examines outlier states.
+
+---
+
+### Presentation & Guides
+
+- **Conference presentation**: [PDF](artifacts/presentations/edge_weighted_bisection/presentation.pdf) · [Source](artifacts/presentations/edge_weighted_bisection/)
+- **Layman's guide**: [PDF](artifacts/guides/edge_weighted_bisection/laymen_guide.pdf) · [Source](artifacts/guides/edge_weighted_bisection/)
+- **Command reference**: [PDF](artifacts/guides/command_reference/command_reference.pdf) · [Source](artifacts/guides/command_reference/)
+
+The three papers in [`artifacts/papers/`](artifacts/papers/) are earlier standalone versions of B.1, B.2, and B.1+B.2 combined; the `research/` track versions above supersede them.
 
 ---
 
@@ -156,3 +274,7 @@ apportionment/
 - [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — version history
 - [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
+
+## License
+
+[MIT](LICENSE) © 2026 Gio Della-Libera

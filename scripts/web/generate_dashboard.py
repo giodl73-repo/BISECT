@@ -414,9 +414,9 @@ def main():
     parser.add_argument('--version', type=str, required=True,
                        help='Version (e.g., v1, v2)')
     parser.add_argument('--partition-mode', type=str,
-                       choices=['unweighted', 'edge-weighted'],
+                       choices=['unweighted', 'edge-weighted', 'metis-vra'],
                        default='edge-weighted',
-                       help='Partition mode: unweighted or edge-weighted (default: edge-weighted)')
+                       help='Partition mode: unweighted, edge-weighted, or metis-vra (default: edge-weighted)')
     parser.add_argument('--output-dir', type=str,
                        help='Output directory (default: outputs/VERSION/YEAR, e.g., outputs/v1/2020)')
     parser.add_argument('--template', type=str,

@@ -244,10 +244,10 @@ def create_argument_parser():
                         help='Print commands without executing (debug mode)')
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Enable debug mode with progress delays')
-    parser.add_argument('-pm', '--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted'],
-                        help='Partitioning mode: "edge-weighted" (boundary length minimization, default) or "unweighted" (edge cut minimization for comparison)')
-    parser.add_argument('--processing-mode', type=str, default='batch', choices=['batch', 'streaming'],
-                        help='Processing mode: "batch" (all states per stage, default) or "streaming" (per-state pipeline). Batch mode processes all 50 states through stage N before any state starts stage N+1. Streaming mode lets each state flow through all stages independently.')
+    parser.add_argument('-pm', '--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted', 'metis-vra'],
+                        help='Partitioning mode: "edge-weighted" (boundary length minimization, default), "unweighted" (edge cut minimization), or "metis-vra" (VRA-aware multi-constraint)')
+    parser.add_argument('--processing-mode', type=str, default='streaming', choices=['batch', 'streaming'],
+                        help='Processing mode: "streaming" (per-state pipeline, default) or "batch" (all states per stage). Streaming lets each state flow through all stages independently via process_single_state.py.')
     parser.add_argument('--minimum-boundary-length', type=float, default=10.0,
                         help='Minimum shared boundary length (meters) to filter tiny adjacencies. Eliminates unrealistic corner touches. (default: 10, range: 0-100)')
     parser.add_argument('-rt', '--run-type', type=str, default='production', choices=['production', 'experiment', 'test'],
