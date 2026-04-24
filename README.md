@@ -29,22 +29,17 @@ Consolidated treatment with cross-census validation. Running the same algorithm 
 
 ## Figures
 
-<!--
-Drop generated maps under docs/figures/ (the .gitignore allows PNGs there) and uncomment the blocks below.
-Minnesota (8 districts, 3 rounds) and Alabama (7 districts) are good round-progression examples.
-
-### Bisection rounds — Minnesota
+### Bisection rounds — Minnesota (8 districts, 3 rounds)
 | Round 1 (1 → 2) | Round 2 (2 → 4) | Round 3 (4 → 8) |
 | :---: | :---: | :---: |
 | ![](docs/figures/minnesota_round_1.png) | ![](docs/figures/minnesota_round_2.png) | ![](docs/figures/minnesota_round_3.png) |
 
-### Bisection rounds — Alabama
+### Bisection rounds — Alabama (7 districts, 3 rounds)
 | Round 1 | Round 2 | Round 3 |
 | :---: | :---: | :---: |
 | ![](docs/figures/alabama_round_1.png) | ![](docs/figures/alabama_round_2.png) | ![](docs/figures/alabama_round_3.png) |
--->
 
-Maps are produced by the pipeline at `outputs/v1/{year}/states/{state}/maps/round_*.png`. Copy the ones you want to showcase into `docs/figures/` and uncomment the blocks above.
+Maps are produced by the pipeline at `outputs/V1/{year}/states/{state}/maps/rounds/round_*.png`.
 
 ## Quick Start
 
