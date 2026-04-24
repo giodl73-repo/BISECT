@@ -28,7 +28,7 @@ Because the algorithm minimizes the total weight of the edges it cuts — and ed
 
 Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
 
-It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 binary decisions. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
+It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of splitting. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
 
 ## Track record
 
