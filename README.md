@@ -2,9 +2,11 @@
 
 Every ten years, after the census, each state redraws its congressional districts. The process is notoriously political — legislators choose their voters, not the other way around. Salamander-shaped districts, packed minorities, cracked communities. It's been this way for two centuries.
 
-This project asks a simple question: **what would the map look like if a computer drew it instead — using only geography and population, with no knowledge of party registration, race, or voting history?**
+And computers have made it worse. Modern redistricting software lets mapmakers calculate the partisan effect of moving a single city block from one district to another, optimizing the map to a precision that was impossible by hand. The problem isn't that we need a computer to solve it. Computers are already being used — to gerrymander more precisely than ever before.
 
-The answer turns out to be pretty good. Fairer-shaped districts than most states draw for themselves. Population balance within a fraction of a percent. And the results are remarkably stable across census years, which suggests the algorithm is responding to geography — not to political opportunity.
+The question is which **method** to use. And the fairest method turns out to be the oldest one in the book: **divide it in half.**
+
+Split the state into two equal halves by population. Split each half again. Keep going until you have the right number of districts. It's the same principle as cutting a pizza, splitting an inheritance, or dividing a deck of cards — nobody gets to choose which half is theirs, so nobody gets an advantage. The shape of each piece is determined entirely by geography.
 
 **Headline result (2020 Census):** mean Polsby–Popper compactness **0.367**, a **+56% improvement** over the unweighted baseline and **+20% over enacted 2020 congressional districts**. 37 of 50 states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
@@ -24,9 +26,9 @@ Because the algorithm minimizes the total weight of the edges it cuts — and ed
 
 ## Why bisection
 
-Most redistricting algorithms either solve the whole problem at once (computationally intractable at scale) or use local search heuristics that can get stuck. Recursive bisection is fast, deterministic, and produces contiguous districts by construction. The METIS `-contig` flag guarantees no district is split into disconnected pieces.
+Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
 
-The recursive structure also makes the results interpretable: you can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 binary decisions.
+It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 binary decisions. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
 
 ## Track record
 
