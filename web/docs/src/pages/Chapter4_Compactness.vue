@@ -126,7 +126,7 @@
           <div class="card bg-red-50 border-l-4 border-red-500">
             <h3 class="text-xl font-heading font-bold mb-3 text-red-600">What METIS Sees</h3>
             <p class="text-sm mb-4">
-              METIS only sees the <strong>graph structure</strong>: nodes (census tracts) and
+              METIS only sees the <strong>graph structure</strong>: nodes (tracts) and
               edges (adjacency). It tries to minimize the number of edges crossing boundaries.
             </p>
             <p class="text-sm text-gray-700">
@@ -174,7 +174,7 @@
           <ConceptCard color="purple" icon="⚖️">
             <template #title>How It Works</template>
             <p class="text-sm mb-4">
-              Calculate the geographic distance between every pair of adjacent census tracts.
+              Calculate the geographic distance between every pair of adjacent tracts.
               Use this as the edge weight in METIS.
             </p>
             <ul class="text-xs space-y-1">
@@ -237,7 +237,7 @@ edge_weight = distance
     </ScrollSection>
 
     <!-- Interactive Compactness Slider -->
-    <ScrollSection bg-class="bg-white">
+    <ScrollSection bg-class="bg-gradient-to-br from-purple-50 to-pink-50">
       <div class="max-w-5xl mx-auto">
         <InteractiveSlider
           title="See Edge-Weighting in Action"
@@ -321,8 +321,8 @@ edge_weight = distance
 
         <div class="mt-8 text-center">
           <p class="text-story">
-            As you increase edge-weighting, districts become more circular and compact!
-            The Polsby-Popper score improves from <strong>0.28</strong> to <strong>0.44</strong>.
+            Watch districts transform from wiggly to compact!
+            Polsby-Popper score jumps from <strong>0.28</strong> to <strong>0.44</strong>.
           </p>
         </div>
       </div>
@@ -429,11 +429,12 @@ edge_weight = distance
     <ScrollSection bg-class="bg-white">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-4-accent">
-          Alabama: Before and After
+          Alabama's Transformation: Before and After
         </h2>
 
         <p class="text-story text-center mb-8">
-          Remember Alabama from Chapters 1-3? Let's see how edge-weighting improves its districts!
+          We've followed Alabama through 3 chapters—from tracts to graph to 7 districts.
+          Now see the dramatic difference edge-weighting makes!
         </p>
 
         <div class="grid md:grid-cols-2 gap-8 mb-12">
@@ -521,35 +522,37 @@ edge_weight = distance
     <!-- Key Takeaway -->
     <ScrollSection bg-class="bg-white">
       <div class="max-w-3xl mx-auto text-center">
-        <div class="inline-block bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div class="text-6xl mb-6">💡</div>
-          <h2 class="text-4xl font-heading font-black mb-6 chapter-4-accent">
+        <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 md:p-12 border-4 border-schoolhouse-purple animate-slide-up">
+          <div class="text-7xl mb-6 animate-bounce-subtle">💡</div>
+          <h2 class="text-5xl font-heading font-black mb-8 chapter-4-accent">
             Key Takeaway
           </h2>
-          <p class="text-2xl font-heading leading-relaxed">
-            By teaching the algorithm <span class="underline-purple">geography</span>, we make
-            districts <span class="underline-purple">56% more compact</span>!
+          <p class="text-3xl font-heading leading-relaxed font-bold">
+            By teaching the algorithm <span class="underline-purple bg-purple-100 px-2">geography</span>, we make
+            districts <span class="underline-purple bg-purple-100 px-2">56% more compact</span>!
           </p>
         </div>
       </div>
     </ScrollSection>
 
-    <!-- Next Chapter -->
-    <ScrollSection bg-class="chapter-4-bg">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl font-heading font-bold mb-6">What's Next?</h2>
-        <p class="text-xl text-gray-700 mb-4">
-          We have compact, balanced districts. But what about <strong>minority representation</strong>?
+    <!-- Cliffhanger -->
+    <ScrollSection bg-class="bg-gradient-to-br from-purple-500 to-red-500">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-4xl font-heading font-bold mb-6">
+          But compactness isn't everything...
+        </h2>
+        <p class="text-2xl leading-relaxed">
+          We've created beautiful, compact districts. But what about <strong>minority communities</strong>?
+          The Voting Rights Act says everyone deserves fair representation. Can algorithms deliver?
         </p>
-        <p class="text-xl text-gray-700 mb-8">
-          In Chapter 5, we'll explore the <strong>Voting Rights Act</strong> and the critical
-          42% threshold for proportional representation...
-        </p>
-        <router-link to="/chapter-5" class="btn btn-primary btn-lg">
-          Continue to Chapter 5 →
-        </router-link>
+        <div class="mt-8 text-lg opacity-90">
+          <p>The challenge: proportional representation without gerrymandering. 🗳️</p>
+        </div>
       </div>
     </ScrollSection>
+
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="4" />
   </div>
 </template>
 
@@ -560,6 +563,7 @@ import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
 import InteractiveSlider from '@/components/InteractiveSlider.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 
 // Computed values for interactive slider
 const sliderValue = ref(0)

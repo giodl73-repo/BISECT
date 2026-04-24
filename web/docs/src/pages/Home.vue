@@ -3,25 +3,50 @@
     <!-- Hero Section -->
     <section class="section-hero bg-gradient-schoolhouse relative overflow-hidden">
       <div class="container-custom text-center text-white relative z-10">
-        <h1 class="text-hero mb-6 animate-fade-in text-shadow-strong">
-          Algorithmic<br />Redistricting
+        <!-- The Problem (Hook) -->
+        <div class="mb-8 animate-fade-in">
+          <p class="text-2xl md:text-3xl font-semibold mb-4 text-white/95">
+            Every 10 years, politicians redraw district maps.
+          </p>
+          <p class="text-2xl md:text-3xl font-semibold text-yellow-300">
+            Sometimes they cheat.
+          </p>
+        </div>
+
+        <!-- The Impact -->
+        <div class="mb-8 animate-slide-up" style="animation-delay: 0.1s">
+          <p class="text-xl text-white/90">
+            In 2020, gerrymandering affected <strong class="text-yellow-300">37 million voters</strong>.
+          </p>
+          <p class="text-xl text-white/90 mt-2">
+            Your vote might matter less because of how lines are drawn.
+          </p>
+        </div>
+
+        <!-- The Question -->
+        <h1 class="text-5xl md:text-6xl font-heading font-black mb-6 animate-slide-up" style="animation-delay: 0.2s">
+          Can Computers<br />Do Better?
         </h1>
-        <p class="text-subhero mb-12 animate-slide-up text-white/90">
-          A Visual Journey Through Fair Districts
+
+        <p class="text-xl md:text-2xl mb-12 text-white/90 max-w-3xl mx-auto animate-slide-up" style="animation-delay: 0.3s">
+          Discover how algorithms can create fair, compact districts—without the politics.
         </p>
 
-        <div class="animate-slide-up" style="animation-delay: 0.2s">
-          <router-link to="/chapter-1" class="btn btn-lg bg-white text-schoolhouse-blue hover:bg-gray-100">
+        <div class="animate-slide-up" style="animation-delay: 0.4s">
+          <router-link to="/chapter-1" class="btn btn-lg bg-white text-schoolhouse-blue hover:bg-gray-100 shadow-2xl">
             Start the Journey →
           </router-link>
         </div>
 
-        <!-- Animated Visual Placeholder -->
-        <div class="mt-16 animate-fade-in" style="animation-delay: 0.4s">
-          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto">
-            <p class="text-lg text-white/80 italic">
-              "How do we divide a state into equal districts without gerrymandering?<br />
-              Let's find out together!"
+        <!-- Key Result Teaser -->
+        <div class="mt-16 animate-fade-in" style="animation-delay: 0.5s">
+          <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-8 max-w-4xl mx-auto border-2 border-white/20">
+            <p class="text-lg text-white/90 mb-4">
+              <strong class="text-yellow-300">The answer might surprise you.</strong>
+            </p>
+            <p class="text-base text-white/80">
+              Districts that are 56% more compact. 69 additional majority-minority districts.<br />
+              All created by algorithms in minutes—not months.
             </p>
           </div>
         </div>

@@ -190,10 +190,10 @@ edge_weight = distance × minority_factor
 
         <div class="grid md:grid-cols-2 gap-8 mb-12">
           <div class="card bg-white">
-            <h3 class="text-xl font-heading font-bold mb-4">Scenario: Alabama District Boundary</h3>
+            <h3 class="text-xl font-heading font-bold mb-4">Alabama's Final Chapter</h3>
             <p class="text-sm mb-4">
-              METIS needs to decide where to place the boundary between two districts.
-              Should it split through the urban minority community or around it?
+              Our friend Alabama from Chapters 1-5 faces one last challenge: balancing compactness
+              with minority representation. Watch edge-factor weighting solve it!
             </p>
             <div class="bg-gray-100 p-4 rounded mb-4">
               <p class="text-xs font-mono mb-2">Option A: Split through community</p>
@@ -540,6 +540,9 @@ edge_weight = distance × minority_factor
         </div>
       </div>
     </ScrollSection>
+
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="6" />
   </div>
 </template>
 
@@ -548,4 +551,5 @@ import Hero from '@/components/Hero.vue'
 import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 </script>

@@ -19,7 +19,7 @@
           </h2>
           <p class="text-story">
             The United States Census divides the country into approximately <strong>73,000 tiny pieces</strong>
-            called census tracts. Each tract is like a neighborhood—usually between 1,200 and 8,000 people.
+            called census tracts. Each one is like a neighborhood—usually between 1,200 and 8,000 people.
           </p>
         </div>
 
@@ -27,8 +27,8 @@
           src="/figures/chapter1/alabama_tracts.png"
           alt="Census tracts in Alabama"
         >
-          Alabama's 1,181 census tracts. Each colored region represents one tract—
-          these are the building blocks we'll use to create 7 congressional districts.
+          Alabama's 1,181 tracts. Each colored region represents one—
+          these are the building blocks we'll use to create 7 districts.
         </FigureCard>
       </div>
     </ScrollSection>
@@ -44,7 +44,7 @@
           <ConceptCard color="blue" icon="🏘️">
             <template #title>Neighborhoods</template>
             <p>
-              Census tracts are small, permanent geographic areas designed to be relatively
+              Tracts are small, permanent geographic areas designed to be relatively
               homogeneous with respect to population characteristics, economic status, and living conditions.
             </p>
           </ConceptCard>
@@ -69,8 +69,8 @@
         <div class="card bg-blue-50 border-l-4 border-schoolhouse-blue">
           <h3 class="text-2xl font-heading font-bold mb-3 chapter-1-accent">Key Insight</h3>
           <p class="text-story">
-            Census tracts are the <strong>atomic units</strong> of redistricting. We never split a tract—
-            each one stays whole and gets assigned to exactly one congressional district.
+            Tracts are the <strong>atomic units</strong> of redistricting. We never split a tract—
+            each one stays whole and gets assigned to exactly one district.
           </p>
         </div>
       </div>
@@ -86,7 +86,7 @@
         <p class="text-story text-center mb-8">
           Redistricting is a complex spatial problem. But here's the insight: With most programming problems,
           the first step is to <strong>solve the simplest version</strong>. For redistricting, that's splitting
-          a region into two equal-population parts.
+          a region into two equal-population regions.
         </p>
 
         <div class="card bg-blue-50 border-l-4 border-schoolhouse-blue mb-12">
@@ -96,9 +96,9 @@
             that captures all the key challenges:
           </p>
           <ul class="space-y-2 text-story">
-            <li>• Balancing population between two parts</li>
+            <li>• Balancing population between two regions</li>
             <li>• Maintaining geographic compactness</li>
-            <li>• Ensuring both parts stay connected (contiguity)</li>
+            <li>• Ensuring both regions stay connected (contiguity)</li>
           </ul>
           <p class="text-story mt-4">
             Once we master this building block, scaling up to 7, 8, or even 52 districts becomes straightforward
@@ -118,7 +118,7 @@
           <ConceptCard color="blue" icon="🔗">
             <template #title>Ensures Contiguity</template>
             <p class="text-sm">
-              Any partition must form connected components. If two tracts are in the same district,
+              Any region must form connected components. If two tracts are in the same district,
               there must be a path of edges between them.
             </p>
           </ConceptCard>
@@ -142,7 +142,7 @@
         </h2>
 
         <p class="text-story text-center mb-12">
-          Let's see this transformation with a real example: twelve census tracts from Minneapolis, Minnesota.
+          Let's see this transformation with a real example: twelve tracts from Minneapolis, Minnesota.
           These aren't hypothetical shapes—they're actual tract boundaries that follow streets, rivers,
           and neighborhoods.
         </p>
@@ -159,12 +159,12 @@
               <div class="bg-blue-50 rounded-lg p-6">
                 <div class="aspect-square bg-blue-100 rounded flex items-center justify-center mb-4">
                   <div class="text-gray-400 text-center">
-                    <p class="text-sm">12 real census tracts</p>
+                    <p class="text-sm">12 real tracts</p>
                     <p class="text-xs mt-2">Hennepin County, Minnesota (2010)</p>
                   </div>
                 </div>
                 <p class="text-sm text-gray-700">
-                  Each colored region is a census tract—small areas of 1,200-8,000 people.
+                  Each colored region is a tract—small areas of 1,200-8,000 people.
                   Boundaries follow streets, rivers, and railroad tracks.
                 </p>
               </div>
@@ -222,7 +222,7 @@
           <ConceptCard color="blue" icon="1️⃣">
             <template #title>Load Geometries</template>
             <p class="text-sm">
-              Read census tract boundaries from TIGER/Line shapefiles. Each tract has a unique
+              Read tract boundaries from TIGER/Line shapefiles. Each tract has a unique
               identifier (GEOID) and polygon geometry.
             </p>
           </ConceptCard>
@@ -252,7 +252,7 @@
             For our Minneapolis example with 12 tracts:
           </p>
           <ul class="space-y-2 text-story">
-            <li>• <strong>12 vertices</strong>: One for each census tract</li>
+            <li>• <strong>12 vertices</strong>: One for each tract</li>
             <li>• <strong>19 edges</strong>: Connections between neighboring tracts</li>
             <li>• <strong>Population data</strong>: Each vertex sized by tract population</li>
             <li>• <strong>Contiguity preserved</strong>: Connected in geography = connected in graph</li>
@@ -266,14 +266,14 @@
     </ScrollSection>
 
     <!-- Interactive Graph Builder -->
-    <ScrollSection bg-class="bg-white">
+    <ScrollSection bg-class="bg-gradient-to-br from-blue-50 to-purple-50">
       <div class="max-w-5xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-1-accent">
           🎨 Interactive: Watch Tracts Become a Graph
         </h2>
 
         <p class="text-story text-center mb-8">
-          Click <strong>"Show Tracts"</strong> to see census tracts appear, then
+          Click <strong>"Show Tracts"</strong> to see tracts appear, then
           <strong>"Add Edges"</strong> to watch neighbors connect!
         </p>
 
@@ -287,13 +287,12 @@
         <div class="mt-8 grid md:grid-cols-2 gap-6">
           <div class="card bg-blue-50">
             <h3 class="text-lg font-heading font-bold mb-3 text-schoolhouse-blue">
-              👀 What to Watch
+              👀 Watch For
             </h3>
             <ul class="text-sm space-y-2">
-              <li>• Tracts appear as blue nodes</li>
-              <li>• Edges connect between neighbors</li>
-              <li>• Toggle between geographic and network views</li>
-              <li>• Graph density shows avg connections per tract</li>
+              <li>• Blue nodes = tracts</li>
+              <li>• Lines = neighbor connections</li>
+              <li>• Toggle views to compare</li>
             </ul>
           </div>
 
@@ -302,8 +301,8 @@
               🔍 Key Insight
             </h3>
             <p class="text-sm">
-              This is a simplified version with 30 tracts. Real Alabama has 1,181 tracts
-              and ~3,200 edges! The algorithm works the same way regardless of size.
+              This demo has 30 tracts. Real Alabama has 1,181 with ~3,200 edges.
+              Same algorithm, any size!
             </p>
           </div>
         </div>
@@ -321,9 +320,9 @@
           <div>
             <h3 class="text-2xl font-heading font-bold mb-4">The Numbers</h3>
             <ul class="space-y-3 text-story">
-              <li><strong>1,181 census tracts</strong> cover the entire state</li>
+              <li><strong>1,181 tracts</strong> cover the entire state</li>
               <li><strong>~3,200 edges</strong> connect neighboring tracts</li>
-              <li><strong>7 congressional districts</strong> to create</li>
+              <li><strong>7 districts</strong> to create</li>
               <li><strong>5.03 million people</strong> total population (2020 census)</li>
             </ul>
           </div>
@@ -345,8 +344,8 @@
         <div class="card bg-gradient-green-blue text-white">
           <h3 class="text-2xl font-heading font-bold mb-4">Follow Alabama's Journey</h3>
           <p class="text-lg mb-4">
-            We'll use Alabama as our example throughout all 6 chapters, showing how 1,181 census
-            tracts become 7 congressional districts through recursive bisection.
+            We'll use Alabama as our example throughout all 6 chapters, showing how 1,181 tracts
+            become 7 districts through recursive bisection.
           </p>
           <div class="bg-white/20 rounded-lg p-8">
             <p class="text-sm mb-2">Coming in Chapter 2:</p>
@@ -359,14 +358,30 @@
     <!-- Key Takeaway -->
     <ScrollSection bg-class="chapter-1-bg">
       <div class="max-w-3xl mx-auto text-center">
-        <div class="inline-block bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div class="text-6xl mb-6">💡</div>
-          <h2 class="text-4xl font-heading font-black mb-6 chapter-1-accent">
+        <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 md:p-12 border-4 border-schoolhouse-blue animate-slide-up">
+          <div class="text-7xl mb-6 animate-bounce-subtle">💡</div>
+          <h2 class="text-5xl font-heading font-black mb-8 chapter-1-accent">
             Key Takeaway
           </h2>
-          <p class="text-2xl font-heading leading-relaxed">
-            A state isn't just a shape—it's a <span class="underline-blue">network of connected neighborhoods</span>!
+          <p class="text-3xl font-heading leading-relaxed font-bold">
+            A state isn't just a shape—it's a <span class="underline-blue bg-blue-100 px-2">network of connected neighborhoods</span>!
           </p>
+        </div>
+      </div>
+    </ScrollSection>
+
+    <!-- Cliffhanger -->
+    <ScrollSection bg-class="bg-gradient-to-br from-blue-500 to-orange-500">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-4xl font-heading font-bold mb-6">
+          But here's the problem...
+        </h2>
+        <p class="text-2xl leading-relaxed">
+          We've got a graph. Now what? Alabama needs <strong>2 perfectly balanced regions</strong>.
+          How do you cut a state in half when cities and rural areas have wildly different populations?
+        </p>
+        <div class="mt-8 text-lg opacity-90">
+          <p>The answer involves an algorithm from supercomputing...</p>
         </div>
       </div>
     </ScrollSection>

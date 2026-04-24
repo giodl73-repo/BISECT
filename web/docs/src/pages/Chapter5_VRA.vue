@@ -70,7 +70,7 @@
           <ConceptCard color="red" icon="⚖️">
             <template #title>Proportional Representation</template>
             <p class="text-sm">
-              If 30% of a state's population is Black, ideally ~30% of that state's representatives
+              If 30% of a state's population is Black, then ideally ~30% of that state's representatives
               should be elected from majority-Black districts.
             </p>
           </ConceptCard>
@@ -285,7 +285,7 @@
     </ScrollSection>
 
     <!-- Interactive VRA Explorer -->
-    <ScrollSection bg-class="bg-white">
+    <ScrollSection bg-class="bg-gradient-to-br from-red-50 to-orange-50">
       <div class="max-w-6xl mx-auto">
         <InteractiveMap
           title="🗺️ VRA Explorer: 50-State Analysis"
@@ -385,35 +385,37 @@
     <!-- Key Takeaway -->
     <ScrollSection bg-class="bg-white">
       <div class="max-w-3xl mx-auto text-center">
-        <div class="inline-block bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div class="text-6xl mb-6">💡</div>
-          <h2 class="text-4xl font-heading font-black mb-6 chapter-5-accent">
+        <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 md:p-12 border-4 border-schoolhouse-red animate-slide-up">
+          <div class="text-7xl mb-6 animate-bounce-subtle">💡</div>
+          <h2 class="text-5xl font-heading font-black mb-8 chapter-5-accent">
             Key Takeaway
           </h2>
-          <p class="text-2xl font-heading leading-relaxed">
-            States with <span class="underline-red">42%+ minority population</span> can achieve
-            <span class="underline-red">proportional representation</span> through geography alone!
+          <p class="text-3xl font-heading leading-relaxed font-bold">
+            States with <span class="underline-red bg-red-100 px-2">42%+ minority population</span> can achieve
+            <span class="underline-red bg-red-100 px-2">proportional representation</span> through geography alone!
           </p>
         </div>
       </div>
     </ScrollSection>
 
-    <!-- Next Chapter -->
-    <ScrollSection bg-class="chapter-5-bg">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl font-heading font-bold mb-6">What's Next?</h2>
-        <p class="text-xl text-gray-700 mb-4">
-          We know VRA compliance is possible. But how do we balance it with <strong>compactness</strong>?
+    <!-- Cliffhanger -->
+    <ScrollSection bg-class="bg-gradient-to-br from-red-500 to-yellow-500">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-4xl font-heading font-bold mb-6">
+          But can we have both?
+        </h2>
+        <p class="text-2xl leading-relaxed">
+          Compactness (Chapter 4) vs. minority representation (Chapter 5)—they seem like
+          <strong>competing goals</strong>. Pick one, lose the other. Unless...
         </p>
-        <p class="text-xl text-gray-700 mb-8">
-          In Chapter 6, we'll discover the <strong>edge-factor solution</strong> that achieves
-          both goals simultaneously...
-        </p>
-        <router-link to="/chapter-6" class="btn btn-primary btn-lg">
-          Continue to Chapter 6 →
-        </router-link>
+        <div class="mt-8 text-lg opacity-90">
+          <p>What if there's a way to optimize for both at once? ⚖️</p>
+        </div>
       </div>
     </ScrollSection>
+
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="5" />
   </div>
 </template>
 
@@ -424,6 +426,7 @@ import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
 import InteractiveMap from '@/components/InteractiveMap.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 
 // Simplified state data for VRA Explorer (key states only)
 const statesData = ref([

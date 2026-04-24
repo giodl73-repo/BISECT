@@ -19,7 +19,7 @@
           </h2>
           <p class="text-story">
             In Chapter 2, we learned how to split Alabama into <strong>2 regions</strong>.
-            But Alabama needs <strong>7 congressional districts</strong>! How do we get from 2 to 7?
+            But Alabama needs <strong>7 districts</strong>! How do we get from 2 to 7?
           </p>
           <p class="text-story mt-4">
             The answer: <strong>Keep splitting!</strong> Just like a family tree grows through
@@ -115,8 +115,13 @@
     <ScrollSection bg-class="bg-white">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-3-accent">
-          Alabama's Recursive Bisection: Round by Round
+          Alabama's Journey Continues: Round by Round
         </h2>
+
+        <p class="text-story text-center mb-8">
+          In Chapter 2, we split Alabama in half. Now watch as those 2 regions become 4, then 7
+          final districts. Same algorithm, applied recursively!
+        </p>
 
         <!-- Round 1 -->
         <div class="mb-16">
@@ -197,14 +202,14 @@
             alt="Alabama Round 3: Final 7 districts"
           >
             <strong>Round 3 (Final):</strong> All remaining regions split into individual districts.
-            Alabama now has exactly 7 congressional districts, each with ~718,700 people (±0.5%).
+            Alabama now has exactly 7 districts, each with ~718,700 people (±0.5%).
           </FigureCard>
 
           <div class="card bg-gradient-green-blue text-white mt-6">
             <h3 class="text-xl font-heading font-bold mb-3">Mission Accomplished! 🎉</h3>
             <p>
-              Through 3 rounds of recursive bisection, we've transformed Alabama's 1,181 census
-              tracts into 7 perfectly balanced, contiguous congressional districts.
+              Through 3 rounds of recursive bisection, we've transformed Alabama's 1,181 tracts
+              into 7 perfectly balanced, contiguous districts.
             </p>
           </div>
         </div>
@@ -378,7 +383,7 @@ function partition(region, num_districts):
 
     <!-- Interactive Tree Placeholder -->
     <!-- Interactive Recursion Tree -->
-    <ScrollSection bg-class="bg-white">
+    <ScrollSection bg-class="bg-gradient-to-br from-green-50 to-blue-50">
       <div class="max-w-5xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-3-accent">
           🌳 Interactive Recursion Tree
@@ -398,13 +403,12 @@ function partition(region, num_districts):
         <div class="mt-8 grid md:grid-cols-2 gap-6">
           <div class="card bg-green-50">
             <h3 class="text-lg font-heading font-bold mb-3 text-green-600">
-              👀 What to Watch
+              👀 Watch the Tree Grow
             </h3>
             <ul class="text-sm space-y-2">
-              <li>• Start with 1 node (Alabama, 7 districts)</li>
-              <li>• Round 1: Split [3, 4] → 2 regions</li>
-              <li>• Round 2: Split both regions → 4 parts</li>
-              <li>• Round 3: Final splits → 7 districts!</li>
+              <li>• Round 1: [3, 4] split</li>
+              <li>• Round 2: 4 regions</li>
+              <li>• Round 3: 7 final districts!</li>
             </ul>
           </div>
 
@@ -413,8 +417,8 @@ function partition(region, num_districts):
               🎯 Key Insight
             </h3>
             <p class="text-sm">
-              Green circles = final districts (leaves). Orange circles = regions that still need
-              splitting. The tree grows until every leaf is a single district!
+              Green = done. Orange = needs more splitting.
+              Tree grows until all leaves are districts!
             </p>
           </div>
         </div>
@@ -497,7 +501,7 @@ function partition(region, num_districts):
             <h3 class="text-xl font-heading font-bold mb-4 text-center">Alabama Final Districts</h3>
             <FigureCard
               src="/figures/chapter3/alabama_final.png"
-              alt="Alabama's 7 congressional districts"
+              alt="Alabama's 7 districts"
             >
               Alabama's 7 districts created through asymmetric recursive bisection.
               Notice how the splits adapt to the odd number!
@@ -508,7 +512,7 @@ function partition(region, num_districts):
             <h3 class="text-xl font-heading font-bold mb-4 text-center">Colorado Final Districts</h3>
             <FigureCard
               src="/figures/chapter3/colorado_final.png"
-              alt="Colorado's 8 congressional districts"
+              alt="Colorado's 8 districts"
             >
               Colorado's 8 districts created through perfectly symmetric splits.
               Power of 2 creates a clean binary tree!
@@ -562,35 +566,37 @@ function partition(region, num_districts):
     <!-- Key Takeaway -->
     <ScrollSection bg-class="chapter-3-bg">
       <div class="max-w-3xl mx-auto text-center">
-        <div class="inline-block bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div class="text-6xl mb-6">💡</div>
-          <h2 class="text-4xl font-heading font-black mb-6 chapter-3-accent">
+        <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 md:p-12 border-4 border-schoolhouse-green animate-slide-up">
+          <div class="text-7xl mb-6 animate-bounce-subtle">💡</div>
+          <h2 class="text-5xl font-heading font-black mb-8 chapter-3-accent">
             Key Takeaway
           </h2>
-          <p class="text-2xl font-heading leading-relaxed">
-            Like a <span class="underline-green">family tree</span>, recursive bisection creates
-            <span class="underline-green">any number of districts</span> through repeated splitting!
+          <p class="text-3xl font-heading leading-relaxed font-bold">
+            Like a <span class="underline-green bg-green-100 px-2">family tree</span>, recursive bisection creates
+            <span class="underline-green bg-green-100 px-2">any number of districts</span> through repeated splitting!
           </p>
         </div>
       </div>
     </ScrollSection>
 
-    <!-- Next Chapter -->
-    <ScrollSection bg-class="bg-white">
-      <div class="max-w-4xl mx-auto text-center">
-        <h2 class="text-4xl font-heading font-bold mb-6">What's Next?</h2>
-        <p class="text-xl text-gray-700 mb-4">
-          We can create 7 balanced districts for Alabama. But are they <strong>compact</strong>?
+    <!-- Cliffhanger -->
+    <ScrollSection bg-class="bg-gradient-to-br from-green-500 to-purple-500">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-4xl font-heading font-bold mb-6">
+          But there's a problem...
+        </h2>
+        <p class="text-2xl leading-relaxed">
+          These districts are balanced and connected. But some look like <strong>snakes</strong>
+          winding across the state. How do we make them <em>compact</em>—round and tidy?
         </p>
-        <p class="text-xl text-gray-700 mb-8">
-          In Chapter 4, we'll learn how <strong>edge-weighting</strong> makes districts 56% more
-          geographically sensible...
-        </p>
-        <router-link to="/chapter-4" class="btn btn-primary btn-lg">
-          Continue to Chapter 4 →
-        </router-link>
+        <div class="mt-8 text-lg opacity-90">
+          <p>The fix: teach the algorithm about geography. 📐</p>
+        </div>
       </div>
     </ScrollSection>
+
+    <!-- Chapter Navigation -->
+    <ChapterNavigation :current-chapter="3" />
   </div>
 </template>
 
@@ -600,4 +606,5 @@ import ScrollSection from '@/components/ScrollSection.vue'
 import FigureCard from '@/components/FigureCard.vue'
 import ConceptCard from '@/components/ConceptCard.vue'
 import InteractiveTree from '@/components/InteractiveTree.vue'
+import ChapterNavigation from '@/components/ChapterNavigation.vue'
 </script>

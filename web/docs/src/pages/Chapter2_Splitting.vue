@@ -28,7 +28,7 @@
           <ConceptCard color="orange" icon="🎂">
             <template #title>The Challenge</template>
             <p>
-              Alabama has 5.03 million people across 1,181 census tracts. We need to split it into
+              Alabama has 5.03 million people across 1,181 tracts. We need to split it into
               <strong>2 regions</strong> that each have exactly half the population (±0.5%).
             </p>
           </ConceptCard>
@@ -176,7 +176,7 @@
     </ScrollSection>
 
     <!-- Interactive Split Simulator -->
-    <ScrollSection bg-class="bg-white">
+    <ScrollSection bg-class="bg-gradient-to-br from-orange-50 to-red-50">
       <div class="max-w-5xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-2-accent">
           ⚡ Interactive: Run METIS Yourself
@@ -197,14 +197,12 @@
             🎯 What Just Happened?
           </h3>
           <p class="text-sm mb-4">
-            METIS analyzed thousands of possible ways to split the state and found the one
-            that minimizes edge cut while balancing population. The whole process took
-            milliseconds!
+            METIS found the optimal split in milliseconds—minimizing edge cut while
+            balancing population perfectly.
           </p>
           <p class="text-sm">
-            Notice how the split isn't perfectly equal (42.8% vs 57.2% for Alabama) because
-            census tracts are indivisible units. The algorithm gets as close as possible while
-            respecting tract boundaries.
+            The split isn't exactly 50-50 (42.8% vs 57.2%) because tracts can't be divided.
+            The algorithm gets as close as possible.
           </p>
         </div>
       </div>
@@ -214,13 +212,13 @@
     <ScrollSection bg-class="bg-white">
       <div class="max-w-4xl mx-auto">
         <h2 class="text-4xl font-heading font-bold mb-8 text-center chapter-2-accent">
-          Alabama's First Split
+          Alabama's Journey Begins: The First Split
         </h2>
 
         <p class="text-story text-center mb-8">
-          Let's see METIS in action! We'll split Alabama into 2 regions, aiming for roughly
-          equal population. Remember: Alabama needs <strong>7 districts total</strong>, so this
-          first split creates regions that will eventually become [3 districts] and [4 districts].
+          Remember Alabama from Chapter 1? Those 1,181 tracts we turned into a graph?
+          Now watch METIS split them into 2 regions. Alabama needs <strong>7 districts total</strong>,
+          so this first split creates [3 districts] and [4 districts].
         </p>
 
         <FigureCard
@@ -273,7 +271,7 @@
           <ConceptCard color="orange" icon="📊">
             <template #title>Edge Cut</template>
             <p class="text-sm">
-              Alabama's first split has an edge cut of ~180 edges (out of 3,200 total edges in
+              Alabama's first split has an edge cut of ~180 edges (out of ~3,200 total edges in
               the graph).
             </p>
           </ConceptCard>
@@ -356,15 +354,31 @@
     <!-- Key Takeaway -->
     <ScrollSection bg-class="bg-white">
       <div class="max-w-3xl mx-auto text-center">
-        <div class="inline-block bg-white rounded-2xl shadow-xl p-8 md:p-12">
-          <div class="text-6xl mb-6">💡</div>
-          <h2 class="text-4xl font-heading font-black mb-6 chapter-2-accent">
+        <div class="inline-block bg-white rounded-2xl shadow-2xl p-8 md:p-12 border-4 border-schoolhouse-orange animate-slide-up">
+          <div class="text-7xl mb-6 animate-bounce-subtle">💡</div>
+          <h2 class="text-5xl font-heading font-black mb-8 chapter-2-accent">
             Key Takeaway
           </h2>
-          <p class="text-2xl font-heading leading-relaxed">
-            You can split <span class="underline-orange">any state into 2 perfectly balanced parts</span>
+          <p class="text-3xl font-heading leading-relaxed font-bold">
+            You can split <span class="underline-orange bg-orange-100 px-2">any state into 2 perfectly balanced parts</span>
             using graph partitioning!
           </p>
+        </div>
+      </div>
+    </ScrollSection>
+
+    <!-- Cliffhanger -->
+    <ScrollSection bg-class="bg-gradient-to-br from-orange-500 to-green-500">
+      <div class="max-w-3xl mx-auto text-center text-white">
+        <h2 class="text-4xl font-heading font-bold mb-6">
+          Wait—Alabama needs 7 districts, not 2!
+        </h2>
+        <p class="text-2xl leading-relaxed">
+          METIS can split a state in half. But what if we need 7 regions? Or 52?
+          <strong>Here's where the magic happens...</strong>
+        </p>
+        <div class="mt-8 text-lg opacity-90">
+          <p>The secret: keep splitting. Like a family tree. 🌳</p>
         </div>
       </div>
     </ScrollSection>
