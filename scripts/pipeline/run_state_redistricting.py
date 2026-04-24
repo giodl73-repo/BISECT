@@ -190,77 +190,66 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
 
     if partition_mode == 'metis-vra':
         from apportionment.partition import vra_utils
-        from apportionment.partition import vra_targets
 
         vra_mode = True
-        print(f"[VRA] Enabling VRA-aware partitioning mode")
+        print(f"[VRA] Enabling VRA minority edge-weighting mode")
 
-        # Load tract geometries for merging with demographics
+        # Load tract geometries and demographics
         tracts_gdf = gpd.read_parquet(tracts_file)
 
-        # Load demographics
         try:
-            demographics = vra_utils.load_tract_demographics(state_name.lower().replace(' ', '_'), year=int(year))
+            demographics = vra_utils.load_tract_demographics(
+                state_name.lower().replace(' ', '_'), year=int(year)
+            )
             print(f"[VRA] Loaded demographics for {len(demographics)} tracts")
         except FileNotFoundError as e:
             print(f"ERROR: Demographics not found for {state_name}: {e}")
-            print(f"       VRA mode requires demographic data. Falling back to standard mode.")
+            print(f"       VRA mode requires demographic data. Falling back to edge-weighted.")
+            partition_mode = 'edge-weighted'
+            edge_weights = graph_data.get('edge_weights', None)
             vra_mode = False
 
         if vra_mode:
-            # Create multi-constraint vertex weights (population + minority VAP)
-            vertex_weights_vra, tracts_with_demo = vra_utils.create_vra_vertex_weights(tracts_gdf, demographics)
-
-            total_minority = vertex_weights_vra[:, 1].sum()
-            state_minority_pct = (total_minority / total_pop)
-
+            # Merge demographics to get per-tract minority percentage
+            _, tracts_with_demo = vra_utils.create_vra_vertex_weights(tracts_gdf, demographics)
+            state_minority_pct = tracts_with_demo['pct_minority'].mean()
             print(f"[VRA] State minority population: {state_minority_pct*100:.1f}%")
 
-            # Get target MM districts (auto-detect or use specified)
-            if target_mm_districts is None:
-                target_mm_districts = vra_utils.get_vra_target_mm_districts(state_name.lower().replace(' ', '_'))
-                if target_mm_districts is None:
-                    # Default: Create MM districts proportional to minority population
-                    target_mm_districts = max(1, int(num_districts * state_minority_pct))
-                print(f"[VRA] Auto-detected target: {target_mm_districts} majority-minority districts")
-            else:
-                print(f"[VRA] User-specified target: {target_mm_districts} majority-minority districts")
+            # Edge-weighted VRA approach (Paper D.0):
+            # - Vertex weights: 1D population only (preserves ±0.5% population balance)
+            # - Edge weights: α for minority-minority edges, 1 for all others
+            # - No tpwgts, no ubvec, no multi-constraint vertex weights
+            # - Optimal: threshold=40%, weight=5x (80% VRA success rate across 5 covered states)
+            #
+            # This encodes minority clustering into the graph structure itself rather than
+            # using multi-constraint optimization, which sacrifices population balance.
+            MINORITY_THRESHOLD = 0.40   # 40% minority tract threshold (Paper D.0 optimal)
+            MINORITY_WEIGHT = 10.0      # α = 10× for minority-minority edges (Paper D.0: 5-10x range)
+            NORMAL_WEIGHT = 1.0         # all other edges
 
-            # Parse tree structure if provided
-            first_split = None
-            if tree_structure is not None:
-                try:
-                    left, right = map(int, tree_structure.split(','))
-                    if left + right != num_districts:
-                        print(f"[WARNING] Tree structure {tree_structure} doesn't sum to {num_districts}, using default")
-                    else:
-                        first_split = (left, right)
-                        print(f"[VRA] Using custom tree structure: {num_districts} -> [{left}, {right}]")
-                except ValueError:
-                    print(f"[WARNING] Invalid tree structure format: {tree_structure}, using default")
+            is_minority = (tracts_with_demo['pct_minority'] >= MINORITY_THRESHOLD).values
+            n_tracts = len(tracts_with_demo)
 
-            # Create VRA target tree (bottom-up target calculation)
-            vra_target_tree = vra_targets.create_vra_target_tree(
-                num_districts=num_districts,
-                target_mm_districts=target_mm_districts,
-                state_minority_pct=state_minority_pct,
-                mm_target_pct=0.60,  # 60% minority in MM districts
-                first_split=first_split
-            )
+            # Build edge weight dict from adjacency (replace boundary lengths with
+            # simple categorical weights — minority-minority vs other)
+            adj = graph_data['adjacency']
+            vra_edge_weights = {}
+            boosted = 0
+            for i in range(n_tracts):
+                for j in adj[i]:
+                    if i < j:
+                        if is_minority[i] and is_minority[j]:
+                            vra_edge_weights[(i, j)] = MINORITY_WEIGHT
+                            boosted += 1
+                        else:
+                            vra_edge_weights[(i, j)] = NORMAL_WEIGHT
 
-            print(f"[VRA] Created VRA target tree for recursive bisection")
-            print(f"[VRA] Target: {target_mm_districts} districts at 60%+ minority")
+            minority_tracts = is_minority.sum()
+            print(f"[VRA] {minority_tracts} tracts ≥{MINORITY_THRESHOLD*100:.0f}% minority, "
+                  f"{boosted} minority-minority edges weighted {MINORITY_WEIGHT:.0f}× "
+                  f"(of {len(vra_edge_weights)} total)")
 
-            # Show root split targets
-            root_targets = vra_target_tree['target_weights']
-            left_dists = vra_target_tree['left_count']
-            right_dists = vra_target_tree['right_count']
-            print(f"[VRA] Root split ({num_districts} -> {left_dists}|{right_dists}): " +
-                  f"Left=[{root_targets[0][0]:.3f} pop, {root_targets[0][1]:.3f} min], " +
-                  f"Right=[{root_targets[1][0]:.3f} pop, {root_targets[1][1]:.3f} min]")
-
-            # Replace vertex_weights with multi-constraint version
-            vertex_weights = vertex_weights_vra
+            edge_weights = vra_edge_weights
 
     partitioner = RecursiveBisection(
         adjacency=adjacency,
@@ -276,8 +265,8 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
         niter=niter,
         objtype=objtype,
         seed=seed,
-        vra_mode=vra_mode,
-        vra_target_weights=vra_target_weights
+        vra_mode=False,          # VRA is now pure edge weighting — no multi-constraint
+        vra_target_weights=None
     )
 
     # Run the algorithm
