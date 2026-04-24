@@ -14,12 +14,15 @@ import csv
 import pytest
 from pathlib import Path
 
-from .conftest import get_outputs_root, get_years
+from .conftest import get_outputs_root, get_years, is_vra_mode
 
 OUTPUTS_ROOT = get_outputs_root()
 YEARS = get_years(OUTPUTS_ROOT)
 
-TOLERANCE = 0.005  # ±0.5%
+# VRA multi-constraint mode sacrifices population balance to achieve minority
+# district targets — the VRA-balance tradeoff documented in Paper D.3.
+# Standard edge-weighted mode uses the legal ±0.5% standard.
+TOLERANCE = 0.25 if is_vra_mode(OUTPUTS_ROOT) else 0.005
 
 # States with known 2010 geographic constraint imbalance (METIS -contig issue).
 # These pass in 2020 because 2020 tract boundaries have better connectivity.

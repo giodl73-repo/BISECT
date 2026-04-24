@@ -96,6 +96,24 @@ def pipeline_version(request) -> str:
     return getattr(request.config, '_pipeline_version', 'V3')
 
 
+def get_partition_mode(root: Path | None = None) -> str:
+    """Read partition_mode from version.json. Returns 'edge_weighted', 'metis_vra', etc."""
+    if root is None:
+        root = get_outputs_root()
+    version_json = root / 'version.json'
+    if version_json.exists():
+        import json
+        with open(version_json) as f:
+            meta = json.load(f)
+        return meta.get('algorithm', {}).get('partition_mode', 'edge_weighted')
+    return 'edge_weighted'
+
+
+def is_vra_mode(root: Path | None = None) -> bool:
+    """Return True if this is a VRA multi-constraint run."""
+    return get_partition_mode(root) == 'metis_vra'
+
+
 @pytest.fixture(scope='session')
 def pipeline_root(pipeline_version) -> Path:
     root = Path('outputs') / pipeline_version

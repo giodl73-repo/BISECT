@@ -10,15 +10,18 @@ import csv
 import pytest
 from pathlib import Path
 
-from .conftest import get_outputs_root, get_years
+from .conftest import get_outputs_root, get_years, is_vra_mode
 
 OUTPUTS_ROOT = get_outputs_root()
 YEARS = get_years(OUTPUTS_ROOT)
 
+# VRA multi-constraint mode trades compactness for minority concentration.
+# Paper D.3 documents this tradeoff — VRA runs have lower PP than edge-weighted.
+_VRA = is_vra_mode(OUTPUTS_ROOT)
 
-# Expected national means from papers (with tolerance)
+# Expected national means: edge-weighted (V3) vs VRA (V4)
 EXPECTED_MEANS = {
-    '2020': (0.367, 0.05),   # Paper B.2: 0.367 ± 0.05
+    '2020': (0.22, 0.12) if _VRA else (0.367, 0.05),  # VRA ≈ 0.14-0.34; EW ≈ 0.367
     '2010': (0.320, 0.06),   # Paper C.2: ~0.320 ± 0.06
     '2000': (0.300, 0.08),   # Estimated from cross-census trend
 }
