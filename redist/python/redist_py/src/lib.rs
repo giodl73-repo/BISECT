@@ -7,7 +7,10 @@ use redist_core::{
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
     metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
-use redist_data::{read_tiger_tracts, build_adjacency_graph, connect_island_components};
+use redist_data::{
+    read_tiger_tracts, build_adjacency_graph, connect_island_components,
+    serialize_adjacency, deserialize_adjacency, AdjacencyGraph,
+};
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -149,6 +152,42 @@ fn read_tiger_shp(
         let wkb_bytes = pyo3::types::PyBytes::new_bound(py, &r.geometry_wkb).unbind();
         Ok((r.geoid.clone(), wkb_bytes, r.aland, r.awater))
     }).collect()
+}
+
+// ---------------------------------------------------------------------------
+// Adjacency serialization
+// ---------------------------------------------------------------------------
+
+/// Serialize an adjacency graph dict to .adj.bin bytes.
+/// Input dict: {'adjacency': list[list[int]], 'edge_weights': dict, 'n_vertices': int, 'n_edges': int}
+#[pyfunction]
+fn adjacency_to_bin(
+    py: Python<'_>,
+    adjacency: Vec<Vec<usize>>,
+    edge_weights: HashMap<(usize, usize), f64>,
+    n_vertices: usize,
+    n_edges: usize,
+) -> PyResult<pyo3::Py<pyo3::types::PyBytes>> {
+    let graph = AdjacencyGraph { adjacency, edge_weights, n_vertices, n_edges };
+    let bytes = serialize_adjacency(&graph);
+    Ok(pyo3::types::PyBytes::new_bound(py, &bytes).unbind())
+}
+
+/// Deserialize .adj.bin bytes to an adjacency graph dict.
+#[pyfunction]
+fn adjacency_from_bin(
+    py: Python<'_>,
+    data: Vec<u8>,
+) -> PyResult<PyObject> {
+    let graph = deserialize_adjacency(&data)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let d = pyo3::types::PyDict::new_bound(py);
+    d.set_item("adjacency", &graph.adjacency)?;
+    d.set_item("edge_weights", &graph.edge_weights
+        .iter().map(|(&(u,v), &w)| ((u,v), w)).collect::<HashMap<_,_>>())?;
+    d.set_item("n_vertices", graph.n_vertices)?;
+    d.set_item("n_edges", graph.n_edges)?;
+    Ok(d.into_any().unbind().into())
 }
 
 // ---------------------------------------------------------------------------
@@ -301,5 +340,7 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(read_tiger_shp, m)?)?;
     m.add_function(wrap_pyfunction!(build_adjacency, m)?)?;
     m.add_function(wrap_pyfunction!(connect_islands, m)?)?;
+    m.add_function(wrap_pyfunction!(adjacency_to_bin, m)?)?;
+    m.add_function(wrap_pyfunction!(adjacency_from_bin, m)?)?;
     Ok(())
 }

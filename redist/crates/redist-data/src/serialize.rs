@@ -1,0 +1,236 @@
+/// Adjacency graph binary serialization (.adj.bin format).
+///
+/// Fast Rust-to-Rust format. Not pickle — Python uses the companion
+/// conversion script to produce .pkl for backward compat.
+///
+/// Format (little-endian):
+///   [0..4]   magic bytes: b"RADJ"
+///   [4..8]   format version: u32 = 1
+///   [8..12]  n_vertices: u32
+///   [12..16] n_edges: u32
+///   [16..]   adjacency section:
+///              for each vertex i (0..n_vertices):
+///                n_neighbors: u32
+///                neighbor_0: u32, ..., neighbor_{n-1}: u32
+///   then edge_weights section:
+///              n_weights: u32
+///              for each weight:
+///                u: u32, v: u32, weight: f64  (u < v always)
+use std::io::{self, Read, Write};
+use thiserror::Error;
+use crate::adjacency::AdjacencyGraph;
+
+const MAGIC: &[u8; 4] = b"RADJ";
+const FORMAT_VERSION: u32 = 1;
+
+#[derive(Debug, Error)]
+pub enum SerializeError {
+    #[error("IO error: {0}")]
+    Io(#[from] io::Error),
+    #[error("invalid magic bytes: expected RADJ")]
+    InvalidMagic,
+    #[error("unsupported format version: {0} (expected {FORMAT_VERSION})")]
+    UnsupportedVersion(u32),
+    #[error("data truncated at {context}")]
+    Truncated { context: &'static str },
+}
+
+/// Serialize an adjacency graph to binary bytes.
+pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
+    let mut buf = Vec::with_capacity(
+        16 + graph.n_vertices * 8 + graph.n_edges * 16
+    );
+
+    // Header
+    buf.extend_from_slice(MAGIC);
+    buf.extend_from_slice(&FORMAT_VERSION.to_le_bytes());
+    buf.extend_from_slice(&(graph.n_vertices as u32).to_le_bytes());
+    buf.extend_from_slice(&(graph.n_edges as u32).to_le_bytes());
+
+    // Adjacency section
+    for nbrs in &graph.adjacency {
+        buf.extend_from_slice(&(nbrs.len() as u32).to_le_bytes());
+        for &n in nbrs {
+            buf.extend_from_slice(&(n as u32).to_le_bytes());
+        }
+    }
+
+    // Edge weights section
+    buf.extend_from_slice(&(graph.edge_weights.len() as u32).to_le_bytes());
+    // Sort for deterministic output
+    let mut weights: Vec<_> = graph.edge_weights.iter().collect();
+    weights.sort_by_key(|&(&(u, v), _)| (u, v));
+    for (&(u, v), &w) in &weights {
+        buf.extend_from_slice(&(u as u32).to_le_bytes());
+        buf.extend_from_slice(&(v as u32).to_le_bytes());
+        buf.extend_from_slice(&w.to_le_bytes());
+    }
+
+    buf
+}
+
+/// Deserialize an adjacency graph from binary bytes.
+pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeError> {
+    let mut pos = 0usize;
+
+    macro_rules! read_u32 {
+        ($ctx:expr) => {{
+            if pos + 4 > data.len() {
+                return Err(SerializeError::Truncated { context: $ctx });
+            }
+            let v = u32::from_le_bytes(data[pos..pos+4].try_into().unwrap());
+            pos += 4;
+            v
+        }};
+    }
+
+    macro_rules! read_f64 {
+        ($ctx:expr) => {{
+            if pos + 8 > data.len() {
+                return Err(SerializeError::Truncated { context: $ctx });
+            }
+            let v = f64::from_le_bytes(data[pos..pos+8].try_into().unwrap());
+            pos += 8;
+            v
+        }};
+    }
+
+    // Magic
+    if data.len() < 4 || &data[0..4] != MAGIC {
+        return Err(SerializeError::InvalidMagic);
+    }
+    pos = 4;
+
+    // Version
+    let version = read_u32!("version");
+    if version != FORMAT_VERSION {
+        return Err(SerializeError::UnsupportedVersion(version));
+    }
+
+    let n_vertices = read_u32!("n_vertices") as usize;
+    let n_edges_hdr = read_u32!("n_edges") as usize;
+
+    // Adjacency
+    let mut adjacency: Vec<Vec<usize>> = Vec::with_capacity(n_vertices);
+    for _ in 0..n_vertices {
+        let n_nbrs = read_u32!("n_neighbors") as usize;
+        let mut nbrs = Vec::with_capacity(n_nbrs);
+        for _ in 0..n_nbrs {
+            nbrs.push(read_u32!("neighbor") as usize);
+        }
+        adjacency.push(nbrs);
+    }
+
+    // Edge weights
+    let n_weights = read_u32!("n_weights") as usize;
+    let mut edge_weights = std::collections::HashMap::with_capacity(n_weights);
+    for _ in 0..n_weights {
+        let u = read_u32!("edge_u") as usize;
+        let v = read_u32!("edge_v") as usize;
+        let w = read_f64!("edge_weight");
+        edge_weights.insert((u, v), w);
+    }
+
+    Ok(AdjacencyGraph {
+        adjacency,
+        edge_weights,
+        n_vertices,
+        n_edges: n_edges_hdr,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashMap;
+
+    fn make_graph() -> AdjacencyGraph {
+        // Linear 0-1-2
+        let adjacency = vec![vec![1], vec![0, 2], vec![1]];
+        let mut edge_weights = HashMap::new();
+        edge_weights.insert((0, 1), 500.5_f64);
+        edge_weights.insert((1, 2), 300.0_f64);
+        AdjacencyGraph { adjacency, edge_weights, n_vertices: 3, n_edges: 2 }
+    }
+
+    #[test]
+    fn test_roundtrip() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        assert_eq!(g.n_vertices, g2.n_vertices);
+        assert_eq!(g.n_edges, g2.n_edges);
+        assert_eq!(g.adjacency, g2.adjacency);
+        assert_eq!(g.edge_weights, g2.edge_weights);
+    }
+
+    #[test]
+    fn test_magic_header() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        assert_eq!(&bytes[0..4], b"RADJ");
+        assert_eq!(u32::from_le_bytes(bytes[4..8].try_into().unwrap()), 1u32); // version
+    }
+
+    #[test]
+    fn test_invalid_magic_error() {
+        let mut bytes = serialize_adjacency(&make_graph());
+        bytes[0] = b'X'; // corrupt magic
+        let result = deserialize_adjacency(&bytes);
+        assert!(matches!(result, Err(SerializeError::InvalidMagic)));
+    }
+
+    #[test]
+    fn test_truncated_data_error() {
+        let bytes = serialize_adjacency(&make_graph());
+        let short = &bytes[..8]; // only magic + version
+        let result = deserialize_adjacency(short);
+        assert!(matches!(result, Err(SerializeError::Truncated { .. })));
+    }
+
+    #[test]
+    fn test_edge_weights_sorted_in_output() {
+        // Edge weights must be written in sorted (u,v) order
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        // All keys canonical
+        for &(u, v) in g2.edge_weights.keys() {
+            assert!(u < v, "edge ({u},{v}) not canonical");
+        }
+    }
+
+    #[test]
+    fn test_empty_graph_roundtrip() {
+        let g = AdjacencyGraph {
+            adjacency: vec![vec![], vec![]],
+            edge_weights: HashMap::new(),
+            n_vertices: 2,
+            n_edges: 0,
+        };
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        assert_eq!(g2.n_vertices, 2);
+        assert_eq!(g2.n_edges, 0);
+        assert!(g2.edge_weights.is_empty());
+    }
+
+    #[test]
+    fn test_large_graph_roundtrip() {
+        // 100 nodes in a cycle with edge weights
+        let n = 100usize;
+        let adjacency: Vec<Vec<usize>> = (0..n)
+            .map(|i| vec![(i + n - 1) % n, (i + 1) % n])
+            .collect();
+        let edge_weights: HashMap<(usize, usize), f64> = (0..n)
+            .map(|i| ((i, (i + 1) % n), 100.0 + i as f64))
+            .filter(|&((u, v), _)| u < v)
+            .collect();
+        let n_edges = edge_weights.len();
+        let g = AdjacencyGraph { adjacency, edge_weights, n_vertices: n, n_edges };
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        assert_eq!(g.adjacency, g2.adjacency);
+        assert_eq!(g.edge_weights.len(), g2.edge_weights.len());
+    }
+}
