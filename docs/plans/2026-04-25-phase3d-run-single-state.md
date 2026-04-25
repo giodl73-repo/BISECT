@@ -1509,3 +1509,159 @@ git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
 - ✗ Phase 5 (native METIS) — out of scope for this plan; see `design/rust-port/README.md` Phase 5 section
 
 **Phase 5 note:** Phase 5 (link METIS as C library via `bindgen`) is a separate plan. Implement only if Task 11 benchmarks show subprocess overhead >10% of total runtime. The decision gate is documented in `design/rust-port/README.md`.
+
+---
+
+## Task 12: Data download integration — `redist fetch`
+
+**Files:**
+- Create: `redist/crates/redist-cli/src/fetch.rs`
+- Modify: `redist/crates/redist-cli/src/lib.rs`
+- Modify: `redist/crates/redist-cli/src/main.rs`
+- Modify: `redist/crates/redist-cli/src/args.rs` (add `Commands::Fetch`)
+- Create: `redist/data/manifest.json` (shipped with binary)
+- Create: `redist/data/local_manifest.example.json`
+
+### What it does
+
+A user who installs `redist` can run `redist fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
+
+Three manifest sources (checked in priority order):
+
+1. **Local override** (`~/.config/redist/manifest.json` or `REDIST_MANIFEST` env var) — points to local paths. Set this on a machine where data is already downloaded. No network access needed.
+2. **GitHub Releases** (`--release` flag) — pulls from the project's GitHub Releases (outputs-v3, outputs-v4, data-inputs-v1). Requires `gh auth login`.
+3. **Public Census Bureau URLs** (default) — downloads TIGER shapefiles and PL 94-171 redistricting files directly from census.gov.
+
+### Manifest format (`manifest.json`)
+
+```json
+{
+  "version": "1",
+  "sources": {
+    "tiger_tracts_2020": {
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/",
+      "pattern": "tl_2020_{fips}_tract.zip",
+      "states": "all",
+      "local_path": "data/2020/tiger/tracts/{state_name}/"
+    },
+    "redistricting_2020": {
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/",
+      "pattern": "{state_name}2020.pl.zip",
+      "states": "all",
+      "local_path": "data/2020/redistricting/{state_name}/"
+    },
+    "adjacency_2020": {
+      "github_release": "data-inputs-v1",
+      "asset": "adjacency_2020.tar.gz",
+      "local_path": "outputs/V3/data/2020/adjacency/"
+    }
+  }
+}
+```
+
+Local manifest override (`~/.config/redist/manifest.json`):
+```json
+{
+  "version": "1",
+  "local_overrides": {
+    "tiger_tracts_2020": { "local_path": "/mnt/data/tiger/tracts/2020/" },
+    "adjacency_2020": { "local_path": "/mnt/data/adjacency/2020/" }
+  }
+}
+```
+
+### CLI surface
+
+```
+redist fetch [OPTIONS]
+
+Options:
+  --year <YEAR>         Census year (2020, 2010, 2000, or all) [default: 2020]
+  --states <STATES>     Specific states (default: all)
+  --type <TYPE>         Data type: tiger, redistricting, adjacency, all [default: all]
+  --release             Pull from GitHub Releases (requires gh auth login)
+  --manifest <PATH>     Override manifest file path
+  --check-only          Print what would be downloaded without downloading
+  --workers <N>         Parallel download workers [default: 4]
+```
+
+### Task steps
+
+- [ ] **Step 1: Create `manifest.json` embedded in binary**
+
+```rust
+// redist/crates/redist-cli/src/fetch.rs
+// Embed the manifest at compile time
+const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
+```
+
+Create `redist/data/manifest.json` with the public URL patterns for all census data.
+
+- [ ] **Step 2: Write manifest loading with local override**
+
+```rust
+pub fn load_manifest(override_path: Option<&str>) -> Result<Manifest, String> {
+    // Priority: explicit --manifest > REDIST_MANIFEST env > local default > bundled
+    let path = override_path
+        .or_else(|| std::env::var("REDIST_MANIFEST").ok().as_deref())
+        ...;
+    if let Some(p) = path {
+        // Load from file
+    } else {
+        serde_json::from_str(BUILTIN_MANIFEST)...
+    }
+}
+```
+
+- [ ] **Step 3: Implement `redist fetch --check-only`**
+
+Print what would be downloaded without downloading anything. This is the first testable state.
+
+Test: `redist fetch --check-only --year 2020 --states VT` should print the list of files to download without making any network calls.
+
+- [ ] **Step 4: Implement local-manifest path resolution**
+
+When local_overrides are present, resolve paths and verify they exist.
+
+Test: create a `manifest.json` pointing to existing local adjacency data; `redist fetch --check-only` should report all files as "available locally".
+
+- [ ] **Step 5: Implement census.gov downloads (TIGER + redistricting)**
+
+Download and extract ZIP files from census.gov. Use reqwest or curl subprocess (subprocess is simpler and avoids TLS dependency in Rust).
+
+- [ ] **Step 6: Implement GitHub Releases download (`--release`)**
+
+Invoke `gh release download data-inputs-v1 --dir outputs/V3/data/`. This reuses the existing GitHub Releases setup (data-inputs-v1, outputs-v3, outputs-v4 tags).
+
+- [ ] **Step 7: Wire into main.rs and args.rs**
+
+```
+Commands::Fetch(args) => { ... }
+```
+
+- [ ] **Step 8: Write acceptance test**
+
+```python
+def test_fetch_check_only_lists_files():
+    result = subprocess.run(
+        [str(REDIST_BIN), 'fetch', '--check-only', '--year', '2020', '--states', 'VT'],
+        capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 0
+    assert 'tl_2020_50_tract' in result.stdout  # Vermont FIPS=50
+```
+
+### User experience goal
+
+A new user installs `redist` and can run:
+```bash
+redist fetch --year 2020               # downloads all data
+redist states --year 2020 --version V3 # runs all 50 states
+```
+
+Or on a machine with data already downloaded:
+```bash
+echo '{"version":"1","local_overrides":{"adjacency_2020":{"local_path":"/data/adj/"}}}' \
+  > ~/.config/redist/manifest.json
+redist states --year 2020 --version V3  # reads from local paths
+```
