@@ -110,7 +110,7 @@ pub enum Stage {
 #[derive(Debug, Parser)]
 #[command(
     name = "redist",
-    about = "Congressional redistricting pipeline — compact, population-balanced districts",
+    about = "Congressional redistricting pipeline -- compact, population-balanced districts",
     version,
     propagate_version = true,
 )]
