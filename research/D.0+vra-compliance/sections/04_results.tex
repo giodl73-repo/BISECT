@@ -216,20 +216,27 @@ Table \ref{tab:edge_weighting_summary} summarizes optimal configurations per sta
 & Target & \multicolumn{2}{c}{Multi-Constraint} & \multicolumn{3}{c}{Edge-Weighted (Optimal)} \\
 State & MM & tpwgts & +ubvec & Config & MM & EdgeCut \\
 \midrule
-Mississippi & 2 & 2 (53.3\%) & 2 (53.2\%) & 1x @ 40\% & \textbf{2 (53.8\%)} & 100 \\
-Georgia & 5 & 5 (70.4\%) & 5 (76.7\%) & 1x @ 40\% & \textbf{5 (76.9\%)} & 742 \\
-Louisiana & 2 & 1 (58.8\%) & 1 (52.9\%) & 5x @ 40\% & \textbf{2 (55.8\%)} & 395 \\
+Mississippi & 2 & 2 (53.3\%) & 2 (53.2\%) & 1x @ 40\% & \textbf{2 (53.8\%)\dag} & 100 \\
+Georgia & 5 & 5 (70.4\%) & 5 (76.7\%) & 1x @ 40\% & \textbf{5 (76.9\%)\ddag} & 742 \\
+Louisiana & 2 & 1 (58.8\%) & 1 (52.9\%) & 5x @ 40\% & \textbf{2 (55.8\%)\S} & 395 \\
 Alabama & 2 & 0 (47.3\%) & 0 (49.6\%) & 5x @ 40\% & \textbf{2 (50.8\%)} & 276 \\
 South Carolina & 3 & 0 (44.4\%) & 0 (47.2\%) & 50x @ 50\% & 0 (49.2\%) & 364 \\
 \midrule
-Success Rate & & 40\% (2/5) & 40\% (2/5) & & \textbf{80\% (4/5)} & \\
+Success Rate (ablation) & & 40\% (2/5) & 40\% (2/5) & & \textbf{80\% (4/5)} & \\
+Success Rate (V4 production) & & \multicolumn{4}{c}{40\% (2/5): Alabama \checkmark, Georgia \checkmark; Louisiana 1/2, Mississippi 1/2\dag, SC 1/3} & \\
 \bottomrule
 \end{tabular}
-\caption{Edge-weighted vs multi-constraint VRA compliance. Bold indicates meeting target. Optimal configuration shown (lowest weight factor achieving success).}
+\caption{Edge-weighted vs multi-constraint VRA compliance. Bold indicates meeting target. Optimal configuration shown (lowest weight factor achieving success). V4 production row shows verified outcomes from the adaptive formula (Eq.~\ref{eq:adaptive_boost}).}
 \label{tab:edge_weighting_summary}
 \end{table}
 
-\textbf{Key Finding 4}: Edge-weighted optimization achieves 80\% success rate (4/5 states), doubling multi-constraint performance (40\%).
+{\small
+\dag Mississippi District 1 reaches 49.99\% in the V4 production run (2026-04-24)---essentially a stochastic boundary. The ablation's 1$\times$@40\% configuration achieves 2 MM reproducibly; the adaptive formula's $\approx$6.7$\times$ weight is above the sufficient threshold but METIS randomness places District 1 just below 50\%. \\
+\ddag Georgia achieves 7 MM districts in V4 production (Districts 7,9--14; range 52.3--71.4\%), exceeding the 5-district target. The ablation configuration shown achieves 5. \\
+\S Louisiana achieves only 1 MM (60.2\%) in V4 production. The ablation's 5$\times$@40\% achieves 2 (55.8\%). See Section~\ref{sec:discussion_adaptive} for analysis of this production gap.
+}
+
+\textbf{Key Finding 4}: Edge-weighted optimization achieves 80\% success rate (4/5 states) with per-state-optimal fixed configurations, doubling multi-constraint performance (40\%). With the V4 production adaptive formula, full legal targets are met in 2/5 states (Alabama, Georgia), with Louisiana and Mississippi each achieving 1 of 2 target districts---see Section~\ref{sec:discussion_adaptive}.
 
 \subsubsection{Alabama: Breakthrough Result}
 

@@ -37,7 +37,7 @@ Target MM district counts reflect statutory requirements and recent legal preced
 
 \textbf{Geographic}: Census 2020 TIGER/Line shapefiles for tract boundaries and adjacency.
 
-\textbf{Demographic}: Census 2020 redistricting files (PL 94-171) for total population and voting-age population by race/ethnicity.
+\textbf{Demographic}: Census 2020 redistricting files (PL 94-171) for total population and voting-age population (VAP) by race/ethnicity. \emph{Note on denominator}: The MM district threshold (50\% minority) and the minority tract identification threshold $\tau$ are applied against \textbf{total population} (not VAP) throughout this paper. Total population is the appropriate denominator for redistricting population-balance calculations under the Equal Protection Clause; VAP is the denominator courts examine for VRA dilution analysis. Where the background section references ``minority VAP'' in the context of Gingles preconditions, this refers to the legal standard; our algorithmic threshold uses total population as a practical proxy because PL 94-171 total population data is available at the tract level for all 50 states.
 
 \textbf{Graph Construction}: Queen contiguity (shared boundary or vertex) with water-based connections for disconnected components. Final graphs: 878-2,796 vertices, average degree 6.1.
 
@@ -168,12 +168,62 @@ Complexity & High & Low \\
 
 \textbf{Hypothesis}: Edge weighting directly encodes the VRA goal ("don't split minority communities") into graph structure, potentially achieving better results than indirect multi-constraint balancing.
 
+\subsection{Production Algorithm: Adaptive Weight Formula}
+\label{sec:adaptive_formula}
+
+The ablation study above tests fixed weight factors to characterize the parameter space. The deployed V4 pipeline uses an \textbf{adaptive formula} that sets $\alpha$ automatically based on each state's minority tract density:
+
+\begin{equation}
+\alpha = \max\!\left(3.0,\; 10.0 \times \bigl(1.0 - 0.7 \times f_{\text{minority}}\bigr)\right)
+\label{eq:adaptive_boost}
+\end{equation}
+
+where $f_{\text{minority}}$ is the fraction of tracts in the state with minority percentage $\geq \tau$ (the minority threshold, default $\tau = 0.40$).
+
+\textbf{Rationale}: States with densely clustered minority tracts (high $f_{\text{minority}}$) need less boosting---the geography already concentrates minority tracts together. States with sparse minority tracts (low $f_{\text{minority}}$) need stronger signals to overcome dispersion. The formula scales from 10$\times$ (no minority tracts, $f = 0$) down to a floor of 3$\times$ (saturated states), with the $0.7$ coefficient tuned to keep $\alpha$ in the empirically effective 5$\times$--10$\times$ range for the covered Southern states.
+
+\textbf{Effective weights for key states} (2020 Census, $\tau = 0.40$):
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+State & $f_{\text{minority}}$ & $\alpha$ (adaptive) & Closest fixed config \\
+\midrule
+Alabama      & $\sim$0.22 & $\approx 8.5\times$ & 10$\times$ \\
+Georgia      & $\sim$0.34 & $\approx 7.6\times$ & 10$\times$ \\
+Louisiana    & $\sim$0.30 & $\approx 7.9\times$ & 10$\times$ \\
+Mississippi  & $\sim$0.47 & $\approx 6.7\times$ & 5$\times$ \\
+South Carolina & $\sim$0.16 & $\approx 8.9\times$ & 10$\times$ \\
+California   & $\sim$0.63 & $\approx 5.6\times$ & 5$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Relationship to ablation}: The adaptive formula maps each state to an effective $\alpha$ within the 5$\times$--10$\times$ range that the ablation identifies as optimal (Section~\ref{sec:ablation_results}). Results for the ablation's fixed-weight configurations are therefore directly comparable to V4 production outputs for all covered states except those near the 3$\times$ floor (high-diversity states such as California, Hawaii).
+
+\textbf{V4 production outcomes} (verified 2026-04-24, current pipeline):
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+State & Target MM & V4 MM Achieved & MM District Minority \% \\
+\midrule
+Alabama      & 2 & \textbf{2} & 51.1\%, 50.5\% \\
+Georgia      & 5 & \textbf{7} & 52.3\%--71.4\% \\
+Louisiana    & 2 & 1           & 60.2\% \\
+Mississippi  & 2 & 1           & 55.8\% (D1 at 49.99\%\dag) \\
+South Carolina & 3 & 1         & 52.6\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+{\small \dag Mississippi District 1 reaches 49.99\% minority---a stochastic boundary condition. Across repeated METIS runs with different random seeds, this district fluctuates across the 50\% threshold. The adaptive formula's effective $\alpha \approx 6.7\times$ is between the ablation's 5$\times$ and 10$\times$ configs; achieving both MM districts reproducibly would require the 10$\times$--50$\times$ range or a lower threshold.}
+
+\textbf{Discrepancy from ablation headline}: The ablation study reports 80\% success (4/5 states) using per-state-optimal fixed configurations. The V4 production adaptive formula achieves 40\% of full legal targets (Alabama and Georgia only), with Louisiana and Mississippi each at 1/2 districts. Section~\ref{sec:discussion_adaptive} discusses this gap.
+
 \subsection{Implementation}
 
 \textbf{Partitioner}: METIS 5.1.0 (\texttt{gpmetis}) with flags \texttt{-contig} (enforce contiguity), \texttt{-minconn} (minimize subdomain connectivity), \texttt{-niter=100} (refinement iterations).
 
 \textbf{Platform}: Python 3.13 with GeoPandas for spatial operations, NumPy for weight calculations.
 
-\textbf{Analysis}: Count MM districts with $\geq 50\%$ minority VAP. Report maximum minority concentration achieved and number of districts meeting threshold. For edge-weighted approach, additionally measure edge cut (unweighted and weighted) to assess compactness tradeoff.
+\textbf{Analysis}: Count MM districts with $\geq 50\%$ minority population. Report maximum minority concentration achieved and number of districts meeting threshold. For edge-weighted approach, additionally measure edge cut (unweighted and weighted) to assess compactness tradeoff.
 
 All code and data available at [repository URL upon acceptance].

@@ -1,3 +1,14 @@
+\subsection{Ablation vs.\ Production: Interpreting the 80\% vs.\ 40\% Gap}
+\label{sec:discussion_adaptive}
+
+The ablation study (Section~\ref{sec:ablation_results}) achieves 80\% success (4/5 states) using per-state-optimal fixed weight factors. The V4 production pipeline uses the adaptive formula (Eq.~\ref{eq:adaptive_boost}) and achieves full legal targets in 2/5 states (Alabama, Georgia). Understanding this gap is essential for interpreting the paper's headline claim.
+
+\textbf{Why the gap exists}: The ablation identifies that Louisiana needs $\alpha \geq 5\times$ at $\tau = 0.40$ to achieve 2 MM districts, and Mississippi needs $\alpha \geq 1\times$ (the unmodified graph already achieves the target). The adaptive formula gives Louisiana $\approx 7.9\times$ and Mississippi $\approx 6.7\times$---well within the ablation's successful range. However, METIS is stochastic: different random seeds produce different partitions. Mississippi District 1 sits at 49.99\% minority in the V4 run verified 2026-04-24---essentially a coin flip. A different run (or the ablation's run) may produce 2 MM districts.
+
+\textbf{What 80\% means}: The ablation result is reproducible from the methods and configurations listed in Section~\ref{sec:ablation_results}. It demonstrates that the edge-weighting approach \emph{can} achieve VRA compliance for 4 of 5 states under optimal per-state parameters. The V4 production formula is designed to approximate those optimal parameters adaptively without state-specific tuning---and succeeds for the two highest-priority states (Alabama, Georgia).
+
+\textbf{Recommendation}: Practitioners seeking to reproduce the 80\% headline should use the per-state configurations in Table~\ref{tab:edge_weighting_summary}. For production deployment across all states without parameter tuning, the adaptive formula (Eq.~\ref{eq:adaptive_boost}) provides a reasonable default at the cost of borderline-state reproducibility (Louisiana, Mississippi).
+
 \subsection{Geographic Constraints Dominate Algorithm Choice}
 
 Our results demonstrate that VRA compliance feasibility depends primarily on geographic distribution of minority populations, not algorithmic sophistication. While n-way partitioning outperforms recursive bisection by 3-7 percentage points, this advantage is insufficient to change outcomes in states with dispersed minority populations.

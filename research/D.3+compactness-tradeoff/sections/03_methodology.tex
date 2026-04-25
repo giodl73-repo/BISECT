@@ -558,6 +558,33 @@ Empirical overhead is 12\%, confirming that edge-weight computation is negligibl
 
 \textbf{Conclusion}: Edge-weighted optimization is computationally inexpensive. The 12\% overhead is negligible compared to the substantial VRA compliance benefits demonstrated in our results (Alabama: 0 MM → 2 MM with 3.2\% compactness improvement).
 
+\subsubsection{Production Adaptive Formula}
+
+The ablation study above tests fixed weight factors ($w \in \{1, 5, 10, 50, 100\}$). The V4 production pipeline uses an adaptive formula that sets $w$ automatically per state without manual tuning~\citep{dellaLibera2026D0}:
+
+\begin{equation}
+w = \max\!\left(3.0,\; 10.0 \times \bigl(1.0 - 0.7 \times f_{\text{minority}}\bigr)\right)
+\label{eq:adaptive_boost_d3}
+\end{equation}
+
+where $f_{\text{minority}}$ is the fraction of state tracts with minority percentage $\geq \tau$ ($\tau = 0.40$ by default). Verified V4 production outcomes for our five study states (2026-04-24):
+
+\begin{center}
+\begin{tabular}{lccl}
+\toprule
+State & Target MM & V4 Achieved & Notes \\
+\midrule
+Alabama & 2 & 2 & 51.1\%, 50.5\% \\
+Georgia & 5 & 7 & Exceeds target \\
+Louisiana & 2 & 1 & Borderline; 1 district at 60.2\% \\
+Mississippi & 2 & 1 & District 1 at 49.99\% (stochastic boundary) \\
+South Carolina & 3 & 1 & 52.6\%; infeasible at 3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Compactness results in the next section are from the fixed-weight ablation configurations. The adaptive formula is expected to produce compactness outcomes comparable to the $w=5$--$10$ ablation rows for these states.
+
 \subsubsection{Data Availability and Reproducibility}
 
 All code, data, and results are available at [repository URL to be added upon publication]. This includes:

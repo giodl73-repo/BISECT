@@ -58,6 +58,17 @@ We employ \textbf{edge-weighted recursive bisection}~\citep{dellaLibera2026edgeW
     \item \textbf{MM threshold}: Districts with $\geq$50\% minority deemed majority-minority
 \end{enumerate}
 
+\subsubsection{Production Adaptive Formula}
+
+The ablation study above uses fixed weight factors. The deployed V4 pipeline uses an adaptive formula that sets $\alpha$ automatically per state~\citep{dellaLibera2026D0}:
+
+\begin{equation}
+\alpha = \max\!\left(3.0,\; 10.0 \times \bigl(1.0 - 0.7 \times f_{\text{minority}}\bigr)\right)
+\label{eq:adaptive_boost_d1}
+\end{equation}
+
+where $f_{\text{minority}}$ is the fraction of state tracts with minority percentage $\geq \tau$. This scales from 10$\times$ (dispersed minority) to a 3$\times$ floor (dense minority states), automatically approximating the 5$\times$--10$\times$ range identified as optimal in~\citeauthor{dellaLibera2026D0}'s ablation. The proportional-target results reported in this paper are from the fixed-weight ablation configurations, not the adaptive formula, and should be interpreted accordingly.
+
 \textbf{Key insight}: Higher-weight edges are ``expensive'' to cut, so METIS keeps minority tracts together.
 
 \subsection{Experimental Design}

@@ -58,6 +58,15 @@ We conduct ablation studies testing:
 \item $\alpha = 10, 50, 100$: Stronger weighting (test for diminishing returns)
 \end{itemize}
 
+\subsubsection{Relationship to Production Algorithm}
+
+The V4 production pipeline does not use a fixed $\alpha$ but instead applies an adaptive formula~\citep{dellaLibera2026D0}:
+\begin{equation}
+\alpha = \max\!\left(3.0,\; 10.0 \times \bigl(1.0 - 0.7 \times f_{\text{minority}}\bigr)\right)
+\label{eq:adaptive_boost_d2}
+\end{equation}
+where $f_{\text{minority}}$ is the fraction of state tracts above the minority threshold. For the states tested in this paper, the adaptive formula yields effective weights in the 5$\times$--10$\times$ range, placing it between the $\alpha=5$ and $\alpha=10$ ablation rows. Runtime and success-rate comparisons in this paper use fixed ablation configurations; the adaptive formula's per-state weights are not expected to alter the n-way vs.\ recursive equivalence finding (Cohen's $d = -0.018$) since both methods receive identical edge weights.
+
 \textbf{Minority Thresholds ($\tau$)}: [0.40, 0.45, 0.50, 0.55]
 \begin{itemize}
 \item Lower thresholds: More tracts classified as minority, larger edge weight coverage

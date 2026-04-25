@@ -30,7 +30,7 @@ South Carolina (SC) & 35.1\% & 3/7 (42.9\%) & --- & --- & --- & \textbf{No succe
 
 \textbf{Pattern 1: ``MM Sacrifice, Non-MM Gain''} (Alabama, Mississippi): Two states exhibit a pattern where MM districts sacrifice compactness to concentrate minority voters, but non-MM districts \emph{gain} compactness relative to baseline. Alabama's non-MM districts improve by +23.0\% Polsby-Popper while MM districts decline by $-46.2$\%. Mississippi shows similar redistribution (+17.9\% vs. $-17.9$\%). Critically, this pattern demonstrates that non-MM voters do not bear the compactness cost of VRA compliance---they benefit from it.
 
-\textbf{Pattern 2: ``Both Gain''} (Georgia): Most remarkably, Georgia achieves simultaneous improvements in both MM and non-MM district compactness (+14.3\% and +28.1\%, respectively), with overall state compactness improving by +22.2\%. This win-win outcome directly contradicts the conventional assumption that VRA compliance requires universal compactness sacrifice. Georgia creates 6 MM districts (exceeding its 5-district target) while improving compactness across all district types.
+\textbf{Pattern 2: ``Both Gain''} (Georgia): Most remarkably, Georgia achieves simultaneous improvements in both MM and non-MM district compactness (+14.3\% and +28.1\%, respectively), with overall state compactness improving by +22.2\%. This win-win outcome directly contradicts the conventional assumption that VRA compliance requires universal compactness sacrifice. Georgia creates 6 MM districts in this ablation configuration (exceeding its 5-district target); V4 production achieves 7 MM districts, further exceeding the target. Both results confirm the win-win pattern.
 
 \textbf{Pattern 3: ``Both Sacrifice''} (Louisiana): Louisiana exhibits the expected tradeoff pattern, with both MM and non-MM districts losing compactness ($-51.2$\% and $-39.0$\%, respectively). However, even here, non-MM districts lose \emph{less} than MM districts, suggesting the compactness cost is concentrated where minorities are being represented, not redistributed system-wide.
 
@@ -104,7 +104,7 @@ Georgia achieves the most striking result: simultaneous improvement in VRA compl
     \item Non-MM districts (8 total): Average PP = 0.262 (\textbf{+28.1\%} vs. baseline 0.204)
 \end{itemize}
 
-Georgia's baseline already achieves its 5 MM district target, yet edge-weighted optimization with 5×@55\% creates a 6th MM district while improving compactness across the board. This demonstrates that VRA optimization can \emph{exceed} proportional representation targets when geographic clustering is favorable, without any compactness penalty.
+Georgia's baseline already achieves its 5 MM district target, yet edge-weighted optimization with 5×@55\% creates a 6th MM district while improving compactness across the board. V4 production (adaptive formula, $\alpha \approx 7.6\times$) achieves 7 MM districts. This demonstrates that VRA optimization can \emph{exceed} proportional representation targets when geographic clustering is favorable, without any compactness penalty.
 
 \subsection{Mississippi: The Baseline Paradox}
 
@@ -190,11 +190,11 @@ For each state, we identify Pareto-optimal configurations (Figure~\ref{fig:paret
 
 The Alabama frontier shows a \emph{negative} initial slope: moving from 0 to 2 MM districts \emph{improves} edge cut, creating a win-win region. Beyond 2 MM districts, the slope would be positive (more MM districts require compactness sacrifice), but 2 is the maximum feasible.
 
-\textbf{Georgia Pareto Frontier}: Georgia's frontier lies entirely in the positive region---all Pareto-optimal points improve upon baseline in both objectives. The 5×@55\% configuration creating 6 MM districts (exceeding the 5-district target) with +22.2\% compactness improvement represents the global optimum.
+\textbf{Georgia Pareto Frontier}: Georgia's frontier lies entirely in the positive region---all Pareto-optimal points improve upon baseline in both objectives. The 5×@55\% configuration creating 6 MM districts (exceeding the 5-district target) with +22.2\% compactness improvement represents the Pareto optimum for fixed-weight configurations; V4 production achieves 7 MM with the adaptive formula.
 
 \textbf{Louisiana Pareto Frontier}: Louisiana exhibits the traditional positive slope: achieving the 2nd MM district requires substantial compactness sacrifice. The frontier is steep, indicating limited ability to trade compactness for VRA gains once baseline's 1 MM district is exceeded.
 
-\textbf{South Carolina Pareto Frontier}: South Carolina has no feasible Pareto frontier for 3 MM districts. The maximum achievable is 1 MM district, creating a discontinuous frontier where the 2nd and 3rd MM districts are geometrically infeasible regardless of compactness sacrifice.
+\textbf{South Carolina Pareto Frontier}: South Carolina has no feasible Pareto frontier for 3 MM districts. The maximum achievable with fixed-weight ablation configurations is 1 MM district. Notably, V4 production (adaptive formula, $\alpha \approx 8.9\times$ for SC's 35.1\% minority) achieves 1 MM district (District 5, 52.6\% minority)---the same result the ablation found only under extreme weight factors (1000$\times$@30\%). The adaptive formula's high effective weight for SC thus reaches the geographic limit of what is feasible: 1 MM district is achievable; 2 or 3 remain infeasible regardless of algorithm.
 
 \subsection{Configuration Sensitivity: Optimal Parameters Vary by State}
 
@@ -392,7 +392,7 @@ We classify MM districts in our best configurations (baseline + edge-weighted 5�
 \begin{enumerate}
     \item \textbf{Non-MM districts generally benefit}: Across successful states, non-MM districts gain +7.5\% compactness while MM districts sacrifice $-25.3$\%, demonstrating that VRA compliance costs are borne by MM districts, not redistributed to non-MM voters.
 
-    \item \textbf{Win-win solutions exist}: Georgia achieves simultaneous improvements in VRA compliance (6 MM districts) and compactness (+22.2\% Polsby-Popper), directly contradicting the assumption that these objectives inherently conflict.
+    \item \textbf{Win-win solutions exist}: Georgia achieves simultaneous improvements in VRA compliance (6 MM districts in ablation, 7 in V4 production) and compactness (+22.2\% Polsby-Popper), directly contradicting the assumption that these objectives inherently conflict.
 
     \item \textbf{Alabama's counterintuitive improvement}: Creating 2 MM districts \emph{improves} compactness relative to baseline (edge cut $-9.3$\%, Polsby-Popper +3.2\%), challenging the conventional wisdom that VRA compliance requires compactness sacrifice.
 

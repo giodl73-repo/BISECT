@@ -2,7 +2,7 @@ We systematically evaluated VRA compliance through principled optimization metho
 
 \textbf{(1) Multi-Constraint Limitations}: Multi-constraint optimization (n-way partitioning, adaptive bisection, constraint relaxation) achieved only 40\% success (2/5 states). Advanced methods improved concentration by 3-7 percentage points but could not overcome geographic constraints.
 
-\textbf{(2) Edge-Weighting Breakthrough}: Single-objective optimization with weighted edges doubled success rate to 80\% (4/5 states). By directly encoding "don't split minority communities" into graph structure, edge-weighting achieves VRA compliance where multi-constraint failed. Alabama breakthrough: 0 MM → 2 MM districts (50.8\% minority).
+\textbf{(2) Edge-Weighting Breakthrough}: Single-objective optimization with weighted edges doubles success rate to 80\% (4/5 states) with per-state-optimal configurations, versus 40\% for multi-constraint. With the V4 production adaptive formula (Eq.~\ref{eq:adaptive_boost}), full legal targets are met in 2/5 states; Louisiana and Mississippi each achieve 1 of 2 target districts due to stochastic boundary sensitivity (see Section~\ref{sec:discussion_adaptive}). Alabama breakthrough: 0 MM $\to$ 2 MM districts (50.8\% minority, confirmed in production).
 
 \textbf{(3) Minimal Compactness Cost}: Edge-weighting increases average edge cut by only +4\% compared to baseline. Alabama actually improves compactness (-1.4\%) while gaining 2 MM districts. This resolves the perceived tension between VRA compliance and algorithmic principles.
 

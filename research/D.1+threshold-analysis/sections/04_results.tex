@@ -28,23 +28,29 @@ Representative states from each category demonstrate the threshold pattern (see 
 \midrule
 \multicolumn{5}{c}{\textit{Above Threshold ($\geq$42\%)}} \\
 California    & 65.3\% & 34 & 44 & 129\% \\
-Georgia       & 49.9\% & 7  & 8  & 114\% \\
+Georgia       & 49.9\% & 7  & 8\dag & 114\% \\
 New York      & 47.5\% & 12 & 12 & 100\% \\
-Mississippi   & 44.6\% & 2  & 2  & 100\% \\
+Mississippi   & 44.6\% & 2  & 2\ddag & 100\% \\
 \midrule
 \multicolumn{5}{c}{\textit{Borderline (37--42\%)}} \\
 Illinois      & 41.7\% & 7  & 5  & 71\% \\
 N. Carolina   & 39.5\% & 6  & 3  & 50\% \\
 \midrule
 \multicolumn{5}{c}{\textit{Below Threshold ($<$37\%)}} \\
-Alabama       & 36.9\% & 3  & 2  & 67\% \\
+Alabama       & 36.9\% & 3\S & 2  & 67\% \\
 Connecticut   & 36.8\% & 2  & 1  & 50\% \\
 Pennsylvania  & 26.5\% & 5  & 0  & 0\% \\
 \bottomrule
 \end{tabular}
-\caption{Representative states showing threshold pattern. Above 42\%: achieve 80-114\% of target. Below 42\%: achieve 0-67\% of target.}
+\caption{Representative states showing threshold pattern. ``Target MM'' is the \emph{proportional} target ($\lfloor$minority\%~$\times$~districts$\rceil$), used consistently for cross-state comparison; legal VRA obligations may differ (see note \S). Above 42\%: achieve 80-114\% of proportional target. Below 42\%: achieve 0-67\%.}
 \label{tab:representative_states}
 \end{table}
+
+{\small
+\dag Georgia ablation achieves 8 MM in optimal configurations; V4 production achieves 7 MM (Districts 7, 9--14; range 52.3--71.4\%), exceeding the 5-district legal target. \\
+\ddag Mississippi achieves 2 MM in ablation. V4 production achieves 1 MM: District 1 sits at 49.99\% minority (stochastic boundary condition; see Section~\ref{sec:adaptive_formula} in~\citeauthor{dellaLibera2026D0}). \\
+\S Alabama's \emph{proportional} target is 3 (36.9\%~$\times$~7~$\approx$~2.6, rounded up). Alabama's \emph{legal} target under \textit{Allen v.\ Milligan} (2023) is 2 MM districts. Alabama achieves its legal target in both ablation and V4 production. This paper uses proportional targets to enable consistent cross-state comparison; readers should not interpret a below-proportional result as a VRA violation where the legal target is lower.
+}
 
 \subsection{The 42\% Effectiveness Threshold}
 
