@@ -19,6 +19,7 @@ def partition_graph(
     target_weights: Optional[List[float]] = None,
     recursive: bool = True,
     ufactor: Optional[float] = None,
+    ubvec: Optional[List[float]] = None,
     niter: int = 100,
     objtype: str = 'cut',
     seed: Optional[int] = None,
