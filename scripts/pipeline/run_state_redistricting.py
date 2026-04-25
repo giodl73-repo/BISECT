@@ -288,6 +288,22 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
     deviations = [(p - ideal) / ideal * 100 for p in populations]
     max_dev = max(abs(d) for d in deviations)
 
+    # Constitutional population balance check — asserted in Rust (single authoritative check).
+    # Only call on the final leaf partition, not on intermediate bisection splits.
+    # Raises ValueError immediately if any district exceeds ±0.5%.
+    try:
+        from redist_py import Partition as _RustPartition
+        import numpy as _np
+        _rust_partition = _RustPartition.from_dict(
+            {int(k): int(v) for k, v in final_assignments.items()}
+        )
+        _vw = vertex_weights if vertex_weights.ndim == 1 else vertex_weights[:, 0]
+        _rust_partition.assert_balanced(
+            _np.asarray(_vw, dtype=_np.int64), num_districts, tolerance=0.005
+        )
+    except ImportError:
+        pass  # REDIST_NO_RUST=1 — Python max_dev check below serves as fallback
+
     # Analyze VRA compliance if in VRA mode
     if vra_mode:
         from apportionment.partition import vra_utils
