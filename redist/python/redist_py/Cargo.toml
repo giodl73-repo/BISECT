@@ -12,6 +12,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 redist-core = { path = "../../crates/redist-core" }
+redist-data = { path = "../../crates/redist-data" }
 pyo3.workspace = true
 numpy.workspace = true
 anyhow.workspace = true

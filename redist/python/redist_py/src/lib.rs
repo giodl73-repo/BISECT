@@ -7,6 +7,7 @@ use redist_core::{
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
     metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
+use redist_data::read_tiger_tracts;
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -129,6 +130,28 @@ fn build_vra_edge_weights(
 }
 
 // ---------------------------------------------------------------------------
+// TIGER shapefile reader
+// ---------------------------------------------------------------------------
+
+/// Read census tract records from a TIGER .shp file.
+///
+/// Returns list of (geoid, geometry_wkb, aland, awater) tuples.
+/// Records sorted by GEOID. population=0 sentinel — join PL 94-171 separately.
+#[pyfunction]
+fn read_tiger_shp(
+    py: Python<'_>,
+    shp_path: String,
+) -> PyResult<Vec<(String, pyo3::Py<pyo3::types::PyBytes>, i64, i64)>> {
+    let records = read_tiger_tracts(&shp_path)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    records.iter().map(|r| {
+        let wkb_bytes = pyo3::types::PyBytes::new_bound(py, &r.geometry_wkb).unbind();
+        Ok((r.geoid.clone(), wkb_bytes, r.aland, r.awater))
+    }).collect()
+}
+
+// ---------------------------------------------------------------------------
 // METIS file format
 // ---------------------------------------------------------------------------
 
@@ -217,5 +240,6 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(bisection_ufactor, m)?)?;
     m.add_function(wrap_pyfunction!(metis_graph_content, m)?)?;
     m.add_function(wrap_pyfunction!(metis_parse_partition, m)?)?;
+    m.add_function(wrap_pyfunction!(read_tiger_shp, m)?)?;
     Ok(())
 }
