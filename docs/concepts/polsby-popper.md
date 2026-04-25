@@ -2,7 +2,7 @@
 
 ## Short version
 
-Polsby-Popper = 4π × (Area / Perimeter²). A perfect circle scores 1.0. A long thin district scores near 0. Higher is more compact. It is the standard legal and academic metric for redistricting compactness. Our algorithm achieves a national mean of 0.367, compared to 0.306 for enacted 2020 maps.
+Polsby-Popper = 4π × (Area / Perimeter²). A perfect circle scores 1.0. A long thin district scores near 0. Higher is more compact. It is the standard legal and academic metric for redistricting compactness. Our algorithm achieves a national mean of 0.361 (95% CI: 0.351–0.370), compared to 0.296 for enacted 2020 congressional districts.
 
 ---
 
@@ -47,13 +47,13 @@ Polsby-Popper is more sensitive to perimeter jaggedness. Reock is more sensitive
 
 | Dataset | Mean PP |
 |---------|---------|
-| Algorithmic (2020) | 0.367 |
-| Enacted 2020 maps | 0.306 |
+| Algorithmic (2020) | 0.361 (95% CI: 0.351–0.370) |
+| Enacted 2020 maps | 0.296 |
 | Algorithmic (2010) | 0.320 |
 | Enacted 2010 maps | ~0.26 |
 | Algorithmic (2000) | ~0.31 |
 
-The algorithm beats enacted maps in 37 of 50 states (2020). The gap has been narrowing as redistricting reform spread: 2010 enacted maps were worse than 2020 enacted maps.
+The algorithm beats enacted maps in **37 of 44** multi-district states (2020) — 6 single-district states are excluded as they have no meaningful enacted comparison. The gap has been narrowing as redistricting reform spread: 2010 enacted maps were worse than 2020 enacted maps.
 
 ## Where to find compactness scores in outputs
 

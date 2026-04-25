@@ -40,7 +40,7 @@ web/                  # dashboard.html, master_dashboard.html
 artifacts/            # papers/, presentations/, guides/ (LaTeX)
 context/              # AI context (enhancements/, archive/, patterns, architecture)
 docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, CENSUS_DATA_PROCESSING.md, etc.)
-tests/                # unit/ (135), integration/ (24), e2e/ (56) - 215 total, ~24s
+tests/                # unit/ (~1000), integration/ (~730), e2e/ — run: pytest tests/ -v
 ```
 
 ## Git Rules
@@ -92,11 +92,11 @@ python scripts/data/download_orchestrator.py --type demographics --year 2020 --s
 
 # Dashboard
 python scripts/web/generate_master_dashboard.py
-deploy_web.bat --year 2020 --version v1
+python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
 
 # Tests
-pytest tests/ -v           # All 187 tests (~23s)
-pytest tests/unit/ -v      # Unit only (110 tests)
+pytest tests/unit/ -v      # Unit tests (~1000)
+pytest tests/integration/  # Integration tests (require pipeline outputs)
 ```
 
 **See**: [context/QUICK_REFERENCE.md](context/QUICK_REFERENCE.md) for troubleshooting
