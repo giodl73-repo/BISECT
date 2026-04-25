@@ -257,11 +257,22 @@ pub fn download_items(
 
         match item.kind.as_str() {
             "adjacency" if use_release => {
-                // GitHub Releases: use gh CLI (the only subprocess we still need)
+                // GitHub Releases: use gh CLI (or REDIST_GH override for testing).
+                // REDIST_GH may be "python /path/to/fake_gh.py" — split on first space.
+                let gh_raw = std::env::var("REDIST_GH").unwrap_or_else(|_| "gh".to_string());
+                let mut gh_parts = gh_raw.splitn(2, ' ');
+                let gh_cmd = gh_parts.next().unwrap_or("gh");
+                let gh_extra_args: Vec<&str> = gh_parts.next()
+                    .map(|s| s.split_whitespace().collect())
+                    .unwrap_or_default();
+
                 let release_tag = &manifest.releases.data_inputs;
                 let adj_dir = item.local_path.parent().unwrap();
+                std::fs::create_dir_all(adj_dir).map_err(|e| e.to_string())?;
                 println!("[DOWN] {} {} adjacency from release {release_tag}", item.state_code, item.year);
-                let out = std::process::Command::new("gh")
+                let mut cmd = std::process::Command::new(gh_cmd);
+                cmd.args(&gh_extra_args);
+                let out = cmd
                     .args(["release", "download", release_tag,
                            "--pattern", &format!("{}_adjacency_{}.pkl", item.state_code.to_lowercase(), item.year),
                            "--dir", adj_dir.to_str().unwrap(),

@@ -473,3 +473,239 @@ class TestRustCLIAcceptance:
         adj_pkl = ADJACENCY_DIR / 'al_adjacency_2020.pkl'
         dev = compute_pop_balance({int(k): v for k, v in assignments.items()}, adj_pkl)
         assert dev <= 0.005, f'Alabama balance {dev*100:.3f}% exceeds ±0.5%'
+
+
+# ---------------------------------------------------------------------------
+# redist states: multi-state parallel acceptance (VT + RI)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(not REDIST_BIN.exists(), reason='redist binary not built')
+@pytest.mark.skipif(
+    not adjacency_exists('VT') or not adjacency_exists('RI'),
+    reason='VT or RI adjacency not found'
+)
+class TestRustStatesAcceptance:
+    """
+    Verify `redist states --states VT RI` runs two states in parallel.
+    VT (1 district) exercises the single-district shortcut.
+    RI (2 districts) exercises real bisection + population balance.
+    """
+
+    @pytest.fixture(scope='class')
+    def states_output(self, tmp_path_factory):
+        tmp = tmp_path_factory.mktemp('rust_states')
+        env = os.environ.copy()
+        env['REDIST_PYTHON'] = sys.executable
+        result = subprocess.run(
+            [str(REDIST_BIN), 'states',
+             '--year', '2020', '--version', 'V3',
+             '--output-dir', str(tmp),
+             '--states', 'VT', 'RI',
+             '--workers', '2'],
+            capture_output=True, text=True, timeout=180,
+            cwd=str(Path.cwd()), env=env
+        )
+        if result.returncode != 0:
+            pytest.fail(
+                f'redist states VT RI failed:\n'
+                f'STDOUT: {result.stdout[-500:]}\n'
+                f'STDERR: {result.stderr[-500:]}'
+            )
+        return tmp
+
+    def test_vermont_assignments_exist(self, states_output):
+        assert (states_output / 'states' / 'vermont' / 'data' / 'final_assignments.json').exists()
+
+    def test_rhode_island_assignments_exist(self, states_output):
+        assert (states_output / 'states' / 'rhode_island' / 'data' / 'final_assignments.json').exists()
+
+    def test_vermont_193_tracts_1_district(self, states_output):
+        data = json.loads(
+            (states_output / 'states' / 'vermont' / 'data' / 'final_assignments.json').read_text()
+        )
+        assert len(data) == 193
+        assert set(data.values()) == {1}, 'VT must have exactly 1 district'
+
+    def test_rhode_island_250_tracts_2_districts(self, states_output):
+        data = json.loads(
+            (states_output / 'states' / 'rhode_island' / 'data' / 'final_assignments.json').read_text()
+        )
+        assert len(data) == 250
+        assert set(data.values()) == {1, 2}, \
+            f'RI must have 2 districts, got {set(data.values())}'
+
+    def test_rhode_island_population_balance(self, states_output):
+        """RI 2-district split must satisfy ±0.5% constitutional balance."""
+        data = json.loads(
+            (states_output / 'states' / 'rhode_island' / 'data' / 'final_assignments.json').read_text()
+        )
+        adj_pkl = ADJACENCY_DIR / 'ri_adjacency_2020.pkl'
+        dev = compute_pop_balance({int(k): v for k, v in data.items()}, adj_pkl)
+        assert dev <= 0.005, f'RI balance {dev*100:.3f}% exceeds ±0.5%'
+
+    def test_both_states_complete_in_parallel(self, states_output):
+        """Both outputs must exist — confirms parallel worker completed both."""
+        vt = states_output / 'states' / 'vermont' / 'data' / 'final_assignments.json'
+        ri = states_output / 'states' / 'rhode_island' / 'data' / 'final_assignments.json'
+        assert vt.exists() and ri.exists()
+
+
+# ---------------------------------------------------------------------------
+# redist fetch --release: adjacency download via fake gh binary
+# ---------------------------------------------------------------------------
+
+def _make_fake_gh(tmp: Path, adjacency_dir: Path) -> tuple:
+    """
+    Create a fake `gh` script and set REDIST_GH to point to it.
+    The binary uses REDIST_GH env var (not PATH) so the real gh is never called.
+    Returns (script_path, env_with_REDIST_GH_set).
+    """
+    # Must use absolute path — the script runs from binary's CWD, not project root
+    real_pkl = adjacency_dir.resolve() / 'vt_adjacency_2020.pkl'
+
+    # Write a Python-based fake gh (works on all platforms without .exe/.bat issues)
+    script = tmp / 'fake_gh.py'
+    script.write_text(
+        'import sys, os, shutil\n'
+        'args = sys.argv[1:]\n'
+        'dest_dir = None\n'
+        'i = 0\n'
+        'while i < len(args):\n'
+        '    if args[i] == "--dir" and i + 1 < len(args):\n'
+        '        dest_dir = args[i + 1]; i += 2\n'
+        '    else:\n'
+        '        i += 1\n'
+        'if dest_dir:\n'
+        '    os.makedirs(dest_dir, exist_ok=True)\n'
+        f'    shutil.copy(r"{real_pkl}", os.path.join(dest_dir, "vt_adjacency_2020.pkl"))\n'
+        'sys.exit(0)\n'
+    )
+
+    env = os.environ.copy()
+    env['REDIST_PYTHON'] = sys.executable
+    # REDIST_GH: the binary reads this to override 'gh' command (avoids PATH confusion)
+    env['REDIST_GH'] = f'{sys.executable} {script}'
+    return script, env
+
+
+@pytest.mark.skipif(not REDIST_BIN.exists(), reason='redist binary not built')
+@pytest.mark.skipif(
+    not adjacency_exists('VT'),
+    reason='VT adjacency not found (needed as release fixture)'
+)
+class TestRustFetchRelease:
+    """
+    Verify `redist fetch --release --type adjacency` downloads adjacency pkls
+    by calling `gh release download`. Uses a fake `gh` binary that copies a
+    local pkl to simulate the download without network access.
+    """
+
+    @pytest.fixture(scope='class')
+    def fake_env(self, tmp_path_factory):
+        tmp = tmp_path_factory.mktemp('fake_gh')
+        _, env = _make_fake_gh(tmp, ADJACENCY_DIR)  # env has REDIST_GH set
+        return tmp, env
+
+    def test_fetch_release_downloads_adjacency_pkl(self, fake_env, tmp_path_factory):
+        """fake gh copies real VT pkl to the adjacency directory."""
+        tmp, env = fake_env
+        out = tmp_path_factory.mktemp('fetch_out')
+
+        manifest = {
+            'version': '1', 'github_repo': 'test/repo',
+            'releases': {'data_inputs': 'data-inputs-v1', 'outputs_v3': 'v3', 'outputs_v4': 'v4'},
+            'local_data_dir': 'data', 'local_outputs_dir': str(out),
+            'states': {
+                'VT': {
+                    'name': 'Vermont', 'fips': '50',
+                    'districts': {'2020': 1, '2010': 1, '2000': 1},
+                    'tiger': {}, 'pl94171': {},
+                }
+            }
+        }
+        manifest_file = tmp / 'manifest.json'
+        manifest_file.write_text(json.dumps(manifest))
+
+        result = subprocess.run(
+            [str(REDIST_BIN), 'fetch',
+             '--states', 'VT', '--year', '2020', '--type', 'adjacency',
+             '--release', '--manifest', str(manifest_file)],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(out), env=env
+        )
+
+        assert result.returncode == 0, \
+            f'fetch --release failed:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}'
+
+        # Adjacency goes to local_outputs_dir/V3/data/2020/adjacency/
+        # build_fetch_list joins outputs_dir / "V3" / "data" / year / "adjacency"
+        adj = out / 'V3' / 'data' / '2020' / 'adjacency' / 'vt_adjacency_2020.pkl'
+        all_pkls = list(out.rglob('*.pkl'))
+        assert adj.exists(), f'Adjacency pkl not at {adj}; found pkls: {all_pkls}'
+
+    def test_fetched_adjacency_is_valid_pkl(self, fake_env, tmp_path_factory):
+        """The fetched adjacency pkl must be loadable and have 193 tracts."""
+        tmp, env = fake_env
+        out = tmp_path_factory.mktemp('fetch_valid')
+
+        manifest = {
+            'version': '1', 'github_repo': 'test/repo',
+            'releases': {'data_inputs': 'data-inputs-v1', 'outputs_v3': 'v3', 'outputs_v4': 'v4'},
+            'local_data_dir': 'data', 'local_outputs_dir': str(out),
+            'states': {
+                'VT': {
+                    'name': 'Vermont', 'fips': '50',
+                    'districts': {'2020': 1, '2010': 1, '2000': 1},
+                    'tiger': {}, 'pl94171': {},
+                }
+            }
+        }
+        (tmp / 'manifest2.json').write_text(json.dumps(manifest))
+
+        subprocess.run(
+            [str(REDIST_BIN), 'fetch',
+             '--states', 'VT', '--year', '2020', '--type', 'adjacency',
+             '--release', '--manifest', str(tmp / 'manifest2.json')],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(out), env=env
+        )
+
+        adj = out / 'V3' / 'data' / '2020' / 'adjacency' / 'vt_adjacency_2020.pkl'
+        assert adj.exists(), f'Adjacency not fetched. Found: {list(out.rglob("*.pkl"))}'
+
+        import pickle
+        with open(adj, 'rb') as f:
+            graph = pickle.load(f)
+        assert 'adjacency' in graph
+        assert len(graph['adjacency']) == 193, \
+            f'Expected 193 VT tracts, got {len(graph["adjacency"])}'
+
+    def test_fetch_release_creates_done_marker(self, fake_env, tmp_path_factory):
+        """Done marker written after successful adjacency download."""
+        tmp, env = fake_env
+        out = tmp_path_factory.mktemp('fetch_done')
+
+        manifest = {
+            'version': '1', 'github_repo': 'test/repo',
+            'releases': {'data_inputs': 'data-inputs-v1', 'outputs_v3': 'v3', 'outputs_v4': 'v4'},
+            'local_data_dir': 'data', 'local_outputs_dir': str(out),
+            'states': {
+                'VT': {
+                    'name': 'Vermont', 'fips': '50',
+                    'districts': {'2020': 1, '2010': 1, '2000': 1},
+                    'tiger': {}, 'pl94171': {},
+                }
+            }
+        }
+        (tmp / 'manifest3.json').write_text(json.dumps(manifest))
+
+        subprocess.run(
+            [str(REDIST_BIN), 'fetch',
+             '--states', 'VT', '--year', '2020', '--type', 'adjacency',
+             '--release', '--manifest', str(tmp / 'manifest3.json')],
+            capture_output=True, text=True, timeout=30,
+            cwd=str(out), env=env
+        )
+
+        done_files = list(out.rglob('*.done'))
+        assert done_files, 'No .done marker created after adjacency download'
