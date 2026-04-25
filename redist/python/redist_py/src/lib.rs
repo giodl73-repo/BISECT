@@ -7,7 +7,7 @@ use redist_core::{
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
     metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
-use redist_data::read_tiger_tracts;
+use redist_data::{read_tiger_tracts, build_adjacency_graph};
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -152,6 +152,43 @@ fn read_tiger_shp(
 }
 
 // ---------------------------------------------------------------------------
+// Adjacency builder
+// ---------------------------------------------------------------------------
+
+/// Build spatial adjacency graph from WKB-encoded projected polygons.
+///
+/// Args:
+///   polygons_wkb: list of WKB bytes (must be in equal-area projected CRS)
+///   min_boundary_length: minimum shared boundary in metres (default 10.0)
+///
+/// Returns dict with:
+///   'adjacency': list[list[int]] — CSR adjacency (adjacency[i] = sorted neighbors)
+///   'edge_weights': dict[(int,int) -> float] — canonical (min,max) → length in metres
+///   'n_vertices': int
+///   'n_edges': int
+#[pyfunction]
+#[pyo3(signature = (polygons_wkb, min_boundary_length=10.0))]
+fn build_adjacency(
+    py: Python<'_>,
+    polygons_wkb: Vec<Vec<u8>>,
+    min_boundary_length: f64,
+) -> PyResult<PyObject> {
+    let graph = build_adjacency_graph(&polygons_wkb, min_boundary_length)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+
+    let d = pyo3::types::PyDict::new_bound(py);
+    d.set_item("adjacency", &graph.adjacency)?;
+    d.set_item("edge_weights", &graph.edge_weights
+        .iter()
+        .map(|(&(u, v), &w)| ((u, v), w))
+        .collect::<HashMap<_, _>>()
+    )?;
+    d.set_item("n_vertices", graph.n_vertices)?;
+    d.set_item("n_edges", graph.n_edges)?;
+    Ok(d.into_any().unbind().into())
+}
+
+// ---------------------------------------------------------------------------
 // METIS file format
 // ---------------------------------------------------------------------------
 
@@ -241,5 +278,6 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(metis_graph_content, m)?)?;
     m.add_function(wrap_pyfunction!(metis_parse_partition, m)?)?;
     m.add_function(wrap_pyfunction!(read_tiger_shp, m)?)?;
+    m.add_function(wrap_pyfunction!(build_adjacency, m)?)?;
     Ok(())
 }

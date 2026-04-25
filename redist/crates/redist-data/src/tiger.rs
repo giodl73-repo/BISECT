@@ -157,6 +157,10 @@ fn ring_to_linestring_z(points: &[shapefile::PointZ]) -> LineString<f64> {
 
 /// Encode a geo Polygon as WKB (Well-Known Binary), little-endian.
 /// Format: byte order (1) + type (3 = Polygon) + n_rings + rings
+pub fn geo_to_wkb_polygon_pub(poly: &Polygon<f64>) -> Vec<u8> {
+    geo_to_wkb_polygon(poly)
+}
+
 fn geo_to_wkb_polygon(poly: &Polygon<f64>) -> Vec<u8> {
     let mut buf = Vec::new();
     // Byte order: little-endian
