@@ -71,3 +71,19 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 **Status:** SOLVED
 **Proved by:** VRA block begins with `if num_districts == 1: return to edge-weighted`
 **Test:** `tests/integration/test_vra_pipeline_balance.py::TestVRACodePathIntegrity`
+
+---
+
+## AP-06: Implicit partition equality assumption in recursive bisection
+
+**Pattern:** A bisection algorithm defaults to equal-weight partitioning (50/50) when splitting a node. This is correct when the node needs to produce two equal-sized children. It is wrong when the tree structure requires unequal children — for example, splitting 7 districts into [4, 3] requires 57%/43%, not 50%/50%. The algorithm produces a plausible-looking 2-way split every time, but only achieves population balance across the final districts when the target weights match the tree structure.
+
+**Domain:** Any recursive bisection algorithm where the two halves are not always equal. Non-power-of-two district counts (3, 5, 6, 7, 9, ...) require unequal splits at some levels of the tree. The error is invisible until the final population balance check reveals systematic imbalance (12-75% deviation observed for k=7).
+
+**Why it's hard to catch:** METIS accepts the call and produces a valid 2-way partition. The partition looks geometrically reasonable. Only the population balance assertion (applied after all bisection levels complete) reveals that the accumulated imbalance is unconstitutional. The connection between "missing target weights at depth 0" and "12% district imbalance" is not obvious.
+
+**Structural solution:** Every call to a 2-way partitioner must explicitly pass the target partition weights derived from the bisection tree node's k_left/k_right ratio. The partitioner function signature should require target weights as a parameter (not optional), forcing callers to compute them explicitly. Store k_left and k_right in BisectionNode so callers always have the correct ratio.
+
+**Status:** SOLVED in bisection_runner.rs
+**Proved by:** Alabama VRA with k=7 passes ±0.5% population balance; tpwgts file written with correct ratios
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_al_rust_population_balance`

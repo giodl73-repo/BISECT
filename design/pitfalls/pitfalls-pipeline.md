@@ -1,4 +1,4 @@
-# Pipeline Pitfalls (PP-01..PP-03)
+# Pipeline Pitfalls (PP-01..PP-07)
 
 Structural vulnerabilities in multi-script pipeline chains. The root pattern: a flag or intent expressed at one level of the chain silently fails to reach the level where it matters.
 
@@ -47,3 +47,67 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 **Status:** SOLVED for `--skip-analysis`, `--skip-political`, `--skip-demographic`
 **Proved by:** `run_states_parallel.py` defaults `run_analysis=False`; all three skip flags propagated
 **Test:** `tests/unit/test_pipeline_flag_propagation.py::TestSkipFlags`
+
+---
+
+## PP-04: Cross-language subprocess environment locality
+
+**Pattern:** A compiled binary spawns a subprocess using a short command name (e.g., `python`). The OS resolves that name against the spawning process's PATH, which differs from the environment the test runner or user expects. The subprocess finds a different interpreter — with different packages, different version, different behaviour — and fails with a package import error or silently produces wrong output.
+
+**Domain:** Any system where a compiled binary (Rust, Go, C++) invokes a scripted runtime (Python, Node, Ruby) via subprocess. The binary's PATH is set at launch time, often from a system shell profile, not from the virtual environment the developer is working in.
+
+**Why it's hard to catch:** The binary works when launched from the terminal (where the developer's shell profile sets PATH correctly). It fails in CI, tests, or when launched programmatically — where PATH comes from the test runner, not the developer's profile.
+
+**Structural solution:** Never use a short command name for a language runtime in a compiled binary. Accept the executable path via an environment variable (`REDIST_PYTHON`, `REDIST_NODE`) that the caller must set explicitly. Document this requirement in the binary's `--help` output.
+
+**Status:** SOLVED for Python subprocess calls in redist-cli
+**Proved by:** REDIST_PYTHON env var used in adjacency_loader.rs and runner.rs; acceptance tests set it to sys.executable
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — fixtures pass REDIST_PYTHON=sys.executable
+
+---
+
+## PP-05: Dual-purpose path parameter creates read/write coupling
+
+**Pattern:** A single path parameter controls both where outputs are written and where input data is read from. In production, these are the same directory tree, so no coupling is visible. In tests or non-standard deployments where inputs and outputs live in different locations, the system either fails to find inputs or writes outputs into the input directory.
+
+**Domain:** Any pipeline with an `--output-dir` parameter that is also used to locate data (adjacency graphs, demographics, configurations) that predates the current run. The parameter name implies "where to write" but the implementation also uses it as "where to read".
+
+**Why it's hard to catch:** All existing tests and documentation assume inputs and outputs share a root directory. The coupling is never visible until someone needs to read from a read-only data store or write to a separate location.
+
+**Structural solution:** Separate read paths from write paths explicitly. Output data goes to `--output-dir`. Input data (adjacency graphs, TIGER files, demographics) is looked up from `outputs/{version}/` or a separate `--data-dir` parameter that defaults to the version root. The two paths are always independent.
+
+**Status:** SOLVED in redist-cli runner.rs
+**Proved by:** Adjacency path uses `outputs/{version}/data/` independently of output_dir
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — tmp dir as output-dir, V3 as adjacency source
+
+---
+
+## PP-06: Parallel task failure invisibility via silent filter
+
+**Pattern:** When parallel tasks are collected with a filter-and-map pattern (`filter_map(.ok()?)` or equivalent), failures are silently discarded. The caller receives an empty or partial result with no indication of what failed. Downstream code that assumes complete results then produces wrong output (e.g., "0/1437 tracts assigned") with no connection to the actual failure.
+
+**Domain:** Any parallel computation (Rayon, async, thread pool) that maps over items and collects results. The ergonomic choice `filter_map` makes partial failure the default path — a single task error quietly removes that item from the result set.
+
+**Why it's hard to catch:** The system doesn't crash. It produces output (an empty or short result), and the error manifests far downstream: "0 tracts assigned" appears to be a bisection bug, not a METIS error. The actual failure message is lost.
+
+**Structural solution:** Use `map(|item| ... .map_err(...)?).collect::<Result<Vec<_>, _>>()?` in parallel contexts. First failure aborts the collection and returns the error. If partial success is acceptable, collect errors explicitly into a separate channel that is always inspected.
+
+**Status:** SOLVED in bisection_runner.rs
+**Proved by:** run_all_splits uses .map().collect::<Result>()? — first METIS error propagates immediately
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_al_rust_mm_count` — would show "bisection failed: depth N node '...': <gpmetis error>" instead of silent empty result
+
+---
+
+## PP-07: External tool parameter unit mismatch at boundary
+
+**Pattern:** A parameter stored internally in one unit or format is passed to an external tool that expects a different unit or format. The external tool silently accepts the wrong value and produces subtly wrong output. The symptom (e.g., population imbalance) looks like an algorithm failure, not a parameter error.
+
+**Domain:** Any system that drives an external binary (METIS, GDAL, ffmpeg) whose parameter conventions differ from the calling system's conventions. The mismatch is invisible in the code (both look like "ufactor") and only manifests in output quality.
+
+**Why it's hard to catch:** The external tool accepts the value without error. Its output is plausible — wrong values still partition the graph, just with looser or tighter balance than intended. The test that catches it (population balance check) is far from the conversion point.
+
+**Structural solution:** Create a typed wrapper at every external tool call boundary that performs the conversion explicitly and documents it. The wrapper's function name encodes the output unit: `ufactor_for_metis(depth: usize) -> f64` makes the conversion and destination explicit. Unit tests verify the wrapper for known input/output pairs.
+
+**Status:** SOLVED in bisection_runner.rs
+**Proved by:** ufactor_for_depth() returns decimal (1.001..1.005); acceptance tests confirm pop balance <=0.5%
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_al_rust_population_balance`

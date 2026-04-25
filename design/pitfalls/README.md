@@ -16,12 +16,12 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
-| Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 5 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 3 |
+| Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 6 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 7 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
-| Data | DP | [pitfalls-data.md](pitfalls-data.md) | 2 |
+| Data | DP | [pitfalls-data.md](pitfalls-data.md) | 3 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **14** |
+| **Total** | | | **20** |
 
 ## Status
 
@@ -39,8 +39,14 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | CP-02 | Algorithm operating outside its valid input domain | **SOLVED** | test_vra_pipeline_balance.py::TestVRACodePathIntegrity |
 | DP-01 | Population metric ambiguity across legal and algorithmic contexts | **OPEN** | — |
 | DP-02 | Module context loss across subprocess boundary | **SOLVED** | (2010/2000 pipeline runs) |
+| DP-03 | Identifier representation ambiguity at system boundaries | **SOLVED** | TestRustCLIAcceptance::test_vt_rust_final_assignments_exists |
 | RP-01 | Threshold sensitivity presented as a point result | **OPEN** | — |
 | RP-02 | Claim-to-data drift across pipeline evolution | **MITIGATED** | test_vra_compliance.py (partial) |
+| PP-04 | Cross-language subprocess environment locality | **SOLVED** | TestRustCLIAcceptance — REDIST_PYTHON=sys.executable |
+| PP-05 | Dual-purpose path parameter creates read/write coupling | **SOLVED** | TestRustCLIAcceptance — tmp dir + V3 adjacency |
+| PP-06 | Parallel task failure invisibility via silent filter | **SOLVED** | TestRustCLIAcceptance::test_al_rust_mm_count |
+| PP-07 | External tool parameter unit mismatch at boundary | **SOLVED** | TestRustCLIAcceptance::test_al_rust_population_balance |
+| AP-06 | Implicit partition equality assumption in recursive bisection | **SOLVED** | TestRustCLIAcceptance::test_al_rust_population_balance |
 
 ## Adding a Pitfall
 
