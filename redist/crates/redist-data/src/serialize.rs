@@ -33,6 +33,8 @@ pub enum SerializeError {
     UnsupportedVersion(u32),
     #[error("data truncated at {context}")]
     Truncated { context: &'static str },
+    #[error("n_edges header ({header}) does not match actual edge weight count ({actual})")]
+    EdgeCountMismatch { header: usize, actual: usize },
 }
 
 /// Serialize an adjacency graph to binary bytes.
@@ -123,19 +125,28 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
 
     // Edge weights
     let n_weights = read_u32!("n_weights") as usize;
+    // Validate header n_edges matches actual weight count
+    if n_weights != n_edges_hdr {
+        return Err(SerializeError::EdgeCountMismatch {
+            header: n_edges_hdr,
+            actual: n_weights,
+        });
+    }
     let mut edge_weights = std::collections::HashMap::with_capacity(n_weights);
     for _ in 0..n_weights {
         let u = read_u32!("edge_u") as usize;
         let v = read_u32!("edge_v") as usize;
         let w = read_f64!("edge_weight");
-        edge_weights.insert((u, v), w);
+        // Enforce canonical order on read (defensive)
+        let key = (u.min(v), u.max(v));
+        edge_weights.insert(key, w);
     }
 
     Ok(AdjacencyGraph {
         adjacency,
         edge_weights,
         n_vertices,
-        n_edges: n_edges_hdr,
+        n_edges: n_weights, // use actual count, not header
     })
 }
 
@@ -213,6 +224,19 @@ mod tests {
         assert_eq!(g2.n_vertices, 2);
         assert_eq!(g2.n_edges, 0);
         assert!(g2.edge_weights.is_empty());
+    }
+
+    #[test]
+    fn test_edge_count_mismatch_error() {
+        // Construct bytes with mismatched n_edges header vs actual weight count
+        let g = make_graph();
+        let mut bytes = serialize_adjacency(&g);
+        // Header n_edges is at offset 12..16 (after magic, version, n_vertices)
+        // Change it to 999
+        bytes[12] = 0xe7; bytes[13] = 0x03; bytes[14] = 0x00; bytes[15] = 0x00; // 999 LE
+        let result = deserialize_adjacency(&bytes);
+        assert!(matches!(result, Err(SerializeError::EdgeCountMismatch { .. })),
+            "mismatched n_edges should be caught");
     }
 
     #[test]

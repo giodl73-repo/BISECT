@@ -71,8 +71,12 @@ pub fn build_adjacency_graph(
         if let Some(bbox) = poly.bounding_rect() {
             let cx = bbox.center().x;
             let cy = bbox.center().y;
-            // If coordinates look like degrees (-180..180, -90..90), warn
-            if cx.abs() < 180.0 && cy.abs() < 90.0 && cx.abs() < 1000.0 {
+            // Heuristic: if BOTH x and y are in degree range AND x is in longitude range,
+        // the input is likely WGS84/NAD83 degrees rather than projected metres.
+        // Valid US projected CRS (EPSG:5070, 3338, 6364, UTM) have at least one
+        // coordinate >> 1000 metres. This check is imperfect for very small areas;
+        // callers should use explicit CRS documentation.
+            if cx.abs() <= 180.0 && cy.abs() <= 90.0 {
                 return Err(AdjacencyError::LikelyUnprojected(cx, cy));
             }
         }

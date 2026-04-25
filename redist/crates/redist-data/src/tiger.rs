@@ -181,10 +181,26 @@ fn geo_to_wkb_polygon(poly: &Polygon<f64>) -> Vec<u8> {
 }
 
 fn write_ring(buf: &mut Vec<u8>, coords: &[geo_types::Point<f64>]) {
-    buf.extend_from_slice(&(coords.len() as u32).to_le_bytes());
+    if coords.is_empty() {
+        buf.extend_from_slice(&0u32.to_le_bytes());
+        return;
+    }
+    // WKB requires the ring to be closed: first == last point.
+    // Shapefile rings are always closed; add the closing point defensively
+    // in case a caller constructs a polygon without one.
+    let needs_close = coords.first().zip(coords.last())
+        .map(|(f, l)| (f.x() - l.x()).abs() > 1e-12 || (f.y() - l.y()).abs() > 1e-12)
+        .unwrap_or(false);
+
+    let n = if needs_close { coords.len() + 1 } else { coords.len() };
+    buf.extend_from_slice(&(n as u32).to_le_bytes());
     for pt in coords {
         buf.extend_from_slice(&pt.x().to_le_bytes());
         buf.extend_from_slice(&pt.y().to_le_bytes());
+    }
+    if needs_close {
+        buf.extend_from_slice(&coords[0].x().to_le_bytes());
+        buf.extend_from_slice(&coords[0].y().to_le_bytes());
     }
 }
 
@@ -222,6 +238,46 @@ mod tests {
         assert_eq!(wkb[0], 1u8); // little-endian byte order marker
         // WKB type = 3 (Polygon)
         assert_eq!(u32::from_le_bytes([wkb[1], wkb[2], wkb[3], wkb[4]]), 3u32);
+    }
+
+    #[test]
+    fn test_wkb_ring_closing_point_added_when_missing() {
+        // Polygon with 3 unique points and NO explicit closing point
+        let poly = Polygon::new(
+            LineString::new(vec![
+                Coord { x: 0.0, y: 0.0 },
+                Coord { x: 1.0, y: 0.0 },
+                Coord { x: 0.5, y: 1.0 },
+                // no closing point
+            ]),
+            vec![],
+        );
+        let wkb = geo_to_wkb_polygon(&poly);
+        // Ring should have 4 points (3 + closing)
+        let n_points = u32::from_le_bytes([wkb[9], wkb[10], wkb[11], wkb[12]]);
+        assert_eq!(n_points, 4u32, "closing point should be appended");
+        // First and last x must match
+        let first_x = f64::from_le_bytes(wkb[13..21].try_into().unwrap());
+        let last_offset = 13 + (n_points as usize - 1) * 16;
+        let last_x = f64::from_le_bytes(wkb[last_offset..last_offset+8].try_into().unwrap());
+        assert_eq!(first_x, last_x, "first and last point must match (WKB ring closed)");
+    }
+
+    #[test]
+    fn test_wkb_ring_not_duplicated_when_already_closed() {
+        // Polygon that already has the closing point
+        let poly = Polygon::new(
+            LineString::new(vec![
+                Coord { x: 0.0, y: 0.0 },
+                Coord { x: 1.0, y: 0.0 },
+                Coord { x: 0.5, y: 1.0 },
+                Coord { x: 0.0, y: 0.0 },  // explicit closing point
+            ]),
+            vec![],
+        );
+        let wkb = geo_to_wkb_polygon(&poly);
+        let n_points = u32::from_le_bytes([wkb[9], wkb[10], wkb[11], wkb[12]]);
+        assert_eq!(n_points, 4u32, "should have 4 points (not 5) — no duplicate closing");
     }
 
     #[test]

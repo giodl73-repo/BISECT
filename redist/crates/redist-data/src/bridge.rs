@@ -97,7 +97,9 @@ pub fn connect_island_components(
 
     let main_component = &components[0];
     let counties: Vec<&str> = geoids.iter().map(|g| county_from_geoid(g)).collect();
-    let mut new_edges: Vec<(usize, usize)> = Vec::new();
+    // HashSet for O(1) deduplication (vs O(n²) Vec::contains for island-heavy states)
+    let mut new_edges_set: std::collections::HashSet<(usize, usize)> =
+        std::collections::HashSet::new();
 
     for component in &components[1..] {
         for &tract_idx in component {
@@ -128,13 +130,13 @@ pub fn connect_island_components(
                 .unwrap(); // candidates is never empty
 
             let edge = (tract_idx.min(closest), tract_idx.max(closest));
-            if !new_edges.contains(&edge) {
-                new_edges.push(edge);
-            }
+            new_edges_set.insert(edge);
         }
     }
 
-    new_edges
+    let mut edges: Vec<_> = new_edges_set.into_iter().collect();
+    edges.sort_unstable(); // deterministic output order
+    edges
 }
 
 #[cfg(test)]
