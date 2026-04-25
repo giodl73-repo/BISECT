@@ -7,13 +7,15 @@ The Python-facing API is intentionally minimal. Rust does computation; Python do
 ```python
 class Graph:
     @staticmethod
-    def from_dict(data: dict) -> "Graph":
+    def from_csr(data: dict) -> "Graph":
         """
-        Build from a Python dict with keys:
-          - 'adjacency': list of (u, v) int pairs
+        Build from a Python dict in CSR (Compressed Sparse Row) format,
+        matching the adjacency format used throughout recursive_bisection.py:
+          - 'adjacency': list[list[int]] — adjacency[i] = list of neighbor indices
           - 'vertex_weights': 1D numpy array of int (population per tract)
           - 'n_vertices': int
         Raises ValueError if vertex_weights is 2D (multi-constraint not supported).
+        Note: NOT edge pairs (u,v). Use the CSR format that the pipeline already uses.
         """
 
     def n_vertices(self) -> int: ...
