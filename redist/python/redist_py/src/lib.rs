@@ -11,6 +11,11 @@ use redist_data::{
     read_tiger_tracts, build_adjacency_graph, connect_island_components,
     serialize_adjacency, deserialize_adjacency, AdjacencyGraph,
 };
+use redist_analysis::{
+    polsby_popper as rust_pp, reock as rust_reock, convex_hull_ratio as rust_chr,
+    analyze_mm_districts as rust_vra_analysis,
+};
+use redist_analysis::compactness::all_metrics as rust_all_metrics;
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -130,6 +135,87 @@ fn build_vra_edge_weights(
     let fracs = minority_fracs.as_slice()
         .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
     Ok(core_vra(&edges, fracs, threshold))
+}
+
+// ---------------------------------------------------------------------------
+// Compactness metrics
+// ---------------------------------------------------------------------------
+
+/// Compute Polsby-Popper score from WKB polygon (projected CRS required).
+/// Returns (polsby_popper_score, perimeter_metres).
+#[pyfunction]
+fn compute_polsby_popper(
+    py: Python<'_>,
+    wkb: Vec<u8>,
+) -> PyResult<(f64, f64)> {
+    use redist_data::adjacency::parse_wkb_polygon_pub;
+    let poly = parse_wkb_polygon_pub(&wkb, 0)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    rust_pp(&poly).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Compute Reock score from WKB polygon (projected CRS required).
+#[pyfunction]
+fn compute_reock(wkb: Vec<u8>) -> PyResult<f64> {
+    use redist_data::adjacency::parse_wkb_polygon_pub;
+    let poly = parse_wkb_polygon_pub(&wkb, 0)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    rust_reock(&poly).map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Compute all three compactness metrics (PP, Reock, CHR) from WKB polygon.
+/// Returns dict: {district, polsby_popper, reock, convex_hull_ratio, perimeter_m, area_m2}
+#[pyfunction]
+fn compute_all_compactness(
+    py: Python<'_>,
+    district: usize,
+    wkb: Vec<u8>,
+) -> PyResult<PyObject> {
+    use redist_data::adjacency::parse_wkb_polygon_pub;
+    let poly = parse_wkb_polygon_pub(&wkb, 0)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let m = rust_all_metrics(district, &poly)
+        .map_err(|e| PyValueError::new_err(e.to_string()))?;
+    let d = pyo3::types::PyDict::new_bound(py);
+    d.set_item("district", m.district)?;
+    d.set_item("polsby_popper", m.polsby_popper)?;
+    d.set_item("reock", m.reock)?;
+    d.set_item("convex_hull_ratio", m.convex_hull_ratio)?;
+    d.set_item("perimeter_m", m.perimeter_m)?;
+    d.set_item("area_m2", m.area_m2)?;
+    Ok(d.into_any().unbind().into())
+}
+
+/// Compute VRA majority-minority district analysis.
+/// Returns dict: {mm_count, mm_districts, districts: [{district, pct_minority, pct_black, pct_hispanic, is_mm}]}
+#[pyfunction]
+#[pyo3(signature = (assignments, total_pops, minority_pops, black_pops, hispanic_pops, mm_threshold=0.50))]
+fn compute_vra_analysis(
+    py: Python<'_>,
+    assignments: HashMap<usize, usize>,
+    total_pops: Vec<i64>,
+    minority_pops: Vec<f64>,
+    black_pops: Vec<f64>,
+    hispanic_pops: Vec<f64>,
+    mm_threshold: f64,
+) -> PyResult<PyObject> {
+    let vra = rust_vra_analysis(
+        &assignments, &total_pops, &minority_pops, &black_pops, &hispanic_pops, mm_threshold
+    );
+    let d = pyo3::types::PyDict::new_bound(py);
+    d.set_item("mm_count", vra.mm_count)?;
+    d.set_item("mm_districts", &vra.mm_districts)?;
+    let districts: Vec<_> = vra.districts.iter().map(|dist| {
+        let dd = pyo3::types::PyDict::new_bound(py);
+        dd.set_item("district", dist.district).unwrap();
+        dd.set_item("pct_minority", dist.pct_minority).unwrap();
+        dd.set_item("pct_black", dist.pct_black).unwrap();
+        dd.set_item("pct_hispanic", dist.pct_hispanic).unwrap();
+        dd.set_item("is_mm", dist.is_mm).unwrap();
+        dd.into_any().unbind()
+    }).collect();
+    d.set_item("districts", districts)?;
+    Ok(d.into_any().unbind().into())
 }
 
 // ---------------------------------------------------------------------------
@@ -338,6 +424,10 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(metis_graph_content, m)?)?;
     m.add_function(wrap_pyfunction!(metis_parse_partition, m)?)?;
     m.add_function(wrap_pyfunction!(read_tiger_shp, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_polsby_popper, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_reock, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_all_compactness, m)?)?;
+    m.add_function(wrap_pyfunction!(compute_vra_analysis, m)?)?;
     m.add_function(wrap_pyfunction!(build_adjacency, m)?)?;
     m.add_function(wrap_pyfunction!(connect_islands, m)?)?;
     m.add_function(wrap_pyfunction!(adjacency_to_bin, m)?)?;

@@ -673,7 +673,12 @@ name = "redist-analysis"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "geo",
+ "geo-types",
  "redist-core",
+ "serde",
+ "serde_json",
+ "thiserror",
 ]
 
 [[package]]
@@ -733,6 +738,7 @@ dependencies = [
  "anyhow",
  "numpy",
  "pyo3",
+ "redist-analysis",
  "redist-core",
  "redist-data",
 ]

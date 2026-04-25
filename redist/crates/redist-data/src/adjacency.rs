@@ -154,6 +154,11 @@ pub fn build_adjacency_graph(
     Ok(AdjacencyGraph { adjacency, edge_weights, n_vertices: n, n_edges })
 }
 
+/// Public wrapper for tests and PyO3 (compactness module needs to parse WKB).
+pub fn parse_wkb_polygon_pub(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyError> {
+    parse_wkb_polygon(wkb, idx)
+}
+
 /// Parse a WKB-encoded polygon (little-endian, type 3).
 fn parse_wkb_polygon(wkb: &[u8], idx: usize) -> Result<Polygon<f64>, AdjacencyError> {
     if wkb.len() < 9 {
