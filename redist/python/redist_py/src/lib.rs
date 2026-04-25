@@ -7,7 +7,7 @@ use redist_core::{
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
     metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
-use redist_data::{read_tiger_tracts, build_adjacency_graph};
+use redist_data::{read_tiger_tracts, build_adjacency_graph, connect_island_components};
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -152,6 +152,27 @@ fn read_tiger_shp(
 }
 
 // ---------------------------------------------------------------------------
+// Island bridging
+// ---------------------------------------------------------------------------
+
+/// Connect disconnected graph components (islands) to the main component.
+///
+/// Args:
+///   adjacency: list[list[int]] — CSR adjacency from build_adjacency
+///   centroids: list[(float, float)] — projected (x, y) centroid per tract
+///   geoids: list[str] — 11-char GEOID per tract (for county extraction)
+///
+/// Returns list of (u, v) tuples to add as bridge edges (canonical u < v).
+#[pyfunction]
+fn connect_islands(
+    adjacency: Vec<Vec<usize>>,
+    centroids: Vec<(f64, f64)>,
+    geoids: Vec<String>,
+) -> Vec<(usize, usize)> {
+    connect_island_components(&adjacency, &centroids, &geoids)
+}
+
+// ---------------------------------------------------------------------------
 // Adjacency builder
 // ---------------------------------------------------------------------------
 
@@ -279,5 +300,6 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(metis_parse_partition, m)?)?;
     m.add_function(wrap_pyfunction!(read_tiger_shp, m)?)?;
     m.add_function(wrap_pyfunction!(build_adjacency, m)?)?;
+    m.add_function(wrap_pyfunction!(connect_islands, m)?)?;
     Ok(())
 }
