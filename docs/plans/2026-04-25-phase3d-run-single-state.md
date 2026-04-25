@@ -1577,13 +1577,54 @@ redist fetch [OPTIONS]
 
 Options:
   --year <YEAR>         Census year (2020, 2010, 2000, or all) [default: 2020]
-  --states <STATES>     Specific states (default: all)
-  --type <TYPE>         Data type: tiger, redistricting, adjacency, all [default: all]
+  --states <STATES>     Specific states to fetch (default: all)
+                        Example: --states AL GA MS (only Alabama + Georgia + Mississippi)
+  --type <TYPE>         Data type: tiger, redistricting, adjacency, demographics, all
+                        [default: all]
   --release             Pull from GitHub Releases (requires gh auth login)
   --manifest <PATH>     Override manifest file path
   --check-only          Print what would be downloaded without downloading
   --workers <N>         Parallel download workers [default: 4]
+  --force               Re-download even if files already exist
 ```
+
+### Incremental fetch — only what's missing
+
+**IMPORTANT**: `redist fetch` is **incremental by default**. It checks each target file before downloading and skips files that already exist. This means:
+
+- `redist fetch --states AL` downloads ONLY Alabama's data (TIGER shapefile, demographics, adjacency). Fast and cheap — typically <10s.
+- `redist fetch --states AL --force` re-downloads Alabama even if present.
+- `redist fetch` (no --states) downloads all 50 states, skipping already-present files.
+
+Each file gets a `.done` marker file after successful download. Before downloading, the fetch command checks: if `{target_path}.done` exists AND the file size matches the manifest's expected size, skip.
+
+State-specific files: `tl_2020_{fips}_tract.zip`, `{state_name}2020.pl.zip`, `{state_lower}_adjacency_2020.pkl`
+Shared files: only downloaded once regardless of --states filter.
+
+### E2E Alabama VRA performance goal (from scratch)
+
+**Target: Alabama VRA redistricting in <30s from a clean machine.**
+
+```bash
+time (redist fetch --states AL --year 2020 && \
+      redist state --state AL --year 2020 --version V4 \
+                   --partition-mode metis-vra --seed 42)
+```
+
+Expected breakdown:
+| Step | Target |
+|---|---|
+| `redist fetch --states AL` | <10s (TIGER ~1MB + demographics ~200KB + adjacency pkl ~1MB) |
+| Adjacency load (pkl shim) | <1s |
+| Demographics load | <0.1s |
+| VRA edge weight build | <0.5s |
+| METIS bisection (7 districts, seed=42) | ~1.5s (measured: 1354ms) |
+| Balance check + output write | <0.1s |
+| **Total** | **<15s** |
+
+For comparison: Python pipeline for AL VRA (with data present) is ~60-90s. The Rust CLI target is 4–6× faster.
+
+Record actual timings in `design/rust-port/migration-log.md` when Task 11 runs.
 
 ### Task steps
 
