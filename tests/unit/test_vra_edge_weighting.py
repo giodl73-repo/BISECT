@@ -221,33 +221,34 @@ class TestVRACodePath:
     edge-weighting logic and does NOT use multi-constraint vertex weights.
     """
 
-    def test_vra_mode_clears_after_setup(self):
+    def test_vra_mode_stays_true_throughout_run(self):
         """
-        After VRA edge-weight setup, vra_mode should be False so that
-        population stats use 1D vertex_weights (not 2D multi-constraint).
+        vra_mode must remain True for the entire VRA run — it is a run-type flag,
+        not a multi-constraint flag. Population stats use vertex_weights.ndim to
+        distinguish 1D vs 2D arrays, NOT vra_mode (invariant fixed in VRA rewrite).
+
+        Previous bug: vra_mode was cleared to False after edge-weight setup, which
+        caused the vra_analysis block to be skipped (vra_analysis.pkl not written).
         """
-        # This test validates the logic structure, not METIS execution
         import pandas as pd
         import numpy as np
 
-        # Simulate the VRA mode block from run_state_redistricting.py
         partition_mode = 'metis-vra'
         vra_mode = False
 
         if partition_mode == 'metis-vra':
-            vra_mode = True  # set at start of VRA block
+            vra_mode = True
 
             tracts_df = pd.DataFrame({'pct_minority': [0.6, 0.2, 0.5, 0.1]})
-            is_minority = (tracts_df['pct_minority'] >= 0.40).values
             adj = [[1], [0, 2], [1, 3], [2]]
             ew = build_vra_edge_weights(adj, tracts_df)
 
-            # After setup, flag must be cleared — population stats use 1D weights
-            vra_mode = False
+            # vra_mode must NOT be cleared here — analysis block needs it True
+            # (the old bug cleared it here, skipping vra_analysis.pkl write)
 
-        assert not vra_mode, (
-            'vra_mode must be False after edge-weight setup. '
-            'If True, population stats try 2D indexing on 1D array -> IndexError.'
+        assert vra_mode, (
+            'vra_mode must stay True after edge-weight setup. '
+            'Clearing it causes vra_analysis.pkl to not be written.'
         )
 
     def test_vertex_weights_remain_1d(self):
@@ -267,3 +268,107 @@ class TestVRACodePath:
             'Multi-constraint mode was incorrectly activated.'
         )
         np.testing.assert_array_equal(vertex_weights, original_vw)
+
+
+# ── Rust formula parity tests ─────────────────────────────────────────────────
+import os as _os
+_RUST_AVAILABLE = _os.environ.get('REDIST_NO_RUST', '0') != '1'
+try:
+    import redist_py as _redist_py
+    _RUST_IMPORTABLE = True
+except ImportError:
+    _RUST_IMPORTABLE = False
+
+_RUST_SKIP = pytest.mark.skipif(
+    not _RUST_AVAILABLE or not _RUST_IMPORTABLE,
+    reason='redist_py not available'
+)
+
+
+@_RUST_SKIP
+class TestRustFormulaParity:
+    """
+    Verify Rust build_vra_edge_weights produces identical results to the
+    Python formula across representative state profiles.
+
+    These are the tests that would catch formula drift between the Rust
+    implementation and any future Python copy. If they fail, it means
+    someone edited one implementation without updating the other.
+    """
+
+    def _python_weights(self, adj, minority_pcts, threshold=0.40):
+        """Reference: Python formula as it existed before Phase 1a deletion."""
+        import numpy as np
+        minority_fracs = np.array(minority_pcts)
+        is_minority = minority_fracs >= threshold
+        f_minority = is_minority.mean()
+        alpha = max(3.0, 10.0 * (1.0 - 0.7 * f_minority))
+        ew = {}
+        for i in range(len(adj)):
+            for j in adj[i]:
+                if i < j and is_minority[i] and is_minority[j]:
+                    ew[(i, j)] = alpha
+        return ew
+
+    def _rust_weights(self, adj, minority_pcts, threshold=0.40):
+        import numpy as np
+        minority_fracs = np.array(minority_pcts, dtype=np.float64)
+        edges = [(i, j) for i in range(len(adj)) for j in adj[i] if i < j]
+        return _redist_py.build_vra_edge_weights(edges, minority_fracs, threshold=threshold)
+
+    def _assert_parity(self, adj, minority_pcts, label, threshold=0.40):
+        py = self._python_weights(adj, minority_pcts, threshold)
+        rs = self._rust_weights(adj, minority_pcts, threshold)
+        assert set(py.keys()) == set(rs.keys()), (
+            f'{label}: boosted edge sets differ\n'
+            f'  Python only: {set(py)-set(rs)}\n'
+            f'  Rust only:   {set(rs)-set(py)}'
+        )
+        for edge, py_w in py.items():
+            rs_w = rs[edge]
+            assert abs(py_w - rs_w) < 1e-9, (
+                f'{label} edge {edge}: Python={py_w:.6f} Rust={rs_w:.6f}'
+            )
+
+    def test_parity_alabama_profile(self):
+        """Alabama: ~22% minority tracts → alpha ≈ 8.46."""
+        n = 100
+        # Linear graph: tracts 0-21 minority, 22-99 not
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.55 if i < 22 else 0.20 for i in range(n)]
+        self._assert_parity(adj, pcts, 'Alabama')
+
+    def test_parity_georgia_profile(self):
+        """Georgia: ~34% minority tracts → alpha ≈ 7.6."""
+        n = 60
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.55 if i < 20 else 0.20 for i in range(n)]
+        self._assert_parity(adj, pcts, 'Georgia')
+
+    def test_parity_california_profile(self):
+        """California: ~63% minority tracts → alpha ≈ 5.6 (near floor)."""
+        n = 50
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.65 if i < 32 else 0.15 for i in range(n)]
+        self._assert_parity(adj, pcts, 'California')
+
+    def test_parity_all_minority_floor(self):
+        """All tracts minority → f=1.0 → alpha = 3.0 (floor)."""
+        n = 20
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.70] * n
+        self._assert_parity(adj, pcts, 'All-minority floor')
+
+    def test_parity_no_minority_empty(self):
+        """No minority tracts → no boosted edges → both return empty."""
+        n = 20
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.10] * n
+        self._assert_parity(adj, pcts, 'No-minority empty')
+
+    def test_parity_south_carolina_profile(self):
+        """South Carolina: ~16% minority tracts → alpha ≈ 8.9."""
+        n = 80
+        adj = [[i-1] if i == n-1 else ([i+1] if i == 0 else [i-1, i+1]) for i in range(n)]
+        pcts = [0.50 if i < 13 else 0.20 for i in range(n)]
+        self._assert_parity(adj, pcts, 'South Carolina')

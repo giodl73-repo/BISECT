@@ -223,41 +223,36 @@ def run_state_redistricting(state_code: str, state_config: dict, year: str = '20
             #
             # This encodes minority clustering into the graph structure itself rather than
             # using multi-constraint optimization, which sacrifices population balance.
-            MINORITY_THRESHOLD = 0.40   # 40% minority tract threshold (Paper D.0 optimal)
-            NORMAL_WEIGHT = 1.0         # all other edges
+            # Adaptive boost formula lives in redist-core/src/vra.rs — single source.
+            # Formula: alpha = max(3.0, 10.0*(1 - 0.7*f_minority)), threshold=40%
+            # METIS writer defaults missing edges to 1.0 (metis_executable.py:304),
+            # so we only return the boosted minority-minority edges.
+            try:
+                from redist_py import build_vra_edge_weights as _rust_vra
+            except ImportError:
+                raise ImportError(
+                    'redist_py not available — VRA mode requires the Rust extension. '
+                    'Build with: cd redist/python/redist_py && maturin develop\n'
+                    'Or set REDIST_NO_RUST=1 to disable (VRA mode will not be available).'
+                )
 
-            # Scale the boost inversely with the fraction of minority-minority edges.
-            # When most edges are minority-minority (high-diversity states like CA, TX),
-            # a large boost becomes nearly uniform and disrupts population balance.
-            # Paper D.0 found 5-10x optimal; we cap lower as minority density rises.
-            is_minority = (tracts_with_demo['pct_minority'] >= MINORITY_THRESHOLD).values
-            minority_frac = is_minority.mean()
-            # Linear taper: 10x at 0% minority-minority saturation → 3x at 100%
-            MINORITY_WEIGHT = max(3.0, 10.0 * (1.0 - 0.7 * minority_frac))
-            n_tracts = len(tracts_with_demo)
-
-            # Build edge weight dict from adjacency (replace boundary lengths with
-            # simple categorical weights — minority-minority vs other)
+            import numpy as _np
+            MINORITY_THRESHOLD = 0.40
+            minority_fracs_arr = tracts_with_demo['pct_minority'].to_numpy(dtype=_np.float64)
             adj = graph_data['adjacency']
-            vra_edge_weights = {}
-            boosted = 0
-            for i in range(n_tracts):
-                for j in adj[i]:
-                    if i < j:
-                        if is_minority[i] and is_minority[j]:
-                            vra_edge_weights[(i, j)] = MINORITY_WEIGHT
-                            boosted += 1
-                        else:
-                            vra_edge_weights[(i, j)] = NORMAL_WEIGHT
+            edges = [(i, j) for i in range(len(adj)) for j in adj[i] if i < j]
+            vra_edge_weights = _rust_vra(edges, minority_fracs_arr, threshold=MINORITY_THRESHOLD)
 
-            minority_tracts = is_minority.sum()
-            print(f"[VRA] {minority_tracts} tracts >={MINORITY_THRESHOLD*100:.0f}% minority, "
-                  f"{boosted} minority-minority edges weighted {MINORITY_WEIGHT:.0f}x "
-                  f"(of {len(vra_edge_weights)} total)")
+            # Logging only — alpha recomputed here for display, not for weight assignment
+            is_minority_log = minority_fracs_arr >= MINORITY_THRESHOLD
+            alpha_log = max(3.0, 10.0 * (1.0 - 0.7 * is_minority_log.mean()))
+            print(f"[VRA] {int(is_minority_log.sum())} tracts >={MINORITY_THRESHOLD*100:.0f}% minority, "
+                  f"{len(vra_edge_weights)} minority-minority edges weighted {alpha_log:.0f}x "
+                  f"(of {len(edges)} total)")
 
             edge_weights = vra_edge_weights
             # vra_mode stays True — this IS a VRA run.
-            # multi_constraint is determined by vra_target_weights (None here → False).
+            # multi_constraint is determined by vra_target_weights (None here -> False).
 
     partitioner = RecursiveBisection(
         adjacency=adjacency,
