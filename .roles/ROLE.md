@@ -15,6 +15,7 @@ SCALE      Statistician              ─── Significance, confidence interval
 COMMONS    Civic Advocate            ─── Community voice, representation, lived impact
 SURVEY     Practitioner              ─── Court admissibility, operational feasibility
 BENCHMARK  Test Engineer             ─── Test coverage, stale assertions, ground truth
+TRENCH     Failure Mode Specialist   ─── Pitfall enumeration, structural prevention, traceability
 ```
 
 ## Tiebreaker Ranking
@@ -30,6 +31,7 @@ When roles conflict, earlier roles govern:
 7. **DATUM**     — publication quality is a gate, not a veto
 8. **COMMONS**   — community voice informs but doesn't override
 9. **SURVEY**    — operational feasibility is last
+10. **TRENCH**   — pitfall collection grows every session; structural prevention is the standard
 
 ## Core Tensions
 
