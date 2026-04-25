@@ -1,0 +1,14 @@
+[build-system]
+requires = ["maturin>=1.5,<2"]
+build-backend = "maturin"
+
+[project]
+name = "redist_py"
+version = "0.1.0"
+description = "PyO3 bindings for the redist redistricting engine"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+python-source = "python"   # optional: if you add a pure-Python wrapper later

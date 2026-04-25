@@ -226,3 +226,8 @@ venv/
 .env
 .env.local
 
+
+# Rust build artifacts
+redist/target/
+redist/**/*.so
+redist/**/*.pyd

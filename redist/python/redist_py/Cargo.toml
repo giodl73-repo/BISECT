@@ -1,0 +1,17 @@
+[package]
+name = "redist_py"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "PyO3 bindings for redist-core"
+
+[lib]
+name = "redist_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+redist-core = { path = "../../crates/redist-core" }
+pyo3.workspace = true
+numpy.workspace = true
+anyhow.workspace = true

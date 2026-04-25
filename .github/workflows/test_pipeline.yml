@@ -13,6 +13,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
         python-version: ['3.11', '3.12', '3.13']
+    env:
+      REDIST_NO_RUST: "1"   # Rust not compiled in this job; pure-Python path used
 
     steps:
     - uses: actions/checkout@v4
@@ -46,6 +48,42 @@ jobs:
         files: ./coverage.xml
         flags: unittests
         name: codecov-umbrella
+
+  rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@stable
+
+    - name: Install METIS
+      run: sudo apt-get install -y metis
+
+    - name: Install maturin and build PyO3 bindings
+      run: |
+        pip install maturin
+        # Build and install redist_py wheel once redist/ workspace exists
+        # Uncomment when Phase 0 scaffold is committed:
+        # cd redist && maturin develop --release
+
+    - name: Run Rust unit tests
+      run: |
+        # Uncomment when Phase 0 scaffold is committed:
+        # cd redist && cargo test --workspace
+        echo "Rust scaffold not yet committed — placeholder job"
+
+    - name: Run Python-via-PyO3 tests
+      run: |
+        pip install -r requirements.txt
+        # Uncomment when Phase 0 scaffold is committed:
+        # pytest tests/unit/test_rust_graph.py -v
+        echo "PyO3 tests pending Phase 0 scaffold"
 
   test-e2e:
     runs-on: ${{ matrix.os }}
