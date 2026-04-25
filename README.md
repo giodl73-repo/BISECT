@@ -16,21 +16,23 @@ Split the state into two equal halves by population. Split each half again. Keep
 
 ---
 
+## Why bisection is fair
+
+Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
+
+It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of splitting. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
+
 ## How it works
 
-The algorithm treats each state as a graph. Census tracts are nodes; two tracts are connected if they share a border. The weight on each edge is the length of that shared border — so cuts through long shared boundaries cost more than cuts through short ones.
+**The picture, in plain terms:** treat the state as a map of small neighborhoods. Two neighborhoods are connected if they share a border, and the connection is "stronger" the longer that shared border is. The algorithm cuts the map in half by snipping the weakest set of connections that produces two halves with equal population — which naturally avoids long, jagged borders.
+
+Stated formally, the algorithm treats each state as a graph. Census tracts are nodes; two tracts are connected if they share a border. The weight on each edge is the length of that shared border — so cuts through long shared boundaries cost more than cuts through short ones.
 
 Then it bisects. METIS, a high-performance graph partitioner, splits the state into two halves of roughly equal population. Each half is split again. This continues for `⌈log₂ N⌉` rounds until there are exactly `N` districts. Minnesota's 8 districts take 3 rounds. California's 52 take 6.
 
 Because the algorithm minimizes the total weight of the edges it cuts — and edge weight equals shared boundary length — it is directly minimizing the total perimeter of the resulting districts. Shorter perimeter at fixed area means more compact, more sensible shapes. The Polsby–Popper score (the standard compactness metric) goes up automatically, without ever being told to.
 
 **No political or racial data enters the algorithm at any stage.** The inputs are geometry and population, nothing else.
-
-## Why bisection
-
-Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
-
-It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of splitting. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
 
 ## Track record
 
