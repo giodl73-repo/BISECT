@@ -123,13 +123,13 @@ pub fn all_metrics(
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Polygon perimeter = exterior ring length + sum of hole lengths.
+/// Polygon perimeter = exterior ring length only.
+///
+/// Matches Python Shapely: `geometry.length` on a Polygon returns only the
+/// exterior ring perimeter, NOT including interior holes. Holes are excluded
+/// to maintain parity with `analyze_district_compactness.py:polsby_popper_score`.
 fn polygon_perimeter(polygon: &Polygon<f64>) -> f64 {
-    let mut p = polygon.exterior().euclidean_length();
-    for interior in polygon.interiors() {
-        p += interior.euclidean_length();
-    }
-    p
+    polygon.exterior().euclidean_length()
 }
 
 /// Max Euclidean distance from centroid to any exterior boundary coordinate.
@@ -288,6 +288,45 @@ mod tests {
         assert!((m.area_m2 - 1_000_000.0).abs() < 0.001); // 1km² in m²
         assert!((m.perimeter_m - 4000.0).abs() < 0.001);
         assert!(m.convex_hull_ratio > 0.99); // square is convex
+    }
+
+    // ── Bounds and Python parity ─────────────────────────────────────────────
+
+    #[test]
+    fn test_all_scores_nonnegative() {
+        let poly = unit_square(1_000_000.0, 1_000_000.0);
+        let (pp, _) = polsby_popper(&poly).unwrap();
+        assert!(pp >= 0.0, "PP must be >= 0, got {pp}");
+        let r = reock(&poly).unwrap();
+        assert!(r >= 0.0, "Reock must be >= 0, got {r}");
+        let chr = convex_hull_ratio(&poly).unwrap();
+        assert!(chr >= 0.0, "CHR must be >= 0, got {chr}");
+    }
+
+    #[test]
+    fn test_perimeter_excludes_holes() {
+        // Polygon with a hole: Python .length returns only exterior (4000m)
+        // Rust must match — do NOT add hole perimeters
+        let exterior = LineString::new(vec![
+            Coord { x: 1_000_000.0, y: 1_000_000.0 },
+            Coord { x: 1_001_000.0, y: 1_000_000.0 },
+            Coord { x: 1_001_000.0, y: 1_001_000.0 },
+            Coord { x: 1_000_000.0, y: 1_001_000.0 },
+            Coord { x: 1_000_000.0, y: 1_000_000.0 },
+        ]);
+        let hole = LineString::new(vec![
+            Coord { x: 1_000_250.0, y: 1_000_250.0 },
+            Coord { x: 1_000_750.0, y: 1_000_250.0 },
+            Coord { x: 1_000_750.0, y: 1_000_750.0 },
+            Coord { x: 1_000_250.0, y: 1_000_750.0 },
+            Coord { x: 1_000_250.0, y: 1_000_250.0 },
+        ]);
+        let poly = Polygon::new(exterior, vec![hole]);
+        let (_, perimeter) = polsby_popper(&poly).unwrap();
+        // Exterior only = 4000m; hole = 2000m
+        // Must be 4000m, NOT 6000m
+        assert!((perimeter - 4000.0).abs() < 0.001,
+            "perimeter should be 4000m (exterior only), got {perimeter}");
     }
 
     // ── Python parity ────────────────────────────────────────────────────────

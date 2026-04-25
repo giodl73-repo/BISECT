@@ -53,7 +53,14 @@ pub fn analyze_mm_districts(
     let mut dist_black: HashMap<usize, f64> = HashMap::new();
     let mut dist_hispanic: HashMap<usize, f64> = HashMap::new();
 
-    for (&tract, &dist) in assignments {
+    // Sort by tract index for deterministic floating-point summation order.
+    // HashMap iteration is non-deterministic; sorting ensures reproducible
+    // pct_minority values across runs (FP addition is not associative).
+    let mut sorted_assignments: Vec<(usize, usize)> = assignments
+        .iter().map(|(&t, &d)| (t, d)).collect();
+    sorted_assignments.sort_unstable_by_key(|&(tract, _)| tract);
+
+    for (tract, dist) in sorted_assignments {
         if tract >= total_pops.len() { continue; }
         *dist_total.entry(dist).or_insert(0) += total_pops[tract];
         *dist_minority.entry(dist).or_insert(0.0) +=
@@ -80,7 +87,8 @@ pub fn analyze_mm_districts(
         let pct_minority = if total > 0.0 { minority / total } else { 0.0 };
         let pct_black = if total > 0.0 { black / total } else { 0.0 };
         let pct_hispanic = if total > 0.0 { hispanic / total } else { 0.0 };
-        let is_mm = pct_minority >= mm_threshold;
+        // Python vra_utils.py line 236: `is_mm = pct_minority > mm_threshold` (exclusive)
+        let is_mm = pct_minority > mm_threshold;
 
         if is_mm { mm_districts.push(dist); }
 
@@ -161,24 +169,61 @@ mod tests {
         let vra = analyze_mm_districts(
             &assignments, &total, &minority, &[0.0; 2], &[0.0; 2], 0.50
         );
-        assert_eq!(vra.mm_count, 1, "exactly 50% should count as MM");
+        // Python vra_utils.py uses `pct_minority > mm_threshold` (exclusive)
+        // Exactly 50% → NOT MM
+        assert_eq!(vra.mm_count, 0, "exactly 50% is NOT MM (Python uses >, not >=)");
         let d = &vra.districts[0];
         assert!((d.pct_minority - 0.5).abs() < 1e-9);
+        assert!(!d.is_mm, "50.0% must not be is_mm");
     }
 
     #[test]
-    fn test_threshold_boundary() {
-        // 49.99% → not MM; 50.00% → MM
+    fn test_threshold_boundary_exclusive() {
+        // Python vra_utils.py line 236: `is_mm = pct_minority > mm_threshold` (exclusive)
+        // So: exactly 50.00% → NOT MM; 50.01% → MM
         let a1: HashMap<usize, usize> = vec![(0,1)].into_iter().collect();
         let total = vec![10000i64];
 
-        let minority_below = vec![4999.0]; // 49.99%
+        let minority_below = vec![4999.0]; // 49.99% → not MM
         let vra_below = analyze_mm_districts(&a1, &total, &minority_below, &[0.0], &[0.0], 0.50);
-        assert_eq!(vra_below.mm_count, 0);
+        assert_eq!(vra_below.mm_count, 0, "49.99% must not be MM");
 
-        let minority_at = vec![5000.0]; // 50.00%
-        let vra_at = analyze_mm_districts(&a1, &total, &minority_at, &[0.0], &[0.0], 0.50);
-        assert_eq!(vra_at.mm_count, 1, "exactly 50% must be MM (>= threshold)");
+        let minority_exact = vec![5000.0]; // 50.00% exactly → NOT MM (exclusive >)
+        let vra_exact = analyze_mm_districts(&a1, &total, &minority_exact, &[0.0], &[0.0], 0.50);
+        assert_eq!(vra_exact.mm_count, 0, "50.00% must NOT be MM (Python uses >, not >=)");
+
+        let minority_above = vec![5001.0]; // 50.01% → MM
+        let vra_above = analyze_mm_districts(&a1, &total, &minority_above, &[0.0], &[0.0], 0.50);
+        assert_eq!(vra_above.mm_count, 1, "50.01% must be MM");
+    }
+
+    #[test]
+    fn test_deterministic_across_runs() {
+        // Same input always produces same pct_minority (sorted aggregation)
+        let mut assignments = HashMap::new();
+        for i in 0..100usize {
+            assignments.insert(i, if i < 50 { 1 } else { 2 });
+        }
+        let total = vec![1000i64; 100];
+        let minority = vec![600.0f64; 100];
+        let r1 = analyze_mm_districts(&assignments, &total, &minority, &[0.0;100], &[0.0;100], 0.50);
+        let r2 = analyze_mm_districts(&assignments, &total, &minority, &[0.0;100], &[0.0;100], 0.50);
+        for (d1, d2) in r1.districts.iter().zip(r2.districts.iter()) {
+            assert_eq!(d1.pct_minority.to_bits(), d2.pct_minority.to_bits(),
+                "pct_minority must be bit-identical across runs");
+        }
+    }
+
+    #[test]
+    fn test_out_of_bounds_tract_skipped() {
+        let mut assignments = HashMap::new();
+        assignments.insert(0usize, 1usize); // valid
+        assignments.insert(999usize, 2usize); // out of bounds
+        let total = vec![1000i64; 2]; // only tracts 0 and 1
+        let minority = vec![300.0; 2];
+        let vra = analyze_mm_districts(&assignments, &total, &minority, &[0.0;2], &[0.0;2], 0.50);
+        // Tract 999 silently skipped; district 1 has 30% < 50% → not MM
+        assert_eq!(vra.mm_count, 0);
     }
 
     #[test]

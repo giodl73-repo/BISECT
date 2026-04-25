@@ -191,13 +191,19 @@ class TestVraAnalysis:
         result = self._run(assignments, [0.30]*4, n_tracts=4)
         assert result['mm_count'] == 0
 
-    def test_threshold_inclusive_at_50pct(self):
-        # Exactly 50% → must be MM
-        assignments = {0: 1}
+    def test_threshold_exclusive_at_50pct(self):
+        """Python vra_utils.py line 236: pct_minority > mm_threshold (exclusive).
+        Exactly 50% is NOT MM; must strictly exceed the threshold."""
         result = redist_py.compute_vra_analysis(
-            {0: 1}, [1000], [500.0], [400.0], [100.0], 0.50
+            {0: 1}, [10000], [5000.0], [4000.0], [1000.0], 0.50
         )
-        assert result['mm_count'] == 1, "50% must count as MM (>= threshold)"
+        assert result['mm_count'] == 0, "50.00% must NOT be MM (Python uses >, exclusive)"
+
+    def test_just_above_threshold_is_mm(self):
+        result = redist_py.compute_vra_analysis(
+            {0: 1}, [10000], [5001.0], [0.0], [0.0], 0.50
+        )
+        assert result['mm_count'] == 1, "50.01% must be MM"
 
     def test_just_below_threshold_not_mm(self):
         result = redist_py.compute_vra_analysis(
@@ -215,6 +221,12 @@ class TestVraAnalysis:
         assert districts_by_id[1]['is_mm'] is True
         assert districts_by_id[2]['is_mm'] is False
         assert abs(districts_by_id[1]['pct_minority'] - 0.60) < 1e-9
+
+    def test_mismatched_array_lengths_raise(self):
+        with pytest.raises(ValueError, match='length mismatch'):
+            redist_py.compute_vra_analysis(
+                {0: 1}, [1000], [500.0, 300.0], [0.0], [0.0], 0.50
+            )
 
     def test_districts_sorted_by_id(self):
         assignments = {0: 3, 1: 1, 2: 2}

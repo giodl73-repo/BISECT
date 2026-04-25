@@ -199,6 +199,23 @@ fn compute_vra_analysis(
     hispanic_pops: Vec<f64>,
     mm_threshold: f64,
 ) -> PyResult<PyObject> {
+    // Validate that all per-tract arrays have the same length
+    let n = total_pops.len();
+    if minority_pops.len() != n {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: total_pops={n}, minority_pops={}", minority_pops.len()
+        )));
+    }
+    if black_pops.len() != n {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: total_pops={n}, black_pops={}", black_pops.len()
+        )));
+    }
+    if hispanic_pops.len() != n {
+        return Err(PyValueError::new_err(format!(
+            "length mismatch: total_pops={n}, hispanic_pops={}", hispanic_pops.len()
+        )));
+    }
     let vra = rust_vra_analysis(
         &assignments, &total_pops, &minority_pops, &black_pops, &hispanic_pops, mm_threshold
     );
