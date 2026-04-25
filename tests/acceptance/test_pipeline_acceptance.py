@@ -375,3 +375,101 @@ class TestRustIntegrationSmoke:
         p = redist_py.Partition.from_dict({0: 1, 1: 1, 2: 2, 3: 2})
         vw = np.array([1000, 1000, 1000, 1000], dtype=np.int64)
         p.assert_balanced(vw, n_districts=2, tolerance=0.005)  # should not raise
+
+
+# ---------------------------------------------------------------------------
+# Rust CLI acceptance tests — verify `redist state` binary works end-to-end
+# ---------------------------------------------------------------------------
+
+REDIST_BIN = Path('redist/target/release/redist.exe'
+                  if sys.platform == 'win32'
+                  else 'redist/target/release/redist')
+
+
+@pytest.mark.skipif(
+    not REDIST_BIN.exists(),
+    reason=f'redist binary not built — run: cargo build -p redist-cli --release'
+)
+@pytest.mark.skipif(
+    not adjacency_exists('VT'),
+    reason='Vermont adjacency not found'
+)
+class TestRustCLIAcceptance:
+    """Verify `redist state` binary produces correct output."""
+
+    @pytest.fixture(scope='class')
+    def vt_rust_output(self, tmp_path_factory):
+        tmp = tmp_path_factory.mktemp('rust_cli')
+        # REDIST_PYTHON: pass the exact Python executable so the binary uses the
+        # same Python environment (with numpy) that pytest runs under.
+        env = os.environ.copy()
+        env['REDIST_PYTHON'] = sys.executable
+        result = subprocess.run(
+            [str(REDIST_BIN), 'state',
+             '--state', 'VT', '--year', '2020', '--version', 'V3',
+             '--output-dir', str(tmp),
+             '--position', '999'],
+            capture_output=True, text=True, timeout=60,
+            cwd=str(Path.cwd()), env=env
+        )
+        if result.returncode != 0:
+            pytest.fail(f'redist state VT failed:\nSTDOUT: {result.stdout}\nSTDERR: {result.stderr}')
+        return tmp
+
+    def test_vt_rust_final_assignments_exists(self, vt_rust_output):
+        assert (vt_rust_output / 'states' / 'vermont' / 'data' / 'final_assignments.json').exists(), \
+            'Rust CLI should write final_assignments.json'
+
+    def test_vt_rust_193_tracts(self, vt_rust_output):
+        data = json.loads(
+            (vt_rust_output / 'states' / 'vermont' / 'data' / 'final_assignments.json').read_text()
+        )
+        assert len(data) == 193, f'Expected 193 tracts, got {len(data)}'
+
+    def test_vt_rust_one_district(self, vt_rust_output):
+        data = json.loads(
+            (vt_rust_output / 'states' / 'vermont' / 'data' / 'final_assignments.json').read_text()
+        )
+        assert set(data.values()) == {1}, f'Expected only district 1, got {set(data.values())}'
+
+    @pytest.mark.skipif(not adjacency_exists('AL'), reason='Alabama adjacency not found')
+    @pytest.fixture(scope='class')
+    def al_rust_output(self, tmp_path_factory):
+        tmp = tmp_path_factory.mktemp('rust_al')
+        env = os.environ.copy()
+        env['REDIST_PYTHON'] = sys.executable
+        result = subprocess.run(
+            [str(REDIST_BIN), 'state',
+             '--state', 'AL', '--year', '2020', '--version', 'V4',
+             '--partition-mode', 'metis-vra',
+             '--output-dir', str(tmp),
+             '--position', '999',
+             '--seed', '42'],  # Fixed seed: METIS is stochastic
+            capture_output=True, text=True, timeout=300,
+            cwd=str(Path.cwd()), env=env
+        )
+        if result.returncode != 0:
+            pytest.fail(f'redist state AL failed:\nSTDOUT: {result.stdout[-500:]}\nSTDERR: {result.stderr[-500:]}')
+        return tmp
+
+    @pytest.mark.skipif(not adjacency_exists('AL'), reason='Alabama adjacency not found')
+    def test_al_rust_vra_analysis_written(self, al_rust_output):
+        assert (al_rust_output / 'states' / 'alabama' / 'data' / 'vra_analysis.json').exists(), \
+            'vra_analysis.json not written — vra_mode may have been cleared'
+
+    @pytest.mark.skipif(not adjacency_exists('AL'), reason='Alabama adjacency not found')
+    def test_al_rust_mm_count(self, al_rust_output):
+        vra = json.loads(
+            (al_rust_output / 'states' / 'alabama' / 'data' / 'vra_analysis.json').read_text()
+        )
+        assert vra['mm_count'] == 2, \
+            f'Alabama must achieve 2 MM districts (seed=42 is fixed), got {vra["mm_count"]}'
+
+    @pytest.mark.skipif(not adjacency_exists('AL'), reason='Alabama adjacency not found')
+    def test_al_rust_population_balance(self, al_rust_output):
+        assignments = json.loads(
+            (al_rust_output / 'states' / 'alabama' / 'data' / 'final_assignments.json').read_text()
+        )
+        adj_pkl = ADJACENCY_DIR / 'al_adjacency_2020.pkl'
+        dev = compute_pop_balance({int(k): v for k, v in assignments.items()}, adj_pkl)
+        assert dev <= 0.005, f'Alabama balance {dev*100:.3f}% exceeds ±0.5%'

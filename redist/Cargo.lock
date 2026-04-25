@@ -688,6 +688,7 @@ dependencies = [
  "anyhow",
  "clap",
  "rayon",
+ "redist-analysis",
  "redist-core",
  "redist-data",
  "serde",
