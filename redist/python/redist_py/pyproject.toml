@@ -11,4 +11,4 @@ license = { text = "MIT" }
 
 [tool.maturin]
 features = ["pyo3/extension-module"]
-python-source = "python"   # optional: if you add a pure-Python wrapper later
+# python-source = "python"  # uncomment if adding a pure-Python wrapper layer
