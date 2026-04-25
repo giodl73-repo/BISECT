@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use redist_core::{
     Graph as CoreGraph, Partition as CorePartition, build_vra_edge_weights as core_vra,
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
+    metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
 
 // ---------------------------------------------------------------------------
@@ -128,6 +129,33 @@ fn build_vra_edge_weights(
 }
 
 // ---------------------------------------------------------------------------
+// METIS file format
+// ---------------------------------------------------------------------------
+
+/// Generate METIS .graph file content as a Python string.
+/// Edge weights: dict mapping (u, v) → weight in metres. Missing = 1.0m.
+/// The caller writes this to disk and runs gpmetis.
+#[pyfunction]
+#[pyo3(signature = (adjacency, vertex_weights, edge_weights=None))]
+fn metis_graph_content(
+    adjacency: Vec<Vec<usize>>,
+    vertex_weights: Vec<i64>,
+    edge_weights: Option<HashMap<(usize, usize), f64>>,
+) -> PyResult<String> {
+    let ew_ref = edge_weights.as_ref();
+    core_write_metis(&adjacency, &vertex_weights, ew_ref)
+        .map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+/// Parse gpmetis output partition file content (one assignment per line).
+/// Returns list of partition IDs (0-based) matching vertex order.
+#[pyfunction]
+fn metis_parse_partition(content: String, expected_n: usize) -> PyResult<Vec<usize>> {
+    core_parse_metis(&content, expected_n)
+        .map_err(|e| PyValueError::new_err(e.to_string()))
+}
+
+// ---------------------------------------------------------------------------
 // BisectionTree
 // ---------------------------------------------------------------------------
 
@@ -187,5 +215,7 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(build_vra_edge_weights, m)?)?;
     m.add_function(wrap_pyfunction!(bisection_max_depth, m)?)?;
     m.add_function(wrap_pyfunction!(bisection_ufactor, m)?)?;
+    m.add_function(wrap_pyfunction!(metis_graph_content, m)?)?;
+    m.add_function(wrap_pyfunction!(metis_parse_partition, m)?)?;
     Ok(())
 }

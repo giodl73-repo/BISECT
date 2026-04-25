@@ -1,5 +1,6 @@
 pub mod bisection;
 pub mod graph;
+pub mod metis_format;
 pub mod partition;
 pub mod vra;
 
