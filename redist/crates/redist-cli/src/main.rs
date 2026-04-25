@@ -1,6 +1,7 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands};
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete};
+use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 
 fn main() {
     let cli = Cli::parse();
@@ -8,24 +9,18 @@ fn main() {
         // ── redist state: single state ────────────────────────────────────────
         Commands::State(args) => {
             let state_code = args.state.to_uppercase();
-
-            // Resolve state name and district count via Python (once, before Rayon)
             let all = load_all_states(&args.year.to_string())
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
-
             let (_, state_name, num_districts) = all.iter()
                 .find(|(code, _, _)| code == &state_code)
                 .cloned()
-                .unwrap_or_else(|| {
-                    eprintln!("ERROR: unknown state code '{state_code}'");
-                    std::process::exit(1);
-                });
+                .unwrap_or_else(|| { eprintln!("ERROR: unknown state '{state_code}'"); std::process::exit(1); });
 
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from(format!("outputs/{}", args.version)));
 
-            let cfg = StateConfig {
+            let results = run_states_parallel(vec![StateConfig {
                 state_code: state_code.clone(),
                 state_name,
                 num_districts,
@@ -40,9 +35,7 @@ fn main() {
                 ufactor: args.ufactor,
                 niter: args.niter,
                 seed: args.seed,
-            };
-
-            let results = run_states_parallel(vec![cfg], 1);
+            }], 1);
             for r in &results {
                 if !r.success {
                     eprintln!("FAILED {}: {}", r.state_code, r.error.as_deref().unwrap_or(""));
@@ -54,46 +47,33 @@ fn main() {
 
         // ── redist states: 50-state parallel ─────────────────────────────────
         Commands::States(args) => {
-            // Load all state metadata ONCE before Rayon starts (avoids process explosion)
             let all = load_all_states(&args.year.to_string())
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
 
-            let states_filter: std::collections::HashSet<String> = args.states
+            let filter: std::collections::HashSet<String> = args.states
                 .iter().map(|s| s.to_uppercase()).collect();
 
             let configs: Vec<StateConfig> = all.into_iter()
-                .filter(|(code, _, _)| states_filter.is_empty() || states_filter.contains(code))
+                .filter(|(code, _, _)| filter.is_empty() || filter.contains(code))
                 .enumerate()
                 .map(|(i, (code, name, districts))| StateConfig {
-                    state_code: code,
-                    state_name: name,
-                    num_districts: districts,
-                    year: args.year.to_string(),
-                    version: args.version.clone(),
+                    state_code: code, state_name: name, num_districts: districts,
+                    year: args.year.to_string(), version: args.version.clone(),
                     output_dir: std::path::PathBuf::from(&args.output_dir),
                     partition_mode: args.partition_mode.to_string(),
                     position: (i + 2) as i32,
-                    debug: args.debug,
-                    reset: false,
-                    reprocess: args.reprocess,
-                    ufactor: 5,
-                    niter: 100,
-                    seed: None,
+                    debug: args.debug, reset: false, reprocess: args.reprocess,
+                    ufactor: 5, niter: 100, seed: None,
                 })
                 .collect();
 
             let to_run = filter_incomplete(configs);
-            eprintln!("[redist states] {} states to process ({} workers)", to_run.len(), args.workers);
-
-            let results = run_states_parallel(to_run, args.workers);
-            report_and_exit(results);
+            eprintln!("[redist states] {} states ({} workers)", to_run.len(), args.workers);
+            report_and_exit(run_states_parallel(to_run, args.workers));
         }
 
         // ── redist run: multi-year orchestrator ───────────────────────────────
         Commands::Run(args) => {
-            // Years run SEQUENTIALLY; states within each year run in parallel.
-            // Sequential years: each year's files are distinct; parallel years
-            // would saturate disk I/O without meaningful speedup.
             let years: Vec<String> = if args.year == "all" {
                 vec!["2020".into(), "2010".into(), "2000".into()]
             } else {
@@ -102,35 +82,26 @@ fn main() {
 
             let mut any_failure = false;
             for year in &years {
-                eprintln!("[redist run] year={year} version={} mode={}", args.version, args.partition_mode);
-
+                eprintln!("[redist run] year={year} version={}", args.version);
                 let all = load_all_states(year)
-                    .unwrap_or_else(|e| { eprintln!("ERROR loading {year} config: {e}"); vec![] });
+                    .unwrap_or_else(|e| { eprintln!("ERROR {year}: {e}"); vec![] });
 
-                let states_filter: std::collections::HashSet<String> = args.states
+                let filter: std::collections::HashSet<String> = args.states
                     .iter().map(|s| s.to_uppercase()).collect();
 
                 let configs: Vec<StateConfig> = all.into_iter()
-                    .filter(|(code, _, _)| states_filter.is_empty() || states_filter.contains(code))
+                    .filter(|(code, _, _)| filter.is_empty() || filter.contains(code))
                     .enumerate()
                     .map(|(i, (code, name, districts))| StateConfig {
-                        state_code: code,
-                        state_name: name,
-                        num_districts: districts,
-                        year: year.clone(),
-                        version: args.version.clone(),
+                        state_code: code, state_name: name, num_districts: districts,
+                        year: year.clone(), version: args.version.clone(),
                         output_dir: std::path::PathBuf::from(
-                            args.output_dir.clone()
-                                .unwrap_or_else(|| format!("outputs/{}", args.version))
+                            args.output_dir.clone().unwrap_or_else(|| format!("outputs/{}", args.version))
                         ),
                         partition_mode: args.partition_mode.to_string(),
                         position: (i + 2) as i32,
-                        debug: args.debug,
-                        reset: args.reset,
-                        reprocess: args.reprocess,
-                        ufactor: 5,
-                        niter: 100,
-                        seed: None,
+                        debug: args.debug, reset: args.reset, reprocess: args.reprocess,
+                        ufactor: 5, niter: 100, seed: None,
                     })
                     .collect();
 
@@ -140,21 +111,49 @@ fn main() {
                     eprintln!("FAILED {year}/{}: {}", r.state_code, r.error.as_deref().unwrap_or(""));
                     any_failure = true;
                 }
-                let ok = results.iter().filter(|r| r.success).count();
-                eprintln!("[redist run] year={year}: {ok}/{} OK", results.len());
+                eprintln!("[redist run] {year}: {}/{} OK",
+                    results.iter().filter(|r| r.success).count(), results.len());
             }
             if any_failure { std::process::exit(1); }
             eprintln!("[OK] redist run complete");
+        }
+
+        // ── redist fetch: data download ───────────────────────────────────────
+        Commands::Fetch(args) => {
+            // --manifest flag overrides the env var
+            if let Some(ref path) = args.manifest {
+                std::env::set_var("REDIST_MANIFEST", path);
+            }
+
+            let manifest = load_manifest()
+                .unwrap_or_else(|e| { eprintln!("ERROR loading manifest: {e}"); std::process::exit(1); });
+
+            let years: Vec<String> = if args.year == "all" {
+                vec!["2020".into(), "2010".into(), "2000".into()]
+            } else {
+                vec![args.year.clone()]
+            };
+
+            for year in &years {
+                let items = build_fetch_list(&manifest, &args.states, year, &args.data_types);
+                eprintln!("[redist fetch] year={year} {} items",  items.len());
+
+                if args.check_only {
+                    print_check_report(&items);
+                } else {
+                    download_items(&items, args.force, args.release, &manifest)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                }
+            }
         }
     }
 }
 
 fn report_and_exit(results: Vec<StateResult>) {
     let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
-    let ok = results.len() - failures.len();
     for f in &failures {
         eprintln!("FAILED {}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
     }
-    eprintln!("[OK] {ok}/{} states complete", results.len());
+    eprintln!("[OK] {}/{} states complete", results.len() - failures.len(), results.len());
     if !failures.is_empty() { std::process::exit(1); }
 }

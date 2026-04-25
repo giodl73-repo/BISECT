@@ -127,6 +127,8 @@ pub enum Commands {
     State(StateArgs),
     /// Run all states in parallel for one year (mirrors run_states_parallel.py)
     States(StatesArgs),
+    /// Download census data needed to run redistricting
+    Fetch(FetchArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -479,4 +481,44 @@ mod tests {
         let with_seed = StateArgs::parse_from(["state", "--state", "VT", "--seed", "42"]);
         assert_eq!(with_seed.seed, Some(42));
     }
+}
+
+// ---------------------------------------------------------------------------
+// `redist fetch` — data download
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct FetchArgs {
+    /// Census year: 2020, 2010, 2000, or all [default: 2020]
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// State codes to fetch (default: all 50)
+    #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
+    pub states: Vec<String>,
+
+    /// Data types: tiger, redistricting, adjacency, all [default: all]
+    #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
+    pub data_types: Vec<String>,
+
+    /// Pull adjacency data from GitHub Releases (requires gh auth login)
+    #[arg(long)]
+    pub release: bool,
+
+    /// Custom manifest file path (overrides REDIST_MANIFEST env var)
+    #[arg(long)]
+    pub manifest: Option<String>,
+
+    /// Print what would be downloaded without downloading
+    #[arg(long)]
+    pub check_only: bool,
+
+    /// Re-download even if files already exist
+    #[arg(long)]
+    pub force: bool,
+
+    /// Parallel download workers [default: 4]
+    #[arg(short = 'w', long, default_value_t = 4)]
+    pub workers: usize,
 }

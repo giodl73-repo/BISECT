@@ -1,0 +1,426 @@
+/// Data fetch command: download census data needed to run redistricting.
+///
+/// Three data sources in priority order:
+///   1. Local manifest override (~/.config/redist/manifest.json or REDIST_MANIFEST)
+///      Points to already-present local files — no network needed.
+///   2. GitHub Releases (--release flag) — pulls adjacency data from project releases.
+///      Requires `gh auth login`.
+///   3. Public Census Bureau URLs (default) — TIGER shapefiles and PL 94-171.
+///
+/// Incremental by default: checks for existing files before downloading.
+/// Use --force to re-download even if present.
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+// Manifest embedded at compile time. Falls back to this if no override present.
+const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
+
+// ---------------------------------------------------------------------------
+// Manifest types
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Manifest {
+    pub version: String,
+    pub github_repo: String,
+    pub releases: Releases,
+    pub local_data_dir: String,
+    pub local_outputs_dir: String,
+    pub states: HashMap<String, StateManifest>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct Releases {
+    pub data_inputs: String,
+    pub outputs_v3: String,
+    pub outputs_v4: String,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct StateManifest {
+    pub name: String,
+    pub fips: String,
+    pub districts: HashMap<String, usize>,
+    pub tiger: HashMap<String, String>,
+    pub pl94171: HashMap<String, String>,
+}
+
+// ---------------------------------------------------------------------------
+// Fetch item: one file to download
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct FetchItem {
+    pub state_code: String,
+    pub year: String,
+    pub kind: String,         // "tiger", "pl94171", "adjacency"
+    pub url: Option<String>,  // None = use github release or local only
+    pub local_path: PathBuf,
+    pub done_marker: PathBuf,
+    pub available_locally: bool,
+}
+
+impl FetchItem {
+    pub fn is_done(&self) -> bool {
+        self.done_marker.exists() && self.local_path.exists()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Load manifest
+// ---------------------------------------------------------------------------
+
+pub fn load_manifest() -> Result<Manifest, String> {
+    // Priority: REDIST_MANIFEST env > ~/.config/redist/manifest.json > builtin
+    if let Ok(path) = std::env::var("REDIST_MANIFEST") {
+        let content = std::fs::read_to_string(&path)
+            .map_err(|e| format!("REDIST_MANIFEST={path}: {e}"))?;
+        return serde_json::from_str(&content)
+            .map_err(|e| format!("manifest parse error: {e}"));
+    }
+
+    // Check ~/.config/redist/manifest.json
+    if let Some(home) = dirs_next_home() {
+        let local = home.join(".config").join("redist").join("manifest.json");
+        if local.exists() {
+            let content = std::fs::read_to_string(&local)
+                .map_err(|e| format!("local manifest read error: {e}"))?;
+            return serde_json::from_str(&content)
+                .map_err(|e| format!("local manifest parse error: {e}"));
+        }
+    }
+
+    serde_json::from_str(BUILTIN_MANIFEST)
+        .map_err(|e| format!("builtin manifest parse error: {e}"))
+}
+
+fn dirs_next_home() -> Option<PathBuf> {
+    std::env::var("HOME").or_else(|_| std::env::var("USERPROFILE"))
+        .ok().map(PathBuf::from)
+}
+
+// ---------------------------------------------------------------------------
+// Build fetch list
+// ---------------------------------------------------------------------------
+
+/// Build list of items to fetch for given states and year.
+pub fn build_fetch_list(
+    manifest: &Manifest,
+    states: &[String],
+    year: &str,
+    data_types: &[String],
+) -> Vec<FetchItem> {
+    let all_types = data_types.is_empty() || data_types.contains(&"all".to_string());
+    let want_tiger = all_types || data_types.contains(&"tiger".to_string());
+    let want_pl = all_types || data_types.contains(&"redistricting".to_string());
+    let want_adj = all_types || data_types.contains(&"adjacency".to_string());
+
+    let mut items = Vec::new();
+    let data_dir = PathBuf::from(&manifest.local_data_dir);
+    let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
+
+    // Filter states
+    let state_codes: Vec<&String> = if states.is_empty() {
+        manifest.states.keys().collect()
+    } else {
+        states.iter()
+            .filter(|s| manifest.states.contains_key(s.as_str()))
+            .collect()
+    };
+
+    for code in state_codes {
+        let state = match manifest.states.get(code.as_str()) {
+            Some(s) => s,
+            None => continue,
+        };
+        let state_lower = state.name.to_lowercase().replace(' ', "_");
+
+        // TIGER tract shapefile
+        if want_tiger {
+            if let Some(url) = state.tiger.get(year) {
+                let filename = url.split('/').last().unwrap_or("tract.zip");
+                let local_path = data_dir.join(year).join("tiger").join("tracts")
+                    .join(filename.replace(".zip", "")).join(filename.replace(".zip", ".shp"));
+                let done_marker = local_path.with_extension("done");
+                items.push(FetchItem {
+                    state_code: code.clone(),
+                    year: year.to_string(),
+                    kind: "tiger".to_string(),
+                    url: Some(url.clone()),
+                    available_locally: local_path.exists(),
+                    local_path,
+                    done_marker,
+                });
+            }
+        }
+
+        // PL 94-171 redistricting file
+        if want_pl {
+            if let Some(url) = state.pl94171.get(year) {
+                let filename = url.split('/').last().unwrap_or("data.zip");
+                let local_path = data_dir.join(year).join("redistricting")
+                    .join(&state_lower).join(filename);
+                let done_marker = local_path.with_extension("done");
+                items.push(FetchItem {
+                    state_code: code.clone(),
+                    year: year.to_string(),
+                    kind: "pl94171".to_string(),
+                    url: Some(url.clone()),
+                    available_locally: local_path.exists(),
+                    local_path,
+                    done_marker,
+                });
+            }
+        }
+
+        // Adjacency pkl (from GitHub Release or local)
+        if want_adj {
+            let adj_filename = format!("{}_adjacency_{year}.pkl", code.to_lowercase());
+            let local_path = outputs_dir.join("V3").join("data").join(year)
+                .join("adjacency").join(&adj_filename);
+            let done_marker = local_path.with_extension("done");
+            items.push(FetchItem {
+                state_code: code.clone(),
+                year: year.to_string(),
+                kind: "adjacency".to_string(),
+                url: None, // adjacency comes from GitHub Releases
+                available_locally: local_path.exists(),
+                local_path,
+                done_marker,
+            });
+        }
+    }
+
+    items
+}
+
+// ---------------------------------------------------------------------------
+// Print check-only report
+// ---------------------------------------------------------------------------
+
+pub fn print_check_report(items: &[FetchItem]) {
+    let mut have = 0usize;
+    let mut need = 0usize;
+    for item in items {
+        let status = if item.is_done() {
+            have += 1;
+            "[OK]  "
+        } else if item.available_locally {
+            have += 1;
+            "[FILE]"
+        } else {
+            need += 1;
+            "[NEED]"
+        };
+        let src = item.url.as_deref().unwrap_or("github-release");
+        println!("{status} {} {} {} -> {}",
+            item.state_code, item.year, item.kind,
+            item.local_path.display());
+        if status == "[NEED]" {
+            println!("       src: {src}");
+        }
+    }
+    println!();
+    println!("Summary: {have} available, {need} need download");
+    if need == 0 {
+        println!("[OK] All data present. Ready to run: redist states --year 2020 --version V3");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Download
+// ---------------------------------------------------------------------------
+
+/// Download all items that aren't already present.
+/// Uses REDIST_PYTHON env var for Python-based downloads.
+pub fn download_items(
+    items: &[FetchItem],
+    force: bool,
+    use_release: bool,
+    manifest: &Manifest,
+) -> Result<(), String> {
+    let python_cmd = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| {
+        if cfg!(windows) { "py".to_string() } else { "python3".to_string() }
+    });
+
+    for item in items {
+        if !force && item.is_done() {
+            println!("[SKIP] {} {} {} (already present)", item.state_code, item.year, item.kind);
+            continue;
+        }
+
+        // Create parent directory
+        if let Some(parent) = item.local_path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| format!("mkdir {}: {e}", parent.display()))?;
+        }
+
+        match item.kind.as_str() {
+            "adjacency" if use_release => {
+                // Download adjacency from GitHub Release via gh CLI
+                let release_tag = &manifest.releases.data_inputs;
+                let adj_dir = item.local_path.parent().unwrap();
+                println!("[DOWN] {} {} adjacency from release {release_tag}", item.state_code, item.year);
+                let out = Command::new("gh")
+                    .args(["release", "download", release_tag,
+                           "--pattern", &format!("{}_adjacency_{}.pkl", item.state_code.to_lowercase(), item.year),
+                           "--dir", adj_dir.to_str().unwrap(),
+                           "--repo", &manifest.github_repo,
+                           "--clobber"])
+                    .output()
+                    .map_err(|e| format!("gh not found: {e}. Install: https://cli.github.com/"))?;
+                if !out.status.success() {
+                    return Err(format!(
+                        "gh release download failed:\n{}",
+                        String::from_utf8_lossy(&out.stderr)
+                    ));
+                }
+            }
+
+            "tiger" | "pl94171" => {
+                // Download via Python (reuses existing download_handler.py logic)
+                let url = item.url.as_deref().unwrap();
+                let dest = item.local_path.parent().unwrap();
+                println!("[DOWN] {} {} {} from {}", item.state_code, item.year, item.kind, url);
+
+                // Simple wget/curl via Python's urllib
+                let script = format!(
+                    r#"
+import urllib.request, zipfile, os, sys
+url = '{url}'
+dest = r'{dest}'
+os.makedirs(dest, exist_ok=True)
+zipname = url.split('/')[-1]
+zippath = os.path.join(dest, zipname)
+print(f'  Downloading {{zipname}}...', flush=True)
+urllib.request.urlretrieve(url, zippath)
+print(f'  Extracting...', flush=True)
+with zipfile.ZipFile(zippath, 'r') as z:
+    z.extractall(dest)
+os.remove(zippath)
+print(f'  Done.', flush=True)
+"#,
+                    dest = dest.display()
+                );
+
+                let out = Command::new(&python_cmd)
+                    .args(["-c", &script])
+                    .output()
+                    .map_err(|e| format!("failed to invoke {python_cmd}: {e}"))?;
+
+                if !out.status.success() {
+                    return Err(format!(
+                        "download failed for {url}:\n{}",
+                        String::from_utf8_lossy(&out.stderr)
+                    ));
+                }
+                print!("{}", String::from_utf8_lossy(&out.stdout));
+            }
+
+            _ => {
+                println!("[SKIP] {} {} {} (not downloadable without --release)",
+                    item.state_code, item.year, item.kind);
+                continue;
+            }
+        }
+
+        // Write done marker
+        std::fs::write(&item.done_marker, b"done")
+            .map_err(|e| format!("done marker write failed: {e}"))?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_manifest_loads_from_builtin() {
+        let manifest = load_manifest().expect("builtin manifest should parse");
+        assert_eq!(manifest.version, "1");
+        assert_eq!(manifest.states.len(), 50, "should have all 50 states");
+    }
+
+    #[test]
+    fn test_manifest_has_vermont() {
+        let manifest = load_manifest().unwrap();
+        let vt = manifest.states.get("VT").expect("Vermont must be in manifest");
+        assert_eq!(vt.fips, "50", "Vermont FIPS is 50");
+        assert!(vt.tiger["2020"].contains("tl_2020_50_tract"), "VT TIGER URL");
+        assert!(vt.pl94171["2020"].contains("vermont"), "VT PL URL");
+    }
+
+    #[test]
+    fn test_manifest_has_alabama() {
+        let manifest = load_manifest().unwrap();
+        let al = manifest.states.get("AL").expect("Alabama must be in manifest");
+        assert_eq!(al.fips, "01", "Alabama FIPS is 01");
+        assert_eq!(al.districts["2020"], 7, "Alabama has 7 districts in 2020");
+    }
+
+    #[test]
+    fn test_build_fetch_list_vermont_all_types() {
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(&manifest, &["VT".to_string()], "2020", &[]);
+        // Should have tiger, pl94171, adjacency
+        assert_eq!(items.len(), 3);
+        let kinds: Vec<&str> = items.iter().map(|i| i.kind.as_str()).collect();
+        assert!(kinds.contains(&"tiger"));
+        assert!(kinds.contains(&"pl94171"));
+        assert!(kinds.contains(&"adjacency"));
+    }
+
+    #[test]
+    fn test_build_fetch_list_tiger_only() {
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["VT".to_string()], "2020", &["tiger".to_string()]
+        );
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].kind, "tiger");
+        assert!(items[0].url.as_deref().unwrap().contains("tl_2020_50_tract"));
+    }
+
+    #[test]
+    fn test_fetch_item_done_when_done_marker_exists() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let local_path = tmp.path().join("data.shp");
+        let done_marker = tmp.path().join("data.done");
+        std::fs::write(&local_path, b"data").unwrap();
+        std::fs::write(&done_marker, b"done").unwrap();
+        let item = FetchItem {
+            state_code: "VT".to_string(),
+            year: "2020".to_string(),
+            kind: "tiger".to_string(),
+            url: None,
+            local_path,
+            done_marker,
+            available_locally: true,
+        };
+        assert!(item.is_done());
+    }
+
+    #[test]
+    fn test_all_50_states_have_tiger_2020_url() {
+        let manifest = load_manifest().unwrap();
+        for (code, state) in &manifest.states {
+            let url = state.tiger.get("2020")
+                .unwrap_or_else(|| panic!("{code} missing tiger 2020 URL"));
+            assert!(url.starts_with("https://"), "{code} tiger URL must be https");
+            assert!(url.ends_with(".zip"), "{code} tiger URL must end in .zip");
+        }
+    }
+
+    #[test]
+    fn test_all_50_states_have_pl94171_2020_url() {
+        let manifest = load_manifest().unwrap();
+        for (code, state) in &manifest.states {
+            let url = state.pl94171.get("2020")
+                .unwrap_or_else(|| panic!("{code} missing pl94171 2020 URL"));
+            assert!(url.contains("census.gov"), "{code} PL URL must be census.gov");
+        }
+    }
+}
