@@ -81,6 +81,17 @@ mod tests {
     }
 
     #[test]
+    fn test_population_balance_uneven() {
+        // District 0: 2000, District 1: 3000 → max_dev = 300/2500 = 0.12
+        let assignments: HashMap<usize, usize> =
+            [(0, 0), (1, 0), (2, 1), (3, 1), (4, 1)].into_iter().collect();
+        let p = Partition::from_assignments(assignments);
+        let weights = vec![1000i64, 1000, 1000, 1000, 1000];
+        let dev = p.population_balance(&weights, 2);
+        assert!((dev - 0.20).abs() < 1e-9, "expected 20% deviation, got {dev}");
+    }
+
+    #[test]
     fn test_assert_balanced_fails() {
         let assignments: HashMap<usize, usize> =
             [(0, 0), (1, 0), (2, 1), (3, 1), (4, 1)].into_iter().collect();
@@ -89,5 +100,27 @@ mod tests {
         // District 0: 2000, District 1: 3000 — 20% deviation
         let result = p.assert_balanced(&weights, 2, 0.005);
         assert!(result.is_err());
+        // Error message should name the deviation
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("deviates"), "error should mention 'deviates': {msg}");
+    }
+
+    #[test]
+    fn test_assert_balanced_passes_within_tolerance() {
+        // 2450 vs 2550 → max_dev = 50/2500 = 2% — passes ±5% but fails ±0.5%
+        let assignments: HashMap<usize, usize> =
+            [(0, 0), (1, 0), (2, 1), (3, 1)].into_iter().collect();
+        let p = Partition::from_assignments(assignments);
+        let weights = vec![1200i64, 1250, 1250, 1300];
+        // D0: 2450, D1: 2550, ideal: 2500, dev = 50/2500 = 2%
+        assert!(p.assert_balanced(&weights, 2, 0.05).is_ok());  // passes ±5%
+        assert!(p.assert_balanced(&weights, 2, 0.005).is_err()); // fails ±0.5%
+    }
+
+    #[test]
+    fn test_to_assignments_returns_correct_map() {
+        let input: HashMap<usize, usize> = [(0, 0), (1, 0), (2, 1)].into_iter().collect();
+        let p = Partition::from_assignments(input.clone());
+        assert_eq!(*p.to_assignments(), input);
     }
 }

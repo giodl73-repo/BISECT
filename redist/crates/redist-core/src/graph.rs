@@ -82,4 +82,27 @@ mod tests {
         let result = Graph::new(vec![], vec![]);
         assert!(matches!(result, Err(GraphError::EmptyGraph)));
     }
+
+    #[test]
+    fn test_adjacency_length_mismatch() {
+        // 2 adjacency entries but 3 weight entries
+        let result = Graph::new(vec![vec![1], vec![0]], vec![100, 200, 300]);
+        assert!(matches!(result, Err(GraphError::AdjacencyLengthMismatch(3, 2))));
+    }
+
+    #[test]
+    fn test_isolated_vertex() {
+        // A graph with one vertex and no edges
+        let g = Graph::new(vec![vec![]], vec![5000]).unwrap();
+        assert_eq!(g.n_vertices(), 1);
+        assert_eq!(g.n_edges(), 0);
+    }
+
+    #[test]
+    fn test_clone_is_independent() {
+        let g1 = small_graph();
+        let mut g2 = g1.clone();
+        g2.vertex_weights[0] = 9999;
+        assert_eq!(g1.vertex_weights[0], 1000); // original unchanged
+    }
 }

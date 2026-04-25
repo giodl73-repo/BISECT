@@ -74,9 +74,51 @@ mod tests {
     }
 
     #[test]
+    fn test_minority_minority_edge_is_boosted() {
+        // Both endpoints minority → edge appears in output with correct α
+        let minority_fracs = vec![0.60, 0.55, 0.10]; // tracts 0,1 minority; 2 not
+        let edges = vec![(0usize, 1usize), (1usize, 2usize)];
+        let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
+        // f_minority = 2/3 → α = max(3.0, 10*(1-0.7*(2/3))) = max(3.0, 5.33) = 5.33
+        assert!(weights.contains_key(&(0, 1)), "minority-minority edge must be in output");
+        let alpha = weights[&(0, 1)];
+        let expected = 3.0_f64.max(10.0 * (1.0 - 0.7 * (2.0 / 3.0)));
+        assert!((alpha - expected).abs() < 1e-9, "alpha={alpha} expected={expected}");
+        // Mixed edge not in output
+        assert!(!weights.contains_key(&(1, 2)));
+    }
+
+    #[test]
+    fn test_out_of_bounds_index_falls_back_to_zero() {
+        // Edge (0, 99) — tract 99 doesn't exist in minority_fracs (len=3)
+        // get(99) returns None → unwrap_or(0.0) → 0.0 < threshold → not boosted
+        let minority_fracs = vec![0.70, 0.70, 0.70]; // all minority
+        let edges = vec![(0usize, 99usize)]; // 99 is out of bounds
+        let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
+        assert!(!weights.contains_key(&(0, 99)), "out-of-bounds vertex treated as non-minority");
+    }
+
+    #[test]
+    fn test_empty_minority_fracs() {
+        // Empty fracs → early return, no panic
+        let weights = build_vra_edge_weights(&[(0, 1)], &[], 0.40);
+        assert!(weights.is_empty());
+    }
+
+    #[test]
     fn test_empty_edges() {
         let minority_fracs = vec![0.5; 10];
         let weights = build_vra_edge_weights(&[], &minority_fracs, 0.40);
         assert!(weights.is_empty());
+    }
+
+    #[test]
+    fn test_all_tracts_below_threshold() {
+        // No minority tracts → no edges boosted (but f_minority=0 → α=10.0)
+        // Because no edges pass the filter, output is empty
+        let minority_fracs = vec![0.10, 0.15, 0.20];
+        let edges = vec![(0usize, 1usize), (1usize, 2usize)];
+        let weights = build_vra_edge_weights(&edges, &minority_fracs, 0.40);
+        assert!(weights.is_empty(), "no minority tracts → no boosted edges");
     }
 }
