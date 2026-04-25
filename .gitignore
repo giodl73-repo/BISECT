@@ -203,3 +203,26 @@ docs/_templates/
 # Process ID tracking files
 *.pid
 .redistricting_pid.txt
+
+# Local/editor state (not public)
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Env files with potential secrets
+.env
+.env.local
+
