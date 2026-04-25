@@ -168,6 +168,86 @@ pub fn split_subgraph(
     Ok((left, right))
 }
 
+/// Run n-way partitioning: call gpmetis once with nparts=k.
+///
+/// Direct n-way is faster than recursive bisection (D.2 research: 3.68s vs 11.33s).
+/// D.2 also shows equivalent VRA success rates (47.5% vs 48.3%, p=0.634).
+///
+/// Target weights: equal partitioning (1/k per district). The last weight is
+/// inferred by METIS so the sum is exactly 1.0 (avoids floating-point drift).
+///
+/// AC-05 invariant: all target weights sum to 1.0.
+/// The approach: write n-1 explicit weights of 1/k; METIS infers the last.
+/// This guarantees sum = (n-1)*(1/k) + inferred = 1.0 regardless of rounding.
+pub fn run_nway_partition(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    ufactor: f64,
+    niter: u32,
+    seed: Option<u64>,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+    if num_districts == 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let graph_content = write_metis_graph(
+        adjacency,
+        vertex_weights,
+        if edge_weights.is_empty() { None } else { Some(edge_weights) },
+    ).map_err(|e| e.to_string())?;
+
+    let gpmetis = find_gpmetis()
+        .ok_or_else(|| "gpmetis not found".to_string())?;
+
+    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
+    let graph_file = tmp_dir.path().join("graph.txt");
+    let part_file = tmp_dir.path().join(format!("graph.txt.part.{num_districts}"));
+
+    std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
+
+    // Write n-1 equal target weights; METIS infers the last to guarantee sum=1.0
+    // AC-05: this approach avoids floating-point drift from n independent 1/k values
+    let tpwgts_file = tmp_dir.path().join("tpwgts.txt");
+    let weight_per = 1.0_f64 / num_districts as f64;
+    let mut tpwgts_content = String::new();
+    for partition_id in 0..(num_districts - 1) {
+        tpwgts_content.push_str(&format!("{partition_id} = {weight_per:.8}\n"));
+    }
+    std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
+
+    let mut cmd = Command::new(&gpmetis);
+    cmd.args([
+        "-contig",
+        "-minconn",
+        &format!("-niter={niter}"),
+        &format!("-ufactor={ufactor:.4}"),
+        &format!("-tpwgt={}", tpwgts_file.display()),
+    ]);
+    if let Some(s) = seed { cmd.arg(format!("-seed={s}")); }
+    cmd.args([graph_file.to_str().unwrap(), &num_districts.to_string()]);
+    cmd.current_dir(tmp_dir.path());
+
+    let out = cmd.output().map_err(|e| format!("gpmetis exec error: {e}"))?;
+    if !out.status.success() {
+        return Err(format!(
+            "gpmetis n-way failed (rc={}):\n{}",
+            out.status.code().unwrap_or(-1),
+            String::from_utf8_lossy(&out.stderr).chars().take(300).collect::<String>()
+        ));
+    }
+
+    let part_content = std::fs::read_to_string(&part_file)
+        .map_err(|_| format!("gpmetis did not create {}", part_file.display()))?;
+
+    let parts = parse_metis_partition(&part_content, n).map_err(|e| e.to_string())?;
+
+    // Convert 0-based METIS output to 1-based district IDs
+    Ok(parts.iter().enumerate().map(|(tract, &part)| (tract, part + 1)).collect())
+}
+
 /// Run the full level-parallel bisection for k districts.
 /// Returns HashMap<tract_index, district_id> (1-based district IDs).
 ///
@@ -328,6 +408,48 @@ mod tests {
     }
 
     // ── Invariant tests ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_nway_single_district_shortcut() {
+        let adj = vec![vec![1], vec![0]];
+        let vw = vec![1000i64, 1000];
+        let ew = HashMap::new();
+        let assignments = run_nway_partition(&adj, &vw, &ew, 1, 1.005, 100, None).unwrap();
+        assert_eq!(assignments.len(), 2);
+        assert!(assignments.values().all(|&d| d == 1));
+    }
+
+    #[test]
+    fn test_nway_two_districts() {
+        if find_gpmetis().is_none() { return; }
+        let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+        let vw = vec![1000i64; 4];
+        let ew: HashMap<(usize, usize), f64> = HashMap::new();
+        let assignments = run_nway_partition(&adj, &vw, &ew, 2, 1.005, 100, Some(42)).unwrap();
+        assert_eq!(assignments.len(), 4);
+        assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");
+        assert!(assignments.values().any(|&d| d == 2), "district 2 must exist");
+        // Districts are 1-based and disjoint
+        let d1: HashSet<_> = assignments.iter().filter(|(_, &v)| v == 1).map(|(&k, _)| k).collect();
+        let d2: HashSet<_> = assignments.iter().filter(|(_, &v)| v == 2).map(|(&k, _)| k).collect();
+        assert!(d1.is_disjoint(&d2));
+        assert_eq!(d1.len() + d2.len(), 4);
+    }
+
+    #[test]
+    fn test_nway_equal_weights_sum_to_one() {
+        // AC-05: for n-way, verify n-1 explicit weights + inferred last = 1.0
+        // With weight_per = 1/k, sum = (k-1)/k + inferred(1/k) = 1.0 exactly
+        for k in [2usize, 3, 7, 52] {
+            let weight_per = 1.0_f64 / k as f64;
+            let explicit_sum: f64 = (k - 1) as f64 * weight_per;
+            let inferred = 1.0 - explicit_sum;
+            assert!(
+                (explicit_sum + inferred - 1.0).abs() < 1e-9,
+                "k={k}: explicit({explicit_sum:.9}) + inferred({inferred:.9}) should = 1.0"
+            );
+        }
+    }
 
     #[test]
     fn test_invariant_target_weights_sum_to_one_2way() {

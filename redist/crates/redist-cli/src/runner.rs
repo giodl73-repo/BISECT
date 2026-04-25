@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::run_all_splits;
+use crate::bisection_runner::{run_all_splits, run_nway_partition};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
 use crate::status::{status, ascii_safe};
@@ -185,17 +185,38 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         _ => HashMap::new(), // unweighted
     };
 
-    // 3. Run bisection
-    status(cfg.position, &format!("{}: bisecting into {} districts", cfg.state_code, num_districts));
-    let assignments = run_all_splits(
-        &graph.adjacency,
-        &graph.vertex_weights,
-        &edge_weights,
-        num_districts,
-        cfg.ufactor,
-        cfg.niter,
-        cfg.seed,
-    ).map_err(|e| format!("bisection failed: {e}"))?;
+    // 3. Run partitioning
+    // VRA mode uses n-way: D.2 shows equivalent VRA success rate to recursive
+    // bisection (47.5% vs 48.3%, p=0.634) with 3.08× speedup.
+    // Non-VRA modes use recursive bisection (level-parallel for multi-district).
+    let use_nway = cfg.partition_mode == "metis-vra" && num_districts > 1;
+    let method = if use_nway { "n-way" } else { "recursive bisection" };
+    status(cfg.position, &format!(
+        "{}: {} into {} districts", cfg.state_code, method, num_districts
+    ));
+
+    let assignments = if use_nway {
+        // N-way: single gpmetis call with nparts=k, equal target weights
+        run_nway_partition(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            &edge_weights,
+            num_districts,
+            1.0 + cfg.ufactor as f64 / 1000.0,  // convert int ufactor to decimal
+            cfg.niter,
+            cfg.seed,
+        ).map_err(|e| format!("n-way partition failed: {e}"))?
+    } else {
+        run_all_splits(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            &edge_weights,
+            num_districts,
+            cfg.ufactor,
+            cfg.niter,
+            cfg.seed,
+        ).map_err(|e| format!("bisection failed: {e}"))?
+    };
 
     // 4. Assert constitutional population balance (±0.5%)
     // BOUNDARY invariant: 0.5% matches one-person-one-vote standard.
