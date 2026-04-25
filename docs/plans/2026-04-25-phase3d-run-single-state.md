@@ -1073,3 +1073,374 @@ git commit -m "Phase 3d: record benchmarks and update migration log"
 - `Partition::from_assignments` from `redist-core`, used in Task 5 ✓
 
 **One open question:** `state_name_for` in Task 5 calls Python to look up the state name. This creates a Python dependency in the Rust runner. If Python is not available, the VRA path fails. This is acceptable for Phase 3d since the adjacency loader already requires Python. Both can be eliminated in Phase 2a (when the Rust TIGER reader owns the config). Document this in the code.
+
+---
+
+## Task 8: Wire `redist states` — 50-state parallel runner
+
+**Files:**
+- Modify: `redist/crates/redist-cli/src/main.rs`
+
+### What it does
+`Commands::States` already calls `run_states_parallel` but exits with "not yet implemented". Once `run_single_state` works (Task 5), this is a direct wiring job: build a `Vec<StateConfig>` for every state in the 2020 config and pass it to `run_states_parallel`.
+
+State list comes from `scripts/config_2020.py` via a Python subprocess (same pattern as `load_num_districts` in Task 5).
+
+- [ ] **Step 1: Write failing acceptance test**
+
+```python
+# tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
+def test_redist_states_runs_vermont_and_delaware(self, tmp_dir):
+    """redist states processes a subset of states without crashing."""
+    result = subprocess.run(
+        [str(REDIST_BIN), 'states',
+         '--year', '2020', '--version', 'V3',
+         '--output-dir', str(tmp_dir / 'rust_states'),
+         '--states', 'VT', 'DE',
+         '--workers', '2',
+         '--position', '999'],
+        capture_output=True, text=True, timeout=120
+    )
+    assert result.returncode == 0, f'redist states failed:\n{result.stderr}'
+    for state in ['vermont', 'delaware']:
+        assert (tmp_dir / 'rust_states' / 'states' / state / 'data' / 'final_assignments.json').exists()
+```
+
+Run: `pytest tests/acceptance/ -k test_redist_states -v`
+Expected: FAIL — "not yet implemented".
+
+- [ ] **Step 2: Load state list helper**
+
+Add to `runner.rs`:
+
+```rust
+/// Load all state codes and district counts for a given year.
+/// Returns Vec<(state_code, num_districts)> sorted alphabetically.
+pub fn load_all_states(year: &str) -> Result<Vec<(String, usize)>, String> {
+    let script = format!(
+        "from scripts.config_{year} import STATE_CONFIG_{year}; \
+         import json; \
+         print(json.dumps({{k: v['districts'] for k, v in STATE_CONFIG_{year}.items()}}))",
+        year = year
+    );
+    let out = std::process::Command::new("python")
+        .args(["-c", &script])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let map: std::collections::HashMap<String, usize> =
+        serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
+    let mut states: Vec<(String, usize)> = map.into_iter().collect();
+    states.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(states)
+}
+```
+
+- [ ] **Step 3: Wire `Commands::States` in `main.rs`**
+
+```rust
+Commands::States(args) => {
+    let all_states = redist_cli::runner::load_all_states(&args.year.to_string())
+        .unwrap_or_else(|e| { eprintln!("failed to load state list: {e}"); std::process::exit(1); });
+
+    // Filter to requested states if --states provided
+    let states_filter: std::collections::HashSet<String> = args.states
+        .iter().map(|s| s.to_uppercase()).collect();
+
+    let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+        .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
+        .enumerate()
+        .map(|(i, (code, _))| redist_cli::runner::StateConfig {
+            state_code: code,
+            year: args.year.to_string(),
+            version: args.version.clone(),
+            output_dir: std::path::PathBuf::from(&args.output_dir),
+            partition_mode: args.partition_mode.to_string(),
+            position: (i + 2) as i32,  // tqdm positions 2..N
+            debug: args.debug,
+            reset: false,
+            reprocess: args.reprocess,
+            ufactor: 5,
+            niter: 100,
+            seed: None,
+        })
+        .collect();
+
+    let filtered = redist_cli::runner::filter_incomplete(configs);
+    eprintln!("[redist states] processing {} states with {} workers", filtered.len(), args.workers);
+
+    let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+    let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
+    for f in &failures {
+        eprintln!("FAILED {}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
+    }
+    if !failures.is_empty() {
+        std::process::exit(1);
+    }
+    eprintln!("[OK] all states complete");
+}
+```
+
+- [ ] **Step 4: Build**
+
+```
+cd redist && cargo build -p redist-cli --release 2>&1 | tail -3
+```
+
+- [ ] **Step 5: Run acceptance test**
+
+```
+pytest tests/acceptance/ -k test_redist_states -v --tb=short
+```
+
+Expected: PASS — VT and DE both produce `final_assignments.json`.
+
+- [ ] **Step 6: Verify full 50-state dry-run (print only)**
+
+```bash
+redist/target/release/redist states \
+  --year 2020 --version V3 \
+  --output-dir outputs/V3 \
+  --workers 1 \
+  --states VT DE AK
+```
+
+Confirm 3 states complete without error before committing.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add redist/crates/redist-cli/src/main.rs redist/crates/redist-cli/src/runner.rs
+git add tests/acceptance/test_pipeline_acceptance.py
+git commit -m "Phase 3d Task 8: wire redist states — 50-state parallel runner"
+```
+
+---
+
+## Task 9: Wire `redist run` — multi-year orchestrator
+
+**Files:**
+- Modify: `redist/crates/redist-cli/src/main.rs`
+
+### What it does
+`Commands::Run` is the outermost entry point: it runs `redist states` for one or all census years (2020, 2010, 2000), optionally in parallel across years using Rayon's thread pool.
+
+Years "all" = spawn all three years concurrently using Rayon. A single year runs `redist states` for that year sequentially (states still parallel within the year via `run_states_parallel`).
+
+- [ ] **Step 1: Write failing acceptance test**
+
+```python
+# tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
+def test_redist_run_single_year_vermont(self, tmp_dir):
+    """redist run --year 2020 --states VT completes successfully."""
+    result = subprocess.run(
+        [str(REDIST_BIN), 'run',
+         '--year', '2020', '--version', 'V3',
+         '--output-dir', str(tmp_dir / 'rust_run'),
+         '--states', 'VT',
+         '--workers', '1'],
+        capture_output=True, text=True, timeout=120
+    )
+    assert result.returncode == 0, f'redist run failed:\n{result.stderr}'
+    assert (tmp_dir / 'rust_run' / 'states' / 'vermont' / 'data' / 'final_assignments.json').exists()
+```
+
+- [ ] **Step 2: Wire `Commands::Run` in `main.rs`**
+
+```rust
+Commands::Run(args) => {
+    use rayon::prelude::*;
+
+    // Determine which years to run
+    let years: Vec<String> = if args.year == "all" {
+        vec!["2020".into(), "2010".into(), "2000".into()]
+    } else {
+        vec![args.year.clone()]
+    };
+
+    // For each year, build state configs and run in parallel
+    // Years themselves run sequentially (inner parallelism handles states)
+    let mut any_failure = false;
+    for year in &years {
+        eprintln!("[redist run] year={year} version={} mode={}", args.version, args.partition_mode);
+
+        let all_states = redist_cli::runner::load_all_states(year)
+            .unwrap_or_else(|e| { eprintln!("state list failed for {year}: {e}"); vec![] });
+
+        let states_filter: std::collections::HashSet<String> = args.states
+            .iter().map(|s| s.to_uppercase()).collect();
+
+        let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+            .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
+            .enumerate()
+            .map(|(i, (code, _))| redist_cli::runner::StateConfig {
+                state_code: code,
+                year: year.clone(),
+                version: args.version.clone(),
+                output_dir: std::path::PathBuf::from(
+                    args.output_dir.clone().unwrap_or_else(|| format!("outputs/{}", args.version))
+                ),
+                partition_mode: args.partition_mode.to_string(),
+                position: (i + 2) as i32,
+                debug: args.debug,
+                reset: args.reset,
+                reprocess: args.reprocess,
+                ufactor: 5,
+                niter: 100,
+                seed: None,
+            })
+            .collect();
+
+        let filtered = redist_cli::runner::filter_incomplete(configs);
+        let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+        let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
+        for f in &failures {
+            eprintln!("FAILED {year}/{}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
+            any_failure = true;
+        }
+    }
+    if any_failure { std::process::exit(1); }
+    eprintln!("[OK] redist run complete");
+}
+```
+
+- [ ] **Step 3: Build and run acceptance test**
+
+```
+cd redist && cargo build -p redist-cli --release 2>&1 | tail -3
+pytest tests/acceptance/ -k test_redist_run_single_year_vermont -v
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Run full 2020 single-state smoke test**
+
+```bash
+redist/target/release/redist run \
+  --year 2020 --version V3 \
+  --states VT --workers 4
+```
+
+Confirm output written to `outputs/V3/`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add redist/crates/redist-cli/src/main.rs
+git add tests/acceptance/test_pipeline_acceptance.py
+git commit -m "Phase 3d Task 9: wire redist run — multi-year orchestrator"
+```
+
+---
+
+## Task 10: Extract pitfalls from this session
+
+**Files:**
+- Modify: `design/pitfalls/` (existing directory)
+- Modify: `design/pitfalls/README.md`
+
+### What it does
+This session's bugs and reviews surfaced new structural pitfalls that belong in the collection. Run the `/update-pitfalls` skill after Phase 3d is working.
+
+The key pitfalls from this session not yet captured:
+
+| ID | Pattern | Source |
+|---|---|---|
+| PP-04 | Threshold operator parity (>= vs >) — Rust used inclusive where Python used exclusive | Phase 4 review, VRA analysis |
+| PP-05 | HashMap iteration order produces non-deterministic FP sums | Phase 4 review, VRA aggregation |
+| PP-06 | `debug_assert!` compiled out in release — safety checks silently disappear | Phase 3 review, STATUS protocol |
+| PP-07 | Dead code in Rayon closures (Arc<Mutex> collecting errors that are never read) | Phase 3 review, runner.rs |
+| PP-08 | CSV column order from HashMap is non-deterministic across runs | Phase 3 review, output.rs |
+
+- [ ] **Step 1: Run update-pitfalls skill**
+
+```
+/update-pitfalls
+```
+
+Provide session context: "Phase 3d Rust port. Key bugs found in role reviews: threshold operator mismatch (>= vs >), HashMap non-determinism in FP sums, debug_assert compiled out in release builds, dead Arc<Mutex> in Rayon closures, CSV HashMap column ordering."
+
+- [ ] **Step 2: Verify pitfalls added to design/pitfalls/README.md**
+
+```bash
+grep -c "PP-0[4-8]" design/pitfalls/README.md
+```
+
+Expected: 5 new entries.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add design/pitfalls/
+git commit -m "Phase 3d Task 10: extract pitfalls from Phase 1-4 Rust port reviews"
+```
+
+---
+
+## Task 11: Record benchmarks and update migration log
+
+**Files:**
+- Modify: `design/rust-port/migration-log.md`
+- Modify: `design/rust-port/benchmarks.md`
+
+### What it does
+After Tasks 5–9 are working, run hyperfine to measure actual wall time improvements and record them so the migration-log.md has real data.
+
+- [ ] **Step 1: Establish Python baseline (before Rust)**
+
+Run this before the Rust binary exists or with the Python pipeline:
+
+```bash
+# Requires hyperfine: cargo install hyperfine
+hyperfine --warmup 1 --runs 3 \
+  'python scripts/pipeline/run_state_redistricting.py --state VT --year 2020 --version V3 --position 999' \
+  'python scripts/pipeline/run_state_redistricting.py --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+```
+
+Record output.
+
+- [ ] **Step 2: Run Rust binary benchmark**
+
+```bash
+hyperfine --warmup 1 --runs 3 \
+  'redist/target/release/redist state --state VT --year 2020 --version V3 --position 999' \
+  'redist/target/release/redist state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+```
+
+- [ ] **Step 3: Update migration-log.md**
+
+```markdown
+## Phase 3d — Complete (DATE)
+run_single_state implemented. redist state, redist states, and redist run all wired.
+
+### Benchmarks (DATE, Windows 11, 12-core):
+
+| State | Python (s) | Rust CLI (s) | Speedup |
+|-------|------------|--------------|---------|
+| VT    | X.Xs       | X.Xs         | Nx      |
+| AL    | X.Xs       | X.Xs         | Nx      |
+
+### Phase 3d target: ~25 min for 50 states (Phase 2 adjacency + Rayon)
+### Phase 5 target: ~10 min (native METIS)
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add design/rust-port/migration-log.md design/rust-port/benchmarks.md
+git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
+```
+
+---
+
+## Updated Self-Review
+
+**Spec coverage (full plan including gaps):**
+- ✓ `run_single_state` (Tasks 1–6)
+- ✓ `redist states` — 50-state parallel (Task 8)
+- ✓ `redist run` — multi-year orchestrator (Task 9)
+- ✓ Pitfalls extraction (Task 10)
+- ✓ Benchmark recording (Task 11)
+- ✓ Acceptance tests for each new command (Tasks 6, 8, 9)
+- ✗ Phase 5 (native METIS) — out of scope for this plan; see `design/rust-port/README.md` Phase 5 section
+
+**Phase 5 note:** Phase 5 (link METIS as C library via `bindgen`) is a separate plan. Implement only if Task 11 benchmarks show subprocess overhead >10% of total runtime. The decision gate is documented in `design/rust-port/README.md`.
