@@ -173,7 +173,7 @@ pub struct RunArgs {
     pub skip_demographic: bool,
 
     /// Pipeline stages to run (default: data states nation)
-    #[arg(short = 's', long, value_delimiter = ' ', num_args = 1..)]
+    #[arg(short = 's', long, value_delimiter = ' ', num_args = 0.., default_value = "data states nation")]
     pub stages: Vec<Stage>,
 
     /// Reprocess all states (ignore completion markers)
@@ -435,6 +435,40 @@ mod tests {
         assert!(!args.print_only);
         assert!(!args.debug);
         assert!(!args.reset);
+    }
+
+    #[test]
+    fn test_stages_default_all_three() {
+        let args = RunArgs::parse_from(["run"]);
+        // Must default to all three stages, not empty — empty Vec silently skips all stages
+        assert_eq!(args.stages.len(), 3,
+            "stages should default to [data, states, nation], got {:?}", args.stages);
+        assert!(args.stages.contains(&Stage::Data));
+        assert!(args.stages.contains(&Stage::States));
+        assert!(args.stages.contains(&Stage::Nation));
+    }
+
+    #[test]
+    fn test_stages_explicit_subset() {
+        let args = RunArgs::parse_from(["run", "--stages", "states", "nation"]);
+        assert_eq!(args.stages.len(), 2);
+        assert!(!args.stages.contains(&Stage::Data));
+    }
+
+    #[test]
+    fn test_workers_defaults_match_python() {
+        let run_args = RunArgs::parse_from(["run"]);
+        assert_eq!(run_args.workers, 12, "run_complete_redistricting.py defaults to 12");
+        let states_args = StatesArgs::parse_from([
+            "states", "--year", "2020", "--version", "v1", "--output-dir", "/tmp"
+        ]);
+        assert_eq!(states_args.workers, 4, "run_states_parallel.py defaults to 4");
+    }
+
+    #[test]
+    fn test_election_year_long_flag() {
+        let args = RunArgs::parse_from(["run", "--election-year", "2016"]);
+        assert_eq!(args.election_year, ElectionYear::E2016);
     }
 
     #[test]

@@ -8,7 +8,6 @@
 /// States that fail write to an error log and do not block other states.
 use rayon::prelude::*;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
 use crate::status::ascii_safe;
 
 /// Result of processing a single state.
@@ -51,9 +50,9 @@ pub fn run_states_parallel(
         .build()
         .expect("failed to build Rayon thread pool");
 
-    let errors: Arc<Mutex<Vec<String>>> = Arc::new(Mutex::new(Vec::new()));
-
-    let results: Vec<StateResult> = pool.install(|| {
+    // Rayon collect() returns each state's result including errors via StateResult.error.
+    // No Arc<Mutex> needed — errors are not lost, they're in the returned Vec.
+    pool.install(|| {
         configs.par_iter().map(|cfg| {
             let start = std::time::Instant::now();
             let result = run_single_state(cfg);
@@ -65,21 +64,15 @@ pub fn run_states_parallel(
                     error: None,
                     elapsed_ms,
                 },
-                Err(e) => {
-                    let msg = format!("{}: {}", cfg.state_code, ascii_safe(&e.to_string()));
-                    errors.lock().unwrap().push(msg.clone());
-                    StateResult {
-                        state_code: cfg.state_code.clone(),
-                        success: false,
-                        error: Some(msg),
-                        elapsed_ms,
-                    }
+                Err(e) => StateResult {
+                    state_code: cfg.state_code.clone(),
+                    success: false,
+                    error: Some(format!("{}: {}", cfg.state_code, ascii_safe(&e.to_string()))),
+                    elapsed_ms,
                 }
             }
         }).collect()
-    });
-
-    results
+    })
 }
 
 /// Run a single state redistricting task.
@@ -100,13 +93,15 @@ pub fn state_already_complete(output_dir: &PathBuf, state_code: &str, reprocess:
     if reprocess {
         return false;
     }
-    // A state is complete if its final_assignments.pkl exists
-    let marker = output_dir
+    // A state is complete if its final output exists.
+    // Rust CLI writes final_assignments.json; Python pipeline writes final_assignments.pkl.
+    // Check both so either pipeline's output is recognized.
+    let data_dir = output_dir
         .join("states")
         .join(state_code.to_lowercase())
-        .join("data")
-        .join("final_assignments.pkl");
-    marker.exists()
+        .join("data");
+    data_dir.join("final_assignments.json").exists()
+        || data_dir.join("final_assignments.pkl").exists()
 }
 
 /// Filter configs to only those needing processing.
@@ -209,6 +204,34 @@ mod tests {
         let remaining = filter_incomplete(configs);
         assert_eq!(remaining.len(), 1);
         assert_eq!(remaining[0].state_code, "DE");
+    }
+
+    #[test]
+    fn test_run_states_parallel_empty_configs() {
+        let results = run_states_parallel(vec![], 4);
+        assert_eq!(results.len(), 0, "empty input should return empty results without panic");
+    }
+
+    #[test]
+    fn test_errors_are_in_state_results_not_lost() {
+        let configs = vec![make_config("VT"), make_config("TX")];
+        let results = run_states_parallel(configs, 2);
+        for r in &results {
+            // Stub always fails; error must be in StateResult, not lost
+            assert!(!r.success, "stub should fail");
+            assert!(r.error.is_some(), "failed state must have error message in StateResult");
+        }
+    }
+
+    #[test]
+    fn test_completion_check_recognizes_json_output() {
+        // write_state_outputs writes .json; state_already_complete must find it
+        let tmp = tempfile::TempDir::new().unwrap();
+        let data_dir = tmp.path().join("states").join("vt").join("data");
+        std::fs::create_dir_all(&data_dir).unwrap();
+        std::fs::write(data_dir.join("final_assignments.json"), b"{}").unwrap();
+        assert!(state_already_complete(&tmp.path().to_path_buf(), "VT", false),
+            "should detect final_assignments.json");
     }
 
     #[test]

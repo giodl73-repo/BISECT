@@ -106,8 +106,11 @@ pub fn write_district_summary(
     let csv_path = data_dir.join("district_summary.csv");
     let tmp_csv = data_dir.join(".district_summary.tmp.csv");
 
-    // Collect column names from first row (preserves insertion order)
-    let headers: Vec<&str> = rows[0].keys().map(|k| k.as_str()).collect();
+    // Collect and sort column names for deterministic CSV output.
+    // HashMap iteration order is non-deterministic; sorting ensures
+    // the same column order across runs and Rust versions.
+    let mut headers: Vec<&str> = rows[0].keys().map(|k| k.as_str()).collect();
+    headers.sort_unstable();
 
     let mut content = String::new();
     content.push_str(&headers.join(","));
@@ -247,6 +250,39 @@ mod tests {
         assert!(content.contains("district"));
         assert!(content.contains("polsby_popper"));
         assert!(content.contains("0.34"));
+    }
+
+    #[test]
+    fn test_district_summary_columns_deterministic() {
+        // Same data written 3 times should produce identical column order
+        let mut make_row = || {
+            let mut m = std::collections::HashMap::new();
+            m.insert("polsby_popper".to_string(), "0.34".to_string());
+            m.insert("district".to_string(), "1".to_string());
+            m.insert("reock".to_string(), "0.42".to_string());
+            m
+        };
+        let mut headers_seen = vec![];
+        for _ in 0..5 {
+            let tmp = TempDir::new().unwrap();
+            write_district_summary(tmp.path(), &[make_row()]).unwrap();
+            let content = std::fs::read_to_string(tmp.path().join("district_summary.csv")).unwrap();
+            let header = content.lines().next().unwrap().to_string();
+            headers_seen.push(header);
+        }
+        for h in &headers_seen[1..] {
+            assert_eq!(h, &headers_seen[0], "column order must be deterministic across runs");
+        }
+    }
+
+    #[test]
+    fn test_temp_files_do_not_exist_after_success() {
+        let tmp = TempDir::new().unwrap();
+        let vra = sample_vra();
+        write_state_outputs(tmp.path(), &sample_assignments(), Some(&vra)).unwrap();
+        // Direct filesystem check (not just has_corrupt_state)
+        assert!(!tmp.path().join(".final_assignments.tmp.json").exists());
+        assert!(!tmp.path().join(".vra_analysis.tmp.json").exists());
     }
 
     #[test]
