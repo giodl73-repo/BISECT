@@ -10,6 +10,8 @@ Split the state into two equal halves by population. Split each half again. Keep
 
 **Headline result (2020 Census):** mean Polsby–Popper compactness **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over the enacted 2020 congressional districts (mean PP 0.296). 37 of 44 multi-district states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
 
+**VRA result (2020):** edge-weighted `metis-vra` mode achieves majority-minority district targets in Alabama (2 MM districts at 51.1%/50.5%) and Georgia (7 MM districts, exceeding the 5-district target). Adaptive boost formula scales weight by minority tract density — no manual parameter tuning per state.
+
 **[View all dashboards →](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
 
 ---
@@ -87,7 +89,7 @@ Baseline method paper. Establishes the graph-theoretic formulation, METIS recurs
 **B.2 · Edge-Weighted Recursive Bisection for Compact Congressional Districts**
 [PDF](research/B.2+edge-weighted-bisection/main.pdf) · [Source](research/B.2+edge-weighted-bisection/)
 
-Core algorithmic contribution. Weights edges by shared boundary length so minimizing the cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.367** (+56% vs. unweighted, +20% vs. enacted 2020 maps).
+Core algorithmic contribution. Weights edges by shared boundary length so minimizing the cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over enacted 2020 maps (PP 0.296).
 
 **B.3 · Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Redistricting**
 [PDF](research/B.3+multi-vs-edge/main.pdf) · [Source](research/B.3+multi-vs-edge/)
@@ -135,7 +137,7 @@ Applies the efficiency gap metric to algorithmic districts. Shows that purely ge
 **D.0 · Voting Rights Act Compliance Through Edge-Weighted Graph Partitioning**
 [PDF](research/D.0+vra-compliance/main.pdf) · [Source](research/D.0+vra-compliance/)
 
-Introduces the `metis-vra` multi-constraint formulation (2D vertex weights: population + minority VAP). Tests VRA Section 2 compliance on covered states. This is the algorithm behind the V4 pipeline run.
+Introduces the `metis-vra` edge-weighted formulation: minority-to-minority tract edges receive higher weights (adaptive formula: `max(3.0, 10.0*(1-0.7*f))`) so METIS naturally preserves minority communities without multi-constraint vertex weights. Tests VRA Section 2 compliance on covered states. This is the algorithm behind the V4 pipeline run.
 
 **D.1 · The 42% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting**
 [PDF](research/D.1+threshold-analysis/main.pdf) · [Source](research/D.1+threshold-analysis/)
@@ -269,8 +271,8 @@ python scripts/pipeline/run_state_redistricting.py --state CA --year 2020
 ### Build the dashboard
 
 ```bash
-python scripts/web/generate_master_dashboard.py
-python scripts/web/embed_maps_dashboard.py   # → docs/dashboard.html (self-contained)
+python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
+python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
 ```
 
 ## Data
@@ -292,20 +294,22 @@ python scripts/data/download_orchestrator.py --stages redistricting --year 2020
 apportionment/
 ├── src/apportionment/       # Library: partition/, data/, visualization/
 ├── scripts/                 # Executables: pipeline/, data/, political/, demographic/, compactness/, web/
-├── artifacts/               # Papers, presentations, guides (LaTeX sources)
+├── research/                # Research papers (LaTeX sources + PDFs, A–E tracks)
+├── artifacts/               # Earlier papers, presentations, guides
+├── design/                  # Architecture plans: rust-port/, pitfalls/
 ├── data/{year}/             # Raw census data (gitignored)
 ├── outputs/                 # Pipeline outputs (gitignored)
-├── docs/                    # Human-facing documentation + dashboard
+├── docs/                    # Human-facing documentation + GitHub Pages dashboards
 ├── context/                 # Developer / AI-assistant docs
-└── tests/                   # unit/, integration/, e2e/ (215 tests, ~24s)
+└── tests/                   # unit/ (~1000 tests), integration/ (~730 tests), e2e/
 ```
 
 ## Constraints
 
 - Population: within ±0.5% of state target per district
-- Contiguity: all districts connected (enforced by METIS `-contig`)
+- Contiguity: all districts connected
 - Compactness: edge-cut minimization = perimeter minimization = Polsby–Popper maximization
-- **No political or racial data used at any stage**
+- **No political or racial data used at any stage** (VRA mode uses demographic data only for edge weighting, not for population balance)
 
 ## Documentation
 
@@ -335,7 +339,7 @@ All dashboards are self-contained — no server needed, open directly in a brows
 | 2020 Results | 2020 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2020.html) |
 | 2010 Results | 2010 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2010.html) |
 | 2000 Results | 2000 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2000.html) |
-| VRA (2020) | 2020 | Multi-constraint minority | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
+| VRA (2020) | 2020 | Edge-weighted minority (metis-vra) | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
 
 To regenerate after a new pipeline run:
 ```bash
@@ -344,6 +348,12 @@ python scripts/web/deploy_docs.py --version V3 --year 2010 --out dashboard_2010.
 python scripts/web/deploy_docs.py --version V3 --year 2000 --out dashboard_2000.html
 python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
 ```
+
+## Rust Port (in progress)
+
+A progressive Rust rewrite is planned — see [`design/rust-port/`](design/rust-port/). The goal is a single `redist` binary that runs the full pipeline without a Python dependency. The Python pipeline continues working throughout the migration via PyO3 bindings. The adaptive boost formula moves to `redist-core` as the single ground-truth implementation shared by both the CLI and Python pipeline.
+
+Phases: Scaffold → Core algorithm → Adjacency data layer → CLI binary → Analysis & dashboard.
 
 ## License
 
