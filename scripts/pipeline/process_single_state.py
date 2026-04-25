@@ -33,6 +33,12 @@ def main():
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--run-analysis', action='store_true',
                        help='Run per-state analysis (compactness, political, demographic)')
+    parser.add_argument('--skip-political', action='store_true',
+                       help='Skip political analysis even when election data is available')
+    parser.add_argument('--skip-demographic', action='store_true',
+                       help='Skip demographic analysis even when demographic data is available')
+    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
+                       help='Election year for political analysis (default: 2020)')
     parser.add_argument('--reprocess', action='store_true',
                        help='Force re-run even if output already exists')
     parser.add_argument('--partition-mode', type=str, default='edge-weighted', choices=['unweighted', 'edge-weighted', 'metis-vra'],
@@ -154,34 +160,34 @@ def main():
             f'{sys.executable} {compactness_script} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --version {args.version} --dpi {args.dpi} --position {child_position}'.strip()
         ))
 
-        # Demographic analysis (only if demographic data exists for this census year)
-        if demographic_data.exists():
+        # Demographic analysis (only if demographic data exists and not skipped)
+        if demographic_data.exists() and not args.skip_demographic:
             demographic_analyze = Path(__file__).parent / 'analyze_district_demographics.py'
             demographic_visualize = Path(__file__).parent / 'visualize_district_demographics.py'
 
             steps.append((
                 "Demographics analysis",
-                f'{sys.executable} {demographic_analyze} {state_dir} --state {state_code} --census-year {args.year}'.strip()
+                f'{sys.executable} {demographic_analyze} {state_dir} --state {state_code} --census-year {args.year} --version {args.version}'.strip()
             ))
             steps.append((
                 "Demographics visualization",
-                f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --dpi {args.dpi} --position {child_position}'.strip()
+                f'{sys.executable} {demographic_visualize} --scope state --state {state_code} --state-dir {state_dir} --census-year {args.year} --version {args.version} --dpi {args.dpi} --position {child_position}'.strip()
             ))
 
-        # Political analysis (only if compatible election data exists for this census year)
+        # Political analysis (only if compatible election data exists and not skipped)
         # Always last in the pipeline
-        can_do_political = (args.year == '2020' and election_data_2020.exists())
+        can_do_political = (args.year == '2020' and election_data_2020.exists() and not args.skip_political)
         if can_do_political:
             political_analyze = Path(__file__).parent / 'analyze_districts.py'
             political_visualize = Path(__file__).parent / 'visualize_partisan_lean.py'
 
             steps.append((
                 "Political analysis",
-                f'{sys.executable} {political_analyze} {state_dir} --state {state_code} --year 2020 --census-year {args.year}'.strip()
+                f'{sys.executable} {political_analyze} {state_dir} --state {state_code} --year {args.year} --version {args.version} --census-year {args.year}'.strip()
             ))
             steps.append((
                 "Political visualization",
-                f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year 2020 --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
+                f'{sys.executable} {political_visualize} --scope state --state {state_code} --state-dir {state_dir} --election-year {args.election_year} --census-year {args.year} --dpi {args.dpi} --skip-rounds --position {child_position}'.strip()
             ))
 
     # Set up environment for child processes (inherit PARALLEL_MODE)

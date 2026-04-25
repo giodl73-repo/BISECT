@@ -63,6 +63,12 @@ def process_single_state(args_tuple: Tuple) -> Tuple[str, bool]:
         cmd.append('--debug')
     if args_dict.get('run_analysis'):
         cmd.append('--run-analysis')
+    if args_dict.get('skip_political'):
+        cmd.append('--skip-political')
+    if args_dict.get('skip_demographic'):
+        cmd.append('--skip-demographic')
+    if args_dict.get('election_year'):
+        cmd.extend(['--election-year', args_dict['election_year']])
     if args_dict.get('partition_mode') != 'edge-weighted':
         cmd.extend(['--partition-mode', args_dict['partition_mode']])
     if args_dict.get('version'):
@@ -122,8 +128,16 @@ def main():
                        help='Print commands without executing')
     parser.add_argument('--debug', action='store_true',
                        help='Enable debug mode')
-    parser.add_argument('--run-analysis', action='store_true', default=True,
+    parser.add_argument('--run-analysis', action='store_true', default=False,
                        help='Run per-state analysis')
+    parser.add_argument('--skip-analysis', dest='run_analysis', action='store_false',
+                       help='Skip per-state analysis')
+    parser.add_argument('--skip-political', action='store_true',
+                       help='Skip political analysis')
+    parser.add_argument('--skip-demographic', action='store_true',
+                       help='Skip demographic analysis')
+    parser.add_argument('--election-year', type=str, default='2020', choices=['2020', '2016'],
+                       help='Election year for political analysis')
     parser.add_argument('--processing-mode', type=str, default='streaming',
                        choices=['batch', 'streaming'],
                        help='Processing mode (streaming uses process_single_state.py per state)')
@@ -163,6 +177,9 @@ def main():
         'dpi': args.dpi,
         'reprocess': args.reprocess,
         'version': args.version,
+        'skip_political': args.skip_political,
+        'skip_demographic': args.skip_demographic,
+        'election_year': args.election_year,
     }
 
     max_workers = min(args.workers, len(states_to_process), 8)

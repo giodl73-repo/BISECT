@@ -591,6 +591,13 @@ def main():
                 cmd.append('--print-only')
             if args.debug:
                 cmd.append('--debug')
+            if not args.run_analysis:
+                cmd.append('--skip-analysis')
+            if args.skip_political:
+                cmd.append('--skip-political')
+            if args.skip_demographic:
+                cmd.append('--skip-demographic')
+            cmd.extend(['--election-year', args.election_year])
             if args.states:
                 cmd.append('--states')
                 cmd.extend(args.states)
