@@ -111,3 +111,63 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 **Status:** SOLVED in bisection_runner.rs
 **Proved by:** ufactor_for_depth() returns decimal (1.001..1.005); acceptance tests confirm pop balance <=0.5%
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_al_rust_population_balance`
+
+---
+
+## PP-08: URL Filename Extraction Without Query Parameter Stripping
+
+**Pattern:** A local file path is derived from a URL by taking the last path segment (`url.split('/').last()`). If the URL contains query parameters (e.g., `?format=zip&version=2020`), the "filename" includes the query string, producing invalid filesystem paths on Windows (`?` is forbidden) and confusing path construction on all systems.
+
+**Domain:** Any system that downloads files from URLs and stores them locally by inferring the filename from the URL. This appears whenever REST APIs use query parameters to specify format or version, which is common in government data portals.
+
+**Why it's hard to catch:** During development, URLs are clean (census.gov TIGER URLs have no query params). The bug only surfaces when the URL format changes, when using mirrors, or when query-parameterised redirect URLs are followed.
+
+**Structural solution:** Always strip query parameters before extracting filename:
+```rust
+let raw = url.split('/').last().unwrap_or("file.zip");
+let filename = raw.split('?').next().unwrap_or(raw);
+```
+
+**Status:** SOLVED in fetch.rs
+**Proved by:** URL stripping applied to all filename derivations in build_fetch_list
+**Test:** Add test: URL `http://example.com/tl_2020_50_tract.zip?token=abc` → filename `tl_2020_50_tract.zip`
+
+---
+
+## PP-09: In-Memory Download Buffer OOM for Variable-Size Files
+
+**Pattern:** A download function loads the entire response body into RAM before writing to disk. The comment documents the expected size ("typically 1-5MB") based on known examples. When a different data source (or a larger state) produces a 50-100MB file, the system OOMs with a generic error unrelated to the real cause (insufficient memory).
+
+**Domain:** Any system that uses `response.bytes()` or equivalent to download files that vary significantly in size by state/entity. Government datasets are particularly prone: California's redistricting files are ~50-80× larger than Vermont's.
+
+**Why it's hard to catch:** The system works correctly for small states (VT, RI, DE) during development and testing. The bug only manifests for large states (CA, TX, NY) or when disk quota is abundant but RAM is not.
+
+**Structural solution:** Always stream downloads to a temp file regardless of expected size:
+```rust
+let mut out = std::fs::File::create(&tmp_zip)?;
+std::io::copy(&mut response, &mut out)?;
+```
+Then extract from the temp file. The system's I/O subsystem handles large transfers without buffering.
+
+**Status:** SOLVED in fetch.rs::download_and_extract_zip
+**Proved by:** Streaming via std::io::copy to TempDir before zip extraction
+**Test:** OPEN — no test with >50MB response; add test_download_large_zip
+
+---
+
+## PP-10: Silent State Omission on Invalid Year Parameter
+
+**Pattern:** A lookup function filters a collection by a year key and returns only matching entries. If no entries match (e.g., the year "2030" or a typo "202a"), the function returns an empty collection with no error. The caller receives an empty list and may produce zero output with zero error messages, making the bug invisible.
+
+**Domain:** Any system where a key parameter (year, version, region) is used to filter a collection, and the "no matches" result is indistinguishable from "valid but empty." Pipeline orchestrators are particularly vulnerable because they treat empty state lists as "nothing to do" rather than "invalid input."
+
+**Structural solution:** Validate the key parameter against an allowlist before filtering. Return `Err` for unknown values:
+```rust
+if !["2020", "2010", "2000"].contains(&year) {
+    return Err(format!("unsupported year '{year}' — valid: 2020, 2010, 2000"));
+}
+```
+
+**Status:** SOLVED in runner.rs::load_all_states
+**Proved by:** Explicit year allowlist check before manifest lookup
+**Test:** Add test: `load_all_states("2030")` returns Err, not empty Vec

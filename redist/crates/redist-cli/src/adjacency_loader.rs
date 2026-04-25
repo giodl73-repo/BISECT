@@ -63,9 +63,12 @@ pub fn load_adjacency_pkl(pkl_path: &Path) -> Result<LoadedGraph, String> {
         return Err(format!("adjacency pkl not found: {}", pkl_path.display()));
     }
 
-    // Use REDIST_PYTHON env var if set, else platform default.
-    // On Windows: `py` (Python Launcher) finds the correct environment.
-    // On Linux/macOS: `python3`.
+    // REDIST_PYTHON must be set explicitly in CI/containers (Critical 4).
+    // Default `py` (Windows) and `python3` (Linux/macOS) may not be correct if:
+    //   - Running in Alpine/minimal containers where only `python` exists
+    //   - Running inside a venv where Python is at a non-standard path
+    // Set REDIST_PYTHON=<full path> to override. Example:
+    //   REDIST_PYTHON=$(which python3) redist state --state VT
     let python_cmd = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| {
         if cfg!(windows) { "py".to_string() } else { "python3".to_string() }
     });

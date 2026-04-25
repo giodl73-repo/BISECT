@@ -125,6 +125,14 @@ fn main() {
                 std::env::set_var("REDIST_MANIFEST", path);
             }
 
+            // PP-10: Validate year before fetching (silent omission on invalid year)
+            let valid_years = ["2020", "2010", "2000", "all"];
+            if !valid_years.contains(&args.year.as_str()) {
+                eprintln!("ERROR: unsupported year '{}' — valid years are 2020, 2010, 2000, all",
+                    args.year);
+                std::process::exit(1);
+            }
+
             let manifest = load_manifest()
                 .unwrap_or_else(|e| { eprintln!("ERROR loading manifest: {e}"); std::process::exit(1); });
 

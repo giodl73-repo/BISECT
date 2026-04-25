@@ -140,7 +140,9 @@ pub fn build_fetch_list(
         // TIGER tract shapefile
         if want_tiger {
             if let Some(url) = state.tiger.get(year) {
-                let filename = url.split('/').last().unwrap_or("tract.zip");
+                // Strip query params from URL before extracting filename (Critical 1)
+                let raw = url.split('/').last().unwrap_or("tract.zip");
+                let filename = raw.split('?').next().unwrap_or(raw);
                 let local_path = data_dir.join(year).join("tiger").join("tracts")
                     .join(filename.replace(".zip", "")).join(filename.replace(".zip", ".shp"));
                 let done_marker = local_path.with_extension("done");
@@ -159,7 +161,8 @@ pub fn build_fetch_list(
         // PL 94-171 redistricting file
         if want_pl {
             if let Some(url) = state.pl94171.get(year) {
-                let filename = url.split('/').last().unwrap_or("data.zip");
+                let raw = url.split('/').last().unwrap_or("data.zip");
+                let filename = raw.split('?').next().unwrap_or(raw);
                 let local_path = data_dir.join(year).join("redistricting")
                     .join(&state_lower).join(filename);
                 let done_marker = local_path.with_extension("done");
@@ -297,24 +300,33 @@ pub fn download_items(
     Ok(())
 }
 
-/// Download a ZIP from url and extract it to dest_dir using native Rust (reqwest + zip).
-/// No Python subprocess. Follows redirects automatically.
+/// Download a ZIP from url and extract it to dest_dir.
+/// Streams response to a temp file to avoid OOM for large ZIPs (Critical 3).
+/// California PL 94-171 can be 80MB+ — in-memory loading would OOM on constrained systems.
 pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String> {
-    // Download into memory (census.gov zips are typically 1-5MB — fine for in-memory)
-    let response = reqwest::blocking::get(url)
+    let mut response = reqwest::blocking::get(url)
         .map_err(|e| format!("HTTP GET {url}: {e}"))?;
 
     if !response.status().is_success() {
         return Err(format!("HTTP {}: {url}", response.status()));
     }
 
-    let bytes = response.bytes()
-        .map_err(|e| format!("reading response body: {e}"))?;
+    // Stream to temp file — avoids loading large ZIPs (80MB+ for CA PL 94-171) into RAM
+    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
+    let tmp_zip = tmp_dir.path().join("download.zip");
+    {
+        let mut out = std::fs::File::create(&tmp_zip)
+            .map_err(|e| format!("tmp file create: {e}"))?;
+        std::io::copy(&mut response, &mut out)
+            .map_err(|e| format!("streaming download: {e}"))?;
+    }
 
-    // Extract zip
-    let cursor = std::io::Cursor::new(bytes);
-    let mut archive = zip::ZipArchive::new(cursor)
+    // Extract from temp file
+    let zip_file = std::fs::File::open(&tmp_zip).map_err(|e| e.to_string())?;
+    let mut archive = zip::ZipArchive::new(zip_file)
         .map_err(|e| format!("invalid ZIP from {url}: {e}"))?;
+
+    std::fs::create_dir_all(dest_dir).map_err(|e| e.to_string())?;
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
@@ -325,9 +337,8 @@ pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String
             if let Some(p) = outpath.parent() {
                 std::fs::create_dir_all(p).map_err(|e| e.to_string())?;
             }
-            let mut contents = Vec::new();
-            file.read_to_end(&mut contents).map_err(|e| e.to_string())?;
-            std::fs::write(&outpath, &contents).map_err(|e| e.to_string())?;
+            let mut out = std::fs::File::create(&outpath).map_err(|e| e.to_string())?;
+            std::io::copy(&mut file, &mut out).map_err(|e| e.to_string())?;
         }
     }
     Ok(())

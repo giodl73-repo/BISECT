@@ -623,3 +623,107 @@ class TestFetchThenRun:
             assert len(records) == 193, f'VT should have 193 tracts, got {len(records)}'
         except ImportError:
             pytest.skip('redist_py not available')
+
+
+# ---------------------------------------------------------------------------
+# Tests for fixes from role review (PP-08, PP-09, PP-10)
+# ---------------------------------------------------------------------------
+
+class TestRoleReviewFixes:
+
+    def test_url_with_query_params_strips_correctly(self, tmp_path):
+        """PP-08: Query params in URL must not appear in local filename."""
+        # Serve the real VT TIGER zip but with a query param in the URL
+        vt_zip = make_tiger_zip('50')
+        routes = {'/tl_2020_50_tract.zip': ('application/zip', vt_zip)}
+        manifest = make_manifest('', {
+            'VT': {
+                'name': 'Vermont', 'fips': '50',
+                'districts': {'2020': 1, '2010': 1, '2000': 1},
+                'tiger': {}, 'pl94171': {},
+            }
+        })
+        with FixtureServer(routes) as server:
+            # URL with query param — filename should still be tl_2020_50_tract.zip
+            manifest['states']['VT']['tiger']['2020'] = \
+                f'{server.url}/tl_2020_50_tract.zip?token=abc123'
+            manifest_file = tmp_path / 'manifest.json'
+            manifest_file.write_text(json.dumps(manifest))
+
+            result = run_fetch(
+                ['--check-only', '--states', 'VT', '--year', '2020', '--type', 'tiger',
+                 '--manifest', str(manifest_file)],
+                env={'REDIST_PYTHON': sys.executable},
+                cwd=str(tmp_path)
+            )
+
+        assert result.returncode == 0
+        # The [NEED]/[FILE] path lines must not contain query strings.
+        # The "src:" continuation line shows the full original URL — that's OK.
+        path_lines = [l for l in result.stdout.splitlines()
+                      if l.strip().startswith(('[NEED]', '[FILE]', '[OK]', '[SKIP]'))]
+        for line in path_lines:
+            assert '?' not in line, f'Query param in local path: {line!r}'
+        assert 'tl_2020_50_tract' in result.stdout
+
+    def test_invalid_year_returns_error(self):
+        """PP-10: Invalid year should fail with clear error, not silent empty list."""
+        result = run_fetch(
+            ['--check-only', '--year', '2030', '--states', 'VT'],
+            env={'REDIST_PYTHON': sys.executable}
+        )
+        assert result.returncode != 0, 'Invalid year 2030 should cause non-zero exit'
+        combined = result.stdout + result.stderr
+        assert '2030' in combined, f'Error should mention the invalid year: {combined}'
+
+    def test_year_typo_returns_error(self):
+        """PP-10: Year typo (202a) must not silently produce empty output."""
+        result = run_fetch(
+            ['--check-only', '--year', '202a', '--states', 'VT'],
+            env={'REDIST_PYTHON': sys.executable}
+        )
+        assert result.returncode != 0
+
+    def test_year_2000_is_valid(self):
+        """Year 2000 is in the allowlist."""
+        result = run_fetch(
+            ['--check-only', '--year', '2000', '--states', 'VT'],
+            env={'REDIST_PYTHON': sys.executable}
+        )
+        assert result.returncode == 0
+
+    def test_large_download_streams_to_disk(self, tmp_path):
+        """PP-09: Large downloads must stream to disk, not buffer in RAM."""
+        import io, zipfile as _zipfile
+        # 5MB fake zip — large enough to test streaming, small enough for CI
+        buf = io.BytesIO()
+        with _zipfile.ZipFile(buf, 'w', _zipfile.ZIP_STORED) as zf:
+            zf.writestr('tl_2020_50_tract.shp', b'X' * 5 * 1024 * 1024)
+        large_zip = buf.getvalue()
+
+        routes = {'/tl_2020_50_tract.zip': ('application/zip', large_zip)}
+        manifest = make_manifest('', {
+            'VT': {
+                'name': 'Vermont', 'fips': '50',
+                'districts': {'2020': 1, '2010': 1, '2000': 1},
+                'tiger': {}, 'pl94171': {},
+            }
+        })
+        with FixtureServer(routes) as server:
+            manifest['states']['VT']['tiger']['2020'] = f'{server.url}/tl_2020_50_tract.zip'
+            manifest_file = tmp_path / 'manifest.json'
+            manifest_file.write_text(json.dumps(manifest))
+
+            result = run_fetch(
+                ['--states', 'VT', '--year', '2020', '--type', 'tiger',
+                 '--manifest', str(manifest_file)],
+                env={'REDIST_PYTHON': sys.executable},
+                cwd=str(tmp_path)
+            )
+
+        assert result.returncode == 0, f'Large zip download failed:\n{result.stderr}'
+        shp = (tmp_path / 'data' / '2020' / 'tiger' / 'tracts' /
+               'tl_2020_50_tract' / 'tl_2020_50_tract.shp')
+        assert shp.exists(), 'File not extracted from large zip'
+        assert shp.stat().st_size == 5 * 1024 * 1024, \
+            f'Expected 5MB, got {shp.stat().st_size} bytes'

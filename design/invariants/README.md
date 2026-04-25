@@ -14,8 +14,8 @@ An invariant is **ENFORCED** when a test would fail if the invariant were violat
 | VRA Algorithm | VA | 5 |
 | Data Format | DF | 4 |
 | Algorithm Correctness | AC | 5 |
-| Interface/Protocol | IP | 3 |
-| **Total** | | **20** |
+| Interface/Protocol | IP | 4 |
+| **Total** | | **21** |
 
 ---
 
@@ -43,6 +43,7 @@ An invariant is **ENFORCED** when a test would fail if the invariant were violat
 | IP-01 | STATUS output is ASCII-only (no Unicode) | ENFORCED | test_rust_cli.py::test_no_unicode_in_help_output |
 | IP-02 | Error propagation from parallel tasks: no silent filter | ENFORCED | TestRustCLIAcceptance (Alabama run would show error not silent empty) |
 | IP-03 | REDIST_PYTHON used for all Python subprocess calls | ENFORCED | TestRustCLIAcceptance fixtures set REDIST_PYTHON=sys.executable |
+| IP-04 | CWD must equal project root when using relative manifest paths | PARTIAL | test_fetch.py::TestCheckOnly (uses cwd=str(tmp_path)) |
 
 ---
 

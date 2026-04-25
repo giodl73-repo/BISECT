@@ -53,7 +53,16 @@ pub struct StateConfig {
 /// Load all state codes, names, and district counts for a given year.
 /// Returns Vec<(state_code, state_name, num_districts)> sorted alphabetically.
 /// Reads directly from the embedded manifest — no Python subprocess.
+///
+/// Warning 6: if `year` is not in the manifest (e.g. "2030" or a typo),
+/// all states are silently omitted. The caller sees an empty Vec with no error.
+/// Valid years: "2020", "2010", "2000".
 pub fn load_all_states(year: &str) -> Result<Vec<(String, String, usize)>, String> {
+    if !["2020", "2010", "2000"].contains(&year) {
+        return Err(format!(
+            "unsupported year '{year}' — valid years are 2020, 2010, 2000"
+        ));
+    }
     let manifest = crate::fetch::load_manifest()?;
     let mut states: Vec<(String, String, usize)> = manifest.states.into_iter()
         .filter_map(|(code, state)| {

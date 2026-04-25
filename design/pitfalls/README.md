@@ -17,11 +17,11 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
 | Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 6 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 7 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 10 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
 | Data | DP | [pitfalls-data.md](pitfalls-data.md) | 3 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **20** |
+| **Total** | | | **23** |
 
 ## Status
 
@@ -47,6 +47,9 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-06 | Parallel task failure invisibility via silent filter | **SOLVED** | TestRustCLIAcceptance::test_al_rust_mm_count |
 | PP-07 | External tool parameter unit mismatch at boundary | **SOLVED** | TestRustCLIAcceptance::test_al_rust_population_balance |
 | AP-06 | Implicit partition equality assumption in recursive bisection | **SOLVED** | TestRustCLIAcceptance::test_al_rust_population_balance |
+| PP-08 | URL filename extraction without query parameter stripping | **SOLVED** | fetch.rs url.split('?').next() |
+| PP-09 | In-memory download buffer OOM for variable-size files | **SOLVED** | fetch.rs::download_and_extract_zip (streaming) |
+| PP-10 | Silent state omission on invalid year parameter | **SOLVED** | runner.rs::load_all_states year allowlist |
 
 ## Adding a Pitfall
 

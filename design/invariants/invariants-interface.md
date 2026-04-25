@@ -50,3 +50,19 @@ Properties of the CLI interface and inter-process communication protocol.
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — all fixtures pass REDIST_PYTHON=sys.executable; tests would fail with ImportError if bare 'python' were used.
 
 **Status:** ENFORCED
+
+---
+
+## IP-04: CWD must equal project root when using relative manifest paths
+
+**Invariant:** When `redist fetch` or `redist state` is run, the working directory must be the project root (the directory containing `data/`, `outputs/`, and `redist/`). All manifest paths (`local_data_dir: "data"`, `local_outputs_dir: "outputs"`) are relative to CWD.
+
+**Why it must hold:** The manifest stores paths as relative strings to avoid hardcoding user-specific absolute paths. If the binary is launched from a different directory (e.g., `/home/user` instead of `/home/user/apportionment`), all data lookups and writes go to the wrong location. Done-marker checks fail; downloads appear missing even after fetching.
+
+**When it can be violated:** Running `redist fetch` from a different directory than the project root. Calling the binary via a wrapper script that changes CWD. Containerised deployments where CWD is `/` or `/app`.
+
+**Enforcement:** Document in `--help` output. Future: support absolute paths in manifest via `REDIST_DATA_DIR` and `REDIST_OUTPUTS_DIR` env vars.
+
+**Test:** `tests/integration/test_fetch.py::TestCheckOnly::test_check_only_marks_existing_files_as_available` — tests pass `cwd=str(tmp_path)` explicitly, verifying CWD-relative path resolution works correctly.
+
+**Status:** PARTIAL — documented but not enforced with an assertion. Future: add startup check.
