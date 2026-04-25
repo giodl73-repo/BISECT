@@ -2,7 +2,10 @@ use pyo3::prelude::*;
 use pyo3::exceptions::{PyValueError, PyRuntimeError};
 use numpy::PyReadonlyArray1;
 use std::collections::HashMap;
-use redist_core::{Graph as CoreGraph, Partition as CorePartition, build_vra_edge_weights as core_vra};
+use redist_core::{
+    Graph as CoreGraph, Partition as CorePartition, build_vra_edge_weights as core_vra,
+    BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
+};
 
 // ---------------------------------------------------------------------------
 // Graph
@@ -125,6 +128,54 @@ fn build_vra_edge_weights(
 }
 
 // ---------------------------------------------------------------------------
+// BisectionTree
+// ---------------------------------------------------------------------------
+
+/// Split schedule for k districts: which k_left/k_right at each depth.
+/// Use nodes_at_depth(d) to drive parallel METIS calls level by level.
+#[pyclass]
+struct BisectionTree {
+    inner: CoreBisectionTree,
+}
+
+#[pymethods]
+impl BisectionTree {
+    #[staticmethod]
+    fn from_k(k: usize) -> PyResult<Self> {
+        if k == 0 {
+            return Err(PyValueError::new_err("k must be >= 1"));
+        }
+        Ok(BisectionTree { inner: CoreBisectionTree::from_k(k) })
+    }
+
+    fn max_depth(&self) -> usize { self.inner.max_depth }
+    fn total_splits(&self) -> usize { self.inner.total_splits() }
+
+    /// List of (k, k_left, k_right, depth, path) tuples for nodes at this depth.
+    fn nodes_at_depth(&self, depth: usize) -> Vec<(usize, usize, usize, usize, String)> {
+        self.inner.nodes_at_depth(depth)
+            .iter()
+            .map(|n| (n.k, n.k_left, n.k_right, n.depth, n.path.clone()))
+            .collect()
+    }
+
+    /// Splits per depth as a list: [count_at_depth_0, count_at_depth_1, ...]
+    fn splits_per_depth(&self) -> Vec<usize> {
+        self.inner.splits_per_depth()
+    }
+}
+
+#[pyfunction]
+fn bisection_max_depth(k: usize) -> usize {
+    max_depth_for_k(k)
+}
+
+#[pyfunction]
+fn bisection_ufactor(depth: usize) -> f64 {
+    ufactor_for_depth(depth)
+}
+
+// ---------------------------------------------------------------------------
 // Module
 // ---------------------------------------------------------------------------
 
@@ -132,6 +183,9 @@ fn build_vra_edge_weights(
 fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Graph>()?;
     m.add_class::<Partition>()?;
+    m.add_class::<BisectionTree>()?;
     m.add_function(wrap_pyfunction!(build_vra_edge_weights, m)?)?;
+    m.add_function(wrap_pyfunction!(bisection_max_depth, m)?)?;
+    m.add_function(wrap_pyfunction!(bisection_ufactor, m)?)?;
     Ok(())
 }
