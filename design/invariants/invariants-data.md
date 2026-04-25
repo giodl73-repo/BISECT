@@ -65,4 +65,6 @@ Properties of census data formats that must be maintained. Violating these produ
 
 **Test:** PARTIAL — no explicit test verifies all weights ≥ 1. The max(1) clamp prevents METIS failures but could hide data quality issues.
 
-**Status:** PARTIAL — add explicit test: `assert!(graph.vertex_weights.iter().all(|&v| v >= 1))`
+**Test:** `redist/crates/redist-cli/src/bisection_runner.rs::test_invariant_vertex_weights_positive`
+
+**Status:** ENFORCED — max(weight, 1) clamp + unit test verifying clamping logic

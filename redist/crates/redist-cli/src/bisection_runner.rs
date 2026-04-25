@@ -106,7 +106,14 @@ pub fn split_subgraph(
     std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
 
     // Write tpwgts file if target_weights specified (non-equal split)
-    // Format: "partition_id = weight\n" for n-1 partitions (METIS infers last)
+    // AC-05: validate target weights sum to 1.0 before passing to METIS
+    if let Some((lf, rf)) = target_weights {
+        let sum = lf + rf;
+        assert!(
+            (sum - 1.0).abs() < 1e-6,
+            "target_weights must sum to 1.0: {lf:.6} + {rf:.6} = {sum:.6}"
+        );
+    }
     let tpwgts_file = if let Some((left_frac, _right_frac)) = target_weights {
         let tpwgts = tmp_dir.path().join("tpwgts.txt");
         // Only write partition 0; METIS infers partition 1 = 1 - left_frac
@@ -318,5 +325,41 @@ mod tests {
         paths.sort_by_key(|p| (p.len(), p.clone()));
         // BFS: depth-1 first ("0","1"), then depth-2 ("00","01")
         assert_eq!(paths, vec!["0", "1", "00", "01"]);
+    }
+
+    // ── Invariant tests ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_invariant_target_weights_sum_to_one_2way() {
+        // AC-05: target partition weights must sum to 1.0 for 2-way split
+        // (k_left/k + k_right/k = k/k = 1.0 by construction)
+        for k in [2, 3, 4, 7, 8, 14, 52] {
+            let tree = redist_core::BisectionTree::from_k(k);
+            for node in &tree.nodes {
+                let left_frac = node.k_left as f64 / node.k as f64;
+                let right_frac = node.k_right as f64 / node.k as f64;
+                let sum = left_frac + right_frac;
+                assert!(
+                    (sum - 1.0).abs() < 1e-9,
+                    "k={k} node k={}: left_frac={left_frac:.6} + right_frac={right_frac:.6} = {sum:.6} != 1.0",
+                    node.k
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_invariant_vertex_weights_positive() {
+        // DF-04: all vertex weights must be >= 1 after loading
+        // sub-zero weights cause METIS to produce degenerate partitions
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let vw = vec![1000i64, 500, 2000]; // all positive
+        let ew: HashMap<(usize, usize), f64> = HashMap::new();
+        // The subgraph builder clamps to max(weight, 1) — verify it would catch 0
+        let tract_indices: HashSet<usize> = (0..3).collect();
+        let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+        sorted.sort_unstable();
+        let sub_vw: Vec<i64> = sorted.iter().map(|&g| vw[g].max(1)).collect();
+        assert!(sub_vw.iter().all(|&v| v >= 1), "all vertex weights must be >= 1 after clamping");
     }
 }

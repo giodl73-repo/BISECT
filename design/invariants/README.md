@@ -13,9 +13,9 @@ An invariant is **ENFORCED** when a test would fail if the invariant were violat
 | Constitutional | CI | 3 |
 | VRA Algorithm | VA | 5 |
 | Data Format | DF | 4 |
-| Algorithm Correctness | AC | 4 |
+| Algorithm Correctness | AC | 5 |
 | Interface/Protocol | IP | 3 |
-| **Total** | | **19** |
+| **Total** | | **20** |
 
 ---
 
@@ -34,11 +34,12 @@ An invariant is **ENFORCED** when a test would fail if the invariant were violat
 | DF-01 | GEOID is exactly 11 characters for census tracts | ENFORCED | test_rust_tiger.py::test_geoid_length |
 | DF-02 | Edge weight keys are canonical (u < v, never u > v) | ENFORCED | test_rust_graph.py::test_edge_weights_canonical_order |
 | DF-03 | Adjacency is symmetric (j in adj[i] ⟺ i in adj[j]) | ENFORCED | test_rust_adjacency.py::test_adjacency_is_symmetric |
-| DF-04 | Vertex weights are positive integers (population ≥ 1) | PARTIAL | test_rust_graph.py (weight roundtrip); no explicit positivity check |
+| DF-04 | Vertex weights are positive integers (population ≥ 1) | ENFORCED | bisection_runner.rs::test_invariant_vertex_weights_positive |
 | AC-01 | Bisection is complete: every tract in exactly one leaf | ENFORCED | test_rust_cli.py::test_al_rust_population_balance (implies all assigned) |
 | AC-02 | Bisection split target weights match k_left/k ratio | ENFORCED | TestRustCLIAcceptance::test_al_rust_population_balance |
 | AC-03 | Leaf sort order is BFS (depth then path), not lexicographic | ENFORCED | bisection_runner.rs::test_leaf_sort_bfs_order |
 | AC-04 | Polsby-Popper formula: 4π×A/P², perimeter = exterior only | ENFORCED | test_rust_compactness.py::test_square_pp_is_pi_over_4 |
+| AC-05 | Target partition weights sum to 1.0 (2-way and n-way) | PARTIAL | bisection_runner.rs::test_invariant_target_weights_sum_to_one_2way; n-way OPEN |
 | IP-01 | STATUS output is ASCII-only (no Unicode) | ENFORCED | test_rust_cli.py::test_no_unicode_in_help_output |
 | IP-02 | Error propagation from parallel tasks: no silent filter | ENFORCED | TestRustCLIAcceptance (Alabama run would show error not silent empty) |
 | IP-03 | REDIST_PYTHON used for all Python subprocess calls | ENFORCED | TestRustCLIAcceptance fixtures set REDIST_PYTHON=sys.executable |

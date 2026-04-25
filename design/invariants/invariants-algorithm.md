@@ -52,6 +52,22 @@ Properties of the bisection algorithm and compactness metrics that ensure mathem
 
 ---
 
+## AC-05: Target partition weights sum to 1.0
+
+**Invariant:** For every METIS partition call (2-way bisection or n-way), the target partition weights must sum to exactly 1.0. For 2-way: left_frac + right_frac = 1.0. For n-way: w1 + w2 + ... + wn = 1.0.
+
+**Why it must hold:** METIS interprets target weights as fractions of total load. If they don't sum to 1, METIS's balance objective is undefined. In practice METIS may accept non-summing weights but produce arbitrary results. In the 2-way bisection case, k_left/k + k_right/k = (k_left + k_right)/k = k/k = 1.0 by construction from BisectionNode — but this must be verified at the METIS call boundary.
+
+**When it can be violated:** Rounding k_left/k and k_right/k independently (floating-point subtraction gives 1.0 - k_left/k ≠ k_right/k exactly). Implementing n-way partitioning with independently computed weights that don't account for rounding drift.
+
+**Enforcement:** assert at split_subgraph entry: `(left_frac + right_frac - 1.0).abs() < 1e-6`. For n-way (future): assert sum of all partition weights ≈ 1.0 before writing tpwgts file.
+
+**Test:** `redist/crates/redist-cli/src/bisection_runner.rs::test_invariant_target_weights_sum_to_one_2way` — verifies all BisectionTree nodes for k=2,3,4,7,8,14,52
+
+**Status:** ENFORCED for 2-way bisection; OPEN for n-way (not yet implemented)
+
+---
+
 ## AC-04: Polsby-Popper formula: 4π×A/P², perimeter = exterior ring only
 
 **Invariant:** Polsby-Popper score = 4π × area / perimeter² where perimeter is the exterior ring length only (not including holes), capped at 1.0. This matches Python Shapely's `geometry.length` which returns exterior perimeter only.
