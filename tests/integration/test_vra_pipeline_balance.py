@@ -177,3 +177,41 @@ class TestVRACodePathIntegrity:
             with open(pkl, 'rb') as f:
                 assignments = pickle.load(f)
             assert isinstance(assignments, dict), 'assignments should be a dict'
+
+    def test_vra_analysis_pkl_saved_when_vra_mode_true(self):
+        """
+        vra_analysis.pkl must be written after VRA redistricting.
+        If vra_mode is prematurely set to False, the analysis block is skipped
+        and this file won't exist — meaning no MM district data for the dashboard.
+        """
+        if not adjacency_exists('AL'):
+            pytest.skip('Alabama adjacency not found')
+
+        with tempfile.TemporaryDirectory() as tmp:
+            output_dir = Path(tmp) / 'alabama'
+            result = subprocess.run([
+                sys.executable, str(SCRIPT),
+                '--state', 'AL',
+                '--year', '2020',
+                '--version', 'V3',
+                '--partition-mode', 'metis-vra',
+                '--output-dir', str(output_dir),
+                '--position', '999',
+            ], capture_output=True, text=True, timeout=300)
+
+            assert result.returncode == 0, (
+                f'VRA redistricting failed:\n{result.stderr[-300:]}'
+            )
+
+            # vra_analysis.pkl must exist — proves vra_mode stayed True through analysis block
+            vra_pkl = output_dir / 'data' / 'vra_analysis.pkl'
+            assert vra_pkl.exists(), (
+                'vra_analysis.pkl not created. This means vra_mode was False when '
+                'the analysis block ran — premature vra_mode=False is the pitfall.'
+            )
+
+            import pickle
+            with open(vra_pkl, 'rb') as f:
+                analysis = pickle.load(f)
+            assert 'mm_count' in analysis, 'vra_analysis.pkl missing mm_count key'
+            assert 'districts' in analysis, 'vra_analysis.pkl missing districts key'
