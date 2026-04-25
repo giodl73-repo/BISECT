@@ -152,9 +152,10 @@ pub struct RunArgs {
     #[arg(short = 'w', long, default_value_t = 12)]
     pub workers: usize,
 
-    /// DPI for output maps (default: 150)
-    #[arg(long, default_value_t = 150, value_parser = clap::value_parser!(u32).range(72..=300))]
-    pub dpi: u32,
+    /// DPI for output maps: 72, 100, 150, 200, or 300 (default: 150)
+    /// Note: Python argparse accepts only these discrete values; Rust mirrors that.
+    #[arg(long, default_value = "150", value_parser = clap::builder::PossibleValuesParser::new(["72", "100", "150", "200", "300"]))]
+    pub dpi: String,
 
     /// Election year for political analysis (default: 2020)
     #[arg(short = 'e', long = "election-year", default_value = "2020")]
@@ -244,12 +245,12 @@ pub struct StateArgs {
     #[arg(long)]
     pub output_dir: Option<String>,
 
-    /// DPI for output maps (default: 150)
-    #[arg(long, default_value_t = 150)]
-    pub dpi: u32,
+    /// DPI for output maps: 72, 100, 150, 200, or 300 (default: 150)
+    #[arg(long, default_value = "150", value_parser = clap::builder::PossibleValuesParser::new(["72", "100", "150", "200", "300"]))]
+    pub dpi: String,
 
-    /// Progress bar position for parallel mode (default: 2)
-    #[arg(long, default_value_t = 2)]
+    /// Progress bar position for parallel mode (default: 1, matches Python process_single_state.py)
+    #[arg(long, default_value_t = 1)]
     pub position: i32,
 
     /// Print what would be done without executing
@@ -312,9 +313,9 @@ pub struct StatesArgs {
     #[arg(short = 'w', long, default_value_t = 4)]
     pub workers: usize,
 
-    /// DPI for output maps (default: 150)
-    #[arg(long, default_value_t = 150)]
-    pub dpi: u32,
+    /// DPI for output maps: 72, 100, 150, 200, or 300 (default: 150)
+    #[arg(long, default_value = "150", value_parser = clap::builder::PossibleValuesParser::new(["72", "100", "150", "200", "300"]))]
+    pub dpi: String,
 
     /// Partitioning mode (default: edge-weighted)
     #[arg(short = 'm', long = "partition-mode", default_value = "edge-weighted")]
@@ -374,7 +375,7 @@ mod tests {
         assert_eq!(args.year, "all");
         assert_eq!(args.version, "v1");
         assert_eq!(args.workers, 12);
-        assert_eq!(args.dpi, 150);
+        assert_eq!(args.dpi, "150");
         assert!(!args.skip_analysis);
         assert!(!args.reprocess);
         assert!(!args.reset);

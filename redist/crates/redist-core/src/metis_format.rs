@@ -1,6 +1,14 @@
 /// METIS graph file format: generation and parsing.
 ///
-/// Pure computation — no file I/O. The caller (PyO3 layer or redist-cli) writes
+/// Pure computation — no file I/O.
+///
+/// **METIS flags note**: the `-contig` (enforce contiguous districts) and
+/// `-minconn` (minimize subdomain connectivity) flags are only used when
+/// invoking the `gpmetis` subprocess directly. The `pymetis` Python library
+/// path (current primary path) does NOT set these flags. The behaviour
+/// difference is minor in practice — METIS produces contiguous results
+/// without `-contig` for planar graphs — but will be made explicit when
+/// Phase 1c ports the full subprocess wrapper to Rust. The caller (PyO3 layer or redist-cli) writes
 /// the content to disk and invokes gpmetis. This keeps redist-core free of I/O.
 ///
 /// METIS format spec:

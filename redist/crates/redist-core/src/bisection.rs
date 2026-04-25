@@ -26,6 +26,11 @@ pub struct BisectionNode {
 ///
 /// `nodes` contains all non-leaf nodes in BFS order (root first, then each
 /// level left-to-right). Leaf nodes (k=1) are not stored.
+///
+/// **Level-parallel semantics**: all nodes at a given depth are processed
+/// simultaneously. The Python pipeline uses `ProcessPoolExecutor` to run all
+/// splits at the same depth in parallel; the Rust CLI (Phase 3c) uses Rayon.
+/// Depth-first processing would produce different intermediate partitions.
 #[derive(Debug, Clone)]
 pub struct BisectionTree {
     pub k: usize,

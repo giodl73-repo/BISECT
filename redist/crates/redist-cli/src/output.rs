@@ -23,7 +23,8 @@ pub enum OutputError {
     },
     #[error("output directory {0} does not exist (create it before writing)")]
     DirectoryMissing(PathBuf),
-    #[error("corrupt state detected: temp file {0} exists without final file — reprocess this state")]
+    #[error("corrupt state detected: temp file {0} exists without final file.\n\
+             Recovery: call clean_corrupt_state(data_dir) then retry, or pass --reset to wipe and restart.")]
     CorruptState(PathBuf),
     #[error("JSON serialization error: {0}")]
     Json(String),

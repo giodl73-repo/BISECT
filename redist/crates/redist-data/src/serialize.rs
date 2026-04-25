@@ -58,6 +58,13 @@ pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
     }
 
     // Edge weights section
+    // Validate canonical key order before writing — non-canonical keys (u>v) would
+    // deserialize as-is and silently produce duplicate or wrong edges downstream.
+    for &(u, v) in graph.edge_weights.keys() {
+        assert!(u < v,
+            "edge_weights key ({u},{v}) is not canonical (u must be < v); \
+             build_adjacency_graph always produces canonical keys");
+    }
     buf.extend_from_slice(&(graph.edge_weights.len() as u32).to_le_bytes());
     // Sort for deterministic output
     let mut weights: Vec<_> = graph.edge_weights.iter().collect();
@@ -237,6 +244,14 @@ mod tests {
         let result = deserialize_adjacency(&bytes);
         assert!(matches!(result, Err(SerializeError::EdgeCountMismatch { .. })),
             "mismatched n_edges should be caught");
+    }
+
+    #[test]
+    #[should_panic(expected = "not canonical")]
+    fn test_serialize_panics_on_non_canonical_key() {
+        let mut g = make_graph();
+        g.edge_weights.insert((2, 0), 100.0); // non-canonical: 2 > 0
+        serialize_adjacency(&g); // must panic
     }
 
     #[test]

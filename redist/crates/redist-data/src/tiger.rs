@@ -43,6 +43,13 @@ pub struct TractRecord {
 ///
 /// Returns records sorted by GEOID for deterministic ordering.
 /// Skips records with empty geometries (rare in TIGER but possible).
+///
+/// **TIGER tract geometry assumption**: Census tract shapefiles have exactly
+/// one polygon record per tract. Multi-polygon features do not appear in tract
+/// files — each island or disconnected area in a tract is encoded as a single
+/// `shapefile::Polygon` with multiple rings, not as a separate record. The
+/// county-bridge logic in `bridge.rs` handles connectivity between physically
+/// separated tract polygons.
 pub fn read_tiger_tracts<P: AsRef<Path>>(shp_path: P) -> Result<Vec<TractRecord>, TigerError> {
     let shp_path = shp_path.as_ref();
 
