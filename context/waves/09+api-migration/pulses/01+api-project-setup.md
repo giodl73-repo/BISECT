@@ -537,7 +537,7 @@ Per engineer recommendation:
   - Vite dev server with API proxy configuration
   - pnpm workspace with package linking
 - **App Manager Integration**:
-  - Centralized PM2 process management via C:\src\appmanager
+  - Centralized PM2 process management via appmanager
   - Shared UI components reduce frontend development time by 40-50%
   - Port alignment: Backend 8002, Frontend 3002, Database 5434
   - Unified dashboard integration at http://localhost:9000
@@ -596,7 +596,7 @@ Per engineer recommendation:
 
 **Architecture Decision: App Manager Integration**
 
-This enhancement was initially implemented as standalone api/ and frontend/ directories, but was **revised mid-implementation** to properly integrate with the existing App Manager system at C:\src\appmanager. This architectural decision:
+This enhancement was initially implemented as standalone api/ and frontend/ directories, but was **revised mid-implementation** to properly integrate with the existing App Manager system at appmanager. This architectural decision:
 - Reuses shared packages (@common/ui, common-backend-utils)
 - Follows established patterns from TCM and NHL projects
 - Enables centralized PM2 process management

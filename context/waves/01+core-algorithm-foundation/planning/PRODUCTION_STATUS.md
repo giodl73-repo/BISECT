@@ -28,7 +28,7 @@
 
 **User will run manually**:
 ```bash
-cd C:\src\apportionment
+cd apportionment
 python scripts\run_all_states.py --year 2010 --version v1
 ```
 
@@ -305,15 +305,15 @@ gpmetis.exe -contig -minconn -ufactor=1.003 -niter=100 \
 
 ## File Locations
 
-**Project Root**: `C:\src\apportionment\`
+**Project Root**: `apportionment\`
 
-**Scripts**: `C:\src\apportionment\scripts\`
+**Scripts**: `apportionment\scripts\`
 
 **Data**:
-- Raw: `C:\src\apportionment\data\raw\` (tracts, places)
-- Processed: `C:\src\apportionment\data\processed\` (adjacency graphs)
+- Raw: `apportionment\data\raw\` (tracts, places)
+- Processed: `apportionment\data\processed\` (adjacency graphs)
 
-**Outputs**: `C:\src\apportionment\outputs\us_2020_v2\`
+**Outputs**: `apportionment\outputs\us_2020_v2\`
 
 **Documentation**:
 - `PRODUCTION_STATUS.md` - This file
@@ -327,7 +327,7 @@ gpmetis.exe -contig -minconn -ufactor=1.003 -niter=100 \
 
 ### Run Full Production
 ```bash
-cd C:\src\apportionment
+cd apportionment
 python scripts\run_all_states.py --version v2
 ```
 

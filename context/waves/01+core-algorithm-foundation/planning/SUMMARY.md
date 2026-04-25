@@ -74,7 +74,7 @@ I've added a new module (`metis_executable.py`) that calls `gpmetis.exe` directl
 I've created a Windows build script for you:
 
 ```bat
-C:\src\apportionment\scripts\build_metis_windows.bat
+apportionment\scripts\build_metis_windows.bat
 ```
 
 This script:
@@ -85,7 +85,7 @@ This script:
 
 Just run it from a Visual Studio Developer Command Prompt:
 ```bat
-cd C:\src\apportionment\scripts
+cd apportionment\scripts
 build_metis_windows.bat
 ```
 
@@ -151,7 +151,7 @@ python scripts/visualize_districts.py --state CA --num-districts 52
 ## Project Structure
 
 ```
-C:/src/apportionment/
+apportionment/
 ├── README.md                 # User documentation
 ├── INSTALL.md                # Installation guide
 ├── STATUS.md                 # Detailed status
@@ -238,10 +238,10 @@ With METIS (not NetworkX):
 
 ## Files You Need to Check
 
-- `C:\src\apportionment\scripts\build_metis_windows.bat` - METIS build script
-- `C:\src\apportionment\src\apportionment\partition\metis_executable.py` - Direct gpmetis wrapper
-- `C:\src\apportionment\INSTALL.md` - Comprehensive installation guide
-- `C:\src\apportionment\STATUS.md` - Detailed project status
+- `apportionment\scripts\build_metis_windows.bat` - METIS build script
+- `apportionment\src\apportionment\partition\metis_executable.py` - Direct gpmetis wrapper
+- `apportionment\INSTALL.md` - Comprehensive installation guide
+- `apportionment\STATUS.md` - Detailed project status
 
 ## Support
 

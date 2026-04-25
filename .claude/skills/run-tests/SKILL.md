@@ -60,7 +60,7 @@ pytest tests/ -v -s            # Show print statements
 ### Step 3: Execute
 Use `Bash`:
 ```bash
-cd C:\src\apportionment
+cd apportionment
 pytest [command from Step 2]
 ```
 

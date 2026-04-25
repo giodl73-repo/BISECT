@@ -91,7 +91,7 @@ Failure Analysis:
 ### Step 3: Guided Debugging
 
 **Import Errors**:
-1. Check PYTHONPATH: `echo $PYTHONPATH` / `echo %PYTHONPATH%` (should include `C:\src\apportionment`)
+1. Check PYTHONPATH: `echo $PYTHONPATH` / `echo %PYTHONPATH%` (should include `apportionment`)
 2. Set if not: `export PYTHONPATH="${PYTHONPATH}:$(pwd)"` (Unix) / `set PYTHONPATH=%PYTHONPATH%;%CD%` (Win)
 3. Check structure: Glob for `__init__.py`, verify `apportionment/__init__.py` exists
 4. Check circular: Review recent import changes (A imports B, B imports A)

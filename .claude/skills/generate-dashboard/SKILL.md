@@ -58,7 +58,7 @@ Dashboard generated successfully! Opening in browser...
 **Runtime**: ~5-10s
 
 ### Step 4: Verify Dashboard Opens
-Browser auto-opens to `file:///C:/src/apportionment/outputs/us_2020_v1/index.html`
+Browser auto-opens to `file:///apportionment/outputs/us_2020_v1/index.html`
 Check: State dropdown works, tabs display content, maps load, CSVs link correctly, national maps visible
 
 ### Step 5: Test Functionality

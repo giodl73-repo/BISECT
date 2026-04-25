@@ -433,7 +433,7 @@ common-backend-utils              # Exceptions, pagination, CRUD patterns (from 
 - E60 (Project Setup) - REQUIRED
 - PostgreSQL database running
 - Alembic configured
-- **App Manager shared packages** (C:\src\appmanager\packages\)
+- **App Manager shared packages** (appmanager\packages\)
 
 **Python Packages** (Poetry dependencies):
 - alembic>=1.12.0 (if not already added in pyproject.toml)

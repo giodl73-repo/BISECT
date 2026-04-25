@@ -53,7 +53,7 @@ All notable changes to the Congressional Redistricting project.
     - Vite dev server with API proxy to backend
     - pnpm workspace with package linking
   - **App Manager Integration**:
-    - Centralized PM2 process management via `C:\src\appmanager\infrastructure\ecosystem.config.js`
+    - Centralized PM2 process management via `appmanager\infrastructure\ecosystem.config.js`
     - Shared UI components reduce frontend development time by 40-50%
     - Shared backend utilities provide consistent exception handling patterns
     - Port alignment: Backend 8002, Frontend 3002, Database 5434, App Manager 9000

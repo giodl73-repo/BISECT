@@ -153,7 +153,7 @@ Production runs have verified:
 ## File Structure
 
 ```
-C:/src/apportionment/
+apportionment/
 ├── README.md ✓
 ├── STATUS.md ✓ (this file)
 ├── PRODUCTION_STATUS.md ✓

@@ -700,7 +700,7 @@ it('should handle network disconnection gracefully', async () => {
 - E60 (Project Setup) - REQUIRED (frontend scaffold)
 - E61 (Run Management API) - REQUIRED (API endpoints)
 - E62 (Pipeline Execution) - REQUIRED (progress endpoint)
-- **App Manager shared packages** (C:\src\appmanager\packages\)
+- **App Manager shared packages** (appmanager\packages\)
 
 **Shared Packages** (workspace dependencies):
 - `@common/ui@workspace:*` - Button, LoadingSpinner, StatusIndicator

@@ -190,7 +190,7 @@ pulses:
 
 All future wave directories are located in:
 ```
-C:\src\apportionment\context\waves\
+apportionment\context\waves\
 ├── F02+production-polish/
 ├── F03+research-infrastructure/
 ├── F04+algorithm-improvements/
