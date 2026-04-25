@@ -30,6 +30,11 @@ impl Partition {
 
         let mut dist_pop: HashMap<usize, i64> = HashMap::new();
         for (&tract, &dist) in &self.assignments {
+            assert!(
+                tract < vertex_weights.len(),
+                "tract index {tract} out of bounds (vertex_weights.len()={})",
+                vertex_weights.len()
+            );
             *dist_pop.entry(dist).or_insert(0) += vertex_weights[tract];
         }
 
@@ -51,6 +56,11 @@ impl Partition {
 
         let mut dist_pop: HashMap<usize, i64> = HashMap::new();
         for (&tract, &dist) in &self.assignments {
+            assert!(
+                tract < vertex_weights.len(),
+                "tract index {tract} out of bounds (vertex_weights.len()={})",
+                vertex_weights.len()
+            );
             *dist_pop.entry(dist).or_insert(0) += vertex_weights[tract];
         }
 
@@ -89,6 +99,26 @@ mod tests {
         let weights = vec![1000i64, 1000, 1000, 1000, 1000];
         let dev = p.population_balance(&weights, 2);
         assert!((dev - 0.20).abs() < 1e-9, "expected 20% deviation, got {dev}");
+    }
+
+    #[test]
+    #[should_panic(expected = "out of bounds")]
+    fn test_population_balance_out_of_bounds_panics() {
+        let assignments: HashMap<usize, usize> =
+            [(0, 0), (99, 1)].into_iter().collect(); // tract 99 doesn't exist
+        let p = Partition::from_assignments(assignments);
+        let weights = vec![1000i64, 1000, 1000, 1000]; // only indices 0-3
+        let _ = p.population_balance(&weights, 2);
+    }
+
+    #[test]
+    fn test_population_balance_single_district_zero() {
+        // Single district = everything assigned to it → deviation is always 0
+        let assignments: HashMap<usize, usize> = [(0, 0), (1, 0), (2, 0)].into_iter().collect();
+        let p = Partition::from_assignments(assignments);
+        let weights = vec![500i64, 700, 300];
+        let dev = p.population_balance(&weights, 1);
+        assert_eq!(dev, 0.0, "single district always zero deviation");
     }
 
     #[test]

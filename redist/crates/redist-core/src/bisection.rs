@@ -103,8 +103,12 @@ pub fn max_depth_for_k(k: usize) -> usize {
 
 /// METIS ufactor (imbalance tolerance) for a given bisection depth.
 /// Tighter at early depths to maintain global balance.
+///
+/// Depth 0 (root node) is never split by METIS — it represents the whole state.
+/// Splitting begins at depth 1. If called with depth=0, returns the default 1.005.
 pub fn ufactor_for_depth(depth: usize) -> f64 {
     match depth {
+        0 => 1.005, // Root never split; unreachable in normal operation
         1 => 1.001,
         2 => 1.002,
         3 => 1.003,
@@ -205,6 +209,7 @@ mod tests {
 
     #[test]
     fn test_ufactor_by_depth() {
+        assert!((ufactor_for_depth(0) - 1.005).abs() < 1e-9); // root — unreachable but safe
         assert!((ufactor_for_depth(1) - 1.001).abs() < 1e-9);
         assert!((ufactor_for_depth(2) - 1.002).abs() < 1e-9);
         assert!((ufactor_for_depth(3) - 1.003).abs() < 1e-9);
