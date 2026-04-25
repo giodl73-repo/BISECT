@@ -52,37 +52,14 @@ pub struct StateConfig {
 
 /// Load all state codes, names, and district counts for a given year.
 /// Returns Vec<(state_code, state_name, num_districts)> sorted alphabetically.
-/// Calls Python ONCE — not once per state.
+/// Reads directly from the embedded manifest — no Python subprocess.
 pub fn load_all_states(year: &str) -> Result<Vec<(String, String, usize)>, String> {
-    let script = format!(
-        "from scripts.config_{year} import STATE_CONFIG_{year}; \
-         import json; \
-         print(json.dumps({{k: {{'districts': v['districts'], 'name': v['name'].lower().replace(' ','_')}} \
-         for k, v in STATE_CONFIG_{year}.items()}}))",
-        year = year
-    );
-    let python_cmd = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| {
-        if cfg!(windows) { "py".to_string() } else { "python3".to_string() }
-    });
-    let out = std::process::Command::new(&python_cmd)
-        .args(["-c", &script])
-        .output()
-        .map_err(|e| format!("failed to invoke {python_cmd} for state config: {e}"))?;
-
-    if !out.status.success() {
-        return Err(format!(
-            "python config load failed:\n{}",
-            String::from_utf8_lossy(&out.stderr)
-        ));
-    }
-
-    let map: HashMap<String, serde_json::Value> =
-        serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
-
-    let mut states: Vec<(String, String, usize)> = map.into_iter()
-        .filter_map(|(code, val)| {
-            let name = val["name"].as_str()?.to_string();
-            let districts = val["districts"].as_u64()? as usize;
+    let manifest = crate::fetch::load_manifest()?;
+    let mut states: Vec<(String, String, usize)> = manifest.states.into_iter()
+        .filter_map(|(code, state)| {
+            let districts = *state.districts.get(year)?;
+            if districts == 0 { return None; }
+            let name = state.name.to_lowercase().replace(' ', "_");
             Some((code, name, districts))
         })
         .collect();

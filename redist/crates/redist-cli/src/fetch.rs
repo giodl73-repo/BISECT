@@ -11,8 +11,8 @@
 /// Use --force to re-download even if present.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
 
 // Manifest embedded at compile time. Falls back to this if no override present.
 const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
@@ -234,24 +234,19 @@ pub fn print_check_report(items: &[FetchItem]) {
 // ---------------------------------------------------------------------------
 
 /// Download all items that aren't already present.
-/// Uses REDIST_PYTHON env var for Python-based downloads.
+/// Uses native Rust (reqwest) for HTTP downloads. No Python subprocess.
 pub fn download_items(
     items: &[FetchItem],
     force: bool,
     use_release: bool,
     manifest: &Manifest,
 ) -> Result<(), String> {
-    let python_cmd = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| {
-        if cfg!(windows) { "py".to_string() } else { "python3".to_string() }
-    });
-
     for item in items {
         if !force && item.is_done() {
             println!("[SKIP] {} {} {} (already present)", item.state_code, item.year, item.kind);
             continue;
         }
 
-        // Create parent directory
         if let Some(parent) = item.local_path.parent() {
             std::fs::create_dir_all(parent)
                 .map_err(|e| format!("mkdir {}: {e}", parent.display()))?;
@@ -259,11 +254,11 @@ pub fn download_items(
 
         match item.kind.as_str() {
             "adjacency" if use_release => {
-                // Download adjacency from GitHub Release via gh CLI
+                // GitHub Releases: use gh CLI (the only subprocess we still need)
                 let release_tag = &manifest.releases.data_inputs;
                 let adj_dir = item.local_path.parent().unwrap();
                 println!("[DOWN] {} {} adjacency from release {release_tag}", item.state_code, item.year);
-                let out = Command::new("gh")
+                let out = std::process::Command::new("gh")
                     .args(["release", "download", release_tag,
                            "--pattern", &format!("{}_adjacency_{}.pkl", item.state_code.to_lowercase(), item.year),
                            "--dir", adj_dir.to_str().unwrap(),
@@ -280,55 +275,60 @@ pub fn download_items(
             }
 
             "tiger" | "pl94171" => {
-                // Download via Python (reuses existing download_handler.py logic)
+                // Pure Rust HTTP download + zip extraction (no Python)
                 let url = item.url.as_deref().unwrap();
                 let dest = item.local_path.parent().unwrap();
-                println!("[DOWN] {} {} {} from {}", item.state_code, item.year, item.kind, url);
+                println!("[DOWN] {} {} {} <- {}", item.state_code, item.year, item.kind,
+                    url.split('/').last().unwrap_or(url));
 
-                // Simple wget/curl via Python's urllib
-                let script = format!(
-                    r#"
-import urllib.request, zipfile, os, sys
-url = '{url}'
-dest = r'{dest}'
-os.makedirs(dest, exist_ok=True)
-zipname = url.split('/')[-1]
-zippath = os.path.join(dest, zipname)
-print(f'  Downloading {{zipname}}...', flush=True)
-urllib.request.urlretrieve(url, zippath)
-print(f'  Extracting...', flush=True)
-with zipfile.ZipFile(zippath, 'r') as z:
-    z.extractall(dest)
-os.remove(zippath)
-print(f'  Done.', flush=True)
-"#,
-                    dest = dest.display()
-                );
-
-                let out = Command::new(&python_cmd)
-                    .args(["-c", &script])
-                    .output()
-                    .map_err(|e| format!("failed to invoke {python_cmd}: {e}"))?;
-
-                if !out.status.success() {
-                    return Err(format!(
-                        "download failed for {url}:\n{}",
-                        String::from_utf8_lossy(&out.stderr)
-                    ));
-                }
-                print!("{}", String::from_utf8_lossy(&out.stdout));
+                download_and_extract_zip(url, dest)?;
             }
 
             _ => {
-                println!("[SKIP] {} {} {} (not downloadable without --release)",
+                println!("[SKIP] {} {} {} (use --release to download from GitHub)",
                     item.state_code, item.year, item.kind);
                 continue;
             }
         }
 
-        // Write done marker
         std::fs::write(&item.done_marker, b"done")
             .map_err(|e| format!("done marker write failed: {e}"))?;
+    }
+    Ok(())
+}
+
+/// Download a ZIP from url and extract it to dest_dir using native Rust (reqwest + zip).
+/// No Python subprocess. Follows redirects automatically.
+pub fn download_and_extract_zip(url: &str, dest_dir: &Path) -> Result<(), String> {
+    // Download into memory (census.gov zips are typically 1-5MB — fine for in-memory)
+    let response = reqwest::blocking::get(url)
+        .map_err(|e| format!("HTTP GET {url}: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(format!("HTTP {}: {url}", response.status()));
+    }
+
+    let bytes = response.bytes()
+        .map_err(|e| format!("reading response body: {e}"))?;
+
+    // Extract zip
+    let cursor = std::io::Cursor::new(bytes);
+    let mut archive = zip::ZipArchive::new(cursor)
+        .map_err(|e| format!("invalid ZIP from {url}: {e}"))?;
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i).map_err(|e| e.to_string())?;
+        let outpath = dest_dir.join(file.name());
+        if file.is_dir() {
+            std::fs::create_dir_all(&outpath).map_err(|e| e.to_string())?;
+        } else {
+            if let Some(p) = outpath.parent() {
+                std::fs::create_dir_all(p).map_err(|e| e.to_string())?;
+            }
+            let mut contents = Vec::new();
+            file.read_to_end(&mut contents).map_err(|e| e.to_string())?;
+            std::fs::write(&outpath, &contents).map_err(|e| e.to_string())?;
+        }
     }
     Ok(())
 }
