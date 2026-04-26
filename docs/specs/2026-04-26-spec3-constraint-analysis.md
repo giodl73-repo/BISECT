@@ -288,3 +288,29 @@ Fix: Add `--state-splits-standard <STATE>` lookup (or auto-detect from `--state`
 **[LEDGER] CONCERN — Missing municipal data must be an error for required jurisdictions**
 Silently skipping municipal splits when the geography file is absent could constitute a legal deficiency if municipal preservation is constitutionally required in that state.
 Fix: `redist analyze --types splits` checks if the state has a municipal preservation requirement (lookup table). If yes and the geography file is absent, exit with error code 6 and message: `ERROR: Municipal preservation is constitutionally required for WA but place-tract data is absent. Run: redist fetch --type geography --states WA`. Add `--require-municipal` flag to force this behavior in any state.
+
+**[BENCHMARK] CONCERN — Finding 5: Adopt bitfield exit codes**
+The current exit code table (0, 2, 3, 4) has gaps and does not compose when multiple violations occur simultaneously. Exit code 4 means "both violations" but this cannot scale to additional constraint types.
+Fix: Adopt bitfield exit codes. Each constraint type owns one bit:
+- 0 = success (no violations)
+- 1 = population balance violation (bit 0)
+- 2 = contiguity violation (bit 1)
+- 4 = nesting violation (bit 2)
+- 8 = missing required data (bit 3)
+
+Combinations OR the bits: balance+contiguity=3, balance+nesting=5, contiguity+nesting=6, all three=7, etc. Remove the old codes 2, 3, 4, 5, 6 and replace with this table. `redist analyze` returns the OR of all active violation bits across all constraint types checked in a single invocation.
+
+Updated exit code table:
+| Code | Meaning |
+|------|---------|
+| 0 | All constraints satisfied |
+| 1 | Population balance violation |
+| 2 | Contiguity violation |
+| 3 | Balance + contiguity violation |
+| 4 | Nesting violation |
+| 5 | Balance + nesting violation |
+| 6 | Contiguity + nesting violation |
+| 7 | Balance + contiguity + nesting violation |
+| 8 | Missing required data (geography file absent for required jurisdiction) |
+
+`--allow-noncontiguous` suppresses bit 1 (contiguity) from the exit code.

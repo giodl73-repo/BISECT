@@ -234,3 +234,34 @@ Fix: `redist suite --nest` hard-fails if any house district fails contiguity che
 **[WARD] CONCERN — Variable nesting ratios need constitutional validation**
 Several states have variable or non-integer nesting schemes. The `--nest-ratio N:M` flag exists but there is no validation against known constitutional requirements.
 Fix: Add a per-state nesting table. When `--nest-ratio` deviates from the constitutional value, print a warning: `WARNING: WA constitution requires 2:1 house-to-senate nesting ratio. You specified 3:1. Proceed only if you have verified this is legally permissible.`
+
+**[LEDGER] CONCERN — Finding 7: Suite export produces separate RPLAN files, not a multi-plan RPLAN**
+The spec was ambiguous about whether a suite export produces one multi-plan RPLAN file or multiple single-plan files. Multi-plan RPLAN is deferred to RPLAN v0.2.
+Fix: Suite export produces three separate RPLAN files plus a `suite.json` envelope. Structure:
+```
+exports/wa_commission_v1/
+  suite.json               <- suite manifest referencing each plan
+  wa_congressional.rplan
+  wa_house.rplan
+  wa_senate.rplan
+```
+`suite.json` schema:
+```json
+{
+  "suite_name": "wa_commission_v1",
+  "plans": [
+    {"chamber": "congressional", "file": "wa_congressional.rplan"},
+    {"chamber": "house", "file": "wa_house.rplan"},
+    {"chamber": "senate", "file": "wa_senate.rplan"}
+  ]
+}
+```
+Each `.rplan` file is a standalone valid RPLAN v0.1 document. Multi-plan RPLAN envelope waits for RPLAN v0.2.
+
+**[MERIDIAN] CONCERN — Finding 9: build_chamber_adjacency must handle disconnected house districts**
+If a house district has disconnected components (e.g., due to `--allow-noncontiguous`), `build_chamber_adjacency` currently includes all tracts from all components, which can create phantom adjacencies between geographically separated regions.
+Fix: `build_chamber_adjacency` uses only the PRIMARY component of each house district (largest by tract count). Tracts in disconnected secondary components are excluded from adjacency computation with a warning:
+```
+WARNING: House district N has disconnected components; only primary component used for senate adjacency.
+```
+This ensures that senate nesting is computed from the geographically coherent portion of each house district. The full fix is: `redist suite --nest` hard-fails on noncontiguous house districts (per the MERIDIAN CRITICAL amendment above), making this defensive path a fallback for research use only.

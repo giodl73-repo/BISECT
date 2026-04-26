@@ -166,3 +166,27 @@ For a full commission submission:
 4. **Spec 4** (partisan metrics)
 5. **Spec 2** (comparison vs enacted)
 6. **Spec 6** (formal report)
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[DATUM] CONCERN — Finding 8: Normative analysis file table**
+The cross-spec data contracts for `analysis/` files were implicit. Making them normative ensures each spec knows exactly what it produces and what it consumes.
+
+Normative analysis file table:
+
+| Filename | Produced by | Consumed by |
+|----------|-------------|-------------|
+| `analysis/demographic.json` | Spec 1 (analyzer) | Spec 6 (report) |
+| `analysis/political.json` | Spec 1 | Spec 6 |
+| `analysis/compactness.json` | Spec 1 | Spec 6 |
+| `analysis/contiguity.json` | Spec 3 | Spec 5 (nesting), Spec 6 |
+| `analysis/splits.json` | Spec 3 | Spec 2 (comparison), Spec 6 |
+| `analysis/partisan.json` | Spec 4 | Spec 2 (comparison), Spec 6 |
+| `analysis/summary.json` | Spec 1 | Spec 6 |
+
+Each file is written atomically to `outputs/{version}/{year}/plans/{label}/analysis/`. Consumers must not read a file that does not exist; they must check for presence and degrade gracefully (e.g., omit the report section with a note: "Analysis not available — run `redist analyze --types partisan` first").
+
+**[LEDGER] CRITICAL — Path convention migration (cross-spec)**
+`plans/{label}/` tree (Spec 1) vs legacy `states/{state_name}/` tree (existing CLI). Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `redist analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. See Spec 0 R3 amendments for full detail.

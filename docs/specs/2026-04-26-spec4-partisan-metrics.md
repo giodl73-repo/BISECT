@@ -277,3 +277,16 @@ Fix: When `--election-file` is not specified and presidential data is used for a
 ```json
 {"methodology_warning": "Presidential election results used as proxy for state legislative district partisanship. Presidential coattail effects may systematically inflate urban Democratic margins. Provide state legislative election data via --election-file for more accurate analysis."}
 ```
+
+**[SURVEY] CONCERN — Finding 6: Election data dependency must be explicit**
+Partisan analysis has a hard dependency on a local data file that is NOT part of the RPLAN format. This dependency is invisible to tools that receive an RPLAN for analysis.
+Fix: Add explicit note in this spec and in the partisan analyzer output: "Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `redist fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine."
+If the election file is absent, `partisan.json` must include:
+```json
+{
+  "available": false,
+  "unavailable_reason": "Election data not found. Run: redist fetch --type elections --year 2020",
+  "required_file": "data/2020/elections/presidential_by_tract.csv"
+}
+```
+Do not silently produce metrics with missing data.

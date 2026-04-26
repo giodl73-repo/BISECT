@@ -203,3 +203,19 @@ Fix: `PlanManifest` gains two additional fields:
   "adjacency_build_version": "redist_py 0.1.0 (abi3)"
 }
 ```
+
+**[COVENANT] CONCERN — Finding 4: adjacency_file must record source URL, not local path**
+`adjacency_file` in PlanManifest currently records a local path such as `outputs/V3/data/2020/adjacency/wa_adjacency_2020.adj.bin`. A local path is not reproducible on an auditor's machine and does not identify the upstream Census source.
+Fix: `adjacency_file` records filename + SHA-256 only (not local path). Add field `tiger_source_url` from the manifest's embedded URL table, so auditors can retrieve the source from Census servers:
+```json
+{
+  "adjacency_file": "wa_adjacency_2020.adj.bin",
+  "adjacency_sha256": "def456...",
+  "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
+  "tiger_sha256": "ghi789..."
+}
+```
+
+**[TRENCH] CRITICAL — Finding 10: Label collision protection**
+At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero with: "ERROR: Plan '{label}' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." Document this in the label default section.
+Implementation note: Check for `manifest.json` existence before beginning any computation. Record the `created_at` timestamp from the existing manifest in the error message so the user can identify which run it was. With `--force`, atomically overwrite the plan directory contents.
