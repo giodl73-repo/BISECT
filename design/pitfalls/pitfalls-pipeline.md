@@ -171,3 +171,31 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** SOLVED in runner.rs::load_all_states
 **Proved by:** Explicit year allowlist check before manifest lookup
 **Test:** Add test: `load_all_states("2030")` returns Err, not empty Vec
+
+## PP-11: Compile-time asset path resolution mismatch in workspace builds
+
+**Pattern:** A `include_bytes!("../assets/file")` path resolves relative to the source file, but when cargo builds from a workspace root, the CWD differs from the crate root. The macro resolves from the manifest directory, not the CWD — but the exact behavior depends on how cargo sets up the build environment. Files that appear to be sibling directories (`../assets/`) may resolve to nonexistent paths.
+
+**Domain:** Any Rust workspace with embedded binary assets (fonts, icons, data files). Arises because `include_bytes!` resolves relative to the *source file*, not the CWD or crate manifest, but workspace vs. crate-local builds can expose this differently.
+
+**Why it's hard to catch:** The path looks correct in isolation. It only fails when building from the workspace root vs. the crate root. No compile-time error until the macro can't find the file.
+
+**Structural solution:** Place embedded assets in the same directory as the source file that includes them (`src/font_embed.ttf` next to `src/renderer.rs`), not in a sibling directory. Alternatively, use `concat!(env!("CARGO_MANIFEST_DIR"), "/assets/file")` inside a `build.rs` to generate an absolute path.
+
+**Status:** SOLVED
+**Proved by:** Font file moved to `redist/crates/redist-map/src/font_embed.ttf` — `include_bytes!("font_embed.ttf")` works from any workspace build context
+**Test:** `cargo build --release --manifest-path redist/Cargo.toml` succeeds
+
+## PP-12: WKB decode API surface mismatch across geospatial crate ecosystem
+
+**Pattern:** Multiple Rust crates in the geo ecosystem provide WKB encoding/decoding with subtly different APIs and `geo-types` version pins. Calling the wrong API (`WkbReader` which doesn't exist, or `Wkb(bytes).to_geo()` through a private module path) produces compile errors. Adding a secondary WKB crate alongside `geo` risks `geo-types` version conflicts that cause type incompatibility at runtime.
+
+**Domain:** Any Rust system using the GeoRust ecosystem (geo, geo-types, geozero). Arises because the ecosystem has multiple competing WKB crates with overlapping functionality.
+
+**Why it's hard to catch:** The correct API (`geo_types::Geometry::from_wkb(&mut cursor, WkbDialect::Wkb)` via the `FromWkb` trait) is not obvious from crate documentation. Wrong calls compile only after adding the right imports, making the error appear to be an import issue rather than an API surface issue.
+
+**Structural solution:** Use `geozero` as the single WKB bridge — it is already a transitive dependency of `geo` and guarantees type compatibility. Import via `use geozero::wkb::{FromWkb, WkbDialect}` and call `geo_types::Geometry::from_wkb(...)`. Never add a second WKB crate.
+
+**Status:** SOLVED
+**Proved by:** `dissolve.rs::wkb_to_geometry()` uses `geozero::wkb::FromWkb` — all WKB tests pass including MultiPolygon island tract case
+**Test:** `redist-map::dissolve::tests::test_wkb_decode_known_unit_square`, `test_wkb_multipolygon_does_not_panic`

@@ -53,3 +53,17 @@ if str(_project_root) not in sys.path:
 **Status:** SOLVED in redist-cli runner.rs
 **Proved by:** State directory uses cfg.state_name ('vermont'), adjacency lookup uses state_code.lower() ('vt_adjacency_2020.pkl')
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_vt_rust_final_assignments_exists` — verifies output at states/vermont/data/
+
+## DP-04: Stale test assertion after format version upgrade
+
+**Pattern:** A test that asserts a specific version or magic number in a serialized format becomes silently stale when the format version is incremented. The test continues to pass against old compiled binaries but fails on clean builds — creating a hidden inconsistency that only surfaces during full workspace rebuilds.
+
+**Domain:** Any system with versioned binary serialization formats. Arises when format upgrades are not accompanied by a systematic audit of all assertions against version constants.
+
+**Why it's hard to catch:** The test binary may be cached and not recompiled when only the format version changes. The test passes in incremental builds and fails only on clean `cargo test` — a scenario that may not run frequently in development.
+
+**Structural solution:** Version constants used in serialization must be referenced via a single named constant (not duplicated as literals). Test assertions against version numbers must reference the same constant (`FORMAT_VERSION`), not a hardcoded literal. Add a test: `assert_eq!(FORMAT_VERSION, EXPECTED_VERSION)` where `EXPECTED_VERSION` is the only place a version literal appears.
+
+**Status:** SOLVED
+**Proved by:** `serialize.rs::test_magic_header` updated to assert `version == FORMAT_VERSION` (2u32) not `1u32`
+**Test:** `redist-data::serialize::tests::test_magic_header`

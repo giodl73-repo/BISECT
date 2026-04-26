@@ -50,6 +50,9 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-08 | URL filename extraction without query parameter stripping | **SOLVED** | fetch.rs url.split('?').next() |
 | PP-09 | In-memory download buffer OOM for variable-size files | **SOLVED** | fetch.rs::download_and_extract_zip (streaming) |
 | PP-10 | Silent state omission on invalid year parameter | **SOLVED** | runner.rs::load_all_states year allowlist |
+| PP-11 | Compile-time asset path resolution mismatch in workspace builds | **SOLVED** | include_bytes! next to source file |
+| PP-12 | WKB decode API surface mismatch across geospatial crate ecosystem | **SOLVED** | redist-map::dissolve::tests |
+| DP-04 | Stale test assertion after format version upgrade | **SOLVED** | redist-data::serialize::tests::test_magic_header |
 
 ## Adding a Pitfall
 

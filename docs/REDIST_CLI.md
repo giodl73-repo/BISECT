@@ -247,6 +247,77 @@ python scripts/data/generate_adj_bin.py --year 2020
 
 ---
 
+## `redist aggregate` — Merge state analysis into national datasets
+
+Walks all present states in `outputs/{version}/states/*/analysis/` and merges per-type JSON files into national datasets at `outputs/{version}/national/`.
+
+```
+redist aggregate [OPTIONS]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-v`, `--version` | `v1` | Version identifier |
+| `--types <TYPES>` | `all` | Analyzer types to aggregate: `demographic`, `political`, `urban`, `compactness`, `summary`, `all` |
+| `--csv` | false | Write CSV alongside each JSON output |
+| `--force` | false | Re-aggregate even if output exists |
+
+**Examples**:
+```bash
+# Aggregate all analyzer types
+redist aggregate --version V3 --types all --csv
+
+# Just demographic national dataset
+redist aggregate --version V3 --types demographic
+
+# After running all 50 states + analyze:
+redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+# (then for each state: redist analyze --state XX --types all)
+redist aggregate --version V3 --types all --csv
+```
+
+**Output files** (under `outputs/{version}/national/`):
+
+| File | Description |
+|------|-------------|
+| `us_demographic.json` | All districts across all states with demographic metrics |
+| `us_political.json` | Partisan lean per district, all states |
+| `us_compactness.json` | PP/Reock/CHR per district, all states |
+| `us_summary.json` | Full summary with balance checks, all states |
+| `us_demographic.csv` | CSV export of the JSON (with `--csv`) |
+| `us_summary.csv` | CSV export (with `--csv`) |
+
+All JSON files include `state_count`, `district_count`, `scope: "national"`, and a `"state"` field on every district record.
+
+---
+
+## `redist map --scope national` — National map with AK/HI insets
+
+Renders all present states onto one canvas using an inset projection: continental US in top 75%, Alaska inset bottom-left, Hawaii inset next to Alaska.
+
+Add `--scope national` to any `redist map` call (omit `--state`):
+
+```bash
+redist map --scope national --version V3 --types districts
+redist map --scope national --version V3 --types political --dpi 300
+redist map --scope national --version V3 --types districts political demographic compactness
+```
+
+**Output files** (under `outputs/{version}/national/maps/`):
+
+| File | Description |
+|------|-------------|
+| `districts.png` | All 435 districts, categorical color scheme |
+| `political.png` | National partisan choropleth (red→white→blue) |
+| `demographic.png` | National minority % choropleth (yellow→brown) |
+| `compactness.png` | National PP choropleth (green sequential) |
+
+**Projection**: equirectangular display projection only (not equal-area). Alaska and Hawaii are scaled and translated into insets — not geographically accurate for metric computation but correct for visual display.
+
+**Note**: States without TIGER shapefiles or assignment data are skipped. A warning lists any omitted states: `WARNING: N states omitted from national districts map`.
+
+---
+
 ## `redist analyze` — Per-district analytics
 
 Computes analytics for each district and writes JSON to `outputs/{version}/states/{state}/analysis/`.
