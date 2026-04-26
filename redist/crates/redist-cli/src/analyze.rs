@@ -301,11 +301,18 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 let municipal_result =
                     analyze_municipal_splits(&assignments, &place_to_tracts, &place_names);
 
+                // Subdivision vocabulary: read from SplitStandard (populated from policy DB).
+                let (sub_term, sub_term_plural) = standard.as_ref().map(|s| {
+                    (s.subdivision_term.clone(), s.subdivision_term_plural.clone())
+                }).unwrap_or_else(|| ("county".into(), "counties".into()));
+
                 let out = serde_json::json!({
                     "analyzer": "splits",
                     "state": state_code,
                     "year": year,
                     "counties": {
+                        "subdivision_term": sub_term,
+                        "subdivision_term_plural": sub_term_plural,
                         "total": county_result.total,
                         "split": county_result.split,
                         "preservation_score": county_result.preservation_score,

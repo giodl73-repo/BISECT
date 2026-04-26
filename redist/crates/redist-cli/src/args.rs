@@ -159,6 +159,23 @@ pub enum Commands {
     Export(ExportArgs),
     /// Import a GeoJSON plan into the RPLAN format
     Import(ImportArgs),
+    /// Show redistricting policy for a state (subdivision terms, tolerances, VRA, etc.)
+    Policy(PolicyArgs),
+}
+
+// ---------------------------------------------------------------------------
+// `redist policy` — state policy lookup
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct PolicyArgs {
+    /// State code (e.g., LA, WA, VA) or _TEST_EL for Eldoria test state
+    #[arg(long)]
+    pub state: String,
+    /// Output format: table (default) or json
+    #[arg(long, default_value = "table")]
+    pub format: String,
 }
 
 // ---------------------------------------------------------------------------

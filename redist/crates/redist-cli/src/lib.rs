@@ -14,6 +14,7 @@ pub mod map_cmd;
 pub mod migrate;
 pub mod output;
 pub mod partisan;
+pub mod policy;
 pub mod report_cmd;
 pub mod runner;
 pub mod status;

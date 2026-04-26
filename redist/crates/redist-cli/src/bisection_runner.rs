@@ -256,12 +256,22 @@ pub fn run_nway_partition(
 ///
 /// SORT FIX: leaves sorted by (depth, path) not plain lex, which gives
 /// correct BFS order for mixed-length binary paths.
+/// Run recursive bisection with mathematically-derived per-node ufactor.
+///
+/// **Key insight**: at each bisection node producing `k` final districts, the allowed
+/// per-split imbalance must be `balance_tolerance / k` — not a fixed value — so that
+/// cumulative error across all splits never exceeds `balance_tolerance` per final district.
+///
+/// For k=98 (WA house) with 10% target: root ufactor=0.102% (very tight), leaf ufactor=5% (loose).
+/// This prevents the compounding error (28% deviation) seen with fixed ufactor per depth.
+///
+/// Formula: `node_ufactor = 1.0 + balance_tolerance_frac / node.k`
 pub fn run_all_splits(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
     edge_weights: &HashMap<(usize, usize), f64>,
     num_districts: usize,
-    ufactor: u32,
+    balance_tolerance: f64, // fraction (e.g. 0.10 for ±10%); node ufactor = 1 + T/k
     niter: u32,
     seed: Option<u64>,
     // If Some, writes intermediate/depth_{d:02}/assignments.json after each round.
@@ -296,15 +306,17 @@ pub fn run_all_splits(
                 })
                 .collect();
 
-        // Use depth-based ufactor scaling: tighter at early depths, full tolerance at deep levels.
-        // Rust BFS depth 0 = Python's depth 1 (first actual split), hence depth+1.
-        // ufactor is passed through from the user's --ufactor flag so non-default values
-        // (e.g. 50 for state legislative) propagate correctly through all splits.
-        let depth_ufactor = ufactor_for_depth(depth + 1, ufactor);
-
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
             nodes_with_tracts.into_par_iter()
                 .map(|(node, tracts)| {
+                    // Per-node ufactor: 1.0 + balance_tolerance / k_node
+                    // This is the mathematically correct formula: if each split at a node
+                    // with k remaining districts is balanced to (T/k)%, the cumulative
+                    // error across all levels never exceeds T% per final district.
+                    // Root (k=98, T=10%): ufactor=1.00102 (very tight)
+                    // Leaf (k=2, T=10%): ufactor=1.05 (loose — OK since only 2 districts)
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+
                     // Target weights: k_left/k and k_right/k
                     // Equal when k_left == k_right (even k); unequal for odd k
                     let tw = if node.k_left == node.k_right {
@@ -315,7 +327,7 @@ pub fn run_all_splits(
                     };
                     let (left, right) = split_subgraph(
                         adjacency, vertex_weights, edge_weights, &tracts,
-                        depth_ufactor, niter, seed, tw
+                        node_ufactor, niter, seed, tw
                     ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
                     Ok((node.path, left, right))
                 })
@@ -406,7 +418,7 @@ mod tests {
         let adj = vec![vec![]; n];
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
-        let assignments = run_all_splits(&adj, &vw, &ew, 1, 5, 100, None, None)
+        let assignments = run_all_splits(&adj, &vw, &ew, 1, 0.005, 100, None, None)
             .expect("single district should not invoke METIS");
         assert_eq!(assignments.len(), n);
         assert!(assignments.values().all(|&d| d == 1));
@@ -419,7 +431,7 @@ mod tests {
         let vw = vec![1000i64, 1000, 1000, 1000];
         let ew = HashMap::new();
 
-        let assignments = run_all_splits(&adj, &vw, &ew, 2, 5, 100, Some(42), None).unwrap();
+        let assignments = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None).unwrap();
 
         assert_eq!(assignments.len(), 4, "all tracts assigned");
         assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");

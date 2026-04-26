@@ -1,5 +1,6 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
+use redist_cli::policy::run_policy;
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete};
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
@@ -312,6 +313,12 @@ fn main() {
         // ── redist import: import GeoJSON plan ────────────────────────────────
         Commands::Import(args) => {
             run_import(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist policy: state policy lookup ────────────────────────────────
+        Commands::Policy(args) => {
+            run_policy(&args)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
     }

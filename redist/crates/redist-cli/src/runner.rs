@@ -347,12 +347,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             cfg.seed,
         ).map_err(|e| format!("n-way partition failed: {e}"))?
     } else {
+        // Pass balance_tolerance as fraction: per-node ufactor = 1 + tolerance/k_node
+        // This guarantees cumulative error ≤ tolerance regardless of bisection depth.
+        let balance_tolerance_frac = cfg.effective_balance_tolerance();
         run_all_splits(
             &graph.adjacency,
             &graph.vertex_weights,
             &edge_weights,
             num_districts,
-            cfg.ufactor,
+            balance_tolerance_frac,
             cfg.niter,
             cfg.seed,
             Some(&intermediate_dir),
