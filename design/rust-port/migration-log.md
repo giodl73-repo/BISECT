@@ -32,12 +32,21 @@ both pass end-to-end acceptance tests. Python subprocess calls eliminated.
 - ufactor_for_depth() returns decimal (1.001..1.005), not integer (PP-07 pitfall)
 - Target partition weights (tpwgts): k_left/k + k_right/k for METIS (AP-06 pitfall)
 
-### Phase 3d benchmarks (2026-04-25, Windows 11, 12-core):
+### Phase 3d benchmarks (2026-04-25, Windows 11):
 
-| State | Mode | Python (s) | Rust CLI (s) | Speedup |
-|-------|------|------------|--------------|---------|
-| VT    | edge-weighted (1 district) | 4.48 | 0.52 | **8.6×** |
-| AL    | metis-vra (7 districts)    | 1.63 | 0.65 | **2.5×** |
+| Stage | Python | Rust CLI (pkl shim) | Rust CLI (.adj.bin) |
+|-------|--------|---------------------|---------------------|
+| VT single state | 4.48s | 0.52s (8.6×) | — |
+| AL single state VRA | 1.63s | 0.65s (2.5×) | — |
+| **50-state V3 2020 (8 workers)** | **~55 min** | **18s** | **15.5s** |
+
+50-state speedup vs Python: **~213× faster**.
+
+### Phase 2 .adj.bin native loading (2026-04-25):
+All 50 state pkl adjacency files converted to .adj.bin v2 format (with vertex_weights).
+adjacency_loader.rs tries .adj.bin first (pure Rust, zero Python);
+falls back to pkl shim with warning if .adj.bin absent.
+Script: `scripts/data/generate_adj_bin.py`
 
 Notes:
 - Python VT includes adjacency loading from pkl, METIS via pymetis, writing pkl
