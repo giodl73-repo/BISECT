@@ -207,7 +207,7 @@ mod tests {
         let g = make_graph();
         let bytes = serialize_adjacency(&g);
         assert_eq!(&bytes[0..4], b"RADJ");
-        assert_eq!(u32::from_le_bytes(bytes[4..8].try_into().unwrap()), 1u32); // version
+        assert_eq!(u32::from_le_bytes(bytes[4..8].try_into().unwrap()), 2u32); // format v2 (with vertex_weights)
     }
 
     #[test]
