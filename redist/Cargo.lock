@@ -1809,6 +1809,7 @@ dependencies = [
  "geo 0.28.0",
  "geo-types 0.7.19",
  "geozero",
+ "polylabel",
  "rayon",
  "redist-analysis",
  "redist-core",

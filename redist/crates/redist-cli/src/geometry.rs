@@ -139,6 +139,30 @@ pub fn state_code_to_fips(code: &str) -> Option<&'static str> {
     }
 }
 
+/// Reverse-lookup: state directory name (e.g. "rhode_island") → 2-letter code (e.g. "RI").
+pub fn state_name_to_code(name: &str) -> Option<&'static str> {
+    match name {
+        "alabama" => Some("AL"), "alaska" => Some("AK"), "arizona" => Some("AZ"),
+        "arkansas" => Some("AR"), "california" => Some("CA"), "colorado" => Some("CO"),
+        "connecticut" => Some("CT"), "delaware" => Some("DE"), "florida" => Some("FL"),
+        "georgia" => Some("GA"), "hawaii" => Some("HI"), "idaho" => Some("ID"),
+        "illinois" => Some("IL"), "indiana" => Some("IN"), "iowa" => Some("IA"),
+        "kansas" => Some("KS"), "kentucky" => Some("KY"), "louisiana" => Some("LA"),
+        "maine" => Some("ME"), "maryland" => Some("MD"), "massachusetts" => Some("MA"),
+        "michigan" => Some("MI"), "minnesota" => Some("MN"), "mississippi" => Some("MS"),
+        "missouri" => Some("MO"), "montana" => Some("MT"), "nebraska" => Some("NE"),
+        "nevada" => Some("NV"), "new_hampshire" => Some("NH"), "new_jersey" => Some("NJ"),
+        "new_mexico" => Some("NM"), "new_york" => Some("NY"), "north_carolina" => Some("NC"),
+        "north_dakota" => Some("ND"), "ohio" => Some("OH"), "oklahoma" => Some("OK"),
+        "oregon" => Some("OR"), "pennsylvania" => Some("PA"), "rhode_island" => Some("RI"),
+        "south_carolina" => Some("SC"), "south_dakota" => Some("SD"), "tennessee" => Some("TN"),
+        "texas" => Some("TX"), "utah" => Some("UT"), "vermont" => Some("VT"),
+        "virginia" => Some("VA"), "washington" => Some("WA"), "west_virginia" => Some("WV"),
+        "wisconsin" => Some("WI"), "wyoming" => Some("WY"), "district_of_columbia" => Some("DC"),
+        _ => None,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

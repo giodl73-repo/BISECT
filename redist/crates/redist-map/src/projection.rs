@@ -72,6 +72,95 @@ impl Projection {
     }
 }
 
+// ── InsetProjection ───────────────────────────────────────────────────────────
+
+/// National US map projection with Alaska and Hawaii insets.
+///
+/// Places three independent equirectangular sub-projections on one canvas:
+///   - Continental: top 75% of canvas, lon -125→-65, lat 24→50
+///   - Alaska inset: bottom-left 28%×25%, scaled to 35% of continental
+///   - Hawaii inset: bottom-left, right of AK, scaled to ~90%
+///
+/// **Display only** — all three sub-projections are equirectangular.
+/// Alaska at 61°N has significant east-west compression (a degree of
+/// longitude ≈ 55km vs 111km at the equator). Do not use projected
+/// coordinates for metric computation.
+pub struct InsetProjection {
+    // (sub-projection, x_offset_px, y_offset_px) for each region
+    continental: (Projection, f64, f64),
+    alaska:      (Projection, f64, f64),
+    hawaii:      (Projection, f64, f64),
+    canvas_w: u32,
+    canvas_h: u32,
+}
+
+impl InsetProjection {
+    /// Standard US national layout for the given canvas dimensions.
+    /// `canvas_w` × `canvas_h` in pixels. Typical: 2400 × 1500.
+    pub fn us_national(canvas_w: u32, canvas_h: u32) -> Self {
+        let w = canvas_w as f64;
+        let h = canvas_h as f64;
+
+        // Continental: full width, top 75% of canvas
+        let cont_h_px = (h * 0.75).round() as u32;
+        let cont_proj = Projection::from_bbox(-125.0, 24.0, -65.0, 50.0,
+                                              canvas_w, cont_h_px, 0.02);
+
+        // Alaska inset: bottom-left, 28% width × 25% height
+        let ak_w_px = (w * 0.28).round() as u32;
+        let ak_h_px = (h * 0.25).round() as u32;
+        let ak_y_offset = cont_h_px as f64;
+        let ak_proj = Projection::from_bbox(-180.0, 51.0, -130.0, 72.0,
+                                            ak_w_px, ak_h_px, 0.02);
+
+        // Hawaii inset: right of AK inset, 12% width × 10% height, vertically centred
+        let hi_w_px = (w * 0.12).round() as u32;
+        let hi_h_px = (h * 0.10).round() as u32;
+        let hi_x_offset = ak_w_px as f64 + 4.0;
+        let hi_y_offset = cont_h_px as f64 + (ak_h_px as f64 - hi_h_px as f64) * 0.5;
+        let hi_proj = Projection::from_bbox(-161.0, 18.0, -154.0, 23.0,
+                                            hi_w_px, hi_h_px, 0.04);
+
+        Self {
+            continental: (cont_proj, 0.0, 0.0),
+            alaska:      (ak_proj, 0.0, ak_y_offset),
+            hawaii:      (hi_proj, hi_x_offset, hi_y_offset),
+            canvas_w,
+            canvas_h,
+        }
+    }
+
+    /// Project (lon, lat) → (svg_x, svg_y).
+    ///
+    /// Classifies the coordinate into continental / Alaska / Hawaii by
+    /// geographic bounds, then applies the appropriate sub-projection + offset.
+    pub fn project(&self, lon: f64, lat: f64) -> (f64, f64) {
+        // Alaska: lon < -130 and lat > 51
+        if lon < -130.0 && lat > 51.0 {
+            let (p, ox, oy) = &self.alaska;
+            let (x, y) = p.project(lon, lat);
+            return (x + ox, y + oy);
+        }
+        // Hawaii: lon < -154 and lat < 25
+        if lon < -154.0 && lat < 25.0 {
+            let (p, ox, oy) = &self.hawaii;
+            let (x, y) = p.project(lon, lat);
+            return (x + ox, y + oy);
+        }
+        // Continental (everything else, including Puerto Rico which falls off-canvas)
+        let (p, ox, oy) = &self.continental;
+        let (x, y) = p.project(lon, lat);
+        (x + ox, y + oy)
+    }
+
+    pub fn canvas_w(&self) -> u32 { self.canvas_w }
+    pub fn canvas_h(&self) -> u32 { self.canvas_h }
+    pub fn continental_height(&self) -> f64 {
+        let (_, _, oy) = &self.alaska;
+        *oy
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,5 +211,56 @@ mod tests {
         let (x1, _) = proj.project(1.0, 0.5);
         assert!((x0).abs() < 1.0);
         assert!((x1 - 400.0).abs() < 1.0);
+    }
+
+    // ── InsetProjection tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_inset_continental_coord_in_main_area() {
+        let proj = InsetProjection::us_national(1200, 800);
+        // Kansas City, MO: lon=-94.6, lat=39.1 — centre of continental US
+        let (x, y) = proj.project(-94.6, 39.1);
+        // Should land in the continental area: top 600px of a 1200×800 canvas
+        assert!(x > 200.0 && x < 1000.0, "x={x} outside expected continental range");
+        assert!(y > 0.0 && y < 600.0, "y={y} outside continental area (top 75%)");
+    }
+
+    #[test]
+    fn test_inset_alaska_coord_in_bottom_left() {
+        let proj = InsetProjection::us_national(1200, 800);
+        // Anchorage, AK: lon=-149.9, lat=61.2
+        let (x, y) = proj.project(-149.9, 61.2);
+        // AK inset occupies bottom-left: y > 600px (below continental)
+        assert!(y > 580.0, "AK y={y} should be in bottom inset (y > 580)");
+        // AK inset is 28% of 1200px = 336px wide
+        assert!(x < 340.0, "AK x={x} should be in left portion of canvas");
+    }
+
+    #[test]
+    fn test_inset_hawaii_coord_right_of_ak() {
+        let proj = InsetProjection::us_national(1200, 800);
+        // Honolulu, HI: lon=-157.8, lat=21.3
+        let (x, y) = proj.project(-157.8, 21.3);
+        // HI inset is to the right of AK inset (ak_w ~336px, so HI x > 336)
+        assert!(x > 336.0, "HI x={x} should be right of AK inset");
+        // HI is also in the bottom strip
+        assert!(y > 580.0, "HI y={y} should be in bottom strip");
+    }
+
+    #[test]
+    fn test_inset_same_latitude_same_y_continental() {
+        let proj = InsetProjection::us_national(1200, 800);
+        // Two points at same continental latitude → same SVG y
+        let (_, y1) = proj.project(-120.0, 37.0);
+        let (_, y2) = proj.project(-80.0, 37.0);
+        assert!((y2 - y1).abs() < 2.0, "same lat should give same y: y1={y1} y2={y2}");
+    }
+
+    #[test]
+    fn test_inset_continental_lon_increases_right() {
+        let proj = InsetProjection::us_national(1200, 800);
+        let (x1, _) = proj.project(-120.0, 37.0);
+        let (x2, _) = proj.project(-80.0, 37.0);
+        assert!(x2 > x1, "more east = higher x: x1={x1} x2={x2}");
     }
 }
