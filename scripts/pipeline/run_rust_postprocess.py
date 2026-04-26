@@ -197,7 +197,7 @@ def process_version_year(binary: str, version: str, year: str,
     if not skip_dash:
         out_html = DASHBOARD_MAP.get((version, year))
         if out_html:
-            print(f"\n  [4b/4] dashboard → {out_html}...")
+            print(f"\n  [4b/4] dashboard -> {out_html}...")
             py = sys.executable
             ok, err = run_cmd(
                 [py, "scripts/web/deploy_docs.py",
