@@ -1001,3 +1001,143 @@ To add a `compactness` choropleth map:
 - `polylabel` finds the best label placement point (pole of inaccessibility) — maps look right
 - `fontdb` embeds Liberation Sans at compile time — consistent fonts, no system dependency
 - The entire pipeline has zero external C dependencies (no GDAL, no PROJ, no cairo)
+
+---
+
+## Board Review Amendments (2026-04-25)
+
+Full 10-role board review surfaced **5 CRITICAL** findings and **6 CONCERN** findings.
+All must be addressed before or during implementation. CRITICAL items block hand-off to agentic worker.
+
+### CRITICAL amendments (must resolve before implementation)
+
+**BOUNDARY-01: Add population balance validation to `redist analyze` output**
+
+`redist analyze --types demographic` must emit a constitutional validity signal. Add to `SummaryDistrict`:
+```rust
+pub ideal_pop: i64,
+pub pop_deviation_pct: f64,
+pub pop_balance_ok: bool,  // |deviation| <= 0.005
+```
+Top-level `summary.json` must include `"population_balance_valid": bool`. The `analyze.rs` dispatcher emits a stderr warning when any district fails. The L2 test `test_demographic_json_structure` must assert `d["pop_balance_ok"] == True` for VT.
+
+**TRENCH-01: Add WKB decode step and round-trip test between `tiger.rs` and `dissolve.rs`**
+
+`tiger.rs` emits `geometry_wkb: Vec<u8>`. Add to `dissolve.rs` (Task 4) and `Cargo.toml`:
+```toml
+wkb = "0.1"   # or geozero with with-wkb feature
+```
+```rust
+pub fn wkb_to_polygon(wkb: &[u8]) -> anyhow::Result<geo_types::Geometry<f64>> {
+    wkb::wkb_to_geom(&mut std::io::Cursor::new(wkb))
+        .map_err(|e| anyhow::anyhow!("WKB decode failed: {e}"))
+}
+```
+Add L0 test:
+```rust
+#[test]
+fn test_wkb_round_trip_preserves_area() {
+    let original: Polygon = polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.)];
+    let wkb_bytes = geom_to_wkb(&original);
+    let decoded = wkb_to_polygon(&wkb_bytes).unwrap();
+    let p = match decoded { Geometry::Polygon(p) => p, _ => panic!("wrong type") };
+    assert!((p.unsigned_area() - 1.0).abs() < 1e-9);
+}
+```
+
+**MERIDIAN-01: Document projection is display-only; do not use rendered geometry for compactness scores**
+
+`Projection::from_bbox` is equirectangular (display only, not equal-area). Add comment to `projection.rs`:
+```rust
+/// Display projection only — NOT equal-area. Do not use projected coordinates
+/// to compute area, perimeter, or compactness metrics. Use redist-analysis::compactness
+/// for all metric computation (which operates on WGS84 before projection).
+```
+Add to `compactness.json` metadata output: `"crs_note": "PP/Reock computed on WGS84 coords; WGS84-based scores systematically compress east-west-elongated districts"`. The `test_aspect_ratio_preserved` test gets a comment clarifying it tests visual centering only.
+
+**CONTOUR-01: Declare VAP vs. total population basis; enforce CSV schema**
+
+The demographics CSV has no VAP columns. The plan must state explicitly: demographic analysis uses **total population** (not VAP). Add to all demographic JSON outputs: `"pop_basis": "total_population"`. VRA district identification in `vra_analysis.rs` (which uses minority VAP) remains separate. Add column validation in `aggregate_demographic`:
+```rust
+fn validate_columns(headers: &csv::StringRecord) -> anyhow::Result<()> {
+    let required = ["GEOID", "total_pop", "white_non_hispanic", "black_non_hispanic",
+                    "asian_non_hispanic", "hispanic", "other"];
+    for col in required {
+        if !headers.iter().any(|h| h == col) {
+            anyhow::bail!("demographics CSV missing required column: {col}");
+        }
+    }
+    Ok(())
+}
+```
+
+**BENCHMARK-01: Add non-contiguous dissolve test and fix label placement for MultiPolygon**
+
+Add to Task 4 (`dissolve.rs`):
+```rust
+#[test]
+fn test_dissolve_noncontiguous_returns_two_components() {
+    let sq1: Polygon = polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.)];
+    let sq2: Polygon = polygon![(x:5.,y:5.),(x:6.,y:5.),(x:6.,y:6.),(x:5.,y:6.)];
+    let merged = dissolve_polygons(&[sq1, sq2]);
+    assert_eq!(merged.0.len(), 2, "non-adjacent tracts → 2-component MultiPolygon");
+}
+```
+In `labeler.rs`, `polylabel` must be called on the **largest component by area** of each district `MultiPolygon`, not on the first ring. Add to labeler:
+```rust
+fn largest_component(mp: &MultiPolygon) -> &Polygon {
+    mp.0.iter().max_by(|a, b| a.unsigned_area().partial_cmp(&b.unsigned_area()).unwrap())
+       .expect("MultiPolygon must have at least one component")
+}
+```
+
+---
+
+### CONCERN amendments (fix before merge)
+
+**CONTOUR-02: Political data year coverage**
+- Specify election CSV format: columns `geoid, dem_votes, rep_votes, ...` (tract-level).
+- For year 2000: return `PoliticalResult::Unavailable` (not empty vec) with stderr note.
+- Add test `test_political_year_2000_returns_unavailable`.
+
+**DATUM-01: L2 test preconditions**
+Add `setUpClass` guard to all L2 acceptance tests:
+```python
+@classmethod
+def setUpClass(cls):
+    if not Path("outputs/V3/2020/vermont/final_assignments.json").exists():
+        raise unittest.SkipTest("Run: redist run --year 2020 --version V3 --states VT")
+```
+Add `assert len(data["districts"]) == 1` to `test_demographic_json_structure`.
+
+**SCALE-01: Label overlap test for multi-district maps**
+Add `test_labels_do_not_overlap_for_adjacent_districts` to `labeler.rs`. Consider secondary font cap: `min(28.0, canvas_h / (num_districts * 2.0))`.
+
+**PRECINCT-01: Flag uncontested races**
+Add `is_uncontested: bool` to `PoliticalDistrict`. Color uncontested districts gray in choropleth instead of saturated red/blue. Add test `test_political_uncontested_flagged`.
+
+**COMMONS-01: Majority-minority flag in demographic output**
+Add `is_majority_minority: bool` and `pop_basis: &'static str` to `DemographicDistrict`. Add test `test_majority_minority_district_flagged`.
+
+**SURVEY-01: Define DPI-to-canvas-pixel mapping**
+Add to `map_cmd.rs`:
+```rust
+fn canvas_size_from_dpi(dpi: u32, base_inches: f64, aspect: f64) -> (u32, u32) {
+    let w = (dpi as f64 * base_inches) as u32;
+    let h = (w as f64 / aspect) as u32;
+    (w, h)
+}
+```
+Standard: `base_inches=8.0`, aspect ratio from state bbox. Add L0 test `test_canvas_size_from_dpi`.
+
+---
+
+### Board verdict
+
+| Severity | Count | Gate |
+|----------|-------|------|
+| CRITICAL | 5 | Block implementation start |
+| CONCERN | 6 | Block merge to master |
+| PASS | 0 | — |
+
+MERIDIAN: projection approach sound for display; WGS84 limit documented. BENCHMARK: TDD discipline correct; non-contiguous gap now closed. TRENCH: WKB decode now explicit. CONTOUR: VAP limitation now stated. BOUNDARY: population balance now in output.
