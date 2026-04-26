@@ -43,6 +43,46 @@ pub fn get_split_standard(state_code: &str) -> Option<SplitStandard> {
             compliance_assessment_template: "{n} county splits present".into(),
             disclaimer: "Legal compliance determination requires counsel".into(),
         }),
+        "VA" => Some(SplitStandard {
+            state_code: "VA".into(),
+            legal_standard: "VA Const. Art. II §6 — counties and cities shall be preserved \
+                where practical. IMPORTANT: Virginia has 95 counties AND 38 independent cities \
+                that are legally separate from any county. Both are tracked as separate entities \
+                in this analysis (133 total). Independent cities have FIPS codes 51510–51840 \
+                and appear alongside counties in the split count. This is automatic — Census \
+                GEOIDs encode independent cities with their own FIPS codes."
+                .into(),
+            compliance_assessment_template:
+                "{n} splits present across counties and independent cities (133 total entities). \
+                 VA Const. requires preserving both."
+                .into(),
+            disclaimer: "Legal compliance determination requires counsel. \
+                Virginia's independent cities are distinct jurisdictions with no \
+                county affiliation — they must be preserved on equal footing with counties."
+                .into(),
+        }),
+        "NV" => Some(SplitStandard {
+            state_code: "NV".into(),
+            legal_standard: "NV Const. Art. 15 §13 — county boundaries shall be preserved \
+                where possible. Clark County contains ~71% of Nevada's population and \
+                necessarily spans multiple legislative districts."
+                .into(),
+            compliance_assessment_template: "{n} county splits present".into(),
+            disclaimer: "Legal compliance determination requires counsel. \
+                Clark County splits are expected given its dominant population share."
+                .into(),
+        }),
+        "LA" => Some(SplitStandard {
+            state_code: "LA".into(),
+            legal_standard: "LA Const. Art. III §6 — parish (county) boundaries shall be \
+                preserved where possible. Louisiana uses parishes rather than counties. \
+                VRA Section 2 requires majority-minority districts for Black voters (~33%)."
+                .into(),
+            compliance_assessment_template: "{n} parish splits present".into(),
+            disclaimer: "Legal compliance determination requires counsel. \
+                Bayou geography and island tracts may make some parish splits unavoidable."
+                .into(),
+        }),
         _ => Some(SplitStandard {
             state_code: state_code.into(),
             legal_standard: format!(
