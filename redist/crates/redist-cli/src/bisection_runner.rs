@@ -124,12 +124,20 @@ pub fn split_subgraph(
         None
     };
 
+    // gpmetis uses atoi() to parse -ufactor, so it MUST be an integer.
+    // The METIS manual defines: imbalance = (1 + ufactor/1000). So:
+    //   ufactor=1  → 0.1% tolerance
+    //   ufactor=50 → 5.0% tolerance
+    // Convert from decimal (e.g. 1.05 → 50) and clamp to [1, 1000].
+    let ufactor_int = ((ufactor - 1.0) * 1000.0).round() as u32;
+    let ufactor_int = ufactor_int.clamp(1, 1000);
+
     let mut cmd = Command::new(&gpmetis);
     cmd.args([
         "-contig",
         "-minconn",
         &format!("-niter={niter}"),
-        &format!("-ufactor={ufactor:.4}"),
+        &format!("-ufactor={ufactor_int}"),
     ]);
     if let Some(ref tpwgts) = tpwgts_file {
         cmd.arg(format!("-tpwgt={}", tpwgts.display()));
