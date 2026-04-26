@@ -10,6 +10,10 @@ pub struct AnalyzerContext<'a> {
     pub num_districts: usize,  // BOUNDARY-R2-01: required for ideal_pop
     pub data_root: &'a Path,
     pub output_root: &'a Path,
+    /// Maximum allowed per-district population deviation as a fraction (not percent).
+    /// Congressional default: 0.005 (±0.5%). State legislative default: 0.05 (±5%).
+    /// Read from plan manifest when available so non-congressional plans pass correctly.
+    pub balance_tolerance: f64,
 }
 
 pub trait Analyzer {

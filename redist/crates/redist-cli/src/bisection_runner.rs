@@ -296,11 +296,11 @@ pub fn run_all_splits(
                 })
                 .collect();
 
-        // Use depth-based ufactor matching Python's recursive_bisection.py logic:
-        //   depth 1 → 1.001 (first split: tightest)
-        //   depth 2 → 1.002, depth 3 → 1.003, depth 4+ → 1.005
+        // Use depth-based ufactor scaling: tighter at early depths, full tolerance at deep levels.
         // Rust BFS depth 0 = Python's depth 1 (first actual split), hence depth+1.
-        let depth_ufactor = ufactor_for_depth(depth + 1);
+        // ufactor is passed through from the user's --ufactor flag so non-default values
+        // (e.g. 50 for state legislative) propagate correctly through all splits.
+        let depth_ufactor = ufactor_for_depth(depth + 1, ufactor);
 
         let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
             nodes_with_tracts.into_par_iter()

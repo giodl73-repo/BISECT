@@ -11,18 +11,9 @@ use crate::partisan::{PartisanArgs, run_partisan};
 use crate::io_utils::write_json_atomic;
 
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
-    let state_code = args.state.to_uppercase();
     let year = args.year.to_string();
 
-    // Resolve state name from config
-    let all = load_all_states(&year)
-        .map_err(|e| anyhow::anyhow!("Failed to load state config: {e}"))?;
-    let (_, state_name, num_districts) = all.iter()
-        .find(|(code, _, _)| code == &state_code)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
-
-    // Locate assignment file.
+    // Locate output root first — needed for manifest-based state resolution.
     // Priority:
     //   1. --label + --output-dir: {output_dir}/{year}/plans/{label}/data/final_assignments.json
     //   2. --label only: {output_base}/{version}/{year}/plans/{label}/data/final_assignments.json
@@ -32,6 +23,49 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     } else {
         PathBuf::from(&args.output_base).join(&args.version)
     };
+
+    // Resolve state_code: from --state if provided, otherwise from plan manifest.
+    let state_code = match &args.state {
+        Some(s) => s.to_uppercase(),
+        None => {
+            // Derive from manifest when --label is provided
+            if let Some(ref label) = args.label {
+                let manifest_path = output_root
+                    .join(&year)
+                    .join("plans")
+                    .join(label)
+                    .join("manifest.json");
+                if manifest_path.exists() {
+                    let manifest: serde_json::Value = serde_json::from_str(
+                        &std::fs::read_to_string(&manifest_path)?
+                    )?;
+                    manifest["state_code"]
+                        .as_str()
+                        .filter(|s| !s.is_empty())
+                        .map(|s| s.to_uppercase())
+                        .ok_or_else(|| anyhow::anyhow!(
+                            "manifest at {} missing 'state_code' field",
+                            manifest_path.display()
+                        ))?
+                } else {
+                    anyhow::bail!(
+                        "--state is required when manifest not found at {}",
+                        manifest_path.display()
+                    );
+                }
+            } else {
+                anyhow::bail!("--state or --label with an existing manifest is required");
+            }
+        }
+    };
+
+    // Resolve state name from config
+    let all = load_all_states(&year)
+        .map_err(|e| anyhow::anyhow!("Failed to load state config: {e}"))?;
+    let (_, state_name, num_districts) = all.iter()
+        .find(|(code, _, _)| code == &state_code)
+        .cloned()
+        .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
     let (assignments_path, analysis_dir_base) = if let Some(ref label) = args.label {
         let plan_dir = output_root.join(&year).join("plans").join(label);
@@ -77,6 +111,39 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     let analysis_dir = analysis_dir_base.join("analysis");
     std::fs::create_dir_all(&analysis_dir)?;
 
+    // Resolve balance_tolerance: read from manifest when --label path is used,
+    // otherwise use the congressional default (0.005 = ±0.5%).
+    // Manifest stores `balance_tolerance_pct` as a percentage; convert to fraction.
+    let balance_tolerance: f64 = if let Some(ref label) = args.label {
+        let manifest_path = output_root
+            .join(&year)
+            .join("plans")
+            .join(label)
+            .join("manifest.json");
+        if manifest_path.exists() {
+            let manifest: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(&manifest_path)?
+            )?;
+            // Try balance_tolerance_pct (percentage form) first, then balance_tolerance (fraction)
+            if let Some(pct) = manifest["balance_tolerance_pct"].as_f64() {
+                pct / 100.0
+            } else if let Some(frac) = manifest["balance_tolerance"].as_f64() {
+                frac
+            } else {
+                // Fall back to chamber-aware default from manifest chamber field
+                match manifest["chamber"].as_str().unwrap_or("congressional") {
+                    "congressional" => 0.005,
+                    _ => 0.05,
+                }
+            }
+        } else {
+            0.005 // default when manifest absent
+        }
+    } else {
+        // Legacy state path: use congressional default (strictest)
+        0.005
+    };
+
     let ctx = AnalyzerContext {
         assignments: &assignments,
         state_name: &state_name,
@@ -86,6 +153,7 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         num_districts,
         data_root: Path::new("data"),
         output_root: &adjacency_root,
+        balance_tolerance,
     };
 
     // Resolve types: expand All → concrete list
@@ -121,7 +189,8 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             AnalyzerType::Summary => {
                 let result = SummaryAnalyzer::run(&ctx)?;
                 if !result.population_balance_valid {
-                    eprintln!("WARNING: population balance FAILED for {state_code} — one or more districts exceed ±0.5%");
+                    eprintln!("WARNING: population balance FAILED for {state_code} — one or more districts exceed ±{:.1}%",
+                        balance_tolerance * 100.0);
                     balance_failed = true;
                 }
                 write_json_atomic(&out_path, &result)?;
@@ -131,7 +200,7 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 // Load dissolved district geometries
                 let districts = crate::geometry::load_district_geometries(
                     &state_name, &state_code, &year, &args.version,
-                    &assignments, Path::new("data"),
+                    &assignments, Path::new("data"), "tract",
                 )?;
 
                 // Compute compactness metrics for each district using the largest polygon component

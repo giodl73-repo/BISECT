@@ -187,6 +187,7 @@ mod tests {
             num_districts: 1,
             data_root: &nonexistent,
             output_root: &nonexistent,
+            balance_tolerance: 0.005,
         };
         let result = PoliticalAnalyzer::run(&ctx);
         assert!(result.is_ok());

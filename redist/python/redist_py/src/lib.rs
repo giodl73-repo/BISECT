@@ -423,8 +423,9 @@ fn bisection_max_depth(k: usize) -> usize {
 }
 
 #[pyfunction]
-fn bisection_ufactor(depth: usize) -> f64 {
-    ufactor_for_depth(depth)
+#[pyo3(signature = (depth, base_ufactor=5))]
+fn bisection_ufactor(depth: usize, base_ufactor: u32) -> f64 {
+    ufactor_for_depth(depth, base_ufactor)
 }
 
 // ---------------------------------------------------------------------------

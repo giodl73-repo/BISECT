@@ -106,19 +106,29 @@ pub fn max_depth_for_k(k: usize) -> usize {
     depth
 }
 
-/// METIS ufactor (imbalance tolerance) for a given bisection depth.
-/// Tighter at early depths to maintain global balance.
+/// METIS ufactor (imbalance tolerance) for a given bisection depth and user-specified base ufactor.
 ///
+/// Tighter at early depths to maintain global balance.
 /// Depth 0 (root node) is never split by METIS — it represents the whole state.
-/// Splitting begins at depth 1. If called with depth=0, returns the default 1.005.
-pub fn ufactor_for_depth(depth: usize) -> f64 {
-    match depth {
-        0 => 1.005, // Root never split; unreachable in normal operation
-        1 => 1.001,
-        2 => 1.002,
-        3 => 1.003,
-        _ => 1.005,
-    }
+///
+/// # Scaling
+/// - `base_ufactor=5`  → 0.5% balance per split (congressional default)
+/// - `base_ufactor=50` → 5% balance per split (state legislative)
+/// - depth 1 gets the tightest constraint (20% of full base), depth 4+ gets 100%.
+///
+/// # Backward compatibility
+/// When `base_ufactor=5` the results are identical to the old hardcoded values:
+/// depth 1 → 1.001, depth 2 → 1.002, depth 3 → 1.003, depth 4+ → 1.005.
+pub fn ufactor_for_depth(depth: usize, base_ufactor: u32) -> f64 {
+    let base = 1.0 + base_ufactor as f64 / 1000.0;
+    let scale = match depth {
+        0 => 0.2, // Root never split; unreachable in normal operation
+        1 => 0.2, // tightest at first split
+        2 => 0.4,
+        3 => 0.6,
+        _ => 1.0, // full ufactor at deep levels
+    };
+    1.0 + (base - 1.0) * scale
 }
 
 #[cfg(test)]
@@ -213,13 +223,24 @@ mod tests {
     }
 
     #[test]
-    fn test_ufactor_by_depth() {
-        assert!((ufactor_for_depth(0) - 1.005).abs() < 1e-9); // root — unreachable but safe
-        assert!((ufactor_for_depth(1) - 1.001).abs() < 1e-9);
-        assert!((ufactor_for_depth(2) - 1.002).abs() < 1e-9);
-        assert!((ufactor_for_depth(3) - 1.003).abs() < 1e-9);
-        assert!((ufactor_for_depth(4) - 1.005).abs() < 1e-9);
-        assert!((ufactor_for_depth(99) - 1.005).abs() < 1e-9);
+    fn test_ufactor_by_depth_default() {
+        // base_ufactor=5 (congressional default) must be backward-compatible
+        assert!((ufactor_for_depth(0, 5) - 1.001).abs() < 1e-9); // root — unreachable but safe
+        assert!((ufactor_for_depth(1, 5) - 1.001).abs() < 1e-9);
+        assert!((ufactor_for_depth(2, 5) - 1.002).abs() < 1e-9);
+        assert!((ufactor_for_depth(3, 5) - 1.003).abs() < 1e-9);
+        assert!((ufactor_for_depth(4, 5) - 1.005).abs() < 1e-9);
+        assert!((ufactor_for_depth(99, 5) - 1.005).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_ufactor_by_depth_state_legislative() {
+        // base_ufactor=50 (state legislative): depth 1 → 1.010, depth 4+ → 1.050
+        assert!((ufactor_for_depth(1, 50) - 1.010).abs() < 1e-9);
+        assert!((ufactor_for_depth(2, 50) - 1.020).abs() < 1e-9);
+        assert!((ufactor_for_depth(3, 50) - 1.030).abs() < 1e-9);
+        assert!((ufactor_for_depth(4, 50) - 1.050).abs() < 1e-9);
+        assert!((ufactor_for_depth(99, 50) - 1.050).abs() < 1e-9);
     }
 
     #[test]

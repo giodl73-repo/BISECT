@@ -59,6 +59,7 @@ fn main() {
                 balance_tolerance: args.balance_tolerance.map(|t| t / 100.0),
                 write_manifest: args.manifest,
                 force: args.force,
+                resolution: args.resolution.to_string(),
             }], 1);
             for r in &results {
                 if !r.success {
@@ -96,6 +97,7 @@ fn main() {
                     balance_tolerance: None,
                     write_manifest: false,
                     force: false,
+                    resolution: "tract".into(),
                 })
                 .collect();
 
@@ -142,6 +144,7 @@ fn main() {
                         balance_tolerance: None,
                         write_manifest: false,
                         force: false,
+                        resolution: "tract".into(),
                     })
                     .collect();
 
@@ -223,7 +226,7 @@ fn main() {
         Commands::Migrate(args) => {
             let output_dir = std::path::PathBuf::from(format!("outputs/{}", args.version));
             let base = output_dir.join(&args.year);
-            run_migrate(&base, &args.state, &args.label)
+            run_migrate(&base, &args.state, &args.label, args.force)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
             eprintln!("[OK] migrated {} -> plans/{}", args.state, args.label);
         }

@@ -164,6 +164,7 @@ mod tests {
             label: "wa_house_old".into(),
             version: "v1".into(),
             year: "2020".into(),
+            force: false,
         };
         assert_eq!(args.state, "WA");
         assert_eq!(args.label, "wa_house_old");

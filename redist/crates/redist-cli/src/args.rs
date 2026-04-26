@@ -67,6 +67,16 @@ pub enum Resolution {
     Block,
 }
 
+impl std::fmt::Display for Resolution {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Tract      => write!(f, "tract"),
+            Self::BlockGroup => write!(f, "block_group"),
+            Self::Block      => write!(f, "block"),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum MetisObjective {
     #[value(name = "cut")]
@@ -185,6 +195,9 @@ pub struct MigrateArgs {
     /// Census year
     #[arg(short = 'y', long, default_value = "2020")]
     pub year: String,
+    /// Overwrite an existing plan directory without error
+    #[arg(long, default_value_t = false)]
+    pub force: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -307,9 +320,10 @@ pub struct ImportArgs {
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct AnalyzeArgs {
-    /// Two-letter state code (e.g., VT, AL)
+    /// Two-letter state code (e.g., VT, AL). Optional when --label is provided
+    /// (state is then read from the plan manifest).
     #[arg(long)]
-    pub state: String,
+    pub state: Option<String>,
 
     /// Census year (default: 2020)
     #[arg(short = 'y', long, default_value = "2020")]
@@ -963,12 +977,20 @@ mod tests {
     #[test]
     fn test_analyze_defaults() {
         let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
-        assert_eq!(args.state, "VT");
+        assert_eq!(args.state.as_deref(), Some("VT"));
         assert_eq!(args.year, Year::Y2020);
         assert_eq!(args.version, "v1");
         assert!(!args.force);
         assert!(!args.allow_imbalance);
         assert!(args.types.contains(&redist_analysis::AnalyzerType::All));
+    }
+
+    #[test]
+    fn test_analyze_state_optional_without_state() {
+        // --state is now optional; --label alone is sufficient
+        let args = AnalyzeArgs::parse_from(["analyze", "--label", "wa_house_test"]);
+        assert!(args.state.is_none());
+        assert_eq!(args.label.as_deref(), Some("wa_house_test"));
     }
 
     #[test]

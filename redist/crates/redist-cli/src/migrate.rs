@@ -5,7 +5,7 @@
 ///
 /// A minimal manifest.json is written to the destination.
 use std::path::Path;
-use redist_report::{PlanManifest, create_plan_dir, write_manifest_atomic};
+use redist_report::{PlanManifest, create_plan_dir, write_manifest_atomic, check_plan_collision};
 
 /// Migrate a legacy state directory into a labeled plan directory.
 ///
@@ -15,7 +15,8 @@ use redist_report::{PlanManifest, create_plan_dir, write_manifest_atomic};
 /// `state_identifier` can be:
 ///   - a 2-letter state code ("WA") — will look up full name via manifest
 ///   - a full lowercase state name ("washington")
-pub fn run_migrate(base: &Path, state_identifier: &str, label: &str) -> anyhow::Result<()> {
+/// `force`: if true, overwrite an existing plan directory without error.
+pub fn run_migrate(base: &Path, state_identifier: &str, label: &str, force: bool) -> anyhow::Result<()> {
     // Try the identifier as given (lowercase), then try to resolve via manifest
     let candidate_lower = state_identifier.to_lowercase();
     let source_dir_direct = base.join("states").join(&candidate_lower);
@@ -41,6 +42,10 @@ pub fn run_migrate(base: &Path, state_identifier: &str, label: &str) -> anyhow::
             }
         }
     };
+
+    // Check for collision before creating the target directory
+    let plan_dir_candidate = base.join("plans").join(label);
+    check_plan_collision(&plan_dir_candidate, force)?;
 
     // Create the target plan directory structure
     let plan_dir = create_plan_dir(base, label)?;
@@ -161,7 +166,7 @@ mod tests {
         )
         .unwrap();
         // Run migrate using the full name (no manifest needed in test env)
-        run_migrate(tmp.path(), "washington", "wa_congressional_2020").unwrap();
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
         // Verify plan dir exists with assignments
         let plan_dir = tmp.path().join("plans").join("wa_congressional_2020");
         assert!(plan_dir.join("final_assignments.json").exists());
@@ -171,7 +176,7 @@ mod tests {
     fn test_migrate_creates_minimal_manifest() {
         let tmp = TempDir::new().unwrap();
         setup_legacy_state_dir(tmp.path(), "washington");
-        run_migrate(tmp.path(), "washington", "wa_congressional_2020").unwrap();
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
         let manifest_path = tmp
             .path()
             .join("plans")
@@ -189,8 +194,30 @@ mod tests {
     #[test]
     fn test_migrate_nonexistent_state_errors() {
         let tmp = TempDir::new().unwrap();
-        let result = run_migrate(tmp.path(), "zzznotastate", "zz_plan");
+        let result = run_migrate(tmp.path(), "zzznotastate", "zz_plan", false);
         assert!(result.is_err());
         assert!(result.unwrap_err().to_string().contains("not found"));
+    }
+
+    #[test]
+    fn test_migrate_collision_without_force_errors() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "washington");
+        // First migrate succeeds
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
+        // Second without --force must fail with "exists" in the message
+        let result = run_migrate(tmp.path(), "washington", "wa_congressional_2020", false);
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string().to_lowercase();
+        assert!(msg.contains("exists"), "expected 'exists' in: {msg}");
+    }
+
+    #[test]
+    fn test_migrate_force_allows_overwrite() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "washington");
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
+        // Second with --force must succeed
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", true).unwrap();
     }
 }

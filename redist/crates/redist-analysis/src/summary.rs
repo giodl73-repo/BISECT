@@ -12,7 +12,8 @@ pub struct SummaryDistrict {
     pub total_pop: Option<i64>,
     pub ideal_pop: Option<i64>,
     pub pop_deviation_pct: Option<f64>,
-    pub pop_balance_ok: Option<bool>,   // |deviation| <= 0.005
+    /// Whether |deviation| <= balance_tolerance from AnalyzerContext.
+    pub pop_balance_ok: Option<bool>,
     pub pct_minority: Option<f64>,
     pub is_majority_minority: Option<bool>,
     pub dem_pct: Option<f64>,
@@ -34,12 +35,13 @@ pub fn merge_district(
     pol: Option<&PoliticalDistrict>,
     ideal_pop: Option<i64>,
     urban: Option<&UrbanDistrict>,
+    balance_tolerance: f64,
 ) -> SummaryDistrict {
     let total_pop = demo.map(|d| d.total_pop);
     let pop_deviation_pct = total_pop.and_then(|tp| ideal_pop.map(|ip| {
         if ip == 0 { 0.0 } else { (tp - ip).abs() as f64 / ip as f64 }
     }));
-    let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= 0.005);
+    let pop_balance_ok = pop_deviation_pct.map(|dev| dev <= balance_tolerance);
 
     SummaryDistrict {
         district,
@@ -98,6 +100,7 @@ impl Analyzer for SummaryAnalyzer {
                 pol_map.get(&d).copied(),
                 ideal_pop,
                 urban_map.get(&d).copied(),
+                ctx.balance_tolerance,
             )
         }).collect();
         districts.sort_by_key(|d| d.district);
@@ -166,8 +169,8 @@ mod tests {
         let d2 = make_demo(2, 1010, 0.1);
         let ideal = Some((1000 + 1010) / 2);
 
-        let s1 = merge_district(1, Some(&d1), None, ideal, None);
-        let s2 = merge_district(2, Some(&d2), None, ideal, None);
+        let s1 = merge_district(1, Some(&d1), None, ideal, None, 0.005);
+        let s2 = merge_district(2, Some(&d2), None, ideal, None, 0.005);
 
         assert_eq!(s1.ideal_pop, ideal);
         assert!(s1.pop_balance_ok.unwrap_or(false));
@@ -181,8 +184,8 @@ mod tests {
         let d2 = make_demo(2, 1100, 0.1);
         let ideal = Some((1000 + 1100) / 2);  // 1050
 
-        let s1 = merge_district(1, Some(&d1), None, ideal, None);
-        let s2 = merge_district(2, Some(&d2), None, ideal, None);
+        let s1 = merge_district(1, Some(&d1), None, ideal, None, 0.005);
+        let s2 = merge_district(2, Some(&d2), None, ideal, None, 0.005);
 
         assert!(!s1.pop_balance_ok.unwrap_or(true));
         assert!(!s2.pop_balance_ok.unwrap_or(true));
@@ -194,11 +197,27 @@ mod tests {
     }
 
     #[test]
+    fn test_summary_balance_tolerance_respected() {
+        // District with 4% deviation passes at 5% tolerance (state legislative) but
+        // fails at 0.5% tolerance (congressional).
+        let d1 = make_demo(1, 1000, 0.0);
+        let d2 = make_demo(2, 1042, 0.0); // ~4% over ideal of 1021
+        let ideal = Some(1021i64);
+
+        let strict = merge_district(1, Some(&d1), None, ideal, None, 0.005);
+        let loose  = merge_district(1, Some(&d1), None, ideal, None, 0.05);
+
+        assert!(!strict.pop_balance_ok.unwrap_or(true), "4% should fail at 0.5% tolerance");
+        assert!(loose.pop_balance_ok.unwrap_or(false), "4% should pass at 5% tolerance");
+        let _ = d2; // suppress unused warning
+    }
+
+    #[test]
     fn test_merge_district_with_all_sub_results() {
         let demo = make_demo(1, 1000, 0.05);
         let pol = make_pol(1, 0.55);
         let urban = make_urban(1, Some("Burlington"), 45000);
-        let s = merge_district(1, Some(&demo), Some(&pol), Some(1005), Some(&urban));
+        let s = merge_district(1, Some(&demo), Some(&pol), Some(1005), Some(&urban), 0.005);
         assert_eq!(s.district, 1);
         assert!((s.dem_pct.unwrap() - 0.55).abs() < 1e-6);
         assert_eq!(s.largest_city.as_deref(), Some("Burlington"));
@@ -208,7 +227,7 @@ mod tests {
     fn test_merge_district_partial_inputs_no_panic() {
         // Only demographic provided
         let demo = make_demo(1, 800, 0.2);
-        let s = merge_district(1, Some(&demo), None, None, None);
+        let s = merge_district(1, Some(&demo), None, None, None, 0.005);
         assert!(s.dem_pct.is_none());
         assert!(s.largest_city.is_none());
         assert_eq!(s.total_pop, Some(800));
