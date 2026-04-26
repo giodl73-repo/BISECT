@@ -1155,3 +1155,16 @@ fn test_label_force_flag_allows_overwrite() {
 10. Task 10 — L2 acceptance tests (depends on all above)
 
 Tasks 1+3+4 can run in parallel. Tasks 2 and 5 and 6 each depend on one prior task only, so the critical path is 1→2→6 and 3+4→5→7→8→9→10.
+
+---
+
+## Plan Board Review Amendments (2026-04-26)
+
+**[BENCHMARK] CRITICAL — SHA-256 fixture must use real file hash**
+Test fixtures that hardcode `tiger_sha256 = "a".repeat(64)` let every hash test pass trivially. Fix: add one L0 test that calls `sha256_file()` on a real temp file containing `b"hello world"` and asserts the known SHA-256 `b94d27b9934d3e08a52e52d7da7dabfac484efe04294e576efe49e5d5ee24a9a` against the result. This is the only test that actually exercises file I/O in the hashing path.
+
+**[TRENCH] CRITICAL — SHA-256 of TIGER file blocks main thread**
+`sha256_file()` reads the entire shapefile into memory synchronously. CA's TIGER .shp is ~50MB — this blocks a worker thread for several seconds during multi-state parallel runs. Fix: compute incrementally using `sha2::Digest::update()` in a streaming 64KB-chunk loop so the thread is not held while reading. Do NOT use `tokio::spawn_blocking` — the existing runner is Rayon, not tokio.
+
+**[COVENANT] CRITICAL — Manifest write is not atomic**
+`manifest.json` is written after `final_assignments.json` with no atomic swap. A killed process leaves assignments without a manifest; `check_plan_collision()` (which checks only for `manifest.json`) treats the directory as empty and silently overwrites. Fix: write manifest to `manifest.tmp` then `std::fs::rename()` atomically. On startup, detect `manifest.tmp` and exit: `ERROR: Incomplete plan '{label}' detected (manifest.tmp exists). Delete the plan directory and re-run.`

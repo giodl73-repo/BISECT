@@ -1398,3 +1398,13 @@ fn test_balance_and_nesting_exit_code() {
 10. Task 10 — L2 acceptance tests (depends on all above)
 
 Tasks 1, 2, 3, 4, 5 are all independent and can run in parallel. Task 6 depends on 3+4. Tasks 7 and 8 are sequential. Tasks 9 and 10 must wait for everything upstream.
+
+---
+
+## Plan Board Review Amendments (2026-04-26)
+
+**[TRENCH] CRITICAL — Centroid PIP ambiguity for boundary-straddling tracts**
+Tracts whose centroid falls in the wrong district (common in dense urban areas where tracts straddle enacted district lines) are misassigned by PIP — nearest-polygon fallback only helps tracts whose centroid is entirely outside all polygons, not the ambiguous-centroid case. Fix: document this known bias — add `pip_method_note: "centroid PIP; boundary-straddling tracts may be misassigned"` and `fallback_count: N` to `enacted_assignments.json` metadata so practitioners can audit coverage. Accept this as a known limitation; the alternative (full polygon intersection) is orders of magnitude slower.
+
+**[BENCHMARK] CRITICAL — Contiguity exit code test is skipped**
+`test_contiguity_exits_2_on_violation` is `pytest.skip()`'d — the most important test (does the bitfield exit code actually propagate to the process exit code?) is never run. Fix: implement the fixture as a `conftest.py` helper `make_disconnected_plan(state, year, version, label)` that writes a known-bad `final_assignments.json` where one district's tracts are split across non-adjacent regions. Remove the skip; this test must pass before the task is marked complete.

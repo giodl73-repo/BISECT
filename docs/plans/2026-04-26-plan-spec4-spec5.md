@@ -1040,3 +1040,16 @@ No new crates required for `redist-suite` (uses existing `serde_json`, `csv`, `t
 | 8 | L2 acceptance tests (partisan + suite) | 7 L2 acceptance |
 
 **Total new tests: ~38** (28 L0 unit + 3 L0 integration + 7 L2 acceptance)
+
+---
+
+## Plan Board Review Amendments (2026-04-26)
+
+**[TRENCH] CRITICAL — Bootstrap CI blocks thread for large chambers**
+Three sequential `bootstrap_ci()` calls with 1000 resamples each on CA (52 districts) = ~156,000 resample operations, blocking the analyze thread for potentially 10+ seconds with no progress signal. Fix: (1) make `--bootstrap-samples` a CLI flag (default 1000); (2) print `"Running bootstrap CI ({n} samples)..."` before the calls; (3) document expected wall time in the spec. The calls stay on the main thread — no async needed, but the user must know it's running.
+
+**[MERIDIAN] CRITICAL — Primary-component tie-breaking is non-deterministic**
+`build_chamber_adjacency()` breaks ties between equal-size components by "first found" (undefined order in a `HashMap`). Two plans with identical geography but different internal tract ordering produce different senate adjacency graphs — non-reproducible senate draws even with a fixed seed. Fix: break ties deterministically by minimum GEOID lexicographic order. Add test: two components of size 1 with GEOIDs "53001" and "53002" → component containing "53001" is always selected as primary.
+
+**[WARD] CONCERN — "Variable" nesting ratio has no operational definition**
+`IL=variable` in the constitutional ratio table requires a concrete `required_ratio: usize` to be passed to `validate_nesting()`, but no value is defined. Fix: when ratio is `Variable`, require `--nest-ratio N` explicitly; exit non-zero without it: `ERROR: IL nesting ratio is variable by statute. Specify --nest-ratio N:M (e.g. --nest-ratio 2:1).`
