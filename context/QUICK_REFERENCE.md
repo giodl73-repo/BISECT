@@ -1,10 +1,39 @@
 # Quick Reference
 
-**Updated**: 2026-01-18
+**Updated**: 2026-04-25
 
-## Commands
+## Rust CLI (`redist`) — Recommended for All Redistricting Runs
 
-### Download Orchestrator (NEW - Parallel Downloads)
+```bash
+# Build once
+cargo build --release --manifest-path redist/Cargo.toml
+
+# Download census data
+redist fetch --year 2020                              # TIGER + redistricting
+redist fetch --year 2020 --release                   # + adjacency pkls from GitHub Releases
+python scripts/data/generate_adj_bin.py --year 2020  # convert to fast .adj.bin
+
+# Run redistricting
+redist state --state VT --year 2020 --version V3          # single state
+redist states --year 2020 --version V3 \
+  --output-dir outputs/V3 --workers 8                     # all 50 states (~15 s)
+redist run --year 2020 --version V3 --workers 12           # full pipeline
+redist run --version V3 --workers 12                       # all 3 years
+
+# VRA mode (majority-minority districts)
+redist state --state AL --year 2020 --version V3 --partition-mode metis-vra
+
+# Check what would be downloaded
+redist fetch --year 2020 --check-only
+```
+
+Full reference: [`docs/REDIST_CLI.md`](../docs/REDIST_CLI.md)
+
+---
+
+## Python Pipeline (Development / Analysis)
+
+### Download Orchestrator (Parallel Downloads)
 ```bash
 # Check what data exists vs needs downloading
 dl                                                                # Check all stages, all years (default)

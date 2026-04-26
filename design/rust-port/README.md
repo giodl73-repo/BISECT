@@ -1,8 +1,9 @@
 # Rust CLI Port Plan
 
-**Status**: Planning — reviewed by cartographic roles 2026-04-24  
+**Status**: Complete — all phases shipped 2026-04-25  
 **Author**: Gio Della-Libera  
-**Scope**: Progressive replacement of the Python redistricting pipeline with a Rust CLI
+**Scope**: Progressive replacement of the Python redistricting pipeline with a Rust CLI  
+**Result**: `redist` binary, 50-state run in ~15.5 s (~213× faster than Python). See `migration-log.md`.
 
 ---
 

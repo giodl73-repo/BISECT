@@ -1,4 +1,5 @@
 """
+[RESEARCH EXPERIMENT — Paper 2 only]
 Recursive bisection implementation for Paper 2.
 
 Implements:

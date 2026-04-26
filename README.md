@@ -349,11 +349,27 @@ python scripts/web/deploy_docs.py --version V3 --year 2000 --out dashboard_2000.
 python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
 ```
 
-## Rust Port (in progress)
+## Rust CLI (recommended for production runs)
 
-A progressive Rust rewrite is planned — see [`design/rust-port/`](design/rust-port/). The goal is a single `redist` binary that runs the full pipeline without a Python dependency. The Python pipeline continues working throughout the migration via PyO3 bindings. The adaptive boost formula moves to `redist-core` as the single ground-truth implementation shared by both the CLI and Python pipeline.
+The `redist` binary is a complete Rust rewrite of the redistricting pipeline — **~213× faster** than Python
+for full 50-state runs (55 min → 15.5 s). It is the recommended entry point for running redistricting.
 
-Phases: Scaffold → Core algorithm → Adjacency data layer → CLI binary → Analysis & dashboard.
+```bash
+cargo build --release --manifest-path redist/Cargo.toml
+
+redist fetch --year 2020                              # Download census data
+python scripts/data/generate_adj_bin.py --year 2020  # Convert adjacency to fast format
+redist states --year 2020 --version V3 \
+  --output-dir outputs/V3 --workers 8                # All 50 states in ~15 s
+```
+
+See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for full command reference.
+
+**Architecture** (`redist/crates/`): `redist-core` (algorithm) · `redist-data` (adjacency, TIGER) ·
+`redist-cli` (binary) · `redist-analysis` (compactness, VRA) · PyO3 bindings for Python interop.
+
+The Python pipeline (`scripts/pipeline/`) remains available for development and analysis work.
+Phase plan and benchmarks: [`design/rust-port/`](design/rust-port/).
 
 ## License
 

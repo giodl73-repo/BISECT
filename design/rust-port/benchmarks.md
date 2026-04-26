@@ -24,15 +24,15 @@ Baseline measurements from current Python pipeline (2026-04-24, Windows 11, 12-c
 | National post-processing | ~8 min | 9 parallel tasks |
 | Dashboard generation (V4) | ~4 min | 308 image embeds |
 
-## Rust targets by phase
+## Rust targets by phase — **ACHIEVED**
 
-| Phase | Stage improved | Target | Mechanism |
-|---|---|---|---|
-| Phase 2 | Adjacency build | < 4 min | Rayon-parallel intersection calls |
-| Phase 3 | Full 50-state run | < 25 min | Phase 2 savings + more parallel workers |
-| Phase 5 | Full 50-state run | < 10 min | Native METIS eliminates subprocess overhead |
+| Phase | Stage improved | Target | Actual | Mechanism |
+|---|---|---|---|---|
+| Phase 2 | Adjacency build | < 4 min | eliminated via `.adj.bin` | Pre-built adjacency, pure Rust load |
+| Phase 3 | Full 50-state run | < 25 min | **15.5 s** | Rayon parallel + native adjacency |
+| Phase 5 | Full 50-state run | < 10 min | skipped (not needed) | METIS subprocess is already ms-scale |
 
-The 55 min → 10 min target requires Phase 5. Phases 1-4 alone realistically achieve ~20-25 min.
+**Final result**: 55 min (Python) → 15.5 s (Rust, 8 workers) = **213× speedup**. Phase 5 unnecessary.
 
 ## Measurement protocol
 

@@ -5,7 +5,7 @@
 ## Project Context
 Congressional redistricting via METIS recursive bisection → 435 districts, 50 states, 3 census years (2000/2010/2020). Purely algorithmic (no gerrymandering). Goal: compact + population-balanced districts.
 
-**Stack**: Python 3.13+, METIS, GeoPandas, Matplotlib | **Data**: Census tracts (~40GB) | **Output**: Maps/CSVs (~20GB/run)
+**Stack**: Rust (`redist` CLI, ~213× faster) + Python 3.13+ (analysis/dev) | METIS, GeoPandas, Matplotlib | **Data**: Census tracts (~40GB) | **Output**: Maps/CSVs (~20GB/run)
 
 ## Critical Files
 
