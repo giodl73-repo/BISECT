@@ -264,11 +264,20 @@ pub fn run_all_splits(
     ufactor: u32,
     niter: u32,
     seed: Option<u64>,
+    // If Some, writes intermediate/depth_{d:02}/assignments.json after each round.
+    intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
     let n = adjacency.len();
 
     // Single-district: all tracts to district 1, no METIS call
     if num_districts == 1 {
+        // Write depth-00 as the trivial single-region state
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
 
@@ -316,6 +325,22 @@ pub fn run_all_splits(
             node_tracts.insert(format!("{path}0"), left);
             node_tracts.insert(format!("{path}1"), right);
         }
+
+        // Write intermediate round: current node_tracts state as tract→region_id
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            // Sort nodes for deterministic region numbering
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
     }
 
     // Sort leaves by (depth, path) — NOT plain lex.
@@ -336,6 +361,15 @@ pub fn run_all_splits(
         ));
     }
     Ok(assignments)
+}
+
+/// Write one intermediate round's assignments to `{round_dir}/assignments.json`.
+/// Format: `{"tract_index": region_id, ...}` — mirrors final_assignments.json.
+fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize>) -> Result<(), String> {
+    let path = round_dir.join("assignments.json");
+    let json = serde_json::to_string(assignments)
+        .map_err(|e| format!("serialize intermediate: {e}"))?;
+    std::fs::write(&path, json).map_err(|e| format!("write intermediate: {e}"))
 }
 
 #[cfg(test)]
@@ -372,7 +406,7 @@ mod tests {
         let adj = vec![vec![]; n];
         let vw = vec![1000i64; n];
         let ew = HashMap::new();
-        let assignments = run_all_splits(&adj, &vw, &ew, 1, 5, 100, None)
+        let assignments = run_all_splits(&adj, &vw, &ew, 1, 5, 100, None, None)
             .expect("single district should not invoke METIS");
         assert_eq!(assignments.len(), n);
         assert!(assignments.values().all(|&d| d == 1));
@@ -385,7 +419,7 @@ mod tests {
         let vw = vec![1000i64, 1000, 1000, 1000];
         let ew = HashMap::new();
 
-        let assignments = run_all_splits(&adj, &vw, &ew, 2, 5, 100, Some(42)).unwrap(); // ufactor=5 converted internally
+        let assignments = run_all_splits(&adj, &vw, &ew, 2, 5, 100, Some(42), None).unwrap();
 
         assert_eq!(assignments.len(), 4, "all tracts assigned");
         assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");

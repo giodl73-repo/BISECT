@@ -181,8 +181,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         "{}: {} into {} districts", cfg.state_code, method, num_districts
     ));
 
+    // Intermediate rounds go in {state_dir}/intermediate/
+    let state_dir = cfg.output_dir.join("states").join(state_name);
+    let intermediate_dir = state_dir.join("intermediate");
+    std::fs::create_dir_all(&intermediate_dir)
+        .map_err(|e| format!("cannot create intermediate dir: {e}"))?;
+
     let assignments = if use_nway {
-        // N-way: single gpmetis call with nparts=k, equal target weights
+        // N-way: single gpmetis call with nparts=k — no intermediate rounds
         run_nway_partition(
             &graph.adjacency,
             &graph.vertex_weights,
@@ -201,6 +207,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             cfg.ufactor,
             cfg.niter,
             cfg.seed,
+            Some(&intermediate_dir),
         ).map_err(|e| format!("bisection failed: {e}"))?
     };
 
