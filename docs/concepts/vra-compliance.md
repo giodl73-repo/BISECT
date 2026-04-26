@@ -79,7 +79,8 @@ multi_constraint=vra_mode  # removed from recursive_bisection.py
 
 ## Files
 
+- `redist/crates/redist-core/src/vra.rs` — **single authoritative formula** (`build_vra_edge_weights`); both CLI and Python pipeline call this via PyO3
+- `redist/crates/redist-analysis/src/vra_analysis.rs` — `analyze_mm_districts()` (Rust)
 - `src/apportionment/partition/recursive_bisection.py` — `vra_mode` flag, `multi_constraint` derived from `vra_target_tree`
-- `scripts/pipeline/run_state_redistricting.py` — VRA edge weight construction, adaptive boost formula
-- `src/apportionment/partition/vra_utils.py` — `analyze_mm_districts()`, demographic loading
+- `src/apportionment/partition/vra_utils.py` — `analyze_mm_districts()` (Python, legacy path)
 - Papers: D.0 (methodology), D.1 (42% threshold), D.3 (compactness tradeoff)

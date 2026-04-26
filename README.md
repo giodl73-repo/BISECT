@@ -209,7 +209,7 @@ python setup_data.py --inputs
 
 # Download pre-computed results (skip running the pipeline)
 python setup_data.py --outputs v3    # edge-weighted, 50 states, 2020
-python setup_data.py --outputs v4    # VRA multi-constraint, 50 states, 2020
+python setup_data.py --outputs v4    # VRA edge-weighted (metis-vra), 50 states, 2020
 
 # Download both outputs
 python setup_data.py --all
@@ -260,7 +260,7 @@ run -y 2020 -v v1 -st MN AL
 runtest -y 2020 -v test -st VT
 ```
 
-`run` and `runtest` are `doskey` aliases for `run_redistricting.bat` and `run_test.bat`. See `run -h` for all flags.
+`run` and `runtest` are `doskey` aliases configured by `setup_env.bat`. See `run -h` for all flags.
 
 ### Run a single state
 

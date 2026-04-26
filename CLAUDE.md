@@ -33,7 +33,7 @@ Congressional redistricting via METIS recursive bisection → 435 districts, 50 
 - `docs/REDIST_CLI.md` - Full CLI reference (commands, flags, env vars)
 - `scripts/data/generate_adj_bin.py` - Convert pkl adjacency files to fast `.adj.bin` format
 
-**Entry**: `run_redistricting.bat`, `deploy_web.bat`, `CANCEL.bat`
+**Entry**: `redist` binary (primary), `setup_env.bat` (sets doskey aliases for Python pipeline), `scripts/web/deploy_docs.py` (dashboard)
 
 ## Structure
 ```

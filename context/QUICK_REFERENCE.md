@@ -135,7 +135,10 @@ pytest tests/unit/test_file.py::test_func -v       # Specific test
 
 ### Emergency
 ```bash
-CANCEL.bat  # Kill all Python processes (Windows)
+# Stop Python pipeline (Windows)
+taskkill /F /IM python.exe
+
+# Stop Rust CLI — just Ctrl+C (signal propagates to worker threads)
 ```
 
 ## File Paths

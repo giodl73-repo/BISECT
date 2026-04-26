@@ -44,7 +44,7 @@ adjacency/{year}/{state}_adjacency_{year}.pkl      # NetworkX graph
 **Output** (`outputs/us_{year}_{version}/`):
 ```
 states/{state}/
-  ├─ data/                    # final_assignments.pkl, district_summary.csv, cities, rounds
+  ├─ data/                    # final_assignments.json (Rust) / .pkl (Python), district_summary.csv, cities, rounds
   ├─ maps/                    # all_districts.png, districts/, rounds/
   ├─ political/               # district_political.csv, maps/
   ├─ demographic/             # demographics, maps/
@@ -205,8 +205,7 @@ Main Process (Coordinator)
 
 ```bash
 # First run: Full (creates marker)
-run_redistricting.bat -v v1
-run -v v1                                             # Short: doskey alias
+run -v v1                                             # doskey alias (setup_env.bat)
 
 # Second run: Fast! (sees marker, skips states)
 run -v v1
