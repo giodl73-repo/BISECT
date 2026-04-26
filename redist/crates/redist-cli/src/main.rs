@@ -5,6 +5,8 @@ use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, dow
 use redist_cli::analyze::run_analyze;
 use redist_cli::aggregate::run_aggregate;
 use redist_cli::map_cmd::run_map;
+use redist_cli::validate::run_validate;
+use redist_cli::migrate::run_migrate;
 
 fn main() {
     let cli = Cli::parse();
@@ -23,6 +25,14 @@ fn main() {
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from(format!("outputs/{}", args.version)));
 
+            // Warn for non-congressional chambers (state tolerance applies)
+            if args.chamber != "congressional" {
+                eprintln!(
+                    "NOTE: State legislative balance tolerance set to 5.0%. \
+                     Verify your state's constitutional standard."
+                );
+            }
+
             let results = run_states_parallel(vec![StateConfig {
                 state_code: state_code.clone(),
                 state_name,
@@ -38,6 +48,14 @@ fn main() {
                 ufactor: args.ufactor,
                 niter: args.niter,
                 seed: args.seed,
+                // Spec 1 fields
+                num_districts_override: args.districts,
+                chamber: args.chamber.clone(),
+                label: args.label.clone(),
+                population_source: args.population_source.clone(),
+                balance_tolerance: args.balance_tolerance.map(|t| t / 100.0),
+                write_manifest: args.manifest,
+                force: args.force,
             }], 1);
             for r in &results {
                 if !r.success {
@@ -67,6 +85,14 @@ fn main() {
                     position: (i + 2) as i32,
                     debug: args.debug, reset: false, reprocess: args.reprocess,
                     ufactor: 5, niter: 100, seed: None,
+                    // Spec 1 defaults for bulk runs
+                    num_districts_override: None,
+                    chamber: "congressional".into(),
+                    label: None,
+                    population_source: "total".into(),
+                    balance_tolerance: None,
+                    write_manifest: false,
+                    force: false,
                 })
                 .collect();
 
@@ -105,6 +131,14 @@ fn main() {
                         position: (i + 2) as i32,
                         debug: args.debug, reset: args.reset, reprocess: args.reprocess,
                         ufactor: 5, niter: 100, seed: None,
+                        // Spec 1 defaults for bulk runs
+                        num_districts_override: None,
+                        chamber: "congressional".into(),
+                        label: None,
+                        population_source: "total".into(),
+                        balance_tolerance: None,
+                        write_manifest: false,
+                        force: false,
                     })
                     .collect();
 
@@ -174,6 +208,21 @@ fn main() {
                         .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
                 }
             }
+        }
+
+        // ── redist validate: validate a .rplan file ───────────────────────────
+        Commands::Validate(args) => {
+            run_validate(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist migrate: copy legacy state plan into plans/{label}/ tree ───
+        Commands::Migrate(args) => {
+            let output_dir = std::path::PathBuf::from(format!("outputs/{}", args.version));
+            let base = output_dir.join(&args.year);
+            run_migrate(&base, &args.state, &args.label)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+            eprintln!("[OK] migrated {} → plans/{}", args.state, args.label);
         }
     }
 }

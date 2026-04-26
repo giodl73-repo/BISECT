@@ -135,6 +135,46 @@ pub enum Commands {
     Map(MapArgs),
     /// Merge all state analysis outputs into national datasets
     Aggregate(AggregateArgs),
+    /// Validate a .rplan file for format correctness and coverage
+    Validate(ValidateArgs),
+    /// Copy a legacy state plan into the plans/{label}/ tree
+    Migrate(MigrateArgs),
+}
+
+// ---------------------------------------------------------------------------
+// `redist validate` — validate a .rplan file
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ValidateArgs {
+    /// Path to .rplan file to validate
+    #[arg(long)]
+    pub file: std::path::PathBuf,
+    /// Strict mode: fail on warnings
+    #[arg(long, default_value_t = false)]
+    pub strict: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist migrate` — copy legacy state plan into plans/{label}/ tree
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct MigrateArgs {
+    /// Source state code (e.g. WA)
+    #[arg(long)]
+    pub state: String,
+    /// Target label for the new plan directory
+    #[arg(long)]
+    pub label: String,
+    /// Version directory (e.g. v1)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -403,6 +443,36 @@ pub struct StateArgs {
     /// METIS random seed for reproducibility (default: random)
     #[arg(long)]
     pub seed: Option<u64>,
+
+    // ── Spec 1: custom parameters ─────────────────────────────────────────────
+
+    /// Override district count (enables non-congressional chambers)
+    #[arg(long)]
+    pub districts: Option<usize>,
+
+    /// Chamber type: congressional, house, senate, custom
+    #[arg(long, default_value = "congressional")]
+    pub chamber: String,
+
+    /// Human label for this plan run (default: {state}_{chamber}_{year})
+    #[arg(long)]
+    pub label: Option<String>,
+
+    /// Population source: total, vap, cvap
+    #[arg(long, default_value = "total")]
+    pub population_source: String,
+
+    /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
+    #[arg(long)]
+    pub balance_tolerance: Option<f64>,
+
+    /// Write manifest.json alongside outputs
+    #[arg(long, default_value_t = true)]
+    pub manifest: bool,
+
+    /// Overwrite existing plan without error
+    #[arg(long, default_value_t = false)]
+    pub force: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -640,6 +710,80 @@ mod tests {
         assert!(args.types.contains(&MapType::Districts));
         assert!(args.types.contains(&MapType::Rounds));
     }
+
+    // --- Task 7: Spec 1 flag parsing tests ---
+
+    fn parse_state_args(extra: &[&str]) -> StateArgs {
+        let mut base = vec!["redist", "--state", "WA", "--year", "2020", "--version", "v1"];
+        base.extend_from_slice(extra);
+        StateArgs::try_parse_from(base).expect("failed to parse StateArgs")
+    }
+
+    #[test]
+    fn test_districts_flag_parsed() {
+        let args = parse_state_args(&["--districts", "98"]);
+        assert_eq!(args.districts, Some(98));
+    }
+
+    #[test]
+    fn test_chamber_flag_default_is_congressional() {
+        let args = parse_state_args(&[]);
+        assert_eq!(args.chamber, "congressional");
+    }
+
+    #[test]
+    fn test_chamber_flag_parsed() {
+        let args = parse_state_args(&["--chamber", "house"]);
+        assert_eq!(args.chamber, "house");
+    }
+
+    #[test]
+    fn test_label_flag_parsed() {
+        let args = parse_state_args(&["--label", "wa_house_draft1"]);
+        assert_eq!(args.label.as_deref(), Some("wa_house_draft1"));
+    }
+
+    #[test]
+    fn test_balance_tolerance_flag_parsed() {
+        let args = parse_state_args(&["--balance-tolerance", "5.0"]);
+        assert!((args.balance_tolerance.unwrap() - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_population_source_flag_parsed() {
+        let args = parse_state_args(&["--population-source", "vap"]);
+        assert_eq!(args.population_source, "vap");
+    }
+
+    #[test]
+    fn test_force_flag_default_false() {
+        let args = parse_state_args(&[]);
+        assert!(!args.force);
+    }
+
+    #[test]
+    fn test_force_flag_set() {
+        let args = parse_state_args(&["--force"]);
+        assert!(args.force);
+    }
+
+    #[test]
+    fn test_population_source_default_is_total() {
+        let args = parse_state_args(&[]);
+        assert_eq!(args.population_source, "total");
+    }
+
+    #[test]
+    fn test_districts_default_is_none() {
+        let args = parse_state_args(&[]);
+        assert_eq!(args.districts, None);
+    }
+
+    #[test]
+    fn test_label_default_is_none() {
+        let args = parse_state_args(&[]);
+        assert!(args.label.is_none());
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -710,3 +854,4 @@ pub struct AggregateArgs {
     #[arg(long)]
     pub force: bool,
 }
+

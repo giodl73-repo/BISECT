@@ -7,6 +7,8 @@ pub mod demographics;
 pub mod fetch;
 pub mod geometry;
 pub mod map_cmd;
+pub mod migrate;
 pub mod output;
 pub mod runner;
 pub mod status;
+pub mod validate;
