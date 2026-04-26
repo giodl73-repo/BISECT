@@ -65,6 +65,8 @@ pub struct StateConfig {
     pub write_manifest: bool,
     /// --force: overwrite existing plan without error
     pub force: bool,
+    /// Geographic resolution: "tract" (default), "block_group", "block"
+    pub resolution: String,
 }
 
 impl StateConfig {
@@ -154,25 +156,74 @@ pub fn run_states_parallel(configs: Vec<StateConfig>, workers: usize) -> Vec<Sta
 /// The manifest's `local_outputs_dir` + "V3/data/{year}/adjacency/" is the
 /// canonical adjacency store — the same path that `redist fetch --release` downloads to.
 /// Override with REDIST_MANIFEST env var for custom data layouts.
-fn resolve_adjacency_path(state_code_lower: &str, year: &str) -> Result<PathBuf, String> {
+///
+/// Returns `(path, effective_resolution)` where `effective_resolution` may differ from
+/// the requested resolution if a graceful fallback to tract occurred.
+fn resolve_adjacency_path(
+    state_code_lower: &str,
+    year: &str,
+    resolution: &str,
+) -> Result<(PathBuf, String), String> {
     let manifest = load_manifest()
         .map_err(|e| format!("cannot load manifest: {e}"))?;
-    let adj_filename = format!("{state_code_lower}_adjacency_{year}.pkl");
-    // Manifest points to the canonical adjacency store (outputs_dir/V3/data/{year}/adjacency/)
     let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
+
+    // Choose filename based on requested resolution
+    let (adj_filename, is_block_group) = match resolution {
+        "block_group" | "block-group" => (
+            format!("{state_code_lower}_bg_adjacency_{year}.pkl"),
+            true,
+        ),
+        _ => (
+            format!("{state_code_lower}_adjacency_{year}.pkl"),
+            false,
+        ),
+    };
+
+    // Try V3 then V4 canonical stores
     let canonical = outputs_dir
         .join("V3").join("data").join(year).join("adjacency")
         .join(&adj_filename);
     if canonical.exists() {
-        return Ok(canonical);
+        return Ok((canonical, resolution.to_string()));
     }
-    // Fallback: check V4 store (VRA adjacency lives there for some setups)
     let v4 = outputs_dir
         .join("V4").join("data").join(year).join("adjacency")
         .join(&adj_filename);
     if v4.exists() {
-        return Ok(v4);
+        return Ok((v4, resolution.to_string()));
     }
+
+    // Block group not found — graceful fallback to tract with clear warning
+    if is_block_group {
+        eprintln!(
+            "WARNING: Block group adjacency not found for {state_code_lower} {year}. \
+             Falling back to tract resolution.\n\
+             To use block groups: run \
+             python scripts/data/geography/build_bg_adjacency.py \
+             --year {year} --states {state_code_lower}"
+        );
+        let tract_filename = format!("{state_code_lower}_adjacency_{year}.pkl");
+        let tract_canonical = outputs_dir
+            .join("V3").join("data").join(year).join("adjacency")
+            .join(&tract_filename);
+        if tract_canonical.exists() {
+            return Ok((tract_canonical, "tract".to_string()));
+        }
+        let tract_v4 = outputs_dir
+            .join("V4").join("data").join(year).join("adjacency")
+            .join(&tract_filename);
+        if tract_v4.exists() {
+            return Ok((tract_v4, "tract".to_string()));
+        }
+        return Err(format!(
+            "adjacency pkl not found (block_group and tract both missing): {canonical}. \
+             Run: redist fetch --year {year} --release && \
+             python scripts/data/generate_adj_bin.py --year {year} --states {state_code_lower}",
+            canonical = tract_canonical.display()
+        ));
+    }
+
     Err(format!(
         "adjacency pkl not found: {canonical}. \
          Run: redist fetch --year {year} --release && \
@@ -236,7 +287,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // The manifest's local_outputs_dir + "V3/data/{year}/adjacency/" is the
     // canonical store. REDIST_MANIFEST can override this for custom setups.
     let state_code_lower = cfg.state_code.to_lowercase();
-    let adj_pkl = resolve_adjacency_path(&state_code_lower, &cfg.year)?;
+    let (adj_pkl, _effective_resolution) = resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
 
     let graph = load_adjacency_pkl(&adj_pkl)
         .map_err(|e| format!("adjacency load failed: {e}"))?;
@@ -446,6 +497,7 @@ mod tests {
             balance_tolerance: None,
             write_manifest: false,
             force: false,
+            resolution: "tract".to_string(),
         }
     }
 
@@ -576,5 +628,69 @@ mod tests {
             ..make_config("WA")
         };
         assert_eq!(cfg.effective_label(), "wa_custom_label");
+    }
+
+    // --- Resolution field tests ---
+
+    #[test]
+    fn test_resolution_default_is_tract() {
+        let cfg = make_config("VT");
+        assert_eq!(cfg.resolution, "tract");
+    }
+
+    #[test]
+    fn test_resolution_block_group_stored_in_config() {
+        let cfg = StateConfig {
+            resolution: "block_group".into(),
+            ..make_config("WA")
+        };
+        assert_eq!(cfg.resolution, "block_group");
+    }
+
+    #[test]
+    fn test_resolution_block_stored_in_config() {
+        let cfg = StateConfig {
+            resolution: "block".into(),
+            ..make_config("WA")
+        };
+        assert_eq!(cfg.resolution, "block");
+    }
+
+    #[test]
+    fn test_resolve_adjacency_path_tract_missing_returns_err() {
+        // With no data present (invalid path from manifest default), tract resolution
+        // should return an Err containing the expected filename pattern.
+        let result = resolve_adjacency_path("vt", "2020", "tract");
+        assert!(result.is_err(), "expected Err when adjacency not present");
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("vt_adjacency_2020.pkl") || msg.contains("cannot load manifest"),
+            "error message should reference tract filename or manifest: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_resolve_adjacency_path_block_group_missing_falls_back_or_errs() {
+        // Block group adjacency missing: function either falls back to tract (also missing
+        // in test env) and returns Err, or returns Err directly. Either way it must not panic.
+        let result = resolve_adjacency_path("vt", "2020", "block_group");
+        // In CI with no data, we expect an error (fallback tract also absent).
+        // The important invariant: no panic, and error message is descriptive.
+        match result {
+            Err(msg) => {
+                assert!(
+                    msg.contains("adjacency") || msg.contains("manifest"),
+                    "error should mention adjacency or manifest: {msg}"
+                );
+            }
+            Ok((path, resolution)) => {
+                // If data happens to exist locally, verify path and resolution are coherent
+                assert!(path.exists(), "returned path must exist");
+                assert!(
+                    resolution == "tract" || resolution == "block_group",
+                    "effective resolution must be tract or block_group: {resolution}"
+                );
+            }
+        }
     }
 }

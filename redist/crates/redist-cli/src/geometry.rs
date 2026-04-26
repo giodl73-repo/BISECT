@@ -67,8 +67,13 @@ pub fn resolve_to_geoid_assignments(
 /// Steps:
 ///   1. Detect key format (index if len < 11, GEOID otherwise)
 ///   2. If index-keyed: load `_geoids.json` to build GEOID → district map
-///   3. Load TIGER shapefile for tract WKB geometries
+///   3. Load TIGER shapefile for the correct geographic resolution
 ///   4. Join by GEOID, group_dissolve per district
+///
+/// `resolution` controls which TIGER shapefile is loaded:
+///   - "tract" (default): `tl_{year}_{fips}_tract.shp`
+///   - "block_group" / "block-group": `tl_{year}_{fips}_bg.shp`
+///   - "block": `tl_{year}_{fips}_tabblock20.shp` (2020) — not yet fully supported
 ///
 /// Returns HashMap<district_id, MultiPolygon> for all districts.
 pub fn load_district_geometries(
@@ -78,6 +83,7 @@ pub fn load_district_geometries(
     version: &str,
     assignments: &HashMap<String, usize>,
     data_root: &Path,
+    resolution: &str,
 ) -> anyhow::Result<HashMap<usize, MultiPolygon<f64>>> {
     let fips = state_code_to_fips(state_code)
         .ok_or_else(|| anyhow::anyhow!("Unknown state code: {state_code}"))?;
@@ -89,10 +95,16 @@ pub fn load_district_geometries(
         .unwrap_or(false);
 
     // Build GEOID → district_id map
+    // For block groups the geoid file uses the bg_ prefix convention
     let geoid_to_district: HashMap<String, usize> = if uses_index_keys {
-        // Geoid files use state_code_lower prefix: vt_adjacency_2020_geoids.json
         let state_code_lower = state_code.to_lowercase();
-        let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
+        // Geoid filename depends on resolution
+        let geoid_file = match resolution {
+            "block_group" | "block-group" => {
+                format!("{state_code_lower}_bg_adjacency_{year}_geoids.json")
+            }
+            _ => format!("{state_code_lower}_adjacency_{year}_geoids.json"),
+        };
         // Geoid files live in the shared data directory, not the year-specific states dir
         let geoid_candidates = [
             PathBuf::from("outputs").join(version).join("data").join(year).join("adjacency").join(&geoid_file),
@@ -102,7 +114,7 @@ pub fn load_district_geometries(
         let geoid_path = geoid_candidates.iter()
             .find(|p| p.exists())
             .ok_or_else(|| anyhow::anyhow!(
-                "Geoid mapping not found for {state_name}. \
+                "Geoid mapping not found for {state_name} ({resolution} resolution). \
                  Run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}"
             ))?;
 
@@ -120,18 +132,31 @@ pub fn load_district_geometries(
         assignments.iter().map(|(k, &v)| (k.clone(), v)).collect()
     };
 
-    // TIGER files: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/tl_{year}_{fips}_tract.shp
-    let stem = format!("tl_{year}_{fips}_tract");
+    // TIGER files: choose stem based on resolution
+    //   tract:       data/{year}/tiger/tracts/tl_{year}_{fips}_tract/tl_{year}_{fips}_tract.shp
+    //   block_group: data/{year}/tiger/tracts/tl_{year}_{fips}_bg/tl_{year}_{fips}_bg.shp
+    let (stem, subdir) = match resolution {
+        "block_group" | "block-group" => (
+            format!("tl_{year}_{fips}_bg"),
+            "tracts",  // block group shapefiles live alongside tracts
+        ),
+        _ => (
+            format!("tl_{year}_{fips}_tract"),
+            "tracts",
+        ),
+    };
     let tiger_path = data_root
         .join(year)
         .join("tiger")
-        .join("tracts")
+        .join(subdir)
         .join(&stem)
         .join(format!("{stem}.shp"));
 
     if !tiger_path.exists() {
         anyhow::bail!(
-            "TIGER shapefile not found: {}. Run: redist fetch --year {year} --states {state_code}",
+            "{resolution} TIGER shapefile not found: {}. \
+             Run: redist fetch --year {year} --states {state_code} (for tracts), \
+             or download block group TIGER files manually.",
             tiger_path.display()
         );
     }
@@ -153,7 +178,7 @@ pub fn load_district_geometries(
         .filter(|tr| !geoid_to_district.contains_key(&tr.geoid))
         .count();
     if unmatched > 0 {
-        eprintln!("WARNING: {unmatched}/{} tracts had no assignment match for {state_name}",
+        eprintln!("WARNING: {unmatched}/{} {resolution} units had no assignment match for {state_name}",
             tract_records.len());
     }
 

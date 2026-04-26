@@ -128,7 +128,7 @@ fn render_districts_map(
     )?;
 
     let districts = load_district_geometries(
-        state_name, state_code, year, version, &assignments, std::path::Path::new("data")
+        state_name, state_code, year, version, &assignments, std::path::Path::new("data"), "tract"
     )?;
 
     let all_mp: MultiPolygon<f64> = MultiPolygon(
@@ -222,7 +222,7 @@ fn render_rounds_maps(
 
         let districts = match load_district_geometries(
             state_name, state_code, year, version,
-            &round_assignments, std::path::Path::new("data"),
+            &round_assignments, std::path::Path::new("data"), "tract",
         ) {
             Ok(d) => d,
             Err(e) => {
@@ -323,7 +323,7 @@ fn render_choropleth_map(
     // Load dissolved district geometries
     let districts = load_district_geometries(
         state_name, state_code, year, version,
-        &assignments, std::path::Path::new("data"),
+        &assignments, std::path::Path::new("data"), "tract",
     )?;
 
     // Build bbox from all district polygons
@@ -448,7 +448,7 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
             };
 
             let geoms = match load_district_geometries(
-                &state_name, state_code, &year, &args.version, &raw, std::path::Path::new("data")
+                &state_name, state_code, &year, &args.version, &raw, std::path::Path::new("data"), "tract"
             ) {
                 Ok(g) => g,
                 Err(e) => { skipped.push(format!("{state_name} ({e})")); continue; }

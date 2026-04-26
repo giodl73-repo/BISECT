@@ -417,5 +417,89 @@ class TestMapAL(unittest.TestCase):
         self.assertTrue((AL_MAPS / "demographic.png").exists())
 
 
+class TestResolutionFlag(unittest.TestCase):
+    """L2 acceptance tests for --resolution flag on `redist state`.
+
+    These tests verify the flag is accepted and parsed without requiring
+    block group adjacency data (which may not be present in CI).
+
+    With block group data present (outputs/V3/data/{year}/adjacency/*_bg_adjacency_*.pkl),
+    the full block group path is exercised. Without it, graceful fallback to tract is
+    verified via the WARNING message.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.binary = find_redist_binary()
+
+    def _state(self, resolution, state="VT", year="2020", version="ResolutionTest", **kwargs):
+        """Run `redist state` with the given resolution flag."""
+        cmd = [
+            self.binary, "state",
+            "--state", state,
+            "--year", year,
+            "--version", version,
+            "--resolution", resolution,
+            "--force",
+        ]
+        return run(cmd, check=False)
+
+    def test_resolution_tract_accepted(self):
+        """--resolution tract is the default and must be accepted."""
+        r = self._state("tract")
+        # May fail due to missing adjacency data, but must not fail due to flag parsing
+        # (clap would exit 2 for unknown flags)
+        self.assertNotEqual(r.returncode, 2,
+                            f"--resolution tract rejected by clap: {r.stderr}")
+
+    def test_resolution_block_group_accepted(self):
+        """--resolution block_group must be accepted (exit code != 2 means clap parsed it)."""
+        r = self._state("block_group")
+        self.assertNotEqual(r.returncode, 2,
+                            f"--resolution block_group rejected by clap: {r.stderr}")
+
+    def test_resolution_block_group_fallback_or_success(self):
+        """With block_group resolution, CLI either succeeds (data present) or falls back to
+        tract with a clear WARNING (data absent). Must not crash or exit 2."""
+        r = self._state("block_group")
+        # Exit 2 = clap parse error — must never happen for a valid flag
+        self.assertNotEqual(r.returncode, 2,
+                            f"--resolution block_group parse error: {r.stderr}")
+        if r.returncode != 0:
+            # If it failed for non-parse reasons (e.g. missing tract adjacency too),
+            # the error must be descriptive, not a clap usage message
+            self.assertNotIn("error: unexpected argument", r.stderr.lower())
+        else:
+            # Successful run: either used block_group data or fell back to tract
+            combined = r.stderr + r.stdout
+            self.assertTrue(
+                "WARNING: Block group adjacency not found" in combined or
+                "[OK]" in combined,
+                f"Expected fallback WARNING or [OK] in output: {combined}"
+            )
+
+    def test_resolution_block_group_fallback_warning_mentions_build_script(self):
+        """When block group adjacency is absent, the fallback warning must mention
+        build_bg_adjacency.py so users know how to generate the data."""
+        r = self._state("block_group")
+        if r.returncode == 2:
+            self.fail(f"--resolution block_group rejected by clap: {r.stderr}")
+        # Only check for the build script hint if we got the fallback (not full BG data)
+        combined = r.stderr + r.stdout
+        if "WARNING: Block group adjacency not found" in combined:
+            self.assertIn("build_bg_adjacency.py", combined,
+                          "Fallback warning must mention build_bg_adjacency.py")
+
+    def test_resolution_invalid_value_rejected(self):
+        """An invalid --resolution value must be rejected by clap with exit code 2."""
+        r = run(
+            [self.binary, "state", "--state", "VT", "--year", "2020",
+             "--version", "ResolutionTest", "--resolution", "invalid_resolution"],
+            check=False
+        )
+        self.assertEqual(r.returncode, 2,
+                         f"Expected exit 2 for invalid resolution, got {r.returncode}: {r.stderr}")
+
+
 if __name__ == "__main__":
     unittest.main()
