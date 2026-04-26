@@ -167,26 +167,27 @@ def make_disconnected_plan():
         (plan_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
         # Write final_assignments.json — a disconnected plan.
-        # Two real-looking VT tract GEOIDs in district 1:
-        #   50023000100 (Chittenden County, near Burlington)
-        #   50025010100 (Orange County — far from Burlington, non-adjacent)
-        # These two tracts are not spatially adjacent, so a BFS contiguity check
-        # will find 2 components in district 1 if adjacency data is present.
-        # If adjacency data is missing, the test still exercises the code path
-        # and exits with code 8 (missing data), which the test also accepts.
+        #
+        # Strategy: assign ALL 193 VT tracts to district 1, EXCEPT place two
+        # geographically remote tracts in their own "district 1 island" by
+        # simply not including middle tracts — but this is complex without real
+        # adjacency data.
+        #
+        # Simpler guaranteed approach: use only 2 tracts from opposite corners of
+        # Vermont that are NOT directly adjacent. The BFS contiguity check will
+        # return 2 components.
+        #
+        # Tract GEOIDs chosen from vt_adjacency_2020_geoids.json:
+        #   index 0  -> "50005957100" (Caledonia County, NE Vermont)
+        #   index 175 -> "50025967300" (Windsor County, SE Vermont)
+        # These are in different counties separated by multiple counties —
+        # they cannot share a direct boundary edge. With only 2 tracts in
+        # district 1 and no intermediate tracts, BFS finds 2 components.
         assignments = {
-            "50023000100": 1,   # Chittenden, Burlington area
-            "50025010100": 1,   # Orange County — non-adjacent to above
+            "50005957100": 1,   # Caledonia County (NE Vermont, index 0)
+            "50025967300": 1,   # Windsor County (SE Vermont, index 175)
         }
         (plan_dir / "final_assignments.json").write_text(json.dumps(assignments))
-
-        # Also write to the legacy state path so analyze.rs can find the file
-        # (analyze.rs looks for final_assignments.json in states/{name}/data/ too).
-        state_data_dir = (
-            output_dir / version / year / "states" / "vermont" / "data"
-        )
-        state_data_dir.mkdir(parents=True, exist_ok=True)
-        (state_data_dir / "final_assignments.json").write_text(json.dumps(assignments))
 
         return state, year, version, label
 
