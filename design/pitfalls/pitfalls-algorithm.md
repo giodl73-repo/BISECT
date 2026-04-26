@@ -87,3 +87,33 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 **Status:** SOLVED in bisection_runner.rs
 **Proved by:** Alabama VRA with k=7 passes ±0.5% population balance; tpwgts file written with correct ratios
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_al_rust_population_balance`
+
+## AP-07: Per-depth tolerance in recursive bisection causes compounding balance error
+
+**Pattern:** A recursive bisection algorithm applies a fixed imbalance tolerance at each split level, assuming that the per-split tolerance equals the final district-level tolerance. In reality, balance errors accumulate across levels: a 5% tolerance per split across 7 rounds produces a worst-case cumulative error of ~35%. The deeper the bisection tree, the worse the final imbalance — even when each individual split appears to succeed.
+
+**Domain:** Any recursive bisection algorithm where the depth of the tree varies with the number of output partitions. Non-power-of-two partition counts require unequal depths for different branches. Arises because the bisection literature focuses on power-of-two cases where each branch has the same depth, making the accumulation symmetric and bounded.
+
+**Why it's hard to catch:** Each individual split passes its local balance check. The accumulated error only appears in the final constitutional validation. At small partition counts (k ≤ 10 for congressional districts), the accumulation is small enough that it never triggers the ±0.5% constitutional limit. At large state legislative counts (k ≥ 80), the accumulated error can exceed 20%.
+
+**Structural solution:** Compute the allowed per-split tolerance at each bisection node from the final target tolerance and the number of districts the node produces: `node_ufactor = 1 + T / k_node`. This guarantees cumulative error ≤ T regardless of tree depth. The formula tightens tolerance at the root (k_node = k, very tight) and loosens it at leaves (k_node = 2, T/2). Pass the final balance tolerance, not a per-split ufactor, to the bisection function.
+
+**Status:** SOLVED
+**Proved by:** FL 120HD now passes 10% balance check after fix (was failing at 16.1% deviation)
+**Test:** `redist-cli::bisection_runner::tests::test_per_node_ufactor_formula`, `test_run_all_splits_tight_balance_10pct`
+
+---
+
+## AP-08: Granularity floor constraint in geographic unit-based partitioning
+
+**Pattern:** A partitioning algorithm is asked to balance populations to within T% of the ideal, but the geographic units (tracts, block groups) are too coarse: the average unit contains more than T% of the ideal district population. In this regime, no algorithm — regardless of parameters — can achieve the target balance, because a single unit swap changes the partition by more than the entire allowed tolerance.
+
+**Domain:** Geographic redistricting at any resolution where the number of units per district is small (< 20). Arises when the number of districts is large relative to the total number of available geographic units. Congressional districts (10 per state, 178 tracts each) never hit this limit; state legislative chambers (98 districts, 18 tracts each) frequently do.
+
+**Why it's hard to catch:** The algorithm runs to completion and produces a partition. The partition fails the final balance check, and the error appears to be a parameter problem (wrong ufactor, wrong tolerance). The actual cause — insufficient granularity — is not surfaced in the error message. Practitioners spend time tuning parameters instead of switching resolution.
+
+**Structural solution:** Before attempting partitioning, compute `units_per_district = total_units / k` and `unit_size_as_pct = (total_pop / total_units) / (total_pop / k) * 100`. If `unit_size_as_pct > balance_tolerance`, emit an early error: "Cannot achieve {T}% balance with {U} units/district at tract resolution — use block_group or block." This converts a silent run-to-failure into an actionable early diagnostic.
+
+**Status:** MITIGATED
+**Proved by:** Block group resolution (54 units/district for WA 98HD) achieves 10% balance where tract (18/district) cannot. Validation script identifies states needing BG resolution.
+**Test:** `scripts/pipeline/validate_state_legislative.py` detects granularity failures; `state_policy.json` documents low_density_note for MT/ND

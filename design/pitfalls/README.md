@@ -16,12 +16,12 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
-| Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 6 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 10 |
+| Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 8 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 13 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
-| Data | DP | [pitfalls-data.md](pitfalls-data.md) | 3 |
+| Data | DP | [pitfalls-data.md](pitfalls-data.md) | 4 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **23** |
+| **Total** | | | **29** |
 
 ## Status
 
@@ -53,6 +53,9 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-11 | Compile-time asset path resolution mismatch in workspace builds | **SOLVED** | include_bytes! next to source file |
 | PP-12 | WKB decode API surface mismatch across geospatial crate ecosystem | **SOLVED** | redist-map::dissolve::tests |
 | DP-04 | Stale test assertion after format version upgrade | **SOLVED** | redist-data::serialize::tests::test_magic_header |
+| PP-13 | Integer parameter truncation at subprocess boundary | **SOLVED** | bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression |
+| AP-07 | Per-depth tolerance in recursive bisection causes compounding balance error | **SOLVED** | bisection_runner::tests::test_per_node_ufactor_formula |
+| AP-08 | Granularity floor constraint in geographic unit-based partitioning | **MITIGATED** | validate_state_legislative.py |
 
 ## Adding a Pitfall
 

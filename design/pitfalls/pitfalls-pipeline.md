@@ -199,3 +199,17 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** SOLVED
 **Proved by:** `dissolve.rs::wkb_to_geometry()` uses `geozero::wkb::FromWkb` — all WKB tests pass including MultiPolygon island tract case
 **Test:** `redist-map::dissolve::tests::test_wkb_decode_known_unit_square`, `test_wkb_multipolygon_does_not_panic`
+
+## PP-13: Integer parameter truncation at subprocess boundary
+
+**Pattern:** A system passes a numeric parameter to an external tool via a command-line string. The external tool uses integer parsing (`atoi()`) internally, which silently truncates any decimal part. The calling system computes the parameter as a float and formats it as a float string, assuming the tool receives the float value. Both sides behave correctly individually; the mismatch only appears at the boundary, and no error is raised — the tool accepts the (truncated) integer silently.
+
+**Domain:** Any system that invokes external tools via command-line strings where the tool's parameter parsing is stricter than the calling language's default numeric formatting. Common in scientific computing where the external tool (METIS, BLAS, etc.) is written in C and uses `atoi`/`strtol` for performance. Arises because the calling code and the tool documentation may describe the parameter in compatible terms (e.g., both say "ufactor controls balance") without clarifying the type contract.
+
+**Why it's hard to catch:** The external tool accepts the malformed value without error. Behavior changes only quantitatively, not qualitatively — partitions are still produced, just with different (usually tighter) balance tolerance than intended. At small district counts (10 congressional districts), the difference between ufactor=1 and ufactor=5 is invisible because METIS achieves balance easily either way. The error only manifests at large district counts (98 state house) where the tighter-than-intended tolerance becomes impossible to satisfy.
+
+**Structural solution:** Explicitly convert parameters to the type expected by the external tool before formatting as a string. For integer tools, round to integer and document the conversion formula at the call site. Add a unit test that calls the conversion function and asserts the output type and expected value for known inputs. The test must use the same conversion path as the production code.
+
+**Status:** SOLVED
+**Proved by:** gpmetis receives `-ufactor=50` (integer) instead of `-ufactor=1.0500` (float that atoi truncates to 1). FL 120HD now passes balance check.
+**Test:** `redist-cli::bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression`, `test_ufactor_integer_conversion_5_pct`
