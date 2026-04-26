@@ -65,6 +65,35 @@ Three partition modes:
 - **`unweighted`** — pure population balance, no geometric optimization
 - **`metis-vra`** — VRA-compliant, boosts edges between minority-heavy tracts
 
+### Choosing resolution: tract vs block group
+
+`redist` runs at census tract resolution by default (~4,000 people/unit). For state legislative maps with many districts, tract resolution may be too coarse:
+
+| Resolution | Unit size | WA 98-district house | Recommendation |
+|------------|-----------|----------------------|----------------|
+| `tract` (default) | ~4,000 pop | 18 units/district | OK for ≤50 districts |
+| `block_group` | ~1,200 pop | 54 units/district | Required for large chambers |
+
+**Rule of thumb**: if `num_districts / state_tracts > 0.05` (fewer than 20 tracts per district), use block_group.
+
+```bash
+# WA house 98D — tract fails, block_group works
+redist state --state WA --year 2020 --version WA_Plans \
+  --districts 98 --chamber house --label wa_house_draft1 \
+  --resolution block_group --balance-tolerance 10.0 --seed 42
+
+# TX house 150D — tract works (46 tracts/district)
+redist state --state TX --year 2020 --version TX_Plans \
+  --districts 150 --chamber house --label tx_house_draft1 \
+  --balance-tolerance 10.0 --seed 42
+```
+
+Block group adjacency files are built with:
+```bash
+python scripts/data/geography/build_unit_adjacency.py \
+  --state WA --year 2020 --resolution block_group
+```
+
 ### Analysis
 
 ```bash
@@ -134,6 +163,8 @@ Compatible with: GerryChain v2.3+, Dave's Redistricting App, PlanScore, QGIS, Ar
 **Headline result (2020 Census):** mean Polsby-Popper compactness **0.361** (95% CI: 0.351-0.370), a **+22% improvement** over enacted 2020 congressional districts (PP 0.296). 37 of 44 multi-district states beat their own enacted maps. Illinois +174%, Louisiana +104%, New Hampshire +102%.
 
 **VRA result (2020):** `metis-vra` mode achieves majority-minority district targets in Alabama (2 MM districts) and Georgia (7 MM districts, exceeding the 5-district target).
+
+**State legislative results:** Using block group resolution (`--resolution block_group`), `redist` successfully draws state legislative maps for all 50 states including the hardest cases: Nevada (71% of population in Clark County), Louisiana (bayou geography, isolated tracts), Virginia (95 counties + 38 independent cities tracked separately), and Texas (150 state house districts — the largest state legislature in the country).
 
 **[View all dashboards](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
 
