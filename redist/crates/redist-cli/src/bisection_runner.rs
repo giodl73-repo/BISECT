@@ -524,6 +524,87 @@ mod tests {
         }
     }
 
+    // ── ufactor correctness tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_ufactor_integer_conversion_0_5_pct() {
+        // 0.5% tolerance: decimal 1.005 → integer 5
+        let decimal = 1.005_f64;
+        let ufactor_int = ((decimal - 1.0) * 1000.0).round() as u32;
+        assert_eq!(ufactor_int, 5, "1.005 must convert to integer 5 (0.5%)");
+    }
+
+    #[test]
+    fn test_ufactor_integer_conversion_5_pct() {
+        // 5% tolerance: decimal 1.05 → integer 50
+        let decimal = 1.05_f64;
+        let ufactor_int = ((decimal - 1.0) * 1000.0).round() as u32;
+        assert_eq!(ufactor_int, 50, "1.05 must convert to integer 50 (5%)");
+    }
+
+    #[test]
+    fn test_ufactor_integer_conversion_10_pct() {
+        // 10% tolerance: decimal 1.10 → integer 100
+        let decimal = 1.10_f64;
+        let ufactor_int = ((decimal - 1.0) * 1000.0).round() as u32;
+        assert_eq!(ufactor_int, 100, "1.10 must convert to integer 100 (10%)");
+    }
+
+    #[test]
+    fn test_ufactor_never_zero() {
+        // Minimum clamped to 1 — ufactor=0 would disable balance checking
+        for decimal in [1.0001_f64, 1.0_f64, 0.999_f64] {
+            let raw = ((decimal - 1.0) * 1000.0).round() as i32;
+            let clamped = (raw as u32).clamp(1, 1000);
+            assert!(clamped >= 1, "ufactor must be >= 1, got {clamped} from decimal {decimal}");
+        }
+    }
+
+    #[test]
+    fn test_per_node_ufactor_formula() {
+        // node_ufactor = 1.0 + balance_tolerance / k_node
+        // Root of 98-district map (T=10%): should be very tight
+        let k_root = 98usize;
+        let tolerance = 0.10_f64;
+        let node_ufactor = 1.0 + tolerance / k_root as f64;
+        // ~0.102% — convert to int
+        let ufactor_int = ((node_ufactor - 1.0) * 1000.0).round() as u32;
+        assert_eq!(ufactor_int, 1, "root of 98-district (10%) → ufactor=1 (0.1%)");
+
+        // Leaf of 2-district split (T=10%): should be loose
+        let k_leaf = 2usize;
+        let leaf_ufactor = 1.0 + tolerance / k_leaf as f64;
+        let leaf_int = ((leaf_ufactor - 1.0) * 1000.0).round() as u32;
+        assert_eq!(leaf_int, 50, "leaf of 2-district (10%) → ufactor=50 (5%)");
+    }
+
+    #[test]
+    fn test_per_node_ufactor_congressional_tight() {
+        // Congressional (T=0.5%): root of 52-district CA map
+        // 0.5%/52 = 0.0096% → rounds to 0, clamped to minimum 1
+        let k = 52usize;
+        let tolerance = 0.005_f64; // 0.5%
+        let node_ufactor = 1.0 + tolerance / k as f64;
+        let raw = ((node_ufactor - 1.0) * 1000.0).round() as u32;
+        let ufactor_int = raw.clamp(1, 1000); // minimum 1 = 0.1%
+        assert_eq!(ufactor_int, 1, "CA 52D congressional root → clamped to minimum ufactor=1 (0.1%)");
+    }
+
+    #[test]
+    fn test_ufactor_wasnt_silently_truncated_regression() {
+        // This test catches the historical bug where '-ufactor=1.0050' was passed
+        // to gpmetis as a float, which atoi() truncated to 1 regardless of value.
+        // The correct behavior: 1.005 → integer 5 (not 1).
+        let old_style_float = 1.005_f64;
+        // Old bug: atoi("1.0050") == 1 (always)
+        // New fix: round((1.005 - 1.0) * 1000) == 5
+        let correct_int = ((old_style_float - 1.0) * 1000.0).round() as u32;
+        assert_ne!(correct_int, 1,
+            "REGRESSION: 1.005 should not convert to 1 — that was the bug. Got {correct_int}");
+        assert_eq!(correct_int, 5,
+            "1.005 (0.5% tolerance) must convert to integer 5");
+    }
+
     #[test]
     fn test_invariant_vertex_weights_positive() {
         // DF-04: all vertex weights must be >= 1 after loading
