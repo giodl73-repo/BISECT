@@ -30,6 +30,8 @@ pub enum AdjacencyError {
 pub struct AdjacencyGraph {
     /// adjacency[i] = sorted list of neighbor indices
     pub adjacency: Vec<Vec<usize>>,
+    /// vertex_weights[i] = population of tract i (1D, always positive)
+    pub vertex_weights: Vec<i64>,
     /// edge_weights[(min(i,j), max(i,j))] = shared boundary length in metres.
     /// Water/point adjacency uses the median of land boundary lengths.
     pub edge_weights: HashMap<(usize, usize), f64>,
@@ -151,7 +153,9 @@ pub fn build_adjacency_graph(
     }
 
     let n_edges = edge_weights.len();
-    Ok(AdjacencyGraph { adjacency, edge_weights, n_vertices: n, n_edges })
+    // vertex_weights are populated later from demographics/pkl; default to 1 here
+    let vertex_weights = vec![1i64; n];
+    Ok(AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices: n, n_edges })
 }
 
 /// Public wrapper for tests and PyO3 (compactness module needs to parse WKB).

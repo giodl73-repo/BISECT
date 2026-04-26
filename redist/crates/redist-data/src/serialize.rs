@@ -3,12 +3,14 @@
 /// Fast Rust-to-Rust format. Not pickle — Python uses the companion
 /// conversion script to produce .pkl for backward compat.
 ///
-/// Format (little-endian):
+/// Format v2 (little-endian):
 ///   [0..4]   magic bytes: b"RADJ"
-///   [4..8]   format version: u32 = 1
+///   [4..8]   format version: u32 = 2
 ///   [8..12]  n_vertices: u32
 ///   [12..16] n_edges: u32
-///   [16..]   adjacency section:
+///   [16..]   vertex_weights section (v2 addition):
+///              for each vertex i (0..n_vertices): weight: i64
+///   then adjacency section:
 ///              for each vertex i (0..n_vertices):
 ///                n_neighbors: u32
 ///                neighbor_0: u32, ..., neighbor_{n-1}: u32
@@ -21,7 +23,7 @@ use thiserror::Error;
 use crate::adjacency::AdjacencyGraph;
 
 const MAGIC: &[u8; 4] = b"RADJ";
-const FORMAT_VERSION: u32 = 1;
+const FORMAT_VERSION: u32 = 2;
 
 #[derive(Debug, Error)]
 pub enum SerializeError {
@@ -37,10 +39,10 @@ pub enum SerializeError {
     EdgeCountMismatch { header: usize, actual: usize },
 }
 
-/// Serialize an adjacency graph to binary bytes.
+/// Serialize an adjacency graph to binary bytes (format v2 with vertex_weights).
 pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
     let mut buf = Vec::with_capacity(
-        16 + graph.n_vertices * 8 + graph.n_edges * 16
+        16 + graph.n_vertices * 16 + graph.n_edges * 16
     );
 
     // Header
@@ -48,6 +50,11 @@ pub fn serialize_adjacency(graph: &AdjacencyGraph) -> Vec<u8> {
     buf.extend_from_slice(&FORMAT_VERSION.to_le_bytes());
     buf.extend_from_slice(&(graph.n_vertices as u32).to_le_bytes());
     buf.extend_from_slice(&(graph.n_edges as u32).to_le_bytes());
+
+    // Vertex weights section (v2 addition)
+    for &w in &graph.vertex_weights {
+        buf.extend_from_slice(&w.to_le_bytes());
+    }
 
     // Adjacency section
     for nbrs in &graph.adjacency {
@@ -119,6 +126,18 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
     let n_vertices = read_u32!("n_vertices") as usize;
     let n_edges_hdr = read_u32!("n_edges") as usize;
 
+    // Vertex weights (v2 addition; v1 files have none — backward compat below)
+    let vertex_weights: Vec<i64> = if version >= 2 {
+        (0..n_vertices).map(|_| {
+            if pos + 8 > data.len() { return 1i64; }
+            let v = i64::from_le_bytes(data[pos..pos+8].try_into().unwrap());
+            pos += 8;
+            v
+        }).collect()
+    } else {
+        vec![1i64; n_vertices] // v1 files: default to 1 (no population data)
+    };
+
     // Adjacency
     let mut adjacency: Vec<Vec<usize>> = Vec::with_capacity(n_vertices);
     for _ in 0..n_vertices {
@@ -151,9 +170,10 @@ pub fn deserialize_adjacency(data: &[u8]) -> Result<AdjacencyGraph, SerializeErr
 
     Ok(AdjacencyGraph {
         adjacency,
+        vertex_weights,
         edge_weights,
         n_vertices,
-        n_edges: n_weights, // use actual count, not header
+        n_edges: n_weights,
     })
 }
 
@@ -168,7 +188,7 @@ mod tests {
         let mut edge_weights = HashMap::new();
         edge_weights.insert((0, 1), 500.5_f64);
         edge_weights.insert((1, 2), 300.0_f64);
-        AdjacencyGraph { adjacency, edge_weights, n_vertices: 3, n_edges: 2 }
+        AdjacencyGraph { adjacency, vertex_weights: vec![1000, 1200, 900], edge_weights, n_vertices: 3, n_edges: 2 }
     }
 
     #[test]
@@ -222,6 +242,7 @@ mod tests {
     fn test_empty_graph_roundtrip() {
         let g = AdjacencyGraph {
             adjacency: vec![vec![], vec![]],
+            vertex_weights: vec![500, 700],
             edge_weights: HashMap::new(),
             n_vertices: 2,
             n_edges: 0,
@@ -266,7 +287,8 @@ mod tests {
             .filter(|&((u, v), _)| u < v)
             .collect();
         let n_edges = edge_weights.len();
-        let g = AdjacencyGraph { adjacency, edge_weights, n_vertices: n, n_edges };
+        let vertex_weights = vec![1000i64; n];
+        let g = AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices: n, n_edges };
         let bytes = serialize_adjacency(&g);
         let g2 = deserialize_adjacency(&bytes).unwrap();
         assert_eq!(g.adjacency, g2.adjacency);
