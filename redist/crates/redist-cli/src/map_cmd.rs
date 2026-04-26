@@ -74,7 +74,14 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
                 eprintln!("[OK] demographic map -> {}", out.display());
             }
             MapType::Compactness => {
-                eprintln!("[skip] compactness map — not yet wired (needs dissolved geometries)");
+                let out = maps_dir.join("compactness.png");
+                if out.exists() && !args.force { eprintln!("[skip] compactness map"); continue; }
+                let png = render_choropleth_map(
+                    &state_data_dir, &state_name, &state_code, &year,
+                    &args.version, "compactness", dpi, &font_db,
+                )?;
+                std::fs::write(&out, &png)?;
+                eprintln!("[OK] compactness map -> {}", out.display());
             }
             MapType::All => unreachable!(),
         }
@@ -261,8 +268,8 @@ fn render_choropleth_map(
     font_db: &FontDb,
 ) -> anyhow::Result<Vec<u8>> {
     use redist_map::{Projection, build_svg};
-    use redist_map::colorscheme::{PoliticalScheme, DemographicScheme};
-    use redist_map::labeler::{LabelSpec, political_label, demographic_label};
+    use redist_map::colorscheme::{PoliticalScheme, DemographicScheme, CompactnessScheme};
+    use redist_map::labeler::{LabelSpec, political_label, demographic_label, compactness_label};
     use geo::BoundingRect;
     use geo_types::MultiPolygon;
     use crate::geometry::load_district_geometries;
@@ -295,8 +302,9 @@ fn render_choropleth_map(
         for d in districts {
             let id = d.get("district").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
             let stat = match analysis_type {
-                "political" => d.get("dem_pct").and_then(|v| v.as_f64()).unwrap_or(0.5),
+                "political"   => d.get("dem_pct").and_then(|v| v.as_f64()).unwrap_or(0.5),
                 "demographic" => d.get("pct_minority").and_then(|v| v.as_f64()).unwrap_or(0.0),
+                "compactness" => d.get("polsby_popper").and_then(|v| v.as_f64()).unwrap_or(0.3),
                 _ => 0.0,
             };
             district_stats.insert(id, stat);
@@ -337,6 +345,10 @@ fn render_choropleth_map(
                     "demographic" => {
                         let frac = stat.unwrap_or(0.0);
                         (DemographicScheme.color(frac), demographic_label(id, frac))
+                    }
+                    "compactness" => {
+                        let pp = stat.unwrap_or(0.3);
+                        (CompactnessScheme.color(pp), compactness_label(id, pp))
                     }
                     _ => (gray, LabelSpec {
                         main: id.to_string(),
