@@ -130,14 +130,23 @@ impl Analyzer for DemographicAnalyzer {
     fn name() -> &'static str { "demographic" }
 
     fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> {
-        // Locate demographics CSV: data/{year}/demographics/{state_code}_demographics_{year}.csv
-        let state_lower = ctx.state_code.to_lowercase();
-        let csv_path = ctx.data_root
-            .join(ctx.year)
-            .join("demographics")
-            .join(format!("{state_lower}_demographics_{}.csv", ctx.year));
+        // Demographics CSV may be named by state_name (vermont_demographics_2020.csv)
+        // or state_code_lower (vt_demographics_2020.csv). Try both.
+        let state_code_lower = ctx.state_code.to_lowercase();
+        let state_name_lower = ctx.state_name.replace(' ', "_");
+        let demo_dir = ctx.data_root.join(ctx.year).join("demographics");
+        let candidates = [
+            demo_dir.join(format!("{state_name_lower}_demographics_{}.csv", ctx.year)),
+            demo_dir.join(format!("{state_code_lower}_demographics_{}.csv", ctx.year)),
+        ];
+        let csv_path = candidates.iter()
+            .find(|p| p.exists())
+            .ok_or_else(|| anyhow::anyhow!(
+                "demographics CSV not found for {} — tried {:?}",
+                ctx.state_name, candidates
+            ))?;
 
-        let mut rdr = csv::Reader::from_path(&csv_path)
+        let mut rdr = csv::Reader::from_path(csv_path)
             .with_context(|| format!("cannot open demographics CSV: {}", csv_path.display()))?;
 
         let headers = rdr.headers()?.clone();

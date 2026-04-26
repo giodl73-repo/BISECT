@@ -16,19 +16,21 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
+    // Path mirrors runner.rs: {version}/states/{state}/
     let output_root = PathBuf::from("outputs").join(&args.version);
-    let state_dir = output_root.join(&year).join(&state_name);
+    let state_dir = output_root.join("states").join(&state_name);
+    let state_data_dir = state_dir.join("data");
     let maps_dir = state_dir.join("maps");
     std::fs::create_dir_all(&maps_dir)?;
 
     let types = resolve_map_types(&args.types);
     let font_db = default_font_db();
 
-    let assignments_path = state_dir.join("final_assignments.json");
+    let assignments_path = state_data_dir.join("final_assignments.json");
     if !assignments_path.exists() {
         anyhow::bail!(
-            "No assignments at {}. Run: redist state --state {state_code} first.",
-            assignments_path.display()
+            "No assignments at {}.\nRun: redist state --state {state_code} --version {} first.",
+            assignments_path.display(), args.version
         );
     }
 
@@ -40,7 +42,7 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
                     eprintln!("[skip] districts map (exists)");
                     continue;
                 }
-                let png = render_districts_map(&state_dir, &state_name, &state_code, &year,
+                let png = render_districts_map(&state_data_dir, &state_name, &state_code, &year,
                                                &args.version, dpi, &font_db)?;
                 std::fs::write(&out, &png)?;
                 eprintln!("[OK] districts map -> {} ({} bytes)", out.display(), png.len());
@@ -51,14 +53,14 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
             MapType::Political => {
                 let out = maps_dir.join("political.png");
                 if out.exists() && !args.force { eprintln!("[skip] political map"); continue; }
-                let png = render_choropleth_map(&state_dir, "political", dpi, &font_db)?;
+                let png = render_choropleth_map(&state_data_dir, "political", dpi, &font_db)?;
                 std::fs::write(&out, &png)?;
                 eprintln!("[OK] political map -> {}", out.display());
             }
             MapType::Demographic => {
                 let out = maps_dir.join("demographic.png");
                 if out.exists() && !args.force { eprintln!("[skip] demographic map"); continue; }
-                let png = render_choropleth_map(&state_dir, "demographic", dpi, &font_db)?;
+                let png = render_choropleth_map(&state_data_dir, "demographic", dpi, &font_db)?;
                 std::fs::write(&out, &png)?;
                 eprintln!("[OK] demographic map -> {}", out.display());
             }
@@ -84,7 +86,7 @@ fn render_districts_map(
     state_name: &str,
     state_code: &str,
     year: &str,
-    _version: &str,
+    version: &str,
     dpi: u32,
     font_db: &FontDb,
 ) -> anyhow::Result<Vec<u8>> {
@@ -95,12 +97,13 @@ fn render_districts_map(
     use geo_types::MultiPolygon;
     use crate::geometry::load_district_geometries;
 
+    // state_dir here is actually state_data_dir (contains final_assignments.json)
     let assignments: std::collections::HashMap<String, usize> = serde_json::from_str(
         &std::fs::read_to_string(state_dir.join("final_assignments.json"))?
     )?;
 
     let districts = load_district_geometries(
-        state_name, state_code, year, &assignments, std::path::Path::new("data")
+        state_name, state_code, year, version, &assignments, std::path::Path::new("data")
     )?;
 
     let all_mp: MultiPolygon<f64> = MultiPolygon(

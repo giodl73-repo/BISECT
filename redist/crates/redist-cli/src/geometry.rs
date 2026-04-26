@@ -14,29 +14,75 @@ use redist_data::tiger::read_tiger_tracts;
 
 /// Load dissolved district geometries for a state.
 ///
-/// Steps:
-///   1. Find TIGER shapefile at data/{year}/tiger/tracts/{fips}/tl_{year}_{fips}_tract.shp
-///   2. Decode each tract's WKB geometry
-///   3. Join to district assignments via GEOID
-///   4. Dissolve (union) per district
+/// The Rust CLI writes `final_assignments.json` with **tract-index** keys (not GEOIDs):
+///   `{"174": 1, "22": 1, ...}` (index → district_id, 1-based)
 ///
-/// Returns HashMap<district_id, MultiPolygon> for all districts present in assignments.
+/// The adjacency `_geoids.json` maps index → GEOID:
+///   `{"0": "50005957100", "1": "50005957400", ...}`
+///
+/// Steps:
+///   1. Detect key format (index if len < 11, GEOID otherwise)
+///   2. If index-keyed: load `_geoids.json` to build GEOID → district map
+///   3. Load TIGER shapefile for tract WKB geometries
+///   4. Join by GEOID, group_dissolve per district
+///
+/// Returns HashMap<district_id, MultiPolygon> for all districts.
 pub fn load_district_geometries(
     state_name: &str,
     state_code: &str,
     year: &str,
+    version: &str,
     assignments: &HashMap<String, usize>,
     data_root: &Path,
 ) -> anyhow::Result<HashMap<usize, MultiPolygon<f64>>> {
     let fips = state_code_to_fips(state_code)
         .ok_or_else(|| anyhow::anyhow!("Unknown state code: {state_code}"))?;
 
+    // Determine if assignments use tract indices or GEOIDs
+    let uses_index_keys = assignments.keys()
+        .next()
+        .map(|k| k.len() < 11)
+        .unwrap_or(false);
+
+    // Build GEOID → district_id map
+    let geoid_to_district: HashMap<String, usize> = if uses_index_keys {
+        // Geoid files use state_code_lower prefix: vt_adjacency_2020_geoids.json
+        let state_code_lower = state_code.to_lowercase();
+        let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
+        let geoid_candidates = [
+            PathBuf::from("outputs").join(version).join("data").join(year).join("adjacency").join(&geoid_file),
+            PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),
+            PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&geoid_file),
+        ];
+        let geoid_path = geoid_candidates.iter()
+            .find(|p| p.exists())
+            .ok_or_else(|| anyhow::anyhow!(
+                "Geoid mapping not found for {state_name}. \
+                 Run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}"
+            ))?;
+
+        let raw: HashMap<String, String> = serde_json::from_str(
+            &std::fs::read_to_string(geoid_path)?
+        )?;
+        // raw: {"0": "50005957100", ...} — join with assignments on index
+        raw.into_iter()
+            .filter_map(|(idx, geoid)| {
+                assignments.get(&idx).map(|&dist| (geoid, dist))
+            })
+            .collect()
+    } else {
+        // Assignments already keyed by GEOID
+        assignments.iter().map(|(k, &v)| (k.clone(), v)).collect()
+    };
+
+    // TIGER files: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/tl_{year}_{fips}_tract.shp
+    let stem = format!("tl_{year}_{fips}_tract");
     let tiger_path = data_root
         .join(year)
         .join("tiger")
         .join("tracts")
-        .join(fips)
-        .join(format!("tl_{year}_{fips}_tract.shp"));
+        .join(&stem)
+        .join(format!("{stem}.shp"));
 
     if !tiger_path.exists() {
         anyhow::bail!(
@@ -52,16 +98,14 @@ pub fn load_district_geometries(
         .map(|tr| wkb_to_geometry(&tr.geometry_wkb))
         .collect::<anyhow::Result<Vec<_>>>()?;
 
-    // Map tract index → district via GEOID
     let tract_assignments: Vec<usize> = tract_records.iter()
-        .map(|tr| assignments.get(&tr.geoid).copied().unwrap_or(0))
+        .map(|tr| geoid_to_district.get(&tr.geoid).copied().unwrap_or(0))
         .collect();
 
     let num_districts = assignments.values().copied().max().unwrap_or(1);
 
-    // Log unmatched tracts at debug level
     let unmatched = tract_records.iter()
-        .filter(|tr| !assignments.contains_key(&tr.geoid))
+        .filter(|tr| !geoid_to_district.contains_key(&tr.geoid))
         .count();
     if unmatched > 0 {
         eprintln!("WARNING: {unmatched}/{} tracts had no assignment match for {state_name}",
@@ -71,7 +115,7 @@ pub fn load_district_geometries(
     Ok(group_dissolve(&geoms, &tract_assignments, num_districts))
 }
 
-/// Map state FIPS code from 2-letter postal code.
+/// Map 2-letter postal code → Census FIPS code (zero-padded to 2 digits).
 pub fn state_code_to_fips(code: &str) -> Option<&'static str> {
     match code {
         "AL" => Some("01"), "AK" => Some("02"), "AZ" => Some("04"),
@@ -118,7 +162,6 @@ mod tests {
 
     #[test]
     fn test_group_dissolve_two_districts() {
-        // 4 polygons (as WKB-encoded geometries) → 2 districts
         use geozero::{CoordDimensions, ToWkb};
 
         let p1: Geometry<f64> = Geometry::Polygon(

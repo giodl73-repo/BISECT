@@ -78,12 +78,17 @@ impl Analyzer for UrbanAnalyzer {
 
     fn run(ctx: &AnalyzerContext<'_>) -> anyhow::Result<Self::Output> {
         let state_lower = ctx.state_code.to_lowercase();
-        let csv_path = ctx.output_root
-            .join(ctx.version)
-            .join("data")
-            .join(ctx.year)
-            .join("places")
-            .join(format!("{state_lower}_places_{}.csv", ctx.year));
+        // output_root is already outputs/{version}; places data lives at data/{year}/places/
+        // Also try state_name (vermont) and state_code_lower (vt) prefixes
+        let state_name_lower = ctx.state_name.replace(' ', "_");
+        let places_dir = ctx.output_root.join("data").join(ctx.year).join("places");
+        let csv_path_candidates = [
+            places_dir.join(format!("{state_name_lower}_places_{}.csv", ctx.year)),
+            places_dir.join(format!("{state_lower}_places_{}.csv", ctx.year)),
+        ];
+        let csv_path = csv_path_candidates.iter().find(|p| p.exists())
+            .cloned()
+            .unwrap_or_else(|| csv_path_candidates[0].clone());
 
         if !csv_path.exists() {
             eprintln!("WARNING: urban places data not found at {}", csv_path.display());

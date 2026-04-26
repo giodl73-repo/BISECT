@@ -18,23 +18,52 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
-    // Locate assignment file
+    // Locate assignment file — path mirrors runner.rs: {output}/{version}/states/{state}/data/
     let output_root = PathBuf::from(&args.output_base).join(&args.version);
-    let state_dir = output_root.join(&year).join(&state_name);
-    let assignments_path = state_dir.join("final_assignments.json");
+    let state_data_dir = output_root.join("states").join(&state_name).join("data");
+    let assignments_path = state_data_dir.join("final_assignments.json");
 
     if !assignments_path.exists() {
         anyhow::bail!(
-            "No assignments found at {}. Run: redist state --state {state_code} --year {year} --version {}",
+            "No assignments found at {}.\nRun: redist state --state {state_code} --year {year} --version {}",
             assignments_path.display(), args.version
         );
     }
 
-    let assignments: HashMap<String, usize> = serde_json::from_str(
+    let raw_assignments: HashMap<String, usize> = serde_json::from_str(
         &std::fs::read_to_string(&assignments_path)?
     )?;
 
-    let analysis_dir = state_dir.join("analysis");
+    // If assignments use tract indices (keys < 11 chars), resolve to GEOID-keyed map
+    // using the adjacency geoids file so all analyzers can join by GEOID.
+    let assignments: HashMap<String, usize> = {
+        let uses_index = raw_assignments.keys().next().map(|k| k.len() < 11).unwrap_or(false);
+        if uses_index {
+            let state_code_lower = state_code.to_lowercase();
+            let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
+            let geoid_path = output_root.join("data").join(&year).join("adjacency").join(&geoid_file);
+            if geoid_path.exists() {
+                let raw_geoids: HashMap<String, String> = serde_json::from_str(
+                    &std::fs::read_to_string(&geoid_path)?
+                )?;
+                // raw_geoids: {"0": "50005957100", ...}
+                // Build GEOID -> district from index -> district
+                raw_geoids.into_iter()
+                    .filter_map(|(idx, geoid)| raw_assignments.get(&idx).map(|&d| (geoid, d)))
+                    .collect()
+            } else {
+                eprintln!("WARNING: geoid mapping not found at {}; analyzers may show unmatched tracts",
+                    geoid_path.display());
+                raw_assignments
+            }
+        } else {
+            raw_assignments
+        }
+    };
+
+    let analysis_dir = state_data_dir.parent()
+        .unwrap_or(&state_data_dir)
+        .join("analysis");
     std::fs::create_dir_all(&analysis_dir)?;
 
     let ctx = AnalyzerContext {
