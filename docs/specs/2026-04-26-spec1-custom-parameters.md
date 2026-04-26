@@ -219,3 +219,16 @@ Fix: `adjacency_file` records filename + SHA-256 only (not local path). Add fiel
 **[TRENCH] CRITICAL — Finding 10: Label collision protection**
 At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero with: "ERROR: Plan '{label}' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." Document this in the label default section.
 Implementation note: Check for `manifest.json` existence before beginning any computation. Record the `created_at` timestamp from the existing manifest in the error message so the user can identify which run it was. With `--force`, atomically overwrite the plan directory contents.
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[COVENANT] CONCERN — adjacency_file path is local-machine-relative**
+Recording `"adjacency_file": "outputs/V3/data/2020/adjacency/..."` embeds a local path that is meaningless to an external auditor. Fix: `adjacency_file` in PlanManifest records filename + SHA-256 only (not full path). Add `tiger_source_url` field pointing to the Census.gov download URL for the source shapefile, enabling independent verification from Census-published data.
+
+**[TRENCH] CONCERN — Label collision overwrites silently**
+Running `redist state --state WA --chamber house` twice uses the same default label and overwrites the first plan's manifest without warning. Fix: At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero: "ERROR: Plan 'washington_house_2020' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." `--force` skips this check.
+
+**[SURVEY] — Commands::Validate wiring**
+Add `Validate(ValidateArgs)` to the Commands enum. `ValidateArgs` takes `--file <PATH>` and optional `--strict`. Validation dispatches to `redist_report::validate_rplan()`.

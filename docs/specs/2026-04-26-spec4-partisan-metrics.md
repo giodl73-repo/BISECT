@@ -290,3 +290,10 @@ If the election file is absent, `partisan.json` must include:
 }
 ```
 Do not silently produce metrics with missing data.
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[SURVEY] CONCERN — Election data dependency not explicit**
+Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv` but this is never stated as a prerequisite. Fix: Add to the "Requires" section: "Requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `redist fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine. When unavailable, `partisan.json` has `available: false` and `unavailable_reason: 'election data not found'`."

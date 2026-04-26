@@ -265,3 +265,20 @@ Fix: `build_chamber_adjacency` uses only the PRIMARY component of each house dis
 WARNING: House district N has disconnected components; only primary component used for senate adjacency.
 ```
 This ensures that senate nesting is computed from the geographically coherent portion of each house district. The full fix is: `redist suite --nest` hard-fails on noncontiguous house districts (per the MERIDIAN CRITICAL amendment above), making this defensive path a fallback for research use only.
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[LEDGER] CONCERN — Suite export format not defined**
+Spec 5 references `redist export --suite` but never defines what a suite export produces. Fix: Suite export produces three separate RPLAN files plus a `suite.json` envelope — NOT a multi-plan RPLAN (that waits for RPLAN v0.2). Structure:
+```
+exports/wa_commission_v1/
+  suite.json               <- {"suite_name": "wa_commission_v1", "plans": [{"chamber": "congressional", "file": "wa_congressional.rplan"}, {"chamber": "house", "file": "wa_house.rplan"}, {"chamber": "senate", "file": "wa_senate.rplan"}]}
+  wa_congressional.rplan
+  wa_house.rplan
+  wa_senate.rplan
+```
+
+**[MERIDIAN] CONCERN — build_chamber_adjacency must use primary component only**
+If a house district has disconnected secondary components, they may create spurious edges in the senate adjacency graph. Fix: `build_chamber_adjacency` uses only the PRIMARY component (largest by tract count) of each house district. Tracts in secondary components are excluded with: "WARNING: House district N has disconnected components; only primary component ({K} tracts) used for senate adjacency. {J} tracts in secondary components ignored."

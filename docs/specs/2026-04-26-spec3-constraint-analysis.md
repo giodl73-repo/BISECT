@@ -314,3 +314,19 @@ Updated exit code table:
 | 8 | Missing required data (geography file absent for required jurisdiction) |
 
 `--allow-noncontiguous` suppresses bit 1 (contiguity) from the exit code.
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[BENCHMARK] CRITICAL — Replace exit codes with composable bitfield**
+Exit codes 2 (balance), 3 (contiguity), 4 (both), 5 (nesting), 6 (missing-municipal) are not composable. "balance + nesting" has no defined code. Fix: Adopt bitfield semantics:
+
+| Bit | Value | Condition |
+|-----|-------|-----------|
+| 0 | 1 | Population balance violation |
+| 1 | 2 | Contiguity violation |
+| 2 | 4 | Nesting violation |
+| 3 | 8 | Required geographic data absent |
+
+Exit code = OR of all active violation bits. Examples: balance only=1, contiguity only=2, both=3, nesting only=4, balance+nesting=5, all four=15. Exit 0 = all constraints satisfied. This replaces the old codes 2, 3, 4, 5, 6 across Specs 1, 3, 5. `--allow-noncontiguous` suppresses bit 1; `--allow-imbalance` suppresses bit 0.

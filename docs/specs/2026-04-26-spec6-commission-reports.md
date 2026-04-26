@@ -305,3 +305,16 @@ Reports with external analyzers include a visible disclaimer: "This report inclu
 **[LEDGER] CRITICAL — GerryChain export schema must be pinned to a specific version**
 GerryChain changed its partition JSON schema between v2 and v3 (field `assignment` vs `part`; dict vs list format). An incompatible export silently produces wrong analysis.
 Fix: MGGG export is pinned to GerryChain v2.3+ schema explicitly. The export format documentation states the target version. Add a round-trip integration test: `gerrychain_import → assignments → gerrychain_import` produces identical partition. Document: "Compatible with GerryChain ≥2.3. Earlier versions use different field names; see docs/specs/RPLAN.md for migration."
+
+---
+
+## R3 Board Review Amendments (2026-04-26)
+
+**[COVENANT] CRITICAL — Binary provenance gap (already addressed in R2)**
+(Confirmed addressed in R2: `binary_download_url` and `binary_release_sha256` added to PlanManifest.)
+
+**[LEDGER] CONCERN — External analyzer hook breaks audit integrity (already addressed in R2)**
+(Confirmed addressed in R2: external analyzer scripts must be hashed and recorded in manifest.)
+
+**[DATUM] CONCERN — Analysis file paths never formally defined across specs**
+`redist report` assembles outputs from `contiguity.json`, `splits.json`, `partisan.json` etc. These filenames are defined only within their individual specs — never consolidated. If any spec changes a filename, the report assembler silently finds nothing. Fix: Normative producer/consumer table added to the overview spec (see overview R3 amendments). `redist report` validates all expected files exist before assembly and reports which are missing.
