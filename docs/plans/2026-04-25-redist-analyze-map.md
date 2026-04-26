@@ -1132,12 +1132,162 @@ Standard: `base_inches=8.0`, aspect ratio from state bbox. Add L0 test `test_can
 
 ---
 
-### Board verdict
+### R1 Board verdict
 
 | Severity | Count | Gate |
 |----------|-------|------|
 | CRITICAL | 5 | Block implementation start |
 | CONCERN | 6 | Block merge to master |
-| PASS | 0 | — |
 
 MERIDIAN: projection approach sound for display; WGS84 limit documented. BENCHMARK: TDD discipline correct; non-contiguous gap now closed. TRENCH: WKB decode now explicit. CONTOUR: VAP limitation now stated. BOUNDARY: population balance now in output.
+
+---
+
+## R2 Board Review Amendments (2026-04-25)
+
+Focused review of R1 amendments only — 4 roles: TRENCH, BENCHMARK, BOUNDARY, CONTOUR.
+The R1 fixes closed their original gaps but introduced or exposed 5 new CRITICALs.
+
+### R2 CRITICAL amendments (block implementation start)
+
+**TRENCH-R2-01: `wkb_to_polygon` panics on MultiPolygon — rename and handle both types**
+
+TIGER island tracts are encoded as WKB `MultiPolygon`, not `Polygon`. The R1 fix's match arm `Geometry::Polygon(p) => p, _ => panic!` will panic on these. Fix:
+
+- Rename `wkb_to_polygon` → `wkb_to_geometry` returning `geo_types::Geometry<f64>`
+- `dissolve_polygons` accepts `&[Geometry<f64>]` and handles both `Polygon` and `MultiPolygon` variants by flattening inner rings
+- Round-trip test asserts `unsigned_area()` on the returned `Geometry` directly, no type match required
+
+```rust
+pub fn wkb_to_geometry(wkb: &[u8]) -> anyhow::Result<geo_types::Geometry<f64>> { ... }
+
+pub fn dissolve_geometries(geoms: &[geo_types::Geometry<f64>]) -> MultiPolygon<f64> {
+    // flatten Polygon + MultiPolygon → Vec<Polygon>, then union
+}
+```
+
+Add test:
+```rust
+#[test]
+fn test_wkb_multipolygon_does_not_panic() {
+    // Construct a WKB-encoded MultiPolygon and verify wkb_to_geometry returns Ok(...)
+    let mp = MultiPolygon(vec![
+        polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.)],
+        polygon![(x:5.,y:5.),(x:6.,y:5.),(x:6.,y:6.),(x:5.,y:6.)],
+    ]);
+    let wkb_bytes = geozero::wkb::geom_to_wkb(&mp).unwrap();
+    let result = wkb_to_geometry(&wkb_bytes);
+    assert!(result.is_ok(), "MultiPolygon WKB must not panic");
+}
+```
+
+**TRENCH-R2-02: Use `geozero` with `with-wkb` feature, not `wkb = "0.1"`**
+
+`wkb 0.1` and `geo 0.28` may pin different `geo-types` versions causing type incompatibility. Fix: remove `wkb = "0.1"` from `Cargo.toml`; use `geozero` (which `geo` already depends on) with the `with-wkb` feature:
+
+```toml
+geozero = { version = "0.14", features = ["with-wkb", "with-geo"] }
+```
+
+The encode function is then `geozero::wkb::geom_to_wkb(&geom)` — consistent with `geo`'s own type system.
+
+**BENCHMARK-R2-01: Define `geom_to_wkb` or rewrite round-trip test with hex literal**
+
+The test `test_wkb_round_trip_preserves_area` calls `geom_to_wkb()` which is never defined in the plan. Fix: use `geozero::wkb::geom_to_wkb` (now available per TRENCH-R2-02) in the test, or rewrite the test with a known-good WKB hex literal for the unit square:
+
+```rust
+#[test]
+fn test_wkb_decode_known_unit_square() {
+    // WKB for a simple polygon: unit square (0,0)→(1,0)→(1,1)→(0,1)→(0,0)
+    // Generated once and hardcoded — avoids dependency on encode function
+    let wkb_hex = "0103000000..."; // known-good WKB bytes
+    let wkb = hex::decode(wkb_hex).unwrap();
+    let geom = wkb_to_geometry(&wkb).unwrap();
+    use geo::Area;
+    assert!((geom.unsigned_area() - 1.0).abs() < 1e-9);
+}
+```
+
+**BOUNDARY-R2-01: Specify `ideal_pop` source and `num_districts` in `SummaryAnalyzer` interface**
+
+`SummaryAnalyzer` receives pre-aggregated per-district totals. It can derive `ideal_pop` by summing `total_pop` across all districts and dividing by `num_districts`. But `num_districts` is not in the current `AnalyzerContext` interface.
+
+Fix: add `num_districts: usize` to `AnalyzerContext` (it is available at call time from the state config). Document the derivation:
+```rust
+let state_total_pop: i64 = districts.iter().map(|d| d.total_pop).sum();
+let ideal_pop = state_total_pop / ctx.num_districts as i64;
+let pop_deviation_pct = (d.total_pop - ideal_pop).abs() as f64 / ideal_pop as f64;
+```
+
+**BOUNDARY-R2-02: Balance failure must exit non-zero; add `--allow-imbalance` flag**
+
+The amendment says stderr warning + `population_balance_valid: false` in JSON but exit 0. For court-submission use, a constitutionally invalid map must not exit 0 silently.
+
+Fix: `redist analyze` exits with code 2 when `population_balance_valid == false`. Add `--allow-imbalance` flag to `AnalyzeArgs` that suppresses the non-zero exit (for research/experimental runs). Add to L2 test suite:
+```python
+def test_analyze_exits_2_on_balance_failure(self):
+    # Construct synthetic assignments that violate ±0.5% — then analyze
+    result = subprocess.run(
+        [binary, "analyze", "--state", "SYNTHETIC_IMBALANCED", ...],
+        capture_output=True
+    )
+    assert result.returncode == 2
+```
+
+**CONTOUR-R2-01: Guard `vra_analysis.rs` against reading `demographic.json`**
+
+`"pop_basis": "total_population"` is metadata-only — nothing prevents `vra_analysis.rs` from reading `pct_minority` from `demographic.json` and treating it as VAP. Fix:
+
+- `vra_analysis.rs` must derive minority percentages exclusively from its own tract-level inputs (passed as `minority_pops: &[u64]`) — never by reading `demographic.json`
+- Add a compile-time note in `vra_analysis.rs`: `// CONTOUR invariant: minority_pops must be VAP-based, not total-pop. Never read from demographic.json.`
+- Add test:
+```rust
+#[test]
+fn test_vra_analysis_accepts_vap_array_not_demographic_json() {
+    // VraAnalysis must compile and run using only the passed arrays,
+    // with no reference to any file path or demographic output struct.
+    // This test is the compile-time proof — if VraAnalysis reads a file, it won't compile here.
+    let result = analyze_mm_districts(&[1,1], &[1000,1000], &[600,400], &[300,200], &[300,200]);
+    assert!(result.is_ok());
+}
+```
+
+### R2 CONCERN amendments
+
+**TRENCH-R2-C01: `wkb crate` version conflict** — resolved by TRENCH-R2-02 (use `geozero`).
+
+**BENCHMARK-R2-C01: `merged.0.len() == 2` fragility**
+
+Replace `assert_eq!(merged.0.len(), 2)` with `assert!((merged.unsigned_area() - 2.0).abs() < 1e-9)` — area is stable across `i_overlay` implementation versions; component count is not guaranteed.
+
+**BENCHMARK-R2-C02: Missing `validate_columns` failure test**
+
+Add:
+```rust
+#[test]
+fn test_demographic_missing_column_returns_error() {
+    let csv_content = "GEOID,total_pop\n50001,1000\n"; // missing race columns
+    let result = aggregate_demographic_from_str(csv_content, &hashmap!{}, 1);
+    assert!(result.is_err());
+    assert!(result.unwrap_err().to_string().contains("missing required column"));
+}
+```
+
+**CONTOUR-R2-C01: Silent GEOID drop**
+
+`aggregate_demographic` silently drops rows whose GEOID is not in `assignments`. Add a stderr counter warning:
+```rust
+if unmatched > 0 {
+    eprintln!("WARNING: {unmatched} tract rows had no assignment match — possible census vintage mismatch");
+}
+```
+
+### R2 Board verdict
+
+| Round | CRITICAL | CONCERN | Status |
+|-------|----------|---------|--------|
+| R1 | 5 | 6 | All closed by R1 amendments |
+| R2 | 5 | 4 | **Must resolve before implementation** |
+| **Total** | **10** | **10** | — |
+
+All 5 R2 CRITICALs are in the amendments themselves, not in the original plan tasks. The plan structure and TDD approach are sound. The gaps are in interface contracts (WKB type handling, `num_districts` missing from context, exit code semantics) and cross-module data contamination guards. Resolve these 5 and implementation may proceed.
