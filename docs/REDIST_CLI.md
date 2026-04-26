@@ -247,6 +247,112 @@ python scripts/data/generate_adj_bin.py --year 2020
 
 ---
 
+## `redist analyze` — Per-district analytics
+
+Computes analytics for each district and writes JSON to `outputs/{version}/states/{state}/analysis/`.
+
+```
+redist analyze --state <CODE> [OPTIONS]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--state <CODE>` | *(required)* | Two-letter state code |
+| `-y`, `--year` | `2020` | Census year |
+| `-v`, `--version` | `v1` | Version identifier |
+| `--output-base` | `outputs` | Output base directory |
+| `--types <TYPES>` | `all` | Analyzers: `demographic`, `political`, `urban`, `summary`, `compactness`, `all` |
+| `--force` | false | Re-run even if output exists |
+| `--allow-imbalance` | false | Don't exit non-zero on population balance failure (research use) |
+
+**Requires**: `redist state` must have been run first to produce `final_assignments.json`.
+
+**Examples**:
+
+```bash
+# All analyzers for Vermont
+redist analyze --state VT --year 2020 --version V3 --types all
+
+# Just demographic + political
+redist analyze --state AL --year 2020 --version V3 --types demographic political
+
+# Compactness metrics (PP, Reock, CHR)
+redist analyze --state TX --year 2020 --version V3 --types compactness
+
+# Allow imbalanced results without exiting non-zero
+redist analyze --state VT --year 2020 --version V3 --allow-imbalance
+```
+
+**Output files** (under `outputs/{version}/states/{state}/analysis/`):
+
+| File | Key fields |
+|------|-----------|
+| `demographic.json` | `total_pop`, `pct_white/black/asian/hispanic/other`, `pct_minority`, `is_majority_minority`, `pop_basis` |
+| `political.json` | `dem_pct`, `rep_pct`, `margin`, `lean_dem`, `is_uncontested`, `available` |
+| `urban.json` | `largest_city`, `largest_city_pop`, `num_places`, `available` |
+| `compactness.json` | `polsby_popper`, `reock`, `convex_hull_ratio`, `crs_note` |
+| `summary.json` | All of the above merged + `ideal_pop`, `pop_deviation_pct`, `pop_balance_ok`, `population_balance_valid` |
+
+**Notes:**
+- `demographic.json` uses **total population** (not VAP). VRA district identification uses separate VAP-based logic in `vra_analysis.json`. Field `pop_basis: "total_population"` is always present to document this.
+- `political.json` is `available: false` for years without election data (2000, 2010).
+- `compactness.json` metrics are computed on WGS84 coordinates (display-only CRS). Scores for east-west-elongated states (Montana, Nevada) are systematically compressed. See `crs_note` in output.
+- `summary.json` exits with code 2 if any district fails ±0.5% population balance; suppress with `--allow-imbalance`.
+
+---
+
+## `redist map` — PNG map rendering
+
+Renders district maps to PNG using the native Rust SVG→PNG pipeline (no Python, no matplotlib).
+
+```
+redist map --state <CODE> [OPTIONS]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--state <CODE>` | *(required)* | Two-letter state code |
+| `-y`, `--year` | `2020` | Census year |
+| `-v`, `--version` | `v1` | Version identifier |
+| `--types <TYPES>` | `districts` | Map types: `districts`, `rounds`, `political`, `demographic`, `compactness`, `all` |
+| `--dpi` | `150` | Output DPI: `72`, `100`, `150`, `200`, `300` |
+| `--force` | false | Re-render even if output exists |
+
+**Requires**: `redist state` for all map types. `redist analyze` for choropleth types (political, demographic, compactness).
+
+**Examples**:
+
+```bash
+# Categorical district map (colored regions)
+redist map --state VT --year 2020 --version V3 --types districts
+
+# Partisan choropleth (red-white-blue by Dem %)
+redist map --state AL --year 2020 --version V3 --types political
+
+# Minority % choropleth (yellow-brown sequential)
+redist map --state TX --year 2020 --version V3 --types demographic
+
+# All map types, publication quality
+redist map --state CA --year 2020 --version V3 --types all --dpi 300
+
+# Bisection round progression maps
+redist map --state AL --year 2020 --version V3 --types rounds
+```
+
+**Output files** (under `outputs/{version}/states/{state}/maps/`):
+
+| File | Description |
+|------|-------------|
+| `districts.png` | Categorical district map — each district a distinct color |
+| `political.png` | Partisan choropleth — red (Rep) → white (tossup) → blue (Dem) |
+| `demographic.png` | Minority % choropleth — yellow (low) → brown (high) |
+| `compactness.png` | Polsby-Popper choropleth — green sequential |
+| `maps/rounds/round_00.png` … | Bisection progression — one PNG per round |
+
+**Labeling**: labels are sized adaptively based on polygon area. Large regions show `"1 (26)"` (district number + how many final districts this region will contain). Small regions show just `"1"`. Analytical maps show `"D+12%"` or `"42% min"` below the district number.
+
+---
+
 ## Environment Variables
 
 | Variable | Description |

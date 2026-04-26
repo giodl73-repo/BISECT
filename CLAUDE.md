@@ -29,7 +29,9 @@ Congressional redistricting via METIS recursive bisection → 435 districts, 50 
 **Web**: `web/dashboard.html`, `scripts/web/generate_dashboard.py` - Static dashboard
 
 **Rust CLI** (`~213× faster than Python`):
-- `redist/crates/redist-cli/` - Binary source (`redist state`, `redist states`, `redist run`, `redist fetch`)
+- `redist/crates/redist-cli/` - Binary source (`redist state`, `redist states`, `redist run`, `redist fetch`, `redist analyze`, `redist map`)
+- `redist/crates/redist-map/` - Native map rendering crate (SVG→PNG via resvg, Liberation Sans embedded)
+- `redist/crates/redist-analysis/` - Analytics crate (demographic, political, urban, compactness, summary)
 - `docs/REDIST_CLI.md` - Full CLI reference (commands, flags, env vars)
 - `scripts/data/generate_adj_bin.py` - Convert pkl adjacency files to fast `.adj.bin` format
 
