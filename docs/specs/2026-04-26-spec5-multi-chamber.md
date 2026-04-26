@@ -222,3 +222,15 @@ fn test_nesting_ratio_computed() {
 - **Spec 1**: suite uses `--label` and `PlanManifest` for each chamber plan
 - **Spec 3**: contiguity and splits run on each chamber plan; nesting adds a fourth constraint type
 - **Spec 6**: report covers all chambers in a suite; nesting compliance section included
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[MERIDIAN] CRITICAL — Noncontiguous house plan silently breaks senate nesting**
+If `--allow-noncontiguous` is used to proceed with a noncontiguous house plan, the house-district adjacency graph used for senate nesting will be disconnected. METIS will produce an invalid senate plan with no error.
+Fix: `redist suite --nest` hard-fails if any house district fails contiguity check, regardless of `--allow-noncontiguous`. Error message: `ERROR: Senate nesting requires all house districts to be contiguous. District 7 has 2 components. Remove --allow-noncontiguous or fix the house plan before nesting.`
+
+**[WARD] CONCERN — Variable nesting ratios need constitutional validation**
+Several states have variable or non-integer nesting schemes. The `--nest-ratio N:M` flag exists but there is no validation against known constitutional requirements.
+Fix: Add a per-state nesting table. When `--nest-ratio` deviates from the constitutional value, print a warning: `WARNING: WA constitution requires 2:1 house-to-senate nesting ratio. You specified 3:1. Proceed only if you have verified this is legally permissible.`

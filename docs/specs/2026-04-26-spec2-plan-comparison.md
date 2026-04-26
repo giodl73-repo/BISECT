@@ -234,3 +234,15 @@ Uses `geo::algorithm::Contains` for point-in-polygon.
 - **Spec 3**: county/split metrics fed into comparison output
 - **Spec 4**: partisan metrics fed into comparison output
 - **Spec 6**: `PlanComparison` JSON is a primary input to the commission report
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[MERIDIAN] CRITICAL — Centroid PIP must have nearest-polygon fallback**
+Tract centroids along district boundaries frequently fall outside their containing polygon (coastal tracts, narrow linear tracts). No fallback is specified — these tracts would be unassigned, silently corrupting the enacted assignment.
+Fix: After point-in-polygon, any unassigned tract uses nearest-polygon (minimum centroid-to-polygon-boundary distance). Assert 100% coverage before writing `enacted_assignments.json`. Error and exit if coverage < 100%.
+
+**[WARD] CONCERN — Remove "Winner" framing from comparison output**
+Declaring a "Winner" based on compactness or split count is legally dangerous — courts do not declare plans better or worse on single metrics, and this language can be used adversarially.
+Fix: Replace "Winner: Draft 1" with "Lower: Draft 1" and "Difference: -3 splits". Add disclaimer in all comparison output: "No single metric determines legal compliance. Consult applicable state constitutional standards."

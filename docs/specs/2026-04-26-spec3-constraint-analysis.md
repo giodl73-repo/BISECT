@@ -269,3 +269,22 @@ fn test_county_split_across_two_districts() {
 - **Spec 2**: `splits.json` → `county_splits` and `municipal_splits` in comparison output
 - **Spec 5**: contiguity check mandatory for nested plan validation
 - **Spec 6**: `contiguity.json` + `splits.json` → constraint compliance section of report
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[WARD] CRITICAL — Split standard must be state-specific**
+"Minimize splits" and a generic preservation score are not legally sufficient. WA's constitutional language differs from CA's Article XXI, TX, CO, etc. The same split count may be compliant in one state and a constitutional violation in another.
+Fix: Add `--state-splits-standard <STATE>` lookup (or auto-detect from `--state` flag). Per-state table records the applicable constitutional language and threshold. Output includes:
+```json
+{
+  "legal_standard": "WA Const. Art. II §43 — counties shall be preserved where possible",
+  "compliance_assessment": "4 splits present; no binding numerical limit under WMCA",
+  "disclaimer": "Legal compliance determination requires counsel"
+}
+```
+
+**[LEDGER] CONCERN — Missing municipal data must be an error for required jurisdictions**
+Silently skipping municipal splits when the geography file is absent could constitute a legal deficiency if municipal preservation is constitutionally required in that state.
+Fix: `redist analyze --types splits` checks if the state has a municipal preservation requirement (lookup table). If yes and the geography file is absent, exit with error code 6 and message: `ERROR: Municipal preservation is constitutionally required for WA but place-tract data is absent. Run: redist fetch --type geography --states WA`. Add `--require-municipal` flag to force this behavior in any state.

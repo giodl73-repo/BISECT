@@ -277,3 +277,31 @@ shapefile = "0.6"    # already a dependency in redist-data
 - **Spec 4**: partisan metrics feed Section 4
 - **Spec 5**: nesting validation feeds Section 8
 - **All**: the `external analyzer hook` and `import` mechanism make `redist` an open platform for any tool chain
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[COVENANT] CRITICAL — Binary provenance must be independently verifiable**
+The manifest hashes input data but not the binary itself. A court-appointed special master needs to independently obtain and verify the exact binary used.
+Fix: `PlanManifest` gains:
+```json
+{
+  "binary_download_url": "https://github.com/giodl73-repo/REDIST/releases/tag/v0.1.0",
+  "binary_release_sha256": "hash from GitHub release page",
+  "binary_build_commit": "git SHA"
+}
+```
+Release process must publish SHA-256 hashes for each platform binary on the GitHub Releases page. The manifest verification command in the report includes: `curl -L {binary_download_url}/redist.exe | sha256sum` → must match `binary_release_sha256`.
+
+**[COVENANT] CONCERN — External analyzer hook breaks audit integrity**
+`--external-analyzer` passes assignments to a mutable external script. This breaks the self-contained reproducibility guarantee. Every report using an external analyzer has a gap in chain of custody.
+Fix: External analyzer invocations must also SHA-256 hash the script file and record it in the manifest:
+```json
+{"external_analyzers": [{"script": "my_splits.py", "sha256": "abc123...", "command": "python my_splits.py {args}"}]}
+```
+Reports with external analyzers include a visible disclaimer: "This report includes analysis from external tools not part of the redist binary. Independent reproducibility requires access to the external scripts listed in the manifest."
+
+**[LEDGER] CRITICAL — GerryChain export schema must be pinned to a specific version**
+GerryChain changed its partition JSON schema between v2 and v3 (field `assignment` vs `part`; dict vs list format). An incompatible export silently produces wrong analysis.
+Fix: MGGG export is pinned to GerryChain v2.3+ schema explicitly. The export format documentation states the target version. Add a round-trip integration test: `gerrychain_import → assignments → gerrychain_import` produces identical partition. Document: "Compatible with GerryChain ≥2.3. Earlier versions use different field names; see docs/specs/RPLAN.md for migration."

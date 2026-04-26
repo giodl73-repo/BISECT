@@ -251,3 +251,29 @@ fn test_partisan_bias_neutral_at_50pct() {
 - **Spec 2**: `partisan` metrics in side-by-side plan comparison
 - **Spec 3**: no direct dependency, but share the `AnalyzerContext`
 - **Spec 6**: partisan fairness section of commission report includes EG + MM + PB with thresholds
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[SCALE] CRITICAL — Bootstrap CI invalid for small chambers**
+Bootstrapping over districts with N < 10 produces meaningless variance estimates. Single-district states (VT, WY) and small chambers would silently report CIs that are statistically invalid.
+Fix: Suppress CI computation when `num_districts < 10`. Report:
+```json
+{"ci_available": false, "ci_reason": "Bootstrap CI requires ≥10 districts (found N)"}
+```
+Do not report CI bounds at all for small chambers.
+
+**[BOUNDARY] CONCERN — Gill threshold is not a constitutional standard**
+The ±8% efficiency gap threshold (Stephanopoulos & McGhee) was explicitly not adopted by SCOTUS in Gill v. Whitford (2018). Labeling plans `within_normal` against this threshold misleads commissioners.
+Fix: Replace `threshold_8pct: "within_normal"` with:
+```json
+{"academic_reference": "8% threshold from Stephanopoulos & McGhee (2015). SCOTUS declined to adopt in Gill v. Whitford (2018). Not a constitutional standard."}
+```
+
+**[PRECINCT] CONCERN — Presidential proxy limitation must be visible**
+Using presidential results for state legislative chambers systematically inflates urban Democratic margins. This is a methodological limitation requiring disclosure in every report.
+Fix: When `--election-file` is not specified and presidential data is used for a non-congressional chamber, include in `partisan.json`:
+```json
+{"methodology_warning": "Presidential election results used as proxy for state legislative district partisanship. Presidential coattail effects may systematically inflate urban Democratic margins. Provide state legislative election data via --election-file for more accurate analysis."}
+```

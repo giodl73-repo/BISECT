@@ -181,3 +181,25 @@ After `write_state_outputs()` succeeds, compute SHA-256 of adjacency and TIGER f
 - **Spec 4 (Partisan Metrics)**: reads `final_assignments.json` from plan directory
 - **Spec 5 (Multi-chamber)**: references parent plan label for nesting validation
 - **Spec 6 (Reports)**: reads `manifest.json` as audit chain of custody anchor
+
+---
+
+## Board Review Amendments (2026-04-26)
+
+**[WARD] CRITICAL — Chamber-aware balance tolerance defaults**
+The `--balance-tolerance` default of 0.5% incorrectly applies a federal congressional standard to state legislative chambers. WA state legislative districts have unlimited deviation under WMCA case law; most states allow ±5-10% for state chambers.
+Fix: Defaults are now chamber-aware:
+- `congressional`: 0.5% (Baker v. Carr strict)
+- `house`, `senate`: 5.0% with a printed notice: "State legislative balance tolerance set to 5.0%. Verify your state's constitutional standard."
+- `--balance-tolerance` override always wins.
+
+**[COVENANT] CRITICAL — Manifest must hash Census source, not derived files**
+Hashing `adjacency.adj.bin` (a derived product) does not allow a special master to verify correctness back to Census-published data. The manifest must separately record the SHA-256 of the upstream TIGER tract shapefile and the adjacency-build command/version.
+Fix: `PlanManifest` gains two additional fields:
+```json
+{
+  "tiger_sha256": "hash of data/2020/tiger/tracts/{fips}/tl_2020_{fips}_tract.shp",
+  "adjacency_build_command": "python scripts/data/geography/build_tract_adjacency.py ...",
+  "adjacency_build_version": "redist_py 0.1.0 (abi3)"
+}
+```
