@@ -28,7 +28,7 @@ impl ReportContext {
 
 /// Names of required analysis files (relative to plan_dir/analysis/).
 pub const REQUIRED_ANALYSIS_FILES: &[&str] = &[
-    "population.json",
+    "summary.json",
     "contiguity.json",
     "compactness.json",
 ];
@@ -143,8 +143,8 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
         "balance_tolerance_pct": m.balance_tolerance_pct,
     });
 
-    // Section 2: Population equality
-    let population_json = read_analysis_json(&analysis_dir, "population.json")
+    // Section 2: Population equality (written by SummaryAnalyzer as summary.json)
+    let population_json = read_analysis_json(&analysis_dir, "summary.json")
         .unwrap_or_else(|| serde_json::json!({"status": "unavailable"}));
 
     // Section 3: Geographic constraints
@@ -385,7 +385,7 @@ mod tests {
     fn test_assemble_report_returns_err_on_missing_required_file() {
         // Board amendment: assemble_report() must return Err when required files absent
         let tmp = TempDir::new().unwrap();
-        let ctx = setup_plan_dir_missing_file(&tmp, "vt_err_test", "population.json");
+        let ctx = setup_plan_dir_missing_file(&tmp, "vt_err_test", "summary.json");
         let result = assemble_report(&ctx);
         assert!(
             result.is_err(),
@@ -393,7 +393,7 @@ mod tests {
         );
         let msg = result.unwrap_err().to_string();
         assert!(
-            msg.contains("population.json"),
+            msg.contains("summary.json"),
             "error must mention the missing file, got: {msg}"
         );
     }

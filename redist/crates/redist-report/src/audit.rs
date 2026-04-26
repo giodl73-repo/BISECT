@@ -73,7 +73,7 @@ pub fn generate_verification_command(
 ) -> String {
     let seed_str = seed
         .map(|s| format!(" --seed {}", s))
-        .unwrap_or_default();
+        .unwrap_or_else(|| " --seed <unknown: seed not recorded in manifest>".to_string());
 
     let tiger_check = if let Some(sha) = tiger_sha256 {
         format!(

@@ -11,6 +11,50 @@ use std::path::{Path, PathBuf};
 use geo_types::{Geometry, MultiPolygon};
 use redist_map::{wkb_to_geometry, group_dissolve};
 use redist_data::tiger::read_tiger_tracts;
+use redist_core::state_code_to_fips;
+
+/// Resolve raw assignments (may be index-keyed or GEOID-keyed) to GEOID-keyed form.
+/// If keys are shorter than 11 chars, treats them as adjacency indices and resolves
+/// via the _geoids.json file in the adjacency store.
+pub fn resolve_to_geoid_assignments(
+    raw: HashMap<String, usize>,
+    output_root: &Path,
+    state_code: &str,
+    year: &str,
+) -> HashMap<String, usize> {
+    let uses_index = raw.keys().next().map(|k| k.len() < 11).unwrap_or(false);
+    if !uses_index {
+        return raw;
+    }
+    let state_code_lower = state_code.to_lowercase();
+    let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
+    let geoid_candidates = [
+        output_root.join("data").join(year).join("adjacency").join(&geoid_file),
+        PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),
+        PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&geoid_file),
+    ];
+    let geoid_path = geoid_candidates.iter().find(|p| p.exists());
+    if let Some(geoid_path) = geoid_path {
+        let raw_geoids: HashMap<String, String> =
+            match std::fs::read_to_string(geoid_path)
+                .and_then(|s| serde_json::from_str(&s)
+                    .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e)))
+            {
+                Ok(m) => m,
+                Err(e) => {
+                    eprintln!("WARNING: could not read geoid mapping {}: {e}", geoid_path.display());
+                    return raw;
+                }
+            };
+        raw_geoids.into_iter()
+            .filter_map(|(idx, geoid)| raw.get(&idx).map(|&d| (geoid, d)))
+            .collect()
+    } else {
+        eprintln!("WARNING: geoid mapping not found for {state_code_lower} {year}; \
+            run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
+        raw
+    }
+}
 
 /// Load dissolved district geometries for a state.
 ///
@@ -114,30 +158,6 @@ pub fn load_district_geometries(
     }
 
     Ok(group_dissolve(&geoms, &tract_assignments, num_districts))
-}
-
-/// Map 2-letter postal code → Census FIPS code (zero-padded to 2 digits).
-pub fn state_code_to_fips(code: &str) -> Option<&'static str> {
-    match code {
-        "AL" => Some("01"), "AK" => Some("02"), "AZ" => Some("04"),
-        "AR" => Some("05"), "CA" => Some("06"), "CO" => Some("08"),
-        "CT" => Some("09"), "DE" => Some("10"), "FL" => Some("12"),
-        "GA" => Some("13"), "HI" => Some("15"), "ID" => Some("16"),
-        "IL" => Some("17"), "IN" => Some("18"), "IA" => Some("19"),
-        "KS" => Some("20"), "KY" => Some("21"), "LA" => Some("22"),
-        "ME" => Some("23"), "MD" => Some("24"), "MA" => Some("25"),
-        "MI" => Some("26"), "MN" => Some("27"), "MS" => Some("28"),
-        "MO" => Some("29"), "MT" => Some("30"), "NE" => Some("31"),
-        "NV" => Some("32"), "NH" => Some("33"), "NJ" => Some("34"),
-        "NM" => Some("35"), "NY" => Some("36"), "NC" => Some("37"),
-        "ND" => Some("38"), "OH" => Some("39"), "OK" => Some("40"),
-        "OR" => Some("41"), "PA" => Some("42"), "RI" => Some("44"),
-        "SC" => Some("45"), "SD" => Some("46"), "TN" => Some("47"),
-        "TX" => Some("48"), "UT" => Some("49"), "VT" => Some("50"),
-        "VA" => Some("51"), "WA" => Some("53"), "WV" => Some("54"),
-        "WI" => Some("55"), "WY" => Some("56"), "DC" => Some("11"),
-        _ => None,
-    }
 }
 
 /// Reverse-lookup: state directory name (e.g. "rhode_island") → 2-letter code (e.g. "RI").

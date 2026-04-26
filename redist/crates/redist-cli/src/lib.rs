@@ -2,6 +2,7 @@ pub mod adjacency_loader;
 pub mod aggregate;
 pub mod analyze;
 pub mod args;
+pub mod io_utils;
 pub mod bisection_runner;
 pub mod compare;
 pub mod demographics;

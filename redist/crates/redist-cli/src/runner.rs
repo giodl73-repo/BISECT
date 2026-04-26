@@ -15,7 +15,7 @@ use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::fetch::load_manifest;
 use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
 use crate::status::{status, ascii_safe};
-use redist_core::{Partition, build_vra_edge_weights};
+use redist_core::{Partition, build_vra_edge_weights, state_code_to_fips};
 use redist_analysis::analyze_mm_districts;
 use redist_report;
 
@@ -363,7 +363,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // Board amendment: atomic write (manifest.tmp + rename) prevents partial manifests.
     if cfg.write_manifest || cfg.label.is_some() {
         let adj_filename = format!("{}_adjacency_{}.adj.bin", state_name, cfg.year);
-        let state_fips = resolve_state_fips(&cfg.state_code);
+        let state_fips = state_code_to_fips(&cfg.state_code).unwrap_or("00").to_string();
         let tiger_url = redist_report::tiger_source_url(&state_fips, &cfg.year);
         let manifest = redist_report::PlanManifest {
             label: label.clone(),
@@ -389,7 +389,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             adjacency_build_version: env!("CARGO_PKG_VERSION").to_string(),
             tiger_source_url: tiger_url,
             tiger_sha256: None, // expensive; computed separately if needed
-            created_at: current_iso8601(),
+            created_at: redist_report::now_iso8601(),
             balance_tolerance_pct: balance_tolerance * 100.0,
             population_balance_valid: true,
         };
@@ -399,55 +399,6 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
 
     status(cfg.position, &format!("{}: complete ({num_districts}D, {}ms)", cfg.state_code, 0));
     Ok(())
-}
-
-/// Resolve a 2-letter state code to its FIPS code string.
-/// Falls back to "00" if not found.
-fn resolve_state_fips(state_code: &str) -> String {
-    // Standard FIPS codes for common states
-    match state_code.to_uppercase().as_str() {
-        "AL" => "01", "AK" => "02", "AZ" => "04", "AR" => "05", "CA" => "06",
-        "CO" => "08", "CT" => "09", "DE" => "10", "FL" => "12", "GA" => "13",
-        "HI" => "15", "ID" => "16", "IL" => "17", "IN" => "18", "IA" => "19",
-        "KS" => "20", "KY" => "21", "LA" => "22", "ME" => "23", "MD" => "24",
-        "MA" => "25", "MI" => "26", "MN" => "27", "MS" => "28", "MO" => "29",
-        "MT" => "30", "NE" => "31", "NV" => "32", "NH" => "33", "NJ" => "34",
-        "NM" => "35", "NY" => "36", "NC" => "37", "ND" => "38", "OH" => "39",
-        "OK" => "40", "OR" => "41", "PA" => "42", "RI" => "44", "SC" => "45",
-        "SD" => "46", "TN" => "47", "TX" => "48", "UT" => "49", "VT" => "50",
-        "VA" => "51", "WA" => "53", "WV" => "54", "WI" => "55", "WY" => "56",
-        _ => "00",
-    }.to_string()
-}
-
-/// Return current time as ISO 8601 string (UTC).
-fn current_iso8601() -> String {
-    use std::time::SystemTime;
-    let secs = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs();
-    let days = secs / 86400;
-    let rem = secs % 86400;
-    let h = rem / 3600;
-    let m = (rem % 3600) / 60;
-    let s = rem % 60;
-    let date = epoch_days_to_iso_date(days);
-    format!("{date}T{h:02}:{m:02}:{s:02}Z")
-}
-
-fn epoch_days_to_iso_date(days: u64) -> String {
-    let z = days as i64 + 719468;
-    let era = if z >= 0 { z } else { z - 146096 } / 146097;
-    let doe = z - era * 146097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
-    let y = yoe + era * 400;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = doy - (153 * mp + 2) / 5 + 1;
-    let mo = if mp < 10 { mp + 3 } else { mp - 9 };
-    let y = if mo <= 2 { y + 1 } else { y };
-    format!("{y:04}-{mo:02}-{d:02}")
 }
 
 /// Check if a state's outputs already exist and are complete.

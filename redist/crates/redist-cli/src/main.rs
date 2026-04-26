@@ -266,8 +266,10 @@ fn main() {
                     };
                     // Empty assignments for CLI stub — real draw populates from bisection
                     let empty: HashMap<String, usize> = HashMap::new();
-                    run_suite_draw(&draw_args, &empty, &empty, None)
-                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                    if let Err(e) = run_suite_draw(&draw_args, &empty, &empty, None) {
+                        eprintln!("ERROR: {e}");
+                        std::process::exit(4);  // nesting bit
+                    }
                 }
                 SuiteCommands::Validate(args) => {
                     use redist_cli::suite::run_suite_validate;

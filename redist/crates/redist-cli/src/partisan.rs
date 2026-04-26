@@ -9,6 +9,7 @@ use anyhow::Context;
 use redist_analysis::{
     DistrictElection, compute_partisan_metrics,
 };
+use crate::io_utils::write_json_atomic;
 
 // ---------------------------------------------------------------------------
 // Election CSV record
@@ -245,13 +246,6 @@ pub fn run_partisan(args: &PartisanArgs<'_>) -> anyhow::Result<()> {
 
     write_json_atomic(&out_path, &output)?;
     eprintln!("[OK] partisan -> {}", out_path.display());
-    Ok(())
-}
-
-fn write_json_atomic<T: serde::Serialize>(path: &Path, value: &T) -> anyhow::Result<()> {
-    let tmp = path.with_extension("tmp.json");
-    std::fs::write(&tmp, serde_json::to_string_pretty(value)?)?;
-    std::fs::rename(&tmp, path)?;
     Ok(())
 }
 

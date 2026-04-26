@@ -46,6 +46,13 @@ impl AnalyzerType {
         }
     }
 
+    /// Returns all concrete analyzer types for use with `--types all`.
+    ///
+    /// **Excluded from this list:**
+    /// - `Compactness`: requires TIGER geometry loading; handled separately in analyze.rs
+    /// - `Partisan`: requires election data file; handled separately in analyze.rs
+    ///
+    /// These analyzers are invoked via explicit `--types compactness` or `--types partisan`.
     pub fn all_concrete() -> Vec<Self> {
         vec![
             Self::Demographic,

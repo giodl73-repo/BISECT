@@ -362,8 +362,7 @@ pub fn run_suite_draw(
                 args.name,
                 violation_strs.join("\n")
             );
-            // Return exit code 5 (balance=0 | nesting=4 | ...)
-            std::process::exit(5);
+            return Err(anyhow::anyhow!("Nesting validation failed — see violations above"));
         }
     }
 

@@ -8,6 +8,7 @@ use redist_analysis::{AnalyzerContext, AnalyzerType,
 use crate::args::AnalyzeArgs;
 use crate::runner::load_all_states;
 use crate::partisan::{PartisanArgs, run_partisan};
+use crate::io_utils::write_json_atomic;
 
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     let state_code = args.state.to_uppercase();
@@ -69,34 +70,9 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
 
     // If assignments use tract indices (keys < 11 chars), resolve to GEOID-keyed map
     // using the adjacency geoids file so all analyzers can join by GEOID.
-    let assignments: HashMap<String, usize> = {
-        let uses_index = raw_assignments.keys().next().map(|k| k.len() < 11).unwrap_or(false);
-        if uses_index {
-            let state_code_lower = state_code.to_lowercase();
-            let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
-            // Search order mirrors adjacency resolution: version-local, then V3, then V4
-            let geoid_candidates = [
-                adjacency_root.join("data").join(&year).join("adjacency").join(&geoid_file),
-                PathBuf::from("outputs/V3/data").join(&year).join("adjacency").join(&geoid_file),
-                PathBuf::from("outputs/V4/data").join(&year).join("adjacency").join(&geoid_file),
-            ];
-            let geoid_path = geoid_candidates.iter().find(|p| p.exists());
-            if let Some(geoid_path) = geoid_path {
-                let raw_geoids: HashMap<String, String> = serde_json::from_str(
-                    &std::fs::read_to_string(geoid_path)?
-                )?;
-                raw_geoids.into_iter()
-                    .filter_map(|(idx, geoid)| raw_assignments.get(&idx).map(|&d| (geoid, d)))
-                    .collect()
-            } else {
-                eprintln!("WARNING: geoid mapping not found for {state_code_lower} {year}; \
-                    run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
-                raw_assignments
-            }
-        } else {
-            raw_assignments
-        }
-    };
+    let assignments: HashMap<String, usize> = crate::geometry::resolve_to_geoid_assignments(
+        raw_assignments, &adjacency_root, &state_code, &year,
+    );
 
     let analysis_dir = analysis_dir_base.join("analysis");
     std::fs::create_dir_all(&analysis_dir)?;
@@ -222,14 +198,7 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                             num_districts,
                         );
                         let contiguity_violation = !result.all_contiguous;
-                        let out = serde_json::json!({
-                            "analyzer": "contiguity",
-                            "state": state_code,
-                            "year": year,
-                            "all_contiguous": result.all_contiguous,
-                            "districts": result.districts,
-                        });
-                        write_json_atomic(&out_path, &out)?;
+                        write_json_atomic(&out_path, &result)?;
                         eprintln!("[OK] contiguity -> {}", out_path.display());
                         if contiguity_violation {
                             contiguity_failed = true;
@@ -385,9 +354,3 @@ fn resolve_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {
     }
 }
 
-fn write_json_atomic<T: serde::Serialize>(path: &Path, value: &T) -> anyhow::Result<()> {
-    let tmp = path.with_extension("tmp.json");
-    std::fs::write(&tmp, serde_json::to_string_pretty(value)?)?;
-    std::fs::rename(&tmp, path)?;
-    Ok(())
-}

@@ -573,6 +573,10 @@ pub struct MapArgs {
     /// Re-render even if output already exists
     #[arg(long)]
     pub force: bool,
+
+    /// Base output directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -991,6 +995,13 @@ mod tests {
         assert_eq!(args.dpi, "150");
         assert!(!args.force);
         assert!(args.types.contains(&MapType::Districts));
+        assert_eq!(args.output_base, "outputs");
+    }
+
+    #[test]
+    fn test_map_output_base_override() {
+        let args = MapArgs::parse_from(["map", "--state", "VT", "--output-base", "/custom/outputs"]);
+        assert_eq!(args.output_base, "/custom/outputs");
     }
 
     #[test]
@@ -1081,6 +1092,24 @@ mod tests {
 // `redist fetch` — data download
 // ---------------------------------------------------------------------------
 
+#[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
+pub enum DataType {
+    #[value(name = "tiger")]
+    Tiger,
+    #[value(name = "redistricting")]
+    Redistricting,
+    #[value(name = "adjacency")]
+    Adjacency,
+    #[value(name = "enacted")]
+    Enacted,
+    #[value(name = "geography")]
+    Geography,
+    #[value(name = "elections")]
+    Elections,
+    #[value(name = "all")]
+    All,
+}
+
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct FetchArgs {
@@ -1092,9 +1121,9 @@ pub struct FetchArgs {
     #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
     pub states: Vec<String>,
 
-    /// Data types: tiger, redistricting, adjacency, all [default: all]
+    /// Data types: tiger, redistricting, adjacency, enacted, geography, elections, all [default: all]
     #[arg(long = "type", num_args = 0.., value_delimiter = ' ')]
-    pub data_types: Vec<String>,
+    pub data_types: Vec<DataType>,
 
     /// Pull adjacency data from GitHub Releases (requires gh auth login)
     #[arg(long)]

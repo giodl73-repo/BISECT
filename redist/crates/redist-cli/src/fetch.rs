@@ -110,12 +110,13 @@ pub fn build_fetch_list(
     manifest: &Manifest,
     states: &[String],
     year: &str,
-    data_types: &[String],
+    data_types: &[crate::args::DataType],
 ) -> Vec<FetchItem> {
-    let all_types = data_types.is_empty() || data_types.contains(&"all".to_string());
-    let want_tiger = all_types || data_types.contains(&"tiger".to_string());
-    let want_pl = all_types || data_types.contains(&"redistricting".to_string());
-    let want_adj = all_types || data_types.contains(&"adjacency".to_string());
+    use crate::args::DataType;
+    let all_types = data_types.is_empty() || data_types.iter().any(|t| matches!(t, DataType::All));
+    let want_tiger = all_types || data_types.iter().any(|t| matches!(t, DataType::Tiger));
+    let want_pl = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
+    let want_adj = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
 
     let mut items = Vec::new();
     let data_dir = PathBuf::from(&manifest.local_data_dir);
@@ -397,9 +398,10 @@ mod tests {
 
     #[test]
     fn test_build_fetch_list_tiger_only() {
+        use crate::args::DataType;
         let manifest = load_manifest().unwrap();
         let items = build_fetch_list(
-            &manifest, &["VT".to_string()], "2020", &["tiger".to_string()]
+            &manifest, &["VT".to_string()], "2020", &[DataType::Tiger]
         );
         assert_eq!(items.len(), 1);
         assert_eq!(items[0].kind, "tiger");

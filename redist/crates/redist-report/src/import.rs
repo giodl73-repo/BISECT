@@ -6,6 +6,7 @@
 /// - source="imported" is recorded in RPLAN metadata
 use std::collections::HashMap;
 use serde_json::Value;
+use redist_core::state_code_to_fips as core_fips;
 
 /// Assign each census tract centroid to the district polygon containing it.
 /// Falls back to the nearest polygon centroid for tracts outside all polygons.
@@ -203,7 +204,7 @@ pub fn import_plan_to_rplan(
 
     let mut metadata = crate::rplan::RplanMetadata {
         label: label.to_string(),
-        state_fips: state_code_to_fips(state_code),
+        state_fips: core_fips(&state_code.to_uppercase()).unwrap_or("00").to_string(),
         state_code: state_code.to_uppercase(),
         year: year.to_string(),
         chamber: "imported".to_string(),
@@ -223,31 +224,6 @@ pub fn import_plan_to_rplan(
         assignments,
         geometry: None,
     })
-}
-
-/// Best-effort state code → FIPS lookup (common states only).
-fn state_code_to_fips(state_code: &str) -> String {
-    match state_code.to_uppercase().as_str() {
-        "AL" => "01".to_string(), "AK" => "02".to_string(), "AZ" => "04".to_string(),
-        "AR" => "05".to_string(), "CA" => "06".to_string(), "CO" => "08".to_string(),
-        "CT" => "09".to_string(), "DE" => "10".to_string(), "FL" => "12".to_string(),
-        "GA" => "13".to_string(), "HI" => "15".to_string(), "ID" => "16".to_string(),
-        "IL" => "17".to_string(), "IN" => "18".to_string(), "IA" => "19".to_string(),
-        "KS" => "20".to_string(), "KY" => "21".to_string(), "LA" => "22".to_string(),
-        "ME" => "23".to_string(), "MD" => "24".to_string(), "MA" => "25".to_string(),
-        "MI" => "26".to_string(), "MN" => "27".to_string(), "MS" => "28".to_string(),
-        "MO" => "29".to_string(), "MT" => "30".to_string(), "NE" => "31".to_string(),
-        "NV" => "32".to_string(), "NH" => "33".to_string(), "NJ" => "34".to_string(),
-        "NM" => "35".to_string(), "NY" => "36".to_string(), "NC" => "37".to_string(),
-        "ND" => "38".to_string(), "OH" => "39".to_string(), "OK" => "40".to_string(),
-        "OR" => "41".to_string(), "PA" => "42".to_string(), "RI" => "44".to_string(),
-        "SC" => "45".to_string(), "SD" => "46".to_string(), "TN" => "47".to_string(),
-        "TX" => "48".to_string(), "UT" => "49".to_string(), "VT" => "50".to_string(),
-        "VA" => "51".to_string(), "WA" => "53".to_string(), "WV" => "54".to_string(),
-        "WI" => "55".to_string(), "WY" => "56".to_string(),
-        fips if fips.chars().all(|c| c.is_ascii_digit()) => fips.to_string(),
-        _ => "00".to_string(),
-    }
 }
 
 // ---------------------------------------------------------------------------

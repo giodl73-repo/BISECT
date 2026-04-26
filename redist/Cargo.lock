@@ -2143,7 +2143,7 @@ dependencies = [
  "redist-core",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2168,7 +2168,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tempfile",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "zip",
 ]
 
@@ -2181,7 +2181,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -2196,7 +2196,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shapefile",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "wkb",
 ]
 
@@ -2215,7 +2215,7 @@ dependencies = [
  "resvg",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.18",
  "tiny-skia",
  "usvg",
 ]
@@ -2232,6 +2232,7 @@ dependencies = [
  "geo-types 0.7.19",
  "geojson",
  "hex",
+ "redist-core",
  "serde",
  "serde_json",
  "sha2",
@@ -2245,7 +2246,6 @@ name = "redist-web"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "redist-core",
 ]
 
 [[package]]

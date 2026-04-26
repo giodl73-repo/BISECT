@@ -63,6 +63,7 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
 
 /// Load an RplanFile from a plan directory.
 /// Tries plan.rplan first, then reconstructs from final_assignments.json + manifest.json.
+/// Also checks `data/final_assignments.json` (new pipeline layout).
 fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::Result<RplanFile> {
     // Try to read a .rplan file
     let rplan_path = plan_dir.join(format!("{}.rplan", label));
@@ -73,14 +74,19 @@ fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::
         return Ok(rplan);
     }
 
-    // Fall back: reconstruct from final_assignments.json
-    let assignments_path = plan_dir.join("final_assignments.json");
-    if !assignments_path.exists() {
+    // Fall back: reconstruct from final_assignments.json (root or data/ subdir)
+    let assignments_path_root = plan_dir.join("final_assignments.json");
+    let assignments_path_data = plan_dir.join("data").join("final_assignments.json");
+    let assignments_path = if assignments_path_root.exists() {
+        assignments_path_root
+    } else if assignments_path_data.exists() {
+        assignments_path_data
+    } else {
         anyhow::bail!(
             "No .rplan or final_assignments.json found in '{}'",
             plan_dir.display()
         );
-    }
+    };
 
     let assignments_str = std::fs::read_to_string(&assignments_path)?;
     let assignments: std::collections::HashMap<String, usize> =
