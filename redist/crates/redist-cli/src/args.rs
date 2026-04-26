@@ -129,6 +129,91 @@ pub enum Commands {
     States(StatesArgs),
     /// Download census data needed to run redistricting
     Fetch(FetchArgs),
+    /// Compute per-district analytics (demographic, political, urban, summary)
+    Analyze(AnalyzeArgs),
+    /// Render district maps to PNG
+    Map(MapArgs),
+}
+
+// ---------------------------------------------------------------------------
+// `redist analyze` — per-district analytics
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct AnalyzeArgs {
+    /// Two-letter state code (e.g., VT, AL)
+    #[arg(long)]
+    pub state: String,
+
+    /// Census year (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: Year,
+
+    /// Version identifier (default: v1)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+
+    /// Output base directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+
+    /// Analyzers to run (default: all)
+    #[arg(long = "types", value_delimiter = ' ', num_args = 0..,
+          default_values = ["all"])]
+    pub types: Vec<redist_analysis::AnalyzerType>,
+
+    /// Re-run even if output already exists
+    #[arg(long)]
+    pub force: bool,
+
+    /// Allow unconstitutional population imbalance without exiting non-zero (research use only)
+    #[arg(long)]
+    pub allow_imbalance: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist map` — PNG map rendering
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
+pub enum MapType {
+    Districts,
+    Rounds,
+    Political,
+    Demographic,
+    Compactness,
+    All,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct MapArgs {
+    /// Two-letter state code
+    #[arg(long)]
+    pub state: String,
+
+    /// Census year (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: Year,
+
+    /// Version identifier (default: v1)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+
+    /// Map types to render (default: districts)
+    #[arg(long = "types", value_delimiter = ' ', num_args = 0..,
+          default_values = ["districts"])]
+    pub types: Vec<MapType>,
+
+    /// DPI for output maps
+    #[arg(long, default_value = "150",
+          value_parser = clap::builder::PossibleValuesParser::new(["72","100","150","200","300"]))]
+    pub dpi: String,
+
+    /// Re-render even if output already exists
+    #[arg(long)]
+    pub force: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -480,6 +565,52 @@ mod tests {
         assert!(no_seed.seed.is_none());
         let with_seed = StateArgs::parse_from(["state", "--state", "VT", "--seed", "42"]);
         assert_eq!(with_seed.seed, Some(42));
+    }
+
+    #[test]
+    fn test_analyze_defaults() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
+        assert_eq!(args.state, "VT");
+        assert_eq!(args.year, Year::Y2020);
+        assert_eq!(args.version, "v1");
+        assert!(!args.force);
+        assert!(!args.allow_imbalance);
+        assert!(args.types.contains(&redist_analysis::AnalyzerType::All));
+    }
+
+    #[test]
+    fn test_analyze_explicit_types() {
+        let args = AnalyzeArgs::parse_from([
+            "analyze", "--state", "AL", "--types", "demographic", "political"
+        ]);
+        assert!(args.types.contains(&redist_analysis::AnalyzerType::Demographic));
+        assert!(args.types.contains(&redist_analysis::AnalyzerType::Political));
+        assert!(!args.types.contains(&redist_analysis::AnalyzerType::All));
+    }
+
+    #[test]
+    fn test_analyze_allow_imbalance_flag() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT", "--allow-imbalance"]);
+        assert!(args.allow_imbalance);
+    }
+
+    #[test]
+    fn test_map_defaults() {
+        let args = MapArgs::parse_from(["map", "--state", "VT"]);
+        assert_eq!(args.state, "VT");
+        assert_eq!(args.year, Year::Y2020);
+        assert_eq!(args.dpi, "150");
+        assert!(!args.force);
+        assert!(args.types.contains(&MapType::Districts));
+    }
+
+    #[test]
+    fn test_map_types_parse() {
+        let args = MapArgs::parse_from([
+            "map", "--state", "VT", "--types", "districts", "rounds"
+        ]);
+        assert!(args.types.contains(&MapType::Districts));
+        assert!(args.types.contains(&MapType::Rounds));
     }
 }
 

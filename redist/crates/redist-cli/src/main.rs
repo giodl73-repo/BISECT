@@ -2,6 +2,8 @@ use clap::Parser;
 use redist_cli::args::{Cli, Commands};
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete};
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
+use redist_cli::analyze::run_analyze;
+use redist_cli::map_cmd::run_map;
 
 fn main() {
     let cli = Cli::parse();
@@ -116,6 +118,18 @@ fn main() {
             }
             if any_failure { std::process::exit(1); }
             eprintln!("[OK] redist run complete");
+        }
+
+        // ── redist analyze: per-district analytics ────────────────────────────
+        Commands::Analyze(args) => {
+            run_analyze(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist map: PNG map rendering ─────────────────────────────────────
+        Commands::Map(args) => {
+            run_map(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
         // ── redist fetch: data download ───────────────────────────────────────

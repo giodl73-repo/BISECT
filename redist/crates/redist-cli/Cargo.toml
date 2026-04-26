@@ -14,6 +14,10 @@ path = "src/main.rs"
 redist-core = { path = "../redist-core" }
 redist-data = { path = "../redist-data" }
 redist-analysis = { path = "../redist-analysis" }
+redist-map = { path = "../redist-map" }
+geo.workspace = true
+geo-types.workspace = true
+fontdb = "0.22"
 tempfile = "3"
 anyhow.workspace = true
 serde.workspace = true

@@ -4,6 +4,7 @@ members = [
     "crates/redist-data",
     "crates/redist-cli",
     "crates/redist-analysis",
+    "crates/redist-map",
     "crates/redist-web",
     "python/redist_py",
 ]
