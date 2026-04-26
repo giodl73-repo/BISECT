@@ -1,6 +1,6 @@
 # System Architecture
 
-**Updated**: 2026-01-25
+**Updated**: 2026-04-25
 
 **Related**: [CODING_PATTERNS.md](CODING_PATTERNS.md), [enhancements/INDEX.md](enhancements/INDEX.md), [SKILLS.md](SKILLS.md), [../CLAUDE.md](../CLAUDE.md)
 
@@ -379,22 +379,63 @@ open outputs/index.html
 
 ---
 
-## Future: Rust CLI Port
+## Rust CLI (Complete — 2026-04-25)
 
-The Python pipeline is being ported to Rust for performance. Planned crates:
+The `redist` binary is the recommended entry point for all redistricting runs.
+Python pipeline remains for post-processing analysis (maps, political/demographic CSVs).
 
-- **`redist-core`** — Graph construction + METIS recursive bisection (replaces `src/apportionment/partition/`)
-- **`redist-data`** — Census shapefile loading, adjacency building (replaces `scripts/data/`)
-- **`redist-cli`** — Parallel orchestration, progress reporting (replaces `scripts/pipeline/`)
-- **`redist-analysis`** — Compactness, political, demographic metrics (replaces `scripts/political/`, `scripts/compactness/`, `scripts/demographic/`)
+**Performance**: 50-state run: Python ~55 min → Rust ~15.5 s (**213× faster**)
 
-The static HTML dashboard (`web/`) and LaTeX papers (`artifacts/`, `research/`) remain Python/LaTeX.
+### 5-Crate Workspace (`redist/`)
 
-Key migration decisions:
-- `*.pkl` adjacency graphs → `bincode` binary format
-- `pandas` CSVs → `polars` or native Rust CSV
-- `matplotlib` maps → thin Python wrapper calling Rust-generated data, or `plotters` crate
-- METIS FFI via `metis` crate (crates.io) or shell-out (same as Python today)
+```
+redist/
+├── crates/
+│   ├── redist-core/        Graph, Partition, BisectionTree, VRA edge weights
+│   ├── redist-data/        AdjacencyGraph, .adj.bin serialization, adjacency loader
+│   ├── redist-cli/         Binary: state, states, run, fetch subcommands
+│   └── redist-analysis/    Compactness (PP, Reock, CHR), VRA analysis
+└── python/
+    └── redist_py/          PyO3 bindings (Python calls into redist-core/data)
+```
+
+| Crate | Python equivalent | Key types |
+|-------|-------------------|-----------|
+| `redist-core` | `src/apportionment/partition/` | `Graph`, `Partition`, `BisectionTree`, `build_vra_edge_weights` |
+| `redist-data` | `src/apportionment/data/` | `AdjacencyGraph`, `serialize_adjacency`, `deserialize_adjacency` |
+| `redist-cli` | `scripts/pipeline/run_*.py` | `StateConfig`, `run_states_parallel`, `load_adjacency` |
+| `redist-analysis` | `scripts/compactness/`, `scripts/political/` | `CompactnessMetrics`, `VraAnalysis` |
+
+### Adjacency Data Flow
+
+```
+redist fetch --release           → downloads {state}_adjacency_{year}.pkl
+generate_adj_bin.py              → converts pkl → .adj.bin (v2) + _geoids.json
+adjacency_loader.rs              → loads .adj.bin natively (zero Python subprocess)
+                                   falls back to pkl shim if .adj.bin absent
+```
+
+**.adj.bin format v2** (`RADJ` magic, little-endian): header (n_vertices, n_edges) →
+vertex_weights (i64×n) → adjacency lists → edge_weights (f64). See `serialize.rs`.
+
+### Key Design Decisions (Rust)
+
+**REDIST_PYTHON** env var: Rust binary uses caller's Python for pkl shim — avoids
+environment mismatch (PP-04).
+
+**REDIST_GH** env var: Override `gh` binary for `redist fetch --release` — enables
+testing without network (fake gh script).
+
+**Rayon for parallelism**: All 50 states run concurrently on a thread pool sized to
+`--workers`. Each state is independent (separate METIS invocations).
+
+**ufactor_for_depth()**: Returns decimal (1.001–1.005), not integer. METIS expects
+`ufactor` as an imbalance tolerance multiplier (1 + ε), not a percentage (PP-07).
+
+**See**: [`design/rust-port/`](../design/rust-port/) for migration log and benchmarks.
+[`docs/REDIST_CLI.md`](../docs/REDIST_CLI.md) for command reference.
+
+---
 
 **Algorithm**: Recursive bisection w/ METIS → Fast (O(N log K)), quality (compact/balanced), scalable (all 50 states)
 
