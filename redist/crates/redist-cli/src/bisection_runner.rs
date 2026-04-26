@@ -619,4 +619,188 @@ mod tests {
         let sub_vw: Vec<i64> = sorted.iter().map(|&g| vw[g].max(1)).collect();
         assert!(sub_vw.iter().all(|&v| v >= 1), "all vertex weights must be >= 1 after clamping");
     }
+
+    // ── Group 1: split_subgraph edge cases ───────────────────────────────────
+
+    #[test]
+    fn test_split_subgraph_with_edge_weights() {
+        if find_gpmetis().is_none() { return; }
+        // 4-node chain with strong edge weights on left side — should bias split
+        let adj = vec![vec![1], vec![0,2], vec![1,3], vec![2]];
+        let vw = vec![1000i64; 4];
+        let mut ew = HashMap::new();
+        ew.insert((0,1), 1000.0); // strong edge — METIS should avoid cutting
+        ew.insert((1,2), 1.0);    // weak edge — METIS may cut here
+        ew.insert((2,3), 1000.0); // strong edge
+        let indices: HashSet<usize> = (0..4).collect();
+        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, Some(42), None)
+            .expect("should split with edge weights");
+        assert_eq!(left.len() + right.len(), 4);
+        assert!(!left.is_empty() && !right.is_empty());
+    }
+
+    #[test]
+    fn test_split_subgraph_unequal_target_weights() {
+        if find_gpmetis().is_none() { return; }
+        // 6 tracts, split 4:2 (target weights 2/3 and 1/3)
+        let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2,4,5], vec![3,5], vec![3,4]];
+        let vw = vec![1000i64; 6];
+        let ew = HashMap::new();
+        let indices: HashSet<usize> = (0..6).collect();
+        let (left, right) = split_subgraph(
+            &adj, &vw, &ew, &indices, 1.05, 100, Some(42),
+            Some((2.0/3.0, 1.0/3.0))  // unequal: 4:2 split
+        ).expect("should split with target weights");
+        assert_eq!(left.len() + right.len(), 6);
+        assert!(!left.is_empty() && !right.is_empty());
+        // Approximate target: left ~4 tracts, right ~2 (within tolerance)
+        let larger = left.len().max(right.len());
+        assert!(larger >= 3, "larger partition should have >= 3 tracts for 4:2 split");
+    }
+
+    #[test]
+    fn test_split_subgraph_single_node_returns_all_left() {
+        // Edge case: single tract — no METIS call, returns all in left
+        let adj = vec![vec![]];
+        let vw = vec![1000i64];
+        let ew = HashMap::new();
+        let indices: HashSet<usize> = vec![0].into_iter().collect();
+        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, None, None)
+            .expect("single node split");
+        assert_eq!(left.len(), 1);
+        assert!(right.is_empty());
+    }
+
+    #[test]
+    fn test_split_subgraph_two_tracts_always_splits() {
+        if find_gpmetis().is_none() { return; }
+        // 2 tracts: must produce one in each partition
+        let adj = vec![vec![1], vec![0]];
+        let vw = vec![1000i64, 1000];
+        let ew = HashMap::new();
+        let indices: HashSet<usize> = (0..2).collect();
+        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, Some(42), None)
+            .expect("2-node split");
+        assert_eq!(left.len(), 1);
+        assert_eq!(right.len(), 1);
+        assert!(left.is_disjoint(&right));
+    }
+
+    // ── Group 2: run_nway_partition ──────────────────────────────────────────
+
+    #[test]
+    fn test_run_nway_partition_basic() {
+        if find_gpmetis().is_none() { return; }
+        // 12 tracts into 3 districts — n-way partition
+        let n = 12;
+        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
+            let mut nbrs = vec![];
+            if i > 0 { nbrs.push(i-1); }
+            if i < n-1 { nbrs.push(i+1); }
+            nbrs
+        }).collect();
+        let vw = vec![1000i64; n];
+        let ew = HashMap::new();
+        let result = run_nway_partition(&adj, &vw, &ew, 3, 1.05, 100, Some(42));
+        assert!(result.is_ok(), "n-way partition should succeed: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), n, "all tracts assigned");
+        let districts: std::collections::HashSet<usize> = assignments.values().copied().collect();
+        assert_eq!(districts.len(), 3, "exactly 3 districts");
+        assert!(districts.contains(&1) && districts.contains(&2) && districts.contains(&3));
+    }
+
+    #[test]
+    fn test_run_nway_partition_balance() {
+        if find_gpmetis().is_none() { return; }
+        // 20 equal-weight tracts into 4 districts — should be well-balanced
+        let n = 20;
+        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
+            let mut nbrs = vec![];
+            if i > 0 { nbrs.push(i-1); }
+            if i < n-1 { nbrs.push(i+1); }
+            nbrs
+        }).collect();
+        let vw = vec![1000i64; n];
+        let ew = HashMap::new();
+        let assignments = run_nway_partition(&adj, &vw, &ew, 4, 1.05, 100, Some(42)).unwrap();
+
+        let mut district_pops = vec![0i64; 5];
+        for (tract, &dist) in &assignments {
+            district_pops[dist] += vw[*tract];
+        }
+        let ideal = 20 * 1000 / 4; // 5000
+        for d in 1..=4 {
+            let dev = (district_pops[d] - ideal as i64).abs() as f64 / ideal as f64;
+            assert!(dev <= 0.1, "district {d} deviation {:.1}% exceeds 10%", dev*100.0);
+        }
+    }
+
+    #[test]
+    fn test_run_nway_partition_output_complete_and_valid() {
+        if find_gpmetis().is_none() { return; }
+        let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2]];
+        let vw = vec![1000i64; 4];
+        let ew = HashMap::new();
+        let assignments = run_nway_partition(&adj, &vw, &ew, 2, 1.05, 100, Some(42)).unwrap();
+        // Every tract assigned, district IDs 1-based
+        assert_eq!(assignments.len(), 4);
+        assert!(assignments.values().all(|&d| d >= 1 && d <= 2));
+        let d1: Vec<_> = assignments.values().filter(|&&d| d == 1).collect();
+        let d2: Vec<_> = assignments.values().filter(|&&d| d == 2).collect();
+        assert!(!d1.is_empty() && !d2.is_empty(), "both districts must have tracts");
+    }
+
+    // ── Group 3: run_all_splits edge cases ───────────────────────────────────
+
+    #[test]
+    fn test_run_all_splits_large_k_structure() {
+        // Verify that run_all_splits with k=8 produces exactly 8 districts
+        // without calling gpmetis (test the assignment structure, not balance)
+        // Use single-tract-per-district to make it trivially balanced
+        if find_gpmetis().is_none() { return; }
+        let n = 16;
+        // Grid graph: 4x4
+        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
+            let row = i / 4; let col = i % 4;
+            let mut nbrs = vec![];
+            if row > 0 { nbrs.push(i-4); }
+            if row < 3 { nbrs.push(i+4); }
+            if col > 0 { nbrs.push(i-1); }
+            if col < 3 { nbrs.push(i+1); }
+            nbrs
+        }).collect();
+        let vw = vec![1000i64; n];
+        let ew = HashMap::new();
+        let assignments = run_all_splits(&adj, &vw, &ew, 8, 0.10, 100, Some(42), None).unwrap();
+        assert_eq!(assignments.len(), n);
+        let districts: std::collections::HashSet<usize> = assignments.values().copied().collect();
+        assert_eq!(districts.len(), 8, "exactly 8 districts");
+        // All district IDs 1-based
+        assert!(districts.iter().all(|&d| d >= 1 && d <= 8));
+    }
+
+    #[test]
+    fn test_run_all_splits_tight_balance_10pct() {
+        // With correct ufactor math, 10% tolerance on a 4-district map
+        // should produce well-balanced output
+        if find_gpmetis().is_none() { return; }
+        let adj = vec![
+            vec![1,4], vec![0,2,5], vec![1,3,6], vec![2,7],
+            vec![0,5], vec![1,4,6], vec![2,5,7], vec![3,6],
+        ];
+        let vw = vec![1000i64; 8]; // 8 equal tracts
+        let ew = HashMap::new();
+        let assignments = run_all_splits(&adj, &vw, &ew, 4, 0.10, 100, Some(42), None).unwrap();
+
+        let mut pops = vec![0i64; 5];
+        for (&tract, &dist) in &assignments {
+            pops[dist] += vw[tract];
+        }
+        let ideal = 8000 / 4; // 2000
+        for d in 1..=4 {
+            let dev = (pops[d] - ideal).abs() as f64 / ideal as f64;
+            assert!(dev <= 0.10, "district {d} deviation {:.1}% exceeds 10%", dev*100.0);
+        }
+    }
 }

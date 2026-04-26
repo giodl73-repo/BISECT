@@ -696,4 +696,63 @@ mod tests {
             }
         }
     }
+
+    // ── Group 4: StateConfig.effective_balance_tolerance ─────────────────────
+
+    #[test]
+    fn test_effective_balance_tolerance_congressional_default() {
+        let cfg = make_config("VT");
+        // Congressional default: 0.5%
+        assert!((cfg.effective_balance_tolerance() - 0.005).abs() < 1e-9,
+            "congressional default must be 0.5%, got {}", cfg.effective_balance_tolerance());
+    }
+
+    #[test]
+    fn test_effective_balance_tolerance_house_default() {
+        let cfg = StateConfig {
+            chamber: "house".to_string(),
+            balance_tolerance: None,
+            ..make_config("WA")
+        };
+        // House default: 5.0%
+        assert!((cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
+            "house default must be 5.0%, got {}", cfg.effective_balance_tolerance());
+    }
+
+    #[test]
+    fn test_effective_balance_tolerance_explicit_override() {
+        let cfg = StateConfig {
+            chamber: "house".to_string(),
+            balance_tolerance: Some(0.08), // 8% explicit override
+            ..make_config("WA")
+        };
+        assert!((cfg.effective_balance_tolerance() - 0.08).abs() < 1e-9,
+            "explicit override must win, got {}", cfg.effective_balance_tolerance());
+    }
+
+    #[test]
+    fn test_effective_balance_tolerance_senate_default() {
+        let cfg = StateConfig {
+            chamber: "senate".to_string(),
+            balance_tolerance: None,
+            ..make_config("IL")
+        };
+        assert!((cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
+            "senate default must be 5.0%");
+    }
+
+    // ── Group 5: adjacency fallback / resolve_adjacency_path ─────────────────
+
+    #[test]
+    fn test_resolve_adjacency_uses_manifest() {
+        // resolve_adjacency_path reads the manifest to find outputs_dir.
+        // If manifest can be loaded, the function should not panic.
+        // Test that an unknown state code returns a descriptive error.
+        let result = resolve_adjacency_path("zz", "2020", "tract");
+        // Should fail (no ZZ adjacency) but with a helpful error message
+        assert!(result.is_err(), "unknown state ZZ should fail");
+        let err = result.unwrap_err();
+        assert!(err.contains("adjacency") || err.contains("not found") || err.contains("manifest"),
+            "error should mention adjacency: {err}");
+    }
 }
