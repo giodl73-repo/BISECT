@@ -49,6 +49,7 @@ pub fn load_district_geometries(
         // Geoid files use state_code_lower prefix: vt_adjacency_2020_geoids.json
         let state_code_lower = state_code.to_lowercase();
         let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
+        // Geoid files live in the shared data directory, not the year-specific states dir
         let geoid_candidates = [
             PathBuf::from("outputs").join(version).join("data").join(year).join("adjacency").join(&geoid_file),
             PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),

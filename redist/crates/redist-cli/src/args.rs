@@ -689,6 +689,10 @@ pub struct FetchArgs {
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct AggregateArgs {
+    /// Census year (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: Year,
+
     /// Version identifier (default: v1)
     #[arg(short = 'v', long, default_value = "v1")]
     pub version: String,

@@ -3,16 +3,17 @@ use crate::args::AggregateArgs;
 use redist_analysis::AnalyzerType;
 
 pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
+    let year = args.year.to_string();
     let output_root = PathBuf::from("outputs").join(&args.version);
-    let national_dir = output_root.join("national");
+    let national_dir = output_root.join(&year).join("national");
     std::fs::create_dir_all(&national_dir)?;
 
     let types = resolve_types(&args.types);
 
-    // Discover states with analysis outputs
-    let states_dir = output_root.join("states");
+    // Discover states with analysis outputs — year-specific path
+    let states_dir = output_root.join(&year).join("states");
     if !states_dir.exists() {
-        anyhow::bail!("No states directory at {}. Run: redist states first.", states_dir.display());
+        anyhow::bail!("No states directory at {}. Run: redist states --year {year} first.", states_dir.display());
     }
     let mut state_dirs: Vec<(String, PathBuf)> = std::fs::read_dir(&states_dir)?
         .filter_map(|e| e.ok())

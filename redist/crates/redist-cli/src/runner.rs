@@ -12,6 +12,7 @@ use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
 use crate::bisection_runner::{run_all_splits, run_nway_partition};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
+use crate::fetch::load_manifest;
 use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
 use crate::status::{status, ascii_safe};
 use redist_core::{Partition, build_vra_edge_weights};
@@ -107,6 +108,38 @@ pub fn run_states_parallel(configs: Vec<StateConfig>, workers: usize) -> Vec<Sta
     })
 }
 
+/// Resolve the adjacency pkl path for a state using the manifest.
+///
+/// The manifest's `local_outputs_dir` + "V3/data/{year}/adjacency/" is the
+/// canonical adjacency store — the same path that `redist fetch --release` downloads to.
+/// Override with REDIST_MANIFEST env var for custom data layouts.
+fn resolve_adjacency_path(state_code_lower: &str, year: &str) -> Result<PathBuf, String> {
+    let manifest = load_manifest()
+        .map_err(|e| format!("cannot load manifest: {e}"))?;
+    let adj_filename = format!("{state_code_lower}_adjacency_{year}.pkl");
+    // Manifest points to the canonical adjacency store (outputs_dir/V3/data/{year}/adjacency/)
+    let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);
+    let canonical = outputs_dir
+        .join("V3").join("data").join(year).join("adjacency")
+        .join(&adj_filename);
+    if canonical.exists() {
+        return Ok(canonical);
+    }
+    // Fallback: check V4 store (VRA adjacency lives there for some setups)
+    let v4 = outputs_dir
+        .join("V4").join("data").join(year).join("adjacency")
+        .join(&adj_filename);
+    if v4.exists() {
+        return Ok(v4);
+    }
+    Err(format!(
+        "adjacency pkl not found: {canonical}. \
+         Run: redist fetch --year {year} --release && \
+         python scripts/data/generate_adj_bin.py --year {year} --states {state_code_lower}",
+        canonical = canonical.display()
+    ))
+}
+
 /// Run a single state redistricting task end-to-end.
 ///
 /// Flow: load adjacency → build edge weights → bisect → assert balance → write outputs
@@ -114,8 +147,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let num_districts = cfg.num_districts;
     let state_name = &cfg.state_name; // e.g. "vermont" — used for directory paths
 
-    // Data directory: use full lowercase state name (e.g. "vermont"), matching Python pipeline
+    // Data directory: {output_dir}/{year}/states/{state_name}/data/
+    // Mirrors Python pipeline layout so dashboards work across both.
     let data_dir = cfg.output_dir
+        .join(&cfg.year)
         .join("states")
         .join(state_name)
         .join("data");
@@ -130,15 +165,12 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
 
     status(cfg.position, &format!("{}: loading adjacency", cfg.state_code));
 
-    // 1. Load adjacency graph (Python subprocess shim: pkl → JSON)
-    // Adjacency lives at outputs/{version}/data/{year}/adjacency/ — independent
-    // of where state results are written (output_dir may be a different path).
-    // Adjacency uses two-letter state code (lowercase), e.g. "vt_adjacency_2020.pkl"
+    // 1. Load adjacency graph
+    // Adjacency path comes from the manifest (same source as `redist fetch`).
+    // The manifest's local_outputs_dir + "V3/data/{year}/adjacency/" is the
+    // canonical store. REDIST_MANIFEST can override this for custom setups.
     let state_code_lower = cfg.state_code.to_lowercase();
-    let adjacency_base = PathBuf::from(format!("outputs/{}", cfg.version));
-    let adj_pkl = adjacency_base
-        .join("data").join(&cfg.year).join("adjacency")
-        .join(format!("{state_code_lower}_adjacency_{}.pkl", cfg.year));
+    let adj_pkl = resolve_adjacency_path(&state_code_lower, &cfg.year)?;
 
     let graph = load_adjacency_pkl(&adj_pkl)
         .map_err(|e| format!("adjacency load failed: {e}"))?;
@@ -182,7 +214,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     ));
 
     // Intermediate rounds go in {state_dir}/intermediate/
-    let state_dir = cfg.output_dir.join("states").join(state_name);
+    let state_dir = cfg.output_dir.join(&cfg.year).join("states").join(state_name);
     let intermediate_dir = state_dir.join("intermediate");
     std::fs::create_dir_all(&intermediate_dir)
         .map_err(|e| format!("cannot create intermediate dir: {e}"))?;
@@ -263,10 +295,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
 }
 
 /// Check if a state's outputs already exist and are complete.
-pub fn state_already_complete(output_dir: &PathBuf, state_code: &str, reprocess: bool) -> bool {
+pub fn state_already_complete(output_dir: &PathBuf, state_code: &str, year: &str, reprocess: bool) -> bool {
     if reprocess { return false; }
     let data_dir = output_dir
-        .join("states").join(state_code.to_lowercase()).join("data");
+        .join(year).join("states").join(state_code.to_lowercase()).join("data");
     data_dir.join("final_assignments.json").exists()
         || data_dir.join("final_assignments.pkl").exists()
 }
@@ -274,7 +306,7 @@ pub fn state_already_complete(output_dir: &PathBuf, state_code: &str, reprocess:
 /// Filter configs to only those needing processing.
 pub fn filter_incomplete(configs: Vec<StateConfig>) -> Vec<StateConfig> {
     configs.into_iter()
-        .filter(|cfg| !state_already_complete(&cfg.output_dir, &cfg.state_code, cfg.reprocess))
+        .filter(|cfg| !state_already_complete(&cfg.output_dir, &cfg.state_code, &cfg.year, cfg.reprocess))
         .collect()
 }
 
@@ -328,27 +360,27 @@ mod tests {
 
     #[test]
     fn test_state_already_complete_reprocess() {
-        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", true));
+        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", "2020", true));
     }
 
     #[test]
     fn test_state_already_complete_missing() {
-        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", false));
+        assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", "2020", false));
     }
 
     #[test]
     fn test_state_already_complete_with_json_marker() {
         let tmp = TempDir::new().unwrap();
-        let data = tmp.path().join("states").join("vt").join("data");
+        let data = tmp.path().join("2020").join("states").join("vt").join("data");
         std::fs::create_dir_all(&data).unwrap();
         std::fs::write(data.join("final_assignments.json"), b"{}").unwrap();
-        assert!(state_already_complete(&tmp.path().to_path_buf(), "VT", false));
+        assert!(state_already_complete(&tmp.path().to_path_buf(), "VT", "2020", false));
     }
 
     #[test]
     fn test_filter_incomplete() {
         let tmp = TempDir::new().unwrap();
-        let marker = tmp.path().join("states").join("vt").join("data");
+        let marker = tmp.path().join("2020").join("states").join("vt").join("data");
         std::fs::create_dir_all(&marker).unwrap();
         std::fs::write(marker.join("final_assignments.json"), b"{}").unwrap();
         let mut configs = vec![make_config("VT"), make_config("DE")];

@@ -18,9 +18,9 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
-    // Locate assignment file — path mirrors runner.rs: {output}/{version}/states/{state}/data/
+    // Locate assignment file — path mirrors runner.rs: {output}/{version}/{year}/states/{state}/data/
     let output_root = PathBuf::from(&args.output_base).join(&args.version);
-    let state_data_dir = output_root.join("states").join(&state_name).join("data");
+    let state_data_dir = output_root.join(&year).join("states").join(&state_name).join("data");
     let assignments_path = state_data_dir.join("final_assignments.json");
 
     if !assignments_path.exists() {

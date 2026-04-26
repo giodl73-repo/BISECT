@@ -25,9 +25,9 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
-    // Path mirrors runner.rs: {version}/states/{state}/
+    // Path mirrors runner.rs: {version}/{year}/states/{state}/
     let output_root = PathBuf::from("outputs").join(&args.version);
-    let state_dir = output_root.join("states").join(&state_name);
+    let state_dir = output_root.join(&year).join("states").join(&state_name);
     let state_data_dir = state_dir.join("data");
     let maps_dir = state_dir.join("maps");
     std::fs::create_dir_all(&maps_dir)?;
@@ -391,15 +391,15 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
     let proj = InsetProjection::us_national(w, h);
 
     let output_root = PathBuf::from("outputs").join(&args.version);
-    let national_maps_dir = output_root.join("national").join("maps");
+    let year = args.year.to_string();
+    let national_maps_dir = output_root.join(&year).join("national").join("maps");
     std::fs::create_dir_all(&national_maps_dir)?;
 
     let types = resolve_map_types(&args.types);
-    let year = args.year.to_string();
 
-    let states_dir = output_root.join("states");
+    let states_dir = output_root.join(&year).join("states");
     if !states_dir.exists() {
-        anyhow::bail!("No states directory at {}. Run: redist states first.", states_dir.display());
+        anyhow::bail!("No states directory at {}. Run: redist states --year {year} first.", states_dir.display());
     }
     let mut state_entries: Vec<_> = std::fs::read_dir(&states_dir)?
         .filter_map(|e| e.ok())
