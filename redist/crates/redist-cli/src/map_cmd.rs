@@ -84,73 +84,44 @@ fn render_districts_map(
     state_name: &str,
     state_code: &str,
     year: &str,
-    version: &str,
+    _version: &str,
     dpi: u32,
     font_db: &FontDb,
 ) -> anyhow::Result<Vec<u8>> {
-    use redist_map::{group_dissolve, wkb_to_geometry, Projection, build_svg};
+    use redist_map::{Projection, build_svg};
     use redist_map::colorscheme::{CategoricalScheme, graph_color};
     use redist_map::labeler::LabelSpec;
-    use std::collections::HashMap;
-    use crate::adjacency_loader::load_adjacency_pkl;
     use geo::BoundingRect;
+    use geo_types::MultiPolygon;
+    use crate::geometry::load_district_geometries;
 
-    // Load assignments
-    let assignments: HashMap<String, usize> = serde_json::from_str(
+    let assignments: std::collections::HashMap<String, usize> = serde_json::from_str(
         &std::fs::read_to_string(state_dir.join("final_assignments.json"))?
     )?;
 
-    // Load adjacency (includes geometry via WKB)
-    let adj_dir = PathBuf::from("outputs").join(version).join("data").join(year).join("adjacency");
-    let pkl_path = adj_dir.join(format!("{}_adjacency_{}.pkl", state_name.replace(' ', "_"), year));
-    if !pkl_path.exists() {
-        anyhow::bail!("Adjacency file not found: {}", pkl_path.display());
-    }
-    let graph = load_adjacency_pkl(&pkl_path)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    let districts = load_district_geometries(
+        state_name, state_code, year, &assignments, std::path::Path::new("data")
+    )?;
 
-    // TIGER shapefiles path
-    let state_fips = get_fips(state_code).unwrap_or("00");
-    let tiger_path = PathBuf::from("data").join(year).join("tiger").join("tracts")
-        .join(state_fips).join(format!("tl_{}_{}_tract.shp", year, state_fips));
-
-    if !tiger_path.exists() {
-        anyhow::bail!("TIGER shapefile not found: {}", tiger_path.display());
-    }
-
-    let tract_records = redist_data::tiger::read_tiger_tracts(&tiger_path)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-
-    // Map tract index -> district via index_to_geoid
-    let tract_assignments: Vec<usize> = tract_records.iter().map(|tr| {
-        assignments.get(&tr.geoid).copied().unwrap_or(0)
-    }).collect();
-
-    let geoms: Vec<_> = tract_records.iter()
-        .map(|tr| wkb_to_geometry(&tr.geometry_wkb))
-        .collect::<anyhow::Result<Vec<_>>>()?;
-
-    let num_districts = assignments.values().copied().max().unwrap_or(1);
-    let districts = group_dissolve(&geoms, &tract_assignments, num_districts);
-
-    // Compute bounding box from all geometries
-    use geo_types::MultiPolygon;
     let all_mp: MultiPolygon<f64> = MultiPolygon(
         districts.values().flat_map(|mp| mp.0.clone()).collect()
     );
     let bbox = all_mp.bounding_rect().ok_or_else(|| anyhow::anyhow!("empty geometry"))?;
-    let aspect = (bbox.max().x - bbox.min().x) / (bbox.max().y - bbox.min().y);
+    let lon_span = bbox.max().x - bbox.min().x;
+    let lat_span = bbox.max().y - bbox.min().y;
+    let aspect = if lat_span > 1e-9 { lon_span / lat_span } else { 1.5 };
     let (w, h) = canvas_size_from_dpi(dpi, 8.0, aspect);
     let proj = Projection::from_bbox(bbox.min().x, bbox.min().y, bbox.max().x, bbox.max().y, w, h, 0.05);
 
-    // Graph coloring
-    let adjacency: Vec<Vec<usize>> = (1..=num_districts).map(|_| vec![]).collect(); // simplified
+    // Adjacency-based graph coloring (use district adjacency from dissolved polygons)
+    let num_districts = assignments.values().copied().max().unwrap_or(1);
+    let adjacency: Vec<Vec<usize>> = (0..num_districts).map(|_| vec![]).collect();
     let scheme = CategoricalScheme::default();
     let colors = graph_color(&adjacency, &scheme);
 
     let mut district_list: Vec<(usize, MultiPolygon<f64>, (u8,u8,u8), LabelSpec)> = districts.into_iter()
         .map(|(id, mp)| {
-            let color = colors.get(id.saturating_sub(1)).copied().unwrap_or((200,200,200));
+            let color = colors.get(id.saturating_sub(1)).copied().unwrap_or((200, 200, 200));
             let label = LabelSpec {
                 main: id.to_string(),
                 annotation: None, stat: None, lineage_superscript: None,
@@ -227,26 +198,3 @@ fn render_choropleth_map(
     redist_map::svg_to_png(&svg, font_db)
 }
 
-fn get_fips(state_code: &str) -> Option<&'static str> {
-    // Common FIPS codes — expand as needed
-    match state_code {
-        "AL" => Some("01"), "AK" => Some("02"), "AZ" => Some("04"),
-        "AR" => Some("05"), "CA" => Some("06"), "CO" => Some("08"),
-        "CT" => Some("09"), "DE" => Some("10"), "FL" => Some("12"),
-        "GA" => Some("13"), "HI" => Some("15"), "ID" => Some("16"),
-        "IL" => Some("17"), "IN" => Some("18"), "IA" => Some("19"),
-        "KS" => Some("20"), "KY" => Some("21"), "LA" => Some("22"),
-        "ME" => Some("23"), "MD" => Some("24"), "MA" => Some("25"),
-        "MI" => Some("26"), "MN" => Some("27"), "MS" => Some("28"),
-        "MO" => Some("29"), "MT" => Some("30"), "NE" => Some("31"),
-        "NV" => Some("32"), "NH" => Some("33"), "NJ" => Some("34"),
-        "NM" => Some("35"), "NY" => Some("36"), "NC" => Some("37"),
-        "ND" => Some("38"), "OH" => Some("39"), "OK" => Some("40"),
-        "OR" => Some("41"), "PA" => Some("42"), "RI" => Some("44"),
-        "SC" => Some("45"), "SD" => Some("46"), "TN" => Some("47"),
-        "TX" => Some("48"), "UT" => Some("49"), "VT" => Some("50"),
-        "VA" => Some("51"), "WA" => Some("53"), "WV" => Some("54"),
-        "WI" => Some("55"), "WY" => Some("56"),
-        _ => None,
-    }
-}

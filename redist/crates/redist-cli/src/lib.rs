@@ -4,6 +4,7 @@ pub mod args;
 pub mod bisection_runner;
 pub mod demographics;
 pub mod fetch;
+pub mod geometry;
 pub mod map_cmd;
 pub mod output;
 pub mod runner;

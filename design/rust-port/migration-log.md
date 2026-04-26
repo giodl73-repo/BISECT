@@ -67,9 +67,43 @@ Compactness metrics (PP, Reock, CHR) and VRA analysis in `redist-analysis` crate
 Exposed via PyO3. Role review caught: MM threshold `>` not `>=` (VA-01 invariant),
 perimeter excludes holes, deterministic FP aggregation, array length validation.
 
-## Phase 5 — Not started (optional)
-Decision gate: profile subprocess overhead after 50-state run. If >10% of
-wall time, link METIS as C library via bindgen. Otherwise skip.
-Current assessment: METIS subprocess is fast (ms-scale per call); the main
-bottleneck is adjacency pkl loading via Python shim. Resolve Phase 2 (.adj.bin)
-before evaluating Phase 5.
+## Phase 5 — Complete (2026-04-25)
+`redist analyze` + `redist map` — analytics extension model + native Rust map rendering.
+
+### New crate: `redist-map`
+- `projection.rs`: WGS84 bbox → SVG pixel coords (equirectangular, display only)
+- `dissolve.rs`: WKB decode via `geozero::FromWkb` (Polygon + MultiPolygon island tracts) + `geo::BooleanOps::union`
+- `colorscheme.rs`: 12-color categorical + political/demographic/compactness choropleth + greedy graph coloring
+- `labeler.rs`: adaptive font sizing, `polylabel` visual center, halo SVG, lineage superscripts
+- `renderer.rs`: SVG → `resvg` → PNG + embedded Liberation Sans (SIL OFL)
+- `rounds.rs`: `BisectionTree` lineage tracking
+
+### New modules in `redist-analysis`
+- `analyzer.rs`: `Analyzer` trait + `AnalyzerContext` (with `num_districts`) + `AnalyzerType` enum
+- `demographic.rs`: CSV column validation, is_majority_minority, pop_basis metadata
+- `political.rs`: partisan aggregation, is_uncontested, Unavailable for missing years
+- `urban.rs`: largest city per district
+- `summary.rs`: `ideal_pop`, `pop_deviation_pct`, `pop_balance_ok`; exit code 2 on failure
+
+### New CLI subcommands
+- `redist analyze` — dispatches typed analyzers, atomic JSON write, exits 2 on balance failure
+- `redist map` — PNG rendering via `redist-map` crate
+
+### Shared geometry helper: `redist-cli/src/geometry.rs`
+`load_district_geometries()` — TIGER → WKB decode → `group_dissolve` → `HashMap<district_id, MultiPolygon>`.
+Used by both `map_cmd.rs` and compactness analyzer.
+
+### Board review (R1 + R2): 10 CRITICAL + 10 CONCERN findings, all addressed
+Key: WKB MultiPolygon, geozero as single bridge, ideal_pop from num_districts,
+exit code 2 on imbalance, pop_basis metadata, WGS84 display-projection note.
+
+### Tests: 241 Rust tests passing
+
+### Still pending (Phase 5 stubs)
+- Choropleth maps with real geometry + analysis data (#62)
+- `redist analyze --types compactness` (#63)
+- `redist map --types rounds` real bisection rendering (#64)
+- `redist-web` crate (dashboard generation) remains stub
+
+## Phase 6 (native METIS, optional)
+Not needed — METIS subprocess is already ms-scale. Skip.

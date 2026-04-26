@@ -1808,6 +1808,7 @@ dependencies = [
  "fontdb",
  "geo 0.28.0",
  "geo-types 0.7.19",
+ "geozero",
  "rayon",
  "redist-analysis",
  "redist-core",
