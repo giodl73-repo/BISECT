@@ -115,7 +115,44 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 eprintln!("[OK] summary -> {}", out_path.display());
             }
             AnalyzerType::Compactness => {
-                eprintln!("[skip] compactness — requires dissolved district geometries (not yet wired)");
+                // Load dissolved district geometries
+                let districts = crate::geometry::load_district_geometries(
+                    &state_name, &state_code, &year, &args.version,
+                    &assignments, Path::new("data"),
+                )?;
+
+                // Compute compactness metrics for each district using the largest polygon component
+                let mut district_results: Vec<serde_json::Value> = Vec::new();
+                for (district_id, mp) in &districts {
+                    if let Some(poly) = redist_map::largest_component(mp) {
+                        match redist_analysis::all_metrics(*district_id, poly) {
+                            Ok(metrics) => {
+                                district_results.push(serde_json::json!({
+                                    "district": metrics.district,
+                                    "polsby_popper": metrics.polsby_popper,
+                                    "reock": metrics.reock,
+                                    "convex_hull_ratio": metrics.convex_hull_ratio,
+                                    "perimeter_m": metrics.perimeter_m,
+                                    "area_m2": metrics.area_m2,
+                                    "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts"
+                                }));
+                            }
+                            Err(e) => {
+                                eprintln!("WARNING: compactness skipped for district {district_id}: {e}");
+                            }
+                        }
+                    }
+                }
+                district_results.sort_by_key(|d| d["district"].as_u64().unwrap_or(0));
+
+                let result = serde_json::json!({
+                    "analyzer": "compactness",
+                    "state": state_code,
+                    "year": year,
+                    "districts": district_results
+                });
+                write_json_atomic(&out_path, &result)?;
+                eprintln!("[OK] compactness -> {}", out_path.display());
             }
             AnalyzerType::All => unreachable!("expanded above"),
         }
