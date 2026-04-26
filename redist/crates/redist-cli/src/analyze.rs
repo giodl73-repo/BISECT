@@ -41,19 +41,23 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         if uses_index {
             let state_code_lower = state_code.to_lowercase();
             let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
-            let geoid_path = output_root.join("data").join(&year).join("adjacency").join(&geoid_file);
-            if geoid_path.exists() {
+            // Search order mirrors adjacency resolution: version-local, then V3, then V4
+            let geoid_candidates = [
+                output_root.join("data").join(&year).join("adjacency").join(&geoid_file),
+                PathBuf::from("outputs/V3/data").join(&year).join("adjacency").join(&geoid_file),
+                PathBuf::from("outputs/V4/data").join(&year).join("adjacency").join(&geoid_file),
+            ];
+            let geoid_path = geoid_candidates.iter().find(|p| p.exists());
+            if let Some(geoid_path) = geoid_path {
                 let raw_geoids: HashMap<String, String> = serde_json::from_str(
-                    &std::fs::read_to_string(&geoid_path)?
+                    &std::fs::read_to_string(geoid_path)?
                 )?;
-                // raw_geoids: {"0": "50005957100", ...}
-                // Build GEOID -> district from index -> district
                 raw_geoids.into_iter()
                     .filter_map(|(idx, geoid)| raw_assignments.get(&idx).map(|&d| (geoid, d)))
                     .collect()
             } else {
-                eprintln!("WARNING: geoid mapping not found at {}; analyzers may show unmatched tracts",
-                    geoid_path.display());
+                eprintln!("WARNING: geoid mapping not found for {state_code_lower} {year}; \
+                    run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
                 raw_assignments
             }
         } else {
