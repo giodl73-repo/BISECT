@@ -68,6 +68,16 @@ pub struct ValidationResult {
     pub errors: Vec<String>,
 }
 
+/// Validate all GEOIDs in an assignments map. Returns Err on first invalid GEOID.
+pub fn validate_geoid_format_batch(
+    assignments: &HashMap<String, usize>,
+) -> Result<(), RplanError> {
+    for geoid in assignments.keys() {
+        validate_geoid_format(geoid)?;
+    }
+    Ok(())
+}
+
 /// Validate a 11-character numeric GEOID (Census tract format).
 pub fn validate_geoid_format(geoid: &str) -> Result<(), RplanError> {
     if geoid.len() != 11 {

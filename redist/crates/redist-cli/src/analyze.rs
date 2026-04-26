@@ -2,9 +2,12 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use redist_analysis::{AnalyzerContext, AnalyzerType,
     DemographicAnalyzer, Analyzer,
-    PoliticalAnalyzer, UrbanAnalyzer, SummaryAnalyzer};
+    PoliticalAnalyzer, UrbanAnalyzer, SummaryAnalyzer,
+    check_contiguity, analyze_county_splits_with_state, analyze_municipal_splits,
+    get_split_standard, compute_exit_code_with_flags};
 use crate::args::AnalyzeArgs;
 use crate::runner::load_all_states;
+use crate::partisan::{PartisanArgs, run_partisan};
 
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     let state_code = args.state.to_uppercase();
@@ -18,10 +21,40 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
-    // Locate assignment file — path mirrors runner.rs: {output}/{version}/{year}/states/{state}/data/
-    let output_root = PathBuf::from(&args.output_base).join(&args.version);
-    let state_data_dir = output_root.join(&year).join("states").join(&state_name).join("data");
-    let assignments_path = state_data_dir.join("final_assignments.json");
+    // Locate assignment file.
+    // Priority:
+    //   1. --label + --output-dir: {output_dir}/{year}/plans/{label}/data/final_assignments.json
+    //   2. --label only: {output_base}/{version}/{year}/plans/{label}/data/final_assignments.json
+    //   3. State path: {output_base}/{version}/{year}/states/{state_name}/data/final_assignments.json
+    let output_root = if let Some(ref od) = args.output_dir {
+        od.clone()
+    } else {
+        PathBuf::from(&args.output_base).join(&args.version)
+    };
+
+    let (assignments_path, analysis_dir_base) = if let Some(ref label) = args.label {
+        let plan_dir = output_root.join(&year).join("plans").join(label);
+        let data_path = plan_dir.join("data").join("final_assignments.json");
+        let flat_path = plan_dir.join("final_assignments.json");
+        let chosen = if data_path.exists() {
+            data_path
+        } else {
+            flat_path
+        };
+        (chosen, plan_dir)
+    } else {
+        let state_dir = output_root.join(&year).join("states").join(&state_name);
+        let data_path = state_dir.join("data").join("final_assignments.json");
+        (data_path, state_dir)
+    };
+
+    // For the old (non-label) path, compute the proper output_root for adjacency lookups
+    let adjacency_root = if args.output_dir.is_some() {
+        // If output_dir was given, adjacency is elsewhere; fall back to standard path
+        PathBuf::from(&args.output_base).join(&args.version)
+    } else {
+        output_root.clone()
+    };
 
     if !assignments_path.exists() {
         anyhow::bail!(
@@ -43,7 +76,7 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             let geoid_file = format!("{state_code_lower}_adjacency_{year}_geoids.json");
             // Search order mirrors adjacency resolution: version-local, then V3, then V4
             let geoid_candidates = [
-                output_root.join("data").join(&year).join("adjacency").join(&geoid_file),
+                adjacency_root.join("data").join(&year).join("adjacency").join(&geoid_file),
                 PathBuf::from("outputs/V3/data").join(&year).join("adjacency").join(&geoid_file),
                 PathBuf::from("outputs/V4/data").join(&year).join("adjacency").join(&geoid_file),
             ];
@@ -65,9 +98,7 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         }
     };
 
-    let analysis_dir = state_data_dir.parent()
-        .unwrap_or(&state_data_dir)
-        .join("analysis");
+    let analysis_dir = analysis_dir_base.join("analysis");
     std::fs::create_dir_all(&analysis_dir)?;
 
     let ctx = AnalyzerContext {
@@ -78,13 +109,15 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         version: &args.version,
         num_districts,
         data_root: Path::new("data"),
-        output_root: &output_root,
+        output_root: &adjacency_root,
     };
 
     // Resolve types: expand All → concrete list
     let types = resolve_types(&args.types);
 
     let mut balance_failed = false;
+    let mut contiguity_failed = false;
+    let mut missing_data = false;
 
     for typ in &types {
         let out_path = analysis_dir.join(format!("{}.json", typ.name()));
@@ -158,16 +191,190 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 write_json_atomic(&out_path, &result)?;
                 eprintln!("[OK] compactness -> {}", out_path.display());
             }
+            AnalyzerType::Partisan => {
+                let partisan_args = PartisanArgs {
+                    assignments: &assignments,
+                    state_code: &state_code,
+                    state_name: &state_name,
+                    year: &year,
+                    version: &args.version,
+                    election_file: args.election_file.as_ref(),
+                    bootstrap_samples: args.bootstrap_samples,
+                    analysis_dir: &analysis_dir,
+                    force: args.force,
+                    chamber: "congressional",
+                };
+                run_partisan(&partisan_args)?;
+                // Skip writing json again — run_partisan handles it
+                continue;
+            }
+            AnalyzerType::Contiguity => {
+                // Load adjacency graph to get geoid list and edges.
+                let adj_result = load_adjacency_for_analysis(
+                    &adjacency_root, &state_code, &year,
+                );
+                match adj_result {
+                    Ok((adjacency, geoids)) => {
+                        let result = check_contiguity(
+                            &assignments,
+                            &adjacency,
+                            &geoids,
+                            num_districts,
+                        );
+                        let contiguity_violation = !result.all_contiguous;
+                        let out = serde_json::json!({
+                            "analyzer": "contiguity",
+                            "state": state_code,
+                            "year": year,
+                            "all_contiguous": result.all_contiguous,
+                            "districts": result.districts,
+                        });
+                        write_json_atomic(&out_path, &out)?;
+                        eprintln!("[OK] contiguity -> {}", out_path.display());
+                        if contiguity_violation {
+                            contiguity_failed = true;
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("WARNING: adjacency not available for contiguity check: {e}");
+                        eprintln!("  Run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
+                        missing_data = true;
+                        // Write a placeholder so the file exists
+                        let out = serde_json::json!({
+                            "analyzer": "contiguity",
+                            "state": state_code,
+                            "year": year,
+                            "error": "adjacency data not available",
+                        });
+                        write_json_atomic(&out_path, &out)?;
+                    }
+                }
+            }
+            AnalyzerType::Splits => {
+                let standard = get_split_standard(&state_code);
+                let county_result = analyze_county_splits_with_state(
+                    &assignments,
+                    None, // county names not loaded (optional enrichment)
+                    Some(&state_code),
+                );
+                // Municipal splits: not loaded unless geography data present
+                let place_to_tracts = HashMap::new();
+                let place_names = HashMap::new();
+                let municipal_result =
+                    analyze_municipal_splits(&assignments, &place_to_tracts, &place_names);
+
+                let out = serde_json::json!({
+                    "analyzer": "splits",
+                    "state": state_code,
+                    "year": year,
+                    "counties": {
+                        "total": county_result.total,
+                        "split": county_result.split,
+                        "preservation_score": county_result.preservation_score,
+                        "split_list": county_result.split_list,
+                        "legal_standard": county_result.legal_standard,
+                        "compliance_assessment": county_result.compliance_assessment,
+                        "disclaimer": county_result.disclaimer,
+                    },
+                    "municipalities": {
+                        "available": municipal_result.available,
+                        "total": municipal_result.total,
+                        "split": municipal_result.split,
+                        "preservation_score": municipal_result.preservation_score,
+                        "split_list": municipal_result.split_list,
+                    },
+                });
+                write_json_atomic(&out_path, &out)?;
+                eprintln!("[OK] splits -> {}", out_path.display());
+                // Log the standard for auditing
+                if let Some(ref s) = standard {
+                    eprintln!("  Legal standard: {}", s.legal_standard);
+                }
+            }
             AnalyzerType::All => unreachable!("expanded above"),
         }
     }
 
-    if balance_failed && !args.allow_imbalance {
-        eprintln!("ERROR: population balance failed. Use --allow-imbalance to suppress this exit code.");
-        std::process::exit(2);
+    // Compute bitfield exit code
+    let exit_code = compute_exit_code_with_flags(
+        balance_failed,
+        contiguity_failed,
+        false, // nesting: not checked in this flow
+        missing_data,
+        args.allow_noncontiguous,
+        args.allow_imbalance,
+    );
+
+    if exit_code != 0 {
+        let mut reasons = Vec::new();
+        if balance_failed && !args.allow_imbalance {
+            reasons.push("population balance failed");
+        }
+        if contiguity_failed && !args.allow_noncontiguous {
+            reasons.push("contiguity violation detected");
+        }
+        if missing_data {
+            reasons.push("missing data (adjacency not available)");
+        }
+        eprintln!("ERROR: {}", reasons.join("; "));
+        std::process::exit(exit_code as i32);
     }
 
     Ok(())
+}
+
+/// Load adjacency list and geoid vector from standard adjacency file locations.
+fn load_adjacency_for_analysis(
+    output_root: &PathBuf,
+    state_code: &str,
+    year: &str,
+) -> anyhow::Result<(Vec<Vec<usize>>, Vec<String>)> {
+    let state_lower = state_code.to_lowercase();
+    let geoid_file = format!("{state_lower}_adjacency_{year}_geoids.json");
+    let bin_file = format!("{state_lower}_adjacency_{year}.adj.bin");
+    let geoid_candidates = [
+        output_root.join("data").join(year).join("adjacency").join(&geoid_file),
+        PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&geoid_file),
+        PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&geoid_file),
+    ];
+    let bin_candidates = [
+        output_root.join("data").join(year).join("adjacency").join(&bin_file),
+        PathBuf::from("outputs/V3/data").join(year).join("adjacency").join(&bin_file),
+        PathBuf::from("outputs/V4/data").join(year).join("adjacency").join(&bin_file),
+    ];
+
+    // Find geoids file
+    let geoid_path = geoid_candidates.iter().find(|p| p.exists())
+        .ok_or_else(|| anyhow::anyhow!("GEOID mapping not found for {state_code} {year}"))?;
+    let raw_geoids: HashMap<String, String> = serde_json::from_str(
+        &std::fs::read_to_string(geoid_path)?
+    )?;
+
+    // Build ordered geoid vector (index -> geoid)
+    let n = raw_geoids.len();
+    let mut geoids = vec![String::new(); n];
+    for (idx_str, geoid) in &raw_geoids {
+        if let Ok(idx) = idx_str.parse::<usize>() {
+            if idx < n {
+                geoids[idx] = geoid.clone();
+            }
+        }
+    }
+
+    // Load adjacency from .adj.bin
+    let bin_path = bin_candidates.iter().find(|p| p.exists());
+    let adjacency = if let Some(bp) = bin_path {
+        let data = std::fs::read(bp)?;
+        let graph = redist_data::deserialize_adjacency(&data)
+            .map_err(|e| anyhow::anyhow!("adjacency deserialization failed: {e}"))?;
+        graph.adjacency
+    } else {
+        // Fallback: return empty adjacency (contiguity not checkable)
+        anyhow::bail!("Adjacency binary not found for {state_code} {year}. \
+            Run: python scripts/data/generate_adj_bin.py --year {year} --states {state_code}");
+    };
+
+    Ok((adjacency, geoids))
 }
 
 fn resolve_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {

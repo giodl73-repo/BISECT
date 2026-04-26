@@ -129,8 +129,10 @@ pub enum Commands {
     States(StatesArgs),
     /// Download census data needed to run redistricting
     Fetch(FetchArgs),
-    /// Compute per-district analytics (demographic, political, urban, summary)
+    /// Compute per-district analytics (demographic, political, urban, summary, contiguity, splits)
     Analyze(AnalyzeArgs),
+    /// Compare two redistricting plans (Jaccard, population, compactness)
+    Compare(CompareArgs),
     /// Render district maps to PNG
     Map(MapArgs),
     /// Merge all state analysis outputs into national datasets
@@ -139,6 +141,14 @@ pub enum Commands {
     Validate(ValidateArgs),
     /// Copy a legacy state plan into the plans/{label}/ tree
     Migrate(MigrateArgs),
+    /// Draw and validate multi-chamber nested legislative plans (Spec 5)
+    Suite(SuiteArgs),
+    /// Generate a commission report (HTML and/or JSON) from analysis outputs
+    Report(ReportArgs),
+    /// Export a plan in GeoJSON, GerryChain v2.3, or CSV format
+    Export(ExportArgs),
+    /// Import a GeoJSON plan into the RPLAN format
+    Import(ImportArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -178,6 +188,119 @@ pub struct MigrateArgs {
 }
 
 // ---------------------------------------------------------------------------
+// `redist report` — commission report (HTML / JSON)
+// ---------------------------------------------------------------------------
+
+/// Output format for `redist report`.
+#[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
+pub enum ReportFormat {
+    /// Self-contained HTML (no external dependencies)
+    Html,
+    /// Machine-readable JSON
+    Json,
+    /// PDF (not yet available — exits with code 1)
+    Pdf,
+}
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ReportArgs {
+    /// Plan label (e.g. vt_congressional_2020)
+    #[arg(long)]
+    pub label: String,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Version directory (e.g. RustV3)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+    /// Output formats (html, json, pdf)
+    #[arg(long = "format", value_delimiter = ' ', num_args = 1..,
+          default_values = ["html"])]
+    pub format: Vec<ReportFormat>,
+    /// Output directory for report files (default: reports/{label}/)
+    #[arg(long = "out")]
+    pub out: Option<String>,
+    /// Only write audit.json (chain-of-custody only)
+    #[arg(long)]
+    pub audit_only: bool,
+    /// Base output directory
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+}
+
+// ---------------------------------------------------------------------------
+// `redist export` — plan export (GeoJSON, GerryChain, CSV)
+// ---------------------------------------------------------------------------
+
+/// Export format for `redist export`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, clap::ValueEnum)]
+pub enum ExportFormat {
+    /// RFC 7946 GeoJSON FeatureCollection
+    #[value(name = "geojson", alias = "geo-json")]
+    GeoJson,
+    /// GerryChain v2.3 format ("assignment" singular field)
+    #[value(name = "gerrychain", alias = "gerry-chain")]
+    GerryChain,
+    /// GEOID,district CSV
+    Csv,
+}
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ExportArgs {
+    /// Plan label
+    #[arg(long)]
+    pub label: String,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Version directory
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+    /// Export formats (geojson, gerrychain, csv)
+    #[arg(long = "format", value_delimiter = ' ', num_args = 1..,
+          default_values = ["geojson"])]
+    pub format: Vec<ExportFormat>,
+    /// Output directory (default: exports/{label}/)
+    #[arg(long = "out")]
+    pub out: Option<String>,
+    /// Base output directory
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+}
+
+// ---------------------------------------------------------------------------
+// `redist import` — import GeoJSON plan
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, clap::Args)]
+#[command(disable_version_flag = true)]
+pub struct ImportArgs {
+    /// GeoJSON file to import
+    #[arg(long)]
+    pub file: std::path::PathBuf,
+    /// State code (e.g. WA)
+    #[arg(long)]
+    pub state: String,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Plan label for the imported plan
+    #[arg(long)]
+    pub label: String,
+    /// Version directory
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+    /// Input format: geojson (default) or gerrychain
+    #[arg(long, default_value = "geojson")]
+    pub format: String,
+    /// Base output directory
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+}
+
+// ---------------------------------------------------------------------------
 // `redist analyze` — per-district analytics
 // ---------------------------------------------------------------------------
 
@@ -212,6 +335,174 @@ pub struct AnalyzeArgs {
     /// Allow unconstitutional population imbalance without exiting non-zero (research use only)
     #[arg(long)]
     pub allow_imbalance: bool,
+
+    /// Allow non-contiguous districts without setting exit code bit 1 (research use only)
+    #[arg(long)]
+    pub allow_noncontiguous: bool,
+
+    /// Plan label (for labeled plans under plans/{label}/); falls back to state-level path
+    #[arg(long)]
+    pub label: Option<String>,
+
+    /// Output directory override for comparison and analysis outputs
+    #[arg(long)]
+    pub output_dir: Option<std::path::PathBuf>,
+
+    /// Custom election CSV file for partisan analysis
+    /// (default: data/{year}/elections/presidential_by_tract.csv)
+    #[arg(long)]
+    pub election_file: Option<std::path::PathBuf>,
+
+    /// Number of bootstrap samples for partisan CI (default: 1000)
+    #[arg(long, default_value_t = 1000)]
+    pub bootstrap_samples: usize,
+}
+
+// ---------------------------------------------------------------------------
+// `redist suite` — multi-chamber suite draw and validate
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct SuiteDrawCliArgs {
+    /// Two-letter state code (e.g., WA, IL)
+    #[arg(long)]
+    pub state: String,
+
+    /// Census year (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// Version identifier
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+
+    /// Suite name (e.g., wa_commission_v1)
+    #[arg(long)]
+    pub name: String,
+
+    /// Number of congressional districts (optional)
+    #[arg(long)]
+    pub congressional_districts: Option<usize>,
+
+    /// Number of house districts
+    #[arg(long)]
+    pub house_districts: Option<usize>,
+
+    /// Number of senate districts
+    #[arg(long)]
+    pub senate_districts: Option<usize>,
+
+    /// Nesting mode: none or senate-in-house
+    #[arg(long, default_value = "none")]
+    pub nest: String,
+
+    /// Required house-to-senate nesting ratio (e.g., 2 for 2:1).
+    /// Required for states with variable nesting (IL). Warns if differs from constitutional value.
+    #[arg(long)]
+    pub nest_ratio: Option<usize>,
+
+    /// Random seed for reproducibility
+    #[arg(long)]
+    pub seed: Option<u64>,
+
+    /// Output base directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+
+    /// Overwrite existing suite without error
+    #[arg(long)]
+    pub force: bool,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct SuiteValidateCliArgs {
+    /// Suite name
+    #[arg(long)]
+    pub name: String,
+
+    /// Version identifier
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// Output base directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum SuiteCommands {
+    /// Draw a multi-chamber suite (congressional + house + senate)
+    Draw(SuiteDrawCliArgs),
+    /// Validate nesting constraints for an existing suite
+    Validate(SuiteValidateCliArgs),
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct SuiteArgs {
+    #[command(subcommand)]
+    pub command: SuiteCommands,
+}
+
+// ---------------------------------------------------------------------------
+// `redist compare` — plan comparison
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, PartialEq, Eq, clap::ValueEnum)]
+pub enum CompareFormat {
+    Table,
+    Json,
+    Csv,
+}
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct CompareArgs {
+    /// First plan — label or path to plan directory (required)
+    #[arg(long)]
+    pub plan_a: String,
+
+    /// Second plan — label or path
+    #[arg(long)]
+    pub plan_b: Option<String>,
+
+    /// Use currently enacted districts as plan B
+    #[arg(long, default_value_t = false)]
+    pub enacted: bool,
+
+    /// Census year (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+
+    /// Version directory for label resolution
+    #[arg(short = 'v', long)]
+    pub version: Option<String>,
+
+    /// Metrics to compare: population, compactness, splits, partisan, all
+    #[arg(long, value_delimiter = ' ', num_args = 0.., default_values = ["all"])]
+    pub metrics: Vec<String>,
+
+    /// Output file path (default: stdout)
+    #[arg(long)]
+    pub out: Option<std::path::PathBuf>,
+
+    /// Output format
+    #[arg(long, value_enum, default_value_t = CompareFormat::Table)]
+    pub format: CompareFormat,
+
+    /// Output base directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+
+    /// Output directory override
+    #[arg(long)]
+    pub output_dir: Option<std::path::PathBuf>,
 }
 
 // ---------------------------------------------------------------------------

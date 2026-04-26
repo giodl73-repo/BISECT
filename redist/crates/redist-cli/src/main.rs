@@ -1,5 +1,5 @@
 use clap::Parser;
-use redist_cli::args::{Cli, Commands};
+use redist_cli::args::{Cli, Commands, SuiteCommands};
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete};
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
@@ -7,6 +7,9 @@ use redist_cli::aggregate::run_aggregate;
 use redist_cli::map_cmd::run_map;
 use redist_cli::validate::run_validate;
 use redist_cli::migrate::run_migrate;
+use redist_cli::report_cmd::run_report;
+use redist_cli::export_cmd::run_export;
+use redist_cli::import_cmd::run_import;
 
 fn main() {
     let cli = Cli::parse();
@@ -222,7 +225,89 @@ fn main() {
             let base = output_dir.join(&args.year);
             run_migrate(&base, &args.state, &args.label)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
-            eprintln!("[OK] migrated {} → plans/{}", args.state, args.label);
+            eprintln!("[OK] migrated {} -> plans/{}", args.state, args.label);
+        }
+
+        // ── redist compare: plan comparison ──────────────────────────────────
+        Commands::Compare(args) => {
+            redist_cli::compare::run_compare(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist suite: multi-chamber nested plans ──────────────────────────
+        Commands::Suite(suite_args) => {
+            match suite_args.command {
+                SuiteCommands::Draw(args) => {
+                    use redist_cli::suite::{SuiteDrawArgs, NestMode, run_suite_draw};
+                    use std::collections::HashMap;
+                    use std::str::FromStr;
+
+                    let nest_mode = NestMode::from_str(&args.nest)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+
+                    // For draw, we currently require existing plan files.
+                    // This is a stub — real draw would invoke bisection_runner for each chamber.
+                    eprintln!("[redist suite draw] state={} year={} name={} nest={}",
+                        args.state, args.year, args.name, args.nest);
+
+                    let draw_args = SuiteDrawArgs {
+                        state: args.state,
+                        year: args.year,
+                        version: args.version,
+                        name: args.name,
+                        congressional_districts: args.congressional_districts,
+                        house_districts: args.house_districts,
+                        senate_districts: args.senate_districts,
+                        nest_mode,
+                        nest_ratio: args.nest_ratio,
+                        seed: args.seed,
+                        output_base: args.output_base,
+                        force: args.force,
+                    };
+                    // Empty assignments for CLI stub — real draw populates from bisection
+                    let empty: HashMap<String, usize> = HashMap::new();
+                    run_suite_draw(&draw_args, &empty, &empty, None)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                }
+                SuiteCommands::Validate(args) => {
+                    use redist_cli::suite::run_suite_validate;
+                    use std::path::PathBuf;
+
+                    let suite_dir = PathBuf::from(&args.output_base)
+                        .join(&args.version)
+                        .join(&args.year)
+                        .join("suites")
+                        .join(&args.name);
+
+                    let result = run_suite_validate(&suite_dir, &args.name)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+
+                    println!("{}", serde_json::to_string_pretty(&result)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); }));
+
+                    if !result.valid {
+                        std::process::exit(5); // nesting violation bit 2 = 4, balance bit 0 = 1 → 5
+                    }
+                }
+            }
+        }
+
+        // ── redist report: generate commission report ─────────────────────────
+        Commands::Report(args) => {
+            run_report(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist export: export plan to GeoJSON/GerryChain/CSV ─────────────
+        Commands::Export(args) => {
+            run_export(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist import: import GeoJSON plan ────────────────────────────────
+        Commands::Import(args) => {
+            run_import(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
     }
 }

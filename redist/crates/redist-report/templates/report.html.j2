@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redistricting Commission Report — {{ label }} ({{ year }})</title>
+<style>
+  body { font-family: Georgia, 'Times New Roman', serif; max-width: 1100px; margin: 0 auto; padding: 2rem; color: #1a1a1a; line-height: 1.6; }
+  h1 { font-size: 2rem; border-bottom: 3px solid #2c3e50; padding-bottom: 0.5rem; color: #2c3e50; }
+  h2 { font-size: 1.4rem; color: #2c3e50; border-bottom: 1px solid #bdc3c7; padding-bottom: 0.3rem; margin-top: 2rem; }
+  h3 { font-size: 1.1rem; color: #34495e; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid #bdc3c7; padding: 0.5rem 1rem; text-align: left; }
+  th { background: #ecf0f1; font-weight: bold; }
+  .pass { color: #27ae60; font-weight: bold; }
+  .fail { color: #c0392b; font-weight: bold; }
+  .unavailable { color: #7f8c8d; font-style: italic; }
+  .warning-box { background: #fef9e7; border: 2px solid #f39c12; border-radius: 4px; padding: 1rem; margin: 1rem 0; }
+  .audit-box { background: #eaf2fb; border: 1px solid #3498db; border-radius: 4px; padding: 1rem; margin: 1rem 0; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; }
+  .section { margin-bottom: 2rem; padding-bottom: 1rem; }
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 2rem; margin: 1rem 0; }
+  .meta-item { display: flex; gap: 0.5rem; }
+  .meta-label { font-weight: bold; min-width: 200px; }
+  .toc { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 1rem 1.5rem; margin: 1.5rem 0; }
+  .toc a { color: #2c3e50; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  img.district-map { max-width: 100%; border: 1px solid #bdc3c7; border-radius: 4px; }
+  .disclaimer { background: #fdf2f8; border: 2px solid #9b59b6; border-radius: 4px; padding: 1rem; margin: 1rem 0; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #bdc3c7; font-size: 0.8rem; color: #7f8c8d; }
+</style>
+</head>
+<body>
+
+<h1>Congressional Redistricting Commission Report</h1>
+<p><strong>Plan:</strong> {{ label }} &nbsp;|&nbsp; <strong>State:</strong> {{ state }} &nbsp;|&nbsp; <strong>Census Year:</strong> {{ year }} &nbsp;|&nbsp; <strong>Generated:</strong> {{ generated_at }}</p>
+
+<div class="toc">
+  <strong>Table of Contents</strong>
+  <ol>
+    <li><a href="#exec-summary">Executive Summary</a></li>
+    <li><a href="#population">Population Equality</a></li>
+    <li><a href="#geographic">Geographic Constraints</a></li>
+    <li><a href="#partisan">Partisan Fairness</a></li>
+    <li><a href="#vra">Minority Representation / VRA</a></li>
+    <li><a href="#compactness">Compactness</a></li>
+    <li><a href="#comparison">Comparison vs Enacted Plan</a></li>
+    <li><a href="#nesting">Nesting Compliance</a></li>
+    <li><a href="#audit">Audit Trail</a></li>
+    <li><a href="#maps">Maps</a></li>
+  </ol>
+</div>
+
+{% if has_external_analyzers %}
+<div class="disclaimer">
+  <strong>External Analyzer Disclosure:</strong> This report incorporates results from external tools.
+  External analyzers may affect independent reproducibility. Each external tool's SHA-256 is recorded
+  in the manifest and audit trail below. Reviewers should verify tool integrity before relying on
+  these results for court submission.
+</div>
+{% endif %}
+
+<!-- Section 1: Executive Summary -->
+<div class="section" id="exec-summary">
+<h2>1. Executive Summary</h2>
+<div class="meta-grid">
+  <div class="meta-item"><span class="meta-label">Label:</span> {{ exec_summary.label }}</div>
+  <div class="meta-item"><span class="meta-label">State:</span> {{ exec_summary.state }}</div>
+  <div class="meta-item"><span class="meta-label">Year:</span> {{ exec_summary.year }}</div>
+  <div class="meta-item"><span class="meta-label">Chamber:</span> {{ exec_summary.chamber }}</div>
+  <div class="meta-item"><span class="meta-label">Districts:</span> {{ exec_summary.num_districts }}</div>
+  <div class="meta-item"><span class="meta-label">Balance Tolerance:</span> ±{{ exec_summary.balance_tolerance_pct }}%</div>
+  <div class="meta-item"><span class="meta-label">Population Balance Valid:</span>
+    {% if exec_summary.population_balance_valid %}<span class="pass">[PASS]</span>{% else %}<span class="fail">[FAIL]</span>{% endif %}
+  </div>
+  <div class="meta-item"><span class="meta-label">Binary Version:</span> {{ exec_summary.binary_version }}</div>
+  <div class="meta-item"><span class="meta-label">Created:</span> {{ exec_summary.created_at }}</div>
+</div>
+</div>
+
+<!-- Section 2: Population Equality -->
+<div class="section" id="population">
+<h2>2. Population Equality</h2>
+{% if population_equality.status == "unavailable" %}
+<p class="unavailable">Population equality analysis unavailable.</p>
+{% else %}
+<p><strong>Status:</strong> Population equality metrics from analysis/population.json</p>
+<pre>{{ population_equality | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 3: Geographic Constraints -->
+<div class="section" id="geographic">
+<h2>3. Geographic Constraints</h2>
+<h3>Contiguity</h3>
+{% if geographic_constraints.contiguity.status == "unavailable" %}
+<p class="unavailable">Contiguity data unavailable.</p>
+{% else %}
+<pre>{{ geographic_constraints.contiguity | json_encode(pretty=true) }}</pre>
+{% endif %}
+<h3>Municipal Splits</h3>
+{% if geographic_constraints.splits.status == "unavailable" %}
+<p class="unavailable">Splits analysis unavailable.</p>
+{% else %}
+<pre>{{ geographic_constraints.splits | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 4: Partisan Fairness -->
+<div class="section" id="partisan">
+<h2>4. Partisan Fairness</h2>
+{% if partisan_fairness.status == "unavailable" %}
+<p class="unavailable">Partisan fairness analysis unavailable (election data may not be present for this year).</p>
+{% else %}
+<pre>{{ partisan_fairness | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 5: Minority Representation / VRA -->
+<div class="section" id="vra">
+<h2>5. Minority Representation / VRA</h2>
+{% if vra_compliance.status == "unavailable" %}
+<p class="unavailable">VRA analysis unavailable.</p>
+{% else %}
+<pre>{{ vra_compliance | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 6: Compactness -->
+<div class="section" id="compactness">
+<h2>6. Compactness</h2>
+{% if compactness.status == "unavailable" %}
+<p class="unavailable">Compactness analysis unavailable.</p>
+{% else %}
+<pre>{{ compactness | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 7: Comparison vs Enacted Plan -->
+<div class="section" id="comparison">
+<h2>7. Comparison vs Enacted Plan</h2>
+{% if comparison.status == "unavailable" %}
+<p class="unavailable">Comparison analysis unavailable (enacted plan data not provided).</p>
+{% else %}
+<pre>{{ comparison | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 8: Nesting Compliance -->
+<div class="section" id="nesting">
+<h2>8. Nesting Compliance</h2>
+{% if nesting.status == "unavailable" %}
+<p class="unavailable">Nesting compliance data unavailable.</p>
+{% else %}
+<pre>{{ nesting | json_encode(pretty=true) }}</pre>
+{% endif %}
+</div>
+
+<!-- Section 9: Audit Trail -->
+<div class="section" id="audit">
+<h2>9. Audit Trail</h2>
+<div class="meta-grid">
+  <div class="meta-item"><span class="meta-label">Binary Version:</span> {{ audit.binary_version }}</div>
+  <div class="meta-item"><span class="meta-label">Download URL:</span> <a href="{{ audit.binary_download_url }}">{{ audit.binary_download_url }}</a></div>
+  <div class="meta-item"><span class="meta-label">Binary SHA-256:</span> <code>{{ audit.binary_sha256 }}</code></div>
+  <div class="meta-item"><span class="meta-label">Adjacency File:</span> {{ audit.adjacency_file }}</div>
+  <div class="meta-item"><span class="meta-label">Adjacency SHA-256:</span> <code>{{ audit.adjacency_sha256 }}</code></div>
+  <div class="meta-item"><span class="meta-label">TIGER Source URL:</span> <a href="{{ audit.tiger_source_url }}">{{ audit.tiger_source_url }}</a></div>
+  {% if audit.tiger_sha256 %}
+  <div class="meta-item"><span class="meta-label">TIGER SHA-256:</span> <code>{{ audit.tiger_sha256 }}</code></div>
+  {% endif %}
+  <div class="meta-item"><span class="meta-label">Seed:</span> {{ audit.seed }}</div>
+  <div class="meta-item"><span class="meta-label">Created At:</span> {{ audit.created_at }}</div>
+</div>
+<h3>Verification Command</h3>
+<div class="audit-box">{{ audit.verification_command }}</div>
+</div>
+
+<!-- Section 10: Maps -->
+<div class="section" id="maps">
+<h2>10. Maps</h2>
+{% if maps.status == "unavailable" %}
+<p class="unavailable">District maps unavailable (run 'redist map' to generate).</p>
+{% else %}
+  {% if maps.districts %}
+  <h3>District Map</h3>
+  <img class="district-map" src="data:image/png;base64,{{ maps.districts }}" alt="District Map">
+  {% endif %}
+  {% if maps.political %}
+  <h3>Political Lean Map</h3>
+  <img class="district-map" src="data:image/png;base64,{{ maps.political }}" alt="Political Lean Map">
+  {% endif %}
+  {% if maps.compactness %}
+  <h3>Compactness Map</h3>
+  <img class="district-map" src="data:image/png;base64,{{ maps.compactness }}" alt="Compactness Map">
+  {% endif %}
+{% endif %}
+</div>
+
+<footer>
+  Generated by redist {{ exec_summary.binary_version }} &mdash; {{ generated_at }}<br>
+  This report is self-contained and requires no external dependencies to view.
+</footer>
+
+</body>
+</html>

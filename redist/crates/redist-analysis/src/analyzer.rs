@@ -23,8 +23,11 @@ pub enum AnalyzerType {
     Compactness,
     Demographic,
     Political,
+    Partisan,
     Urban,
     Summary,
+    Contiguity,
+    Splits,
     All,
 }
 
@@ -34,14 +37,33 @@ impl AnalyzerType {
             Self::Compactness => "compactness",
             Self::Demographic => "demographic",
             Self::Political => "political",
+            Self::Partisan => "partisan",
             Self::Urban => "urban",
             Self::Summary => "summary",
+            Self::Contiguity => "contiguity",
+            Self::Splits => "splits",
             Self::All => "all",
         }
     }
 
     pub fn all_concrete() -> Vec<Self> {
-        vec![Self::Demographic, Self::Political, Self::Urban, Self::Summary]
+        vec![
+            Self::Demographic,
+            Self::Political,
+            Self::Urban,
+            Self::Summary,
+            Self::Contiguity,
+            Self::Splits,
+        ]
+    }
+}
+
+/// Expand `All` variant to all concrete types, keeping non-All as-is.
+pub fn expand_all_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {
+    if types.iter().any(|t| *t == AnalyzerType::All) {
+        AnalyzerType::all_concrete()
+    } else {
+        types.to_vec()
     }
 }
 

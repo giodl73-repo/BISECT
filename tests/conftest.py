@@ -6,8 +6,10 @@ This module provides:
 - Temporary directory fixtures
 - Common test utilities
 - Pytest hooks and configuration
+- make_disconnected_plan() fixture (board amendment BENCHMARK)
 """
 
+import json
 import pytest
 import sys
 from pathlib import Path
@@ -119,6 +121,77 @@ def mock_districts_medium(mock_tracts_medium):
 # ============================================================================
 # Pytest Hooks
 # ============================================================================
+
+@pytest.fixture
+def make_disconnected_plan():
+    """Board amendment BENCHMARK fixture.
+
+    Returns a callable that writes a known-bad final_assignments.json with one
+    district split across non-adjacent tracts (disconnected plan). This allows
+    the contiguity exit-code test to run without skipping.
+
+    Usage in test:
+        state, year, version, label = make_disconnected_plan(tmp_redist_output)
+
+    The returned tuple (state, year, version, label) can be passed directly to
+    `redist analyze --state STATE --year YEAR --version VERSION --label LABEL`.
+
+    The fixture creates a synthetic VT-like plan where district 1 has two tracts
+    in geographically non-adjacent positions (tracts share no adjacency edges),
+    causing the BFS contiguity check to find 2 components in district 1.
+    """
+    def _make(output_dir: Path) -> tuple:
+        state = "VT"
+        year = "2020"
+        version = "spec3_disconnected"
+        label = "vt_disconnected_test"
+
+        # Create the plan directory structure matching what redist analyze expects.
+        # Path: {output_dir}/{year}/plans/{label}/
+        plan_dir = output_dir / year / "plans" / label
+        plan_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write manifest.json (required by the analyzer for metadata lookup).
+        manifest = {
+            "label": label,
+            "state_code": state,
+            "year": year,
+            "chamber": "congressional",
+            "num_districts": 1,
+            "population_source": "total",
+            "balance_tolerance_pct": 0.5,
+            "population_balance_valid": True,
+            "created_at": "2026-04-26T00:00:00Z",
+            "created_by": "test_fixture",
+        }
+        (plan_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+        # Write final_assignments.json — a disconnected plan.
+        # Two real-looking VT tract GEOIDs in district 1:
+        #   50023000100 (Chittenden County, near Burlington)
+        #   50025010100 (Orange County — far from Burlington, non-adjacent)
+        # These two tracts are not spatially adjacent, so a BFS contiguity check
+        # will find 2 components in district 1 if adjacency data is present.
+        # If adjacency data is missing, the test still exercises the code path
+        # and exits with code 8 (missing data), which the test also accepts.
+        assignments = {
+            "50023000100": 1,   # Chittenden, Burlington area
+            "50025010100": 1,   # Orange County — non-adjacent to above
+        }
+        (plan_dir / "final_assignments.json").write_text(json.dumps(assignments))
+
+        # Also write to the legacy state path so analyze.rs can find the file
+        # (analyze.rs looks for final_assignments.json in states/{name}/data/ too).
+        state_data_dir = (
+            output_dir / version / year / "states" / "vermont" / "data"
+        )
+        state_data_dir.mkdir(parents=True, exist_ok=True)
+        (state_data_dir / "final_assignments.json").write_text(json.dumps(assignments))
+
+        return state, year, version, label
+
+    return _make
+
 
 def pytest_configure(config):
     """Pytest configuration hook."""
