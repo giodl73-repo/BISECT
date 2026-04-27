@@ -161,6 +161,8 @@ pub enum Commands {
     Import(ImportArgs),
     /// Show redistricting policy for a state (subdivision terms, tolerances, VRA, etc.)
     Policy(PolicyArgs),
+    /// Pre-flight check: verify data files, year validity, resolution warnings for a location
+    Doctor(DoctorArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +178,30 @@ pub struct PolicyArgs {
     /// Output format: table (default) or json
     #[arg(long, default_value = "table")]
     pub format: String,
+}
+
+// ---------------------------------------------------------------------------
+// `redist doctor` — pre-flight check for a location+year
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct DoctorArgs {
+    /// Location code to check (e.g., WA, NV, IE, MT-PARLIAMENT, _TEST_EL)
+    #[arg(long)]
+    pub state: String,
+    /// Census year to check (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Chamber to check (default: congressional)
+    #[arg(long, default_value = "congressional")]
+    pub chamber: String,
+    /// Resolution to check (default: tract)
+    #[arg(long, default_value = "tract")]
+    pub resolution: String,
+    /// Output base directory for adjacency path check (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -710,9 +736,10 @@ pub struct StateArgs {
     #[arg(long)]
     pub state: String,
 
-    /// Census year (default: 2020)
+    /// Census year. Accepts any 4-digit year (2020, 2010, 2000 for US; 2022 for
+    /// Ireland, 2021 for Malta, etc.). Validated against the location registry.
     #[arg(short = 'y', long, default_value = "2020")]
-    pub year: Year,
+    pub year: String,
 
     /// Geographic resolution (default: tract)
     #[arg(long, default_value = "tract")]
@@ -928,7 +955,7 @@ mod tests {
     fn test_state_defaults() {
         let args = StateArgs::parse_from(["state", "--state", "VT"]);
         assert_eq!(args.state, "VT");
-        assert_eq!(args.year, Year::Y2020);
+        assert_eq!(args.year, "2020");
         assert_eq!(args.version, "v1");
         assert_eq!(args.ufactor, 5);
         assert_eq!(args.niter, 100);
@@ -960,7 +987,7 @@ mod tests {
         let args = StateArgs::parse_from([
             "state", "--state", "CA", "--year", "2010"
         ]);
-        assert_eq!(args.year, Year::Y2010);
+        assert_eq!(args.year, "2010");
     }
 
     #[test]

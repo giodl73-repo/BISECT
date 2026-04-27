@@ -25,25 +25,35 @@ pub struct LoadedGraph {
     pub n_edges: usize,
 }
 
-/// Load adjacency graph from `.adj.bin` + `_geoids.json`.
-/// Returns `Ok(graph)` on success.
-/// Falls back to Python pkl shim if `.adj.bin` not present.
-pub fn load_adjacency_pkl(pkl_path: &Path) -> Result<LoadedGraph, String> {
-    // Derive .adj.bin path from the .pkl path
-    let bin_path = pkl_path.with_extension("adj.bin");
-    let stem = pkl_path.file_stem().unwrap_or_default().to_string_lossy();
-    let geoid_path = pkl_path.with_file_name(format!("{stem}_geoids.json"));
+/// Load adjacency graph from either a `.adj.bin` path or a `.pkl` path.
+///
+/// - If `path` ends in `.adj.bin`: loads directly (used for `--adjacency` override
+///   with international states where the path IS the binary file).
+/// - Otherwise: treats path as `.pkl`, derives `.adj.bin` from it, and falls
+///   back to the Python pkl shim if `.adj.bin` is not present.
+pub fn load_adjacency_pkl(path: &Path) -> Result<LoadedGraph, String> {
+    let path_str = path.to_string_lossy();
+    if path_str.ends_with(".adj.bin") {
+        // Direct .adj.bin path — common when using --adjacency override
+        let base = path_str.strip_suffix(".adj.bin").unwrap_or(&path_str);
+        let geoid_path = std::path::PathBuf::from(format!("{base}_geoids.json"));
+        return load_from_bin(path, &geoid_path);
+    }
+
+    // Legacy: derive .adj.bin from .pkl path
+    let bin_path = path.with_extension("adj.bin");
+    let stem = path.file_stem().unwrap_or_default().to_string_lossy();
+    let geoid_path = path.with_file_name(format!("{stem}_geoids.json"));
 
     if bin_path.exists() {
         load_from_bin(&bin_path, &geoid_path)
     } else {
-        // Fallback: Python pkl shim (used when .adj.bin not yet generated)
         eprintln!(
             "WARNING: {} not found — falling back to Python pkl shim. \
              Run scripts/data/convert_adj_bin_to_pkl.py to generate .adj.bin files.",
             bin_path.display()
         );
-        load_from_pkl_shim(pkl_path)
+        load_from_pkl_shim(path)
     }
 }
 

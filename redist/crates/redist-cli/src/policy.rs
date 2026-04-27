@@ -1,12 +1,36 @@
-/// State policy database — loads and queries redist/data/state_policy.json.
+/// Location policy database — loads and queries redist/data/location_policy.json.
 ///
 /// The JSON is embedded directly in the binary at compile time so `redist policy`
-/// works without any external files. Override with REDIST_STATE_POLICY env var.
+/// works without any external files.
+///
+/// Override with REDIST_LOCATION_POLICY env var (REDIST_STATE_POLICY accepted for
+/// backward compatibility).
 
 /// Embedded fallback — compiled into the binary.
-static EMBEDDED_POLICY: &str = include_str!("../../../data/state_policy.json");
+static EMBEDDED_POLICY: &str = include_str!("../../../data/location_policy.json");
+
+/// Re-export LocationRegistry so callers can use `crate::policy::LocationRegistry`.
+pub use crate::registry::LocationRegistry;
 
 pub fn load_policy() -> serde_json::Value {
+    // Primary env var
+    if let Ok(path) = std::env::var("REDIST_LOCATION_POLICY") {
+        if let Ok(content) = std::fs::read_to_string(&path) {
+            if let Ok(v) = serde_json::from_str(&content) {
+                return v;
+            }
+            eprintln!(
+                "WARNING: REDIST_LOCATION_POLICY={path} could not be parsed; \
+                 falling back to embedded policy."
+            );
+        } else {
+            eprintln!(
+                "WARNING: REDIST_LOCATION_POLICY={path} could not be read; \
+                 falling back to embedded policy."
+            );
+        }
+    }
+    // Backward-compat alias
     if let Ok(path) = std::env::var("REDIST_STATE_POLICY") {
         if let Ok(content) = std::fs::read_to_string(&path) {
             if let Ok(v) = serde_json::from_str(&content) {
@@ -23,7 +47,7 @@ pub fn load_policy() -> serde_json::Value {
             );
         }
     }
-    serde_json::from_str(EMBEDDED_POLICY).expect("embedded state_policy.json is valid JSON")
+    serde_json::from_str(EMBEDDED_POLICY).expect("embedded location_policy.json is valid JSON")
 }
 
 pub fn get_state_policy(policy: &serde_json::Value, state_code: &str) -> Option<serde_json::Value> {

@@ -1,7 +1,9 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
 use redist_cli::policy::run_policy;
+use redist_cli::doctor::run_doctor;
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
+use redist_cli::policy::LocationRegistry;
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
 use redist_cli::aggregate::run_aggregate;
@@ -18,51 +20,89 @@ fn main() {
         // ── redist state: single state ────────────────────────────────────────
         Commands::State(args) => {
             let state_code = args.state.to_uppercase();
+            let registry = LocationRegistry::load();
 
-            // International path: --adjacency bypasses manifest lookup entirely.
-            // Requires --districts to be explicit (no manifest to fall back on).
+            // Validate year against the registry for known locations.
+            // Unknown locations with --adjacency bypass get any year.
+            let year = if registry.has_location(&state_code) {
+                registry.validate_year(&state_code, &args.year)
+                    .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); })
+            } else if args.adjacency.is_none() {
+                eprintln!(
+                    "ERROR: unknown location '{state_code}'. \
+                     For international locations not in the registry, \
+                     use --adjacency <path> --districts <n>. \
+                     To add this location permanently, edit data/location_policy.json."
+                );
+                std::process::exit(1);
+            } else {
+                args.year.clone()
+            };
+
+            // Resolve state name + base district count via registry or --adjacency override.
             let (state_name, num_districts) = if let Some(ref _adj_path) = args.adjacency {
                 let name = args.state_name.clone()
-                    .unwrap_or_else(|| state_code.to_lowercase());
+                    .unwrap_or_else(|| registry.state_name(&state_code)
+                        .map(|n| n.to_lowercase().replace(' ', "_"))
+                        .unwrap_or_else(|| state_code.to_lowercase()));
                 let districts = args.districts.unwrap_or_else(|| {
-                    eprintln!("ERROR: --adjacency requires --districts (no manifest to look up district count)");
-                    std::process::exit(1);
+                    registry.chamber_districts(&state_code, &args.chamber, &year)
+                        .unwrap_or_else(|| {
+                            eprintln!(
+                                "ERROR: --adjacency requires --districts ('{state_code}' \
+                                 has no district data for year {year} in the registry)"
+                            );
+                            std::process::exit(1);
+                        })
                 });
                 (name, districts)
             } else {
-                // US path: look up from manifest
-                let all = load_all_states(&args.year.to_string())
-                    .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
-                let (_, sname, ndist) = all.iter()
-                    .find(|(code, _, _)| code == &state_code)
-                    .cloned()
+                let name = registry.state_name(&state_code)
+                    .unwrap_or_else(|| state_code.to_lowercase())
+                    .to_lowercase().replace(' ', "_");
+                let ndist = registry.chamber_districts(&state_code, &args.chamber, &year)
                     .unwrap_or_else(|| {
-                        eprintln!("ERROR: unknown state '{state_code}'. \
-                            For international states, use --adjacency <path> --districts <n>.");
-                        std::process::exit(1);
+                        // Fallback: manifest lookup for US states
+                        let all = load_all_states(&year)
+                            .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                        all.iter()
+                            .find(|(code, _, _)| code == &state_code)
+                            .map(|(_, _, n)| *n)
+                            .unwrap_or_else(|| {
+                                eprintln!("ERROR: no district count for '{state_code}' \
+                                    chamber '{}' year '{year}'. Use --districts.", args.chamber);
+                                std::process::exit(1);
+                            })
                     });
-                (sname, ndist)
+                (name, ndist)
             };
 
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from(format!("outputs/{}", args.version)));
 
-            // Warn for non-congressional chambers (state tolerance applies)
-            if args.chamber != "congressional" {
-                eprintln!(
-                    "NOTE: State legislative balance tolerance set to 5.0%. \
-                     Verify your state's constitutional standard."
-                );
+            // Granularity floor warning (before the run starts)
+            if let Some(warn) = registry.granularity_warning(
+                &state_code, &year, &args.chamber, &args.resolution.to_string()
+            ) {
+                eprintln!("NOTE: {warn}");
             }
 
-            let effective_num_districts = if args.adjacency.is_some() {
-                num_districts // already resolved above
-            } else {
-                args.districts.unwrap_or_else(|| {
-                    chamber_district_count(&state_code, &args.chamber, num_districts)
-                })
-            };
+            // Chamber balance tolerance info
+            if args.chamber != "congressional" && args.balance_tolerance.is_none() {
+                let tol_pct = registry.chamber_districts(&state_code, &args.chamber, &year)
+                    .map(|_| {
+                        use redist_cli::runner::chamber_balance_tolerance;
+                        chamber_balance_tolerance(&state_code, &args.chamber) * 100.0
+                    });
+                if let Some(pct) = tol_pct {
+                    eprintln!("NOTE: Using {:.1}% balance tolerance for {state_code} {} (from location policy). Override with --balance-tolerance.", pct, args.chamber);
+                }
+            }
+
+            let effective_num_districts = args.districts.unwrap_or_else(|| {
+                chamber_district_count(&state_code, &args.chamber, num_districts)
+            });
             let total_seats = args.total_seats.unwrap_or(
                 args.seats_per_district * effective_num_districts
             );
@@ -70,7 +110,7 @@ fn main() {
                 state_code: state_code.clone(),
                 state_name,
                 num_districts: effective_num_districts,
-                year: args.year.to_string(),
+                year: year.clone(),
                 version: args.version.clone(),
                 output_dir,
                 partition_mode: args.partition_mode.to_string(),
@@ -358,6 +398,11 @@ fn main() {
         Commands::Policy(args) => {
             run_policy(&args)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist doctor: pre-flight check ───────────────────────────────────
+        Commands::Doctor(args) => {
+            run_doctor(&args);
         }
     }
 }

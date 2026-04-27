@@ -1,0 +1,2449 @@
+{
+  "_version": "2.0",
+  "_description": "Redistricting location policy configuration. Override with REDIST_LOCATION_POLICY env var.",
+  "_sources": [
+    "NCSL Redistricting criteria by state (2024)",
+    "Princeton Gerrymandering Project state profiles",
+    "State constitutional and statutory citations",
+    "Prison Policy Initiative prison gerrymandering tracker"
+  ],
+  "AL": {
+    "name": "Alabama",
+    "fips": "01",
+    "house_districts": 105,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve where possible",
+    "preservation_citation": "AL Const. Art. IX \u00c2\u00a7200",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "VRA-critical: significant Black population requiring MM districts",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 7,
+      "2010": 7,
+      "2020": 7
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/al_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states al",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "AK": {
+    "name": "Alaska",
+    "fips": "02",
+    "house_districts": 40,
+    "senate_districts": 20,
+    "subdivision_term": "borough",
+    "subdivision_term_plural": "boroughs",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 10.0,
+    "balance_tolerance_senate_pct": 10.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "borough"
+    ],
+    "preservation_standard": "preserve where practicable",
+    "preservation_citation": "AK Const. Art. VI \u00c2\u00a76",
+    "has_independent_commission": true,
+    "commission_type": "redistricting_board",
+    "vra_section2_applies": false,
+    "notes": "Vast geography; few contiguous units. 2:1 nesting required.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ak_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ak",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "AZ": {
+    "name": "Arizona",
+    "fips": "04",
+    "house_districts": 30,
+    "senate_districts": 30,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county",
+      "city"
+    ],
+    "preservation_standard": "respect political subdivisions",
+    "preservation_citation": "AZ Const. Art. IV Part 2 \u00c2\u00a71(14)(B)",
+    "has_independent_commission": true,
+    "commission_type": "independent_redistricting",
+    "vra_section2_applies": true,
+    "notes": "AZ has 2 house seats per senate district (multi-member house). AIRC draws both congressional and legislative maps.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 8,
+      "2010": 9,
+      "2020": 9
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/az_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states az",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "AR": {
+    "name": "Arkansas",
+    "fips": "05",
+    "house_districts": 100,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve where practicable",
+    "preservation_citation": "AR Const. Art. VIII \u00c2\u00a71",
+    "has_independent_commission": false,
+    "commission_type": "board_of_apportionment",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 4,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ar_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ar",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "CA": {
+    "name": "California",
+    "fips": "06",
+    "house_districts": 80,
+    "senate_districts": 40,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2011,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county",
+      "city"
+    ],
+    "preservation_standard": "minimize county and city splits",
+    "preservation_citation": "CA Const. Art. XXI \u00c2\u00a72(d)",
+    "has_independent_commission": true,
+    "commission_type": "citizens_redistricting",
+    "vra_section2_applies": true,
+    "notes": "CRC draws both legislative and congressional maps. Prison population counted at home since AB 420 (2011). Strong VRA requirements.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 53,
+      "2010": 53,
+      "2020": 52
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ca_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ca",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "CO": {
+    "name": "Colorado",
+    "fips": "08",
+    "house_districts": 65,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2020,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "counties shall not be divided unless absolutely necessary",
+    "preservation_citation": "CO Const. Art. V \u00c2\u00a747",
+    "has_independent_commission": true,
+    "commission_type": "independent_redistricting",
+    "vra_section2_applies": false,
+    "notes": "CO Const. uses strong language: 'absolutely necessary' for county splits \u00e2\u20ac\u201d higher bar than most states.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 7,
+      "2010": 7,
+      "2020": 8
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/co_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states co",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "CT": {
+    "name": "Connecticut",
+    "fips": "09",
+    "house_districts": 151,
+    "senate_districts": 36,
+    "subdivision_term": "town",
+    "subdivision_term_plural": "towns",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2021,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "town"
+    ],
+    "preservation_standard": "preserve town boundaries where possible",
+    "preservation_citation": "CT Const. Art. III \u00c2\u00a76",
+    "has_independent_commission": false,
+    "commission_type": "reapportionment_commission",
+    "vra_section2_applies": false,
+    "notes": "CT uses 'towns' not counties as the primary subdivision. Towns are the core political unit. No county government in CT.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 5,
+      "2010": 5,
+      "2020": 5
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ct_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ct",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "DE": {
+    "name": "Delaware",
+    "fips": "10",
+    "house_districts": 41,
+    "senate_districts": 21,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2010,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve where practicable",
+    "preservation_citation": "DE Code Title 29 \u00c2\u00a7804",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/de_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states de",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "FL": {
+    "name": "Florida",
+    "fips": "12",
+    "house_districts": 120,
+    "senate_districts": 40,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve political and geographical boundaries",
+    "preservation_citation": "FL Const. Art. III \u00c2\u00a721(b)",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "Fair Districts Amendment (2010) prohibits incumbent protection and partisan intent.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 25,
+      "2010": 27,
+      "2020": 28
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/fl_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states fl",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "GA": {
+    "name": "Georgia",
+    "fips": "13",
+    "house_districts": 180,
+    "senate_districts": 56,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county lines where possible",
+    "preservation_citation": "GA Const. Art. III \u00c2\u00a72",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "VRA-critical: large Black population. GA has 159 counties \u00e2\u20ac\u201d most of any state.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 13,
+      "2010": 14,
+      "2020": 14
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ga_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ga",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "HI": {
+    "name": "Hawaii",
+    "fips": "15",
+    "house_districts": 51,
+    "senate_districts": 25,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "district",
+    "municipal_term_plural": "districts",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "permanent_resident",
+    "permanent_resident_note": "Hawaii excludes non-permanent residents (military, students from mainland) from its apportionment base \u00e2\u20ac\u201d unique in the US",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "keep basic units intact",
+    "preservation_citation": "HI Const. Art. IV \u00c2\u00a76",
+    "has_independent_commission": true,
+    "commission_type": "reapportionment_commission",
+    "vra_section2_applies": false,
+    "notes": "CRITICAL: Hawaii uses permanent resident population, not Census total. Excludes large military and out-of-state student populations. This significantly affects district population counts.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 2,
+      "2010": 2,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/hi_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states hi",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "ID": {
+    "name": "Idaho",
+    "fips": "16",
+    "house_districts": 70,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 10.0,
+    "balance_tolerance_senate_pct": 10.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "counties shall not be divided",
+    "preservation_citation": "ID Const. Art. III \u00c2\u00a75",
+    "has_independent_commission": true,
+    "commission_type": "bipartisan_commission",
+    "vra_section2_applies": false,
+    "notes": "ID has strong county preservation: 'counties shall not be divided in creating legislative districts.' 2 house seats per senate district.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 2,
+      "2010": 2,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/id_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states id",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "IL": {
+    "name": "Illinois",
+    "fips": "17",
+    "house_districts": 118,
+    "senate_districts": 59,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2021,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_house",
+    "nesting_ratio": "variable",
+    "nesting_note": "IL senate districts must contain whole house districts; ratio varies",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "compact and contiguous; preserve counties where possible",
+    "preservation_citation": "IL Const. Art. IV \u00c2\u00a73",
+    "has_independent_commission": false,
+    "commission_type": "legislature_with_tiebreaker",
+    "vra_section2_applies": true,
+    "notes": "If legislature fails to pass a map, bipartisan commission draws it; if deadlocked, tiebreaker selected by lot.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 19,
+      "2010": 18,
+      "2020": 17
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/il_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states il",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "IN": {
+    "name": "Indiana",
+    "fips": "18",
+    "house_districts": 100,
+    "senate_districts": 50,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county",
+      "township"
+    ],
+    "preservation_standard": "preserve county and township boundaries where possible",
+    "preservation_citation": "IN Code \u00c2\u00a73-3-2-2",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 9,
+      "2010": 9,
+      "2020": 9
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/in_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states in",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "IA": {
+    "name": "Iowa",
+    "fips": "19",
+    "house_districts": 100,
+    "senate_districts": 50,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "counties shall not be divided",
+    "preservation_citation": "IA Code \u00c2\u00a742.4",
+    "has_independent_commission": true,
+    "commission_type": "nonpartisan_legislative_service_bureau",
+    "vra_section2_applies": false,
+    "notes": "Iowa's Legislative Services Bureau draws nonpartisan maps; legislature can only accept or reject (no amendments). Model for nonpartisan redistricting.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 5,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ia_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ia",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "KS": {
+    "name": "Kansas",
+    "fips": "20",
+    "house_districts": 125,
+    "senate_districts": 40,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "KS Const. Art. 10 \u00c2\u00a71",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 4,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ks_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ks",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "KY": {
+    "name": "Kentucky",
+    "fips": "21",
+    "house_districts": 100,
+    "senate_districts": 38,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "counties shall not be divided",
+    "preservation_citation": "KY Const. \u00c2\u00a733",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 6,
+      "2010": 6,
+      "2020": 6
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ky_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ky",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "LA": {
+    "name": "Louisiana",
+    "fips": "22",
+    "house_districts": 105,
+    "senate_districts": 39,
+    "subdivision_term": "parish",
+    "subdivision_term_plural": "parishes",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "parish"
+    ],
+    "preservation_standard": "parishes shall be preserved where possible",
+    "preservation_citation": "LA Const. Art. III \u00c2\u00a76",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "Louisiana uses PARISHES not counties. All split analysis reports 'parish splits' not 'county splits'. Complex bayou geography creates natural isolation. VRA-critical: ~33% Black population.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 7,
+      "2010": 6,
+      "2020": 6
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/la_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states la",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "ME": {
+    "name": "Maine",
+    "fips": "23",
+    "house_districts": 151,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "town",
+    "municipal_term_plural": "towns",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2021,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county",
+      "town"
+    ],
+    "preservation_standard": "preserve municipalities and counties",
+    "preservation_citation": "ME Const. Art. IV \u00c2\u00a72",
+    "has_independent_commission": true,
+    "commission_type": "apportionment_commission",
+    "vra_section2_applies": false,
+    "notes": "Maine uses towns as primary subdivision unit alongside counties.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 2,
+      "2010": 2,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/me_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states me",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MD": {
+    "name": "Maryland",
+    "fips": "24",
+    "house_districts": 141,
+    "senate_districts": 47,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2010,
+    "student_counting": null,
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "variable",
+    "nesting_note": "MD house districts must be within senate districts; ratio varies (some senate districts have 3 delegates, some have multi-member sub-districts)",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve political subdivisions where practical",
+    "preservation_citation": "MD Const. Art. III \u00c2\u00a74",
+    "has_independent_commission": false,
+    "commission_type": "governor_appointed_commission",
+    "vra_section2_applies": true,
+    "notes": "MD has unusual structure: 47 senate districts, 141 house delegates (3 per senate district, but some senate districts have sub-districts with 1 or 2 delegates). Baltimore City is an independent city (like VA).",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 8,
+      "2010": 8,
+      "2020": 8
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/md_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states md",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MA": {
+    "name": "Massachusetts",
+    "fips": "25",
+    "house_districts": 160,
+    "senate_districts": 40,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city_or_town",
+    "municipal_term_plural": "cities_and_towns",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2012,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "city_or_town"
+    ],
+    "preservation_standard": "preserve city and town boundaries where possible",
+    "preservation_citation": "MA Const. Art. CI",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "MA uses 'cities and towns' as the primary subdivision unit. Counties have limited government in MA. Preservation applies to municipality boundaries.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 10,
+      "2010": 9,
+      "2020": 9
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ma_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ma",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MI": {
+    "name": "Michigan",
+    "fips": "26",
+    "house_districts": 110,
+    "senate_districts": 38,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve counties where possible",
+    "preservation_citation": "MI Const. Art. IV \u00c2\u00a72",
+    "has_independent_commission": true,
+    "commission_type": "independent_citizens",
+    "vra_section2_applies": true,
+    "notes": "Voters approved Prop 2 (2018) creating independent citizens redistricting commission.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 15,
+      "2010": 14,
+      "2020": 13
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/mi_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mi",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MN": {
+    "name": "Minnesota",
+    "fips": "27",
+    "house_districts": 134,
+    "senate_districts": 67,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county lines where possible",
+    "preservation_citation": "MN Const. Art. IV \u00c2\u00a73",
+    "has_independent_commission": false,
+    "commission_type": "legislature_with_court_backup",
+    "vra_section2_applies": false,
+    "notes": "If legislature deadlocks, courts draw the maps (happened 2022). 2:1 house-to-senate nesting required.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 8,
+      "2010": 8,
+      "2020": 8
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/mn_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mn",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MS": {
+    "name": "Mississippi",
+    "fips": "28",
+    "house_districts": 122,
+    "senate_districts": 52,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "MS Const. \u00c2\u00a7254",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "VRA-critical: ~38% Black population. High priority for majority-minority districts.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 4,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ms_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ms",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MO": {
+    "name": "Missouri",
+    "fips": "29",
+    "house_districts": 163,
+    "senate_districts": 34,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "MO Const. Art. III \u00c2\u00a72",
+    "has_independent_commission": true,
+    "commission_type": "bipartisan_commission",
+    "vra_section2_applies": false,
+    "notes": "Voters approved Amendment 1 (2018) for bipartisan redistricting. St. Louis City is an independent city (like VA).",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 9,
+      "2010": 8,
+      "2020": 8
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/mo_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mo",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "MT": {
+    "name": "Montana",
+    "fips": "30",
+    "house_districts": 100,
+    "senate_districts": 50,
+    "low_density_note": "Montana has only 319 census tracts for 100 house districts (3.2/district). Block group resolution required; even then may struggle with extreme rural sparsity.",
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "MT Const. Art. V \u00c2\u00a714",
+    "has_independent_commission": true,
+    "commission_type": "bipartisan_commission",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/mt_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mt",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NE": {
+    "name": "Nebraska",
+    "fips": "31",
+    "house_districts": 49,
+    "senate_districts": 0,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "NE Const. Art. III \u00c2\u00a75",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "Nebraska has a UNICAMERAL legislature \u00e2\u20ac\u201d no senate. The 49-member body is nonpartisan. Only state with a unicameral legislature.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 3,
+      "2010": 3,
+      "2020": 3
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ne_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ne",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NV": {
+    "name": "Nevada",
+    "fips": "32",
+    "house_districts": 42,
+    "senate_districts": 21,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 10.0,
+    "balance_tolerance_senate_pct": 10.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2021,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "NV Const. Art. 15 \u00c2\u00a713",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "71% of Nevada's population in Clark County (Las Vegas). County splits expected and unavoidable. Block group resolution required for 42HD redistricting.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 3,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nv_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nv",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NJ": {
+    "name": "New Jersey",
+    "fips": "34",
+    "house_districts": 80,
+    "senate_districts": 40,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2021,
+    "student_counting": "college_address",
+    "student_counting_note": "NJ counts college students at their college address for state legislative redistricting \u00e2\u20ac\u201d different from Census default which uses college address. This is consistent with Census but explicitly codified in NJ law.",
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county",
+      "municipality"
+    ],
+    "preservation_standard": "preserve county and municipality boundaries where possible",
+    "preservation_citation": "NJ Const. Art. IV \u00c2\u00a73",
+    "has_independent_commission": true,
+    "commission_type": "apportionment_commission",
+    "vra_section2_applies": true,
+    "notes": "NJ explicitly codifies student counting at college address. 2 assembly seats per senate district. Tiebreaker commission member appointed by NJ Supreme Court.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 13,
+      "2010": 12,
+      "2020": 12
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nj_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nj",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NM": {
+    "name": "New Mexico",
+    "fips": "35",
+    "house_districts": 70,
+    "senate_districts": 42,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "NM Const. Art. IV \u00c2\u00a73",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "VRA-critical: significant Native American and Hispanic populations.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 3,
+      "2010": 3,
+      "2020": 3
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nm_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nm",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NY": {
+    "name": "New York",
+    "fips": "36",
+    "house_districts": 150,
+    "senate_districts": 63,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2010,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_house",
+    "nesting_ratio": "variable",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries",
+    "preservation_citation": "NY Const. Art. III \u00c2\u00a74",
+    "has_independent_commission": true,
+    "commission_type": "independent_redistricting",
+    "vra_section2_applies": true,
+    "notes": "Voters approved independent commission (2014 amendment). Legislature can reject maps; if deadlocked, courts draw. NYC boroughs (Queens, Brooklyn, etc.) are also counties.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 29,
+      "2010": 27,
+      "2020": 26
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ny_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ny",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "NC": {
+    "name": "North Carolina",
+    "fips": "37",
+    "house_districts": 120,
+    "senate_districts": 50,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "whole county provision \u00e2\u20ac\u201d counties shall not be divided",
+    "preservation_citation": "NC Const. Art. II \u00c2\u00a7\u00c2\u00a73,5",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "notes": "NC has a strict 'Whole County Provision' \u00e2\u20ac\u201d no county may be split for legislative districts. Congressional districts are different (no whole county requirement). Major redistricting litigation history.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 13,
+      "2010": 13,
+      "2020": 14
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nc_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nc",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "ND": {
+    "name": "North Dakota",
+    "fips": "38",
+    "house_districts": 94,
+    "house_multi_member_note": "ND has 47 legislative districts each with 2 house seats = 94 members. Districts are drawn as 47 units, not 94. Use house_districts=47 for single-member redistricting.",
+    "house_districts_effective_single_member": 47,
+    "senate_districts": 47,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "ND Const. Art. IV \u00c2\u00a72",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "ND has 47 senate districts, each with 2 house members (94 house = 2 per senate district, 2:1 ratio).",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nd_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nd",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "OH": {
+    "name": "Ohio",
+    "fips": "39",
+    "house_districts": 99,
+    "senate_districts": 33,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_three_house",
+    "nesting_ratio": "3:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "county undivided unless population requires otherwise",
+    "preservation_citation": "OH Const. Art. XI \u00c2\u00a77",
+    "has_independent_commission": true,
+    "commission_type": "redistricting_commission",
+    "vra_section2_applies": false,
+    "notes": "OH Supreme Court struck down multiple maps 2021-2022. Commission includes governor, auditor, SOS, 2 house members, 2 senators. 3:1 house-to-senate nesting.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 18,
+      "2010": 16,
+      "2020": 15
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/oh_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states oh",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "OK": {
+    "name": "Oklahoma",
+    "fips": "40",
+    "house_districts": 101,
+    "senate_districts": 48,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "OK Const. Art. V \u00c2\u00a79B",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 5,
+      "2010": 5,
+      "2020": 5
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ok_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ok",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "OR": {
+    "name": "Oregon",
+    "fips": "41",
+    "house_districts": 60,
+    "senate_districts": 30,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "OR Const. Art. IV \u00c2\u00a77",
+    "has_independent_commission": true,
+    "commission_type": "independent_citizens",
+    "vra_section2_applies": false,
+    "notes": "Voters approved IP 17 (2022) creating independent citizens commission for 2030 cycle.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 5,
+      "2010": 5,
+      "2020": 6
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/or_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states or",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "PA": {
+    "name": "Pennsylvania",
+    "fips": "42",
+    "house_districts": 203,
+    "senate_districts": 50,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county",
+      "municipality"
+    ],
+    "preservation_standard": "preserve counties, cities, and municipalities where possible",
+    "preservation_citation": "PA Const. Art. II \u00c2\u00a716",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "PA has the largest state house in the country at 203 members. Block group resolution required for redistricting.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 19,
+      "2010": 18,
+      "2020": 17
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/pa_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states pa",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "RI": {
+    "name": "Rhode Island",
+    "fips": "44",
+    "house_districts": 75,
+    "senate_districts": 38,
+    "subdivision_term": "city_or_town",
+    "subdivision_term_plural": "cities_and_towns",
+    "municipal_term": "city_or_town",
+    "municipal_term_plural": "cities_and_towns",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2012,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "city_or_town"
+    ],
+    "preservation_standard": "preserve city and town boundaries where possible",
+    "preservation_citation": "RI Const. Art. VIII \u00c2\u00a71",
+    "has_independent_commission": false,
+    "commission_type": "reapportionment_commission",
+    "vra_section2_applies": false,
+    "notes": "RI uses cities and towns as primary subdivision. No county government in RI.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 2,
+      "2010": 2,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ri_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ri",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "SC": {
+    "name": "South Carolina",
+    "fips": "45",
+    "house_districts": 124,
+    "senate_districts": 46,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "SC Const. Art. III \u00c2\u00a73",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": true,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 6,
+      "2010": 7,
+      "2020": 7
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/sc_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states sc",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "SD": {
+    "name": "South Dakota",
+    "fips": "46",
+    "house_districts": 70,
+    "senate_districts": 35,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "house_in_senate",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries",
+    "preservation_citation": "SD Const. Art. III \u00c2\u00a75",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/sd_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states sd",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "TN": {
+    "name": "Tennessee",
+    "fips": "47",
+    "house_districts": 99,
+    "senate_districts": 33,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_three_house",
+    "nesting_ratio": "3:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "TN Const. Art. II \u00c2\u00a75",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "3:1 house-to-senate nesting required. 99 house = 33 senate \u00c3\u2014 3.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 9,
+      "2010": 9,
+      "2020": 9
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/tn_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states tn",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "TX": {
+    "name": "Texas",
+    "fips": "48",
+    "house_districts": 150,
+    "senate_districts": 31,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where practicable",
+    "preservation_citation": "TX Const. Art. III \u00c2\u00a726",
+    "has_independent_commission": false,
+    "commission_type": "legislature_with_backup_board",
+    "vra_section2_applies": true,
+    "notes": "Texas has 254 counties \u00e2\u20ac\u201d 2nd most after GA. VRA-critical: large Hispanic (40%) and Black (13%) populations. If legislature fails, Legislative Redistricting Board draws maps (LRB). Largest state house in the US at 150 members.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 32,
+      "2010": 36,
+      "2020": 38
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/tx_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states tx",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "UT": {
+    "name": "Utah",
+    "fips": "49",
+    "house_districts": 75,
+    "senate_districts": 29,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "UT Code \u00c2\u00a720A-19-102",
+    "has_independent_commission": true,
+    "commission_type": "independent_redistricting_advisory",
+    "vra_section2_applies": false,
+    "notes": "Voters approved advisory commission (2018); legislature is not bound by its maps.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 3,
+      "2010": 4,
+      "2020": 4
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/ut_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ut",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "VT": {
+    "name": "Vermont",
+    "fips": "50",
+    "house_districts": 150,
+    "house_districts_effective_single_member": 0,
+    "house_multi_member_note": "VT has 150 house members but they sit in multi-member districts (2 or 3 members per district). Cannot be drawn as 150 single-member districts from 193 tracts. Use the actual district count from the redistricting plan (~80 districts with variable membership).",
+    "senate_districts": 30,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "town",
+    "municipal_term_plural": "towns",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county",
+      "town"
+    ],
+    "preservation_standard": "preserve town boundaries where possible",
+    "preservation_citation": "VT Const. Ch. II \u00c2\u00a773",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "VT uses towns (not counties) as the primary subdivision for legislative districts. VT has many small multi-member house districts.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/vt_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states vt",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "VA": {
+    "name": "Virginia",
+    "fips": "51",
+    "house_districts": 100,
+    "senate_districts": 40,
+    "subdivision_term": "county_or_independent_city",
+    "subdivision_term_plural": "counties_and_independent_cities",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_since": 2020,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county_or_independent_city"
+    ],
+    "preservation_standard": "preserve counties and cities where possible",
+    "preservation_citation": "VA Const. Art. II \u00c2\u00a76",
+    "has_independent_commission": true,
+    "commission_type": "citizen_redistricting",
+    "vra_section2_applies": true,
+    "independent_city_note": "Virginia has 95 counties AND 38 independent cities that are separate from any county. Both are tracked as separate entities in split analysis (133 total). Independent cities have FIPS codes 51510-51840 and are extracted correctly from Census GEOIDs.",
+    "independent_cities": [
+      "Alexandria",
+      "Bedford",
+      "Bristol",
+      "Buena Vista",
+      "Charlottesville",
+      "Chesapeake",
+      "Colonial Heights",
+      "Covington",
+      "Danville",
+      "Emporia",
+      "Fairfax",
+      "Falls Church",
+      "Franklin",
+      "Fredericksburg",
+      "Galax",
+      "Hampton",
+      "Harrisonburg",
+      "Hopewell",
+      "Lexington",
+      "Lynchburg",
+      "Manassas",
+      "Manassas Park",
+      "Martinsville",
+      "Newport News",
+      "Norfolk",
+      "Norton",
+      "Petersburg",
+      "Poquoson",
+      "Portsmouth",
+      "Radford",
+      "Richmond",
+      "Roanoke",
+      "Salem",
+      "Staunton",
+      "Suffolk",
+      "Virginia Beach",
+      "Waynesboro",
+      "Williamsburg",
+      "Winchester"
+    ],
+    "notes": "Virginia is the ONLY state where independent cities are completely separate from counties. Cities like Richmond, Virginia Beach, Norfolk, and Alexandria have no county affiliation. Both counties and independent cities must be preserved. The 2020 Constitutional amendment created a citizen redistricting commission.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 11,
+      "2010": 11,
+      "2020": 11
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/va_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states va",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "WA": {
+    "name": "Washington",
+    "fips": "53",
+    "house_districts": 98,
+    "senate_districts": 49,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "city",
+    "municipal_term_plural": "cities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "counties shall be preserved where possible",
+    "preservation_citation": "WA Const. Art. II \u00c2\u00a743",
+    "has_independent_commission": true,
+    "commission_type": "redistricting_commission",
+    "vra_section2_applies": false,
+    "notes": "WA has a bipartisan redistricting commission (4 appointed members + nonpartisan staff director). 2:1 senate-in-house nesting required. Block group resolution required for 98HD redistricting (only 1,784 tracts, 18/district at tract level).",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 9,
+      "2010": 10,
+      "2020": 10
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/wa_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wa",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "WV": {
+    "name": "West Virginia",
+    "fips": "54",
+    "house_districts": 100,
+    "senate_districts": 34,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries where possible",
+    "preservation_citation": "WV Const. Art. VI \u00c2\u00a74",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 3,
+      "2010": 3,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/wv_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wv",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "WI": {
+    "name": "Wisconsin",
+    "fips": "55",
+    "house_districts": 99,
+    "senate_districts": 33,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_three_house",
+    "nesting_ratio": "3:1",
+    "preservation_entities": [
+      "county",
+      "municipality"
+    ],
+    "preservation_standard": "preserve county and municipal boundaries",
+    "preservation_citation": "WI Const. Art. IV \u00c2\u00a74",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "99 house = 33 senate \u00c3\u2014 3. 3:1 nesting required.",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 8,
+      "2010": 8,
+      "2020": 8
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/wi_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wi",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "WY": {
+    "name": "Wyoming",
+    "fips": "56",
+    "house_districts": 60,
+    "senate_districts": 30,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 10.0,
+    "balance_tolerance_senate_pct": 10.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": "senate_contains_two_house",
+    "nesting_ratio": "2:1",
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "preserve county boundaries",
+    "preservation_citation": "WY Const. Art. III \u00c2\u00a748",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 1,
+      "2010": 1,
+      "2020": 1
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/wy_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wy",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
+  "GB-ENG": {
+    "name": "England (UK Parliament)",
+    "fips": null,
+    "house_districts": 543,
+    "senate_districts": 0,
+    "subdivision_term": "constituency",
+    "subdivision_term_plural": "constituencies",
+    "municipal_term": "local_authority",
+    "municipal_term_plural": "local_authorities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 5.0,
+    "population_basis": "registered_electors",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "local_authority"
+    ],
+    "preservation_standard": "Boundary Commission Rule 5 - local authority boundaries",
+    "preservation_citation": "Parliamentary Constituencies Act 2020 \u00c2\u00a75",
+    "has_independent_commission": true,
+    "commission_type": "boundary_commission",
+    "vra_section2_applies": false,
+    "electoral_system": "first_past_the_post",
+    "seats_per_district": 1,
+    "notes": "Single-member FPTP constituencies. Balance uses registered electorate not population.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 543
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/gb-eng/gb-eng_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_gb-eng.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "IE": {
+    "name": "Ireland (Dail Eireann)",
+    "fips": null,
+    "house_districts": 43,
+    "senate_districts": 60,
+    "subdivision_term": "constituency",
+    "subdivision_term_plural": "constituencies",
+    "municipal_term": "county",
+    "municipal_term_plural": "counties",
+    "balance_tolerance_house_pct": 16.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 16.0,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county"
+    ],
+    "preservation_standard": "County boundaries respected where possible",
+    "preservation_citation": "Electoral Amendment Act 2023",
+    "has_independent_commission": true,
+    "commission_type": "electoral_commission",
+    "vra_section2_applies": false,
+    "electoral_system": "single_transferable_vote",
+    "seats_per_district": "3-5",
+    "total_seats": 174,
+    "balance_formula": "population_per_seat",
+    "notes": "Multi-member STV. 43 constituencies with 3-5 seats each. Balance is per seat not per constituency.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 43
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/ie/ie_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_ie.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "MT-PARLIAMENT": {
+    "name": "Malta (House of Representatives)",
+    "fips": null,
+    "house_districts": 13,
+    "senate_districts": 0,
+    "subdivision_term": "district",
+    "subdivision_term_plural": "districts",
+    "municipal_term": "locality",
+    "municipal_term_plural": "localities",
+    "balance_tolerance_house_pct": 10.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 10.0,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "district"
+    ],
+    "preservation_standard": "Historic district boundaries preserved",
+    "preservation_citation": "Electoral Code of Malta Chapter 354",
+    "has_independent_commission": false,
+    "commission_type": "parliament",
+    "vra_section2_applies": false,
+    "electoral_system": "single_transferable_vote",
+    "seats_per_district": 5,
+    "total_seats": 65,
+    "balance_formula": "population_per_seat",
+    "notes": "13 districts, 5 seats each via STV. Use --seats-per-district 5 --districts 13 --total-seats 65.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 13
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/mt-parliament/mt-parliament_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_mt-parliament.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "NZ-ELECTORATE": {
+    "name": "New Zealand Electorates (General Roll)",
+    "fips": null,
+    "house_districts": 65,
+    "senate_districts": 0,
+    "subdivision_term": "electorate",
+    "subdivision_term_plural": "electorates",
+    "municipal_term": "territorial_authority",
+    "municipal_term_plural": "territorial_authorities",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 5.0,
+    "population_basis": "general_electoral_population",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "territorial_authority"
+    ],
+    "preservation_standard": "Territorial authorities should not be divided where possible",
+    "preservation_citation": "Electoral Act 1993 Part 2",
+    "has_independent_commission": true,
+    "commission_type": "representation_commission",
+    "vra_section2_applies": false,
+    "electoral_system": "mixed_member_proportional",
+    "seats_per_district": 1,
+    "notes": "65 general electorates + 7 Maori electorates + list seats = 120 total. This covers general electorates only.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 65
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/nz-electorate/nz-electorate_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_nz-electorate.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "DE-WAHLKREIS": {
+    "name": "Germany Bundeswahlkreise",
+    "fips": null,
+    "house_districts": 299,
+    "senate_districts": 0,
+    "subdivision_term": "Wahlkreis",
+    "subdivision_term_plural": "Wahlkreise",
+    "municipal_term": "Gemeinde",
+    "municipal_term_plural": "Gemeinden",
+    "balance_tolerance_house_pct": 25.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 25.0,
+    "population_basis": "german_citizens",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "Landkreis"
+    ],
+    "preservation_standard": "Landkreise und kreisfreie Staedte sollen nicht aufgeteilt werden",
+    "preservation_citation": "Bundeswahlgesetz \u00c2\u00a73",
+    "has_independent_commission": true,
+    "commission_type": "wahlkreiskommission",
+    "vra_section2_applies": false,
+    "electoral_system": "mixed_member_proportional",
+    "seats_per_district": 1,
+    "notes": "299 Wahlkreise (FPTP) + list seats. German citizens only. 25% deviation allowed.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 299
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/de-wahlkreis/de-wahlkreis_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_de-wahlkreis.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "CA-PROV": {
+    "name": "Canada Federal Electoral Districts",
+    "fips": null,
+    "house_districts": 343,
+    "senate_districts": 0,
+    "subdivision_term": "riding",
+    "subdivision_term_plural": "ridings",
+    "municipal_term": "municipality",
+    "municipal_term_plural": "municipalities",
+    "balance_tolerance_house_pct": 25.0,
+    "balance_tolerance_senate_pct": 0.0,
+    "balance_tolerance_congressional_pct": 25.0,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "municipality"
+    ],
+    "preservation_standard": "Communities of interest and minority communities shall be preserved",
+    "preservation_citation": "Electoral Boundaries Readjustment Act R.S.C. 1985",
+    "has_independent_commission": true,
+    "commission_type": "electoral_boundaries_commission",
+    "vra_section2_applies": false,
+    "electoral_system": "first_past_the_post",
+    "seats_per_district": 1,
+    "notes": "Canada calls constituencies 'ridings'. 343 single-member ridings. 25% deviation from provincial quota allowed.",
+    "census_years": [
+      "2022"
+    ],
+    "congressional_districts_by_year": {
+      "2022": 343
+    },
+    "adjacency_convention": {
+      "convention": "gadm",
+      "path_template": "outputs/international/ca-prov/ca-prov_adjacency_{year}.pkl",
+      "build_command": "python scripts/data/international/acquire_ca-prov.py --year {year}",
+      "data_source": "GADM v4.1 + national statistics office"
+    }
+  },
+  "_TEST_EL": {
+    "_purpose": "TEST STATE ONLY \u00e2\u20ac\u201d Eldoria (EL). Every field uses an unusual value to verify nothing is hardcoded. If any test fails on Eldoria, a real value is being hardcoded somewhere in the codebase.",
+    "_theme": "Medieval fantasy / D&D",
+    "name": "Eldoria",
+    "fips": "99",
+    "house_districts": 13,
+    "senate_districts": 3,
+    "subdivision_term": "realm",
+    "subdivision_term_plural": "realms",
+    "municipal_term": "keep",
+    "municipal_term_plural": "keeps",
+    "balance_tolerance_house_pct": 7.5,
+    "balance_tolerance_senate_pct": 12.0,
+    "balance_tolerance_congressional_pct": 0.3,
+    "population_basis": "vap",
+    "population_basis_note": "Eldoria counts only voting-age adventurers. Dragons excluded per Royal Decree XIV.",
+    "prison_gerrymandering": "home_address",
+    "prison_gerrymandering_note": "Dungeon residents counted at their home village, not their cell.",
+    "student_counting": "college_address",
+    "student_counting_note": "Apprentices at the Arcane Academy counted at the Academy.",
+    "nesting_requirement": "senate_contains_house",
+    "nesting_ratio": "4:1",
+    "nesting_note": "The 3 Kingdoms each contain 4 Council seats (13 = 3\u00c3\u20144+1, with one seat at-large for the Wizard Council).",
+    "preservation_entities": [
+      "realm",
+      "keep"
+    ],
+    "preservation_standard": "Realms and keeps shall not be sundered without the blessing of the High Council",
+    "preservation_citation": "Royal Charter of Eldoria, Article VII \u00c2\u00a742 (Year of the Dragon, 2nd Age)",
+    "has_independent_commission": true,
+    "commission_type": "grand_council_of_wizards",
+    "vra_section2_applies": true,
+    "vra_note": "Elven minority populations in the Eastern Realms require majority-elven districts.",
+    "independent_city_note": "The Free City of Ironforge is an independent keep with no realm affiliation \u00e2\u20ac\u201d similar to Virginia independent cities.",
+    "independent_cities": [
+      "Ironforge",
+      "Dragonspire",
+      "Silvermoon"
+    ],
+    "electoral_system": "arcane_council_proportional",
+    "seats_per_district": 7,
+    "total_seats": 91,
+    "notes": "TEST STATE ONLY. Eldoria validates that every configurable field in the redistricting pipeline is actually read from config and not hardcoded. If Eldoria produces 'county splits' instead of 'realm splits', a value is hardcoded. If balance tolerance is 0.5% or 5.0% instead of 7.5%, the manifest isn't being read. If seats_per_district is 1 instead of 7, multi-member logic is hardcoded. Etc.",
+    "census_years": [
+      "2099"
+    ],
+    "congressional_districts_by_year": {
+      "2099": 13
+    },
+    "adjacency_convention": {
+      "convention": "direct_path",
+      "path_template": "outputs/test/eldoria/eldoria_adjacency_{year}.pkl",
+      "build_command": "python scripts/test/generate_eldoria_adjacency.py",
+      "data_source": "Arcane Census of the High Council (2099)"
+    }
+  }
+}

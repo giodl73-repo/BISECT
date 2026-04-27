@@ -234,7 +234,9 @@ def build_adjacency(gdf: gpd.GeoDataFrame) -> dict:
 
     # For island nations: add water adjacency for Gozo (constituency 9)
     # Gozo is ~5km from Malta mainland — connect to geographically closest unit
-    gozo_idx = next((i for i, g in enumerate(geoids) if "9" in g or "Gozo" in gdf_proj.get("constituency_name", pd.Series()).iloc[i] if "constituency_name" in gdf_proj.columns else False), None)
+    has_name_col = "constituency_name" in gdf_proj.columns
+    gozo_idx = next((i for i, g in enumerate(geoids)
+                     if "9" in g or (has_name_col and "Gozo" in str(gdf_proj["constituency_name"].iloc[i]))), None)
     if gozo_idx is not None and not adjacency[gozo_idx]:
         # Find nearest mainland unit and add water bridge
         gozo_geom = gdf_proj.geometry.iloc[gozo_idx]
