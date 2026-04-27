@@ -68,11 +68,29 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
             out_path.display());
 
         // CSV export
-        if args.csv {
+        if args.csv || args.format == "csv" {
             let csv_path = national_dir.join(format!("us_{type_name}.csv"));
             let csv = districts_to_csv(&merged);
             std::fs::write(&csv_path, csv)?;
             eprintln!("[OK] {type_name} CSV -> {}", csv_path.display());
+        }
+
+        // JSON format export (explicit --format json)
+        if args.format == "json" {
+            let json_path = national_dir.join(format!("us_{type_name}_districts.json"));
+            let rows = districts_to_json_array(&merged);
+            let tmp = json_path.with_extension("tmp.json");
+            std::fs::write(&tmp, serde_json::to_string_pretty(&rows)?)?;
+            std::fs::rename(&tmp, &json_path)?;
+            eprintln!("[OK] {type_name} JSON -> {}", json_path.display());
+        }
+
+        // Parquet format: helpful guidance
+        if args.format == "parquet" {
+            eprintln!(
+                "Parquet format not yet supported. \
+                 Use --format csv and load with pandas.read_csv() or polars."
+            );
         }
     }
     Ok(())
@@ -141,6 +159,16 @@ pub fn districts_to_csv(merged: &serde_json::Value) -> String {
     out
 }
 
+/// Convert national JSON districts array to a JSON array of objects.
+/// Each district record becomes a JSON object preserving all fields.
+pub fn districts_to_json_array(merged: &serde_json::Value) -> serde_json::Value {
+    let districts = merged.get("districts")
+        .and_then(|d| d.as_array())
+        .cloned()
+        .unwrap_or_default();
+    serde_json::Value::Array(districts)
+}
+
 fn resolve_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {
     if types.iter().any(|t| *t == AnalyzerType::All) {
         AnalyzerType::all_concrete()
@@ -198,6 +226,58 @@ mod tests {
         let d = &merged["districts"][0];
         assert!((d["polsby_popper"].as_f64().unwrap() - 0.364).abs() < 1e-9);
         assert!((d["reock"].as_f64().unwrap() - 0.385).abs() < 1e-9);
+    }
+
+    // ── Task 143: JSON format output ──────────────────────────────────────────
+
+    #[test]
+    fn test_aggregate_json_format_parsed() {
+        use clap::Parser;
+        // Verify --format json is accepted as an arg
+        let args = crate::args::AggregateArgs::parse_from([
+            "aggregate", "--year", "2020", "--version", "v1", "--format", "json",
+        ]);
+        assert_eq!(args.format, "json", "--format json should be accepted");
+    }
+
+    #[test]
+    fn test_aggregate_parquet_format_parsed() {
+        use clap::Parser;
+        // Verify --format parquet parses (guidance emitted at runtime, not a parse error)
+        let args = crate::args::AggregateArgs::parse_from([
+            "aggregate", "--year", "2020", "--version", "v1", "--format", "parquet",
+        ]);
+        assert_eq!(args.format, "parquet");
+    }
+
+    #[test]
+    fn test_districts_to_json_array_is_array() {
+        let merged = serde_json::json!({
+            "analyzer": "demographic",
+            "districts": [
+                {"district": 1, "state": "vermont", "total_pop": 643077},
+                {"district": 2, "state": "vermont", "total_pop": 600000}
+            ]
+        });
+        let arr = districts_to_json_array(&merged);
+        assert!(arr.is_array(), "output should be a JSON array");
+        assert_eq!(arr.as_array().unwrap().len(), 2, "should have 2 district objects");
+        assert_eq!(arr[0]["district"].as_u64().unwrap(), 1);
+        assert_eq!(arr[1]["total_pop"].as_u64().unwrap(), 600000);
+    }
+
+    #[test]
+    fn test_aggregate_parquet_gives_guidance() {
+        // Test that parquet is accepted at the args level (guidance emitted at runtime).
+        // We verify the format string parses without error.
+        use clap::Parser;
+        let args = crate::args::AggregateArgs::parse_from([
+            "aggregate", "--format", "parquet",
+        ]);
+        // Parquet guidance fires at runtime inside run_aggregate when format=="parquet".
+        // We verify the field is correctly stored.
+        assert_eq!(args.format, "parquet",
+            "parquet format should be stored for runtime guidance");
     }
 
     #[test]

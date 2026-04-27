@@ -1435,5 +1435,9 @@ pub struct AggregateArgs {
     /// Re-aggregate even if output exists
     #[arg(long)]
     pub force: bool,
+
+    /// Output format: csv (default) or json
+    #[arg(long, default_value = "csv")]
+    pub format: String,
 }
 

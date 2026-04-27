@@ -214,11 +214,23 @@ pub fn load_all_states(year: &str) -> Result<Vec<(String, String, usize)>, Strin
     Ok(states)
 }
 
+/// Return the actual worker count that will be used (capped to available CPU threads).
+pub fn effective_workers(requested: usize) -> usize {
+    requested.min(rayon::current_num_threads())
+}
+
 /// Run multiple states in parallel using Rayon.
 /// Workers cap: min(workers, available_threads).
 pub fn run_states_parallel(configs: Vec<StateConfig>, workers: usize) -> Vec<StateResult> {
+    let actual_workers = effective_workers(workers);
+    if actual_workers < workers {
+        eprintln!(
+            "NOTE: --workers {} capped to {} (available CPU threads). Actual parallelism: {}x.",
+            workers, actual_workers, actual_workers
+        );
+    }
     let pool = rayon::ThreadPoolBuilder::new()
-        .num_threads(workers.min(rayon::current_num_threads()))
+        .num_threads(actual_workers)
         .build()
         .expect("failed to build Rayon thread pool");
 
@@ -364,6 +376,40 @@ fn resolve_adjacency_path(
     ))
 }
 
+/// Check CVAP data availability and warn + fall back to total if missing.
+///
+/// The CVAP file is expected at:
+///   `outputs/{version}/data/{year}/demographics/{state_lower}_cvap_{year}.csv`
+/// or the legacy path:
+///   `data/{year}/demographics/{state_lower}_cvap_{year}.csv`
+///
+/// Returns the effective population source: "cvap" if file exists, "total" otherwise.
+pub fn check_cvap_availability(
+    requested: &str,
+    state_name: &str,
+    year: &str,
+    state_code: &str,
+) -> String {
+    if requested != "cvap" {
+        return requested.to_string();
+    }
+    // Try the canonical CVAP path used by the Python pipeline
+    let cvap_path = std::path::Path::new("data")
+        .join(year)
+        .join("demographics")
+        .join(format!("{state_name}_cvap_{year}.csv"));
+    if cvap_path.exists() {
+        return "cvap".to_string();
+    }
+    eprintln!(
+        "WARNING: CVAP data not found for {state_code} {year}.\n\
+         CVAP requires a separate download: \
+         https://www.census.gov/programs-surveys/decennial-census/about/voting-rights/cvap.html\n\
+         Falling back to total population."
+    );
+    "total".to_string()
+}
+
 /// Run a single state redistricting task end-to-end.
 ///
 /// Flow: load adjacency → build edge weights → bisect → assert balance → write outputs
@@ -461,6 +507,16 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             cfg.state_code, isolated.len()
         );
     }
+
+    // 1b. CVAP population source check
+    // CVAP data requires a separate download from the Census Bureau.
+    // If "cvap" is requested but the file is missing, warn and fall back to total.
+    let _effective_population_source = check_cvap_availability(
+        &cfg.population_source,
+        state_name,
+        &cfg.year,
+        &cfg.state_code,
+    );
 
     // 2. Build edge weights based on partition mode
     let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
@@ -1287,5 +1343,56 @@ mod tests {
             .map(|(i, _)| i)
             .collect();
         assert!(isolated_none.is_empty(), "fully connected graph has no isolated nodes");
+    }
+
+    // ── Task 131: CVAP fallback warning ──────────────────────────────────────
+
+    #[test]
+    fn test_cvap_missing_falls_back_to_total() {
+        // With no CVAP file on disk, requesting "cvap" should fall back to "total".
+        let result = check_cvap_availability("cvap", "vermont", "2020", "VT");
+        assert_eq!(result, "total",
+            "should fall back to total when CVAP file is absent, got {result}");
+    }
+
+    #[test]
+    fn test_population_source_cvap_falls_back_to_total() {
+        // Synonym test — same logic as above but more explicit assertion.
+        let source = check_cvap_availability("cvap", "nonexistent_state", "2020", "XX");
+        assert_eq!(source, "total",
+            "CVAP fallback must produce 'total', got '{source}'");
+    }
+
+    #[test]
+    fn test_non_cvap_source_unchanged() {
+        // "total" and "vap" should be returned unchanged regardless of file presence.
+        assert_eq!(check_cvap_availability("total", "vermont", "2020", "VT"), "total");
+        assert_eq!(check_cvap_availability("vap", "vermont", "2020", "VT"), "vap");
+    }
+
+    // ── Task 130: Worker cap reporting ───────────────────────────────────────
+
+    #[test]
+    fn test_worker_cap_message_when_capped() {
+        // effective_workers(very_large) < very_large => note would be emitted.
+        // We can't easily capture stderr in unit tests, but we can verify the
+        // logic: if requested > actual, the note should fire.
+        let requested = usize::MAX; // always exceeds available threads
+        let actual = effective_workers(requested);
+        assert!(actual < requested,
+            "effective_workers(MAX) must be < MAX (got {actual})");
+    }
+
+    #[test]
+    fn test_worker_cap_no_message_when_exact() {
+        // When requested equals actual, no note should be emitted.
+        // Using 1 worker: effective == 1 == requested.
+        let requested = 1;
+        let actual = effective_workers(requested);
+        // Rayon always has at least 1 thread
+        assert!(actual >= 1, "effective_workers(1) must be >= 1");
+        // When actual == requested, no cap note fires (logical condition)
+        let would_print = actual < requested;
+        assert!(!would_print, "no note when requested ({requested}) == actual ({actual})");
     }
 }

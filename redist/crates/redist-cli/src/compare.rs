@@ -46,6 +46,49 @@ fn load_plan_assignments(
         return Ok(assignments);
     }
 
+    // GerryChain flat JSON detection:
+    // If the label is a file path (not ending in .rplan) that exists and contains
+    // a flat JSON object (no "assignments" key, no "rplan_version"), treat it as
+    // a GerryChain / DRA direct GEOID-to-district map.
+    // Also handles GerryChain's nested {"assignment": {...}} format.
+    let label_path = PathBuf::from(label);
+    if label_path.is_file() && !label.ends_with(".rplan") {
+        if let Ok(content) = std::fs::read_to_string(&label_path) {
+            if let Ok(v) = serde_json::from_str::<serde_json::Value>(&content) {
+                // Nested GerryChain format: {"assignment": {"GEOID": district, ...}}
+                if let Some(nested) = v.get("assignment").and_then(|a| a.as_object()) {
+                    let assignments: HashMap<String, usize> = nested
+                        .iter()
+                        .filter_map(|(geoid, val)| {
+                            val.as_u64().map(|d| (geoid.clone(), d as usize))
+                        })
+                        .collect();
+                    if !assignments.is_empty() {
+                        return Ok(assignments);
+                    }
+                }
+                // Flat GerryChain format: {"GEOID": district, ...}
+                // Detect: JSON object, no "assignments" key, no "rplan_version"
+                if v.is_object()
+                    && v.get("assignments").is_none()
+                    && v.get("rplan_version").is_none()
+                {
+                    if let Some(obj) = v.as_object() {
+                        let assignments: HashMap<String, usize> = obj
+                            .iter()
+                            .filter_map(|(geoid, val)| {
+                                val.as_u64().map(|d| (geoid.clone(), d as usize))
+                            })
+                            .collect();
+                        if !assignments.is_empty() {
+                            return Ok(assignments);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     let base = if let Some(od) = output_dir_override {
         od.clone()
     } else {
@@ -386,6 +429,48 @@ mod tests {
     fn test_allow_cross_year_flag_defaults_false() {
         let args = parse_compare_args(&["--plan-a", "plan1", "--plan-b", "plan2"]).unwrap();
         assert!(!args.allow_cross_year, "--allow-cross-year should default to false");
+    }
+
+    /// Task 136: GerryChain flat format
+    #[test]
+    fn test_gerrychain_flat_format_loads() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("gc_flat.json");
+        // Flat GEOID-to-district map (GerryChain / DRA style)
+        let json = serde_json::json!({
+            "53001000100": 1,
+            "53001000200": 2,
+            "53001000300": 1
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_ok(), "flat GerryChain JSON should load: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 3);
+        assert_eq!(assignments["53001000100"], 1);
+        assert_eq!(assignments["53001000200"], 2);
+    }
+
+    /// Task 136: GerryChain nested "assignment" key format
+    #[test]
+    fn test_gerrychain_assignment_key_loads() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("gc_nested.json");
+        // GerryChain nested format: {"assignment": {"GEOID": district}}
+        let json = serde_json::json!({
+            "assignment": {
+                "53033000100": 3,
+                "53033000200": 4,
+                "53033000300": 3
+            }
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_ok(), "nested GerryChain JSON should load: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 3);
+        assert_eq!(assignments["53033000100"], 3);
+        assert_eq!(assignments["53033000200"], 4);
     }
 
     /// Scenario 14: External .rplan compare

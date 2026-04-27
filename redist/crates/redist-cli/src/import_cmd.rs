@@ -10,9 +10,48 @@ use redist_report::{
     write_rplan, validate_geoid_format_batch,
 };
 
+/// Return true if the path has a shapefile-family extension (.shp, .shx, .dbf, .prj, .zip).
+fn is_shapefile_extension(path: &std::path::Path) -> bool {
+    matches!(
+        path.extension().and_then(|e| e.to_str()),
+        Some("shp") | Some("shx") | Some("dbf") | Some("prj") | Some("zip")
+    )
+}
+
+/// Build the shapefile guidance error message for a given extension.
+fn shapefile_error_message(path: &std::path::Path) -> String {
+    let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("shp");
+    let (title, extra) = if ext == "zip" {
+        (
+            "ZIP archives (common for Census TIGER downloads) are not directly supported by redist import.",
+            "Extract the archive first, then convert the contained .shp to GeoJSON.",
+        )
+    } else {
+        (
+            &*format!("Shapefile format (.{ext}) is not directly supported by redist import."),
+            "Convert to GeoJSON first using one of:",
+        )
+    };
+    format!(
+        "ERROR: {title}\n\
+         {extra}\n  \
+         ogr2ogr -f GeoJSON output.geojson input.shp\n  \
+         qgis: Layer > Save As > GeoJSON\n  \
+         python: geopandas.read_file('input.shp').to_file('output.geojson', driver='GeoJSON')\n\
+         Then: redist import --format geojson --file output.geojson --label <label>"
+    )
+}
+
 /// Run the import command.
 pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
     let file_path = &args.file;
+
+    // Shapefile / ZIP guard — must fire before file-existence check so the message
+    // is shown even when the file doesn't exist yet.
+    if is_shapefile_extension(file_path) {
+        anyhow::bail!("{}", shapefile_error_message(file_path));
+    }
+
     if !file_path.exists() {
         anyhow::bail!("Input file not found: '{}'", file_path.display());
     }
@@ -32,11 +71,20 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
             // GerryChain v2.3 JSON import
             import_gerrychain_to_assignments(&content)?
         }
+        "dra-csv" => {
+            // Dave's Redistricting App CSV import
+            import_assignments_from_dra_csv(&content)?
+        }
         _ => {
-            // Default: GeoJSON import (PIP assignment)
-            // For GeoJSON import without real tract centroids: use assignment field from properties
-            // or fall back to deriving centroids from the GeoJSON itself
-            import_assignments_from_geojson_properties(&content)?
+            // Auto-detect DRA CSV by file extension
+            if file_path.extension().and_then(|e| e.to_str()) == Some("csv") {
+                import_assignments_from_dra_csv(&content)?
+            } else {
+                // Default: GeoJSON import (PIP assignment)
+                // For GeoJSON import without real tract centroids: use assignment field from properties
+                // or fall back to deriving centroids from the GeoJSON itself
+                import_assignments_from_geojson_properties(&content)?
+            }
         }
     };
 
@@ -133,6 +181,77 @@ fn import_assignments_from_geojson_properties(
     anyhow::bail!("Invalid GeoJSON: missing 'features' array")
 }
 
+/// Import assignments from Dave's Redistricting App CSV format.
+///
+/// DRA exports a two-column CSV:
+///   Variant 1: GEOID,DISTRICT header  (GEOID = 11-char numeric, DISTRICT = small int)
+///   Variant 2: DISTRICT,GEOID header  (reversed columns)
+///   Variant 3: no header              (first column is detected as GEOID by length)
+///
+/// Returns HashMap<GEOID, district_id>.
+pub fn import_assignments_from_dra_csv(
+    csv_str: &str,
+) -> anyhow::Result<std::collections::HashMap<String, usize>> {
+    let mut lines = csv_str.lines().peekable();
+    if lines.peek().is_none() {
+        anyhow::bail!("DRA CSV is empty");
+    }
+
+    // Detect header row by checking whether the first token is numeric.
+    let first_line = *lines.peek().unwrap();
+    let first_fields: Vec<&str> = first_line.splitn(2, ',').collect();
+    let has_header = !first_fields.get(0).map(|f| f.trim()).unwrap_or("").chars()
+        .next().map(|c| c.is_ascii_digit()).unwrap_or(false);
+
+    // Determine column order from header (or default to GEOID=0, DISTRICT=1).
+    let (geoid_col, district_col) = if has_header {
+        let header_line = lines.next().unwrap(); // consume the header
+        let headers: Vec<&str> = header_line.split(',').collect();
+        let h0 = headers.get(0).map(|h| h.trim().to_uppercase()).unwrap_or_default();
+        let h1 = headers.get(1).map(|h| h.trim().to_uppercase()).unwrap_or_default();
+        // Detect reversed order: first column is DISTRICT (small-int-like name)
+        let geoid_first = h0.contains("GEOID") || h0.contains("GEO_ID");
+        let district_first = h0.contains("DISTRICT") || h0.contains("DIST") || h0 == "ID";
+        if district_first && (h1.contains("GEOID") || h1.contains("GEO_ID")) {
+            (1usize, 0usize) // reversed: DISTRICT, GEOID
+        } else if geoid_first {
+            (0, 1) // normal: GEOID, DISTRICT
+        } else {
+            // Unknown header order — try to auto-detect from first data row
+            (0, 1)
+        }
+    } else {
+        (0usize, 1usize) // no header: assume GEOID first
+    };
+
+    let mut assignments = std::collections::HashMap::new();
+    for (lineno, line) in lines.enumerate() {
+        let line = line.trim();
+        if line.is_empty() { continue; }
+        let fields: Vec<&str> = line.split(',').collect();
+        let geoid_raw = fields.get(geoid_col).map(|f| f.trim()).unwrap_or("");
+        let district_raw = fields.get(district_col).map(|f| f.trim()).unwrap_or("");
+
+        // If auto-detect failed and geoid looks numeric with small value, swap
+        let (geoid, district_str) =
+            if geoid_raw.len() < 5 && district_raw.len() == 11 && district_raw.chars().all(|c| c.is_ascii_digit()) {
+                (district_raw, geoid_raw)
+            } else {
+                (geoid_raw, district_raw)
+            };
+
+        let district: usize = district_str.parse().map_err(|_| {
+            anyhow::anyhow!("DRA CSV line {}: cannot parse district '{}' as integer", lineno + 1, district_str)
+        })?;
+        assignments.insert(geoid.to_string(), district);
+    }
+
+    if assignments.is_empty() {
+        anyhow::bail!("DRA CSV produced no assignments — check file format");
+    }
+    Ok(assignments)
+}
+
 // ---------------------------------------------------------------------------
 // Tests — Task 7
 // ---------------------------------------------------------------------------
@@ -155,6 +274,96 @@ mod tests {
         };
         assert_eq!(args.state, "WA");
         assert_eq!(args.label, "wa_imported_test");
+    }
+
+    // ── Task 128: Shapefile import guidance ──────────────────────────────────
+
+    #[test]
+    fn test_import_shapefile_extension_gives_actionable_error() {
+        // A .shp file should produce an error containing "ogr2ogr" guidance.
+        let args = ImportArgs {
+            file: std::path::PathBuf::from("plan.shp"),
+            state: "WA".into(),
+            year: "2020".into(),
+            label: "wa_test".into(),
+            version: "test".into(),
+            format: "geojson".into(),
+            output_base: "outputs".into(),
+        };
+        let result = run_import(&args);
+        assert!(result.is_err(), "importing .shp should fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("ogr2ogr"), "error should mention ogr2ogr, got: {msg}");
+        assert!(msg.contains("GeoJSON"), "error should mention GeoJSON conversion, got: {msg}");
+    }
+
+    #[test]
+    fn test_import_zip_extension_gives_actionable_error() {
+        let args = ImportArgs {
+            file: std::path::PathBuf::from("tl_2020_us_tract.zip"),
+            state: "WA".into(),
+            year: "2020".into(),
+            label: "wa_test".into(),
+            version: "test".into(),
+            format: "geojson".into(),
+            output_base: "outputs".into(),
+        };
+        let result = run_import(&args);
+        assert!(result.is_err(), "importing .zip should fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("ogr2ogr"), "error should mention ogr2ogr, got: {msg}");
+    }
+
+    #[test]
+    fn test_import_shx_extension_gives_error() {
+        let args = ImportArgs {
+            file: std::path::PathBuf::from("plan.shx"),
+            state: "WA".into(),
+            year: "2020".into(),
+            label: "wa_test".into(),
+            version: "test".into(),
+            format: "geojson".into(),
+            output_base: "outputs".into(),
+        };
+        let result = run_import(&args);
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("ogr2ogr"));
+    }
+
+    // ── Task 140: DRA CSV format import ──────────────────────────────────────
+
+    #[test]
+    fn test_import_dra_csv_with_header() {
+        let csv = "GEOID,DISTRICT\n53001000100,1\n53001000200,2\n53001000300,1\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_ok(), "should parse DRA CSV with header: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 3);
+        assert_eq!(assignments["53001000100"], 1);
+        assert_eq!(assignments["53001000200"], 2);
+        assert_eq!(assignments["53001000300"], 1);
+    }
+
+    #[test]
+    fn test_import_dra_csv_without_header() {
+        let csv = "53001000100,1\n53001000200,2\n53001000300,3\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_ok(), "should parse headerless DRA CSV: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 3);
+        assert_eq!(assignments["53001000100"], 1);
+    }
+
+    #[test]
+    fn test_import_dra_csv_reversed_columns() {
+        let csv = "DISTRICT,GEOID\n1,53001000100\n2,53001000200\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_ok(), "should parse reversed-column DRA CSV: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 2);
+        assert_eq!(assignments["53001000100"], 1);
+        assert_eq!(assignments["53001000200"], 2);
     }
 
     #[test]

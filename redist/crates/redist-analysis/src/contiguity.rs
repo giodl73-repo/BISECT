@@ -21,6 +21,9 @@ pub struct DistrictContiguity {
     pub component_count: usize,
     /// GEOIDs of tracts that are in a non-primary component (isolated).
     pub disconnected_tracts: Vec<String>,
+    /// Human-readable county context for each disconnected tract.
+    /// Format: "King County, WA" or raw FIPS "53033" if unknown.
+    pub disconnected_tract_counties: Vec<String>,
 }
 
 /// Check contiguity for every district in `assignments`.
@@ -62,6 +65,7 @@ pub fn check_contiguity(
                 tract_count: 0,
                 component_count: 0,
                 disconnected_tracts: vec![],
+                disconnected_tract_counties: vec![],
             });
             continue;
         }
@@ -102,12 +106,19 @@ pub fn check_contiguity(
                 .collect();
         }
 
+        // Build human-readable county context for each disconnected tract.
+        let disconnected_tract_counties: Vec<String> = disconnected_tracts
+            .iter()
+            .map(|geoid| county_context_for_geoid(geoid))
+            .collect();
+
         district_results.push(DistrictContiguity {
             district: d,
             contiguous,
             tract_count,
             component_count,
             disconnected_tracts,
+            disconnected_tract_counties,
         });
     }
 
@@ -158,6 +169,21 @@ pub fn bfs_component_count(
     }
 
     (components.len(), components)
+}
+
+/// Produce a human-readable county context string for a GEOID.
+///
+/// Extracts the first 5 characters (county FIPS) and looks up the county name.
+/// Returns "King County, WA" style strings, or the raw FIPS if unknown.
+pub fn county_context_for_geoid(geoid: &str) -> String {
+    if geoid.len() < 5 {
+        return geoid.to_string();
+    }
+    let county_fips = &geoid[..5];
+    match crate::county_names::county_name(county_fips) {
+        Some(name) => name.to_string(),
+        None => county_fips.to_string(),
+    }
 }
 
 // Re-export for use in nesting tests from plan (Scenario 4).
@@ -289,6 +315,55 @@ mod tests {
         let result = check_contiguity(&assignments, &adj, &geoids, 1);
         assert!(result.districts[0].contiguous);
         assert_eq!(result.districts[0].component_count, 1);
+    }
+
+    // ── Task 142: County context for disconnected tracts ─────────────────────
+
+    #[test]
+    fn test_disconnected_tract_county_context_king_county() {
+        // GEOID starting with "53033" is King County, WA
+        let ctx = county_context_for_geoid("53033001234");
+        assert!(ctx.contains("King"), "should contain 'King', got: {ctx}");
+    }
+
+    #[test]
+    fn test_disconnected_tract_county_context_unknown_fips() {
+        // Unknown FIPS should return the raw FIPS string (first 5 chars)
+        let ctx = county_context_for_geoid("99999001234");
+        assert_eq!(ctx, "99999", "unknown FIPS should return raw FIPS, got: {ctx}");
+    }
+
+    #[test]
+    fn test_disconnected_tract_county_context_populated_in_result() {
+        // When a district is non-contiguous, disconnected_tract_counties should be populated
+        // with one entry per disconnected_tracts entry.
+        let adj = vec![vec![1usize], vec![0usize], vec![], vec![]];
+        // Use GEOIDs starting with known King County FIPS "53033"
+        let geoids: Vec<String> = vec![
+            "53033000001".to_string(),
+            "53033000002".to_string(),
+            "53001000003".to_string(), // Adams County
+            "53033000004".to_string(), // isolated King County tract
+        ];
+        let assignments: HashMap<String, usize> = vec![
+            ("53033000001".to_string(), 1),
+            ("53033000002".to_string(), 1),
+            ("53001000003".to_string(), 2),
+            ("53033000004".to_string(), 1), // isolated
+        ].into_iter().collect();
+        let result = check_contiguity(&assignments, &adj, &geoids, 2);
+        let d1 = result.districts.iter().find(|d| d.district == 1).unwrap();
+        assert!(!d1.contiguous);
+        assert_eq!(
+            d1.disconnected_tracts.len(),
+            d1.disconnected_tract_counties.len(),
+            "county context count must match disconnected tract count"
+        );
+        // The isolated tract 53033000004 should have King County context
+        let king_ctx = d1.disconnected_tract_counties.iter()
+            .any(|c| c.contains("King"));
+        assert!(king_ctx, "King County tract should get 'King' context, got: {:?}",
+            d1.disconnected_tract_counties);
     }
 
     #[test]
