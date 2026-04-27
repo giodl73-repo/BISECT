@@ -88,6 +88,28 @@ fn main() {
                 eprintln!("NOTE: {warn}");
             }
 
+            // Balance tolerance range validation
+            // --balance-tolerance is in PERCENT (e.g., 0.5 = 0.5%, 5 = 5%, 25 = 25%).
+            // Guard against common mistakes: passing a fraction (0.005) or absurd value (200).
+            if let Some(tol) = args.balance_tolerance {
+                if tol < 0.05 {
+                    eprintln!(
+                        "WARNING: --balance-tolerance {tol:.4} looks like a fraction, not a percent.\n\
+                         Pass as percent: --balance-tolerance 0.5 means ±0.5%.\n\
+                         Did you mean --balance-tolerance {}?",
+                        tol * 100.0
+                    );
+                } else if tol > 50.0 {
+                    eprintln!(
+                        "ERROR: --balance-tolerance {tol} is over 50%. \
+                         This effectively removes the balance constraint. \
+                         Maximum useful value is 25% (some international standards). \
+                         Check your value."
+                    );
+                    std::process::exit(1);
+                }
+            }
+
             // Chamber balance tolerance info
             if args.chamber != "congressional" && args.balance_tolerance.is_none() {
                 let tol_pct = registry.chamber_districts(&state_code, &args.chamber, &year)

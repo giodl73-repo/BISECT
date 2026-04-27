@@ -334,6 +334,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let state_name = &cfg.state_name; // e.g. "vermont" — used for directory paths
     let label = cfg.effective_label();
     let balance_tolerance = cfg.effective_balance_tolerance();
+    // Defensive: tolerance must be in [0.0001, 0.50] as a fraction.
+    // Values outside this range indicate a unit error (% passed as fraction or vice versa).
+    if balance_tolerance < 0.0001 || balance_tolerance > 0.50 {
+        return Err(format!(
+            "{}: balance tolerance {:.6} is outside plausible range [0.0001, 0.50]. \
+             Pass as percent to --balance-tolerance (e.g., 0.5 for ±0.5%, 5 for ±5%).",
+            cfg.state_code, balance_tolerance
+        ));
+    }
 
     // Determine output directory structure:
     //   Labeled runs: {output_dir}/{year}/plans/{label}/data/

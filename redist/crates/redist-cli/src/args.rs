@@ -1218,6 +1218,29 @@ mod tests {
         assert_eq!(args.seats_per_district, 4);
         assert_eq!(args.total_seats, Some(172));
     }
+
+    // ── Balance tolerance range (scenario 31) ─────────────────────────────────
+
+    #[test]
+    fn test_balance_tolerance_parses_as_f64() {
+        let args = parse_state_args(&["--balance-tolerance", "5.0"]);
+        assert!((args.balance_tolerance.unwrap() - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_balance_tolerance_half_percent_is_not_fraction() {
+        // 0.5 as input means 0.5% (in runner.rs, divided by 100 → 0.005 fraction)
+        // Must NOT trigger the "looks like fraction" path at the CLI level
+        // (that check fires for values < 0.05)
+        let args = parse_state_args(&["--balance-tolerance", "0.5"]);
+        assert!((args.balance_tolerance.unwrap() - 0.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_balance_tolerance_none_when_not_provided() {
+        let args = parse_state_args(&[]);
+        assert!(args.balance_tolerance.is_none());
+    }
 }
 
 // ---------------------------------------------------------------------------
