@@ -772,11 +772,13 @@ pub struct StateArgs {
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 
-    /// Override district count (enables non-congressional chambers)
+    /// Override district count. For house/senate chambers, count is auto-resolved
+    /// from state policy (e.g., WA house=98) when this flag is not provided.
     #[arg(long)]
     pub districts: Option<usize>,
 
-    /// Chamber type: congressional, house, senate, custom
+    /// Chamber type: congressional, house, senate, custom.
+    /// When house or senate, district count is auto-resolved from state policy.
     #[arg(long, default_value = "congressional")]
     pub chamber: String,
 
