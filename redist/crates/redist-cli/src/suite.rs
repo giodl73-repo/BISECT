@@ -52,10 +52,37 @@ pub enum NestedRatio {
     Variable,
 }
 
-pub fn build_constitutional_nesting_table() -> HashMap<&'static str, NestedRatio> {
+/// Build the nesting ratio table from the embedded state policy database.
+///
+/// Any state in state_policy.json with a `nesting_ratio` field gets an entry:
+/// - "variable" → NestedRatio::Variable (e.g., IL, MD)
+/// - "{n}:1"   → NestedRatio::Fixed(n) (e.g., WA=2:1, NV=2:1, AK=2:1)
+/// - null/absent → state has no nesting requirement, not in table
+pub fn build_constitutional_nesting_table() -> HashMap<String, NestedRatio> {
+    let policy = crate::policy::load_policy();
     let mut table = HashMap::new();
-    table.insert("WA", NestedRatio::Fixed(2));
-    table.insert("IL", NestedRatio::Variable);
+
+    if let Some(obj) = policy.as_object() {
+        for (code, state) in obj {
+            if code.starts_with('_') {
+                continue; // skip test states
+            }
+            if let Some(ratio_str) = state.get("nesting_ratio").and_then(|v| v.as_str()) {
+                let entry = if ratio_str == "variable" {
+                    NestedRatio::Variable
+                } else if let Some(n_str) = ratio_str.split(':').next() {
+                    if let Ok(n) = n_str.parse::<usize>() {
+                        NestedRatio::Fixed(n)
+                    } else {
+                        continue; // unparseable ratio format
+                    }
+                } else {
+                    continue;
+                };
+                table.insert(code.clone(), entry);
+            }
+        }
+    }
     table
 }
 
@@ -402,6 +429,30 @@ mod tests {
     }
 
     #[test]
+    fn test_constitutional_nesting_table_includes_nv() {
+        // NV has senate_contains_two_house, 2:1 in state_policy.json
+        let table = build_constitutional_nesting_table();
+        assert_eq!(table.get("NV"), Some(&NestedRatio::Fixed(2)),
+            "NV must have 2:1 nesting ratio from state policy");
+    }
+
+    #[test]
+    fn test_constitutional_nesting_table_excludes_test_states() {
+        // _TEST_EL (Eldoria) should not appear in the nesting table
+        let table = build_constitutional_nesting_table();
+        assert!(!table.contains_key("_TEST_EL"),
+            "test states must be excluded from nesting table");
+    }
+
+    #[test]
+    fn test_constitutional_nesting_table_has_multiple_states() {
+        // Policy-driven table should have more than just WA and IL
+        let table = build_constitutional_nesting_table();
+        assert!(table.len() >= 4,
+            "nesting table must cover at least 4 states (WA, IL, NV, AK...), got {}", table.len());
+    }
+
+    #[test]
     fn test_il_variable_requires_explicit_nest_ratio() {
         // Board amendment (WARD): IL must fail without --nest-ratio
         let result = resolve_nesting_ratio("IL", None);
@@ -428,6 +479,21 @@ mod tests {
         let result = resolve_nesting_ratio("WA", Some(3));
         // Still succeeds (user is warned but not blocked)
         assert_eq!(result.unwrap(), 3);
+    }
+
+    #[test]
+    fn test_nv_nesting_ratio_resolved_from_policy() {
+        // NV senate contains two house districts (2:1), driven by state_policy.json
+        let result = resolve_nesting_ratio("NV", None);
+        assert_eq!(result.unwrap(), 2,
+            "NV must resolve 2:1 nesting from policy without explicit --nest-ratio");
+    }
+
+    #[test]
+    fn test_md_variable_requires_explicit_nest_ratio() {
+        // MD has variable nesting ratio (some senate districts have 3 delegates)
+        let result = resolve_nesting_ratio("MD", None);
+        assert!(result.is_err(), "MD variable nesting must require explicit --nest-ratio");
     }
 
     #[test]
