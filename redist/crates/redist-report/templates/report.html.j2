@@ -159,20 +159,20 @@
 <div class="section" id="audit">
 <h2>9. Audit Trail</h2>
 <div class="meta-grid">
-  <div class="meta-item"><span class="meta-label">Binary Version:</span> {{ audit.binary_version }}</div>
-  <div class="meta-item"><span class="meta-label">Download URL:</span> <a href="{{ audit.binary_download_url }}">{{ audit.binary_download_url }}</a></div>
-  <div class="meta-item"><span class="meta-label">Binary SHA-256:</span> <code>{{ audit.binary_sha256 }}</code></div>
-  <div class="meta-item"><span class="meta-label">Adjacency File:</span> {{ audit.adjacency_file }}</div>
-  <div class="meta-item"><span class="meta-label">Adjacency SHA-256:</span> <code>{{ audit.adjacency_sha256 }}</code></div>
-  <div class="meta-item"><span class="meta-label">TIGER Source URL:</span> <a href="{{ audit.tiger_source_url }}">{{ audit.tiger_source_url }}</a></div>
-  {% if audit.tiger_sha256 %}
+  <div class="meta-item"><span class="meta-label">Binary Version:</span> {{ audit.binary_version | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Download URL:</span> {{ audit.binary_download_url | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Binary SHA-256:</span> <code>{{ audit.binary_sha256 | default(value="(not computed)") }}</code></div>
+  <div class="meta-item"><span class="meta-label">Adjacency File:</span> {{ audit.adjacency_file | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Adjacency SHA-256:</span> <code>{{ audit.adjacency_sha256 | default(value="(not computed)") }}</code></div>
+  <div class="meta-item"><span class="meta-label">TIGER Source URL:</span> {{ audit.tiger_source_url | default(value="N/A") }}</div>
+  {% if audit.tiger_sha256 and audit.tiger_sha256 != "" %}
   <div class="meta-item"><span class="meta-label">TIGER SHA-256:</span> <code>{{ audit.tiger_sha256 }}</code></div>
   {% endif %}
-  <div class="meta-item"><span class="meta-label">Seed:</span> {{ audit.seed }}</div>
-  <div class="meta-item"><span class="meta-label">Created At:</span> {{ audit.created_at }}</div>
+  <div class="meta-item"><span class="meta-label">Seed:</span> {{ audit.seed | default(value="N/A") }}</div>
+  <div class="meta-item"><span class="meta-label">Created At:</span> {{ audit.created_at | default(value="N/A") }}</div>
 </div>
 <h3>Verification Command</h3>
-<div class="audit-box">{{ audit.verification_command }}</div>
+<div class="audit-box">{{ audit.verification_command | default(value="(verification command not available)") }}</div>
 </div>
 
 <!-- Section 10: Maps -->

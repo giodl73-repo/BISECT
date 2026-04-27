@@ -317,4 +317,104 @@ mod tests {
             analyze_municipal_splits(&HashMap::new(), &HashMap::new(), &HashMap::new());
         assert!(!result.available);
     }
+
+    // ── Virginia independent cities ───────────────────────────────────────────
+
+    #[test]
+    fn test_va_independent_city_tracked_separately_from_county() {
+        // Richmond city (51760) and Henrico County (51087) are legally separate in VA.
+        // Census GEOIDs encode them with different 5-char FIPS prefixes, so our
+        // county_fips_from_geoid() correctly treats them as separate entities.
+        let assignments = make_assignments(&[
+            ("51760000001", 1), // Richmond city, tract 1, district 1
+            ("51760000002", 2), // Richmond city, tract 2, district 2 (city is split)
+            ("51087000001", 1), // Henrico County (adjacent), district 1 (not split)
+        ]);
+        let result = analyze_county_splits(&assignments, None);
+        assert_eq!(result.total, 2, "should see 2 entities: Richmond city + Henrico County");
+        assert_eq!(result.split, 1, "only Richmond city is split — Henrico is intact");
+        assert_eq!(result.split_list[0].county_fips, "51760", "split entity must be Richmond city");
+        assert_eq!(result.split_list[0].split_severity, 2);
+    }
+
+    #[test]
+    fn test_va_state_code_legal_standard_mentions_independent_cities() {
+        let assignments = make_assignments(&[
+            ("51760000001", 1),
+            ("51760000002", 2),
+        ]);
+        let result = analyze_county_splits_with_state(&assignments, None, Some("VA"));
+        let standard = result.legal_standard.expect("VA must have a legal standard");
+        assert!(
+            standard.contains("independent") || standard.contains("city"),
+            "VA legal standard must mention independent cities, got: {standard}"
+        );
+    }
+
+    // ── Nevada urban-rural skew ───────────────────────────────────────────────
+
+    #[test]
+    fn test_nv_clark_county_split_detected() {
+        // Clark County (32003) contains ~73% of Nevada's population.
+        // It necessarily spans multiple legislative districts in any valid plan.
+        let assignments = make_assignments(&[
+            ("32003000001", 1),
+            ("32003000002", 1),
+            ("32003000003", 2),
+            ("32003000004", 3),
+            ("32031000001", 4), // Washoe County (Reno) — whole in district 4
+        ]);
+        let result = analyze_county_splits_with_state(&assignments, None, Some("NV"));
+        assert_eq!(result.total, 2, "Clark + Washoe = 2 county entities");
+        assert_eq!(result.split, 1, "only Clark County is split");
+        assert_eq!(result.split_list[0].county_fips, "32003");
+        assert_eq!(result.split_list[0].split_severity, 3, "Clark spans districts 1, 2, 3");
+        // NV standard should acknowledge Clark County as expected split
+        let disclaimer = result.disclaimer.expect("NV must have disclaimer");
+        assert!(
+            disclaimer.contains("Clark") || disclaimer.contains("expected"),
+            "NV disclaimer must note Clark County splits are expected"
+        );
+    }
+
+    #[test]
+    fn test_nv_clark_county_name_resolved_from_lookup() {
+        let assignments = make_assignments(&[
+            ("32003000001", 1),
+            ("32003000002", 2),
+        ]);
+        let result = analyze_county_splits(&assignments, None);
+        let split = &result.split_list[0];
+        // Clark County should resolve its name from the static lookup
+        assert_eq!(split.county_name.as_deref(), Some("Clark County"));
+    }
+
+    // ── Louisiana parishes ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_la_parish_split_detected() {
+        // Orleans Parish (22071) should be split across two districts
+        let assignments = make_assignments(&[
+            ("22071000001", 1),
+            ("22071000002", 2),
+            ("22087000001", 3), // Saint Bernard Parish — whole
+        ]);
+        let result = analyze_county_splits_with_state(&assignments, None, Some("LA"));
+        assert_eq!(result.split, 1);
+        assert_eq!(result.split_list[0].county_fips, "22071");
+        // LA standard should use "parish" terminology
+        let standard = result.legal_standard.expect("LA must have legal standard");
+        assert!(standard.contains("parish"), "LA standard must use 'parish' term");
+    }
+
+    #[test]
+    fn test_la_parish_name_from_lookup() {
+        let assignments = make_assignments(&[
+            ("22071000001", 1),
+            ("22071000002", 2),
+        ]);
+        let result = analyze_county_splits(&assignments, None);
+        let split = &result.split_list[0];
+        assert_eq!(split.county_name.as_deref(), Some("Orleans Parish"));
+    }
 }

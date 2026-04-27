@@ -43,12 +43,18 @@ pub struct PlanManifest {
     pub balance_tolerance_pct: f64,
     pub population_balance_valid: bool,
     /// Seats per constituency (1 = single-member, 3-5 = multi-member)
+    #[serde(default = "default_seats_per_district")]
     pub seats_per_district: usize,
     /// Total seats across all constituencies
+    #[serde(default)]
     pub total_seats: usize,
-    /// Electoral system classification: "single_member", "multi_member_uniform", "multi_member_variable"
+    /// Electoral system classification
+    #[serde(default = "default_electoral_system")]
     pub electoral_system: String,
 }
+
+fn default_seats_per_district() -> usize { 1 }
+fn default_electoral_system() -> String { "single_member".to_string() }
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
 pub fn sha256_bytes(data: &[u8]) -> String {

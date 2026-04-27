@@ -237,4 +237,51 @@ mod tests {
         assert_eq!(s.subdivision_term, "county");
         assert_eq!(s.subdivision_term_plural, "counties");
     }
+
+    #[test]
+    fn test_va_standard_mentions_133_entities() {
+        // Virginia has 95 counties + 38 independent cities = 133 total entities.
+        // The legal standard must document this to prevent practitioners from
+        // only counting counties and missing the 38 independent cities.
+        let s = get_split_standard("VA").unwrap();
+        let full_text = format!("{} {} {}", s.legal_standard, s.disclaimer, s.compliance_assessment_template);
+        assert!(
+            full_text.contains("133") || full_text.contains("38"),
+            "VA standard must document 133 total entities (95 counties + 38 cities)"
+        );
+    }
+
+    #[test]
+    fn test_va_independent_cities_explicitly_flagged() {
+        let s = get_split_standard("VA").unwrap();
+        let combined = format!("{} {}", s.legal_standard, s.disclaimer);
+        assert!(
+            combined.contains("independent cities") || combined.contains("independent city"),
+            "VA standard must explicitly flag independent cities, got: {combined}"
+        );
+    }
+
+    #[test]
+    fn test_nv_standard_acknowledges_clark_county_splits() {
+        // Clark County has ~73% of NV population — splits are structurally unavoidable.
+        // The standard must acknowledge this so practitioners know splits are expected.
+        let s = get_split_standard("NV").unwrap();
+        let combined = format!("{} {}", s.legal_standard, s.disclaimer);
+        assert!(
+            combined.contains("Clark"),
+            "NV standard must acknowledge Clark County's dominant population: {combined}"
+        );
+    }
+
+    #[test]
+    fn test_la_standard_mentions_vra() {
+        // Louisiana has ~33% Black population — VRA Section 2 applies.
+        // The standard must note VRA requirements for practitioners.
+        let s = get_split_standard("LA").unwrap();
+        let combined = format!("{} {}", s.legal_standard, s.disclaimer);
+        assert!(
+            combined.contains("VRA") || combined.contains("minority"),
+            "LA standard must mention VRA/minority district requirements"
+        );
+    }
 }

@@ -45,7 +45,7 @@ pub fn render_html_report(report: &Report) -> anyhow::Result<String> {
 
     let html = tera
         .render("report.html", &ctx)
-        .map_err(|e| anyhow::anyhow!("Tera render error: {e}"))?;
+        .map_err(|e| anyhow::anyhow!("Tera render error: {e:#?}"))?;
 
     Ok(html)
 }

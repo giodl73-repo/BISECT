@@ -231,6 +231,27 @@ pub fn county_name(fips: &str) -> Option<&'static str> {
         "12117" => Some("Seminole County"),
 
         // ---------------------------------------------------------------
+        // Nevada (32) — all 16 counties + Carson City (independent city)
+        // ---------------------------------------------------------------
+        "32001" => Some("Churchill County"),
+        "32003" => Some("Clark County"),
+        "32005" => Some("Douglas County"),
+        "32007" => Some("Elko County"),
+        "32009" => Some("Esmeralda County"),
+        "32011" => Some("Eureka County"),
+        "32013" => Some("Humboldt County"),
+        "32015" => Some("Lander County"),
+        "32017" => Some("Lincoln County"),
+        "32019" => Some("Lyon County"),
+        "32021" => Some("Mineral County"),
+        "32023" => Some("Nye County"),
+        "32027" => Some("Pershing County"),
+        "32029" => Some("Storey County"),
+        "32031" => Some("Washoe County"),
+        "32033" => Some("White Pine County"),
+        "32510" => Some("Carson City"),
+
+        // ---------------------------------------------------------------
         // District of Columbia
         // ---------------------------------------------------------------
         "11001" => Some("District of Columbia"),
@@ -265,5 +286,71 @@ mod tests {
     #[test]
     fn test_unknown_fips() {
         assert_eq!(county_name("99999"), None);
+    }
+
+    #[test]
+    fn test_clark_county_nv() {
+        assert_eq!(county_name("32003"), Some("Clark County"));
+    }
+
+    #[test]
+    fn test_washoe_county_nv() {
+        assert_eq!(county_name("32031"), Some("Washoe County"));
+    }
+
+    #[test]
+    fn test_carson_city_nv_independent() {
+        // Carson City is Nevada's only consolidated city-county (FIPS 32510)
+        assert_eq!(county_name("32510"), Some("Carson City"));
+    }
+
+    #[test]
+    fn test_all_va_independent_cities_in_lookup() {
+        // Virginia has 38 independent cities with FIPS 51510–51840.
+        // All must be in the lookup and all must end with "city".
+        let va_city_fips = [
+            "51510", "51515", "51520", "51530", "51540", "51550",
+            "51570", "51580", "51590", "51595", "51600", "51610",
+            "51620", "51630", "51640", "51650", "51660", "51670",
+            "51678", "51680", "51683", "51685", "51690", "51700",
+            "51710", "51720", "51730", "51735", "51740", "51750",
+            "51760", "51770", "51775", "51790", "51800", "51810",
+            "51820", "51830", "51840",
+        ];
+        for fips in &va_city_fips {
+            let name = county_name(fips);
+            assert!(name.is_some(), "VA independent city FIPS {fips} missing from lookup");
+            assert!(
+                name.unwrap().ends_with("city") || name.unwrap().ends_with("City"),
+                "VA city FIPS {fips} name must end with 'city', got: {:?}",
+                name
+            );
+        }
+    }
+
+    #[test]
+    fn test_va_county_and_city_have_distinct_fips() {
+        // Richmond city (51760) must not return same name as any adjacent county.
+        // Henrico County (51087) is adjacent but has a different FIPS — it's not in the
+        // lookup (we don't cover all VA counties) but must differ from the city.
+        let city = county_name("51760");
+        assert_eq!(city, Some("Richmond city"));
+        // Henrico County FIPS — not covered in our static lookup, should be None
+        let county = county_name("51087");
+        assert_ne!(city, county, "Richmond city and Henrico County must resolve differently");
+    }
+
+    #[test]
+    fn test_nv_all_17_entities_covered() {
+        // Nevada has 16 counties + Carson City (32510 — consolidated city-county).
+        // All 17 must be in the lookup.
+        let nv_fips = [
+            "32001", "32003", "32005", "32007", "32009", "32011", "32013",
+            "32015", "32017", "32019", "32021", "32023", "32027", "32029",
+            "32031", "32033", "32510",
+        ];
+        for fips in &nv_fips {
+            assert!(county_name(fips).is_some(), "NV entity FIPS {fips} missing from lookup");
+        }
     }
 }
