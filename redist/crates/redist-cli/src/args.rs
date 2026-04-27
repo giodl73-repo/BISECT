@@ -792,6 +792,19 @@ pub struct StateArgs {
     #[arg(long)]
     pub balance_tolerance: Option<f64>,
 
+    /// Number of seats per constituency for multi-member systems (default: 1).
+    /// Malta: 5, Ireland: 3-5 (use 4 for average), Germany: 1
+    /// For uniform seat counts: each district gets exactly this many seats.
+    /// Balance formula: population/seats ~ ideal_per_seat (= total_pop / (districts x seats))
+    #[arg(long, default_value_t = 1)]
+    pub seats_per_district: usize,
+
+    /// Total seat count (alternative to --seats-per-district x --districts).
+    /// Specify either --total-seats OR --seats-per-district, not both.
+    /// If specified: ideal_per_seat = total_pop / total_seats; districts can have varying seat counts.
+    #[arg(long)]
+    pub total_seats: Option<usize>,
+
     /// Write manifest.json alongside outputs
     #[arg(long, default_value_t = true)]
     pub manifest: bool,
@@ -1124,6 +1137,38 @@ mod tests {
     fn test_label_default_is_none() {
         let args = parse_state_args(&[]);
         assert!(args.label.is_none());
+    }
+
+    #[test]
+    fn test_seats_per_district_default_is_1() {
+        let args = parse_state_args(&[]);
+        assert_eq!(args.seats_per_district, 1);
+    }
+
+    #[test]
+    fn test_seats_per_district_parsed_malta() {
+        let args = parse_state_args(&["--seats-per-district", "5"]);
+        assert_eq!(args.seats_per_district, 5);
+    }
+
+    #[test]
+    fn test_total_seats_default_is_none() {
+        let args = parse_state_args(&[]);
+        assert!(args.total_seats.is_none());
+    }
+
+    #[test]
+    fn test_total_seats_parsed() {
+        let args = parse_state_args(&["--total-seats", "65"]);
+        assert_eq!(args.total_seats, Some(65));
+    }
+
+    #[test]
+    fn test_seats_per_district_and_total_seats_together() {
+        // Both flags can be provided simultaneously (caller resolves precedence)
+        let args = parse_state_args(&["--seats-per-district", "4", "--total-seats", "172"]);
+        assert_eq!(args.seats_per_district, 4);
+        assert_eq!(args.total_seats, Some(172));
     }
 }
 

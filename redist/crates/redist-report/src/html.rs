@@ -85,6 +85,9 @@ mod tests {
             created_at: "2026-04-26T00:00:00Z".into(),
             balance_tolerance_pct: 0.5,
             population_balance_valid: true,
+            seats_per_district: 1,
+            total_seats: 1,
+            electoral_system: "single_member".into(),
         }
     }
 

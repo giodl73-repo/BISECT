@@ -67,6 +67,10 @@ pub struct StateConfig {
     pub force: bool,
     /// Geographic resolution: "tract" (default), "block_group", "block"
     pub resolution: String,
+    /// Seats per constituency (1 for single-member, 3-5 for multi-member)
+    pub seats_per_district: usize,
+    /// Total seats across all constituencies (seats_per_district * num_districts if uniform)
+    pub total_seats: usize,
 }
 
 impl StateConfig {
@@ -91,6 +95,19 @@ impl StateConfig {
     /// Returns the effective number of districts (override takes priority).
     pub fn effective_num_districts(&self) -> usize {
         self.num_districts_override.unwrap_or(self.num_districts)
+    }
+
+    /// Returns the effective number of seats per district (always >= 1).
+    pub fn effective_seats_per_district(&self) -> usize {
+        self.seats_per_district.max(1)
+    }
+
+    /// Returns the ideal population per seat (not per district).
+    /// For single-member: same as ideal_per_district.
+    /// For multi-member: total_pop / total_seats.
+    pub fn ideal_pop_per_seat(&self, total_pop: i64) -> f64 {
+        let total_seats = self.total_seats.max(1);
+        total_pop as f64 / total_seats as f64
     }
 }
 
@@ -446,6 +463,13 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             created_at: redist_report::now_iso8601(),
             balance_tolerance_pct: balance_tolerance * 100.0,
             population_balance_valid: true,
+            seats_per_district: cfg.effective_seats_per_district(),
+            total_seats: cfg.total_seats,
+            electoral_system: if cfg.seats_per_district <= 1 {
+                "single_member".to_string()
+            } else {
+                "multi_member_uniform".to_string()
+            },
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
@@ -501,6 +525,8 @@ mod tests {
             write_manifest: false,
             force: false,
             resolution: "tract".to_string(),
+            seats_per_district: 1,
+            total_seats: 1,
         }
     }
 
@@ -739,6 +765,66 @@ mod tests {
         };
         assert!((cfg.effective_balance_tolerance() - 0.05).abs() < 1e-9,
             "senate default must be 5.0%");
+    }
+
+    // ── Group seats: seats_per_district / total_seats ────────────────────────
+
+    #[test]
+    fn test_seats_per_district_default_is_1() {
+        let cfg = make_config("VT");
+        assert_eq!(cfg.effective_seats_per_district(), 1);
+    }
+
+    #[test]
+    fn test_seats_per_district_5_malta_style() {
+        let cfg = StateConfig {
+            seats_per_district: 5,
+            total_seats: 65, // 13 x 5
+            ..make_config("WA")
+        };
+        assert_eq!(cfg.effective_seats_per_district(), 5);
+    }
+
+    #[test]
+    fn test_total_seats_computed_from_seats_per_district() {
+        let cfg = StateConfig {
+            seats_per_district: 4, // avg for Ireland-style
+            num_districts_override: Some(43),
+            total_seats: 43 * 4, // 172
+            ..make_config("WA")
+        };
+        assert_eq!(cfg.total_seats, 172);
+    }
+
+    #[test]
+    fn test_ideal_pop_per_seat_single_member() {
+        let cfg = make_config("VT"); // seats_per_district=1, total_seats=1
+        // For single-member: ideal_pop_per_seat = total_pop / 1 = total_pop
+        let ideal = cfg.ideal_pop_per_seat(643503);
+        assert!((ideal - 643503.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_ideal_pop_per_seat_multi_member() {
+        let cfg = StateConfig {
+            seats_per_district: 5,
+            total_seats: 65,
+            ..make_config("WA")
+        };
+        // 7_705_281 / 65 ~ 118_543
+        let ideal = cfg.ideal_pop_per_seat(7_705_281);
+        assert!((ideal - 7_705_281.0 / 65.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn test_seats_per_district_zero_clamps_to_1() {
+        let cfg = StateConfig {
+            seats_per_district: 0,
+            total_seats: 1,
+            ..make_config("VT")
+        };
+        // effective_seats_per_district uses .max(1) so 0 -> 1
+        assert_eq!(cfg.effective_seats_per_district(), 1);
     }
 
     // ── Group 5: adjacency fallback / resolve_adjacency_path ─────────────────

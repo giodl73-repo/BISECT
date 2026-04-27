@@ -1,3 +1,4 @@
+pub mod dhondt;
 pub mod compactness;
 pub mod vra_analysis;
 pub mod analyzer;
@@ -34,3 +35,4 @@ pub use contiguity::{check_contiguity, bfs_component_count, ContiguityResult, Di
 pub use splits::{analyze_county_splits, analyze_county_splits_with_state, analyze_municipal_splits, county_fips_from_geoid, CountySplitResult, MunicipalSplitResult};
 pub use split_standards::{get_split_standard, SplitStandard};
 pub use exit_codes::{compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_NESTING, BIT_MISSING_DATA};
+pub use dhondt::{dhondt_allocate, gallagher_index};

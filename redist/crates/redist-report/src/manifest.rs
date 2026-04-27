@@ -42,6 +42,12 @@ pub struct PlanManifest {
     pub created_at: String,
     pub balance_tolerance_pct: f64,
     pub population_balance_valid: bool,
+    /// Seats per constituency (1 = single-member, 3-5 = multi-member)
+    pub seats_per_district: usize,
+    /// Total seats across all constituencies
+    pub total_seats: usize,
+    /// Electoral system classification: "single_member", "multi_member_uniform", "multi_member_variable"
+    pub electoral_system: String,
 }
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
@@ -145,6 +151,9 @@ mod tests {
             created_at: "2026-04-26T00:00:00Z".into(),
             balance_tolerance_pct: 0.5,
             population_balance_valid: true,
+            seats_per_district: 1,
+            total_seats: 10,
+            electoral_system: "single_member".into(),
         }
     }
 
@@ -244,5 +253,64 @@ mod tests {
     fn test_check_incomplete_plan_ok_when_no_tmp() {
         let tmp = TempDir::new().unwrap();
         assert!(check_incomplete_plan(tmp.path(), "test_label").is_ok());
+    }
+
+    // ── seats / electoral_system fields ──────────────────────────────────────
+
+    #[test]
+    fn test_manifest_seats_per_district_default_is_1() {
+        let manifest = make_test_manifest("53");
+        assert_eq!(manifest.seats_per_district, 1);
+    }
+
+    #[test]
+    fn test_manifest_electoral_system_single_member() {
+        let manifest = PlanManifest {
+            seats_per_district: 1,
+            total_seats: 10,
+            electoral_system: "single_member".into(),
+            ..Default::default()
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert_eq!(json["electoral_system"], "single_member");
+    }
+
+    #[test]
+    fn test_manifest_electoral_system_multi_member_uniform() {
+        let manifest = PlanManifest {
+            seats_per_district: 5,
+            total_seats: 65,
+            electoral_system: "multi_member_uniform".into(),
+            ..Default::default()
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert_eq!(json["electoral_system"], "multi_member_uniform");
+        assert_eq!(json["seats_per_district"], 5);
+        assert_eq!(json["total_seats"], 65);
+    }
+
+    #[test]
+    fn test_manifest_total_seats_serialized() {
+        let manifest = make_test_manifest("53");
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert!(json["total_seats"].is_number());
+        assert_eq!(json["total_seats"], 10);
+    }
+
+    #[test]
+    fn test_manifest_seats_roundtrip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            seats_per_district: 5,
+            total_seats: 65,
+            electoral_system: "multi_member_uniform".into(),
+            ..make_test_manifest("53")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let json_bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&json_bytes).unwrap();
+        assert_eq!(parsed.seats_per_district, 5);
+        assert_eq!(parsed.total_seats, 65);
+        assert_eq!(parsed.electoral_system, "multi_member_uniform");
     }
 }

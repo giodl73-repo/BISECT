@@ -37,6 +37,10 @@ fn main() {
                 );
             }
 
+            let effective_num_districts = args.districts.unwrap_or(num_districts);
+            let total_seats = args.total_seats.unwrap_or(
+                args.seats_per_district * effective_num_districts
+            );
             let results = run_states_parallel(vec![StateConfig {
                 state_code: state_code.clone(),
                 state_name,
@@ -61,6 +65,8 @@ fn main() {
                 write_manifest: args.manifest,
                 force: args.force,
                 resolution: args.resolution.to_string(),
+                seats_per_district: args.seats_per_district,
+                total_seats,
             }], 1);
             for r in &results {
                 if !r.success {
@@ -99,6 +105,8 @@ fn main() {
                     write_manifest: false,
                     force: false,
                     resolution: "tract".into(),
+                    seats_per_district: 1,
+                    total_seats: districts,
                 })
                 .collect();
 
@@ -146,6 +154,8 @@ fn main() {
                         write_manifest: false,
                         force: false,
                         resolution: "tract".into(),
+                        seats_per_district: 1,
+                        total_seats: districts,
                     })
                     .collect();
 
