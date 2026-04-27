@@ -69,6 +69,26 @@ fn load_plan_assignments(
     )
 }
 
+/// Read the `year` field from a plan's manifest.json (for cross-year comparison guard).
+/// Returns None if the manifest is absent or the year field is missing.
+fn read_plan_year(
+    label: &str,
+    output_base: &str,
+    version: &str,
+    year: &str,
+    output_dir_override: Option<&PathBuf>,
+) -> Option<String> {
+    let base = if let Some(od) = output_dir_override {
+        od.clone()
+    } else {
+        PathBuf::from(output_base).join(version)
+    };
+    let manifest_path = base.join(year).join("plans").join(label).join("manifest.json");
+    let content = std::fs::read_to_string(&manifest_path).ok()?;
+    let v: serde_json::Value = serde_json::from_str(&content).ok()?;
+    v.get("year")?.as_str().map(String::from)
+}
+
 /// Run the `redist compare` command.
 pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
     let version = args.version.as_deref().unwrap_or("v1");
@@ -103,6 +123,24 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
             "Must provide either --plan-b <label> or --enacted"
         );
     };
+
+    // Cross-year comparison guard: warn if plans are from different census years
+    // (Jaccard similarity is meaningless across years — different tract GEOIDs)
+    {
+        let year_a = read_plan_year(&args.plan_a, &args.output_base, version, &args.year, args.output_dir.as_ref());
+        let year_b = args.plan_b.as_deref()
+            .and_then(|b| read_plan_year(b, &args.output_base, version, &args.year, args.output_dir.as_ref()));
+        if let (Some(ya), Some(yb)) = (year_a, year_b) {
+            if ya != yb {
+                eprintln!(
+                    "WARNING: Plans are from different census years ({ya} vs {yb}). \
+                     Jaccard similarity compares tract GEOIDs directly — across census years, \
+                     the same geographic area has different GEOIDs and similarity will be \
+                     artificially low. Compare only plans within the same census year."
+                );
+            }
+        }
+    }
 
     // Run comparison
     let mut comparison = compare_plans(&assignments_a, &assignments_b);

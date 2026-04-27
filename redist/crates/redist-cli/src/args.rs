@@ -277,9 +277,13 @@ pub struct ReportArgs {
     /// Output directory for report files (default: reports/{label}/)
     #[arg(long = "out")]
     pub out: Option<String>,
-    /// Only write audit.json (chain-of-custody only)
+    /// Only write audit.json (chain-of-custody only; skips HTML/JSON report)
     #[arg(long)]
     pub audit_only: bool,
+    /// Write audit.json alongside the report (court submission mode).
+    /// Unlike --audit-only, this writes BOTH the full report AND audit.json.
+    #[arg(long)]
+    pub audit_with_report: bool,
     /// Base output directory
     #[arg(long, default_value = "outputs")]
     pub output_base: String,

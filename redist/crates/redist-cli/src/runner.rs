@@ -172,6 +172,17 @@ pub fn chamber_district_count(
             if n > 0 {
                 return n as usize;
             }
+            if n == 0 && (key == "senate_districts" || key == "house_districts") {
+                // Zero means this chamber doesn't exist (e.g., NE unicameral has no senate)
+                let notes = state.get("notes").and_then(|v| v.as_str()).unwrap_or("");
+                let hint = if notes.to_lowercase().contains("unicameral") {
+                    format!(" {} has a unicameral legislature — use --chamber house.", state_code)
+                } else {
+                    format!(" {} has no {} chamber.", state_code, chamber)
+                };
+                eprintln!("ERROR: No {chamber} chamber for {state_code}.{hint}");
+                std::process::exit(1);
+            }
         }
     }
     congressional_fallback

@@ -108,15 +108,26 @@ pub fn resolve_nesting_ratio(
             Ok(*r)
         }
         Some(NestedRatio::Variable) => {
+            // Provide state-specific guidance for common variable-ratio states
+            let hint = match state_code {
+                "IL" => " Illinois uses 2:1 or 3:1 depending on district geometry. \
+                          Historically most senate districts nest 2 house districts. \
+                          Try --nest-ratio 2 first; use --nest-ratio 3 if nesting fails.",
+                "MD" => " Maryland senate districts typically contain 3 house delegates, \
+                          though some have sub-districts with fewer. \
+                          Try --nest-ratio 3.",
+                _ => " Check your state constitution for the required ratio.",
+            };
             user_ratio.ok_or_else(|| anyhow::anyhow!(
-                "ERROR: {state_code} nesting ratio is variable by statute. \
-                 Specify --nest-ratio N:M (e.g. --nest-ratio 2:1)."
+                "{state_code} nesting ratio is variable by statute — must be specified explicitly.\
+                 {hint}\n\
+                 Use: --nest-ratio N  (integer house districts per senate district)"
             ))
         }
         None => {
             user_ratio.ok_or_else(|| anyhow::anyhow!(
                 "No constitutional nesting ratio defined for {state_code}. \
-                 Specify --nest-ratio N:M."
+                 Check your state constitution and use --nest-ratio N."
             ))
         }
     }

@@ -54,12 +54,12 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         .unwrap_or_else(|| PathBuf::from(format!("reports/{}", args.label)));
     std::fs::create_dir_all(&out_dir)?;
 
-    // Audit-only mode: write audit.json and return
-    if args.audit_only {
-        let audit_json = serde_json::to_string_pretty(&serde_json::json!({
+    // Build audit JSON (used by --audit-only and --audit-with-report)
+    let build_audit_json = |manifest: &PlanManifest| -> anyhow::Result<String> {
+        Ok(serde_json::to_string_pretty(&serde_json::json!({
             "label": manifest.label,
             "audit": {
-                "verification_command": redist_report::audit::generate_verification_command_from_manifest(&manifest),
+                "verification_command": redist_report::audit::generate_verification_command_from_manifest(manifest),
                 "binary_version": manifest.binary_version,
                 "binary_download_url": manifest.binary_download_url,
                 "binary_sha256": manifest.binary_sha256,
@@ -70,9 +70,12 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
                 "created_at": manifest.created_at,
                 "seed": manifest.seed,
             }
-        }))?;
-        let audit_path = &out_dir;
-        // If out points to a file path ending in .json, write there; else write audit.json in dir
+        }))?)
+    };
+
+    // Audit-only mode: write audit.json and return (skips HTML/JSON report)
+    if args.audit_only {
+        let audit_json = build_audit_json(&manifest)?;
         let audit_file = if out_dir.extension().map(|e| e == "json").unwrap_or(false) {
             out_dir.clone()
         } else {
@@ -126,6 +129,14 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         }
     }
 
+    // Court submission mode: --audit-with-report writes audit.json alongside the report
+    if args.audit_with_report {
+        let audit_json = build_audit_json(&manifest)?;
+        let audit_file = out_dir.join("audit.json");
+        std::fs::write(&audit_file, &audit_json)?;
+        eprintln!("[OK] audit.json written: {}", audit_file.display());
+    }
+
     // PDF deferral: board amendment — exit code 1 with message after other formats complete
     if has_pdf {
         if wrote_any {
@@ -162,6 +173,7 @@ mod tests {
             format: vec![ReportFormat::Html, ReportFormat::Json],
             out: Some("reports/wa_house/".into()),
             audit_only: false,
+            audit_with_report: false,
             output_base: "outputs".into(),
         };
         assert!(args.format.contains(&ReportFormat::Html));
@@ -178,6 +190,7 @@ mod tests {
             format: vec![ReportFormat::Html],
             out: Some("reports/audit.json".into()),
             audit_only: true,
+            audit_with_report: false,
             output_base: "outputs".into(),
         };
         assert!(args.audit_only);
