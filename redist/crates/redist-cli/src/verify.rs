@@ -4,6 +4,47 @@ use redist_report::PlanManifest;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+/// Check whether the binary SHA-256 in the manifest matches the current executable.
+///
+/// - If `binary_sha256` is empty or starts with "(not", skip silently.
+/// - If `skip_binary_check` is true: emit a NOTE and return.
+/// - If the hashes differ: emit a WARNING (not an error) about mismatch.
+/// - If the hashes match: no output.
+pub fn check_binary_sha256(manifest_sha256: &str, skip_binary_check: bool) {
+    // Skip if the manifest has no meaningful hash
+    if manifest_sha256.is_empty() || manifest_sha256.starts_with("(not") {
+        return;
+    }
+
+    if skip_binary_check {
+        eprintln!("NOTE: Binary check skipped (--skip-binary-check set)");
+        return;
+    }
+
+    // Compute SHA-256 of the current executable
+    let exe_sha = match std::env::current_exe()
+        .ok()
+        .and_then(|p| redist_report::sha256_file(&p).ok())
+    {
+        Some(sha) => sha,
+        None => {
+            eprintln!("WARNING: Could not compute SHA-256 of current executable — binary check skipped.");
+            return;
+        }
+    };
+
+    if exe_sha != manifest_sha256 {
+        eprintln!(
+            "WARNING: Binary SHA-256 mismatch.\n\
+             Manifest: {}\n\
+             Current:  {}\n\
+             Results may differ if built from a different commit. \
+             Use --skip-binary-check to suppress this warning.",
+            manifest_sha256, exe_sha
+        );
+    }
+}
+
 pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     // 1. Load manifest
     let content = std::fs::read_to_string(&args.manifest)
@@ -34,6 +75,9 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
 
     eprintln!("=== redist verify: {} ===", manifest.label);
     eprintln!("Equivalent command: {cmd}");
+
+    // Binary SHA-256 audit check
+    check_binary_sha256(&manifest.binary_sha256, args.skip_binary_check);
 
     if args.dry_run {
         eprintln!("[DRY RUN] Command not executed.");
@@ -246,6 +290,7 @@ mod tests {
             verify_label: None,
             output_base: "outputs".to_string(),
             dry_run: true,
+            skip_binary_check: false,
         };
         // Should fail at manifest read, not at binary execution
         let result = run_verify(&args);
@@ -281,6 +326,7 @@ mod tests {
             verify_label: None,
             output_base: "outputs".to_string(),
             dry_run: true,
+            skip_binary_check: false,
         };
         // dry_run=true: must return Ok after printing command (no binary execution)
         let result = run_verify(&args);
@@ -304,5 +350,66 @@ mod tests {
         let computed = verify_label
             .unwrap_or_else(|| format!("{}_verify", original_label));
         assert_eq!(computed, "my_custom_label");
+    }
+
+    // ── Task 133: --skip-binary-check ────────────────────────────────────────
+
+    #[test]
+    fn test_verify_skip_binary_check_flag_parses() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from([
+            "verify",
+            "--manifest", "/tmp/manifest.json",
+            "--skip-binary-check",
+        ]);
+        assert!(args.skip_binary_check, "--skip-binary-check flag must parse to true");
+    }
+
+    #[test]
+    fn test_verify_skip_binary_check_default_false() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from([
+            "verify",
+            "--manifest", "/tmp/manifest.json",
+        ]);
+        assert!(!args.skip_binary_check, "--skip-binary-check must default to false");
+    }
+
+    #[test]
+    fn test_verify_binary_check_logic_empty_hash_skips() {
+        // An empty binary_sha256 should be silently skipped (no action)
+        // We call check_binary_sha256 directly and verify it doesn't panic.
+        check_binary_sha256("", false);
+        check_binary_sha256("", true);
+        // No panic = pass
+    }
+
+    #[test]
+    fn test_verify_binary_check_logic_not_prefix_skips() {
+        // binary_sha256 starting with "(not" should be silently skipped
+        check_binary_sha256("(not available)", false);
+        check_binary_sha256("(not computed)", true);
+        // No panic = pass
+    }
+
+    #[test]
+    fn test_verify_binary_check_logic_skip_flag_suppresses_check() {
+        // When skip_binary_check=true, check_binary_sha256 must not compute exe hash
+        // (i.e., must not fail even with a bogus sha256 string).
+        // We can't capture eprintln output in unit tests, but we verify no panic.
+        let bogus_sha = "a".repeat(64); // 64 hex chars (valid format, wrong value)
+        check_binary_sha256(&bogus_sha, true); // skip_binary_check=true
+        // No panic = pass
+    }
+
+    #[test]
+    fn test_verify_binary_check_logic_mismatch_no_panic() {
+        // With skip_binary_check=false and a known-wrong hash, must emit WARNING but not panic.
+        // The exe hash won't match "a"*64, so a warning is emitted (to stderr — not testable).
+        let bogus_sha = "a".repeat(64);
+        check_binary_sha256(&bogus_sha, false); // should emit WARNING but not panic
+        // No panic = pass
     }
 }

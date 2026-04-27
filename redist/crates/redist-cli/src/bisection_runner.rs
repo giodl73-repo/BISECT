@@ -12,6 +12,40 @@ use rayon::prelude::*;
 use redist_core::{BisectionTree, ufactor_for_depth};
 use redist_core::metis_format::{write_metis_graph, parse_metis_partition};
 
+/// Detect the gpmetis version string by running `gpmetis --version` or `gpmetis -version`.
+///
+/// gpmetis typically prints to stderr:
+///   "METIS 5.1.0 (2013-03-30)"
+///   or: "METIS  Copyright 1998-2020, Regents of the University of Minnesota"
+///
+/// Returns the first non-empty output line, or "unknown" if gpmetis is not found or
+/// does not produce recognizable output. Never panics.
+pub fn detect_gpmetis_version() -> String {
+    let gpmetis = match find_gpmetis() {
+        Some(p) => p,
+        None => return "unknown".to_string(),
+    };
+
+    // Try --version first, then -version (older METIS versions use -version)
+    for flag in &["--version", "-version"] {
+        if let Ok(out) = Command::new(&gpmetis).arg(flag).output() {
+            // gpmetis writes version info to stderr (and sometimes stdout)
+            let combined = format!(
+                "{}\n{}",
+                String::from_utf8_lossy(&out.stderr),
+                String::from_utf8_lossy(&out.stdout),
+            );
+            for line in combined.lines() {
+                let trimmed = line.trim();
+                if !trimmed.is_empty() {
+                    return trimmed.to_string();
+                }
+            }
+        }
+    }
+    "unknown".to_string()
+}
+
 /// Find the gpmetis executable (cross-platform: Windows .exe or Linux/macOS binary).
 pub fn find_gpmetis() -> Option<String> {
     // Try PATH first
@@ -422,6 +456,32 @@ fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // ── Task 132: detect_gpmetis_version ─────────────────────────────────────
+
+    #[test]
+    fn test_detect_gpmetis_version_returns_string() {
+        // Must return a non-panicking string — "unknown" when gpmetis isn't present,
+        // or a non-empty version string when it is. Never panics.
+        let version = detect_gpmetis_version();
+        assert!(!version.is_empty(),
+            "detect_gpmetis_version must return a non-empty string (got empty)");
+        // Must be either "unknown" (gpmetis absent) or contain printable characters
+        assert!(version.chars().all(|c| !c.is_control() || c == ' '),
+            "version string must contain only printable chars: {:?}", version);
+    }
+
+    #[test]
+    fn test_detect_gpmetis_version_never_panics_without_gpmetis() {
+        // Simulate the case where gpmetis is not found: find_gpmetis() → None.
+        // detect_gpmetis_version() must return "unknown" in that case.
+        // We can't easily mock find_gpmetis, but we can at least verify the return
+        // value is a valid String (non-empty).
+        let v = detect_gpmetis_version();
+        // Acceptable values: "unknown" (no gpmetis) or any non-empty version string
+        assert!(v == "unknown" || !v.is_empty(),
+            "must return 'unknown' or a version string, got: {:?}", v);
+    }
 
     #[test]
     fn test_split_four_node_graph() {

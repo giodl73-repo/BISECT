@@ -51,6 +51,9 @@ pub struct PlanManifest {
     /// Electoral system classification
     #[serde(default = "default_electoral_system")]
     pub electoral_system: String,
+    /// Version of gpmetis used for partitioning (captured at runtime)
+    #[serde(default)]
+    pub gpmetis_version: String,
 }
 
 fn default_seats_per_district() -> usize { 1 }
@@ -160,6 +163,7 @@ mod tests {
             seats_per_district: 1,
             total_seats: 10,
             electoral_system: "single_member".into(),
+            gpmetis_version: String::new(),
         }
     }
 
@@ -301,6 +305,31 @@ mod tests {
         let json = serde_json::to_value(&manifest).unwrap();
         assert!(json["total_seats"].is_number());
         assert_eq!(json["total_seats"], 10);
+    }
+
+    // ── Task 132: gpmetis_version field ──────────────────────────────────────
+
+    #[test]
+    fn test_manifest_has_gpmetis_version_field() {
+        // PlanManifest must serialize with gpmetis_version field present
+        let manifest = PlanManifest {
+            gpmetis_version: "METIS 5.1.0".to_string(),
+            ..make_test_manifest("53")
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert!(json["gpmetis_version"].is_string(),
+            "gpmetis_version must be a string field in the serialized manifest");
+        assert_eq!(json["gpmetis_version"], "METIS 5.1.0");
+    }
+
+    #[test]
+    fn test_manifest_gpmetis_version_default_is_empty() {
+        // When not set, gpmetis_version defaults to empty string (serde default)
+        let manifest = make_test_manifest("53");
+        let json = serde_json::to_value(&manifest).unwrap();
+        // Default is empty string (from #[serde(default)])
+        assert!(json["gpmetis_version"].is_string(),
+            "gpmetis_version field must be present even when empty");
     }
 
     #[test]

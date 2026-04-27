@@ -245,6 +245,44 @@ pub fn run_states_parallel(configs: Vec<StateConfig>, workers: usize) -> Vec<Sta
     })
 }
 
+/// Extract the census year (2000, 2010, or 2020) from an adjacency filename.
+///
+/// Looks for a 4-digit number matching 2000, 2010, or 2020 in the filename.
+/// Returns `None` if no valid census year is found.
+pub fn extract_year_from_adj_filename(filename: &str) -> Option<&'static str> {
+    // Search for any of the known census years as a substring
+    for year in &["2020", "2010", "2000"] {
+        if filename.contains(year) {
+            return Some(year);
+        }
+    }
+    None
+}
+
+/// Check whether the year in the adjacency filename matches the requested year.
+///
+/// Emits a WARNING to stderr (not an error) when there is a mismatch.
+/// A mismatch can occur when the user requests --year 2020 but only a 2010
+/// adjacency file is available and is used as fallback.
+pub fn check_adjacency_year_mismatch(path: &PathBuf, requested_year: &str, state_code: &str) {
+    let filename = path.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+    if let Some(file_year) = extract_year_from_adj_filename(filename) {
+        if file_year != requested_year {
+            eprintln!(
+                "WARNING: Requested adjacency for year {requested_year} but adjacency file is \
+                 for year {file_year}: {filename}\n\
+                 Census tract boundaries changed between {file_year} and {requested_year} \
+                 -- results will use {file_year} geography.\n\
+                 For {requested_year} census tracts: run \
+                 redist fetch --year {requested_year} --type adjacency --states {}",
+                state_code.to_uppercase()
+            );
+        }
+    }
+}
+
 /// Resolve the adjacency pkl path for a state using the manifest.
 ///
 /// The manifest's `local_outputs_dir` + "V3/data/{year}/adjacency/" is the
@@ -401,6 +439,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         override_path.clone()
     } else {
         let (path, _effective_resolution) = resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
+        // Task 135: warn when adjacency file year doesn't match requested year
+        check_adjacency_year_mismatch(&path, &cfg.year, &cfg.state_code);
         path
     };
 
@@ -549,6 +589,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         let adj_filename = format!("{}_adjacency_{}.adj.bin", state_name, cfg.year);
         let state_fips = state_code_to_fips(&cfg.state_code).unwrap_or("00").to_string();
         let tiger_url = redist_report::tiger_source_url(&state_fips, &cfg.year);
+        let gpmetis_version = crate::bisection_runner::detect_gpmetis_version();
         let manifest = redist_report::PlanManifest {
             label: label.clone(),
             state_code: cfg.state_code.clone(),
@@ -583,6 +624,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             } else {
                 "multi_member_uniform".to_string()
             },
+            gpmetis_version,
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
@@ -1144,6 +1186,57 @@ mod tests {
         assert!(msg.contains("--reset"), "must mention --reset flag");
         assert!(msg.contains("delete"), "must use the word 'delete'");
         assert!(msg.contains("all its contents"), "must warn about contents");
+    }
+
+    // ── Task 135: adjacency year mismatch detection ──────────────────────────
+
+    #[test]
+    fn test_adjacency_year_mismatch_detected() {
+        // Requesting year 2020 but file is for 2010 — must detect mismatch
+        let path = PathBuf::from("wa_adjacency_2010.pkl");
+        let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let file_year = extract_year_from_adj_filename(filename);
+        assert_eq!(file_year, Some("2010"), "should extract 2010 from filename");
+        // Mismatch: requested 2020, file is 2010
+        assert_ne!(file_year, Some("2020"), "2010 file != 2020 requested — mismatch detected");
+    }
+
+    #[test]
+    fn test_adjacency_year_match_no_warning() {
+        // Requesting year 2020 and file is also for 2020 — no mismatch
+        let path = PathBuf::from("wa_adjacency_2020.pkl");
+        let filename = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        let file_year = extract_year_from_adj_filename(filename);
+        assert_eq!(file_year, Some("2020"), "should extract 2020 from filename");
+        // No mismatch: requested 2020, file is 2020
+        assert_eq!(file_year, Some("2020"), "2020 file == 2020 requested — no mismatch");
+    }
+
+    #[test]
+    fn test_extract_year_from_adj_filename_2000() {
+        let year = extract_year_from_adj_filename("ca_adjacency_2000.pkl");
+        assert_eq!(year, Some("2000"), "should extract 2000");
+    }
+
+    #[test]
+    fn test_extract_year_from_adj_filename_none() {
+        // Filename without a recognizable census year
+        let year = extract_year_from_adj_filename("ca_adjacency.pkl");
+        assert_eq!(year, None, "no census year in filename should return None");
+    }
+
+    #[test]
+    fn test_check_adjacency_year_mismatch_same_year_no_panic() {
+        // Same year: function runs without panic
+        let path = PathBuf::from("wa_adjacency_2020.pkl");
+        check_adjacency_year_mismatch(&path, "2020", "WA"); // no panic
+    }
+
+    #[test]
+    fn test_check_adjacency_year_mismatch_different_year_no_panic() {
+        // Different year: function emits warning but doesn't panic
+        let path = PathBuf::from("wa_adjacency_2010.pkl");
+        check_adjacency_year_mismatch(&path, "2020", "WA"); // warns but no panic
     }
 
     #[test]

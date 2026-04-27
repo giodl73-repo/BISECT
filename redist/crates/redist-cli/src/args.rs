@@ -1340,6 +1340,9 @@ pub struct VerifyArgs {
     /// Print the equivalent CLI command only, don't run it
     #[arg(long)]
     pub dry_run: bool,
+    /// Skip binary SHA-256 check (for source-built binaries or different releases)
+    #[arg(long)]
+    pub skip_binary_check: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -1398,6 +1401,11 @@ pub struct FetchArgs {
     /// Parallel download workers [default: 4]
     #[arg(short = 'w', long, default_value_t = 4)]
     pub workers: usize,
+
+    /// Verify SHA-256 of each downloaded file against expected hash (if known).
+    /// On mismatch: deletes the corrupt file and returns an error.
+    #[arg(long)]
+    pub verify_downloads: bool,
 }
 
 // ---------------------------------------------------------------------------

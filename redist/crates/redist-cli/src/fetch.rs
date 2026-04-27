@@ -312,6 +312,33 @@ pub fn download_items(
     Ok(())
 }
 
+/// Verify the SHA-256 of a downloaded file against an expected hash.
+///
+/// Computes the SHA-256 of `path` (streaming in 64KB chunks, same as sha256_file)
+/// and compares to `expected` (lowercase hex string). On mismatch: deletes the
+/// corrupt file and returns Err. On match: returns Ok(()).
+///
+/// If `expected` is empty, returns Ok(()) without computing (no expected hash).
+pub fn verify_file_sha256(path: &std::path::Path, expected: &str) -> Result<(), String> {
+    if expected.is_empty() {
+        return Ok(());
+    }
+
+    let actual = redist_report::sha256_file(path)
+        .map_err(|e| format!("SHA-256 computation failed for {}: {e}", path.display()))?;
+
+    if actual != expected.to_lowercase() {
+        // Delete the corrupt file so it won't be reused
+        let _ = std::fs::remove_file(path);
+        return Err(format!(
+            "SHA-256 mismatch for {}:\n  expected: {}\n  actual:   {}\n\
+             Corrupt file deleted. Re-run to re-download.",
+            path.display(), expected, actual
+        ));
+    }
+    Ok(())
+}
+
 /// Download a ZIP from url and extract it to dest_dir.
 /// Streams response to a temp file to avoid OOM for large ZIPs (Critical 3).
 /// California PL 94-171 can be 80MB+ — in-memory loading would OOM on constrained systems.
@@ -436,6 +463,68 @@ mod tests {
             assert!(url.starts_with("https://"), "{code} tiger URL must be https");
             assert!(url.ends_with(".zip"), "{code} tiger URL must end in .zip");
         }
+    }
+
+    // ── Task 137: verify_file_sha256 ─────────────────────────────────────────
+
+    #[test]
+    fn test_verify_file_sha256_correct_hash() {
+        // Write a known file and verify with its correct SHA-256
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("data.bin");
+        std::fs::write(&path, b"hello world").unwrap();
+        // Known SHA-256 of "hello world"
+        let expected = "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9";
+        let result = verify_file_sha256(&path, expected);
+        assert!(result.is_ok(), "correct hash should pass: {:?}", result.err());
+        // File must still exist after a passing check
+        assert!(path.exists(), "file must still exist after passing verification");
+    }
+
+    #[test]
+    fn test_verify_file_sha256_wrong_hash_returns_err() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("data.bin");
+        std::fs::write(&path, b"hello world").unwrap();
+        // Wrong hash
+        let wrong_hash = "a".repeat(64);
+        let result = verify_file_sha256(&path, &wrong_hash);
+        assert!(result.is_err(), "wrong hash must return Err");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("mismatch") || msg.contains("SHA-256"),
+            "error must mention mismatch: {msg}");
+        // File must be deleted after mismatch
+        assert!(!path.exists(), "corrupt file must be deleted after mismatch");
+    }
+
+    #[test]
+    fn test_verify_file_sha256_empty_expected_skips() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("data.bin");
+        std::fs::write(&path, b"any content").unwrap();
+        // Empty expected = no check performed
+        let result = verify_file_sha256(&path, "");
+        assert!(result.is_ok(), "empty expected hash must skip check and return Ok");
+        assert!(path.exists(), "file must not be deleted when check is skipped");
+    }
+
+    #[test]
+    fn test_verify_downloads_flag_parses() {
+        use crate::args::FetchArgs;
+        use clap::Parser;
+        let args = FetchArgs::parse_from([
+            "fetch",
+            "--verify-downloads",
+        ]);
+        assert!(args.verify_downloads, "--verify-downloads flag must parse to true");
+    }
+
+    #[test]
+    fn test_verify_downloads_default_false() {
+        use crate::args::FetchArgs;
+        use clap::Parser;
+        let args = FetchArgs::parse_from(["fetch"]);
+        assert!(!args.verify_downloads, "--verify-downloads must default to false");
     }
 
     #[test]

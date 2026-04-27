@@ -287,6 +287,7 @@ mod tests {
             seats_per_district: 1,
             total_seats: 1,
             electoral_system: "single_member".into(),
+            gpmetis_version: String::new(),
         }
     }
 

@@ -10,6 +10,41 @@ use crate::runner::load_all_states;
 use crate::partisan::{PartisanArgs, run_partisan};
 use crate::io_utils::write_json_atomic;
 
+/// Check for a mismatch between election data year and census plan year.
+///
+/// Election data is collected using census tract boundaries from a particular year:
+///   - 2016, 2012, 2008, 2004 elections → 2010 census tract boundaries
+///   - 2020, 2018 elections → 2020 census tract boundaries
+///
+/// If the plan uses 2020 census tracts but the election data is from 2016 (2010 tracts),
+/// partisan analysis will be inaccurate. Emits a WARNING to stderr.
+///
+/// Returns the warning message string (empty when no mismatch).
+pub fn check_election_census_year_mismatch(election_year: u32, plan_year: &str) -> String {
+    // Elections using 2010 tract boundaries
+    let uses_2010_tracts = matches!(election_year, 2004 | 2008 | 2012 | 2016);
+    // Elections using 2020 tract boundaries
+    let uses_2020_tracts = matches!(election_year, 2018 | 2020 | 2022);
+
+    if uses_2010_tracts && plan_year == "2020" {
+        return format!(
+            "WARNING: Election data from {election_year} uses 2010 census tract boundaries.\n\
+             Your plan uses 2020 census tracts. Partisan analysis may be inaccurate.\n\
+             Consider using 2020 election data, or crosswalk {election_year} results to 2020 tracts."
+        );
+    }
+
+    if uses_2020_tracts && (plan_year == "2010" || plan_year == "2000") {
+        return format!(
+            "WARNING: Election data from {election_year} uses 2020 census tract boundaries.\n\
+             Your plan uses {plan_year} census tracts. Partisan analysis may be inaccurate.\n\
+             Consider using election data from an earlier cycle, or crosswalk results to {plan_year} tracts."
+        );
+    }
+
+    String::new()
+}
+
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     let year = args.year.to_string();
 
@@ -280,6 +315,26 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 eprintln!("[OK] compactness -> {}", out_path.display());
             }
             AnalyzerType::Partisan => {
+                // Task 138: check for election year vs census year mismatch.
+                // If an explicit election file is provided, try to extract the election year
+                // from the filename (e.g., "presidential_2016_by_tract.csv" → 2016).
+                if let Some(ref ef) = args.election_file {
+                    let fname = ef.file_name()
+                        .and_then(|n| n.to_str())
+                        .unwrap_or("");
+                    // Look for a 4-digit year in the filename
+                    for candidate in &["2004", "2008", "2012", "2016", "2018", "2020", "2022"] {
+                        if fname.contains(candidate) {
+                            if let Ok(ey) = candidate.parse::<u32>() {
+                                let warning = check_election_census_year_mismatch(ey, &year);
+                                if !warning.is_empty() {
+                                    eprintln!("{warning}");
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
                 let partisan_args = PartisanArgs {
                     assignments: &assignments,
                     state_code: &state_code,
@@ -545,6 +600,61 @@ mod tests {
         assert!(available_hint.contains("wa_senate_2020"), "must list wa_senate_2020: {available_hint}");
         assert!(available_hint.contains("wa_congressional_2020"), "must list wa_congressional_2020: {available_hint}");
         assert!(available_hint.starts_with("\nAvailable plans:"));
+    }
+
+    // ── Task 138: election year vs census year mismatch ──────────────────────
+
+    #[test]
+    fn test_election_census_year_mismatch_2016_with_2020_plan() {
+        // 2016 election (2010 tracts) + 2020 plan → should warn
+        let warning = check_election_census_year_mismatch(2016, "2020");
+        assert!(!warning.is_empty(),
+            "2016 election + 2020 plan should produce a warning");
+        assert!(warning.contains("WARNING"), "must start with WARNING: {warning}");
+        assert!(warning.contains("2016"), "must mention election year 2016: {warning}");
+        assert!(warning.contains("2010"), "must mention 2010 tract boundaries: {warning}");
+        assert!(warning.contains("2020"), "must mention plan year 2020: {warning}");
+    }
+
+    #[test]
+    fn test_election_census_year_match_2020_with_2020_plan() {
+        // 2020 election (2020 tracts) + 2020 plan → no warning
+        let warning = check_election_census_year_mismatch(2020, "2020");
+        assert!(warning.is_empty(),
+            "2020 election + 2020 plan should produce no warning, got: {warning}");
+    }
+
+    #[test]
+    fn test_election_census_year_mismatch_2020_with_2010_plan() {
+        // 2020 election (2020 tracts) + 2010 plan → should warn
+        let warning = check_election_census_year_mismatch(2020, "2010");
+        assert!(!warning.is_empty(),
+            "2020 election + 2010 plan should produce a warning");
+        assert!(warning.contains("WARNING"), "must start with WARNING: {warning}");
+    }
+
+    #[test]
+    fn test_election_census_year_match_2016_with_2010_plan() {
+        // 2016 election (2010 tracts) + 2010 plan → no warning (same boundary year)
+        let warning = check_election_census_year_mismatch(2016, "2010");
+        assert!(warning.is_empty(),
+            "2016 election + 2010 plan should produce no warning, got: {warning}");
+    }
+
+    #[test]
+    fn test_election_census_year_mismatch_2012_with_2020_plan() {
+        // 2012 election (2010 tracts) + 2020 plan → should warn
+        let warning = check_election_census_year_mismatch(2012, "2020");
+        assert!(!warning.is_empty(),
+            "2012 election + 2020 plan should produce a warning");
+    }
+
+    #[test]
+    fn test_election_census_year_match_2020_with_2000_plan() {
+        // 2020 election (2020 tracts) + 2000 plan → should warn
+        let warning = check_election_census_year_mismatch(2020, "2000");
+        assert!(!warning.is_empty(),
+            "2020 election + 2000 plan (boundary mismatch) should produce a warning");
     }
 
     /// Task 119: when plans directory doesn't exist, show path without listing.
