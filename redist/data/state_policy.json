@@ -1419,6 +1419,9 @@
     "vra_note": "Elven minority populations in the Eastern Realms require majority-elven districts.",
     "independent_city_note": "The Free City of Ironforge is an independent keep with no realm affiliation — similar to Virginia independent cities.",
     "independent_cities": ["Ironforge", "Dragonspire", "Silvermoon"],
-    "notes": "TEST STATE ONLY. Eldoria validates that every configurable field in the redistricting pipeline is actually read from config and not hardcoded. If Eldoria produces 'county splits' instead of 'realm splits', a value is hardcoded. If balance tolerance is 0.5% or 5.0% instead of 7.5%, the manifest isn't being read. Etc."
+    "electoral_system": "arcane_council_proportional",
+    "seats_per_district": 7,
+    "total_seats": 91,
+    "notes": "TEST STATE ONLY. Eldoria validates that every configurable field in the redistricting pipeline is actually read from config and not hardcoded. If Eldoria produces 'county splits' instead of 'realm splits', a value is hardcoded. If balance tolerance is 0.5% or 5.0% instead of 7.5%, the manifest isn't being read. If seats_per_district is 1 instead of 7, multi-member logic is hardcoded. Etc."
   }
 }

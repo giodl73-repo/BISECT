@@ -258,6 +258,69 @@ mod tests {
     }
 
     #[test]
+    fn test_eldoria_municipal_term_is_keep() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["municipal_term"].as_str().unwrap(), "keep");
+        assert_eq!(el["municipal_term_plural"].as_str().unwrap(), "keeps");
+    }
+
+    #[test]
+    fn test_eldoria_population_basis_is_vap() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["population_basis"].as_str().unwrap(), "vap");
+    }
+
+    #[test]
+    fn test_eldoria_nesting_4to1() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["nesting_requirement"].as_str().unwrap(), "senate_contains_house");
+        assert_eq!(el["nesting_ratio"].as_str().unwrap(), "4:1");
+    }
+
+    #[test]
+    fn test_eldoria_vra_applies() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["vra_section2_applies"].as_bool().unwrap(), true);
+    }
+
+    #[test]
+    fn test_eldoria_seats_per_district_7() {
+        // Eldoria uses 7-seat districts to verify seats_per_district is configurable
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["seats_per_district"].as_u64().unwrap(), 7);
+        assert_eq!(el["total_seats"].as_u64().unwrap(), 91);
+    }
+
+    #[test]
+    fn test_eldoria_electoral_system_is_fantasy() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        let system = el["electoral_system"].as_str().unwrap();
+        assert!(system.contains("arcane") || system.contains("proportional"),
+            "Eldoria electoral system must be fantasy-named, got: {system}");
+    }
+
+    #[test]
+    fn test_eldoria_independent_city_note_has_ironforge() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        let note = el["independent_city_note"].as_str().unwrap_or("");
+        assert!(note.contains("Ironforge"), "Eldoria must mention the Free City of Ironforge");
+    }
+
+    #[test]
+    fn test_eldoria_prison_gerrymandering_home_address() {
+        let policy = load_policy();
+        let el = get_state_policy(&policy, "_TEST_EL").unwrap();
+        assert_eq!(el["prison_gerrymandering"].as_str().unwrap(), "home_address");
+    }
+
+    #[test]
     fn test_policy_all_50_states_have_house_districts() {
         let policy = load_policy();
         let required_states = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
