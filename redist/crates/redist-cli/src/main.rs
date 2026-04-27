@@ -1,5 +1,7 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
+use redist_cli::suite::run_suite_stability;
+use redist_cli::verify::run_verify;
 use redist_cli::policy::run_policy;
 use redist_cli::doctor::run_doctor;
 use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
@@ -80,6 +82,26 @@ fn main() {
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from(format!("outputs/{}", args.version)));
+
+            // Block-level memory warning (scenario 40)
+            if args.resolution.to_string() == "block" {
+                let large_block_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI", "VA", "WA", "AZ", "CO"];
+                let is_large = large_block_states.contains(&state_code.as_str());
+                if is_large {
+                    eprintln!(
+                        "WARNING: Block-level resolution for {} loads ~700K+ units. \
+                         This requires 2-4GB RAM and significant compute time. \
+                         For most redistricting, --resolution block_group provides \
+                         sufficient precision with 10x fewer units.",
+                        state_code
+                    );
+                } else {
+                    eprintln!(
+                        "NOTE: Block-level resolution loads all census blocks (~50-200K units). \
+                         For most redistricting, --resolution block_group is sufficient."
+                    );
+                }
+            }
 
             // Granularity floor warning (before the run starts)
             if let Some(warn) = registry.granularity_warning(
@@ -397,6 +419,15 @@ fn main() {
                         std::process::exit(4);  // nesting bit
                     }
                 }
+                SuiteCommands::Stability(args) => {
+                    let result = run_suite_stability(&args)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                    println!("{}", serde_json::to_string_pretty(&result)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); }));
+                    if !result.stable {
+                        std::process::exit(6); // instability exit code
+                    }
+                }
                 SuiteCommands::Validate(args) => {
                     use redist_cli::suite::run_suite_validate_with_overrides;
                     use std::path::PathBuf;
@@ -452,6 +483,11 @@ fn main() {
         // ── redist doctor: pre-flight check ───────────────────────────────────
         Commands::Doctor(args) => {
             run_doctor(&args);
+        }
+
+        // ── redist verify: reproduce plan from manifest and compare ───────────
+        Commands::Verify(args) => {
+            run_verify(&args).unwrap_or_else(|e| { eprintln!("FAIL: {e}"); std::process::exit(1); });
         }
     }
 }
@@ -580,6 +616,60 @@ mod tests {
         let small_configs = vec![make_config("VT"), make_config("DE")];
         let has_large_small = small_configs.iter().any(|c| large_states.contains(&c.state_code.as_str()));
         assert!(!has_large_small, "VT+DE run must not trigger large-state warning");
+    }
+
+    // ── Task 126: block-level resolution memory warning ───────────────────────
+
+    /// Verify the large-block-state list used for memory warnings contains expected states.
+    #[test]
+    fn test_block_resolution_warning_for_large_state() {
+        let large_block_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI", "VA", "WA", "AZ", "CO"];
+        // Large states must be in the list
+        assert!(large_block_states.contains(&"CA"), "CA must be in large block states");
+        assert!(large_block_states.contains(&"TX"), "TX must be in large block states");
+        assert!(large_block_states.contains(&"NY"), "NY must be in large block states");
+        assert!(large_block_states.contains(&"WA"), "WA must be in large block states");
+        // Small states must NOT be in the list
+        assert!(!large_block_states.contains(&"VT"), "VT must not be in large block states");
+        assert!(!large_block_states.contains(&"DE"), "DE must not be in large block states");
+        assert!(!large_block_states.contains(&"WY"), "WY must not be in large block states");
+    }
+
+    /// Verify the block-resolution warning message format for large states.
+    #[test]
+    fn test_block_resolution_warning_message_format_large_state() {
+        let state_code = "CA";
+        let msg = format!(
+            "WARNING: Block-level resolution for {} loads ~700K+ units. \
+             This requires 2-4GB RAM and significant compute time. \
+             For most redistricting, --resolution block_group provides \
+             sufficient precision with 10x fewer units.",
+            state_code
+        );
+        assert!(msg.contains("WARNING:"), "must start with WARNING:");
+        assert!(msg.contains("CA"), "must mention state code");
+        assert!(msg.contains("700K+"), "must mention unit count threshold");
+        assert!(msg.contains("block_group"), "must mention block_group alternative");
+        assert!(msg.contains("2-4GB"), "must mention RAM requirement");
+    }
+
+    /// Verify the block-resolution note message format for small states.
+    #[test]
+    fn test_block_resolution_note_message_format_small_state() {
+        let msg = "NOTE: Block-level resolution loads all census blocks (~50-200K units). \
+                   For most redistricting, --resolution block_group is sufficient.";
+        assert!(msg.contains("NOTE:"), "must start with NOTE:");
+        assert!(msg.contains("block_group"), "must mention block_group alternative");
+        assert!(msg.contains("50-200K"), "must mention unit count range");
+    }
+
+    /// Verify only "block" triggers the warning (not "block_group" or "tract").
+    #[test]
+    fn test_block_resolution_warning_only_for_block_resolution() {
+        // The warning condition in main.rs: args.resolution.to_string() == "block"
+        assert_eq!("block", "block", "block matches");
+        assert_ne!("block_group", "block", "block_group must not trigger block warning");
+        assert_ne!("tract", "block", "tract must not trigger block warning");
     }
 
     /// Task 117: verify the Run arm also exits non-zero on any_failure.

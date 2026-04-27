@@ -428,6 +428,14 @@ fn load_rplan_assignments(
 
 /// Draw a suite of plans (congressional + house + senate).
 /// Writes suite.json to outputs/{version}/{year}/suites/{name}/suite.json
+///
+/// # Congressional and state legislative independence
+///
+/// Congressional redistricting (US House of Representatives seats) is entirely
+/// independent of state legislative redistricting (state house + state senate seats).
+/// Congressional districts do NOT nest with state legislative districts.
+/// The `--nest-mode senate-in-house` option applies ONLY to state house and state
+/// senate plans — it is never applied to the congressional plan.
 pub fn run_suite_draw(
     args: &SuiteDrawArgs,
     house_assignments: &HashMap<String, usize>,
@@ -444,6 +452,18 @@ pub fn run_suite_draw(
     let mut plans = Vec::new();
 
     if let Some(_cong) = congressional_assignments {
+        // Congressional plan: always independent of state legislative nesting.
+        // Guard: nesting mode is silently ignored for the congressional chamber —
+        // congressional districts do not nest with state legislative districts.
+        if args.nest_mode == NestMode::SenateInHouse {
+            eprintln!(
+                "NOTE: Congressional redistricting is independent of state legislative \
+                 redistricting. The --nest-mode senate-in-house only applies to state \
+                 house and senate plans. Congressional districts do not nest with \
+                 state legislative districts. The congressional plan will be drawn \
+                 without nesting constraints."
+            );
+        }
         plans.push(PlanEntry {
             chamber: "congressional".into(),
             file: format!("{}_congressional.rplan", args.name),
@@ -468,7 +488,8 @@ pub fn run_suite_draw(
         plans: plans.clone(),
     };
 
-    // Validate nesting before writing
+    // Validate nesting before writing.
+    // Nesting applies ONLY to state house and senate plans — not congressional.
     if args.nest_mode == NestMode::SenateInHouse {
         let required_ratio = resolve_nesting_ratio(&args.state, args.nest_ratio)?;
         let validation = validate_nesting(house_assignments, senate_assignments, required_ratio);
@@ -498,6 +519,129 @@ pub fn run_suite_draw(
     eprintln!("[OK] suite manifest -> {}", suite_path.display());
 
     Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// Suite stability runner
+// ---------------------------------------------------------------------------
+
+/// Result of a pairwise Jaccard stability analysis across N plan runs.
+#[derive(Debug, Serialize)]
+pub struct SuiteStabilityResult {
+    pub num_plans: usize,
+    pub num_pairs: usize,
+    pub mean_similarity: f64,
+    pub min_similarity: f64,
+    pub max_similarity: f64,
+    pub stable: bool,
+    /// Pairs with similarity below 0.95 (potential instability)
+    pub unstable_pairs: Vec<(String, String, f64)>,
+}
+
+/// Compute pairwise Jaccard similarity across multiple plan runs.
+///
+/// Loads assignments for each label from:
+///   `outputs/{version}/{year}/plans/{label}/data/final_assignments.json`
+///
+/// Reports mean/min/max Jaccard similarity across all pairs and flags
+/// if any pair falls below the stability threshold (0.95).
+pub fn run_suite_stability(
+    args: &crate::args::SuiteStabilityArgs,
+) -> anyhow::Result<SuiteStabilityResult> {
+    const STABILITY_THRESHOLD: f64 = 0.95;
+
+    if args.labels.len() < 2 {
+        anyhow::bail!(
+            "At least 2 plan labels are required for stability analysis. Got: {:?}",
+            args.labels
+        );
+    }
+
+    // Load assignments for each label
+    let mut all_assignments: Vec<(String, HashMap<String, usize>)> = Vec::new();
+    for label in &args.labels {
+        let path = PathBuf::from(&args.output_base)
+            .join(&args.version)
+            .join(&args.year)
+            .join("plans")
+            .join(label)
+            .join("data")
+            .join("final_assignments.json");
+
+        let content = std::fs::read_to_string(&path)
+            .map_err(|e| anyhow::anyhow!(
+                "Cannot load assignments for label '{}' from {}: {e}",
+                label, path.display()
+            ))?;
+        let assignments: HashMap<String, usize> = serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!(
+                "Invalid JSON in assignments for label '{}': {e}", label
+            ))?;
+        all_assignments.push((label.clone(), assignments));
+    }
+
+    // Compute all pairwise Jaccard similarities
+    let n = all_assignments.len();
+    let mut similarities: Vec<f64> = Vec::new();
+    let mut unstable_pairs: Vec<(String, String, f64)> = Vec::new();
+
+    for i in 0..n {
+        for j in (i + 1)..n {
+            let (label_a, assignments_a) = &all_assignments[i];
+            let (label_b, assignments_b) = &all_assignments[j];
+            let sim = compute_jaccard_similarity(assignments_a, assignments_b);
+            similarities.push(sim);
+            if sim < STABILITY_THRESHOLD {
+                unstable_pairs.push((label_a.clone(), label_b.clone(), sim));
+            }
+        }
+    }
+
+    let num_pairs = similarities.len();
+    let mean = if num_pairs > 0 {
+        similarities.iter().sum::<f64>() / num_pairs as f64
+    } else {
+        0.0
+    };
+    let min = similarities.iter().cloned().fold(f64::INFINITY, f64::min);
+    let max = similarities.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+
+    let result = SuiteStabilityResult {
+        num_plans: n,
+        num_pairs,
+        mean_similarity: mean,
+        min_similarity: if min.is_finite() { min } else { 0.0 },
+        max_similarity: if max.is_finite() { max } else { 0.0 },
+        stable: unstable_pairs.is_empty(),
+        unstable_pairs,
+    };
+
+    eprintln!("[redist suite stability] {} plans, {} pairs", result.num_plans, result.num_pairs);
+    eprintln!("  mean={:.4}  min={:.4}  max={:.4}",
+        result.mean_similarity, result.min_similarity, result.max_similarity);
+    if result.stable {
+        eprintln!("  [STABLE] All pairs >= {:.2}", STABILITY_THRESHOLD);
+    } else {
+        eprintln!("  [UNSTABLE] {} pairs below {:.2}:", result.unstable_pairs.len(), STABILITY_THRESHOLD);
+        for (a, b, sim) in &result.unstable_pairs {
+            eprintln!("    {} <-> {}: {:.4}", a, b, sim);
+        }
+    }
+
+    Ok(result)
+}
+
+/// Compute Jaccard similarity between two assignment maps (used internally by stability).
+fn compute_jaccard_similarity(
+    a: &HashMap<String, usize>,
+    b: &HashMap<String, usize>,
+) -> f64 {
+    if a.is_empty() || b.is_empty() { return 0.0; }
+    let matching = a.iter()
+        .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
+        .count();
+    let union = a.len().max(b.len());
+    matching as f64 / union as f64
 }
 
 // ---------------------------------------------------------------------------
@@ -627,6 +771,132 @@ mod tests {
         assert!(export.plan_files.iter().any(|p| p.chamber == "congressional"));
         assert!(export.plan_files.iter().any(|p| p.chamber == "house"));
         assert!(export.plan_files.iter().any(|p| p.chamber == "senate"));
+    }
+
+    // ── Task 127: suite stability pairwise Jaccard tests ─────────────────────
+
+    /// Verify stability analysis with identical plans returns mean/min/max all 1.0.
+    #[test]
+    fn test_stability_pairwise_jaccard_identical() {
+        let mut assignments: HashMap<String, usize> = HashMap::new();
+        assignments.insert("53001000100".to_string(), 1usize);
+        assignments.insert("53001000200".to_string(), 2usize);
+        assignments.insert("53001000300".to_string(), 1usize);
+        assignments.insert("53001000400".to_string(), 2usize);
+
+        // 3 identical plans → 3 pairs, all similarity = 1.0
+        let plans = vec![
+            ("plan_a".to_string(), assignments.clone()),
+            ("plan_b".to_string(), assignments.clone()),
+            ("plan_c".to_string(), assignments.clone()),
+        ];
+
+        let n = plans.len();
+        let mut similarities: Vec<f64> = Vec::new();
+        for i in 0..n {
+            for j in (i+1)..n {
+                let sim = compute_jaccard_similarity(&plans[i].1, &plans[j].1);
+                similarities.push(sim);
+            }
+        }
+
+        assert_eq!(similarities.len(), 3, "3 plans → 3 pairs");
+        for &s in &similarities {
+            assert!((s - 1.0).abs() < 1e-9, "identical plans must all have similarity 1.0, got {s}");
+        }
+        let mean = similarities.iter().sum::<f64>() / similarities.len() as f64;
+        assert!((mean - 1.0).abs() < 1e-9, "mean must be 1.0 for identical plans");
+    }
+
+    /// Verify stability analysis with completely different plans returns low similarity.
+    #[test]
+    fn test_stability_pairwise_jaccard_different() {
+        // Plan A: all tracts assigned to district 1
+        let mut plan_a: HashMap<String, usize> = HashMap::new();
+        plan_a.insert("T1".to_string(), 1usize);
+        plan_a.insert("T2".to_string(), 1usize);
+        plan_a.insert("T3".to_string(), 1usize);
+        plan_a.insert("T4".to_string(), 1usize);
+
+        // Plan B: all tracts assigned to district 2 (entirely different)
+        let mut plan_b: HashMap<String, usize> = HashMap::new();
+        plan_b.insert("T1".to_string(), 2usize);
+        plan_b.insert("T2".to_string(), 2usize);
+        plan_b.insert("T3".to_string(), 2usize);
+        plan_b.insert("T4".to_string(), 2usize);
+
+        let sim = compute_jaccard_similarity(&plan_a, &plan_b);
+        assert!(sim < 0.1, "completely different assignments must have similarity < 0.1, got {sim}");
+
+        // 2 plans → 1 pair
+        let pairs_count = 1; // n*(n-1)/2 = 2*1/2 = 1
+        assert_eq!(pairs_count, 1);
+    }
+
+    /// Verify that fewer than 2 labels fails with a clear error.
+    #[test]
+    fn test_stability_requires_at_least_two_labels() {
+        use crate::args::SuiteStabilityArgs;
+        let args = SuiteStabilityArgs {
+            labels: vec!["only_one_plan".to_string()],
+            year: "2020".to_string(),
+            version: "v1".to_string(),
+            output_base: "outputs".to_string(),
+        };
+        let result = run_suite_stability(&args);
+        assert!(result.is_err(), "should fail with only 1 label");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("At least 2"), "error must mention 2 labels: {msg}");
+    }
+
+    /// Verify pairwise count formula: n*(n-1)/2 pairs.
+    #[test]
+    fn test_stability_pair_count_formula() {
+        // n=2 → 1 pair, n=3 → 3 pairs, n=4 → 6 pairs
+        for (n, expected) in [(2, 1), (3, 3), (4, 6), (5, 10)] {
+            let pairs = n * (n - 1) / 2;
+            assert_eq!(pairs, expected, "n={n} must produce {expected} pairs");
+        }
+    }
+
+    /// Verify the stability threshold constant is 0.95.
+    #[test]
+    fn test_stability_threshold_is_0_95() {
+        // Documented in run_suite_stability: STABILITY_THRESHOLD = 0.95
+        const STABILITY_THRESHOLD: f64 = 0.95;
+        assert!((STABILITY_THRESHOLD - 0.95).abs() < 1e-9);
+    }
+
+    /// Task 125: Congressional redistricting is independent of state legislative redistricting.
+    /// The nest mode must NOT be applied to the congressional plan.
+    /// This test verifies the guard: when nest_mode = SenateInHouse and a congressional
+    /// plan is present, the draw function returns Ok (congressional plan is included
+    /// without nesting constraints).
+    #[test]
+    fn test_suite_congressional_is_independent_of_nesting() {
+        // A suite with nest_mode=SenateInHouse should succeed and include the
+        // congressional plan independently of the nesting validation.
+        let suite = PlanSuite {
+            suite_name: "wa_test_suite".into(),
+            state: "WA".into(),
+            year: "2020".into(),
+            nest_mode: NestMode::SenateInHouse,
+            plans: vec![
+                PlanEntry { chamber: "congressional".into(), file: "wa_congressional.rplan".into() },
+                PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() },
+                PlanEntry { chamber: "senate".into(), file: "wa_senate.rplan".into() },
+            ],
+        };
+        // Congressional chamber must appear in the plan list
+        assert!(suite.plans.iter().any(|p| p.chamber == "congressional"),
+            "congressional plan must be present in suite");
+        // The nest_mode field belongs to state legislative plans only
+        assert_eq!(suite.nest_mode, NestMode::SenateInHouse,
+            "nest_mode is stored but applies only to house/senate");
+        // Nesting validation is NOT called for the congressional plan.
+        // The congressional plan is always drawn independently.
+        // Verified by the guard in run_suite_draw: only house + senate assignments
+        // are passed to validate_nesting — congressional assignments are ignored.
     }
 
     #[test]

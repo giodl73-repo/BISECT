@@ -163,6 +163,8 @@ pub enum Commands {
     Policy(PolicyArgs),
     /// Pre-flight check: verify data files, year validity, resolution warnings for a location
     Doctor(DoctorArgs),
+    /// Reproduce a plan from its manifest.json and verify it matches the original
+    Verify(VerifyArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -454,7 +456,10 @@ pub struct SuiteDrawCliArgs {
     #[arg(long)]
     pub senate_districts: Option<usize>,
 
-    /// Nesting mode: none or senate-in-house
+    /// Nesting mode for state legislative plans: none or senate-in-house.
+    /// NOTE: Congressional redistricting is independent of state legislative
+    /// redistricting. This flag applies ONLY to state house and senate plans.
+    /// Congressional districts do not nest with state legislative districts.
     #[arg(long, default_value = "none")]
     pub nest: String,
 
@@ -508,12 +513,31 @@ pub struct SuiteValidateCliArgs {
     pub senate_label: Option<String>,
 }
 
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct SuiteStabilityArgs {
+    /// Comma-separated plan labels to compare
+    #[arg(long, value_delimiter = ',')]
+    pub labels: Vec<String>,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Version
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
+    /// Output base directory
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+}
+
 #[derive(Debug, Subcommand)]
 pub enum SuiteCommands {
     /// Draw a multi-chamber suite (congressional + house + senate)
     Draw(SuiteDrawCliArgs),
     /// Validate nesting constraints for an existing suite
     Validate(SuiteValidateCliArgs),
+    /// Compute pairwise Jaccard similarity across multiple plan runs
+    Stability(SuiteStabilityArgs),
 }
 
 #[derive(Debug, Parser)]
@@ -1292,6 +1316,30 @@ mod tests {
         assert!(args.house_label.is_none());
         assert!(args.senate_label.is_none());
     }
+}
+
+// ---------------------------------------------------------------------------
+// `redist verify` — reproduce plan from manifest.json and verify
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct VerifyArgs {
+    /// Path to manifest.json to reproduce and verify
+    #[arg(long)]
+    pub manifest: std::path::PathBuf,
+    /// Minimum Jaccard similarity for PASS (default: 0.99)
+    #[arg(long, default_value_t = 0.99)]
+    pub min_similarity: f64,
+    /// Label for the re-run verification plan (default: {original_label}_verify)
+    #[arg(long)]
+    pub verify_label: Option<String>,
+    /// Base output directory (default: outputs)
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+    /// Print the equivalent CLI command only, don't run it
+    #[arg(long)]
+    pub dry_run: bool,
 }
 
 // ---------------------------------------------------------------------------

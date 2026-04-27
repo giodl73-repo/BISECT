@@ -22,3 +22,4 @@ pub mod runner;
 pub mod status;
 pub mod suite;
 pub mod validate;
+pub mod verify;
