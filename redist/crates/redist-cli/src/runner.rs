@@ -662,6 +662,36 @@ mod tests {
     }
 
     #[test]
+    fn test_load_all_states_2020_returns_only_us_states() {
+        // load_all_states reads from the embedded manifest (US-only).
+        // International locations (IE, MT-PARLIAMENT, etc.) are in location_policy.json
+        // but NOT in the manifest — they must never appear in bulk runs.
+        let states = load_all_states("2020").expect("manifest should load");
+        assert_eq!(states.len(), 50, "exactly 50 US states expected, got {}", states.len());
+        // No international location codes
+        let international = ["IE", "MT-PARLIAMENT", "DE-WAHLKREIS", "NZ-ELECTORATE", "GB-ENG", "CA-PROV"];
+        for code in &international {
+            assert!(
+                !states.iter().any(|(c, _, _)| c == code),
+                "international location {code} must not appear in load_all_states"
+            );
+        }
+        // All codes are 2-letter uppercase (US state convention)
+        for (code, _, _) in &states {
+            assert_eq!(code.len(), 2, "state code '{code}' must be 2 chars");
+            assert!(code.chars().all(|c| c.is_uppercase()), "code '{code}' must be uppercase");
+        }
+    }
+
+    #[test]
+    fn test_load_all_states_invalid_year_returns_err() {
+        let result = load_all_states("2024");
+        assert!(result.is_err(), "year 2024 must be rejected for bulk US runs");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("2020") || msg.contains("2010"), "error must list valid years: {msg}");
+    }
+
+    #[test]
     fn test_state_already_complete_reprocess() {
         assert!(!state_already_complete(&PathBuf::from("/nonexistent"), "VT", "2020", true));
     }
