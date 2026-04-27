@@ -814,6 +814,21 @@ pub struct StateArgs {
     /// Overwrite existing plan without error
     #[arg(long, default_value_t = false)]
     pub force: bool,
+
+    // ── International / research use ─────────────────────────────────────────
+
+    /// Direct path to .adj.bin adjacency file (bypasses manifest lookup).
+    /// Required for international states not in the embedded US manifest.
+    /// Example: --adjacency outputs/international/mt_adjacency_2021.adj.bin
+    /// When set, --districts must also be provided.
+    #[arg(long)]
+    pub adjacency: Option<String>,
+
+    /// Human-readable name for the state/country (used in file paths and labels).
+    /// Defaults to lowercase state code when --adjacency is used.
+    /// Example: --state-name "malta" or --state-name "ireland"
+    #[arg(long)]
+    pub state_name: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

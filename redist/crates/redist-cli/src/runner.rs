@@ -71,6 +71,9 @@ pub struct StateConfig {
     pub seats_per_district: usize,
     /// Total seats across all constituencies (seats_per_district * num_districts if uniform)
     pub total_seats: usize,
+    /// Direct adjacency file path (bypasses manifest lookup for international states).
+    /// When Some, runner skips resolve_adjacency_path() and uses this path directly.
+    pub adjacency_override: Option<std::path::PathBuf>,
 }
 
 impl StateConfig {
@@ -367,7 +370,12 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // The manifest's local_outputs_dir + "V3/data/{year}/adjacency/" is the
     // canonical store. REDIST_MANIFEST can override this for custom setups.
     let state_code_lower = cfg.state_code.to_lowercase();
-    let (adj_pkl, _effective_resolution) = resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
+    let adj_pkl = if let Some(ref override_path) = cfg.adjacency_override {
+        override_path.clone()
+    } else {
+        let (path, _effective_resolution) = resolve_adjacency_path(&state_code_lower, &cfg.year, &cfg.resolution)?;
+        path
+    };
 
     let graph = load_adjacency_pkl(&adj_pkl)
         .map_err(|e| format!("adjacency load failed: {e}"))?;
@@ -590,6 +598,7 @@ mod tests {
             resolution: "tract".to_string(),
             seats_per_district: 1,
             total_seats: 1,
+            adjacency_override: None,
         }
     }
 

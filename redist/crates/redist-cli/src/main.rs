@@ -18,12 +18,31 @@ fn main() {
         // ── redist state: single state ────────────────────────────────────────
         Commands::State(args) => {
             let state_code = args.state.to_uppercase();
-            let all = load_all_states(&args.year.to_string())
-                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
-            let (_, state_name, num_districts) = all.iter()
-                .find(|(code, _, _)| code == &state_code)
-                .cloned()
-                .unwrap_or_else(|| { eprintln!("ERROR: unknown state '{state_code}'"); std::process::exit(1); });
+
+            // International path: --adjacency bypasses manifest lookup entirely.
+            // Requires --districts to be explicit (no manifest to fall back on).
+            let (state_name, num_districts) = if let Some(ref _adj_path) = args.adjacency {
+                let name = args.state_name.clone()
+                    .unwrap_or_else(|| state_code.to_lowercase());
+                let districts = args.districts.unwrap_or_else(|| {
+                    eprintln!("ERROR: --adjacency requires --districts (no manifest to look up district count)");
+                    std::process::exit(1);
+                });
+                (name, districts)
+            } else {
+                // US path: look up from manifest
+                let all = load_all_states(&args.year.to_string())
+                    .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                let (_, sname, ndist) = all.iter()
+                    .find(|(code, _, _)| code == &state_code)
+                    .cloned()
+                    .unwrap_or_else(|| {
+                        eprintln!("ERROR: unknown state '{state_code}'. \
+                            For international states, use --adjacency <path> --districts <n>.");
+                        std::process::exit(1);
+                    });
+                (sname, ndist)
+            };
 
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
@@ -37,16 +56,20 @@ fn main() {
                 );
             }
 
-            let effective_num_districts = args.districts.unwrap_or_else(|| {
-                chamber_district_count(&state_code, &args.chamber, num_districts)
-            });
+            let effective_num_districts = if args.adjacency.is_some() {
+                num_districts // already resolved above
+            } else {
+                args.districts.unwrap_or_else(|| {
+                    chamber_district_count(&state_code, &args.chamber, num_districts)
+                })
+            };
             let total_seats = args.total_seats.unwrap_or(
                 args.seats_per_district * effective_num_districts
             );
             let results = run_states_parallel(vec![StateConfig {
                 state_code: state_code.clone(),
                 state_name,
-                num_districts,
+                num_districts: effective_num_districts,
                 year: args.year.to_string(),
                 version: args.version.clone(),
                 output_dir,
@@ -69,6 +92,7 @@ fn main() {
                 resolution: args.resolution.to_string(),
                 seats_per_district: args.seats_per_district,
                 total_seats,
+                adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
             }], 1);
             for r in &results {
                 if !r.success {
@@ -109,6 +133,7 @@ fn main() {
                     resolution: "tract".into(),
                     seats_per_district: 1,
                     total_seats: districts,
+                    adjacency_override: None,
                 })
                 .collect();
 
@@ -158,6 +183,7 @@ fn main() {
                         resolution: "tract".into(),
                         seats_per_district: 1,
                         total_seats: districts,
+                        adjacency_override: None,
                     })
                     .collect();
 
