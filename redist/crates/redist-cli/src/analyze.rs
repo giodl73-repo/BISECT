@@ -430,3 +430,37 @@ fn resolve_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use redist_analysis::AnalyzerType;
+
+    #[test]
+    fn test_resolve_types_all_expands_to_concrete() {
+        let types = resolve_types(&[AnalyzerType::All]);
+        // All must expand to at least Demographic, Political, Urban, Summary
+        assert!(types.contains(&AnalyzerType::Demographic));
+        assert!(types.contains(&AnalyzerType::Political));
+        assert!(types.contains(&AnalyzerType::Urban));
+        assert!(types.contains(&AnalyzerType::Summary));
+        // All must NOT be in the expanded list
+        assert!(!types.contains(&AnalyzerType::All));
+    }
+
+    #[test]
+    fn test_resolve_types_explicit_subset() {
+        let types = resolve_types(&[AnalyzerType::Demographic, AnalyzerType::Political]);
+        assert_eq!(types.len(), 2);
+        assert!(types.contains(&AnalyzerType::Demographic));
+        assert!(types.contains(&AnalyzerType::Political));
+        assert!(!types.contains(&AnalyzerType::Urban));
+    }
+
+    #[test]
+    fn test_resolve_types_empty_input() {
+        let types = resolve_types(&[]);
+        // Empty input should return empty (not All)
+        assert!(types.is_empty(), "empty input should return empty types, got {types:?}");
+    }
+}
+

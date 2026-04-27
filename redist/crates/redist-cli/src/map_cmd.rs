@@ -374,6 +374,48 @@ fn render_choropleth_map(
 }
 
 
+// ── Tests ─────────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::args::MapType;
+
+    #[test]
+    fn test_resolve_map_types_all_expands() {
+        let types = resolve_map_types(&[MapType::All]);
+        assert!(types.contains(&MapType::Districts));
+        assert!(types.contains(&MapType::Political));
+        assert!(types.contains(&MapType::Demographic));
+        assert!(!types.contains(&MapType::All));
+    }
+
+    #[test]
+    fn test_resolve_map_types_explicit() {
+        let types = resolve_map_types(&[MapType::Districts, MapType::Compactness]);
+        assert_eq!(types.len(), 2);
+        assert!(types.contains(&MapType::Districts));
+        assert!(types.contains(&MapType::Compactness));
+    }
+
+    #[test]
+    fn test_canvas_size_from_dpi_150_landscape() {
+        use redist_map::canvas_size_from_dpi;
+        let (w, h) = canvas_size_from_dpi(150, 8.0, 1.5);
+        assert_eq!(w, 1200);
+        assert_eq!(h, 800);
+    }
+
+    #[test]
+    fn test_canvas_size_from_dpi_300_portrait() {
+        use redist_map::canvas_size_from_dpi;
+        let (w, h) = canvas_size_from_dpi(300, 8.0, 0.75);
+        // Portrait: height is long edge
+        assert_eq!(h, 2400);
+        assert_eq!(w, 1800);
+    }
+}
+
 // ── National map ──────────────────────────────────────────────────────────────
 
 fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {

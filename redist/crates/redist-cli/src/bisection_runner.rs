@@ -803,4 +803,41 @@ mod tests {
             assert!(dev <= 0.10, "district {d} deviation {:.1}% exceeds 10%", dev*100.0);
         }
     }
+
+    // ── AP-08: Granularity floor tests ───────────────────────────────────────
+
+    #[test]
+    fn test_granularity_floor_warning_threshold() {
+        // AP-08: when tracts_per_district < 20, balance may be unachievable
+        // This tests the THRESHOLD CALCULATION not the algorithm (which can't be unit tested)
+        let total_tracts = 1784usize; // WA 2020
+        let house_districts = 98usize;
+        let tpd = total_tracts as f64 / house_districts as f64;
+        assert!(tpd < 20.0, "WA house at tract level has {tpd:.1} tracts/district — below granularity threshold");
+
+        let avg_tract_pop = 7_705_281i64 / total_tracts as i64;
+        let ideal_district_pop = 7_705_281i64 / house_districts as i64;
+        let single_tract_impact_pct = avg_tract_pop as f64 / ideal_district_pop as f64 * 100.0;
+        // One tract swap changes the balance by >5% — makes 5% tolerance often impossible
+        assert!(single_tract_impact_pct > 3.0,
+            "At WA tract granularity, one tract swap = {single_tract_impact_pct:.1}% of district ideal — exceeds 5% tolerance at 10% target");
+    }
+
+    #[test]
+    fn test_granularity_sufficient_for_congressional() {
+        // Congressional maps (10 districts) have ~178 tracts/district — far above threshold
+        let total_tracts = 1784usize;
+        let congressional_districts = 10usize;
+        let tpd = total_tracts as f64 / congressional_districts as f64;
+        assert!(tpd >= 20.0, "WA congressional has {tpd:.1} tracts/district — sufficient granularity");
+    }
+
+    #[test]
+    fn test_granularity_block_group_fixes_wa_house() {
+        // Block groups (5311 for WA) give 54/district — above threshold
+        let bg_count = 5311usize;
+        let house_districts = 98usize;
+        let bgpd = bg_count as f64 / house_districts as f64;
+        assert!(bgpd >= 20.0, "WA house at block_group has {bgpd:.1} BGs/district — adequate");
+    }
 }

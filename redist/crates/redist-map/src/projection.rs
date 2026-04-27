@@ -263,4 +263,48 @@ mod tests {
         let (x2, _) = proj.project(-80.0, 37.0);
         assert!(x2 > x1, "more east = higher x: x1={x1} x2={x2}");
     }
+
+    #[test]
+    fn test_inset_anchorage_is_in_alaska_inset() {
+        let proj = InsetProjection::us_national(1200, 800);
+        let (x, y) = proj.project(-149.9, 61.2); // Anchorage
+        // Alaska inset is bottom-left: y > 600px (below continental area)
+        assert!(y > 580.0, "Anchorage must be in bottom AK inset, y={y}");
+        // And left portion of canvas
+        assert!(x < 400.0, "Anchorage must be in left portion, x={x}");
+    }
+
+    #[test]
+    fn test_inset_honolulu_is_in_hawaii_inset() {
+        let proj = InsetProjection::us_national(1200, 800);
+        let (x, y) = proj.project(-157.8, 21.3); // Honolulu
+        // Hawaii inset is bottom strip, right of AK
+        assert!(y > 580.0, "Honolulu must be in bottom strip, y={y}");
+    }
+
+    #[test]
+    fn test_inset_seattle_is_in_continental() {
+        let proj = InsetProjection::us_national(1200, 800);
+        let (x, y) = proj.project(-122.3, 47.6); // Seattle
+        // Continental area is top 75% of canvas (0 to 600px for 800px canvas)
+        assert!(y < 600.0, "Seattle must be in continental area, y={y}");
+        assert!(x > 0.0 && x < 1200.0, "Seattle x must be in canvas, x={x}");
+    }
+
+    #[test]
+    fn test_inset_miami_is_in_continental() {
+        let proj = InsetProjection::us_national(1200, 800);
+        let (x, y) = proj.project(-80.2, 25.8); // Miami
+        assert!(y < 600.0, "Miami must be in continental area, y={y}");
+        // Miami is east — should be right side of canvas
+        let (x_seattle, _) = proj.project(-122.3, 47.6);
+        assert!(x > x_seattle, "Miami must be east of Seattle on map");
+    }
+
+    #[test]
+    fn test_inset_canvas_size() {
+        let proj = InsetProjection::us_national(1200, 800);
+        assert_eq!(proj.canvas_w(), 1200);
+        assert_eq!(proj.canvas_h(), 800);
+    }
 }

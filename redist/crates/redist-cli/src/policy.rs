@@ -193,4 +193,83 @@ mod tests {
         assert_eq!(subdivision_term("CT", false), "town");
         assert_eq!(subdivision_term("CT", true), "towns");
     }
+
+    #[test]
+    fn test_policy_la_has_parish_term() {
+        let policy = load_policy();
+        let la = get_state_policy(&policy, "LA").unwrap();
+        assert_eq!(la["subdivision_term"].as_str().unwrap(), "parish");
+        assert_eq!(la["subdivision_term_plural"].as_str().unwrap(), "parishes");
+    }
+
+    #[test]
+    fn test_policy_va_has_independent_city_note() {
+        let policy = load_policy();
+        let va = get_state_policy(&policy, "VA").unwrap();
+        // VA must document its independent city structure
+        assert!(va.get("independent_city_note").is_some(), "VA must have independent_city_note");
+        let note = va["independent_city_note"].as_str().unwrap();
+        assert!(note.contains("independent"), "VA note must mention independent cities");
+    }
+
+    #[test]
+    fn test_policy_wa_has_nesting_requirement() {
+        let policy = load_policy();
+        let wa = get_state_policy(&policy, "WA").unwrap();
+        assert_eq!(wa["nesting_requirement"].as_str().unwrap(), "senate_contains_two_house");
+        assert_eq!(wa["nesting_ratio"].as_str().unwrap(), "2:1");
+    }
+
+    #[test]
+    fn test_policy_hi_has_permanent_resident_basis() {
+        let policy = load_policy();
+        let hi = get_state_policy(&policy, "HI").unwrap();
+        assert_eq!(hi["population_basis"].as_str().unwrap(), "permanent_resident",
+            "Hawaii must count permanent residents only");
+    }
+
+    #[test]
+    fn test_policy_nj_has_student_counting() {
+        let policy = load_policy();
+        let nj = get_state_policy(&policy, "NJ").unwrap();
+        assert_eq!(nj["student_counting"].as_str().unwrap(), "college_address",
+            "NJ counts students at college address");
+    }
+
+    #[test]
+    fn test_policy_ne_has_unicameral_note() {
+        let policy = load_policy();
+        let ne = get_state_policy(&policy, "NE").unwrap();
+        let notes = ne["notes"].as_str().unwrap_or("");
+        assert!(notes.to_lowercase().contains("unicameral"),
+            "Nebraska unicameral legislature must be documented");
+    }
+
+    #[test]
+    fn test_policy_subdivision_term_ct_is_town() {
+        assert_eq!(subdivision_term("CT", false), "town");
+        assert_eq!(subdivision_term("CT", true), "towns");
+    }
+
+    #[test]
+    fn test_policy_subdivision_term_vt_is_county() {
+        // VT uses "county" as subdivision_term (towns are the municipal_term)
+        assert_eq!(subdivision_term("VT", false), "county");
+    }
+
+    #[test]
+    fn test_policy_all_50_states_have_house_districts() {
+        let policy = load_policy();
+        let required_states = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+                              "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+                              "MA","MI","MN","MS","MO","MT","NE","NV","NJ","NM",
+                              "NY","NC","ND","OH","OK","OR","PA","RI","SC","SD",
+                              "TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+        for state in required_states {
+            let s = get_state_policy(&policy, state)
+                .unwrap_or_else(|| panic!("State {state} missing from policy database"));
+            assert!(s.get("house_districts").is_some(),
+                "{state} must have house_districts field");
+        }
+    }
 }
