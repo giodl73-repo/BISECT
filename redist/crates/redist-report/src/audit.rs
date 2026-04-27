@@ -301,4 +301,69 @@ mod tests {
             "verification command must contain external script SHA-256 hash"
         );
     }
+
+    #[test]
+    fn test_verification_command_tiger_sha256_none_is_descriptive() {
+        // When tiger_sha256 is None, the verification command must NOT say "null".
+        // It must say something actionable about downloading the file manually.
+        let cmd = generate_verification_command(
+            "vt_congressional_2020",
+            "VT",
+            "2020",
+            Some(42),
+            "congressional",
+            1,
+            "vt_adjacency_2020.adj.bin",
+            &"a".repeat(64),
+            "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_50_tract.zip",
+            None, // no tiger sha256
+            &[],
+        );
+        assert!(!cmd.contains("null"), "verification command must not contain raw 'null': {cmd}");
+        assert!(
+            cmd.contains("Download") || cmd.contains("download"),
+            "must tell user to download TIGER file: {cmd}"
+        );
+    }
+
+    #[test]
+    fn test_audit_report_tiger_sha256_none_shows_descriptive_string() {
+        // Scenario 36: In the assembled report audit section, tiger_sha256: None
+        // must produce a descriptive placeholder, not a raw JSON null.
+        use crate::report::{assemble_report, ReportContext, REQUIRED_ANALYSIS_FILES};
+        use crate::manifest::PlanManifest;
+        use tempfile::TempDir;
+
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plans").join("vt_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        for name in REQUIRED_ANALYSIS_FILES {
+            std::fs::write(analysis_dir.join(name),
+                serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap()).unwrap();
+        }
+        let manifest = PlanManifest {
+            label: "vt_test".into(),
+            state_code: "VT".into(),
+            year: "2020".into(),
+            tiger_sha256: None, // <-- the case we're testing
+            ..Default::default()
+        };
+        let ctx = ReportContext::new(plan_dir, manifest);
+        let report = assemble_report(&ctx).unwrap();
+        let audit_tiger = &report.sections.audit["tiger_sha256"];
+        assert!(
+            audit_tiger.is_string(),
+            "tiger_sha256 in audit must be a String, not null: {:?}", audit_tiger
+        );
+        let s = audit_tiger.as_str().unwrap();
+        assert!(
+            !s.is_empty() && s != "null",
+            "tiger_sha256 audit string must be descriptive, got: {s}"
+        );
+        assert!(
+            s.contains("not recorded") || s.contains("download") || s.contains("compute"),
+            "tiger_sha256 audit string must explain what to do: {s}"
+        );
+    }
 }

@@ -165,9 +165,7 @@
   <div class="meta-item"><span class="meta-label">Adjacency File:</span> {{ audit.adjacency_file | default(value="N/A") }}</div>
   <div class="meta-item"><span class="meta-label">Adjacency SHA-256:</span> <code>{{ audit.adjacency_sha256 | default(value="(not computed)") }}</code></div>
   <div class="meta-item"><span class="meta-label">TIGER Source URL:</span> {{ audit.tiger_source_url | default(value="N/A") }}</div>
-  {% if audit.tiger_sha256 and audit.tiger_sha256 != "" %}
-  <div class="meta-item"><span class="meta-label">TIGER SHA-256:</span> <code>{{ audit.tiger_sha256 }}</code></div>
-  {% endif %}
+  <div class="meta-item"><span class="meta-label">TIGER SHA-256:</span> <code>{{ audit.tiger_sha256 | default(value="(not recorded)") }}</code></div>
   <div class="meta-item"><span class="meta-label">Seed:</span> {{ audit.seed | default(value="N/A") }}</div>
   <div class="meta-item"><span class="meta-label">Created At:</span> {{ audit.created_at | default(value="N/A") }}</div>
 </div>

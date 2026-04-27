@@ -185,9 +185,9 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
         "binary_download_url": m.binary_download_url,
         "binary_sha256": m.binary_sha256,
         "adjacency_file": m.adjacency_file,
-        "adjacency_sha256": m.adjacency_sha256,
+        "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
         "tiger_source_url": m.tiger_source_url,
-        "tiger_sha256": m.tiger_sha256,
+        "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
         "created_at": m.created_at,
         "seed": m.seed,
     });
