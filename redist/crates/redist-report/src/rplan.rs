@@ -183,7 +183,45 @@ pub fn validate_rplan(rplan: &RplanFile) -> Result<ValidationResult, RplanError>
         }
     }
 
-    // 4. GeoJSON geometry check (if present)
+    // 4. Semantic completeness checks (distinct from format checks)
+    if meta.num_districts > 0 && !rplan.assignments.is_empty() {
+        let assigned_districts: std::collections::HashSet<usize> =
+            rplan.assignments.values().copied().collect();
+        let max_assigned = assigned_districts.iter().copied().max().unwrap_or(0);
+
+        // 4a. max district ID must match num_districts
+        if max_assigned != meta.num_districts {
+            let msg = format!(
+                "num_districts is {} but assignments use districts 1..{} — \
+                 max assigned district must equal num_districts",
+                meta.num_districts, max_assigned
+            );
+            if max_assigned > meta.num_districts {
+                errors.push(msg);
+            } else {
+                // max < num_districts: could be unused trailing districts
+                warnings.push(format!(
+                    "{} — some districts may be empty (unused)",
+                    msg
+                ));
+            }
+        }
+
+        // 4b. All districts 1..=num_districts must be used at least once
+        let missing: Vec<usize> = (1..=meta.num_districts)
+            .filter(|d| !assigned_districts.contains(d))
+            .collect();
+        if !missing.is_empty() {
+            let missing_str: Vec<String> = missing.iter().map(|d| d.to_string()).collect();
+            warnings.push(format!(
+                "districts {} have no assigned tracts — every district must contain \
+                 at least one tract for a valid redistricting plan",
+                missing_str.join(", ")
+            ));
+        }
+    }
+
+    // 5. GeoJSON geometry check (if present)
     if let Some(geom) = &rplan.geometry {
         if geom["type"].as_str() != Some("FeatureCollection") {
             errors.push(format!(
@@ -466,5 +504,99 @@ mod tests {
         write_rplan(&path, &metadata, &assignments, None).unwrap();
         let content = std::fs::read_to_string(&path).unwrap();
         assert!(validate_rplan_str(&content).is_ok());
+    }
+
+    // ── Semantic validation (scenario 43) ────────────────────────────────────
+
+    fn make_rplan_with_assignments(num_districts: usize, assignments: &[(&str, usize)]) -> RplanFile {
+        let mut map = std::collections::HashMap::new();
+        for &(geoid, d) in assignments {
+            map.insert(geoid.to_string(), d);
+        }
+        RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "test".into(),
+                state_fips: "53".into(),
+                state_code: "WA".into(),
+                year: "2020".into(),
+                chamber: "congressional".into(),
+                num_districts,
+                population_source: "total".into(),
+                balance_tolerance_pct: 0.5,
+                created_at: "2026-04-26T00:00:00Z".into(),
+                created_by: "test".into(),
+                ..Default::default()
+            },
+            assignments: map,
+            geometry: None,
+        }
+    }
+
+    #[test]
+    fn test_semantic_all_districts_used_passes() {
+        // 3 districts, 3 tracts each assigned to distinct district
+        let rplan = make_rplan_with_assignments(3, &[
+            ("53001000100", 1), ("53001000200", 2), ("53001000300", 3),
+        ]);
+        let result = validate_rplan(&rplan);
+        assert!(result.is_ok(), "all districts used must pass: {:?}", result);
+    }
+
+    #[test]
+    fn test_semantic_missing_district_warns() {
+        // num_districts=3 but only districts 1 and 2 assigned (3 is empty)
+        let rplan = make_rplan_with_assignments(3, &[
+            ("53001000100", 1), ("53001000200", 2),
+        ]);
+        let result = validate_rplan(&rplan);
+        // Should pass (warnings only) or warn about missing district 3
+        match result {
+            Ok(vr) => {
+                assert!(
+                    !vr.warnings.is_empty(),
+                    "missing district 3 must produce a warning"
+                );
+                let warnings_text = vr.warnings.join(" ");
+                assert!(
+                    warnings_text.contains("3") || warnings_text.contains("district"),
+                    "warning must mention the missing district: {warnings_text}"
+                );
+            }
+            Err(e) => {
+                // Also acceptable to fail with an error
+                let _ = e;
+            }
+        }
+    }
+
+    #[test]
+    fn test_semantic_max_district_exceeds_num_districts_fails() {
+        // num_districts=2 but assignment uses district 5
+        let rplan = make_rplan_with_assignments(2, &[
+            ("53001000100", 1), ("53001000200", 5),
+        ]);
+        let result = validate_rplan(&rplan);
+        assert!(result.is_err(), "max_assigned > num_districts must fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(
+            msg.contains("num_districts") || msg.contains("range") || msg.contains("district"),
+            "error must explain the district range problem: {msg}"
+        );
+    }
+
+    #[test]
+    fn test_semantic_max_district_less_than_num_districts_warns() {
+        // num_districts=5 but max assigned is 3 (districts 4 and 5 empty)
+        let rplan = make_rplan_with_assignments(5, &[
+            ("53001000100", 1), ("53001000200", 2), ("53001000300", 3),
+        ]);
+        let result = validate_rplan(&rplan);
+        match result {
+            Ok(vr) => {
+                assert!(!vr.warnings.is_empty(), "unused trailing districts must warn");
+            }
+            Err(_) => {} // error is also acceptable
+        }
     }
 }
