@@ -22,6 +22,8 @@ pub struct CountySplitResult {
     pub legal_standard: Option<String>,
     pub compliance_assessment: Option<String>,
     pub disclaimer: Option<String>,
+    /// State-specific note about entity count (e.g., VA's 133 = 95 counties + 38 cities)
+    pub entity_note: Option<String>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -144,6 +146,17 @@ pub fn analyze_county_splits_with_state(
             .replace("{m}", &split.to_string())
     });
 
+    // State-specific entity note (prominently surface VA's 133-entity count so
+    // practitioners don't mistakenly expect only 95 counties)
+    let entity_note = state_code.and_then(|sc| match sc {
+        "VA" => Some(format!(
+            "Virginia has 133 total preservation entities: 95 counties + 38 independent cities. \
+             Both appear in this split analysis. Total found in this plan: {}.",
+            total
+        )),
+        _ => None,
+    });
+
     CountySplitResult {
         total,
         split,
@@ -152,6 +165,7 @@ pub fn analyze_county_splits_with_state(
         legal_standard,
         compliance_assessment,
         disclaimer,
+        entity_note,
     }
 }
 

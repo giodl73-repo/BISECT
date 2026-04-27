@@ -88,8 +88,9 @@ pub fn generate_verification_command(
     };
 
     let adj_check = format!(
-        "\n# Verify adjacency file:\n# sha256sum {}  # expected: {}",
-        adjacency_file, adjacency_sha256
+        "\n# Verify adjacency file:\n# sha256sum {}  # expected: {}\
+        \n# If not present locally: redist fetch --type adjacency --states {} --year {}",
+        adjacency_file, adjacency_sha256, state_code, year
     );
 
     let external_checks: String = external_analyzers
