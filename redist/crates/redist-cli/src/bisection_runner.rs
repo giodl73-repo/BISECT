@@ -132,6 +132,12 @@ pub fn split_subgraph(
     let ufactor_int = ((ufactor - 1.0) * 1000.0).round() as u32;
     let ufactor_int = ufactor_int.clamp(1, 1000);
 
+    // SAFETY: Rust's std::process::Command::arg() passes arguments directly to the
+    // OS API (CreateProcess on Windows, execvp on Unix) without shell interpretation.
+    // This means individual .arg() calls handle quoting and spaces automatically —
+    // NO manual quoting is needed. Paths with spaces are safe when passed as PathBuf
+    // or OsStr via .arg(path). Only format!("{}", path.display()) inserted into a
+    // shell string would be unsafe; we avoid that pattern here.
     let mut cmd = Command::new(&gpmetis);
     cmd.args([
         "-contig",
@@ -140,12 +146,17 @@ pub fn split_subgraph(
         &format!("-ufactor={ufactor_int}"),
     ]);
     if let Some(ref tpwgts) = tpwgts_file {
-        cmd.arg(format!("-tpwgt={}", tpwgts.display()));
+        // Pass -tpwgt= by building the flag string and the path separately via OsString
+        // so that spaces in the temp dir path are handled correctly by the OS API.
+        let mut flag = std::ffi::OsString::from("-tpwgt=");
+        flag.push(tpwgts.as_os_str());
+        cmd.arg(flag);
     }
     if let Some(s) = seed {
         cmd.arg(format!("-seed={s}"));
     }
-    cmd.args([graph_file.to_str().unwrap(), "2"]);
+    // Pass graph file path via .arg(PathBuf) — OS API handles spaces automatically.
+    cmd.arg(&graph_file).arg("2");
     cmd.current_dir(tmp_dir.path());
 
     let out = cmd.output().map_err(|e| format!("gpmetis exec error: {e}"))?;
@@ -226,16 +237,23 @@ pub fn run_nway_partition(
     }
     std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
 
+    // SAFETY: See comment in split_subgraph — .arg(PathBuf) is safe for paths with
+    // spaces; format!("{}", path.display()) in a shell string would NOT be.
     let mut cmd = Command::new(&gpmetis);
     cmd.args([
         "-contig",
         "-minconn",
         &format!("-niter={niter}"),
         &format!("-ufactor={ufactor:.4}"),
-        &format!("-tpwgt={}", tpwgts_file.display()),
     ]);
+    {
+        let mut flag = std::ffi::OsString::from("-tpwgt=");
+        flag.push(tpwgts_file.as_os_str());
+        cmd.arg(flag);
+    }
     if let Some(s) = seed { cmd.arg(format!("-seed={s}")); }
-    cmd.args([graph_file.to_str().unwrap(), &num_districts.to_string()]);
+    // Pass graph file via .arg(PathBuf) and num_districts as a string arg.
+    cmd.arg(&graph_file).arg(num_districts.to_string());
     cmd.current_dir(tmp_dir.path());
 
     let out = cmd.output().map_err(|e| format!("gpmetis exec error: {e}"))?;
@@ -848,6 +866,35 @@ mod tests {
         let house_districts = 98usize;
         let bgpd = bg_count as f64 / house_districts as f64;
         assert!(bgpd >= 20.0, "WA house at block_group has {bgpd:.1} BGs/district — adequate");
+    }
+
+    /// Task 112: Windows path quoting invariant.
+    /// Documents that Command::arg(PathBuf) handles paths with spaces correctly via
+    /// the OS API — no manual quoting is needed or should be applied.
+    #[test]
+    fn test_path_arg_does_not_need_manual_quoting() {
+        use std::ffi::OsString;
+        // Simulate building the -tpwgt= flag as done in split_subgraph/run_nway_partition.
+        // A path with spaces: "/tmp/my dir with spaces/tpwgts.txt"
+        let spaced_path = std::path::PathBuf::from("/tmp/my dir with spaces/tpwgts.txt");
+
+        // The correct pattern: OsString concatenation, passed as a single .arg()
+        let mut flag = OsString::from("-tpwgt=");
+        flag.push(spaced_path.as_os_str());
+
+        // The flag should contain the path verbatim (with spaces) — no manual quoting
+        let flag_str = flag.to_string_lossy();
+        assert!(flag_str.contains(" "), "spaces are preserved in OsString — OS API handles quoting");
+        assert!(flag_str.starts_with("-tpwgt="), "flag prefix preserved");
+        assert!(!flag_str.contains('"'), "no manual quoting added — OS API handles this");
+
+        // Contrast: format!() with .display() would produce the same string,
+        // but would be passed through the shell if used with Command::new("sh").arg("-c", ...)
+        // When using Command::arg() directly, the OS API receives the raw arg — safe either way.
+        // The important invariant: do NOT concatenate paths into shell strings.
+        let display_str = format!("-tpwgt={}", spaced_path.display());
+        assert_eq!(flag_str, display_str.as_str(),
+            "OsString flag matches display()-based string for non-Unicode paths");
     }
 
     /// Scenario 23: Rayon seed determinism — sort split_results by path before insert.

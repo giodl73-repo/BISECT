@@ -564,6 +564,10 @@ pub struct CompareArgs {
     /// Output directory override
     #[arg(long)]
     pub output_dir: Option<std::path::PathBuf>,
+
+    /// Suppress cross-year comparison warning (for intentional cycle-over-cycle comparisons)
+    #[arg(long)]
+    pub allow_cross_year: bool,
 }
 
 // ---------------------------------------------------------------------------

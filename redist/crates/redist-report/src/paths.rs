@@ -55,10 +55,10 @@ pub fn check_plan_collision(plan_dir: &Path, force: bool) -> anyhow::Result<()> 
             .unwrap_or_else(|| plan_dir.display().to_string());
 
         anyhow::bail!(
-            "ERROR: Plan '{}' already exists (created {}). \
-             Use --force to overwrite or choose a different --label.",
+            "ERROR: plan '{}' already exists at: {}\n\
+             Use --force to overwrite, or choose a different --label.",
             label,
-            created_at,
+            plan_dir.display(),
         );
     }
     Ok(())
@@ -115,8 +115,12 @@ mod tests {
         let result = check_plan_collision(&plan_dir, false);
         assert!(result.is_err());
         let msg = result.unwrap_err().to_string();
-        assert!(msg.contains("already exists"));
-        assert!(msg.contains("2026-04-26"), "Error must include existing plan timestamp");
+        assert!(msg.contains("already exists"), "Error must say 'already exists'");
+        assert!(msg.contains("washington_house_2020"), "Error must include plan label");
+        // Task 115: error must include the full plan directory path
+        let plan_dir_str = plan_dir.to_string_lossy();
+        assert!(msg.contains(plan_dir_str.as_ref()),
+            "Error must include the full plan directory path '{}', got: {}", plan_dir_str, msg);
         assert!(msg.contains("--force"), "Error must mention --force option");
     }
 

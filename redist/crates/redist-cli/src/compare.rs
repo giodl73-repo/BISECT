@@ -120,7 +120,12 @@ fn load_plan_assignments(
 }
 
 /// Read the `year` field from a plan's manifest.json (for cross-year comparison guard).
-/// Returns None if the manifest is absent or the year field is missing.
+///
+/// When `label` ends with `.rplan`, reads `rplan["metadata"]["year"]` directly
+/// from the RPLAN file instead of looking for manifest.json — because .rplan files
+/// have no accompanying manifest.
+///
+/// Returns None if the manifest/rplan is absent or the year field is missing.
 fn read_plan_year(
     label: &str,
     output_base: &str,
@@ -128,6 +133,13 @@ fn read_plan_year(
     year: &str,
     output_dir_override: Option<&PathBuf>,
 ) -> Option<String> {
+    // .rplan path: year lives in rplan["metadata"]["year"]
+    if label.ends_with(".rplan") {
+        let content = std::fs::read_to_string(label).ok()?;
+        let v: serde_json::Value = serde_json::from_str(&content).ok()?;
+        return v["metadata"]["year"].as_str().map(String::from);
+    }
+
     let base = if let Some(od) = output_dir_override {
         od.clone()
     } else {
@@ -176,7 +188,7 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
 
     // Cross-year comparison guard: warn if plans are from different census years
     // (Jaccard similarity is meaningless across years — different tract GEOIDs)
-    {
+    if !args.allow_cross_year {
         let year_a = read_plan_year(&args.plan_a, &args.output_base, version, &args.year, args.output_dir.as_ref());
         let year_b = args.plan_b.as_deref()
             .and_then(|b| read_plan_year(b, &args.output_base, version, &args.year, args.output_dir.as_ref()));
@@ -184,9 +196,11 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
             if ya != yb {
                 eprintln!(
                     "WARNING: Plans are from different census years ({ya} vs {yb}). \
-                     Jaccard similarity compares tract GEOIDs directly — across census years, \
+                     Jaccard similarity compares tract GEOIDs directly -- across census years, \
                      the same geographic area has different GEOIDs and similarity will be \
-                     artificially low. Compare only plans within the same census year."
+                     artificially low. Compare only plans within the same census year. \
+                     Pass --allow-cross-year to suppress this warning for intentional \
+                     cross-cycle comparisons."
                 );
             }
         }
@@ -279,6 +293,99 @@ mod tests {
         let args = parse_compare_args(&["--plan-a", "plan1", "--enacted"]).unwrap();
         assert!(args.enacted);
         assert!(args.plan_b.is_none());
+    }
+
+    /// Task 113: read_plan_year from .rplan file
+    /// When the label is a .rplan path, year is read from metadata.year (not manifest.json).
+    #[test]
+    fn test_read_plan_year_from_rplan_file() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let rplan_path = tmp.path().join("test_plan.rplan");
+
+        let rplan_json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {
+                "label": "wa_test",
+                "state_fips": "53",
+                "state_code": "WA",
+                "year": "2010",
+                "chamber": "congressional",
+                "num_districts": 9,
+                "population_source": "total",
+                "balance_tolerance_pct": 0.5,
+                "created_at": "2026-04-26T00:00:00Z",
+                "created_by": "test"
+            },
+            "assignments": {"53001000100": 1},
+            "geometry": null
+        });
+        std::fs::write(&rplan_path, rplan_json.to_string()).unwrap();
+
+        let path_str = rplan_path.to_str().unwrap();
+        let year = read_plan_year(path_str, "outputs", "v1", "2020", None);
+        assert_eq!(year, Some("2010".to_string()),
+            "should read year 2010 from .rplan metadata, not manifest.json");
+    }
+
+    /// Task 113: cross-year warning fires when comparing .rplan files with different years.
+    /// Tests the year-reading logic directly (no actual plan comparison needed).
+    #[test]
+    fn test_cross_year_warning_fires_for_rplan() {
+        let tmp = tempfile::TempDir::new().unwrap();
+
+        let make_rplan = |year: &str, path: &std::path::Path| {
+            let json = serde_json::json!({
+                "rplan_version": "0.1",
+                "metadata": {
+                    "label": "test",
+                    "state_fips": "00",
+                    "state_code": "XX",
+                    "year": year,
+                    "chamber": "congressional",
+                    "num_districts": 1,
+                    "population_source": "total",
+                    "balance_tolerance_pct": 0.5,
+                    "created_at": "2026-04-26T00:00:00Z",
+                    "created_by": "test"
+                },
+                "assignments": {},
+                "geometry": null
+            });
+            std::fs::write(path, json.to_string()).unwrap();
+        };
+
+        let plan_a_path = tmp.path().join("plan_2020.rplan");
+        let plan_b_path = tmp.path().join("plan_2010.rplan");
+        make_rplan("2020", &plan_a_path);
+        make_rplan("2010", &plan_b_path);
+
+        let year_a = read_plan_year(plan_a_path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        let year_b = read_plan_year(plan_b_path.to_str().unwrap(), "outputs", "v1", "2020", None);
+
+        assert_eq!(year_a, Some("2020".to_string()), "plan A year should be 2020");
+        assert_eq!(year_b, Some("2010".to_string()), "plan B year should be 2010");
+
+        // The warning condition: years differ
+        let should_warn = year_a.as_deref() != year_b.as_deref();
+        assert!(should_warn, "cross-year warning should fire when rplan years differ");
+    }
+
+    /// Task 116: --allow-cross-year flag parses correctly.
+    #[test]
+    fn test_allow_cross_year_flag_parsed() {
+        let args = parse_compare_args(&[
+            "--plan-a", "plan1",
+            "--plan-b", "plan2",
+            "--allow-cross-year",
+        ]).unwrap();
+        assert!(args.allow_cross_year, "--allow-cross-year flag should be true when provided");
+    }
+
+    /// Task 116: --allow-cross-year defaults to false.
+    #[test]
+    fn test_allow_cross_year_flag_defaults_false() {
+        let args = parse_compare_args(&["--plan-a", "plan1", "--plan-b", "plan2"]).unwrap();
+        assert!(!args.allow_cross_year, "--allow-cross-year should default to false");
     }
 
     /// Scenario 14: External .rplan compare

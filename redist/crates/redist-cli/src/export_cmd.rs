@@ -4,7 +4,7 @@
 /// based on --format flag.
 use std::path::PathBuf;
 use crate::args::{ExportArgs, ExportFormat};
-use redist_report::{RplanFile, export_geojson, export_gerrychain_v23, export_tracts_csv};
+use redist_report::{RplanFile, export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file};
 
 /// Run the export command.
 pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
@@ -43,19 +43,22 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
                 let geojson_str = export_geojson(&rplan)?;
                 let path = out_dir.join(format!("{}.geojson", args.label));
                 std::fs::write(&path, &geojson_str)?;
-                eprintln!("[OK] GeoJSON written: {}", path.display());
+                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
             }
             ExportFormat::GerryChain => {
                 let gc_str = export_gerrychain_v23(&rplan)?;
                 let path = out_dir.join(format!("{}_gerrychain.json", args.label));
                 std::fs::write(&path, &gc_str)?;
-                eprintln!("[OK] GerryChain v2.3 JSON written: {}", path.display());
+                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
             }
             ExportFormat::Csv => {
                 let csv_str = export_tracts_csv(&rplan)?;
                 let path = out_dir.join(format!("{}_tracts.csv", args.label));
                 std::fs::write(&path, &csv_str)?;
-                eprintln!("[OK] CSV written: {}", path.display());
+                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
             }
         }
     }
@@ -190,6 +193,24 @@ mod tests {
             output_base: "outputs".into(),
         };
         assert_eq!(args.format, vec![ExportFormat::GeoJson]);
+    }
+
+    /// Task 114: SHA-256 of export output files is 64-character lowercase hex.
+    #[test]
+    fn test_export_output_sha256_format() {
+        use redist_report::sha256_file;
+
+        let tmp = tempfile::TempDir::new().unwrap();
+        let file_path = tmp.path().join("test_output.geojson");
+        std::fs::write(&file_path, r#"{"type":"FeatureCollection","features":[]}"#).unwrap();
+
+        let sha = sha256_file(&file_path).expect("sha256_file should succeed");
+        assert_eq!(sha.len(), 64, "SHA-256 must be 64 hex characters, got: {}", sha);
+        assert!(
+            sha.chars().all(|c| c.is_ascii_hexdigit()),
+            "SHA-256 must be hex characters only, got: {}", sha
+        );
+        assert_eq!(sha, sha.to_lowercase(), "SHA-256 must be lowercase hex");
     }
 
     /// Scenario 15: warn_if_null_geometry triggers for a geometry-free plan.
