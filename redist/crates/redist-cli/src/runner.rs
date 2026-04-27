@@ -75,13 +75,14 @@ pub struct StateConfig {
 
 impl StateConfig {
     /// Returns the effective balance tolerance based on chamber type.
-    /// Congressional: ±0.5% (strict one-person-one-vote)
-    /// State legislative (house/senate/custom): ±5.0% (looser standard)
-    /// Explicit override always wins.
+    ///
+    /// Priority order:
+    /// 1. Explicit `--balance-tolerance` override (always wins)
+    /// 2. Chamber-specific value from state policy database
+    /// 3. Fallback: 0.5% congressional / 5% state legislative
     pub fn effective_balance_tolerance(&self) -> f64 {
-        self.balance_tolerance.unwrap_or_else(|| match self.chamber.as_str() {
-            "congressional" => 0.005,
-            _ => 0.05, // house, senate, custom — state legislative default
+        self.balance_tolerance.unwrap_or_else(|| {
+            chamber_balance_tolerance(&self.state_code, &self.chamber)
         })
     }
 
@@ -108,6 +109,35 @@ impl StateConfig {
     pub fn ideal_pop_per_seat(&self, total_pop: i64) -> f64 {
         let total_seats = self.total_seats.max(1);
         total_pop as f64 / total_seats as f64
+    }
+}
+
+/// Resolve balance tolerance for a given chamber from state policy.
+///
+/// Uses state_policy.json fields: `balance_tolerance_house_pct`, `balance_tolerance_senate_pct`,
+/// `balance_tolerance_congressional_pct`. Falls back to algorithm defaults (0.5% congressional,
+/// 5.0% state legislative) when the state is not in the policy or the field is missing.
+pub fn chamber_balance_tolerance(state_code: &str, chamber: &str) -> f64 {
+    let policy = crate::policy::load_policy();
+    if let Some(state) = crate::policy::get_state_policy(&policy, state_code) {
+        let key = match chamber {
+            "congressional" => "balance_tolerance_congressional_pct",
+            "house" | "lower" | "assembly" => "balance_tolerance_house_pct",
+            "senate" | "upper" => "balance_tolerance_senate_pct",
+            _ => "",
+        };
+        if !key.is_empty() {
+            if let Some(pct) = state.get(key).and_then(|v| v.as_f64()) {
+                if pct > 0.0 {
+                    return pct / 100.0; // policy stores in %, we use fraction
+                }
+            }
+        }
+    }
+    // Fallback: constitutional standard for one-person-one-vote
+    match chamber {
+        "congressional" => 0.005,
+        _ => 0.05,
     }
 }
 
@@ -858,6 +888,68 @@ mod tests {
         };
         // effective_seats_per_district uses .max(1) so 0 -> 1
         assert_eq!(cfg.effective_seats_per_district(), 1);
+    }
+
+    // ── Group: chamber_balance_tolerance ──────────────────────────────────────
+
+    #[test]
+    fn test_chamber_balance_tolerance_wa_house_is_5pct() {
+        // WA house_districts balance_tolerance_house_pct = 5.0%
+        let tol = chamber_balance_tolerance("WA", "house");
+        assert!((tol - 0.05).abs() < 1e-6, "WA house tolerance must be 5%, got {tol}");
+    }
+
+    #[test]
+    fn test_chamber_balance_tolerance_wa_congressional_is_half_pct() {
+        // WA balance_tolerance_congressional_pct = 0.5%
+        let tol = chamber_balance_tolerance("WA", "congressional");
+        assert!((tol - 0.005).abs() < 1e-6, "WA congressional tolerance must be 0.5%, got {tol}");
+    }
+
+    #[test]
+    fn test_chamber_balance_tolerance_nv_house_is_10pct() {
+        // NV allows 10% house tolerance (policy explicitly documents this)
+        let tol = chamber_balance_tolerance("NV", "house");
+        assert!((tol - 0.10).abs() < 1e-6, "NV house tolerance must be 10%, got {tol}");
+    }
+
+    #[test]
+    fn test_chamber_balance_tolerance_unknown_state_uses_default() {
+        let tol = chamber_balance_tolerance("ZZ", "house");
+        assert!((tol - 0.05).abs() < 1e-6, "unknown state must fall back to 5% default");
+    }
+
+    #[test]
+    fn test_chamber_balance_tolerance_unknown_chamber_uses_default() {
+        let tol = chamber_balance_tolerance("WA", "council");
+        assert!((tol - 0.05).abs() < 1e-6, "unknown chamber must fall back to 5% default");
+    }
+
+    #[test]
+    fn test_effective_balance_tolerance_uses_policy_when_no_override() {
+        // NV house has 10% tolerance in policy; without explicit override, must use 10%
+        let cfg = StateConfig {
+            state_code: "NV".into(),
+            chamber: "house".into(),
+            balance_tolerance: None, // no explicit override
+            ..make_config("VT")
+        };
+        let tol = cfg.effective_balance_tolerance();
+        assert!((tol - 0.10).abs() < 1e-6,
+            "NV house must use policy tolerance 10%, got {tol}");
+    }
+
+    #[test]
+    fn test_effective_balance_tolerance_explicit_override_wins() {
+        // Explicit --balance-tolerance 2 must override even if policy says 10%
+        let cfg = StateConfig {
+            state_code: "NV".into(),
+            chamber: "house".into(),
+            balance_tolerance: Some(0.02), // explicit 2% override
+            ..make_config("VT")
+        };
+        let tol = cfg.effective_balance_tolerance();
+        assert!((tol - 0.02).abs() < 1e-9, "explicit override must win, got {tol}");
     }
 
     // ── Group: chamber_district_count ─────────────────────────────────────────
