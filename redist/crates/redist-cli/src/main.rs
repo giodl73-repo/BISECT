@@ -1,7 +1,7 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
 use redist_cli::policy::run_policy;
-use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete};
+use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
 use redist_cli::aggregate::run_aggregate;
@@ -37,7 +37,9 @@ fn main() {
                 );
             }
 
-            let effective_num_districts = args.districts.unwrap_or(num_districts);
+            let effective_num_districts = args.districts.unwrap_or_else(|| {
+                chamber_district_count(&state_code, &args.chamber, num_districts)
+            });
             let total_seats = args.total_seats.unwrap_or(
                 args.seats_per_district * effective_num_districts
             );

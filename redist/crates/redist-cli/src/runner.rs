@@ -111,6 +111,39 @@ impl StateConfig {
     }
 }
 
+/// Resolve district count for a given chamber from state policy.
+///
+/// When `--chamber house` or `--chamber senate` is specified without `--districts`,
+/// this looks up `house_districts` or `senate_districts` from the embedded state
+/// policy database. Falls back to `congressional_fallback` (from the manifest) if
+/// the policy doesn't have the chamber or the state is unknown.
+///
+/// This ensures `redist state --state WA --chamber house` automatically uses 98
+/// districts without requiring the user to also pass `--districts 98`.
+pub fn chamber_district_count(
+    state_code: &str,
+    chamber: &str,
+    congressional_fallback: usize,
+) -> usize {
+    if chamber == "congressional" {
+        return congressional_fallback;
+    }
+    let policy = crate::policy::load_policy();
+    if let Some(state) = crate::policy::get_state_policy(&policy, state_code) {
+        let key = match chamber {
+            "house" | "lower" | "assembly" => "house_districts",
+            "senate" | "upper" => "senate_districts",
+            _ => return congressional_fallback,
+        };
+        if let Some(n) = state.get(key).and_then(|v| v.as_u64()) {
+            if n > 0 {
+                return n as usize;
+            }
+        }
+    }
+    congressional_fallback
+}
+
 /// Load all state codes, names, and district counts for a given year.
 /// Returns Vec<(state_code, state_name, num_districts)> sorted alphabetically.
 /// Reads directly from the embedded manifest — no Python subprocess.
@@ -825,6 +858,64 @@ mod tests {
         };
         // effective_seats_per_district uses .max(1) so 0 -> 1
         assert_eq!(cfg.effective_seats_per_district(), 1);
+    }
+
+    // ── Group: chamber_district_count ─────────────────────────────────────────
+
+    #[test]
+    fn test_chamber_district_count_congressional_returns_fallback() {
+        // Congressional always uses the manifest fallback, not state policy
+        assert_eq!(chamber_district_count("WA", "congressional", 10), 10);
+        assert_eq!(chamber_district_count("VT", "congressional", 1), 1);
+    }
+
+    #[test]
+    fn test_chamber_district_count_house_wa_returns_98() {
+        // WA house has 98 districts per state_policy.json
+        let result = chamber_district_count("WA", "house", 10);
+        assert_eq!(result, 98, "WA house must use 98 districts from state policy, got {result}");
+    }
+
+    #[test]
+    fn test_chamber_district_count_senate_wa_returns_49() {
+        // WA senate has 49 districts (2:1 nesting with 98 house)
+        let result = chamber_district_count("WA", "senate", 10);
+        assert_eq!(result, 49, "WA senate must use 49 districts from state policy, got {result}");
+    }
+
+    #[test]
+    fn test_chamber_district_count_house_nv_returns_42() {
+        // NV house has 42 districts per state_policy.json
+        let result = chamber_district_count("NV", "house", 4);
+        assert_eq!(result, 42, "NV house must use 42 districts from state policy, got {result}");
+    }
+
+    #[test]
+    fn test_chamber_district_count_house_va_returns_100() {
+        // VA house has 100 delegates
+        let result = chamber_district_count("VA", "house", 11);
+        assert_eq!(result, 100, "VA house must use 100 from state policy, got {result}");
+    }
+
+    #[test]
+    fn test_chamber_district_count_house_la_returns_105() {
+        // LA house has 105 representatives
+        let result = chamber_district_count("LA", "house", 6);
+        assert_eq!(result, 105, "LA house must use 105 from state policy, got {result}");
+    }
+
+    #[test]
+    fn test_chamber_district_count_unknown_state_uses_fallback() {
+        // Unknown state code falls back to congressional count
+        let result = chamber_district_count("ZZ", "house", 7);
+        assert_eq!(result, 7, "unknown state ZZ must fall back to congressional count");
+    }
+
+    #[test]
+    fn test_chamber_district_count_unknown_chamber_uses_fallback() {
+        // Unrecognized chamber name falls back
+        let result = chamber_district_count("WA", "council", 10);
+        assert_eq!(result, 10, "unknown chamber type must fall back to congressional count");
     }
 
     // ── Group 5: adjacency fallback / resolve_adjacency_path ─────────────────
