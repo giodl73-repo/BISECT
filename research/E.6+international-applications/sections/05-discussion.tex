@@ -1,0 +1,26 @@
+% Discussion
+
+\subsection{Transferability of Algorithmic Redistricting}
+
+The consistent compactness improvements across all six countries --- spanning four electoral systems, three redistricting institutions, and six distinct population bases --- suggest that algorithmic redistricting is \emph{not} a specifically American solution. The algorithm's core mechanism (minimize weighted edge cuts in a population-balanced graph partition) generalizes to any system where geographic contiguity, population equality, and compactness are valued, regardless of seat magnitude or electoral formula.
+
+The institutional independence of the boundary commission moderates the size of the improvement: countries with strong independent commissions (UK, New Zealand) already pursue compact, balanced boundaries through expert judgment, leaving less algorithmic advantage. Countries with weaker commissions (Germany's advisory Wahlkreiskommission) show larger improvements, consistent with political influence on boundary-drawing leaving more room for geometric optimization.
+
+\subsection{Multi-Member Districts and the Proportionality Paradox}
+
+A striking finding for Ireland and Malta is that \emph{geographic optimization does not impair proportionality}. When boundaries are drawn to maximize compactness within per-seat balance constraints, D'Hondt allocation produces near-perfect proportionality (Gallagher index $<$ 2.0). This appears paradoxical: if boundaries are drawn without regard to party vote shares, why should the result be proportional?
+
+The resolution lies in the seat magnitude. In 5-seat constituencies (Malta) and 4-seat constituencies (Ireland), even substantial geographic variation in party vote share --- which would create disproportionality in single-member systems --- is averaged out by the proportional allocation mechanism. A compact, geographically coherent constituency with 40\% Green, 35\% Conservative, and 25\% Labour votes allocates seats in proportion to those shares regardless of how the boundary was drawn. This suggests that multi-member PR systems are \emph{inherently more robust to redistricting manipulation} than single-member systems --- a finding with implications for US electoral reform proposals.
+
+\subsection{Vocabulary and Institutional Specificity}
+
+A practical contribution of this paper is the \texttt{redist policy} database, which encodes country-specific terminology (ridings, Wahlkreise, constituencies), population bases, and balance standards. The analysis reveals that ``redistricting'' is institutionally heterogeneous: the UK uses registered electors, Germany uses German citizens, and Ireland uses total population, reflecting different theories of democratic representation. Algorithmic redistricting must be adapted to each country's legal standard to be institutionally valid, not merely geometrically optimal.
+
+\subsection{Limitations}
+
+% TODO: Fill in
+% - Geographic unit availability varies by country
+% - Germany Gemeinde granularity constraint
+% - STV simulation uses D'Hondt approximation (party-list rather than ranked ballot)
+% - 2020 election data used for countries where more recent data available
+% - Enacted boundary dates vary; not all countries have simultaneous redistricting cycles

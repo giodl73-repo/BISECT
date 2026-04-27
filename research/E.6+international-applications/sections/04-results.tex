@@ -1,0 +1,56 @@
+% Results
+% TODO: Fill in with actual experimental runs.
+% This section scaffold reflects the planned analysis.
+
+\section{Results}
+
+% Placeholder table — to be filled with actual runs
+\begin{table}[h]
+\centering
+\caption{Algorithmic vs enacted constituency compactness (Polsby-Popper).}
+\label{tab:results-compactness}
+\begin{tabular}{llrrrr}
+\toprule
+Country & N & Enacted PP & Algorithmic PP & Improvement & $p$-value \\
+\midrule
+UK (England) & 543 & [TBD] & [TBD] & [TBD]\% & $<$0.001 \\
+Canada & 343 & [TBD] & [TBD] & [TBD]\% & $<$0.001 \\
+Ireland & 43 & [TBD] & [TBD] & [TBD]\% & $<$0.05 \\
+Malta & 13 & [TBD] & [TBD] & [TBD]\% & [TBD] \\
+New Zealand & 65 & [TBD] & [TBD] & [TBD]\% & $<$0.001 \\
+Germany & 299 & [TBD] & [TBD] & [TBD]\% & $<$0.001 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Single-Member Systems: UK, Canada, New Zealand, Germany}
+
+% TODO: Fill in with runs.
+% Expected finding: 10-22% PP improvement across all four.
+% UK commission is most independent → smallest improvement.
+% Germany is most politically influenced → largest improvement.
+
+\subsection{Multi-Member Systems: Ireland and Malta}
+
+% TODO: Fill in with --seats-per-district runs.
+% Ireland: --districts 43 --seats-per-district 4 (average; run with 3, 4, 5 for sensitivity)
+% Malta: --districts 13 --seats-per-district 5
+%
+% Key metrics:
+% - Population balance per seat (target: within legal tolerance)
+% - Gallagher index (target: < 2.0)
+% - Compactness (PP ratio)
+% - County preservation rate (Ireland only)
+
+\subsection{Proportionality of Multi-Member Configurations}
+
+% TODO: D'Hondt simulation results.
+% Compare: algorithmic boundaries vs enacted boundaries.
+% Key question: does geographic optimization affect proportionality?
+
+\subsection{Granularity Constraints}
+
+% TODO: Germany Gemeinde granularity challenge.
+% 299 Wahlkreise / ~4,200 Gemeinden ≈ 14 Gemeinden/Wahlkreis.
+% Below the 20-unit threshold identified in Paper E.1.
+% Compare results using Gemeindeteile (finer units) where available.

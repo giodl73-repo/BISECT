@@ -1,0 +1,29 @@
+paper: E.6+international-applications
+title: "Beyond American Federalism: Algorithmic Redistricting in Parliamentary Democracies"
+venue: "Comparative Political Studies"
+stage: draft
+round: 0
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-04-26
+    note: "Paper scaffolded — introduction, comparative systems, methodology, discussion, conclusion written. Results section placeholder pending international data acquisition and experimental runs."
+dependencies:
+  - "B.1 (recursive bisection algorithm)"
+  - "B.2 (edge-weighted compactness)"
+  - "E.1 (multi-member methodology and per-seat balance)"
+data_needed:
+  - "UK Office for National Statistics 2021 Census output areas + electoral roll"
+  - "Statistics Canada 2021 dissemination areas"
+  - "CSO Ireland 2022 small areas"
+  - "Stats NZ 2023 meshblocks"
+  - "Destatis Germany 2021 Gemeinden/Gemeindeteile"
+  - "Malta NSO 2021 enumeration districts"
+next_steps:
+  - "Acquire international census data for all 6 countries"
+  - "Run redist state --seats-per-district for Ireland/Malta"
+  - "Run redist state for UK/Canada/NZ/Germany with country-specific data"
+  - "Fill in results table with actual experimental outcomes"
+  - "Panel review (board: MERIDIAN, BOUNDARY, WARD, LEDGER, MERIDIAN-INTERNATIONAL)"

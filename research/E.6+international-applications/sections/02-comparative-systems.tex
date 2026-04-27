@@ -1,0 +1,56 @@
+We study six parliamentary democracies chosen to span the space of electoral systems, seat magnitudes, and redistricting institutions (Table~\ref{tab:country-comparison}).
+
+\begin{table}[h]
+\centering
+\caption{Redistricting systems in six parliamentary democracies.}
+\label{tab:country-comparison}
+\small
+\begin{tabular}{llrrll}
+\toprule
+Country & System & Districts & Seats & Balance basis & Commission \\
+\midrule
+United Kingdom & FPTP & 543 & 543 & Registered electors & Independent \\
+Canada & FPTP & 343 & 343 & Total population & Independent \\
+Ireland & STV & 43 & 174 & Per seat & Independent \\
+Malta & STV & 13 & 65 & Per seat & Parliament \\
+New Zealand & MMP & 65 & 65 & Electoral pop. & Independent \\
+Germany & MMP & 299 & 299+ & German citizens & Advisory \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{United Kingdom}
+
+The UK uses single-member constituencies (``seats'') for the House of Commons elected by first-past-the-post plurality. Four independent Boundary Commissions (England, Scotland, Wales, Northern Ireland) draw constituency boundaries using registered electorate --- not total population --- as the balance criterion. The Parliamentary Constituencies Act 2020 sets the electoral quota at the national electorate divided by 650 seats, with 5\% tolerance. Constituencies must respect local authority boundaries where possible. Our analysis covers England (543 constituencies) where the largest commission operates and data are most available.
+
+\subsection{Canada}
+
+Canada's 343 federal ridings are drawn by provincial Electoral Boundary Commissions appointed by judges. The process uses total population with 25\% deviation from provincial quotas permitted; communities of interest (including Indigenous communities) are a named criterion. Unlike the UK, no single national commission exists; each of Canada's 10 provinces has its own commission. This decentralized structure creates variation in commission independence and methodology.
+
+\subsection{Ireland}
+
+Ireland's Dáil Éireann uses single transferable vote (STV) in 43 multi-member constituencies returning 3--5 seats each (174 total seats as of 2024). The Electoral Commission draws boundaries using total population with a per-seat target (national population $\div$ 174). Because constituencies have different seat counts, balance is measured \emph{per seat}: a 5-seat constituency must have approximately $5 \times \text{ideal\_per\_seat}$ population, and a 3-seat constituency must have $3 \times \text{ideal\_per\_seat}$. County boundaries must be preserved where possible.
+
+\subsection{Malta}
+
+Malta's House of Representatives uses STV in 13 districts, each returning 5 seats (65 base seats; additional seats may be added for proportionality). All constituencies are constitutionally fixed to return exactly 5 seats, making Malta a clean test case for uniform-magnitude multi-member redistricting. The parliament draws boundaries with limited independent oversight.
+
+\subsection{New Zealand}
+
+New Zealand uses MMP, with 65 general electorates (single-member, FPTP) and 7 Māori electorates drawn separately, plus list seats allocated for proportionality (120 total). The Representation Commission draws both general and Māori electorate boundaries using the \emph{general electoral population} (a Census-derived count excluding those enrolled on the Māori roll). This paper covers general electorates only.
+
+\subsection{Germany}
+
+Germany's 299 Bundeswahlkreise (federal electoral districts) are single-member constituencies using FPTP; list seats are allocated to ensure MMP proportionality. The Wahlkreiskommission is advisory, with the Bundestag retaining final authority over boundaries. The population basis is \emph{German citizens} only --- approximately 10 million non-citizen residents are excluded. Boundaries must not divide Landkreise (rural counties) or kreisfreie Städte (independent cities) where possible, with 25\% tolerance from the national average.
+
+\subsection{Data}
+
+% TODO: Describe census-equivalent data sources for each country.
+% UK: Office for National Statistics census output areas (2021)
+% Canada: Statistics Canada dissemination areas (2021)
+% Ireland: Central Statistics Office small areas (2022)
+% Malta: National Statistics Office enumeration districts (2021)
+% NZ: Stats NZ meshblocks (2023)
+% Germany: Destatis Gemeindeverbände (2021)
+% All data is publicly available; geographic unit GEOIDs encoded as
+% {ISO-2-country}{4-char-unit-code} in RPLAN format.
