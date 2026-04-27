@@ -11,6 +11,11 @@ use redist_analysis::{
 use crate::args::{CompareArgs, CompareFormat};
 
 /// Load a plan's final_assignments.json given a label, version, year, and base dir.
+///
+/// If `label` ends with `.rplan`, parses it as an RPLAN file and extracts assignments
+/// from `rplan["assignments"]` (map of GEOID → district_id as integer).
+/// If `label` is an absolute path or starts with `.` or `/`, also tries it as a
+/// direct file path to final_assignments.json.
 fn load_plan_assignments(
     label: &str,
     output_base: &str,
@@ -18,11 +23,56 @@ fn load_plan_assignments(
     year: &str,
     output_dir_override: Option<&PathBuf>,
 ) -> anyhow::Result<HashMap<String, usize>> {
+    // If label ends with .rplan, parse it as RPLAN format.
+    if label.ends_with(".rplan") {
+        let content = std::fs::read_to_string(label)
+            .map_err(|e| anyhow::anyhow!("cannot read .rplan file '{}': {}", label, e))?;
+        // Parse as generic JSON to extract assignments (map of GEOID → district_id as integer)
+        let v: serde_json::Value = serde_json::from_str(&content)
+            .map_err(|e| anyhow::anyhow!("failed to parse .rplan '{}': {}", label, e))?;
+        let assignments_obj = v["assignments"]
+            .as_object()
+            .ok_or_else(|| anyhow::anyhow!(".rplan file '{}' missing 'assignments' field", label))?;
+        let assignments: HashMap<String, usize> = assignments_obj
+            .iter()
+            .map(|(geoid, dist_val)| {
+                let dist = dist_val.as_u64()
+                    .ok_or_else(|| anyhow::anyhow!(
+                        "assignment value for GEOID {} must be integer, got {}", geoid, dist_val
+                    ))?;
+                Ok((geoid.clone(), dist as usize))
+            })
+            .collect::<anyhow::Result<_>>()?;
+        return Ok(assignments);
+    }
+
     let base = if let Some(od) = output_dir_override {
         od.clone()
     } else {
         PathBuf::from(output_base).join(version)
     };
+
+    // If label looks like an absolute or relative file path, try it directly as
+    // final_assignments.json (or a directory containing data/final_assignments.json).
+    let is_path_like = label.starts_with('/') || label.starts_with('\\')
+        || label.starts_with('.')
+        || (label.len() >= 3 && label.chars().nth(1) == Some(':'));
+    if is_path_like {
+        let p = PathBuf::from(label);
+        let direct = p.join("data").join("final_assignments.json");
+        if direct.exists() {
+            let raw: HashMap<String, usize> = serde_json::from_str(
+                &std::fs::read_to_string(&direct)?
+            )?;
+            return Ok(raw);
+        }
+        if p.is_file() {
+            let raw: HashMap<String, usize> = serde_json::from_str(
+                &std::fs::read_to_string(&p)?
+            )?;
+            return Ok(raw);
+        }
+    }
 
     // Try labeled plan path: {base}/{year}/plans/{label}/data/final_assignments.json
     // (this mirrors the path written by runner.rs: {output_dir}/{year}/plans/{label}/data/)
@@ -229,5 +279,46 @@ mod tests {
         let args = parse_compare_args(&["--plan-a", "plan1", "--enacted"]).unwrap();
         assert!(args.enacted);
         assert!(args.plan_b.is_none());
+    }
+
+    /// Scenario 14: External .rplan compare
+    /// load_plan_assignments should parse a .rplan file directly when path ends with .rplan
+    #[test]
+    fn test_compare_accepts_rplan_path() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let rplan_path = tmp.path().join("enacted.rplan");
+
+        // Write a minimal RPLAN file with assignments
+        let rplan_json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {
+                "label": "wa_enacted",
+                "state_fips": "53",
+                "state_code": "WA",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 10,
+                "population_source": "total",
+                "balance_tolerance_pct": 0.5,
+                "created_at": "2026-04-26T00:00:00Z",
+                "created_by": "test"
+            },
+            "assignments": {
+                "53033000100": 1,
+                "53033000200": 2,
+                "53033000300": 1
+            },
+            "geometry": null
+        });
+        std::fs::write(&rplan_path, rplan_json.to_string()).unwrap();
+
+        let path_str = rplan_path.to_str().unwrap();
+        let result = load_plan_assignments(path_str, "outputs", "v1", "2020", None);
+        assert!(result.is_ok(), "should load .rplan file: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 3, "should have 3 assignments");
+        assert_eq!(assignments["53033000100"], 1);
+        assert_eq!(assignments["53033000200"], 2);
+        assert_eq!(assignments["53033000300"], 1);
     }
 }

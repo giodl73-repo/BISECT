@@ -391,6 +391,21 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let graph = load_adjacency_pkl(&adj_pkl)
         .map_err(|e| format!("adjacency load failed: {e}"))?;
 
+    // Check for isolated nodes (no adjacency neighbors) — common with island tracts.
+    // Isolated tracts will always form non-contiguous districts.
+    let isolated: Vec<usize> = graph.adjacency.iter().enumerate()
+        .filter(|(_, nbrs)| nbrs.is_empty())
+        .map(|(i, _)| i)
+        .collect();
+    if !isolated.is_empty() {
+        eprintln!(
+            "WARNING: {}: {} isolated tract(s) with no adjacency neighbors. \
+             These will form non-contiguous districts. \
+             For island states (AK, HI, international), rebuild adjacency with water bridges.",
+            cfg.state_code, isolated.len()
+        );
+    }
+
     // 2. Build edge weights based on partition mode
     let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
         "edge-weighted" => {
@@ -1043,5 +1058,42 @@ mod tests {
         let err = result.unwrap_err();
         assert!(err.contains("adjacency") || err.contains("not found") || err.contains("manifest"),
             "error should mention adjacency: {err}");
+    }
+
+    /// Scenario 17: Isolated node warning logic — verify that an adjacency with
+    /// isolated nodes (empty neighbor list) is correctly detected.
+    #[test]
+    fn test_run_warns_on_isolated_nodes() {
+        // Simulate the isolated-node detection logic from run_single_state.
+        // adjacency[0] has neighbors, adjacency[1] is isolated, adjacency[2] is isolated.
+        let adjacency: Vec<Vec<usize>> = vec![
+            vec![2],     // node 0: connected
+            vec![],      // node 1: isolated
+            vec![0],     // node 2: connected
+            vec![],      // node 3: isolated
+        ];
+
+        let isolated: Vec<usize> = adjacency.iter().enumerate()
+            .filter(|(_, nbrs)| nbrs.is_empty())
+            .map(|(i, _)| i)
+            .collect();
+
+        assert_eq!(isolated.len(), 2, "should detect 2 isolated nodes");
+        assert!(isolated.contains(&1), "node 1 should be isolated");
+        assert!(isolated.contains(&3), "node 3 should be isolated");
+        assert!(!isolated.contains(&0), "node 0 is connected, not isolated");
+        assert!(!isolated.contains(&2), "node 2 is connected, not isolated");
+
+        // Verify a fully-connected graph produces no isolated nodes
+        let connected: Vec<Vec<usize>> = vec![
+            vec![1, 2],
+            vec![0, 2],
+            vec![0, 1],
+        ];
+        let isolated_none: Vec<usize> = connected.iter().enumerate()
+            .filter(|(_, nbrs)| nbrs.is_empty())
+            .map(|(i, _)| i)
+            .collect();
+        assert!(isolated_none.is_empty(), "fully connected graph has no isolated nodes");
     }
 }

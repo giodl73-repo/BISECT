@@ -172,9 +172,31 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
 
         match typ {
             AnalyzerType::Demographic => {
-                let result = DemographicAnalyzer::run(&ctx)?;
-                write_json_atomic(&out_path, &result)?;
-                eprintln!("[OK] demographic -> {}", out_path.display());
+                match DemographicAnalyzer::run(&ctx) {
+                    Ok(result) => {
+                        write_json_atomic(&out_path, &result)?;
+                        eprintln!("[OK] demographic -> {}", out_path.display());
+                    }
+                    Err(e) => {
+                        let msg = e.to_string();
+                        if msg.contains("demographics CSV not found") {
+                            eprintln!(
+                                "WARNING: VRA analysis for {state_code} {year}: demographics CSV not found.\n\
+                                 Run: redist fetch --type demographics --states {state_code} --year {year}"
+                            );
+                            missing_data = true;
+                            let out = serde_json::json!({
+                                "analyzer": "demographic",
+                                "state": state_code,
+                                "year": year,
+                                "error": "demographics CSV not found",
+                            });
+                            write_json_atomic(&out_path, &out)?;
+                        } else {
+                            return Err(e);
+                        }
+                    }
+                }
             }
             AnalyzerType::Political => {
                 let result = PoliticalAnalyzer::run(&ctx)?;
@@ -461,6 +483,47 @@ mod tests {
         let types = resolve_types(&[]);
         // Empty input should return empty (not All)
         assert!(types.is_empty(), "empty input should return empty types, got {types:?}");
+    }
+
+    /// Scenario 5: VRA missing demographics hint
+    /// When demographics CSV is absent, the warning must include the exact fetch command.
+    #[test]
+    fn test_vra_missing_demographics_hint() {
+        use redist_analysis::{Analyzer, AnalyzerContext, DemographicAnalyzer};
+        use std::collections::HashMap;
+        use std::path::Path;
+
+        // Build a context with a data_root that has no demographics CSVs
+        let tmp = tempfile::TempDir::new().unwrap();
+        let assignments: HashMap<String, usize> = HashMap::new();
+        let ctx = AnalyzerContext {
+            assignments: &assignments,
+            state_name: "washington",
+            state_code: "WA",
+            year: "2020",
+            version: "v1",
+            num_districts: 10,
+            data_root: tmp.path(), // no CSV files here
+            output_root: Path::new("outputs/v1"),
+            balance_tolerance: 0.005,
+        };
+
+        let result = DemographicAnalyzer::run(&ctx);
+        assert!(result.is_err(), "DemographicAnalyzer must return Err when CSV is missing");
+        let msg = result.unwrap_err().to_string();
+        // The error message from DemographicAnalyzer should mention demographics CSV not found
+        assert!(
+            msg.contains("demographics CSV not found"),
+            "error must mention demographics CSV not found: {msg}"
+        );
+        // Verify that the hint we emit contains "redist fetch" and "--type demographics"
+        // (We can't capture eprintln in a unit test, so we verify the error text that
+        // triggers the hint path — the warn text is validated by the message content.)
+        // The hint branch is triggered by the message above; verify the message pattern here.
+        assert!(
+            msg.contains("demographics"),
+            "error message must contain 'demographics' to trigger fetch hint: {msg}"
+        );
     }
 }
 

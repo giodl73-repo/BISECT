@@ -38,6 +38,8 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
     for fmt in &args.format {
         match fmt {
             ExportFormat::GeoJson => {
+                // Warn if plan has no geometry — GeoJSON will have null geometries
+                warn_if_null_geometry(&rplan, &args.label, &args.year);
                 let geojson_str = export_geojson(&rplan)?;
                 let path = out_dir.join(format!("{}.geojson", args.label));
                 std::fs::write(&path, &geojson_str)?;
@@ -125,6 +127,33 @@ fn load_rplan_from_plan_dir(plan_dir: &std::path::Path, label: &str) -> anyhow::
     })
 }
 
+/// Warn if all GeoJSON features will have null geometry.
+/// Emits a warning with instructions to fetch/reimport geometry.
+fn warn_if_null_geometry(rplan: &RplanFile, label: &str, year: &str) {
+    // Plan has no geometry if geometry field is None or not a FeatureCollection
+    // with non-null coordinate data.
+    let has_geometry = rplan.geometry.as_ref().map(|g| {
+        g["type"].as_str() == Some("FeatureCollection")
+            && g["features"].as_array().map(|f| {
+                f.iter().any(|feat| !feat["geometry"].is_null())
+            }).unwrap_or(false)
+    }).unwrap_or(false);
+
+    if !has_geometry {
+        let state = if rplan.metadata.state_code.is_empty() {
+            "<STATE>".to_string()
+        } else {
+            rplan.metadata.state_code.clone()
+        };
+        eprintln!(
+            "WARNING: Plan '{}' has no geometry -- GeoJSON will have null geometries.\n\
+             To add geometry: run 'redist import' with a GeoJSON source, or use\n\
+             'redist fetch --type geometry --states {} --year {}' + reimport.",
+            label, state, year
+        );
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Tests — Task 7
 // ---------------------------------------------------------------------------
@@ -161,5 +190,57 @@ mod tests {
             output_base: "outputs".into(),
         };
         assert_eq!(args.format, vec![ExportFormat::GeoJson]);
+    }
+
+    /// Scenario 15: warn_if_null_geometry triggers for a geometry-free plan.
+    #[test]
+    fn test_export_warns_on_null_geometry() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+
+        // Plan with no geometry (geometry: None)
+        let plan_no_geom = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "wa_test".into(),
+                state_code: "WA".into(),
+                year: "2020".into(),
+                ..Default::default()
+            },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        // warn_if_null_geometry should not panic and should detect missing geometry
+        // (we can't capture eprintln, but we can verify the detection logic)
+        let has_geometry = plan_no_geom.geometry.as_ref().map(|g| {
+            g["type"].as_str() == Some("FeatureCollection")
+                && g["features"].as_array().map(|f| {
+                    f.iter().any(|feat| !feat["geometry"].is_null())
+                }).unwrap_or(false)
+        }).unwrap_or(false);
+        assert!(!has_geometry, "plan with geometry=None should be detected as missing geometry");
+
+        // Plan with FeatureCollection but all null geometries
+        let plan_null_feats = RplanFile {
+            geometry: Some(serde_json::json!({
+                "type": "FeatureCollection",
+                "features": [
+                    {"type": "Feature", "geometry": null, "properties": {"district_id": 1}},
+                    {"type": "Feature", "geometry": null, "properties": {"district_id": 2}}
+                ]
+            })),
+            ..plan_no_geom.clone()
+        };
+        let has_geometry2 = plan_null_feats.geometry.as_ref().map(|g| {
+            g["type"].as_str() == Some("FeatureCollection")
+                && g["features"].as_array().map(|f| {
+                    f.iter().any(|feat| !feat["geometry"].is_null())
+                }).unwrap_or(false)
+        }).unwrap_or(false);
+        assert!(!has_geometry2, "plan with all-null geometries should be detected as missing geometry");
+
+        // The warn function itself must not panic for either case
+        warn_if_null_geometry(&plan_no_geom, "wa_test", "2020");
+        warn_if_null_geometry(&plan_null_feats, "wa_test", "2020");
     }
 }

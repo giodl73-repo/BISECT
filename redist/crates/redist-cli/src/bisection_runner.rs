@@ -341,7 +341,16 @@ pub fn run_all_splits(
                 })
                 .collect::<Result<Vec<_>, String>>()?;
 
-        for (path, left, right) in split_results {
+        // Sort results by path before inserting to ensure deterministic insertion order.
+        // Rayon's thread scheduling may vary, so the collection order of split_results
+        // is non-deterministic without this sort.
+        //
+        // Determinism requires: (a) same seed passed to gpmetis, (b) same graph structure,
+        // (c) same topology of adjacency. The sort here ensures consistent insertion order
+        // into node_tracts, which affects the final leaf sort and district numbering.
+        let mut sorted_results = split_results;
+        sorted_results.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted_results {
             node_tracts.insert(format!("{path}0"), left);
             node_tracts.insert(format!("{path}1"), right);
         }
@@ -839,5 +848,39 @@ mod tests {
         let house_districts = 98usize;
         let bgpd = bg_count as f64 / house_districts as f64;
         assert!(bgpd >= 20.0, "WA house at block_group has {bgpd:.1} BGs/district — adequate");
+    }
+
+    /// Scenario 23: Rayon seed determinism — sort split_results by path before insert.
+    /// Verify that for a two-district run with a fixed seed, calling run_all_splits
+    /// twice returns identical assignments (deterministic output).
+    #[test]
+    fn test_rayon_results_sorted_before_insert() {
+        if find_gpmetis().is_none() { return; }
+
+        // A simple 4-node chain graph: 0-1-2-3
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let vw = vec![1000i64, 1000, 1000, 1000];
+        let ew = HashMap::new();
+
+        // Run twice with the same seed
+        let result1 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
+        let result2 = run_all_splits(&adj, &vw, &ew, 2, 0.005, 100, Some(42), None);
+
+        assert!(result1.is_ok(), "first run must succeed: {:?}", result1.err());
+        assert!(result2.is_ok(), "second run must succeed: {:?}", result2.err());
+
+        let a1 = result1.unwrap();
+        let a2 = result2.unwrap();
+
+        // With sorted insertion order and same seed, assignments must be identical
+        let mut a1_sorted: Vec<(usize, usize)> = a1.into_iter().collect();
+        let mut a2_sorted: Vec<(usize, usize)> = a2.into_iter().collect();
+        a1_sorted.sort_by_key(|&(k, _)| k);
+        a2_sorted.sort_by_key(|&(k, _)| k);
+
+        assert_eq!(
+            a1_sorted, a2_sorted,
+            "two runs with the same seed must produce identical assignments"
+        );
     }
 }

@@ -58,16 +58,34 @@ pub fn run_migrate(base: &Path, state_identifier: &str, label: &str, force: bool
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| candidate_lower.clone());
+    // Count districts from final_assignments.json to determine num_districts
+    let assignments_path = plan_dir.join("final_assignments.json");
+    let num_districts: usize = if assignments_path.exists() {
+        let content = std::fs::read_to_string(&assignments_path).unwrap_or_default();
+        let asgn: std::collections::HashMap<String, usize> =
+            serde_json::from_str(&content).unwrap_or_default();
+        // Count distinct district IDs
+        let distinct: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        distinct.len().max(1)
+    } else {
+        1
+    };
+
     let manifest = PlanManifest {
         label: label.to_string(),
         state_code: state_identifier.to_uppercase(),
         chamber: "congressional".to_string(),
+        num_districts,
         population_source: "total".to_string(),
         partition_mode: "edge-weighted".to_string(),
         binary_download_url: "https://github.com/owner/redist/releases".to_string(),
         adjacency_file: format!("{}_adjacency.adj.bin", state_dir_name),
         tiger_source_url: "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/".to_string(),
         created_at: chrono_now(),
+        // Legacy US plans are always single-member; set explicitly so manifest is unambiguous.
+        seats_per_district: 1,
+        total_seats: num_districts, // one seat per district for single-member systems
+        electoral_system: "single_member".to_string(),
         ..Default::default()
     };
     write_manifest_atomic(&plan_dir, &manifest)?;
@@ -219,5 +237,51 @@ mod tests {
         run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
         // Second with --force must succeed
         run_migrate(tmp.path(), "washington", "wa_congressional_2020", true).unwrap();
+    }
+
+    /// Scenario 22: Migrated manifest must have seats_per_district, total_seats,
+    /// and electoral_system explicitly set for legacy US plans.
+    #[test]
+    fn test_migrate_manifest_has_seats_fields() {
+        let tmp = TempDir::new().unwrap();
+        // Setup legacy state dir with 3 districts in assignments
+        let state_dir = tmp.path().join("states").join("washington");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        // Write assignments with 3 distinct district IDs
+        std::fs::write(
+            state_dir.join("final_assignments.json"),
+            r#"{"53033000100":1,"53033000200":2,"53033000300":3}"#,
+        ).unwrap();
+
+        run_migrate(tmp.path(), "washington", "wa_congressional_2020", false).unwrap();
+
+        let manifest_path = tmp
+            .path()
+            .join("plans")
+            .join("wa_congressional_2020")
+            .join("manifest.json");
+        assert!(manifest_path.exists());
+        let content = std::fs::read_to_string(&manifest_path).unwrap();
+        let manifest: serde_json::Value = serde_json::from_str(&content).unwrap();
+
+        // seats_per_district must be explicitly 1 (single-member)
+        assert_eq!(
+            manifest["seats_per_district"].as_u64().unwrap_or(0),
+            1,
+            "seats_per_district must be 1 for legacy US plans"
+        );
+        // total_seats must equal num_districts (one seat per district)
+        let num_districts = manifest["num_districts"].as_u64().unwrap_or(0);
+        assert_eq!(
+            manifest["total_seats"].as_u64().unwrap_or(0),
+            num_districts,
+            "total_seats must equal num_districts for single-member plans"
+        );
+        // electoral_system must be "single_member"
+        assert_eq!(
+            manifest["electoral_system"].as_str().unwrap_or(""),
+            "single_member",
+            "electoral_system must be 'single_member' for legacy US plans"
+        );
     }
 }
