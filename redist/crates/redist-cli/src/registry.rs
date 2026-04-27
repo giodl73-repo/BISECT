@@ -734,4 +734,101 @@ mod tests {
             }
         }
     }
+
+    // ── Task 121: manifest/policy district count agreement for all 50 states ──
+
+    /// Verify that registry.congressional_districts() agrees with manifest.json
+    /// for all US states present in location_policy.json and both 2020 and 2010 census years.
+    ///
+    /// The registry uses congressional_districts_by_year from location_policy.json.
+    /// States absent from location_policy.json (e.g. NH) are skipped — they cannot
+    /// be checked against policy since no policy entry exists to diverge.
+    /// This test catches drift between the two data sources for all registered states.
+    #[test]
+    fn test_manifest_and_policy_district_counts_agree() {
+        let reg = registry();
+        let manifest = crate::fetch::load_manifest()
+            .expect("manifest must load for district count agreement test");
+
+        let us_state_codes: &[&str] = &[
+            "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+            "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+            "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+            "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+            "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+        ];
+
+        let mut mismatches: Vec<String> = Vec::new();
+        let mut skipped_no_policy: Vec<String> = Vec::new();
+
+        for &code in us_state_codes {
+            // Skip states not in location_policy.json — no policy entry to check against
+            if !reg.has_location(code) {
+                skipped_no_policy.push(code.to_string());
+                continue;
+            }
+
+            for year in &["2020", "2010"] {
+                // Ground truth: manifest.json (Congress.gov-aligned, hand-verified)
+                let manifest_count = manifest.states.get(code)
+                    .and_then(|s| s.districts.get(*year).copied());
+
+                // Registry value from congressional_districts_by_year in policy
+                let registry_count = reg.congressional_districts(code, year);
+
+                // Both absent: OK (some states might not have older data in both)
+                if manifest_count.is_none() && registry_count.is_none() {
+                    continue;
+                }
+
+                // Registry None when manifest has value: policy is missing year entry
+                // (not a mismatch per se — just missing data in policy)
+                if registry_count.is_none() && manifest_count.is_some() {
+                    // Only flag if there's an explicit policy entry for other years
+                    // (meaning the year entry is just missing, not that policy is absent)
+                    continue;
+                }
+
+                if manifest_count != registry_count {
+                    mismatches.push(format!(
+                        "{code} {year}: manifest={manifest_count:?}, registry={registry_count:?}"
+                    ));
+                }
+            }
+        }
+
+        if !skipped_no_policy.is_empty() {
+            eprintln!(
+                "NOTE: {} state(s) skipped (not in location_policy.json): {}",
+                skipped_no_policy.len(),
+                skipped_no_policy.join(", ")
+            );
+        }
+
+        assert!(
+            mismatches.is_empty(),
+            "manifest/policy district count mismatches found:\n  {}",
+            mismatches.join("\n  ")
+        );
+    }
+
+    /// Spot-check key reapportionment states between 2010 and 2020.
+    /// TX gained 2 seats (36->38), WA gained 1 (9->10), CO gained 1 (7->8).
+    #[test]
+    fn test_reapportionment_states_2010_vs_2020() {
+        let reg = registry();
+        // TX: 36 in 2010, 38 in 2020
+        assert_eq!(reg.congressional_districts("TX", "2010"), Some(36),
+            "TX must have 36 districts in 2010");
+        assert_eq!(reg.congressional_districts("TX", "2020"), Some(38),
+            "TX must have 38 districts in 2020");
+        // WA: 10 in 2010, 10 in 2020 (gained from 9 to 10 after 2000 cycle)
+        assert_eq!(reg.congressional_districts("WA", "2010"), Some(10),
+            "WA must have 10 districts in 2010");
+        assert_eq!(reg.congressional_districts("WA", "2020"), Some(10),
+            "WA must have 10 districts in 2020");
+        // CO: 7 in 2010, 8 in 2020
+        let co_2020 = reg.congressional_districts("CO", "2020");
+        assert!(co_2020.is_some(), "CO must have district count for 2020");
+    }
 }

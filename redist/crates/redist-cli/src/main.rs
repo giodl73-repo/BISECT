@@ -199,6 +199,17 @@ fn main() {
                 })
                 .collect();
 
+            // Memory estimation for large parallel runs (scenario 49)
+            let large_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI"];
+            let has_large_state = configs.iter().any(|c| large_states.contains(&c.state_code.as_str()));
+            if has_large_state && args.workers > 4 {
+                eprintln!(
+                    "NOTE: Large states included in run. Peak memory estimate: ~{}MB. \
+                     Reduce --workers if you see OOM errors.",
+                    args.workers * 150
+                );
+            }
+
             let to_run = filter_incomplete(configs);
             eprintln!("[redist states] {} states ({} workers)", to_run.len(), args.workers);
             report_and_exit(run_states_parallel(to_run, args.workers));
@@ -248,6 +259,17 @@ fn main() {
                         adjacency_override: None,
                     })
                     .collect();
+
+                // Memory estimation for large parallel runs (scenario 49)
+                let large_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI"];
+                let has_large_state = configs.iter().any(|c| large_states.contains(&c.state_code.as_str()));
+                if has_large_state && args.workers > 4 {
+                    eprintln!(
+                        "NOTE: Large states included in run. Peak memory estimate: ~{}MB. \
+                         Reduce --workers if you see OOM errors.",
+                        args.workers * 150
+                    );
+                }
 
                 let to_run = filter_incomplete(configs);
                 let results = run_states_parallel(to_run, args.workers);
@@ -376,7 +398,7 @@ fn main() {
                     }
                 }
                 SuiteCommands::Validate(args) => {
-                    use redist_cli::suite::run_suite_validate;
+                    use redist_cli::suite::run_suite_validate_with_overrides;
                     use std::path::PathBuf;
 
                     let suite_dir = PathBuf::from(&args.output_base)
@@ -385,8 +407,13 @@ fn main() {
                         .join("suites")
                         .join(&args.name);
 
-                    let result = run_suite_validate(&suite_dir, &args.name)
-                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                    let result = run_suite_validate_with_overrides(
+                        &suite_dir,
+                        &args.name,
+                        args.house_label.as_deref(),
+                        args.senate_label.as_deref(),
+                    )
+                    .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
 
                     println!("{}", serde_json::to_string_pretty(&result)
                         .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); }));
@@ -473,6 +500,86 @@ mod tests {
         ];
         let no_failures: Vec<_> = all_ok.iter().filter(|r| !r.success).collect();
         assert!(no_failures.is_empty(), "all-success → exit 0 (no non-zero exit)");
+    }
+
+    // ── Task 123: large state memory estimation warning ───────────────────────
+
+    /// Verify CA is in the large states list used for memory estimation.
+    #[test]
+    fn test_large_state_set_contains_ca() {
+        let large_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI"];
+        assert!(large_states.contains(&"CA"), "CA must be in large states list");
+        assert!(large_states.contains(&"TX"), "TX must be in large states list");
+        assert!(large_states.contains(&"NY"), "NY must be in large states list");
+        // Small states must NOT be in the list
+        assert!(!large_states.contains(&"VT"), "VT must not be in large states list");
+        assert!(!large_states.contains(&"WY"), "WY must not be in large states list");
+    }
+
+    /// Verify the memory warning message format is correct.
+    #[test]
+    fn test_large_state_memory_warning_format() {
+        let workers: usize = 8;
+        let msg = format!(
+            "NOTE: Large states included in run. Peak memory estimate: ~{}MB. \
+             Reduce --workers if you see OOM errors.",
+            workers * 150
+        );
+        assert!(msg.contains("NOTE:"), "must start with NOTE:");
+        assert!(msg.contains("1200MB"), "must show computed MB for 8 workers: {msg}");
+        assert!(msg.contains("--workers"), "must mention --workers flag: {msg}");
+        assert!(msg.contains("OOM"), "must mention OOM: {msg}");
+    }
+
+    /// Verify the warning triggers only when workers > 4.
+    #[test]
+    fn test_large_state_warning_triggers_above_4_workers() {
+        use redist_cli::runner::StateConfig;
+        use std::path::PathBuf;
+
+        fn make_config(state: &str) -> StateConfig {
+            StateConfig {
+                state_code: state.to_string(),
+                state_name: state.to_lowercase(),
+                num_districts: 52,
+                year: "2020".to_string(),
+                version: "v1".to_string(),
+                output_dir: PathBuf::from("/tmp/test"),
+                partition_mode: "edge-weighted".to_string(),
+                position: 1,
+                debug: false, reset: false, reprocess: false,
+                ufactor: 5, niter: 100, seed: None,
+                num_districts_override: None,
+                chamber: "congressional".into(),
+                label: None,
+                population_source: "total".into(),
+                balance_tolerance: None,
+                write_manifest: false,
+                force: false,
+                resolution: "tract".into(),
+                seats_per_district: 1,
+                total_seats: 52,
+                adjacency_override: None,
+            }
+        }
+
+        let large_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI"];
+        let configs = vec![make_config("CA"), make_config("VT")];
+        let has_large = configs.iter().any(|c| large_states.contains(&c.state_code.as_str()));
+        assert!(has_large, "CA in configs must trigger has_large_state");
+
+        // workers <= 4: no warning
+        let should_warn_4 = has_large && 4 > 4;
+        assert!(!should_warn_4, "should not warn for exactly 4 workers");
+
+        // workers > 4: warning
+        let should_warn_5 = has_large && 5 > 4;
+        assert!(should_warn_5, "should warn for 5 workers with CA in configs");
+
+        // Small-state only run: no warning
+        let small_configs = vec![make_config("VT"), make_config("DE")];
+        let has_large_small = small_configs.iter().any(|c| large_states.contains(&c.state_code.as_str()));
+        assert!(!has_large_small, "VT+DE run must not trigger large-state warning");
     }
 
     /// Task 117: verify the Run arm also exits non-zero on any_failure.

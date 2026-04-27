@@ -483,6 +483,10 @@ pub struct SuiteValidateCliArgs {
     #[arg(long)]
     pub name: String,
 
+    /// Two-letter state code (required when using label overrides)
+    #[arg(long)]
+    pub state: Option<String>,
+
     /// Version identifier
     #[arg(short = 'v', long, default_value = "v1")]
     pub version: String,
@@ -494,6 +498,14 @@ pub struct SuiteValidateCliArgs {
     /// Output base directory (default: outputs)
     #[arg(long, default_value = "outputs")]
     pub output_base: String,
+
+    /// Override house plan label (bypasses suite manifest lookup)
+    #[arg(long)]
+    pub house_label: Option<String>,
+
+    /// Override senate plan label (bypasses suite manifest lookup)
+    #[arg(long)]
+    pub senate_label: Option<String>,
 }
 
 #[derive(Debug, Subcommand)]
@@ -1244,6 +1256,41 @@ mod tests {
     fn test_balance_tolerance_none_when_not_provided() {
         let args = parse_state_args(&[]);
         assert!(args.balance_tolerance.is_none());
+    }
+
+    // ── Task 118: --house-label / --senate-label for suite validate ───────────
+
+    #[test]
+    fn test_suite_validate_args_has_label_overrides() {
+        use crate::args::SuiteValidateCliArgs;
+        let args = SuiteValidateCliArgs::parse_from([
+            "validate", "--name", "wa_suite_v1", "--state", "WA",
+            "--house-label", "wa_house_custom",
+        ]);
+        assert_eq!(args.house_label, Some("wa_house_custom".into()));
+        assert!(args.senate_label.is_none());
+    }
+
+    #[test]
+    fn test_suite_validate_args_both_label_overrides() {
+        use crate::args::SuiteValidateCliArgs;
+        let args = SuiteValidateCliArgs::parse_from([
+            "validate", "--name", "wa_suite_v1",
+            "--house-label", "wa_house_custom",
+            "--senate-label", "wa_senate_custom",
+        ]);
+        assert_eq!(args.house_label, Some("wa_house_custom".into()));
+        assert_eq!(args.senate_label, Some("wa_senate_custom".into()));
+    }
+
+    #[test]
+    fn test_suite_validate_args_no_labels_defaults_to_none() {
+        use crate::args::SuiteValidateCliArgs;
+        let args = SuiteValidateCliArgs::parse_from([
+            "validate", "--name", "wa_suite_v1",
+        ]);
+        assert!(args.house_label.is_none());
+        assert!(args.senate_label.is_none());
     }
 }
 

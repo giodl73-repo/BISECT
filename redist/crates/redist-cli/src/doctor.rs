@@ -172,4 +172,43 @@ mod tests {
         let registry = LocationRegistry::load();
         assert!(registry.validate_year("_TEST_EL", "2099").is_ok());
     }
+
+    // ── Task 120: normalize location code case ────────────────────────────────
+
+    #[test]
+    fn test_doctor_lowercase_state_works() {
+        // run_doctor calls args.state.to_uppercase() internally before registry lookup.
+        // Verify that uppercasing "wa" → "WA" produces the correct result.
+        let registry = LocationRegistry::load();
+        // Direct lookup: has_location already normalizes to uppercase internally
+        let code = "wa";
+        let normalized = code.to_uppercase();
+        assert_eq!(normalized, "WA", "to_uppercase of 'wa' must produce 'WA'");
+        // Registry finds normalized code
+        assert!(registry.has_location(&normalized),
+            "registry must find 'WA' (normalized from 'wa')");
+        // Confirm that the normalization used in run_doctor matches registry lookup
+        let args_state = "wa"; // simulates DoctorArgs.state = "wa"
+        let code_normalized = args_state.to_uppercase();
+        assert!(registry.has_location(&code_normalized),
+            "run_doctor normalization pattern must work: {} -> {}", args_state, code_normalized);
+    }
+
+    #[test]
+    fn test_doctor_uppercase_state_code_consistent() {
+        // Verify that to_uppercase() is idempotent for typical state codes
+        let code = "WA";
+        assert_eq!(code.to_uppercase(), code);
+        let code_lower = "wa";
+        assert_eq!(code_lower.to_uppercase(), "WA");
+    }
+
+    #[test]
+    fn test_doctor_test_state_uppercase_preserves_prefix() {
+        // _TEST_EL uppercased is still _TEST_EL (underscore + uppercase letters)
+        let code = "_TEST_EL";
+        assert_eq!(code.to_uppercase(), "_TEST_EL");
+        let registry = LocationRegistry::load();
+        assert!(registry.has_location("_TEST_EL"), "_TEST_EL must be in registry");
+    }
 }

@@ -371,9 +371,16 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     }
 
     // Reset: delete existing outputs before starting
-    if cfg.reset && data_dir.exists() {
-        std::fs::remove_dir_all(&data_dir)
-            .map_err(|e| format!("reset failed: {e}"))?;
+    if cfg.reset {
+        // Warn before deletion so users can see exactly what will be removed
+        eprintln!(
+            "WARNING: --reset will delete {} and all its contents before re-running.",
+            plan_root.display()
+        );
+        if data_dir.exists() {
+            std::fs::remove_dir_all(&data_dir)
+                .map_err(|e| format!("reset failed: {e}"))?;
+        }
     }
     // Create plan directory structure if labeled
     if cfg.label.is_some() {
@@ -1085,6 +1092,59 @@ mod tests {
     }
 
     // ── Group 5: adjacency fallback / resolve_adjacency_path ─────────────────
+
+    // ── Task 122: --reset data loss warning ───────────────────────────────────
+
+    /// Verify the reset plan path computation matches the expected directory structure.
+    ///
+    /// The warning uses `plan_root.display()` which is either:
+    ///   labeled:  {output_dir}/{year}/plans/{label}/
+    ///   unlabeled: {output_dir}/{year}/states/{state_name}/
+    #[test]
+    fn test_reset_warning_format() {
+        use std::path::PathBuf;
+
+        // Labeled plan path
+        let output_dir = PathBuf::from("/tmp/outputs/v1");
+        let year = "2020";
+        let label = "wa_house_2020";
+        let plan_root_labeled = output_dir.join(year).join("plans").join(label);
+        let expected = "/tmp/outputs/v1/2020/plans/wa_house_2020";
+        assert!(
+            plan_root_labeled.to_string_lossy().replace('\\', "/").contains("wa_house_2020"),
+            "labeled plan_root must contain label: {}",
+            plan_root_labeled.display()
+        );
+        let warning = format!(
+            "WARNING: --reset will delete {} and all its contents before re-running.",
+            plan_root_labeled.display()
+        );
+        assert!(warning.contains("wa_house_2020"), "warning must mention the plan label: {warning}");
+        assert!(warning.contains("--reset will delete"), "warning must mention --reset: {warning}");
+
+        // Legacy (unlabeled) state path
+        let state_name = "washington";
+        let plan_root_legacy = output_dir.join(year).join("states").join(state_name);
+        let warning_legacy = format!(
+            "WARNING: --reset will delete {} and all its contents before re-running.",
+            plan_root_legacy.display()
+        );
+        assert!(warning_legacy.contains("washington"), "legacy warning must mention state: {warning_legacy}");
+    }
+
+    #[test]
+    fn test_reset_warning_contains_required_components() {
+        // Verify the warning message format has all required components
+        let plan_root = std::path::PathBuf::from("/tmp/outputs/v1/2020/plans/wa_house_2020");
+        let msg = format!(
+            "WARNING: --reset will delete {} and all its contents before re-running.",
+            plan_root.display()
+        );
+        assert!(msg.starts_with("WARNING:"), "must start with WARNING:");
+        assert!(msg.contains("--reset"), "must mention --reset flag");
+        assert!(msg.contains("delete"), "must use the word 'delete'");
+        assert!(msg.contains("all its contents"), "must warn about contents");
+    }
 
     #[test]
     fn test_resolve_adjacency_uses_manifest() {

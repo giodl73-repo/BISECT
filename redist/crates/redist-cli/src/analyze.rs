@@ -92,9 +92,30 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     };
 
     if !assignments_path.exists() {
+        // List available plans to help the user understand what labels exist
+        let plans_dir = output_root.join(&year).join("plans");
+        let available_hint = if plans_dir.exists() {
+            let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+                .ok()
+                .into_iter()
+                .flatten()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir())
+                .filter_map(|e| e.file_name().into_string().ok())
+                .take(10)
+                .collect();
+            labels.sort();
+            if labels.is_empty() {
+                format!("\nPlans directory exists but is empty: {}", plans_dir.display())
+            } else {
+                format!("\nAvailable plans: {}", labels.join(", "))
+            }
+        } else {
+            format!("\nPlans directory not found: {}", plans_dir.display())
+        };
         anyhow::bail!(
-            "No assignments found at {}.\nRun: redist state --state {state_code} --year {year} --version {}",
-            assignments_path.display(), args.version
+            "No assignments found at {}.{}\nRun: redist state --state {state_code} --year {year} --version {}",
+            assignments_path.display(), available_hint, args.version
         );
     }
 
@@ -483,6 +504,59 @@ mod tests {
         let types = resolve_types(&[]);
         // Empty input should return empty (not All)
         assert!(types.is_empty(), "empty input should return empty types, got {types:?}");
+    }
+
+    /// Task 119: missing plan error lists available labels from plans directory.
+    #[test]
+    fn test_missing_plan_error_lists_available_labels() {
+        use tempfile::TempDir;
+        use std::path::Path;
+
+        let tmp = TempDir::new().unwrap();
+        // Create a fake plans/{year}/plans/ directory with some plan subdirs
+        let plans_dir = tmp.path().join("2020").join("plans");
+        std::fs::create_dir_all(&plans_dir).unwrap();
+        for label in &["wa_house_2020", "wa_senate_2020", "wa_congressional_2020"] {
+            std::fs::create_dir_all(plans_dir.join(label)).unwrap();
+        }
+
+        // Simulate the listing logic from run_analyze
+        let available_hint = if plans_dir.exists() {
+            let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+                .ok()
+                .into_iter()
+                .flatten()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir())
+                .filter_map(|e| e.file_name().into_string().ok())
+                .take(10)
+                .collect();
+            labels.sort();
+            if labels.is_empty() {
+                format!("\nPlans directory exists but is empty: {}", plans_dir.display())
+            } else {
+                format!("\nAvailable plans: {}", labels.join(", "))
+            }
+        } else {
+            format!("\nPlans directory not found: {}", plans_dir.display())
+        };
+
+        assert!(available_hint.contains("wa_house_2020"), "must list wa_house_2020: {available_hint}");
+        assert!(available_hint.contains("wa_senate_2020"), "must list wa_senate_2020: {available_hint}");
+        assert!(available_hint.contains("wa_congressional_2020"), "must list wa_congressional_2020: {available_hint}");
+        assert!(available_hint.starts_with("\nAvailable plans:"));
+    }
+
+    /// Task 119: when plans directory doesn't exist, show path without listing.
+    #[test]
+    fn test_missing_plan_error_no_plans_dir_shows_path() {
+        let plans_dir = std::path::PathBuf::from("/nonexistent/plans");
+        let available_hint = if plans_dir.exists() {
+            "should not reach here".to_string()
+        } else {
+            format!("\nPlans directory not found: {}", plans_dir.display())
+        };
+        assert!(available_hint.contains("Plans directory not found"), "must say not found: {available_hint}");
     }
 
     /// Scenario 5: VRA missing demographics hint

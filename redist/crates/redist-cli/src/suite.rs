@@ -216,6 +216,10 @@ pub struct SuiteValidateArgs {
     pub version: String,
     pub year: String,
     pub output_base: String,
+    /// Override house plan label (bypasses suite manifest lookup)
+    pub house_label: Option<String>,
+    /// Override senate plan label (bypasses suite manifest lookup)
+    pub senate_label: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -264,40 +268,124 @@ pub fn generate_suite_export(suite: &PlanSuite) -> SuiteExport {
 // ---------------------------------------------------------------------------
 
 /// Load a suite from disk and validate nesting.
+///
+/// When `house_label` or `senate_label` overrides are provided in `args`,
+/// those plan directories are used directly instead of reading the suite manifest.
+/// This allows validating nesting between plans that were drawn independently.
 pub fn run_suite_validate(
     suite_dir: &Path,
     suite_name: &str,
 ) -> anyhow::Result<SuiteValidateResult> {
-    let suite_json_path = suite_dir.join("suite.json");
-    if !suite_json_path.exists() {
-        anyhow::bail!(
-            "Suite not found at {}. Run: redist suite draw --name {suite_name}",
-            suite_json_path.display()
-        );
-    }
+    run_suite_validate_with_overrides(suite_dir, suite_name, None, None)
+}
 
-    let suite: PlanSuite = serde_json::from_str(
-        &std::fs::read_to_string(&suite_json_path)
-            .with_context(|| format!("Reading {}", suite_json_path.display()))?,
-    )
-    .context("Parsing suite.json")?;
+/// Internal implementation that supports optional house/senate label overrides.
+pub fn run_suite_validate_with_overrides(
+    suite_dir: &Path,
+    suite_name: &str,
+    house_label_override: Option<&str>,
+    senate_label_override: Option<&str>,
+) -> anyhow::Result<SuiteValidateResult> {
+    // When both labels are overridden, skip loading suite.json entirely.
+    // When only one is overridden, still load suite.json for the other.
+    let (house_assignments, senate_assignments) = if house_label_override.is_some()
+        || senate_label_override.is_some()
+    {
+        // Base directory for label-based plan lookup: parent of suites dir
+        // Typically: outputs/{version}/{year}/plans/{label}/
+        let plans_base = suite_dir
+            .parent() // suites/
+            .and_then(|p| p.parent()) // {year}/
+            .map(|p| p.join("plans"))
+            .unwrap_or_else(|| PathBuf::from("outputs/v1/2020/plans"));
 
-    // Load house and senate assignments
-    let house_entry = suite
-        .plans
-        .iter()
-        .find(|p| p.chamber == "house")
-        .ok_or_else(|| anyhow::anyhow!("Suite does not contain a house plan"))?;
-    let senate_entry = suite
-        .plans
-        .iter()
-        .find(|p| p.chamber == "senate")
-        .ok_or_else(|| anyhow::anyhow!("Suite does not contain a senate plan"))?;
+        // Load house assignments
+        let house = if let Some(label) = house_label_override {
+            let plan_dir = plans_base.join(label);
+            let data_path = plan_dir.join("data").join("final_assignments.json");
+            let flat_path = plan_dir.join("final_assignments.json");
+            let chosen = if data_path.exists() { data_path } else { flat_path };
+            let content = std::fs::read_to_string(&chosen)
+                .with_context(|| format!("Reading house plan from {}", chosen.display()))?;
+            serde_json::from_str::<HashMap<String, usize>>(&content)
+                .with_context(|| format!("Parsing house assignments from {}", chosen.display()))?
+        } else {
+            // Load from suite manifest
+            let suite_json_path = suite_dir.join("suite.json");
+            let suite: PlanSuite = serde_json::from_str(
+                &std::fs::read_to_string(&suite_json_path)
+                    .with_context(|| format!("Reading {}", suite_json_path.display()))?,
+            )
+            .context("Parsing suite.json")?;
+            let entry = suite
+                .plans
+                .iter()
+                .find(|p| p.chamber == "house")
+                .ok_or_else(|| anyhow::anyhow!("Suite does not contain a house plan"))?;
+            load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &entry.file)?
+        };
 
-    let house_assignments =
-        load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &house_entry.file)?;
-    let senate_assignments =
-        load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &senate_entry.file)?;
+        // Load senate assignments
+        let senate = if let Some(label) = senate_label_override {
+            let plan_dir = plans_base.join(label);
+            let data_path = plan_dir.join("data").join("final_assignments.json");
+            let flat_path = plan_dir.join("final_assignments.json");
+            let chosen = if data_path.exists() { data_path } else { flat_path };
+            let content = std::fs::read_to_string(&chosen)
+                .with_context(|| format!("Reading senate plan from {}", chosen.display()))?;
+            serde_json::from_str::<HashMap<String, usize>>(&content)
+                .with_context(|| format!("Parsing senate assignments from {}", chosen.display()))?
+        } else {
+            // Load from suite manifest
+            let suite_json_path = suite_dir.join("suite.json");
+            let suite: PlanSuite = serde_json::from_str(
+                &std::fs::read_to_string(&suite_json_path)
+                    .with_context(|| format!("Reading {}", suite_json_path.display()))?,
+            )
+            .context("Parsing suite.json")?;
+            let entry = suite
+                .plans
+                .iter()
+                .find(|p| p.chamber == "senate")
+                .ok_or_else(|| anyhow::anyhow!("Suite does not contain a senate plan"))?;
+            load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &entry.file)?
+        };
+
+        (house, senate)
+    } else {
+        // Standard path: load both chambers from suite.json
+        let suite_json_path = suite_dir.join("suite.json");
+        if !suite_json_path.exists() {
+            anyhow::bail!(
+                "Suite not found at {}. Run: redist suite draw --name {suite_name}",
+                suite_json_path.display()
+            );
+        }
+
+        let suite: PlanSuite = serde_json::from_str(
+            &std::fs::read_to_string(&suite_json_path)
+                .with_context(|| format!("Reading {}", suite_json_path.display()))?,
+        )
+        .context("Parsing suite.json")?;
+
+        let house_entry = suite
+            .plans
+            .iter()
+            .find(|p| p.chamber == "house")
+            .ok_or_else(|| anyhow::anyhow!("Suite does not contain a house plan"))?;
+        let senate_entry = suite
+            .plans
+            .iter()
+            .find(|p| p.chamber == "senate")
+            .ok_or_else(|| anyhow::anyhow!("Suite does not contain a senate plan"))?;
+
+        let house =
+            load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &house_entry.file)?;
+        let senate =
+            load_rplan_assignments(suite_dir.parent().unwrap_or(suite_dir), &senate_entry.file)?;
+
+        (house, senate)
+    };
 
     // Count districts for ratio
     let num_house = house_assignments.values().cloned().max().unwrap_or(0);
