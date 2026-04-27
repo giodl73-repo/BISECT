@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::manifest::PlanManifest;
-use crate::audit::generate_verification_command_from_manifest;
+use crate::audit::{generate_verification_command_from_manifest, generate_verification_script};
 
 /// Context needed to assemble a report.
 /// Points to the plan directory containing manifest.json and analysis/ subdirectory.
@@ -179,8 +179,10 @@ pub fn assemble_report(ctx: &ReportContext) -> anyhow::Result<Report> {
 
     // Section 9: Audit trail
     let verification_command = generate_verification_command_from_manifest(m);
+    let verification_script = generate_verification_script(m);
     let audit = serde_json::json!({
         "verification_command": verification_command,
+        "verification_script": verification_script,
         "binary_version": m.binary_version,
         "binary_download_url": m.binary_download_url,
         "binary_sha256": m.binary_sha256,

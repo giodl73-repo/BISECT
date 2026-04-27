@@ -21,7 +21,7 @@ pub mod paths;
 pub mod report;
 pub mod rplan;
 
-pub use audit::{ExternalAnalyzerRecord, generate_verification_command, sha256_file as audit_sha256_file};
+pub use audit::{ExternalAnalyzerRecord, generate_verification_command, generate_verification_script, sha256_file as audit_sha256_file};
 pub use export::{export_geojson, export_gerrychain_v23, export_tracts_csv, import_gerrychain_to_assignments};
 pub use html::render_html_report;
 pub use import::{import_geojson_plan, import_plan_to_rplan};

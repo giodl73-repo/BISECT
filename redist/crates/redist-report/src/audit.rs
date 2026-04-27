@@ -123,6 +123,26 @@ pub fn generate_verification_command(
     )
 }
 
+/// Generate ONLY the executable lines from the verification command (no comment lines).
+///
+/// Returns a shell script fragment containing only the commands that can be run directly
+/// (lines that do not start with `#` and are not empty).
+///
+/// Used by `redist export --format reproducibility-package` to write `verify.sh`.
+pub fn generate_verification_script(manifest: &crate::manifest::PlanManifest) -> String {
+    let full_cmd = generate_verification_command_from_manifest(manifest);
+    // Keep only lines that are NOT comments (don't start with #)
+    // and are not empty
+    full_cmd
+        .lines()
+        .filter(|line| {
+            let trimmed = line.trim();
+            !trimmed.is_empty() && !trimmed.starts_with('#')
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 /// High-level convenience wrapper using a PlanManifest.
 pub fn generate_verification_command_from_manifest(
     manifest: &crate::manifest::PlanManifest,
@@ -324,6 +344,41 @@ mod tests {
         assert!(
             cmd.contains("Download") || cmd.contains("download"),
             "must tell user to download TIGER file: {cmd}"
+        );
+    }
+
+    // ── Task 150: generate_verification_script ────────────────────────────────
+
+    #[test]
+    fn test_verification_script_has_no_comment_lines() {
+        let manifest = fixture_manifest_wa_house();
+        let script = generate_verification_script(&manifest);
+        for line in script.lines() {
+            let trimmed = line.trim();
+            assert!(
+                !trimmed.starts_with('#'),
+                "verification_script must not contain comment lines, but got: {trimmed}"
+            );
+        }
+    }
+
+    #[test]
+    fn test_verification_script_contains_redist_state() {
+        let manifest = fixture_manifest_wa_house();
+        let script = generate_verification_script(&manifest);
+        assert!(
+            script.contains("redist state"),
+            "verification_script must contain the redist state command, got: {script}"
+        );
+    }
+
+    #[test]
+    fn test_verification_script_is_nonempty() {
+        let manifest = fixture_manifest_wa_house();
+        let script = generate_verification_script(&manifest);
+        assert!(
+            !script.trim().is_empty(),
+            "verification_script must not be empty"
         );
     }
 

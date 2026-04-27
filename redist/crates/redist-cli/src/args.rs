@@ -308,6 +308,9 @@ pub enum ExportFormat {
     GerryChain,
     /// GEOID,district CSV
     Csv,
+    /// Court-submission reproducibility package directory
+    #[value(name = "reproducibility-package")]
+    ReproducibilityPackage,
 }
 
 #[derive(Debug, clap::Args)]
@@ -1417,6 +1420,20 @@ mod tests {
         );
         assert!(note.contains("ie-dail"), "note must mention the format");
         assert!(note.contains("us-presidential"), "note must mention the supported format");
+    }
+
+    // ── Task 141: reproducibility-package format ──────────────────────────────
+
+    #[test]
+    fn test_reproducibility_package_format_recognized() {
+        use clap::ValueEnum;
+        // The variant must be parseable from its value name string
+        let parsed = ExportFormat::from_str("reproducibility-package", true);
+        assert_eq!(
+            parsed,
+            Ok(ExportFormat::ReproducibilityPackage),
+            "reproducibility-package must be a valid ExportFormat"
+        );
     }
 
     // ── Task 149: COI weights flag ────────────────────────────────────────────

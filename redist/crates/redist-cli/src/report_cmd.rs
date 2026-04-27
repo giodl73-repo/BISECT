@@ -60,6 +60,7 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
             "label": manifest.label,
             "audit": {
                 "verification_command": redist_report::audit::generate_verification_command_from_manifest(manifest),
+                "verification_script": redist_report::audit::generate_verification_script(manifest),
                 "binary_version": manifest.binary_version,
                 "binary_download_url": manifest.binary_download_url,
                 "binary_sha256": if manifest.binary_sha256.is_empty() { "(not computed)".to_string() } else { manifest.binary_sha256.clone() },

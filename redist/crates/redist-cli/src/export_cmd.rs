@@ -4,7 +4,11 @@
 /// based on --format flag.
 use std::path::PathBuf;
 use crate::args::{ExportArgs, ExportFormat};
-use redist_report::{RplanFile, export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file};
+use redist_report::{
+    RplanFile, export_geojson, export_gerrychain_v23, export_tracts_csv, sha256_file,
+    write_rplan, PlanManifest,
+    audit::{generate_verification_command_from_manifest, generate_verification_script},
+};
 
 /// Run the export command.
 pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
@@ -59,6 +63,11 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
                 std::fs::write(&path, &csv_str)?;
                 let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
                 eprintln!("[OK] {} (sha256: {})", path.display(), sha);
+            }
+            ExportFormat::ReproducibilityPackage => {
+                write_reproducibility_package(
+                    &plan_dir, &out_dir, &args.label, &rplan,
+                )?;
             }
         }
     }
@@ -155,6 +164,117 @@ fn warn_if_null_geometry(rplan: &RplanFile, label: &str, year: &str) {
             label, state, year
         );
     }
+}
+
+// ---------------------------------------------------------------------------
+// Reproducibility package writer — Task 141
+// ---------------------------------------------------------------------------
+
+/// Write a reproducibility package directory for court submission.
+///
+/// Output structure:
+///   {out_dir}/{label}_reproducibility/
+///     manifest.json        — copied from plan directory
+///     {label}.rplan        — plan assignments in RPLAN format
+///     analysis/            — all JSON files from plan_dir/analysis/ (if present)
+///     audit.json           — audit record built from manifest
+///     verify.sh            — executable lines from the verification command
+fn write_reproducibility_package(
+    plan_dir: &std::path::Path,
+    out_dir: &std::path::Path,
+    label: &str,
+    rplan: &RplanFile,
+) -> anyhow::Result<()> {
+    // Output directory: {out_dir}/{label}_reproducibility/
+    let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+    std::fs::create_dir_all(&pkg_dir)?;
+
+    // 1. manifest.json — copy from plan directory
+    let manifest_src = plan_dir.join("manifest.json");
+    let manifest_dst = pkg_dir.join("manifest.json");
+    let manifest: Option<PlanManifest> = if manifest_src.exists() {
+        std::fs::copy(&manifest_src, &manifest_dst)?;
+        let content = std::fs::read_to_string(&manifest_src)?;
+        serde_json::from_str(&content).ok()
+    } else {
+        None
+    };
+
+    // 2. {label}.rplan — export plan assignments in RPLAN format
+    let rplan_path = pkg_dir.join(format!("{}.rplan", label));
+    write_rplan(&rplan_path, &rplan.metadata, &rplan.assignments, rplan.geometry.clone())?;
+
+    // 3. analysis/ — copy all JSON files from plan_dir/analysis/ if they exist
+    let analysis_src = plan_dir.join("analysis");
+    let analysis_dst = pkg_dir.join("analysis");
+    let mut analysis_count = 0usize;
+    if analysis_src.exists() && analysis_src.is_dir() {
+        std::fs::create_dir_all(&analysis_dst)?;
+        if let Ok(entries) = std::fs::read_dir(&analysis_src) {
+            for entry in entries.flatten() {
+                let src_path = entry.path();
+                if src_path.extension().map(|e| e == "json").unwrap_or(false) {
+                    let dst_path = analysis_dst.join(entry.file_name());
+                    std::fs::copy(&src_path, &dst_path)?;
+                    analysis_count += 1;
+                }
+            }
+        }
+    }
+
+    // 4. audit.json — build from manifest (same as --audit-only format)
+    let audit_dst = pkg_dir.join("audit.json");
+    let audit_json = if let Some(ref m) = manifest {
+        serde_json::to_string_pretty(&serde_json::json!({
+            "label": m.label,
+            "audit": {
+                "verification_command": generate_verification_command_from_manifest(m),
+                "verification_script": generate_verification_script(m),
+                "binary_version": m.binary_version,
+                "binary_download_url": m.binary_download_url,
+                "binary_sha256": if m.binary_sha256.is_empty() { "(not computed)".to_string() } else { m.binary_sha256.clone() },
+                "adjacency_file": m.adjacency_file,
+                "adjacency_sha256": if m.adjacency_sha256.is_empty() { "(not computed — run: sha256sum adjacency_file)".to_string() } else { m.adjacency_sha256.clone() },
+                "tiger_source_url": m.tiger_source_url,
+                "tiger_sha256": m.tiger_sha256.clone().unwrap_or_else(|| format!("(not recorded — download from {} and compute manually)", m.tiger_source_url)),
+                "created_at": m.created_at,
+                "seed": m.seed,
+            }
+        }))?
+    } else {
+        serde_json::to_string_pretty(&serde_json::json!({
+            "label": label,
+            "audit": { "note": "manifest.json not found — audit fields unavailable" }
+        }))?
+    };
+    std::fs::write(&audit_dst, &audit_json)?;
+
+    // 5. verify.sh — executable lines from the verification command
+    let verify_dst = pkg_dir.join("verify.sh");
+    let verify_content = if let Some(ref m) = manifest {
+        generate_verification_script(m)
+    } else {
+        format!("# Verification script unavailable — manifest.json not found\n# Re-run: redist state --label {}", label)
+    };
+    std::fs::write(&verify_dst, &verify_content)?;
+    // Make executable on Unix
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let mut perms = std::fs::metadata(&verify_dst)?.permissions();
+        perms.set_mode(0o755);
+        std::fs::set_permissions(&verify_dst, perms)?;
+    }
+
+    // Report output
+    eprintln!("[OK] Reproducibility package: {}/", pkg_dir.display());
+    eprintln!("  manifest.json");
+    eprintln!("  {}.rplan", label);
+    eprintln!("  analysis/ ({} files)", analysis_count);
+    eprintln!("  audit.json");
+    eprintln!("  verify.sh");
+
+    Ok(())
 }
 
 // ---------------------------------------------------------------------------
@@ -263,5 +383,84 @@ mod tests {
         // The warn function itself must not panic for either case
         warn_if_null_geometry(&plan_no_geom, "wa_test", "2020");
         warn_if_null_geometry(&plan_null_feats, "wa_test", "2020");
+    }
+
+    // ── Task 141: reproducibility package ────────────────────────────────────
+
+    fn make_test_manifest_for_repro() -> redist_report::PlanManifest {
+        redist_report::PlanManifest {
+            label: "vt_congressional_2020".into(),
+            state_code: "VT".into(),
+            year: "2020".into(),
+            chamber: "congressional".into(),
+            num_districts: 1,
+            seed: Some(42),
+            binary_version: "0.1.0".into(),
+            binary_sha256: "a".repeat(64),
+            binary_download_url:
+                "https://github.com/owner/redist/releases/download/v0.1.0/redist".into(),
+            adjacency_file: "vt_adjacency_2020.adj.bin".into(),
+            adjacency_sha256: "b".repeat(64),
+            tiger_source_url:
+                "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_50_tract.zip".into(),
+            tiger_sha256: Some("c".repeat(64)),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_reproducibility_package_contains_required_files() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+
+        // Write a manifest
+        let manifest = make_test_manifest_for_repro();
+        let manifest_json = serde_json::to_string_pretty(&manifest).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"), &manifest_json).unwrap();
+
+        // Write some analysis files
+        std::fs::write(
+            analysis_dir.join("summary.json"),
+            serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap(),
+        ).unwrap();
+        std::fs::write(
+            analysis_dir.join("compactness.json"),
+            serde_json::to_string(&serde_json::json!({"status": "ok"})).unwrap(),
+        ).unwrap();
+
+        let label = "vt_congressional_2020";
+        let rplan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: label.into(),
+                state_code: "VT".into(),
+                year: "2020".into(),
+                ..Default::default()
+            },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+
+        let out_dir = tmp.path().join("exports");
+        std::fs::create_dir_all(&out_dir).unwrap();
+
+        write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
+
+        let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+        assert!(pkg_dir.exists(), "package directory must be created");
+        assert!(pkg_dir.join("manifest.json").exists(), "manifest.json must be present");
+        assert!(pkg_dir.join(format!("{}.rplan", label)).exists(), "{}.rplan must be present", label);
+        assert!(pkg_dir.join("audit.json").exists(), "audit.json must be present");
+        assert!(pkg_dir.join("verify.sh").exists(), "verify.sh must be present");
+
+        // Verify audit.json is valid JSON with an "audit" key
+        let audit_content = std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap();
+        let audit_val: serde_json::Value = serde_json::from_str(&audit_content).unwrap();
+        assert!(audit_val["audit"].is_object(), "audit.json must contain an 'audit' object");
     }
 }
