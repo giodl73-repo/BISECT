@@ -6,6 +6,7 @@
 use std::collections::{HashMap, HashSet};
 
 use crate::split_standards::{get_split_standard, SplitStandard};
+use crate::county_names::county_name as lookup_county_name;
 
 // ---------------------------------------------------------------------------
 // County split types
@@ -114,7 +115,9 @@ pub fn analyze_county_splits_with_state(
             CountySplit {
                 county_name: county_names
                     .and_then(|m| m.get(fips))
-                    .cloned(),
+                    .map(|s| s.as_str())
+                    .or_else(|| lookup_county_name(fips))
+                    .map(|s| s.to_string()),
                 tract_count: *county_to_tracts.get(fips).unwrap_or(&0),
                 split_severity: dists.len(),
                 districts_containing: d_vec,

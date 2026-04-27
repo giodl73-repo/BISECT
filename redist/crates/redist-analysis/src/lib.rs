@@ -1,3 +1,4 @@
+pub mod county_names;
 pub mod dhondt;
 pub mod compactness;
 pub mod vra_analysis;
@@ -36,3 +37,4 @@ pub use splits::{analyze_county_splits, analyze_county_splits_with_state, analyz
 pub use split_standards::{get_split_standard, SplitStandard};
 pub use exit_codes::{compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_NESTING, BIT_MISSING_DATA};
 pub use dhondt::{dhondt_allocate, gallagher_index};
+pub use county_names::county_name;

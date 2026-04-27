@@ -254,10 +254,12 @@ class TestStatePolicy(unittest.TestCase):
                               f"State {code} missing required field: '{field}'")
 
     def test_congressional_balance_tolerance_is_half_percent(self):
-        """All states must have 0.5% tolerance for congressional districts."""
+        """All US states (fips not null) must have 0.5% tolerance for congressional districts."""
         for code, state in self.policy.items():
             if code.startswith("_"):
                 continue
+            if state.get("fips") is None:
+                continue  # Skip non-US/parliamentary entries
             tol = state.get("balance_tolerance_congressional_pct")
             if tol is not None:
                 self.assertAlmostEqual(
@@ -286,6 +288,32 @@ class TestStatePolicy(unittest.TestCase):
             if val is not None:
                 self.assertIsInstance(val, bool,
                                       f"{code} has_independent_commission must be bool, got {type(val).__name__}")
+
+    def test_ireland_is_stv_multi_member(self):
+        ie = self.policy.get("IE")
+        self.assertIsNotNone(ie)
+        self.assertEqual(ie["electoral_system"], "single_transferable_vote")
+        self.assertEqual(ie["total_seats"], 174)
+
+    def test_uk_registered_electors(self):
+        uk = self.policy.get("GB-ENG")
+        self.assertIsNotNone(uk)
+        self.assertEqual(uk["population_basis"], "registered_electors")
+
+    def test_germany_wahlkreis_vocabulary(self):
+        de = self.policy.get("DE-WAHLKREIS")
+        self.assertIsNotNone(de)
+        self.assertEqual(de["subdivision_term"], "Wahlkreis")
+
+    def test_canada_ridings(self):
+        ca = self.policy.get("CA-PROV")
+        self.assertIsNotNone(ca)
+        self.assertEqual(ca["subdivision_term"], "riding")
+
+    def test_malta_5_seats(self):
+        mt = self.policy.get("MT-PARLIAMENT")
+        self.assertIsNotNone(mt)
+        self.assertEqual(mt["seats_per_district"], 5)
 
 
 # ---------------------------------------------------------------------------
