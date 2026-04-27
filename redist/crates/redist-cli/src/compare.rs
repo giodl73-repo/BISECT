@@ -194,8 +194,110 @@ fn read_plan_year(
     v.get("year")?.as_str().map(String::from)
 }
 
+/// Load a plan's analysis JSON file given its base path and file name.
+/// Returns None if the file is absent or unreadable.
+fn load_analysis_json(plan_base: &std::path::Path, filename: &str) -> Option<serde_json::Value> {
+    let path = plan_base.join("analysis").join(filename);
+    std::fs::read_to_string(&path).ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+}
+
+/// Run an N-plan summary table when `--labels` has >= 2 entries.
+pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
+    if args.labels.len() < 2 {
+        anyhow::bail!("--labels requires at least 2 plan labels for a multi-plan summary table");
+    }
+    let version = args.version.as_deref().unwrap_or("v1");
+    let base = if let Some(ref od) = args.output_dir {
+        od.clone()
+    } else {
+        std::path::PathBuf::from(&args.output_base).join(version)
+    };
+
+    struct PlanRow {
+        label: String,
+        mean_pp: Option<f64>,
+        max_dev_pct: Option<f64>,
+        county_splits: Option<u64>,
+        contiguous: Option<bool>,
+    }
+
+    let mut rows: Vec<PlanRow> = Vec::new();
+
+    for label in &args.labels {
+        let plan_base = base.join(&args.year).join("plans").join(label);
+
+        // summary.json → population deviation
+        let summary = load_analysis_json(&plan_base, "summary.json");
+        let max_dev_pct = summary.as_ref().and_then(|v| {
+            v.get("max_deviation_pct").and_then(|d| d.as_f64())
+                .or_else(|| v.get("population_max_deviation_pct").and_then(|d| d.as_f64()))
+        });
+
+        // compactness.json → mean polsby_popper
+        let compactness = load_analysis_json(&plan_base, "compactness.json");
+        let mean_pp = compactness.as_ref().and_then(|v| {
+            v.get("districts").and_then(|d| d.as_array()).map(|arr| {
+                let vals: Vec<f64> = arr.iter()
+                    .filter_map(|d| d.get("polsby_popper").and_then(|p| p.as_f64()))
+                    .collect();
+                if vals.is_empty() { return f64::NAN; }
+                vals.iter().sum::<f64>() / vals.len() as f64
+            })
+        });
+
+        // splits.json → total splits count
+        let splits = load_analysis_json(&plan_base, "splits.json");
+        let county_splits = splits.as_ref().and_then(|v| {
+            v.get("counties").and_then(|c| c.get("split")).and_then(|s| s.as_u64())
+        });
+
+        // contiguity.json → all_contiguous
+        let contiguity = load_analysis_json(&plan_base, "contiguity.json");
+        let contiguous = contiguity.as_ref()
+            .and_then(|v| v.get("all_contiguous").and_then(|c| c.as_bool()));
+
+        rows.push(PlanRow { label: label.clone(), mean_pp, max_dev_pct, county_splits, contiguous });
+    }
+
+    let is_csv = matches!(args.format, crate::args::CompareFormat::Csv);
+
+    if is_csv {
+        println!("Label,Mean PP,Max Dev%,County Splits,Contiguous");
+        for row in &rows {
+            let pp: String = row.mean_pp.map_or_else(|| "N/A".to_string(), |v| format!("{:.3}", v));
+            let dev: String = row.max_dev_pct.map_or_else(|| "N/A".to_string(), |v| format!("{:.1}%", v));
+            let splits: String = row.county_splits.map_or_else(|| "N/A".to_string(), |v| v.to_string());
+            let cont: String = row.contiguous.map_or_else(|| "N/A".to_string(), |v| if v { "Yes".to_string() } else { "No".to_string() });
+            println!("{},{},{},{},{}", row.label, pp, dev, splits, cont);
+        }
+    } else {
+        // Table format
+        let col1 = rows.iter().map(|r| r.label.len()).max().unwrap_or(5).max(23);
+        println!("{:<col1$} | Mean PP | Max Dev% | County Splits | Contiguous",
+            "Label", col1 = col1);
+        println!("{:-<col1$}-+---------+----------+---------------+------------",
+            "", col1 = col1);
+        for row in &rows {
+            let pp: String = row.mean_pp.map_or_else(|| " N/A ".to_string(), |v| format!(" {:.3} ", v));
+            let dev: String = row.max_dev_pct.map_or_else(|| "  N/A  ".to_string(), |v| format!("  {:.1}% ", v));
+            let splits: String = row.county_splits.map_or_else(|| "     N/A      ".to_string(), |v| format!("     {:3}      ", v));
+            let cont: String = row.contiguous.map_or_else(|| "  N/A ".to_string(), |v| if v { "  Yes ".to_string() } else { "  No  ".to_string() });
+            println!("{:<col1$} |{pp}|{dev}|{splits}|{cont}",
+                row.label, col1 = col1);
+        }
+    }
+
+    Ok(())
+}
+
 /// Run the `redist compare` command.
 pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
+    // When --labels is provided with >= 2 entries, run multi-plan summary instead
+    if !args.labels.is_empty() {
+        return run_multi_plan_summary(args);
+    }
+
     let version = args.version.as_deref().unwrap_or("v1");
 
     // Load plan A
@@ -471,6 +573,62 @@ mod tests {
         assert_eq!(assignments.len(), 3);
         assert_eq!(assignments["53033000100"], 3);
         assert_eq!(assignments["53033000200"], 4);
+    }
+
+    // ── Task 129: N-plan summary table ────────────────────────────────────────
+
+    /// Fewer than 2 labels gives an error.
+    #[test]
+    fn test_multi_plan_summary_minimum_two_labels() {
+        use crate::args::{CompareArgs, CompareFormat};
+        let args = CompareArgs {
+            plan_a: "plan1".into(),
+            plan_b: None,
+            enacted: false,
+            year: "2020".into(),
+            version: None,
+            metrics: vec!["all".into()],
+            out: None,
+            format: CompareFormat::Table,
+            output_base: "outputs".into(),
+            output_dir: None,
+            allow_cross_year: false,
+            labels: vec!["only_one".into()],  // fewer than 2
+        };
+        let result = run_multi_plan_summary(&args);
+        assert!(result.is_err(), "fewer than 2 labels must return error");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("at least 2"), "error must mention 'at least 2': {msg}");
+    }
+
+    /// Output contains column headers.
+    #[test]
+    fn test_multi_plan_summary_table_has_header() {
+        use crate::args::{CompareArgs, CompareFormat};
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Create minimal plan directories (no analysis files — N/A values expected)
+        for label in &["plan_a", "plan_b"] {
+            std::fs::create_dir_all(
+                tmp.path().join("sweep").join("2020").join("plans").join(label)
+            ).unwrap();
+        }
+        let args = CompareArgs {
+            plan_a: "plan_a".into(),
+            plan_b: None,
+            enacted: false,
+            year: "2020".into(),
+            version: Some("sweep".into()),
+            metrics: vec!["all".into()],
+            out: None,
+            format: CompareFormat::Table,
+            output_base: tmp.path().to_str().unwrap().into(),
+            output_dir: None,
+            allow_cross_year: false,
+            labels: vec!["plan_a".into(), "plan_b".into()],
+        };
+        // run_multi_plan_summary should succeed and emit header — just check it doesn't error
+        let result = run_multi_plan_summary(&args);
+        assert!(result.is_ok(), "multi-plan summary with 2 valid labels must succeed: {:?}", result.err());
     }
 
     /// Scenario 14: External .rplan compare

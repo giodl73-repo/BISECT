@@ -1,5 +1,6 @@
 use clap::Parser;
 use redist_cli::args::{Cli, Commands, SuiteCommands};
+use redist_cli::sweep::run_sweep;
 use redist_cli::suite::run_suite_stability;
 use redist_cli::verify::run_verify;
 use redist_cli::policy::run_policy;
@@ -177,6 +178,7 @@ fn main() {
                 seats_per_district: args.seats_per_district,
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
+                coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
             }], 1);
             for r in &results {
                 if !r.success {
@@ -218,6 +220,7 @@ fn main() {
                     seats_per_district: 1,
                     total_seats: districts,
                     adjacency_override: None,
+                    coi_weights: None,
                 })
                 .collect();
 
@@ -279,6 +282,7 @@ fn main() {
                         seats_per_district: 1,
                         total_seats: districts,
                         adjacency_override: None,
+                        coi_weights: None,
                     })
                     .collect();
 
@@ -393,6 +397,19 @@ fn main() {
                     let nest_mode = NestMode::from_str(&args.nest)
                         .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
 
+                    // Task 151: congressional-in-senate nesting is not yet supported
+                    if args.nest_congressional_in_senate {
+                        eprintln!(
+                            "NOTE: Congressional-in-senate nesting is not yet supported.\n\
+                             Congressional districts nest with state legislative districts at \
+                             fractional ratios (e.g., WA: 10 congressional / 49 senate = 0.204:1).\n\
+                             This requires multi-level optimization not available in the current \
+                             recursive bisection approach.\n\
+                             To file a feature request: https://github.com/giodl73-repo/REDIST/issues\n\
+                             Proceeding without congressional-in-senate nesting."
+                        );
+                    }
+
                     // For draw, we currently require existing plan files.
                     // This is a stub — real draw would invoke bisection_runner for each chamber.
                     eprintln!("[redist suite draw] state={} year={} name={} nest={}",
@@ -488,6 +505,12 @@ fn main() {
         // ── redist verify: reproduce plan from manifest and compare ───────────
         Commands::Verify(args) => {
             run_verify(&args).unwrap_or_else(|e| { eprintln!("FAIL: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist sweep: N-seed optimization planning tool ───────────────────
+        Commands::Sweep(args) => {
+            run_sweep(&args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
     }
 }
@@ -596,6 +619,7 @@ mod tests {
                 seats_per_district: 1,
                 total_seats: 52,
                 adjacency_override: None,
+                coi_weights: None,
             }
         }
 

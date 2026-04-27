@@ -130,7 +130,25 @@ pub fn split_subgraph(
         .map_err(|e| e.to_string())?;
 
     let gpmetis = find_gpmetis()
-        .ok_or_else(|| "gpmetis not found in PATH or common locations. Install with: apt install metis (Linux) or brew install metis (macOS)".to_string())?;
+        .ok_or_else(|| {
+            let arch = std::env::consts::ARCH;
+            let os = std::env::consts::OS;
+            let install_hint = match (os, arch) {
+                ("linux", "aarch64") | ("linux", "arm") =>
+                    "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
+                ("macos", "aarch64") =>
+                    "Apple Silicon: brew install metis",
+                ("linux", _) =>
+                    "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
+                ("windows", _) =>
+                    "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
+                ("macos", _) =>
+                    "macOS: brew install metis",
+                _ =>
+                    "Install METIS from https://github.com/KarypisLab/METIS",
+            };
+            format!("gpmetis not found ({os}/{arch}). {install_hint}")
+        })?;
 
     // Write to temp directory and invoke gpmetis
     let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
@@ -253,7 +271,25 @@ pub fn run_nway_partition(
     ).map_err(|e| e.to_string())?;
 
     let gpmetis = find_gpmetis()
-        .ok_or_else(|| "gpmetis not found".to_string())?;
+        .ok_or_else(|| {
+            let arch = std::env::consts::ARCH;
+            let os = std::env::consts::OS;
+            let install_hint = match (os, arch) {
+                ("linux", "aarch64") | ("linux", "arm") =>
+                    "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
+                ("macos", "aarch64") =>
+                    "Apple Silicon: brew install metis",
+                ("linux", _) =>
+                    "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
+                ("windows", _) =>
+                    "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
+                ("macos", _) =>
+                    "macOS: brew install metis",
+                _ =>
+                    "Install METIS from https://github.com/KarypisLab/METIS",
+            };
+            format!("gpmetis not found ({os}/{arch}). {install_hint}")
+        })?;
 
     let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
     let graph_file = tmp_dir.path().join("graph.txt");
@@ -926,6 +962,57 @@ mod tests {
         let house_districts = 98usize;
         let bgpd = bg_count as f64 / house_districts as f64;
         assert!(bgpd >= 20.0, "WA house at block_group has {bgpd:.1} BGs/district — adequate");
+    }
+
+    // ── Task 147: ARM Linux platform detection ───────────────────────────────
+
+    #[test]
+    fn test_gpmetis_not_found_error_includes_arch() {
+        // The error message from a missing gpmetis must include the OS/arch string.
+        let arch = std::env::consts::ARCH;
+        let os = std::env::consts::OS;
+        let install_hint = match (os, arch) {
+            ("linux", "aarch64") | ("linux", "arm") =>
+                "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
+            ("macos", "aarch64") =>
+                "Apple Silicon: brew install metis",
+            ("linux", _) =>
+                "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
+            ("windows", _) =>
+                "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
+            ("macos", _) =>
+                "macOS: brew install metis",
+            _ =>
+                "Install METIS from https://github.com/KarypisLab/METIS",
+        };
+        let msg = format!("gpmetis not found ({os}/{arch}). {install_hint}");
+        assert!(msg.contains(os), "error must contain OS: {os}");
+        assert!(msg.contains(arch), "error must contain arch: {arch}");
+        assert!(msg.contains("gpmetis not found"), "must include 'gpmetis not found'");
+    }
+
+    #[test]
+    fn test_platform_install_hint_linux_arm() {
+        // Simulate ARM Linux hint construction.
+        let (os, arch) = ("linux", "aarch64");
+        let install_hint = match (os, arch) {
+            ("linux", "aarch64") | ("linux", "arm") =>
+                "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
+            ("macos", "aarch64") =>
+                "Apple Silicon: brew install metis",
+            ("linux", _) =>
+                "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
+            ("windows", _) =>
+                "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
+            ("macos", _) =>
+                "macOS: brew install metis",
+            _ =>
+                "Install METIS from https://github.com/KarypisLab/METIS",
+        };
+        assert!(install_hint.contains("apt-get install metis"),
+            "ARM Linux must get apt-get hint, got: {install_hint}");
+        assert!(install_hint.contains("ARM Linux"),
+            "must mention ARM Linux, got: {install_hint}");
     }
 
     /// Task 112: Windows path quoting invariant.

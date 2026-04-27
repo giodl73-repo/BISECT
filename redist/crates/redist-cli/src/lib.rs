@@ -21,5 +21,6 @@ pub mod report_cmd;
 pub mod runner;
 pub mod status;
 pub mod suite;
+pub mod sweep;
 pub mod validate;
 pub mod verify;

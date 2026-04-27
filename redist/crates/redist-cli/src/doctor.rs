@@ -91,6 +91,16 @@ pub fn run_doctor(args: &DoctorArgs) {
         }
     }
 
+    // ── 8. Compactness standard ───────────────────────────────────────────────
+    {
+        let policy = registry.raw();
+        if let Some(location) = policy.get(&code) {
+            if let Some(std) = location.get("compactness_standard").and_then(|v| v.as_str()) {
+                println!("[INFO] Compactness standard: {std}");
+            }
+        }
+    }
+
     println!("\n[OK] Doctor check complete for {code} {} {}.", args.chamber, args.year);
 }
 
@@ -210,5 +220,39 @@ mod tests {
         assert_eq!(code.to_uppercase(), "_TEST_EL");
         let registry = LocationRegistry::load();
         assert!(registry.has_location("_TEST_EL"), "_TEST_EL must be in registry");
+    }
+
+    // ── Task 145: compactness standard ───────────────────────────────────────
+
+    #[test]
+    fn test_doctor_wa_has_compactness_standard() {
+        let registry = LocationRegistry::load();
+        let policy = registry.raw();
+        let wa = policy.get("WA").expect("WA must be in policy");
+        let std = wa.get("compactness_standard")
+            .and_then(|v| v.as_str());
+        assert!(std.is_some(), "WA must have compactness_standard field");
+        let s = std.unwrap();
+        assert!(s.contains("RCW") || s.contains("compact"),
+            "WA compactness_standard must reference RCW or compactness: {s}");
+    }
+
+    #[test]
+    fn test_doctor_compactness_standard_shown() {
+        // Verify the field exists for the states that should have it
+        let registry = LocationRegistry::load();
+        let policy = registry.raw();
+        let states_with_standard = ["WA", "CA", "CO", "FL", "TX", "VA", "NY"];
+        for code in &states_with_standard {
+            let location = policy.get(*code)
+                .unwrap_or_else(|| panic!("{code} must be in policy"));
+            let std = location.get("compactness_standard")
+                .and_then(|v| v.as_str());
+            assert!(std.is_some(),
+                "{code} must have compactness_standard field, but it's missing");
+            let s = std.unwrap();
+            assert!(!s.is_empty(),
+                "{code} compactness_standard must not be empty");
+        }
     }
 }

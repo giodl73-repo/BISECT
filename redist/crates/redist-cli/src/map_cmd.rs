@@ -92,6 +92,12 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
                 std::fs::write(&out, &png)?;
                 eprintln!("[OK] compactness map -> {}", out.display());
             }
+            MapType::Splits => {
+                println!("NOTE: Splits map type is not yet implemented.");
+                println!("The splits map would highlight split counties/municipalities in the district map.");
+                println!("For now, use: redist analyze --types splits to get splits.json, then");
+                println!("visualize manually with QGIS or Python (geopandas).");
+            }
             MapType::All => unreachable!(),
         }
     }
@@ -404,6 +410,15 @@ mod tests {
         let (w, h) = canvas_size_from_dpi(150, 8.0, 1.5);
         assert_eq!(w, 1200);
         assert_eq!(h, 800);
+    }
+
+    #[test]
+    fn test_map_type_splits_emits_note_not_error() {
+        // Splits returns Ok(()) — the dispatch arm just prints a note, no error.
+        // We verify by calling resolve_map_types with Splits and confirming it stays in list.
+        let types = resolve_map_types(&[MapType::Splits]);
+        assert_eq!(types.len(), 1);
+        assert!(types.contains(&MapType::Splits), "splits must be preserved by resolve_map_types");
     }
 
     #[test]

@@ -315,6 +315,17 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                 eprintln!("[OK] compactness -> {}", out_path.display());
             }
             AnalyzerType::Partisan => {
+                // Task 148: international election format note
+                if args.election_format != "us-presidential" {
+                    eprintln!(
+                        "NOTE: Election format '{}' is not yet fully supported.\n\
+                         Currently supported: us-presidential (GEOID, dem_votes, rep_votes columns).\n\
+                         For international formats, pre-process your data to match:\n\
+                           GEOID,party_a_votes,party_b_votes,...\n\
+                         and pass as a generic CSV. Full format support is planned.",
+                        args.election_format
+                    );
+                }
                 // Task 138: check for election year vs census year mismatch.
                 // If an explicit election file is provided, try to extract the election year
                 // from the filename (e.g., "presidential_2016_by_tract.csv" → 2016).
@@ -436,6 +447,30 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             }
             AnalyzerType::All => unreachable!("expanded above"),
         }
+    }
+
+    // ── Task 139: external analyzer ────────────────────────────────────────────
+    if let Some(ref script_path_str) = args.external_analyzer {
+        let script_path = std::path::Path::new(script_path_str);
+        if !script_path.exists() {
+            anyhow::bail!(
+                "external analyzer script not found: {}",
+                script_path.display()
+            );
+        }
+        // Create ExternalAnalyzerRecord
+        let command_template = format!(
+            "python {} {{assignments_json}} {{output_dir}}",
+            script_path_str
+        );
+        let record = redist_report::ExternalAnalyzerRecord::from_script(script_path, &command_template)
+            .map_err(|e| anyhow::anyhow!("failed to hash external analyzer script: {e}"))?;
+
+        // Write record to analysis/external_analyzers.json
+        let ext_path = analysis_dir.join("external_analyzers.json");
+        let records: Vec<&redist_report::ExternalAnalyzerRecord> = vec![&record];
+        write_json_atomic(&ext_path, &records)?;
+        eprintln!("[OK] external analyzer recorded: {} (sha256: {})", script_path_str, record.sha256);
     }
 
     // Compute bitfield exit code
@@ -667,6 +702,31 @@ mod tests {
             format!("\nPlans directory not found: {}", plans_dir.display())
         };
         assert!(available_hint.contains("Plans directory not found"), "must say not found: {available_hint}");
+    }
+
+    // ── Task 139: external analyzer ──────────────────────────────────────────
+
+    #[test]
+    fn test_external_analyzer_record_created_from_script() {
+        use tempfile::TempDir;
+        use std::io::Write;
+
+        let tmp = TempDir::new().unwrap();
+        let script = tmp.path().join("my_analyzer.py");
+        let mut f = std::fs::File::create(&script).unwrap();
+        writeln!(f, "# dummy analyzer script").unwrap();
+        drop(f);
+
+        let command_template = format!("python {} {{assignments_json}} {{output_dir}}", script.display());
+        let record = redist_report::ExternalAnalyzerRecord::from_script(&script, &command_template).unwrap();
+
+        // sha256 must be 64 hex chars
+        assert_eq!(record.sha256.len(), 64, "sha256 must be 64 hex chars");
+        assert!(record.sha256.chars().all(|c| c.is_ascii_hexdigit()),
+            "sha256 must be hex: {}", record.sha256);
+        assert!(record.command.contains("{assignments_json}"),
+            "command template must contain placeholder");
+        assert!(record.script.contains("my_analyzer"), "script field must name the file");
     }
 
     /// Scenario 5: VRA missing demographics hint

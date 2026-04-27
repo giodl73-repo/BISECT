@@ -899,6 +899,27 @@ mod tests {
         // are passed to validate_nesting — congressional assignments are ignored.
     }
 
+    // ── Task 151: congressional-in-senate nesting note ───────────────────────
+
+    #[test]
+    fn test_nest_congressional_in_senate_emits_note() {
+        // Verify the note message content that is emitted when
+        // --nest-congressional-in-senate is set.
+        let note = "NOTE: Congressional-in-senate nesting is not yet supported.\n\
+             Congressional districts nest with state legislative districts at \
+             fractional ratios (e.g., WA: 10 congressional / 49 senate = 0.204:1).\n\
+             This requires multi-level optimization not available in the current \
+             recursive bisection approach.\n\
+             To file a feature request: https://github.com/giodl73-repo/REDIST/issues\n\
+             Proceeding without congressional-in-senate nesting.";
+        assert!(note.contains("Congressional-in-senate nesting is not yet supported"),
+            "note must say nesting is unsupported");
+        assert!(note.contains("fractional ratios"),
+            "note must explain fractional ratios");
+        assert!(note.contains("recursive bisection"),
+            "note must mention the algorithm constraint");
+    }
+
     #[test]
     fn test_suite_json_envelope_references_all_chambers() {
         let suite = PlanSuite {

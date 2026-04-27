@@ -74,6 +74,8 @@ pub struct StateConfig {
     /// Direct adjacency file path (bypasses manifest lookup for international states).
     /// When Some, runner skips resolve_adjacency_path() and uses this path directly.
     pub adjacency_override: Option<std::path::PathBuf>,
+    /// Path to COI weights file (optional)
+    pub coi_weights: Option<std::path::PathBuf>,
 }
 
 impl StateConfig {
@@ -546,6 +548,25 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         _ => HashMap::new(), // unweighted
     };
 
+    // 2b. Apply COI weights if provided.
+    // Each edge weight is multiplied by sqrt(w_a * w_b) (geometric mean of endpoint weights).
+    // Tracts not in the COI file get weight 1.0 (no modification).
+    let edge_weights = if let Some(ref coi_path) = cfg.coi_weights {
+        match apply_coi_weights(edge_weights, coi_path, &graph.index_to_geoid) {
+            Ok(ew) => ew,
+            Err(e) => {
+                eprintln!("WARNING: COI weights not applied: {e}");
+                // Continue without COI weights rather than failing the whole run
+                match cfg.partition_mode.as_str() {
+                    "edge-weighted" => graph.edge_weights.clone(),
+                    _ => HashMap::new(),
+                }
+            }
+        }
+    } else {
+        edge_weights
+    };
+
     // 3. Run partitioning
     // VRA mode uses n-way: D.2 shows equivalent VRA success rate to recursive
     // bisection (47.5% vs 48.3%, p=0.634) with 3.08× speedup.
@@ -706,6 +727,42 @@ pub fn filter_incomplete(configs: Vec<StateConfig>) -> Vec<StateConfig> {
         .collect()
 }
 
+/// Apply COI (Communities of Interest) weights to edge weights.
+///
+/// Loads a JSON file mapping GEOID -> weight (0.0-1.0). For each edge (u, v),
+/// multiplies the edge weight by sqrt(w_u * w_v) (geometric mean of endpoint weights).
+/// Tracts not in the COI file get weight 1.0 (no modification).
+///
+/// The geometric mean ensures that if both endpoints of an edge are in the same
+/// community (high weight), the edge is strengthened and METIS will avoid cutting it.
+pub fn apply_coi_weights(
+    mut edge_weights: HashMap<(usize, usize), f64>,
+    coi_path: &std::path::Path,
+    index_to_geoid: &HashMap<usize, String>,
+) -> Result<HashMap<(usize, usize), f64>, String> {
+    let content = std::fs::read_to_string(coi_path)
+        .map_err(|e| format!("cannot read COI weights file {}: {e}", coi_path.display()))?;
+    let coi_map: HashMap<String, f64> = serde_json::from_str(&content)
+        .map_err(|e| format!("cannot parse COI weights JSON: {e}"))?;
+
+    // Build a geoid -> weight lookup by index
+    let get_weight = |idx: usize| -> f64 {
+        index_to_geoid.get(&idx)
+            .and_then(|geoid| coi_map.get(geoid))
+            .copied()
+            .unwrap_or(1.0)
+    };
+
+    for (&(u, v), weight) in edge_weights.iter_mut() {
+        let w_u = get_weight(u);
+        let w_v = get_weight(v);
+        let factor = (w_u * w_v).sqrt();
+        *weight *= factor;
+    }
+
+    Ok(edge_weights)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -739,7 +796,56 @@ mod tests {
             seats_per_district: 1,
             total_seats: 1,
             adjacency_override: None,
+            coi_weights: None,
         }
+    }
+
+    // ── Task 149: COI weights ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_coi_weights_geometric_mean_increases_edge_weight() {
+        // Applying COI weight 0.9 to both endpoints multiplies edge by sqrt(0.9*0.9) = 0.9
+        let mut edge_weights: HashMap<(usize, usize), f64> = HashMap::new();
+        edge_weights.insert((0, 1), 1.0);
+
+        // Build a COI map: both tract 0 and tract 1 have weight 0.9
+        let coi_json = r#"{"GEOID_0": 0.9, "GEOID_1": 0.9}"#;
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), coi_json).unwrap();
+
+        let mut index_to_geoid: HashMap<usize, String> = HashMap::new();
+        index_to_geoid.insert(0, "GEOID_0".to_string());
+        index_to_geoid.insert(1, "GEOID_1".to_string());
+        let result = apply_coi_weights(edge_weights, tmp.path(), &index_to_geoid).unwrap();
+
+        let ew = result[&(0, 1)];
+        let expected = (0.9_f64 * 0.9_f64).sqrt(); // ~0.9
+        assert!((ew - expected).abs() < 1e-9,
+            "edge weight should be ~{expected:.4}, got {ew:.4}");
+    }
+
+    #[test]
+    fn test_coi_weights_missing_geoid_defaults_to_one() {
+        // A GEOID not in the COI map gets weight 1.0 (no modification)
+        let mut edge_weights: HashMap<(usize, usize), f64> = HashMap::new();
+        edge_weights.insert((0, 1), 2.0);
+
+        // COI map only has tract 0, not tract 1
+        let coi_json = r#"{"GEOID_0": 0.5}"#;
+        let tmp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(tmp.path(), coi_json).unwrap();
+
+        let mut index_to_geoid: HashMap<usize, String> = HashMap::new();
+        index_to_geoid.insert(0, "GEOID_0".to_string());
+        index_to_geoid.insert(1, "GEOID_1".to_string());
+        let result = apply_coi_weights(edge_weights, tmp.path(), &index_to_geoid).unwrap();
+
+        // w_0=0.5, w_1=1.0 (default — not in COI map) → factor = sqrt(0.5 * 1.0) = sqrt(0.5)
+        // original edge weight=2.0 → result = 2.0 * sqrt(0.5)
+        let ew = result[&(0, 1)];
+        let expected = 2.0 * (0.5_f64).sqrt();
+        assert!((ew - expected).abs() < 1e-9,
+            "missing GEOID should default to w=1.0, got {ew:.4}");
     }
 
     #[test]

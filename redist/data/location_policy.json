@@ -204,6 +204,7 @@
     "has_independent_commission": true,
     "commission_type": "citizens_redistricting",
     "vra_section2_applies": true,
+    "compactness_standard": "CA Const. Art. XXI §2(e) — districts shall be drawn to encourage geographical compactness",
     "notes": "CRC draws both legislative and congressional maps. Prison population counted at home since AB 420 (2011). Strong VRA requirements.",
     "census_years": [
       "2000",
@@ -247,6 +248,7 @@
     "has_independent_commission": true,
     "commission_type": "independent_redistricting",
     "vra_section2_applies": false,
+    "compactness_standard": "CO Const. Art. V §47 — district boundaries shall be as compact as possible",
     "notes": "CO Const. uses strong language: 'absolutely necessary' for county splits \u00e2\u20ac\u201d higher bar than most states.",
     "census_years": [
       "2000",
@@ -374,6 +376,7 @@
     "has_independent_commission": false,
     "commission_type": "legislature",
     "vra_section2_applies": true,
+    "compactness_standard": "FL Const. Art. III §20(a) — districts shall be compact",
     "notes": "Fair Districts Amendment (2010) prohibits incumbent protection and partisan intent.",
     "census_years": [
       "2000",
@@ -1318,6 +1321,7 @@
     "has_independent_commission": true,
     "commission_type": "independent_redistricting",
     "vra_section2_applies": true,
+    "compactness_standard": "NY Const. Art. III §4 — senate districts shall be compact in territory",
     "notes": "Voters approved independent commission (2014 amendment). Legislature can reject maps; if deadlocked, courts draw. NYC boroughs (Queens, Brooklyn, etc.) are also counties.",
     "census_years": [
       "2000",
@@ -1786,6 +1790,7 @@
     "has_independent_commission": false,
     "commission_type": "legislature_with_backup_board",
     "vra_section2_applies": true,
+    "compactness_standard": "TX Const. Art. III §26 — no specific compactness requirement; minimize county splits",
     "notes": "Texas has 254 counties \u00e2\u20ac\u201d 2nd most after GA. VRA-critical: large Hispanic (40%) and Black (13%) populations. If legislature fails, Legislative Redistricting Board draws maps (LRB). Largest state house in the US at 150 members.",
     "census_years": [
       "2000",
@@ -1916,6 +1921,7 @@
     "has_independent_commission": true,
     "commission_type": "citizen_redistricting",
     "vra_section2_applies": true,
+    "compactness_standard": "VA Const. Art. II §6 — no binding compactness requirement; districts should be compact",
     "independent_city_note": "Virginia has 95 counties AND 38 independent cities that are separate from any county. Both are tracked as separate entities in split analysis (133 total). Independent cities have FIPS codes 51510-51840 and are extracted correctly from Census GEOIDs.",
     "independent_cities": [
       "Alexandria",
@@ -2001,6 +2007,7 @@
     "has_independent_commission": true,
     "commission_type": "redistricting_commission",
     "vra_section2_applies": false,
+    "compactness_standard": "WA RCW 44.05.090 — districts shall be as compact as practicable",
     "notes": "WA has a bipartisan redistricting commission (4 appointed members + nonpartisan staff director). 2:1 senate-in-house nesting required. Block group resolution required for 98HD redistricting (only 1,784 tracts, 18/district at tract level).",
     "census_years": [
       "2000",

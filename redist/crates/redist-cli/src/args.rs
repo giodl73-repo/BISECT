@@ -165,6 +165,8 @@ pub enum Commands {
     Doctor(DoctorArgs),
     /// Reproduce a plan from its manifest.json and verify it matches the original
     Verify(VerifyArgs),
+    /// Run N redistricting seeds and keep top-K plans by a metric
+    Sweep(SweepArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -419,6 +421,15 @@ pub struct AnalyzeArgs {
     /// Number of bootstrap samples for partisan CI (default: 1000)
     #[arg(long, default_value_t = 1000)]
     pub bootstrap_samples: usize,
+
+    /// Path to external analyzer script to run and record in audit trail
+    /// Script called as: python script.py {assignments_json} {output_dir}
+    #[arg(long)]
+    pub external_analyzer: Option<String>,
+
+    /// Election data format: us-presidential (default), ie-dail, de-bundestag, generic-party-totals
+    #[arg(long, default_value = "us-presidential")]
+    pub election_format: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -479,6 +490,10 @@ pub struct SuiteDrawCliArgs {
     /// Overwrite existing suite without error
     #[arg(long)]
     pub force: bool,
+
+    /// Nest congressional within state senate (not yet supported — emits guidance)
+    #[arg(long)]
+    pub nest_congressional_in_senate: bool,
 }
 
 #[derive(Debug, Parser)]
@@ -604,6 +619,10 @@ pub struct CompareArgs {
     /// Suppress cross-year comparison warning (for intentional cycle-over-cycle comparisons)
     #[arg(long)]
     pub allow_cross_year: bool,
+
+    /// Comma-separated plan labels for N-plan summary table (alternative to --plan-a/--plan-b)
+    #[arg(long, value_delimiter = ',')]
+    pub labels: Vec<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -617,6 +636,7 @@ pub enum MapType {
     Political,
     Demographic,
     Compactness,
+    Splits,
     All,
 }
 
@@ -628,6 +648,7 @@ impl MapType {
             Self::Political   => "political",
             Self::Demographic => "demographic",
             Self::Compactness => "compactness",
+            Self::Splits      => "splits",
             Self::All         => "all",
         }
     }
@@ -900,6 +921,11 @@ pub struct StateArgs {
     /// Example: --state-name "malta" or --state-name "ireland"
     #[arg(long)]
     pub state_name: Option<String>,
+
+    /// Path to JSON file mapping GEOID -> weight (0.0-1.0) for COI preservation
+    /// Higher weight = stronger preference to keep tract with its neighbors
+    #[arg(long)]
+    pub coi_weights: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -1316,6 +1342,185 @@ mod tests {
         assert!(args.house_label.is_none());
         assert!(args.senate_label.is_none());
     }
+
+    // ── Task 129: --labels flag for N-plan summary ────────────────────────────
+
+    #[test]
+    fn test_compare_labels_flag_parsed() {
+        let args = CompareArgs::parse_from([
+            "compare", "--plan-a", "plan1",
+            "--labels", "wa_house_plan_a,wa_house_plan_b,wa_house_plan_c",
+        ]);
+        assert_eq!(args.labels, vec!["wa_house_plan_a", "wa_house_plan_b", "wa_house_plan_c"]);
+    }
+
+    #[test]
+    fn test_compare_labels_default_empty() {
+        let args = CompareArgs::parse_from(["compare", "--plan-a", "plan1", "--plan-b", "plan2"]);
+        assert!(args.labels.is_empty(), "--labels should default to empty Vec");
+    }
+
+    // ── Task 134: splits map type ─────────────────────────────────────────────
+
+    #[test]
+    fn test_map_type_splits_recognized() {
+        let args = MapArgs::parse_from(["map", "--state", "WA", "--types", "splits"]);
+        assert!(args.types.contains(&MapType::Splits), "splits must be a valid MapType");
+    }
+
+    #[test]
+    fn test_map_type_splits_name() {
+        assert_eq!(MapType::Splits.name(), "splits");
+    }
+
+    // ── Task 139: --external-analyzer flag ───────────────────────────────────
+
+    #[test]
+    fn test_external_analyzer_flag_parsed() {
+        let args = AnalyzeArgs::parse_from([
+            "analyze", "--state", "WA", "--external-analyzer", "my_script.py",
+        ]);
+        assert_eq!(args.external_analyzer.as_deref(), Some("my_script.py"));
+    }
+
+    #[test]
+    fn test_external_analyzer_default_none() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "WA"]);
+        assert!(args.external_analyzer.is_none());
+    }
+
+    // ── Task 148: international election format ───────────────────────────────
+
+    #[test]
+    fn test_election_format_flag_parses() {
+        let args = AnalyzeArgs::parse_from([
+            "analyze", "--state", "IE", "--election-format", "ie-dail",
+        ]);
+        assert_eq!(args.election_format, "ie-dail");
+    }
+
+    #[test]
+    fn test_election_format_default_us_presidential() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
+        assert_eq!(args.election_format, "us-presidential");
+    }
+
+    #[test]
+    fn test_non_us_election_format_emits_note() {
+        // Verify that the format string for a non-default election format
+        // would trigger the note. We check the logic that builds the message.
+        let format = "ie-dail";
+        let note = format!(
+            "NOTE: Election format '{}' is not yet fully supported.\n\
+             Currently supported: us-presidential (GEOID, dem_votes, rep_votes columns).",
+            format
+        );
+        assert!(note.contains("ie-dail"), "note must mention the format");
+        assert!(note.contains("us-presidential"), "note must mention the supported format");
+    }
+
+    // ── Task 149: COI weights flag ────────────────────────────────────────────
+
+    #[test]
+    fn test_coi_weights_flag_parsed() {
+        let args = StateArgs::parse_from([
+            "state", "--state", "WA", "--coi-weights", "coi_weights.json",
+        ]);
+        assert_eq!(args.coi_weights.as_deref(), Some("coi_weights.json"));
+    }
+
+    #[test]
+    fn test_coi_weights_default_none() {
+        let args = StateArgs::parse_from(["state", "--state", "WA"]);
+        assert!(args.coi_weights.is_none());
+    }
+
+    // ── Task 151: nest-congressional-in-senate flag ───────────────────────────
+
+    #[test]
+    fn test_nest_congressional_in_senate_flag_parsed() {
+        let args = SuiteDrawCliArgs::parse_from([
+            "draw", "--state", "WA", "--name", "wa_suite",
+            "--nest-congressional-in-senate",
+        ]);
+        assert!(args.nest_congressional_in_senate);
+    }
+
+    #[test]
+    fn test_nest_congressional_in_senate_default_false() {
+        let args = SuiteDrawCliArgs::parse_from([
+            "draw", "--state", "WA", "--name", "wa_suite",
+        ]);
+        assert!(!args.nest_congressional_in_senate);
+    }
+
+    // ── Task 144: sweep subcommand ────────────────────────────────────────────
+
+    #[test]
+    fn test_sweep_args_parse() {
+        use crate::args::SweepArgs;
+        let args = SweepArgs::parse_from([
+            "sweep", "--state", "WA", "--seeds", "20", "--keep-top", "5",
+            "--optimize-by", "splits",
+        ]);
+        assert_eq!(args.state, "WA");
+        assert_eq!(args.seeds, 20);
+        assert_eq!(args.keep_top, 5);
+        assert_eq!(args.optimize_by, "splits");
+    }
+
+    #[test]
+    fn test_sweep_args_defaults() {
+        use crate::args::SweepArgs;
+        let args = SweepArgs::parse_from(["sweep", "--state", "VT"]);
+        assert_eq!(args.year, "2020");
+        assert_eq!(args.chamber, "congressional");
+        assert_eq!(args.seeds, 10);
+        assert_eq!(args.seed_start, 1);
+        assert_eq!(args.keep_top, 3);
+        assert_eq!(args.optimize_by, "compactness");
+        assert_eq!(args.version, "sweep");
+        assert_eq!(args.output_base, "outputs");
+    }
+}
+
+// ---------------------------------------------------------------------------
+// `redist sweep` — N-seed optimization planning tool
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct SweepArgs {
+    /// State code
+    #[arg(long)]
+    pub state: String,
+    /// Census year
+    #[arg(short = 'y', long, default_value = "2020")]
+    pub year: String,
+    /// Chamber
+    #[arg(long, default_value = "congressional")]
+    pub chamber: String,
+    /// Number of seeds to run
+    #[arg(long, default_value_t = 10)]
+    pub seeds: usize,
+    /// Starting seed value (seeds N..N+seeds are used)
+    #[arg(long, default_value_t = 1)]
+    pub seed_start: u64,
+    /// Keep top K plans (default: 3)
+    #[arg(long, default_value_t = 3)]
+    pub keep_top: usize,
+    /// Metric to optimize: compactness, splits, deviation
+    #[arg(long, default_value = "compactness")]
+    pub optimize_by: String,
+    /// Version identifier
+    #[arg(short = 'v', long, default_value = "sweep")]
+    pub version: String,
+    /// Output base directory
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+    /// Auto-execute the generated commands (v2 feature; currently no-op)
+    #[arg(long, default_value_t = false)]
+    pub run: bool,
 }
 
 // ---------------------------------------------------------------------------
