@@ -117,6 +117,23 @@ fn load_plan_assignments(
         }
     }
 
+    // Try PlanContext first for labeled plans — single source of truth for paths.
+    // This ensures the assignments path is derived from the manifest, not reconstructed.
+    {
+        let ctx_result = crate::plan_context::PlanContext::from_label(
+            PathBuf::from(output_base).as_path(), version, year, label,
+        );
+        if let Ok(ctx) = ctx_result {
+            let asgn_path = ctx.assignments_path();
+            if asgn_path.exists() {
+                let raw: HashMap<String, usize> = serde_json::from_str(
+                    &std::fs::read_to_string(&asgn_path)?
+                )?;
+                return Ok(raw);
+            }
+        }
+    }
+
     // Try labeled plan path: {base}/{year}/plans/{label}/data/final_assignments.json
     // (this mirrors the path written by runner.rs: {output_dir}/{year}/plans/{label}/data/)
     let plan_path = base

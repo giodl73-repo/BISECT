@@ -46,6 +46,8 @@ pub fn check_binary_sha256(manifest_sha256: &str, skip_binary_check: bool) {
 }
 
 pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
+    // Future: use PlanContext::from_label when label can be derived from manifest.label
+    // (verify takes a manifest PATH not a label, so the refactor requires arg plumbing)
     // 1. Load manifest
     let content = std::fs::read_to_string(&args.manifest)
         .map_err(|e| anyhow::anyhow!("cannot read manifest '{}': {e}", args.manifest.display()))?;

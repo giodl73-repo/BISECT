@@ -25,6 +25,8 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
 
+    // TODO: use PlanContext for plan_dir when map is label-based;
+    //       geometry paths via LocationRegistry.adjacency_path() to eliminate hardcoded "V3"/"V4".
     // Path mirrors runner.rs: {output_base}/{version}/{year}/states/{state}/
     let output_root = PathBuf::from(&args.output_base).join(&args.version);
     let state_dir = output_root.join(&year).join("states").join(&state_name);

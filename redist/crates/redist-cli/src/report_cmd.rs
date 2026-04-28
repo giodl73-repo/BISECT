@@ -30,19 +30,17 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         );
     }
 
-    // Read manifest
-    let manifest_path = plan_dir.join("manifest.json");
-    let manifest: PlanManifest = if manifest_path.exists() {
-        let content = std::fs::read_to_string(&manifest_path)?;
-        serde_json::from_str(&content)?
-    } else {
-        // Build a minimal manifest from args
-        PlanManifest {
-            label: args.label.clone(),
-            year: args.year.clone(),
-            ..Default::default()
-        }
-    };
+    // Read manifest — prefer PlanContext (single source of truth); fall back to minimal
+    // manifest for plans created before v0.1.0 that may lack manifest.json.
+    let manifest: PlanManifest = crate::plan_context::PlanContext::from_label(
+        &PathBuf::from(&args.output_base), &args.version, &args.year, &args.label,
+    )
+    .map(|ctx| ctx.manifest)
+    .unwrap_or_else(|_| PlanManifest {
+        label: args.label.clone(),
+        year: args.year.clone(),
+        ..Default::default()
+    });
 
     let ctx = ReportContext::new(plan_dir.clone(), manifest.clone());
 

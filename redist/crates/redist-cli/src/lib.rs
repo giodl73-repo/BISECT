@@ -1,4 +1,6 @@
 pub mod adjacency_loader;
+#[cfg(test)]
+mod integration_pipeline_tests;
 pub mod aggregate;
 pub mod analyze;
 pub mod plan_context;
