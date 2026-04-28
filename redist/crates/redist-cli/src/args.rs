@@ -167,6 +167,8 @@ pub enum Commands {
     Verify(VerifyArgs),
     /// Run N redistricting seeds and keep top-K plans by a metric
     Sweep(SweepArgs),
+    /// Launch the interactive terminal UI
+    Tui(TuiArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -1565,6 +1567,18 @@ pub struct VerifyArgs {
     /// Skip binary SHA-256 check (for source-built binaries or different releases)
     #[arg(long)]
     pub skip_binary_check: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist tui` — interactive terminal UI
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct TuiArgs {
+    /// Start with a clean session (no saved config loaded)
+    #[arg(long)]
+    pub no_session: bool,
 }
 
 // ---------------------------------------------------------------------------

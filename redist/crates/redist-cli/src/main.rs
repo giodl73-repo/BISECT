@@ -512,6 +512,26 @@ fn main() {
             run_sweep(&args)
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
+
+        // ── redist tui: interactive terminal UI ───────────────────────────────
+        Commands::Tui(args) => {
+            let mut tui_bin = std::env::current_exe()
+                .unwrap_or_else(|_| std::path::PathBuf::from("redist-tui"));
+            tui_bin.set_file_name(if cfg!(windows) { "redist-tui.exe" } else { "redist-tui" });
+
+            let mut cmd = std::process::Command::new(&tui_bin);
+            if args.no_session {
+                cmd.arg("--no-session");
+            }
+            match cmd.status() {
+                Ok(status) => std::process::exit(status.code().unwrap_or(1)),
+                Err(e) => {
+                    eprintln!("ERROR: could not launch redist-tui: {e}");
+                    eprintln!("Build it with: cargo build --release -p redist-tui");
+                    std::process::exit(1);
+                }
+            }
+        }
     }
 }
 
