@@ -1,6 +1,5 @@
 use std::path::PathBuf;
 use crate::args::{MapArgs, MapScope, MapType};
-use crate::runner::load_all_states;
 use redist_map::{default_font_db, canvas_size_from_dpi};
 use fontdb::Database as FontDb;
 
@@ -18,12 +17,15 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
     let year = args.year.to_string();
     let dpi: u32 = args.dpi.parse().unwrap_or(150);
 
-    let all = load_all_states(&year)
-        .map_err(|e| anyhow::anyhow!("Failed to load state config: {e}"))?;
-    let (_, state_name, _) = all.iter()
-        .find(|(code, _, _)| code == &state_code)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
+    // Derive state_name from registry (avoids load_all_states for Class B command).
+    // state_name is used only to construct the legacy states/ directory path.
+    let state_name = {
+        let reg = crate::policy::LocationRegistry::load();
+        reg.state_name(&state_code)
+            .unwrap_or_else(|| state_code.to_lowercase())
+            .to_lowercase()
+            .replace(' ', "_")
+    };
 
     // TODO: use PlanContext for plan_dir when map is label-based;
     //       geometry paths via LocationRegistry.adjacency_path() to eliminate hardcoded "V3"/"V4".

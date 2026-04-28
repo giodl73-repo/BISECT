@@ -213,3 +213,19 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** SOLVED
 **Proved by:** gpmetis receives `-ufactor=50` (integer) instead of `-ufactor=1.0500` (float that atoi truncates to 1). FL 120HD now passes balance check.
 **Test:** `redist-cli::bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression`, `test_ufactor_integer_conversion_5_pct`
+
+---
+
+## PP-14: Metadata Resolution Split — dual sources for plan parameters
+
+**Pattern:** A command that operates on an existing plan (analyze, report, compare) resolves plan metadata (num_districts, chamber, balance_tolerance) from a global lookup table rather than the plan's own manifest. The global table only knows about the primary chamber (e.g., congressional: WA=10), so any plan run with a non-primary chamber (WA house=98, WA senate=49, IE parliamentary=43) silently receives wrong metadata. The plan was created correctly; the error is entirely in the post-creation command.
+
+**Domain:** Any CLI tool that has both (a) a "create" phase that writes metadata to disk and (b) an "operate" phase that re-derives metadata from a global registry. Arises because the global registry is added for the create phase and then accidentally used in the operate phase. The two phases feel symmetric but have different correct information sources.
+
+**Why it's hard to catch:** The bug produces plausible output — analysis files are written, balance checks run — but with wrong district counts. A WA house plan analyzed as 10 districts shows 10 districts with near-zero deviation (each district is very large) and reports "balance OK" trivially. Without knowing the plan should have 98 districts, the output looks valid. Only comparing district counts between manifest.json and analysis summary reveals the mismatch.
+
+**Structural solution:** Introduce `PlanContext` — a typed wrapper that loads all plan metadata exclusively from `{plan_dir}/manifest.json`. All Class B commands (analyze, report, compare, verify, map) must construct a `PlanContext` at entry and use only its methods. Prohibit `load_all_states()` and `LocationRegistry` calls for plan-level metadata in Class B commands. Enforce via code review: any PR touching a Class B command that adds a `load_all_states()` call is a bug.
+
+**Status:** SOLVED
+**Proved by:** `redist-cli::plan_context::PlanContext::from_label()` loads manifest directly. `analyze.rs` uses PlanContext for `num_districts`. WA house 98D: `analyze` now produces summary with 98 districts, balance_valid=true, max_deviation=0%.
+**Test:** `redist-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10`
