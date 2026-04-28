@@ -16,11 +16,20 @@ The resolution lies in the seat magnitude. In 5-seat constituencies (Malta) and 
 
 A practical contribution of this paper is the \texttt{redist policy} database, which encodes country-specific terminology (ridings, Wahlkreise, constituencies), population bases, and balance standards. The analysis reveals that ``redistricting'' is institutionally heterogeneous: the UK uses registered electors, Germany uses German citizens, and Ireland uses total population, reflecting different theories of democratic representation. Algorithmic redistricting must be adapted to each country's legal standard to be institutionally valid, not merely geometrically optimal.
 
+\subsection{Granularity Constraints and Data Availability}
+
+A practical finding of this analysis is that algorithmic redistricting quality is bounded by the \emph{granularity floor} identified in Paper E.1: when the number of geographic units per target district falls below approximately 10--20, the recursive bisection algorithm cannot achieve target population balance regardless of the imbalance tolerance parameter. Table~\ref{tab:germany-granularity} in the Results section illustrates this for Germany: GADM level-2 boundaries (Landkreise, $\approx$400 units) fail at 299 Wahlkreise (1.3 units/district), while GADM level-3 boundaries (Gemeinden, 4{,}680 units) succeed (15.7 units/district).
+
+This constraint motivates our data acquisition strategy: Ireland at level-2 county boundaries (106 units, 2.5 per constituency) is borderline adequate for prototype quality; CSO Small Area data ($\approx$18{,}000 units) would provide $\approx$419 units per constituency, well above the floor.
+
 \subsection{Limitations}
 
-% TODO: Fill in
-% - Geographic unit availability varies by country
-% - Germany Gemeinde granularity constraint
-% - STV simulation uses D'Hondt approximation (party-list rather than ranked ballot)
-% - 2020 election data used for countries where more recent data available
-% - Enacted boundary dates vary; not all countries have simultaneous redistricting cycles
+\textbf{Geographic unit availability.} GADM level-2 and level-3 administrative boundaries differ from official statistical boundaries used in national censuses. CSO Ireland Small Area boundaries, Destatis Gemeinden population data, and NSO Malta enumeration districts would improve precision; results presented here use GADM proxies where national data was unavailable.
+
+\textbf{STV proportionality approximation.} Ireland and Malta use Single Transferable Vote with ranked ballots. We approximate STV outcomes using D'Hondt party-list allocation on aggregate party vote shares --- a standard approximation that overestimates large-party seats relative to STV. The directional finding (algorithmic boundaries do not impair proportionality) is robust to this approximation, but exact Gallagher indices should be computed with full STV simulation when ranked ballot data is available.
+
+\textbf{Electoral data vintage.} We use 2020 presidential vote shares for Ireland and Malta; more recent election data would better reflect current party systems. Germany's results use uniform population distribution (Destatis ZENSUS 2021 Gemeinde data pending); per-Gemeinde population data would improve balance accuracy.
+
+\textbf{Enacted boundary comparisons.} Compactness comparisons against enacted boundaries (Table~\ref{tab:results-compactness}) are pending acquisition of digitised enacted boundary shapefiles for all six countries. The algorithmic compactness scores reported are absolute; relative improvement can only be computed once enacted boundaries are available.
+
+\textbf{Contiguity of GADM boundaries.} Six of 299 German Wahlkreise in the prototype run are non-contiguous, reflecting geographic artefacts in GADM level-3 data (isolated Gemeinden connected via nearest-neighbour water bridges). Official Bundeswahlkreis boundaries would eliminate these artefacts.
