@@ -118,4 +118,82 @@ mod integration_pipeline_tests {
             "error must list available plans, got: {msg}"
         );
     }
+
+    #[test]
+    fn test_plan_context_to_report_context_district_count() {
+        // L1: PlanContext feeds correct metadata to the report assembly step.
+        // Verifies analyze→report handoff: ReportContext built from PlanContext
+        // has the correct num_districts from the manifest.
+        let tmp = TempDir::new().unwrap();
+        make_house_plan(&tmp, "wa_house_report_test", 98);
+
+        // Add required analysis stubs
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("wa_house_report_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        for name in &["summary.json", "contiguity.json", "compactness.json"] {
+            std::fs::write(analysis_dir.join(name),
+                serde_json::json!({"status": "ok", "districts": [], "all_contiguous": true}).to_string()
+            ).unwrap();
+        }
+
+        let ctx = crate::plan_context::PlanContext::from_label(
+            tmp.path(), "v1", "2020", "wa_house_report_test"
+        ).unwrap();
+
+        // PlanContext provides the manifest — assert it has 98 districts
+        assert_eq!(ctx.manifest.num_districts, 98);
+        assert_eq!(ctx.manifest.chamber, "house");
+
+        // If we were to build ReportContext from PlanContext, it would correctly
+        // use 98 districts (not 10 from congressional manifest)
+        let report_ctx = redist_report::ReportContext::new(
+            ctx.plan_dir.clone(),
+            ctx.manifest.clone()
+        );
+        assert_eq!(report_ctx.manifest.num_districts, 98,
+            "ReportContext built from PlanContext must have 98 districts");
+    }
+
+    #[test]
+    fn test_compare_loads_plan_assignments_via_plan_context_paths() {
+        // L1: compare.rs now uses PlanContext for labeled plans.
+        // Verify that PlanContext.assignments_path() gives the correct path
+        // that load_plan_assignments() can find.
+        let tmp = TempDir::new().unwrap();
+        make_house_plan(&tmp, "plan_for_compare_a", 5);
+        make_house_plan(&tmp, "plan_for_compare_b", 5);
+
+        let ctx_a = crate::plan_context::PlanContext::from_label(
+            tmp.path(), "v1", "2020", "plan_for_compare_a"
+        ).unwrap();
+        let ctx_b = crate::plan_context::PlanContext::from_label(
+            tmp.path(), "v1", "2020", "plan_for_compare_b"
+        ).unwrap();
+
+        // Both assignments must be loadable
+        assert!(ctx_a.assignments_path().exists(), "plan_a assignments must exist");
+        assert!(ctx_b.assignments_path().exists(), "plan_b assignments must exist");
+
+        let raw_a: std::collections::HashMap<String, usize> = serde_json::from_str(
+            &std::fs::read_to_string(ctx_a.assignments_path()).unwrap()
+        ).unwrap();
+        let raw_b: std::collections::HashMap<String, usize> = serde_json::from_str(
+            &std::fs::read_to_string(ctx_b.assignments_path()).unwrap()
+        ).unwrap();
+
+        // Both plans have 5 districts
+        let districts_a: std::collections::HashSet<usize> = raw_a.values().copied().collect();
+        let districts_b: std::collections::HashSet<usize> = raw_b.values().copied().collect();
+        assert_eq!(districts_a.len(), 5);
+        assert_eq!(districts_b.len(), 5);
+
+        // Jaccard between identical plans = 1.0 (same tracts, same districts)
+        let matching = raw_a.iter()
+            .filter(|(geoid, &d)| raw_b.get(*geoid) == Some(&d))
+            .count();
+        let union = raw_a.len().max(raw_b.len());
+        let jaccard = matching as f64 / union as f64;
+        assert_eq!(jaccard, 1.0, "identical plans must have Jaccard = 1.0");
+    }
 }

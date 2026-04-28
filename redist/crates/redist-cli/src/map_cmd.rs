@@ -27,25 +27,36 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
             .replace(' ', "_")
     };
 
-    // TODO: use PlanContext for plan_dir when map is label-based;
-    //       geometry paths via LocationRegistry.adjacency_path() to eliminate hardcoded "V3"/"V4".
-    // Path mirrors runner.rs: {output_base}/{version}/{year}/states/{state}/
-    let output_root = PathBuf::from(&args.output_base).join(&args.version);
-    let state_dir = output_root.join(&year).join("states").join(&state_name);
-    let state_data_dir = state_dir.join("data");
-    let maps_dir = state_dir.join("maps");
+    // Resolve plan directory: prefer --label (PlanContext) over legacy --state path
+    let (plan_dir, maps_dir, assignments_path) = if let Some(ref label) = args.label {
+        let ctx = crate::plan_context::PlanContext::from_label(
+            &PathBuf::from(&args.output_base).join(&args.version),
+            &args.version, &year, label
+        )?;
+        let md = ctx.maps_dir();
+        let ap = ctx.assignments_path();
+        (ctx.plan_dir.clone(), md, ap)
+    } else {
+        // Legacy: construct path from state_name under states/ directory
+        let output_root = PathBuf::from(&args.output_base).join(&args.version);
+        let state_dir = output_root.join(&year).join("states").join(&state_name);
+        let md = state_dir.join("maps");
+        let ap = state_dir.join("data").join("final_assignments.json");
+        (state_dir, md, ap)
+    };
     std::fs::create_dir_all(&maps_dir)?;
 
     let types = resolve_map_types(&args.types);
     let font_db = default_font_db();
 
-    let assignments_path = state_data_dir.join("final_assignments.json");
     if !assignments_path.exists() {
         anyhow::bail!(
             "No assignments at {}.\nRun: redist state --state {state_code} --version {} first.",
             assignments_path.display(), args.version
         );
     }
+
+    let state_data_dir = plan_dir.join("data");
 
     for map_type in &types {
         match map_type {
@@ -62,7 +73,7 @@ pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
             }
             MapType::Rounds => {
                 render_rounds_maps(
-                    &state_dir, &maps_dir, &state_name, &state_code, &year,
+                    &plan_dir, &maps_dir, &state_name, &state_code, &year,
                     &args.version, dpi, &font_db, args.force,
                 )?;
             }

@@ -99,7 +99,7 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
     }
 
     // 3. Load original assignments
-    let original_assignments = load_original_assignments(&manifest, &args.output_base)?;
+    let original_assignments = load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
     if original_assignments.is_empty() {
         eprintln!("WARNING: Original plan has no assignments — cannot compare.");
         eprintln!("The original plan may be at a different path. Verification aborted.");
@@ -171,9 +171,24 @@ fn find_redist_binary() -> anyhow::Result<PathBuf> {
 fn load_original_assignments(
     manifest: &PlanManifest,
     output_base: &str,
+    explicit_label: Option<&str>,
 ) -> anyhow::Result<HashMap<String, usize>> {
-    // Try standard plan path
-    let plan_dir = PathBuf::from(output_base)
+    // Try explicit label via PlanContext first
+    if let Some(label) = explicit_label {
+        for version in &["v1", "verify", "international"] {
+            if let Ok(ctx) = crate::plan_context::PlanContext::from_label(
+                std::path::Path::new(output_base), version, &manifest.year, label
+            ) {
+                if ctx.assignments_path().exists() {
+                    let content = std::fs::read_to_string(ctx.assignments_path())?;
+                    return Ok(serde_json::from_str(&content)?);
+                }
+            }
+        }
+    }
+
+    // Fall back to searching by manifest.label under v1
+    let plan_path = PathBuf::from(output_base)
         .join("v1")
         .join(&manifest.year)
         .join("plans")
@@ -181,13 +196,13 @@ fn load_original_assignments(
         .join("data")
         .join("final_assignments.json");
 
-    if plan_dir.exists() {
-        let content = std::fs::read_to_string(&plan_dir)?;
+    if plan_path.exists() {
+        let content = std::fs::read_to_string(&plan_path)?;
         return Ok(serde_json::from_str(&content)?);
     }
 
-    // Try same directory as the manifest
-    Ok(HashMap::new()) // Empty = warn and skip comparison
+    // Not found — return empty (caller warns and skips comparison)
+    Ok(HashMap::new())
 }
 
 fn load_verify_assignments(
@@ -305,6 +320,7 @@ mod tests {
             output_base: "outputs".to_string(),
             dry_run: true,
             skip_binary_check: false,
+            label: None,
         };
         // Should fail at manifest read, not at binary execution
         let result = run_verify(&args);
@@ -341,6 +357,7 @@ mod tests {
             output_base: "outputs".to_string(),
             dry_run: true,
             skip_binary_check: false,
+            label: None,
         };
         // dry_run=true: must return Ok after printing command (no binary execution)
         let result = run_verify(&args);

@@ -675,6 +675,10 @@ pub struct MapArgs {
     #[arg(long, default_value = "")]
     pub state: String,
 
+    /// Plan label (alternative to --state for labeled plans under plans/ directory)
+    #[arg(long)]
+    pub label: Option<String>,
+
     /// Rendering scope: state (default) or national
     #[arg(long, default_value = "state")]
     pub scope: MapScope,
@@ -1501,6 +1505,22 @@ mod tests {
         assert_eq!(args.version, "sweep");
         assert_eq!(args.output_base, "outputs");
     }
+
+    // ── Task 192: --label on map ──────────────────────────────────────────────
+
+    #[test]
+    fn test_map_args_label_parsed() {
+        let args = MapArgs::parse_from(["map", "--state", "WA", "--label", "wa_house_v1"]);
+        assert_eq!(args.label, Some("wa_house_v1".to_string()));
+    }
+
+    // ── Task 193: --label on verify ───────────────────────────────────────────
+
+    #[test]
+    fn test_verify_args_label_parsed() {
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json", "--label", "wa_house_v1"]);
+        assert_eq!(args.label, Some("wa_house_v1".to_string()));
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -1567,6 +1587,10 @@ pub struct VerifyArgs {
     /// Skip binary SHA-256 check (for source-built binaries or different releases)
     #[arg(long)]
     pub skip_binary_check: bool,
+    /// Plan label for locating the original plan to compare against (optional).
+    /// When provided, PlanContext locates the original assignments for Jaccard comparison.
+    #[arg(long)]
+    pub label: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
