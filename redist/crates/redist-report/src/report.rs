@@ -64,12 +64,20 @@ fn present_optional_files(ctx: &ReportContext) -> std::collections::HashSet<&'st
 }
 
 /// Read an analysis JSON file if present.
+/// Injects `"status": "ok"` into the result so templates can always
+/// check `.status == "unavailable"` regardless of file structure.
 fn read_analysis_json(analysis_dir: &Path, name: &str) -> Option<Value> {
     let path = analysis_dir.join(name);
     if path.exists() {
         std::fs::read_to_string(&path)
             .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
+            .and_then(|s| serde_json::from_str::<Value>(&s).ok())
+            .map(|mut v| {
+                if let Some(obj) = v.as_object_mut() {
+                    obj.entry("status").or_insert_with(|| serde_json::json!("ok"));
+                }
+                v
+            })
     } else {
         None
     }

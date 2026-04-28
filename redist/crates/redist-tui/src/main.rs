@@ -54,6 +54,16 @@ fn main() -> anyhow::Result<()> {
     // Discover plans using session settings
     app.plans = plans::discover_plans(&sess.output_base, &sess.version, &sess.year);
 
+    // Pre-populate run form from session
+    app.default_run_form = redist_tui::app::RunForm {
+        location: sess.location.clone(),
+        chamber: sess.chamber.clone(),
+        year: sess.year.clone(),
+        resolution: sess.resolution.clone(),
+        version: sess.version.clone(),
+        ..Default::default()
+    };
+
     // Run main event loop
     let result = run_app(&mut terminal, &mut app, &sess);
 
@@ -257,7 +267,12 @@ fn run_app(
                                 (KeyCode::Char('q'), _) | (KeyCode::Esc, _) => return Ok(()),
                                 (KeyCode::Char('c'), KeyModifiers::CONTROL) => return Ok(()),
                                 (KeyCode::Char('r'), _) => {
-                                    app.navigate(Screen::Run(RunState::default()));
+                                    // Pre-fill from session defaults
+                                    let form = app.default_run_form.clone();
+                                    app.navigate(Screen::Run(RunState {
+                                        form,
+                                        ..Default::default()
+                                    }));
                                 }
                                 (KeyCode::Char('c'), _) => {
                                     use redist_tui::app::CompareState;
@@ -277,8 +292,8 @@ fn run_app(
                                 }
                                 (KeyCode::Char('d'), _) => {
                                     app.navigate(Screen::Doctor(DoctorState {
-                                        location: "VT".to_string(),
-                                        chamber: "congressional".to_string(),
+                                        location: app.default_run_form.location.clone(),
+                                        chamber: app.default_run_form.chamber.clone(),
                                         year: "2020".to_string(),
                                         checks: Vec::new(),
                                     }));
