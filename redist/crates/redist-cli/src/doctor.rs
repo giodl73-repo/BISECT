@@ -259,7 +259,13 @@ fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
     for name in &required_analysis {
         if ctx.analysis_file_exists(name) {
             let info = read_analysis_summary(&ctx, name);
-            println!("[PASS] {:<24} {}", name, info);
+            // For compactness: use [WARN] when PP is low or moderate (< 0.25)
+            let status = if *name == "compactness.json" {
+                if info.contains("low") || info.contains("moderate") { "WARN" } else { "PASS" }
+            } else {
+                "PASS"
+            };
+            println!("[{}] {:<24} {}", status, name, info);
         } else {
             println!(
                 "[MISS] {:<24} -> run: redist analyze --label {} --types {}",
@@ -375,10 +381,18 @@ fn read_analysis_summary(ctx: &crate::plan_context::PlanContext, name: &str) -> 
         "summary.json" => {
             let valid = v["population_balance_valid"].as_bool().unwrap_or(false);
             let n = v["districts"].as_array().map(|a| a.len()).unwrap_or(0);
+            let balance_context = if valid && n > 1 {
+                " (within tolerance ✓)"
+            } else if !valid {
+                " (⚠ EXCEEDS TOLERANCE)"
+            } else {
+                ""
+            };
             format!(
-                "({} districts, balance {})",
+                "({} districts, balance {}{})",
                 n,
-                if valid { "valid" } else { "FAILED" }
+                if valid { "valid" } else { "FAILED" },
+                balance_context
             )
         }
         "compactness.json" => {
@@ -390,7 +404,16 @@ fn read_analysis_summary(ctx: &crate::plan_context::PlanContext, name: &str) -> 
                     .collect();
                 if !pp_vals.is_empty() {
                     let mean = pp_vals.iter().sum::<f64>() / pp_vals.len() as f64;
-                    return format!("(mean PP: {:.3})", mean);
+                    let context = if mean < 0.15 {
+                        " (low — may face legal challenge)"
+                    } else if mean < 0.25 {
+                        " (moderate)"
+                    } else if mean < 0.35 {
+                        " (good)"
+                    } else {
+                        " (well-compact)"
+                    };
+                    return format!("(mean PP: {:.3}{})", mean, context);
                 }
             }
             String::new()
@@ -614,6 +637,169 @@ mod tests {
             assert!(!s.is_empty(),
                 "{code} compactness_standard must not be empty");
         }
+    }
+
+    // ── Task 208: doctor metric context thresholds ────────────────────────────
+
+    #[test]
+    fn test_doctor_compactness_low_pp_shows_warn_context() {
+        // PP < 0.15 should get "low" context
+        let pp = 0.12_f64;
+        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        assert_eq!(context, "low");
+    }
+
+    #[test]
+    fn test_doctor_compactness_high_pp_shows_compact_context() {
+        let pp = 0.36_f64;
+        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        assert_eq!(context, "well-compact");
+    }
+
+    #[test]
+    fn test_doctor_compactness_moderate_pp() {
+        let pp = 0.20_f64;
+        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        assert_eq!(context, "moderate");
+    }
+
+    #[test]
+    fn test_doctor_compactness_good_pp() {
+        let pp = 0.30_f64;
+        let context = if pp < 0.15 { "low" } else if pp < 0.25 { "moderate" } else if pp < 0.35 { "good" } else { "well-compact" };
+        assert_eq!(context, "good");
+    }
+
+    /// read_analysis_summary compactness includes context text for mean PP.
+    #[test]
+    fn test_read_analysis_summary_compactness_includes_context() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("ctx_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "ctx_test",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 1,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            }).to_string(),
+        ).unwrap();
+
+        // Low PP (< 0.15) → "low" context
+        std::fs::write(
+            analysis_dir.join("compactness.json"),
+            serde_json::json!({
+                "districts": [{"district": 1, "polsby_popper": 0.10}]
+            }).to_string(),
+        ).unwrap();
+        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test").unwrap();
+        let summary = read_analysis_summary(&ctx, "compactness.json");
+        assert!(summary.contains("low") || summary.contains("legal"),
+            "low PP must show 'low' context: {summary}");
+
+        // High PP (> 0.35) → "well-compact" context
+        std::fs::write(
+            analysis_dir.join("compactness.json"),
+            serde_json::json!({
+                "districts": [{"district": 1, "polsby_popper": 0.40}]
+            }).to_string(),
+        ).unwrap();
+        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "ctx_test").unwrap();
+        let summary2 = read_analysis_summary(&ctx2, "compactness.json");
+        assert!(summary2.contains("well-compact"),
+            "high PP must show 'well-compact' context: {summary2}");
+    }
+
+    /// read_analysis_summary summary.json includes balance context.
+    #[test]
+    fn test_read_analysis_summary_balance_context() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("bal_ctx_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "bal_ctx_test",
+                "state_code": "WA",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 10,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 10,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            }).to_string(),
+        ).unwrap();
+
+        // Valid balance with 10 districts → "within tolerance" context
+        std::fs::write(
+            analysis_dir.join("summary.json"),
+            serde_json::json!({
+                "population_balance_valid": true,
+                "districts": [
+                    {"district": 1}, {"district": 2}, {"district": 3},
+                    {"district": 4}, {"district": 5}, {"district": 6},
+                    {"district": 7}, {"district": 8}, {"district": 9}, {"district": 10}
+                ]
+            }).to_string(),
+        ).unwrap();
+        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test").unwrap();
+        let summary = read_analysis_summary(&ctx, "summary.json");
+        assert!(summary.contains("within tolerance"),
+            "valid balance with >1 district must show 'within tolerance': {summary}");
+
+        // Invalid balance → "EXCEEDS TOLERANCE" context
+        std::fs::write(
+            analysis_dir.join("summary.json"),
+            serde_json::json!({
+                "population_balance_valid": false,
+                "districts": [{"district": 1}, {"district": 2}]
+            }).to_string(),
+        ).unwrap();
+        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "bal_ctx_test").unwrap();
+        let summary2 = read_analysis_summary(&ctx2, "summary.json");
+        assert!(summary2.contains("EXCEEDS TOLERANCE"),
+            "invalid balance must show 'EXCEEDS TOLERANCE': {summary2}");
     }
 
     // ── Plan diagnosis mode (--label) ─────────────────────────────────────────

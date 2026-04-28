@@ -1692,6 +1692,13 @@ pub struct VerifyArgs {
     /// When provided, PlanContext locates the original assignments for Jaccard comparison.
     #[arg(long)]
     pub label: Option<String>,
+    /// Skip re-running redist state — just compare the existing plan assignments
+    /// against a reference file (useful when METIS is unavailable)
+    #[arg(long)]
+    pub verify_assignments_only: bool,
+    /// Reference assignments file to compare against (for --verify-assignments-only)
+    #[arg(long)]
+    pub plan_ref: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

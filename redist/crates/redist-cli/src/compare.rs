@@ -237,6 +237,7 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         max_dev_pct: Option<f64>,
         county_splits: Option<u64>,
         contiguous: Option<bool>,
+        balance_tol: Option<f64>,
     }
 
     let mut rows: Vec<PlanRow> = Vec::new();
@@ -274,33 +275,40 @@ pub fn run_multi_plan_summary(args: &CompareArgs) -> anyhow::Result<()> {
         let contiguous = contiguity.as_ref()
             .and_then(|v| v.get("all_contiguous").and_then(|c| c.as_bool()));
 
-        rows.push(PlanRow { label: label.clone(), mean_pp, max_dev_pct, county_splits, contiguous });
+        // balance_tolerance_pct → from PlanContext manifest
+        let balance_tol = crate::plan_context::PlanContext::from_label(
+            std::path::Path::new(&args.output_base), version, &args.year, label,
+        ).ok().map(|ctx| ctx.manifest.balance_tolerance_pct);
+
+        rows.push(PlanRow { label: label.clone(), mean_pp, max_dev_pct, county_splits, contiguous, balance_tol });
     }
 
     let is_csv = matches!(args.format, crate::args::CompareFormat::Csv);
 
     if is_csv {
-        println!("Label,Mean PP,Max Dev%,County Splits,Contiguous");
+        println!("Label,Mean PP,Max Dev%,County Splits,Bal Tol%,Contiguous");
         for row in &rows {
             let pp: String = row.mean_pp.map_or_else(|| "N/A".to_string(), |v| format!("{:.3}", v));
             let dev: String = row.max_dev_pct.map_or_else(|| "N/A".to_string(), |v| format!("{:.1}%", v));
             let splits: String = row.county_splits.map_or_else(|| "N/A".to_string(), |v| v.to_string());
+            let tol: String = row.balance_tol.map_or_else(|| "-".to_string(), |v| format!("{:.1}%", v));
             let cont: String = row.contiguous.map_or_else(|| "N/A".to_string(), |v| if v { "Yes".to_string() } else { "No".to_string() });
-            println!("{},{},{},{},{}", row.label, pp, dev, splits, cont);
+            println!("{},{},{},{},{},{}", row.label, pp, dev, splits, tol, cont);
         }
     } else {
         // Table format
         let col1 = rows.iter().map(|r| r.label.len()).max().unwrap_or(5).max(23);
-        println!("{:<col1$} | Mean PP | Max Dev% | County Splits | Contiguous",
+        println!("{:<col1$} | Mean PP | Max Dev% | Splits | Bal Tol% | Contiguous",
             "Label", col1 = col1);
-        println!("{:-<col1$}-+---------+----------+---------------+------------",
+        println!("{:-<col1$}-+---------+----------+--------+----------+------------",
             "", col1 = col1);
         for row in &rows {
             let pp: String = row.mean_pp.map_or_else(|| " N/A ".to_string(), |v| format!(" {:.3} ", v));
             let dev: String = row.max_dev_pct.map_or_else(|| "  N/A  ".to_string(), |v| format!("  {:.1}% ", v));
-            let splits: String = row.county_splits.map_or_else(|| "     N/A      ".to_string(), |v| format!("     {:3}      ", v));
+            let splits: String = row.county_splits.map_or_else(|| "  N/A ".to_string(), |v| format!("  {:3}  ", v));
+            let tol: String = row.balance_tol.map_or_else(|| "   -    ".to_string(), |v| format!("  {:.1}%  ", v));
             let cont: String = row.contiguous.map_or_else(|| "  N/A ".to_string(), |v| if v { "  Yes ".to_string() } else { "  No  ".to_string() });
-            println!("{:<col1$} |{pp}|{dev}|{splits}|{cont}",
+            println!("{:<col1$} |{pp}|{dev}|{splits}|{tol}|{cont}",
                 row.label, col1 = col1);
         }
     }
@@ -699,6 +707,143 @@ mod tests {
         // run_multi_plan_summary should succeed and emit header — just check it doesn't error
         let result = run_multi_plan_summary(&args);
         assert!(result.is_ok(), "multi-plan summary with 2 valid labels must succeed: {:?}", result.err());
+    }
+
+    // ── Task 207: N-plan summary includes Bal Tol% column ────────────────────
+
+    fn write_plan_manifest(plan_dir: &std::path::Path, label: &str, tol: f64) {
+        std::fs::create_dir_all(plan_dir).unwrap();
+        let manifest = serde_json::json!({
+            "label": label,
+            "state_code": "WA",
+            "year": "2020",
+            "chamber": "house",
+            "num_districts": 98,
+            "population_source": "total",
+            "partition_mode": "edge-weighted",
+            "seed": null,
+            "binary_version": "0.1.0",
+            "binary_sha256": "",
+            "binary_download_url": "",
+            "adjacency_file": "",
+            "adjacency_sha256": "",
+            "adjacency_build_command": "",
+            "adjacency_build_version": "0.1.0",
+            "tiger_source_url": "",
+            "tiger_sha256": null,
+            "created_at": "2026-04-26T00:00:00Z",
+            "balance_tolerance_pct": tol,
+            "population_balance_valid": true,
+            "seats_per_district": 1,
+            "total_seats": 98,
+            "electoral_system": "single_member",
+            "gpmetis_version": "unknown"
+        });
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::to_string_pretty(&manifest).unwrap(),
+        ).unwrap();
+    }
+
+    /// Task 207: multi-plan summary table includes Bal Tol% column with tolerance values.
+    #[test]
+    fn test_multi_plan_summary_includes_tolerance_column() {
+        use crate::args::{CompareArgs, CompareFormat};
+
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Create two plans with different tolerances
+        let plan_dir_a = tmp.path().join("sweep").join("2020").join("plans").join("wa_house_tol_0_5");
+        let plan_dir_b = tmp.path().join("sweep").join("2020").join("plans").join("wa_house_tol_5_0");
+        write_plan_manifest(&plan_dir_a, "wa_house_tol_0_5", 0.5);
+        write_plan_manifest(&plan_dir_b, "wa_house_tol_5_0", 5.0);
+
+        let args_table = CompareArgs {
+            plan_a: "wa_house_tol_0_5".into(),
+            plan_b: None,
+            enacted: false,
+            year: "2020".into(),
+            version: Some("sweep".into()),
+            metrics: vec!["all".into()],
+            out: None,
+            format: CompareFormat::Table,
+            output_base: tmp.path().to_str().unwrap().into(),
+            output_dir: None,
+            allow_cross_year: false,
+            labels: vec!["wa_house_tol_0_5".into(), "wa_house_tol_5_0".into()],
+            version_b: None,
+        };
+
+        let args_csv = CompareArgs {
+            plan_a: "wa_house_tol_0_5".into(),
+            plan_b: None,
+            enacted: false,
+            year: "2020".into(),
+            version: Some("sweep".into()),
+            metrics: vec!["all".into()],
+            out: None,
+            format: CompareFormat::Csv,
+            output_base: tmp.path().to_str().unwrap().into(),
+            output_dir: None,
+            allow_cross_year: false,
+            labels: vec!["wa_house_tol_0_5".into(), "wa_house_tol_5_0".into()],
+            version_b: None,
+        };
+
+        // (a) table format must succeed
+        let result_table = run_multi_plan_summary(&args_table);
+        assert!(result_table.is_ok(), "multi-plan summary (table) with tolerances must succeed: {:?}", result_table.err());
+
+        // (b) CSV format must also succeed
+        let result_csv = run_multi_plan_summary(&args_csv);
+        assert!(result_csv.is_ok(), "multi-plan summary (CSV) with tolerances must succeed: {:?}", result_csv.err());
+    }
+
+    /// Task 207: balance_tol reads correctly from manifest via PlanContext.
+    #[test]
+    fn test_multi_plan_summary_tolerance_from_manifest() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("tol_plan");
+        write_plan_manifest(&plan_dir, "tol_plan", 2.5);
+
+        // Verify PlanContext reads balance_tolerance_pct correctly
+        let ctx = crate::plan_context::PlanContext::from_label(
+            tmp.path(), "v1", "2020", "tol_plan",
+        ).unwrap();
+        assert!((ctx.manifest.balance_tolerance_pct - 2.5).abs() < 1e-9,
+            "balance_tolerance_pct must be 2.5, got {}", ctx.manifest.balance_tolerance_pct);
+    }
+
+    /// Task 207: when PlanContext fails, Bal Tol% shows "-".
+    #[test]
+    fn test_multi_plan_summary_missing_manifest_shows_dash() {
+        use crate::args::{CompareArgs, CompareFormat};
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Create plan directories without manifests
+        for label in &["plan_no_manifest_a", "plan_no_manifest_b"] {
+            std::fs::create_dir_all(
+                tmp.path().join("v1").join("2020").join("plans").join(label)
+            ).unwrap();
+        }
+
+        let args = CompareArgs {
+            plan_a: "plan_no_manifest_a".into(),
+            plan_b: None,
+            enacted: false,
+            year: "2020".into(),
+            version: Some("v1".into()),
+            metrics: vec!["all".into()],
+            out: None,
+            format: CompareFormat::Table,
+            output_base: tmp.path().to_str().unwrap().into(),
+            output_dir: None,
+            allow_cross_year: false,
+            labels: vec!["plan_no_manifest_a".into(), "plan_no_manifest_b".into()],
+            version_b: None,
+        };
+
+        // Should succeed — missing PlanContext just shows "-"
+        let result = run_multi_plan_summary(&args);
+        assert!(result.is_ok(), "summary without manifests must still succeed: {:?}", result.err());
     }
 
     /// Scenario 14: External .rplan compare

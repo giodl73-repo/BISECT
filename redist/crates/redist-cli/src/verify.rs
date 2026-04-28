@@ -46,6 +46,55 @@ pub fn check_binary_sha256(manifest_sha256: &str, skip_binary_check: bool) {
 }
 
 pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
+    // ── assignments-only mode (no METIS re-run) ───────────────────────────────
+    if args.verify_assignments_only {
+        let content = std::fs::read_to_string(&args.manifest)
+            .map_err(|e| anyhow::anyhow!("cannot read manifest: {e}"))?;
+        let manifest: PlanManifest = serde_json::from_str(&content)?;
+
+        eprintln!("=== redist verify (assignments only): {} ===", args.manifest.display());
+        eprintln!("Plan: {} ({} {} {}D)",
+            manifest.label, manifest.state_code, manifest.chamber, manifest.num_districts);
+
+        // Find original assignments via load_original_assignments
+        let original = load_original_assignments(&manifest, &args.output_base, args.label.as_deref())?;
+        if original.is_empty() {
+            eprintln!("WARNING: Original plan not found — cannot compare.");
+            eprintln!("Use --plan-ref to specify a reference assignments file.");
+            std::process::exit(1);
+        }
+
+        // Load reference
+        let reference = if let Some(ref ref_path) = args.plan_ref {
+            let content = std::fs::read_to_string(ref_path)?;
+            serde_json::from_str::<HashMap<String, usize>>(&content)?
+        } else {
+            eprintln!("ERROR: --verify-assignments-only requires --plan-ref <path> \
+                pointing to a reference final_assignments.json file.");
+            std::process::exit(1);
+        };
+
+        // Compute Jaccard
+        let matching = original.iter()
+            .filter(|(geoid, &d)| reference.get(*geoid) == Some(&d))
+            .count();
+        let union = original.len().max(reference.len());
+        let similarity = if union == 0 { 0.0 } else { matching as f64 / union as f64 };
+
+        eprintln!("Jaccard similarity: {:.4} ({}/{} tracts match)",
+            similarity, matching, union);
+
+        if similarity >= args.min_similarity {
+            eprintln!("[PASS] Assignments match (similarity={:.4} >= {:.4})",
+                similarity, args.min_similarity);
+        } else {
+            eprintln!("[FAIL] Assignments differ (similarity={:.4} < {:.4})",
+                similarity, args.min_similarity);
+            std::process::exit(1);
+        }
+        return Ok(());
+    }
+
     // Future: use PlanContext::from_label when label can be derived from manifest.label
     // (verify takes a manifest PATH not a label, so the refactor requires arg plumbing)
     // 1. Load manifest
@@ -321,6 +370,8 @@ mod tests {
             dry_run: true,
             skip_binary_check: false,
             label: None,
+            verify_assignments_only: false,
+            plan_ref: None,
         };
         // Should fail at manifest read, not at binary execution
         let result = run_verify(&args);
@@ -358,6 +409,8 @@ mod tests {
             dry_run: true,
             skip_binary_check: false,
             label: None,
+            verify_assignments_only: false,
+            plan_ref: None,
         };
         // dry_run=true: must return Ok after printing command (no binary execution)
         let result = run_verify(&args);
@@ -413,6 +466,127 @@ mod tests {
             warning.contains("--output-base"),
             "warning must mention --output-base flag: {warning}"
         );
+    }
+
+    // ── Task 209: --verify-assignments-only ──────────────────────────────────
+
+    #[test]
+    fn test_verify_assignments_only_flag_parsed() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from([
+            "verify", "--manifest", "manifest.json",
+            "--verify-assignments-only", "--plan-ref", "ref.json"
+        ]);
+        assert!(args.verify_assignments_only);
+        assert_eq!(args.plan_ref, Some("ref.json".to_string()));
+    }
+
+    #[test]
+    fn test_verify_assignments_only_defaults_false() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
+        assert!(!args.verify_assignments_only);
+        assert!(args.plan_ref.is_none());
+    }
+
+    #[test]
+    fn test_verify_jaccard_identical_assignments() {
+        // Test the Jaccard computation logic directly
+        let mut a = std::collections::HashMap::new();
+        a.insert("53001000100".to_string(), 1usize);
+        a.insert("53001000200".to_string(), 2usize);
+        a.insert("53001000300".to_string(), 1usize);
+
+        let b = a.clone();
+
+        let matching = a.iter()
+            .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
+            .count();
+        let union = a.len().max(b.len());
+        let similarity = matching as f64 / union as f64;
+
+        assert!((similarity - 1.0).abs() < 1e-9, "identical assignments must have Jaccard 1.0");
+    }
+
+    #[test]
+    fn test_verify_jaccard_different_assignments() {
+        let mut a = std::collections::HashMap::new();
+        a.insert("tract1".to_string(), 1usize);
+        a.insert("tract2".to_string(), 2usize);
+
+        let mut b = std::collections::HashMap::new();
+        b.insert("tract1".to_string(), 2usize);  // different district
+        b.insert("tract2".to_string(), 1usize);  // different district
+
+        let matching = a.iter()
+            .filter(|(geoid, &d)| b.get(*geoid) == Some(&d))
+            .count();
+        let union = a.len().max(b.len());
+        let similarity = matching as f64 / union as f64;
+
+        assert_eq!(similarity, 0.0, "completely swapped assignments must have Jaccard 0.0");
+    }
+
+    /// --verify-assignments-only with valid manifest+reference runs successfully.
+    #[test]
+    fn test_verify_assignments_only_with_valid_files() {
+        use tempfile::TempDir;
+        use redist_report::PlanManifest;
+
+        let tmp = TempDir::new().unwrap();
+
+        // Write manifest
+        let manifest = PlanManifest {
+            label: "vt_congressional_2020".to_string(),
+            state_code: "VT".to_string(),
+            year: "2020".to_string(),
+            chamber: "congressional".to_string(),
+            num_districts: 1,
+            balance_tolerance_pct: 0.5,
+            seed: None,
+            ..Default::default()
+        };
+        let manifest_path = tmp.path().join("manifest.json");
+        std::fs::write(&manifest_path, serde_json::to_string(&manifest).unwrap()).unwrap();
+
+        // Write original assignments
+        let assignments: HashMap<String, usize> = [
+            ("50001000100".to_string(), 1usize),
+            ("50001000200".to_string(), 1usize),
+        ].into_iter().collect();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("vt_congressional_2020").join("data");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("final_assignments.json"),
+            serde_json::to_string(&assignments).unwrap(),
+        ).unwrap();
+        // Write manifest.json next to plan dir too (for PlanContext)
+        let plan_manifest_dir = tmp.path().join("v1").join("2020").join("plans").join("vt_congressional_2020");
+        std::fs::write(
+            plan_manifest_dir.join("manifest.json"),
+            serde_json::to_string(&manifest).unwrap(),
+        ).unwrap();
+
+        // Write reference (same as original → perfect match)
+        let ref_path = tmp.path().join("ref_assignments.json");
+        std::fs::write(&ref_path, serde_json::to_string(&assignments).unwrap()).unwrap();
+
+        let args = VerifyArgs {
+            manifest: manifest_path,
+            min_similarity: 0.99,
+            verify_label: None,
+            output_base: tmp.path().to_str().unwrap().to_string(),
+            dry_run: false,
+            skip_binary_check: false,
+            label: Some("vt_congressional_2020".to_string()),
+            verify_assignments_only: true,
+            plan_ref: Some(ref_path.to_str().unwrap().to_string()),
+        };
+
+        let result = run_verify(&args);
+        assert!(result.is_ok(), "--verify-assignments-only with identical plans must pass: {:?}", result.err());
     }
 
     // ── Task 133: --skip-binary-check ────────────────────────────────────────
