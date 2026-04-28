@@ -65,25 +65,13 @@ redist-tui/src/
 
 ```
 redist-tui
-  ├── ratatui + crossterm      — terminal event loop, layout, key events
-  ├── proof (git submodule)    — canvas, sparklines, mini-bars, value formatting
-  ├── mdpath (git submodule)   — stable URIs (future: plan element addressing)
-  ├── redist-cli (lib)         — LocationRegistry, chamber_district_count, policy
-  ├── redist-report (lib)      — PlanManifest, RPLAN reading
-  └── serde_json               — reading analysis JSON files
+  ├── ratatui + crossterm   — terminal event loop, layout, key events, widgets
+  ├── redist-cli (lib)      — LocationRegistry, chamber_district_count, policy
+  ├── redist-report (lib)   — PlanManifest, RPLAN reading
+  └── serde_json            — reading analysis JSON files
 ```
 
-### Proof/mdpath packaging
-
-proof and mdpath live as sibling directories to the apportionment repo (`C:\src\proof` and `C:\src\mdpath`). `redist-tui/Cargo.toml` references them as path dependencies:
-
-```toml
-[dependencies]
-proof = { path = "../../../../proof" }
-mdpath = { path = "../../../../mdpath" }
-```
-
-Only proof's canvas/element/dashboard functionality is used — not the full proof CLI surface. Future: extract `proof-canvas` as a standalone publishable crate to remove the sibling-directory requirement.
+ratatui's built-in widgets cover all metric display needs: `Gauge` and `LineGauge` for progress bars, `Sparkline` for metric trends, `BarChart` for comparison deltas, `Table` for the plan browser and chain-of-custody rows. No external rendering framework needed.
 
 ### Key invariant
 
@@ -368,18 +356,22 @@ Overlay from any screen. Tab-completes location codes from LocationRegistry. Arr
 
 Summary by default. `[e]` expands to raw stderr. `[c]` copies. No "TIGER", "pkl", or "gpmetis" in user-facing messages.
 
-### proof canvas responsibility split
+### Widget responsibility
 
-| Region | Renderer | Reason |
-|--------|----------|--------|
-| Plan browser rows | ratatui `Table` | Interactive — sortable, selectable, scrollable |
-| Detail panel metric bars | proof `mini-bar` | Rich formatting, value alignment |
-| Progress depth bars | proof `mini-bar` | Live-updating blocks |
-| Comparison Δ bars | proof `mini-bar` | Side-by-side alignment |
-| PASS/FAIL box | ratatui `Block` | Terminal colour (green/red) |
-| Chain-of-custody rows | ratatui `Table` | Interactive |
-| Status bar | ratatui `Paragraph` | Always present, tied to layout |
-| Command palette | ratatui popup | Needs input focus |
+All rendering is pure ratatui — no external canvas framework.
+
+| Region | Widget | Notes |
+|--------|--------|-------|
+| Plan browser rows | `Table` | Sortable, selectable, scrollable |
+| Detail panel metric bars | `Gauge` / `LineGauge` | PP, deviation, splits |
+| Progress depth bars | `Gauge` | One per bisection depth level |
+| Assigned counter | `LineGauge` | Districts completed / total |
+| Comparison Δ bars | `BarChart` | Side-by-side plan metrics |
+| PASS/FAIL box | `Block` + `Paragraph` | Coloured border (green/red) |
+| Chain-of-custody rows | `Table` | Scrollable |
+| Status bar | `Paragraph` | Always-visible bottom bar |
+| Command palette | `Block` popup | Floating overlay, captures input |
+| Metric sparklines | `Sparkline` | Trend over recent runs (future) |
 
 ---
 
