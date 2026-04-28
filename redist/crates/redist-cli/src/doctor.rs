@@ -13,6 +13,11 @@ use crate::policy::LocationRegistry;
 use crate::runner::{chamber_balance_tolerance, chamber_district_count};
 
 pub fn run_doctor(args: &DoctorArgs) {
+    if let Some(ref label) = args.label {
+        run_plan_doctor(label, &args.version, &args.year, &args.output_base);
+        return;
+    }
+
     let code = args.state.to_uppercase();
     let registry = LocationRegistry::load();
 
@@ -124,6 +129,218 @@ pub fn run_doctor(args: &DoctorArgs) {
 }
 
 // ---------------------------------------------------------------------------
+// Plan diagnosis mode — `redist doctor --label <label>`
+// ---------------------------------------------------------------------------
+
+fn run_plan_doctor(label: &str, version: &str, year: &str, output_base: &str) {
+    use std::path::PathBuf;
+
+    let ctx = match crate::plan_context::PlanContext::from_label(
+        PathBuf::from(output_base).as_path(), version, year, label,
+    ) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("[FAIL] {e}");
+            std::process::exit(1);
+        }
+    };
+
+    println!("=== redist doctor: {} ===\n", label);
+    println!(
+        "Plan:  {} ({} {}, {}, {} districts)",
+        label,
+        ctx.state_code(),
+        ctx.chamber(),
+        ctx.year(),
+        ctx.num_districts()
+    );
+    println!("Dir:   {}\n", ctx.plan_dir.display());
+
+    // ── Analysis files ────────────────────────────────────────────────────────
+    println!("── Analysis files ─────────────────────────────────────────────");
+
+    let required_analysis = ["summary.json", "compactness.json", "contiguity.json"];
+    let optional_analysis = [
+        "splits.json",
+        "demographic.json",
+        "partisan.json",
+        "vra_analysis.json",
+        "comparison.json",
+        "nesting.json",
+    ];
+
+    let mut missing_required: Vec<&str> = vec![];
+    let mut missing_optional: Vec<&str> = vec![];
+
+    for name in &required_analysis {
+        if ctx.analysis_file_exists(name) {
+            let info = read_analysis_summary(&ctx, name);
+            println!("[PASS] {:<24} {}", name, info);
+        } else {
+            println!(
+                "[MISS] {:<24} -> run: redist analyze --label {} --types {}",
+                name,
+                label,
+                name.trim_end_matches(".json")
+            );
+            missing_required.push(name);
+        }
+    }
+
+    for name in &optional_analysis {
+        if ctx.analysis_file_exists(name) {
+            println!("[PASS] {}", name);
+        } else {
+            let hint = analysis_fetch_hint(name, ctx.state_code(), ctx.year());
+            if let Some(h) = hint {
+                println!(
+                    "[MISS] {:<24} -> run: redist analyze --label {} --types {}\n       {}",
+                    name,
+                    label,
+                    name.trim_end_matches(".json"),
+                    h
+                );
+            } else {
+                println!(
+                    "[MISS] {:<24} -> run: redist analyze --label {} --types {}",
+                    name,
+                    label,
+                    name.trim_end_matches(".json")
+                );
+            }
+            missing_optional.push(name);
+        }
+    }
+
+    // ── Report readiness ──────────────────────────────────────────────────────
+    println!("\n-- Report readiness ───────────────────────────────────────────");
+    if missing_required.is_empty() {
+        println!("[PASS] Required analysis files present");
+        println!("[INFO] To generate report: redist report --label {} --format html", label);
+    } else {
+        println!(
+            "[FAIL] Missing required files: {}",
+            missing_required.join(", ")
+        );
+        println!("       Run: redist analyze --label {} --types all --force", label);
+    }
+    if !missing_optional.is_empty() {
+        println!(
+            "[WARN] Optional files missing: {} (report will show as unavailable)",
+            missing_optional.join(", ")
+        );
+    }
+
+    // ── Maps ──────────────────────────────────────────────────────────────────
+    println!("\n-- Maps ────────────────────────────────────────────────────────");
+    let maps_dir = ctx.maps_dir();
+    let map_files = ["districts.png", "compactness.png", "political.png"];
+    let mut has_maps = false;
+    for f in &map_files {
+        if maps_dir.join(f).exists() {
+            println!("[PASS] maps/{}", f);
+            has_maps = true;
+        }
+    }
+    if !has_maps {
+        println!("[MISS] No maps generated");
+        println!("       Run: redist map --label {} --types districts", label);
+        println!(
+            "       (needs: redist fetch --type tiger --states {} --year {})",
+            ctx.state_code(),
+            ctx.year()
+        );
+    }
+
+    // ── Court readiness ───────────────────────────────────────────────────────
+    println!("\n-- Court readiness ─────────────────────────────────────────────");
+    let audit_path = ctx.plan_dir.join("audit.json");
+    if audit_path.exists() {
+        println!("[PASS] audit.json present");
+    } else {
+        println!("[WARN] audit.json missing");
+        println!(
+            "       Run: redist report --label {} --audit-with-report --format html",
+            label
+        );
+    }
+
+    let rplan_path = ctx.plan_dir.join(format!("{}.rplan", label));
+    if rplan_path.exists() {
+        println!("[PASS] {}.rplan present (reproducibility package)", label);
+    } else {
+        println!(
+            "[INFO] No .rplan file -- run: redist export --label {} --format rplan",
+            label
+        );
+    }
+
+    println!("\n[OK] Doctor complete for {}", label);
+}
+
+fn read_analysis_summary(ctx: &crate::plan_context::PlanContext, name: &str) -> String {
+    let path = ctx.analysis_file(name);
+    let Ok(content) = std::fs::read_to_string(&path) else {
+        return String::new();
+    };
+    let Ok(v): Result<serde_json::Value, _> = serde_json::from_str(&content) else {
+        return String::new();
+    };
+
+    match name {
+        "summary.json" => {
+            let valid = v["population_balance_valid"].as_bool().unwrap_or(false);
+            let n = v["districts"].as_array().map(|a| a.len()).unwrap_or(0);
+            format!(
+                "({} districts, balance {})",
+                n,
+                if valid { "valid" } else { "FAILED" }
+            )
+        }
+        "compactness.json" => {
+            let districts = v["districts"].as_array();
+            if let Some(d) = districts {
+                let pp_vals: Vec<f64> = d
+                    .iter()
+                    .filter_map(|x| x["polsby_popper"].as_f64())
+                    .collect();
+                if !pp_vals.is_empty() {
+                    let mean = pp_vals.iter().sum::<f64>() / pp_vals.len() as f64;
+                    return format!("(mean PP: {:.3})", mean);
+                }
+            }
+            String::new()
+        }
+        "contiguity.json" => {
+            let all = v["all_contiguous"].as_bool().unwrap_or(false);
+            format!(
+                "({})",
+                if all {
+                    "all contiguous"
+                } else {
+                    "NON-CONTIGUOUS districts found"
+                }
+            )
+        }
+        _ => String::new(),
+    }
+}
+
+fn analysis_fetch_hint(name: &str, state_code: &str, year: &str) -> Option<String> {
+    match name {
+        "partisan.json" => Some(format!(
+            "(also needs: redist fetch --type elections --states {} --year {})",
+            state_code, year
+        )),
+        "demographic.json" | "vra_analysis.json" => Some(format!(
+            "(also needs: redist fetch --type demographics --states {} --year {})",
+            state_code, year
+        )),
+        _ => None,
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -138,6 +355,8 @@ mod tests {
             chamber: chamber.to_string(),
             resolution: resolution.to_string(),
             output_base: "outputs".to_string(),
+            label: None,
+            version: "v1".to_string(),
         }
     }
 
@@ -310,5 +529,130 @@ mod tests {
             assert!(!s.is_empty(),
                 "{code} compactness_standard must not be empty");
         }
+    }
+
+    // ── Plan diagnosis mode (--label) ─────────────────────────────────────────
+
+    /// PlanContext can be loaded when a valid manifest.json is present.
+    #[test]
+    fn test_doctor_label_mode_finds_plan() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("vt_test");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "vt_test",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 1,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let ctx = crate::plan_context::PlanContext::from_label(
+            tmp.path(),
+            "v1",
+            "2020",
+            "vt_test",
+        )
+        .unwrap();
+        assert_eq!(ctx.num_districts(), 1);
+        assert_eq!(ctx.chamber(), "congressional");
+        assert_eq!(ctx.state_code(), "VT");
+    }
+
+    /// read_analysis_summary returns a string containing the mean PP value.
+    #[test]
+    fn test_read_analysis_summary_compactness() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp
+            .path()
+            .join("v1")
+            .join("2020")
+            .join("plans")
+            .join("t");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "t",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 1,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_dir.join("compactness.json"),
+            serde_json::json!({
+                "districts": [{"district": 1, "polsby_popper": 0.31}]
+            })
+            .to_string(),
+        )
+        .unwrap();
+
+        let ctx = crate::plan_context::PlanContext::from_label(
+            tmp.path(),
+            "v1",
+            "2020",
+            "t",
+        )
+        .unwrap();
+        let summary = read_analysis_summary(&ctx, "compactness.json");
+        assert!(
+            summary.contains("0.31") || summary.contains("PP"),
+            "must show PP value: {summary}"
+        );
     }
 }

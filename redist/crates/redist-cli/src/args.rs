@@ -193,8 +193,9 @@ pub struct PolicyArgs {
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct DoctorArgs {
-    /// Location code to check (e.g., WA, NV, IE, MT-PARLIAMENT, _TEST_EL)
-    #[arg(long)]
+    /// Location code to check (e.g., WA, NV, IE, MT-PARLIAMENT, _TEST_EL).
+    /// Not required when --label is provided.
+    #[arg(long, default_value = "")]
     pub state: String,
     /// Census year to check (default: 2020)
     #[arg(short = 'y', long, default_value = "2020")]
@@ -208,6 +209,12 @@ pub struct DoctorArgs {
     /// Output base directory for adjacency path check (default: outputs)
     #[arg(long, default_value = "outputs")]
     pub output_base: String,
+    /// Existing plan label to diagnose (alternative to --state/--year for plan diagnosis)
+    #[arg(long)]
+    pub label: Option<String>,
+    /// Version directory for --label lookup (default: v1)
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -1520,6 +1527,35 @@ mod tests {
     fn test_verify_args_label_parsed() {
         let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json", "--label", "wa_house_v1"]);
         assert_eq!(args.label, Some("wa_house_v1".to_string()));
+    }
+
+    // ── Doctor --label flag (plan diagnosis mode) ─────────────────────────────
+
+    #[test]
+    fn test_doctor_label_flag_parsed() {
+        let args = DoctorArgs::parse_from(["doctor", "--label", "wa_house_2020"]);
+        assert_eq!(args.label.as_deref(), Some("wa_house_2020"));
+        assert_eq!(args.version, "v1");
+    }
+
+    #[test]
+    fn test_doctor_label_with_version_flag() {
+        let args = DoctorArgs::parse_from(["doctor", "--label", "wa_house_2020", "--version", "v2"]);
+        assert_eq!(args.label.as_deref(), Some("wa_house_2020"));
+        assert_eq!(args.version, "v2");
+    }
+
+    #[test]
+    fn test_doctor_label_default_is_none() {
+        let args = DoctorArgs::parse_from(["doctor", "--state", "WA"]);
+        assert!(args.label.is_none());
+    }
+
+    #[test]
+    fn test_doctor_state_default_is_empty_when_label_provided() {
+        let args = DoctorArgs::parse_from(["doctor", "--label", "vt_test"]);
+        // state should default to "" when --label is used without --state
+        assert_eq!(args.state, "");
     }
 }
 
