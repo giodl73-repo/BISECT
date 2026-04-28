@@ -1,6 +1,28 @@
 # redist TUI — Design Spec
 **Date:** 2026-04-27  
-**Status:** Approved for implementation planning
+**Updated:** 2026-04-28  
+**Status:** v1 partially implemented — 3 gaps remaining before v1 complete
+
+## Implementation Status
+
+| Screen | Spec | Status |
+|--------|------|--------|
+| Home (plan browser) | ✓ | ✅ Implemented — Table + detail panel Gauges |
+| Run (form + progress) | ✓ | ✅ Implemented — form editable, subprocess spawns |
+| Run (live progress) | ✓ | ⚠️ **Bug: elapsed_secs never increments** (`saturating_add(0)`) |
+| Compare | ✓ | 🔴 **Stub only** — shows "coming soon", not built |
+| Verify | ✓ | ✅ Implemented — PASS/FAIL box + chain of custody |
+| Doctor | ✓ | ✅ Implemented — live checks from LocationRegistry |
+| Command palette (`:`) | ✓ | ✅ Implemented — tab-complete, history |
+| Error banner | ✓ | ✅ Implemented |
+| Glossary (`?`) | ✓ | ✅ Implemented |
+| Status bar | ✓ | ✅ Implemented |
+| Session persistence | ✓ | ⚠️ **Partial** — loads from TOML but Run form pre-fill incomplete |
+
+**v1 gap list (3 items):**
+1. Elapsed timer bug — `main.rs:167` `saturating_add(0)` → should be wall-clock elapsed
+2. Compare screen — stub, needs real implementation per spec
+3. Session pre-fill — location/chamber/year pre-filled in Run form but not Doctor screen input
 
 ---
 
