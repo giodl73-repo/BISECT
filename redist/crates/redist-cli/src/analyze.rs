@@ -94,56 +94,38 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         }
     };
 
-    // Resolve state name and district count.
-    // ALWAYS prefer the plan manifest when a label is provided — the manifest records
-    // the actual chamber and district count used (e.g., WA house=98, not congressional=10).
-    // Fall back to load_all_states() only when no label/manifest is available.
-    let (state_name, num_districts) = {
-        // Try plan manifest first (covers both US legislative and international)
-        let manifest_path = if let Some(ref label) = args.label {
-            output_root.join(&year).join("plans").join(label).join("manifest.json")
-        } else {
-            std::path::PathBuf::new()
-        };
-        if manifest_path.exists() {
-            let manifest: serde_json::Value = serde_json::from_str(
-                &std::fs::read_to_string(&manifest_path)?
+    // Resolve plan metadata via PlanContext (Class B command — must read from manifest).
+    // PlanContext is the single source of truth: num_districts comes from the plan's
+    // manifest.json, never from load_all_states() (which only knows congressional counts).
+    let (state_name, num_districts, assignments_path, analysis_dir_base) =
+        if let Some(ref label) = args.label {
+            let ctx = crate::plan_context::PlanContext::from_label(
+                &output_root, &args.version, &year, label
             )?;
-            let nd = manifest["num_districts"].as_u64().unwrap_or(1) as usize;
-            let sn = manifest["state_name"]
-                .as_str()
-                .map(|s| s.to_string())
-                .unwrap_or_else(|| state_code.to_lowercase());
-            (sn, nd)
+            let assignments = if ctx.assignments_path().exists() {
+                ctx.assignments_path()
+            } else {
+                // Flat fallback (legacy plans written before data/ subdir convention)
+                ctx.plan_dir.join("final_assignments.json")
+            };
+            let sn = ctx.manifest.state_code.to_lowercase().replace(' ', "_");
+            let nd = ctx.num_districts();
+            let analysis_base = ctx.plan_dir.clone();
+            (sn, nd, assignments, analysis_base)
         } else {
-            // Fallback: load_all_states (congressional counts only)
+            // No label: fall back to legacy state-directory path + load_all_states
             let all = load_all_states(&year).unwrap_or_default();
             if let Some((_, name, nd)) = all.iter().find(|(code, _, _)| code == &state_code).cloned() {
-                (name, nd)
+                let state_dir = output_root.join(&year).join("states").join(&name);
+                let data_path = state_dir.join("data").join("final_assignments.json");
+                (name, nd, data_path, state_dir)
             } else {
                 anyhow::bail!(
-                    "Unknown state '{state_code}' and no plan manifest found.\n\
-                     For international states, provide --label pointing to a plan with manifest.json"
+                    "Unknown state '{state_code}'. Use --label to specify an existing plan, \
+                     or provide --label with 'redist state' first."
                 );
             }
-        }
-    };
-
-    let (assignments_path, analysis_dir_base) = if let Some(ref label) = args.label {
-        let plan_dir = output_root.join(&year).join("plans").join(label);
-        let data_path = plan_dir.join("data").join("final_assignments.json");
-        let flat_path = plan_dir.join("final_assignments.json");
-        let chosen = if data_path.exists() {
-            data_path
-        } else {
-            flat_path
         };
-        (chosen, plan_dir)
-    } else {
-        let state_dir = output_root.join(&year).join("states").join(&state_name);
-        let data_path = state_dir.join("data").join("final_assignments.json");
-        (data_path, state_dir)
-    };
 
     // For the old (non-label) path, compute the proper output_root for adjacency lookups
     let adjacency_root = if args.output_dir.is_some() {
