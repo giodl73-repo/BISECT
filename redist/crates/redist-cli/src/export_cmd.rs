@@ -47,22 +47,25 @@ pub fn run_export(args: &ExportArgs) -> anyhow::Result<()> {
                 let geojson_str = export_geojson(&rplan)?;
                 let path = out_dir.join(format!("{}.geojson", args.label));
                 std::fs::write(&path, &geojson_str)?;
-                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
-                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
+                let abs = path.canonicalize().unwrap_or_else(|_| path.clone());
+                let sha = sha256_file(&abs).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", abs.display(), sha);
             }
             ExportFormat::GerryChain => {
                 let gc_str = export_gerrychain_v23(&rplan)?;
                 let path = out_dir.join(format!("{}_gerrychain.json", args.label));
                 std::fs::write(&path, &gc_str)?;
-                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
-                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
+                let abs = path.canonicalize().unwrap_or_else(|_| path.clone());
+                let sha = sha256_file(&abs).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", abs.display(), sha);
             }
             ExportFormat::Csv => {
                 let csv_str = export_tracts_csv(&rplan)?;
                 let path = out_dir.join(format!("{}_tracts.csv", args.label));
                 std::fs::write(&path, &csv_str)?;
-                let sha = sha256_file(&path).unwrap_or_else(|_| "error".to_string());
-                eprintln!("[OK] {} (sha256: {})", path.display(), sha);
+                let abs = path.canonicalize().unwrap_or_else(|_| path.clone());
+                let sha = sha256_file(&abs).unwrap_or_else(|_| "error".to_string());
+                eprintln!("[OK] {} (sha256: {})", abs.display(), sha);
             }
             ExportFormat::ReproducibilityPackage => {
                 write_reproducibility_package(
@@ -313,6 +316,28 @@ mod tests {
             output_base: "outputs".into(),
         };
         assert_eq!(args.format, vec![ExportFormat::GeoJson]);
+    }
+
+    // ── Gap 5: canonicalize gives absolute path ───────────────────────────────
+
+    #[test]
+    fn test_canonicalize_path_gives_absolute() {
+        // canonicalize on a real temp file gives a path containing a path separator.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let file_path = tmp.path().join("test_output.txt");
+        std::fs::write(&file_path, b"hello").unwrap();
+        let abs = file_path.canonicalize().unwrap_or_else(|_| file_path.clone());
+        let abs_str = abs.to_string_lossy();
+        // Absolute path must contain either / or \ (a path separator)
+        assert!(
+            abs_str.contains('/') || abs_str.contains('\\'),
+            "canonicalized path must contain a path separator: {abs_str}"
+        );
+        // Must not be relative (no leading . on a real temp path)
+        assert!(
+            !abs_str.starts_with('.'),
+            "canonicalized path must not start with '.': {abs_str}"
+        );
     }
 
     /// Task 114: SHA-256 of export output files is 64-character lowercase hex.

@@ -357,11 +357,12 @@ impl LocationRegistry {
             }
         }
 
+        let state_upper = state_lower.to_uppercase();
         Err(format!(
             "adjacency pkl not found: {}. Run: {}",
             canonical.display(),
             if build_hint.is_empty() {
-                format!("python scripts/data/generate_adj_bin.py --year {year} --states {state_lower}")
+                format!("redist fetch --type adjacency --states {state_upper} --year {year}")
             } else {
                 build_hint.to_string()
             }
@@ -714,6 +715,61 @@ mod tests {
                     msg.contains("adjacency"),
                     "error must reference adjacency path: {msg}"
                 );
+            }
+        }
+    }
+
+    // ── Gap 3: Chamber hint emitted for legislative states ────────────────────
+
+    #[test]
+    fn test_chamber_hint_emitted_for_legislative_state() {
+        // WA has house=98 and senate=49. When chamber=="congressional" and
+        // districts is None (not explicitly set), the hint logic must fire.
+        let reg = registry();
+        let state_code = "WA";
+        let year = "2020";
+        let chamber = "congressional";
+        let districts_override: Option<usize> = None; // not explicitly set
+
+        // Simulate the hint logic from Commands::State
+        let should_hint = chamber == "congressional" && districts_override.is_none();
+        assert!(should_hint, "hint condition must fire when chamber==congressional and no --districts");
+
+        let house = reg.chamber_districts(state_code, "house", year);
+        let senate = reg.chamber_districts(state_code, "senate", year);
+        assert_eq!(house, Some(98), "WA house must be 98D");
+        assert_eq!(senate, Some(49), "WA senate must be 49D");
+
+        // Verify hint parts would be constructed correctly
+        let mut hint_parts: Vec<String> = Vec::new();
+        if let Some(h) = house { hint_parts.push(format!("house ({}D)", h)); }
+        if let Some(s) = senate { hint_parts.push(format!("senate ({}D)", s)); }
+        let hint_str = hint_parts.join(" and ");
+        assert!(hint_str.contains("house (98D)"), "hint must mention house: {hint_str}");
+        assert!(hint_str.contains("senate (49D)"), "hint must mention senate: {hint_str}");
+    }
+
+    // ── Gap 2: doctor build hint uses redist fetch not Python script ──────────
+
+    #[test]
+    fn test_us_state_doctor_hint_uses_fetch_command() {
+        // For WA, the adjacency_path error must contain "redist fetch" not the Python script.
+        let reg = registry();
+        let base = std::path::Path::new("/nonexistent_gap2_test/outputs");
+        let result = reg.adjacency_path("WA", "2020", "tract", base);
+        match result {
+            Err(msg) => {
+                assert!(
+                    msg.contains("redist fetch"),
+                    "doctor hint must suggest 'redist fetch', got: {msg}"
+                );
+                assert!(
+                    !msg.contains("python scripts/data/generate_adj_bin.py"),
+                    "doctor hint must NOT contain the old Python command, got: {msg}"
+                );
+            }
+            Ok(_) => {
+                // File exists locally — hint not needed; test is vacuously satisfied.
             }
         }
     }

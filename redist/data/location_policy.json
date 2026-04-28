@@ -45,7 +45,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/al_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states al",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -88,7 +88,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ak_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ak",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -132,7 +132,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/az_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states az",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -173,7 +173,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ar_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ar",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -219,7 +219,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ca_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ca",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -263,7 +263,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/co_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states co",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -306,7 +306,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ct_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ct",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -348,7 +348,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/de_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states de",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -391,7 +391,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/fl_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states fl",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -433,7 +433,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ga_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ga",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -476,7 +476,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/hi_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states hi",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -519,7 +519,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/id_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states id",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -564,7 +564,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/il_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states il",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -606,7 +606,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/in_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states in",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -649,7 +649,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ia_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ia",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -690,7 +690,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ks_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ks",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -731,7 +731,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ky_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ky",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -773,7 +773,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/la_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states la",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -817,7 +817,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/me_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states me",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -862,7 +862,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/md_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states md",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -905,7 +905,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ma_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ma",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -947,7 +947,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/mi_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mi",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -990,7 +990,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/mn_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mn",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1032,7 +1032,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ms_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ms",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1074,7 +1074,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/mo_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mo",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1117,7 +1117,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/mt_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states mt",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1159,7 +1159,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ne_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ne",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1203,7 +1203,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/nv_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nv",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1249,7 +1249,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/nj_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nj",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1291,7 +1291,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/nm_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nm",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1336,7 +1336,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ny_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ny",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1378,7 +1378,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/nc_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nc",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1423,7 +1423,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/nd_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states nd",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1466,7 +1466,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/oh_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states oh",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1507,7 +1507,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ok_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ok",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1550,7 +1550,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/or_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states or",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1593,7 +1593,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/pa_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states pa",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1636,7 +1636,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ri_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ri",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1677,7 +1677,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/sc_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states sc",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1719,7 +1719,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/sd_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states sd",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1762,7 +1762,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/tn_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states tn",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1805,7 +1805,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/tx_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states tx",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1847,7 +1847,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/ut_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states ut",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1892,7 +1892,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/vt_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states vt",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -1978,7 +1978,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/va_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states va",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -2022,7 +2022,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/wa_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wa",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -2063,7 +2063,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/wv_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wv",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -2107,7 +2107,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/wi_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wi",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
@@ -2149,7 +2149,7 @@
     "adjacency_convention": {
       "convention": "us_census",
       "path_template": "outputs/V3/data/{year}/adjacency/wy_adjacency_{year}.pkl",
-      "build_command": "python scripts/data/generate_adj_bin.py --year {year} --states wy",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },

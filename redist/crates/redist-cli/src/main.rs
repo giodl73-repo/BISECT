@@ -148,6 +148,24 @@ fn main() {
             let effective_num_districts = args.districts.unwrap_or_else(|| {
                 chamber_district_count(&state_code, &args.chamber, num_districts)
             });
+
+            // Gap 3: Emit a chamber hint when user ran with default congressional
+            // chamber and the state also has legislative chambers available.
+            if args.chamber == "congressional" && args.districts.is_none() {
+                let house = registry.chamber_districts(&state_code, "house", &year);
+                let senate = registry.chamber_districts(&state_code, "senate", &year);
+                if house.is_some() || senate.is_some() {
+                    let mut hint_parts = Vec::new();
+                    if let Some(h) = house { hint_parts.push(format!("house ({}D)", h)); }
+                    if let Some(s) = senate { hint_parts.push(format!("senate ({}D)", s)); }
+                    eprintln!(
+                        "NOTE: Running congressional ({}D). {} also has {}. \
+                         Use --chamber house or --chamber senate.",
+                        effective_num_districts, state_code, hint_parts.join(" and ")
+                    );
+                }
+            }
+
             let total_seats = args.total_seats.unwrap_or(
                 args.seats_per_district * effective_num_districts
             );
@@ -236,8 +254,16 @@ fn main() {
             }
 
             let to_run = filter_incomplete(configs);
-            eprintln!("[redist states] {} states ({} workers)", to_run.len(), args.workers);
-            report_and_exit(run_states_parallel(to_run, args.workers));
+            eprintln!(
+                "[redist states] {} states queued — {} workers — year {} — version {}",
+                to_run.len(), args.workers, args.year, args.version
+            );
+            eprintln!("[redist states] Running... (this takes 5-15 minutes for 50 states)");
+            let results = run_states_parallel(to_run, args.workers);
+            let succeeded = results.iter().filter(|r| r.success).count();
+            let failed = results.iter().filter(|r| !r.success).count();
+            eprintln!("[redist states] Complete: {} succeeded, {} failed", succeeded, failed);
+            report_and_exit(results);
         }
 
         // ── redist run: multi-year orchestrator ───────────────────────────────

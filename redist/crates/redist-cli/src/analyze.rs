@@ -94,13 +94,42 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         }
     };
 
-    // Resolve state name from config
-    let all = load_all_states(&year)
-        .map_err(|e| anyhow::anyhow!("Failed to load state config: {e}"))?;
-    let (_, state_name, num_districts) = all.iter()
-        .find(|(code, _, _)| code == &state_code)
-        .cloned()
-        .ok_or_else(|| anyhow::anyhow!("Unknown state: {state_code}"))?;
+    // Resolve state name and district count.
+    // For US states: read from the embedded manifest via load_all_states.
+    // For international states (e.g. IE, MT, DE) accessed via --adjacency:
+    //   fall back to the plan manifest when the state is not in the US manifest.
+    let (state_name, num_districts) = {
+        let all = load_all_states(&year).unwrap_or_default();
+        if let Some((_, name, nd)) = all.iter().find(|(code, _, _)| code == &state_code).cloned() {
+            (name, nd)
+        } else {
+            // International state — try to read from plan manifest
+            let manifest_fallback = if let Some(ref label) = args.label {
+                output_root.join(&year).join("plans").join(label).join("manifest.json")
+            } else {
+                std::path::PathBuf::new()
+            };
+            if manifest_fallback.exists() {
+                let manifest: serde_json::Value = serde_json::from_str(
+                    &std::fs::read_to_string(&manifest_fallback)?
+                )?;
+                let nd = manifest["num_districts"].as_u64().unwrap_or(1) as usize;
+                // state_name: prefer --state-name from manifest if present, else lowercase state_code
+                let sn = manifest["state_name"]
+                    .as_str()
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| state_code.to_lowercase());
+                eprintln!("NOTE: International state '{state_code}' not in US manifest — \
+                    using manifest: state_name={sn}, num_districts={nd}");
+                (sn, nd)
+            } else {
+                anyhow::bail!(
+                    "Unknown state: {state_code}\n\
+                     For international states, provide --label pointing to a plan with manifest.json"
+                );
+            }
+        }
+    };
 
     let (assignments_path, analysis_dir_base) = if let Some(ref label) = args.label {
         let plan_dir = output_root.join(&year).join("plans").join(label);
@@ -557,7 +586,16 @@ fn load_adjacency_for_analysis(
 
 fn resolve_types(types: &[AnalyzerType]) -> Vec<AnalyzerType> {
     if types.iter().any(|t| *t == AnalyzerType::All) {
-        AnalyzerType::all_concrete()
+        // Start with all_concrete() (which may not include Compactness)
+        // and ensure the required report files are always present:
+        // Summary, Contiguity, and Compactness are required by assemble_report().
+        let mut result = AnalyzerType::all_concrete();
+        for required in [AnalyzerType::Summary, AnalyzerType::Contiguity, AnalyzerType::Compactness] {
+            if !result.contains(&required) {
+                result.push(required);
+            }
+        }
+        result
     } else {
         types.to_vec()
     }
@@ -578,6 +616,31 @@ mod tests {
         assert!(types.contains(&AnalyzerType::Summary));
         // All must NOT be in the expanded list
         assert!(!types.contains(&AnalyzerType::All));
+    }
+
+    // ── Gap 6: --types all always includes required report files ─────────────
+
+    #[test]
+    fn test_all_type_includes_required_report_files() {
+        // resolve_types([All]) must contain Summary, Contiguity, and Compactness
+        // because these three are required by assemble_report() to build the report.
+        let types = resolve_types(&[AnalyzerType::All]);
+        assert!(
+            types.contains(&AnalyzerType::Summary),
+            "resolve_types([All]) must include Summary (required by assemble_report)"
+        );
+        assert!(
+            types.contains(&AnalyzerType::Contiguity),
+            "resolve_types([All]) must include Contiguity (required by assemble_report)"
+        );
+        assert!(
+            types.contains(&AnalyzerType::Compactness),
+            "resolve_types([All]) must include Compactness (required by assemble_report)"
+        );
+        assert!(
+            !types.contains(&AnalyzerType::All),
+            "All must not appear in the expanded list"
+        );
     }
 
     #[test]

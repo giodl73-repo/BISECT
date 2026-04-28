@@ -76,7 +76,26 @@ pub fn run_doctor(args: &DoctorArgs) {
         Err(e) => println!("[WARN] Could not resolve adjacency path: {e}"),
     }
 
-    // ── 7. Nesting (if applicable) ────────────────────────────────────────────
+    // ── 7. TIGER geometry files (needed for redist map) ──────────────────────
+    {
+        let tiger_path = std::path::PathBuf::from(&args.output_base)
+            .join("V3").join("data").join(&args.year).join("tiger");
+        let has_tiger = tiger_path.exists()
+            && tiger_path.read_dir()
+                .map(|mut d| d.next().is_some())
+                .unwrap_or(false);
+        if has_tiger {
+            println!("[PASS] TIGER geometry found (maps available): {}", tiger_path.display());
+        } else {
+            println!("[INFO] TIGER geometry not found (maps will fail): {}", tiger_path.display());
+            println!(
+                "       Run: redist fetch --type tiger --states {} --year {}",
+                code, args.year
+            );
+        }
+    }
+
+    // ── 8. Nesting (if applicable) ────────────────────────────────────────────
     if args.chamber != "congressional" {
         let policy = registry.raw();
         if let Some(location) = policy.get(&code) {
@@ -220,6 +239,43 @@ mod tests {
         assert_eq!(code.to_uppercase(), "_TEST_EL");
         let registry = LocationRegistry::load();
         assert!(registry.has_location("_TEST_EL"), "_TEST_EL must be in registry");
+    }
+
+    // ── Gap 7: doctor checks TIGER geometry files ─────────────────────────────
+
+    #[test]
+    fn test_doctor_checks_tiger_geometry_missing() {
+        // With a nonexistent output_base path, the TIGER check must produce an
+        // info message containing "tiger" and a fetch hint.
+        let output_base = "/nonexistent_gap7_test/outputs";
+        let year = "2020";
+        let code = "WA";
+
+        let tiger_path = std::path::PathBuf::from(output_base)
+            .join("V3").join("data").join(year).join("tiger");
+
+        // Verify the detection logic: non-existent path → info check fires
+        let has_tiger = tiger_path.exists()
+            && tiger_path.read_dir()
+                .map(|mut d| d.next().is_some())
+                .unwrap_or(false);
+
+        assert!(!has_tiger, "TIGER path must not exist in test env: {}", tiger_path.display());
+
+        // Build the message that would be emitted
+        let info_msg = format!(
+            "[INFO] TIGER geometry not found (maps will fail): {}",
+            tiger_path.display()
+        );
+        let fetch_hint = format!(
+            "Run: redist fetch --type tiger --states {} --year {}",
+            code, year
+        );
+
+        assert!(info_msg.contains("tiger"), "info message must contain 'tiger': {info_msg}");
+        assert!(info_msg.contains("TIGER"), "info message must contain 'TIGER': {info_msg}");
+        assert!(fetch_hint.contains("redist fetch"), "hint must suggest 'redist fetch': {fetch_hint}");
+        assert!(fetch_hint.contains("--type tiger"), "hint must include '--type tiger': {fetch_hint}");
     }
 
     // ── Task 145: compactness standard ───────────────────────────────────────

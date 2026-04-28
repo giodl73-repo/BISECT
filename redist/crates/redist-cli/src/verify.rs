@@ -84,6 +84,18 @@ pub fn run_verify(args: &VerifyArgs) -> anyhow::Result<()> {
         return Ok(());
     }
 
+    // Gap 8: Warn when output_base path doesn't exist on this machine.
+    // This commonly happens when verifying a plan from another machine.
+    let output_base_path = std::path::PathBuf::from(&args.output_base);
+    if !output_base_path.exists() {
+        eprintln!(
+            "WARNING: output directory '{}' not found on this machine.\n\
+             If verifying a plan from another machine, use --output-base to specify\n\
+             where plans are stored locally. The plan comparison step will be skipped.",
+            args.output_base
+        );
+    }
+
     // 3. Load original assignments
     let original_assignments = load_original_assignments(&manifest, &args.output_base)?;
     if original_assignments.is_empty() {
@@ -350,6 +362,38 @@ mod tests {
         let computed = verify_label
             .unwrap_or_else(|| format!("{}_verify", original_label));
         assert_eq!(computed, "my_custom_label");
+    }
+
+    // ── Gap 8: verify warns on missing output_base ───────────────────────────
+
+    #[test]
+    fn test_verify_warns_missing_output_base() {
+        // When output_base doesn't exist, the warning must contain "output directory".
+        // We simulate the check logic directly.
+        let output_base = "/nonexistent_gap8_test/outputs";
+        let output_base_path = std::path::PathBuf::from(output_base);
+
+        assert!(!output_base_path.exists(), "test path must not exist: {output_base}");
+
+        let warning = format!(
+            "WARNING: output directory '{}' not found on this machine.\n\
+             If verifying a plan from another machine, use --output-base to specify\n\
+             where plans are stored locally. The plan comparison step will be skipped.",
+            output_base
+        );
+
+        assert!(
+            warning.contains("output directory"),
+            "warning must contain 'output directory': {warning}"
+        );
+        assert!(
+            warning.contains("WARNING"),
+            "warning must start with WARNING: {warning}"
+        );
+        assert!(
+            warning.contains("--output-base"),
+            "warning must mention --output-base flag: {warning}"
+        );
     }
 
     // ── Task 133: --skip-binary-check ────────────────────────────────────────

@@ -83,7 +83,8 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
             out_dir.join("audit.json")
         };
         std::fs::write(&audit_file, audit_json)?;
-        eprintln!("[OK] audit.json written to: {}", audit_file.display());
+        let abs = audit_file.canonicalize().unwrap_or_else(|_| audit_file.clone());
+        eprintln!("[OK] audit.json written to: {}", abs.display());
         return Ok(());
     }
 
@@ -116,14 +117,16 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
                 let html = render_html_report(&report)?;
                 let path = out_dir.join(format!("{}_report.html", args.label));
                 std::fs::write(&path, &html)?;
-                eprintln!("[OK] HTML report written: {}", path.display());
+                let abs = path.canonicalize().unwrap_or_else(|_| path.clone());
+                eprintln!("[OK] HTML report written: {}", abs.display());
                 wrote_any = true;
             }
             ReportFormat::Json => {
                 let json = serde_json::to_string_pretty(&report)?;
                 let path = out_dir.join(format!("{}_report.json", args.label));
                 std::fs::write(&path, &json)?;
-                eprintln!("[OK] JSON report written: {}", path.display());
+                let abs = path.canonicalize().unwrap_or_else(|_| path.clone());
+                eprintln!("[OK] JSON report written: {}", abs.display());
                 wrote_any = true;
             }
             ReportFormat::Pdf => unreachable!("PDF filtered above"),
@@ -135,7 +138,8 @@ pub fn run_report(args: &ReportArgs) -> anyhow::Result<()> {
         let audit_json = build_audit_json(&manifest)?;
         let audit_file = out_dir.join("audit.json");
         std::fs::write(&audit_file, &audit_json)?;
-        eprintln!("[OK] audit.json written: {}", audit_file.display());
+        let abs = audit_file.canonicalize().unwrap_or_else(|_| audit_file.clone());
+        eprintln!("[OK] audit.json written: {}", abs.display());
     }
 
     // PDF handling: try external tools, fall back with helpful guidance

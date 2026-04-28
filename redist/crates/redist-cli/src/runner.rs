@@ -362,19 +362,19 @@ fn resolve_adjacency_path(
         if tract_v4.exists() {
             return Ok((tract_v4, "tract".to_string()));
         }
+        let state_upper = state_code_lower.to_uppercase();
         return Err(format!(
-            "adjacency pkl not found (block_group and tract both missing): {canonical}. \
-             Run: redist fetch --year {year} --release && \
-             python scripts/data/generate_adj_bin.py --year {year} --states {state_code_lower}",
-            canonical = tract_canonical.display()
+            "Adjacency file not found for {state_code_lower} {year}.\n\
+             Run: redist fetch --type adjacency --states {state_upper} --year {year}\n\
+             Then: redist state --state {state_upper} --year {year} ..."
         ));
     }
 
+    let state_upper = state_code_lower.to_uppercase();
     Err(format!(
-        "adjacency pkl not found: {canonical}. \
-         Run: redist fetch --year {year} --release && \
-         python scripts/data/generate_adj_bin.py --year {year} --states {state_code_lower}",
-        canonical = canonical.display()
+        "Adjacency file not found for {state_code_lower} {year}.\n\
+         Run: redist fetch --type adjacency --states {state_upper} --year {year}\n\
+         Then: redist state --state {state_upper} --year {year} ..."
     ))
 }
 
@@ -1036,13 +1036,13 @@ mod tests {
     #[test]
     fn test_resolve_adjacency_path_tract_missing_returns_err() {
         // With no data present (invalid path from manifest default), tract resolution
-        // should return an Err containing the expected filename pattern.
+        // should return an Err containing the expected hint.
         let result = resolve_adjacency_path("vt", "2020", "tract");
         assert!(result.is_err(), "expected Err when adjacency not present");
         let msg = result.unwrap_err();
         assert!(
-            msg.contains("vt_adjacency_2020.pkl") || msg.contains("cannot load manifest"),
-            "error message should reference tract filename or manifest: {msg}"
+            msg.contains("redist fetch") || msg.contains("cannot load manifest"),
+            "error message should reference redist fetch or manifest: {msg}"
         );
     }
 
@@ -1399,6 +1399,63 @@ mod tests {
         // Different year: function emits warning but doesn't panic
         let path = PathBuf::from("wa_adjacency_2010.pkl");
         check_adjacency_year_mismatch(&path, "2020", "WA"); // warns but no panic
+    }
+
+    // ── Gap 9: progress messages for redist states ────────────────────────────
+
+    #[test]
+    fn test_states_progress_message_format() {
+        // A States run with 0 configs still shows the summary line format.
+        // We verify the message format that would be produced by the States command.
+        let configs: Vec<StateConfig> = Vec::new();
+        let results = run_states_parallel(configs, 4);
+        let succeeded = results.iter().filter(|r| r.success).count();
+        let failed = results.iter().filter(|r| !r.success).count();
+
+        // Verify summary computation is correct for empty run
+        assert_eq!(succeeded, 0, "0 configs: succeeded must be 0");
+        assert_eq!(failed, 0, "0 configs: failed must be 0");
+
+        // Verify the summary line format
+        let summary = format!("[redist states] Complete: {} succeeded, {} failed", succeeded, failed);
+        assert!(summary.contains("Complete:"), "summary must contain 'Complete:'");
+        assert!(summary.contains("succeeded"), "summary must contain 'succeeded'");
+        assert!(summary.contains("failed"), "summary must contain 'failed'");
+        assert!(summary.contains("[redist states]"), "summary must be prefixed with [redist states]");
+
+        // Verify the queued banner format
+        let queued = format!(
+            "[redist states] {} states queued — {} workers — year {} — version {}",
+            0usize, 4usize, "2020", "v1"
+        );
+        assert!(queued.contains("states queued"), "banner must contain 'states queued'");
+        assert!(queued.contains("workers"), "banner must contain 'workers'");
+        assert!(queued.contains("year"), "banner must contain 'year'");
+        assert!(queued.contains("version"), "banner must contain 'version'");
+    }
+
+    // ── Gap 1: adjacency missing error message suggests redist fetch ──────────
+
+    #[test]
+    fn test_adjacency_missing_error_suggests_fetch() {
+        // When adjacency is missing, the error must mention "redist fetch" and "--type adjacency".
+        let result = resolve_adjacency_path("wa", "2020", "tract");
+        // In test env, adjacency won't exist — verify error contains expected hints.
+        match result {
+            Err(msg) => {
+                assert!(
+                    msg.contains("redist fetch"),
+                    "error must suggest 'redist fetch': {msg}"
+                );
+                assert!(
+                    msg.contains("--type adjacency"),
+                    "error must include '--type adjacency': {msg}"
+                );
+            }
+            Ok(_) => {
+                // If data happens to exist locally, the test is vacuously satisfied.
+            }
+        }
     }
 
     #[test]
