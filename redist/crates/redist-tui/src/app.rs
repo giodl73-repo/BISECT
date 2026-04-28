@@ -112,6 +112,7 @@ pub struct VerifyResult {
     pub seed_recorded: bool,
     pub fail_reason: Option<String>,
     pub likely_causes: Vec<String>,
+    pub manifest_path_used: String,
 }
 
 // ── Doctor screen state ───────────────────────────────────────────────────────
@@ -196,6 +197,10 @@ pub struct App {
     pub show_glossary: bool,
     pub show_policy_panel: bool,
     pub no_session: bool,
+    /// Shared log lines from background subprocess during a run.
+    pub subprocess_log: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+    /// None = still running, Some(true) = success, Some(false) = failed.
+    pub subprocess_done: std::sync::Arc<std::sync::Mutex<Option<bool>>>,
 }
 
 impl Default for App {
@@ -215,6 +220,8 @@ impl Default for App {
             show_glossary: false,
             show_policy_panel: false,
             no_session: false,
+            subprocess_log: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
+            subprocess_done: std::sync::Arc::new(std::sync::Mutex::new(None)),
         }
     }
 }

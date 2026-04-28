@@ -110,6 +110,124 @@ fn parse_elapsed_secs(msg: &str) -> Option<u64> {
     None
 }
 
+/// Spawn `redist state` subprocess in a background thread.
+/// Returns immediately. Progress is written to `log_lines` and `done`.
+/// done: None = still running, Some(true) = success, Some(false) = failed.
+pub fn spawn_redist_state(
+    form: &crate::app::RunForm,
+    log_lines: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
+    done: std::sync::Arc<std::sync::Mutex<Option<bool>>>,
+) {
+    // Find the redist binary alongside us
+    let redist_bin = std::env::current_exe()
+        .map(|mut p| { p.set_file_name(if cfg!(windows) { "redist.exe" } else { "redist" }); p })
+        .unwrap_or_else(|_| std::path::PathBuf::from("redist"));
+
+    let mut args = vec![
+        "state".to_string(),
+        "--state".to_string(), form.location.clone(),
+        "--chamber".to_string(), form.chamber.clone(),
+        "--year".to_string(), form.year.clone(),
+        "--resolution".to_string(), form.resolution.clone(),
+        "--version".to_string(), form.version.clone(),
+        "--force".to_string(),
+    ];
+    if !form.seed.is_empty() {
+        args.push("--seed".to_string());
+        args.push(form.seed.clone());
+    }
+    if !form.label.is_empty() {
+        args.push("--label".to_string());
+        args.push(form.label.clone());
+    }
+    if !form.balance_tol.is_empty() {
+        args.push("--balance-tolerance".to_string());
+        args.push(form.balance_tol.clone());
+    }
+
+    std::thread::spawn(move || {
+        use std::io::BufRead;
+        let result = std::process::Command::new(&redist_bin)
+            .args(&args)
+            .stderr(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn();
+
+        match result {
+            Err(e) => {
+                let mut lines = log_lines.lock().unwrap();
+                lines.push(format!("ERROR: failed to launch redist: {e}"));
+                *done.lock().unwrap() = Some(false);
+            }
+            Ok(mut child) => {
+                // Read stderr (STATUS: lines come here)
+                if let Some(stderr) = child.stderr.take() {
+                    for line in std::io::BufReader::new(stderr).lines().map_while(Result::ok) {
+                        log_lines.lock().unwrap().push(line);
+                    }
+                }
+                let success = child.wait().map(|s| s.success()).unwrap_or(false);
+                *done.lock().unwrap() = Some(success);
+            }
+        }
+    });
+}
+
+/// Run `redist verify --manifest {path}` and return VerifyResult.
+/// This blocks — call from a background thread.
+pub fn run_verify_subprocess(manifest_path: &str) -> crate::app::VerifyResult {
+    let redist_bin = std::env::current_exe()
+        .map(|mut p| { p.set_file_name(if cfg!(windows) { "redist.exe" } else { "redist" }); p })
+        .unwrap_or_else(|_| std::path::PathBuf::from("redist"));
+
+    let result = std::process::Command::new(&redist_bin)
+        .args(["verify", "--manifest", manifest_path, "--dry-run"])
+        .stderr(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .output();
+
+    let mut vr = crate::app::VerifyResult::default();
+    vr.manifest_path_used = manifest_path.to_string();
+
+    match result {
+        Err(e) => {
+            vr.fail_reason = Some(format!("Failed to launch redist: {e}"));
+        }
+        Ok(output) => {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            let combined = format!("{stdout}{stderr}");
+
+            vr.passed = combined.contains("PASS") && !combined.contains("FAIL");
+
+            // Parse Jaccard score: "Jaccard similarity: 0.9987"
+            for line in combined.lines() {
+                if line.contains("Jaccard similarity") || line.contains("Jaccard:") {
+                    if let Some(val) = line.split_whitespace().last()
+                        .and_then(|s| s.parse::<f64>().ok())
+                    {
+                        vr.jaccard = val;
+                    }
+                }
+                if line.contains("FAIL") && !line.contains("PASS") {
+                    vr.passed = false;
+                    vr.fail_reason = Some(line.trim().to_string());
+                }
+            }
+
+            if !vr.passed && vr.fail_reason.is_none() {
+                vr.fail_reason = Some("Verification failed — check manifest path and binary".to_string());
+                vr.likely_causes = vec![
+                    "METIS version differs from manifest".to_string(),
+                    "Different adjacency file (check sha256)".to_string(),
+                    "Run without --seed (add seed to reproduce)".to_string(),
+                ];
+            }
+        }
+    }
+    vr
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

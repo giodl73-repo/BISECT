@@ -213,3 +213,55 @@ fn render_detail_panel(f: &mut Frame, area: Rect, app: &App) {
         .alignment(Alignment::Left);
     f.render_widget(actions, rows[8]);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| {
+            let area = frame.area();
+            f(frame, area);
+        }).unwrap();
+        terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string())
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_home_renders_plan_label() {
+        use crate::app::PlanSummary;
+        let mut app = crate::app::App::default();
+        app.plans = vec![PlanSummary {
+            label: "wa_house_test".into(),
+            state_code: "WA".into(),
+            chamber: "house".into(),
+            year: "2020".into(),
+            num_districts: 98,
+            ..Default::default()
+        }];
+        let content = render_to_string(120, 30, |f, area| render(f, area, &app));
+        assert!(content.contains("wa_house_test"), "plan label must appear: {content}");
+    }
+
+    #[test]
+    fn test_home_empty_state_shown_when_no_plans() {
+        let app = crate::app::App::default();
+        let content = render_to_string(120, 20, |f, area| render(f, area, &app));
+        assert!(
+            content.contains("No plans") || content.contains("no plans") || content.contains("[r]"),
+            "empty state must show: {content}"
+        );
+    }
+
+    #[test]
+    fn test_home_quick_action_bar_visible() {
+        let app = crate::app::App::default();
+        let content = render_to_string(120, 20, |f, area| render(f, area, &app));
+        assert!(content.contains("[r]"), "quick action bar must show [r] Run");
+        assert!(content.contains("[v]"), "quick action bar must show [v] Verify");
+    }
+}

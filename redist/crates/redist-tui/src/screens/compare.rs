@@ -175,3 +175,47 @@ pub fn render(f: &mut Frame, area: Rect, state: &CompareState) {
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer, rows[4]);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| {
+            let area = frame.area();
+            f(frame, area);
+        }).unwrap();
+        terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string())
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_compare_shows_plan_a_label() {
+        use crate::app::CompareState;
+        let state = CompareState {
+            plan_a: "wa_house_plan_a".into(),
+            ..Default::default()
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("wa_house_plan_a") || content.contains("Plan A"));
+    }
+
+    #[test]
+    fn test_compare_shows_jaccard_when_result_present() {
+        use crate::app::{CompareState, CompareResult};
+        let state = CompareState {
+            plan_a: "plan_a".into(),
+            result: Some(CompareResult {
+                jaccard: 0.847,
+                ..Default::default()
+            }),
+            ..Default::default()
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("0.847") || content.contains("Jaccard") || content.contains("jaccard"));
+    }
+}

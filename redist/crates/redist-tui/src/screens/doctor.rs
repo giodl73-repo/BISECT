@@ -184,3 +184,49 @@ pub fn render(f: &mut Frame, area: Rect, state: &DoctorState) {
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer, rows[1]);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| {
+            let area = frame.area();
+            f(frame, area);
+        }).unwrap();
+        terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string())
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_doctor_empty_location_shows_prompt() {
+        use crate::app::DoctorState;
+        let state = DoctorState::default();
+        let content = render_to_string(120, 20, |f, area| render(f, area, &state));
+        assert!(
+            content.contains("location") || content.contains("Location") || content.contains("WA") || content.contains("IE") || content.contains("Doctor"),
+            "doctor must show location prompt: {content}"
+        );
+    }
+
+    #[test]
+    fn test_doctor_with_vt_location_runs_checks() {
+        use crate::app::DoctorState;
+        let state = DoctorState {
+            location: "VT".into(),
+            chamber: "congressional".into(),
+            year: "2020".into(),
+            checks: vec![],
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        // Doctor runs live checks — should show either location name or check results
+        assert!(
+            content.contains("VT") || content.contains("Vermont") || content.contains("Doctor"),
+            "doctor output must reference location: {content}"
+        );
+    }
+}

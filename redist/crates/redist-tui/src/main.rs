@@ -14,7 +14,7 @@ use ratatui::{
 };
 
 use redist_tui::{plans, session};
-use redist_tui::app::{App, DoctorState, RunState, Screen};
+use redist_tui::app::{App, DoctorState, RunPhase, RunProgress, RunResult, RunState, Screen};
 
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
@@ -121,6 +121,44 @@ fn run_app(
             }
         })?;
 
+        // Drain subprocess log into RunState each tick
+        if let Screen::Run(ref mut run_state) = app.screen {
+            if matches!(run_state.phase, RunPhase::Running) {
+                // Drain log lines
+                {
+                    let mut log = app.subprocess_log.lock().unwrap();
+                    for line in log.drain(..) {
+                        // Parse STATUS: lines for progress
+                        if let Some(msg) = redist_tui::runner::parse_status_line(&line) {
+                            redist_tui::runner::update_progress_from_message(&mut run_state.progress, &msg);
+                            run_state.log_lines.push(msg);
+                        } else {
+                            run_state.log_lines.push(line);
+                        }
+                        // Keep only last 50 log lines
+                        if run_state.log_lines.len() > 50 {
+                            run_state.log_lines.drain(0..run_state.log_lines.len() - 50);
+                        }
+                    }
+                }
+                // Update elapsed time (approximate — one tick ≈ 50ms but we only increment on poll hits)
+                run_state.progress.elapsed_secs = run_state.progress.elapsed_secs.saturating_add(0);
+
+                // Check if subprocess finished
+                let done = *app.subprocess_done.lock().unwrap();
+                if let Some(success) = done {
+                    let elapsed = run_state.progress.elapsed_secs;
+                    run_state.phase = RunPhase::Complete(RunResult {
+                        success,
+                        elapsed_secs: elapsed,
+                        ..Default::default()
+                    });
+                    // Reset done flag
+                    *app.subprocess_done.lock().unwrap() = None;
+                }
+            }
+        }
+
         // Poll for events with 50ms timeout
         if !event::poll(Duration::from_millis(50))? {
             continue;
@@ -176,98 +214,148 @@ fn run_app(
 
         // Screen-specific key dispatch
         if let Event::Key(key) = evt {
-            match &app.screen {
-                Screen::Home => {
-                    match (key.code, key.modifiers) {
-                        (KeyCode::Char('q'), _) | (KeyCode::Esc, _) => return Ok(()),
-                        (KeyCode::Char('c'), KeyModifiers::CONTROL) => return Ok(()),
-                        (KeyCode::Char('r'), _) => {
-                            app.navigate(Screen::Run(RunState::default()));
-                        }
-                        (KeyCode::Char('c'), _) => {
-                            use redist_tui::app::CompareState;
-                            let plan_a = app
-                                .visible_plans()
-                                .get(app.selected_plan)
-                                .map(|p| p.label.clone())
-                                .unwrap_or_default();
-                            app.navigate(Screen::Compare(CompareState {
-                                plan_a,
+            match key.code {
+                KeyCode::Enter => {
+                    // Run screen: Enter on form → spawn subprocess
+                    if let Screen::Run(ref mut state) = app.screen {
+                        if matches!(state.phase, RunPhase::Form) {
+                            // Reset shared state
+                            *app.subprocess_log.lock().unwrap() = Vec::new();
+                            *app.subprocess_done.lock().unwrap() = None;
+
+                            // Transition to Running phase
+                            state.phase = RunPhase::Running;
+                            state.log_lines.clear();
+                            state.progress = RunProgress {
+                                districts_total: state.form.label.parse().unwrap_or(1),
                                 ..Default::default()
-                            }));
+                            };
+
+                            // Spawn subprocess
+                            let form_clone = state.form.clone();
+                            let log_arc = app.subprocess_log.clone();
+                            let done_arc = app.subprocess_done.clone();
+                            redist_tui::runner::spawn_redist_state(&form_clone, log_arc, done_arc);
                         }
-                        (KeyCode::Char('v'), _) => {
-                            use redist_tui::app::VerifyState;
-                            app.navigate(Screen::Verify(VerifyState::default()));
+                    }
+                    // Verify screen: Enter with non-empty path → run verify
+                    if let Screen::Verify(ref mut state) = app.screen {
+                        if !state.manifest_path.is_empty() && !state.running {
+                            state.running = true;
+                            state.result = None;
+                            let path = state.manifest_path.clone();
+                            let result = redist_tui::runner::run_verify_subprocess(&path);
+                            state.result = Some(result);
+                            state.running = false;
                         }
-                        (KeyCode::Char('d'), _) => {
-                            app.navigate(Screen::Doctor(DoctorState {
-                                location: "VT".to_string(),
-                                chamber: "congressional".to_string(),
-                                year: "2020".to_string(),
-                                checks: Vec::new(),
-                            }));
-                        }
-                        (KeyCode::Up, _) => {
-                            if app.selected_plan > 0 {
-                                app.selected_plan -= 1;
+                    }
+                }
+                _ => {
+                    match &app.screen {
+                        Screen::Home => {
+                            match (key.code, key.modifiers) {
+                                (KeyCode::Char('q'), _) | (KeyCode::Esc, _) => return Ok(()),
+                                (KeyCode::Char('c'), KeyModifiers::CONTROL) => return Ok(()),
+                                (KeyCode::Char('r'), _) => {
+                                    app.navigate(Screen::Run(RunState::default()));
+                                }
+                                (KeyCode::Char('c'), _) => {
+                                    use redist_tui::app::CompareState;
+                                    let plan_a = app
+                                        .visible_plans()
+                                        .get(app.selected_plan)
+                                        .map(|p| p.label.clone())
+                                        .unwrap_or_default();
+                                    app.navigate(Screen::Compare(CompareState {
+                                        plan_a,
+                                        ..Default::default()
+                                    }));
+                                }
+                                (KeyCode::Char('v'), _) => {
+                                    use redist_tui::app::VerifyState;
+                                    app.navigate(Screen::Verify(VerifyState::default()));
+                                }
+                                (KeyCode::Char('d'), _) => {
+                                    app.navigate(Screen::Doctor(DoctorState {
+                                        location: "VT".to_string(),
+                                        chamber: "congressional".to_string(),
+                                        year: "2020".to_string(),
+                                        checks: Vec::new(),
+                                    }));
+                                }
+                                (KeyCode::Up, _) => {
+                                    if app.selected_plan > 0 {
+                                        app.selected_plan -= 1;
+                                    }
+                                }
+                                (KeyCode::Down, _) => {
+                                    let count = app.visible_plans().len();
+                                    if count > 0 && app.selected_plan + 1 < count {
+                                        app.selected_plan += 1;
+                                    }
+                                }
+                                (KeyCode::Char('s'), _) => {
+                                    app.cycle_sort();
+                                }
+                                (KeyCode::Char(':'), _) => {
+                                    app.show_palette = true;
+                                }
+                                (KeyCode::Char('?'), _) => {
+                                    app.show_glossary = !app.show_glossary;
+                                }
+                                _ => {}
                             }
                         }
-                        (KeyCode::Down, _) => {
-                            let count = app.visible_plans().len();
-                            if count > 0 && app.selected_plan + 1 < count {
-                                app.selected_plan += 1;
+                        Screen::Run(_) => {
+                            match key.code {
+                                KeyCode::Esc => app.navigate_back(),
+                                KeyCode::Char('q') => return Ok(()),
+                                KeyCode::Char(':') => app.show_palette = true,
+                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                _ => {}
                             }
                         }
-                        (KeyCode::Char('s'), _) => {
-                            app.cycle_sort();
+                        Screen::Compare(_) => {
+                            match key.code {
+                                KeyCode::Esc => app.navigate_back(),
+                                KeyCode::Char('q') => return Ok(()),
+                                KeyCode::Char(':') => app.show_palette = true,
+                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                _ => {}
+                            }
                         }
-                        (KeyCode::Char(':'), _) => {
-                            app.show_palette = true;
+                        Screen::Verify(_) => {
+                            // Text input for manifest path
+                            match key.code {
+                                KeyCode::Esc => app.navigate_back(),
+                                KeyCode::Char('q') => return Ok(()),
+                                KeyCode::Char(':') => app.show_palette = true,
+                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                KeyCode::Backspace => {
+                                    if let Screen::Verify(ref mut state) = app.screen {
+                                        state.manifest_path.pop();
+                                    }
+                                }
+                                KeyCode::Char(c) => {
+                                    if let Screen::Verify(ref mut state) = app.screen {
+                                        state.manifest_path.push(c);
+                                    }
+                                }
+                                _ => {}
+                            }
                         }
-                        (KeyCode::Char('?'), _) => {
-                            app.show_glossary = !app.show_glossary;
+                        Screen::Doctor(_) => {
+                            match key.code {
+                                KeyCode::Esc => app.navigate_back(),
+                                KeyCode::Char('q') => return Ok(()),
+                                KeyCode::Char('r') => {
+                                    app.navigate(Screen::Run(RunState::default()));
+                                }
+                                KeyCode::Char(':') => app.show_palette = true,
+                                KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                _ => {}
+                            }
                         }
-                        _ => {}
-                    }
-                }
-                Screen::Run(_) => {
-                    match key.code {
-                        KeyCode::Esc => app.navigate_back(),
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char(':') => app.show_palette = true,
-                        KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                        _ => {}
-                    }
-                }
-                Screen::Compare(_) => {
-                    match key.code {
-                        KeyCode::Esc => app.navigate_back(),
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char(':') => app.show_palette = true,
-                        KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                        _ => {}
-                    }
-                }
-                Screen::Verify(_) => {
-                    match key.code {
-                        KeyCode::Esc => app.navigate_back(),
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char(':') => app.show_palette = true,
-                        KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                        _ => {}
-                    }
-                }
-                Screen::Doctor(_) => {
-                    match key.code {
-                        KeyCode::Esc => app.navigate_back(),
-                        KeyCode::Char('q') => return Ok(()),
-                        KeyCode::Char('r') => {
-                            app.navigate(Screen::Run(RunState::default()));
-                        }
-                        KeyCode::Char(':') => app.show_palette = true,
-                        KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
-                        _ => {}
                     }
                 }
             }

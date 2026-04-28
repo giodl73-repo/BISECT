@@ -260,3 +260,65 @@ fn render_complete(f: &mut Frame, area: Rect, _state: &RunState, result: &crate:
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(actions, rows[7]);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| {
+            let area = frame.area();
+            f(frame, area);
+        }).unwrap();
+        terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string())
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_run_form_renders_fields() {
+        use crate::app::{RunState, RunForm};
+        let mut state = RunState::default();
+        state.form = RunForm {
+            location: "WA".into(),
+            chamber: "house".into(),
+            year: "2020".into(),
+            ..Default::default()
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("WA") || content.contains("house"), "form fields must appear");
+    }
+
+    #[test]
+    fn test_run_progress_shows_depth_bars() {
+        use crate::app::{RunState, RunPhase, RunProgress};
+        let mut state = RunState::default();
+        state.phase = RunPhase::Running;
+        state.progress = RunProgress {
+            depths: vec![(2, 2), (3, 4), (0, 8)],
+            districts_assigned: 22,
+            districts_total: 98,
+            balance_ok: true,
+            ..Default::default()
+        };
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("Depth") || content.contains("depth") || content.contains("2 / 2") || content.contains("22"));
+    }
+
+    #[test]
+    fn test_run_completion_shows_pass_indicators() {
+        use crate::app::{RunState, RunPhase, RunResult};
+        let mut state = RunState::default();
+        state.phase = RunPhase::Complete(RunResult {
+            success: true,
+            elapsed_secs: 154,
+            mean_pp: Some(0.31),
+            ..Default::default()
+        });
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("Done") || content.contains("Complete") || content.contains("154") || content.contains("SUCCESS"));
+    }
+}

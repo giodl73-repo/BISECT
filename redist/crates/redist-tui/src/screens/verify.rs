@@ -143,3 +143,60 @@ pub fn render(f: &mut Frame, area: Rect, state: &VerifyState) {
         .style(Style::default().fg(Color::DarkGray));
     f.render_widget(footer, rows[4]);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    fn render_to_string(width: u16, height: u16, f: impl FnOnce(&mut ratatui::Frame, ratatui::layout::Rect)) -> String {
+        let backend = TestBackend::new(width, height);
+        let mut terminal = Terminal::new(backend).unwrap();
+        terminal.draw(|frame| {
+            let area = frame.area();
+            f(frame, area);
+        }).unwrap();
+        terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string())
+            .collect::<String>()
+    }
+
+    #[test]
+    fn test_verify_pass_shows_pass_text() {
+        use crate::app::{VerifyState, VerifyResult};
+        let mut state = VerifyState::default();
+        state.result = Some(VerifyResult {
+            passed: true,
+            jaccard: 0.9987,
+            label: "wa_house_2020".into(),
+            state_code: "WA".into(),
+            year: "2020".into(),
+            ..Default::default()
+        });
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("PASS") || content.contains("pass"), "PASS must appear: {content}");
+    }
+
+    #[test]
+    fn test_verify_fail_shows_fail_text() {
+        use crate::app::{VerifyState, VerifyResult};
+        let mut state = VerifyState::default();
+        state.result = Some(VerifyResult {
+            passed: false,
+            jaccard: 0.741,
+            ..Default::default()
+        });
+        let content = render_to_string(120, 30, |f, area| render(f, area, &state));
+        assert!(content.contains("FAIL") || content.contains("fail"), "FAIL must appear: {content}");
+    }
+
+    #[test]
+    fn test_verify_empty_state_shows_input_prompt() {
+        let state = VerifyState::default();
+        let content = render_to_string(120, 20, |f, area| render(f, area, &state));
+        assert!(
+            content.contains("Manifest") || content.contains("manifest") || content.contains("path"),
+            "manifest input must show: {content}"
+        );
+    }
+}

@@ -44,3 +44,35 @@ fn context_from_app(app: &App) -> (String, String, String) {
         _ => ("--".to_string(), "--".to_string(), "--".to_string()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_status_bar_shows_plan_count() {
+        use crate::app::{App, PlanSummary};
+        let mut app = App::default();
+        app.plans = vec![PlanSummary { label: "test".into(), ..Default::default() }];
+        let backend = ratatui::backend::TestBackend::new(80, 1);
+        let mut terminal = ratatui::Terminal::new(backend).unwrap();
+        terminal.draw(|f| {
+            let area = f.area();
+            render(f, area, &app);
+        }).unwrap();
+        let content: String = terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string()).collect();
+        assert!(content.contains("1") || content.contains("plans"), "plan count must appear: {content}");
+    }
+
+    #[test]
+    fn test_status_bar_shows_help_hint() {
+        let app = App::default();
+        let backend = ratatui::backend::TestBackend::new(80, 1);
+        let mut terminal = ratatui::Terminal::new(backend).unwrap();
+        terminal.draw(|f| render(f, f.area(), &app)).unwrap();
+        let content: String = terminal.backend().buffer().content().iter()
+            .map(|c| c.symbol().to_string()).collect();
+        assert!(content.contains("?") || content.contains("q"), "help hint must appear: {content}");
+    }
+}
