@@ -32,8 +32,15 @@ pub struct StateResult {
 ///
 /// state_name and num_districts are pre-resolved by the caller (Commands::States
 /// or Commands::Run) to avoid spawning Python once per state inside the Rayon pool.
+///
+/// Fields are grouped into four logical domains:
+/// - **Identity**: what plan is being drawn (state, name, districts, year, version, output location)
+/// - **Algorithm**: how the partitioning is performed (partition_mode, ufactor, niter, seed)
+/// - **Control**: execution behavior (position, debug, reset, reprocess)
+/// - **Spec 1 extensions**: chamber-aware, labeled, multi-member, COI, CVAP features
 #[derive(Debug, Clone)]
 pub struct StateConfig {
+    // ── Identity: what plan is being drawn ───────────────────────────────────
     pub state_code: String,
     /// Lowercase state name for file paths (e.g. "alabama"). Pre-resolved.
     pub state_name: String,
@@ -42,15 +49,26 @@ pub struct StateConfig {
     pub year: String,
     pub version: String,
     pub output_dir: PathBuf,
+
+    // ── Algorithm: how partitioning is performed ──────────────────────────────
     pub partition_mode: String,
+    /// METIS imbalance factor (integer percent, e.g. 5 = 0.5% imbalance per level)
+    pub ufactor: u32,
+    /// Number of METIS refinement iterations
+    pub niter: u32,
+    /// Optional random seed for reproducibility
+    pub seed: Option<u64>,
+
+    // ── Control: execution behavior ───────────────────────────────────────────
+    /// Progress bar position (TQDM_POSITION-style, -1 = disabled)
     pub position: i32,
     pub debug: bool,
+    /// Delete existing outputs and re-run from scratch
     pub reset: bool,
+    /// Reprocess even if outputs already exist (skip completion check)
     pub reprocess: bool,
-    pub ufactor: u32,
-    pub niter: u32,
-    pub seed: Option<u64>,
-    // Spec 1: custom parameters
+
+    // ── Spec 1 extensions: chamber-aware, labeled, multi-member, COI ─────────
     /// Override district count (enables non-congressional chambers)
     pub num_districts_override: Option<usize>,
     /// Chamber type: "congressional" | "house" | "senate" | "custom"
@@ -79,6 +97,63 @@ pub struct StateConfig {
 }
 
 impl StateConfig {
+    /// Create a StateConfig for bulk congressional runs (Commands::States and Commands::Run).
+    ///
+    /// All Spec 1 fields default to their canonical bulk-run values:
+    /// - `partition_mode`: "edge-weighted"
+    /// - `ufactor`: 5, `niter`: 100, `seed`: None
+    /// - `debug`: false, `reset`: false, `reprocess`: false
+    /// - `chamber`: "congressional", `population_source`: "total"
+    /// - `resolution`: "tract", `seats_per_district`: 1
+    /// - `write_manifest`: false, `force`: false
+    /// - All override/optional fields: None
+    ///
+    /// `total_seats` is set to `num_districts` (single-member default).
+    ///
+    /// Use `Commands::State` (the single-state arm) for custom chambers, labels,
+    /// multi-member districts, COI weights, etc. — those require the full struct literal.
+    pub fn new_bulk(
+        state_code: String,
+        state_name: String,
+        num_districts: usize,
+        year: String,
+        version: String,
+        output_dir: std::path::PathBuf,
+        position: i32,
+    ) -> Self {
+        Self {
+            state_code,
+            state_name,
+            num_districts,
+            year,
+            version,
+            output_dir,
+            position,
+            // Algorithm defaults
+            partition_mode: "edge-weighted".to_string(),
+            ufactor: 5,
+            niter: 100,
+            seed: None,
+            // Control defaults
+            debug: false,
+            reset: false,
+            reprocess: false,
+            // Spec 1 defaults for bulk congressional runs
+            num_districts_override: None,
+            chamber: "congressional".to_string(),
+            label: None,
+            population_source: "total".to_string(),
+            balance_tolerance: None,
+            write_manifest: false,
+            force: false,
+            resolution: "tract".to_string(),
+            seats_per_district: 1,
+            total_seats: num_districts,
+            adjacency_override: None,
+            coi_weights: None,
+        }
+    }
+
     /// Returns the effective balance tolerance based on chamber type.
     ///
     /// Priority order:
@@ -797,6 +872,66 @@ mod tests {
             total_seats: 1,
             adjacency_override: None,
             coi_weights: None,
+        }
+    }
+
+    // ── Task 199: StateConfig::new_bulk constructor ───────────────────────────
+
+    #[test]
+    fn test_new_bulk_defaults() {
+        let cfg = StateConfig::new_bulk(
+            "WA".to_string(),
+            "washington".to_string(),
+            10,
+            "2020".to_string(),
+            "v1".to_string(),
+            PathBuf::from("/tmp/test"),
+            3,
+        );
+        // Identity fields set correctly
+        assert_eq!(cfg.state_code, "WA");
+        assert_eq!(cfg.state_name, "washington");
+        assert_eq!(cfg.num_districts, 10);
+        assert_eq!(cfg.year, "2020");
+        assert_eq!(cfg.version, "v1");
+        assert_eq!(cfg.output_dir, PathBuf::from("/tmp/test"));
+        assert_eq!(cfg.position, 3);
+        // Algorithm defaults
+        assert_eq!(cfg.partition_mode, "edge-weighted");
+        assert_eq!(cfg.ufactor, 5);
+        assert_eq!(cfg.niter, 100);
+        assert!(cfg.seed.is_none());
+        // Control defaults
+        assert!(!cfg.debug);
+        assert!(!cfg.reset);
+        assert!(!cfg.reprocess);
+        // Spec 1 defaults
+        assert!(cfg.num_districts_override.is_none());
+        assert_eq!(cfg.chamber, "congressional");
+        assert!(cfg.label.is_none());
+        assert_eq!(cfg.population_source, "total");
+        assert!(cfg.balance_tolerance.is_none());
+        assert!(!cfg.write_manifest);
+        assert!(!cfg.force);
+        assert_eq!(cfg.resolution, "tract");
+        assert_eq!(cfg.seats_per_district, 1);
+        // total_seats == num_districts for single-member default
+        assert_eq!(cfg.total_seats, 10);
+        assert!(cfg.adjacency_override.is_none());
+        assert!(cfg.coi_weights.is_none());
+    }
+
+    #[test]
+    fn test_new_bulk_total_seats_matches_num_districts() {
+        // For single-member districts, total_seats must equal num_districts
+        for n in [1usize, 5, 10, 52] {
+            let cfg = StateConfig::new_bulk(
+                "CA".to_string(), "california".to_string(), n,
+                "2020".to_string(), "v1".to_string(),
+                PathBuf::from("/tmp"), 0,
+            );
+            assert_eq!(cfg.total_seats, n,
+                "total_seats must equal num_districts ({n}) for new_bulk");
         }
     }
 

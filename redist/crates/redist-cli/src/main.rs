@@ -218,27 +218,17 @@ fn main() {
             let configs: Vec<StateConfig> = all.into_iter()
                 .filter(|(code, _, _)| filter.is_empty() || filter.contains(code))
                 .enumerate()
-                .map(|(i, (code, name, districts))| StateConfig {
-                    state_code: code, state_name: name, num_districts: districts,
-                    year: args.year.to_string(), version: args.version.clone(),
-                    output_dir: std::path::PathBuf::from(&args.output_dir),
-                    partition_mode: args.partition_mode.to_string(),
-                    position: (i + 2) as i32,
-                    debug: args.debug, reset: false, reprocess: args.reprocess,
-                    ufactor: 5, niter: 100, seed: None,
-                    // Spec 1 defaults for bulk runs
-                    num_districts_override: None,
-                    chamber: "congressional".into(),
-                    label: None,
-                    population_source: "total".into(),
-                    balance_tolerance: None,
-                    write_manifest: false,
-                    force: false,
-                    resolution: "tract".into(),
-                    seats_per_district: 1,
-                    total_seats: districts,
-                    adjacency_override: None,
-                    coi_weights: None,
+                .map(|(i, (code, name, districts))| {
+                    let mut cfg = StateConfig::new_bulk(
+                        code, name, districts,
+                        args.year.to_string(), args.version.clone(),
+                        std::path::PathBuf::from(&args.output_dir),
+                        (i + 2) as i32,
+                    );
+                    cfg.debug = args.debug;
+                    cfg.reprocess = args.reprocess;
+                    cfg.partition_mode = args.partition_mode.to_string();
+                    cfg
                 })
                 .collect();
 
@@ -286,29 +276,21 @@ fn main() {
                 let configs: Vec<StateConfig> = all.into_iter()
                     .filter(|(code, _, _)| filter.is_empty() || filter.contains(code))
                     .enumerate()
-                    .map(|(i, (code, name, districts))| StateConfig {
-                        state_code: code, state_name: name, num_districts: districts,
-                        year: year.clone(), version: args.version.clone(),
-                        output_dir: std::path::PathBuf::from(
+                    .map(|(i, (code, name, districts))| {
+                        let output_dir = std::path::PathBuf::from(
                             args.output_dir.clone().unwrap_or_else(|| format!("outputs/{}", args.version))
-                        ),
-                        partition_mode: args.partition_mode.to_string(),
-                        position: (i + 2) as i32,
-                        debug: args.debug, reset: args.reset, reprocess: args.reprocess,
-                        ufactor: 5, niter: 100, seed: None,
-                        // Spec 1 defaults for bulk runs
-                        num_districts_override: None,
-                        chamber: "congressional".into(),
-                        label: None,
-                        population_source: "total".into(),
-                        balance_tolerance: None,
-                        write_manifest: false,
-                        force: false,
-                        resolution: "tract".into(),
-                        seats_per_district: 1,
-                        total_seats: districts,
-                        adjacency_override: None,
-                        coi_weights: None,
+                        );
+                        let mut cfg = StateConfig::new_bulk(
+                            code, name, districts,
+                            year.clone(), args.version.clone(),
+                            output_dir,
+                            (i + 2) as i32,
+                        );
+                        cfg.debug = args.debug;
+                        cfg.reset = args.reset;
+                        cfg.reprocess = args.reprocess;
+                        cfg.partition_mode = args.partition_mode.to_string();
+                        cfg
                     })
                     .collect();
 
@@ -643,30 +625,11 @@ mod tests {
         use std::path::PathBuf;
 
         fn make_config(state: &str) -> StateConfig {
-            StateConfig {
-                state_code: state.to_string(),
-                state_name: state.to_lowercase(),
-                num_districts: 52,
-                year: "2020".to_string(),
-                version: "v1".to_string(),
-                output_dir: PathBuf::from("/tmp/test"),
-                partition_mode: "edge-weighted".to_string(),
-                position: 1,
-                debug: false, reset: false, reprocess: false,
-                ufactor: 5, niter: 100, seed: None,
-                num_districts_override: None,
-                chamber: "congressional".into(),
-                label: None,
-                population_source: "total".into(),
-                balance_tolerance: None,
-                write_manifest: false,
-                force: false,
-                resolution: "tract".into(),
-                seats_per_district: 1,
-                total_seats: 52,
-                adjacency_override: None,
-                coi_weights: None,
-            }
+            StateConfig::new_bulk(
+                state.to_string(), state.to_lowercase(), 52,
+                "2020".to_string(), "v1".to_string(),
+                PathBuf::from("/tmp/test"), 1,
+            )
         }
 
         let large_states = ["CA", "TX", "NY", "FL", "PA", "IL", "OH", "GA", "NC", "MI"];
