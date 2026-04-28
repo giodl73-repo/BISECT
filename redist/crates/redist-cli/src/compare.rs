@@ -328,10 +328,11 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
 
     // Load plan B (or enacted)
     let assignments_b = if let Some(ref plan_b) = args.plan_b {
+        let version_for_b = args.version_b.as_deref().unwrap_or(version);
         load_plan_assignments(
             plan_b,
             &args.output_base,
-            version,
+            version_for_b,
             &args.year,
             args.output_dir.as_ref(),
         )?
@@ -661,6 +662,7 @@ mod tests {
             output_dir: None,
             allow_cross_year: false,
             labels: vec!["only_one".into()],  // fewer than 2
+            version_b: None,
         };
         let result = run_multi_plan_summary(&args);
         assert!(result.is_err(), "fewer than 2 labels must return error");
@@ -692,6 +694,7 @@ mod tests {
             output_dir: None,
             allow_cross_year: false,
             labels: vec!["plan_a".into(), "plan_b".into()],
+            version_b: None,
         };
         // run_multi_plan_summary should succeed and emit header — just check it doesn't error
         let result = run_multi_plan_summary(&args);

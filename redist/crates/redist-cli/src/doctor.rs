@@ -13,6 +13,12 @@ use crate::policy::LocationRegistry;
 use crate::runner::{chamber_balance_tolerance, chamber_district_count};
 
 pub fn run_doctor(args: &DoctorArgs) {
+    // --all mode: scan all plans
+    if args.all {
+        run_all_plans_doctor(&args.version, &args.year, &args.output_base);
+        return;
+    }
+
     if let Some(ref label) = args.label {
         run_plan_doctor(label, &args.version, &args.year, &args.output_base);
         return;
@@ -126,6 +132,84 @@ pub fn run_doctor(args: &DoctorArgs) {
     }
 
     println!("\n[OK] Doctor check complete for {code} {} {}.", args.chamber, args.year);
+}
+
+// ---------------------------------------------------------------------------
+// All-plans scan mode — `redist doctor --all`
+// ---------------------------------------------------------------------------
+
+fn run_all_plans_doctor(version: &str, year: &str, output_base: &str) {
+    let plans_dir = std::path::PathBuf::from(output_base)
+        .join(version).join(year).join("plans");
+
+    let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+        .ok()
+        .into_iter()
+        .flatten()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.path().is_dir())
+        .map(|e| e.file_name().to_string_lossy().into_owned())
+        .collect();
+    labels.sort();
+
+    if labels.is_empty() {
+        println!("No plans found in {}", plans_dir.display());
+        println!("Run 'redist state --label ...' to create a plan first.");
+        return;
+    }
+
+    println!("=== redist doctor --all: {} plans in {}/{}/{}/plans/ ===\n",
+        labels.len(), output_base, version, year);
+    println!("{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
+        "Label", "Districts", "Balance", "PP", "Splits", "Missing");
+    println!("{}", "-".repeat(75));
+
+    for label in &labels {
+        match crate::plan_context::PlanContext::from_label(
+            std::path::Path::new(output_base), version, year, label
+        ) {
+            Err(_) => println!("{:<30} [no manifest]", label),
+            Ok(ctx) => {
+                let n = ctx.num_districts();
+                let balance = if ctx.analysis_file_exists("summary.json") {
+                    let path = ctx.analysis_file("summary.json");
+                    std::fs::read_to_string(&path).ok()
+                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                        .and_then(|v| v["population_balance_valid"].as_bool())
+                        .map(|ok| if ok { "OK" } else { "FAIL" })
+                        .unwrap_or("?")
+                } else { "-" };
+                let pp = if ctx.analysis_file_exists("compactness.json") {
+                    let path = ctx.analysis_file("compactness.json");
+                    std::fs::read_to_string(&path).ok()
+                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                        .and_then(|v| {
+                            v["districts"].as_array().and_then(|d| {
+                                let vals: Vec<f64> = d.iter().filter_map(|x| x["polsby_popper"].as_f64()).collect();
+                                if vals.is_empty() { None } else { Some(vals.iter().sum::<f64>() / vals.len() as f64) }
+                            })
+                        })
+                        .map(|pp_val| format!("{:.3}", pp_val))
+                        .unwrap_or_else(|| "-".to_string())
+                } else { "-".to_string() };
+                let splits = if ctx.analysis_file_exists("splits.json") {
+                    let path = ctx.analysis_file("splits.json");
+                    std::fs::read_to_string(&path).ok()
+                        .and_then(|s| serde_json::from_str::<serde_json::Value>(&s).ok())
+                        .and_then(|v| v["counties"]["split"].as_u64())
+                        .map(|n| n.to_string())
+                        .unwrap_or_else(|| "-".to_string())
+                } else { "-".to_string() };
+                let required = ["summary.json", "compactness.json", "contiguity.json"];
+                let missing_count = required.iter().filter(|&&f| !ctx.analysis_file_exists(f)).count();
+                let missing_str = if missing_count == 0 { "none".to_string() } else { format!("{} required", missing_count) };
+
+                println!("{:<30} {:>9} {:>8} {:>6} {:>7} {:>8}",
+                    &label[..label.len().min(29)], n, balance, pp, splits, missing_str);
+            }
+        }
+    }
+    println!("\nRun 'redist doctor --label <label>' for detailed diagnosis.");
 }
 
 // ---------------------------------------------------------------------------
@@ -357,6 +441,7 @@ mod tests {
             output_base: "outputs".to_string(),
             label: None,
             version: "v1".to_string(),
+            all: false,
         }
     }
 
@@ -654,5 +739,47 @@ mod tests {
             summary.contains("0.31") || summary.contains("PP"),
             "must show PP value: {summary}"
         );
+    }
+
+    // ── Task 203: doctor --all ────────────────────────────────────────────────
+
+    #[test]
+    fn test_doctor_all_empty_dir_shows_no_plans_message() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        // plans dir exists but is empty
+        let plans_dir = tmp.path().join("v1").join("2020").join("plans");
+        std::fs::create_dir_all(&plans_dir).unwrap();
+
+        let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+            .ok()
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .collect();
+        labels.sort();
+        assert!(labels.is_empty(), "no plans should be found in empty dir");
+    }
+
+    #[test]
+    fn test_doctor_all_scans_plan_dirs() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plans_dir = tmp.path().join("v1").join("2020").join("plans");
+        for label in &["alpha_plan", "beta_plan"] {
+            std::fs::create_dir_all(plans_dir.join(label)).unwrap();
+        }
+        let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+            .ok()
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .map(|e| e.file_name().to_string_lossy().into_owned())
+            .collect();
+        labels.sort();
+        assert_eq!(labels, vec!["alpha_plan", "beta_plan"]);
     }
 }

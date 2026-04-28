@@ -45,29 +45,29 @@ pub fn run_sweep(args: &SweepArgs) -> anyhow::Result<()> {
 
     let labels = generate_sweep_labels(args);
 
-    println!("=== redist sweep: {} seeds, keep top {} by {} ===",
+    eprintln!("=== redist sweep: {} seeds, keep top {} by {} ===",
         args.seeds, args.keep_top, args.optimize_by);
-    println!();
-    println!("Would run {} plans for {} {} (year={}, version={}):",
+    eprintln!();
+    eprintln!("Would run {} plans for {} {} (year={}, version={}):",
         args.seeds, args.state, args.chamber, args.year, args.version);
-    println!();
+    eprintln!();
 
     for (i, label) in labels.iter().enumerate() {
         let seed_val = args.seed_start + i as u64;
-        println!("  [{}] {}", i + 1, label);
-        println!("    redist state --state {} --year {} --chamber {} --label {} --seed {} --version {} --output-base {}",
+        eprintln!("  [{}] {}", i + 1, label);
+        println!("redist state --state {} --year {} --chamber {} --label {} --seed {} --version {} --output-base {}",
             args.state, args.year, args.chamber, label, seed_val, args.version, args.output_base);
-        println!("    redist analyze --state {} --year {} --label {} --version {} --types compactness splits summary",
+        println!("redist analyze --state {} --year {} --label {} --version {} --types compactness splits summary",
             args.state, args.year, label, args.version);
-        println!();
+        eprintln!();
     }
 
-    println!("After running all seeds, compare with:");
-    println!("  redist compare --labels {} --optimize-by {}",
+    eprintln!("After running all seeds, compare with:");
+    eprintln!("  redist compare --labels {} --optimize-by {}",
         labels.iter().take(args.keep_top).cloned().collect::<Vec<_>>().join(","),
         args.optimize_by);
-    println!();
-    println!("Report: Would run {} plans, keeping top {} by {}",
+    eprintln!();
+    eprintln!("Report: Would run {} plans, keeping top {} by {}",
         args.seeds, args.keep_top, args.optimize_by);
 
     if args.run {
@@ -162,5 +162,34 @@ mod tests {
         let args = make_sweep_args("VT", 5, 5, "compactness"); // keep_top == seeds: ok
         let result = validate_sweep_args(&args);
         assert!(result.is_ok(), "keep_top == seeds must be ok: {:?}", result.err());
+    }
+
+    // ── Task 212: generated commands go to stdout ─────────────────────────────
+
+    #[test]
+    fn test_sweep_generates_redist_state_commands() {
+        // The generated labels should contain the state and chamber
+        let mut args = make_sweep_args("WA", 3, 1, "compactness");
+        args.chamber = "house".to_string();
+        let labels = generate_sweep_labels(&args);
+        assert_eq!(labels.len(), 3);
+        assert!(
+            labels[0].contains("wa") || labels[0].contains("WA"),
+            "label must reference state: {}", labels[0]
+        );
+        assert!(
+            labels[0].contains("house"),
+            "label must reference chamber: {}", labels[0]
+        );
+    }
+
+    #[test]
+    fn test_sweep_labels_contain_seed_numbers() {
+        let args = make_sweep_args("TX", 3, 2, "splits");
+        let labels = generate_sweep_labels(&args);
+        // Each label should contain the seed number
+        assert!(labels[0].contains("1"), "first label must contain seed 1: {}", labels[0]);
+        assert!(labels[1].contains("2"), "second label must contain seed 2: {}", labels[1]);
+        assert!(labels[2].contains("3"), "third label must contain seed 3: {}", labels[2]);
     }
 }

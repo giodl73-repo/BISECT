@@ -224,6 +224,16 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     // Resolve types: expand All → concrete list
     let types = resolve_types(&args.types);
 
+    // --stdout validation: requires exactly one type
+    if args.stdout && types.len() != 1 {
+        anyhow::bail!(
+            "--stdout requires exactly one --types value, got {}. \
+            Example: redist analyze --label {} --types summary --stdout",
+            types.len(),
+            args.label.as_deref().unwrap_or("label")
+        );
+    }
+
     let mut balance_failed = false;
     let mut contiguity_failed = false;
     let mut missing_data = false;
@@ -243,8 +253,12 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             AnalyzerType::Demographic => {
                 match DemographicAnalyzer::run(&ctx) {
                     Ok(result) => {
-                        write_json_atomic(&out_path, &result)?;
-                        eprintln!("[OK] demographic -> {}", out_path.display());
+                        if args.stdout {
+                            println!("{}", serde_json::to_string_pretty(&result)?);
+                        } else {
+                            write_json_atomic(&out_path, &result)?;
+                            eprintln!("[OK] demographic -> {}", out_path.display());
+                        }
                     }
                     Err(e) => {
                         let msg = e.to_string();
@@ -271,13 +285,21 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             }
             AnalyzerType::Political => {
                 let result = PoliticalAnalyzer::run(&ctx)?;
-                write_json_atomic(&out_path, &result)?;
-                eprintln!("[OK] political -> {}", out_path.display());
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&result)?);
+                } else {
+                    write_json_atomic(&out_path, &result)?;
+                    eprintln!("[OK] political -> {}", out_path.display());
+                }
             }
             AnalyzerType::Urban => {
                 let result = UrbanAnalyzer::run(&ctx)?;
-                write_json_atomic(&out_path, &result)?;
-                eprintln!("[OK] urban -> {}", out_path.display());
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&result)?);
+                } else {
+                    write_json_atomic(&out_path, &result)?;
+                    eprintln!("[OK] urban -> {}", out_path.display());
+                }
             }
             AnalyzerType::Summary => {
                 let result = SummaryAnalyzer::run(&ctx)?;
@@ -286,8 +308,12 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                         balance_tolerance * 100.0);
                     balance_failed = true;
                 }
-                write_json_atomic(&out_path, &result)?;
-                eprintln!("[OK] summary -> {}", out_path.display());
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&result)?);
+                } else {
+                    write_json_atomic(&out_path, &result)?;
+                    eprintln!("[OK] summary -> {}", out_path.display());
+                }
             }
             AnalyzerType::Compactness => {
                 // Load dissolved district geometries
@@ -326,8 +352,12 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                     "year": year,
                     "districts": district_results
                 });
-                write_json_atomic(&out_path, &result)?;
-                eprintln!("[OK] compactness -> {}", out_path.display());
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&result)?);
+                } else {
+                    write_json_atomic(&out_path, &result)?;
+                    eprintln!("[OK] compactness -> {}", out_path.display());
+                }
             }
             AnalyzerType::Partisan => {
                 // Task 148: international election format note
@@ -453,11 +483,15 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                         "split_list": municipal_result.split_list,
                     },
                 });
-                write_json_atomic(&out_path, &out)?;
-                eprintln!("[OK] splits -> {}", out_path.display());
-                // Log the standard for auditing
-                if let Some(ref s) = standard {
-                    eprintln!("  Legal standard: {}", s.legal_standard);
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&out)?);
+                } else {
+                    write_json_atomic(&out_path, &out)?;
+                    eprintln!("[OK] splits -> {}", out_path.display());
+                    // Log the standard for auditing
+                    if let Some(ref s) = standard {
+                        eprintln!("  Legal standard: {}", s.legal_standard);
+                    }
                 }
             }
             AnalyzerType::All => unreachable!("expanded above"),
@@ -785,6 +819,24 @@ mod tests {
         assert!(record.command.contains("{assignments_json}"),
             "command template must contain placeholder");
         assert!(record.script.contains("my_analyzer"), "script field must name the file");
+    }
+
+    // ── Task 211: --stdout validation ────────────────────────────────────────
+
+    #[test]
+    fn test_stdout_validation_rejects_multiple_types() {
+        // --stdout with multiple types should produce an error message mentioning count
+        let types = resolve_types(&[AnalyzerType::Summary, AnalyzerType::Compactness]);
+        // Simulate the --stdout check
+        let would_error = types.len() != 1;
+        assert!(would_error, "--stdout with 2 types must reject");
+    }
+
+    #[test]
+    fn test_stdout_validation_accepts_single_type() {
+        let types = resolve_types(&[AnalyzerType::Summary]);
+        let would_error = types.len() != 1;
+        assert!(!would_error, "--stdout with exactly 1 type must be accepted");
     }
 
     /// Scenario 5: VRA missing demographics hint

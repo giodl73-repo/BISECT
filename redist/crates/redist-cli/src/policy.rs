@@ -74,11 +74,49 @@ pub fn run_policy(args: &PolicyArgs) -> anyhow::Result<()> {
     let state_code = args.state.to_uppercase();
 
     match get_state_policy(&policy, &state_code) {
-        None => anyhow::bail!(
-            "State '{}' not found in policy database. \
-            Check REDIST_STATE_POLICY or add the state to redist/data/state_policy.json.",
-            state_code
-        ),
+        None => {
+            // Try fuzzy name match (e.g., "ireland" -> "IE")
+            let policy_obj = policy.as_object();
+            if let Some(obj) = policy_obj {
+                let query = state_code.to_lowercase();
+                let matches: Vec<(&str, &str)> = obj.iter()
+                    .filter(|(k, _)| !k.starts_with('_'))  // skip test states
+                    .filter_map(|(code, entry)| {
+                        entry.get("name")
+                            .and_then(|v| v.as_str())
+                            .filter(|name| name.to_lowercase().contains(&query))
+                            .map(|name| (code.as_str(), name))
+                    })
+                    .collect();
+
+                match matches.len() {
+                    1 => {
+                        let (code, _name) = matches[0];
+                        eprintln!("NOTE: '{}' matched as {} ({}). Use the 2-letter code next time.",
+                            state_code, code, _name);
+                        // Re-run display with the matched code
+                        let matched_args = PolicyArgs {
+                            state: code.to_string(),
+                            format: args.format.clone(),
+                        };
+                        return run_policy(&matched_args);
+                    }
+                    0 => {} // fall through to error
+                    _ => {
+                        let suggestions: Vec<String> = matches.iter()
+                            .map(|(code, name)| format!("{} ({})", code, name))
+                            .collect();
+                        eprintln!("Multiple matches for '{}': {}. Use the 2-letter code.",
+                            state_code, suggestions.join(", "));
+                    }
+                }
+            }
+            anyhow::bail!(
+                "Location '{}' not found in policy database. \
+                Check REDIST_LOCATION_POLICY or use a 2-letter code (e.g., IE for Ireland).",
+                state_code
+            )
+        }
         Some(state) => {
             if args.format == "json" {
                 println!("{}", serde_json::to_string_pretty(&state)?);
@@ -342,6 +380,43 @@ mod tests {
         let policy = load_policy();
         let el = get_state_policy(&policy, "_TEST_EL").unwrap();
         assert_eq!(el["prison_gerrymandering"].as_str().unwrap(), "home_address");
+    }
+
+    // ── Task 206: fuzzy name matching ─────────────────────────────────────────
+
+    #[test]
+    fn test_policy_fuzzy_name_match_ireland() {
+        let policy = load_policy();
+        // "ireland" should fuzzy-match to IE
+        let query = "ireland".to_lowercase();
+        let obj = policy.as_object().unwrap();
+        let matches: Vec<&str> = obj.iter()
+            .filter(|(k, _)| !k.starts_with('_'))
+            .filter_map(|(code, entry)| {
+                entry.get("name")
+                    .and_then(|v| v.as_str())
+                    .filter(|name| name.to_lowercase().contains(&query))
+                    .map(|_| code.as_str())
+            })
+            .collect();
+        assert!(matches.contains(&"IE"), "ireland must fuzzy-match to IE");
+    }
+
+    #[test]
+    fn test_policy_fuzzy_no_match_returns_empty() {
+        let policy = load_policy();
+        let query = "zzzyyyxxx".to_lowercase();
+        let obj = policy.as_object().unwrap();
+        let matches: Vec<&str> = obj.iter()
+            .filter(|(k, _)| !k.starts_with('_'))
+            .filter_map(|(code, entry)| {
+                entry.get("name")
+                    .and_then(|v| v.as_str())
+                    .filter(|name| name.to_lowercase().contains(&query))
+                    .map(|_| code.as_str())
+            })
+            .collect();
+        assert!(matches.is_empty(), "gibberish must not match any location");
     }
 
     #[test]

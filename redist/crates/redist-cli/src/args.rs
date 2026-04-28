@@ -121,6 +121,7 @@ pub enum Stage {
 #[command(
     name = "redist",
     about = "Congressional redistricting pipeline -- compact, population-balanced districts",
+    before_help = "QUICKSTART:\n  1. redist fetch --type adjacency --states VT --year 2020\n  2. redist state --state VT --year 2020 --label vt_test\n  3. redist analyze --label vt_test --types all\n  4. redist report --label vt_test --format html\n  5. redist tui   (interactive interface)\n  6. redist doctor --label vt_test  (diagnose plan)\n\nSee: redist <command> --help for detailed options.\n",
     version,
     propagate_version = true,
 )]
@@ -215,6 +216,9 @@ pub struct DoctorArgs {
     /// Version directory for --label lookup (default: v1)
     #[arg(short = 'v', long, default_value = "v1")]
     pub version: String,
+    /// Scan all plans in the version/year directory and show status table
+    #[arg(long)]
+    pub all: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -442,6 +446,9 @@ pub struct AnalyzeArgs {
     /// Election data format: us-presidential (default), ie-dail, de-bundestag, generic-party-totals
     #[arg(long, default_value = "us-presidential")]
     pub election_format: String,
+    /// Write output to stdout instead of analysis/ file (only works with a single --types value)
+    #[arg(long)]
+    pub stdout: bool,
 }
 
 // ---------------------------------------------------------------------------
@@ -635,6 +642,9 @@ pub struct CompareArgs {
     /// Comma-separated plan labels for N-plan summary table (alternative to --plan-a/--plan-b)
     #[arg(long, value_delimiter = ',')]
     pub labels: Vec<String>,
+    /// Version directory for plan-b (overrides --version for plan-b lookup)
+    #[arg(long)]
+    pub version_b: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -1556,6 +1566,61 @@ mod tests {
         let args = DoctorArgs::parse_from(["doctor", "--label", "vt_test"]);
         // state should default to "" when --label is used without --state
         assert_eq!(args.state, "");
+    }
+
+    // ── Task 201: quickstart in CLI help ──────────────────────────────────────
+
+    #[test]
+    fn test_cli_help_contains_quickstart() {
+        use clap::CommandFactory;
+        let mut cmd = Cli::command();
+        let help = format!("{}", cmd.render_long_help());
+        assert!(help.contains("QUICKSTART") || help.contains("fetch"),
+            "CLI help must contain quickstart instructions: {}", &help[..200.min(help.len())]);
+    }
+
+    // ── Task 203: doctor --all flag ───────────────────────────────────────────
+
+    #[test]
+    fn test_doctor_all_flag_parsed() {
+        let args = DoctorArgs::parse_from(["doctor", "--all"]);
+        assert!(args.all);
+    }
+
+    #[test]
+    fn test_doctor_all_flag_default_false() {
+        let args = DoctorArgs::parse_from(["doctor", "--state", "VT"]);
+        assert!(!args.all);
+    }
+
+    // ── Task 204: --version-b flag for cross-version compare ─────────────────
+
+    #[test]
+    fn test_compare_version_b_flag_parsed() {
+        let args = CompareArgs::parse_from([
+            "compare", "--plan-a", "plan_a", "--plan-b", "plan_b", "--version-b", "v2"
+        ]);
+        assert_eq!(args.version_b, Some("v2".to_string()));
+    }
+
+    #[test]
+    fn test_compare_version_b_default_none() {
+        let args = CompareArgs::parse_from(["compare", "--plan-a", "plan_a", "--plan-b", "plan_b"]);
+        assert!(args.version_b.is_none());
+    }
+
+    // ── Task 211: analyze --stdout flag ──────────────────────────────────────
+
+    #[test]
+    fn test_analyze_stdout_flag_parsed() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT", "--stdout"]);
+        assert!(args.stdout);
+    }
+
+    #[test]
+    fn test_analyze_stdout_default_false() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
+        assert!(!args.stdout);
     }
 }
 
