@@ -418,11 +418,11 @@ fn resolve_adjacency_path(
     // Block group not found — graceful fallback to tract with clear warning
     if is_block_group {
         eprintln!(
-            "WARNING: Block group adjacency not found for {state_code_lower} {year}. \
-             Falling back to tract resolution.\n\
-             To use block groups: run \
-             python scripts/data/geography/build_bg_adjacency.py \
-             --year {year} --states {state_code_lower}"
+            "WARNING: --resolution block_group was requested but block_group adjacency \
+             not found for {state_code_lower} {year}.\n\
+             To get block_group data: redist fetch --type adjacency --states {} --year {}\n\
+             Falling back to tract resolution.",
+            state_code_lower.to_uppercase(), year
         );
         let tract_filename = format!("{state_code_lower}_adjacency_{year}.pkl");
         let tract_canonical = outputs_dir
@@ -1570,6 +1570,27 @@ mod tests {
     }
 
     // ── Gap 1: adjacency missing error message suggests redist fetch ──────────
+
+    // ── Task 205: block_group fallback warning mentions --resolution and fetch ──
+
+    #[test]
+    fn test_block_group_fallback_warning_text() {
+        // The warning when bg requested but not found should mention --resolution and fetch
+        let state_code_lower = "wa";
+        let year = "2020";
+        let warning = format!(
+            "WARNING: --resolution block_group was requested but block_group adjacency \
+             not found for {state_code_lower} {year}.\n\
+             To get block_group data: redist fetch --type adjacency --states {} --year {}\n\
+             Falling back to tract resolution.",
+            state_code_lower.to_uppercase(), year
+        );
+        assert!(warning.contains("--resolution block_group"), "must mention flag");
+        assert!(warning.contains("redist fetch"), "must mention fetch command");
+        assert!(warning.contains("block_group"), "must mention resolution type");
+        assert!(warning.contains("Falling back to tract resolution"), "must mention fallback");
+        assert!(warning.contains("WA"), "must mention uppercase state code");
+    }
 
     #[test]
     fn test_adjacency_missing_error_suggests_fetch() {

@@ -168,6 +168,20 @@ mod tests {
         );
     }
 
+    // ── Task 210: HTML report mobile overflow fix ────────────────────────────
+
+    #[test]
+    fn test_html_report_pre_has_overflow_auto() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_full_plan_dir(&tmp, "vt_overflow_test");
+        let report = assemble_report(&ctx).unwrap();
+        let html = render_html_report(&report).unwrap();
+        assert!(
+            html.contains("overflow-x: auto") || html.contains("overflow-x:auto"),
+            "HTML report CSS must include overflow-x: auto for mobile scrolling"
+        );
+    }
+
     #[test]
     fn test_external_analyzer_disclaimer_in_html() {
         let tmp = TempDir::new().unwrap();

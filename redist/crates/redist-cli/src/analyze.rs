@@ -227,6 +227,10 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     let mut balance_failed = false;
     let mut contiguity_failed = false;
     let mut missing_data = false;
+    // Tracks optional data missing (election data, demographics) — produces WARNING but
+    // does NOT set the fatal missing_data bit, so exit code stays 0 when only optional
+    // data is absent. Required data (adjacency for contiguity) uses missing_data above.
+    let mut missing_optional_data = false;
 
     for typ in &types {
         let out_path = analysis_dir.join(format!("{}.json", typ.name()));
@@ -249,7 +253,9 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                                 "WARNING: VRA analysis for {state_code} {year}: demographics CSV not found.\n\
                                  Run: redist fetch --type demographics --states {state_code} --year {year}"
                             );
-                            missing_data = true;
+                            // Demographics is OPTIONAL — missing data does not block the pipeline.
+                            // Use missing_optional_data so exit code stays 0.
+                            missing_optional_data = true;
                             let out = serde_json::json!({
                                 "analyzer": "demographic",
                                 "state": state_code,
@@ -482,12 +488,21 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         eprintln!("[OK] external analyzer recorded: {} (sha256: {})", script_path_str, record.sha256);
     }
 
-    // Compute bitfield exit code
+    // Emit a non-fatal warning when optional data is missing (e.g. demographics).
+    // This does NOT affect the exit code — only required missing data (adjacency) does.
+    if missing_optional_data {
+        eprintln!("WARNING: Some optional analysis data was unavailable (see above). \
+                   Results may be incomplete but the pipeline can continue.");
+    }
+
+    // Compute bitfield exit code — only REQUIRED missing data (adjacency for contiguity)
+    // sets the missing_data bit. Optional data absence (demographics, election data)
+    // is tracked separately via missing_optional_data and does not block the pipeline.
     let exit_code = compute_exit_code_with_flags(
         balance_failed,
         contiguity_failed,
         false, // nesting: not checked in this flow
-        missing_data,
+        missing_data, // only set for REQUIRED data (adjacency)
         args.allow_noncontiguous,
         args.allow_imbalance,
     );

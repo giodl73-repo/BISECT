@@ -375,4 +375,14 @@ mod tests {
         form.location.pop();
         assert_eq!(form.location, "");
     }
+
+    // ── Task 200: panic hook installation ────────────────────────────────────
+
+    #[test]
+    fn test_panic_hook_can_be_installed() {
+        // Verify panic::set_hook doesn't panic (smoke test for the TUI setup path)
+        let original = std::panic::take_hook();
+        std::panic::set_hook(Box::new(move |info| { original(info); }));
+        // If we got here, hook installation works
+    }
 }

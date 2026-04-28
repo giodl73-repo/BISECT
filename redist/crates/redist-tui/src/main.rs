@@ -33,6 +33,18 @@ fn main() -> anyhow::Result<()> {
     // Parse --no-session flag
     let no_session = args.iter().any(|a| a == "--no-session");
 
+    // Install panic hook to restore terminal state on crash
+    let original_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        // Always try to restore terminal — ignore errors
+        let _ = crossterm::terminal::disable_raw_mode();
+        let _ = crossterm::execute!(
+            std::io::stderr(),
+            crossterm::terminal::LeaveAlternateScreen
+        );
+        original_hook(panic_info);
+    }));
+
     // Terminal setup
     enable_raw_mode()?;
     let mut stdout = io::stdout();

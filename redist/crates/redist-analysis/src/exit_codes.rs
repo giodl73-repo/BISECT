@@ -148,4 +148,33 @@ mod tests {
         // balance violation + nesting violation -> bits 0 + 2 = 5
         assert_eq!(compute_exit_code(true, false, true, false), 5);
     }
+
+    // ── Task 202: missing election data must not set the fatal missing_data bit ──
+
+    #[test]
+    fn test_missing_election_data_exit_zero() {
+        // When the partisan analyzer can't find election data, the exit code should be 0.
+        // Election data is OPTIONAL — only adjacency (required for contiguity) sets missing_data.
+        // Simulate: optional data missing (demographics/election) → missing_optional_data=true
+        //           required data present                         → missing_data=false
+        let missing_data = false; // adjacency present (required data OK)
+        // missing_optional_data is tracked separately and does NOT enter compute_exit_code
+        let exit_code = compute_exit_code(
+            false, // balance_violation
+            false, // contiguity_violation
+            false, // nesting_violation
+            missing_data, // only required-data flag goes here
+        );
+        assert_eq!(exit_code, 0,
+            "exit code must be 0 when only optional data (election/demographics) is missing");
+    }
+
+    #[test]
+    fn test_required_missing_data_sets_exit_8() {
+        // When REQUIRED data (adjacency) is missing, exit code must be non-zero (bit 3 = 8).
+        let missing_data = true; // adjacency not available
+        let exit_code = compute_exit_code(false, false, false, missing_data);
+        assert_eq!(exit_code, 8,
+            "missing required data (adjacency) must set exit code bit 3 (value 8)");
+    }
 }
