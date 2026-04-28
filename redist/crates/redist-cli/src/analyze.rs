@@ -95,36 +95,34 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     };
 
     // Resolve state name and district count.
-    // For US states: read from the embedded manifest via load_all_states.
-    // For international states (e.g. IE, MT, DE) accessed via --adjacency:
-    //   fall back to the plan manifest when the state is not in the US manifest.
+    // ALWAYS prefer the plan manifest when a label is provided — the manifest records
+    // the actual chamber and district count used (e.g., WA house=98, not congressional=10).
+    // Fall back to load_all_states() only when no label/manifest is available.
     let (state_name, num_districts) = {
-        let all = load_all_states(&year).unwrap_or_default();
-        if let Some((_, name, nd)) = all.iter().find(|(code, _, _)| code == &state_code).cloned() {
-            (name, nd)
+        // Try plan manifest first (covers both US legislative and international)
+        let manifest_path = if let Some(ref label) = args.label {
+            output_root.join(&year).join("plans").join(label).join("manifest.json")
         } else {
-            // International state — try to read from plan manifest
-            let manifest_fallback = if let Some(ref label) = args.label {
-                output_root.join(&year).join("plans").join(label).join("manifest.json")
-            } else {
-                std::path::PathBuf::new()
-            };
-            if manifest_fallback.exists() {
-                let manifest: serde_json::Value = serde_json::from_str(
-                    &std::fs::read_to_string(&manifest_fallback)?
-                )?;
-                let nd = manifest["num_districts"].as_u64().unwrap_or(1) as usize;
-                // state_name: prefer --state-name from manifest if present, else lowercase state_code
-                let sn = manifest["state_name"]
-                    .as_str()
-                    .map(|s| s.to_string())
-                    .unwrap_or_else(|| state_code.to_lowercase());
-                eprintln!("NOTE: International state '{state_code}' not in US manifest — \
-                    using manifest: state_name={sn}, num_districts={nd}");
-                (sn, nd)
+            std::path::PathBuf::new()
+        };
+        if manifest_path.exists() {
+            let manifest: serde_json::Value = serde_json::from_str(
+                &std::fs::read_to_string(&manifest_path)?
+            )?;
+            let nd = manifest["num_districts"].as_u64().unwrap_or(1) as usize;
+            let sn = manifest["state_name"]
+                .as_str()
+                .map(|s| s.to_string())
+                .unwrap_or_else(|| state_code.to_lowercase());
+            (sn, nd)
+        } else {
+            // Fallback: load_all_states (congressional counts only)
+            let all = load_all_states(&year).unwrap_or_default();
+            if let Some((_, name, nd)) = all.iter().find(|(code, _, _)| code == &state_code).cloned() {
+                (name, nd)
             } else {
                 anyhow::bail!(
-                    "Unknown state: {state_code}\n\
+                    "Unknown state '{state_code}' and no plan manifest found.\n\
                      For international states, provide --label pointing to a plan with manifest.json"
                 );
             }
