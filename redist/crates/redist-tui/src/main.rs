@@ -17,8 +17,21 @@ use redist_tui::{plans, session};
 use redist_tui::app::{App, DoctorState, RunState, Screen};
 
 fn main() -> anyhow::Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+
+    // --version / --help (no terminal setup needed)
+    if args.iter().any(|a| a == "--version" || a == "-V") {
+        println!("redist-tui {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        println!("Usage: redist-tui [--no-session] [--version]");
+        println!("  --no-session  Start with clean state (no saved config)");
+        return Ok(());
+    }
+
     // Parse --no-session flag
-    let no_session = std::env::args().any(|a| a == "--no-session");
+    let no_session = args.iter().any(|a| a == "--no-session");
 
     // Terminal setup
     enable_raw_mode()?;
