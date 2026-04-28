@@ -224,6 +224,47 @@ fn run_app(
 
         // Screen-specific key dispatch
         if let Event::Key(key) = evt {
+            // Run form editing: intercept Tab/BackTab/Backspace/Char before generic dispatch
+            let is_run_form = matches!(&app.screen, Screen::Run(s) if matches!(s.phase, RunPhase::Form));
+            if is_run_form {
+                match key.code {
+                    KeyCode::Esc => {
+                        app.navigate_back();
+                        continue;
+                    }
+                    KeyCode::Enter => {
+                        // Fall through to Enter handling below
+                    }
+                    KeyCode::Tab => {
+                        if let Screen::Run(ref mut s) = app.screen {
+                            s.form.active_field = (s.form.active_field + 1) % 8;
+                        }
+                        continue;
+                    }
+                    KeyCode::BackTab => {
+                        if let Screen::Run(ref mut s) = app.screen {
+                            s.form.active_field = s.form.active_field.saturating_sub(1);
+                        }
+                        continue;
+                    }
+                    KeyCode::Backspace => {
+                        if let Screen::Run(ref mut s) = app.screen {
+                            edit_active_field(&mut s.form, |f| { f.pop(); });
+                        }
+                        continue;
+                    }
+                    KeyCode::Char(c) => {
+                        if let Screen::Run(ref mut s) = app.screen {
+                            edit_active_field(&mut s.form, |f| { f.push(c); });
+                        }
+                        continue;
+                    }
+                    _ => {
+                        continue;
+                    }
+                }
+            }
+
             match key.code {
                 KeyCode::Enter => {
                     // Run screen: Enter on form → spawn subprocess
@@ -375,6 +416,20 @@ fn run_app(
                 }
             }
         }
+    }
+}
+
+fn edit_active_field(form: &mut redist_tui::app::RunForm, edit: impl FnOnce(&mut String)) {
+    match form.active_field {
+        0 => edit(&mut form.location),
+        1 => edit(&mut form.chamber),
+        2 => edit(&mut form.year),
+        3 => edit(&mut form.resolution),
+        4 => edit(&mut form.seed),
+        5 => edit(&mut form.label),
+        6 => edit(&mut form.version),
+        7 => edit(&mut form.balance_tol),
+        _ => {}
     }
 }
 

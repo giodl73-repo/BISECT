@@ -32,7 +32,7 @@ pub struct RunForm {
     pub label: String,
     pub version: String,
     pub balance_tol: String,
-    pub focused_field: usize,
+    pub active_field: usize,
     pub doctor_warnings: Vec<String>,
     pub doctor_errors: Vec<String>,
 }

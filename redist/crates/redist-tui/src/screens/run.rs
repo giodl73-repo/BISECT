@@ -41,18 +41,26 @@ fn render_form(f: &mut Frame, area: Rect, state: &RunState) {
         ("Balance tol %", form.balance_tol.as_str()),
     ];
 
+    let field_display = |val: &str, idx: usize| -> String {
+        if idx == form.active_field {
+            format!("[ {}\u{2588} ]", val)
+        } else {
+            format!("[ {} ]", val)
+        }
+    };
+
     let mut lines: Vec<Line> = fields
         .iter()
         .enumerate()
         .map(|(i, (label, value))| {
-            let style = if i == form.focused_field {
+            let style = if i == form.active_field {
                 Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
             } else {
                 Style::default()
             };
             Line::from(vec![
                 Span::styled(format!("  {:<16}", label), style),
-                Span::styled(format!(" {}", value), Style::default().fg(Color::White)),
+                Span::styled(field_display(value, i), Style::default().fg(Color::White)),
             ])
         })
         .collect();
@@ -320,5 +328,51 @@ mod tests {
         });
         let content = render_to_string(120, 30, |f, area| render(f, area, &state));
         assert!(content.contains("Done") || content.contains("Complete") || content.contains("154") || content.contains("SUCCESS"));
+    }
+
+    #[test]
+    fn test_run_form_tab_cycles_active_field() {
+        use crate::app::{RunForm};
+        let mut form = RunForm::default();
+        assert_eq!(form.active_field, 0);
+        // Simulate Tab: increment, wrapping at 8
+        form.active_field = (form.active_field + 1) % 8;
+        assert_eq!(form.active_field, 1);
+        form.active_field = (form.active_field + 1) % 8;
+        assert_eq!(form.active_field, 2);
+        // Jump to last field and verify wrap
+        form.active_field = 7;
+        form.active_field = (form.active_field + 1) % 8;
+        assert_eq!(form.active_field, 0);
+    }
+
+    #[test]
+    fn test_run_form_char_edits_active_field() {
+        use crate::app::{RunForm};
+        let mut form = RunForm::default();
+        // active_field == 0 means location
+        assert_eq!(form.active_field, 0);
+        form.location.push('W');
+        form.location.push('A');
+        assert_eq!(form.location, "WA");
+        // Switch to field 1 (chamber) and edit
+        form.active_field = 1;
+        form.chamber.push('h');
+        assert_eq!(form.chamber, "h");
+    }
+
+    #[test]
+    fn test_run_form_backspace_removes_char() {
+        use crate::app::{RunForm};
+        let mut form = RunForm { location: "WA".into(), ..Default::default() };
+        assert_eq!(form.active_field, 0);
+        // Simulate Backspace on location (field 0)
+        form.location.pop();
+        assert_eq!(form.location, "W");
+        form.location.pop();
+        assert_eq!(form.location, "");
+        // Pop on empty string is a no-op
+        form.location.pop();
+        assert_eq!(form.location, "");
     }
 }
