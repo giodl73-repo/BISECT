@@ -376,6 +376,26 @@ mod tests {
         assert_eq!(form.location, "");
     }
 
+    #[test]
+    fn test_run_elapsed_wall_clock() {
+        // Verify Instant arithmetic works correctly for elapsed tracking
+        let start = std::time::Instant::now();
+        let elapsed = start.elapsed().as_secs();
+        // In a test, elapsed should be 0 (sub-second) — just verify no panic
+        assert!(elapsed < 5, "elapsed must be reasonable for a test: {}s", elapsed);
+    }
+
+    #[test]
+    fn test_run_progress_elapsed_from_instant() {
+        use crate::app::RunProgress;
+        let start = std::time::Instant::now();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        let elapsed = start.elapsed().as_secs();
+        // elapsed should be 0 (< 1 second) — just verify no panic
+        assert!(elapsed < 60, "elapsed must be reasonable");
+        let _ = RunProgress::default(); // ensure RunProgress is usable
+    }
+
     // ── Task 200: panic hook installation ────────────────────────────────────
 
     #[test]

@@ -111,6 +111,90 @@ mod integration_tests {
     }
 
     #[test]
+    fn test_compare_data_loading_from_plan_dirs() {
+        use crate::screens::compare::{compute_compare_result, load_mean_pp, load_max_dev};
+
+        let tmp_a = TempDir::new().unwrap();
+        let tmp_b = TempDir::new().unwrap();
+
+        // Set up plan A with analysis files
+        let analysis_a = tmp_a.path().join("analysis");
+        std::fs::create_dir_all(&analysis_a).unwrap();
+        std::fs::write(
+            analysis_a.join("compactness.json"),
+            serde_json::json!({
+                "districts": [{"district": 1, "polsby_popper": 0.42}]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_a.join("summary.json"),
+            serde_json::json!({"max_deviation_pct": 3.2}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_a.join("splits.json"),
+            serde_json::json!({"split": 8}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_a.join("contiguity.json"),
+            serde_json::json!({"all_contiguous": true}).to_string(),
+        )
+        .unwrap();
+
+        // Set up plan B with different values
+        let analysis_b = tmp_b.path().join("analysis");
+        std::fs::create_dir_all(&analysis_b).unwrap();
+        std::fs::write(
+            analysis_b.join("compactness.json"),
+            serde_json::json!({
+                "districts": [{"district": 1, "polsby_popper": 0.35}]
+            })
+            .to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_b.join("summary.json"),
+            serde_json::json!({"max_deviation_pct": 4.1}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_b.join("splits.json"),
+            serde_json::json!({"split": 12}).to_string(),
+        )
+        .unwrap();
+        std::fs::write(
+            analysis_b.join("contiguity.json"),
+            serde_json::json!({"all_contiguous": false}).to_string(),
+        )
+        .unwrap();
+
+        // Verify individual loaders
+        let pp_a = load_mean_pp(tmp_a.path());
+        assert!(pp_a.is_some());
+        assert!((pp_a.unwrap() - 0.42).abs() < 0.001, "plan A mean PP must match");
+
+        let dev_b = load_max_dev(tmp_b.path());
+        assert!(dev_b.is_some());
+        assert!((dev_b.unwrap() - 4.1).abs() < 0.001, "plan B max dev must match");
+
+        // Verify compute_compare_result
+        let result =
+            compute_compare_result(tmp_a.path(), tmp_b.path(), "plan_a", "plan_b");
+
+        // No assignments → jaccard 0
+        assert_eq!(result.jaccard, 0.0, "jaccard must be 0 with no assignment files");
+        assert!((result.mean_pp_a - 0.42).abs() < 0.001, "mean_pp_a must be 0.42");
+        assert!((result.mean_pp_b - 0.35).abs() < 0.001, "mean_pp_b must be 0.35");
+        assert_eq!(result.splits_a, 8, "splits_a must be 8");
+        assert_eq!(result.splits_b, 12, "splits_b must be 12");
+        assert!(result.contiguous_a, "plan A must be contiguous");
+        assert!(!result.contiguous_b, "plan B must not be contiguous");
+    }
+
+    #[test]
     fn test_status_parser_integration_with_progress() {
         use crate::runner::{parse_status_line, update_progress_from_message};
         use crate::app::RunProgress;

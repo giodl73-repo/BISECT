@@ -163,8 +163,10 @@ fn run_app(
                         }
                     }
                 }
-                // Update elapsed time (approximate — one tick ≈ 50ms but we only increment on poll hits)
-                run_state.progress.elapsed_secs = run_state.progress.elapsed_secs.saturating_add(0);
+                // Update elapsed time from wall clock (fixes saturating_add(0) bug)
+                if let Some(started) = app.run_started_at {
+                    run_state.progress.elapsed_secs = started.elapsed().as_secs();
+                }
 
                 // Check if subprocess finished
                 let done = *app.subprocess_done.lock().unwrap();
@@ -175,7 +177,8 @@ fn run_app(
                         elapsed_secs: elapsed,
                         ..Default::default()
                     });
-                    // Reset done flag
+                    // Clear start time and done flag
+                    app.run_started_at = None;
                     *app.subprocess_done.lock().unwrap() = None;
                 }
             }
@@ -293,6 +296,8 @@ fn run_app(
                                 districts_total: state.form.label.parse().unwrap_or(1),
                                 ..Default::default()
                             };
+                            // Record wall-clock start time for elapsed tracking
+                            app.run_started_at = Some(std::time::Instant::now());
 
                             // Spawn subprocess
                             let form_clone = state.form.clone();
@@ -389,6 +394,42 @@ fn run_app(
                                 KeyCode::Char('q') => return Ok(()),
                                 KeyCode::Char(':') => app.show_palette = true,
                                 KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                KeyCode::Backspace => {
+                                    if let Screen::Compare(ref mut s) = app.screen {
+                                        s.plan_b_input.pop();
+                                    }
+                                }
+                                KeyCode::Char(c) => {
+                                    if let Screen::Compare(ref mut s) = app.screen {
+                                        s.plan_b_input.push(c);
+                                    }
+                                }
+                                KeyCode::Enter => {
+                                    if let Screen::Compare(ref mut s) = app.screen {
+                                        if !s.plan_b_input.is_empty() {
+                                            let base = std::path::PathBuf::from("outputs")
+                                                .join("v1").join("2020").join("plans");
+                                            let plan_a_dir = base.join(&s.plan_a);
+                                            let plan_b_dir = base.join(&s.plan_b_input);
+                                            if plan_a_dir.exists() && plan_b_dir.exists() {
+                                                let label_a = s.plan_a.clone();
+                                                let label_b = s.plan_b_input.clone();
+                                                let result = redist_tui::screens::compare::compute_compare_result(
+                                                    &plan_a_dir, &plan_b_dir, &label_a, &label_b,
+                                                );
+                                                s.result = Some(result);
+                                            } else {
+                                                let plan_a = s.plan_a.clone();
+                                                let plan_b = s.plan_b_input.clone();
+                                                drop(s);
+                                                app.set_error(format!(
+                                                    "Plan not found: '{}' or '{}'. Check label spelling.",
+                                                    plan_a, plan_b
+                                                ));
+                                            }
+                                        }
+                                    }
+                                }
                                 _ => {}
                             }
                         }
@@ -421,6 +462,16 @@ fn run_app(
                                 }
                                 KeyCode::Char(':') => app.show_palette = true,
                                 KeyCode::Char('?') => app.show_glossary = !app.show_glossary,
+                                KeyCode::Backspace => {
+                                    if let Screen::Doctor(ref mut state) = app.screen {
+                                        state.location.pop();
+                                    }
+                                }
+                                KeyCode::Char(c) => {
+                                    if let Screen::Doctor(ref mut state) = app.screen {
+                                        state.location.push(c.to_uppercase().next().unwrap_or(c));
+                                    }
+                                }
                                 _ => {}
                             }
                         }

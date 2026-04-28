@@ -199,6 +199,8 @@ pub struct App {
     pub no_session: bool,
     /// Default RunForm values pre-populated from session config.
     pub default_run_form: RunForm,
+    /// Wall-clock start time for elapsed display (set when phase transitions to Running).
+    pub run_started_at: Option<std::time::Instant>,
     /// Shared log lines from background subprocess during a run.
     pub subprocess_log: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
     /// None = still running, Some(true) = success, Some(false) = failed.
@@ -223,6 +225,7 @@ impl Default for App {
             show_policy_panel: false,
             no_session: false,
             default_run_form: RunForm::default(),
+            run_started_at: None,
             subprocess_log: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
             subprocess_done: std::sync::Arc::new(std::sync::Mutex::new(None)),
         }
