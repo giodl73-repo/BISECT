@@ -85,7 +85,7 @@ def main():
 
     if not input_file.exists():
         print(f"Error: Block data not found at {input_file}")
-        print(f"Run download_data.py first.")
+        print(f"Run: python scripts/data/download_orchestrator.py --stages redistricting --year {args.year}")
         return 1
 
     blocks_gdf = load_blocks(str(input_file))
