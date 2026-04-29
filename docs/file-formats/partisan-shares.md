@@ -76,7 +76,12 @@ This format is intentionally simple so any tool can produce it. Common pipelines
 2. **Precinct-level results + precinct shapefile + tract shapefile.** Spatial overlay each tract with each precinct, area-weight the precinct's `dem_share` (or `dem_votes / total_votes`) by the overlap, sum across precincts that touch each tract. Output the resulting per-tract share.
 3. **Tract demographics + statewide D-share + uniform turnout assumption.** Use voting-age population × turnout × statewide D-share. This is a poor approximation (ignores spatial variation) but trivial to produce. The legacy `scripts/data/load_tract_votes.py` shows this pattern.
 
-We do not ship a producer in `redist` itself — input format is decoupled from how you got the data.
+We do not ship a producer in `redist` itself — input format is decoupled from how you got the data. A reference Python producer is at `scripts/data/political/build_dem_shares.py` with two modes:
+
+- `--mode direct` if you already have tract-level results
+- `--mode vap-disaggregate` for county-level results + tract VAP
+
+That script emits the canonical TSV (provenance comments + header + sorted rows). Run `python scripts/data/political/build_dem_shares.py --help` for full usage.
 
 ## Compatibility
 
