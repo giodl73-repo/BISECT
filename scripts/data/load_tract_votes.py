@@ -103,7 +103,7 @@ def disaggregate_votes_to_tracts(
     from scripts.utils import get_tract_file
 
     # Map state name to abbreviation
-    from scripts.pipeline.run_party_specific_redistricting import STATE_ABBREV
+    from scripts.constants import STATE_ABBREV
     state_abbrev = STATE_ABBREV.get(state.lower())
     tracts_file = get_tract_file(state_abbrev, str(year), 'v1')
 

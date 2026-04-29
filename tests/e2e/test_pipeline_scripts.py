@@ -628,22 +628,6 @@ class TestCleanupDistrictSummary:
             pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
 
 
-class TestFillMissingCities:
-    """Test fill_missing_cities.py - Fills missing city data."""
-
-    def test_script_imports_successfully(self):
-        """Test that script can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'fill_missing_cities.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
-
-
 class TestFix2010MissingOutputs:
     """Test fix_2010_missing_outputs.py - One-off fix for 2010 data."""
 
