@@ -11,7 +11,10 @@ Modules:
     common: Skip logic, progress reporting, common helpers
     subprocess_helpers: Command building for subprocess calls
     error_logger: Error logging with full tracebacks
-    stage_tracker: Pipeline stage completion tracking
+
+Removed 2026-04-29 (Plan 02 cleanup): pipeline_orchestrator and
+stage_tracker — orphaned after Python pipeline archival. Sources
+moved to archive/python-pipeline-final/scripts/utils/.
 
 Example:
     >>> from scripts.utils import get_state_config, get_tract_file
@@ -74,12 +77,6 @@ from .error_logger import (
     get_error_logger,
 )
 
-# Stage tracking
-from .stage_tracker import (
-    StageTracker,
-    get_stage_tracker,
-)
-
 __all__ = [
     # Config
     'get_state_config',
@@ -123,8 +120,4 @@ __all__ = [
     # Error logging
     'ErrorLogger',
     'get_error_logger',
-
-    # Stage tracking
-    'StageTracker',
-    'get_stage_tracker',
 ]

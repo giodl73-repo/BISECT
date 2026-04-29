@@ -1,14 +1,15 @@
 """
-Unit tests for error logging utilities.
+Unit tests for error_logger.py.
 
-Tests error_logger.py and stage_tracker.py functionality.
+The companion TestStageTracker class was removed 2026-04-29 when stage_tracker
+was archived to archive/python-pipeline-final/scripts/utils/ — its only
+production callers (the Python pipeline orchestrators) were retired in Plan 02.
 """
 
 import pytest
 import tempfile
 from pathlib import Path
 from scripts.utils.error_logger import ErrorLogger, get_error_logger
-from scripts.utils.stage_tracker import StageTracker, get_stage_tracker
 
 
 class TestErrorLogger:
@@ -146,105 +147,3 @@ class TestErrorLogger:
 
             logger.close()  # Close handlers for Windows cleanup
 
-
-class TestStageTracker:
-    """Test StageTracker functionality."""
-
-    def test_stage_tracker_creation(self):
-        """Test that StageTracker can be created."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            assert tracker.output_dir == output_dir
-
-    def test_stage_tracker_factory(self):
-        """Test get_stage_tracker factory function."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = get_stage_tracker(output_dir)
-
-            assert isinstance(tracker, StageTracker)
-
-    def test_mark_stage_complete(self):
-        """Test marking stage as complete."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            tracker.mark_stage_complete('test_stage')
-
-            assert tracker.is_stage_complete('test_stage')
-
-            marker_file = output_dir / '.stage_test_stage'
-            assert marker_file.exists()
-
-            # Check marker content
-            content = marker_file.read_text()
-            assert 'Stage: test_stage' in content
-            assert 'Completed:' in content
-
-    def test_mark_stage_complete_with_metadata(self):
-        """Test marking stage complete with metadata."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            tracker.mark_stage_complete('test_stage', metadata={
-                'tasks_completed': 5,
-                'duration': '120s'
-            })
-
-            metadata = tracker.get_stage_metadata('test_stage')
-            assert metadata is not None
-            assert 'tasks_completed' in metadata
-            assert metadata['tasks_completed'] == '5'
-
-    def test_get_completed_stages(self):
-        """Test getting list of completed stages."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            tracker.mark_stage_complete('stage1')
-            tracker.mark_stage_complete('stage2')
-            tracker.mark_stage_complete('stage3')
-
-            completed = tracker.get_completed_stages()
-            assert len(completed) == 3
-            assert 'stage1' in completed
-            assert 'stage2' in completed
-            assert 'stage3' in completed
-
-    def test_clear_stage(self):
-        """Test clearing a specific stage marker."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            tracker.mark_stage_complete('test_stage')
-            assert tracker.is_stage_complete('test_stage')
-
-            tracker.clear_stage('test_stage')
-            assert not tracker.is_stage_complete('test_stage')
-
-    def test_clear_all(self):
-        """Test clearing all stage markers."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            tracker.mark_stage_complete('stage1')
-            tracker.mark_stage_complete('stage2')
-            assert len(tracker.get_completed_stages()) == 2
-
-            tracker.clear_all()
-            assert len(tracker.get_completed_stages()) == 0
-
-    def test_is_stage_complete_false(self):
-        """Test checking non-existent stage."""
-        with tempfile.TemporaryDirectory() as tmpdir:
-            output_dir = Path(tmpdir)
-            tracker = StageTracker(output_dir)
-
-            assert not tracker.is_stage_complete('nonexistent_stage')
