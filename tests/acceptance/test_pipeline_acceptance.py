@@ -40,10 +40,22 @@ import pytest
 import numpy as np
 
 # ---------------------------------------------------------------------------
+# DEPRECATED 2026-04-29 — Python pipeline archived under archive/python-pipeline-final/.
+# Replacement: tests/acceptance/test_redist_invariants.py runs against `redist` binary.
+# This file is kept skipped for now; once test_redist_invariants.py has full
+# population/contiguity fixtures wired, this file can be deleted.
+# ---------------------------------------------------------------------------
+
+import pytest as _pytest
+pytestmark = _pytest.mark.skip(
+    reason="Python pipeline archived 2026-04-29; replaced by test_redist_invariants.py"
+)
+
+# ---------------------------------------------------------------------------
 # Prerequisites
 # ---------------------------------------------------------------------------
 
-SCRIPT = Path('scripts/pipeline/run_state_redistricting.py')
+SCRIPT = Path('archive/python-pipeline-final/scripts/pipeline/run_state_redistricting.py')
 ADJACENCY_DIR = Path('outputs/V3/data/2020/adjacency')
 
 
