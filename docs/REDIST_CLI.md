@@ -467,7 +467,9 @@ REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" redist state --state VT --y
 
 ## Provenance and `redist doctor --verify-manifest`
 
-Every `manifest.json` written by `redist state` records the binary version that produced it. The `redist doctor --verify-manifest <PATH>` subcommand reads the manifest and:
+Every `redist state` run writes a `provenance.json` sidecar in the output `data/` directory containing the binary's `redist_version`, `redist_build_commit` (with `-dirty` suffix when the working tree had uncommitted changes), `redist_build_date`, and `rustc_version`. This is written atomically alongside `final_assignments.json` regardless of whether `--manifest` is set, so every plan has an audit trail to the binary that produced it.
+
+When `--manifest` is set, `manifest.json` additionally records the binary version, input adjacency hash, and other run parameters. The `redist doctor --verify-manifest <PATH>` subcommand reads the manifest and:
 
 - Prints the running binary's `redist_version`, `redist_build_commit` (with `-dirty` suffix if the working tree had uncommitted changes), `redist_build_date`, and `rustc_version`
 - Prints the recorded `binary_version`, `binary_sha256`, `adjacency_sha256`, and `created_at`

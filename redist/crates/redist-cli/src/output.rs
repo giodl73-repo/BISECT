@@ -47,11 +47,17 @@ pub struct VraDistrict {
     pub is_mm: bool,
 }
 
-/// Write final_assignments (JSON) and vra_analysis.json atomically.
+/// Write final_assignments (JSON), vra_analysis.json, and provenance.json
+/// atomically.
 ///
-/// Both files are written to temp paths first, then renamed together.
+/// All three files are written to temp paths first, then renamed together.
 /// The rename is not filesystem-atomic on all platforms, but temp-file
 /// detection on restart ensures partial writes are caught.
+///
+/// `provenance.json` is a sidecar capturing the running binary's identity
+/// (redist_version, build_commit, build_date, rustc_version) so that any
+/// downstream consumer of `final_assignments.json` can attest to its source.
+/// This sidecar is always written, regardless of whether `--manifest` is set.
 pub fn write_state_outputs(
     data_dir: &Path,
     assignments: &HashMap<usize, usize>,
@@ -64,7 +70,8 @@ pub fn write_state_outputs(
     // Detect corrupt state from previous crashed run
     let tmp_assignments = data_dir.join(".final_assignments.tmp.json");
     let tmp_vra = data_dir.join(".vra_analysis.tmp.json");
-    if tmp_assignments.exists() || tmp_vra.exists() {
+    let tmp_provenance = data_dir.join(".provenance.tmp.json");
+    if tmp_assignments.exists() || tmp_vra.exists() || tmp_provenance.exists() {
         return Err(OutputError::CorruptState(tmp_assignments));
     }
 
@@ -82,7 +89,14 @@ pub fn write_state_outputs(
             .map_err(|e| OutputError::Io { path: tmp_vra.clone(), source: e })?;
     }
 
-    // Both writes succeeded — now rename atomically
+    // Write provenance sidecar (always — captures binary identity for audit trail)
+    let provenance = crate::provenance::Provenance::current();
+    let provenance_json = serde_json::to_string_pretty(&provenance)
+        .map_err(|e| OutputError::Json(e.to_string()))?;
+    fs::write(&tmp_provenance, &provenance_json)
+        .map_err(|e| OutputError::Io { path: tmp_provenance.clone(), source: e })?;
+
+    // All writes succeeded — now rename atomically
     let final_assignments = data_dir.join("final_assignments.json");
     fs::rename(&tmp_assignments, &final_assignments)
         .map_err(|e| OutputError::Io { path: final_assignments, source: e })?;
@@ -92,6 +106,10 @@ pub fn write_state_outputs(
         fs::rename(&tmp_vra, &final_vra)
             .map_err(|e| OutputError::Io { path: final_vra, source: e })?;
     }
+
+    let final_provenance = data_dir.join("provenance.json");
+    fs::rename(&tmp_provenance, &final_provenance)
+        .map_err(|e| OutputError::Io { path: final_provenance, source: e })?;
 
     Ok(())
 }
@@ -136,6 +154,7 @@ pub fn write_district_summary(
 pub fn has_corrupt_state(data_dir: &Path) -> bool {
     data_dir.join(".final_assignments.tmp.json").exists()
         || data_dir.join(".vra_analysis.tmp.json").exists()
+        || data_dir.join(".provenance.tmp.json").exists()
 }
 
 /// Clean up temp files from a corrupt state (call before reprocessing).
@@ -143,6 +162,7 @@ pub fn clean_corrupt_state(data_dir: &Path) -> std::io::Result<()> {
     let tmps = [
         data_dir.join(".final_assignments.tmp.json"),
         data_dir.join(".vra_analysis.tmp.json"),
+        data_dir.join(".provenance.tmp.json"),
         data_dir.join(".district_summary.tmp.csv"),
     ];
     for tmp in &tmps {
@@ -207,6 +227,49 @@ mod tests {
         let parsed: serde_json::Value = serde_json::from_str(&content).unwrap();
         assert_eq!(parsed["mm_count"], 1);
         assert!(parsed["districts"].is_array());
+    }
+
+    #[test]
+    fn test_provenance_sidecar_written_in_non_vra_run() {
+        let tmp = TempDir::new().unwrap();
+        write_state_outputs(tmp.path(), &sample_assignments(), None).unwrap();
+        let prov_path = tmp.path().join("provenance.json");
+        assert!(prov_path.exists(), "provenance.json should be written even without VRA");
+        let parsed: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(&prov_path).unwrap()).unwrap();
+        assert!(parsed["redist_version"].is_string());
+        assert!(parsed["redist_build_commit"].is_string());
+        assert!(parsed["redist_build_date"].is_string());
+        assert!(parsed["rustc_version"].is_string());
+    }
+
+    #[test]
+    fn test_provenance_sidecar_written_in_vra_run() {
+        let tmp = TempDir::new().unwrap();
+        let vra = sample_vra();
+        write_state_outputs(tmp.path(), &sample_assignments(), Some(&vra)).unwrap();
+        assert!(tmp.path().join("provenance.json").exists());
+        // All three primary outputs side by side
+        assert!(tmp.path().join("final_assignments.json").exists());
+        assert!(tmp.path().join("vra_analysis.json").exists());
+    }
+
+    #[test]
+    fn test_provenance_temp_file_blocks_rerun() {
+        let tmp = TempDir::new().unwrap();
+        // Simulate crash mid-write: provenance temp left behind
+        std::fs::write(tmp.path().join(".provenance.tmp.json"), b"partial").unwrap();
+        assert!(has_corrupt_state(tmp.path()));
+        let result = write_state_outputs(tmp.path(), &sample_assignments(), None);
+        assert!(matches!(result, Err(OutputError::CorruptState(_))));
+    }
+
+    #[test]
+    fn test_clean_corrupt_state_removes_provenance_temp() {
+        let tmp = TempDir::new().unwrap();
+        std::fs::write(tmp.path().join(".provenance.tmp.json"), b"x").unwrap();
+        clean_corrupt_state(tmp.path()).unwrap();
+        assert!(!has_corrupt_state(tmp.path()));
     }
 
     #[test]

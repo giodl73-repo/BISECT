@@ -87,7 +87,8 @@ In the same `data/` directory, you typically also find:
 |---|---|---|
 | `vra_analysis.json` | runner (when `--partition-mode metis-vra`) | Per-district minority percentages, MM count |
 | `district_summary.csv` | runner | Per-district population, voting-age population, population balance pct |
-| `manifest.json` | runner (when `--manifest`) | Provenance: input adjacency hash, run parameters, binary version (planned) |
+| `manifest.json` | runner (when `--manifest`) | Provenance: input adjacency hash, run parameters, binary version |
+| `provenance.json` | runner (always) | Sidecar with `redist_version`, `redist_build_commit`, `redist_build_date`, `rustc_version`. Written atomically with `final_assignments.json`. Verifiable via `redist doctor --verify-manifest`. |
 
 ## Mapping back to GEOIDs
 
