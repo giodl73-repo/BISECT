@@ -22,13 +22,16 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | HTML reports (redist-report) | ✅ Complete |
 | Interactive TUI (redist-tui) | ✅ Complete (v1) |
 | Performance benchmark (see §Performance) | ✅ Validated (1 run; reproduction recipe pending) |
-| **Migration parity record artifact** | 🔴 **Required before Plan 02 Task 4** |
-| **Permanent acceptance tests for `redist` invariants** | 🔴 **Required before Plan 02 Task 4** |
-| **Binary provenance embedding in outputs** | 🔴 **Required before Plan 01 cutover** |
-| **Entry-point cutover** (doskey/batch → `redist`) | 🔴 **Not done** |
-| **Python deprecation notice** (30-day window) | 🔴 **Not done** |
-| **Python deletion** (orchestration scripts, duplicate algorithm) | 🔴 **Not done** |
-| `redist-web` crate | ⚠️ Stub — keep as documented placeholder |
+| Migration parity record artifact | ⏭️ Skipped — no users to migrate |
+| Permanent acceptance tests for `redist` invariants | ✅ `tests/acceptance/test_redist_invariants.py` (Plan 01) |
+| Binary provenance embedding in outputs | ⚠️ Specced; doctor verify-manifest subcommand TODO |
+| Entry-point cutover (doskey/batch → `redist`) | ✅ Plan 01 complete |
+| Python deprecation notice | ⏭️ Skipped — no users to migrate |
+| Python deletion / archival | ✅ Plan 02 complete |
+| Partisan edge-weighting (Plan 03) | ✅ Module + CLI wiring + format spec; producer + e2e deferred |
+| File-format specs (`adj-bin`, `final-assignments`, `partisan-shares`) | ✅ Written under `docs/file-formats/` |
+| Reproducible-build pin (`redist/rust-toolchain.toml`) | ✅ Pinned to 1.95.0 |
+| `redist-web` crate | ⚠️ Stub — kept as documented placeholder |
 
 ## Steady-State Surface
 

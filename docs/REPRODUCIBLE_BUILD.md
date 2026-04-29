@@ -69,7 +69,7 @@ Every output JSON file produced by `redist` SHOULD embed a provenance block (TOD
   "redist_version": "0.1.2",
   "redist_build_commit": "<git sha>",
   "redist_build_date": "2026-04-29T00:00:00Z",
-  "rustc_version": "1.84.0"
+  "rustc_version": "1.95.0"
 }
 ```
 
@@ -77,15 +77,16 @@ This is what `redist doctor --verify-manifest <output.json>` (planned) will chec
 
 ## Toolchain Pin
 
-If `redist/rust-toolchain.toml` does not yet exist, create it with the rustc version recorded in CI:
+`redist/rust-toolchain.toml` exists and pins to `1.95.0`. Cargo respects this automatically: `cargo build` from inside `redist/` (or any subdir of it) will use rustc 1.95.0 even if a different stable is installed system-wide. If the pinned version is not installed, `rustup` will install it on first use.
 
 ```toml
 [toolchain]
-channel = "1.84.0"
+channel = "1.95.0"
 components = ["rustfmt", "clippy"]
+profile = "default"
 ```
 
-Without this file, builds may use whatever stable rustc the developer has installed, which can cause subtle drift in compiler-emitted code over time.
+Without this file, builds would use whatever stable rustc the developer has installed, which can cause subtle drift in compiler-emitted code over time. Bump the channel deliberately when you want a newer rustc; do not pin to `stable` (the moving channel).
 
 ## Linkage
 
