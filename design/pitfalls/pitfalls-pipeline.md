@@ -229,3 +229,51 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Status:** SOLVED
 **Proved by:** `redist-cli::plan_context::PlanContext::from_label()` loads manifest directly. `analyze.rs` uses PlanContext for `num_districts`. WA house 98D: `analyze` now produces summary with 98 districts, balance_valid=true, max_deviation=0%.
 **Test:** `redist-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10`
+
+---
+
+## PP-15: Entry-point switching without PATH pre-flight check
+
+**Pattern:** A canonical command's underlying implementation is changed (e.g., script path → binary path) by editing a wrapper file. The user's invocation syntax stays the same, so the cutover appears transparent. But the new backing tool may not be installed or on PATH on every machine where the wrapper runs. Failure manifests as silent confusion ("command not found" yesterday-it-worked) without informing the user that the wiring changed.
+
+**Domain:** Any system where doskey aliases, batch wrappers, shell aliases, or `npm run` scripts route a stable user-facing command name to a backing implementation, and the backing implementation can change between machines, environments, or release tags.
+
+**Why it's hard to catch:** Pre-cutover the invocation works (old script). Post-cutover the invocation fails on any machine that doesn't have the new binary, with no hint that the wiring changed. Developers see "command not found" or worse, an unrelated tool with the same name resolved against PATH. Bisecting the failure points at the user's environment, not the cutover commit.
+
+**Structural solution:** Pre-flight check at shell-init time. The setup file that creates the wrappers (`setup_env.bat` or equivalent) verifies the backing binary is on PATH and prints a clear, named warning if not — naming the binary, the cutover, and where to install it. The check runs before any wrapper is created, so users see the warning when they source the env, not when they first try to run.
+
+**Status:** SOLVED
+**Proved by:** `setup_env.bat` PATH preflight (Plan 01 entry-point cutover, Task 3.2)
+**Test:** Sourcing `setup_env.bat` without `redist` on PATH prints a named warning; sourcing with `redist` on PATH prints no warning.
+
+---
+
+## PP-16: Incremental deletion commits create brittle rollback dependencies
+
+**Pattern:** A multi-step deletion or refactor plan is structured as N separate commits, with the implicit promise of granular rollback ("if Task 4 breaks, just `git revert <hash>`"). But each commit may depend on earlier commits' state. Reverting commit M alone may produce a clean revert (no merge conflict) while leaving the codebase in an invalid intermediate state, because later commits already adapted to the deletion that's now being undone.
+
+**Domain:** Any large refactor, migration, or deletion executed as multiple sequential commits where developers assume single-commit revert is safe. Most acute when deletion plans span weeks and intermediate work merges in between commits in the plan.
+
+**Why it's hard to catch:** `git revert` succeeds without conflict — Git's view of "clean revert" is purely textual. The resulting tree may not compile or pass tests because intermediate work has accrued that depended on the deleted state. Tests fail with confusing errors that point at the intermediate work rather than the revert.
+
+**Structural solution:** Every multi-commit plan includes a "Rollback Plan" section that specifies dependency-aware ordering. Single-commit revert is forbidden once any downstream work has merged; rollback then requires reverting in reverse order, in groups, with verification between each group. The plan document itself records which commits depend on which, making the dependency graph explicit and reviewable.
+
+**Status:** SOLVED
+**Proved by:** Plan 02 (Python archive + deletion) Rollback Plan section enumerating the dependency-aware procedure.
+**Test:** N/A — procedural pitfall. The proof is the existence of the rollback procedure as a reviewable artifact in every multi-commit plan.
+
+---
+
+## PP-17: Sensitive-asset commit prevention via manual reminder, not structural enforcement
+
+**Pattern:** A repository references sensitive or licensed assets (legal PDFs, certificates, large data files, third-party binaries) by hash or URL, but the assets themselves must not be committed. `.gitignore` prevents tracking under expected names, but a developer can bypass with `git add -f` or by misnaming the asset. Plan documents that say "do not commit X" rely on the developer reading them under deadline pressure.
+
+**Domain:** Any project that deliberately references-without-committing — legal-citation projects, ML model registries with external storage, regulated data pipelines, projects that keep large binary fixtures out of git history.
+
+**Why it's hard to catch:** A hurried `git add .` or `git add -f` commits the asset. .gitignore catches generic patterns but not renamed copies. Once committed and pushed, removal requires history rewriting, and any downstream consumers of the leaked asset have already pulled it.
+
+**Structural solution:** Pre-commit hook that blocks staging of files matching the sensitive patterns (`*.pdf`, `*.pem`, etc.), requiring an explicit override flag (`--allow-pdf`) to bypass. The override creates an audit trail in the commit message. The hook is installed by the project's setup script so every developer's clone has it without manual configuration.
+
+**Status:** SOLVED
+**Proved by:** Pre-commit hook installed by setup_env (Plan 03 Task 1.4) blocks `*.pdf` staging unless `ALLOW_PDF=1` is set in the environment.
+**Test:** `git add some.pdf && git commit` is rejected by the hook; `ALLOW_PDF=1 git commit` succeeds, producing an auditable commit.

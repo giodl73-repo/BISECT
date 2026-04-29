@@ -17,11 +17,11 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | Domain | Prefix | File | Count |
 |--------|--------|------|-------|
 | Algorithm | AP | [pitfalls-algorithm.md](pitfalls-algorithm.md) | 8 |
-| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 13 |
+| Pipeline | PP | [pitfalls-pipeline.md](pitfalls-pipeline.md) | 17 |
 | Constitutional | CP | [pitfalls-constitutional.md](pitfalls-constitutional.md) | 2 |
 | Data | DP | [pitfalls-data.md](pitfalls-data.md) | 4 |
 | Research | RP | [pitfalls-research.md](pitfalls-research.md) | 2 |
-| **Total** | | | **29** |
+| **Total** | | | **33** |
 
 ## Status
 
@@ -56,6 +56,10 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-13 | Integer parameter truncation at subprocess boundary | **SOLVED** | bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression |
 | AP-07 | Per-depth tolerance in recursive bisection causes compounding balance error | **SOLVED** | bisection_runner::tests::test_per_node_ufactor_formula |
 | AP-08 | Granularity floor constraint in geographic unit-based partitioning | **MITIGATED** | validate_state_legislative.py |
+| PP-14 | Metadata Resolution Split — dual sources for plan parameters | **SOLVED** | redist-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10 |
+| PP-15 | Entry-point switching without PATH pre-flight check | **SOLVED** | setup_env.bat preflight (Plan 01 Task 3.2) |
+| PP-16 | Incremental deletion commits create brittle rollback dependencies | **SOLVED** | Plan 02 Rollback section (procedural artifact) |
+| PP-17 | Sensitive-asset commit prevention via manual reminder, not structural | **SOLVED** | pre-commit hook rejecting *.pdf staging (Plan 03 Task 1.4) |
 
 ## Adding a Pitfall
 

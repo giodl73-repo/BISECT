@@ -1,24 +1,27 @@
 # Claude AI Guide - Congressional Redistricting
 
-**Updated**: 2026-01-18
+**Updated**: 2026-04-29
 
 ## Project Context
 Congressional redistricting via METIS recursive bisection → 435 districts, 50 states, 3 census years (2000/2010/2020). Purely algorithmic (no gerrymandering). Goal: compact + population-balanced districts.
 
-**Stack**: Rust (`redist` CLI, ~213× faster) + Python 3.13+ (analysis/dev) | METIS, GeoPandas, Matplotlib | **Data**: Census tracts (~40GB) | **Output**: Maps/CSVs (~20GB/run)
+**Stack**: Rust (`redist` CLI — primary, ~213× faster) + Python 3.13+ (dashboard, research, data download only) | METIS, GeoPandas, Matplotlib | **Data**: Census tracts (~40GB) | **Output**: Maps/CSVs (~20GB/run)
 
 ## Critical Files
 
-**Core Algorithm**:
-- `src/apportionment/partition/recursive_bisection.py` - Main algorithm
-- `src/apportionment/partition/metis_wrapper.py` - METIS interface
-- `src/apportionment/data/adjacency.py` - Graph generation
+**Core Algorithm** (Rust — production):
+- `redist/crates/redist-core/` - bisection, edge-weighting, METIS file I/O, FIPS, population balance
+- `redist/crates/redist-data/` - TIGER reading, adjacency build, .adj.bin serialization
 
-**Pipeline** (executable):
-- `scripts/pipeline/run_complete_redistricting.py` - Main orchestrator (parallel multi-year)
-- `scripts/pipeline/process_nation.py` - National post-processing (9 parallel tasks)
-- `scripts/pipeline/run_state_redistricting.py` - Single state wrapper
-- `scripts/pipeline/process_single_state.py` - Core state logic (STATUS protocol)
+**Pipeline** (Rust binary — production, post-cutover 2026-04-29):
+- `redist run` - full pipeline orchestrator (replaces `run_complete_redistricting.py`)
+- `redist state --state <CODE>` - single-state pipeline (replaces `run_state_redistricting.py` and `process_single_state.py`)
+- `redist states --year <YEAR>` - parallel multi-state runner
+- `redist run -s nation` - national post-processing only (replaces `process_nation.py`)
+
+**Python pipeline (archived under `archive/python-pipeline-final/` per Plan 02 — sealed reference, not maintained):**
+- The Python orchestrator scripts that previously lived in `scripts/pipeline/` are forensic reference only.
+- See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
 
 **Config**: `scripts/config_{2000,2010,2020}.py` - State district counts
 
@@ -35,7 +38,7 @@ Congressional redistricting via METIS recursive bisection → 435 districts, 50 
 - `docs/REDIST_CLI.md` - Full CLI reference (commands, flags, env vars)
 - `scripts/data/generate_adj_bin.py` - Convert pkl adjacency files to fast `.adj.bin` format
 
-**Entry**: `redist` binary (primary), `setup_env.bat` (sets doskey aliases for Python pipeline), `scripts/web/deploy_docs.py` (dashboard)
+**Entry**: `redist` binary (primary, invoked by `run` and `runtest` doskey aliases since 2026-04-29 cutover), `setup_env.bat` (sets aliases + checks `redist` is on PATH), `scripts/web/deploy_docs.py` (dashboard)
 
 ## Structure
 ```
@@ -93,9 +96,12 @@ python scripts/data/download_orchestrator.py --stages redistricting demographics
 python scripts/data/download_orchestrator.py --stages redistricting --year 2020 --workers 4  # Download missing data
 python scripts/data/download_orchestrator.py --type demographics --year 2020 --states VT DE  # Test with small states
 
-# Short flags: -h=help, -y=year, -v=version, -s=stages, -st=states, -w=workers, -r=reset,
-#              -p=print-only, -d=debug, -ey=election-year, -pm=partition-mode, -rt=run-type
-# Long forms also work: --help, --year, --version, --stages, --states, --workers, --dpi, etc.
+# Short flags (Rust `redist run`):
+#   -h=help, -y=year, -v=version, -s=stages, -w=workers, -r=reset,
+#   -p=print-only, -d=debug, -e=election-year, -m=partition-mode
+# Long forms (use these for clarity): --help --year --version --stages --states --workers --dpi
+#                                     --run-type --partition-mode --election-year
+# Note: `--states` (plural) takes a list and has NO short flag in Rust.
 
 # Dashboard
 python scripts/web/generate_master_dashboard.py
@@ -143,6 +149,9 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 - No political/racial data
 
 ## Recent Changes
+- **2026-04-29**: **Entry-point cutover** — `run` and `runtest` doskey aliases now invoke `redist` Rust binary directly, replacing the Python pipeline (`run_complete_redistricting.py`). Python orchestrators slated for archival under `archive/python-pipeline-final/` per Plan 02. See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
+- **2026-04-29**: **Pitfalls PP-15, PP-16, PP-17 added** — entry-point PATH preflight, rollback dependency tracking, structural sensitive-asset blocking. See `design/pitfalls/pitfalls-pipeline.md`.
+- **2026-04-29**: **Louisiana v. Callais** ruling integrated — partisan edge-weighting plan (Plan 03) drafted, gated on cutover + cleanup completion.
 - **2026-02-08**: MAUP Sensitivity Analysis (Paper 11) - Phase 2 complete: Built adjacency graphs for all 50 states at block group (239K units) and block (8.1M units) resolutions, validated multi-resolution infrastructure with 10-state subset (30 successful runs), confirmed algorithm scalability across 130× unit count range
 - **2026-02-08**: Multi-resolution redistricting infrastructure - Added resolution parameter to pipeline scripts, created `run_multi_resolution_validation.py`, updated path utilities with backward compatibility for tract naming
 - **2026-04-24**: Removed Wave 9 FastAPI/React app (api/, backend/, frontend/) — replaced by static dashboard + planned Rust CLI port

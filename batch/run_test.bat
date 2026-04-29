@@ -1,17 +1,26 @@
 @echo off
-REM Wrapper for test/debug redistricting runs
-REM Automatically uses --run-type test (outputs to dev/)
+REM Wrapper for `redist run --run-type test` -- Rust CLI test/dev mode.
+REM Cutover from Python pipeline performed 2026-04-29.
+REM See: docs/superpowers/plans/2026-04-29-entry-point-cutover.md
 
 REM Change to project root (one level up from batch/)
 cd /d "%~dp0\.."
 
-REM Pass all arguments plus --run-type test to the Python script
-REM Use py -3.13 to ensure correct Python with installed dependencies
-py -3.13 scripts/pipeline/run_complete_redistricting.py --run-type test %*
-
-REM If Ctrl+C was pressed, ensure Python processes are killed
+REM Pre-flight: verify redist is on PATH (mitigates PP-15)
+where redist >NUL 2>&1
 if errorlevel 1 (
     echo.
-    echo Cleaning up any remaining Python processes...
-    taskkill /F /FI "WINDOWTITLE eq python*" /T >nul 2>&1
+    echo ERROR: 'redist' binary not found on PATH.
+    echo Build it with: cargo build --release --manifest-path redist/Cargo.toml
+    echo Then add the resulting target/release directory to your PATH.
+    echo.
+    exit /b 1
+)
+
+REM Pass all arguments plus --run-type test to the Rust binary
+redist run --run-type test %*
+
+if errorlevel 1 (
+    echo.
+    echo Test run completed with non-zero exit. Check error.log under outputs/ if applicable.
 )

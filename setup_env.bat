@@ -29,6 +29,17 @@ set DATA_DIR=%CD%\data
 set OUTPUT_DIR=%CD%\outputs
 set SCRIPTS_DIR=%CD%\scripts
 
+REM Pre-flight: warn if redist binary not on PATH (PP-15 prevention)
+where redist >NUL 2>&1
+if errorlevel 1 (
+    echo.
+    echo WARNING: 'redist' binary not found on PATH.
+    echo The 'run' and 'runtest' aliases will fail until redist is built and on PATH.
+    echo Build with: cargo build --release --manifest-path redist/Cargo.toml
+    echo Then add target/release to your PATH.
+    echo.
+)
+
 REM Useful aliases
 doskey ls=dir /b $*
 doskey ll=dir $*
