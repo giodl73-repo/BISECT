@@ -42,15 +42,20 @@ Congressional redistricting via METIS recursive bisection → 435 districts, 50 
 
 ## Structure
 ```
-src/apportionment/    # Library (partition/, data/, visualization/)
-scripts/              # Executables (pipeline/, data/, political/, demographic/, compactness/, web/, config_*.py)
+redist/               # Rust workspace — production code
+  crates/             # 8 crates: redist-{core,data,analysis,cli,map,report,tui,web}
+  python/redist_py/   # PyO3 bridge (used by research scripts, not production)
+src/apportionment/    # Python library — visualization helpers + huntington_hill (partition/, data/, visualization/maps.py archived)
+scripts/              # Python executables — dashboard generation, data download, research, figures
+                      # (pipeline orchestrators archived under archive/python-pipeline-final/)
+archive/              # Forensic-only: archive/python-pipeline-final/ holds the last working Python pipeline
 data/{year}/          # Raw census data (redistricting/, tiger/tracts/, tiger/blocks/, demographics/, elections/)
 outputs/data/{year}/  # Processed data (units/, adjacency/, places/, elections/, demographics/)
 web/                  # dashboard.html, master_dashboard.html
 artifacts/            # papers/, presentations/, guides/ (LaTeX)
 context/              # AI context (enhancements/, archive/, patterns, architecture)
-docs/                 # Human docs (RECURSIVE_BISECTION.md, DEPENDENCIES.md, CENSUS_DATA_PROCESSING.md, etc.)
-tests/                # unit/ (~1000), integration/ (~730), e2e/ — run: pytest tests/ -v
+docs/                 # Human docs — REDIST_CLI.md is canonical CLI reference
+tests/                # unit/, integration/, e2e/, acceptance/ — pytest tests/ -v
 ```
 
 ## Git Rules
@@ -149,7 +154,8 @@ Visualization/dashboard?→ dashboard tests (tests/e2e/)
 - No political/racial data
 
 ## Recent Changes
-- **2026-04-29**: **Entry-point cutover** — `run` and `runtest` doskey aliases now invoke `redist` Rust binary directly, replacing the Python pipeline (`run_complete_redistricting.py`). Python orchestrators slated for archival under `archive/python-pipeline-final/` per Plan 02. See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
+- **2026-04-29**: **Python pipeline archived** — pipeline orchestrators (`run_complete_redistricting.py`, `run_states_parallel.py`, `process_nation.py`, `process_single_state.py`, `run_state_redistricting.py`) and the Python algorithm library (`src/apportionment/partition/`, `src/apportionment/data/`, `src/apportionment/visualization/maps.py`) moved to `archive/python-pipeline-final/`. Validation harness (`compare_rust_vs_python.py`, `validate_rust_vs_python.py`) and one-time bridge (`generate_adj_bin.py`) deleted. `redist-web` stub documented as reserved.
+- **2026-04-29**: **Entry-point cutover** — `run` and `runtest` doskey aliases now invoke `redist` Rust binary directly. See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
 - **2026-04-29**: **Pitfalls PP-15, PP-16, PP-17 added** — entry-point PATH preflight, rollback dependency tracking, structural sensitive-asset blocking. See `design/pitfalls/pitfalls-pipeline.md`.
 - **2026-04-29**: **Louisiana v. Callais** ruling integrated — partisan edge-weighting plan (Plan 03) drafted, gated on cutover + cleanup completion.
 - **2026-02-08**: MAUP Sensitivity Analysis (Paper 11) - Phase 2 complete: Built adjacency graphs for all 50 states at block group (239K units) and block (8.1M units) resolutions, validated multi-resolution infrastructure with 10-state subset (30 successful runs), confirmed algorithm scalability across 130× unit count range

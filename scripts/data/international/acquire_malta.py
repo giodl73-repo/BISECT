@@ -277,42 +277,29 @@ def save_pkl(graph_dict: dict, pkl_path: Path) -> None:
 
 
 def convert_to_bin(pkl_path: Path) -> Path:
-    """Convert pkl to .adj.bin using redist_py or generate_adj_bin.py."""
+    """Convert pkl to .adj.bin using redist_py (PyO3 binding to redist-data)."""
     bin_path = pkl_path.with_suffix(".adj.bin")
     geoid_path = pkl_path.with_name(pkl_path.stem + "_geoids.json")
 
-    # Try redist_py (native Rust binding)
     try:
         import redist_py
-        with open(pkl_path, "rb") as f:
-            d = pickle.load(f)
-        adj = d["adjacency"]
-        vw = [int(x) for x in d["vertex_weights"]]
-        ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in d.get("edge_weights", {}).items()}
-        ig = {int(k): str(v) for k, v in d.get("index_to_geoid", {}).items()}
-
-        bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
-        bin_path.write_bytes(bin_data)
-        geoid_path.write_text(json.dumps({str(k): v for k, v in ig.items()}))
-        print(f"  [OK] Converted to .adj.bin: {bin_path} ({len(bin_data):,} bytes)")
-        return bin_path
-
     except ImportError:
-        pass
-
-    # Fallback: generate_adj_bin.py script
-    result = subprocess.run(
-        [sys.executable, "scripts/data/generate_adj_bin.py",
-         "--year", "2021", "--version", "international/malta", "--states", "mt"],
-        capture_output=True, text=True
-    )
-    if result.returncode == 0:
-        print(f"  [OK] Converted via generate_adj_bin.py")
-        return bin_path
-    else:
-        print(f"  [WARN] generate_adj_bin.py failed: {result.stderr}")
-        print("  Install redist_py: cd redist/python/redist_py && maturin develop")
+        print("  [ERROR] redist_py not installed.")
+        print("  Install: cd redist/python/redist_py && maturin develop")
         return None
+
+    with open(pkl_path, "rb") as f:
+        d = pickle.load(f)
+    adj = d["adjacency"]
+    vw = [int(x) for x in d["vertex_weights"]]
+    ew = {(min(i, j), max(i, j)): float(w) for (i, j), w in d.get("edge_weights", {}).items()}
+    ig = {int(k): str(v) for k, v in d.get("index_to_geoid", {}).items()}
+
+    bin_data = redist_py.adjacency_to_bin(adj, vw, ew, len(adj), len(ew))
+    bin_path.write_bytes(bin_data)
+    geoid_path.write_text(json.dumps({str(k): v for k, v in ig.items()}))
+    print(f"  [OK] Converted to .adj.bin: {bin_path} ({len(bin_data):,} bytes)")
+    return bin_path
 
 
 # ---------------------------------------------------------------------------

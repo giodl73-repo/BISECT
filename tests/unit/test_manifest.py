@@ -26,7 +26,7 @@ def make_manifest_fixture(label="wa_house_draft1", state_code="WA"):
         "binary_download_url": "https://github.com/owner/redist/releases/download/v0.1.0/redist",
         "adjacency_file": f"{state_code.lower()}_adjacency_2020.adj.bin",
         "adjacency_sha256": "b" * 64,
-        "adjacency_build_command": "python scripts/data/generate_adj_bin.py --year 2020",
+        "adjacency_build_command": "redist fetch --year 2020 --states WA",
         "adjacency_build_version": "0.1.0",
         "tiger_source_url": f"https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
         "tiger_sha256": "c" * 64,
