@@ -106,19 +106,29 @@ pub fn max_depth_for_k(k: usize) -> usize {
     depth
 }
 
-/// METIS ufactor (imbalance tolerance) for a given bisection depth.
-/// Tighter at early depths to maintain global balance.
+/// METIS ufactor (imbalance tolerance) for a given bisection depth and user-specified base ufactor.
 ///
+/// Tighter at early depths to maintain global balance.
 /// Depth 0 (root node) is never split by METIS — it represents the whole state.
-/// Splitting begins at depth 1. If called with depth=0, returns the default 1.005.
-pub fn ufactor_for_depth(depth: usize) -> f64 {
-    match depth {
-        0 => 1.005, // Root never split; unreachable in normal operation
-        1 => 1.001,
-        2 => 1.002,
-        3 => 1.003,
-        _ => 1.005,
-    }
+///
+/// # Scaling
+/// - `base_ufactor=5`  → 0.5% balance per split (congressional default)
+/// - `base_ufactor=50` → 5% balance per split (state legislative)
+/// - depth 1 gets the tightest constraint (20% of full base), depth 4+ gets 100%.
+///
+/// # Backward compatibility
+/// When `base_ufactor=5` the results are identical to the old hardcoded values:
+/// depth 1 → 1.001, depth 2 → 1.002, depth 3 → 1.003, depth 4+ → 1.005.
+pub fn ufactor_for_depth(depth: usize, base_ufactor: u32) -> f64 {
+    let base = 1.0 + base_ufactor as f64 / 1000.0;
+    let scale = match depth {
+        0 => 0.2, // Root never split; unreachable in normal operation
+        1 => 0.2, // tightest at first split
+        2 => 0.4,
+        3 => 0.6,
+        _ => 1.0, // full ufactor at deep levels
+    };
+    1.0 + (base - 1.0) * scale
 }
 
 #[cfg(test)]
@@ -213,13 +223,24 @@ mod tests {
     }
 
     #[test]
-    fn test_ufactor_by_depth() {
-        assert!((ufactor_for_depth(0) - 1.005).abs() < 1e-9); // root — unreachable but safe
-        assert!((ufactor_for_depth(1) - 1.001).abs() < 1e-9);
-        assert!((ufactor_for_depth(2) - 1.002).abs() < 1e-9);
-        assert!((ufactor_for_depth(3) - 1.003).abs() < 1e-9);
-        assert!((ufactor_for_depth(4) - 1.005).abs() < 1e-9);
-        assert!((ufactor_for_depth(99) - 1.005).abs() < 1e-9);
+    fn test_ufactor_by_depth_default() {
+        // base_ufactor=5 (congressional default) must be backward-compatible
+        assert!((ufactor_for_depth(0, 5) - 1.001).abs() < 1e-9); // root — unreachable but safe
+        assert!((ufactor_for_depth(1, 5) - 1.001).abs() < 1e-9);
+        assert!((ufactor_for_depth(2, 5) - 1.002).abs() < 1e-9);
+        assert!((ufactor_for_depth(3, 5) - 1.003).abs() < 1e-9);
+        assert!((ufactor_for_depth(4, 5) - 1.005).abs() < 1e-9);
+        assert!((ufactor_for_depth(99, 5) - 1.005).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_ufactor_by_depth_state_legislative() {
+        // base_ufactor=50 (state legislative): depth 1 → 1.010, depth 4+ → 1.050
+        assert!((ufactor_for_depth(1, 50) - 1.010).abs() < 1e-9);
+        assert!((ufactor_for_depth(2, 50) - 1.020).abs() < 1e-9);
+        assert!((ufactor_for_depth(3, 50) - 1.030).abs() < 1e-9);
+        assert!((ufactor_for_depth(4, 50) - 1.050).abs() < 1e-9);
+        assert!((ufactor_for_depth(99, 50) - 1.050).abs() < 1e-9);
     }
 
     #[test]
@@ -227,5 +248,68 @@ mod tests {
         let tree = BisectionTree::from_k(1);
         assert_eq!(tree.total_splits(), 0);
         assert_eq!(tree.max_depth, 0);
+    }
+
+    // ── Hard-state scale tests ────────────────────────────────────────────────
+
+    #[test]
+    fn test_wa_house_k98_total_splits() {
+        // WA house: 98 districts → exactly 97 internal bisections
+        let tree = BisectionTree::from_k(98);
+        assert_eq!(tree.total_splits(), 97, "k=98 (WA house) must have 97 splits");
+        assert_eq!(tree.max_depth, 7, "k=98 needs 7 depth levels (2^7=128 ≥ 98)");
+    }
+
+    #[test]
+    fn test_tx_house_k150_total_splits() {
+        // TX house: 150 districts → 149 splits, depth 8 (2^8=256 ≥ 150)
+        let tree = BisectionTree::from_k(150);
+        assert_eq!(tree.total_splits(), 149, "k=150 (TX house) must have 149 splits");
+        assert_eq!(tree.max_depth, 8, "k=150 needs 8 depth levels (2^8=256 ≥ 150)");
+    }
+
+    #[test]
+    fn test_congressional_k435_total_splits() {
+        // US Congress: 435 districts → 434 splits, depth 9 (2^9=512 ≥ 435)
+        let tree = BisectionTree::from_k(435);
+        assert_eq!(tree.total_splits(), 434, "k=435 (congressional) must have 434 splits");
+        assert_eq!(tree.max_depth, 9, "k=435 needs 9 depth levels (2^9=512 ≥ 435)");
+    }
+
+    #[test]
+    fn test_large_k_balance_invariant() {
+        // For all hard-state sizes: k_left + k_right == k at every node
+        for k in [98, 120, 150, 435] {
+            let tree = BisectionTree::from_k(k);
+            for node in &tree.nodes {
+                assert_eq!(
+                    node.k_left + node.k_right, node.k,
+                    "k={k} node.k={} violated balance invariant", node.k
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_large_k_paths_unique() {
+        for k in [98, 150, 435] {
+            let tree = BisectionTree::from_k(k);
+            let paths: std::collections::HashSet<&str> =
+                tree.nodes.iter().map(|n| n.path.as_str()).collect();
+            assert_eq!(paths.len(), tree.nodes.len(), "duplicate paths for k={k}");
+        }
+    }
+
+    #[test]
+    fn test_max_depth_hard_states() {
+        assert_eq!(max_depth_for_k(98), 7);   // WA house (2^7=128)
+        assert_eq!(max_depth_for_k(99), 7);   // WA senate (49*2+1 = also 7 levels)
+        assert_eq!(max_depth_for_k(100), 7);  // VA house, FL house
+        assert_eq!(max_depth_for_k(120), 7);  // CA house
+        assert_eq!(max_depth_for_k(128), 7);  // exact power of 2
+        assert_eq!(max_depth_for_k(129), 8);  // one more than exact
+        assert_eq!(max_depth_for_k(150), 8);  // TX house
+        assert_eq!(max_depth_for_k(236), 8);  // TX senate via house nesting
+        assert_eq!(max_depth_for_k(435), 9);  // congressional
     }
 }

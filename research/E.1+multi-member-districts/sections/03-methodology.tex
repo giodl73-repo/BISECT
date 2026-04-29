@@ -1,8 +1,78 @@
 % Methodology
 
-% TODO: Describe algorithmic approach:
-% - Use METIS recursive bisection to create multi-member districts
-% - Target district sizes: 3, 5, 7 representatives per district
-% - Proportional allocation methods (ranked-choice, party-list simulation)
-% - Data: Census 2000/2010/2020, election results
-% - Metrics: gerrymandering resistance, minority representation, compactness
+\section{Methodology}
+
+Our analysis proceeds in three stages: (1) generating multi-member district configurations via algorithmic redistricting, (2) simulating electoral outcomes using the D'Hondt proportional allocation method, and (3) measuring proportionality and compactness across configurations.
+
+\subsection{Geographic and Demographic Data}
+
+We use 2020 Census tract-level data for the contiguous United States (48 states plus D.C.), comprising 84,414 census tracts with a total population of 328.2 million. Tract boundaries and populations are obtained from the Census Bureau's TIGER/Line shapefiles and PL 94-171 redistricting files \citep{census2020pl941}. For election data, we use 2020 presidential election results at the census tract level, obtained by disaggregating precinct-level returns from the MIT Election Data Science Lab \citep{MEDSL2020} to census tracts using population-proportional allocation.
+
+\subsection{Multi-Member District Generation}
+
+We generate multi-member districts using edge-weighted recursive bisection graph partitioning, implemented in the \texttt{redist} open-source redistricting platform \citep{redistcli2026}. The algorithm represents census tracts as nodes in a graph, with edges weighted by shared boundary length. Graph partitioning minimizes total weighted edge cuts, equivalent to minimizing total district perimeter --- producing compact districts without explicitly optimizing for a compactness metric.
+
+We generate three uniform configurations:
+\begin{itemize}
+    \item \textbf{Uniform-3}: 144 districts, 3 seats each (432 total seats)
+    \item \textbf{Uniform-5}: 87 districts, 5 seats each (435 total seats)
+    \item \textbf{Uniform-7}: 62 districts, 7 seats each (434 total seats)
+\end{itemize}
+using the \texttt{redist states --seats-per-district M --districts k} command with seed 42 for reproducibility.
+
+\subsubsection{Per-Seat Balance Criterion}
+
+For multi-member districts, balance is measured \emph{per seat}, not per district. For a $k$-district configuration with $M$ seats per district and total population $P$:
+\begin{equation}
+    \text{ideal per seat} = \frac{P}{k \cdot M}, \qquad
+    \text{ideal per district} = M \cdot \text{ideal per seat} = \frac{P}{k}.
+\end{equation}
+A district is balanced if its population deviates from the district ideal by no more than tolerance $T$. We target $T = 10\%$ for multi-member configurations, consistent with typical state legislative standards.
+
+\subsubsection{Per-Node Ufactor Scaling}
+
+A critical methodological contribution is the derivation of per-node METIS imbalance tolerances. Applying a fixed ufactor at each bisection level causes \emph{compounding balance errors}: with $D$ rounds at per-round tolerance $\varepsilon$, the worst-case cumulative deviation is $\varepsilon \cdot D$. For 7 rounds at $\varepsilon = 5\%$, the cumulative worst case is 35\%.
+
+We avoid this by computing the ufactor at each bisection node from its district count $k_{\text{node}}$ and target tolerance $T$:
+\begin{equation}
+    \text{ufactor}_{\text{node}} = 1 + \frac{T}{k_{\text{node}}}.
+\end{equation}
+The root node of a 144-district map receives ufactor $= 1 + 0.10/144 \approx 1.00069$ (very tight); a leaf node splitting 2 final districts receives ufactor $= 1.05$ (5\%). This guarantees cumulative balance error $\leq T$ regardless of bisection depth --- a mathematical guarantee not achievable with fixed per-level ufactors.
+
+\textbf{Sensitivity to ufactor formulation.}
+An earlier implementation passed ufactor values as floating-point strings to METIS, which uses \texttt{atoi()} for parsing: the fractional part was silently truncated to integer 1 (0.1\% tolerance) regardless of the intended value. We verified that this implementation error does \emph{not} materially affect the reported results because, at continental scale ($k \geq 62$ districts), the per-node ufactor formula yields $T/k_{\text{root}} \leq 0.16\%$ --- which rounds to the same METIS integer value as the buggy implementation. The reported population deviations ($\pm$3.7--4.3\%) are dominated by the \emph{granularity floor}: census block groups average 1,400 people, and one block-group swap represents $\sim$0.04\% of a multi-member district. METIS cannot achieve arbitrarily precise balance below this floor regardless of ufactor. The corrected per-node implementation provides a strict mathematical guarantee for smaller district counts ($k < 50$) where the floor does not bind.
+
+\subsection{Seat Allocation: D'Hondt Method}
+
+Within each multi-member district, seats are allocated using the D'Hondt highest-averages method \citep{dhondt1882}. For a district with $M$ seats and parties receiving vote totals $\{v_i\}$, the algorithm awards seats iteratively: at each step, award the next seat to the party with the highest quotient $v_i / (s_i + 1)$, where $s_i$ is that party's current seat count. We implement this as the \texttt{dhondt\_allocate} function in the \texttt{redist-analysis} crate, verified by unit tests including Ireland-style 3-party 5-seat constituencies.
+
+The effective threshold --- minimum vote share to win any seats --- is approximately $1/(M+1)$ (Droop quota): 25\% for 3-member, 17\% for 5-member, 12.5\% for 7-member districts.
+
+\subsection{Proportionality Measurement}
+
+We measure proportionality using the Gallagher index \citep{gallagher1991proportionality}:
+\begin{equation}
+    G = \sqrt{\frac{1}{2} \sum_i (v_i - s_i)^2}
+\end{equation}
+where $v_i$ and $s_i$ are party $i$'s vote and seat shares (in percentage points). A Gallagher index of 0 indicates perfect proportionality; typical FPTP systems score 10--15.
+
+\subsection{Compactness Measurement}
+
+We measure district compactness using the Polsby-Popper ratio \citep{polsby1991third}:
+\begin{equation}
+    PP = \frac{4\pi A}{P^2}
+\end{equation}
+where $A$ is district area and $P$ is perimeter. Scores range from 0 to 1 (perfect circle). We compute $PP$ for dissolved district polygons using the \texttt{redist-analysis} compactness module on WGS84 coordinates.
+
+\subsection{Baseline Comparison}
+
+We compare multi-member configurations against: (1) the 2020 enacted single-member congressional districts, and (2) our edge-weighted single-member redistricting from Paper B.2 \citep{dellib2026edgeweighted}. This isolates the effects of district magnitude from boundary-drawing method.
+
+\subsection{Replication}
+
+All code, data, and results are at \url{https://giodl73-repo.github.io/REDIST/}. The \texttt{redist} binary (version 0.1.0) reproduces all configurations from reported seeds. Each configuration's manifest records the SHA-256 hash of source data and the exact command:
+\begin{verbatim}
+redist state --year 2020 --version E1 \
+  --districts [N] --seats-per-district [M] \
+  --balance-tolerance 10.0 --seed 42
+\end{verbatim}

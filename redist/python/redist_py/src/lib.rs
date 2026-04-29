@@ -261,17 +261,17 @@ fn read_tiger_shp(
 // Adjacency serialization
 // ---------------------------------------------------------------------------
 
-/// Serialize an adjacency graph dict to .adj.bin bytes.
-/// Input dict: {'adjacency': list[list[int]], 'edge_weights': dict, 'n_vertices': int, 'n_edges': int}
+/// Serialize an adjacency graph to .adj.bin bytes (format v2 with vertex_weights).
 #[pyfunction]
 fn adjacency_to_bin(
     py: Python<'_>,
     adjacency: Vec<Vec<usize>>,
+    vertex_weights: Vec<i64>,
     edge_weights: HashMap<(usize, usize), f64>,
     n_vertices: usize,
     n_edges: usize,
 ) -> PyResult<pyo3::Py<pyo3::types::PyBytes>> {
-    let graph = AdjacencyGraph { adjacency, edge_weights, n_vertices, n_edges };
+    let graph = AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices, n_edges };
     let bytes = serialize_adjacency(&graph);
     Ok(pyo3::types::PyBytes::new_bound(py, &bytes).unbind())
 }
@@ -286,6 +286,7 @@ fn adjacency_from_bin(
         .map_err(|e| PyValueError::new_err(e.to_string()))?;
     let d = pyo3::types::PyDict::new_bound(py);
     d.set_item("adjacency", &graph.adjacency)?;
+    d.set_item("vertex_weights", &graph.vertex_weights)?;
     d.set_item("edge_weights", &graph.edge_weights
         .iter().map(|(&(u,v), &w)| ((u,v), w)).collect::<HashMap<_,_>>())?;
     d.set_item("n_vertices", graph.n_vertices)?;
@@ -422,8 +423,9 @@ fn bisection_max_depth(k: usize) -> usize {
 }
 
 #[pyfunction]
-fn bisection_ufactor(depth: usize) -> f64 {
-    ufactor_for_depth(depth)
+#[pyo3(signature = (depth, base_ufactor=5))]
+fn bisection_ufactor(depth: usize, base_ufactor: u32) -> f64 {
+    ufactor_for_depth(depth, base_ufactor)
 }
 
 // ---------------------------------------------------------------------------

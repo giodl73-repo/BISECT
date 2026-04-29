@@ -4,7 +4,10 @@ members = [
     "crates/redist-data",
     "crates/redist-cli",
     "crates/redist-analysis",
+    "crates/redist-map",
+    "crates/redist-report",
     "crates/redist-web",
+    "crates/redist-tui",
     "python/redist_py",
 ]
 resolver = "2"
@@ -35,6 +38,6 @@ pyo3 = { version = "0.22", features = ["abi3-py311"] }
 numpy = "0.22"
 
 # Utilities
-thiserror = "1"
+thiserror = { version = "2" }
 anyhow = "1"
 tempfile = "3"

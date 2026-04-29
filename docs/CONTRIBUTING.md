@@ -41,14 +41,15 @@ This project uses a **feature branch + pull request** workflow for all changes.
 
 3. **Download data files** (not in git):
    ```bash
-   # Download 2020 census tracts
-   python scripts/download_all_states_tracts.py --year 2020
+   # Recommended: use the Rust CLI to download all census data
+   redist fetch --year 2020           # TIGER + redistricting data
+   redist fetch --year 2020 --release # Also pull pre-built adjacency files from GitHub Releases
 
-   # Download 2020 places
-   python scripts/download_all_places.py --year 2020
+   # Convert adjacency pkl files to fast native format (after --release download)
+   python scripts/data/generate_adj_bin.py --year 2020
 
-   # Build adjacency graphs
-   python scripts/build_all_adjacency_graphs.py --year 2020
+   # Alternative: Python download orchestrator (slower)
+   python scripts/data/download_orchestrator.py --stages redistricting --year 2020
    ```
 
 ---
@@ -331,12 +332,14 @@ If you need to share data files with collaborators:
 Anyone can regenerate data files:
 
 ```bash
-# Download from Census Bureau
-python scripts/download_all_states_tracts.py --year 2020
-python scripts/download_all_places.py --year 2020
+# Download from Census Bureau (Rust CLI — recommended)
+redist fetch --year 2020
+redist fetch --year 2020 --release          # includes adjacency files
+python scripts/data/generate_adj_bin.py --year 2020  # convert to fast format
 
-# Build derived files
-python scripts/build_all_adjacency_graphs.py --year 2020
+# Alternative: Python download orchestrator
+python scripts/data/download_orchestrator.py --stages redistricting --year 2020
+python scripts/data/download_orchestrator.py --stages adjacency --year 2020
 ```
 
 ---

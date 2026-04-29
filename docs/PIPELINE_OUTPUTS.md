@@ -94,11 +94,17 @@ The pipeline writes hidden marker files to enable resuming interrupted runs:
 
 ---
 
-## Notes for Rust Port
+## Rust CLI vs Python Pipeline outputs
 
-- `final_assignments.pkl` — replace with `bincode` or `flatbuffers` binary format
-- `intermediate/depth_NN/` — same binary format, one file per round
-- All CSVs — keep as CSV (universal, no format migration needed)
-- All PNGs — generate via a thin Python wrapper or port to `plotters` crate
-- `vra_analysis.pkl` — replace with JSON or bincode
-- Dashboard HTML — keep as Python (not performance-critical)
+The `redist` Rust CLI and the Python pipeline produce overlapping but different files:
+
+| Output | Rust CLI | Python pipeline |
+|--------|----------|-----------------|
+| District assignment | `final_assignments.json` | `final_assignments.pkl` |
+| VRA analysis | `vra_analysis.json` | `vra_analysis.pkl` |
+| District summary CSV | — (planned) | `district_summary.csv` |
+| Maps (PNG) | — (planned) | `maps/*.png` |
+| Dashboard HTML | via `deploy_docs.py` | via `deploy_docs.py` |
+
+The Rust CLI writes `.json`; the Python pipeline writes `.pkl`. Both can coexist in the
+same output directory. Python analysis scripts read the `.pkl` files.

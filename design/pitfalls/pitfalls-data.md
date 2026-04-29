@@ -37,3 +37,33 @@ if str(_project_root) not in sys.path:
 
 **Status:** SOLVED for `parse_pl94171_tracts_2010.py` and `parse_pl94171_tracts_2000.py`
 **Test:** 2010/2000 pipeline runs complete without ModuleNotFoundError
+
+---
+
+## DP-03: Identifier representation ambiguity at system boundaries
+
+**Pattern:** An entity has multiple valid representations — a short code and a canonical name — and different subsystems expect different representations. Code that passes the wrong representation produces a path or lookup that fails silently (empty directory, no data found) rather than an error, because the path is syntactically valid but points nowhere.
+
+**Domain:** Any system that deals with named entities that have both a code (state code "VT") and a canonical name (state name "vermont") and uses the name as part of a file path. The pipeline uses codes externally (CLI arguments, filenames) but canonical names internally (directory paths, demographics files). The mapping must be made explicit at every boundary.
+
+**Why it's hard to catch:** The code runs successfully — it creates the directory, writes a completion message, exits 0. The output file simply appears in `states/vt/` instead of `states/vermont/`, and no test checks the exact path. The failure only manifests when the Python pipeline (which uses canonical names) can't find the Rust CLI's output.
+
+**Structural solution:** Resolve all identifier representations to their canonical form before they are used in paths. Store both representations in the configuration struct (StateConfig has both `state_code` and `state_name`). Use `state_name` exclusively for filesystem paths and `state_code` exclusively for METIS inputs and adjacency file lookup. Document which representation each field uses.
+
+**Status:** SOLVED in redist-cli runner.rs
+**Proved by:** State directory uses cfg.state_name ('vermont'), adjacency lookup uses state_code.lower() ('vt_adjacency_2020.pkl')
+**Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_vt_rust_final_assignments_exists` — verifies output at states/vermont/data/
+
+## DP-04: Stale test assertion after format version upgrade
+
+**Pattern:** A test that asserts a specific version or magic number in a serialized format becomes silently stale when the format version is incremented. The test continues to pass against old compiled binaries but fails on clean builds — creating a hidden inconsistency that only surfaces during full workspace rebuilds.
+
+**Domain:** Any system with versioned binary serialization formats. Arises when format upgrades are not accompanied by a systematic audit of all assertions against version constants.
+
+**Why it's hard to catch:** The test binary may be cached and not recompiled when only the format version changes. The test passes in incremental builds and fails only on clean `cargo test` — a scenario that may not run frequently in development.
+
+**Structural solution:** Version constants used in serialization must be referenced via a single named constant (not duplicated as literals). Test assertions against version numbers must reference the same constant (`FORMAT_VERSION`), not a hardcoded literal. Add a test: `assert_eq!(FORMAT_VERSION, EXPECTED_VERSION)` where `EXPECTED_VERSION` is the only place a version literal appears.
+
+**Status:** SOLVED
+**Proved by:** `serialize.rs::test_magic_header` updated to assert `version == FORMAT_VERSION` (2u32) not `1u32`
+**Test:** `redist-data::serialize::tests::test_magic_header`

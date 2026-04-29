@@ -547,17 +547,21 @@ ls outputs/us_2020_v1/states/
 # Should see states appearing as processing continues
 ```
 
-### Problem: CANCEL.bat doesn't stop pipeline
+### Problem: Python pipeline doesn't stop on Ctrl+C
 
-**Why this happens**: Processes may not respond to Ctrl+C immediately.
+**Why this happens**: Subprocesses may not respond to Ctrl+C immediately.
 
 **Solution**:
 ```bash
-# Force kill if needed
+# Force kill all Python processes (Windows)
 taskkill /F /IM python.exe
 ```
 
+**Note**: `CANCEL.bat` has been removed. Use `taskkill` directly.
+
 **Warning**: Force killing may leave incomplete output files. Use `--reset` on next run to clean up.
+
+**Rust CLI**: The `redist` binary responds correctly to Ctrl+C — no force kill needed.
 
 ## Getting Help
 

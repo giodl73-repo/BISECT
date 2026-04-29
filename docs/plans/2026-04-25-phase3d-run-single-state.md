@@ -331,6 +331,12 @@ fn test_split_four_node_graph() {
 
     assert_eq!(left.len() + right.len(), 4, "all tracts assigned");
     assert!(!left.is_empty() && !right.is_empty(), "non-empty split");
+    // Verify disjoint (no tract in both left and right)
+    assert!(left.is_disjoint(&right), "left and right must be disjoint");
+    // Verify complete (every original tract appears in exactly one side)
+    for i in 0..4 {
+        assert!(left.contains(&i) || right.contains(&i), "tract {i} missing from split");
+    }
     // Balance check: each side should be ~50% (2000/4000)
     let pop_left: i64 = left.iter().map(|&i| vw[i]).sum();
     let pop_right: i64 = right.iter().map(|&i| vw[i]).sum();
@@ -540,6 +546,13 @@ use redist_core::{BisectionTree, max_depth_for_k};
 
 /// Run the full level-parallel bisection for k districts.
 /// Returns HashMap<tract_index, district_id> (1-based district IDs).
+///
+/// Level-parallel: all nodes at depth D are split simultaneously via Rayon,
+/// then depth D+1 is processed. BisectionNode implements Clone (see bisection.rs).
+///
+/// RACE CONDITION FIX: data for each node is extracted from node_tracts
+/// BEFORE the parallel section, so par_iter closures own their data and
+/// no shared reference crosses the thread boundary.
 pub fn run_all_splits(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],
@@ -558,39 +571,51 @@ pub fn run_all_splits(
 
     let tree = BisectionTree::from_k(num_districts);
 
-    // Node state: node_name → set of tract indices
-    // Start: root contains all tracts
+    // Node state: path → tract indices for that node
     let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
     node_tracts.insert(String::new(), (0..n).collect());
 
     // Process depth by depth (level-parallel)
     for depth in 0..tree.max_depth {
         let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
-        // Run splits at this depth in parallel (Rayon)
-        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
-            nodes_at_depth.par_iter()
+
+        // KEY: extract node data sequentially BEFORE parallel section.
+        // This moves ownership out of node_tracts, so par_iter closures
+        // own their data entirely — no shared reference, no data race.
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
                 .filter_map(|node| {
-                    let tracts = node_tracts.get(&node.path)?;
-                    let (left, right) = split_subgraph(
-                        adjacency, vertex_weights, edge_weights, tracts,
-                        ufactor, niter, seed
-                    ).ok()?;
-                    Some((node.path.clone(), left, right))
+                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
                 })
                 .collect();
 
-        // Update node_tracts for next depth
+        // Parallel: each closure owns its (node, tracts) pair — fully independent
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .filter_map(|(node, tracts)| {
+                    let (left, right) = split_subgraph(
+                        adjacency, vertex_weights, edge_weights, &tracts,
+                        ufactor, niter, seed
+                    ).ok()?;
+                    Some((node.path, left, right))
+                })
+                .collect();
+
+        // Re-insert children for the next depth
         for (path, left, right) in split_results {
             node_tracts.insert(format!("{path}0"), left);
             node_tracts.insert(format!("{path}1"), right);
-            node_tracts.remove(&path); // free memory
+            // parent path already removed above
         }
     }
 
-    // Assign district IDs: collect all leaf nodes (BFS order) and number 1..=k
-    // Leaves are paths that are in node_tracts but not in any non-leaf node
+    // Assign district IDs: sort leaves by (depth, path) for stable BFS order.
+    // IMPORTANT: plain lexicographic sort is WRONG for mixed-length paths:
+    //   lex order:  "0", "00", "01", "1", "10", "11"  ← WRONG
+    //   BFS order:  "0", "1", "00", "01", "10", "11"  ← CORRECT
+    // Sorting by (path.len(), path) gives correct depth-first then lex within depth.
     let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
-    leaves.sort_by(|(a, _), (b, _)| a.cmp(b)); // BFS order = lex order of binary paths
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
 
     let mut assignments: HashMap<usize, usize> = HashMap::new();
     for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
@@ -614,13 +639,40 @@ pub fn run_all_splits(
 use rayon::prelude::*;
 ```
 
+- [ ] **Step 3b: Add multi-district L0 test** (requires gpmetis; skips gracefully if absent)
+
+```rust
+#[test]
+fn test_run_all_splits_two_districts() {
+    if find_gpmetis().is_none() { return; } // skip without gpmetis
+    // 4 tracts: 0-1 share edge, 2-3 share edge, 1-2 bridge
+    let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
+    let vw = vec![1000i64, 1000, 1000, 1000];
+    let ew = HashMap::new();
+
+    let assignments = run_all_splits(&adj, &vw, &ew, 2, 5, 100, None).unwrap();
+
+    assert_eq!(assignments.len(), 4, "all tracts assigned");
+    // Both districts must be present
+    assert!(assignments.values().any(|&d| d == 1), "district 1 must exist");
+    assert!(assignments.values().any(|&d| d == 2), "district 2 must exist");
+    // All values in {1, 2}
+    assert!(assignments.values().all(|&d| d == 1 || d == 2));
+    // Verify disjointness: each tract in exactly one district
+    let d1: HashSet<usize> = assignments.iter().filter(|(_, &v)| v == 1).map(|(&k, _)| k).collect();
+    let d2: HashSet<usize> = assignments.iter().filter(|(_, &v)| v == 2).map(|(&k, _)| k).collect();
+    assert!(d1.is_disjoint(&d2), "districts must be disjoint");
+    assert_eq!(d1.len() + d2.len(), 4, "complete coverage");
+}
+```
+
 - [ ] **Step 4: Run tests**
 
 ```
 cargo test -p redist-cli test_run_all_splits -- --nocapture
 ```
 
-Expected: PASS (single-district test requires no gpmetis).
+Expected: PASS (single-district test requires no gpmetis; two-district test skips if gpmetis absent).
 
 - [ ] **Step 5: Commit**
 
@@ -682,8 +734,11 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let graph = load_adjacency_pkl(&adj_pkl)
         .map_err(|e| format!("adjacency load failed: {e}"))?;
 
-    // 2. Determine num_districts from config JSON
-    let num_districts = load_num_districts(&cfg.state_code, &cfg.year)?;
+    // 2. num_districts and state_name come from cfg — pre-resolved by the caller
+    // (Commands::States/Run) to avoid spawning Python once per state in parallel.
+    // DO NOT call load_num_districts or state_name_for here.
+    let num_districts = cfg.num_districts;
+    let state_name = &cfg.state_name;
 
     // 3. Build edge weights
     let edge_weights = match cfg.partition_mode.as_str() {
@@ -693,7 +748,6 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         }
         "metis-vra" if num_districts > 1 => {
             status(cfg.position, &format!("{}: loading VRA demographics", cfg.state_code));
-            let state_name = state_name_for(&cfg.state_code)?;
             let demo_path = std::path::Path::new("data")
                 .join(&cfg.year)
                 .join("demographics")
@@ -736,7 +790,6 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // 6. VRA analysis (if VRA mode and multi-district)
     let vra = if cfg.partition_mode == "metis-vra" && num_districts > 1 {
         status(cfg.position, &format!("{}: computing VRA district analysis", cfg.state_code));
-        let state_name = state_name_for(&cfg.state_code)?;
         let demo_path = std::path::Path::new("data")
             .join(&cfg.year).join("demographics")
             .join(format!("{state_name}_demographics_{}.csv", cfg.year));
@@ -954,7 +1007,8 @@ def al_rust_output(self, tmp_dir):
          '--state', 'AL', '--year', '2020', '--version', 'V4',
          '--partition-mode', 'metis-vra',
          '--output-dir', str(tmp_dir / 'rust_al'),
-         '--position', '999'],
+         '--position', '999',
+         '--seed', '42'],   # REQUIRED: METIS is stochastic; seed ensures reproducibility
         capture_output=True, text=True, timeout=300
     )
     if result.returncode != 0:
@@ -962,9 +1016,12 @@ def al_rust_output(self, tmp_dir):
     return tmp_dir / 'rust_al'
 
 def test_al_rust_mm_count(self, al_rust_output):
+    # --seed 42 set in fixture makes this deterministic. If mm_count != 2 with
+    # a fixed seed, the VRA formula or bisection has changed.
     vra = json.loads((al_rust_output / 'data' / 'vra_analysis.json').read_text())
     assert vra['mm_count'] == 2, \
-        f'Alabama Rust CLI must achieve 2 MM districts, got {vra["mm_count"]}'
+        f'Alabama Rust CLI must achieve 2 MM districts, got {vra["mm_count"]}. ' \
+        f'seed=42 is fixed — this should be reproducible.'
 
 def test_al_rust_population_balance(self, al_rust_output):
     assignments = json.loads(
@@ -1073,3 +1130,579 @@ git commit -m "Phase 3d: record benchmarks and update migration log"
 - `Partition::from_assignments` from `redist-core`, used in Task 5 ✓
 
 **One open question:** `state_name_for` in Task 5 calls Python to look up the state name. This creates a Python dependency in the Rust runner. If Python is not available, the VRA path fails. This is acceptable for Phase 3d since the adjacency loader already requires Python. Both can be eliminated in Phase 2a (when the Rust TIGER reader owns the config). Document this in the code.
+
+---
+
+## Task 8: Wire `redist states` — 50-state parallel runner
+
+**Files:**
+- Modify: `redist/crates/redist-cli/src/main.rs`
+
+### What it does
+`Commands::States` already calls `run_states_parallel` but exits with "not yet implemented". Once `run_single_state` works (Task 5), this is a direct wiring job: build a `Vec<StateConfig>` for every state in the 2020 config and pass it to `run_states_parallel`.
+
+State list comes from `scripts/config_2020.py` via a Python subprocess (same pattern as `load_num_districts` in Task 5).
+
+- [ ] **Step 1: Write failing acceptance test**
+
+```python
+# tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
+def test_redist_states_runs_vermont_and_delaware(self, tmp_dir):
+    """redist states processes a subset of states without crashing."""
+    result = subprocess.run(
+        [str(REDIST_BIN), 'states',
+         '--year', '2020', '--version', 'V3',
+         '--output-dir', str(tmp_dir / 'rust_states'),
+         '--states', 'VT', 'DE',
+         '--workers', '2',
+         '--position', '999'],
+        capture_output=True, text=True, timeout=120
+    )
+    assert result.returncode == 0, f'redist states failed:\n{result.stderr}'
+    for state in ['vermont', 'delaware']:
+        assert (tmp_dir / 'rust_states' / 'states' / state / 'data' / 'final_assignments.json').exists()
+```
+
+Run: `pytest tests/acceptance/ -k test_redist_states -v`
+Expected: FAIL — "not yet implemented".
+
+- [ ] **Step 2: Load state list helper**
+
+Add to `runner.rs`:
+
+```rust
+/// Load all state codes and district counts for a given year.
+/// Returns Vec<(state_code, num_districts)> sorted alphabetically.
+pub fn load_all_states(year: &str) -> Result<Vec<(String, usize)>, String> {
+    let script = format!(
+        "from scripts.config_{year} import STATE_CONFIG_{year}; \
+         import json; \
+         print(json.dumps({{k: v['districts'] for k, v in STATE_CONFIG_{year}.items()}}))",
+        year = year
+    );
+    let out = std::process::Command::new("python")
+        .args(["-c", &script])
+        .output()
+        .map_err(|e| e.to_string())?;
+    let map: std::collections::HashMap<String, usize> =
+        serde_json::from_slice(&out.stdout).map_err(|e| e.to_string())?;
+    let mut states: Vec<(String, usize)> = map.into_iter().collect();
+    states.sort_by(|a, b| a.0.cmp(&b.0));
+    Ok(states)
+}
+```
+
+- [ ] **Step 3: Wire `Commands::States` in `main.rs`**
+
+```rust
+Commands::States(args) => {
+    let all_states = redist_cli::runner::load_all_states(&args.year.to_string())
+        .unwrap_or_else(|e| { eprintln!("failed to load state list: {e}"); std::process::exit(1); });
+
+    // Filter to requested states if --states provided
+    let states_filter: std::collections::HashSet<String> = args.states
+        .iter().map(|s| s.to_uppercase()).collect();
+
+    let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+        .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
+        .enumerate()
+        .map(|(i, (code, districts))| {
+            // Resolve state name here (sequential, before Rayon starts)
+            // to avoid spawning Python once per state inside the parallel pool.
+            let state_name = code.to_lowercase().replace(' ', "_");  // simple fallback
+            // For accurate name (e.g., "new_york"), use load_all_states to return names too.
+            redist_cli::runner::StateConfig {
+                state_code: code,
+                state_name,
+                num_districts: districts,
+                year: args.year.to_string(),
+                version: args.version.clone(),
+                output_dir: std::path::PathBuf::from(&args.output_dir),
+                partition_mode: args.partition_mode.to_string(),
+                position: (i + 2) as i32,
+                debug: args.debug,
+                reset: false,
+                reprocess: args.reprocess,
+                ufactor: 5,
+                niter: 100,
+                seed: None,
+            }
+        })
+        .collect();
+
+    let filtered = redist_cli::runner::filter_incomplete(configs);
+    eprintln!("[redist states] processing {} states with {} workers", filtered.len(), args.workers);
+
+    let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+    let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
+    for f in &failures {
+        eprintln!("FAILED {}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
+    }
+    if !failures.is_empty() {
+        std::process::exit(1);
+    }
+    eprintln!("[OK] all states complete");
+}
+```
+
+- [ ] **Step 4: Build**
+
+```
+cd redist && cargo build -p redist-cli --release 2>&1 | tail -3
+```
+
+- [ ] **Step 5: Run acceptance test**
+
+```
+pytest tests/acceptance/ -k test_redist_states -v --tb=short
+```
+
+Expected: PASS — VT and DE both produce `final_assignments.json`.
+
+- [ ] **Step 6: Verify full 50-state dry-run (print only)**
+
+```bash
+redist/target/release/redist states \
+  --year 2020 --version V3 \
+  --output-dir outputs/V3 \
+  --workers 1 \
+  --states VT DE AK
+```
+
+Confirm 3 states complete without error before committing.
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add redist/crates/redist-cli/src/main.rs redist/crates/redist-cli/src/runner.rs
+git add tests/acceptance/test_pipeline_acceptance.py
+git commit -m "Phase 3d Task 8: wire redist states — 50-state parallel runner"
+```
+
+---
+
+## Task 9: Wire `redist run` — multi-year orchestrator
+
+**Files:**
+- Modify: `redist/crates/redist-cli/src/main.rs`
+
+### What it does
+`Commands::Run` is the outermost entry point: it runs `redist states` for one or all census years (2020, 2010, 2000), optionally in parallel across years using Rayon's thread pool.
+
+Years "all" = run 2020, 2010, 2000 **sequentially** (one year completes before the next starts). States within each year run in **parallel** via `run_states_parallel`. Years are sequential because each year's adjacency and demographics files are distinct and the I/O load from 3 parallel years would overwhelm disk throughput.
+
+- [ ] **Step 1: Write failing acceptance test**
+
+```python
+# tests/acceptance/test_pipeline_acceptance.py — add to TestRustCLIAcceptance
+def test_redist_run_single_year_vermont(self, tmp_dir):
+    """redist run --year 2020 --states VT completes successfully."""
+    result = subprocess.run(
+        [str(REDIST_BIN), 'run',
+         '--year', '2020', '--version', 'V3',
+         '--output-dir', str(tmp_dir / 'rust_run'),
+         '--states', 'VT',
+         '--workers', '1'],
+        capture_output=True, text=True, timeout=120
+    )
+    assert result.returncode == 0, f'redist run failed:\n{result.stderr}'
+    assert (tmp_dir / 'rust_run' / 'states' / 'vermont' / 'data' / 'final_assignments.json').exists()
+```
+
+- [ ] **Step 2: Wire `Commands::Run` in `main.rs`**
+
+```rust
+Commands::Run(args) => {
+    use rayon::prelude::*;
+
+    // Determine which years to run
+    let years: Vec<String> = if args.year == "all" {
+        vec!["2020".into(), "2010".into(), "2000".into()]
+    } else {
+        vec![args.year.clone()]
+    };
+
+    // For each year, build state configs and run in parallel
+    // Years themselves run sequentially (inner parallelism handles states)
+    let mut any_failure = false;
+    for year in &years {
+        eprintln!("[redist run] year={year} version={} mode={}", args.version, args.partition_mode);
+
+        let all_states = redist_cli::runner::load_all_states(year)
+            .unwrap_or_else(|e| { eprintln!("state list failed for {year}: {e}"); vec![] });
+
+        let states_filter: std::collections::HashSet<String> = args.states
+            .iter().map(|s| s.to_uppercase()).collect();
+
+        let configs: Vec<redist_cli::runner::StateConfig> = all_states.into_iter()
+            .filter(|(code, _)| states_filter.is_empty() || states_filter.contains(code))
+            .enumerate()
+            .map(|(i, (code, _))| redist_cli::runner::StateConfig {
+                state_code: code,
+                year: year.clone(),
+                version: args.version.clone(),
+                output_dir: std::path::PathBuf::from(
+                    args.output_dir.clone().unwrap_or_else(|| format!("outputs/{}", args.version))
+                ),
+                partition_mode: args.partition_mode.to_string(),
+                position: (i + 2) as i32,
+                debug: args.debug,
+                reset: args.reset,
+                reprocess: args.reprocess,
+                ufactor: 5,
+                niter: 100,
+                seed: None,
+            })
+            .collect();
+
+        let filtered = redist_cli::runner::filter_incomplete(configs);
+        let results = redist_cli::runner::run_states_parallel(filtered, args.workers);
+        let failures: Vec<_> = results.iter().filter(|r| !r.success).collect();
+        for f in &failures {
+            eprintln!("FAILED {year}/{}: {}", f.state_code, f.error.as_deref().unwrap_or(""));
+            any_failure = true;
+        }
+    }
+    if any_failure { std::process::exit(1); }
+    eprintln!("[OK] redist run complete");
+}
+```
+
+- [ ] **Step 3: Build and run acceptance test**
+
+```
+cd redist && cargo build -p redist-cli --release 2>&1 | tail -3
+pytest tests/acceptance/ -k test_redist_run_single_year_vermont -v
+```
+
+Expected: PASS.
+
+- [ ] **Step 4: Run full 2020 single-state smoke test**
+
+```bash
+redist/target/release/redist run \
+  --year 2020 --version V3 \
+  --states VT --workers 4
+```
+
+Confirm output written to `outputs/V3/`.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add redist/crates/redist-cli/src/main.rs
+git add tests/acceptance/test_pipeline_acceptance.py
+git commit -m "Phase 3d Task 9: wire redist run — multi-year orchestrator"
+```
+
+---
+
+## Task 10: Extract pitfalls from this session
+
+**Files:**
+- Modify: `design/pitfalls/` (existing directory)
+- Modify: `design/pitfalls/README.md`
+
+### What it does
+This session's bugs and reviews surfaced new structural pitfalls that belong in the collection. Run the `/update-pitfalls` skill after Phase 3d is working.
+
+The key pitfalls from this session not yet captured:
+
+| ID | Pattern | Source |
+|---|---|---|
+| PP-04 | Threshold operator parity (>= vs >) — Rust used inclusive where Python used exclusive | Phase 4 review, VRA analysis |
+| PP-05 | HashMap iteration order produces non-deterministic FP sums | Phase 4 review, VRA aggregation |
+| PP-06 | `debug_assert!` compiled out in release — safety checks silently disappear | Phase 3 review, STATUS protocol |
+| PP-07 | Dead code in Rayon closures (Arc<Mutex> collecting errors that are never read) | Phase 3 review, runner.rs |
+| PP-08 | CSV column order from HashMap is non-deterministic across runs | Phase 3 review, output.rs |
+
+- [ ] **Step 1: Run update-pitfalls skill**
+
+```
+/update-pitfalls
+```
+
+Provide session context: "Phase 3d Rust port. Key bugs found in role reviews: threshold operator mismatch (>= vs >), HashMap non-determinism in FP sums, debug_assert compiled out in release builds, dead Arc<Mutex> in Rayon closures, CSV HashMap column ordering."
+
+- [ ] **Step 2: Verify pitfalls added to design/pitfalls/README.md**
+
+```bash
+grep -c "PP-0[4-8]" design/pitfalls/README.md
+```
+
+Expected: 5 new entries.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add design/pitfalls/
+git commit -m "Phase 3d Task 10: extract pitfalls from Phase 1-4 Rust port reviews"
+```
+
+---
+
+## Task 11: Record benchmarks and update migration log
+
+**Files:**
+- Modify: `design/rust-port/migration-log.md`
+- Modify: `design/rust-port/benchmarks.md`
+
+### What it does
+After Tasks 5–9 are working, run hyperfine to measure actual wall time improvements and record them so the migration-log.md has real data.
+
+- [ ] **Step 1: Establish Python baseline (before Rust)**
+
+Run this before the Rust binary exists or with the Python pipeline:
+
+```bash
+# Requires hyperfine: cargo install hyperfine
+hyperfine --warmup 1 --runs 3 \
+  'python scripts/pipeline/run_state_redistricting.py --state VT --year 2020 --version V3 --position 999' \
+  'python scripts/pipeline/run_state_redistricting.py --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+```
+
+Record output.
+
+- [ ] **Step 2: Run Rust binary benchmark**
+
+```bash
+hyperfine --warmup 1 --runs 3 \
+  'redist/target/release/redist state --state VT --year 2020 --version V3 --position 999' \
+  'redist/target/release/redist state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+```
+
+- [ ] **Step 3: Update migration-log.md**
+
+```markdown
+## Phase 3d — Complete (DATE)
+run_single_state implemented. redist state, redist states, and redist run all wired.
+
+### Benchmarks (DATE, Windows 11, 12-core):
+
+| State | Python (s) | Rust CLI (s) | Speedup |
+|-------|------------|--------------|---------|
+| VT    | X.Xs       | X.Xs         | Nx      |
+| AL    | X.Xs       | X.Xs         | Nx      |
+
+### Phase 3d target: ~25 min for 50 states (Phase 2 adjacency + Rayon)
+### Phase 5 target: ~10 min (native METIS)
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add design/rust-port/migration-log.md design/rust-port/benchmarks.md
+git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
+```
+
+---
+
+## Updated Self-Review
+
+**Spec coverage (full plan including gaps):**
+- ✓ `run_single_state` (Tasks 1–6)
+- ✓ `redist states` — 50-state parallel (Task 8)
+- ✓ `redist run` — multi-year orchestrator (Task 9)
+- ✓ Pitfalls extraction (Task 10)
+- ✓ Benchmark recording (Task 11)
+- ✓ Acceptance tests for each new command (Tasks 6, 8, 9)
+- ✗ Phase 5 (native METIS) — out of scope for this plan; see `design/rust-port/README.md` Phase 5 section
+
+**Phase 5 note:** Phase 5 (link METIS as C library via `bindgen`) is a separate plan. Implement only if Task 11 benchmarks show subprocess overhead >10% of total runtime. The decision gate is documented in `design/rust-port/README.md`.
+
+---
+
+## Task 12: Data download integration — `redist fetch`
+
+**Files:**
+- Create: `redist/crates/redist-cli/src/fetch.rs`
+- Modify: `redist/crates/redist-cli/src/lib.rs`
+- Modify: `redist/crates/redist-cli/src/main.rs`
+- Modify: `redist/crates/redist-cli/src/args.rs` (add `Commands::Fetch`)
+- Create: `redist/data/manifest.json` (shipped with binary)
+- Create: `redist/data/local_manifest.example.json`
+
+### What it does
+
+A user who installs `redist` can run `redist fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
+
+Three manifest sources (checked in priority order):
+
+1. **Local override** (`~/.config/redist/manifest.json` or `REDIST_MANIFEST` env var) — points to local paths. Set this on a machine where data is already downloaded. No network access needed.
+2. **GitHub Releases** (`--release` flag) — pulls from the project's GitHub Releases (outputs-v3, outputs-v4, data-inputs-v1). Requires `gh auth login`.
+3. **Public Census Bureau URLs** (default) — downloads TIGER shapefiles and PL 94-171 redistricting files directly from census.gov.
+
+### Manifest format (`manifest.json`)
+
+```json
+{
+  "version": "1",
+  "sources": {
+    "tiger_tracts_2020": {
+      "url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/",
+      "pattern": "tl_2020_{fips}_tract.zip",
+      "states": "all",
+      "local_path": "data/2020/tiger/tracts/{state_name}/"
+    },
+    "redistricting_2020": {
+      "url": "https://www2.census.gov/programs-surveys/decennial/2020/data/01-Redistricting_File--PL_94-171/",
+      "pattern": "{state_name}2020.pl.zip",
+      "states": "all",
+      "local_path": "data/2020/redistricting/{state_name}/"
+    },
+    "adjacency_2020": {
+      "github_release": "data-inputs-v1",
+      "asset": "adjacency_2020.tar.gz",
+      "local_path": "outputs/V3/data/2020/adjacency/"
+    }
+  }
+}
+```
+
+Local manifest override (`~/.config/redist/manifest.json`):
+```json
+{
+  "version": "1",
+  "local_overrides": {
+    "tiger_tracts_2020": { "local_path": "/mnt/data/tiger/tracts/2020/" },
+    "adjacency_2020": { "local_path": "/mnt/data/adjacency/2020/" }
+  }
+}
+```
+
+### CLI surface
+
+```
+redist fetch [OPTIONS]
+
+Options:
+  --year <YEAR>         Census year (2020, 2010, 2000, or all) [default: 2020]
+  --states <STATES>     Specific states to fetch (default: all)
+                        Example: --states AL GA MS (only Alabama + Georgia + Mississippi)
+  --type <TYPE>         Data type: tiger, redistricting, adjacency, demographics, all
+                        [default: all]
+  --release             Pull from GitHub Releases (requires gh auth login)
+  --manifest <PATH>     Override manifest file path
+  --check-only          Print what would be downloaded without downloading
+  --workers <N>         Parallel download workers [default: 4]
+  --force               Re-download even if files already exist
+```
+
+### Incremental fetch — only what's missing
+
+**IMPORTANT**: `redist fetch` is **incremental by default**. It checks each target file before downloading and skips files that already exist. This means:
+
+- `redist fetch --states AL` downloads ONLY Alabama's data (TIGER shapefile, demographics, adjacency). Fast and cheap — typically <10s.
+- `redist fetch --states AL --force` re-downloads Alabama even if present.
+- `redist fetch` (no --states) downloads all 50 states, skipping already-present files.
+
+Each file gets a `.done` marker file after successful download. Before downloading, the fetch command checks: if `{target_path}.done` exists AND the file size matches the manifest's expected size, skip.
+
+State-specific files: `tl_2020_{fips}_tract.zip`, `{state_name}2020.pl.zip`, `{state_lower}_adjacency_2020.pkl`
+Shared files: only downloaded once regardless of --states filter.
+
+### E2E Alabama VRA performance goal (from scratch)
+
+**Target: Alabama VRA redistricting in <30s from a clean machine.**
+
+```bash
+time (redist fetch --states AL --year 2020 && \
+      redist state --state AL --year 2020 --version V4 \
+                   --partition-mode metis-vra --seed 42)
+```
+
+Expected breakdown:
+| Step | Target |
+|---|---|
+| `redist fetch --states AL` | <10s (TIGER ~1MB + demographics ~200KB + adjacency pkl ~1MB) |
+| Adjacency load (pkl shim) | <1s |
+| Demographics load | <0.1s |
+| VRA edge weight build | <0.5s |
+| METIS bisection (7 districts, seed=42) | ~1.5s (measured: 1354ms) |
+| Balance check + output write | <0.1s |
+| **Total** | **<15s** |
+
+For comparison: Python pipeline for AL VRA (with data present) is ~60-90s. The Rust CLI target is 4–6× faster.
+
+Record actual timings in `design/rust-port/migration-log.md` when Task 11 runs.
+
+### Task steps
+
+- [ ] **Step 1: Create `manifest.json` embedded in binary**
+
+```rust
+// redist/crates/redist-cli/src/fetch.rs
+// Embed the manifest at compile time
+const BUILTIN_MANIFEST: &str = include_str!("../../../data/manifest.json");
+```
+
+Create `redist/data/manifest.json` with the public URL patterns for all census data.
+
+- [ ] **Step 2: Write manifest loading with local override**
+
+```rust
+pub fn load_manifest(override_path: Option<&str>) -> Result<Manifest, String> {
+    // Priority: explicit --manifest > REDIST_MANIFEST env > local default > bundled
+    let path = override_path
+        .or_else(|| std::env::var("REDIST_MANIFEST").ok().as_deref())
+        ...;
+    if let Some(p) = path {
+        // Load from file
+    } else {
+        serde_json::from_str(BUILTIN_MANIFEST)...
+    }
+}
+```
+
+- [ ] **Step 3: Implement `redist fetch --check-only`**
+
+Print what would be downloaded without downloading anything. This is the first testable state.
+
+Test: `redist fetch --check-only --year 2020 --states VT` should print the list of files to download without making any network calls.
+
+- [ ] **Step 4: Implement local-manifest path resolution**
+
+When local_overrides are present, resolve paths and verify they exist.
+
+Test: create a `manifest.json` pointing to existing local adjacency data; `redist fetch --check-only` should report all files as "available locally".
+
+- [ ] **Step 5: Implement census.gov downloads (TIGER + redistricting)**
+
+Download and extract ZIP files from census.gov. Use reqwest or curl subprocess (subprocess is simpler and avoids TLS dependency in Rust).
+
+- [ ] **Step 6: Implement GitHub Releases download (`--release`)**
+
+Invoke `gh release download data-inputs-v1 --dir outputs/V3/data/`. This reuses the existing GitHub Releases setup (data-inputs-v1, outputs-v3, outputs-v4 tags).
+
+- [ ] **Step 7: Wire into main.rs and args.rs**
+
+```
+Commands::Fetch(args) => { ... }
+```
+
+- [ ] **Step 8: Write acceptance test**
+
+```python
+def test_fetch_check_only_lists_files():
+    result = subprocess.run(
+        [str(REDIST_BIN), 'fetch', '--check-only', '--year', '2020', '--states', 'VT'],
+        capture_output=True, text=True, timeout=10
+    )
+    assert result.returncode == 0
+    assert 'tl_2020_50_tract' in result.stdout  # Vermont FIPS=50
+```
+
+### User experience goal
+
+A new user installs `redist` and can run:
+```bash
+redist fetch --year 2020               # downloads all data
+redist states --year 2020 --version V3 # runs all 50 states
+```
+
+Or on a machine with data already downloaded:
+```bash
+echo '{"version":"1","local_overrides":{"adjacency_2020":{"local_path":"/data/adj/"}}}' \
+  > ~/.config/redist/manifest.json
+redist states --year 2020 --version V3  # reads from local paths
+```

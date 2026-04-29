@@ -1,0 +1,65 @@
+paper: E.6+international-applications
+title: "Beyond American Federalism: Algorithmic Redistricting in Parliamentary Democracies"
+venue: "Comparative Political Studies"
+stage: results-partial
+round: 0
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: 2026-04-26
+    note: "Paper scaffolded — introduction, comparative systems, methodology, discussion, conclusion written. Results section placeholder pending international data acquisition and experimental runs."
+  - stage: results-partial
+    date: 2026-04-28
+    note: "Results section filled with actual experimental data for Ireland (43D STV, GADM L2, balance valid), Germany (299D MMP, GADM L3, balance valid, 98% contiguous), Malta (13D STV, GADM L2, balance valid). Discussion limitations section written. UK/Canada/NZ pending data acquisition."
+dependencies:
+  - "B.1 (recursive bisection algorithm)"
+  - "B.2 (edge-weighted compactness)"
+  - "E.1 (multi-member methodology and per-seat balance)"
+data_completed:
+  - "GADM v4.1 Ireland level 2 (106 municipal districts) — prototype quality"
+  - "GADM v4.1 Germany level 3 (4680 Gemeinden) — 299 Wahlkreise"
+  - "GADM v4.1 Malta level 2 (68 localities) — 13 constituencies"
+data_needed:
+  - "CSO Ireland 2022 small areas (~18K units) — for production-quality Ireland results"
+  - "Destatis Germany 2021 Gemeinden population — for accurate balance computation"
+  - "NSO Malta 2021 enumeration districts (~2K EDs) — for production Malta results"
+  - "UK Office for National Statistics 2021 Census output areas + electoral roll"
+  - "Statistics Canada 2021 dissemination areas"
+  - "Stats NZ 2023 meshblocks"
+results_summary:
+  ireland:
+    units: 106
+    constituencies: 43
+    seats_per_constituency: 4
+    total_seats: 172
+    balance_valid: true
+    mean_pp: 0.203
+    all_contiguous: true
+    note: "Prototype with GADM county boundaries. CSO SA data needed for publication quality."
+  germany:
+    units: 4680
+    wahlkreise: 299
+    seats_per_wahlkreis: 1
+    total_seats: 299
+    balance_valid: true
+    mean_pp: 0.174
+    contiguous_pct: 0.98
+    note: "Full 299-Wahlkreis run with GADM Gemeinden. Destatis population data needed."
+  malta:
+    units: 68
+    constituencies: 13
+    seats_per_constituency: 5
+    total_seats: 65
+    balance_valid: true
+    mean_pp: 0.329
+    all_contiguous: false
+    note: "Prototype with GADM localities. Gozo water bridge issue."
+next_steps:
+  - "Acquire CSO Ireland 2022 SA data for production Ireland run"
+  - "Acquire Destatis ZENSUS 2021 Gemeinde population"
+  - "Run UK/Canada/NZ with GADM data as prototypes"
+  - "Compute Gallagher index for Ireland/Malta via D'Hondt simulation"
+  - "Acquire enacted boundary shapefiles for compactness comparison"
+  - "Panel review (board: MERIDIAN, BOUNDARY, WARD, LEDGER, MERIDIAN-INTERNATIONAL)"

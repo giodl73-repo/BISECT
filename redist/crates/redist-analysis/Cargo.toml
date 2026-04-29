@@ -14,3 +14,6 @@ serde_json.workspace = true
 thiserror.workspace = true
 geo.workspace = true
 geo-types.workspace = true
+csv = "1"
+clap = { version = "4", features = ["derive"] }
+rand = { version = "0.8", features = ["small_rng"] }

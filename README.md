@@ -1,18 +1,172 @@
-# Apportionment
+# redist — Open Redistricting Platform
 
-Every ten years, after the census, each state redraws its congressional districts. The process is notoriously political — legislators choose their voters, not the other way around. Salamander-shaped districts, packed minorities, cracked communities. It's been this way for two centuries.
+`redist` is an open-source redistricting platform for practitioners, researchers, and reform advocates. It draws districts, analyzes plans, compares them to enacted maps, verifies legal constraints, and produces court-ready audit trails — for any chamber, any state, any census year.
 
-And computers have made it worse. Modern redistricting software lets mapmakers calculate the partisan effect of moving a single city block from one district to another, optimizing the map to a precision that was impossible by hand. The problem isn't that we need a computer to solve it. Computers are already being used — to gerrymander more precisely than ever before.
+**For researchers:** 50-state congressional redistricting in 15 seconds. Reproducible, seed-controlled, with compactness and VRA analysis built in.
 
-The question is which **method** to use. And the fairest method turns out to be the oldest one in the book: **divide it in half.**
+**For practitioners:** draw your state's house, senate, and congressional districts in a single command. Compare your plan to the enacted map, verify county preservation, check partisan fairness, generate a commission-ready report.
 
-Split the state into two equal halves by population. Split each half again. Keep going until you have the right number of districts. It's the same principle as cutting a pizza, splitting an inheritance, or dividing a deck of cards — nobody gets to choose which half is theirs, so nobody gets an advantage. The shape of each piece is determined entirely by geography.
+**For reformers:** every plan produced by `redist` is independently verifiable — signed manifest, SHA-256 of source data, complete reproduction command. Any auditor can recreate the map from scratch.
 
-**Headline result (2020 Census):** mean Polsby–Popper compactness **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over the enacted 2020 congressional districts (mean PP 0.296). 37 of 44 multi-district states beat their own enacted maps on compactness. Illinois improves +174%, Louisiana +104%, New Hampshire +102%.
+---
 
-**VRA result (2020):** edge-weighted `metis-vra` mode achieves majority-minority district targets in Alabama (2 MM districts at 51.1%/50.5%) and Georgia (7 MM districts, exceeding the 5-district target). Adaptive boost formula scales weight by minority tract density — no manual parameter tuning per state.
+## Quick start
 
-**[View all dashboards →](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
+```bash
+# Build the binary (one-time)
+cargo build --release --manifest-path redist/Cargo.toml
+
+# Download 2020 census data
+redist fetch --year 2020
+
+# Draw all 50 congressional districts (~15 seconds)
+redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+
+# Draw Washington's 98 house districts
+redist state --state WA --year 2020 --version WA_Plans \
+  --districts 98 --chamber house --label wa_house_draft1 \
+  --balance-tolerance 5.0 --seed 42
+
+# Analyze: compactness, partisan fairness, county splits, VRA
+redist analyze --label wa_house_draft1 --year 2020 --version WA_Plans --types all
+
+# Compare to enacted map
+redist compare --plan-a wa_house_draft1 --enacted --year 2020 --version WA_Plans
+
+# Generate commission report (HTML + JSON)
+redist report --label wa_house_draft1 --year 2020 --version WA_Plans --format html json
+```
+
+---
+
+## What it does
+
+### Redistricting
+
+Any chamber, any district count, any census year:
+
+```bash
+redist state --state WA --districts 98 --chamber house   # state house
+redist state --state WA --districts 49 --chamber senate  # state senate
+redist state --state WA --chamber congressional          # congressional (from config)
+```
+
+Multi-chamber suites with nesting validation (senate = 2 × house):
+
+```bash
+redist suite --state WA --year 2020 --version WA_Plans \
+  --name wa_commission_v1 \
+  --house-districts 98 --senate-districts 49 \
+  --nest senate-in-house --seed 42
+```
+
+Three partition modes:
+- **`edge-weighted`** (default) — compactness-optimized, follows geographic boundaries
+- **`unweighted`** — pure population balance, no geometric optimization
+- **`metis-vra`** — VRA-compliant, boosts edges between minority-heavy tracts
+
+### Choosing resolution: tract vs block group
+
+`redist` runs at census tract resolution by default (~4,000 people/unit). For state legislative maps with many districts, tract resolution may be too coarse:
+
+| Resolution | Unit size | WA 98-district house | Recommendation |
+|------------|-----------|----------------------|----------------|
+| `tract` (default) | ~4,000 pop | 18 units/district | OK for ≤50 districts |
+| `block_group` | ~1,200 pop | 54 units/district | Required for large chambers |
+
+**Rule of thumb**: if `num_districts / state_tracts > 0.05` (fewer than 20 tracts per district), use block_group.
+
+```bash
+# WA house 98D — tract fails, block_group works
+redist state --state WA --year 2020 --version WA_Plans \
+  --districts 98 --chamber house --label wa_house_draft1 \
+  --resolution block_group --balance-tolerance 10.0 --seed 42
+
+# TX house 150D — tract works (46 tracts/district)
+redist state --state TX --year 2020 --version TX_Plans \
+  --districts 150 --chamber house --label tx_house_draft1 \
+  --balance-tolerance 10.0 --seed 42
+```
+
+Block group adjacency files are built with:
+```bash
+python scripts/data/geography/build_unit_adjacency.py \
+  --state WA --year 2020 --resolution block_group
+```
+
+### Analysis
+
+```bash
+redist analyze --label wa_house_draft1 --types all
+```
+
+Produces per-district JSON for:
+- **Demographic** — race/ethnicity breakdown, majority-minority flags
+- **Political** — partisan lean (efficiency gap, mean-median, partisan bias with 95% CI)
+- **Compactness** — Polsby-Popper, Reock, convex hull ratio
+- **Contiguity** — verifies every district is a connected set of tracts
+- **Splits** — county and municipal preservation (state-specific constitutional standard)
+- **Urban** — largest city per district
+- **VRA** — majority-minority district count and compliance
+
+### Plan comparison
+
+```bash
+# Compare two generated plans
+redist compare --plan-a wa_house_v1 --plan-b wa_house_v2
+
+# Compare against currently enacted districts (downloads from Census if needed)
+redist compare --plan-a wa_house_v1 --enacted
+```
+
+Reports Jaccard similarity, population equality, compactness, splits, and partisan metrics side-by-side. No "winner" declared — metrics presented neutrally for commission review.
+
+### Commission reports
+
+```bash
+redist report --label wa_house_v1 --format html json pdf
+```
+
+10-section formal report:
+1. Executive summary with pass/fail for each legal requirement
+2. Population equality (per-district table + deviation histogram)
+3. Geographic constraints (contiguity, county splits, municipal splits)
+4. Partisan fairness (EG, MM, PB with 95% CI and academic citation)
+5. Minority representation (VRA compliance)
+6. Compactness (vs enacted, vs statewide average)
+7. Comparison vs enacted plan
+8. Nesting compliance (for multi-chamber suites)
+9. **Full audit trail** — SHA-256 of all inputs, binary provenance, complete reproduction command
+10. Maps (all types)
+
+### Interoperability — RPLAN format
+
+`redist` defines **RPLAN v0.1**, the first open redistricting plan interchange format. Export to or import from any tool:
+
+```bash
+# Export for other tools
+redist export --label wa_house_v1 --format geojson shapefile gerrychain csv rplan
+
+# Import a plan from DRA, PlanScore, or any GeoJSON source
+redist import --file dra_alternative.geojson --state WA --year 2020 --label dra_alt
+
+# Validate any RPLAN file
+redist validate --file wa_house_v1.rplan
+```
+
+Compatible with: GerryChain v2.3+, Dave's Redistricting App, PlanScore, QGIS, ArcGIS, Maptitude.
+
+---
+
+## Research results
+
+**Headline result (2020 Census):** mean Polsby-Popper compactness **0.361** (95% CI: 0.351-0.370), a **+22% improvement** over enacted 2020 congressional districts (PP 0.296). 37 of 44 multi-district states beat their own enacted maps. Illinois +174%, Louisiana +104%, New Hampshire +102%.
+
+**VRA result (2020):** `metis-vra` mode achieves majority-minority district targets in Alabama (2 MM districts) and Georgia (7 MM districts, exceeding the 5-district target).
+
+**State legislative results:** Using block group resolution (`--resolution block_group`), `redist` successfully draws state legislative maps for all 50 states including the hardest cases: Nevada (71% of population in Clark County), Louisiana (bayou geography, isolated tracts), Virginia (95 counties + 38 independent cities tracked separately), and Texas (150 state house districts — the largest state legislature in the country).
+
+**[View all dashboards](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
 
 ---
 
@@ -211,7 +365,7 @@ python setup_data.py --inputs
 
 # Download pre-computed results (skip running the pipeline)
 python setup_data.py --outputs v3    # edge-weighted, 50 states, 2020
-python setup_data.py --outputs v4    # VRA multi-constraint, 50 states, 2020
+python setup_data.py --outputs v4    # VRA edge-weighted (metis-vra), 50 states, 2020
 
 # Download both outputs
 python setup_data.py --all
@@ -262,7 +416,7 @@ run -y 2020 -v v1 -st MN AL
 runtest -y 2020 -v test -st VT
 ```
 
-`run` and `runtest` are `doskey` aliases for `run_redistricting.bat` and `run_test.bat`. See `run -h` for all flags.
+`run` and `runtest` are `doskey` aliases configured by `setup_env.bat`. See `run -h` for all flags.
 
 ### Run a single state
 
@@ -351,11 +505,27 @@ python scripts/web/deploy_docs.py --version V3 --year 2000 --out dashboard_2000.
 python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
 ```
 
-## Rust Port (in progress)
+## Rust CLI (recommended for production runs)
 
-A progressive Rust rewrite is planned — see [`design/rust-port/`](design/rust-port/). The goal is a single `redist` binary that runs the full pipeline without a Python dependency. The Python pipeline continues working throughout the migration via PyO3 bindings. The adaptive boost formula moves to `redist-core` as the single ground-truth implementation shared by both the CLI and Python pipeline.
+The `redist` binary is a complete Rust rewrite of the redistricting pipeline — **~213× faster** than Python
+for full 50-state runs (55 min → 15.5 s). It is the recommended entry point for running redistricting.
 
-Phases: Scaffold → Core algorithm → Adjacency data layer → CLI binary → Analysis & dashboard.
+```bash
+cargo build --release --manifest-path redist/Cargo.toml
+
+redist fetch --year 2020                              # Download census data
+python scripts/data/generate_adj_bin.py --year 2020  # Convert adjacency to fast format
+redist states --year 2020 --version V3 \
+  --output-dir outputs/V3 --workers 8                # All 50 states in ~15 s
+```
+
+See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for full command reference.
+
+**Architecture** (`redist/crates/`): `redist-core` (algorithm) · `redist-data` (adjacency, TIGER) ·
+`redist-cli` (binary) · `redist-analysis` (compactness, VRA) · PyO3 bindings for Python interop.
+
+The Python pipeline (`scripts/pipeline/`) remains available for development and analysis work.
+Phase plan and benchmarks: [`design/rust-port/`](design/rust-port/).
 
 ## License
 

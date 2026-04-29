@@ -1,0 +1,33 @@
+[package]
+name = "redist-map"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Native Rust map rendering for redistricting outputs (SVG + PNG)"
+
+[dependencies]
+geo.workspace = true
+geo-types.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+
+# WKB decode — use geozero (already a geo transitive dep) for type compatibility
+geozero = { version = "0.14", features = ["with-wkb", "with-geo"] }
+
+# SVG path generation from geo_types
+geo-svg = "0.2"
+
+# Label placement — pole of inaccessibility
+polylabel = "2.0"
+
+# SVG → PNG rendering
+resvg = "0.44"
+tiny-skia = "0.11"
+usvg = "0.44"
+fontdb = "0.22"
+
+[dev-dependencies]
+approx = "0.5"

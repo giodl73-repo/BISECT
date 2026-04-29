@@ -6,5 +6,4 @@ authors.workspace = true
 license.workspace = true
 
 [dependencies]
-redist-core = { path = "../redist-core" }
 anyhow.workspace = true

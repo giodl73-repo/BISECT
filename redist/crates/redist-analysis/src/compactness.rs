@@ -352,4 +352,30 @@ mod tests {
         assert!((pp - expected_pp).abs() < 1e-9, "PP {pp} != expected {expected_pp}");
         assert!((p - perimeter).abs() < 0.001, "perimeter {p} != {perimeter}");
     }
+
+    // ── Scenario 27: 1-district (VT congressional) does not panic ────────────
+
+    #[test]
+    fn test_compactness_single_district_no_panic() {
+        // VT congressional has 1 district = entire state.
+        // all_metrics() must return Ok (not panic or divide-by-zero).
+        let whole_state = unit_square(1_000_000.0, 1_000_000.0);
+        let result = all_metrics(1, &whole_state);
+        assert!(result.is_ok(), "single-district all_metrics must not fail: {:?}", result);
+        let m = result.unwrap();
+        assert_eq!(m.district, 1);
+        assert!(m.polsby_popper > 0.0 && m.polsby_popper <= 1.0);
+        assert!(m.reock > 0.0 && m.reock <= 1.0);
+        assert!(m.convex_hull_ratio > 0.0 && m.convex_hull_ratio <= 1.0);
+    }
+
+    #[test]
+    fn test_compactness_empty_polygon_returns_error_not_panic() {
+        // Empty polygon must return CompactnessError, not panic.
+        // The analyze.rs caller skips the district and logs a warning.
+        use geo_types::LineString;
+        let empty = Polygon::new(LineString::new(vec![]), vec![]);
+        let result = all_metrics(1, &empty);
+        assert!(result.is_err(), "empty polygon must return error");
+    }
 }

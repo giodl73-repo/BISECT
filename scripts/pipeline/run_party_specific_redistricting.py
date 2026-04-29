@@ -1,4 +1,5 @@
 """
+[RESEARCH EXPERIMENT — not part of production pipeline]
 Party-Specific Overlapping Districts Redistricting Pipeline.
 
 This script implements the overlapping party-district system:

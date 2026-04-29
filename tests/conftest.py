@@ -6,8 +6,10 @@ This module provides:
 - Temporary directory fixtures
 - Common test utilities
 - Pytest hooks and configuration
+- make_disconnected_plan() fixture (board amendment BENCHMARK)
 """
 
+import json
 import pytest
 import sys
 from pathlib import Path
@@ -119,6 +121,78 @@ def mock_districts_medium(mock_tracts_medium):
 # ============================================================================
 # Pytest Hooks
 # ============================================================================
+
+@pytest.fixture
+def make_disconnected_plan():
+    """Board amendment BENCHMARK fixture.
+
+    Returns a callable that writes a known-bad final_assignments.json with one
+    district split across non-adjacent tracts (disconnected plan). This allows
+    the contiguity exit-code test to run without skipping.
+
+    Usage in test:
+        state, year, version, label = make_disconnected_plan(tmp_redist_output)
+
+    The returned tuple (state, year, version, label) can be passed directly to
+    `redist analyze --state STATE --year YEAR --version VERSION --label LABEL`.
+
+    The fixture creates a synthetic VT-like plan where district 1 has two tracts
+    in geographically non-adjacent positions (tracts share no adjacency edges),
+    causing the BFS contiguity check to find 2 components in district 1.
+    """
+    def _make(output_dir: Path) -> tuple:
+        state = "VT"
+        year = "2020"
+        version = "spec3_disconnected"
+        label = "vt_disconnected_test"
+
+        # Create the plan directory structure matching what redist analyze expects.
+        # Path: {output_dir}/{year}/plans/{label}/
+        plan_dir = output_dir / year / "plans" / label
+        plan_dir.mkdir(parents=True, exist_ok=True)
+
+        # Write manifest.json (required by the analyzer for metadata lookup).
+        manifest = {
+            "label": label,
+            "state_code": state,
+            "year": year,
+            "chamber": "congressional",
+            "num_districts": 1,
+            "population_source": "total",
+            "balance_tolerance_pct": 0.5,
+            "population_balance_valid": True,
+            "created_at": "2026-04-26T00:00:00Z",
+            "created_by": "test_fixture",
+        }
+        (plan_dir / "manifest.json").write_text(json.dumps(manifest, indent=2))
+
+        # Write final_assignments.json — a disconnected plan.
+        #
+        # Strategy: assign ALL 193 VT tracts to district 1, EXCEPT place two
+        # geographically remote tracts in their own "district 1 island" by
+        # simply not including middle tracts — but this is complex without real
+        # adjacency data.
+        #
+        # Simpler guaranteed approach: use only 2 tracts from opposite corners of
+        # Vermont that are NOT directly adjacent. The BFS contiguity check will
+        # return 2 components.
+        #
+        # Tract GEOIDs chosen from vt_adjacency_2020_geoids.json:
+        #   index 0  -> "50005957100" (Caledonia County, NE Vermont)
+        #   index 175 -> "50025967300" (Windsor County, SE Vermont)
+        # These are in different counties separated by multiple counties —
+        # they cannot share a direct boundary edge. With only 2 tracts in
+        # district 1 and no intermediate tracts, BFS finds 2 components.
+        assignments = {
+            "50005957100": 1,   # Caledonia County (NE Vermont, index 0)
+            "50025967300": 1,   # Windsor County (SE Vermont, index 175)
+        }
+        (plan_dir / "final_assignments.json").write_text(json.dumps(assignments))
+
+        return state, year, version, label
+
+    return _make
+
 
 def pytest_configure(config):
     """Pytest configuration hook."""

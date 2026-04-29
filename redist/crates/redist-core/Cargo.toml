@@ -12,6 +12,7 @@ serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
+csv.workspace = true
 
 [dev-dependencies]
 # no extra deps needed for unit tests

@@ -62,6 +62,7 @@ The `context/` directory contains AI-optimized documentation (compact, token-eff
 | File | Purpose | Read Time |
 |------|---------|-----------|
 | [RECURSIVE_BISECTION.md](RECURSIVE_BISECTION.md) | Algorithm explanation | 15 min |
+| [REDIST_CLI.md](REDIST_CLI.md) | Rust `redist` CLI reference | 10 min |
 | [DEPENDENCIES.md](DEPENDENCIES.md) | Software requirements | 10 min |
 | [CENSUS_DATA_ANALYSIS.md](CENSUS_DATA_ANALYSIS.md) | Census data details | 15 min |
 
