@@ -18,10 +18,13 @@ outputs/
 *.png
 *.jpg
 *.jpeg
+*.pdf
 # Exception: Keep documentation images, dashboard, and paper figures
 !docs/**/*.png
 !docs/**/*.jpg
 !docs/**/*.html
+!docs/**/*.pdf
+!artifacts/**/*.pdf
 
 # Exception: Keep paper figures in research/ and artifacts/
 !research/**/*.png

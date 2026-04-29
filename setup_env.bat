@@ -40,6 +40,9 @@ if errorlevel 1 (
     echo.
 )
 
+REM Install committed git hooks (PP-17 prevention: blocks accidental PDF commits)
+git config core.hooksPath .githooks 2>NUL
+
 REM Useful aliases
 doskey ls=dir /b $*
 doskey ll=dir $*
