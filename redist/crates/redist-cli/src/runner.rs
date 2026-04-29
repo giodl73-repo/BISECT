@@ -502,6 +502,31 @@ pub fn check_cvap_availability(
     "total".to_string()
 }
 
+/// Validate Plan 03 partisan-mode configuration.
+///
+/// Two rules (Callais p.36 disentanglement, Plan 03 Task 4.5):
+/// 1. `partisan_shares` is only valid when `partition_mode == "partisan-weighted"`.
+///    A run that supplies partisan_shares with any other mode is rejected.
+/// 2. `partition_mode == "partisan-weighted"` requires `partisan_shares` to be set.
+///
+/// Together these guarantee the partition_mode/data pairing is consistent and that
+/// race-conscious (`metis-vra`) and partisan signals are never both active.
+pub fn validate_partisan_config(cfg: &StateConfig) -> Result<(), String> {
+    if cfg.partisan_shares.is_some() && cfg.partition_mode != "partisan-weighted" {
+        return Err(format!(
+            "{}: --partisan-shares requires --partition-mode=partisan-weighted (got {})",
+            cfg.state_code, cfg.partition_mode
+        ));
+    }
+    if cfg.partition_mode == "partisan-weighted" && cfg.partisan_shares.is_none() {
+        return Err(format!(
+            "{}: --partition-mode=partisan-weighted requires --partisan-shares <PATH>",
+            cfg.state_code
+        ));
+    }
+    Ok(())
+}
+
 /// Run a single state redistricting task end-to-end.
 ///
 /// Flow: load adjacency → build edge weights → bisect → assert balance → write outputs
@@ -613,21 +638,9 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     // 2. Build edge weights based on partition mode
     //
     // Mutual-exclusion guard (Callais p.36 disentanglement, Plan 03 Task 4.5):
-    // partisan-weighted and metis-vra modes cannot coexist. The partition_mode
-    // value is a single string so they cannot both be active by construction;
-    // additionally, partisan_shares is only valid in partisan-weighted mode.
-    if cfg.partisan_shares.is_some() && cfg.partition_mode != "partisan-weighted" {
-        return Err(format!(
-            "{}: --partisan-shares requires --partition-mode=partisan-weighted (got {})",
-            cfg.state_code, cfg.partition_mode
-        ));
-    }
-    if cfg.partition_mode == "partisan-weighted" && cfg.partisan_shares.is_none() {
-        return Err(format!(
-            "{}: --partition-mode=partisan-weighted requires --partisan-shares <PATH>",
-            cfg.state_code
-        ));
-    }
+    // partisan-weighted and metis-vra modes cannot coexist. Centralised in
+    // validate_partisan_config so it can be unit-tested in isolation.
+    validate_partisan_config(cfg)?;
 
     let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
         "edge-weighted" => {
@@ -1766,5 +1779,86 @@ mod tests {
         // When actual == requested, no cap note fires (logical condition)
         let would_print = actual < requested;
         assert!(!would_print, "no note when requested ({requested}) == actual ({actual})");
+    }
+
+    // ── Plan 03: validate_partisan_config (Callais disentanglement) ──────────
+
+    #[test]
+    fn test_validate_partisan_config_default_ok() {
+        // Default config has partition_mode=edge-weighted and no partisan_shares
+        // → no constraint involved, must pass.
+        let cfg = make_config("VT");
+        validate_partisan_config(&cfg).expect("default config should validate");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_metis_vra_alone_ok() {
+        let cfg = StateConfig {
+            partition_mode: "metis-vra".into(),
+            partisan_shares: None,
+            ..make_config("AL")
+        };
+        validate_partisan_config(&cfg).expect("metis-vra without shares is fine");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_metis_vra_with_shares_rejected() {
+        // The Callais p.36 disentanglement: race-conscious mode + partisan data = error.
+        let cfg = StateConfig {
+            partition_mode: "metis-vra".into(),
+            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
+            ..make_config("LA")
+        };
+        let err = validate_partisan_config(&cfg).expect_err("must reject");
+        assert!(err.contains("--partisan-shares requires"),
+            "error should explain the constraint, got: {err}");
+        assert!(err.contains("metis-vra"), "error should name the offending mode: {err}");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_edge_weighted_with_shares_rejected() {
+        // Even non-VRA modes must not accept partisan_shares — only partisan-weighted does.
+        let cfg = StateConfig {
+            partition_mode: "edge-weighted".into(),
+            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
+            ..make_config("WA")
+        };
+        let err = validate_partisan_config(&cfg).expect_err("must reject");
+        assert!(err.contains("partisan-weighted"),
+            "error should name the only valid mode for shares: {err}");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_partisan_weighted_without_shares_rejected() {
+        let cfg = StateConfig {
+            partition_mode: "partisan-weighted".into(),
+            partisan_shares: None,
+            ..make_config("VT")
+        };
+        let err = validate_partisan_config(&cfg).expect_err("must reject");
+        assert!(err.contains("requires --partisan-shares"),
+            "error should explain what's missing: {err}");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_partisan_weighted_with_shares_ok() {
+        let cfg = StateConfig {
+            partition_mode: "partisan-weighted".into(),
+            partisan_shares: Some(std::path::PathBuf::from("/tmp/foo.tsv")),
+            ..make_config("LA")
+        };
+        validate_partisan_config(&cfg).expect("partisan-weighted + shares is the valid combo");
+    }
+
+    #[test]
+    fn test_validate_partisan_config_unweighted_with_shares_rejected() {
+        // The unweighted mode also doesn't accept shares — only partisan-weighted.
+        let cfg = StateConfig {
+            partition_mode: "unweighted".into(),
+            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
+            ..make_config("DE")
+        };
+        let err = validate_partisan_config(&cfg).expect_err("must reject");
+        assert!(err.contains("unweighted"), "error should name the offending mode: {err}");
     }
 }
