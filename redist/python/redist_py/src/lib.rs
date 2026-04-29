@@ -4,6 +4,7 @@ use numpy::PyReadonlyArray1;
 use std::collections::HashMap;
 use redist_core::{
     Graph as CoreGraph, Partition as CorePartition, build_vra_edge_weights as core_vra,
+    build_partisan_weights as core_partisan_weights,
     BisectionTree as CoreBisectionTree, max_depth_for_k, ufactor_for_depth,
     metis_format::{write_metis_graph as core_write_metis, parse_metis_partition as core_parse_metis},
 };
@@ -135,6 +136,23 @@ fn build_vra_edge_weights(
     let fracs = minority_fracs.as_slice()
         .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
     Ok(core_vra(&edges, fracs, threshold))
+}
+
+/// Build partisan edge weights using the adaptive boost formula.
+/// α = max(3.0, 10.0 × (1.0 − 0.7 × f_partisan))
+/// Symmetric: boosts D-D and R-R edges, never mixed or swing-involving edges.
+/// Returns dict mapping (u, v) → weight for boosted edges only.
+#[pyfunction]
+#[pyo3(signature = (edges, dem_shares, dem_threshold=0.55, rep_threshold=0.45))]
+fn build_partisan_weights(
+    edges: Vec<(usize, usize)>,
+    dem_shares: PyReadonlyArray1<f64>,
+    dem_threshold: f64,
+    rep_threshold: f64,
+) -> PyResult<HashMap<(usize, usize), f64>> {
+    let shares = dem_shares.as_slice()
+        .map_err(|e| PyRuntimeError::new_err(e.to_string()))?;
+    Ok(core_partisan_weights(&edges, shares, dem_threshold, rep_threshold))
 }
 
 // ---------------------------------------------------------------------------
@@ -438,6 +456,7 @@ fn redist_py(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Partition>()?;
     m.add_class::<BisectionTree>()?;
     m.add_function(wrap_pyfunction!(build_vra_edge_weights, m)?)?;
+    m.add_function(wrap_pyfunction!(build_partisan_weights, m)?)?;
     m.add_function(wrap_pyfunction!(bisection_max_depth, m)?)?;
     m.add_function(wrap_pyfunction!(bisection_ufactor, m)?)?;
     m.add_function(wrap_pyfunction!(metis_graph_content, m)?)?;
