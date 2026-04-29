@@ -14,11 +14,20 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from apportionment.partition.recursive_bisection import (
-    _extract_subgraph_edge_weights,
-    _split_node_worker,
+try:
+    from apportionment.partition.recursive_bisection import (
+        _extract_subgraph_edge_weights,
+        _split_node_worker,
+    )
+    from apportionment.partition.metis_wrapper import partition_graph
+    _APPORTIONMENT_AVAILABLE = True
+except ImportError:
+    _APPORTIONMENT_AVAILABLE = False
+
+pytestmark = pytest.mark.skipif(
+    not _APPORTIONMENT_AVAILABLE,
+    reason="apportionment.partition archived 2026-04-29; pending migration to redist_py PyO3 bindings"
 )
-from apportionment.partition.metis_wrapper import partition_graph
 
 
 class TestSubgraphEdgeWeights:

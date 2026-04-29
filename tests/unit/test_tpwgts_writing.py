@@ -8,7 +8,17 @@ import pytest
 import numpy as np
 from pathlib import Path
 import tempfile
-from apportionment.partition.metis_executable import partition_graph_with_executable
+
+try:
+    from apportionment.partition.metis_executable import partition_graph_with_executable
+    _APPORTIONMENT_AVAILABLE = True
+except ImportError:
+    _APPORTIONMENT_AVAILABLE = False
+
+pytestmark = pytest.mark.skipif(
+    not _APPORTIONMENT_AVAILABLE,
+    reason="apportionment.partition archived 2026-04-29; pending migration to redist_py PyO3 bindings"
+)
 
 
 class TestTpwgtsWriting:
