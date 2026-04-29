@@ -10,9 +10,16 @@
 ///  7. Is the nesting ratio defined for the chamber?
 use crate::args::DoctorArgs;
 use crate::policy::LocationRegistry;
+use crate::provenance::Provenance;
 use crate::runner::{chamber_balance_tolerance, chamber_district_count};
 
 pub fn run_doctor(args: &DoctorArgs) {
+    // --verify-manifest mode: cross-check a plan manifest against the running binary
+    if let Some(ref path) = args.verify_manifest {
+        let exit_code = run_verify_manifest(path);
+        std::process::exit(exit_code);
+    }
+
     // --all mode: scan all plans
     if args.all {
         run_all_plans_doctor(&args.version, &args.year, &args.output_base);
@@ -448,6 +455,107 @@ fn analysis_fetch_hint(name: &str, state_code: &str, year: &str) -> Option<Strin
 }
 
 // ---------------------------------------------------------------------------
+// `redist doctor --verify-manifest <PATH>` — provenance audit
+// ---------------------------------------------------------------------------
+
+/// Verify a plan manifest.json against the running binary's provenance.
+///
+/// Reports:
+///   - Manifest parses successfully
+///   - Recorded binary_version vs the running binary
+///   - Build commit / rustc version of the running binary (for the audit log)
+///   - Adjacency file SHA-256 (informational; does not re-hash if the file is missing)
+///
+/// Returns 0 on success, 1 on hard mismatch, 2 on file/parse errors.
+pub fn run_verify_manifest(manifest_path: &str) -> i32 {
+    let prov = Provenance::current();
+    let path = std::path::Path::new(manifest_path);
+
+    println!("=== redist doctor --verify-manifest ===\n");
+    println!("Manifest: {}", path.display());
+    println!();
+
+    // 1. Read + parse
+    let content = match std::fs::read_to_string(path) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("[FAIL] Cannot read manifest: {e}");
+            return 2;
+        }
+    };
+    let json: serde_json::Value = match serde_json::from_str(&content) {
+        Ok(v) => v,
+        Err(e) => {
+            println!("[FAIL] Manifest is not valid JSON: {e}");
+            return 2;
+        }
+    };
+
+    // 2. Running binary provenance — printed first so it's the audit reference
+    println!("Running binary:");
+    println!("  redist_version:      {}", prov.redist_version);
+    println!("  redist_build_commit: {}", prov.redist_build_commit);
+    println!("  redist_build_date:   {}", prov.redist_build_date);
+    println!("  rustc_version:       {}", prov.rustc_version);
+    println!();
+
+    // 3. Pull recorded version
+    let manifest_version = json.get("binary_version")
+        .and_then(|v| v.as_str())
+        .unwrap_or("");
+    println!("Manifest records:");
+    println!("  binary_version:      {}", if manifest_version.is_empty() { "(missing)" } else { manifest_version });
+    if let Some(s) = json.get("binary_sha256").and_then(|v| v.as_str()) {
+        println!("  binary_sha256:       {}", if s.is_empty() { "(not recorded)" } else { s });
+    }
+    if let Some(s) = json.get("adjacency_sha256").and_then(|v| v.as_str()) {
+        println!("  adjacency_sha256:    {}", if s.is_empty() { "(not recorded)" } else { s });
+    }
+    if let Some(s) = json.get("created_at").and_then(|v| v.as_str()) {
+        println!("  created_at:          {s}");
+    }
+    println!();
+
+    // 4. Verify version
+    let mut hard_failures = 0;
+    if manifest_version.is_empty() {
+        println!("[WARN] manifest has no binary_version field — cannot verify provenance.");
+    } else {
+        match prov.verify_version_matches(manifest_version) {
+            Ok(()) => println!("[PASS] binary_version matches running binary."),
+            Err(e) => {
+                println!("[FAIL] {e}");
+                hard_failures += 1;
+            }
+        }
+    }
+
+    // 5. Adjacency file existence (informational — we don't re-hash here)
+    if let Some(adj_filename) = json.get("adjacency_file").and_then(|v| v.as_str()) {
+        if !adj_filename.is_empty() {
+            println!("[INFO] Adjacency file referenced: {adj_filename}");
+            println!("       To verify integrity: sha256sum <path>/{adj_filename} and compare to manifest.adjacency_sha256");
+        }
+    }
+
+    // 6. Build commit traceability
+    if prov.redist_build_commit.starts_with("unknown") {
+        println!("[WARN] Running binary's build commit is 'unknown' — built outside a git checkout. Source provenance cannot be attested.");
+    } else if prov.redist_build_commit.ends_with("-dirty") {
+        println!("[WARN] Running binary was built from a dirty working tree (commit suffix '-dirty'). Source provenance is degraded.");
+    }
+
+    println!();
+    if hard_failures == 0 {
+        println!("Result: OK ({} hard failures)", hard_failures);
+        0
+    } else {
+        println!("Result: FAIL ({} hard failures)", hard_failures);
+        1
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -465,6 +573,7 @@ mod tests {
             label: None,
             version: "v1".to_string(),
             all: false,
+            verify_manifest: None,
         }
     }
 
@@ -967,5 +1076,66 @@ mod tests {
             .collect();
         labels.sort();
         assert_eq!(labels, vec!["alpha_plan", "beta_plan"]);
+    }
+
+    // ── verify_manifest tests ────────────────────────────────────────────────
+
+    fn write_manifest(tmp: &tempfile::TempDir, json: serde_json::Value) -> std::path::PathBuf {
+        let path = tmp.path().join("manifest.json");
+        std::fs::write(&path, serde_json::to_string_pretty(&json).unwrap()).unwrap();
+        path
+    }
+
+    #[test]
+    fn test_verify_manifest_missing_file_returns_2() {
+        let result = run_verify_manifest("/definitely/not/a/real/path/manifest.json");
+        assert_eq!(result, 2, "missing file is a soft error (exit code 2)");
+    }
+
+    #[test]
+    fn test_verify_manifest_invalid_json_returns_2() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("manifest.json");
+        std::fs::write(&path, "{ this is not valid json").unwrap();
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 2);
+    }
+
+    #[test]
+    fn test_verify_manifest_matching_version_returns_0() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let prov = Provenance::current();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "binary_version": prov.redist_version,
+            "binary_sha256": "",
+            "adjacency_file": "",
+            "adjacency_sha256": "",
+            "created_at": "2026-04-29T00:00:00Z",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 0, "matching version → exit 0");
+    }
+
+    #[test]
+    fn test_verify_manifest_mismatched_version_returns_1() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "binary_version": "999.999.999",
+            "binary_sha256": "",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 1, "version mismatch → exit 1");
+    }
+
+    #[test]
+    fn test_verify_manifest_missing_binary_version_warns_not_fails() {
+        // A manifest without binary_version is unverifiable but not a hard failure.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "label": "vt_2020",
+            "state_code": "VT",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 0, "missing binary_version → warn, exit 0");
     }
 }

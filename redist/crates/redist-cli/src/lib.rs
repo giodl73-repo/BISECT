@@ -20,6 +20,7 @@ pub mod output;
 pub mod partisan;
 pub mod partisan_shares;
 pub mod policy;
+pub mod provenance;
 pub mod registry;
 pub mod report_cmd;
 pub mod runner;

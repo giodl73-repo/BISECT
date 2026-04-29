@@ -224,6 +224,12 @@ pub struct DoctorArgs {
     /// Scan all plans in the version/year directory and show status table
     #[arg(long)]
     pub all: bool,
+    /// Verify a plan manifest.json against the running binary's provenance.
+    /// Reports whether the binary version matches and surfaces the recorded
+    /// build commit / rustc version so a special master can attest to source provenance.
+    /// Mutually exclusive with --label / --state / --all.
+    #[arg(long, value_name = "PATH")]
+    pub verify_manifest: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

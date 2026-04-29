@@ -465,6 +465,31 @@ REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" redist state --state VT --y
 
 ---
 
+## Provenance and `redist doctor --verify-manifest`
+
+Every `manifest.json` written by `redist state` records the binary version that produced it. The `redist doctor --verify-manifest <PATH>` subcommand reads the manifest and:
+
+- Prints the running binary's `redist_version`, `redist_build_commit` (with `-dirty` suffix if the working tree had uncommitted changes), `redist_build_date`, and `rustc_version`
+- Prints the recorded `binary_version`, `binary_sha256`, `adjacency_sha256`, and `created_at`
+- Asserts that the recorded version matches the running binary (FAIL if not)
+- Reports the adjacency file referenced (informational; does not re-hash)
+- Warns if the running binary was built outside a git checkout or from a dirty tree
+
+**Exit codes:**
+- `0` — version matches (or manifest had no version field, in which case a WARN is emitted)
+- `1` — version mismatch
+- `2` — manifest cannot be read or parsed
+
+Example:
+
+```bash
+redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
+```
+
+Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
+
+---
+
 ## Performance
 
 Benchmarks on Windows 11, 8 workers, 2020 census:
