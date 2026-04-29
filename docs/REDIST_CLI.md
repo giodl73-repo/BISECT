@@ -61,7 +61,10 @@ redist state --state <CODE> [OPTIONS]
 | `-y`, `--year` | `2020` | Census year: `2020`, `2010`, `2000` |
 | `-v`, `--version` | `v1` | Version tag (used in output path) |
 | `--output-dir` | `outputs/{version}` | Override output root directory |
-| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra` |
+| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `partisan-weighted` |
+| `--partisan-shares` | *(none)* | TSV file with `geoid<TAB>dem_share`. Required for `partisan-weighted` mode. **Mutually exclusive with `metis-vra`** (Callais p.36 disentanglement). |
+| `--dem-threshold` | `0.55` | dem_share ≥ this → unit is "strong-D". Partisan-weighted mode only. |
+| `--rep-threshold` | `0.45` | dem_share ≤ this → unit is "strong-R". Partisan-weighted mode only. |
 | `--ufactor` | `5` | METIS imbalance tolerance (5 = ±0.5%) |
 | `--niter` | `100` | METIS refinement iterations |
 | `--seed` | *(random)* | METIS random seed for reproducible runs |
@@ -77,6 +80,12 @@ redist state --state VT --year 2020 --version V3
 
 # Alabama with VRA mode (7 districts)
 redist state --state AL --year 2020 --version V3 --partition-mode metis-vra
+
+# Partisan-weighted bisection (Plan 03; Callais 2026-04-29)
+# Preserves D-D and R-R clusters via edge-weighting; uses recursive bisection.
+redist state --state LA --year 2020 --version V3 \
+    --partition-mode partisan-weighted \
+    --partisan-shares outputs/data/2020/partisan/la/dem_shares.tsv
 
 # Reproducible run with fixed seed
 redist state --state CA --year 2020 --version V3 --seed 42
@@ -445,9 +454,14 @@ REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" redist state --state VT --y
 |------|------|-------------|
 | Unweighted | `unweighted` | Pure graph cut, no edge weights |
 | Edge-weighted | `edge-weighted` | Weights edges by shared boundary length (default) |
-| VRA | `metis-vra` | Boosts edges between minority-heavy tracts to encourage majority-minority districts |
+| VRA | `metis-vra` | Boosts edges between minority-heavy tracts to encourage majority-minority districts; uses n-way partitioning |
+| Partisan-weighted | `partisan-weighted` | Boosts D-D and R-R edges to preserve partisan clusters; uses recursive bisection |
 
-VRA mode requires demographic CSV files in `data/{year}/demographics/`.
+`metis-vra` requires demographic CSV files in `data/{year}/demographics/`.
+
+`partisan-weighted` requires `--partisan-shares <PATH>` pointing at a per-tract D-share TSV (see `docs/file-formats/partisan-shares.md` once written; format is header `geoid<TAB>dem_share`, GEOIDs are 11-char TIGER FIPS, share is float in `[0.0, 1.0]`).
+
+**Disentanglement guard:** `--partition-mode metis-vra` and `--partisan-shares` cannot be used in the same `redist state` invocation. The runner returns an error if both are specified. This is structural enforcement of *Louisiana v. Callais* p.36 (race-conscious and partisan signals must not be mixed in production map runs). See `docs/legal/CALLAIS_REFERENCE.md`.
 
 ---
 

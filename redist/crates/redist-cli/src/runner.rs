@@ -12,10 +12,11 @@ use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
 use crate::bisection_runner::{run_all_splits, run_nway_partition};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
+use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
 use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
 use crate::status::{status, ascii_safe};
-use redist_core::{Partition, build_vra_edge_weights, state_code_to_fips};
+use redist_core::{Partition, build_vra_edge_weights, build_partisan_weights, state_code_to_fips};
 use redist_analysis::analyze_mm_districts;
 use redist_report;
 
@@ -94,6 +95,16 @@ pub struct StateConfig {
     pub adjacency_override: Option<std::path::PathBuf>,
     /// Path to COI weights file (optional)
     pub coi_weights: Option<std::path::PathBuf>,
+
+    // ── Plan 03: Partisan edge-weighting (Callais 2026-04-29) ──────────────────
+    /// Per-tract Democratic vote share TSV file (partisan-weighted mode only).
+    /// Header: `geoid<TAB>dem_share`. GEOIDs are 11-char TIGER FIPS, share in [0.0, 1.0].
+    /// MUTUALLY EXCLUSIVE with partition_mode == "metis-vra" (Callais p.36 disentanglement).
+    pub partisan_shares: Option<std::path::PathBuf>,
+    /// Threshold above which a unit is "strong-D" (default 0.55).
+    pub dem_threshold: f64,
+    /// Threshold below which a unit is "strong-R" (default 0.45).
+    pub rep_threshold: f64,
 }
 
 impl StateConfig {
@@ -151,6 +162,10 @@ impl StateConfig {
             total_seats: num_districts,
             adjacency_override: None,
             coi_weights: None,
+            // Plan 03 defaults: partisan-weighted mode disabled
+            partisan_shares: None,
+            dem_threshold: 0.55,
+            rep_threshold: 0.45,
         }
     }
 
@@ -596,10 +611,45 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     );
 
     // 2. Build edge weights based on partition mode
+    //
+    // Mutual-exclusion guard (Callais p.36 disentanglement, Plan 03 Task 4.5):
+    // partisan-weighted and metis-vra modes cannot coexist. The partition_mode
+    // value is a single string so they cannot both be active by construction;
+    // additionally, partisan_shares is only valid in partisan-weighted mode.
+    if cfg.partisan_shares.is_some() && cfg.partition_mode != "partisan-weighted" {
+        return Err(format!(
+            "{}: --partisan-shares requires --partition-mode=partisan-weighted (got {})",
+            cfg.state_code, cfg.partition_mode
+        ));
+    }
+    if cfg.partition_mode == "partisan-weighted" && cfg.partisan_shares.is_none() {
+        return Err(format!(
+            "{}: --partition-mode=partisan-weighted requires --partisan-shares <PATH>",
+            cfg.state_code
+        ));
+    }
+
     let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
         "edge-weighted" => {
             status(cfg.position, &format!("{}: edge-weighted mode ({} edges)", cfg.state_code, graph.n_edges));
             graph.edge_weights.clone()
+        }
+        "partisan-weighted" if num_districts > 1 => {
+            // Plan 03: edge-weighted bisection that preserves partisan clusters.
+            // Callais 2026-04-29 grounds this for both state-mapmaker and §2-challenger use cases.
+            let shares_path = cfg.partisan_shares.as_ref()
+                .expect("guarded above: partisan-weighted requires partisan_shares");
+            status(cfg.position, &format!("{}: partisan-weighted mode — loading {}", cfg.state_code, shares_path.display()));
+            let dem_shares = load_partisan_shares(shares_path, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("partisan shares load failed: {e}"))?;
+            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
+                .collect();
+            build_partisan_weights(&edges, &dem_shares, cfg.dem_threshold, cfg.rep_threshold)
+        }
+        "partisan-weighted" if num_districts == 1 => {
+            status(cfg.position, &format!("{}: single district — skipping partisan weighting (trivially trivial)", cfg.state_code));
+            HashMap::new()
         }
         "metis-vra" if num_districts > 1 => {
             status(cfg.position, &format!("{}: VRA mode — loading demographics", cfg.state_code));
@@ -872,6 +922,9 @@ mod tests {
             total_seats: 1,
             adjacency_override: None,
             coi_weights: None,
+            partisan_shares: None,
+            dem_threshold: 0.55,
+            rep_threshold: 0.45,
         }
     }
 

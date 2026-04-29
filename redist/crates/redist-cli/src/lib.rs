@@ -18,6 +18,7 @@ pub mod map_cmd;
 pub mod migrate;
 pub mod output;
 pub mod partisan;
+pub mod partisan_shares;
 pub mod policy;
 pub mod registry;
 pub mod report_cmd;

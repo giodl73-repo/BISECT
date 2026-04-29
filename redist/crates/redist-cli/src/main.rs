@@ -197,6 +197,10 @@ fn main() {
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
                 coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
+                // Plan 03: partisan-weighted bisection (Callais 2026-04-29)
+                partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
+                dem_threshold: args.dem_threshold,
+                rep_threshold: args.rep_threshold,
             }], 1);
             for r in &results {
                 if !r.success {

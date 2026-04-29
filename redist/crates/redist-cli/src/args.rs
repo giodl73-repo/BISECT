@@ -37,14 +37,19 @@ pub enum PartitionMode {
     EdgeWeighted,
     #[value(name = "metis-vra")]
     MetisVra,
+    /// Partisan-weighted bisection: requires --partisan-shares.
+    /// Mutually exclusive with `metis-vra` per Callais p.36 disentanglement.
+    #[value(name = "partisan-weighted")]
+    PartisanWeighted,
 }
 
 impl std::fmt::Display for PartitionMode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Unweighted   => write!(f, "unweighted"),
-            Self::EdgeWeighted => write!(f, "edge-weighted"),
-            Self::MetisVra     => write!(f, "metis-vra"),
+            Self::Unweighted       => write!(f, "unweighted"),
+            Self::EdgeWeighted     => write!(f, "edge-weighted"),
+            Self::MetisVra         => write!(f, "metis-vra"),
+            Self::PartisanWeighted => write!(f, "partisan-weighted"),
         }
     }
 }
@@ -871,6 +876,23 @@ pub struct StateArgs {
     /// Target majority-minority districts (VRA mode only)
     #[arg(long)]
     pub target_mm_districts: Option<usize>,
+
+    /// Per-tract Democratic vote share TSV file (partisan-weighted mode only).
+    /// Format: header row `geoid<TAB>dem_share`, geoid is 11-char TIGER FIPS,
+    /// dem_share is float in [0.0, 1.0]. Required when --partition-mode=partisan-weighted.
+    /// MUTUALLY EXCLUSIVE with --partition-mode=metis-vra (Callais p.36 disentanglement).
+    #[arg(long)]
+    pub partisan_shares: Option<String>,
+
+    /// Threshold above which a unit is considered "strong-D" (default 0.55).
+    /// Partisan-weighted mode only.
+    #[arg(long, default_value_t = 0.55)]
+    pub dem_threshold: f64,
+
+    /// Threshold below which a unit is considered "strong-R" (default 0.45).
+    /// Partisan-weighted mode only.
+    #[arg(long, default_value_t = 0.45)]
+    pub rep_threshold: f64,
 
     /// METIS imbalance tolerance factor: 5 = ±0.5% (default: 5)
     #[arg(long, default_value_t = 5)]
