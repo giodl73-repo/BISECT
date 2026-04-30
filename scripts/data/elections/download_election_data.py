@@ -2,14 +2,22 @@
 """
 Download election data from Harvard Dataverse.
 
-Dataset: "Reallocating u.s. election results from precincts to census geographies"
-Author: Amir Fekrazad
-DOI: 10.7910/DVN/Z8TSH3
-License: CC0 1.0 Universal
+Default dataset: "Reallocating u.s. election results from precincts to census
+geographies" (Fekrazad, DOI 10.7910/DVN/Z8TSH3, CC0 1.0 Universal). Use --doi
+and --filename to fetch from any other Dataverse dataset.
 
-This script downloads census tract-level 2020 presidential election results.
+Some datasets (notably MIT EDSL) require a "guestbook" response before
+download. For those, pass --api-key <KEY> or set DATAVERSE_API_KEY in your
+environment. Get a key by signing in at dataverse.harvard.edu, then visiting
+your account page → API Token. The first download from a guestbook-protected
+dataset still requires a one-time browser visit to accept the guestbook.
+
+Use --list-files to discover filenames before passing --filename. The
+matching auto-fetch entries in scripts/data/elections/sources.json record
+the canonical filenames for known sources.
 """
 
+import os
 import requests
 import argparse
 from pathlib import Path
@@ -17,9 +25,25 @@ import json
 from tqdm import tqdm
 
 
-def download_file(url, output_path, description=None):
+def download_file(url, output_path, description=None, headers=None):
     """Download a file with progress bar."""
-    response = requests.get(url, stream=True)
+    response = requests.get(url, stream=True, headers=headers or {})
+    if response.status_code == 400:
+        # Dataverse uses 400 for guestbook-protected datasets when the
+        # required token isn't provided. Surface the actual error body so
+        # the user knows what to do.
+        try:
+            body = response.json()
+            msg = body.get('message', '<no message>')
+        except Exception:
+            msg = response.text[:500]
+        raise requests.HTTPError(
+            f"400 Bad Request from Dataverse: {msg}\n"
+            f"  If this mentions 'Guestbook', set DATAVERSE_API_KEY or pass "
+            f"--api-key. Get a token from dataverse.harvard.edu → Account → "
+            f"API Token (free, requires login).",
+            response=response,
+        )
     response.raise_for_status()
 
     total_size = int(response.headers.get('content-length', 0))
@@ -75,6 +99,19 @@ def main():
     parser.add_argument('--output-subdir', type=str,
                        default=None,
                        help='Override output subdirectory name (default: {year}_president)')
+    parser.add_argument('--list-files', action='store_true',
+                       help='List all files in the dataset and exit (no download). '
+                            'Use this to discover filenames for new datasets, then pass --filename.')
+    parser.add_argument('--filename', type=str,
+                       default=None,
+                       help='Exact filename to download from the dataset. '
+                            'Bypasses scope/method/state logic — useful for non-Fekrazad datasets '
+                            '(e.g., MIT EDSL, VEST). Use --list-files to discover names.')
+    parser.add_argument('--api-key', type=str,
+                       default=os.environ.get('DATAVERSE_API_KEY'),
+                       help='Harvard Dataverse API token. Required for datasets with a '
+                            'guestbook. Falls back to DATAVERSE_API_KEY env var. '
+                            'Get one from dataverse.harvard.edu → Account → API Token.')
     args = parser.parse_args()
 
     # Validate state argument
@@ -119,8 +156,25 @@ def main():
         # Get file list from Dataverse API
         files = get_dataverse_files(doi)
 
-        # Determine target filename based on scope
-        if args.scope == 'usa':
+        # --list-files mode: print and exit
+        if args.list_files:
+            print(f"\nFiles in dataset {doi}:")
+            print(f"{'SIZE':>12}  FILENAME")
+            print("-" * 78)
+            for file_info in files:
+                filename = file_info['dataFile']['filename']
+                size = file_info['dataFile'].get('filesize', 0)
+                size_str = f"{size:,}" if size else "?"
+                print(f"{size_str:>12}  {filename}")
+            print(f"\nTotal: {len(files)} file(s)")
+            print(f"To download a specific file: --filename '<NAME>'")
+            return 0
+
+        # Determine target filename based on scope (Fekrazad-specific)
+        # or use --filename override (any Dataverse dataset)
+        if args.filename:
+            target_filename = args.filename
+        elif args.scope == 'usa':
             if args.method == 'main':
                 target_filename = '000 Contiguous USA - Main Method.zip'
             else:
@@ -143,32 +197,46 @@ def main():
 
         if not target_file:
             print(f"ERROR: Could not find file: {target_filename}")
-            print("\nAvailable files:")
+            print("\nAvailable files (use --list-files for the full list):")
             for file_info in files[:20]:  # Show first 20
                 print(f"  - {file_info['dataFile']['filename']}")
             return 1
 
         # Download the file
+        # Tabular files (.tab/.csv that Dataverse recognizes as data) are
+        # auto-converted on access; ?format=original returns the bytes
+        # actually uploaded. .zip and other binary files are unaffected.
         file_id = target_file['dataFile']['id']
-        download_url = f"https://dataverse.harvard.edu/api/access/datafile/{file_id}"
+        download_url = (
+            f"https://dataverse.harvard.edu/api/access/datafile/{file_id}"
+            f"?format=original"
+        )
+        download_headers = {}
+        if args.api_key:
+            download_headers['X-Dataverse-key'] = args.api_key
         output_path = output_dir / target_filename
 
-        download_file(download_url, output_path, description=target_filename)
+        download_file(download_url, output_path, description=target_filename,
+                      headers=download_headers)
 
-        # Extract ZIP file
-        print(f"\nExtracting: {output_path}")
-        import zipfile
-        with zipfile.ZipFile(output_path, 'r') as zip_ref:
-            zip_ref.extractall(output_dir)
-        print(f"Extracted to: {output_dir}")
-
-        # List extracted files
-        extracted_files = list(output_dir.glob('*.csv'))
-        print(f"\nExtracted {len(extracted_files)} CSV files")
-        for csv_file in extracted_files[:10]:  # Show first 10
-            print(f"  - {csv_file.name}")
-        if len(extracted_files) > 10:
-            print(f"  ... and {len(extracted_files) - 10} more")
+        # Extract ZIP file only if the target is actually a zip
+        # (Fekrazad ships .zip; MIT EDSL / VEST often ship raw .csv or .tab)
+        extracted_files = []
+        if target_filename.lower().endswith('.zip'):
+            print(f"\nExtracting: {output_path}")
+            import zipfile
+            with zipfile.ZipFile(output_path, 'r') as zip_ref:
+                zip_ref.extractall(output_dir)
+            print(f"Extracted to: {output_dir}")
+            extracted_files = list(output_dir.glob('*.csv'))
+            print(f"\nExtracted {len(extracted_files)} CSV files")
+            for csv_file in extracted_files[:10]:
+                print(f"  - {csv_file.name}")
+            if len(extracted_files) > 10:
+                print(f"  ... and {len(extracted_files) - 10} more")
+        else:
+            print(f"\nDownloaded (no extraction; not a .zip): {output_path}")
+            extracted_files = [output_path]
 
         # Save metadata
         metadata = {
