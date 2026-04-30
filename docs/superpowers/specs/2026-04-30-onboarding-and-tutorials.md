@@ -110,14 +110,20 @@ cargo build --release --locked
 step 4 "Adding to PATH..."
 # ... (platform-specific shell config)
 
-step 5 "Smoke test..."
-./target/release/redist state --state VT --year 2020 --label bootstrap_test --print-only
+step 5 "Smoke test (real run, not --print-only — TRENCH PP-20)..."
+./target/release/redist state --state VT --year 2020 --label bootstrap_test \
+    --output-dir /tmp/bootstrap_smoke
+# Verify the bisection actually completed
+test -f /tmp/bootstrap_smoke/bootstrap_test/final_assignments.json
+TRACT_COUNT=$(jq 'length' /tmp/bootstrap_smoke/bootstrap_test/final_assignments.json)
+[ "$TRACT_COUNT" -eq 193 ] || { echo "[FAIL] expected 193 tracts, got $TRACT_COUNT"; exit 1; }
+echo "[OK] smoke test completed: $TRACT_COUNT tracts assigned"
 
 step 6 "Done!"
 echo "Try: redist state --state VT --year 2020"
 ```
 
-Plus `bootstrap.bat` mirroring for Windows.
+Plus `bootstrap.bat` mirroring for Windows (use `%TEMP%\bootstrap_smoke` and `where redist` instead of `which`).
 
 ### Quickstart doc structure (template)
 
@@ -129,9 +135,11 @@ Each `quickstart-PERSONA.md` follows:
 - **Expected output at each step** (so users know if something's wrong)
 - **Where to go next** (deeper docs)
 
-### Louisiana walkthrough is the primary tutorial
+### Vermont walkthrough is the primary tutorial; Louisiana is the advanced post-Callais walkthrough
 
-It's the full Callais story: fetch data, run constraint-aware bisection, run §2 analysis, generate court-ready PDF, verify provenance. Every other quickstart can reference sections of this walkthrough.
+**Vermont** (per SURVEY 2026-04-30): the canonical 5-minute happy path. 1 district, fully-public Fekrazad data, no live §2 litigation. Every other quickstart cross-references sections of this walkthrough. Committed under `examples/vermont-walkthrough/`.
+
+**Louisiana** is a *separate, longer* walkthrough framed explicitly as "advanced post-Callais §2 evidence kit," not the project's default workflow. Committed under `examples/louisiana-callais-walkthrough/` as referenced from `quickstart-callais-expert.md`. Reading order: Vermont first, Louisiana only when the §2 evidence layer is in scope.
 
 ## Tests (v2 per BENCHMARK)
 
@@ -155,6 +163,7 @@ Doctest of walkthrough markdown was considered (BENCHMARK noted) but rejected: l
 
 - `bootstrap.sh` + `bootstrap.bat` succeed on a clean VM in ≤ 10 minutes wall-clock
 - `quickstart-*.md` exists for all 5 personas; each tested end-to-end manually
-- Louisiana walkthrough committed under `examples/louisiana-callais-walkthrough/` with input data references
+- **Vermont walkthrough** committed under `examples/vermont-walkthrough/` with pinned input data + checksum file at `examples/vermont-walkthrough/checksums.json` (consumed by `redist doctor --check-tutorial-data`)
+- Louisiana advanced walkthrough committed under `examples/louisiana-callais-walkthrough/` with input data references; explicitly framed as post-Callais §2 evidence kit
 - README.md leads with the persona table; link tree has no broken links
 - Error-message audit covers every CLI subcommand main path; documented in error-conventions.md

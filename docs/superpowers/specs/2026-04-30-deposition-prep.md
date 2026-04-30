@@ -17,19 +17,24 @@ This spec adds a "what-if" mode where the expert (or special master) keeps the b
 
 ### In scope
 
-1. **`redist recompute-if` subcommand** — re-runs *only* the analysis layer against a frozen plan with one or more parameter overrides:
+1. **`redist depo recompute` subcommand (MERIDIAN — canonical name)** — re-runs *only* the analysis layer against a frozen plan with one or more parameter overrides:
    ```
-   redist recompute-if --plan vt_2020_v1 \
+   redist depo recompute --plan-label vt_2020_v1 \
      --param leaning_threshold=0.53 \
      --param vra_min_bvap=0.50 \
      --param bloc_p_value_method=holm \
      --types partisan,vra,bloc-voting \
      --format json,narrative
    ```
-   Output goes to `outputs/{version}/states/{state}/what_if/{timestamp}_{param_hash}/` so each experiment is a separate, manifested artifact.
+   `redist depo eval` (interactive daemon client, see §2) is the in-session alias of the same operation; both write to the same output path. `redist recompute-if` from earlier drafts is dropped — one canonical name across the depo namespace.
+
+   Output goes to `outputs/{version}/states/{state}/what_if/{timestamp}_{param_hash}/` so each experiment is a separate, manifested artifact (paths recorded relative to package root for portability per Court-Reports §3).
 
 2. **In-memory plan representation** — the analyze layer loads the plan + tract attributes once and keeps them resident. Subsequent `recompute-if` invocations reuse the loaded state via:
-   - `redist deposition-server --plan vt_2020_v1` — long-running daemon process listening on a Unix socket / named pipe
+   - `redist deposition-server --plan vt_2020_v1` — long-running daemon process listening on a platform-appropriate IPC channel:
+     - **Linux/macOS**: Unix domain socket. Default path: `${XDG_RUNTIME_DIR:-/tmp}/redist-depo-${USER}.sock`. CLI flag: `--socket <PATH>`.
+     - **Windows**: named pipe in the standard pipe namespace. Default name: `\\.\pipe\redist-depo-${USERNAME}`. CLI flag: `--pipe-name <NAME>` (NOT a filesystem path; cross-platform aliasing both flags to a single `--ipc` arg with platform auto-resolution is the implementer's call).
+     - Stale socket / orphaned pipe detection (TRENCH PP-23): on startup, attempt connect; if no daemon answers, unlink/recreate. PID file at `${ipc-path}.pid` with liveness check; `redist depo stop --force` removes both.
    - Client commands: `redist depo eval --param leaning_threshold=0.53` — sub-second turnaround for parametric tweaks
    - Server prints `READY` when warm; deposition rhythm is "ask, type, answer in 1-2 seconds"
 
@@ -93,13 +98,22 @@ Anything outside the whitelist requires a fresh `redist analyze` run with explic
 
 ### Daemon protocol
 
-Length-prefixed JSON messages over Unix socket / Windows named pipe:
+Length-prefixed JSON messages over Unix domain socket / Windows named pipe:
 ```
 {"op": "eval", "params": {"leaning_threshold": 0.53}, "types": ["partisan"]}
-→ {"status": "ok", "results": {...}, "elapsed_ms": 340}
+-> {"status": "ok", "results": {...}, "elapsed_ms": 340}
 ```
 
-No network exposure (loopback / pipe only). The daemon shuts down on a `SIGTERM` and writes a "deposition log" of every eval it served — useful for reconstructing the depo afterwards.
+No network exposure (loopback / pipe only). On `SIGTERM` (Unix) or `CTRL_CLOSE_EVENT` (Windows), the daemon performs a **two-phase shutdown** (TRENCH PP-24): stop accepting new ops, drain any in-flight `eval`, fsync the JSONL log, then exit. The last eval the expert just answered out loud MUST appear in the log even if SIGTERM arrived during compute.
+
+### Deposition log: canonical serialization + hash chain (COVENANT C-1, DATUM)
+
+The `deposition_log_{date}.jsonl` is itself an evidentiary artifact. It MUST be reproducible byte-for-byte and tamper-evident:
+
+- **Canonical JSON** per line: keys sorted lexicographically, floats serialized with Rust's `ryu` shortest-round-trip representation, ISO-8601 timestamps with explicit `Z` suffix (UTC only).
+- **Hash chain**: each entry includes `prev_sha256` (SHA-256 of the previous entry's complete line bytes, or `"GENESIS"` for the first). Mid-stream tampering changes every subsequent hash and is detectable by `redist depo verify-log <PATH>`.
+- **Sidecar manifest** at `deposition_log_{date}.manifest.json` captures: daemon-start build commit, plan label + plan manifest SHA-256, IPC mode (socket vs pipe), log SHA-256-on-rotation/shutdown, total-entries count.
+- **Discoverability note**: deposition logs are likely subject to FRCP 26 discovery in U.S. litigation. Experts working under work-product privilege should pass `--no-log` and accept the loss of the audit trail; the spec does not silently hide this.
 
 ## Outputs
 
@@ -116,15 +130,16 @@ outputs/{version}/states/{state}/what_if/
 ## CLI surface
 
 ```
-redist recompute-if --plan LABEL [--year YYYY] \
+redist depo recompute --plan-label LABEL [--year YYYY] \
   --param KEY=VALUE [--param KEY=VALUE ...] \
   --types {all|partisan|vra|bloc-voting|compactness} \
   [--format {json|narrative|both}] \
   [--note "free-text context"]
 
-redist deposition-server --plan LABEL [--year YYYY] \
-  [--socket /tmp/redist.sock] \
-  [--whitelist-config path/to/extra_params.json]
+redist deposition-server --plan-label LABEL [--year YYYY] \
+  [--socket PATH | --pipe-name NAME] \
+  [--whitelist-config path/to/extra_params.json] \
+  [--enforce-build-commit] [--no-log]
 
 redist depo eval --param KEY=VALUE [--param KEY=VALUE ...] \
   [--types ...] [--note ...]
@@ -132,8 +147,9 @@ redist depo eval --param KEY=VALUE [--param KEY=VALUE ...] \
 redist depo sweep --param KEY=START:STOP:STEP --metric METRIC \
   [--types ...] [--out depo_sweep.csv]
 
-redist depo log [--since "1 hour ago"]   # show recent evals from the daemon
-redist depo stop
+redist depo log [--since "1 hour ago"]      # show recent evals from the daemon
+redist depo verify-log <PATH>                # verify hash-chain integrity
+redist depo stop [--force]
 ```
 
 ## Tests

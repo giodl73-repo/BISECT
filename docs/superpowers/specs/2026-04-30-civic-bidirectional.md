@@ -42,10 +42,21 @@ The Plan Comparison spec already added `redist compare --comments <CSV>` (read s
    ```
    Validates:
    - Every GEOID exists in the year/state's tract set (typo guard)
+   - **Leading-zero loss detection (TRENCH PP-28)**: GEOIDs of length 9 or 10 (instead of expected 11) are flagged with a specific message: "Leading zero stripped — re-export the GEOID column with column-format = Text in Excel/Sheets." This is the single most common Excel error.
    - No GEOID is in two different `comment_id`s without an explanatory note
    - `comment_id` membership is contiguous (warn-only — sometimes a community legitimately straddles non-adjacent tracts)
-   - URL fields parse as URLs; localhost/private IPs are rejected
-   - Writes to `outputs/{version}/civic_inputs/{label}/` with manifest, validation log, and a normalized canonical CSV
+   - URL fields parse as URLs; rejected if `is_loopback() || is_private() || is_link_local()` (TRENCH PP-29 — covers `127.x`, `0.0.0.0`, `::1`, `[::ffff:127.0.0.1]`, `192.168/16`, `10/8`, `172.16/12`, `169.254/16`). String-match on "localhost" alone is insufficient.
+   - Writes to `outputs/{version}/civic_inputs/{label}/` with manifest, validation log, and a normalized canonical CSV (see Canonicalization below).
+
+   **Canonicalization (TRENCH PP-27, DATUM)** — `normalized.csv` is byte-stable across runs and platforms:
+   - Encoding: **UTF-8 without BOM**. Input may have a UTF-8 BOM (Excel default); the reader strips it. The reader rejects UTF-16 with a clear error.
+   - Line endings: **LF only** (`\n`).
+   - Trailing newline: **exactly one**.
+   - Sort order: by `(geoid, comment_id)` lexicographically.
+   - Numeric strings (GEOIDs) are quoted to preserve any leading zeros.
+   - Trailing whitespace stripped from every cell.
+   - Schema-version header line at the top: `# civic-coi-csv v1`.
+   - The `original.csv` is the verbatim input (BOM, CRLF, encoding preserved); `normalized.csv` is the audited form. Both SHAs are recorded in the manifest.
 
 3. **Public-comment-period report mode**
    `redist report --comment-period --plan LABEL --comments-label LABEL` produces a report variant tailored to a public-comment hearing:
@@ -101,6 +112,17 @@ A flat CSV + a manifest is auditable end-to-end with `git diff` and SHA-256. A d
 ### Confidence semantics
 
 The `confidence` field is *the submitter's self-assessment*, not our inference. The narrative can say "the Lafayette Neighborhood Coalition rated this community boundary as high-confidence" without making a claim of our own. This is the same legal posture as the race-of-candidate provenance protocol.
+
+### URL snapshot protocol (COVENANT C-2, TRENCH PP-30)
+
+When `source_url` is provided, ingest snapshots the page at submission time so a later 404 doesn't lose the underlying public comment. The protocol:
+
+- **Format**: single-file WARC if available; fallback is `(headers.txt, body.bin)` pair.
+- **Bounded fetch**: 10s connect timeout, 30s total deadline, **1 MB body cap**. Larger pages get the first 1 MB + a `truncated=true` flag. Streaming responses are truncated to the cap.
+- **No credentials**: we do not follow login redirects, do not send cookies, and refuse `http://` URLs that resolve to authenticated portals (detected by `WWW-Authenticate` response header).
+- **Dynamic / JS-rendered pages**: we do not run a headless browser. If the snapshot's body is suspiciously small (< 4 KB) or content-type is not `text/html|application/pdf|text/plain`, we record a manifest note "URL snapshot may be incomplete; submitter should attach a PDF via `--source-pdf <PATH>`" and accept the submission in `lenient`/`advisory` modes (refuse in `strict`).
+- **Stored fields per snapshot**: `url`, `fetched_at` (ISO-8601 UTC), `http_status`, `content_type`, `content_length_bytes`, `truncated`, `body_sha256`, `snapshot_path` (relative to the civic_inputs dir).
+- **Reproducibility**: snapshots are included in the reproducibility package. URL refetches at trial time are not required; the snapshot is the record.
 
 ### Conflict resolution for race-of-candidate
 

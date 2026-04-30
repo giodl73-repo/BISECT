@@ -47,6 +47,18 @@ The dependencies and value-density argue for this order:
 7. **Deposition Prep** seventh (NEW). Independent capability; can ship anytime after #2 + #3.
 8. **Researcher Toolkit** eighth. Standalone but lowest urgency; researchers can already use the project today.
 
+## CI strategy (BENCHMARK P0 — added v2.1)
+
+Every spec in this set declares L0/L1/L2 tests. Without a named CI surface, the "skipped-by-default" L2s are decorative. The roadmap commits the following CI surface across all specs:
+
+- **PR gate (`.github/workflows/pr.yml`)** — runs L0 + L1 on `ubuntu-latest` and `windows-latest`. Wall-clock budget: 15 min. Markers excluded: `network`, `slow`, `acceptance`.
+- **Nightly (`.github/workflows/nightly.yml`)** — cron `0 6 * * *` UTC; runs L2 acceptance suite including the Vermont walkthrough, AEA REPRODUCE.sh, and any spec marked `slow` or `acceptance`. Runs on `ubuntu-latest-large` (8-core). Wall-clock budget: 90 min. Notebooks under `notebooks/` execute here with their declared `runtime_budget_secs` enforced at 1.5×.
+- **Release gate (`.github/workflows/release.yml`)** — runs the full nightly suite plus `verapdf` validation on every generated court PDF, byte-identical re-render verification on every narrative, and PyPI/wheel-build smoke. Required green before tagging.
+- **Daemon p99 benchmark hardware (Deposition Prep)** — pinned to `ubuntu-latest-large` (8-core, 32 GB) for budget assertions; VT budget p99 ≤ 1.5s in PR; LA budget p99 ≤ 5s in nightly only.
+- **Acceptance fixture policy (BENCHMARK P1/P2)** — every L2 test must reference either a checked-in fixture under `tests/fixtures/` or a network-fetched artifact with a pinned SHA-256. "If available" or "from public examples" without a pinned reference is rejected at PR review.
+
+Per-spec CI labels live in pytest markers (`unit`, `integration`, `network`, `slow`, `acceptance`) and Cargo features. The CI YAML is canonical; each spec's Tests section may reference the marker but does not redefine the workflow.
+
 ## Out of Scope
 
 - **Native GUI / web app for map drawing.** Districtr exists. Build interop instead.

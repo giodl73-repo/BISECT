@@ -25,13 +25,15 @@ A practitioner who has finished their analysis still has to take our HTML output
    - `provenance.json` (binary version, build commit, build date, rustc version)
    - **Race-of-candidate CSV** when bloc-voting analysis is included (BOUNDARY blocker — without this, evidence is not Daubert-defensible)
    - Verification command: `redist doctor --verify-manifest <path-to-manifest>`
-   - **Step-by-step rebuild instructions** for a non-engineer special master:
+   - **Step-by-step rebuild instructions** for a non-engineer special master. **Recommended path** (5–15 min on first build): use the bootstrap script from the Onboarding spec — `bash bootstrap.sh` (Linux/macOS) or `bootstrap.bat` (Windows), which handles `rustup`, METIS, the locked toolchain, and PATH setup. **Manual fallback** (30–60 min, for environments where running scripts is restricted):
      ```
+     # Prereqs: rustup (https://rustup.rs), C compiler, METIS dev headers
      git clone <repo-url>
      git checkout <build_commit>
      cd redist && cargo build --release --locked
      ./target/release/redist doctor --verify-manifest <path>
      ```
+     Common failures (`linker not found` → install build-essential / Xcode CLT / VS Build Tools; METIS missing → `apt install libmetis-dev` / `brew install metis` / Windows uses vendored copy) are documented in `docs/error-conventions.md`.
    - **Page limit**: appendix is bounded to 20 pages of the main PDF; full audit data is in the sidecar `reproducibility_package.zip`. The PDF references the zip's SHA-256.
    - **Path portability** (TRENCH): every embedded path is relative to the package root. Absolute paths (`C:\Users\...`, `/home/...`) are rewritten at report-generation time.
 

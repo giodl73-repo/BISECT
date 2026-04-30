@@ -33,6 +33,7 @@ A civic advocacy group, a journalist, or a member of the public can't pick up th
    - **Margin-of-error suppression**: when narrative text would change direction within the metric's CI, the auto-text is replaced with "within margin of error; see numerical table." (BOUNDARY recommendation)
    - **`[DRAFT]` prefix**: all auto-generated paragraphs are prefixed `[DRAFT — review before publication]` until a human passes `--approved-by "<name>"` to mark them sign-off-ready. The signed name is committed to the manifest.
    - **Civic-friendly framing first** (COMMONS): the default narrative leads with community-of-interest preservation ("District X keeps the Eastside neighborhoods together; Plan B splits them between two districts"), partisan effects come second.
+   - **Civic-counter-proposal framing (MERIDIAN)**: when either plan's manifest carries `submission_type=civic_counter_proposal`, the narrative opens with a one-sentence framing label ("Plan B is a civic counter-proposal submitted by [submitted_by] on [submitted_at]; it is not the state's official map.") and the summary-card PNG includes a visible watermark on the map image itself (not only the manifest) — so a journalist screen-capping the card cannot strip the attribution.
    - Examples:
      - "In Plan B, District 6 gains [N] tracts from former Districts 3 and 5, increasing the Black voting-age population from [X%] to [Y%]."
      - "[DRAFT — review before publication] Statewide partisan composition (using 55% Dem-share threshold): Plan A elects [A_DEM]/[A_REP]; Plan B elects [B_DEM]/[B_REP]."
@@ -40,23 +41,27 @@ A civic advocacy group, a journalist, or a member of the public can't pick up th
 
 4. **Historical-baseline overlay** — `redist compare --baseline ENACTED` compares a proposed plan against the state's currently-enacted map (downloaded via existing fetcher infrastructure)
 
-5. **CLI surface**:
+5. **CLI surface** (MERIDIAN — uses `--plan-label` family, not bare `--label`):
    ```
    redist compare --plan-a LABEL_A --plan-b LABEL_B --format html|narrative|both
    redist compare --plan-a LABEL_A --baseline ENACTED --year 2020
+   redist compare --plan-a LABEL_A --plan-b LABEL_B --comments-label LWV_COMMENTS_2026
    ```
+   Across the spec set: `--plan-a` / `--plan-b` for plan labels, `--comments-label` for civic comment labels, `--ensemble-label` for ensembles. Bare `--label` is reserved for write-side commands (`import`, `civic ingest`) where there's only one referent.
 
 6. **Civic-facing summary card** — A one-page PNG image suitable for tweeting / press release: title, two thumbnail maps, one paragraph of narrative, key numbers
 
 7. **Narrative manifest versioning (v2 — COVENANT)** — Every generated narrative writes a sidecar `narrative_manifest.json` capturing:
-   - Template path + SHA-256
+   - Template path (relative to repo root for portability) + SHA-256
    - Threshold values used (`leaning_threshold`, `close_call_band`, MoE inputs)
-   - Source analysis JSON SHAs (partisan.json, vra_analysis.json, compactness.json)
-   - `approved_by` (string or `null` when `[DRAFT]`) + `approved_at` ISO-8601
-   - `redist` build commit + version
-   - Re-running the same template against the same inputs MUST produce a byte-identical narrative; CI asserts this. The manifest is the audit trail a court or newsroom can check before publishing.
+   - **Plan manifest SHA-256s (COVENANT C-3)**: `plan_a_label`, `plan_a_manifest_sha256`, `plan_b_label`, `plan_b_manifest_sha256`, and `baseline_label` + `baseline_manifest_sha256` when `--baseline ENACTED` is used. Labels alone are not provenance — they can be re-bound to new content. The SHAs pin exactly what was compared.
+   - Source analysis JSON SHAs (partisan.json, vra_analysis.json, compactness.json) for both plans
+   - `approved_by` (string or `null` when `[DRAFT]`) + `approved_at` ISO-8601 UTC
+   - `redist` build commit + version + `rustc_version`
+   - **Civic-counter-proposal tag passthrough**: when either plan's manifest carries `submission_type=civic_counter_proposal`, the narrative manifest records this and the rendered narrative + summary card carry a visible "civic counter-proposal" framing label (not just a hidden manifest field — see §3 framing rules).
+   - Re-running the same template against the same inputs (with `SOURCE_DATE_EPOCH` pinned, see Risks) MUST produce a byte-identical narrative; CI asserts this. The manifest is the audit trail a court or newsroom can check before publishing.
 
-8. **Public-comment overlay (v2 — COMMONS)** — `redist compare --comments <CSV>` accepts a CSV of community-of-interest annotations (`geoid, comment_id, label, source`) gathered during a public-comment period. The comparison report:
+8. **Public-comment overlay (v2 — COMMONS)** — `redist compare --comments-label <LABEL>` consumes the output of `redist civic ingest` (canonical schema defined in `2026-04-30-civic-bidirectional.md` §1; this spec does NOT redefine it). The comparison report:
    - Flags districts where Plan A preserves a labeled community but Plan B splits it (and vice versa)
    - Tallies the percentage of comment-flagged tracts kept whole vs. split per plan
    - Includes a "comments incorporated" appendix listing each `comment_id` and which plan honored it
@@ -129,6 +134,7 @@ Built via redist-map (existing infrastructure) + a small layout-on-PNG helper.
 | Auto-generated text could mislead on close cases | Always include the underlying numbers; flag close calls (e.g., "within margin of error") |
 | Civic-facing card is one image, can be cherry-picked | Add a citation footer; document that the full report is the audit reference |
 | Different states / chambers have different "what matters" lists | One default template; allow `--narrative-template <PATH>` override |
+| Byte-identical re-render gate flakes on PDF/timestamp/git-SHA leaks (BENCHMARK P1) | Build with `SOURCE_DATE_EPOCH` pinned to the manifest's `approved_at` (or `0` for `[DRAFT]`); embed git short-SHA via env var `REDIST_BUILD_COMMIT_SHORT` so tests can pin it; deterministic Typst seed |
 
 ## Definition of done
 
