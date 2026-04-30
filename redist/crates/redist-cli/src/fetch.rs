@@ -118,6 +118,18 @@ pub fn build_fetch_list(
     let want_pl = all_types || data_types.iter().any(|t| matches!(t, DataType::Redistricting));
     let want_adj = all_types || data_types.iter().any(|t| matches!(t, DataType::Adjacency));
 
+    // Data types that exist as CLI flags but are not yet downloaded by `redist fetch`:
+    // Elections, Enacted, Geography. Warn explicitly so users don't think the request
+    // succeeded silently. The Python downloaders below remain the canonical source.
+    let want_elections = !all_types && data_types.iter().any(|t| matches!(t, DataType::Elections));
+    if want_elections {
+        eprintln!(
+            "WARNING: --type elections is not implemented in `redist fetch` yet. \
+             Use the Python downloader instead:\n  \
+             python scripts/data/elections/download_election_data.py --year {year}"
+        );
+    }
+
     let mut items = Vec::new();
     let data_dir = PathBuf::from(&manifest.local_data_dir);
     let outputs_dir = PathBuf::from(&manifest.local_outputs_dir);

@@ -92,8 +92,11 @@ pub fn parse_election_csv<R: std::io::Read>(reader: R) -> anyhow::Result<Vec<Ele
 pub fn load_election_data(path: &Path, year: &str) -> anyhow::Result<Vec<ElectionRecord>> {
     if !path.exists() {
         anyhow::bail!(
-            "Election data not found at {}. \
-             Run: redist fetch --type elections --year {year}",
+            "Election data not found at {}.\n\
+             Download with:\n  \
+             python scripts/data/elections/download_election_data.py --year {year}\n\
+             (`redist fetch --type elections` is declared but not yet implemented; \
+             the Python downloader is canonical for now.)",
             path.display()
         );
     }

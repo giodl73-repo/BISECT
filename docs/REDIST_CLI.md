@@ -191,7 +191,7 @@ redist fetch [OPTIONS]
 |------|---------|-------------|
 | `-y`, `--year` | `2020` | `2020`, `2010`, `2000`, or `all` |
 | `--states <CODES>` | *(all 50)* | Limit download to specific states |
-| `--type <TYPES>` | `all` | `tiger`, `redistricting`, `adjacency`, or `all` |
+| `--type <TYPES>` | `all` | `tiger`, `redistricting`, `adjacency`, or `all`. ⚠️ `elections` / `enacted` / `geography` are declared but not yet implemented — see "Election data" below. |
 | `--release` | false | Download adjacency pkl files from GitHub Releases |
 | `--check-only` | false | Print what would be downloaded, without downloading |
 | `--force` | false | Re-download even if files already exist |
@@ -213,6 +213,28 @@ redist fetch --year 2020 --workers 8
 # Pull pre-built adjacency pkl files from GitHub Releases
 # (requires: gh auth login)
 redist fetch --year 2020 --release
+```
+
+#### Election data (separate from `redist fetch`)
+
+`redist fetch --type elections` is declared as a CLI option but not yet implemented in `fetch.rs` — running it emits a WARNING. Use the Python downloader, which fetches tract-level presidential results from Harvard Dataverse (DOI: 10.7910/DVN/Z8TSH3, Fekrazad 2020):
+
+```bash
+python scripts/data/elections/download_election_data.py --year 2020
+```
+
+This produces tract-level CSVs with `geoid, dem_votes, rep_votes` columns suitable as input for `redist analyze --types political`. After cleanup, the canonical path becomes:
+
+```bash
+# 1. Download tract-level election data (one-time)
+python scripts/data/elections/download_election_data.py --year 2020
+
+# 2. Run redistricting (Rust)
+redist state --state VT --year 2020 --label vt_test
+
+# 3. Compute partisan metrics + render colored map (Rust)
+redist analyze --label vt_test --types political
+redist map --label vt_test --types political
 
 # Download all 3 years
 redist fetch --year all --workers 8
