@@ -470,6 +470,50 @@ pub struct AnalyzeArgs {
     /// Write output to stdout instead of analysis/ file (only works with a single --types value)
     #[arg(long)]
     pub stdout: bool,
+
+    // ── Bloc voting (Callais Evidence Layer) ───────────────────────────────
+    // Only consulted when --types includes bloc-voting.
+    /// Race-of-candidate CSV path (curator-attested per docs/file-formats/race-of-candidate.md).
+    /// Required when --types bloc-voting is requested.
+    #[arg(long)]
+    pub candidate_race_csv: Option<std::path::PathBuf>,
+
+    /// Election cycle name (e.g., "presidential-primary"). Recorded in bloc_voting.json.
+    #[arg(long, default_value = "presidential-primary")]
+    pub election: String,
+
+    /// Party under analysis. Most §2 analyses focus on Democratic primaries
+    /// (where within-party racial polarization is the Callais p.36 question).
+    #[arg(long, default_value = "DEM")]
+    pub party: String,
+
+    /// Minority group for the bloc-voting regression: black (default), hispanic, asian.
+    #[arg(long, default_value = "black")]
+    pub minority_group: String,
+
+    /// Significance threshold alpha for Holm-corrected p-values (default 0.05).
+    #[arg(long, default_value_t = 0.05)]
+    pub alpha: f64,
+
+    /// Confidence level for cluster-bootstrap CIs (default 0.95).
+    #[arg(long, default_value_t = 0.95)]
+    pub ci_level: f64,
+
+    /// Per-tract Democratic-share TSV for the partisan baseline (Callais p.36
+    /// disentanglement). Required when --types bloc-voting; produced via
+    /// `scripts/data/political/build_dem_shares.py`.
+    #[arg(long)]
+    pub partisan_baseline: Option<std::path::PathBuf>,
+
+    /// Regression method. Currently only `wls` (HC3 + cluster-bootstrap by county)
+    /// is implemented; `rxc` returns not-yet-implemented per spec.
+    #[arg(long, default_value = "wls")]
+    pub method: String,
+
+    /// Refuse the analysis below this many precincts (default 50). Below this
+    /// threshold, regression inference is unreliable and `[INPUT]` exits.
+    #[arg(long, default_value_t = 50)]
+    pub min_precincts: usize,
 }
 
 // ---------------------------------------------------------------------------

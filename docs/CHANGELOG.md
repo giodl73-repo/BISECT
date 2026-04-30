@@ -14,6 +14,21 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Callais Evidence Layer (second deliverable of the five-star roadmap)
+- **`redist analyze --types bloc-voting`** — within-party racial bloc voting analyzer per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36 disentanglement requirement. Opt-in only (NOT in `--types all`).
+- **`redist-analysis::bloc_voting`** — WLS via from-scratch Gauss-Jordan inversion (no nalgebra dep), HC3 robust SE via the WLS-scaled hat-diagonal sandwich, VIF, Holm-Bonferroni step-down, cluster bootstrap by county with naive-vs-cluster CI divergence flag. Joint-family orchestrator: m = n_candidates × (1 primary + 3 robustness + n_loo_variants) per S-02.
+- **`redist-analysis::race_of_candidate`** — CSV parser for the curator-attested annotation schema with BD-R2 reconciled `attestation_doc_format` enum (pdf|docx|md|txt|png|jpg|jpeg|tif|tiff). SHA-256 chain of custody on every attestation document; multi-curator dispute support; closed race vocabulary.
+- **`redist-analysis::bloc_voting_writer`** — output writers for `bloc_voting.json` (schema `bloc-voting v1`) and `bloc_voting_summary.md`. Atomic tmp+rename writes. Verbatim ecology caveat in every output (mandatory).
+- **JSON Schema**: `redist/crates/redist-analysis/schemas/bloc_voting.schema.json` validates outputs.
+- **Repro-zip staging**: bloc-voting analyzer copies CSV + every unique attestation doc into `analysis/bloc_voting/` for the future Court Reports zip pipeline.
+- **Docs**: `docs/file-formats/race-of-candidate.md` (curator attestation protocol); `docs/REDIST_CLI.md` "Within-Party Bloc Voting (Callais Evidence)" section.
+- **Tests**: 33 L0 tests in redist-analysis (22 bloc_voting + 11 race_of_candidate) plus 7 writer tests + 3 L1 integration tests via the production CLI = 43 new tests, all green. All four B-02 SCALE-block-lifting anchors confirmed (`test_b02_anchor{1,2,3,4}_*`).
+
+What's NOT in this commit:
+- Real LA precinct fetcher integration (the bloc-voting analyzer accepts pre-built per-precinct TSV via `--partisan-baseline`; the OpenElections-LA → tract-level joining lives in the per-state fetcher which is separate work).
+- L2 nightly acceptance test against real LA 2020 data (deferred until the LA fetcher lands).
+- Robustness-baseline auto-derivation from state-level Dem-share data (orchestrator accepts the variants as inputs; the caller materializes them).
+
 ### Added (2026-04-30) — Onboarding plan landed (first deliverable of the five-star roadmap)
 - **`bootstrap.sh` / `bootstrap.bat`** at the repo root: one-shot clean-machine setup with rustup, locked cargo build, PATH preflight (PP-18), optional `--with-python` (maturin + import verification) and `--with-api-key` (Dataverse round-trip validation, PP-19), and a real smoke test (PP-20: actually runs `redist state --state VT`, asserts tract count). Target wall-clock <= 10 min on clean Ubuntu 22.04 / Windows 11.
 - **`redist doctor --check-tutorial-data`**: drift detection against `examples/{tutorial}-walkthrough/checksums.json` (schema `tutorial-checksums v1`). Per-row PASS/FAIL/MISSING; exit 0 only if no FAIL. 8 L0 tests in `redist/crates/redist-cli/src/doctor.rs`. See `docs/REDIST_CLI.md`.

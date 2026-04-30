@@ -494,6 +494,9 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                     }
                 }
             }
+            AnalyzerType::BlocVoting => {
+                run_bloc_voting_dispatch(args, &analysis_dir)?;
+            }
             AnalyzerType::All => unreachable!("expanded above"),
         }
     }
@@ -556,6 +559,281 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         std::process::exit(exit_code as i32);
     }
 
+    Ok(())
+}
+
+/// Dispatch for `--types bloc-voting` (Callais Evidence Layer).
+///
+/// Loads precincts from `--partisan-baseline` (per-precinct TSV with columns
+/// `precinct_id, county_fips, total_votes, candidate_share, pct_minority,
+/// pct_dem_baseline, candidate_name`), parses the race-of-candidate CSV at
+/// `--candidate-race-csv`, runs the orchestrator's primary regression per
+/// candidate, and writes `bloc_voting.json` + `bloc_voting_summary.md` into
+/// the plan's `analysis/` directory.
+///
+/// Robustness baselines (statewide_dem, district_dem, prior_primary) and LOO
+/// variants from Civic Bidirectional conflict resolution are NOT auto-derived
+/// here — they require state-specific data plumbing. The orchestrator accepts
+/// them as inputs; future state-fetcher integration will populate them.
+///
+/// Out-of-scope today (`--method rxc` returns not-yet-implemented per spec
+/// risk row).
+fn run_bloc_voting_dispatch(
+    args: &AnalyzeArgs,
+    analysis_dir: &Path,
+) -> anyhow::Result<()> {
+    use redist_analysis::{
+        build_bloc_voting_json, parse_race_of_candidate_csv, run_bloc_voting_family,
+        write_bloc_voting_outputs, BlocVotingConfig, BlocVotingTest,
+        ProvenanceBlock, WriteContext,
+    };
+    use redist_analysis::bloc_voting::variants as bvv;
+
+    if args.method != "wls" {
+        anyhow::bail!(
+            "[INPUT] --method {} is not yet implemented for bloc-voting; \
+             only `wls` (HC3 + cluster-bootstrap by county) is shipped today. \
+             RxC ecological inference is deferred per spec risk row.",
+            args.method
+        );
+    }
+
+    let candidate_race_csv = args.candidate_race_csv.as_ref().ok_or_else(|| {
+        anyhow::anyhow!(
+            "[INPUT] --types bloc-voting requires --candidate-race-csv <PATH>. \
+             See docs/file-formats/race-of-candidate.md for the schema."
+        )
+    })?;
+    let partisan_baseline = args.partisan_baseline.as_ref().ok_or_else(|| {
+        anyhow::anyhow!(
+            "[INPUT] --types bloc-voting requires --partisan-baseline <PATH> \
+             (per-precinct TSV with the bloc-voting precinct schema). \
+             See docs/REDIST_CLI.md \"Within-Party Bloc Voting\" for the columns."
+        )
+    })?;
+
+    eprintln!("[bloc-voting] race-of-candidate: {}", candidate_race_csv.display());
+    let annotation_set = parse_race_of_candidate_csv(candidate_race_csv)?;
+    eprintln!(
+        "[bloc-voting] parsed {} annotations from {} curators",
+        annotation_set.annotations.len(),
+        annotation_set.provenance.curators.len()
+    );
+
+    eprintln!("[bloc-voting] precinct TSV: {}", partisan_baseline.display());
+    let precincts_by_candidate = load_precincts_by_candidate(partisan_baseline.as_path())?;
+    let n_total: usize = precincts_by_candidate.values().map(|v| v.len()).sum();
+    eprintln!(
+        "[bloc-voting] loaded {} candidate datasets ({} precinct rows total)",
+        precincts_by_candidate.len(),
+        n_total
+    );
+
+    if let Some((c, ps)) = precincts_by_candidate.iter().next() {
+        if ps.len() < args.min_precincts {
+            anyhow::bail!(
+                "[INPUT] candidate '{}' has only {} precincts (--min-precincts {}); \
+                 below the threshold for reliable inference. Either lower the threshold \
+                 deliberately or check that your precinct TSV is complete.",
+                c, ps.len(), args.min_precincts
+            );
+        }
+    }
+
+    // Build the family: one PRIMARY test per candidate. Robustness baselines +
+    // LOO variants are spec'd inputs the caller materializes; not auto-derived.
+    let mut tests: Vec<BlocVotingTest> = Vec::new();
+    for (cand, precincts) in &precincts_by_candidate {
+        tests.push(BlocVotingTest {
+            candidate: cand.clone(),
+            variant: bvv::PRIMARY.into(),
+            precincts: precincts.clone(),
+        });
+    }
+
+    let cfg = BlocVotingConfig {
+        bootstrap_samples: args.bootstrap_samples,
+        bootstrap_seed: 42,
+        ci_level: args.ci_level,
+        alpha: args.alpha,
+        provenance: Some(annotation_set.provenance.clone()),
+        ..Default::default()
+    };
+    let family = run_bloc_voting_family(&tests, &cfg)?;
+
+    // Provenance from the running binary.
+    let prov = crate::provenance::Provenance::current();
+    let provenance_block = ProvenanceBlock {
+        redist_version: prov.redist_version.clone(),
+        redist_build_commit: prov.redist_build_commit.clone(),
+        redist_build_commit_short: Some(
+            prov.redist_build_commit
+                .chars()
+                .take(8)
+                .collect::<String>(),
+        ),
+        rustc_version: prov.rustc_version.clone(),
+        args: Some(serde_json::json!({
+            "election": args.election,
+            "party": args.party,
+            "method": args.method,
+            "minority_group": args.minority_group,
+            "alpha": args.alpha,
+            "ci_level": args.ci_level,
+            "bootstrap_samples": args.bootstrap_samples,
+            "min_precincts": args.min_precincts,
+        })),
+    };
+
+    let state_code = args.state.clone().unwrap_or_else(|| "??".to_string());
+    let year = args.year.to_string();
+    let ctx = WriteContext {
+        state: &state_code,
+        year: &year,
+        election: &args.election,
+        party: &args.party,
+        method: &args.method,
+        minority_group: &args.minority_group,
+        alpha: args.alpha,
+        bootstrap_samples: args.bootstrap_samples,
+        provenance: &provenance_block,
+        race_provenance: &annotation_set.provenance,
+    };
+    let json = build_bloc_voting_json(&family, &ctx);
+
+    if args.stdout {
+        let serialized = serde_json::to_string_pretty(&json)?;
+        println!("{}", serialized);
+    } else {
+        write_bloc_voting_outputs(&json, analysis_dir)?;
+        eprintln!(
+            "[OK] bloc_voting -> {}",
+            analysis_dir.join("bloc_voting.json").display()
+        );
+        eprintln!(
+            "[OK] bloc_voting_summary -> {}",
+            analysis_dir.join("bloc_voting_summary.md").display()
+        );
+    }
+
+    // Task 5: copy the race-of-candidate CSV + every attestation doc into the
+    // plan's analysis/bloc_voting/ subdirectory so the reproducibility zip
+    // (Court Reports plan) picks them up.
+    stage_repro_artifacts(analysis_dir, candidate_race_csv, &annotation_set)?;
+
+    Ok(())
+}
+
+/// Load per-candidate precinct datasets from a TSV with columns:
+/// `candidate_name, precinct_id, county_fips, total_votes, candidate_share,
+/// pct_minority, pct_dem_baseline`. Returns one Vec<Precinct> per candidate.
+fn load_precincts_by_candidate(
+    path: &Path,
+) -> anyhow::Result<HashMap<String, Vec<redist_analysis::Precinct>>> {
+    use redist_analysis::Precinct;
+
+    let mut reader = csv::ReaderBuilder::new()
+        .delimiter(b'\t')
+        .has_headers(true)
+        .from_path(path)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot read precinct TSV {}: {e}", path.display()))?;
+    let headers = reader
+        .headers()
+        .map_err(|e| anyhow::anyhow!("[INPUT] precinct TSV header read failed: {e}"))?
+        .clone();
+    let required = [
+        "candidate_name",
+        "precinct_id",
+        "county_fips",
+        "total_votes",
+        "candidate_share",
+        "pct_minority",
+        "pct_dem_baseline",
+    ];
+    let mut col_idx: HashMap<&str, usize> = HashMap::new();
+    for col in &required {
+        let idx = headers.iter().position(|h| h == *col).ok_or_else(|| {
+            anyhow::anyhow!(
+                "[INPUT] precinct TSV missing required column '{col}'. Required columns: {}",
+                required.join(", ")
+            )
+        })?;
+        col_idx.insert(col, idx);
+    }
+
+    let mut by_candidate: HashMap<String, Vec<Precinct>> = HashMap::new();
+    for (i, record) in reader.records().enumerate() {
+        let row = i + 2;
+        let r = record.map_err(|e| anyhow::anyhow!("[INPUT] precinct TSV row {row}: {e}"))?;
+        let get = |k: &str| r.get(col_idx[k]).unwrap_or("").trim();
+        let parse_f = |k: &str| -> anyhow::Result<f64> {
+            get(k)
+                .parse::<f64>()
+                .map_err(|_| anyhow::anyhow!("[INPUT] precinct TSV row {row} col '{k}': not a float"))
+        };
+        let cand = get("candidate_name").to_string();
+        if cand.is_empty() {
+            anyhow::bail!("[INPUT] precinct TSV row {row}: empty candidate_name");
+        }
+        by_candidate
+            .entry(cand.clone())
+            .or_default()
+            .push(Precinct {
+                id: get("precinct_id").to_string(),
+                county_fips: get("county_fips").to_string(),
+                total_votes: parse_f("total_votes")?,
+                candidate_share: parse_f("candidate_share")?,
+                pct_minority: parse_f("pct_minority")?,
+                pct_dem_baseline: parse_f("pct_dem_baseline")?,
+            });
+    }
+    Ok(by_candidate)
+}
+
+/// Task 5: copy the race-of-candidate CSV + every referenced attestation doc
+/// into `{analysis_dir}/bloc_voting/` so the reproducibility-zip pipeline
+/// (Court Reports plan) finds them at predictable paths.
+fn stage_repro_artifacts(
+    analysis_dir: &Path,
+    candidate_race_csv: &Path,
+    annotation_set: &redist_analysis::AnnotationSet,
+) -> anyhow::Result<()> {
+    let stage_dir = analysis_dir.join("bloc_voting");
+    std::fs::create_dir_all(&stage_dir)?;
+    let attest_dir = stage_dir.join("attestations");
+    std::fs::create_dir_all(&attest_dir)?;
+
+    // Copy the CSV verbatim.
+    let csv_dest = stage_dir.join(
+        candidate_race_csv
+            .file_name()
+            .unwrap_or_else(|| std::ffi::OsStr::new("race_of_candidate.csv")),
+    );
+    std::fs::copy(candidate_race_csv, &csv_dest)?;
+
+    // Copy each unique attestation doc, content-addressed by its sha256.
+    let csv_dir = candidate_race_csv.parent().unwrap_or(Path::new("."));
+    let mut copied = std::collections::HashSet::new();
+    for ann in &annotation_set.annotations {
+        let key = ann.attestation_doc_sha256.clone();
+        if copied.contains(&key) {
+            continue;
+        }
+        let src = csv_dir.join(&ann.attestation_doc_path);
+        let ext = ann
+            .attestation_doc_path
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("bin");
+        let dest = attest_dir.join(format!("{}.{}", &key[..16], ext));
+        std::fs::copy(&src, &dest)?;
+        copied.insert(key);
+    }
+    eprintln!(
+        "[bloc-voting] staged {} attestation doc(s) under {}",
+        copied.len(),
+        attest_dir.display()
+    );
     Ok(())
 }
 

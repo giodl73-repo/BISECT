@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://redist.example.org/schemas/bloc_voting.schema.json",
+  "title": "Bloc Voting Analysis (Callais Evidence Layer)",
+  "description": "Output of `redist analyze --types bloc-voting` per docs/superpowers/specs/2026-04-30-callais-evidence-layer.md. The SCALE BLOCK from the v1 review was lifted by adopting WLS+HC3, Holm-Bonferroni, cluster-bootstrap by county, VIF, robustness across baselines, and the race-of-candidate provenance protocol — every field below carries that constraint.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "analyzer",
+    "available",
+    "state",
+    "year",
+    "election",
+    "party",
+    "method",
+    "ecology",
+    "candidates",
+    "race_of_candidate_provenance",
+    "provenance"
+  ],
+  "properties": {
+    "schema_version": {"const": "bloc-voting v1"},
+    "analyzer": {"const": "bloc-voting"},
+    "available": {"type": "boolean"},
+    "state": {"type": "string"},
+    "year": {"type": "string"},
+    "election": {"type": "string"},
+    "party": {"type": "string"},
+    "method": {"type": "string", "enum": ["ols", "wls", "rxc"]},
+    "minority_group": {"type": "string"},
+    "alpha": {"type": "number", "minimum": 0.0, "maximum": 1.0},
+    "ecology": {
+      "type": "object",
+      "required": ["n_precincts", "n_clusters"],
+      "properties": {
+        "n_precincts": {"type": "integer", "minimum": 0},
+        "n_clusters": {"type": "integer", "minimum": 0}
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "description": "One entry per analyzed candidate. The `regression` block here is the primary-baseline run; alternative-baseline + LOO runs are in `robustness_check` / `_family_detail`.",
+      "items": {
+        "type": "object",
+        "required": ["candidate", "regression", "robustness_check", "ecology_caveat", "draft_interpretation"],
+        "properties": {
+          "candidate": {"type": "string"},
+          "regression": {"$ref": "#/$defs/regression"},
+          "robustness_check": {"$ref": "#/$defs/robustness_check"},
+          "ecology_caveat": {"type": "string"},
+          "draft_interpretation": {"type": "string"}
+        }
+      }
+    },
+    "race_of_candidate_provenance": {"$ref": "#/$defs/race_of_candidate_provenance"},
+    "_family_detail": {
+      "type": "array",
+      "description": "Optional per-(candidate, variant) detail for auditors. Schema mirrors `regression` plus a `variant` tag.",
+      "items": {
+        "type": "object",
+        "required": ["candidate", "variant", "regression"],
+        "properties": {
+          "candidate": {"type": "string"},
+          "variant": {"type": "string"},
+          "regression": {"$ref": "#/$defs/regression"}
+        }
+      }
+    },
+    "provenance": {"$ref": "#/$defs/provenance"}
+  },
+  "$defs": {
+    "coef": {
+      "type": "object",
+      "required": ["estimate", "stderr_hc3", "ci_95_cluster", "standardized_beta", "p_value_raw", "p_value_holm"],
+      "properties": {
+        "estimate": {"type": "number"},
+        "stderr_hc3": {"type": "number"},
+        "ci_95_cluster": {
+          "type": "array",
+          "items": {"type": "number"},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "standardized_beta": {"type": "number"},
+        "p_value_raw": {"type": "number"},
+        "p_value_holm": {"type": "number"}
+      }
+    },
+    "regression": {
+      "type": "object",
+      "required": ["model", "specification", "diagnostics", "coefficients", "n_precincts", "n_clusters", "r_squared"],
+      "properties": {
+        "model": {"const": "WLS"},
+        "specification": {
+          "type": "string",
+          "description": "Verbatim: 'WLS weighted by precinct vote count; HC3 robust SE; cluster-bootstrap by county B=<n_samples>'."
+        },
+        "diagnostics": {
+          "type": "object",
+          "required": ["vif_pct_minority_vs_baseline", "vif_underpowered_flag", "ci_naive_vs_cluster_diverged"],
+          "properties": {
+            "vif_pct_minority_vs_baseline": {"type": "number"},
+            "vif_underpowered_flag": {"type": "boolean"},
+            "ci_naive_vs_cluster_diverged": {"type": "boolean"}
+          }
+        },
+        "coefficients": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/coef"}
+        },
+        "n_precincts": {"type": "integer", "minimum": 0},
+        "n_clusters": {"type": "integer", "minimum": 0},
+        "r_squared": {"type": "number"}
+      }
+    },
+    "robustness_check": {
+      "type": "object",
+      "required": ["candidate", "variants_tested", "race_coefficient_min", "race_coefficient_max", "race_coefficient_significant_under_all"],
+      "properties": {
+        "candidate": {"type": "string"},
+        "variants_tested": {"type": "array", "items": {"type": "string"}},
+        "race_coefficient_min": {"type": "number"},
+        "race_coefficient_max": {"type": "number"},
+        "race_coefficient_significant_under_all": {"type": "boolean"}
+      }
+    },
+    "race_of_candidate_provenance": {
+      "type": "object",
+      "required": ["schema_version", "source_file", "source_sha256", "annotations_independently_verified", "curators", "attestation_documents"],
+      "properties": {
+        "schema_version": {"const": "race-of-candidate v1"},
+        "source_file": {"type": "string"},
+        "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "annotations_independently_verified": {"type": "boolean"},
+        "curators": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["curator", "curator_credentials", "curator_attestation_date", "n_candidates"],
+            "properties": {
+              "curator": {"type": "string"},
+              "curator_credentials": {"type": "string"},
+              "curator_attestation_date": {"type": "string"},
+              "n_candidates": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "attestation_documents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "format", "sha256"],
+            "properties": {
+              "path": {"type": "string"},
+              "format": {"type": "string", "enum": ["pdf", "docx", "md", "txt", "png", "jpg", "tiff"]},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          }
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["redist_version", "redist_build_commit", "rustc_version"],
+      "properties": {
+        "redist_version": {"type": "string"},
+        "redist_build_commit": {"type": "string"},
+        "redist_build_commit_short": {"type": "string"},
+        "rustc_version": {"type": "string"},
+        "args": {"type": "object"}
+      }
+    }
+  }
+}

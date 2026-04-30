@@ -32,6 +32,12 @@ pub enum AnalyzerType {
     Summary,
     Contiguity,
     Splits,
+    /// Within-party racial bloc voting (Callais Evidence Layer).
+    /// Opt-in only via explicit `--types bloc-voting`. NOT included in `--types all`
+    /// because it requires a curator-attested race-of-candidate CSV; surfacing it
+    /// from `--types all` would silently fail-by-default for users who don't
+    /// have the annotation file.
+    BlocVoting,
     All,
 }
 
@@ -46,6 +52,7 @@ impl AnalyzerType {
             Self::Summary => "summary",
             Self::Contiguity => "contiguity",
             Self::Splits => "splits",
+            Self::BlocVoting => "bloc-voting",
             Self::All => "all",
         }
     }
@@ -55,8 +62,10 @@ impl AnalyzerType {
     /// **Excluded from this list:**
     /// - `Compactness`: requires TIGER geometry loading; handled separately in analyze.rs
     /// - `Partisan`: requires election data file; handled separately in analyze.rs
+    /// - `BlocVoting`: requires race-of-candidate CSV (Callais Evidence Layer);
+    ///   opt-in via explicit `--types bloc-voting` only.
     ///
-    /// These analyzers are invoked via explicit `--types compactness` or `--types partisan`.
+    /// These analyzers are invoked via explicit `--types compactness` / `--types partisan` / `--types bloc-voting`.
     pub fn all_concrete() -> Vec<Self> {
         vec![
             Self::Demographic,
@@ -101,5 +110,20 @@ mod tests {
         assert!(concrete.contains(&AnalyzerType::Political));
         assert!(concrete.contains(&AnalyzerType::Urban));
         assert!(concrete.contains(&AnalyzerType::Summary));
+    }
+
+    #[test]
+    fn test_bloc_voting_excluded_from_all_concrete() {
+        // Callais bloc-voting requires race-of-candidate CSV; --types all must
+        // not silently include it (would fail-by-default for users without the
+        // annotation file).
+        let concrete = AnalyzerType::all_concrete();
+        assert!(!concrete.contains(&AnalyzerType::BlocVoting),
+            "bloc-voting must be opt-in via explicit --types bloc-voting");
+    }
+
+    #[test]
+    fn test_bloc_voting_name_is_kebab_case() {
+        assert_eq!(AnalyzerType::BlocVoting.name(), "bloc-voting");
     }
 }

@@ -539,6 +539,83 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Within-Party Bloc Voting (Callais Evidence Layer)
+
+`redist analyze --types bloc-voting` runs a per-precinct WLS regression of candidate share on racial composition AND a partisan baseline, producing the disentangled bloc-voting evidence required by *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36. It is opt-in (NOT included in `--types all`) because it requires a curator-attested race-of-candidate annotation file.
+
+### What it does
+
+For every analyzed candidate × variant (primary baseline + 3 robustness baselines + N leave-one-out variants from civic conflict-resolution), the analyzer:
+
+1. Fits WLS weighted by precinct vote count: β̂ = (XᵀWX)⁻¹ XᵀWy.
+2. Computes HC3 robust standard errors (Long & Ervin 2000).
+3. Computes Variance Inflation Factor for `pct_minority` against `pct_dem_baseline`. VIF > 5 sets `vif_underpowered_flag`.
+4. Cluster-bootstraps by county (B configurable, default 10 000) for confidence intervals; flags `ci_naive_vs_cluster_diverged` when the cluster CI materially exceeds the naive precinct-level CI.
+5. Holm-Bonferroni step-down across the **joint family** of all (candidate, variant) tests. Family size m = n_candidates × (1 primary + 3 robustness + n_loo_variants) per the SCALE-block-lifting bargain in v2 spec.
+6. Per-candidate roll-up: `race_coefficient_significant_under_all` is `true` iff Holm-corrected p < α under every variant.
+7. Emits the verbatim ecology caveat in every output: precinct-level association ≠ individual-voter behavior. Required.
+8. When the race-of-candidate provenance has any row with `independently_verified=false`, prepends `[CAVEAT — annotations not independently verified]` to the draft interpretation (B-02 anchor 4).
+
+### CLI surface
+
+```bash
+redist analyze \
+    --label la_2020_callais --year 2020 --version v1 \
+    --types bloc-voting \
+    --candidate-race-csv data/elections/race_of_candidate/la_2020_dem_primary.csv \
+    --partisan-baseline data/elections/precincts/la_2020_dem_primary.tsv \
+    --party DEM \
+    --election presidential-primary \
+    --minority-group black \
+    --bootstrap-samples 10000 \
+    --ci-level 0.95 \
+    --alpha 0.05 \
+    --min-precincts 50 \
+    --method wls
+```
+
+Required flags for `--types bloc-voting`:
+
+- `--candidate-race-csv <PATH>` — schema in `docs/file-formats/race-of-candidate.md`. Every annotation must come with a curator + signed attestation document; the parser computes SHA-256 of the CSV and every attestation doc.
+- `--partisan-baseline <PATH>` — per-precinct TSV with columns `candidate_name, precinct_id, county_fips, total_votes, candidate_share, pct_minority, pct_dem_baseline`. Produced via `scripts/data/political/build_dem_shares.py` plus a state-specific precinct loader (LA/AL/GA fetchers in `scripts/data/elections/`).
+
+Optional flags:
+
+- `--method wls` (default; `rxc` returns not-yet-implemented per spec)
+- `--minority-group {black|hispanic|asian}` (default `black`)
+- `--alpha <FLOAT>` (default `0.05`)
+- `--ci-level <FLOAT>` (default `0.95`)
+- `--bootstrap-samples <N>` (default `10000`; consider `2000` for development on slow hardware)
+- `--min-precincts <N>` (default `50`; analyses below this exit `[INPUT]` with a clear message)
+
+### Output artifacts
+
+Written to the plan's `analysis/` directory:
+
+- `bloc_voting.json` — schema `bloc-voting v1`, validates against `redist-analysis/schemas/bloc_voting.schema.json`. Top-level fields: `analyzer`, `state`, `year`, `election`, `party`, `method`, `ecology`, `candidates[]` (one per analyzed candidate, with `regression`, `robustness_check`, `ecology_caveat`, `draft_interpretation`), `race_of_candidate_provenance` (sha256 chain), `_family_detail[]` (per-variant breakdown when robustness/LOO variants are present), `provenance` (build commit, rustc).
+- `bloc_voting_summary.md` — plain-English `[DRAFT — expert witness should rewrite]` summary including verbatim ecology caveat, robustness table, and curator attestation summary.
+- `analysis/bloc_voting/race_of_candidate.csv` — staged copy of the input CSV (Task 5; reproducibility-zip will pick it up).
+- `analysis/bloc_voting/attestations/<sha256>.<ext>` — every unique attestation document, content-addressed.
+
+### Error categories (`docs/error-conventions.md`)
+
+- `[INPUT]` — missing flag, bad row in race-of-candidate CSV, attestation doc not found, format mismatch, fewer precincts than `--min-precincts`.
+- `[INTERNAL]` — singular design matrix (predictors collinear), numerical edge case in HC3 sandwich.
+- Method `rxc` returns a clear "not yet implemented per spec" message pointing at `docs/legal/CALLAIS_REFERENCE.md` for the deferral rationale.
+
+### Why is this safe to claim as Callais evidence?
+
+Every SCALE-block-lifting receipt is enforced by a named L0 test:
+
+- `test_b02_anchor1_ols_coefficient_within_002` — WLS recovers β within ±0.02 on synthetic ground truth.
+- `test_b02_anchor2_holm_dominates_raw_on_30test_family` — Holm correction is provably conservative.
+- `test_b02_anchor3_vif_above_5_sets_underpowered_flag` — collinearity catches the underpowered case.
+- `test_b02_anchor4_independently_verified_false_injects_caveat` — un-verified annotations cannot ship without the caveat.
+
+See `redist/crates/redist-analysis/src/bloc_voting.rs` and `bloc_voting_writer.rs`, plus `docs/file-formats/race-of-candidate.md` for the curator-attestation chain.
+
+---
+
 ### `redist doctor --check-tutorial-data`
 
 Validates that a tutorial walkthrough's pinned data + expected outputs match their `checksums.json`. Catches upstream-data drift (Census re-publishes a TIGER vintage, Fekrazad publishes a new file revision, etc.) before the user wastes a debugging session chasing a phantom bug.

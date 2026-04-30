@@ -16,6 +16,7 @@ pub mod split_standards;
 pub mod exit_codes;
 pub mod bloc_voting;
 pub mod race_of_candidate;
+pub mod bloc_voting_writer;
 
 pub use compactness::{polsby_popper, reock, convex_hull_ratio, all_metrics, CompactnessMetrics, CompactnessError};
 pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
@@ -50,4 +51,9 @@ pub use bloc_voting::{
 pub use race_of_candidate::{
     parse_race_of_candidate_csv, AnnotationSet, AttestationDocFormat, AttestationDocRecord,
     CandidateAnnotation, CandidateRace, CuratorRecord, RaceOfCandidateProvenance, RaceParseError,
+};
+pub use bloc_voting_writer::{
+    build_bloc_voting_json, render_summary_md, regression_specification_string,
+    write_bloc_voting_outputs, BlocVotingJson, CandidateBlock, EcologyBlock, FamilyDetail,
+    ProvenanceBlock, RegressionBlock, WriteContext, ECOLOGY_CAVEAT,
 };
