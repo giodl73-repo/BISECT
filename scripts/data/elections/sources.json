@@ -115,18 +115,19 @@
       "notes": "Voting and Election Science Team — gold-standard precinct geometry + result joins. Per-state DOIs cached in scripts/data/elections/vest_dois.json (initially empty — populate as needed). Default fetcher action is `--list-known` (prints the cache); pass `--state WI --year 2020` to download a specific dataset. Workflow for adding new (state, year): list-files via the Dataverse downloader to discover the .zip filename, then add `state -> year -> {doi, filename}` to vest_dois.json."
     },
     {
-      "id": "ca-sos-primary",
-      "name": "California Secretary of State — primary precinct results",
-      "url": "https://www.sos.ca.gov/elections/prior-elections/statewide-election-results",
-      "license": "Public records (no formal license, redistributable)",
-      "resolution": "precinct",
-      "level": "primary-presidential | primary-statewide",
-      "years": [2008, 2012, 2016, 2020, 2024],
-      "states": "CA",
-      "fetcher": null,
-      "format": "Excel or CSV (varies by cycle)",
-      "schema": "varies (precinct id, candidate name, votes); generally requires per-cycle parsing",
-      "notes": "Single-state exemplar — California publishes precinct-level primary results directly. Most other state SOS sites publish only county-level primaries. Useful as test data for primary-election analysis pipelines. Auto-fetcher not yet written: per-cycle URLs change, format varies. Manual download via the SOS prior-elections page."
+      "id": "state-sos-primary",
+      "name": "State Secretary of State — primary results (per-state)",
+      "url": "varies (per state — see scripts/data/elections/state_sos/cycles.json)",
+      "license": "Public records (no formal license, generally redistributable)",
+      "resolution": "varies — county for most, precinct for ~12 states",
+      "level": "primary-presidential | primary-statewide | primary-house",
+      "years": [2016, 2018, 2020, 2022, 2024],
+      "states": "LA, AL, GA configured (3 of 51); add others by editing state_sos/cycles.json",
+      "fetcher": "scripts/data/elections/state_sos/scrape_state_sos.py",
+      "fetcher_args": ["--list"],
+      "format": "varies (Excel | Clarity-XML | PDF)",
+      "schema": "varies per state per cycle",
+      "notes": "Generic dispatcher reads per-state per-cycle URL config from state_sos/cycles.json and runs format-specific parsers (excel/clarity-xml/pdf). Initial state set: LA (Callais home state), AL (Allen v. Milligan baseline), GA (active §2 cases, Clarity Elections backed). All cycles ship with verified=false until a contributor confirms the URL is live and the format parses. Strong recommendation: use OpenElections instead for any state it covers — direct SOS scraping wins only on freshness or for cycles OE hasn't normalized yet. See script docstring for the full rationale."
     },
     {
       "id": "princeton-gerrymandering-project",

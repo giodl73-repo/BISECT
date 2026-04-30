@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "description": "Per-state, per-cycle election-data URLs from state Secretary-of-State / election-board websites. Used by scrape_state_sos.py to fetch primary-election results for the post-Callais Gingles 2/3 use case (within-party racial-bloc-voting analysis). URLs and formats change per cycle — this file is the local cache. Each entry is unverified until a contributor confirms the URL is live and the format parses; see notes per state.",
+  "states": {
+    "LA": {
+      "_state_name": "Louisiana",
+      "_sos_url": "https://www.sos.la.gov/ElectionsAndVoting/Pages/default.aspx",
+      "_results_portal": "https://voterportal.sos.la.gov/static/elections/{cycle_id}",
+      "_notes": "Louisiana publishes parish-level (= county-level) primary results via the voterportal. Precinct-level data is generally available per parish but not as a single statewide file. This is the Callais home state — primary-election bloc-voting analysis here is the headline §2 use case. URLs change per election; verify before running.",
+      "cycles": {
+        "2020-presidential-primary": {
+          "url": "TODO: verify at sos.la.gov for the 2020 presidential primary results page",
+          "format": "excel",
+          "resolution": "parish",
+          "level": "primary-presidential",
+          "verified": false
+        },
+        "2024-presidential-primary": {
+          "url": "TODO: verify at sos.la.gov for the 2024 presidential primary",
+          "format": "excel",
+          "resolution": "parish",
+          "level": "primary-presidential",
+          "verified": false
+        }
+      }
+    },
+    "AL": {
+      "_state_name": "Alabama",
+      "_sos_url": "https://www.sos.alabama.gov/alabama-votes/voter/election-information",
+      "_notes": "Alabama publishes county-level certified summaries; precinct-level data must be requested from individual probate judges' offices. Allen v. Milligan baseline — the demographic pattern that drove the Allen majority opinion. Limited automated access; OpenElections coverage may be better.",
+      "cycles": {
+        "2020-presidential-primary": {
+          "url": "TODO: verify; Alabama publishes results as PDFs typically",
+          "format": "pdf-or-excel",
+          "resolution": "county",
+          "level": "primary-presidential",
+          "verified": false,
+          "warning": "PDF format may require manual extraction. Consider OpenElections instead."
+        }
+      }
+    },
+    "GA": {
+      "_state_name": "Georgia",
+      "_sos_url": "https://sos.ga.gov/elections-division",
+      "_results_portal": "https://results.enr.clarityelections.com/GA/",
+      "_notes": "Georgia uses Clarity Elections (results.enr.clarityelections.com/GA) which publishes XML and JSON downloads alongside the web portal. This is the most automation-friendly of the three. Each cycle is a separate Clarity URL with a numeric election ID.",
+      "cycles": {
+        "2020-presidential-primary": {
+          "url": "TODO: verify Clarity election ID for GA 2020 primary",
+          "format": "clarity-xml",
+          "resolution": "precinct",
+          "level": "primary-presidential",
+          "verified": false
+        }
+      }
+    }
+  }
+}
