@@ -49,8 +49,8 @@ pub fn load_adjacency_pkl(path: &Path) -> Result<LoadedGraph, String> {
         load_from_bin(&bin_path, &geoid_path)
     } else {
         eprintln!(
-            "WARNING: {} not found — falling back to Python pkl shim. \
-             Run scripts/data/convert_adj_bin_to_pkl.py to generate .adj.bin files.",
+            "WARNING: {} not found — falling back to legacy .pkl shim. \
+             Build the .adj.bin via: redist fetch --year YEAR --states <CODE>",
             bin_path.display()
         );
         load_from_pkl_shim(path)
