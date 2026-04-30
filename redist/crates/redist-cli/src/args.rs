@@ -230,6 +230,16 @@ pub struct DoctorArgs {
     /// Mutually exclusive with --label / --state / --all.
     #[arg(long, value_name = "PATH")]
     pub verify_manifest: Option<String>,
+    /// Validate that a tutorial walkthrough's pinned data + expected outputs match
+    /// their checksums.json. Reads `examples/{tutorial}-walkthrough/checksums.json`,
+    /// hashes each file present locally, reports per-row PASS / FAIL / MISSING.
+    /// Exits 0 only if every row is PASS. Used to catch upstream-data drift.
+    #[arg(long)]
+    pub check_tutorial_data: bool,
+    /// Tutorial slug for --check-tutorial-data (default: vermont-2020).
+    /// Resolves to `examples/{tutorial}-walkthrough/checksums.json`.
+    #[arg(long, default_value = "vermont-2020")]
+    pub tutorial: String,
 }
 
 // ---------------------------------------------------------------------------

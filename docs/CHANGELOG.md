@@ -14,6 +14,18 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Onboarding plan landed (first deliverable of the five-star roadmap)
+- **`bootstrap.sh` / `bootstrap.bat`** at the repo root: one-shot clean-machine setup with rustup, locked cargo build, PATH preflight (PP-18), optional `--with-python` (maturin + import verification) and `--with-api-key` (Dataverse round-trip validation, PP-19), and a real smoke test (PP-20: actually runs `redist state --state VT`, asserts tract count). Target wall-clock <= 10 min on clean Ubuntu 22.04 / Windows 11.
+- **`redist doctor --check-tutorial-data`**: drift detection against `examples/{tutorial}-walkthrough/checksums.json` (schema `tutorial-checksums v1`). Per-row PASS/FAIL/MISSING; exit 0 only if no FAIL. 8 L0 tests in `redist/crates/redist-cli/src/doctor.rs`. See `docs/REDIST_CLI.md`.
+- **`examples/vermont-2020-walkthrough/`**: canonical end-to-end fixture per SURVEY 2026-04-30 (Vermont chosen over Louisiana to avoid advocacy framing). Contains `run.sh`/`run.bat`, `checksums.json` (placeholder SHAs until first clean-machine `pin.sh`), `pin.sh` re-pin helper, README. Tract count baseline: 193 (matches `tests/acceptance/test_pipeline_acceptance.py`).
+- **5 persona quickstart docs** under `docs/quickstart/`: `quickstart-special-master.md`, `quickstart-researcher.md`, `quickstart-callais-expert.md`, `quickstart-state-staff.md`, `quickstart-civic-advocate.md`. Civic advocate doc includes CM-01 guidance on obtaining state plans when not Districtr-published.
+- **`docs/error-conventions.md`**: categorized error model (`[INPUT]` / `[CONFIG]` / `[NETWORK]` / `[INTERNAL]` prefixes with actionable hints). Codifies the PP-34 Windows console policy: ASCII-only on stdout/stderr; Unicode allowed in file outputs only.
+- **`README.md` rewrite**: persona table at the top (5 rows mapping persona -> quickstart -> time), bootstrap pointer, "what this is/is not" framing.
+- **L2 acceptance test** at `tests/acceptance/test_walkthrough_vermont.py` marked `@pytest.mark.network @pytest.mark.slow`. Asserts walkthrough exit 0, ASCII-only console output (PP-34, tracking item 211-P3.1), and final_assignments.json tract count == 193 once the walkthrough has run. Default-skipped on PR; nightly per roadmap CI strategy.
+
+### Added (2026-04-30) — Spec + plan set v2.1.1 for the five-star roadmap
+- 8 capability specs + 8 per-capability implementation plans + v2.1 + v2.1.1 tracking doc covering Onboarding, Callais Evidence Layer, Court Submission Reports, State Staff Interop, Plan Comparison & Narrative, Civic Bidirectional Input, Deposition Prep, Researcher Toolkit. Two rounds of role review (9 roles on specs, 5 roles on plans); SCALE BLOCK on Callais lifted by adopting WLS+HC3, Holm-Bonferroni, cluster-bootstrap by county, VIF, robustness check across baselines, race-of-candidate provenance protocol. v2.1.1 patches resolved BD-R2 attestation_doc_format mismatch + 4 P1 cross-plan consistency issues. Onboarding plan executed in this changelog entry; remaining 7 plans queued. See `docs/superpowers/specs/2026-04-30-roadmap-five-star.md`.
+
 ### Added
 - **MAUP Sensitivity Analysis - Phase 2 Complete (Research Paper 11)**
   - **Multi-Resolution Infrastructure**:

@@ -20,6 +20,12 @@ pub fn run_doctor(args: &DoctorArgs) {
         std::process::exit(exit_code);
     }
 
+    // --check-tutorial-data mode: validate pinned tutorial data + expected outputs
+    if args.check_tutorial_data {
+        let exit_code = run_check_tutorial_data(&args.tutorial, std::path::Path::new("."));
+        std::process::exit(exit_code);
+    }
+
     // --all mode: scan all plans
     if args.all {
         run_all_plans_doctor(&args.version, &args.year, &args.output_base);
@@ -556,6 +562,247 @@ pub fn run_verify_manifest(manifest_path: &str) -> i32 {
 }
 
 // ---------------------------------------------------------------------------
+// `redist doctor --check-tutorial-data` — pinned-data drift detection
+// ---------------------------------------------------------------------------
+
+/// Schema for `examples/{tutorial}-walkthrough/checksums.json`.
+///
+/// `schema_version: "tutorial-checksums v1"`. Onboarding plan Task 1.3 produces
+/// this file. The doctor command validates that locally-fetched inputs and
+/// locally-generated outputs still match the pinned hashes.
+#[derive(Debug, serde::Deserialize)]
+struct TutorialChecksums {
+    schema_version: String,
+    #[serde(default)]
+    tutorial: String,
+    #[serde(default)]
+    pinned_inputs: Vec<PinnedInput>,
+    #[serde(default)]
+    expected_outputs: Vec<ExpectedOutput>,
+    #[serde(default)]
+    build_commit: String,
+    #[serde(default)]
+    pinned_at: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct PinnedInput {
+    name: String,
+    #[serde(default)]
+    source_url: String,
+    local_path: String,
+    sha256: String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct ExpectedOutput {
+    path: String,
+    sha256: String,
+    /// Optional informational tract count for `final_assignments.json`-style outputs.
+    #[serde(default)]
+    tract_count: Option<usize>,
+}
+
+/// Hash a file's bytes as SHA-256 hex. Returns Err on read failure.
+fn sha256_file(path: &std::path::Path) -> std::io::Result<String> {
+    use sha2::{Digest, Sha256};
+    let mut f = std::fs::File::open(path)?;
+    let mut hasher = Sha256::new();
+    let mut buf = [0u8; 64 * 1024];
+    loop {
+        let n = std::io::Read::read(&mut f, &mut buf)?;
+        if n == 0 {
+            break;
+        }
+        hasher.update(&buf[..n]);
+    }
+    Ok(hex_lower(&hasher.finalize()))
+}
+
+fn hex_lower(bytes: &[u8]) -> String {
+    let mut s = String::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        s.push_str(&format!("{:02x}", b));
+    }
+    s
+}
+
+/// Run `redist doctor --check-tutorial-data`. Returns process exit code.
+///
+/// - 0: every row PASS (every locally-present file matches its pinned SHA)
+/// - 1: at least one row FAIL (a present file's hash does not match)
+/// - 2: schema/parse error or missing checksums.json
+///
+/// MISSING rows (file not present) do not fail. The expectation is that a user
+/// validates the inputs they have; missing inputs are diagnostic ("re-fetch with
+/// the pinned commands above"), not errors.
+pub fn run_check_tutorial_data(tutorial: &str, repo_root: &std::path::Path) -> i32 {
+    let checksums_path = repo_root
+        .join("examples")
+        .join(format!("{tutorial}-walkthrough"))
+        .join("checksums.json");
+
+    println!("=== redist doctor --check-tutorial-data ===\n");
+    println!("Tutorial:  {tutorial}");
+    println!("Checksums: {}", checksums_path.display());
+    println!();
+
+    let content = match std::fs::read_to_string(&checksums_path) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("[FAIL] Cannot read checksums file: {e}");
+            println!(
+                "       Expected at: {}",
+                checksums_path.display()
+            );
+            println!("       Did the Onboarding plan's Task 1 fixture land?");
+            return 2;
+        }
+    };
+    let checksums: TutorialChecksums = match serde_json::from_str(&content) {
+        Ok(c) => c,
+        Err(e) => {
+            println!("[FAIL] checksums.json is not valid: {e}");
+            return 2;
+        }
+    };
+
+    if checksums.schema_version != "tutorial-checksums v1" {
+        println!(
+            "[FAIL] Unexpected schema_version: '{}' (expected 'tutorial-checksums v1')",
+            checksums.schema_version
+        );
+        return 2;
+    }
+
+    if !checksums.tutorial.is_empty() && checksums.tutorial != tutorial {
+        println!(
+            "[WARN] checksums.json declares tutorial='{}' but --tutorial='{}'",
+            checksums.tutorial, tutorial
+        );
+    }
+    if !checksums.build_commit.is_empty() {
+        println!("Pinned at build commit: {}", checksums.build_commit);
+    }
+    if !checksums.pinned_at.is_empty() {
+        println!("Pinned at:              {}", checksums.pinned_at);
+    }
+    println!();
+
+    let mut pass = 0usize;
+    let mut fail = 0usize;
+    let mut missing = 0usize;
+
+    println!("-- Pinned inputs ---------------------------------------------");
+    for input in &checksums.pinned_inputs {
+        let path = repo_root.join(&input.local_path);
+        let label = format!("{} ({})", input.name, input.local_path);
+        match check_one(&path, &input.sha256) {
+            CheckResult::Pass => {
+                println!("[PASS]    {label}");
+                pass += 1;
+            }
+            CheckResult::Fail { got } => {
+                println!("[FAIL]    {label}");
+                println!("          expected sha256: {}", input.sha256);
+                println!("          got      sha256: {got}");
+                fail += 1;
+            }
+            CheckResult::Missing => {
+                println!("[MISSING] {label}");
+                if !input.source_url.is_empty() {
+                    println!("          fetch from: {}", input.source_url);
+                }
+                missing += 1;
+            }
+            CheckResult::ReadError(e) => {
+                println!("[FAIL]    {label}");
+                println!("          read error: {e}");
+                fail += 1;
+            }
+        }
+    }
+
+    println!();
+    println!("-- Expected outputs ------------------------------------------");
+    for out in &checksums.expected_outputs {
+        let path = repo_root.join(&out.path);
+        let mut label = out.path.clone();
+        if let Some(n) = out.tract_count {
+            label = format!("{label}  (expects {n} tracts)");
+        }
+        match check_one(&path, &out.sha256) {
+            CheckResult::Pass => {
+                println!("[PASS]    {label}");
+                pass += 1;
+            }
+            CheckResult::Fail { got } => {
+                println!("[FAIL]    {label}");
+                println!("          expected sha256: {}", out.sha256);
+                println!("          got      sha256: {got}");
+                fail += 1;
+            }
+            CheckResult::Missing => {
+                println!("[MISSING] {label}");
+                println!(
+                    "          run the tutorial first: bash examples/{tutorial}-walkthrough/run.sh"
+                );
+                missing += 1;
+            }
+            CheckResult::ReadError(e) => {
+                println!("[FAIL]    {label}");
+                println!("          read error: {e}");
+                fail += 1;
+            }
+        }
+    }
+
+    println!();
+    println!(
+        "Summary: {} PASS, {} FAIL, {} MISSING",
+        pass, fail, missing
+    );
+
+    if fail > 0 {
+        println!();
+        println!(
+            "Data has drifted from tutorial baseline. Either:\n  \
+             (a) re-fetch with the pinned commands above\n  \
+             (b) re-run `bash examples/{tutorial}-walkthrough/run.sh`\n  \
+             (c) if the upstream legitimately changed, re-pin checksums.json"
+        );
+        1
+    } else {
+        println!();
+        println!("[OK] No drift detected.");
+        0
+    }
+}
+
+enum CheckResult {
+    Pass,
+    Fail { got: String },
+    Missing,
+    ReadError(std::io::Error),
+}
+
+fn check_one(path: &std::path::Path, expected_sha256: &str) -> CheckResult {
+    if !path.exists() {
+        return CheckResult::Missing;
+    }
+    match sha256_file(path) {
+        Ok(got) => {
+            if got.eq_ignore_ascii_case(expected_sha256) {
+                CheckResult::Pass
+            } else {
+                CheckResult::Fail { got }
+            }
+        }
+        Err(e) => CheckResult::ReadError(e),
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
@@ -563,6 +810,7 @@ pub fn run_verify_manifest(manifest_path: &str) -> i32 {
 mod tests {
     use super::*;
 
+    #[allow(dead_code)]
     fn make_args(state: &str, year: &str, chamber: &str, resolution: &str) -> DoctorArgs {
         DoctorArgs {
             state: state.to_string(),
@@ -574,6 +822,8 @@ mod tests {
             version: "v1".to_string(),
             all: false,
             verify_manifest: None,
+            check_tutorial_data: false,
+            tutorial: "vermont-2020".to_string(),
         }
     }
 
@@ -1137,5 +1387,190 @@ mod tests {
         }));
         let result = run_verify_manifest(path.to_str().unwrap());
         assert_eq!(result, 0, "missing binary_version → warn, exit 0");
+    }
+
+    // ── --check-tutorial-data tests ──────────────────────────────────────────
+    //
+    // These are the L0 receipts for Onboarding plan Task 2: PASS, FAIL, MISSING,
+    // schema mismatch, and missing-file behavior.
+
+    /// Build a minimal repo-shaped temp dir with one input + one output and write
+    /// an `examples/{tutorial}-walkthrough/checksums.json` referencing them.
+    fn build_tutorial_fixture(
+        repo_root: &std::path::Path,
+        tutorial: &str,
+        inputs: &[(&str, &[u8], &str)],   // (local_path, bytes-to-write, sha256-to-claim)
+        outputs: &[(&str, &[u8], &str)],
+    ) -> std::path::PathBuf {
+        let walk_dir = repo_root
+            .join("examples")
+            .join(format!("{tutorial}-walkthrough"));
+        std::fs::create_dir_all(&walk_dir).unwrap();
+
+        for (rel, bytes, _sha) in inputs.iter().chain(outputs.iter()) {
+            let p = repo_root.join(rel);
+            if let Some(parent) = p.parent() {
+                std::fs::create_dir_all(parent).unwrap();
+            }
+            std::fs::write(&p, bytes).unwrap();
+        }
+
+        let pinned_inputs: Vec<serde_json::Value> = inputs
+            .iter()
+            .enumerate()
+            .map(|(i, (rel, _bytes, sha))| {
+                serde_json::json!({
+                    "name": format!("input_{i}"),
+                    "source_url": "",
+                    "local_path": rel,
+                    "sha256": sha,
+                })
+            })
+            .collect();
+        let expected_outputs: Vec<serde_json::Value> = outputs
+            .iter()
+            .map(|(rel, _bytes, sha)| {
+                serde_json::json!({"path": rel, "sha256": sha})
+            })
+            .collect();
+        let checksums = serde_json::json!({
+            "schema_version": "tutorial-checksums v1",
+            "tutorial": tutorial,
+            "pinned_inputs": pinned_inputs,
+            "expected_outputs": expected_outputs,
+            "build_commit": "test0000",
+            "pinned_at": "2026-04-30T00:00:00Z",
+        });
+        let path = walk_dir.join("checksums.json");
+        std::fs::write(&path, serde_json::to_string_pretty(&checksums).unwrap()).unwrap();
+        path
+    }
+
+    fn known_sha256(bytes: &[u8]) -> String {
+        use sha2::{Digest, Sha256};
+        hex_lower(&Sha256::digest(bytes))
+    }
+
+    #[test]
+    fn test_check_tutorial_data_all_pass_returns_0() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let input_bytes = b"pinned input contents";
+        let output_bytes = b"plan output contents";
+        let _ = build_tutorial_fixture(
+            tmp.path(),
+            "synthetic-test",
+            &[("data/input.bin", input_bytes, &known_sha256(input_bytes))],
+            &[("outputs/v1/plan/out.json", output_bytes, &known_sha256(output_bytes))],
+        );
+        let exit = run_check_tutorial_data("synthetic-test", tmp.path());
+        assert_eq!(exit, 0, "every-row-PASS must exit 0");
+    }
+
+    #[test]
+    fn test_check_tutorial_data_one_fail_returns_1() {
+        // Write a file but claim a different SHA — that's a FAIL row.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let actual_bytes = b"actual file bytes";
+        let wrong_sha = "0000000000000000000000000000000000000000000000000000000000000000";
+        let _ = build_tutorial_fixture(
+            tmp.path(),
+            "drift-test",
+            &[("data/drifted.bin", actual_bytes, wrong_sha)],
+            &[],
+        );
+        let exit = run_check_tutorial_data("drift-test", tmp.path());
+        assert_eq!(exit, 1, "FAIL row must exit 1");
+    }
+
+    #[test]
+    fn test_check_tutorial_data_missing_only_returns_0() {
+        // No file written; only the checksums.json knows about it. Missing rows
+        // are diagnostic, not errors — the user simply hasn't run the tutorial yet.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let walk_dir = tmp.path().join("examples").join("missing-test-walkthrough");
+        std::fs::create_dir_all(&walk_dir).unwrap();
+        let checksums = serde_json::json!({
+            "schema_version": "tutorial-checksums v1",
+            "tutorial": "missing-test",
+            "pinned_inputs": [{
+                "name": "absent",
+                "source_url": "https://example.org/absent.zip",
+                "local_path": "data/never-fetched.zip",
+                "sha256": "abc123",
+            }],
+            "expected_outputs": [],
+            "build_commit": "test",
+            "pinned_at": "2026-04-30T00:00:00Z",
+        });
+        std::fs::write(walk_dir.join("checksums.json"), checksums.to_string()).unwrap();
+        let exit = run_check_tutorial_data("missing-test", tmp.path());
+        assert_eq!(exit, 0, "MISSING-only must exit 0 (not yet run is not an error)");
+    }
+
+    #[test]
+    fn test_check_tutorial_data_missing_file_returns_2() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        // No examples/ dir exists — checksums.json cannot be read.
+        let exit = run_check_tutorial_data("nonexistent-tutorial", tmp.path());
+        assert_eq!(exit, 2, "missing checksums.json is a soft error (exit 2)");
+    }
+
+    #[test]
+    fn test_check_tutorial_data_bad_schema_version_returns_2() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let walk_dir = tmp.path().join("examples").join("bad-schema-walkthrough");
+        std::fs::create_dir_all(&walk_dir).unwrap();
+        std::fs::write(
+            walk_dir.join("checksums.json"),
+            serde_json::json!({
+                "schema_version": "tutorial-checksums v999",
+                "pinned_inputs": [],
+                "expected_outputs": [],
+            })
+            .to_string(),
+        )
+        .unwrap();
+        let exit = run_check_tutorial_data("bad-schema", tmp.path());
+        assert_eq!(exit, 2, "unknown schema_version is a soft error (exit 2)");
+    }
+
+    #[test]
+    fn test_check_tutorial_data_invalid_json_returns_2() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let walk_dir = tmp.path().join("examples").join("badjson-walkthrough");
+        std::fs::create_dir_all(&walk_dir).unwrap();
+        std::fs::write(walk_dir.join("checksums.json"), "{ not json").unwrap();
+        let exit = run_check_tutorial_data("badjson", tmp.path());
+        assert_eq!(exit, 2);
+    }
+
+    #[test]
+    fn test_check_tutorial_data_mixed_pass_and_missing_returns_0() {
+        // A typical "I fetched the inputs but haven't run the tutorial yet" state:
+        // input PASSes, output is MISSING. Should exit 0.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let input_bytes = b"present input";
+        let _ = build_tutorial_fixture(
+            tmp.path(),
+            "mixed-test",
+            &[("data/in.bin", input_bytes, &known_sha256(input_bytes))],
+            &[("outputs/v1/never-run.json", b"unused", "deadbeef")],
+        );
+        // Delete the output file we just wrote — simulate "not yet generated"
+        std::fs::remove_file(tmp.path().join("outputs/v1/never-run.json")).unwrap();
+        let exit = run_check_tutorial_data("mixed-test", tmp.path());
+        assert_eq!(exit, 0, "PASS + MISSING (no FAIL) must exit 0");
+    }
+
+    #[test]
+    fn test_sha256_file_round_trip() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let p = tmp.path().join("hash-me.bin");
+        let bytes = b"hash this content";
+        std::fs::write(&p, bytes).unwrap();
+        let got = sha256_file(&p).unwrap();
+        assert_eq!(got, known_sha256(bytes));
+        // Lowercase hex output
+        assert!(got.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
 }

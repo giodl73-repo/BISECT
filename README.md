@@ -2,18 +2,30 @@
 
 `redist` is an open-source redistricting platform for practitioners, researchers, and reform advocates. It draws districts, analyzes plans, compares them to enacted maps, verifies legal constraints, and produces court-ready audit trails — for any chamber, any state, any census year.
 
-**For researchers:** 50-state congressional redistricting in 15 seconds. Reproducible, seed-controlled, with compactness and VRA analysis built in.
+## Where to start
 
-**For practitioners:** draw your state's house, senate, and congressional districts in a single command. Compare your plan to the enacted map, verify county preservation, check partisan fairness, generate a commission-ready report.
+| Who you are | Where to start | Time |
+|---|---|---|
+| Court-appointed special master | [docs/quickstart/quickstart-special-master.md](docs/quickstart/quickstart-special-master.md) | 5–10 min |
+| Academic researcher (parameter sweeps) | [docs/quickstart/quickstart-researcher.md](docs/quickstart/quickstart-researcher.md) | 10–15 min |
+| §2 plaintiff's expert (post-Callais) | [docs/quickstart/quickstart-callais-expert.md](docs/quickstart/quickstart-callais-expert.md) | 30–60 min |
+| State legislative staff (Districtr backend) | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
+| Civic advocacy group | [docs/quickstart/quickstart-civic-advocate.md](docs/quickstart/quickstart-civic-advocate.md) | 15–30 min |
 
-**For reformers:** every plan produced by `redist` is independently verifiable — signed manifest, SHA-256 of source data, complete reproduction command. Any auditor can recreate the map from scratch.
+First time on a clean machine? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) from the repo root. Target wall-clock: ≤ 10 minutes from `git clone` to first useful run.
+
+## What this is — and is not
+
+**Is:** an algorithmic redistricting engine with bisection-based district drawing, plan analysis (compactness, VRA, partisan, splits), reproducibility-grade manifests, and a backend for Districtr/DRA round-tripping.
+
+**Is not:** a GUI for interactive map drawing (use Districtr; we are the analytical backend), a real-time multiplayer editor, an automated litigation predictor, or a partisan tool. The algorithm itself is partisan-blind by default; partisan-weighted bisection is opt-in (Plan 03) and mutually exclusive with VRA-aware bisection per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36.
 
 ---
 
-## Quick start
+## Quick start (after bootstrap)
 
 ```bash
-# Build the binary (one-time)
+# Build the binary (one-time; bootstrap.sh does this for you)
 cargo build --release --manifest-path redist/Cargo.toml
 
 # Download 2020 census data

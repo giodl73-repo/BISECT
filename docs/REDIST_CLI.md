@@ -539,6 +539,42 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+### `redist doctor --check-tutorial-data`
+
+Validates that a tutorial walkthrough's pinned data + expected outputs match their `checksums.json`. Catches upstream-data drift (Census re-publishes a TIGER vintage, Fekrazad publishes a new file revision, etc.) before the user wastes a debugging session chasing a phantom bug.
+
+```bash
+redist doctor --check-tutorial-data --tutorial vermont-2020
+```
+
+Reads `examples/{tutorial}-walkthrough/checksums.json` (schema: `tutorial-checksums v1`), hashes each pinned input + expected output that exists locally, and reports per-row `[PASS]` / `[FAIL]` / `[MISSING]`.
+
+**Exit codes:**
+- `0` — every row PASS, OR rows are MISSING (file not yet fetched/run is not an error)
+- `1` — at least one row FAIL (file present but hash differs from pin)
+- `2` — checksums.json missing or malformed
+
+The Vermont 2020 walkthrough fixture ships with `PIN_ON_FIRST_RUN` placeholder SHAs; a maintainer runs `bash examples/vermont-2020-walkthrough/pin.sh` after a successful clean run to replace them with real hashes. Until then, expect FAIL on populated files. See `examples/vermont-2020-walkthrough/README.md`.
+
+---
+
+## First-time setup: `bootstrap.sh` / `bootstrap.bat`
+
+For a clean machine, the project ships one-shot bootstrap scripts at the repo root:
+
+```bash
+bash bootstrap.sh                            # Linux/macOS
+bash bootstrap.sh --with-python              # also build redist_py PyO3 wheel
+bash bootstrap.sh --with-api-key             # prompt + validate Dataverse key
+bootstrap.bat                                # Windows mirror
+```
+
+Steps: rustup install if missing → `cargo build --release --locked` → PATH preflight (PP-18: verify binary at expected path before mutating PATH) → optional Python wheel + API-key round-trip validation (PP-19: validate before write) → real smoke test (PP-20: not `--print-only`; runs `redist state --state VT --year 2020`).
+
+Target wall-clock: ≤ 10 minutes on a clean Ubuntu 22.04 container or Windows 11 VM.
+
+See `docs/quickstart/quickstart-{persona}.md` for persona-specific next steps.
+
 ---
 
 ## Performance
