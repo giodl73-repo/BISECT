@@ -68,6 +68,13 @@ def main():
     parser.add_argument('--output-dir', type=str,
                        default='data/raw/elections',
                        help='Output directory')
+    parser.add_argument('--doi', type=str,
+                       default='10.7910/DVN/Z8TSH3',
+                       help='Harvard Dataverse DOI to fetch from (default: Fekrazad tract reallocation). '
+                            'Pass without the "doi:" prefix.')
+    parser.add_argument('--output-subdir', type=str,
+                       default=None,
+                       help='Override output subdirectory name (default: {year}_president)')
     args = parser.parse_args()
 
     # Validate state argument
@@ -75,10 +82,11 @@ def main():
         print("ERROR: --state is required when --scope=state")
         return 1
 
-    # Harvard Dataverse DOI for the dataset
-    doi = 'doi:10.7910/DVN/Z8TSH3'
+    # Harvard Dataverse DOI for the dataset (parameterized; default is Fekrazad)
+    doi = f"doi:{args.doi}" if not args.doi.startswith("doi:") else args.doi
 
-    output_dir = Path(args.output_dir) / f'{args.year}_president'
+    subdir_name = args.output_subdir or f'{args.year}_president'
+    output_dir = Path(args.output_dir) / subdir_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("="*70)

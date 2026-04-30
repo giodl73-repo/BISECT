@@ -74,15 +74,16 @@ class TestFilterSources:
     def test_resolution_filter_matches_substring(self):
         out = fetch_elections.filter_sources(self.sources, resolution="tract")
         assert any(s["id"] == "harvard-fekrazad-2020" for s in out)
-        # MIT EDSL has resolution "county | state | congressional-district"
-        assert not any("mit-edsl" in s["id"] for s in out)
+        # MIT EDSL president has resolution "county | state | congressional-district"
+        # — should not match the "tract" filter.
+        assert not any(s["id"] == "mit-edsl-president-1976-2022" for s in out)
 
     def test_year_filter(self):
         out_2020 = fetch_elections.filter_sources(self.sources, year=2020)
         assert all(2020 in s["years"] for s in out_2020 if isinstance(s["years"], list))
         out_1976 = fetch_elections.filter_sources(self.sources, year=1976)
-        # Only MIT EDSL covers 1976
-        assert any(s["id"] == "mit-edsl-1976-2022" for s in out_1976)
+        # MIT EDSL covers 1976 (multiple variants now: president + senate-primary + house-primary)
+        assert any("mit-edsl" in s["id"] for s in out_1976)
         assert not any(s["id"] == "harvard-fekrazad-2020" for s in out_1976)
 
     def test_license_filter(self):
