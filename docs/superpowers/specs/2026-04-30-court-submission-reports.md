@@ -1,9 +1,10 @@
 # Court-Submission Reports: PDF Expert Witness Output
 **Date:** 2026-04-30
-**Status:** Proposed; pending review
+**Updated:** 2026-04-30 (v2 — incorporates SURVEY/COVENANT/DATUM/BOUNDARY/TRENCH revisions)
+**Status:** Revised; pending re-review
 **Closes gap for:** special master, §2 expert, civic advocacy
 **Depends on:** existing redist-report HTML output + Callais Evidence Layer (for §2 cases)
-**Estimated effort:** 3-4 days
+**Estimated effort:** 4-5 days (v2: PDF/A + expert conventions)
 
 ## Why this exists
 
@@ -17,13 +18,22 @@ A practitioner who has finished their analysis still has to take our HTML output
 
 1. **PDF rendering pipeline** — `redist report --format pdf` produces a court-ready document from the same data the HTML report uses.
 
-2. **Standard sections** — cover page, executive summary, methodology, results, reproducibility appendix, signature block. Each section is templated and pulls from the analysis JSON.
+2. **Standard sections (v2 expanded per SURVEY)** — cover page, executive summary, methodology, results, **expert qualifications (CV attachment)**, **declaration of conflicts of interest**, **prior-testimony list (last 5 years per FRCP 26(a)(2)(B))**, **Daubert-readiness self-assessment**, reproducibility appendix, signature block. Each section is templated and pulls from the analysis JSON or expert-config.
 
-3. **Reproducibility appendix** — automatically embeds:
-   - `manifest.json` (input adjacency hash, run parameters, binary version)
+3. **Reproducibility appendix (v2 detailed per COVENANT)** — automatically embeds:
+   - `manifest.json` with explicit per-input-file SHA-256 + fetch date schema (every input file gets a row: path, sha256, fetched_at, source_url)
    - `provenance.json` (binary version, build commit, build date, rustc version)
+   - **Race-of-candidate CSV** when bloc-voting analysis is included (BOUNDARY blocker — without this, evidence is not Daubert-defensible)
    - Verification command: `redist doctor --verify-manifest <path-to-manifest>`
-   - SHA-256 of every input data file used
+   - **Step-by-step rebuild instructions** for a non-engineer special master:
+     ```
+     git clone <repo-url>
+     git checkout <build_commit>
+     cd redist && cargo build --release --locked
+     ./target/release/redist doctor --verify-manifest <path>
+     ```
+   - **Page limit**: appendix is bounded to 20 pages of the main PDF; full audit data is in the sidecar `reproducibility_package.zip`. The PDF references the zip's SHA-256.
+   - **Path portability** (TRENCH): every embedded path is relative to the package root. Absolute paths (`C:\Users\...`, `/home/...`) are rewritten at report-generation time.
 
 4. **Citations** — automatic citation generation for the data sources used (e.g., "Election data from Fekrazad 2025, DOI 10.7910/DVN/Z8TSH3, accessed 2026-04-29"). Pulled from the election-source registry.
 
@@ -41,6 +51,25 @@ A practitioner who has finished their analysis still has to take our HTML output
 - Court-jurisdiction-specific formatting (Eastern District of Louisiana has different conventions than Northern District of Georgia; we ship a generic template, expert customizes)
 - Automated trial-exhibit numbering (case-management software territory)
 - Case caption auto-fill (requires per-case metadata; out of scope)
+
+## PDF/A compliance (v2 — SURVEY blocker)
+
+All generated PDFs target **PDF/A-2b** for federal court archival permanence. Implementation:
+- Use Typst's PDF/A export mode (Typst ≥ 0.12 supports this)
+- Validate every generated PDF with `verapdf` (open-source PDF/A validator) before reporting success
+- If validation fails, report the violation and refuse to mark the file as court-ready
+
+A non-PDF/A `--draft` mode is available for iteration but warns that the output is not court-admissible.
+
+## Citation format (v2 — DATUM gap)
+
+CLI flag `--citation-style {bluebook,apa,chicago}` with the following defaults:
+- `redist report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` for any U.S. court
+- `redist report --format pdf --paper-mode` → defaults to `apa`
+
+Citation generator pulls metadata from the election-source registry (`scripts/data/elections/sources.json`) and the per-input-file manifest entries. Every cited source includes: author/curator, title, year, DOI/URL, accessed date.
+
+Known errata (when the registry has a `notes` field flagging dataset limitations) are auto-included as a footnote.
 
 ## Implementation choice
 
@@ -98,9 +127,13 @@ Options:
 | Risk | Mitigation |
 |---|---|
 | Typst may break compatibility | Pin Typst version; document upgrade procedure |
+| Typst rendering produces malformed PDFs without erroring (TRENCH PP-21) | Mandatory `verapdf` validation gate after every render; PDF checksums; CI fails on any Typst stderr |
 | Different jurisdictions want different formatting | Ship one generic template; allow `--jurisdiction` to swap in alternates over time |
-| Auto-generated text may sound robotic / not legally defensible | Run early templates by a litigator; iterate |
+| Auto-generated text may sound robotic / not legally defensible | Mark draft text explicitly `[DRAFT]`; expert rewrites before signing |
 | Citation accuracy depends on registry metadata | Reuse the same registry already powering the fetchers; metadata is in one place |
+| Citation URLs go stale between report-generation and trial | Reproducibility package embeds a snapshot of the registry at generation time; `redist doctor --verify-manifest` checks URLs for 404 |
+| Embedded paths non-portable across OS / users | Path-rewriting pass at report-generation time; only relative paths in the PDF |
+| PDF appendix grows unbounded | 20-page hard cap inside the PDF; overflow goes to `reproducibility_package.zip` with SHA-256 reference |
 
 ## Definition of done
 

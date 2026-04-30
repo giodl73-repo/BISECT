@@ -1,9 +1,10 @@
 # Onboarding & Tutorials: 5-Minute Quickstart
 **Date:** 2026-04-30
-**Status:** Proposed; pending review
+**Updated:** 2026-04-30 (v2 — incorporates SURVEY/DATUM/COVENANT/TRENCH/BENCHMARK revisions)
+**Status:** Revised; pending re-review
 **Closes gap for:** all personas
 **Depends on:** existing CLI surface
-**Estimated effort:** 2-3 days
+**Estimated effort:** 3-4 days (v2: pin tutorial data, real smoke test)
 
 ## Why this exists
 
@@ -20,10 +21,11 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - Installs `rustup` if missing
    - Installs the pinned rustc via `rust-toolchain.toml`
    - Builds `redist` in release mode
-   - Adds `redist/target/release` to PATH (or prints the line for the user to add)
-   - Optionally installs maturin + builds the `redist_py` wheel
-   - Optionally prompts for `DATAVERSE_API_KEY` and writes it to a local config
-   - Runs a smoke test: `redist state --state VT --year 2020 --label bootstrap_test`
+   - **Verifies the build produced the binary at the expected path** before mutating PATH (TRENCH PP-18 prevention)
+   - Adds `redist/target/release` to PATH; verifies the next shell can find the binary via `which redist` / `where redist`
+   - Optionally installs maturin + builds the `redist_py` wheel; verifies via `python -c "import redist_py"` before claiming success
+   - Optionally prompts for `DATAVERSE_API_KEY`. **Validates the key with one Dataverse API round-trip** before writing it to local config (TRENCH PP-19 prevention). Writes to `~/.config/redist/credentials.toml` (Linux/macOS) or `%APPDATA%\redist\credentials.toml` (Windows) — explicit path, not hidden in a project dir.
+   - **Runs a real smoke test, not `--print-only`** (TRENCH PP-20): `redist state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke`. Verifies the bisection actually completed and final_assignments.json has 193 tract entries.
    - Reports success with next-step pointers
 
 2. **Persona-specific quickstart docs** under `docs/quickstart/`:
@@ -33,14 +35,35 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - `quickstart-state-staff.md` — import from Districtr, validate, export back
    - `quickstart-civic-advocate.md` — produce a comparison narrative for the public
 
-3. **End-to-end Louisiana walkthrough** (the canonical "complete example")
+3. **End-to-end Vermont walkthrough** (the canonical "complete example", **changed from Louisiana per SURVEY**)
+   - Vermont is the canonical because: 1 district = trivial population balance, fully-public Fekrazad data, no live §2 litigation that might color the project as advocacy-aligned to a special master. Louisiana remains as a separately-documented "advanced post-Callais walkthrough".
    - Fetch Census + adjacency + election data
-   - Run `redist state --state LA --year 2020 --partition-mode partisan-weighted ...`
+   - Run `redist state --state VT --year 2020`
    - Run `redist analyze --types all`
-   - Run `redist analyze --types bloc-voting` (the Callais piece)
    - Generate the PDF expert report
    - Verify with `redist doctor --verify-manifest`
    - Each step shows expected output + how long it should take
+
+3a. **Tutorial data versioning (DATUM/COVENANT/TRENCH consensus)**
+    - Walkthrough pins:
+      - Fekrazad DOI version
+      - Census TIGER year + URL
+      - Expected output checksums for each step (`final_assignments.json`, `district_summary.csv`)
+    - New CLI: `redist doctor --check-tutorial-data` validates that the user's local data matches the pinned versions (by SHA-256). If the upstream changed, the user gets an actionable warning, not a silent drift.
+    - Tutorial output blocks show:
+      ```
+      Expected: final_assignments.json sha256 = abc123...
+      Got:      def456...
+      → Data has drifted from tutorial baseline. Either:
+         (a) re-fetch with the pinned commands above
+         (b) Run `redist doctor --check-tutorial-data` for diagnosis
+      ```
+
+3b. **Advanced Louisiana / Callais walkthrough** (separate doc; not the canonical example)
+    - Fetch primary-election data via the registry
+    - Run `redist analyze --types bloc-voting` with the Callais Evidence Layer
+    - Generate court-formatted PDF
+    - Explicitly framed as "the post-Callais §2 evidence kit" not as the project's default workflow.
 
 4. **Error-message audit**
    - Walk every `unwrap()` and `?` in the CLI binary's user-facing surface
@@ -110,11 +133,14 @@ Each `quickstart-PERSONA.md` follows:
 
 It's the full Callais story: fetch data, run constraint-aware bisection, run §2 analysis, generate court-ready PDF, verify provenance. Every other quickstart can reference sections of this walkthrough.
 
-## Tests
+## Tests (v2 per BENCHMARK)
 
 - L0: bootstrap script syntax check (bash + cmd parser)
 - L1: docs/quickstart/* renders cleanly (markdown lint)
+- L2: separately-runnable acceptance test (NOT doctest — long commands, network, etc.) at `tests/acceptance/test_walkthrough_vermont.py` that runs the canonical walkthrough end-to-end and asserts all expected output checksums. Marked `@pytest.mark.network` and `@pytest.mark.slow`; default-skipped.
 - Manual: full bootstrap from a clean Windows VM + clean Linux container; record actual time-to-first-run
+
+Doctest of walkthrough markdown was considered (BENCHMARK noted) but rejected: long commands cause CI hangs, network dependency, no reasonable mock surface. The L2 acceptance test is the right level.
 
 ## Risks
 

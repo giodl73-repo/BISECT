@@ -1,9 +1,10 @@
 # Callais Evidence Layer: Within-Party Racial Bloc Voting
 **Date:** 2026-04-30
-**Status:** Proposed; pending review
+**Updated:** 2026-04-30 (v2 — incorporates SCALE BLOCK + BOUNDARY/MERIDIAN/DATUM/COVENANT/TRENCH revisions)
+**Status:** Revised; pending re-review
 **Closes gap for:** §2 plaintiff's expert post-Callais (★★★→★★★★★), academic researcher
 **Depends on:** existing partisan-shares producer + redist-analysis::bootstrap_ci
-**Estimated effort:** 5-7 days
+**Estimated effort:** 7-9 days (v2: more rigor)
 
 ## Why this exists
 
@@ -78,41 +79,76 @@ outputs/{version}/states/{state_name}/analysis/
   },
   "regression": {
     "model": "candidate_X_share ~ pct_black + pct_dem_baseline",
+    "specification": "WLS weighted by precinct vote count; HC3 robust SE; cluster-bootstrap by county B=10000",
     "candidate": "Biden",
-    "coefficients": {
-      "intercept": {"estimate": 0.42, "stderr": 0.03, "ci_95": [0.36, 0.48]},
-      "pct_black":   {"estimate": 0.61, "stderr": 0.04, "ci_95": [0.53, 0.69]},
-      "pct_dem_baseline": {"estimate": -0.12, "stderr": 0.05, "ci_95": [-0.22, -0.02]}
+    "diagnostics": {
+      "vif_pct_black_vs_pct_dem_baseline": 3.2,
+      "vif_underpowered_flag": false,
+      "ci_naive_vs_cluster_diverged": false
     },
-    "n": 4082,
+    "coefficients": {
+      "intercept": {"estimate": 0.42, "stderr_hc3": 0.03, "ci_95_cluster": [0.36, 0.48]},
+      "pct_black": {"estimate": 0.61, "stderr_hc3": 0.04, "ci_95_cluster": [0.51, 0.71], "standardized_beta": 0.58},
+      "pct_dem_baseline": {"estimate": -0.12, "stderr_hc3": 0.05, "ci_95_cluster": [-0.24, 0.00]}
+    },
+    "n_precincts": 4082,
+    "n_clusters": 64,
     "r_squared": 0.71,
-    "callais_significance": {
-      "race_coefficient_significant_after_party_control": true,
-      "p_value": 0.0001,
-      "interpretation": "Black voters' candidate preference within the Democratic primary differs from white Democratic voters' preference at p < 0.001, holding partisan baseline constant. Satisfies Callais Gingles 2/3 within-party racial bloc voting test."
-    }
+    "p_values": {
+      "pct_black_raw": 0.0001,
+      "pct_black_holm_corrected": 0.0007,
+      "pct_dem_baseline_raw": 0.018,
+      "pct_dem_baseline_holm_corrected": 0.054
+    },
+    "robustness_check": {
+      "baselines_tested": ["statewide_dem_share", "district_dem_share", "prior_primary_dem_share"],
+      "race_coefficient_significant_under_all": true,
+      "race_coefficient_min_estimate": 0.55,
+      "race_coefficient_max_estimate": 0.64
+    },
+    "ecology_caveat": "This analysis assumes ecological inference validity; ecological fallacy cannot be ruled out without individual-level data. Coefficients describe per-precinct associations, not individual-voter behavior.",
+    "draft_interpretation": "[DRAFT — expert witness should rewrite] Black-share has a positive, large, and robust association with Biden's vote share within the Democratic primary, after controlling for partisan baseline. β=0.61 (95% cluster-bootstrap CI [0.51, 0.71]; Holm-corrected p=0.0007). Robust under three alternative partisan-baseline definitions."
+  },
+  "race_of_candidate_provenance": {
+    "source_file": "data/elections/race_of_candidate/2020-presidential-primary.csv",
+    "source_sha256": "<computed at run time>",
+    "curator": "<from CSV header — required>",
+    "curator_attestation_date": "<from CSV header — required>",
+    "annotations_independently_verified": false,
+    "schema_version": 1
   },
   "provenance": { /* same provenance block as other outputs */ }
 }
 ```
 
-## Algorithmic approach
+## Algorithmic approach (revised v2 per SCALE/MERIDIAN)
 
-### Method 1 (default): Ecological regression with party control
+### Method 1 (default): Weighted ecological regression with party control
 
 For each cycle's primary results in a chosen party:
 1. Compute `pct_black` per precinct from tract-aggregated demographics
 2. Compute `pct_dem_baseline` per precinct from prior-cycle general election share
 3. Compute `candidate_share` per precinct for each named candidate
-4. Fit OLS: `candidate_share ~ pct_black + pct_dem_baseline`
-5. Bootstrap CIs by resampling precincts (B=10000)
-6. Report per-candidate coefficients and the Callais significance flag
+4. **Compute precinct weights** = total_votes_in_precinct (handles 100× size variance — SCALE blocker fix)
+5. **Diagnostic gate**: compute Variance Inflation Factor for `pct_black` vs `pct_dem_baseline`. If VIF > 5, output a "underpowered for causal claims" flag in the JSON; do not block the run (MERIDIAN recommendation).
+6. Fit **WLS** (weighted by precinct vote count) with **HC3 robust standard errors** (heteroskedasticity correction):
+   `candidate_share ~ pct_black + pct_dem_baseline`, weights = precinct vote count
+7. **Cluster-bootstrap by county** (B=10000) — resample counties with replacement, then all precincts in each sampled county. Naive precinct resampling ignores spatial structure (SCALE blocker fix). Report both naive and cluster CIs; flag divergence > 0.05.
+8. **Multiple-testing correction** (SCALE blocker): all p-values for a (state, cycle) pair are corrected via Holm-Bonferroni step-down. The corrected p-value is reported alongside the raw p-value. Default α = 0.05, configurable via `--alpha`.
+9. **Robustness check** (BOUNDARY recommendation): re-run with three alternative partisan baselines (statewide D-share, district D-share, prior-cycle primary D-share). Report whether the race coefficient remains significant under all three. A "robust" result is significant under all baselines after Holm correction.
+10. Report per-candidate **coefficients with 95% CI** + **effect size** (standardized β) + plain-English interpretation. **Do not output a binary significance flag** (SCALE blocker fix).
 
 ### Method 2 (research): RxC ecological inference
 
 For each precinct, model the joint distribution of (race × candidate-vote) using King's RxC method (or a simpler 2×2 variant). Returns posterior means + credible intervals for "P(votes for candidate X | Black voter)" within the chosen party.
 
 We ship Method 1 first because it's simpler, defensible, and the Callais language explicitly contemplates regression-style controls. Method 2 is a future research mode.
+
+**Caveat language for both methods:** outputs include this fixed disclaimer: *"This analysis assumes ecological inference validity; ecological fallacy cannot be ruled out without individual-level data. Coefficients describe per-precinct associations, not individual-voter behavior."*
+
+### Confidence-interval level (standardized v2)
+
+All CIs in this spec are **95% percentile bootstrap CIs** unless explicitly noted. The CI level is configurable via `--ci-level <0.0..1.0>`; default 0.95.
 
 ## CLI surface
 
@@ -135,14 +171,48 @@ Options:
 - L1: end-to-end test on synthetic 100-precinct dataset where ground truth is known
 - L2: skipped-by-default acceptance test that runs against Louisiana 2020 primary (requires OpenElections clone + race-of-candidate annotation)
 
-## Risks
+## Race-of-candidate annotation: full provenance protocol (v2)
+
+The race-of-candidate file is the most contested data input in this analysis. v2 specifies a chain-of-custody protocol per BOUNDARY/COVENANT/DATUM/TRENCH consensus:
+
+### File format
+
+`data/elections/race_of_candidate/{cycle}.csv` with required columns:
+
+```
+candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified
+"Joseph Biden",DEM,white,"Jane Doe","Ph.D. Political Science",2026-04-30,"https://en.wikipedia.org/wiki/Joe_Biden",true
+```
+
+### Schema validation at import
+
+- `race` field must be one of: `Black, white, Hispanic, Asian, Native, other` (case-sensitive). Any other value → import refuses with a clear error.
+- `curator` and `curator_attestation_date` required (no nulls).
+- `independently_verified` is a boolean; if `false`, the bloc-voting JSON output sets `annotations_independently_verified: false` and the draft interpretation includes the caveat "annotations not independently verified."
+
+### Sensitivity analysis (DATUM recommendation)
+
+For close-margin annotations (any candidate where the regression coefficient changes by more than 10% under a single annotation flip), the analysis runs all permutations and reports a "robust under annotation perturbation" flag. Default tolerance configurable via `--annotation-sensitivity <FLOAT>`.
+
+### Reproducibility-package inclusion (BOUNDARY blocker)
+
+The race-of-candidate CSV **must be included** in the reproducibility package emitted by `redist report` (see Court Submission Reports spec v2). Without it, the analysis is not Daubert-defensible.
+
+### Dispute-resolution
+
+When two curators disagree on an annotation, the file format supports multiple rows per candidate (one per curator). The analysis runs once per curator's annotation set; results from each are reported side by side. The expert witness picks which to defend.
+
+## Risks (v2)
 
 | Risk | Mitigation |
 |---|---|
-| Race-of-candidate annotation is subjective and contested | Document source of each annotation; allow user override; ship a curated default for major cycles only |
-| Ecological inference assumptions don't hold in some districts | Output diagnostics (residual analysis, leverage); honest caveat in summary |
-| Different ecological-inference methods give different answers | Default to OLS for transparency; offer RxC as opt-in |
-| Bootstrap CI undercoverage with small precincts | Document minimum precinct count; refuse to run below threshold (configurable) |
+| Race-of-candidate annotation is subjective and contested | Schema-validated import; required curator attestation; sensitivity analysis; reproducibility-package inclusion; dispute-resolution via parallel curator runs |
+| Ecological inference assumptions don't hold in some districts | Output VIF, leverage, residual diagnostics; fixed caveat in every summary |
+| Different ecological-inference methods give different answers | Default to WLS+HC3 for transparency; document expected divergence from RxC; offer RxC as opt-in for sensitivity |
+| Bootstrap CI undercoverage with small precincts | Cluster-bootstrap by county; minimum precinct count gate (`--min-precincts`, default 50); refuse with clear error below |
+| Multiple-testing inflation across 15-30 candidate × cycle × race tests | Holm-Bonferroni step-down correction reported alongside raw p-values; family defined as (state × cycle × party) |
+| Multicollinearity between race and party | VIF diagnostic; if VIF > 5, "underpowered for causal claims" flag in JSON |
+| Auto-generated interpretation prose creates expert-witness liability | Output is `draft_interpretation` with explicit `[DRAFT — expert witness should rewrite]` prefix; expert writes the final language with JSON as audit trail |
 
 ## Definition of done
 
