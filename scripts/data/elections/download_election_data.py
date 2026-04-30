@@ -9,7 +9,7 @@ and --filename to fetch from any other Dataverse dataset.
 Some datasets (notably MIT EDSL) require a "guestbook" response before
 download. For those, pass --api-key <KEY> or set DATAVERSE_API_KEY in your
 environment. Get a key by signing in at dataverse.harvard.edu, then visiting
-your account page → API Token. The first download from a guestbook-protected
+your account page -> API Token. The first download from a guestbook-protected
 dataset still requires a one-time browser visit to accept the guestbook.
 
 Use --list-files to discover filenames before passing --filename. The
@@ -40,7 +40,7 @@ def download_file(url, output_path, description=None, headers=None):
         raise requests.HTTPError(
             f"400 Bad Request from Dataverse: {msg}\n"
             f"  If this mentions 'Guestbook', set DATAVERSE_API_KEY or pass "
-            f"--api-key. Get a token from dataverse.harvard.edu → Account → "
+            f"--api-key. Get a token from dataverse.harvard.edu -> Account -> "
             f"API Token (free, requires login).",
             response=response,
         )
@@ -111,7 +111,7 @@ def main():
                        default=os.environ.get('DATAVERSE_API_KEY'),
                        help='Harvard Dataverse API token. Required for datasets with a '
                             'guestbook. Falls back to DATAVERSE_API_KEY env var. '
-                            'Get one from dataverse.harvard.edu → Account → API Token.')
+                            'Get one from dataverse.harvard.edu -> Account -> API Token.')
     args = parser.parse_args()
 
     # Validate state argument

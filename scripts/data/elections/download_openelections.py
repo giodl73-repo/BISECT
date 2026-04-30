@@ -88,7 +88,7 @@ def clone_state(state_code: str, output_dir: Path, depth: int = 1, force: bool =
     if result.returncode != 0:
         print(f"[FAIL] {state_code}: git clone exited {result.returncode}")
         return result.returncode
-    print(f"[OK]  {state_code} → {repo_dir}")
+    print(f"[OK]  {state_code} -> {repo_dir}")
     return 0
 
 

@@ -4,7 +4,7 @@ Download per-state VEST (Voting and Election Science Team) precinct shapefiles
 
 VEST publishes one Dataverse dataset per state per cycle; there's no central
 index, so this script reads a local cache (vest_dois.json) of known
-state/year → DOI mappings and dispatches to download_election_data.py.
+state/year -> DOI mappings and dispatches to download_election_data.py.
 
 Adding a new state/year:
   1. Browse https://dataverse.harvard.edu/dataverse/electionscience and find
@@ -16,8 +16,8 @@ Adding a new state/year:
   4. Add an entry to vest_dois.json under by_state_and_year.<STATE>.<YEAR>.
 
 Most VEST datasets DO require a DATAVERSE_API_KEY (they're guestbook-protected
-the same way MIT EDSL is). Get a token from dataverse.harvard.edu →
-Account → API Token, then `export DATAVERSE_API_KEY=...`.
+the same way MIT EDSL is). Get a token from dataverse.harvard.edu ->
+Account -> API Token, then `export DATAVERSE_API_KEY=...`.
 
 Plan 03 / Callais context: VEST is the gold-standard precinct shapefile +
 result join used by Princeton Gerrymandering Project and other §2 expert
