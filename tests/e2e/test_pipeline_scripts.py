@@ -9,6 +9,10 @@ Tests actual command-line execution of pipeline scripts to catch:
 
 These tests run the ACTUAL scripts as subprocesses, not mocks.
 """
+# Removed 2026-04-29: 4 test classes for archived Python pipeline orchestrators
+# (process_single_state, run_complete_redistricting, process_nation,
+# run_state_redistricting). Those scripts are at archive/python-pipeline-final/.
+
 
 import pytest
 import subprocess
@@ -183,75 +187,6 @@ def vermont_output_dir(tmp_path):
     return output_dir
 
 
-class TestProcessSingleState:
-    """Test process_single_state.py script execution."""
-
-    def test_script_imports_successfully(self):
-        """Test that script can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'process_single_state.py'
-
-        # Try to compile the script (catches syntax errors)
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error: {e}")
-
-    def test_script_has_main_function(self):
-        """Test that script has a main() function."""
-        script = project_root / 'scripts' / 'pipeline' / 'process_single_state.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        assert 'def main():' in content, "Script must have main() function"
-        assert 'if __name__ == \'__main__\':' in content, "Script must be executable"
-
-    @pytest.mark.slow
-    def test_vermont_execution_no_analysis(self, vermont_test_data, vermont_output_dir):
-        """Test running process_single_state.py for Vermont without analysis."""
-        script = project_root / 'scripts' / 'pipeline' / 'process_single_state.py'
-
-        # Set up environment to point to test data
-        import os
-        env = os.environ.copy()
-        env['PYTHONPATH'] = str(project_root)
-
-        # Change to project root so relative imports work
-        original_cwd = Path.cwd()
-        try:
-            os.chdir(project_root)
-
-            # Create a minimal config structure
-            # Copy test data to expected location
-            data_dir = project_root / 'data'
-            if not data_dir.exists():
-                shutil.copytree(vermont_test_data, data_dir)
-
-            # Run the script
-            result = subprocess.run([
-                sys.executable,
-                str(script),
-                '--state', 'VT',
-                '--year', '2020',
-                '--output-dir', str(vermont_output_dir),
-                '--dpi', '72',  # Low DPI for speed
-                '--print-only'  # Dry run to avoid needing all dependencies
-            ], capture_output=True, text=True, env=env, timeout=30)
-
-            # Check it didn't fail with syntax error
-            assert 'SyntaxError' not in result.stderr, f"Syntax error: {result.stderr}"
-            assert 'TypeError' not in result.stderr, f"Type error: {result.stderr}"
-
-        finally:
-            os.chdir(original_cwd)
-            # Clean up test data
-            if (project_root / 'data').exists():
-                shutil.rmtree(project_root / 'data', ignore_errors=True)
-
-
 class TestAnalyzeDistrictDemographics:
     """Test analyze_district_demographics.py script execution."""
 
@@ -391,74 +326,6 @@ class TestVisualizationScripts:
             pytest.fail(f"{script_name} has syntax error at line {e.lineno}: {e.msg}")
 
 
-class TestRunCompleteRedistricting:
-    """Test run_complete_redistricting.py orchestrator script."""
-
-    def test_script_imports_successfully(self):
-        """Test that orchestrator can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'run_complete_redistricting.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
-
-    def test_has_argument_parser(self):
-        """Test that script has proper argument parser."""
-        script_path = project_root / 'scripts' / 'pipeline' / 'run_complete_redistricting.py'
-
-        with open(script_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        assert 'argparse.ArgumentParser' in content, "Should use argparse"
-        assert '--year' in content, "Should have --year argument"
-        assert '--version' in content, "Should have --version argument"
-        assert '--workers' in content, "Should have --workers argument"
-
-
-# ============================================================================
-# HIGH PRIORITY: Scripts that caused or are involved in V6 failure
-# ============================================================================
-
-class TestProcessNation:
-    """Test process_nation.py - National post-processing orchestrator (V6 failure point)."""
-
-    def test_script_imports_successfully(self):
-        """Test that script can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
-
-    def test_has_main_function(self):
-        """Test that script has a main() function."""
-        script = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        assert 'def main():' in content, "Script must have main() function"
-        assert 'if __name__ == \'__main__\':' in content, "Script must be executable"
-
-    def test_has_error_logging(self):
-        """Test that script uses error logger for debugging failures."""
-        script_path = project_root / 'scripts' / 'pipeline' / 'process_nation.py'
-
-        with open(script_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        assert 'get_error_logger' in content or 'ErrorLogger' in content, \
-            "Should use error logger to catch V6-style failures"
-
-
 class TestVisualizeNationalRounds:
     """Test visualize_national_rounds.py - Script that failed in V6 run."""
 
@@ -484,32 +351,6 @@ class TestVisualizeNationalRounds:
         # Should have error logger for debugging
         assert 'get_error_logger' in content or 'ErrorLogger' in content, \
             "Should use error logger (this script failed in V6)"
-
-
-class TestRunStateRedistricting:
-    """Test run_state_redistricting.py - State-level orchestrator."""
-
-    def test_script_imports_successfully(self):
-        """Test that script can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'run_state_redistricting.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
-
-    def test_has_argument_parser(self):
-        """Test that script has argparse for CLI execution."""
-        script = project_root / 'scripts' / 'pipeline' / 'run_state_redistricting.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        assert 'argparse.ArgumentParser' in content, "Should use argparse"
-        assert '--state' in content, "Should have --state argument"
 
 
 class TestAddCitiesToDistricts:
@@ -618,22 +459,6 @@ class TestCleanupDistrictSummary:
     def test_script_imports_successfully(self):
         """Test that script can be imported without syntax errors."""
         script = project_root / 'scripts' / 'pipeline' / 'cleanup_district_summary.py'
-
-        with open(script, 'r', encoding='utf-8') as f:
-            code = f.read()
-
-        try:
-            compile(code, str(script), 'exec')
-        except SyntaxError as e:
-            pytest.fail(f"Script has syntax error at line {e.lineno}: {e.msg}")
-
-
-class TestVisualizeDistricts:
-    """Test visualize_districts.py - District visualization."""
-
-    def test_script_imports_successfully(self):
-        """Test that script can be imported without syntax errors."""
-        script = project_root / 'scripts' / 'pipeline' / 'visualize_districts.py'
 
         with open(script, 'r', encoding='utf-8') as f:
             code = f.read()
