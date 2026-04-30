@@ -107,10 +107,12 @@
       "level": "presidential | senate | house | state-legislative",
       "years": [2020],
       "states": "varies (~30 states with 2020 releases)",
-      "fetcher": null,
-      "format": "shapefile + CSV joined",
+      "fetcher": "scripts/data/elections/download_vest.py",
+      "fetcher_args": ["--list-known"],
+      "requires_api_key": "DATAVERSE_API_KEY (most VEST datasets are guestbook-protected)",
+      "format": "shapefile + CSV joined (per-state .zip)",
       "schema": "VEST schema: G20PREDBID, G20PRERTRU, G20USSDxxx, etc.",
-      "notes": "Voting and Election Science Team — gold-standard precinct geometry + result joins for redistricting research. Per-state DOIs on Dataverse. Could be auto-fetched via the same downloader as Fekrazad/MIT (each state has its own DOI). Auto-fetcher not yet written because the per-state DOI list isn't centrally indexed; would need a sub-registry."
+      "notes": "Voting and Election Science Team — gold-standard precinct geometry + result joins. Per-state DOIs cached in scripts/data/elections/vest_dois.json (initially empty — populate as needed). Default fetcher action is `--list-known` (prints the cache); pass `--state WI --year 2020` to download a specific dataset. Workflow for adding new (state, year): list-files via the Dataverse downloader to discover the .zip filename, then add `state -> year -> {doi, filename}` to vest_dois.json."
     },
     {
       "id": "ca-sos-primary",
