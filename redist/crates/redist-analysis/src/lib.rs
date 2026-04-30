@@ -14,6 +14,8 @@ pub mod contiguity;
 pub mod splits;
 pub mod split_standards;
 pub mod exit_codes;
+pub mod bloc_voting;
+pub mod race_of_candidate;
 
 pub use compactness::{polsby_popper, reock, convex_hull_ratio, all_metrics, CompactnessMetrics, CompactnessError};
 pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
@@ -38,3 +40,14 @@ pub use split_standards::{get_split_standard, SplitStandard};
 pub use exit_codes::{compute_exit_code, compute_exit_code_with_flags, BIT_BALANCE, BIT_CONTIGUITY, BIT_NESTING, BIT_MISSING_DATA};
 pub use dhondt::{dhondt_allocate, gallagher_index};
 pub use county_names::county_name;
+pub use bloc_voting::{
+    fit_wls, hc3_stderr, compute_vif, holm_bonferroni, cluster_bootstrap,
+    run_bloc_voting_family,
+    Precinct, Coef, RegressionFit, BlocVotingError, ClusterCi,
+    BlocVotingTest, BlocVotingConfig, BlocVotingTestResult, BlocVotingFamilyResult,
+    RobustnessCheck,
+};
+pub use race_of_candidate::{
+    parse_race_of_candidate_csv, AnnotationSet, AttestationDocFormat, AttestationDocRecord,
+    CandidateAnnotation, CandidateRace, CuratorRecord, RaceOfCandidateProvenance, RaceParseError,
+};
