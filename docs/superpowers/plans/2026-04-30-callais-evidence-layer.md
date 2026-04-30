@@ -94,7 +94,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 **Files:** `redist/crates/redist-analysis/src/bloc_voting.rs`, `docs/file-formats/race-of-candidate.md` (new)
 
-- [ ] **4.1** Implement CSV parser for the v2 schema: required columns `candidate_name, party, race, curator, curator_credentials, curator_attestation_date, source, independently_verified` plus the v2.1 BD-R2 additions: `attestation_doc_path` (relative path to the attestation document inside the reproducibility zip), `attestation_doc_format` (one of `pdf|docx|md|txt`), `attestation_doc_sha256` (computed at import; fail if file missing).
+- [ ] **4.1** Implement CSV parser for the v2 schema: required columns `candidate_name, party, race, curator, curator_credentials, curator_attestation_date, source, independently_verified` plus the v2.1 BD-R2 additions: `attestation_doc_path` (relative path to the attestation document inside the reproducibility zip), `attestation_doc_format` (one of the BD-R2 reconciled union: `pdf|docx|md|txt|png|jpg|jpeg|tif|tiff` — see Task 4.6 for the curator-narrative vs civic-attestation rationale), `attestation_doc_sha256` (computed at import; fail if file missing).
 - [ ] **4.2** Schema validation: `race ∈ {Black, white, Hispanic, Asian, Native, other}` case-sensitive — any other value is a hard `[INPUT]` error per `docs/error-conventions.md` conventions. `curator` and `curator_attestation_date` non-empty. `independently_verified` parses to bool.
 - [ ] **4.3** When `independently_verified == false`, the `BlocVotingResult` injection logic (Task 6) must:
   (a) set `race_of_candidate_provenance.annotations_independently_verified = false`
@@ -106,7 +106,12 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 - [ ] **4.6** Write `docs/file-formats/race-of-candidate.md` documenting:
   - The schema (column-by-column)
   - Allowed `race` values and why the list is closed
-  - `attestation_doc` accepted formats: `pdf`, `docx`, `md`, `txt` (no HTML — too easy to fake; no images — not extractable text). Doc must contain at minimum the curator name, credential, attestation date, and a per-candidate sentence justifying the classification.
+  - `attestation_doc` accepted formats — **BD-R2 reconciled union** (resolves v2.1.1 P0 mismatch with Civic Bidirectional plan):
+    - **Curator-narrative formats**: `pdf|docx|md|txt` — the curator's expert-witness narrative justifying classifications. Mutable formats accepted because the SHA-256 is computed at import time (tamper-evident regardless).
+    - **Civic-submitter attestation formats**: `png|jpg|jpeg|tif|tiff` — scanned letterhead from a civic submitter. Image formats accepted because that is the realistic medium.
+    - HTML is barred (too easy to fake; no provenance).
+    - Doc must contain at minimum the curator name, credential, attestation date, and a per-candidate sentence justifying the classification.
+    - Court-mode rejection: the Court Reports plan's `--allow-non-strict-civic` gate (BD-R1) refuses non-PDF attestation docs in court submissions unless the operator opts in. This is wired in `report_cmd.rs`, not here.
   - The reproducibility-zip inclusion contract (Task 5)
   - Worked example for the LA 2020 Democratic presidential primary
 - [ ] **4.7** L0 tests: well-formed CSV parses; bad `race` value errors with `[INPUT]` prefix; missing `attestation_doc_path` errors; computed `attestation_doc_sha256` matches `sha256sum` on the same fixture file; multi-curator file produces 2-element vec.
@@ -171,6 +176,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
   - `--annotation-sensitivity <FLOAT>` (default `0.10`)
   - `--ci-level <FLOAT>` (default `0.95`)
   - `--min-precincts <N>` (default `50`; refuses with clear `[INPUT]` error below this count per spec risk row 4)
+  - **v2.1.1 P1 (M-01 alias)**: every flag in this analyze surface accepts `--plan-label` as a clap alias for `--label` (`#[arg(long, alias = "plan-label")]`) so workflows mixing `redist analyze --plan-label X` with `redist depo eval --plan-label X` are not flag-mismatched. Document the alias in `--help`.
 - [ ] **7.3** In `analyze.rs::run_analyze`, add the `AnalyzerType::BlocVoting` match arm. Delegates to `bloc_voting_cmd::run_bloc_voting_cmd(...)` which: loads precincts (via OpenElections per `sources.json` registry — `fetcher: null` rows surface a `[INPUT]` error directing the user to the registry doc), loads tract demographics (existing `data/{year}/demographics/{state}_demographics_{year}.csv`), loads partisan baseline (reuse `partisan_shares.rs` for the TSV path), loads the race-of-candidate CSV, computes precinct-level `pct_minority` via tract→precinct overlay (existing pipeline), runs the orchestrator, writes JSON + summary, runs Task 5's reproducibility-zip staging.
 - [ ] **7.4** Help text (`redist analyze --help`) lists `bloc-voting` with a one-line description and a `See: docs/file-formats/race-of-candidate.md` pointer.
 - [ ] **7.5** Help text states explicitly that `--types bloc-voting --stdout` is permitted (single-type rule; consistent with `analyze.rs` line 228 invariant).
@@ -256,6 +262,6 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
 - Survey-based race attribution / voter-file integration (Catalist, L2) — separate spec, not addressed here
 - Auto-fetching OpenElections data inside the bloc-voting command — fetcher is `redist fetch --source openelections`, run separately
 - Fixing `fetcher: null` rows in `sources.json` — registry hygiene is owned by D-03 in the Court Reports plan
-- The `--label` rename to `--plan-label` (M-01) — owned by Plan Comparison + Deposition plans; this plan continues to use `--label` consistent with other analyze subcommands until that rename lands
+- The `--label` rename to `--plan-label` (M-01) — owned by Plan Comparison + Deposition plans; this plan continues to accept `--label` consistent with other analyze subcommands. **v2.1.1 P1 patch**: `--plan-label` is added as a clap alias in Task 7.2 so a workflow mixing `redist analyze` with `redist depo eval` doesn't trip over flag drift. The full rename remains the responsibility of a future cross-cutting M-01 cleanup.
 - Consuming Civic Bidirectional conflict-resolution outputs directly — this plan accepts LOO variants as an *input* (via repeated `--candidate-race-csv` invocations or a multi-curator CSV per Task 4.5); the upstream conflict-resolution pipeline that produces them is owned by the Civic Bidirectional plan
 - Daubert pre-flight — separate concern, owned by the Deposition Prep + Court Reports plans
