@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "description": "Registry of US election-data sources used (or usable) by the redistricting pipeline. Each source's `fetcher` is the script that downloads from it; null means manual / not yet automated. Required by `redist analyze --types political` (consumes tract-level CSV: geoid, dem_votes, rep_votes).",
+  "sources": [
+    {
+      "id": "harvard-fekrazad-2020",
+      "name": "Fekrazad reallocation (Harvard Dataverse)",
+      "doi": "10.7910/DVN/Z8TSH3",
+      "url": "https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/Z8TSH3",
+      "license": "CC0-1.0",
+      "resolution": "tract",
+      "level": "presidential",
+      "years": [2020],
+      "states": "all-50",
+      "fetcher": "scripts/data/elections/download_election_data.py",
+      "fetcher_args": ["--year", "2020"],
+      "format": "csv",
+      "schema": {
+        "geoid": "string (11-char TIGER)",
+        "dem_votes": "float",
+        "rep_votes": "float"
+      },
+      "notes": "Default for partisan analysis. CC0 license, redistributable. Single point of failure: dataset moves or retracts, this breaks. Methodology is precinct->tract area-weighted reallocation per Fekrazad's paper."
+    },
+    {
+      "id": "mggg-openprecincts",
+      "name": "MGGG OpenPrecincts",
+      "url": "https://github.com/mggg-states",
+      "license": "varied (mostly CC-BY-4.0; check per-state repo)",
+      "resolution": "precinct",
+      "level": "presidential | senate | governor | various",
+      "years": [2016, 2018, 2020, 2022],
+      "states": "varies (50+ state repos, varying coverage)",
+      "fetcher": null,
+      "format": "shapefile + CSV",
+      "schema": "varies by state — each state's repo defines its own column names (e.g., G20PREDBID for 2020 Biden)",
+      "notes": "Most authoritative precinct-level source. Each state lives in its own GitHub repo (mggg-states/<STATE>-shapefiles). Requires precinct->tract reallocation by the consumer; we don't auto-fetch yet because state-specific schemas need per-state mapping."
+    },
+    {
+      "id": "mit-edsl-1976-2022",
+      "name": "MIT Election Data and Science Lab — U.S. President 1976-2022",
+      "url": "https://electionlab.mit.edu/data",
+      "doi": "10.7910/DVN/42MVDX",
+      "license": "CC-BY-4.0",
+      "resolution": "county | state | congressional-district",
+      "level": "presidential | senate | house",
+      "years": [1976, 1978, 1980, 1982, 1984, 1986, 1988, 1990, 1992, 1994, 1996, 1998, 2000, 2002, 2004, 2006, 2008, 2010, 2012, 2014, 2016, 2018, 2020, 2022],
+      "states": "all-50",
+      "fetcher": null,
+      "format": "csv",
+      "schema": "varies by dataset",
+      "notes": "Resolution too coarse for tract-level partisan-weighted bisection input. Useful for cross-validation of district-level metrics post-redistricting and for VAP-disaggregation in build_dem_shares.py --mode vap-disaggregate (county results -> tract VAP). Long time series enables temporal stability research."
+    },
+    {
+      "id": "dave-redistricting-app",
+      "name": "Dave's Redistricting App",
+      "url": "https://davesredistricting.org",
+      "license": "Proprietary; manual CSV export per the site's terms",
+      "resolution": "precinct | tract | block",
+      "level": "varied (DRA aggregates from many sources)",
+      "years": [2016, 2018, 2020, 2022],
+      "states": "all-50",
+      "fetcher": null,
+      "format": "csv (export)",
+      "schema": "user-controlled at export time",
+      "notes": "Web app with precomputed precinct->tract reallocations. Manual export only — no public API. Useful when Dataverse data is missing for a state or when the Fekrazad reallocation is questioned."
+    },
+    {
+      "id": "daily-kos-elections",
+      "name": "Daily Kos Elections — Presidential by Congressional District",
+      "url": "https://www.dailykos.com/stories/2021/2/5/2014924/",
+      "license": "Editorial (per article)",
+      "resolution": "congressional-district",
+      "level": "presidential",
+      "years": [2020],
+      "states": "all-50",
+      "fetcher": null,
+      "format": "csv (manual table extraction)",
+      "schema": "as published in the article",
+      "notes": "District-level only, manually compiled. Duplicates MIT EDSL coverage at similar fidelity. Not a primary source for our pipeline; included for cross-checking."
+    }
+  ]
+}

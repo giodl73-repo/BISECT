@@ -217,17 +217,44 @@ redist fetch --year 2020 --release
 
 #### Election data (separate from `redist fetch`)
 
-`redist fetch --type elections` is declared as a CLI option but not yet implemented in `fetch.rs` — running it emits a WARNING. Use the Python downloader, which fetches tract-level presidential results from Harvard Dataverse (DOI: 10.7910/DVN/Z8TSH3, Fekrazad 2020):
+`redist fetch --type elections` is declared as a CLI option but not yet implemented in `fetch.rs` — running it emits a WARNING. Election sources live in their own registry under `scripts/data/elections/sources.json` and are fetched via a Python dispatcher:
 
 ```bash
-python scripts/data/elections/download_election_data.py --year 2020
+# List all known election-data sources
+python scripts/data/elections/fetch_elections.py list
+
+# Filter to tract-resolution sources
+python scripts/data/elections/fetch_elections.py list --resolution tract
+
+# Show full details of a specific source
+python scripts/data/elections/fetch_elections.py show harvard-fekrazad-2020
+
+# Fetch from the default tract-level source for a year
+python scripts/data/elections/fetch_elections.py fetch --year 2020
+
+# Fetch from a specific source by id
+python scripts/data/elections/fetch_elections.py fetch --source harvard-fekrazad-2020
 ```
 
-This produces tract-level CSVs with `geoid, dem_votes, rep_votes` columns suitable as input for `redist analyze --types political`. After cleanup, the canonical path becomes:
+Sources currently in the registry:
+
+| ID | Resolution | Auto-fetch | License |
+|---|---|---|---|
+| `harvard-fekrazad-2020` | tract | yes | CC0-1.0 |
+| `mggg-openprecincts` | precinct | no (manual per-state) | varied |
+| `mit-edsl-1976-2022` | county / district | no | CC-BY-4.0 |
+| `dave-redistricting-app` | precinct / tract | no (web export) | proprietary |
+| `daily-kos-elections` | district | no (manual) | editorial |
+
+Adding a new source is a JSON edit to `sources.json`. Sources whose `fetcher` is null print their URL and any manual-fetch instructions.
+
+**Why a registry:** the new Gingles 2/3 standard from *Louisiana v. Callais* requires plaintiffs to control for partisan affiliation when proving racial bloc voting. That makes high-resolution election data load-bearing for §2 evidence in a way it wasn't pre-Callais. The registry is the place to add precinct-level / primary-election sources as they become available.
+
+The canonical 3-step partisan-lean flow:
 
 ```bash
-# 1. Download tract-level election data (one-time)
-python scripts/data/elections/download_election_data.py --year 2020
+# 1. Pick + fetch an election-data source (one-time per cycle)
+python scripts/data/elections/fetch_elections.py fetch --year 2020
 
 # 2. Run redistricting (Rust)
 redist state --state VT --year 2020 --label vt_test
