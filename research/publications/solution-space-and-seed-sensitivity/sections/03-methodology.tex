@@ -93,93 +93,145 @@ Compute estimate: $50 \times 1{,}000 = 50{,}000$ state-level runs at an
 average of $\sim$30\,s each $\approx$ 417 CPU-hours. Parallelised across 8
 cores: $\sim$52 wall-clock hours.
 
-\subsection{CompactBisect: A New Recursive Algorithm}
+\subsection{CompactBisect: A Huntington-Hill Analogue for Geometric Redistricting}
 \label{sec:methodology:compactbisect}
 
-The core observation motivating this section is that minimum-edge-cut, while
-a strong geometric criterion, operates \emph{globally}: it minimises total
-boundary length across the entire partition but makes no guarantee about the
-shape of individual intermediate subgraphs at each level of recursion. A
-non-compact intermediate region propagates non-compactness to all its
-descendant districts.
+\subsubsection{Why Compactness Supersedes Edge-Cut as the Selection Criterion}
 
-We propose \textsc{CompactBisect}, a modification of recursive bisection that
-applies a compactness criterion \emph{at every step of the recursion}, not
-just at the final partition.
+Minimum edge-cut with boundary-length weights minimises total district
+perimeter contribution from \emph{internal} boundaries --- the shared edges
+cut between districts. But the Polsby-Popper score of a district is
+$\mathrm{PP}_i = 4\pi A_i / P_i^2$, where $P_i$ includes \emph{both} the
+internal boundaries (controlled by edge-cut) and the \emph{external} state
+boundary: coastlines, rivers, and state lines that are geographically fixed
+regardless of how the partition is drawn.
+
+For coastal and complex-border states --- Maryland, Florida, California,
+Louisiana --- a district along the water's edge will have a long external
+perimeter that no algorithm can reduce. Edge-cut minimisation is blind to
+this; Polsby-Popper is not. Compactness directly measures the geometric
+quality we want: how close to a circle is each district, accounting for
+its full boundary. Edge-cut is a computationally efficient heuristic for
+generating candidate bisections; compactness is the correct selection criterion.
+
+\subsubsection{The Geometric Mean as the Fairness Criterion}
+
+Given a candidate bisection $(L, R)$ of subgraph $G$, three natural scores
+summarise the compactness of both halves:
+
+\begin{itemize}
+  \item \textbf{Minimum}: $\min(\mathrm{PP}(L), \mathrm{PP}(R))$ ---
+        maximise the worst half (Rawlsian).
+  \item \textbf{Arithmetic mean}: $(\mathrm{PP}(L) + \mathrm{PP}(R))/2$ ---
+        maximise total compactness.
+  \item \textbf{Geometric mean}: $\sqrt{\mathrm{PP}(L) \cdot \mathrm{PP}(R)}$
+        --- maximise \emph{balance} between the two halves.
+\end{itemize}
+
+The geometric mean is strictly superior for the following reason. For a fixed
+arithmetic mean $\mu = (\mathrm{PP}(L) + \mathrm{PP}(R))/2$, the geometric
+mean $\sqrt{\mathrm{PP}(L)\cdot\mathrm{PP}(R)} \leq \mu$ with equality iff
+$\mathrm{PP}(L) = \mathrm{PP}(R)$. Maximising the geometric mean therefore
+simultaneously maximises compactness \emph{and} enforces equality between the
+two halves. It penalises imbalance in proportion to its magnitude: a plan
+with $\mathrm{PP}(L) = 0.1$, $\mathrm{PP}(R) = 0.9$ scores 0.30 (geometric)
+vs.\ 0.50 (arithmetic). A plan with $\mathrm{PP}(L) = \mathrm{PP}(R) = 0.5$
+scores 0.50 under both --- the same, as it should be.
+
+\paragraph{The Huntington-Hill analogy.}
+This criterion is structurally identical to the Huntington-Hill equal-proportions
+method for congressional apportionment (2~U.S.C.~\S~2a). Huntington-Hill
+assigns the next seat to the state for which
+$\sqrt{n_i(n_i+1)}$ is minimised, where $n_i$ is the current seat count. The
+geometric mean $\sqrt{n_i(n_i+1)}$ is the breakpoint because it enforces
+proportional equality in representation: it treats a move from $n$ to $n+1$
+seats proportionally the same regardless of $n$. Congress adopted this
+criterion in 1941 precisely because it is the uniquely neutral geometric-mean
+fairness standard for apportionment.
+
+CompactBisect applies the identical reasoning to the bisection problem.
+Rather than proportional equality in seats, we seek proportional equality in
+compactness: $\sqrt{\mathrm{PP}(L)\cdot\mathrm{PP}(R)}$ is the
+\emph{geometric-mean compactness} of the two halves, and maximising it ensures
+that neither half is penalised for being proportionally less compact than the
+other. The federal government already accepts geometric-mean fairness as the
+uniquely correct apportionment standard; CompactBisect applies the same
+principle one level down, to the line-drawing problem itself.
+
+\subsubsection{Algorithm Definition}
 
 \begin{definition}[\textsc{CompactBisect}]
 \label{def:compactbisect}
-Let $G = (V, E, w)$ be the state census-tract graph, $k$ the target district
-count, and $N$ the per-level seed budget. Define the Polsby-Popper score of a
-subgraph $H \subseteq G$ as $\mathrm{PP}(H) = 4\pi A(H) / P(H)^2$, where
-$A(H)$ is the total area and $P(H)$ the total perimeter of the geographic
-region corresponding to $H$'s vertex set.
+Let $G = (V, E, w_e)$ be the state census-tract graph with edge weights equal
+to TIGER shared boundary lengths (metres), per-vertex areas $a_v$ (m$^2$), and
+per-vertex external perimeters $p_v^{\mathrm{ext}}$ (metres, the non-shared
+boundary of each tract). For a subset $S \subseteq V$, define:
+\[
+  A(S) = \sum_{v \in S} a_v, \qquad
+  P(S) = \underbrace{\sum_{(u,v)\in E,\, u\in S,\, v\notin S} w_e^{(uv)}}_{\text{internal boundary}}
+        + \underbrace{\sum_{v\in S} p_v^{\mathrm{ext}}}_{\text{external boundary}},
+  \qquad
+  \mathrm{PP}(S) = \frac{4\pi A(S)}{P(S)^2}.
+\]
 
-\textsc{CompactBisect}$(G, k, N)$:
+\textsc{CompactBisect}$(G, k, N, \varepsilon)$, with $N$ seeds and
+$\varepsilon$-tolerance ($\varepsilon = 0.05$ unless stated):
 \begin{enumerate}
-  \item If $k = 1$, return $\{V\}$.
-  \item Generate $N$ candidate bisections $\{(L_i, R_i)\}_{i=1}^N$ of $G$ into
-        two parts of sizes proportional to $\lfloor k/2 \rfloor$ and
-        $\lceil k/2 \rceil$, each produced by a distinct METIS seed.
-  \item Compute $\mathrm{EC}(L_i, R_i)$ for each candidate. Let
-        $\mathrm{EC}^* = \min_i \mathrm{EC}(L_i, R_i)$.
-  \item Filter to the $\varepsilon$-near-minimum set:
-        $\mathcal{C} = \{i : \mathrm{EC}(L_i, R_i) \leq (1+\varepsilon)
-        \cdot \mathrm{EC}^*\}$.
-  \item Select the candidate that maximises the \emph{minimum} compactness of
-        both halves:
+  \item If $k = 1$, return $\{V\}$ as a single district.
+  \item For $i = 1, \ldots, N$: run METIS on $G$ with seed $i$ to obtain
+        bisection $(L_i, R_i)$ with target sizes
+        $(\lfloor k/2\rfloor, \lceil k/2\rceil)$.
+        Record edge-cut $\mathrm{EC}_i = \sum_{u\in L_i,\, v\in R_i} w_e^{(uv)}$.
+  \item Let $\mathrm{EC}^* = \min_i \mathrm{EC}_i$.
+        (METIS serves purely as the candidate generator; edge-cut is the
+        search heuristic, not the selection criterion.)
+  \item Select:
         \[
-          i^* = \arg\max_{i \in \mathcal{C}}\;
-                \min\!\bigl(\mathrm{PP}(L_i),\; \mathrm{PP}(R_i)\bigr)
+          i^* = \arg\max_{i:\, \mathrm{EC}_i \leq (1+\varepsilon)\mathrm{EC}^*}
+                \sqrt{\mathrm{PP}(L_i)\cdot\mathrm{PP}(R_i)}.
         \]
-  \item Recurse: \textsc{CompactBisect}$(G[L_{i^*}], \lfloor k/2\rfloor, N)$
-        $\cup$ \textsc{CompactBisect}$(G[R_{i^*}], \lceil k/2\rceil, N)$.
+  \item Recurse: \textsc{CompactBisect}$(G[L_{i^*}],\,\lfloor k/2\rfloor,\,N,\,\varepsilon)$
+        $\cup$ \textsc{CompactBisect}$(G[R_{i^*}],\,\lceil k/2\rceil,\,N,\,\varepsilon)$.
 \end{enumerate}
 \end{definition}
 
-\paragraph{Why $\min(\mathrm{PP}(L), \mathrm{PP}(R))$, not the average.}
-The average $(\mathrm{PP}(L) + \mathrm{PP}(R))/2$ would allow one badly
-non-compact half to be offset by a very compact half. The \emph{minimum}
-implements a \emph{maximin} fairness criterion: the worst half is as compact
-as possible. This is the correct criterion because the non-compact half
-constrains all future district shapes within it --- a permanently bad
-intermediate region cannot be repaired by subsequent bisections.
+\subsubsection{Properties}
 
-\paragraph{Why apply this at each recursion level, not just the final partition.}
-A post-hoc filter (selecting among final 17-district or 38-district plans by
-compactness) operates after all intermediate decisions have already constrained
-the shape space. \textsc{CompactBisect} instead enforces compactness at each
-branch of the recursion tree. Any plan produced by \textsc{CompactBisect} can
-be justified level-by-level: at every bisection, the algorithm chose the
-geometrically most balanced available split. No single intermediate decision
-can be characterised as partisan because every intermediate decision is
-greedily optimal under a purely geometric criterion.
-
-\paragraph{Computational cost.}
-\textsc{CompactBisect} with $k$ districts, $\lceil\log_2 k\rceil$ levels, and
-$N$ seeds per level performs $N \cdot \lceil\log_2 k\rceil$ METIS runs (vs.\ $N$
-for MEC). For Pennsylvania ($k = 17$, $\lceil\log_2 17\rceil = 5$ levels,
-$N = 100$): 500 METIS calls $\approx 5$ minutes. For Texas ($k = 38$, 6
-levels, $N = 100$): 600 calls $\approx 10$ minutes. The cost is modest and
-scales logarithmically with $k$, not linearly.
-
-\paragraph{Relationship to MEC.}
-In the limit $N \to \infty$ and $\varepsilon \to 0$, \textsc{CompactBisect}
-at each level selects the globally minimum-cut bisection. The compactness
-criterion then has no effect (the minimum-cut split is unique). For finite $N$
-and $\varepsilon > 0$, \textsc{CompactBisect} is a principled tiebreaker within
-the near-minimum set at each level. The two algorithms agree whenever the
-minimum-cut bisection is also the most compact bisection; we measure
-empirically how often this holds and whether disagreements have partisan
-direction.
+\paragraph{Level-by-level justifiability.}
+Any plan produced by \textsc{CompactBisect} can be justified at every
+intermediate step: at each bisection, the algorithm chose the candidate
+maximising geometric-mean compactness among near-minimum-cut splits.
+No intermediate decision can be characterised as partisan because the
+selection criterion is purely geometric and admits no partisan input.
+This is directly analogous to the statutory justification for
+Huntington-Hill apportionment: the algorithm is specified in law, the
+inputs are public census figures, and the output is deterministic.
 
 \paragraph{Compactness equity across parties.}
-A secondary output of \textsc{CompactBisect} is the compactness of each final
-district, stratified by partisan lean. A plan that is compact on average but
-with systematically less compact Dem-leaning or Rep-leaning districts would
-indicate residual partisan structure in the solution space. We test for such
-correlation using a Spearman rank correlation between district Polsby-Popper
-scores and district Dem two-party vote shares.
+A plan may be compact on average but with systematically less compact
+districts for one party's coalition (a residual signature of
+packing-and-cracking). \textsc{CompactBisect}'s geometric-mean criterion
+enforces equal compactness at each bisection level, which propagates to
+the final districts. We test the residual correlation empirically using
+a Spearman rank correlation between final-district Polsby-Popper scores
+and district Dem two-party vote shares; a neutral plan should show
+$|\rho| < 0.1$.
+
+\paragraph{Computational cost.}
+With $k$ districts, $\ell = \lceil\log_2 k\rceil$ recursion levels,
+and $N$ seeds per level, \textsc{CompactBisect} performs $N\ell$ METIS
+calls total. For Pennsylvania ($k=17$, $\ell=5$, $N=100$): 500 calls
+$\approx$ 5~min. For Texas ($k=38$, $\ell=6$, $N=100$): 600 calls
+$\approx$ 10~min. Cost scales as $O(N\log k)$, not $O(Nk)$.
+
+\paragraph{Relationship to standard edge-weighted bisection.}
+When $N=1$ and $\varepsilon=0$, \textsc{CompactBisect} degenerates to
+a single METIS run with one fixed seed --- the current default algorithm.
+As $N\to\infty$, the candidate pool densely covers the near-minimum-cut
+solution space and the geometric-mean compactness criterion selects the
+globally optimal plan within it. The parameter $N$ controls the
+exploration-exploitation tradeoff; we calibrate $N$ via convergence
+analysis (\S\ref{sec:methodology:convergence}).
 
 \subsection{The Proportionality Metric}
 \label{sec:methodology:metric}

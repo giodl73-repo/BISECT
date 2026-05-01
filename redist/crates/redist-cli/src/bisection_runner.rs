@@ -12,6 +12,75 @@ use rayon::prelude::*;
 use redist_core::{BisectionTree, ufactor_for_depth};
 use redist_core::metis_format::{write_metis_graph, parse_metis_partition};
 
+// ── CompactBisect (B.7) ───────────────────────────────────────────────────────
+
+/// Configuration for the CompactBisect algorithm.
+///
+/// At each bisection level, runs `seeds_per_level` candidate splits via METIS,
+/// filters to those within `epsilon` of the minimum edge-cut, then selects the
+/// candidate maximising geometric-mean Polsby-Popper: sqrt(PP(L) * PP(R)).
+///
+/// When `graph` has no geometry data (vertex_areas/vertex_ext_perimeters empty),
+/// CompactBisect degrades gracefully to standard minimum-edge-cut selection.
+#[derive(Debug, Clone)]
+pub struct CompactBisectOpts {
+    /// Number of METIS seeds to try at each bisection node. Higher = better
+    /// approximation of the true minimum. Typical: 20-100.
+    pub seeds_per_level: usize,
+    /// Fraction above minimum edge-cut that is still considered "near-minimum".
+    /// Candidates with EC > (1+epsilon)*EC_min are excluded from PP selection.
+    /// Typical: 0.05 (5%).
+    pub epsilon: f64,
+}
+
+impl Default for CompactBisectOpts {
+    fn default() -> Self { Self { seeds_per_level: 50, epsilon: 0.05 } }
+}
+
+/// Select the best bisection candidate by geometric-mean Polsby-Popper,
+/// among candidates within epsilon of the minimum edge-cut.
+///
+/// Returns the (left, right) partition maximising sqrt(PP(left)*PP(right)).
+/// Falls back to the minimum-edge-cut candidate if geometry is unavailable.
+fn select_compact_split(
+    candidates: &[(HashSet<usize>, HashSet<usize>, f64)], // (left, right, edge_cut)
+    graph: &redist_data::AdjacencyGraph,
+    epsilon: f64,
+) -> (HashSet<usize>, HashSet<usize>) {
+    assert!(!candidates.is_empty());
+
+    let ec_min = candidates.iter().map(|(_, _, ec)| *ec)
+        .fold(f64::INFINITY, f64::min);
+    let threshold = ec_min * (1.0 + epsilon);
+
+    let near_min: Vec<&(HashSet<usize>, HashSet<usize>, f64)> = candidates.iter()
+        .filter(|(_, _, ec)| *ec <= threshold)
+        .collect();
+
+    // If no geometry: return the minimum-edge-cut candidate
+    if !graph.has_geometry() {
+        let best = near_min.iter()
+            .min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal))
+            .copied()
+            .unwrap_or(&candidates[0]);
+        return (best.0.clone(), best.1.clone());
+    }
+
+    // Geometric-mean PP selection: argmax sqrt(PP(L) * PP(R))
+    let best_idx = near_min.iter()
+        .enumerate()
+        .map(|(i, (l, r, _))| {
+            let gm = graph.geometric_mean_pp(l, r).unwrap_or(0.0);
+            (i, gm)
+        })
+        .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+        .map(|(i, _)| i)
+        .unwrap_or(0);
+
+    let best = near_min[best_idx];
+    (best.0.clone(), best.1.clone())
+}
+
 /// Detect the gpmetis version string by running `gpmetis --version` or `gpmetis -version`.
 ///
 /// gpmetis typically prints to stderr:
@@ -476,6 +545,115 @@ pub fn run_all_splits(
         return Err(format!(
             "bisection incomplete: {}/{n} tracts assigned", assignments.len()
         ));
+    }
+    Ok(assignments)
+}
+
+/// CompactBisect variant of run_all_splits.
+///
+/// Identical to run_all_splits except at each bisection node it runs
+/// `opts.seeds_per_level` METIS candidates, filters to near-minimum-cut,
+/// and selects the split maximising geometric-mean Polsby-Popper.
+/// Requires geometry data in `graph` (vertex_areas + vertex_ext_perimeters);
+/// gracefully degrades to minimum-edge-cut if geometry is absent.
+pub fn run_all_splits_compact(
+    graph: &redist_data::AdjacencyGraph,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    opts: &CompactBisectOpts,
+    intermediate_dir: Option<&Path>,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = graph.n_vertices;
+    let adjacency = &graph.adjacency;
+    let vertex_weights = &graph.vertex_weights;
+    let edge_weights = &graph.edge_weights;
+
+    if num_districts == 1 {
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                    let tw = if node.k_left == node.k_right { None } else {
+                        Some((node.k_left as f64 / node.k as f64,
+                              node.k_right as f64 / node.k as f64))
+                    };
+
+                    // Run N seeds, collect (left, right, edge_cut)
+                    let candidates: Vec<(HashSet<usize>, HashSet<usize>, f64)> =
+                        (1..=opts.seeds_per_level).filter_map(|s| {
+                            let seed = Some(s as u64);
+                            split_subgraph(
+                                adjacency, vertex_weights, edge_weights,
+                                &tracts, node_ufactor, niter, seed, tw
+                            ).ok().map(|(l, r)| {
+                                let ec: f64 = edge_weights.iter().filter_map(|(&(u, v), &w)| {
+                                    if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
+                                }).sum();
+                                (l, r, ec)
+                            })
+                        }).collect();
+
+                    if candidates.is_empty() {
+                        return Err(format!(
+                            "depth {} node '{}': all {} seeds failed",
+                            depth, node.path, opts.seeds_per_level
+                        ));
+                    }
+
+                    let (left, right) = select_compact_split(&candidates, graph, opts.epsilon);
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted = split_results;
+        sorted.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() { round_asgn.insert(tract, region_id + 1); }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts { assignments.insert(tract, district_id + 1); }
+    }
+    if assignments.len() != n {
+        return Err(format!("bisection incomplete: {}/{n} tracts assigned", assignments.len()));
     }
     Ok(assignments)
 }
