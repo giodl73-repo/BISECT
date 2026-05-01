@@ -235,3 +235,5 @@ redist/target/
 redist/**/*.so
 redist/**/*.pyd
 release_staging/
+reports/
+.claude/worktrees/
