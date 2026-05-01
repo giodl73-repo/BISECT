@@ -165,6 +165,10 @@ pub enum Commands {
     Export(ExportArgs),
     /// Import a GeoJSON plan into the RPLAN format
     Import(ImportArgs),
+    /// Civic Bidirectional Input: ingest community-of-interest CSVs, detect
+    /// cross-input conflicts, list/show ingested inputs, add candidate-race
+    /// annotations. See `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`.
+    Civic(CivicArgs),
     /// Show redistricting policy for a state (subdivision terms, tolerances, VRA, etc.)
     Policy(PolicyArgs),
     /// Pre-flight check: verify data files, year validity, resolution warnings for a location
@@ -453,6 +457,17 @@ pub struct ImportArgs {
     /// Submission timestamp (ISO-8601 UTC). Defaults to current time at import.
     #[arg(long)]
     pub submitted_at: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `redist civic` — Civic Bidirectional Input
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct CivicArgs {
+    #[command(subcommand)]
+    pub command: crate::civic::CivicSubcommand,
 }
 
 // ---------------------------------------------------------------------------

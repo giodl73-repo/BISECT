@@ -503,6 +503,12 @@ fn main() {
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
+        // ── redist civic: civic bidirectional input ───────────────────────────
+        Commands::Civic(args) => {
+            redist_cli::civic::run_civic(&args.command)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
         // ── redist policy: state policy lookup ────────────────────────────────
         Commands::Policy(args) => {
             run_policy(&args)

@@ -14,6 +14,25 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Civic Bidirectional Input (partial; ingest + validation + conflicts)
+- **`redist civic` subcommand group** (`ingest`, `add-candidate-race`, `list`, `show`, `conflicts`) wired into the CLI surface.
+- **`civic-coi v1` `CivicManifest`** schema + `redist-cli/src/civic.rs` module (~1100 lines).
+- **BOM-tolerant CSV reader + canonicalization** (PP-27 / DATUM): UTF-8 BOM stripped, UTF-16 rejected with documented remediation, output is UTF-8 no-BOM + LF + sorted by `(geoid, comment_id)` + always-quoted GEOIDs + `# civic-coi-csv v1` schema header. Byte-stable across runs.
+- **GEOID typo + leading-zero detection** (PP-28): length-9-or-10 GEOIDs trigger the Excel "leading zero stripped — re-export with column-format = Text" remediation; tract-set lookup catches typos when the universe is supplied.
+- **URL validator** (PP-29): rejects `mailto`/`file`/`data`/`javascript` schemes, parsed-IP loopback (127.x, ::1, ::ffff:127.0.0.1), private (RFC 1918), link-local, unspecified, and the literal `localhost` string. Predicate-named errors.
+- **Conflict detection** (B-08): `redist civic conflicts` produces a `ConflictsReport` with COI-overlap, label-mismatch, and (reserved) candidate-race-disagreement categories. `race_conflict_robustness_violated()` implements the threshold semantics (default 0.10) for downstream Callais `robust=false` propagation.
+- **`run_ingest` happy path** writes `outputs/{version}/civic_inputs/{label}/{original.csv, normalized.csv, validation_log.txt, manifest.json}`.
+- **46 new L0 tests**; 1159 total workspace tests pass; 0 regressions.
+
+What's deferred:
+- Task 5 (URL snapshot, PP-30 / C-02) — bounded fetch + WARC fallback + localhost test server.
+- Task 6 (add-candidate-race integration with race_of_candidate parser).
+- Task 8 (E2E civic-counter-proposal example — depends on PCN CLI dispatch).
+- Task 9 (Sheets template + plain-English HOWTO).
+- Task 10 (sanitized LA 2024 hermetic fixture).
+- Task 11 (dogfood test report).
+- PlanDirGuard integration into `run_ingest`.
+
 ### Added (2026-04-30) — Plan Comparison & Narrative (partial; renderer + manifest layer)
 - **`redist-report::moe`** (S-04): margin-of-error suppression for narrative directional claims. Monotone (Dem seats / mean PP / population) and non-monotone (MM count, BVAP step function) rules; per-district indeterminacy counter. Canonical text constant. 13 L0 tests.
 - **`redist-report::comparison`** (Task 2 minimal): ComparisonReport + PlanSide + DiffSummary structures. From-disk assembler is next session's work.

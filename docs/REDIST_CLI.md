@@ -539,6 +539,30 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Civic Bidirectional Input (partial — ingest, validation, conflict detection)
+
+The Civic Bidirectional Input plan is partial. Today (2026-04-30):
+
+**Shipped (`redist-cli/src/civic.rs`):**
+- `redist civic` subcommand group with five subcommands: `ingest`, `add-candidate-race`, `list`, `show`, `conflicts`. Wired into `main.rs::Commands::Civic`.
+- `civic-coi v1` `CivicManifest` schema (matches `docs/file-formats/manifests.md` §3.8).
+- **BOM-tolerant CSV reader + canonicalization** (Task 2 / PP-27 / DATUM): UTF-8 BOM stripped silently; UTF-16 rejected with documented remediation; LF line endings + sorted by `(geoid, comment_id)` + GEOIDs always quoted + `# civic-coi-csv v1` schema header line. Re-running the canonicalizer on the same input produces byte-identical output.
+- **GEOID typo + leading-zero detection** (Task 3 / PP-28): length-9-or-10 GEOIDs trigger the Excel "leading zero stripped — re-export with column-format = Text" message; length-11-not-in-tract-set triggers a typo hint; non-numeric / wrong-length errors are categorized.
+- **URL validator** (Task 4 / PP-29): rejects `mailto`/`file`/`data`/`javascript` schemes, parsed-IP loopback (127.x, ::1, ::ffff:127.0.0.1), private (RFC 1918), link-local (169.254/16), unspecified (0.0.0.0 / ::), and the literal `localhost` string. Predicate-named errors per spec.
+- **Conflict detection** (Task 7 / B-08): `redist civic conflicts --label A --label B [...]` reads each label's `normalized.csv`, joins on GEOID, and emits a `ConflictsReport` with three categories — `coi_overlap` (same GEOID, different comment_ids), `coi_label_mismatch` (same comment_id, different labels), `candidate_race_disagreement` (reserved for the candidate-race CLI). `race_conflict_robustness_violated()` implements the B-08 threshold semantics: `(n_disputed / n_total) >= threshold` (default 0.10) → downstream Callais sets `robust=false`.
+- **`ValidateMode`** parsing for `--validate {strict|lenient|advisory}`. Strict surfaces the first error; lenient/advisory record warnings in the manifest.
+- **`run_ingest`** end-to-end happy path: reads CSV, canonicalizes, validates GEOIDs + URLs, writes `outputs/{version}/civic_inputs/{label}/{original.csv, normalized.csv, validation_log.txt, manifest.json}`. Atomic via direct `std::fs::write` (PlanDirGuard integration is the next session's pickup).
+- **46 L0 tests** including BOM stripping, UTF-16 rejection, byte-stable round-trip, every URL predicate, every GEOID error case, B-08 boundary policy (below / at / above threshold), conflict-detection coverage.
+
+**Deferred (next session pickup):**
+- Task 5 (URL snapshot — PP-30 / C-02): bounded-fetch HTTP client + WARC fallback. Needs `reqwest` blocking + a localhost-only test-server fixture; substantial.
+- Task 6 (`add-candidate-race` integration): the CLI surface is wired and validates inputs but the actual implementation surfaces a `[CONFIG]` actionable error. The race-of-candidate parser already ships in `redist-analysis::race_of_candidate` — wiring is mostly mechanical.
+- Task 8 (E2E civic-counter-proposal example): depends on PCN CLI dispatch shipping first.
+- Task 9 (Sheets template + `docs/civic/HOWTO.md` for non-technical users).
+- Task 10 (sanitized LA 2024 fixture under `tests/fixtures/civic/la_2024_round/`).
+- Task 11 (dogfood test report — requires real-world neighborhood-association partner).
+- PlanDirGuard integration into `run_ingest` (the SSI primitive is shipped + tested; integrating here is mechanical).
+
 ## Plan Comparison & Narrative (partial — narrative + manifest layer; CLI dispatch deferred)
 
 The Plan Comparison & Narrative plan is partial. Today (2026-04-30):
