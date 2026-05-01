@@ -93,6 +93,94 @@ Compute estimate: $50 \times 1{,}000 = 50{,}000$ state-level runs at an
 average of $\sim$30\,s each $\approx$ 417 CPU-hours. Parallelised across 8
 cores: $\sim$52 wall-clock hours.
 
+\subsection{CompactBisect: A New Recursive Algorithm}
+\label{sec:methodology:compactbisect}
+
+The core observation motivating this section is that minimum-edge-cut, while
+a strong geometric criterion, operates \emph{globally}: it minimises total
+boundary length across the entire partition but makes no guarantee about the
+shape of individual intermediate subgraphs at each level of recursion. A
+non-compact intermediate region propagates non-compactness to all its
+descendant districts.
+
+We propose \textsc{CompactBisect}, a modification of recursive bisection that
+applies a compactness criterion \emph{at every step of the recursion}, not
+just at the final partition.
+
+\begin{definition}[\textsc{CompactBisect}]
+\label{def:compactbisect}
+Let $G = (V, E, w)$ be the state census-tract graph, $k$ the target district
+count, and $N$ the per-level seed budget. Define the Polsby-Popper score of a
+subgraph $H \subseteq G$ as $\mathrm{PP}(H) = 4\pi A(H) / P(H)^2$, where
+$A(H)$ is the total area and $P(H)$ the total perimeter of the geographic
+region corresponding to $H$'s vertex set.
+
+\textsc{CompactBisect}$(G, k, N)$:
+\begin{enumerate}
+  \item If $k = 1$, return $\{V\}$.
+  \item Generate $N$ candidate bisections $\{(L_i, R_i)\}_{i=1}^N$ of $G$ into
+        two parts of sizes proportional to $\lfloor k/2 \rfloor$ and
+        $\lceil k/2 \rceil$, each produced by a distinct METIS seed.
+  \item Compute $\mathrm{EC}(L_i, R_i)$ for each candidate. Let
+        $\mathrm{EC}^* = \min_i \mathrm{EC}(L_i, R_i)$.
+  \item Filter to the $\varepsilon$-near-minimum set:
+        $\mathcal{C} = \{i : \mathrm{EC}(L_i, R_i) \leq (1+\varepsilon)
+        \cdot \mathrm{EC}^*\}$.
+  \item Select the candidate that maximises the \emph{minimum} compactness of
+        both halves:
+        \[
+          i^* = \arg\max_{i \in \mathcal{C}}\;
+                \min\!\bigl(\mathrm{PP}(L_i),\; \mathrm{PP}(R_i)\bigr)
+        \]
+  \item Recurse: \textsc{CompactBisect}$(G[L_{i^*}], \lfloor k/2\rfloor, N)$
+        $\cup$ \textsc{CompactBisect}$(G[R_{i^*}], \lceil k/2\rceil, N)$.
+\end{enumerate}
+\end{definition}
+
+\paragraph{Why $\min(\mathrm{PP}(L), \mathrm{PP}(R))$, not the average.}
+The average $(\mathrm{PP}(L) + \mathrm{PP}(R))/2$ would allow one badly
+non-compact half to be offset by a very compact half. The \emph{minimum}
+implements a \emph{maximin} fairness criterion: the worst half is as compact
+as possible. This is the correct criterion because the non-compact half
+constrains all future district shapes within it --- a permanently bad
+intermediate region cannot be repaired by subsequent bisections.
+
+\paragraph{Why apply this at each recursion level, not just the final partition.}
+A post-hoc filter (selecting among final 17-district or 38-district plans by
+compactness) operates after all intermediate decisions have already constrained
+the shape space. \textsc{CompactBisect} instead enforces compactness at each
+branch of the recursion tree. Any plan produced by \textsc{CompactBisect} can
+be justified level-by-level: at every bisection, the algorithm chose the
+geometrically most balanced available split. No single intermediate decision
+can be characterised as partisan because every intermediate decision is
+greedily optimal under a purely geometric criterion.
+
+\paragraph{Computational cost.}
+\textsc{CompactBisect} with $k$ districts, $\lceil\log_2 k\rceil$ levels, and
+$N$ seeds per level performs $N \cdot \lceil\log_2 k\rceil$ METIS runs (vs.\ $N$
+for MEC). For Pennsylvania ($k = 17$, $\lceil\log_2 17\rceil = 5$ levels,
+$N = 100$): 500 METIS calls $\approx 5$ minutes. For Texas ($k = 38$, 6
+levels, $N = 100$): 600 calls $\approx 10$ minutes. The cost is modest and
+scales logarithmically with $k$, not linearly.
+
+\paragraph{Relationship to MEC.}
+In the limit $N \to \infty$ and $\varepsilon \to 0$, \textsc{CompactBisect}
+at each level selects the globally minimum-cut bisection. The compactness
+criterion then has no effect (the minimum-cut split is unique). For finite $N$
+and $\varepsilon > 0$, \textsc{CompactBisect} is a principled tiebreaker within
+the near-minimum set at each level. The two algorithms agree whenever the
+minimum-cut bisection is also the most compact bisection; we measure
+empirically how often this holds and whether disagreements have partisan
+direction.
+
+\paragraph{Compactness equity across parties.}
+A secondary output of \textsc{CompactBisect} is the compactness of each final
+district, stratified by partisan lean. A plan that is compact on average but
+with systematically less compact Dem-leaning or Rep-leaning districts would
+indicate residual partisan structure in the solution space. We test for such
+correlation using a Spearman rank correlation between district Polsby-Popper
+scores and district Dem two-party vote shares.
+
 \subsection{The Proportionality Metric}
 \label{sec:methodology:metric}
 
