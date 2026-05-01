@@ -163,6 +163,48 @@ Among 96 successful seeds, edge-cuts ranged from [TODO] to [TODO]\,km with
 [TODO] distinct seat outcomes observed. Convergence is expected to be slower
 than Pennsylvania due to the larger partition space.
 
+\subsection{Georgia: Why Convergence Depth Matters}
+\label{sec:eval:ga}
+
+Georgia (14 districts, 50.1\% Dem statewide vote) illustrates why the 200-seed
+convergence threshold from the initial sweep is insufficient for legal-quality
+claims.
+
+\begin{center}
+\begin{tabular}{rrrl}
+\toprule
+Seed & EC (km) & D seats & Gap \\
+\midrule
+190 & 2{,}598 & 7D/7R & $-0.1$\,pp \\
+288 & 2{,}594 & 6D/8R & $-7.3$\,pp \\
+489 & 2{,}546 & 7D/7R & $-0.1$\,pp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+At seed 190 (within the initial 200-seed window), the running minimum appeared to
+be 2{,}598\,km producing a near-perfectly proportional 7D/7R plan ($-0.1$\,pp
+gap). A na{\"i}ve convergence declaration at seed 200 would have reported this
+as the MEC result.
+
+At seed 288, a new minimum at 2{,}594\,km overturned the result: the better
+plan produced 6D/8R ($-7.3$\,pp). But at seed 489, a still-better minimum at
+2{,}546\,km recovered the 7D/7R outcome. Seeds 490--1{,}000 produced no
+further improvement: a 511-seed stable tail (51\%) confirms convergence.
+
+The final MEC result for Georgia is 2{,}546\,km, 7D/7R, $-0.1$\,pp. The key
+lesson: the initial 200-seed result was misleading not because it was wrong
+(7D/7R is the correct answer) but because an intermediate false floor at
+seed 288 produced an incorrect 6D result that would have been reported as the
+MEC if the sweep had stopped there. \emph{Convergence certification --- not
+just a fixed seed budget --- is the correct protocol.}
+
+This contrasts sharply with Wisconsin (\S\ref{sec:eval:pa}), where the MEC
+plan consistently produces 2D/6R despite 50.3\% Dem vote. The difference is
+geographic sorting: Wisconsin's Democratic voters concentrate in Milwaukee and
+Madison; Georgia's Democratic coalition spans Atlanta, Augusta, Savannah, and
+diverse suburban counties.
+
 \subsection{50-State Summary}
 \label{sec:eval:national}
 
