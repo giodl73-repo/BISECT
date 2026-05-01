@@ -15,6 +15,7 @@ pub mod splits;
 pub mod split_standards;
 pub mod exit_codes;
 pub mod bloc_voting;
+pub mod ensemble_diagnostics;
 pub mod race_of_candidate;
 pub mod bloc_voting_writer;
 
