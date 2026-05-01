@@ -87,6 +87,14 @@ pub struct PlanManifest {
     /// Lets a future reader determine which compat ranges were active.
     #[serde(default)]
     pub import_compat_sha256: Option<String>,
+
+    // ── B.7: solution-space research ─────────────────────────────────────────
+    /// Total edge-cut of the final partition: sum of edge weights (boundary
+    /// lengths in meters) across all edges whose two endpoints are assigned to
+    /// different districts. Lower = more compact. Enables seed-sensitivity
+    /// research without re-running the algorithm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_cut: Option<f64>,
 }
 
 fn default_seats_per_district() -> usize { 1 }

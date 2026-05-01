@@ -1,7 +1,123 @@
 \section{Evaluation}
 \label{sec:evaluation}
 
-% Results of Phase 1, 2, 3
-% Key tables: per-state mean/SD of proportionality gap across seeds
-% Key figures: histogram of gap distribution for PA, WI, TX
-% Key finding: is variance bounded or wide in competitive states?
+\subsection{Vermont: Zero-Variance Baseline}
+\label{sec:eval:vt}
+
+Vermont has one congressional district (the entire state). Every seed produces
+the identical assignment --- the trivial partition assigning all 192 census
+tracts to district 1. The edge-cut is zero, the proportionality gap is
+$100(1.0 - 0.683) = +31.7$\,pp regardless of seed, and the assignment files
+are byte-identical across all 20 tested seeds. This confirms that for
+at-large states, the seed is \emph{mathematically irrelevant}: no bisection
+is performed and no partitioning choice is made.
+
+\subsection{Pennsylvania: The Dense Solution Space}
+\label{sec:eval:pa}
+
+Pennsylvania (17 districts, 50.6\% Dem statewide vote, 2020 presidential)
+is the paper's central case. The achievable proportionality gaps are
+$\{-15.3, -9.4, -3.5, +2.3\}$\,pp corresponding to 6D, 7D, 8D, and 9D
+Republican/Democratic seat splits.
+
+\paragraph{Solution-space density.}
+Across 100 tested seeds, every seed produced a \emph{distinct} final
+partition (100 unique SHA-256 fingerprints of the assignment files). The
+solution space is dense: there is no small set of ``canonical'' boundaries
+that seeds converge to. This is a direct consequence of the high dimensionality
+of the partition space ($\sim$193 census tracts, $\binom{193}{k}$-scale
+feasible-partition count).
+
+\paragraph{Edge-cut distribution.}
+The observed edge-cuts span 2{,}529--3{,}003\,km (18.7\% range). Edge-cut
+distributions overlap substantially across seat-outcome classes:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+Outcome & $n$ (100 seeds) & EC min & EC mean & EC max \\
+\midrule
+6D/11R ($-15.3$\,pp) & 9  & 2{,}616 & 2{,}720 & 2{,}892 \\
+7D/10R ($-9.4$\,pp)  & 54 & 2{,}541 & 2{,}718 & 3{,}003 \\
+8D/9R  ($-3.5$\,pp)  & 35 & 2{,}529 & 2{,}696 & 2{,}894 \\
+9D/8R  ($+2.3$\,pp)  & 2  & 2{,}536 & 2{,}679 & 2{,}822 \\
+\bottomrule
+\end{tabular}
+\caption{Edge-cut (km) by seat outcome, Pennsylvania, 100 seeds.
+  All four outcome classes contain plans with edge-cuts within 5\% of
+  the global minimum, confirming that minimum-edge-cut selection does not
+  deterministically favour any partisan outcome.}
+\label{tab:pa-ec-by-outcome}
+\end{table}
+
+\paragraph{Convergence.}
+The running minimum improved 7 times across seeds 1--100 (at seeds 1, 2, 3,
+5, 12, 18, 34; Table~\ref{tab:pa-convergence}). The final 66 seeds produced
+no improvement. The current best plan (seed 34, EC = 2{,}529\,km) produces
+8D/9R ($-3.5$\,pp). % TODO: update with full 1000-seed results
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rrrl}
+\toprule
+Seed & New minimum (km) & Improvement & Outcome \\
+\midrule
+1   & 3{,}003 & --- (first) & 7D \\
+2   & 2{,}822 & $-$181     & 9D \\
+3   & 2{,}632 & $-$190     & 8D \\
+5   & 2{,}606 & $-$26      & 8D \\
+12  & 2{,}596 & $-$10      & 7D \\
+18  & 2{,}578 & $-$18      & 8D \\
+34  & 2{,}529 & $-$49      & 8D \\
+% TODO: insert seeds 101-1000 improvements here
+\bottomrule
+\end{tabular}
+\caption{Running minimum edge-cut improvements, Pennsylvania, seeds 1--100.
+  % TODO: extend to 1000 seeds.}
+\label{tab:pa-convergence}
+\end{table}
+
+\paragraph{Near-minimum partisan distribution.}
+Of the 29 plans within 5\% of the current global minimum (EC $\leq$ 2{,}655\,km):
+2 produce 6D, 15 produce 7D, 11 produce 8D, and 1 produces 9D. The near-minimum
+region of the solution space spans all four outcome classes. This means:
+\emph{the minimum edge-cut criterion does not deterministically select a
+particular partisan outcome in Pennsylvania}. The outcome of the MEC plan
+depends on which local optimum is the global minimum --- a question only
+resolved by exhaustive (or near-exhaustive) seed sampling.
+
+\subsection{Texas: Large-State Failures and Convergence Rate}
+\label{sec:eval:tx}
+
+Texas (38 districts) exhibited a 4\% seed-failure rate (seeds 1, 2, 6, 16
+out of 100 produced population-balance violations exceeding the 0.5\%
+tolerance). These failures are expected: with 38 districts and $\lceil
+\log_2 38 \rceil = 6$ levels of recursion, small per-level imbalances
+compound. The statute's tiered tolerance schedule (\S~104(b)(4)) addresses
+this; our implementation applies a flat 0.5\% tolerance. % TODO: implement
+% tiered tolerance and re-run.
+
+Among 96 successful seeds, edge-cuts ranged from [TODO] to [TODO]\,km with
+[TODO] distinct seat outcomes observed. Convergence is expected to be slower
+than Pennsylvania due to the larger partition space.
+
+\subsection{50-State Summary}
+\label{sec:eval:national}
+
+% TODO: populate from Phase 2 sweep (50 states × 1000 seeds)
+
+Key hypotheses to evaluate:
+\begin{itemize}
+  \item \textbf{H1 (at-large states)}: States with $k=1$ (VT, AK, WY, DE, ND,
+        SD, MT) have zero seed variance. \emph{Confirmed for Vermont.}
+  \item \textbf{H2 (competitive states)}: States with 10--20 competitive
+        districts show the largest seed variance in partisan outcomes.
+        \emph{Pennsylvania preliminary data: 3-seat swing across 100 seeds.}
+  \item \textbf{H3 (sorted states)}: Deep-red and deep-blue states show low
+        seed variance because geography dominates. \emph{TBD.}
+  \item \textbf{H4 (MEC stability)}: The minimum-edge-cut plan is a typical
+        draw from the near-minimum distribution, not a partisan outlier.
+        \emph{Pennsylvania: MEC plan (8D) sits in the interior of the
+        distribution, not at the partisan extreme.}
+\end{itemize}

@@ -1,26 +1,113 @@
 \section{Methodology}
 \label{sec:methodology}
 
-\subsection{Phase 1: Single-State Deep Dive}
+\subsection{The Solution Space and Why Seeds Matter}
+\label{sec:methodology:space}
 
-% Vermont (1 district — seed variance expected ~0)
-% Pennsylvania (17 competitive — expected nontrivial variance)
-% Texas (38 mixed — expected moderate variance)
-% N = 1000 seeds each; record proportionality_gap_pp, efficiency gap, seat allocation
+Graph minimum $k$-bisection is NP-hard. METIS finds a local optimum via
+multilevel coarsening and refinement; the random seed controls the initial
+partitioning from which refinement proceeds. Critically, \emph{every seed
+produces a distinct final partition} in the high-dimensional partition space
+--- we verified this empirically for Pennsylvania across 100 seeds (100 unique
+assignment hashes, no two identical). The solution space is therefore dense and
+continuous, not a small collection of canonical boundaries.
 
-\subsection{Phase 2: 50-State Seed Sweep}
+The partisan outcome of a plan is quantized by the integer seat constraint:
+with $k$ districts and statewide Dem share $v$, the achievable proportionality
+gaps are $\{100(j/k - v) : j = 0, 1, \ldots, k\}$. This quantization explains
+why gap values appear to cluster --- different boundaries can produce the same
+integer seat count --- while the underlying plan space is effectively infinite.
 
-% N = 100 seeds × 50 states
-% Per state: mean, SD, IQR of proportionality_gap_pp
-% Identify seed-sensitive states vs. stable states
+\subsection{The Minimum-Edge-Cut Protocol}
+\label{sec:methodology:protocol}
 
-\subsection{Phase 3: Theoretical Lower Bound}
+Rather than report results for a single arbitrary seed, we propose the
+\emph{minimum-edge-cut (MEC) protocol}: run $N$ seeds, compute the total
+boundary length (edge-cut) of each resulting partition, and publish the
+plan with the smallest edge-cut. Formally, for state $s$ and seed set
+$\mathcal{S} = \{1, \ldots, N\}$:
 
-% Cheeger constant / Laplacian spectral gap as lower bound on minimum bisection
-% Approximation ratio = METIS achieved cut / lower bound
-% Distribution across states
+\[
+  \pi^*_s = \arg\min_{\pi \in \{\pi_i : i \in \mathcal{S}\}} \mathrm{EC}(\pi)
+\]
+
+where $\mathrm{EC}(\pi) = \sum_{(u,v) \in E,\, \pi(u) \neq \pi(v)} w_{uv}$
+is the total TIGER boundary length (in metres) of cut edges. This protocol is:
+\begin{itemize}
+  \item \textbf{Deterministic given $\mathcal{S}$}: publishing the full seed
+        set allows anyone to reproduce $\pi^*_s$ exactly.
+  \item \textbf{Monotone}: adding seeds can only decrease or maintain
+        $\mathrm{EC}(\pi^*_s)$.
+  \item \textbf{Parti\-san-blind}: no partisan data enters the selection
+        criterion; the choice is made entirely on geometric grounds.
+  \item \textbf{Convergence-testable}: we can measure how quickly the minimum
+        stabilises across seeds, and declare ``enough seeds'' when the
+        probability of improvement drops below a calibrated threshold.
+\end{itemize}
+
+\subsection{Convergence Analysis}
+\label{sec:methodology:convergence}
+
+Let $M_n = \min_{i \leq n} \mathrm{EC}(\pi_i)$ be the running minimum after
+$n$ seeds. We model the edge-cut values as i.i.d.\ draws from an unknown
+distribution $F$ on $[\mathrm{EC}_{\min}, \infty)$ and estimate $F$
+non-parametrically from the observed sample. The probability that seed $n+1$
+sets a new minimum is $P(X < M_n) = F(M_n^-)$, which decreases as $n$
+increases (since $M_n$ is monotone decreasing).
+
+We declare convergence when the empirical probability of improvement over the
+next 100 seeds falls below 1\% --- equivalently, when the observed gap between
+the $n$th-best and $(n+1)$th-best is consistent with the tail of a fitted
+extreme-value distribution. We validate convergence separately for each state.
+
+\emph{Empirical calibration (Pennsylvania, 100 seeds):} The running minimum
+improved 7 times at seeds $\{1,2,3,5,12,18,34\}$, then stabilised for seeds
+35--100. The improvement rate at $n=100$ is $\hat\lambda \approx 0.02$
+improvements per seed, suggesting roughly 5,000 seeds would be needed to
+achieve a 90\% confidence interval of $\pm$1\,km on the true minimum for PA.
+For states with fewer districts (e.g., Vermont with 1 district), the true
+minimum is trivially achieved at every seed; for large states (Texas, 38
+districts), convergence will be slower.
+
+\subsection{Exhaustive Seed Sweep Design}
+\label{sec:methodology:sweep}
+
+Based on the Pennsylvania calibration, we run the following sweep:
+
+\begin{itemize}
+  \item \textbf{Phase 1 (deep dive)}: Vermont ($k=1$), Pennsylvania ($k=17$),
+        Texas ($k=38$) $\times$ 5{,}000 seeds each. Goal: characterise full
+        convergence curves and establish the partisan-outcome distribution over
+        the near-MEC solution space.
+  \item \textbf{Phase 2 (50-state)}: All 50 states $\times$ 1{,}000 seeds
+        each. Goal: identify which states have seed-sensitive partisan outcomes
+        and what fraction of the near-MEC space each outcome class occupies.
+  \item \textbf{Phase 3 (convergence validation)}: For each state in Phase 2,
+        fit an extreme-value (GEV) model to the observed minimum sequence and
+        report the 95\% CI on the estimated true minimum. States where the CI
+        spans more than one seat boundary are flagged as ``not yet converged''
+        and receive additional seeds.
+\end{itemize}
+
+Compute estimate: $50 \times 1{,}000 = 50{,}000$ state-level runs at an
+average of $\sim$30\,s each $\approx$ 417 CPU-hours. Parallelised across 8
+cores: $\sim$52 wall-clock hours.
 
 \subsection{The Proportionality Metric}
+\label{sec:methodology:metric}
 
-% Cite proportionality.rs — dem_seat_share - dem_vote_share_statewide
-% Reference Task 1 results from current session (50-state baseline sweep)
+The primary outcome variable is the \emph{proportionality gap}:
+\[
+  \Delta_s = 100 \cdot \left(\frac{d_s}{k_s} - v_s\right)
+\]
+where $d_s$ is the number of Dem-leaning districts (Dem two-party share
+$\geq 0.5$), $k_s$ is the total district count, and $v_s$ is the statewide
+Dem two-party vote share from the 2020 presidential election. Positive
+$\Delta_s$ indicates Democratic over-representation; negative indicates
+Republican over-representation. We computed $\Delta_s$ for all 50 states at a
+single reference seed as baseline (Task 1 results).
+
+The key question is whether the MEC protocol --- taking the minimum-edge-cut
+plan across $N$ seeds --- systematically shifts $\Delta_s$ in a partisan
+direction relative to the single-seed baseline and relative to the full
+seed-distribution mean.

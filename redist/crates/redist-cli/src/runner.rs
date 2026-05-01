@@ -798,6 +798,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     write_state_outputs(&data_dir, &assignments, vra.as_ref())
         .map_err(|e| format!("output write failed: {e}"))?;
 
+    // 6b. Compute edge-cut of the final partition.
+    // Sum edge weights for all edges (u, v) whose endpoints are in different districts.
+    // Stored in the manifest for seed-sensitivity research (B.7).
+    let edge_cut: f64 = edge_weights.iter().map(|(&(u, v), &w)| {
+        let du = assignments.get(&u).copied().unwrap_or(0);
+        let dv = assignments.get(&v).copied().unwrap_or(0);
+        if du != dv { w } else { 0.0 }
+    }).sum();
+
     // 7. Write manifest.json atomically (manifest.tmp → manifest.json).
     // Board amendment: atomic write (manifest.tmp + rename) prevents partial manifests.
     if cfg.write_manifest || cfg.label.is_some() {
@@ -849,6 +858,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_tool_version: None,
             source_format_fingerprint: None,
             import_compat_sha256: None,
+            edge_cut: Some(edge_cut),
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
