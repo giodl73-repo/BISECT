@@ -102,6 +102,10 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
             let ctx = crate::plan_context::PlanContext::from_label(
                 &output_root, &args.version, &year, label
             )?;
+            // SSI Task 6: Callais p.36 mutex preflight at the analyze gate.
+            // Refuses to run any analyzer on a plan whose manifest carries both
+            // VRA-aware AND partisan-weighted markers (post-Callais inadmissible).
+            redist_report::manifest::callais_preflight(&ctx.manifest)?;
             let assignments = if ctx.assignments_path().exists() {
                 ctx.assignments_path()
             } else {

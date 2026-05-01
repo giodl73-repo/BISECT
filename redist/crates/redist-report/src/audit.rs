@@ -199,6 +199,7 @@ mod tests {
             total_seats: 98,
             electoral_system: "single_member".into(),
             gpmetis_version: "METIS 5.1.0".into(),
+            ..Default::default()
         }
     }
 

@@ -13,6 +13,7 @@
 ///   - report: Report, assemble_report, check_required_analysis_files, ReportContext
 ///   - html: render_html_report
 pub mod audit;
+pub mod canonical;
 pub mod civic_gate;
 pub mod export;
 pub mod html;

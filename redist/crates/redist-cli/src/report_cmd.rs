@@ -231,6 +231,15 @@ mod tests {
             audit_only: false,
             audit_with_report: false,
             output_base: "outputs".into(),
+            expert_name: None,
+            expert_credentials: None,
+            expert_affiliation: None,
+            case_caption_file: None,
+            jurisdiction: None,
+            citation_style: None,
+            expert_config: None,
+            allow_non_strict_civic: false,
+            draft: false,
         };
         assert!(args.format.contains(&ReportFormat::Html));
         assert!(args.format.contains(&ReportFormat::Json));
@@ -248,6 +257,15 @@ mod tests {
             audit_only: true,
             audit_with_report: false,
             output_base: "outputs".into(),
+            expert_name: None,
+            expert_credentials: None,
+            expert_affiliation: None,
+            case_caption_file: None,
+            jurisdiction: None,
+            citation_style: None,
+            expert_config: None,
+            allow_non_strict_civic: false,
+            draft: false,
         };
         assert!(args.audit_only);
     }

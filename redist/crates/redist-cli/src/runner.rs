@@ -840,6 +840,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 "multi_member_uniform".to_string()
             },
             gpmetis_version,
+            // SSI Task 5/7 fields: state-staff-imported plans set these via run_import;
+            // state-runner-produced plans default to authoritative + None (per `..Default`).
+            submission_type: "authoritative".to_string(),
+            submitted_by: None,
+            submitted_at: None,
+            source_tool: None,
+            source_tool_version: None,
+            source_format_fingerprint: None,
+            import_compat_sha256: None,
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;

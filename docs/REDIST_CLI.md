@@ -539,6 +539,23 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## State Staff Interop (partial — atomic import + Callais gate + civic bypass)
+
+The State Staff Interop plan is partial. Today (2026-04-30):
+
+**Shipped:**
+- `redist-report::manifest::PlanDirGuard` (PP-22): atomic-import infrastructure. Builds plans into `{label}.tmp/`, renames to `{label}/` on `commit()`, deletes tmp on drop without commit. Refuses to overwrite without `force=true` (label-collision check). 6 L0 tests covering commit/drop/collision/force/stale-cleanup/mid-run-race.
+- `redist-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `redist analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `redist import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
+- `redist-report::canonical` (spec §6 round-trip equality): `canonicalize_assignments()` re-numbers districts by ascending min-GEOID; `diff_assignments()` returns a structured `AssignmentDiff`; `assert_canonical_equal()` returns `[INPUT]`-categorized error with the offending GEOIDs. 10 L0 tests including label-permutation collapse, three-way permutation, distinguishes-different-partitions.
+- `redist import --as-civic-counter-proposal --submitted-by "<org>"` (Task 7, COMMONS): tags the imported plan's manifest with `submission_type = "civic_counter_proposal"`. `--submitted-by` required. `--submitted-at` defaults to import time. Downstream comparison reports surface the civic framing instead of treating it as authoritative.
+- `PlanManifest` extended with: `submission_type` (default `"authoritative"`), `submitted_by`, `submitted_at`, `source_tool`, `source_tool_version`, `source_format_fingerprint`, `import_compat_sha256`. All optional / serde-default for backward compat with legacy manifests.
+
+**Deferred:**
+- Full schema-version handshake (Task 5: `import_compat.json` compile-time embed + multi-attribute fingerprint for Districtr + DRA column-set fingerprint). The manifest fields are wired for it; the lookup table + matching code is the next session's pickup.
+- Atomic-import refactor of `run_import` itself (Task 1.2: integrate `PlanDirGuard` into the import flow). The guard is shipped + tested; integrating it requires a careful refactor of the existing 90-line `run_import` body.
+- Native shapefile import (Task 4): existing `is_shapefile_extension` guard still emits the `ogr2ogr` guidance; native read via the `shapefile` crate is the next session's work.
+- L1 round-trip property tests for Districtr/DRA (Task 8.4-8.7).
+
 ## Court Submission Reports (partial — Typst integration scaffolded, not executable)
 
 The Court Submission Reports plan is partially implemented. Today (2026-04-30):

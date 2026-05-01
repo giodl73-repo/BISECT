@@ -14,6 +14,20 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — State Staff Interop (partial; atomic import + Callais gate + civic bypass)
+- **`redist-report::manifest::PlanDirGuard`** (PP-22): atomic-import infrastructure with tmp-then-rename semantics, force-overwrite gating, stale-tmp cleanup, mid-run-race protection. 6 L0 tests.
+- **`redist-report::manifest::callais_preflight`** (BOUNDARY): post-Callais p.36 mutex check on PlanManifest; refuses any plan whose manifest carries both VRA-aware (`metis-vra` OR `cvap` population) AND partisan-weighted markers. Wired into `redist analyze` (top of run) and `redist import` (before manifest write). Returns `[BOUNDARY]`-categorized error citing Callais p.36. 5 L0 tests.
+- **`redist-report::canonical`** (spec §6): `canonicalize_assignments` re-numbers districts by ascending min-GEOID; `diff_assignments` + `assert_canonical_equal` for round-trip property testing. Collapses label permutations (e.g., DRA's district numbering vs. our internal numbering). 10 L0 tests.
+- **`redist import --as-civic-counter-proposal --submitted-by "<org>"`** (Task 7, COMMONS): tags civic counter-proposals with `submission_type = "civic_counter_proposal"` in the plan manifest. `--submitted-by` required (refuses with `[INPUT]` error otherwise). `--submitted-at` defaults to import time.
+- **`PlanManifest` extended** with `submission_type` (default `"authoritative"`), `submitted_by`, `submitted_at`, `source_tool`, `source_tool_version`, `source_format_fingerprint`, `import_compat_sha256`. All optional / serde-default for backward compat with legacy manifests.
+- **Test posture**: 21 new L0 tests (6 PlanDirGuard + 5 callais_preflight + 10 canonical); 0 regressions across the 1068-test workspace sweep.
+
+What's deferred:
+- Full schema-version handshake (`import_compat.json` compile-time embed + Districtr multi-attribute fingerprint + DRA column-set fingerprint, PP-33 / C-05). Manifest fields wired for it; lookup table + matching code is the next session.
+- Atomic-import refactor of `run_import` itself (integrate PlanDirGuard into the import body).
+- Native shapefile import via the `shapefile` crate.
+- L1 round-trip property tests for Districtr/DRA against committed fixtures.
+
 ### Added (2026-04-30) — Court Submission Reports (partial; Typst integration scaffolded)
 - **`docs/file-formats/manifests.md`** (M-03 followup-doc): canonical manifest field inventory across all schema_versions (PlanManifest, narrative-manifest, whatif-manifest, depo-log, civic-coi, tutorial-checksums, import-compat, race-of-candidate, bloc-voting, repro-package). Settles `redist_build_commit` (full) + `redist_build_commit_short` (short) naming reconciliation. Documents `accessed_date` vs `fetched_at` rule (D-01). Path-portability rule + cross-manifest SHA-link convention + schema-versioning policy.
 - **`docs/file-formats/citation-strings.md`** (D-06 followup-doc): Bluebook / APA / Chicago templates per source class (DOI dataset, URL-only dataset, software, expert deposition, civic counter-proposal). Default style precedence: Bluebook for `--jurisdiction`, APA for `--paper-mode`, Chicago for civic.

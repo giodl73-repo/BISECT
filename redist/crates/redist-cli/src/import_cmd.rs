@@ -116,6 +116,33 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
     let assignments_path = plan_dir.join("final_assignments.json");
     std::fs::write(&assignments_path, serde_json::to_string_pretty(&assignments)?)?;
 
+    // SSI Task 7 (civic-bypass) — validation: --as-civic-counter-proposal
+    // requires --submitted-by, otherwise the manifest tag becomes meaningless.
+    if args.as_civic_counter_proposal {
+        let submitted_by = args.submitted_by.as_deref().unwrap_or("");
+        if submitted_by.trim().is_empty() {
+            anyhow::bail!(
+                "[INPUT] --as-civic-counter-proposal requires --submitted-by \"<organization name>\". \
+                 Without a submitter, the civic-counter-proposal tag is unusable in downstream \
+                 comparison reports. See docs/superpowers/specs/2026-04-30-state-staff-interop.md."
+            );
+        }
+    }
+
+    // Compute submission_type / submitted_at default per SSI Task 7.
+    let submission_type = if args.as_civic_counter_proposal {
+        "civic_counter_proposal".to_string()
+    } else {
+        "authoritative".to_string()
+    };
+    let submitted_at = args.submitted_at.clone().or_else(|| {
+        if args.as_civic_counter_proposal {
+            Some(redist_report::now_iso8601())
+        } else {
+            None
+        }
+    });
+
     // Write minimal manifest.json
     let manifest = redist_report::PlanManifest {
         label: args.label.clone(),
@@ -124,8 +151,18 @@ pub fn run_import(args: &ImportArgs) -> anyhow::Result<()> {
         chamber: "imported".into(),
         num_districts,
         created_at: redist_report::now_iso8601(),
+        submission_type,
+        submitted_by: args.submitted_by.clone(),
+        submitted_at,
+        source_tool: Some(args.format.clone()),
         ..Default::default()
     };
+    // SSI Task 6 — Callais p.36 mutex preflight at the import gate. For
+    // freshly-imported plans this is mostly a forward guard; partition_mode
+    // and population_source on imports default to empty strings so the
+    // preflight passes. The check fires for hand-edited or upstream-tampered
+    // manifest fields.
+    redist_report::manifest::callais_preflight(&manifest)?;
     redist_report::write_manifest_atomic(&plan_dir, &manifest)?;
 
     eprintln!(
@@ -271,6 +308,9 @@ mod tests {
             version: "test".into(),
             format: "geojson".into(),
             output_base: "outputs".into(),
+            as_civic_counter_proposal: false,
+            submitted_by: None,
+            submitted_at: None,
         };
         assert_eq!(args.state, "WA");
         assert_eq!(args.label, "wa_imported_test");
@@ -289,6 +329,9 @@ mod tests {
             version: "test".into(),
             format: "geojson".into(),
             output_base: "outputs".into(),
+            as_civic_counter_proposal: false,
+            submitted_by: None,
+            submitted_at: None,
         };
         let result = run_import(&args);
         assert!(result.is_err(), "importing .shp should fail");
@@ -307,6 +350,9 @@ mod tests {
             version: "test".into(),
             format: "geojson".into(),
             output_base: "outputs".into(),
+            as_civic_counter_proposal: false,
+            submitted_by: None,
+            submitted_at: None,
         };
         let result = run_import(&args);
         assert!(result.is_err(), "importing .zip should fail");
@@ -324,6 +370,9 @@ mod tests {
             version: "test".into(),
             format: "geojson".into(),
             output_base: "outputs".into(),
+            as_civic_counter_proposal: false,
+            submitted_by: None,
+            submitted_at: None,
         };
         let result = run_import(&args);
         assert!(result.is_err());

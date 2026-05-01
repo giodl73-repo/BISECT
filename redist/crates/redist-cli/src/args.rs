@@ -439,6 +439,20 @@ pub struct ImportArgs {
     /// Base output directory
     #[arg(long, default_value = "outputs")]
     pub output_base: String,
+
+    // ── Civic-bypass flow (SSI Task 7, COMMONS) ──────────────────────────────
+    /// Tag this import as a civic counter-proposal (NOT an authoritative state map).
+    /// Requires --submitted-by. The plan's manifest records submission_type =
+    /// "civic_counter_proposal" so downstream comparison reports surface the
+    /// civic framing instead of treating it as authoritative state output.
+    #[arg(long)]
+    pub as_civic_counter_proposal: bool,
+    /// Submitting organization name (required when --as-civic-counter-proposal).
+    #[arg(long)]
+    pub submitted_by: Option<String>,
+    /// Submission timestamp (ISO-8601 UTC). Defaults to current time at import.
+    #[arg(long)]
+    pub submitted_at: Option<String>,
 }
 
 // ---------------------------------------------------------------------------

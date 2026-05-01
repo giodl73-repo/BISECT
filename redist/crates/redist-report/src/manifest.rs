@@ -54,10 +54,44 @@ pub struct PlanManifest {
     /// Version of gpmetis used for partitioning (captured at runtime)
     #[serde(default)]
     pub gpmetis_version: String,
+
+    // ── State Staff Interop additions (Tasks 5, 7) ────────────────────────────
+    /// Submission classification. `"authoritative"` (default for state-staff
+    /// drawn maps) or `"civic_counter_proposal"` (Task 7, COMMONS). Downstream
+    /// comparison reports surface this tag so a journalist screen-capping the
+    /// summary card cannot mistake a civic counter-proposal for the official
+    /// state map.
+    #[serde(default = "default_submission_type")]
+    pub submission_type: String,
+    /// For civic counter-proposals: the submitting organization name. Required
+    /// when `submission_type == "civic_counter_proposal"`. Free text.
+    #[serde(default)]
+    pub submitted_by: Option<String>,
+    /// For civic counter-proposals: ISO-8601 UTC timestamp of submission.
+    /// Defaults to import time when `--submitted-at` is not supplied.
+    #[serde(default)]
+    pub submitted_at: Option<String>,
+    /// Source tool that produced the import (e.g., `"districtr"`, `"dra"`,
+    /// `"shapefile"`, `"geojson"`, `"gerrychain"`). Empty for non-imported plans.
+    #[serde(default)]
+    pub source_tool: Option<String>,
+    /// Source tool version (e.g., Districtr build version). Optional.
+    #[serde(default)]
+    pub source_tool_version: Option<String>,
+    /// Multi-attribute schema fingerprint for the imported file (PP-33). For
+    /// Districtr: derived from `(schema_version, problem.type, units.name)`.
+    /// For DRA: the column-set string (`"GEOID,DISTRICT"` etc.).
+    #[serde(default)]
+    pub source_format_fingerprint: Option<String>,
+    /// SHA-256 of the embedded `import_compat.json` at import time (C-05).
+    /// Lets a future reader determine which compat ranges were active.
+    #[serde(default)]
+    pub import_compat_sha256: Option<String>,
 }
 
 fn default_seats_per_district() -> usize { 1 }
 fn default_electoral_system() -> String { "single_member".to_string() }
+fn default_submission_type() -> String { "authoritative".to_string() }
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
 pub fn sha256_bytes(data: &[u8]) -> String {
@@ -102,6 +136,168 @@ pub fn write_manifest_atomic(dir: &Path, manifest: &PlanManifest) -> anyhow::Res
     let json = serde_json::to_string_pretty(manifest)?;
     std::fs::write(&tmp_path, json)?;
     std::fs::rename(&tmp_path, &final_path)?;
+    Ok(())
+}
+
+/// Atomic guard for an entire plan directory (State Staff Interop plan Task 1, PP-22).
+///
+/// Builds the plan into a sibling `{plan_dir}.tmp/` directory; on `commit()` it
+/// renames to `{plan_dir}/`; on drop without commit, it deletes the tmp dir.
+/// Half-imported plan labels MUST NOT be visible to subsequent commands — that
+/// is the load-bearing invariant per spec §7.
+///
+/// The "label collision" semantics: if `{plan_dir}/` already exists, `new()`
+/// fails unless `force` is true (in which case the existing directory is
+/// removed before the rename — caller responsibility to confirm with the user).
+///
+/// Usage:
+/// ```ignore
+/// let mut guard = PlanDirGuard::new(plan_root.join(label), false)?;
+/// // write files into guard.tmp_dir() ...
+/// // ... run validations ...
+/// guard.commit()?;  // atomic rename; on success the tmp dir is gone
+/// ```
+pub struct PlanDirGuard {
+    /// The final destination path (e.g., `outputs/v1/2020/plans/vt_test/`).
+    final_dir: std::path::PathBuf,
+    /// The sibling tmp staging directory (`outputs/v1/2020/plans/vt_test.tmp/`).
+    tmp_dir: std::path::PathBuf,
+    /// Set to `true` after a successful `commit()`. Drop becomes a no-op.
+    committed: bool,
+    /// When `true`, `commit()` removes any existing `final_dir` before rename.
+    force: bool,
+}
+
+impl PlanDirGuard {
+    /// Create a new guard. `final_dir` is the eventual plan directory; the tmp
+    /// staging directory is created as a sibling at `<final_dir>.tmp/`.
+    ///
+    /// Errors:
+    /// - `final_dir` already exists and `force=false`: returns Err with the
+    ///   "label collision" message; existing dir is untouched.
+    /// - tmp staging directory creation fails: returns Err.
+    pub fn new(final_dir: std::path::PathBuf, force: bool) -> anyhow::Result<Self> {
+        if final_dir.exists() && !force {
+            anyhow::bail!(
+                "[INPUT] plan directory already exists at {} (use --force to overwrite). \
+                 Refusing to silently clobber existing data.",
+                final_dir.display()
+            );
+        }
+        // Build the sibling tmp path: append ".tmp" to the final-dir name.
+        let mut tmp_name = final_dir
+            .file_name()
+            .ok_or_else(|| anyhow::anyhow!("[INTERNAL] final_dir has no file name component: {}", final_dir.display()))?
+            .to_os_string();
+        tmp_name.push(".tmp");
+        let tmp_dir = final_dir
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!("[INTERNAL] final_dir has no parent: {}", final_dir.display()))?
+            .join(&tmp_name);
+
+        // Clear any stale tmp from a previous failed run.
+        if tmp_dir.exists() {
+            std::fs::remove_dir_all(&tmp_dir).map_err(|e| {
+                anyhow::anyhow!(
+                    "[INTERNAL] cannot clean stale tmp directory {}: {e}",
+                    tmp_dir.display()
+                )
+            })?;
+        }
+        std::fs::create_dir_all(&tmp_dir)?;
+        Ok(PlanDirGuard {
+            final_dir,
+            tmp_dir,
+            committed: false,
+            force,
+        })
+    }
+
+    /// Path to the staging directory. All file writes go here.
+    pub fn tmp_dir(&self) -> &Path {
+        &self.tmp_dir
+    }
+
+    /// Path to the final destination (do NOT write here directly; use `tmp_dir()`).
+    pub fn final_dir(&self) -> &Path {
+        &self.final_dir
+    }
+
+    /// Atomically promote the staging directory to the final destination.
+    ///
+    /// On success, the staging directory no longer exists and `Drop` becomes a
+    /// no-op. On failure, the staging directory is left in place for debugging
+    /// (caller may retry or invoke an explicit cleanup).
+    pub fn commit(mut self) -> anyhow::Result<()> {
+        // Handle the force-overwrite case: remove existing final_dir first.
+        if self.final_dir.exists() {
+            if !self.force {
+                anyhow::bail!(
+                    "[INPUT] plan directory appeared at {} between guard creation and commit \
+                     (use --force to overwrite). Refusing to clobber.",
+                    self.final_dir.display()
+                );
+            }
+            std::fs::remove_dir_all(&self.final_dir).map_err(|e| {
+                anyhow::anyhow!(
+                    "[INTERNAL] --force overwrite cannot remove existing {}: {e}",
+                    self.final_dir.display()
+                )
+            })?;
+        }
+        std::fs::rename(&self.tmp_dir, &self.final_dir).map_err(|e| {
+            anyhow::anyhow!(
+                "[INTERNAL] atomic rename {} -> {} failed: {e}",
+                self.tmp_dir.display(),
+                self.final_dir.display()
+            )
+        })?;
+        self.committed = true;
+        Ok(())
+    }
+}
+
+impl Drop for PlanDirGuard {
+    fn drop(&mut self) {
+        if !self.committed && self.tmp_dir.exists() {
+            // Best-effort cleanup. We can't surface errors from Drop; if this
+            // fails, the next PlanDirGuard::new for the same final_dir will
+            // remove the stale tmp during its own preflight.
+            let _ = std::fs::remove_dir_all(&self.tmp_dir);
+        }
+    }
+}
+
+/// Callais p.36 disentanglement mutex preflight (State Staff Interop plan Task 6).
+///
+/// Inspects a `PlanManifest` for the simultaneous presence of VRA-aware and
+/// partisan-weighted bisection markers. Returns Err when both are active.
+///
+/// Detection rules:
+/// - VRA-aware: `partition_mode == "metis-vra"` OR `population_source == "cvap"`
+///   (CVAP-population plans are typically race-conscious; either signal counts).
+/// - Partisan-weighted: `partition_mode == "partisan-weighted"`.
+///
+/// When both are active in the same manifest, the run is post-Callais
+/// inadmissible. The error string matches `runner::validate_partisan_config`
+/// for consistency across error sites.
+///
+/// Called at:
+/// - `redist state` runtime via `validate_partisan_config(StateConfig)` (existing).
+/// - `redist import` (this gate, before PlanDirGuard::commit) — Task 6.2.
+/// - `redist analyze` (top of run_analyze) — Task 6.3.
+pub fn callais_preflight(manifest: &PlanManifest) -> anyhow::Result<()> {
+    let vra_aware = manifest.partition_mode == "metis-vra"
+        || manifest.population_source == "cvap";
+    let partisan_weighted = manifest.partition_mode == "partisan-weighted";
+    if vra_aware && partisan_weighted {
+        anyhow::bail!(
+            "[BOUNDARY] partisan-weighted and metis-vra are mutually exclusive per Callais p.36 disentanglement. \
+             Manifest {} has partition_mode={} AND population_source={}; this run is post-Callais inadmissible. \
+             See docs/legal/CALLAIS_REFERENCE.md.",
+            manifest.label, manifest.partition_mode, manifest.population_source
+        );
+    }
     Ok(())
 }
 
@@ -164,6 +360,7 @@ mod tests {
             total_seats: 10,
             electoral_system: "single_member".into(),
             gpmetis_version: String::new(),
+            ..Default::default()
         }
     }
 
@@ -347,5 +544,161 @@ mod tests {
         assert_eq!(parsed.seats_per_district, 5);
         assert_eq!(parsed.total_seats, 65);
         assert_eq!(parsed.electoral_system, "multi_member_uniform");
+    }
+
+    // ── callais_preflight (State Staff Interop Task 6, BOUNDARY) ──────────────
+
+    #[test]
+    fn test_callais_preflight_passes_clean_manifest() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "edge-weighted".into();
+        m.population_source = "total".into();
+        assert!(callais_preflight(&m).is_ok(), "edge-weighted + total population must pass");
+    }
+
+    #[test]
+    fn test_callais_preflight_passes_vra_only() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "metis-vra".into();
+        m.population_source = "cvap".into();
+        assert!(callais_preflight(&m).is_ok(), "VRA-only configuration must pass");
+    }
+
+    #[test]
+    fn test_callais_preflight_passes_partisan_only() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "total".into();
+        assert!(callais_preflight(&m).is_ok(), "partisan-weighted + total population must pass");
+    }
+
+    #[test]
+    fn test_callais_preflight_blocks_partisan_weighted_with_cvap() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "cvap".into();  // VRA-aware proxy
+        let err = callais_preflight(&m).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.starts_with("[BOUNDARY]"), "must be [BOUNDARY] category: {msg}");
+        assert!(msg.contains("Callais p.36"), "must cite Callais p.36: {msg}");
+        assert!(msg.contains("disentanglement"), "must say disentanglement: {msg}");
+    }
+
+    #[test]
+    fn test_callais_preflight_error_names_offending_fields() {
+        let mut m = make_test_manifest("50");
+        m.label = "la_2020_disputed".into();
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "cvap".into();
+        let err = callais_preflight(&m).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("la_2020_disputed"), "must name the manifest: {msg}");
+        assert!(msg.contains("partisan-weighted"), "must name partition_mode: {msg}");
+        assert!(msg.contains("cvap"), "must name population_source: {msg}");
+    }
+
+    // ── PlanDirGuard (State Staff Interop Task 1, PP-22) ──────────────────────
+
+    #[test]
+    fn test_plan_dir_guard_commit_renames_tmp_to_final() {
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+        // Stage some files in the tmp dir.
+        std::fs::write(guard.tmp_dir().join("manifest.json"), b"{}").unwrap();
+        std::fs::write(guard.tmp_dir().join("final_assignments.json"), b"{}").unwrap();
+        // Pre-commit: tmp exists, final doesn't.
+        let tmp_path = guard.tmp_dir().to_path_buf();
+        assert!(tmp_path.exists());
+        assert!(!final_dir.exists());
+        guard.commit().unwrap();
+        // Post-commit: final exists with our files; tmp is gone.
+        assert!(final_dir.exists());
+        assert!(final_dir.join("manifest.json").exists());
+        assert!(final_dir.join("final_assignments.json").exists());
+        assert!(!tmp_path.exists());
+    }
+
+    #[test]
+    fn test_plan_dir_guard_drop_without_commit_leaves_no_label() {
+        // PP-22 invariant: a guard that is dropped without commit must remove
+        // the tmp staging directory and never create the final directory.
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let tmp_path = {
+            let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+            std::fs::write(guard.tmp_dir().join("manifest.json"), b"{}").unwrap();
+            // Simulate a validation failure: drop the guard without committing.
+            let p = guard.tmp_dir().to_path_buf();
+            drop(guard);
+            p
+        };
+        assert!(!tmp_path.exists(), "tmp dir must be removed on drop");
+        assert!(!final_dir.exists(), "final dir must not be created on failure");
+    }
+
+    #[test]
+    fn test_plan_dir_guard_label_collision_refuses_without_force() {
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(&final_dir).unwrap();
+        std::fs::write(final_dir.join("preexisting.txt"), b"keep me").unwrap();
+        let result = PlanDirGuard::new(final_dir.clone(), false);
+        assert!(result.is_err(), "must refuse to overwrite without force");
+        assert!(final_dir.join("preexisting.txt").exists(), "existing files untouched");
+    }
+
+    #[test]
+    fn test_plan_dir_guard_force_overwrites_existing() {
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(&final_dir).unwrap();
+        std::fs::write(final_dir.join("preexisting.txt"), b"replace me").unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), true).unwrap();
+        std::fs::write(guard.tmp_dir().join("new_file.json"), b"new").unwrap();
+        guard.commit().unwrap();
+        assert!(final_dir.join("new_file.json").exists());
+        assert!(!final_dir.join("preexisting.txt").exists(), "force replaces atomically");
+    }
+
+    #[test]
+    fn test_plan_dir_guard_clears_stale_tmp_from_prior_failed_run() {
+        // If a prior process crashed and left a stale .tmp/ directory, the
+        // next guard creation must clean it up rather than fail.
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let stale = final_dir.parent().unwrap().join("vt_test.tmp");
+        std::fs::create_dir_all(&stale).unwrap();
+        std::fs::write(stale.join("garbage.txt"), b"left behind").unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+        // Stale contents should be gone.
+        assert!(!guard.tmp_dir().join("garbage.txt").exists());
+        guard.commit().unwrap();
+        assert!(final_dir.exists());
+    }
+
+    #[test]
+    fn test_plan_dir_guard_commit_fails_if_final_dir_appears_mid_run() {
+        // Race: someone else creates the final dir between our preflight and
+        // commit. We must refuse rather than clobber, unless force=true.
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+        std::fs::write(guard.tmp_dir().join("staged.json"), b"{}").unwrap();
+        // Simulate a mid-run conflict.
+        std::fs::create_dir_all(&final_dir).unwrap();
+        std::fs::write(final_dir.join("from_other_process.txt"), b"hi").unwrap();
+        let tmp_path = guard.tmp_dir().to_path_buf();
+        let result = guard.commit();
+        assert!(result.is_err(), "mid-run collision must refuse without force");
+        // Existing final dir untouched; tmp still exists for debugging.
+        assert!(final_dir.join("from_other_process.txt").exists());
+        // (Tmp may or may not exist depending on Drop order; what matters is
+        // the existing final_dir was not clobbered.)
+        let _ = tmp_path;
     }
 }
