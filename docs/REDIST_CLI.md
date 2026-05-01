@@ -539,6 +539,25 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Researcher Toolkit (partial — diagnostics + notebooks + paper-mode template)
+
+The Researcher Toolkit plan is partial. Today (2026-04-30):
+
+**Shipped:**
+- **`redist-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for the three load-bearing convergence diagnostics — Gelman-Rubin R-hat across ≥4 chains, Effective Sample Size (Geyer 1992 initial monotone sequence) on summary statistics, Hamming-distance autocorrelation on the partition trajectory with integrated `tau_int`. JSON-shape structs mirror the spec's `rhat.json` / `ess.json` / `hamming_autocorr.json`. 21 L0 tests.
+- **`notebooks/`** (Task 1): 5 notebook stubs (`01_quickstart`, `02_parameter_sweep`, `03_callais_evidence`, `04_gerrychain_interop`, `05_mcmc_ensemble`) with cell-1 metadata declaring `runtime_budget_secs` (60 / 120 / 300 / 120 / 1800), cell-2 kernel-state attestation header against compatible RANGES (Task 2 / B-06: `redist_py >=0.4,<0.5`, `gerrychain >=0.3.2,<0.4`), and final-cell completion sentinel. Notebook bodies are TODO; scaffolding + conventions shipped.
+- **`scripts/research/paper_mode_template/REPRODUCE.sh`** (Task 8 / D-05): AEA-compliant replication-script template with platform check (target `linux-x86_64-glibc-2.35`), Cargo.lock + rust-toolchain.toml + requirements.lock SHA verification, locked cargo build, output-checksum verification via jq, cross-platform reviewer note (use WSL / Docker `ubuntu:22.04`). Renderer + `--paper-mode` CLI flag wiring deferred.
+- **`scripts/research/paper_mode_template/README.md`**: documents the template-pack structure + the 8 placeholder substitutions + the rationale for D-05's single-platform pin.
+
+**Deferred (next session pickup):**
+- **Notebook BODY content** — beyond cell-1 metadata + cell-2 attestation; depends on the `redist_py` PyO3 binding stabilizing.
+- **`redist research check-compat`** (Task 3) — actual round-trip property test against installed GerryChain.
+- **`redist research validate-ensemble`** (Task 5, M-02 rename) — percentile-rank computation + missing-diagnostics refusal guard.
+- **`scripts/research/mcmc_ensemble.py`** (Task 6) — GerryChain wrapper.
+- **`redist analyze --paper-mode`** flag wiring + `redist-cli::paper_mode::emit_replication_package` (Task 8.1, 8.2).
+- **`.github/workflows/notebooks.yml`** (Task 1.5) — runtime-budget-enforcing CI.
+- **L0 paper-mode acceptance test** running `bash REPRODUCE.sh` from a clean container (Task 8.4).
+
 ## Deposition Prep (partial — whitelist DAG + log writer + verifier; daemon deferred)
 
 The Deposition Prep plan is partial. Today (2026-04-30):

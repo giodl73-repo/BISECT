@@ -14,6 +14,23 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Researcher Toolkit (partial; diagnostics + notebooks + paper-mode template) + Fairness Doctrine
+- **`docs/legal/FAIRNESS_DOCTRINE.md`** (post-Rucho citable artifact): articulates the project's procedural-fairness claim in 5 verifiable properties, names case law (Rucho 2019, PA *LWV* 2018, NC *Harper* 2022, NY *Harkenrider* 2022, Allen v. Milligan 2023, Callais 2026), addresses Rucho's "no judicially manageable standard" rhetoric directly, and includes §6 — 9 things the project explicitly does NOT claim (the credibility-load-bearing antiparty-overclaim guardrail). §7 reproducibility recipe a special master can follow.
+- **`redist-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for Gelman-Rubin R-hat (≥4 chains required), Effective Sample Size (Geyer 1992 initial monotone sequence), Hamming-distance autocorrelation with integrated `tau_int`. `RhatRecord` / `EssRecord` / `HammingAutocorrRecord` serde shapes mirror the spec's JSON output filenames. 21 L0 tests against hand-computed truth.
+- **`notebooks/`** (Task 1): 5 notebook stubs with cell-1 `runtime_budget_secs` metadata + cell-2 kernel-state attestation header against compatible RANGES (B-06) + final-cell completion sentinel. `notebooks/README.md` documents conventions. Notebook BODY content + CI workflow deferred.
+- **`scripts/research/paper_mode_template/`** (Task 8 / D-05): AEA-compliant `REPRODUCE.sh` template with platform-check + Cargo.lock/rust-toolchain.toml/requirements.lock SHA verification + locked cargo build + output-checksum verification + cross-platform reviewer note (WSL / Docker ubuntu:22.04). 8 placeholder substitutions documented for the (deferred) renderer.
+- **49 new L0 tests** total this commit cycle (21 ensemble_diagnostics + 28 prior depo); 1208 workspace tests pass; 0 regressions.
+
+What's deferred (Researcher Toolkit Tasks 2 / 3 / 4 / 5 / 6 / 8.1 / 9):
+- Kernel-state attestation Python helper.
+- `redist research check-compat` (GerryChain handshake CLI).
+- GerryChain ↔ redist round-trip property tests under Hypothesis.
+- `redist research validate-ensemble` (percentile-rank CLI).
+- `scripts/research/mcmc_ensemble.py` (GerryChain wrapper for ensemble generation).
+- `redist analyze --paper-mode` flag wiring + `redist-cli::paper_mode::emit_replication_package` renderer.
+- Implementation-correctness + nightly N≥10000 statistical-anchor tests.
+- `.github/workflows/notebooks.yml` runtime-budget-enforcing CI.
+
 ### Added (2026-04-30) — Deposition Prep (partial; whitelist DAG + log writer + verifier)
 - **`docs/parameters/whitelist-dependencies.md`** + **`data/whitelist_dependencies.json`** (S-01): explicit dependency DAG for the 8 whitelist parameters with invalidation edges, narrative-blocking rules (e.g., `bloc_p_value_method=none` blocks "statistically significant" wording), and warning rules (e.g., `bloc_robust_se_type=hc1` + `n_clusters<30` triggers anti-conservative-SE warning per Long & Ervin 2000).
 - **`redist-cli/src/depo.rs`** (~900 lines): library module for the deposition pipeline.
