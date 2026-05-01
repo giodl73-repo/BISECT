@@ -177,6 +177,7 @@ fn main() {
                 version: args.version.clone(),
                 output_dir,
                 partition_mode: args.partition_mode.to_string(),
+                compact_seeds: args.compact_seeds,
                 position: args.position,
                 debug: args.debug,
                 reset: args.reset,

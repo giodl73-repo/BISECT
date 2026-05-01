@@ -557,17 +557,36 @@ pub fn run_all_splits(
 /// Requires geometry data in `graph` (vertex_areas + vertex_ext_perimeters);
 /// gracefully degrades to minimum-edge-cut if geometry is absent.
 pub fn run_all_splits_compact(
-    graph: &redist_data::AdjacencyGraph,
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    // Per-vertex land area in m² (from TIGER ALAND). Empty = no PP computation.
+    vertex_areas: &[f64],
+    // Per-vertex external perimeter in metres. Empty = no PP computation.
+    vertex_ext_perimeters: &[f64],
     num_districts: usize,
     balance_tolerance: f64,
     niter: u32,
+    // Ignored here — seeds_per_level in opts controls METIS seed iteration.
+    _single_seed: Option<u64>,
     opts: &CompactBisectOpts,
     intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
-    let n = graph.n_vertices;
-    let adjacency = &graph.adjacency;
-    let vertex_weights = &graph.vertex_weights;
-    let edge_weights = &graph.edge_weights;
+    let n = adjacency.len();
+    // Build a lightweight AdjacencyGraph wrapper so select_compact_split can call subgraph_pp.
+    // We only populate the geometry fields — adjacency/weights are borrowed from the caller.
+    let geom_graph = {
+        let mut g = redist_data::AdjacencyGraph {
+            adjacency: adjacency.to_vec(),
+            vertex_weights: vertex_weights.to_vec(),
+            edge_weights: edge_weights.clone(),
+            n_vertices: n,
+            n_edges: edge_weights.len(),
+            vertex_areas: vertex_areas.to_vec(),
+            vertex_ext_perimeters: vertex_ext_perimeters.to_vec(),
+        };
+        g
+    };
 
     if num_districts == 1 {
         if let Some(dir) = intermediate_dir {
@@ -621,7 +640,7 @@ pub fn run_all_splits_compact(
                         ));
                     }
 
-                    let (left, right) = select_compact_split(&candidates, graph, opts.epsilon);
+                    let (left, right) = select_compact_split(&candidates, &geom_graph, opts.epsilon);
                     Ok((node.path, left, right))
                 })
                 .collect::<Result<Vec<_>, String>>()?;

@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_nway_partition};
+use crate::bisection_runner::{run_all_splits, run_all_splits_compact, run_nway_partition, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -53,6 +53,10 @@ pub struct StateConfig {
 
     // ── Algorithm: how partitioning is performed ──────────────────────────────
     pub partition_mode: String,
+    /// CompactBisect: seeds per bisection level (default 0 = disabled).
+    /// When > 0 and partition_mode == "compact-bisect", run this many METIS seeds
+    /// at each level and select by geometric-mean PP (or min-EC if no geometry).
+    pub compact_seeds: usize,
     /// METIS imbalance factor (integer percent, e.g. 5 = 0.5% imbalance per level)
     pub ufactor: u32,
     /// Number of METIS refinement iterations
@@ -142,6 +146,7 @@ impl StateConfig {
             position,
             // Algorithm defaults
             partition_mode: "edge-weighted".to_string(),
+            compact_seeds: 0,
             ufactor: 5,
             niter: 100,
             seed: None,
@@ -683,6 +688,10 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             status(cfg.position, &format!("{}: single district — skipping VRA (trivially compliant)", cfg.state_code));
             HashMap::new()
         }
+        "compact-bisect" => {
+            status(cfg.position, &format!("{}: compact-bisect mode ({} edges)", cfg.state_code, graph.n_edges));
+            graph.edge_weights.clone()
+        }
         _ => HashMap::new(), // unweighted
     };
 
@@ -727,13 +736,42 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             &graph.vertex_weights,
             &edge_weights,
             num_districts,
-            1.0 + cfg.ufactor as f64 / 1000.0,  // convert int ufactor to decimal
+            1.0 + cfg.ufactor as f64 / 1000.0,
             cfg.niter,
             cfg.seed,
         ).map_err(|e| format!("n-way partition failed: {e}"))?
+    } else if cfg.partition_mode == "compact-bisect" && cfg.compact_seeds > 0 {
+        // CompactBisect: greedy level-by-level selection by geometric-mean PP.
+        // Load TIGER geometry so subgraph_pp() returns real values.
+        let (vertex_areas, vertex_ext_perimeters) =
+            load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
+                                &graph.adjacency, &edge_weights);
+        if vertex_areas.is_empty() {
+            eprintln!("[compact-bisect] WARNING: no TIGER geometry loaded — \
+                       falling back to greedy min-EC at each level");
+        } else {
+            eprintln!("[compact-bisect] geometry loaded: {} tracts with area + ext_perimeter",
+                       vertex_areas.len());
+        }
+        let balance_tolerance_frac = cfg.effective_balance_tolerance();
+        let opts = CompactBisectOpts {
+            seeds_per_level: cfg.compact_seeds,
+            epsilon: 0.05,
+        };
+        run_all_splits_compact(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            &edge_weights,
+            &vertex_areas,
+            &vertex_ext_perimeters,
+            num_districts,
+            balance_tolerance_frac,
+            cfg.niter,
+            None, // use seeds 1..N inside compact, not a fixed seed
+            &opts,
+            Some(&intermediate_dir),
+        ).map_err(|e| format!("compact-bisect failed: {e}"))?
     } else {
-        // Pass balance_tolerance as fraction: per-node ufactor = 1 + tolerance/k_node
-        // This guarantees cumulative error ≤ tolerance regardless of bisection depth.
         let balance_tolerance_frac = cfg.effective_balance_tolerance();
         run_all_splits(
             &graph.adjacency,
@@ -920,6 +958,81 @@ pub fn apply_coi_weights(
     Ok(edge_weights)
 }
 
+/// Load per-tract area (m²) and external perimeter (m) from TIGER shapefiles.
+/// Used by CompactBisect to compute Polsby-Popper at each bisection level.
+///
+/// Area: ALAND field from TIGER (accurate, in m²).
+/// External perimeter: approximated as 2√(π·ALAND) − Σ(shared edge weights).
+/// The circular approximation is slightly off for elongated tracts but preserves
+/// relative compactness rankings within the same subgraph.
+///
+/// Returns (vertex_areas, vertex_ext_perimeters) aligned to adjacency indices.
+/// Returns empty vecs if TIGER file is not found (CompactBisect gracefully degrades).
+pub fn load_tiger_geometry(
+    state_code: &str,
+    year: &str,
+    index_to_geoid: &std::collections::HashMap<usize, String>,
+    adjacency: &[Vec<usize>],
+    edge_weights: &std::collections::HashMap<(usize, usize), f64>,
+) -> (Vec<f64>, Vec<f64>) {
+    let state_fips = state_code_to_fips(&state_code.to_uppercase()).map(|s| s.to_string());
+
+    // Try TIGER path: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/
+    let tiger_path = state_fips.as_deref().and_then(|fips| {
+        let p = std::path::PathBuf::from("data")
+            .join(year).join("tiger").join("tracts")
+            .join(format!("tl_{year}_{fips}_tract"))
+            .join(format!("tl_{year}_{fips}_tract.shp"));
+        if p.exists() { Some(p) } else { None }
+    });
+
+    let tiger_path = match tiger_path {
+        Some(p) => p,
+        None => {
+            eprintln!("[compact-bisect] TIGER not found for {state_code} {year} — no geometry");
+            return (Vec::new(), Vec::new());
+        }
+    };
+
+    // Read tract records: geoid → aland
+    let records = match redist_data::read_tiger_tracts(&tiger_path) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("[compact-bisect] TIGER read failed: {e}");
+            return (Vec::new(), Vec::new());
+        }
+    };
+
+    let geoid_to_aland: std::collections::HashMap<String, f64> = records.iter()
+        .map(|r| (r.geoid.clone(), r.aland as f64))
+        .collect();
+
+    let n = adjacency.len();
+    let mut vertex_areas = vec![0.0f64; n];
+    let mut vertex_ext_perimeters = vec![0.0f64; n];
+
+    for (&idx, geoid) in index_to_geoid {
+        if idx >= n { continue; }
+        let aland = *geoid_to_aland.get(geoid).unwrap_or(&0.0);
+        vertex_areas[idx] = aland;
+
+        // Circular approximation of total perimeter: 2√(π·A)
+        let total_perim_approx = if aland > 0.0 {
+            2.0 * (std::f64::consts::PI * aland).sqrt()
+        } else { 0.0 };
+
+        // Subtract shared boundaries (in metres from adjacency edge weights)
+        let shared: f64 = adjacency[idx].iter().map(|&j| {
+            let key = (idx.min(j), idx.max(j));
+            edge_weights.get(&key).copied().unwrap_or(0.0)
+        }).sum();
+
+        vertex_ext_perimeters[idx] = (total_perim_approx - shared).max(0.0);
+    }
+
+    (vertex_areas, vertex_ext_perimeters)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -934,6 +1047,7 @@ mod tests {
             version: "V3".to_string(),
             output_dir: PathBuf::from("/tmp/test"),
             partition_mode: "edge-weighted".to_string(),
+            compact_seeds: 0,
             position: 999,
             debug: false,
             reset: false,

@@ -49,6 +49,12 @@ pub enum PartitionMode {
     /// valid for state legislative redistricting.
     #[value(name = "proportional")]
     Proportional,
+    /// CompactBisect (B.7): greedy level-by-level selection by geometric-mean
+    /// Polsby-Popper. Requires --compact-seeds N. At each bisection level, runs
+    /// N METIS seeds and selects the split maximising sqrt(PP(L)·PP(R)) among
+    /// near-minimum-cut candidates. Degrades to min-EC if TIGER geometry unavailable.
+    #[value(name = "compact-bisect")]
+    CompactBisect,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -59,6 +65,7 @@ impl std::fmt::Display for PartitionMode {
             Self::MetisVra         => write!(f, "metis-vra"),
             Self::PartisanWeighted => write!(f, "partisan-weighted"),
             Self::Proportional     => write!(f, "proportional"),
+            Self::CompactBisect    => write!(f, "compact-bisect"),
         }
     }
 }
@@ -1115,6 +1122,13 @@ pub struct StateArgs {
     /// METIS random seed for reproducibility (default: random)
     #[arg(long)]
     pub seed: Option<u64>,
+
+    /// CompactBisect: seeds per bisection level (default: 0 = disabled).
+    /// Requires --partition-mode compact-bisect. At each level, runs this many
+    /// METIS seeds and selects by geometric-mean Polsby-Popper (or min edge-cut
+    /// if TIGER geometry is unavailable). Typical: 20-100.
+    #[arg(long, default_value = "0")]
+    pub compact_seeds: usize,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 
