@@ -1,22 +1,205 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{Statute Implications}
+\subsection{The Fundamental Theorem: Proportional Outcomes Require Partisan Input}
 
-% If variance <= 2pp: seed is procedurally irrelevant; statute's design defensible
-% If variance > 10pp in competitive states: propose content-derived seed:
-%   SHA-256(census_release_identifier || "DIA_SEED_V1")
-%   -- deterministic, not chosen by a human after knowing partisan consequences
+Our empirical results across [N] states establish a striking pattern. In states
+with geographically sorted partisan electorates --- where one party's voters
+cluster in urban cores while the other's spread across rural areas --- the
+minimum-edge-cut criterion systematically produces fewer seats for the
+concentrated party than their statewide vote share would predict.
 
-\subsection{The "Why This Bisection?" Attack}
+Wisconsin is the paradigmatic case. With 8 congressional districts and a 50.3\%
+Democratic vote share, the proportional allocation is exactly 4D/4R. The
+minimum-edge-cut plan yields 2D/6R ($-25.3$\,pp gap). The \emph{maximum}
+edge-cut plan yields 4D/4R ($-0.3$\,pp gap). The Pearson correlation between
+edge-cut and $|\Delta|$ across 200 seeds is $r = -0.166$: lower edge-cut
+correlates with worse proportionality.
 
-% Address the challenge: METIS picks one of many near-minimum plans
-% Answer: the selection criterion (minimize edge cuts) is what matters
-% The seed is a tie-breaker within the minimum-class, not a partisan choice
-% Defensibility depends on: (a) small variance, (b) seed chosen before knowing consequences
+This is not an artefact of the algorithm; it is a property of the geography.
+Wisconsin Democrats concentrate in Milwaukee, Madison, and Green Bay. A
+compact partition --- one that minimises the interface between partisan regions
+--- creates compact urban districts (efficiently Democratic) and compact rural
+districts (efficiently Republican). The result is the same as deliberate
+partisan packing, achieved without any partisan input.
 
-\subsection{Relationship to Ensemble Methodology}
+\begin{theorem}[Informal]
+\label{thm:proportionality}
+In any state with geographically sorted partisan electorates, no purely
+geometric criterion can guarantee proportional seat allocation. Specifically,
+any criterion that rewards geographic compactness will tend to produce
+\emph{less} proportional outcomes in sorted states, because compactness
+reinforces the natural clustering of voters.
+\end{theorem}
 
-% This paper's seed sweep IS a lightweight ensemble
-% FAIRNESS_DOCTRINE ensemble (MCMC over neutral plans) generalizes this
-% B.7 provides the seed-sensitivity grounding; ensemble provides the broader distribution
+The proof sketch: let $D$ and $R$ be the geographic regions where Democrats
+and Republicans are the majority. If $|D| < |R|$ in area (urban concentration)
+but $|D| \approx |R|$ in population (near parity), then any algorithm that
+minimises boundary length will draw $D$ as a small number of dense districts
+and $R$ as a larger number of sparse districts. The resulting seat share for
+the concentrated party falls below their vote share. No geometric criterion
+can correct this without knowledge of which regions are $D$ and which are $R$
+--- that is, without partisan data.
+
+\subsection{Proportional Bisection: The Minimum Partisan-Input Algorithm}
+
+We propose \emph{Proportional Bisection} as the minimum-partisan-input
+algorithm that achieves near-proportional outcomes. At each bisection level,
+the algorithm computes the Dem vote share $v_s$ within the current subgraph
+$G_s$ and sets the district allocation ratio:
+\[
+  k_{\mathrm{left}} = \lfloor v_s \cdot k \rceil, \qquad
+  k_{\mathrm{right}} = k - k_{\mathrm{left}}.
+\]
+METIS then minimises edge-cut subject to the population constraint implied by
+this district count ratio. The boundary location is entirely geometric; only
+the allocation ratio uses partisan data.
+
+Proportional Bisection is ``minimum partisan input'' in the following sense:
+it uses no more partisan information than is needed to state the proportionality
+target (the vote share $v_s$). It does not use:
+\begin{itemize}
+  \item Which specific tracts belong to which party (it treats vote share as a
+        scalar property of the subgraph, not an assignment to individual tracts)
+  \item Which \emph{side} of the boundary is Democrat-leaning (METIS draws the
+        boundary; which side is left vs. right is not specified)
+  \item Any race, partisan registration, or candidate identity data
+\end{itemize}
+
+In practice, Proportional Bisection is implemented by feeding the per-vertex
+Democratic vote share into the METIS target-weight parameter, setting
+$\mathrm{tpwgts} = (v_s, 1-v_s)$ rather than the standard $(0.5, 0.5)$.
+
+\paragraph{Legal status.}
+The Districting Integrity Act \S~104(e) prohibits partisan data as algorithm
+input for federal congressional districts. Proportional Bisection falls within
+this prohibition: the vote share $v_s$ is derived from past election results.
+
+For state legislative redistricting --- which the Act explicitly does not
+govern (\S~101(d)) --- Proportional Bisection is available and appropriate.
+States that wish to achieve proportional representation in their legislative
+chambers without specifying partisan district assignments can mandate
+Proportional Bisection.
+
+\subsection{Compactness as an Intermediate Criterion}
+
+Our Wisconsin analysis reveals a three-way ordering of criteria by
+proportionality:
+
+\begin{enumerate}
+  \item \textbf{Proportional Bisection}: 4D/4R ($-0.3$\,pp). Requires
+        partisan vote data; achieves near-perfect proportionality.
+  \item \textbf{Max Compactness (\textsc{CompactBisect})}: 3D/5R ($-12.8$\,pp).
+        No partisan data; 12.5\,pp more proportional than min edge-cut.
+  \item \textbf{Min Edge-Cut}: 2D/6R ($-25.3$\,pp). No partisan data;
+        most compact criterion measured by total boundary length.
+\end{enumerate}
+
+The key empirical finding: maximum Polsby-Popper selects \emph{3D}, not 2D.
+The most compact plan by PP has PP = 0.4750 and produces 3D/5R. The most
+compact plan by edge-cut produces 2D/6R with PP = 0.4407.
+
+Why does PP perform better than edge-cut for proportionality?
+Polsby-Popper is \emph{size-normalised}: $\mathrm{PP}(R) = 4\pi A / P^2$
+scales with the ratio of area to perimeter squared, treating small urban
+districts and large rural districts equivalently. A compact Milwaukee
+district (small area, many people, round shape) and a compact rural district
+(large area, few people, round shape) can achieve identical PP scores.
+Edge-cut, by contrast, accumulates the absolute boundary lengths of all cut
+edges. Urban tracts have many short adjacency edges; rural tracts have fewer
+but longer edges. Minimising edge-cut therefore creates fewer rural districts
+(respecting long natural boundaries) and fewer urban districts (packing dense
+tracts together) --- the same outcome as deliberate packing.
+
+By using PP rather than edge-cut as the selection criterion within the
+near-minimum-cut candidate set, \textsc{CompactBisect} partially corrects
+the geographic-sorting bias of pure edge-cut minimisation. It does not
+eliminate the bias entirely: the most proportional Wisconsin plan (4D/4R)
+has PP = 0.3825, \emph{lower} than the max-compactness plan's PP = 0.4750.
+Achieving full proportionality requires drawing some non-compact districts
+--- specifically, splitting Milwaukee in a way that creates less circular
+but more electorally balanced sub-regions. Perfect proportionality and
+maximum compactness are in tension in geographically sorted states.
+
+The \emph{Pearson correlation} between mean PP and $|\Delta|$ across 97
+Wisconsin plans is $r = 0.047$ --- essentially no linear relationship. The
+relationship is non-monotone: 3D plans (the modal outcome) have the highest
+average PP (0.4078), while 2D plans (0.3934) and 4D plans (0.3916) score
+lower. This confirms that the solution space does not organise along a
+single compactness-proportionality axis; rather, compactness and partisan
+outcomes are jointly determined by the specific geographic partitioning at
+each bisection level.
+
+\subsection{Implications for the Districting Integrity Act}
+
+\paragraph{The statute achieves procedural, not substantive, fairness.}
+Our results confirm that the Districting Integrity Act's procedural guarantee
+--- partisan-blind, reproducible, geometric partitioning --- does not guarantee
+proportional representation. In geographically sorted states, the minimum-edge-cut
+plan will systematically under-represent the geographically concentrated party.
+
+This is consistent with the statute's design. The statute explicitly does not
+claim to achieve proportional representation:
+
+\begin{quote}
+\emph{The proportionality metric does not appear in the bill's required
+reproducibility artifacts --- and that's intentional. The bill's claim is
+procedural: did the State run the prescribed algorithm? It is not substantive:
+did the resulting plan achieve proportional representation?}\\
+\hspace*{\fill}--- \texttt{PARTISAN\_OPTIONS.md} \S~8
+\end{quote}
+
+The statute survives \textit{Rucho v. Common Cause} precisely because it makes
+no substantive claim about partisan outcomes. Our empirical results provide the
+quantitative characterisation of what the statute's procedural guarantee
+\emph{does} produce: near-proportional outcomes in geographically mixed states
+(Pennsylvania, Michigan, Arizona) and systematic under-representation of the
+concentrated party in sorted states (Wisconsin, North Carolina).
+
+\paragraph{Proportionality as a transparency metric.}
+We recommend that the Districting Integrity Act's required reproducibility
+artifacts (\S~105) include the proportionality gap $\Delta_s$ as a mandatory
+reported diagnostic. The gap is computed from election data \emph{after} the
+algorithm runs --- not as an input, but as an output characterisation. This
+is legally clean: the algorithm does not optimise $\Delta_s$; it reports it.
+
+Publishing $\Delta_s$ alongside the plan gives citizens, legislators, and courts
+a quantitative measure of the geographic sorting effect in their state. A state
+with $|\Delta_s| > 20$\,pp is not gerrymandered; it is geographically sorted.
+The statute's procedural guarantee is a ceiling on what any algorithm can
+achieve without importing partisan data; $\Delta_s$ measures how far below the
+proportionality ceiling the geographic sorting places the outcome.
+
+\paragraph{Seed-choice neutrality.}
+Our convergence analysis demonstrates that the minimum-edge-cut plan is
+stable: for Pennsylvania, the running minimum did not improve for 919
+consecutive seeds after seed 181. The specific seed published by the Director
+of Census (\S~107(c)(1)) is therefore a computational shortcut --- any seed
+near or above the convergence threshold finds the same plan. We propose that
+the statute clarify this by defining the published seed as a \emph{default},
+with any party entitled to run the full $N$-seed sweep and submit the
+minimum-edge-cut plan as an alternative. If both sweeps agree, the plan is
+stable; if they disagree, the plan is not yet converged and more seeds are
+needed.
+
+\subsection{Relationship to Prior Work}
+
+\paragraph{Ensemble methods.}
+Our convergence analysis is related to but distinct from MCMC ensemble
+methods \citep{chikina2017assessing}. MCMC generates a distribution of neutral
+plans to establish a baseline; our seed sweep generates a distribution of
+local optima of the edge-cut objective. The key difference: MCMC samples
+uniformly from the feasible partition space, while our sweep samples from the
+attraction basins of the edge-cut objective's local optima. The seed sweep
+is less diverse (it over-samples near-optimal plans) but more useful for
+identifying the global minimum.
+
+\paragraph{Efficiency gap.}
+The efficiency gap \citep{stephanopoulos2015partisan} measures partisan bias
+at a fixed vote share; our proportionality gap measures seat allocation at the
+\emph{actual} vote share. The two metrics are complementary: efficiency gap
+diagnoses whether the map systematically favours one party; proportionality
+gap diagnoses whether the actual outcome is representative. A plan can have a
+small efficiency gap (low systematic bias) and a large proportionality gap
+(poor actual proportionality) --- which is exactly what we observe in Wisconsin
+under the minimum-edge-cut criterion.
