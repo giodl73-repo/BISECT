@@ -1,12 +1,33 @@
 paper: solution-space-and-seed-sensitivity
 title: "The Solution Space of Minimum-Edge-Cut Redistricting: Seed Sensitivity and Partisan Variance"
 venue: "Political Analysis / Journal of Computational Geometry"
-stage: draft
-round: 0
+stage: synthesis
+round: 1
 content_mode: full
-reviewers: []
-reviews: {}
-p1_items: []
+reviewers: [R-50, R-1, R-37, R-44, R-30]
+reviews:
+  R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
+  R-1:  {score: 2.5, file: reviews/REVIEW-percy-liang.md}
+  R-37: {score: 3.0, file: reviews/REVIEW-nadia-polikarpova.md}
+  R-44: {score: 3.0, file: reviews/REVIEW-jacob-steinhardt.md}
+  R-30: {score: 3.0, file: reviews/REVIEW-ce-zhang.md}
+avg_score: 2.8
+p1_items:
+  - id: P1-A
+    desc: "Fix Cheeger formula: EC_min ≥ λ₂×n/4 not λ₂×W_total/4"
+    status: open
+  - id: P1-B
+    desc: "Write 4-line proof of Proposition 3.1 (Certificate Immunity)"
+    status: open
+  - id: P1-C
+    desc: "Cite election data source (Fekrazad DOI), document apportionment methodology"
+    status: open
+  - id: P1-D
+    desc: "Add ε=0.05 to statutory parameter table or run sensitivity analysis"
+    status: open
+  - id: P1-E
+    desc: "Run 200+ more seeds on GA/MI to demonstrate convergence or narrow headline claim"
+    status: open
 history:
   - stage: draft
     date: "2026-05-01"
