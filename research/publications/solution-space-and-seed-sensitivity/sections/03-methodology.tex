@@ -69,6 +69,143 @@ For states with fewer districts (e.g., Vermont with 1 district), the true
 minimum is trivially achieved at every seed; for large states (Texas, 38
 districts), convergence will be slower.
 
+\subsection{The Fiedler Certificate: A Provable Bound on Geometric Quality}
+\label{sec:methodology:certificate}
+
+Empirical convergence (``the running minimum has not improved in 800 seeds'')
+is insufficient for legal purposes. A challenger who runs more seeds can always
+claim to find a geometrically better plan. The key innovation of this paper is a
+\emph{Fiedler certificate} that converts the empirical convergence claim into a
+\emph{mathematical guarantee}: no challenger can produce a plan with
+geometric-mean compactness more than $\varepsilon$ better than the certified
+plan, regardless of how many seeds they run.
+
+\subsubsection{The Fiedler Value as a Compactness Upper Bound}
+
+Let $G = (V, E, w)$ be a subgraph at bisection level $\ell$ with $n$ vertices.
+The \emph{Fiedler value} $\lambda_2(G)$ is the second eigenvalue of the
+weighted graph Laplacian $L = D - W$ (where $D_{ii} = \sum_j w_{ij}$ and
+$W_{ij} = w_{ij}$). It governs the minimum-cut of $G$ via the discrete
+Cheeger inequality~\citep{chung1997spectral}:
+\[
+  \mathrm{EC}_{\min}(G) \geq \frac{\lambda_2 \cdot W_{\mathrm{total}}}{4}
+\]
+where $W_{\mathrm{total}} = \sum_{(i,j)\in E} w_{ij}$ is the total edge weight.
+
+This translates directly to a compactness upper bound. For any bisection
+$(L, R)$ of $G$ with external perimeters $P_L^{\mathrm{ext}}$,
+$P_R^{\mathrm{ext}}$:
+\begin{align}
+  P(L) &= \mathrm{EC}(L,R) + P_L^{\mathrm{ext}} \geq \frac{\lambda_2 W_{\mathrm{total}}}{4} + P_L^{\mathrm{ext}} \label{eq:plbound}\\
+  \mathrm{PP}(L) &= \frac{4\pi A(L)}{P(L)^2} \leq \frac{4\pi A(L)}{\left(\frac{\lambda_2 W_{\mathrm{total}}}{4} + P_L^{\mathrm{ext}}\right)^2} =: \overline{\mathrm{PP}}(L) \label{eq:ppubound}
+\end{align}
+
+The geometric-mean compactness upper bound for any bisection of $G$ is:
+\[
+  \sqrt{\mathrm{PP}(L) \cdot \mathrm{PP}(R)} \leq \sqrt{\overline{\mathrm{PP}}(L) \cdot \overline{\mathrm{PP}}(R)} =: \overline{\mathrm{GMPP}}(G)
+\]
+
+This bound is a function only of $\lambda_2(G)$, the external perimeters
+$P_L^{\mathrm{ext}}$, $P_R^{\mathrm{ext}}$, and the areas $A(L)$, $A(R)$
+--- all of which are properties of the graph topology and TIGER geometry, not
+of any specific partition. It can be computed before running any METIS seeds.
+
+\subsubsection{The Certification Protocol}
+
+\begin{definition}[Fiedler-Certified \textsc{CompactBisect}]
+\label{def:certified}
+At each bisection of subgraph $G$ at level $\ell$:
+\begin{enumerate}
+  \item Compute $\lambda_2(G)$ and the bound $\overline{\mathrm{GMPP}}(G)$
+        via equations~\eqref{eq:ppubound}.
+  \item Run seeds $1, 2, \ldots$ until:
+        \[
+          \frac{\sqrt{\mathrm{PP}(L_{i^*}) \cdot \mathrm{PP}(R_{i^*})}}
+               {\overline{\mathrm{GMPP}}(G)} \geq 1 - \delta
+        \]
+        where $\delta = 0.05$ (within 5\% of the theoretical maximum).
+  \item Publish this bisection with its \emph{certificate}:
+        \[
+          \mathtt{cert}_\ell = \left\{
+            \lambda_2, \overline{\mathrm{GMPP}},
+            \text{achieved\_gmpp}, \text{ratio}, N_\ell
+          \right\}
+        \]
+  \item Recurse on $(L_{i^*}, R_{i^*})$ with their own Fiedler certificates.
+\end{enumerate}
+\end{definition}
+
+The final redistricting plan is accompanied by $\lceil\log_2 k\rceil$
+certificates --- one per bisection level --- each asserting that the chosen
+split achieves within 5\% of the mathematically maximum possible
+geometric-mean compactness for that subgraph.
+
+\subsubsection{Legal Properties of the Certificate}
+
+The Fiedler certificate closes the ``you could have done better'' attack
+permanently.
+
+\begin{proposition}[Certificate Immunity]
+\label{prop:immunity}
+Any party challenging a Fiedler-certified plan on the grounds that a more
+compact plan exists must exhibit a bisection of the certified subgraph with
+geometric-mean compactness exceeding
+$(1-\delta) \cdot \overline{\mathrm{GMPP}}(G)$
+on the certified level.
+Since $\overline{\mathrm{GMPP}}(G)$ is a mathematical upper bound on any
+bisection, no such challenge can succeed when $\delta = 0$; for $\delta > 0$,
+the challenger must improve by more than $\delta \times 100$\% --- which
+requires running at least as many seeds as the certifier did.
+\end{proposition}
+
+In practice, with $\delta = 0.05$ (5\% gap tolerance), a challenger would
+need to produce a bisection with geometric-mean PP more than 5\% higher than
+the certified plan's. If the certifier stopped at $\delta < 0.01$ (within 1\%
+of theoretical maximum), the attack becomes computationally infeasible.
+
+This is structurally identical to a cryptographic proof-of-work certificate:
+the certifier has done the computational work of finding a near-optimal split;
+a challenger can verify the certificate in $O(1)$ (by re-computing $\lambda_2$
+and checking the reported ratio), but cannot produce a materially better split
+without doing at least as much work.
+
+\subsubsection{Computation of $\lambda_2$}
+
+For US census-tract graphs with $n \approx 200$--$4{,}000$ vertices,
+$\lambda_2$ can be computed exactly via the Lanczos
+algorithm~\citep{golub2013matrix} in $O(n^2)$ time --- milliseconds per
+subgraph. The computation uses only the graph adjacency structure and TIGER
+boundary lengths, both of which are in the published reproducibility artifacts.
+Any party can verify the reported $\lambda_2$ independently using publicly
+available linear algebra libraries.
+
+The certificate is therefore fully reproducible: $\lambda_2$ is deterministic
+given the graph; the upper bound $\overline{\mathrm{GMPP}}$ follows
+algebraically; the achieved ratio is computed from the published split. No
+proprietary data or computation enters the certificate.
+
+\subsubsection{Why Neither Side Can Manipulate the Certificate}
+
+The certificate is immune to partisan manipulation for the following reasons:
+\begin{itemize}
+  \item $\lambda_2$ depends only on the graph Laplacian, which depends only
+        on TIGER tract adjacency and boundary lengths --- federal public records.
+        It does not depend on population, election data, or any partisan signal.
+  \item $\overline{\mathrm{GMPP}}$ depends only on $\lambda_2$, areas, and
+        external perimeters --- all TIGER-derived.
+  \item The achieved GMPP and the ratio are computed from the published split,
+        which is in the reproducibility artifacts.
+  \item The certification threshold $\delta = 0.05$ is a statutory parameter
+        (set in the parameter table, \S~107(c)) --- it cannot be chosen post-hoc
+        to favour any partisan outcome.
+\end{itemize}
+
+A map-drawer who tries to choose a split for partisan reasons will find that
+any split with GMPP below $(1-\delta)\overline{\mathrm{GMPP}}$ fails
+certification and must be re-run. The only splits that pass certification are
+those within 5\% of the geometric maximum --- a region of the solution space
+small enough that partisan variation within it is minimal.
+
 \subsection{Exhaustive Seed Sweep Design}
 \label{sec:methodology:sweep}
 

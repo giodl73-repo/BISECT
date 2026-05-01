@@ -1,0 +1,3305 @@
+{
+  "report_version": "1.0",
+  "label": "wa_house_smoke",
+  "state": "WA",
+  "year": "2020",
+  "generated_at": "2026-04-28T14:15:01Z",
+  "sections": {
+    "executive_summary": {
+      "balance_tolerance_pct": 5.0,
+      "binary_version": "0.1.0",
+      "chamber": "house",
+      "created_at": "2026-04-28T13:51:26Z",
+      "label": "wa_house_smoke",
+      "num_districts": 98,
+      "population_balance_valid": true,
+      "state": "WA",
+      "year": "2020"
+    },
+    "population_equality": {
+      "analyzer": "summary",
+      "districts": [
+        {
+          "dem_pct": 0.4087430098806224,
+          "district": 1,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.41487618094174605,
+          "district": 2,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6613810945692089,
+          "district": 3,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5810842090777029,
+          "district": 4,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5464156856392277,
+          "district": 5,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.3233287936542462,
+          "district": 6,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4883215337495294,
+          "district": 7,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.38562054233962606,
+          "district": 8,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.677641311606051,
+          "district": 9,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6582622155083276,
+          "district": 10,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7827970939947851,
+          "district": 11,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5023716451576983,
+          "district": 12,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7681712670933655,
+          "district": 13,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6520697723272755,
+          "district": 14,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5372988512993612,
+          "district": 15,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.9149814595320024,
+          "district": 16,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.8555645913287001,
+          "district": 17,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7335342832444954,
+          "district": 18,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.9000730931258135,
+          "district": 19,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.8041437291839076,
+          "district": 20,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6675026866422169,
+          "district": 21,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6916972251764727,
+          "district": 22,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7443727957230009,
+          "district": 23,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5174743919856446,
+          "district": 24,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5092099297597222,
+          "district": 25,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7122661679052656,
+          "district": 26,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5889563316219895,
+          "district": 27,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5862235741562494,
+          "district": 28,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5950801741164483,
+          "district": 29,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.48204804683026514,
+          "district": 30,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4037662511967299,
+          "district": 31,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.40270585322486263,
+          "district": 32,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5205546160653169,
+          "district": 33,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.3980501954760572,
+          "district": 34,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4297101882476036,
+          "district": 35,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4154666196040496,
+          "district": 36,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4861377722924404,
+          "district": 37,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.37146112629937195,
+          "district": 38,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4503257685532411,
+          "district": 39,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.47158874132364154,
+          "district": 40,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.29797078609494126,
+          "district": 41,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.3822522524520931,
+          "district": 42,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.3790622277897018,
+          "district": 43,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.45539176458234626,
+          "district": 44,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5215455141966083,
+          "district": 45,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4698323525968057,
+          "district": 46,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6471553159467712,
+          "district": 47,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6193205844605261,
+          "district": 48,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7164538664984814,
+          "district": 49,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7209311640066864,
+          "district": 50,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6590449791289529,
+          "district": 51,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4647909072386993,
+          "district": 52,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5034010177027265,
+          "district": 53,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5328588712601696,
+          "district": 54,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7301226592945785,
+          "district": 55,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7344222538051991,
+          "district": 56,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6752835987584646,
+          "district": 57,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7114175086505271,
+          "district": 58,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.44482592771636376,
+          "district": 59,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.553319639894017,
+          "district": 60,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6609883905709517,
+          "district": 61,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.52700567394886,
+          "district": 62,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.545770843817555,
+          "district": 63,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6014974443962173,
+          "district": 64,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.93684657997711,
+          "district": 65,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.9089338713319244,
+          "district": 66,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7833916400179922,
+          "district": 67,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.8456452989784989,
+          "district": 68,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6982300212874558,
+          "district": 69,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7937174827310706,
+          "district": 70,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.9459072104254956,
+          "district": 71,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.915626941233692,
+          "district": 72,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.8822882356451213,
+          "district": 73,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.8180274619656056,
+          "district": 74,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7050935169913736,
+          "district": 75,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.7319414345255281,
+          "district": 76,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6664167512355031,
+          "district": 77,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5164011087596083,
+          "district": 78,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.641013023981765,
+          "district": 79,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6151913637631578,
+          "district": 80,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5548258474821376,
+          "district": 81,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6714999910338225,
+          "district": 82,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5285309207823575,
+          "district": 83,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5917884039019992,
+          "district": 84,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.592884558668462,
+          "district": 85,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4910075285958071,
+          "district": 86,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5838248208303967,
+          "district": 87,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5858775316054358,
+          "district": 88,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.5693673374352854,
+          "district": 89,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.44411887568334946,
+          "district": 90,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.6100043823545941,
+          "district": 91,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.440662097774928,
+          "district": 92,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.608988339507437,
+          "district": 93,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": true,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.40516060453929015,
+          "district": 94,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.3445911140578146,
+          "district": 95,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4334115027575649,
+          "district": 96,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.4389734126133753,
+          "district": 97,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        },
+        {
+          "dem_pct": 0.37816636475040666,
+          "district": 98,
+          "ideal_pop": 0,
+          "is_majority_minority": null,
+          "largest_city": null,
+          "lean_dem": false,
+          "pct_minority": null,
+          "pop_balance_ok": null,
+          "pop_deviation_pct": null,
+          "total_pop": null
+        }
+      ],
+      "population_balance_valid": true,
+      "status": "ok"
+    },
+    "geographic_constraints": {
+      "contiguity": {
+        "all_contiguous": true,
+        "districts": [
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 1,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 2,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 3,
+            "tract_count": 23
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 4,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 5,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 6,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 7,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 8,
+            "tract_count": 21
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 9,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 10,
+            "tract_count": 14
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 11,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 12,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 13,
+            "tract_count": 14
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 14,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 15,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 16,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 17,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 18,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 19,
+            "tract_count": 21
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 20,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 21,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 22,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 23,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 24,
+            "tract_count": 22
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 25,
+            "tract_count": 23
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 26,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 27,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 28,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 29,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 30,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 31,
+            "tract_count": 14
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 32,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 33,
+            "tract_count": 22
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 34,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 35,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 36,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 37,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 38,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 39,
+            "tract_count": 23
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 40,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 41,
+            "tract_count": 28
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 42,
+            "tract_count": 21
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 43,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 44,
+            "tract_count": 21
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 45,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 46,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 47,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 48,
+            "tract_count": 22
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 49,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 50,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 51,
+            "tract_count": 28
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 52,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 53,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 54,
+            "tract_count": 29
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 55,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 56,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 57,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 58,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 59,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 60,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 61,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 62,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 63,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 64,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 65,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 66,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 67,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 68,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 69,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 70,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 71,
+            "tract_count": 21
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 72,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 73,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 74,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 75,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 76,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 77,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 78,
+            "tract_count": 14
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 79,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 80,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 81,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 82,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 83,
+            "tract_count": 23
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 84,
+            "tract_count": 27
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 85,
+            "tract_count": 20
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 86,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 87,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 88,
+            "tract_count": 14
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 89,
+            "tract_count": 15
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 90,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 91,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 92,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 93,
+            "tract_count": 16
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 94,
+            "tract_count": 17
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 95,
+            "tract_count": 19
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 96,
+            "tract_count": 18
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 97,
+            "tract_count": 22
+          },
+          {
+            "component_count": 1,
+            "contiguous": true,
+            "disconnected_tract_counties": [],
+            "disconnected_tracts": [],
+            "district": 98,
+            "tract_count": 22
+          }
+        ],
+        "status": "ok"
+      },
+      "splits": {
+        "analyzer": "splits",
+        "counties": {
+          "compliance_assessment": "28 splits present; no binding numerical limit under WMCA",
+          "disclaimer": "Legal compliance determination requires counsel",
+          "legal_standard": "WA Const. Art. II §43 — counties shall be preserved where possible",
+          "preservation_score": 0.28205128205128205,
+          "split": 28,
+          "split_list": [
+            {
+              "county_fips": "53001",
+              "county_name": "Adams County",
+              "districts_containing": [
+                32,
+                33
+              ],
+              "split_severity": 2,
+              "tract_count": 7
+            },
+            {
+              "county_fips": "53003",
+              "county_name": "Asotin County",
+              "districts_containing": [
+                2,
+                33
+              ],
+              "split_severity": 2,
+              "tract_count": 6
+            },
+            {
+              "county_fips": "53005",
+              "county_name": "Benton County",
+              "districts_containing": [
+                1,
+                8,
+                31,
+                32,
+                45
+              ],
+              "split_severity": 5,
+              "tract_count": 45
+            },
+            {
+              "county_fips": "53007",
+              "county_name": "Chelan County",
+              "districts_containing": [
+                39,
+                44
+              ],
+              "split_severity": 2,
+              "tract_count": 23
+            },
+            {
+              "county_fips": "53009",
+              "county_name": "Clallam County",
+              "districts_containing": [
+                83,
+                84
+              ],
+              "split_severity": 2,
+              "tract_count": 25
+            },
+            {
+              "county_fips": "53011",
+              "county_name": "Clark County",
+              "districts_containing": [
+                28,
+                29,
+                89,
+                90,
+                91,
+                92,
+                98
+              ],
+              "split_severity": 7,
+              "tract_count": 115
+            },
+            {
+              "county_fips": "53015",
+              "county_name": "Cowlitz County",
+              "districts_containing": [
+                92,
+                97,
+                98
+              ],
+              "split_severity": 3,
+              "tract_count": 30
+            },
+            {
+              "county_fips": "53017",
+              "county_name": "Douglas County",
+              "districts_containing": [
+                42,
+                44
+              ],
+              "split_severity": 2,
+              "tract_count": 9
+            },
+            {
+              "county_fips": "53021",
+              "county_name": "Franklin County",
+              "districts_containing": [
+                1,
+                32,
+                33
+              ],
+              "split_severity": 3,
+              "tract_count": 22
+            },
+            {
+              "county_fips": "53025",
+              "county_name": "Grant County",
+              "districts_containing": [
+                6,
+                8,
+                42
+              ],
+              "split_severity": 3,
+              "tract_count": 23
+            },
+            {
+              "county_fips": "53027",
+              "county_name": "Grays Harbor County",
+              "districts_containing": [
+                24,
+                25,
+                84
+              ],
+              "split_severity": 3,
+              "tract_count": 21
+            },
+            {
+              "county_fips": "53029",
+              "county_name": "Island County",
+              "districts_containing": [
+                48,
+                54
+              ],
+              "split_severity": 2,
+              "tract_count": 24
+            },
+            {
+              "county_fips": "53031",
+              "county_name": "Jefferson County",
+              "districts_containing": [
+                83,
+                84
+              ],
+              "split_severity": 2,
+              "tract_count": 11
+            },
+            {
+              "county_fips": "53033",
+              "county_name": "King County",
+              "districts_containing": [
+                13,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                55,
+                56,
+                57,
+                58,
+                60,
+                61,
+                62,
+                63,
+                64,
+                65,
+                66,
+                67,
+                68,
+                69,
+                70,
+                71,
+                72,
+                73,
+                74,
+                75,
+                76,
+                79,
+                80
+              ],
+              "split_severity": 30,
+              "tract_count": 495
+            },
+            {
+              "county_fips": "53035",
+              "county_name": "Kitsap County",
+              "districts_containing": [
+                81,
+                82,
+                85,
+                86
+              ],
+              "split_severity": 4,
+              "tract_count": 60
+            },
+            {
+              "county_fips": "53037",
+              "county_name": "Kittitas County",
+              "districts_containing": [
+                43,
+                44
+              ],
+              "split_severity": 2,
+              "tract_count": 14
+            },
+            {
+              "county_fips": "53041",
+              "county_name": "Lewis County",
+              "districts_containing": [
+                95,
+                96,
+                97
+              ],
+              "split_severity": 3,
+              "tract_count": 21
+            },
+            {
+              "county_fips": "53045",
+              "county_name": "Mason County",
+              "districts_containing": [
+                24,
+                81
+              ],
+              "split_severity": 2,
+              "tract_count": 19
+            },
+            {
+              "county_fips": "53047",
+              "county_name": "Okanogan County",
+              "districts_containing": [
+                41,
+                42
+              ],
+              "split_severity": 2,
+              "tract_count": 13
+            },
+            {
+              "county_fips": "53053",
+              "county_name": "Pierce County",
+              "districts_containing": [
+                15,
+                22,
+                23,
+                26,
+                27,
+                30,
+                59,
+                60,
+                62,
+                77,
+                78,
+                86,
+                87,
+                88,
+                94,
+                96
+              ],
+              "split_severity": 16,
+              "tract_count": 193
+            },
+            {
+              "county_fips": "53057",
+              "county_name": "Skagit County",
+              "districts_containing": [
+                39,
+                53,
+                54
+              ],
+              "split_severity": 3,
+              "tract_count": 42
+            },
+            {
+              "county_fips": "53061",
+              "county_name": "Snohomish County",
+              "districts_containing": [
+                5,
+                9,
+                10,
+                12,
+                14,
+                39,
+                40,
+                47,
+                48,
+                49,
+                50,
+                53,
+                57,
+                58
+              ],
+              "split_severity": 14,
+              "tract_count": 175
+            },
+            {
+              "county_fips": "53063",
+              "county_name": "Spokane County",
+              "districts_containing": [
+                3,
+                4,
+                34,
+                35,
+                36,
+                37,
+                38
+              ],
+              "split_severity": 7,
+              "tract_count": 130
+            },
+            {
+              "county_fips": "53065",
+              "county_name": "Stevens County",
+              "districts_containing": [
+                34,
+                41
+              ],
+              "split_severity": 2,
+              "tract_count": 15
+            },
+            {
+              "county_fips": "53067",
+              "county_name": "Thurston County",
+              "districts_containing": [
+                24,
+                25,
+                26,
+                88,
+                93,
+                94,
+                95,
+                96
+              ],
+              "split_severity": 8,
+              "tract_count": 62
+            },
+            {
+              "county_fips": "53073",
+              "county_name": "Whatcom County",
+              "districts_containing": [
+                11,
+                39,
+                51,
+                52
+              ],
+              "split_severity": 4,
+              "tract_count": 54
+            },
+            {
+              "county_fips": "53075",
+              "county_name": "Whitman County",
+              "districts_containing": [
+                33,
+                34
+              ],
+              "split_severity": 2,
+              "tract_count": 12
+            },
+            {
+              "county_fips": "53077",
+              "county_name": "Yakima County",
+              "districts_containing": [
+                7,
+                8,
+                43,
+                45,
+                46
+              ],
+              "split_severity": 5,
+              "tract_count": 57
+            }
+          ],
+          "subdivision_term": "county",
+          "subdivision_term_plural": "counties",
+          "total": 39
+        },
+        "municipalities": {
+          "available": false,
+          "preservation_score": 1.0,
+          "split": 0,
+          "split_list": [],
+          "total": 0
+        },
+        "state": "WA",
+        "status": "ok",
+        "year": "2020"
+      }
+    },
+    "partisan_fairness": {
+      "status": "unavailable"
+    },
+    "vra_compliance": {
+      "status": "unavailable"
+    },
+    "compactness": {
+      "analyzer": "compactness",
+      "districts": [
+        {
+          "area_m2": 0.025506813656499955,
+          "convex_hull_ratio": 0.7079052092971949,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 1,
+          "perimeter_m": 1.038441311734354,
+          "polsby_popper": 0.29723651397780326,
+          "reock": 0.2718855293450294
+        },
+        {
+          "area_m2": 1.0666149795105009,
+          "convex_hull_ratio": 0.9141486204983648,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 2,
+          "perimeter_m": 5.513299586350471,
+          "polsby_popper": 0.44095508815453927,
+          "reock": 0.2667203250569231
+        },
+        {
+          "area_m2": 0.006731020339000057,
+          "convex_hull_ratio": 0.746093156785454,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 3,
+          "perimeter_m": 0.523569371233334,
+          "polsby_popper": 0.30856190138219286,
+          "reock": 0.2952332527679943
+        },
+        {
+          "area_m2": 0.004387700560500002,
+          "convex_hull_ratio": 0.7615579163119025,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 4,
+          "perimeter_m": 0.39679896743851506,
+          "polsby_popper": 0.3501916437156264,
+          "reock": 0.323730882998302
+        },
+        {
+          "area_m2": 0.018353675470000063,
+          "convex_hull_ratio": 0.5663905067416145,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 5,
+          "perimeter_m": 1.0108495047920618,
+          "polsby_popper": 0.22571473266713304,
+          "reock": 0.27571049899598055
+        },
+        {
+          "area_m2": 0.44544813023199986,
+          "convex_hull_ratio": 0.8180058020293239,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 6,
+          "perimeter_m": 3.502524753842976,
+          "polsby_popper": 0.4562938104911557,
+          "reock": 0.3480231486009458
+        },
+        {
+          "area_m2": 0.009182052898499922,
+          "convex_hull_ratio": 0.6640042765513369,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 7,
+          "perimeter_m": 0.7271541732161577,
+          "polsby_popper": 0.21822105577924664,
+          "reock": 0.22989173382331357
+        },
+        {
+          "area_m2": 0.4149933620685006,
+          "convex_hull_ratio": 0.8827176122260267,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 8,
+          "perimeter_m": 3.087166181370586,
+          "polsby_popper": 0.5471809863991912,
+          "reock": 0.6188746504862935
+        },
+        {
+          "area_m2": 0.006716583334500135,
+          "convex_hull_ratio": 0.7312097891603463,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 9,
+          "perimeter_m": 0.5116323111574794,
+          "polsby_popper": 0.32243512339919755,
+          "reock": 0.1852014321809412
+        },
+        {
+          "area_m2": 0.003671423565999958,
+          "convex_hull_ratio": 0.8676855464931306,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 10,
+          "perimeter_m": 0.28158766405202973,
+          "polsby_popper": 0.581858127626298,
+          "reock": 0.3982715957441883
+        },
+        {
+          "area_m2": 0.034367529744500455,
+          "convex_hull_ratio": 0.7909218535192981,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 11,
+          "perimeter_m": 1.0617328290160444,
+          "polsby_popper": 0.3831137058897464,
+          "reock": 0.25608321174028453
+        },
+        {
+          "area_m2": 0.018983703487499955,
+          "convex_hull_ratio": 0.7077687092601964,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 12,
+          "perimeter_m": 0.8721000494805998,
+          "polsby_popper": 0.31365931064644165,
+          "reock": 0.34886113993819956
+        },
+        {
+          "area_m2": 0.007360327567500019,
+          "convex_hull_ratio": 0.7067963013005147,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 13,
+          "perimeter_m": 0.5402689213281638,
+          "polsby_popper": 0.3168743132314419,
+          "reock": 0.3374958572089513
+        },
+        {
+          "area_m2": 0.006061682769499901,
+          "convex_hull_ratio": 0.7056391962854802,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 14,
+          "perimeter_m": 0.4626489913262278,
+          "polsby_popper": 0.35587692480435557,
+          "reock": 0.3770656446421509
+        },
+        {
+          "area_m2": 0.008699133256999923,
+          "convex_hull_ratio": 0.8502951139920406,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 15,
+          "perimeter_m": 0.4837724313530023,
+          "polsby_popper": 0.46709327684876184,
+          "reock": 0.4488755516341697
+        },
+        {
+          "area_m2": 0.004049874469500059,
+          "convex_hull_ratio": 0.9281445571652692,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 16,
+          "perimeter_m": 0.28377396967286755,
+          "polsby_popper": 0.6319843370523567,
+          "reock": 0.5410343609257035
+        },
+        {
+          "area_m2": 0.004432999095999844,
+          "convex_hull_ratio": 0.7807297470334611,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 17,
+          "perimeter_m": 0.35358099648109015,
+          "polsby_popper": 0.44558409035274854,
+          "reock": 0.44077734939370034
+        },
+        {
+          "area_m2": 0.008077567675999833,
+          "convex_hull_ratio": 0.796865374225608,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 18,
+          "perimeter_m": 0.4788716221329372,
+          "polsby_popper": 0.4426416399305418,
+          "reock": 0.3955074069445664
+        },
+        {
+          "area_m2": 0.0010339932269999865,
+          "convex_hull_ratio": 0.7873927016259765,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 19,
+          "perimeter_m": 0.18204404268134944,
+          "polsby_popper": 0.3920799329523773,
+          "reock": 0.35929372072425747
+        },
+        {
+          "area_m2": 0.006500100004499891,
+          "convex_hull_ratio": 0.7954851971915488,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 20,
+          "perimeter_m": 0.4549532748191756,
+          "polsby_popper": 0.3946356464162401,
+          "reock": 0.364217825021312
+        },
+        {
+          "area_m2": 0.004970443787499978,
+          "convex_hull_ratio": 0.7321085475174773,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 21,
+          "perimeter_m": 0.4275181022494646,
+          "polsby_popper": 0.34174015598661245,
+          "reock": 0.2923409696359588
+        },
+        {
+          "area_m2": 0.006203141401499885,
+          "convex_hull_ratio": 0.7272386604197468,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 22,
+          "perimeter_m": 0.4684052799741626,
+          "polsby_popper": 0.35528590739662486,
+          "reock": 0.41129681216678415
+        },
+        {
+          "area_m2": 0.008567738017500015,
+          "convex_hull_ratio": 0.6368131379836867,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 23,
+          "perimeter_m": 0.6369400157092718,
+          "polsby_popper": 0.2653865897575353,
+          "reock": 0.2126333539502749
+        },
+        {
+          "area_m2": 0.3336004621354995,
+          "convex_hull_ratio": 0.8454427655189295,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 24,
+          "perimeter_m": 3.034593921206257,
+          "polsby_popper": 0.4552346812101319,
+          "reock": 0.5889905797575155
+        },
+        {
+          "area_m2": 0.6683382004374988,
+          "convex_hull_ratio": 0.7541964335673008,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 25,
+          "perimeter_m": 4.704033609920522,
+          "polsby_popper": 0.37954678481857573,
+          "reock": 0.30367243030830093
+        },
+        {
+          "area_m2": 0.047577712676499434,
+          "convex_hull_ratio": 0.7967167823799934,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 26,
+          "perimeter_m": 1.3094232086005153,
+          "polsby_popper": 0.34870113008402204,
+          "reock": 0.3337822578633341
+        },
+        {
+          "area_m2": 0.020671508908000364,
+          "convex_hull_ratio": 0.7416391876158666,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 27,
+          "perimeter_m": 0.8797399279602802,
+          "polsby_popper": 0.3356397865653469,
+          "reock": 0.27560311137532334
+        },
+        {
+          "area_m2": 0.005114392912999989,
+          "convex_hull_ratio": 0.8440066089733357,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 28,
+          "perimeter_m": 0.3443515982516299,
+          "polsby_popper": 0.5420005753832546,
+          "reock": 0.3952199914382887
+        },
+        {
+          "area_m2": 0.005966807019500051,
+          "convex_hull_ratio": 0.6312419600346698,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 29,
+          "perimeter_m": 0.5022276489908469,
+          "polsby_popper": 0.29726968282169225,
+          "reock": 0.2991497544022077
+        },
+        {
+          "area_m2": 0.012197122357999983,
+          "convex_hull_ratio": 0.6676108153042368,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 30,
+          "perimeter_m": 0.7422741413713957,
+          "polsby_popper": 0.2781881215784956,
+          "reock": 0.182854161292323
+        },
+        {
+          "area_m2": 0.022523891054500193,
+          "convex_hull_ratio": 0.7635078636241425,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 31,
+          "perimeter_m": 0.827422101004679,
+          "polsby_popper": 0.4134272018216342,
+          "reock": 0.3213080297625605
+        },
+        {
+          "area_m2": 0.2461339529579992,
+          "convex_hull_ratio": 0.655743451740184,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 32,
+          "perimeter_m": 3.1395449549625445,
+          "polsby_popper": 0.31379641560525057,
+          "reock": 0.3664558672399087
+        },
+        {
+          "area_m2": 1.1500906175060044,
+          "convex_hull_ratio": 0.5870541221457809,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 33,
+          "perimeter_m": 8.711029174682004,
+          "polsby_popper": 0.19045965265290096,
+          "reock": 0.2533529778311475
+        },
+        {
+          "area_m2": 0.5580899468774996,
+          "convex_hull_ratio": 0.741428801074297,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 34,
+          "perimeter_m": 4.595546060409721,
+          "polsby_popper": 0.33207777982994896,
+          "reock": 0.4111400140017139
+        },
+        {
+          "area_m2": 0.010973977149500089,
+          "convex_hull_ratio": 0.787239509983084,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 35,
+          "perimeter_m": 0.5993259558254663,
+          "polsby_popper": 0.38392619277566353,
+          "reock": 0.33753955718236966
+        },
+        {
+          "area_m2": 0.05557758318549966,
+          "convex_hull_ratio": 0.8068442152091617,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 36,
+          "perimeter_m": 1.333898230718176,
+          "polsby_popper": 0.3925221133094254,
+          "reock": 0.3920285527974035
+        },
+        {
+          "area_m2": 0.016360479125499882,
+          "convex_hull_ratio": 0.8416677622958898,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 37,
+          "perimeter_m": 0.6705370657056375,
+          "polsby_popper": 0.4572569370067971,
+          "reock": 0.530547346481938
+        },
+        {
+          "area_m2": 0.1509860381479994,
+          "convex_hull_ratio": 0.918962580431368,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 38,
+          "perimeter_m": 1.8342902287759568,
+          "polsby_popper": 0.5639109766187042,
+          "reock": 0.502742650923065
+        },
+        {
+          "area_m2": 2.1684689459765156,
+          "convex_hull_ratio": 0.8086496655844775,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 39,
+          "perimeter_m": 10.380666782685491,
+          "polsby_popper": 0.2528788862862673,
+          "reock": 0.34163534169991877
+        },
+        {
+          "area_m2": 0.051278575949999926,
+          "convex_hull_ratio": 0.6082782219476717,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 40,
+          "perimeter_m": 1.8915228371197392,
+          "polsby_popper": 0.180103702856669,
+          "reock": 0.17078798784263063
+        },
+        {
+          "area_m2": 3.018093651626507,
+          "convex_hull_ratio": 0.8589745079655484,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 41,
+          "perimeter_m": 8.918206685714214,
+          "polsby_popper": 0.476856283235702,
+          "reock": 0.5061975683944095
+        },
+        {
+          "area_m2": 2.223375561429503,
+          "convex_hull_ratio": 0.7780335932494856,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 42,
+          "perimeter_m": 10.531075607229209,
+          "polsby_popper": 0.2519284590249243,
+          "reock": 0.3736279271650709
+        },
+        {
+          "area_m2": 0.9120192798804964,
+          "convex_hull_ratio": 0.8159142022438939,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 43,
+          "perimeter_m": 5.994136716055376,
+          "polsby_popper": 0.3189779002383183,
+          "reock": 0.41176203303294184
+        },
+        {
+          "area_m2": 0.4302170344449995,
+          "convex_hull_ratio": 0.7891939763918882,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 44,
+          "perimeter_m": 4.828805007938272,
+          "polsby_popper": 0.23185588799255144,
+          "reock": 0.2701645865468789
+        },
+        {
+          "area_m2": 1.4390237843204998,
+          "convex_hull_ratio": 0.84443431601945,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 45,
+          "perimeter_m": 7.629433156236825,
+          "polsby_popper": 0.3106656892787263,
+          "reock": 0.16806840574699974
+        },
+        {
+          "area_m2": 0.18863794174999943,
+          "convex_hull_ratio": 0.8665453691205688,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 46,
+          "perimeter_m": 2.63329028967814,
+          "polsby_popper": 0.34185460761719527,
+          "reock": 0.3831136007701743
+        },
+        {
+          "area_m2": 0.014095773626999928,
+          "convex_hull_ratio": 0.7289539653817034,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 47,
+          "perimeter_m": 0.7990870342478199,
+          "polsby_popper": 0.27740265448916407,
+          "reock": 0.27575899551990724
+        },
+        {
+          "area_m2": 0.18061255830649992,
+          "convex_hull_ratio": 0.7408175911952093,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 48,
+          "perimeter_m": 2.903135657863009,
+          "polsby_popper": 0.2692918117706177,
+          "reock": 0.3190337002967539
+        },
+        {
+          "area_m2": 0.005473549349999982,
+          "convex_hull_ratio": 0.8198130721369388,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 49,
+          "perimeter_m": 0.37148273598358805,
+          "polsby_popper": 0.49842708140431113,
+          "reock": 0.30198652158058165
+        },
+        {
+          "area_m2": 0.00429923762600005,
+          "convex_hull_ratio": 0.7268843162062536,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 50,
+          "perimeter_m": 0.4003528738871055,
+          "polsby_popper": 0.33706636163889014,
+          "reock": 0.30688042062476734
+        },
+        {
+          "area_m2": 0.3467253775599992,
+          "convex_hull_ratio": 0.7284330975726205,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 51,
+          "perimeter_m": 3.6483754502993393,
+          "polsby_popper": 0.3273380148699814,
+          "reock": 0.3862562975759245
+        },
+        {
+          "area_m2": 0.07740353959800017,
+          "convex_hull_ratio": 0.8516952884888582,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 52,
+          "perimeter_m": 1.645926658375796,
+          "polsby_popper": 0.35904569704625244,
+          "reock": 0.2899691099516318
+        },
+        {
+          "area_m2": 0.059876912627999976,
+          "convex_hull_ratio": 0.620855794191483,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 53,
+          "perimeter_m": 2.126046763156376,
+          "polsby_popper": 0.16646526929458044,
+          "reock": 0.34007971939412757
+        },
+        {
+          "area_m2": 0.15003968461099923,
+          "convex_hull_ratio": 0.7616912712348952,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 54,
+          "perimeter_m": 2.921076677413124,
+          "polsby_popper": 0.2209683598634289,
+          "reock": 0.2845991938157905
+        },
+        {
+          "area_m2": 0.015517139199500063,
+          "convex_hull_ratio": 0.6965795227405985,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 55,
+          "perimeter_m": 0.7725912716047901,
+          "polsby_popper": 0.3266795324571974,
+          "reock": 0.4181792276920201
+        },
+        {
+          "area_m2": 0.005596410993499904,
+          "convex_hull_ratio": 0.8440201411645638,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 56,
+          "perimeter_m": 0.35246377216247127,
+          "polsby_popper": 0.5660965333425718,
+          "reock": 0.4300678712576756
+        },
+        {
+          "area_m2": 0.02085814435099996,
+          "convex_hull_ratio": 0.678228329452558,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 57,
+          "perimeter_m": 1.096191104136941,
+          "polsby_popper": 0.21812878788535112,
+          "reock": 0.3780305903875363
+        },
+        {
+          "area_m2": 0.008499836752499943,
+          "convex_hull_ratio": 0.6662566350133767,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 58,
+          "perimeter_m": 0.7032475371871392,
+          "polsby_popper": 0.21597526171299125,
+          "reock": 0.27168282712986336
+        },
+        {
+          "area_m2": 0.020089841642000027,
+          "convex_hull_ratio": 0.6796106652253033,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 59,
+          "perimeter_m": 1.0254311140062495,
+          "polsby_popper": 0.2400896263965235,
+          "reock": 0.4702283713966388
+        },
+        {
+          "area_m2": 0.010959705605999945,
+          "convex_hull_ratio": 0.8199329303712114,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 60,
+          "perimeter_m": 0.6196565371879381,
+          "polsby_popper": 0.358679603557612,
+          "reock": 0.5717024329725628
+        },
+        {
+          "area_m2": 0.2875190569330008,
+          "convex_hull_ratio": 0.876244141009339,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 61,
+          "perimeter_m": 3.177700522200039,
+          "polsby_popper": 0.3578084301976064,
+          "reock": 0.3492324691550754
+        },
+        {
+          "area_m2": 0.4217460572625016,
+          "convex_hull_ratio": 0.7908548819710131,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 62,
+          "perimeter_m": 4.272726237582144,
+          "polsby_popper": 0.29030248948288534,
+          "reock": 0.44791993021567783
+        },
+        {
+          "area_m2": 0.02182806983750015,
+          "convex_hull_ratio": 0.7872737591416706,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 63,
+          "perimeter_m": 0.9650609117031992,
+          "polsby_popper": 0.294520648130787,
+          "reock": 0.40920126163691145
+        },
+        {
+          "area_m2": 0.017415988683499927,
+          "convex_hull_ratio": 0.7974947935379167,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 64,
+          "perimeter_m": 0.769419916636865,
+          "polsby_popper": 0.36968442165622933,
+          "reock": 0.4828050483828421
+        },
+        {
+          "area_m2": 0.002133412328500048,
+          "convex_hull_ratio": 0.816221860722128,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 65,
+          "perimeter_m": 0.2266394853020375,
+          "polsby_popper": 0.5219315066073461,
+          "reock": 0.5395734349253737
+        },
+        {
+          "area_m2": 0.0035630162774998885,
+          "convex_hull_ratio": 0.7262457464053981,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 66,
+          "perimeter_m": 0.37762700596642,
+          "polsby_popper": 0.3139797070291808,
+          "reock": 0.35613940038489034
+        },
+        {
+          "area_m2": 0.006530253212499831,
+          "convex_hull_ratio": 0.788629502315893,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 67,
+          "perimeter_m": 0.43925614788097816,
+          "polsby_popper": 0.4253086232333765,
+          "reock": 0.3567230725104642
+        },
+        {
+          "area_m2": 0.004488868432000115,
+          "convex_hull_ratio": 0.8140873050390997,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 68,
+          "perimeter_m": 0.3720796190362729,
+          "polsby_popper": 0.4074506142236819,
+          "reock": 0.3988293744963201
+        },
+        {
+          "area_m2": 0.006268292791500046,
+          "convex_hull_ratio": 0.8093250420964905,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 69,
+          "perimeter_m": 0.4232469836170607,
+          "polsby_popper": 0.4397151152625123,
+          "reock": 0.3885390036581032
+        },
+        {
+          "area_m2": 0.008199119057500008,
+          "convex_hull_ratio": 0.7445408274605761,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 70,
+          "perimeter_m": 0.5100370780248044,
+          "polsby_popper": 0.3960714686066791,
+          "reock": 0.38327169225275537
+        },
+        {
+          "area_m2": 0.00304686318099992,
+          "convex_hull_ratio": 0.8811610171756975,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 71,
+          "perimeter_m": 0.2575454066848113,
+          "polsby_popper": 0.5772383803298028,
+          "reock": 0.5003940374604876
+        },
+        {
+          "area_m2": 0.003657749835000161,
+          "convex_hull_ratio": 0.800921821721171,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 72,
+          "perimeter_m": 0.30187081241143926,
+          "polsby_popper": 0.5044075939232447,
+          "reock": 0.370794611435975
+        },
+        {
+          "area_m2": 0.004492632946000005,
+          "convex_hull_ratio": 0.7740302330882142,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 73,
+          "perimeter_m": 0.3430714909779934,
+          "polsby_popper": 0.4796688783759271,
+          "reock": 0.4775816946234639
+        },
+        {
+          "area_m2": 0.04956459937349999,
+          "convex_hull_ratio": 0.6444026277094341,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 74,
+          "perimeter_m": 1.6890432600225778,
+          "polsby_popper": 0.2183232151287154,
+          "reock": 0.17406650924819975
+        },
+        {
+          "area_m2": 0.006353243712499977,
+          "convex_hull_ratio": 0.6662793261311083,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 75,
+          "perimeter_m": 0.5575941742007706,
+          "polsby_popper": 0.2567845702915744,
+          "reock": 0.21063350170887055
+        },
+        {
+          "area_m2": 0.008141872983000035,
+          "convex_hull_ratio": 0.7939727523816748,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 76,
+          "perimeter_m": 0.4889903630573912,
+          "polsby_popper": 0.427891428215763,
+          "reock": 0.3608279592831968
+        },
+        {
+          "area_m2": 0.008734188750000097,
+          "convex_hull_ratio": 0.6574351133796718,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 77,
+          "perimeter_m": 0.6623041156871213,
+          "polsby_popper": 0.2502174128408721,
+          "reock": 0.4002685133350746
+        },
+        {
+          "area_m2": 0.011203040591500069,
+          "convex_hull_ratio": 0.8452461806222875,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 78,
+          "perimeter_m": 0.5753916310478346,
+          "polsby_popper": 0.42522490403248536,
+          "reock": 0.5148394551983191
+        },
+        {
+          "area_m2": 0.006770476285500062,
+          "convex_hull_ratio": 0.7539630817456294,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 79,
+          "perimeter_m": 0.5536248955493092,
+          "polsby_popper": 0.27758619417405767,
+          "reock": 0.37654821419228673
+        },
+        {
+          "area_m2": 0.007037641656499977,
+          "convex_hull_ratio": 0.8067637153708863,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 80,
+          "perimeter_m": 0.5237853984287212,
+          "polsby_popper": 0.3223519032720795,
+          "reock": 0.22094281870075408
+        },
+        {
+          "area_m2": 0.14741147716600012,
+          "convex_hull_ratio": 0.5630226847211702,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 81,
+          "perimeter_m": 3.407738026254222,
+          "polsby_popper": 0.15951765666844497,
+          "reock": 0.21790539219492353
+        },
+        {
+          "area_m2": 0.0280606863425,
+          "convex_hull_ratio": 0.6303779393484988,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 82,
+          "perimeter_m": 1.284048567644312,
+          "polsby_popper": 0.21386772608720608,
+          "reock": 0.267022035814122
+        },
+        {
+          "area_m2": 0.3221377002055004,
+          "convex_hull_ratio": 0.7285463020967345,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 83,
+          "perimeter_m": 4.890695723512059,
+          "polsby_popper": 0.16924277207446234,
+          "reock": 0.10369482772737018
+        },
+        {
+          "area_m2": 1.684008913692005,
+          "convex_hull_ratio": 0.6478951705364504,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 84,
+          "perimeter_m": 7.611699190752958,
+          "polsby_popper": 0.3652506656768133,
+          "reock": 0.3234360752857697
+        },
+        {
+          "area_m2": 0.012356944490500212,
+          "convex_hull_ratio": 0.8783833121270255,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 85,
+          "perimeter_m": 0.5327301746526951,
+          "polsby_popper": 0.5471499534455423,
+          "reock": 0.5456637411410732
+        },
+        {
+          "area_m2": 0.055366648671999946,
+          "convex_hull_ratio": 0.7855998498464295,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 86,
+          "perimeter_m": 1.37468598097483,
+          "polsby_popper": 0.3681722851508726,
+          "reock": 0.3398744801867778
+        },
+        {
+          "area_m2": 0.007716717859000014,
+          "convex_hull_ratio": 0.7615960106978994,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 87,
+          "perimeter_m": 0.5182782835546048,
+          "polsby_popper": 0.3610076975226889,
+          "reock": 0.35936970364101956
+        },
+        {
+          "area_m2": 0.016250670474500135,
+          "convex_hull_ratio": 0.6726147625224734,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 88,
+          "perimeter_m": 0.9367728823218404,
+          "polsby_popper": 0.2327086503328969,
+          "reock": 0.19176733595857243
+        },
+        {
+          "area_m2": 0.009894132796999931,
+          "convex_hull_ratio": 0.8875771415692794,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 89,
+          "perimeter_m": 0.48077093315259295,
+          "polsby_popper": 0.5379119511425985,
+          "reock": 0.325970545518604
+        },
+        {
+          "area_m2": 0.02439539281550004,
+          "convex_hull_ratio": 0.82049408399185,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 90,
+          "perimeter_m": 0.8899435050444222,
+          "polsby_popper": 0.3870729334887022,
+          "reock": 0.40697456834370904
+        },
+        {
+          "area_m2": 0.006218706390999833,
+          "convex_hull_ratio": 0.7262471116084495,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 91,
+          "perimeter_m": 0.4565950577715611,
+          "polsby_popper": 0.3748413591564552,
+          "reock": 0.38981469814457753
+        },
+        {
+          "area_m2": 0.060107510663500105,
+          "convex_hull_ratio": 0.7433508959837306,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 92,
+          "perimeter_m": 1.4517000269413425,
+          "polsby_popper": 0.35841389362980763,
+          "reock": 0.46953046634337414
+        },
+        {
+          "area_m2": 0.008419111064500044,
+          "convex_hull_ratio": 0.9018406940176882,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 93,
+          "perimeter_m": 0.42241444189372707,
+          "polsby_popper": 0.5929233955959061,
+          "reock": 0.5729142132733301
+        },
+        {
+          "area_m2": 0.07330848998399976,
+          "convex_hull_ratio": 0.8024759782618051,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 94,
+          "perimeter_m": 1.581859350409644,
+          "polsby_popper": 0.3681530527448114,
+          "reock": 0.2813490123306149
+        },
+        {
+          "area_m2": 0.26437985504400036,
+          "convex_hull_ratio": 0.8362270332261,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 95,
+          "perimeter_m": 3.28672901547685,
+          "polsby_popper": 0.30754624335936215,
+          "reock": 0.3758039394049733
+        },
+        {
+          "area_m2": 0.6603913897259995,
+          "convex_hull_ratio": 0.7391843929529219,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 96,
+          "perimeter_m": 6.20109830632334,
+          "polsby_popper": 0.2158112268664182,
+          "reock": 0.2834774204245896
+        },
+        {
+          "area_m2": 0.0987735957949999,
+          "convex_hull_ratio": 0.6930832409900934,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 97,
+          "perimeter_m": 2.0159659801671883,
+          "polsby_popper": 0.30541075756344793,
+          "reock": 0.3781647398040218
+        },
+        {
+          "area_m2": 0.8670752136264974,
+          "convex_hull_ratio": 0.8982210231327369,
+          "crs_note": "computed on WGS84 coords; scores compressed for east-west-elongated districts",
+          "district": 98,
+          "perimeter_m": 4.9282698659255395,
+          "polsby_popper": 0.4486190105079821,
+          "reock": 0.3939196155114701
+        }
+      ],
+      "state": "WA",
+      "status": "ok",
+      "year": "2020"
+    },
+    "comparison": {
+      "status": "unavailable"
+    },
+    "nesting": {
+      "status": "unavailable"
+    },
+    "audit": {
+      "adjacency_file": "washington_adjacency_2020.adj.bin",
+      "adjacency_sha256": "(not computed — run: sha256sum adjacency_file)",
+      "binary_download_url": "https://github.com/owner/redist/releases/download/v0.1.0/redist",
+      "binary_sha256": "",
+      "binary_version": "0.1.0",
+      "created_at": "2026-04-28T13:51:26Z",
+      "seed": null,
+      "tiger_sha256": "(not recorded — download from https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip and compute manually)",
+      "tiger_source_url": "https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip",
+      "verification_command": "# Verification command for plan: wa_house_smoke\n# Re-run with identical parameters to reproduce:\nredist state --state WA --year 2020 --chamber house --districts 98 --label wa_house_smoke --seed <unknown: seed not recorded in manifest>\n\n# Download TIGER source from:\n# https://www2.census.gov/geo/tiger/TIGER2020/TRACT/tl_2020_53_tract.zip\n\n# Verify adjacency file:\n# sha256sum washington_adjacency_2020.adj.bin  # expected: \n# If not present locally: redist fetch --type adjacency --states WA --year 2020",
+      "verification_script": "redist state --state WA --year 2020 --chamber house --districts 98 --label wa_house_smoke --seed <unknown: seed not recorded in manifest>"
+    },
+    "maps": {
+      "status": "unavailable"
+    }
+  },
+  "has_external_analyzers": false
+}
