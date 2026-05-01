@@ -87,6 +87,67 @@ particular partisan outcome in Pennsylvania}. The outcome of the MEC plan
 depends on which local optimum is the global minimum --- a question only
 resolved by exhaustive (or near-exhaustive) seed sampling.
 
+\subsection{\textsc{CompactBisect} vs.\ Global MEC: Empirical Comparison}
+\label{sec:eval:compactbisect}
+
+We ran \textsc{CompactBisect} with 50 seeds per bisection level on the three
+focal states. Table~\ref{tab:compactbisect-vs-mec} compares the results to
+the global MEC benchmark (best plan from 200 seeds for the full partition).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llrrrrrr}
+\toprule
+State & & \multicolumn{3}{c}{Global MEC (200 seeds)} & \multicolumn{3}{c}{\textsc{CompactBisect} (50/level)} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-8}
+& Dem\% & D seats & $\Delta$ & EC (km) & D seats & $\Delta$ & EC (km) \\
+\midrule
+WI & 50.3\% & 2D/6R & $-25.3$\,pp & 1{,}689 & \textbf{3D/5R} & $\mathbf{-12.8}$\,\textbf{pp} & 1{,}584 \\
+NC & 49.3\% & 5D/9R & $-13.6$\,pp & 2{,}400 & 5D/9R & $-13.6$\,pp & 2{,}271 \\
+PA & 50.6\% & 8D/9R & $-3.5$\,pp  & 2{,}441 & 7D/10R & $-9.4$\,pp & 2{,}392 \\
+\bottomrule
+\end{tabular}
+\caption{\textsc{CompactBisect} (50 seeds per bisection level, geometric-mean PP
+  selection) vs.\ global minimum-edge-cut (best of 200 seeds for full partition).
+  $\Delta$ = proportionality gap in percentage points. WI: \textsc{CompactBisect}
+  is 12.5\,pp more proportional. NC: same partisan outcome, lower edge-cut.
+  PA: \textsc{CompactBisect} slightly less proportional.}
+\label{tab:compactbisect-vs-mec}
+\end{table}
+
+\paragraph{Wisconsin.}
+\textsc{CompactBisect} produces 3D/5R ($-12.8$\,pp) vs.\ the global MEC's
+2D/6R ($-25.3$\,pp). The 12.5\,pp improvement is substantial and confirms the
+theoretical prediction: the geometric-mean PP criterion breaks the Milwaukee
+packing by selecting bisections that distribute compact urban tracts across
+two halves rather than concentrating them in one. The edge-cut is also lower
+(1{,}584\,km vs.\ 1{,}689\,km), indicating that \textsc{CompactBisect}
+found a geometrically tighter partition.
+
+\paragraph{North Carolina.}
+Both algorithms produce 5D/9R. However, \textsc{CompactBisect} achieves this
+at a lower edge-cut (2{,}271\,km vs.\ 2{,}400\,km). The level-by-level
+compactness criterion finds a more geometrically efficient partition that
+happens to produce the same partisan outcome. NC's strong geographic sorting
+(Charlotte, Research Triangle, Greensboro) constrains any compact algorithm
+to produce a Republican-favoring outcome.
+
+\paragraph{Pennsylvania.}
+\textsc{CompactBisect} produces 7D/10R ($-9.4$\,pp) vs.\ the global MEC's
+8D/9R ($-3.5$\,pp) --- 5.9\,pp \emph{worse}. This is an important finding:
+the greedy level-by-level approach does not always outperform global
+optimisation. PA's mixed geography (Philadelphia suburbs, Pittsburgh, Scranton)
+means that locally optimal bisection choices at early levels can constrain
+later levels in ways that reduce the total Dem seat count.
+
+\paragraph{Synthesis.}
+\textsc{CompactBisect} outperforms global MEC on proportionality in geographically
+sorted states (WI: +12.5\,pp) and matches it in moderately sorted states (NC:
+0\,pp). In mixed-geography states where global MEC is already near-proportional
+(PA: $-3.5$\,pp), \textsc{CompactBisect}'s greedy structure can produce a worse
+outcome. The appropriate selection criterion depends on the state's geographic
+structure, which is itself a property of the census data and not a partisan choice.
+
 \subsection{Texas: Large-State Failures and Convergence Rate}
 \label{sec:eval:tx}
 
