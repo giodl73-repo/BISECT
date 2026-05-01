@@ -539,6 +539,127 @@ fn classify_ip(ip: IpAddr) -> Option<(&'static str, String)> {
 }
 
 // ===========================================================================
+// URL snapshot (Task 5 — PP-30 / C-02)
+// ===========================================================================
+
+/// Bounded-fetch limits. Constants (not flags) so the snapshot record is
+/// reproducible across runs of the same redist version. Both are
+/// load-bearing for the link-rot-resilience claim — bumping them is a
+/// schema change.
+pub const SNAPSHOT_MAX_BODY_BYTES: usize = 5 * 1024 * 1024; // 5 MB
+pub const SNAPSHOT_TIMEOUT_SECS: u64 = 10;
+pub const SNAPSHOT_MAX_REDIRECTS: usize = 3;
+
+/// Fetch a URL with the bounded-fetch policy and write the body + headers
+/// to `<dir>/<sha8>.body` + `<dir>/<sha8>.headers.txt`. Returns a populated
+/// `UrlSnapshotRecord`. Caller is responsible for re-running URL validation
+/// (this function trusts the URL has already passed `validate_source_url`).
+///
+/// On HTTP success the headers file contains `HTTP/<ver> <status> <reason>`
+/// followed by `Header-Name: value` lines (one per header), separated by
+/// `\r\n` to match wire format. The body file contains the raw response body
+/// truncated to `SNAPSHOT_MAX_BODY_BYTES`.
+pub fn snapshot_url(url: &str, dir: &Path) -> Result<UrlSnapshotRecord, CivicError> {
+    snapshot_url_with_client(url, dir, build_default_client()?)
+}
+
+fn build_default_client() -> Result<reqwest::blocking::Client, CivicError> {
+    reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(SNAPSHOT_TIMEOUT_SECS))
+        .redirect(reqwest::redirect::Policy::limited(SNAPSHOT_MAX_REDIRECTS))
+        .user_agent(format!(
+            "redist-civic-snapshot/{} (PP-30 archival fetch)",
+            env!("CARGO_PKG_VERSION")
+        ))
+        .build()
+        .map_err(|e| CivicError::UrlParseError {
+            url: String::new(),
+            reason: format!("cannot build HTTP client: {e}"),
+        })
+}
+
+/// Test-friendly variant that takes an injected client (so tests can use a
+/// custom timeout against a localhost server).
+pub fn snapshot_url_with_client(
+    url: &str,
+    dir: &Path,
+    client: reqwest::blocking::Client,
+) -> Result<UrlSnapshotRecord, CivicError> {
+    let resp = client
+        .get(url)
+        .send()
+        .map_err(|e| CivicError::UrlParseError {
+            url: url.to_string(),
+            reason: format!("fetch failed: {e}"),
+        })?;
+    let status = resp.status().as_u16();
+    let content_type = resp
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
+    // Render headers BEFORE consuming the body (resp.bytes() consumes self).
+    let mut headers_text = String::new();
+    let version_str = format!("{:?}", resp.version());
+    headers_text.push_str(&format!(
+        "{} {} {}\r\n",
+        version_str,
+        status,
+        resp.status().canonical_reason().unwrap_or("")
+    ));
+    let mut header_pairs: Vec<(String, String)> = resp
+        .headers()
+        .iter()
+        .map(|(k, v)| (k.as_str().to_string(), v.to_str().unwrap_or("").to_string()))
+        .collect();
+    header_pairs.sort_by(|a, b| a.0.cmp(&b.0)); // canonical order
+    for (k, v) in &header_pairs {
+        headers_text.push_str(&format!("{k}: {v}\r\n"));
+    }
+
+    // Read body with a hard byte cap.
+    let body = resp.bytes().map_err(|e| CivicError::UrlParseError {
+        url: url.to_string(),
+        reason: format!("read body failed: {e}"),
+    })?;
+    let truncated = body.len() > SNAPSHOT_MAX_BODY_BYTES;
+    let body_slice: &[u8] = if truncated {
+        &body[..SNAPSHOT_MAX_BODY_BYTES]
+    } else {
+        &body[..]
+    };
+    let body_sha = sha256_hex(body_slice);
+    let sha8: String = body_sha.chars().take(8).collect();
+    let body_path = dir.join(format!("{sha8}.body"));
+    let headers_path = dir.join(format!("{sha8}.headers.txt"));
+    std::fs::write(&body_path, body_slice).map_err(|e| CivicError::UrlParseError {
+        url: url.to_string(),
+        reason: format!("cannot write body: {e}"),
+    })?;
+    std::fs::write(&headers_path, headers_text).map_err(|e| CivicError::UrlParseError {
+        url: url.to_string(),
+        reason: format!("cannot write headers: {e}"),
+    })?;
+
+    Ok(UrlSnapshotRecord {
+        url: url.to_string(),
+        fetched_at: now_iso8601(),
+        http_status: status,
+        content_type,
+        content_length_bytes: body_slice.len(),
+        truncated,
+        body_sha256: body_sha,
+        snapshot_path: body_path
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_string(),
+        snapshot_format: "headers-body".into(),
+    })
+}
+
+// ===========================================================================
 // Conflict detection (Task 7 — B-08)
 // ===========================================================================
 
@@ -682,6 +803,17 @@ pub struct CivicIngestArgs {
     pub output_base: String,
     #[arg(short = 'v', long, default_value = "v1")]
     pub version: String,
+
+    // ── URL snapshot (PP-30 / C-02) ──────────────────────────────────────────
+    /// Snapshot every unique non-empty source_url to a sidecar file. Without
+    /// this flag, URLs are only validated (scheme + host + IP-loopback) and
+    /// the manifest's url_snapshots field is empty. With this flag, each URL
+    /// is fetched (bounded: 5MB max body, 10s timeout, ≤3 redirects) and the
+    /// body bytes + headers are written under `snapshots/<sha8>.{body,headers.txt}`.
+    /// On fetch failure the record is still recorded with http_status=0 + a
+    /// warning in validation_log.txt (link rot is data, not a fatal error).
+    #[arg(long)]
+    pub snapshot_urls: bool,
 }
 
 #[derive(Debug, clap::Args)]
@@ -728,6 +860,13 @@ pub struct CivicAddCandidateRaceArgs {
     /// Path to the curator's signed attestation document.
     #[arg(long)]
     pub attestation_doc: PathBuf,
+    /// Output label (defaults to `candidate_race_<year>_<state>`).
+    #[arg(long)]
+    pub label: Option<String>,
+    #[arg(long, default_value = "outputs")]
+    pub output_base: String,
+    #[arg(short = 'v', long, default_value = "v1")]
+    pub version: String,
 }
 
 fn output_dir_for_label(args_output_base: &str, version: &str, label: &str) -> PathBuf {
@@ -785,6 +924,58 @@ fn run_ingest(args: &CivicIngestArgs) -> anyhow::Result<()> {
     std::fs::write(dir.join("original.csv"), &raw)?;
     std::fs::write(dir.join("normalized.csv"), &normalized)?;
     let normalized_sha = sha256_hex(&normalized);
+
+    // ── URL snapshot pass (PP-30) ────────────────────────────────────────────
+    // Walk every unique non-empty source_url and (when --snapshot-urls was
+    // passed) fetch a bounded body + headers into snapshots/<sha8>.{body,headers.txt}.
+    // Failures are NOT fatal — link rot is a fact about the world; we record
+    // the attempt and surface it as a warning.
+    let url_snapshots = if args.snapshot_urls {
+        let snap_dir = dir.join("snapshots");
+        std::fs::create_dir_all(&snap_dir)?;
+        let urls: Vec<String> = {
+            let mut seen: std::collections::BTreeSet<String> = std::collections::BTreeSet::new();
+            for r in &rows {
+                if !r.source_url.is_empty() {
+                    seen.insert(r.source_url.clone());
+                }
+            }
+            seen.into_iter().collect()
+        };
+        let mut snaps = Vec::with_capacity(urls.len());
+        for url in &urls {
+            match snapshot_url(url, &snap_dir) {
+                Ok(rec) => {
+                    if rec.http_status >= 400 || rec.http_status == 0 {
+                        warnings.push(format!(
+                            "[WARN] URL snapshot returned status {} for {}",
+                            rec.http_status, url
+                        ));
+                    }
+                    snaps.push(rec);
+                }
+                Err(e) => {
+                    warnings.push(format!("[WARN] URL snapshot failed for {url}: {e}"));
+                    // Record a failure stub so the manifest still attests we tried.
+                    snaps.push(UrlSnapshotRecord {
+                        url: url.clone(),
+                        fetched_at: now_iso8601(),
+                        http_status: 0,
+                        content_type: String::new(),
+                        content_length_bytes: 0,
+                        truncated: false,
+                        body_sha256: String::new(),
+                        snapshot_path: String::new(),
+                        snapshot_format: "headers-body".into(),
+                    });
+                }
+            }
+        }
+        snaps
+    } else {
+        Vec::new()
+    };
+
     let validation_log = warnings.join("\n");
     std::fs::write(dir.join("validation_log.txt"), &validation_log)?;
 
@@ -817,7 +1008,7 @@ fn run_ingest(args: &CivicIngestArgs) -> anyhow::Result<()> {
             warnings: warnings.len(),
             warnings_detail: warnings,
         },
-        url_snapshots: Vec::new(), // Task 5 deferred
+        url_snapshots,
         redist_version: prov.redist_version,
         redist_build_commit: prov.redist_build_commit.clone(),
         redist_build_commit_short: prov.redist_build_commit.chars().take(8).collect(),
@@ -917,17 +1108,145 @@ fn run_show(args: &CivicShowArgs) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn run_add_candidate_race(_args: &CivicAddCandidateRaceArgs) -> anyhow::Result<()> {
-    // CB Task 6 — wiring the existing redist-analysis::race_of_candidate parser
-    // through this CLI surface is the next-session pickup. Surfaces a clear
-    // error rather than silently doing nothing.
-    anyhow::bail!(
-        "[CONFIG] redist civic add-candidate-race is wired into the CLI surface but \
-         the implementation is the next session's pickup. The race-of-candidate \
-         parser already ships in redist-analysis::race_of_candidate \
-         (see docs/file-formats/race-of-candidate.md). Today, build the CSV by \
-         hand and pass it to `redist analyze --types bloc-voting --candidate-race-csv`."
-    )
+/// Manifest schema for `redist civic add-candidate-race` outputs. Schema-versioned
+/// separately from `civic-coi v1` because the columns + provenance shape differ.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CandidateRaceManifest {
+    pub schema_version: String,
+    pub label: String,
+    pub year: String,
+    pub state: String,
+    pub submitter: String,
+    pub submitted_at: String,
+    pub ingested_at: String,
+    /// Number of candidate annotations parsed.
+    pub n_annotations: usize,
+    /// Number of distinct curators across the annotation set.
+    pub n_curators: usize,
+    /// True iff every annotation row had `independently_verified=true`.
+    pub annotations_independently_verified: bool,
+    /// Number of (candidate_name, party) entries with conflicting curator opinions
+    /// (parser's `disputes` map).
+    pub n_disputes: usize,
+    /// Files staged into the output dir (relative names).
+    pub original_csv: String,
+    pub original_csv_sha256: String,
+    pub attestation_doc: String,
+    pub attestation_doc_sha256: String,
+    /// SHA-256 of the rendered annotations.json (BD-R2 chain link).
+    pub annotations_sha256: String,
+    /// SHA-256 of the rendered provenance.json.
+    pub provenance_sha256: String,
+    pub redist_version: String,
+    pub redist_build_commit: String,
+    pub redist_build_commit_short: String,
+    pub rustc_version: String,
+}
+
+fn run_add_candidate_race(args: &CivicAddCandidateRaceArgs) -> anyhow::Result<()> {
+    // ── Input validation ────────────────────────────────────────────────────
+    if !args.csv.exists() {
+        anyhow::bail!(
+            "[INPUT] candidate-race CSV not found: {}",
+            args.csv.display()
+        );
+    }
+    if !args.attestation_doc.exists() {
+        anyhow::bail!(
+            "[INPUT] attestation document not found: {} (per docs/file-formats/race-of-candidate.md, every CSV must be accompanied by a curator-signed attestation)",
+            args.attestation_doc.display()
+        );
+    }
+
+    // ── Parse via the canonical race_of_candidate parser ────────────────────
+    // This validates the CSV schema, the BD-R2 attestation_doc_format union,
+    // and computes the per-row attestation_doc_sha256.
+    let annotation_set = redist_analysis::race_of_candidate::parse_race_of_candidate_csv(&args.csv)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
+    // ── Choose output dir (same shape as civic ingest for tooling consistency) ──
+    let label = args
+        .label
+        .clone()
+        .unwrap_or_else(|| format!("candidate_race_{}_{}", args.year, args.state.to_lowercase()));
+    let dir = output_dir_for_label(&args.output_base, &args.version, &label);
+    std::fs::create_dir_all(&dir)?;
+
+    // ── Stage original CSV + attestation doc ────────────────────────────────
+    let csv_bytes = std::fs::read(&args.csv)?;
+    let csv_sha = sha256_hex(&csv_bytes);
+    std::fs::write(dir.join("candidate_race.csv"), &csv_bytes)?;
+
+    let attest_bytes = std::fs::read(&args.attestation_doc)?;
+    let attest_sha = sha256_hex(&attest_bytes);
+    let attest_filename: String = args
+        .attestation_doc
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("attestation")
+        .to_string();
+    std::fs::write(dir.join(&attest_filename), &attest_bytes)?;
+
+    // ── Render annotations.json + provenance.json ───────────────────────────
+    let annotations_json = serde_json::to_string_pretty(&annotation_set.annotations)?;
+    let annotations_sha = sha256_hex(annotations_json.as_bytes());
+    std::fs::write(dir.join("annotations.json"), &annotations_json)?;
+
+    let provenance_json = serde_json::to_string_pretty(&annotation_set.provenance)?;
+    let provenance_sha = sha256_hex(provenance_json.as_bytes());
+    std::fs::write(dir.join("provenance.json"), &provenance_json)?;
+
+    // ── Manifest ────────────────────────────────────────────────────────────
+    let prov = crate::provenance::Provenance::current();
+    let manifest = CandidateRaceManifest {
+        schema_version: "candidate-race v1".to_string(),
+        label: label.clone(),
+        year: args.year.clone(),
+        state: args.state.clone(),
+        submitter: args.submitter.clone(),
+        submitted_at: now_iso8601(),
+        ingested_at: now_iso8601(),
+        n_annotations: annotation_set.annotations.len(),
+        n_curators: annotation_set.provenance.curators.len(),
+        annotations_independently_verified: annotation_set
+            .provenance
+            .annotations_independently_verified,
+        n_disputes: annotation_set.disputes.len(),
+        original_csv: "candidate_race.csv".into(),
+        original_csv_sha256: csv_sha,
+        attestation_doc: attest_filename,
+        attestation_doc_sha256: attest_sha,
+        annotations_sha256: annotations_sha,
+        provenance_sha256: provenance_sha,
+        redist_version: prov.redist_version,
+        redist_build_commit: prov.redist_build_commit.clone(),
+        redist_build_commit_short: prov.redist_build_commit.chars().take(8).collect(),
+        rustc_version: prov.rustc_version,
+    };
+    std::fs::write(
+        dir.join("manifest.json"),
+        serde_json::to_string_pretty(&manifest)?,
+    )?;
+
+    // ── Summary ─────────────────────────────────────────────────────────────
+    eprintln!(
+        "[OK] civic add-candidate-race: label={} ({} annotations across {} curators{}{}) -> {}",
+        label,
+        manifest.n_annotations,
+        manifest.n_curators,
+        if manifest.n_disputes > 0 {
+            format!(", {} dispute(s)", manifest.n_disputes)
+        } else {
+            String::new()
+        },
+        if !manifest.annotations_independently_verified {
+            ", independently_verified=false (caveat will be injected by analyze)"
+        } else {
+            ""
+        },
+        dir.display(),
+    );
+    Ok(())
 }
 
 // ===========================================================================
@@ -1325,5 +1644,335 @@ mod tests {
         assert!(validate_source_url(&rows[0].source_url).is_ok());
         // Normalized output starts with schema header.
         assert!(normalized.starts_with(b"# civic-coi-csv v1\n"));
+    }
+
+    // ── URL snapshot (Task 5 / PP-30) ─────────────────────────────────────────
+
+    /// Spawn a one-shot HTTP server on 127.0.0.1 that serves a fixed
+    /// (status, content_type, body) response, then shuts down. Returns the
+    /// (url, JoinHandle) so the test can shut down deterministically.
+    fn spawn_oneshot_server(
+        status_line: &'static str,
+        content_type: &'static str,
+        body: Vec<u8>,
+    ) -> (String, std::thread::JoinHandle<()>) {
+        use std::io::{Read, Write};
+        use std::net::TcpListener;
+        let listener = TcpListener::bind("127.0.0.1:0").expect("bind");
+        let port = listener.local_addr().unwrap().port();
+        let url = format!("http://127.0.0.1:{port}/");
+        let handle = std::thread::spawn(move || {
+            // Accept exactly one connection then exit.
+            if let Ok((mut stream, _)) = listener.accept() {
+                // Drain request (best-effort; we don't care).
+                let mut buf = [0u8; 4096];
+                let _ = stream.set_read_timeout(Some(std::time::Duration::from_millis(500)));
+                let _ = stream.read(&mut buf);
+                let resp = format!(
+                    "HTTP/1.1 {status_line}\r\n\
+                     Content-Type: {content_type}\r\n\
+                     Content-Length: {len}\r\n\
+                     Connection: close\r\n\
+                     \r\n",
+                    status_line = status_line,
+                    content_type = content_type,
+                    len = body.len(),
+                );
+                let _ = stream.write_all(resp.as_bytes());
+                let _ = stream.write_all(&body);
+                let _ = stream.flush();
+            }
+        });
+        (url, handle)
+    }
+
+    fn snapshot_test_client() -> reqwest::blocking::Client {
+        reqwest::blocking::Client::builder()
+            .timeout(std::time::Duration::from_secs(2))
+            .redirect(reqwest::redirect::Policy::limited(SNAPSHOT_MAX_REDIRECTS))
+            .build()
+            .unwrap()
+    }
+
+    #[test]
+    fn test_snapshot_url_writes_body_and_headers() {
+        let body = b"<html>hello</html>".to_vec();
+        let (url, handle) = spawn_oneshot_server("200 OK", "text/html; charset=utf-8", body.clone());
+        let tmp = tempfile::TempDir::new().unwrap();
+
+        let rec = snapshot_url_with_client(&url, tmp.path(), snapshot_test_client())
+            .expect("snapshot must succeed");
+        handle.join().ok();
+
+        assert_eq!(rec.url, url);
+        assert_eq!(rec.http_status, 200);
+        assert_eq!(rec.content_type, "text/html; charset=utf-8");
+        assert_eq!(rec.content_length_bytes, body.len());
+        assert!(!rec.truncated);
+        assert_eq!(rec.body_sha256.len(), 64);
+        assert_eq!(rec.snapshot_format, "headers-body");
+
+        // Verify the body file content matches by SHA.
+        let written = std::fs::read(tmp.path().join(&rec.snapshot_path)).unwrap();
+        assert_eq!(sha256_hex(&written), rec.body_sha256);
+
+        // Headers file exists and contains the canonical header lines.
+        let sha8: String = rec.body_sha256.chars().take(8).collect();
+        let headers = std::fs::read_to_string(tmp.path().join(format!("{sha8}.headers.txt")))
+            .expect("headers file must exist");
+        assert!(headers.contains("200"), "headers file must include status line");
+        assert!(
+            headers.lines().any(|l| l.starts_with("content-length:") || l.starts_with("Content-Length:")),
+            "headers must include Content-Length"
+        );
+    }
+
+    #[test]
+    fn test_snapshot_url_truncates_oversized_body() {
+        // Build a 5MB+8 byte body — the server should be truncated to exactly 5MB.
+        let body = vec![b'A'; SNAPSHOT_MAX_BODY_BYTES + 8];
+        let (url, handle) = spawn_oneshot_server("200 OK", "application/octet-stream", body);
+        let tmp = tempfile::TempDir::new().unwrap();
+
+        let rec = snapshot_url_with_client(&url, tmp.path(), snapshot_test_client())
+            .expect("snapshot must succeed even when oversize");
+        handle.join().ok();
+
+        assert!(rec.truncated, "5MB+8 byte body must be marked truncated");
+        assert_eq!(rec.content_length_bytes, SNAPSHOT_MAX_BODY_BYTES);
+        let written = std::fs::read(tmp.path().join(&rec.snapshot_path)).unwrap();
+        assert_eq!(written.len(), SNAPSHOT_MAX_BODY_BYTES);
+    }
+
+    #[test]
+    fn test_snapshot_url_records_404_status() {
+        let (url, handle) = spawn_oneshot_server("404 Not Found", "text/plain", b"missing".to_vec());
+        let tmp = tempfile::TempDir::new().unwrap();
+
+        let rec = snapshot_url_with_client(&url, tmp.path(), snapshot_test_client())
+            .expect("snapshot must record non-2xx, not error");
+        handle.join().ok();
+
+        assert_eq!(rec.http_status, 404);
+        // Body still recorded — caller decides whether to flag the warning.
+        assert!(!rec.body_sha256.is_empty());
+    }
+
+    #[test]
+    fn test_snapshot_url_unreachable_host_returns_err() {
+        // Port 1 on localhost should refuse instantly.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let result = snapshot_url_with_client(
+            "http://127.0.0.1:1/",
+            tmp.path(),
+            snapshot_test_client(),
+        );
+        assert!(result.is_err(), "unreachable host must return an error");
+    }
+
+    // ── Candidate-race CLI integration (Task 8) ──────────────────────────────
+
+    /// Build a synthetic candidate-race CSV + per-row attestation files in `dir`.
+    /// Returns the CSV path. Mirrors the fixture pattern in
+    /// redist-analysis::race_of_candidate::tests.
+    fn write_synthetic_candidate_race_fixture(dir: &Path) -> PathBuf {
+        let mut csv = String::from(
+            "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n",
+        );
+        // Two candidates, same curator, both independently_verified.
+        let rows: &[(&str, &str, &str, &str, &str, &str, &str, bool, &str, &str)] = &[
+            (
+                "Adams J", "DEM", "Black", "test_curator", "PhD History",
+                "2026-04-15", "elections.gov", true, "adams.pdf", "pdf",
+            ),
+            (
+                "Brown K", "DEM", "white", "test_curator", "PhD History",
+                "2026-04-15", "elections.gov", true, "brown.pdf", "pdf",
+            ),
+        ];
+        for (name, party, race, curator, creds, date, source, iv, doc_path, doc_fmt) in rows {
+            // Write per-row attestation file.
+            std::fs::write(dir.join(doc_path), format!("attestation for {name}")).unwrap();
+            csv.push_str(&format!(
+                "{name},{party},{race},{curator},{creds},{date},{source},{iv},{doc_path},{doc_fmt}\n"
+            ));
+        }
+        let csv_path = dir.join("candidates.csv");
+        std::fs::write(&csv_path, csv).unwrap();
+        csv_path
+    }
+
+    #[test]
+    fn test_add_candidate_race_writes_full_output() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_path = write_synthetic_candidate_race_fixture(tmp.path());
+        let attest_path = tmp.path().join("master_attestation.pdf");
+        std::fs::write(&attest_path, b"signed master attestation").unwrap();
+
+        let output_base = tmp.path().join("outputs");
+        let args = CivicAddCandidateRaceArgs {
+            csv: csv_path,
+            year: "2020".into(),
+            state: "VT".into(),
+            submitter: "League of Women Voters".into(),
+            attestation_doc: attest_path,
+            label: Some("vt_2020_test".into()),
+            output_base: output_base.to_str().unwrap().into(),
+            version: "v1".into(),
+        };
+
+        let result = run_add_candidate_race(&args);
+        assert!(result.is_ok(), "add-candidate-race must succeed: {:?}", result.err());
+
+        let dir = output_base
+            .join("v1")
+            .join("civic_inputs")
+            .join("vt_2020_test");
+        for name in &[
+            "candidate_race.csv",
+            "annotations.json",
+            "provenance.json",
+            "manifest.json",
+            "master_attestation.pdf",
+        ] {
+            assert!(dir.join(name).is_file(), "expected output file {name}");
+        }
+
+        let manifest_text = std::fs::read_to_string(dir.join("manifest.json")).unwrap();
+        let m: serde_json::Value = serde_json::from_str(&manifest_text).unwrap();
+        assert_eq!(m["schema_version"].as_str(), Some("candidate-race v1"));
+        assert_eq!(m["label"].as_str(), Some("vt_2020_test"));
+        assert_eq!(m["n_annotations"].as_u64(), Some(2));
+        assert_eq!(m["n_curators"].as_u64(), Some(1));
+        assert_eq!(m["annotations_independently_verified"].as_bool(), Some(true));
+        assert_eq!(m["n_disputes"].as_u64(), Some(0));
+        assert_eq!(m["original_csv_sha256"].as_str().unwrap().len(), 64);
+        assert_eq!(m["attestation_doc_sha256"].as_str().unwrap().len(), 64);
+        assert_eq!(m["annotations_sha256"].as_str().unwrap().len(), 64);
+        assert_eq!(m["provenance_sha256"].as_str().unwrap().len(), 64);
+    }
+
+    #[test]
+    fn test_add_candidate_race_label_defaults_when_omitted() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_path = write_synthetic_candidate_race_fixture(tmp.path());
+        let attest_path = tmp.path().join("att.pdf");
+        std::fs::write(&attest_path, b"sig").unwrap();
+
+        let output_base = tmp.path().join("outputs");
+        let args = CivicAddCandidateRaceArgs {
+            csv: csv_path,
+            year: "2020".into(),
+            state: "VT".into(),
+            submitter: "x".into(),
+            attestation_doc: attest_path,
+            label: None,
+            output_base: output_base.to_str().unwrap().into(),
+            version: "v1".into(),
+        };
+
+        run_add_candidate_race(&args).unwrap();
+        // Default label = candidate_race_<year>_<state-lowercased>
+        assert!(output_base
+            .join("v1")
+            .join("civic_inputs")
+            .join("candidate_race_2020_vt")
+            .is_dir());
+    }
+
+    #[test]
+    fn test_add_candidate_race_rejects_missing_csv() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let attest = tmp.path().join("att.pdf");
+        std::fs::write(&attest, b"sig").unwrap();
+        let args = CivicAddCandidateRaceArgs {
+            csv: tmp.path().join("does-not-exist.csv"),
+            year: "2020".into(),
+            state: "VT".into(),
+            submitter: "x".into(),
+            attestation_doc: attest,
+            label: None,
+            output_base: tmp.path().join("outputs").to_str().unwrap().into(),
+            version: "v1".into(),
+        };
+        let err = run_add_candidate_race(&args).unwrap_err().to_string();
+        assert!(err.contains("[INPUT]"), "must use [INPUT] error category: {err}");
+        assert!(err.contains("CSV not found") || err.contains("does-not-exist"),
+            "error must reference missing CSV: {err}");
+    }
+
+    #[test]
+    fn test_add_candidate_race_rejects_missing_attestation() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_path = write_synthetic_candidate_race_fixture(tmp.path());
+        let args = CivicAddCandidateRaceArgs {
+            csv: csv_path,
+            year: "2020".into(),
+            state: "VT".into(),
+            submitter: "x".into(),
+            attestation_doc: tmp.path().join("missing-master-attestation.pdf"),
+            label: None,
+            output_base: tmp.path().join("outputs").to_str().unwrap().into(),
+            version: "v1".into(),
+        };
+        let err = run_add_candidate_race(&args).unwrap_err().to_string();
+        assert!(err.contains("[INPUT]"), "must use [INPUT] error category: {err}");
+        assert!(err.contains("attestation"), "error must reference missing attestation: {err}");
+    }
+
+    #[test]
+    fn test_add_candidate_race_records_unverified_caveat() {
+        // Build a CSV where one row has independently_verified=false; the
+        // manifest's annotations_independently_verified should be false.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let csv_str = "candidate_name,party,race,curator,curator_credentials,curator_attestation_date,source,independently_verified,attestation_doc_path,attestation_doc_format\n\
+                       Smith,DEM,Black,c1,PhD,2026-04-15,elections.gov,false,doc.pdf,pdf\n";
+        std::fs::write(tmp.path().join("candidates.csv"), csv_str).unwrap();
+        std::fs::write(tmp.path().join("doc.pdf"), b"per-row attestation").unwrap();
+        std::fs::write(tmp.path().join("master.pdf"), b"master attestation").unwrap();
+
+        let output_base = tmp.path().join("outputs");
+        let args = CivicAddCandidateRaceArgs {
+            csv: tmp.path().join("candidates.csv"),
+            year: "2020".into(),
+            state: "AL".into(),
+            submitter: "test".into(),
+            attestation_doc: tmp.path().join("master.pdf"),
+            label: Some("unverified_test".into()),
+            output_base: output_base.to_str().unwrap().into(),
+            version: "v1".into(),
+        };
+        run_add_candidate_race(&args).unwrap();
+
+        let manifest_text = std::fs::read_to_string(
+            output_base
+                .join("v1")
+                .join("civic_inputs")
+                .join("unverified_test")
+                .join("manifest.json"),
+        )
+        .unwrap();
+        let m: serde_json::Value = serde_json::from_str(&manifest_text).unwrap();
+        assert_eq!(m["annotations_independently_verified"].as_bool(), Some(false));
+    }
+
+    #[test]
+    fn test_snapshot_record_round_trips_through_serde() {
+        let rec = UrlSnapshotRecord {
+            url: "https://example.org/comments".into(),
+            fetched_at: "1970-01-01T00:00:00Z".into(),
+            http_status: 200,
+            content_type: "text/html".into(),
+            content_length_bytes: 42,
+            truncated: false,
+            body_sha256: "0".repeat(64),
+            snapshot_path: "deadbeef.body".into(),
+            snapshot_format: "headers-body".into(),
+        };
+        let json = serde_json::to_string(&rec).unwrap();
+        let back: UrlSnapshotRecord = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.url, rec.url);
+        assert_eq!(back.http_status, 200);
+        assert_eq!(back.snapshot_format, "headers-body");
     }
 }

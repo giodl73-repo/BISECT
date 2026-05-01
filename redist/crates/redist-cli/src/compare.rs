@@ -1,14 +1,40 @@
 /// `redist compare` dispatcher — load two plans and compare them.
 ///
 /// Supports plan-a vs plan-b (both labels) or plan-a vs enacted districts.
-/// Output formats: table (default), json, csv.
-use std::collections::HashMap;
-use std::path::PathBuf;
+/// Output formats: table (default), json, csv, narrative, both.
+use std::collections::{BTreeMap, HashMap};
+use std::path::{Path, PathBuf};
 
 use redist_analysis::{
     compare_plans, format_comparison_json, format_comparison_csv, format_comparison_table,
 };
+use redist_report::comparison::{
+    diff_from_assignments, load_plan_side_from_dir, AssembleError, ComparisonReport,
+};
+use redist_report::html_comparison::{render_comparison_html, HtmlComparisonContext};
+use redist_report::narrative::{render_narrative, NarrativeConfig};
+use redist_report::narrative_manifest::{
+    build_narrative_manifest_with_clock, serialize_manifest, NarrativeManifestInputs,
+};
+use sha2::{Digest, Sha256};
 use crate::args::{CompareArgs, CompareFormat};
+use crate::provenance::Provenance;
+
+/// SHA-256 of the embedded narrative renderer source. Anchors `template_sha256`
+/// in `narrative_manifest.json` to the exact Rust code that produced the
+/// markdown — equivalent to a Tera template SHA, but for the pure-Rust renderer.
+const NARRATIVE_RENDERER_SRC: &[u8] = include_bytes!("../../redist-report/src/narrative.rs");
+const NARRATIVE_TEMPLATE_PATH_REL: &str = "redist/crates/redist-report/src/narrative.rs";
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    let mut h = Sha256::new();
+    h.update(bytes);
+    let mut s = String::with_capacity(64);
+    for b in h.finalize() {
+        s.push_str(&format!("{:02x}", b));
+    }
+    s
+}
 
 /// Load a plan's final_assignments.json given a label, version, year, and base dir.
 ///
@@ -393,42 +419,276 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
         .unwrap_or_else(|| "enacted".to_string());
 
     // Format output
-    let output = match args.format {
-        CompareFormat::Json => format_comparison_json(&comparison),
-        CompareFormat::Csv => format_comparison_csv(&comparison),
-        CompareFormat::Table => format_comparison_table(&comparison),
-        CompareFormat::Narrative | CompareFormat::Both => {
-            // Plan Comparison plan Task 11 (CLI dispatch) is not yet wired.
-            // The narrative renderer + manifest writer are implemented and
-            // tested in `redist-report::{narrative, narrative_manifest}`;
-            // this dispatch needs the from-disk assembler that loads plan
-            // manifests + analysis JSONs and computes their SHA-256s. See
-            // docs/superpowers/plans/2026-04-30-plan-comparison-and-narrative.md
-            // Tasks 2 + 11.
-            anyhow::bail!(
-                "[CONFIG] --format narrative is not yet wired into `redist compare`. \
-                 The narrative renderer + manifest writer are implemented in \
-                 redist-report::narrative and redist-report::narrative_manifest \
-                 (see `cargo test -p redist-report narrative` for the test suite). \
-                 The CLI dispatch that loads plan manifests + analysis JSONs from \
-                 disk and feeds them to the renderer is the next session's work. \
-                 For now, use --format table or --format json."
-            );
+    match args.format {
+        CompareFormat::Json => emit_text(&format_comparison_json(&comparison), args.out.as_ref())?,
+        CompareFormat::Csv => emit_text(&format_comparison_csv(&comparison), args.out.as_ref())?,
+        CompareFormat::Table => emit_text(&format_comparison_table(&comparison), args.out.as_ref())?,
+        CompareFormat::Narrative => {
+            run_narrative_dispatch(args, version, /*also_print_table=*/ false, &comparison, /*also_html=*/ false)?;
         }
-    };
+        CompareFormat::Both => {
+            // Print the table to stdout, then emit narrative.md + manifest to disk.
+            print!("{}", format_comparison_table(&comparison));
+            run_narrative_dispatch(args, version, /*also_print_table=*/ true, &comparison, /*also_html=*/ false)?;
+        }
+        CompareFormat::Html => {
+            // Emit narrative.md + manifest + comparison.html.
+            run_narrative_dispatch(args, version, /*also_print_table=*/ false, &comparison, /*also_html=*/ true)?;
+        }
+    }
 
-    // Write to file or stdout
-    if let Some(ref out_path) = args.out {
+    Ok(())
+}
+
+fn emit_text(output: &str, out_path: Option<&PathBuf>) -> anyhow::Result<()> {
+    if let Some(out_path) = out_path {
         if let Some(parent) = out_path.parent() {
             std::fs::create_dir_all(parent)?;
         }
-        std::fs::write(out_path, &output)?;
+        std::fs::write(out_path, output)?;
         eprintln!("[OK] comparison -> {}", out_path.display());
     } else {
         print!("{output}");
     }
+    Ok(())
+}
+
+/// Resolve a plan label or filesystem path into the plan directory holding
+/// `manifest.json`. Returns `None` if no manifest can be located (caller
+/// downgrades to a [SKIP] for the narrative dispatch).
+fn resolve_plan_dir(
+    label_or_path: &str,
+    output_base: &str,
+    version: &str,
+    year: &str,
+    output_dir_override: Option<&PathBuf>,
+) -> Option<PathBuf> {
+    // Direct path: caller passed a manifest.json or a directory containing one.
+    let p = PathBuf::from(label_or_path);
+    if p.is_dir() && p.join("manifest.json").is_file() {
+        return Some(p);
+    }
+    if p.is_file() && p.file_name().and_then(|s| s.to_str()) == Some("manifest.json") {
+        return p.parent().map(Path::to_path_buf);
+    }
+
+    let base = output_dir_override
+        .cloned()
+        .unwrap_or_else(|| PathBuf::from(output_base).join(version));
+    let plan_dir = base.join(year).join("plans").join(label_or_path);
+    if plan_dir.join("manifest.json").is_file() {
+        return Some(plan_dir);
+    }
+    None
+}
+
+/// Run the narrative + manifest dispatch. When called from `Both` format the
+/// table has already been printed to stdout before this runs. When `also_html`
+/// is true, an additional `comparison.html` is written into the same dir.
+fn run_narrative_dispatch(
+    args: &CompareArgs,
+    version: &str,
+    also_print_table: bool,
+    _table_comparison: &redist_analysis::comparison::PlanComparison,
+    also_html: bool,
+) -> anyhow::Result<()> {
+    let _ = also_print_table; // reserved — caller already printed
+
+    let plan_b_label = args
+        .plan_b
+        .as_deref()
+        .ok_or_else(|| anyhow::anyhow!(
+            "[CONFIG] --format narrative requires --plan-b <label-or-path>; \
+             --enacted is not yet supported by the narrative dispatcher"
+        ))?;
+
+    let version_b = args.version_b.as_deref().unwrap_or(version);
+
+    let plan_a_dir = resolve_plan_dir(
+        &args.plan_a,
+        &args.output_base,
+        version,
+        &args.year,
+        args.output_dir.as_ref(),
+    )
+    .ok_or_else(|| anyhow::anyhow!(
+        "[INPUT] cannot locate plan-a manifest for '{}' under {} (version {}, year {}); \
+         --format narrative requires a plan directory containing manifest.json",
+        args.plan_a, args.output_base, version, args.year
+    ))?;
+    let plan_b_dir = resolve_plan_dir(
+        plan_b_label,
+        &args.output_base,
+        version_b,
+        &args.year,
+        args.output_dir.as_ref(),
+    )
+    .ok_or_else(|| anyhow::anyhow!(
+        "[INPUT] cannot locate plan-b manifest for '{}' under {} (version {}, year {}); \
+         --format narrative requires a plan directory containing manifest.json",
+        plan_b_label, args.output_base, version_b, args.year
+    ))?;
+
+    let side_a = load_plan_side_from_dir(&plan_a_dir, args.leaning_threshold)
+        .map_err(|e: AssembleError| anyhow::anyhow!("plan-a: {e}"))?;
+    let side_b = load_plan_side_from_dir(&plan_b_dir, args.leaning_threshold)
+        .map_err(|e: AssembleError| anyhow::anyhow!("plan-b: {e}"))?;
+
+    let diff = diff_from_assignments(&plan_a_dir, &plan_b_dir)
+        .map_err(|e: AssembleError| anyhow::anyhow!("diff: {e}"))?;
+
+    // Snapshot SHAs we need for the manifest BEFORE moving sides into the report.
+    let plan_a_label = side_a.label.clone();
+    let plan_a_manifest_sha = side_a.manifest_sha256.clone();
+    let plan_a_analysis_sha = side_a.analysis_sha256.clone();
+    let plan_a_submission_type = side_a.submission_type.clone();
+    let plan_a_submitted_by = side_a.submitted_by.clone();
+    let plan_a_submitted_at = side_a.submitted_at.clone();
+    let plan_b_label_resolved = side_b.label.clone();
+    let plan_b_manifest_sha = side_b.manifest_sha256.clone();
+    let plan_b_analysis_sha = side_b.analysis_sha256.clone();
+    let plan_b_submission_type = side_b.submission_type.clone();
+    let plan_b_submitted_by = side_b.submitted_by.clone();
+    let plan_b_submitted_at = side_b.submitted_at.clone();
+
+    let report = ComparisonReport::from_loaded(side_a, side_b, /*baseline=*/ None, diff);
+
+    // Render the markdown.
+    let cfg = NarrativeConfig {
+        leaning_threshold: args.leaning_threshold,
+        close_call_band: args.close_call_band,
+        approved_by: args.approved_by.clone(),
+        partisan_seat_ci: None,
+        mm_count_ci: None,
+        mean_pp_ci: None,
+    };
+    let markdown = render_narrative(&report, &cfg);
+
+    // Build provenance manifest.
+    let mut analysis_sha256: BTreeMap<String, BTreeMap<String, String>> = BTreeMap::new();
+    analysis_sha256.insert("plan_a".into(), plan_a_analysis_sha);
+    analysis_sha256.insert("plan_b".into(), plan_b_analysis_sha);
+
+    let prov = Provenance::current();
+    let template_sha = sha256_hex(NARRATIVE_RENDERER_SRC);
+
+    // Civic-counter-proposal attribution: prefer plan B (the typical
+    // civic-side submission) but fall back to plan A if only A is tagged.
+    let (submission_type, civic_attribution) = pick_civic_attribution(
+        plan_a_submission_type.as_deref(),
+        &plan_a_label,
+        plan_a_submitted_by.as_deref(),
+        plan_a_submitted_at.as_deref(),
+        plan_b_submission_type.as_deref(),
+        &plan_b_label_resolved,
+        plan_b_submitted_by.as_deref(),
+        plan_b_submitted_at.as_deref(),
+    );
+
+    let inputs = NarrativeManifestInputs {
+        template_path_rel: NARRATIVE_TEMPLATE_PATH_REL.to_string(),
+        template_sha256: template_sha,
+        leaning_threshold: args.leaning_threshold,
+        close_call_band: args.close_call_band,
+        moe_inputs: BTreeMap::new(),
+        plan_a_label: plan_a_label.clone(),
+        plan_a_manifest_sha256: plan_a_manifest_sha,
+        plan_b_label: plan_b_label_resolved.clone(),
+        plan_b_manifest_sha256: plan_b_manifest_sha,
+        baseline_label: None,
+        baseline_manifest_sha256: None,
+        analysis_sha256,
+        approved_by: args.approved_by.clone(),
+        redist_version: prov.redist_version,
+        redist_build_commit: prov.redist_build_commit,
+        rustc_version: prov.rustc_version,
+        submission_type,
+        civic_counter_proposal_attribution: civic_attribution,
+        comments_label: None,
+        comments_overlay_sha256: None,
+    };
+
+    let source_date_epoch = std::env::var("SOURCE_DATE_EPOCH")
+        .ok()
+        .and_then(|s| s.parse::<i64>().ok());
+    let manifest = build_narrative_manifest_with_clock(inputs, source_date_epoch);
+    let manifest_json = serialize_manifest(&manifest)
+        .map_err(|e| anyhow::anyhow!("[INTERNAL] manifest serialize failed: {e}"))?;
+
+    // Choose output directory.
+    let report_dir = if let Some(rd) = args.report_dir.as_ref() {
+        rd.clone()
+    } else {
+        PathBuf::from(&args.output_base)
+            .join(version)
+            .join("comparisons")
+            .join(format!("{}_vs_{}", plan_a_label, plan_b_label_resolved))
+    };
+    std::fs::create_dir_all(&report_dir)
+        .map_err(|e| anyhow::anyhow!("[INPUT] cannot create {}: {}", report_dir.display(), e))?;
+
+    let narrative_path = report_dir.join("narrative.md");
+    let manifest_path = report_dir.join("narrative_manifest.json");
+    std::fs::write(&narrative_path, &markdown)?;
+    std::fs::write(&manifest_path, &manifest_json)?;
+
+    eprintln!("[OK] narrative -> {}", narrative_path.display());
+    eprintln!("[OK] manifest  -> {}", manifest_path.display());
+
+    if also_html {
+        let ctx = HtmlComparisonContext {
+            narrative_markdown: markdown.clone(),
+            template_sha256: manifest.template_sha256.clone(),
+            redist_build_commit_short: manifest.redist_build_commit_short.clone(),
+            redist_version: manifest.redist_version.clone(),
+            approved_at: manifest.approved_at.clone(),
+        };
+        let html = render_comparison_html(&report, &cfg, &ctx);
+        let html_path = report_dir.join("comparison.html");
+        std::fs::write(&html_path, &html)?;
+        eprintln!("[OK] html      -> {}", html_path.display());
+    }
+
+    if args.approved_by.is_none() {
+        eprintln!(
+            "[INFO] narrative is in DRAFT mode; pass --approved-by \"<name>\" to remove the [DRAFT] prefix"
+        );
+    }
 
     Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+fn pick_civic_attribution(
+    a_type: Option<&str>,
+    a_label: &str,
+    a_by: Option<&str>,
+    a_at: Option<&str>,
+    b_type: Option<&str>,
+    b_label: &str,
+    b_by: Option<&str>,
+    b_at: Option<&str>,
+) -> (
+    Option<String>,
+    Option<redist_report::narrative_manifest::CivicCounterProposalAttribution>,
+) {
+    let civic = "civic_counter_proposal";
+    let make = |label: &str, by: Option<&str>, at: Option<&str>| {
+        Some(
+            redist_report::narrative_manifest::CivicCounterProposalAttribution {
+                plan_label: label.to_string(),
+                submitted_by: by.unwrap_or("").to_string(),
+                submitted_at: at.unwrap_or("").to_string(),
+            },
+        )
+    };
+    if b_type == Some(civic) {
+        return (Some(civic.to_string()), make(b_label, b_by, b_at));
+    }
+    if a_type == Some(civic) {
+        return (Some(civic.to_string()), make(a_label, a_by, a_at));
+    }
+    (None, None)
 }
 
 #[cfg(test)]

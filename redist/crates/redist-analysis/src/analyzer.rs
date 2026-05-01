@@ -28,6 +28,12 @@ pub enum AnalyzerType {
     Demographic,
     Political,
     Partisan,
+    /// Statewide vote-share-vs-seat-share gap. Distinct from `partisan`
+    /// (efficiency gap, mean-median, partisan bias — all *bias-around-50%*
+    /// metrics); proportionality is the simple "did the parties win seats
+    /// in proportion to their statewide votes" metric. Useful for
+    /// comparing geographic-sorting effects across states.
+    Proportionality,
     Urban,
     Summary,
     Contiguity,
@@ -48,6 +54,7 @@ impl AnalyzerType {
             Self::Demographic => "demographic",
             Self::Political => "political",
             Self::Partisan => "partisan",
+            Self::Proportionality => "proportionality",
             Self::Urban => "urban",
             Self::Summary => "summary",
             Self::Contiguity => "contiguity",
@@ -70,6 +77,7 @@ impl AnalyzerType {
         vec![
             Self::Demographic,
             Self::Political,
+            Self::Proportionality,
             Self::Urban,
             Self::Summary,
             Self::Contiguity,

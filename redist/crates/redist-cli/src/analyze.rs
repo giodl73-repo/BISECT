@@ -296,6 +296,21 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
                     eprintln!("[OK] political -> {}", out_path.display());
                 }
             }
+            AnalyzerType::Proportionality => {
+                let result = redist_analysis::ProportionalityAnalyzer::run(&ctx)?;
+                if args.stdout {
+                    println!("{}", serde_json::to_string_pretty(&result)?);
+                } else {
+                    write_json_atomic(&out_path, &result)?;
+                    eprintln!(
+                        "[OK] proportionality -> {} (gap = {:+.1}pp; D vote {:.1}% / D seats {:.1}%)",
+                        out_path.display(),
+                        result.proportionality_gap_pp,
+                        result.dem_vote_share_statewide * 100.0,
+                        result.dem_seat_share * 100.0,
+                    );
+                }
+            }
             AnalyzerType::Urban => {
                 let result = UrbanAnalyzer::run(&ctx)?;
                 if args.stdout {
@@ -561,6 +576,26 @@ pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
         }
         eprintln!("ERROR: {}", reasons.join("; "));
         std::process::exit(exit_code as i32);
+    }
+
+    // ── Paper-mode replication package (RT Task 8 / D-05) ──────────────────
+    // Runs AFTER the analyze pipeline so it can checksum the final outputs.
+    if args.paper_mode {
+        let invocation = std::env::args().collect::<Vec<_>>().join(" ");
+        let inputs = crate::paper_mode::PaperModeInputs {
+            analysis_dir: &analysis_dir,
+            assignments_path: &assignments_path,
+            election_file: args.election_file.as_deref(),
+            candidate_race_csv: args.candidate_race_csv.as_deref(),
+            partisan_baseline: args.partisan_baseline.as_deref(),
+            analyze_invocation: invocation,
+            seed: None, // analyze runs are deterministic; no master seed today
+            citation_style_default: &args.paper_mode_citation_style,
+        };
+        match crate::paper_mode::emit_replication_package(&inputs) {
+            Ok(pkg) => eprintln!("[OK] paper-mode replication package -> {}", pkg.display()),
+            Err(e) => eprintln!("[WARN] paper-mode emit failed (analyze outputs were written): {e}"),
+        }
     }
 
     Ok(())

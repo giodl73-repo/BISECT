@@ -5,6 +5,7 @@ pub mod vra_analysis;
 pub mod analyzer;
 pub mod demographic;
 pub mod political;
+pub mod proportionality;
 pub mod urban;
 pub mod summary;
 pub mod partisan;
@@ -24,6 +25,7 @@ pub use vra_analysis::{analyze_mm_districts, VraAnalysis, VraDistrict};
 pub use analyzer::{Analyzer, AnalyzerContext, AnalyzerType};
 pub use demographic::{DemographicAnalyzer, DemographicResult, DemographicDistrict};
 pub use political::{PoliticalAnalyzer, PoliticalResult, PoliticalDistrict};
+pub use proportionality::{ProportionalityAnalyzer, ProportionalityResult, aggregate_proportionality};
 pub use urban::{UrbanAnalyzer, UrbanResult, UrbanDistrict};
 pub use summary::{SummaryAnalyzer, SummaryResult, SummaryDistrict};
 pub use partisan::{

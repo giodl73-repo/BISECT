@@ -509,6 +509,12 @@ fn main() {
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
+        // ── redist research: researcher toolkit (RT plan) ─────────────────────
+        Commands::Research(args) => {
+            redist_cli::research::run_research(&args.command)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
         // ── redist policy: state policy lookup ────────────────────────────────
         Commands::Policy(args) => {
             run_policy(&args)

@@ -169,6 +169,10 @@ pub enum Commands {
     /// cross-input conflicts, list/show ingested inputs, add candidate-race
     /// annotations. See `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`.
     Civic(CivicArgs),
+    /// Researcher Toolkit: validate ensembles, run convergence diagnostics,
+    /// compute percentile-rank of an enacted plan against an MCMC ensemble.
+    /// See `docs/superpowers/plans/2026-04-30-researcher-toolkit.md`.
+    Research(ResearchArgs),
     /// Show redistricting policy for a state (subdivision terms, tolerances, VRA, etc.)
     Policy(PolicyArgs),
     /// Pre-flight check: verify data files, year validity, resolution warnings for a location
@@ -471,6 +475,17 @@ pub struct CivicArgs {
 }
 
 // ---------------------------------------------------------------------------
+// `redist research` — Researcher Toolkit (RT plan)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct ResearchArgs {
+    #[command(subcommand)]
+    pub command: crate::research::ResearchSubcommand,
+}
+
+// ---------------------------------------------------------------------------
 // `redist analyze` — per-district analytics
 // ---------------------------------------------------------------------------
 
@@ -583,6 +598,22 @@ pub struct AnalyzeArgs {
     /// threshold, regression inference is unreliable and `[INPUT]` exits.
     #[arg(long, default_value_t = 50)]
     pub min_precincts: usize,
+
+    // ── Researcher Toolkit / paper-mode (D-05) ─────────────────────────────
+    /// Emit an AEA-compliant replication package alongside the analyze outputs.
+    /// Writes `paper_mode/{REPRODUCE.sh, inputs.sha256.json,
+    /// expected_outputs.sha256.json, environment.json, seeds.json,
+    /// CITATION.{bib,apa.txt,chicago.txt}, README.md}` under the analysis dir.
+    /// See `docs/superpowers/plans/2026-04-30-researcher-toolkit.md` Task 8.
+    #[arg(long)]
+    pub paper_mode: bool,
+
+    /// Citation style for `paper_mode/CITATION.*` outputs (advisory; the
+    /// renderer always writes all three styles, but the named style is
+    /// flagged "default" in README.md). One of: `bluebook`, `apa`, `chicago`.
+    /// Defaults to `apa` per `docs/file-formats/citation-strings.md` §1.
+    #[arg(long, default_value = "apa")]
+    pub paper_mode_citation_style: String,
 }
 
 // ---------------------------------------------------------------------------
@@ -730,6 +761,10 @@ pub enum CompareFormat {
     Narrative,
     /// Both Table (stdout) and Narrative (file outputs).
     Both,
+    /// Self-contained HTML side-by-side report (Plan Comparison plan Task 7).
+    /// Writes comparison.html + narrative.md + narrative_manifest.json into
+    /// outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/.
+    Html,
 }
 
 #[derive(Debug, Parser)]
@@ -1613,6 +1648,38 @@ mod tests {
     fn test_election_format_default_us_presidential() {
         let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
         assert_eq!(args.election_format, "us-presidential");
+    }
+
+    // ── RT Task 8.1: --paper-mode flag wiring (D-05) ─────────────────────────
+
+    #[test]
+    fn test_paper_mode_flag_defaults_false() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
+        assert!(!args.paper_mode, "--paper-mode must default to false");
+    }
+
+    #[test]
+    fn test_paper_mode_flag_parses() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT", "--paper-mode"]);
+        assert!(args.paper_mode, "--paper-mode flag must set paper_mode = true");
+    }
+
+    #[test]
+    fn test_paper_mode_citation_style_default_apa() {
+        let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
+        assert_eq!(
+            args.paper_mode_citation_style, "apa",
+            "default citation style must be 'apa' per citation-strings.md §1"
+        );
+    }
+
+    #[test]
+    fn test_paper_mode_citation_style_overridable() {
+        let args = AnalyzeArgs::parse_from([
+            "analyze", "--state", "VT",
+            "--paper-mode-citation-style", "chicago",
+        ]);
+        assert_eq!(args.paper_mode_citation_style, "chicago");
     }
 
     #[test]

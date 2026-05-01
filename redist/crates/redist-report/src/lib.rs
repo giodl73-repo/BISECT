@@ -21,6 +21,7 @@ pub mod moe;
 pub mod narrative;
 pub mod narrative_manifest;
 pub mod html;
+pub mod html_comparison;
 pub mod import;
 pub mod manifest;
 pub mod paths;
