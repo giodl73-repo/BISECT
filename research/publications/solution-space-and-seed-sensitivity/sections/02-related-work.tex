@@ -1,5 +1,113 @@
-\section{Related Work}
-\label{sec:related}
+\section{Background}
+\label{sec:background}
 
-% TODO: graph partitioning approximation, redistricting ensemble literature,
-%       seed sensitivity in stochastic algorithms, electoral geography sorting
+\subsection{Graph Minimum Bisection and Computational Hardness}
+
+Let $G = (V, E, w)$ be a connected weighted graph with $n = |V|$ vertices and
+edge weights $w : E \to \mathbb{R}_{>0}$. A \emph{$k$-partition} assigns every
+vertex to one of $k$ parts; the \emph{edge-cut} of a partition is the total
+weight of edges crossing part boundaries.
+
+Graph minimum $k$-bisection (equal-weight, $k=2$) is NP-hard even on planar
+graphs~\citep{garey1979computers}. METIS~\citep{karypis1998fast} approximates
+the minimum using multilevel coarsening and local refinement. The random seed
+controls the initial coarsened-graph bisection; refinement proceeds
+deterministically given the initial partition, so different seeds yield
+different local optima.
+
+\subsection{Theoretical Lower Bounds on Minimum Edge-Cut}
+\label{sec:background:bounds}
+
+Two complementary bounds relate graph structure to minimum edge-cut:
+
+\paragraph{Cheeger constant.}
+The \emph{isoperimetric number} (Cheeger constant) of $G$ is:
+\[
+  h(G) = \min_{S \subseteq V,\, |S| \leq n/2}
+           \frac{\sum_{(u,v)\in E,\, u\in S,\, v\notin S} w_{uv}}{|S|}
+\]
+Any bisection with $|S| = n/2$ satisfies
+$\mathrm{EC}(S) \geq h(G) \cdot n/2$, giving a lower bound independent of the
+algorithm.
+
+\paragraph{Fiedler bound (algebraic connectivity).}
+The second eigenvalue $\lambda_2$ of the weighted graph Laplacian $L = D - W$
+(where $D_{ii} = \sum_j w_{ij}$ and $W_{ij} = w_{ij}$) is the \emph{algebraic
+connectivity}~\citep{fiedler1973algebraic}. By the discrete Cheeger inequality:
+\[
+  h(G) \geq \lambda_2 / 2,
+  \qquad\text{so}\qquad
+  \mathrm{EC}_{\min} \geq \frac{\lambda_2 \cdot n}{4}.
+\]
+$\lambda_2$ can be computed in $O(n^2)$ or approximated in $O(n \log n)$ via
+Lanczos iteration. For US census-tract graphs with $n \approx 200$--$4{,}000$
+vertices, exact computation takes milliseconds.
+
+\paragraph{Geometric scaling law.}
+For geographically compact states, a dimensional-analysis argument predicts:
+\[
+  \mathrm{EC}_{\min}(k) \approx C_s \cdot \sqrt{k \cdot A_s}
+\]
+where $A_s$ is the state land area (m$^2$), $k$ is the district count, and
+$C_s$ is a state-specific constant capturing geographic compactness.
+Intuition: $k$ equal-area districts each have radius $r \sim \sqrt{A_s / (k\pi)}$
+and perimeter $\sim 2\pi r$; internal boundaries are shared, so total internal
+boundary $\sim k \cdot \pi r = \sqrt{\pi k A_s}$. The $\sqrt{k}$ scaling means
+adding more districts increases edge-cut sublinearly. We test this empirically
+in \S\ref{sec:eval:national}.
+
+\subsection{Polsby-Popper Compactness}
+
+The Polsby-Popper score~\citep{polsby1991third} of a region $R$ is:
+\[
+  \mathrm{PP}(R) = \frac{4\pi A(R)}{P(R)^2} \in (0, 1]
+\]
+where $A(R)$ is area and $P(R)$ is perimeter; PP = 1 iff $R$ is a circle.
+Courts have accepted PP as a neutral compactness criterion for redistricting
+(\emph{Karcher v. Daggett}, 462 U.S. 725 (1983)).
+
+Polsby-Popper and edge-cut are related but not identical. The perimeter of a
+district $d$ has two components:
+\[
+  P(d) = \underbrace{P_{\mathrm{ext}}(d)}_{\text{external (fixed)}}
+        + \underbrace{P_{\mathrm{int}}(d)}_{\text{internal (controlled by partition)}}.
+\]
+Edge-cut minimisation controls only $P_{\mathrm{int}}$ (the shared boundaries
+between districts). $P_{\mathrm{ext}}$ — coastlines, state borders, rivers —
+is determined by geography and is independent of the partition. For coastal
+states (Maryland, Florida, California), $P_{\mathrm{ext}}$ dominates and
+edge-cut minimisation can diverge from PP maximisation. This motivates
+\textsc{CompactBisect}'s use of the full PP formula rather than edge-cut as
+the selection criterion.
+
+\subsection{The Huntington-Hill Apportionment Method}
+
+The Huntington-Hill equal-proportions method (2~U.S.C.~\S~2a) assigns seats to
+states using the geometric mean $\sqrt{n(n+1)}$ as the critical divisor. A
+state with $n$ seats receives the next seat if its \emph{priority value}
+$P_i / \sqrt{n_i(n_i+1)}$ (where $P_i$ is population) is the largest among
+all states. The geometric mean is used because it treats proportional
+differences in representation equally: the proportional increase in
+representation when going from $n$ to $n+1$ seats, $1/n - 1/(n+1) = 1/(n(n+1))$,
+is equalised across all $n$ by the geometric-mean divisor.
+
+\textsc{CompactBisect}'s selection criterion $\sqrt{\mathrm{PP}(L) \cdot
+\mathrm{PP}(R)}$ applies the identical principle to bisection fairness: choose
+the split where the proportional compactness difference between the two halves
+is minimised. The geometric mean is maximised when $\mathrm{PP}(L) =
+\mathrm{PP}(R)$, just as Huntington-Hill achieves equal proportional
+representation. Congress adopted the geometric mean in 1941 as the uniquely
+neutral apportionment standard; we apply the same criterion one level down to
+the line-drawing problem.
+
+\subsection{MCMC Ensemble Methods}
+
+Ensemble redistricting methods~\citep{chikina2017assessing, herschlag2020quantifying}
+generate large samples of neutral plans and use the resulting distribution as
+a benchmark against which to evaluate enacted maps. \emph{GerryChain}
+\citep{duchin2019gerrychain} implements a Markov-chain walk over the space of
+valid partitions. These methods answer ``is the enacted map an outlier?'';
+\textsc{CompactBisect} addresses a complementary question: ``which specific
+neutral plan is geometrically optimal?'' The two approaches are compatible:
+the ensemble establishes the distribution; CompactBisect identifies the plan
+at the geometric optimum of that distribution.
