@@ -539,6 +539,28 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Court Submission Reports (partial — Typst integration scaffolded, not executable)
+
+The Court Submission Reports plan is partially implemented. Today (2026-04-30):
+
+**Shipped:**
+- `docs/file-formats/manifests.md` — canonical manifest field inventory + naming + path-portability + cross-manifest hash-link convention.
+- `docs/file-formats/citation-strings.md` — Bluebook / APA / Chicago templates per source class with worked examples.
+- `redist report --format pdf` CLI surface flags: `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, `--expert-config`, `--allow-non-strict-civic`, `--draft`. (Wired into `args.rs`; the legacy HTML→PDF path doesn't consume them yet.)
+- `redist-report::civic_gate` (BD-R1): when court-mode render detects civic inputs ingested under non-strict validation (`--validate {lenient,advisory}`), refuses unless `--allow-non-strict-civic` is set. 10 L0 tests cover all paths.
+- `redist/crates/redist-report/typst-templates/.typst-version` (`0.12.0`) and `.verapdf-version` (`1.26.2`) version pins.
+- `redist/crates/redist-report/typst-templates/README.md` documents the integration path the next session will execute.
+
+**Deferred (requires Typst + verapdf installed in dev + CI):**
+- The actual Typst document templates (`expert_report.typ` + per-section partials).
+- The Rust `typst_render` module that shells out to Typst and gates on verapdf (PP-32).
+- PDF/A-2b determinism (`SOURCE_DATE_EPOCH`, sorted-name tar+gzip with fixed mtime, zeroed PDF metadata — D-04).
+- Removal of the legacy `try_generate_pdf` wkhtmltopdf/pandoc fallback.
+- L1 + L2 acceptance tests (B-01 P0 PDF-text-extraction, B-10 section-header ordering, the deliberately-malformed-Typst negative test).
+- Reproducibility-zip generator (`reproducibility_package.zip` with deterministic byte output).
+
+**Today's `redist report --format pdf` behavior:** falls back to the legacy `try_generate_pdf` path (wkhtmltopdf/pandoc with a `[CONFIG]` error if neither is installed). The new flags are accepted but advisory.
+
 ## Within-Party Bloc Voting (Callais Evidence Layer)
 
 `redist analyze --types bloc-voting` runs a per-precinct WLS regression of candidate share on racial composition AND a partisan baseline, producing the disentangled bloc-voting evidence required by *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36. It is opt-in (NOT included in `--types all`) because it requires a curator-attested race-of-candidate annotation file.

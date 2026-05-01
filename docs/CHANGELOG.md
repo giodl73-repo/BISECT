@@ -14,6 +14,20 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Court Submission Reports (partial; Typst integration scaffolded)
+- **`docs/file-formats/manifests.md`** (M-03 followup-doc): canonical manifest field inventory across all schema_versions (PlanManifest, narrative-manifest, whatif-manifest, depo-log, civic-coi, tutorial-checksums, import-compat, race-of-candidate, bloc-voting, repro-package). Settles `redist_build_commit` (full) + `redist_build_commit_short` (short) naming reconciliation. Documents `accessed_date` vs `fetched_at` rule (D-01). Path-portability rule + cross-manifest SHA-link convention + schema-versioning policy.
+- **`docs/file-formats/citation-strings.md`** (D-06 followup-doc): Bluebook / APA / Chicago templates per source class (DOI dataset, URL-only dataset, software, expert deposition, civic counter-proposal). Default style precedence: Bluebook for `--jurisdiction`, APA for `--paper-mode`, Chicago for civic.
+- **`redist report --format pdf` CLI flags wired** (Court Reports plan Task 4): `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, `--expert-config`, `--allow-non-strict-civic`, `--draft`. Wired into `args.rs`; Typst execution path is scaffolded but not active until Typst is installed.
+- **`redist-report::civic_gate`** (BD-R1, Court Reports plan Task 8): when court-mode render detects civic inputs ingested under `--validate {lenient,advisory}`, refuses unless `--allow-non-strict-civic` is set. 10 L0 tests covering: NoneFound, AllStrict, NonStrictRefused, NonStrictAllowed (override), unknown-validate-mode-treated-as-non-strict, non-civic-schema-ignored, malformed-manifest-doesn't-panic, refusal-message-format.
+- **Typst version pins** at `redist/crates/redist-report/typst-templates/.typst-version` (0.12.0) + `.verapdf-version` (1.26.2). Templates README documents the integration path the next session will execute.
+
+What's deferred (requires Typst + verapdf installed in dev + CI):
+- Per-section Typst templates (Tasks 5.1-5.11).
+- `typst_render` Rust module that shells out to the Typst CLI and gates on verapdf (Tasks 4.1, 7).
+- PDF/A-2b determinism (D-04: SOURCE_DATE_EPOCH, sorted-name tar+gzip, zeroed PDF metadata).
+- B-01 P0 + B-10 acceptance tests (PDF text extraction, section-header ordering).
+- Reproducibility-zip generator with deterministic byte output.
+
 ### Added (2026-04-30) — Callais Evidence Layer (second deliverable of the five-star roadmap)
 - **`redist analyze --types bloc-voting`** — within-party racial bloc voting analyzer per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36 disentanglement requirement. Opt-in only (NOT in `--types all`).
 - **`redist-analysis::bloc_voting`** — WLS via from-scratch Gauss-Jordan inversion (no nalgebra dep), HC3 robust SE via the WLS-scaled hat-diagonal sandwich, VIF, Holm-Bonferroni step-down, cluster bootstrap by county with naive-vs-cluster CI divergence flag. Joint-family orchestrator: m = n_candidates × (1 primary + 3 robustness + n_loo_variants) per S-02.

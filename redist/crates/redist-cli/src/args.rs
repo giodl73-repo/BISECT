@@ -325,6 +325,46 @@ pub struct ReportArgs {
     /// Base output directory
     #[arg(long, default_value = "outputs")]
     pub output_base: String,
+
+    // ── Court Submission Reports (when Typst integration ships) ──────────────
+    // The flags below are wired into the CLI surface so quickstart-callais-expert.md
+    // and the persona docs can demonstrate the full invocation today. The
+    // PDF rendering path itself (Typst + verapdf) is scaffolded but NOT
+    // executable until Typst is installed and templates are authored — see
+    // redist-report/typst-templates/README.md.
+    /// Expert witness name for the report cover page + signature block (court mode).
+    #[arg(long)]
+    pub expert_name: Option<String>,
+    /// Expert credentials, free text (e.g., `"Ph.D., Statistics, Princeton"`).
+    #[arg(long)]
+    pub expert_credentials: Option<String>,
+    /// Expert affiliation / employer.
+    #[arg(long)]
+    pub expert_affiliation: Option<String>,
+    /// Optional path to a free-text case caption file (court header).
+    #[arg(long)]
+    pub case_caption_file: Option<std::path::PathBuf>,
+    /// Court jurisdiction tag (e.g., `EDLA`, `NDGA`). Selects template tweaks
+    /// (page size, margins, citation style default).
+    #[arg(long)]
+    pub jurisdiction: Option<String>,
+    /// Citation style: `bluebook` (default for jurisdiction), `apa`
+    /// (default for paper-mode), `chicago` (default for civic).
+    #[arg(long)]
+    pub citation_style: Option<String>,
+    /// Optional `expert.toml` config file. CLI flags override file values.
+    #[arg(long)]
+    pub expert_config: Option<std::path::PathBuf>,
+    /// Allow non-strict-validated civic inputs into the court report.
+    /// Without this flag, court-mode renders REFUSE to embed civic inputs
+    /// ingested under `--validate {lenient,advisory}` (BD-R1). The override
+    /// is recorded in the reproducibility package manifest.
+    #[arg(long)]
+    pub allow_non_strict_civic: bool,
+    /// Skip the verapdf PDF/A-2b validation gate (PP-32). The resulting PDF
+    /// is explicitly NOT court-admissible. Use for iteration only.
+    #[arg(long)]
+    pub draft: bool,
 }
 
 // ---------------------------------------------------------------------------
