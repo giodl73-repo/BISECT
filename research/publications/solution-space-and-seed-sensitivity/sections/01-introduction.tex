@@ -15,21 +15,23 @@ partisan outcome it would produce?}
 \end{quote}
 
 This paper answers that challenge rigorously. Our central finding is that
-the seed is irrelevant in a precise, empirically verifiable sense:
+for states where convergence can be certified, the seed choice is irrelevant:
 
 \begin{theorem}[informal]
-For each state, there exists a convergence threshold $N^*(s, \varepsilon)$
-such that running $N \geq N^*$ distinct seeds and taking the minimum-edge-cut
-plan produces a plan whose edge-cut is within $\varepsilon$ of the true
-global minimum, regardless of which specific seed achieves it.
+For each state $s$, define convergence as the event that the running minimum
+edge-cut has not improved for $T$ consecutive seeds (empirically: $T \geq
+0.5 \times N$ for 1{,}000-seed sweeps). For states where convergence is
+certified, the MEC plan is a property of the graph, not of the seed.
+Any agent who runs enough seeds finds the same plan.
 \end{theorem}
 
-The minimum-edge-cut plan is not a function of any particular seed. It is a
-property of the graph itself --- the state's census-tract adjacency structure
-with TIGER boundary lengths as weights. Any agent who runs enough seeds finds
-the same plan. A hostile party who runs the same sweep finds the same plan.
-The seed becomes a computational shortcut to reproduce the result, not a
-hidden partisan choice.
+\paragraph{Caveat on convergence.}
+Convergence is not guaranteed in a fixed seed budget. Our 1{,}000-seed sweeps
+show that some states with initially plausible MEC results at 200 seeds are
+overturned by deeper sweeps: Georgia's running minimum dropped 52\,km between
+seed 200 (2{,}598\,km) and seed 489 (2{,}546\,km), changing the interim result
+from 6D/8R to 7D/7R. The correct protocol is not ``run $N$ seeds'' but
+``run seeds until a certified convergence criterion is met.''
 
 \paragraph{Why edge-cut is the correct criterion.}
 Minimum edge-cut has no interpretive degrees of freedom. The graph is the

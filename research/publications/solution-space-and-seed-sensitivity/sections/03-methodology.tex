@@ -88,9 +88,13 @@ weighted graph Laplacian $L = D - W$ (where $D_{ii} = \sum_j w_{ij}$ and
 $W_{ij} = w_{ij}$). It governs the minimum-cut of $G$ via the discrete
 Cheeger inequality~\citep{chung1997spectral}:
 \[
-  \mathrm{EC}_{\min}(G) \geq \frac{\lambda_2 \cdot W_{\mathrm{total}}}{4}
+  \mathrm{EC}_{\min}(G) \geq \frac{\lambda_2 \cdot n}{4}
 \]
-where $W_{\mathrm{total}} = \sum_{(i,j)\in E} w_{ij}$ is the total edge weight.
+where $n = |V|$ is the number of vertices. (Note: this bound uses vertex
+count, not total edge weight; the unnormalized Laplacian's Cheeger bound
+is $h(G) \geq \lambda_2/2$ where $h(G) = \min_{|S|\leq n/2}
+\mathrm{EC}(S)/|S|$, giving $\mathrm{EC}_{\min} \geq h(G)\cdot(n/2)
+\geq \lambda_2 n/4$.)
 
 This translates directly to a compactness upper bound. For any bisection
 $(L, R)$ of $G$ with external perimeters $P_L^{\mathrm{ext}}$,
@@ -147,16 +151,31 @@ permanently.
 
 \begin{proposition}[Certificate Immunity]
 \label{prop:immunity}
-Any party challenging a Fiedler-certified plan on the grounds that a more
-compact plan exists must exhibit a bisection of the certified subgraph with
-geometric-mean compactness exceeding
-$(1-\delta) \cdot \overline{\mathrm{GMPP}}(G)$
-on the certified level.
-Since $\overline{\mathrm{GMPP}}(G)$ is a mathematical upper bound on any
-bisection, no such challenge can succeed when $\delta = 0$; for $\delta > 0$,
-the challenger must improve by more than $\delta \times 100$\% --- which
-requires running at least as many seeds as the certifier did.
+For any bisection $(L, R)$ of $G$ with $|L| \leq |R|$:
+$\sqrt{\mathrm{PP}(L) \cdot \mathrm{PP}(R)} \leq \overline{\mathrm{GMPP}}(G)$.
 \end{proposition}
+\begin{proof}
+For any bisection $(L,R)$, its edge-cut satisfies
+$\mathrm{EC}(L,R) \geq \mathrm{EC}_{\min}(G) \geq \lambda_2 n / 4$ by the
+Cheeger inequality.  Therefore $P(L) = \mathrm{EC}(L,R) + P_L^{\mathrm{ext}}
+\geq \lambda_2 n/4 + P_L^{\mathrm{ext}}$, giving
+$\mathrm{PP}(L) \leq \overline{\mathrm{PP}}(L)$ as defined in
+eq.~\eqref{eq:ppubound}.  The same argument applied to $R$ gives
+$\mathrm{PP}(R) \leq \overline{\mathrm{PP}}(R)$.  Taking the square root of
+the product yields
+$\sqrt{\mathrm{PP}(L)\cdot\mathrm{PP}(R)} \leq
+\sqrt{\overline{\mathrm{PP}}(L)\cdot\overline{\mathrm{PP}}(R)} =
+\overline{\mathrm{GMPP}}(G)$.
+\end{proof}
+\begin{corollary}
+Any party challenging a Fiedler-certified plan must exhibit a bisection of
+the certified subgraph with geometric-mean compactness exceeding
+$(1-\delta)\cdot\overline{\mathrm{GMPP}}(G)$.
+Since Proposition~\ref{prop:immunity} shows no bisection can achieve
+$\overline{\mathrm{GMPP}}(G)$, no such challenge can succeed when $\delta=0$.
+For $\delta > 0$, the challenger must improve by more than $\delta \times 100\%$,
+which requires running at least as many seeds as the certifier.
+\end{corollary}
 
 In practice, with $\delta = 0.05$ (5\% gap tolerance), a challenger would
 need to produce a bisection with geometric-mean PP more than 5\% higher than
@@ -388,3 +407,20 @@ The key question is whether the MEC protocol --- taking the minimum-edge-cut
 plan across $N$ seeds --- systematically shifts $\Delta_s$ in a partisan
 direction relative to the single-seed baseline and relative to the full
 seed-distribution mean.
+
+\paragraph{Election data source.}
+Vote shares $v_s$ are derived from the 2020 U.S. presidential election results
+at the census-tract level, sourced from the Harvard Dataverse VEST (Voting and
+Election Science Team) dataset~\citep{Kuriwaki2023} via Fekrazad et al.\
+(DOI:~10.7910/DVN/Z8TSH3). Precinct-level vote totals were apportioned to
+census tracts using population-weighted areal interpolation on the 2020 TIGER
+tract boundaries. Alaska and Hawaii are excluded from the proportionality
+analysis due to missing tract-level election data in this release.
+
+\paragraph{Statutory parameter $\varepsilon$.}
+The near-minimum tolerance $\varepsilon = 0.05$ used in \textsc{CompactBisect}
+is a statutory parameter: it would appear in the Districting Integrity Act's
+parameter table under \S~107(c) alongside the random seed and the reference
+implementation SHA-256. Publishing $\varepsilon$ before any runs prevents
+post-hoc manipulation --- a map-drawer cannot choose $\varepsilon$ after seeing
+which candidate pool it would produce.
