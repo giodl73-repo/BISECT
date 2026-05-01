@@ -1,0 +1,94 @@
+{
+  "schema_version": "whitelist-deps v1",
+  "_doc": "Source of truth: docs/parameters/whitelist-dependencies.md. CI test enforces agreement between this JSON and the markdown table.",
+  "params": [
+    {
+      "name": "leaning_threshold",
+      "default": 0.55,
+      "type": "float",
+      "range": [0.0, 1.0],
+      "invalidates": ["close_call_band_flags", "mm_count", "partisan_narrative_classification"],
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "plan-comparison"
+    },
+    {
+      "name": "close_call_band",
+      "default": 0.02,
+      "type": "float",
+      "range": [0.0, 0.10],
+      "invalidates": ["close_call_band_flags"],
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "plan-comparison"
+    },
+    {
+      "name": "vra_min_bvap",
+      "default": 0.50,
+      "type": "float",
+      "range": [0.30, 0.70],
+      "invalidates": ["mm_count", "vra_analysis"],
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "redist-analysis::vra_analysis"
+    },
+    {
+      "name": "bloc_p_value_method",
+      "default": "holm",
+      "type": "enum",
+      "values": ["holm", "bonferroni", "none"],
+      "invalidates": ["holm_corrected_p_values"],
+      "blocks_narrative_when": {
+        "value": "none",
+        "blocks": ["statistically_significant_wording"],
+        "rationale": "without multiple-testing correction, every test is one-shot; Holm is what makes family-level significance defensible"
+      },
+      "warn_when": null,
+      "owner": "redist-analysis::bloc_voting"
+    },
+    {
+      "name": "bloc_robust_se_type",
+      "default": "hc3",
+      "type": "enum",
+      "values": ["hc3", "hc1"],
+      "invalidates": ["robust_standard_errors"],
+      "blocks_narrative_when": null,
+      "warn_when": {
+        "condition": "value == 'hc1' AND n_clusters < 30",
+        "message": "HC1 with n_clusters<30 is anti-conservative; HC3 recommended (Long & Ervin 2000)"
+      },
+      "owner": "redist-analysis::bloc_voting"
+    },
+    {
+      "name": "bloc_cluster_unit",
+      "default": "county",
+      "type": "enum",
+      "values": ["county", "tract"],
+      "invalidates": ["cluster_bootstrap_ci", "holm_corrected_p_values"],
+      "_note": "Changing the cluster unit changes the test count, which redefines the Holm family",
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "redist-analysis::bloc_voting"
+    },
+    {
+      "name": "compactness_metric",
+      "default": "pp",
+      "type": "enum",
+      "values": ["pp", "reock", "convex_hull"],
+      "invalidates": ["compactness_analysis"],
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "redist-analysis::compactness"
+    },
+    {
+      "name": "partisan_efficiency_threshold",
+      "default": 0.07,
+      "type": "float",
+      "range": [0.0, 0.20],
+      "invalidates": ["partisan_analysis"],
+      "blocks_narrative_when": null,
+      "warn_when": null,
+      "owner": "redist-analysis::partisan"
+    }
+  ]
+}

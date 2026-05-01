@@ -14,6 +14,26 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Deposition Prep (partial; whitelist DAG + log writer + verifier)
+- **`docs/parameters/whitelist-dependencies.md`** + **`data/whitelist_dependencies.json`** (S-01): explicit dependency DAG for the 8 whitelist parameters with invalidation edges, narrative-blocking rules (e.g., `bloc_p_value_method=none` blocks "statistically significant" wording), and warning rules (e.g., `bloc_robust_se_type=hc1` + `n_clusters<30` triggers anti-conservative-SE warning per Long & Ervin 2000).
+- **`redist-cli/src/depo.rs`** (~900 lines): library module for the deposition pipeline.
+  - `parse_param_kv()` validates `--param KEY=VALUE` against the embedded whitelist; error messages list allowed params + point at the doc.
+  - `overrides_hash()`: deterministic SHA-256 of canonical-JSON BTreeMap.
+  - `canonicalize_json()`: sorted-keys, no-whitespace JSON for log + manifest formats.
+  - `whatif-manifest v1` struct binding parent plan SHA + parent report PDF SHA + overrides + overrides_hash + override_path_relative + build provenance + whitelist_compat_sha256.
+  - **Canonical JSONL log + hash chain** (Task 5 / C-01): `DepoLogWriter` with `prev_sha256` chaining (GENESIS for first entry), per-entry fsync, sidecar `deposition_log_{date}.manifest.json` (schema `depo-log v1`) atomically updated, `close()` writes `final_sha256` of the entire log. Recovers state on reopen so daemon restart appends cleanly.
+  - **`verify_log_file()` / `verify_log_bytes()`** (Task 6): walks the chain, recomputes each line's SHA, asserts seq monotonicity. Detects single-byte tamper AND seq-skip with first-failure byte offset.
+- **`REDIST_BUILD_COMMIT_OVERRIDE`** env (B-07): build script honors it verbatim; no `-dirty` suffix; emits `cargo:warning=` for visibility. Documented in `docs/error-conventions.md` alongside the runtime override (test-only).
+- **28 new L0 tests**; 1187 total workspace tests pass; 0 regressions.
+
+What's deferred:
+- CLI dispatch (`redist depo`) — the module is library-only; dispatch ships with the daemon since they share infrastructure.
+- Task 3 (IPC abstraction Unix-socket vs Windows-named-pipe).
+- Task 4 (`redist deposition-server` daemon: warm in-memory plan, two-phase shutdown drain).
+- Task 7 (`--enforce-build-commit` + `--case-mode` defaults).
+- Task 9 (p99 benchmark methodology).
+- Task 10 (`examples/deposition-checklist.ipynb`).
+
 ### Added (2026-04-30) — Civic Bidirectional Input (partial; ingest + validation + conflicts)
 - **`redist civic` subcommand group** (`ingest`, `add-candidate-race`, `list`, `show`, `conflicts`) wired into the CLI surface.
 - **`civic-coi v1` `CivicManifest`** schema + `redist-cli/src/civic.rs` module (~1100 lines).

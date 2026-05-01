@@ -539,6 +539,30 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Deposition Prep (partial — whitelist DAG + log writer + verifier; daemon deferred)
+
+The Deposition Prep plan is partial. Today (2026-04-30):
+
+**Shipped (`redist-cli/src/depo.rs` + `data/whitelist_dependencies.json` + `docs/parameters/whitelist-dependencies.md`):**
+- **Whitelist DAG (S-01)**: 8 parameters with explicit invalidation edges + narrative guardrails + warning rules. Markdown spec + machine-readable JSON; CI gate (when wired) will assert agreement.
+- **`whitelist_deps()`** + **`lookup_param()`** + **`whitelist_compat_sha256()`**: parses the embedded JSON; the SHA goes into every `whatif-manifest v1` output so a future reader knows which compat ranges were active.
+- **`parse_param_kv()`**: validates `--param KEY=VALUE` against the whitelist. Float/range/enum validation; error messages list allowed params + point at the doc.
+- **`overrides_hash()`**: SHA-256 of the canonical-JSON serialization of an override map. Order-independent (BTreeMap-keyed); deterministic.
+- **`canonicalize_json()`**: sorted-keys, no-whitespace JSON serialization for the log + manifest formats.
+- **`DepoLogWriter`** (Task 5 / C-01): canonical JSONL log with `prev_sha256` hash chain (first entry references `"GENESIS"`), per-entry fsync, sidecar `deposition_log_{date}.manifest.json` (schema `depo-log v1`) updated atomically on every append, `close()` writes `final_sha256` of the entire log file. Recovers `(next_seq, prev_sha)` on reopen so a daemon restart appends cleanly.
+- **`verify_log_file()`** + **`verify_log_bytes()`** (Task 6): walks the JSONL line-by-line, recomputes each `prev_sha256`, asserts seq monotonicity. Returns the first divergent seq + byte offset on tamper. Detects single-byte mutations AND seq-skips.
+- **`whatif-manifest v1`** struct: bind parent_plan_label + parent_plan_manifest_sha256 + parent_report_pdf_sha256 + overrides + overrides_hash + override_path_relative (M-04 portable) + redist_version/build_commit/short/rustc + whitelist_compat_sha256 + generated_at + note.
+- **`REDIST_BUILD_COMMIT_OVERRIDE`** env (B-07): build script honors it; verbatim, no `-dirty` suffix; emits `cargo:warning=using REDIST_BUILD_COMMIT_OVERRIDE=...` so it's visible in build logs. Used by reproducible-build packagers.
+- **28 new L0 tests**: whitelist coverage (3), parse_param_kv (8 cases), overrides_hash (3), canonical JSON (3), log writer (5: GENESIS, chain, recovery, sidecar update, close+final_sha), verify-log (4: valid, single-byte tamper detection, seq-skip detection, empty), bytes-direct (1), build-commit env override.
+
+**Deferred (next session pickup):**
+- **CLI dispatch** (`redist depo recompute`, `redist depo eval`, `redist depo verify-log`, etc.) — the depo module is library-only today; no `Commands::Depo` variant in `args.rs`. The dispatch ships with the daemon (Task 4) since the daemon needs the log writer + recompute logic anyway.
+- **Task 3** (IPC abstraction): Unix domain socket vs Windows named pipe (PP-26).
+- **Task 4** (`redist deposition-server` daemon): warm in-memory plan, accept loop, signal handling, two-phase shutdown drain (PP-24).
+- **Task 7** (`--enforce-build-commit` + `--case-mode` defaults, BD-N2): build-commit binding when starting the daemon against an existing report.
+- **Task 9** (p99 benchmark methodology, B-03): N=5 warm-up + N=50 measured; pinned runner.
+- **Task 10** (`examples/deposition-checklist.ipynb`): pre-deposition sweep + bookmark notebook.
+
 ## Civic Bidirectional Input (partial — ingest, validation, conflict detection)
 
 The Civic Bidirectional Input plan is partial. Today (2026-04-30):

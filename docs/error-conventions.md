@@ -83,6 +83,27 @@ The full error audit (every `unwrap()`, `expect()`, and bare `?` in `redist-cli/
 
 Track migration coverage in `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md` Task 6.
 
+## Build provenance overrides (B-07)
+
+Two related env-var overrides for the recorded `redist_build_commit`:
+
+- **`REDIST_BUILD_COMMIT_OVERRIDE`** (build-time, supported in production):
+  When set during `cargo build`, replaces `git rev-parse HEAD` as the recorded
+  commit. Used by reproducible-build packagers pinning to a release tag.
+  Verbatim — does NOT append the `-dirty` suffix (the override is the
+  authoritative attestation). The build script logs a `cargo:warning=` so the
+  override is visible in build logs.
+
+- **`REDIST_BUILD_COMMIT`** (runtime, test-only): the test harness can spoof
+  the running binary's commit string to exercise build-commit-mismatch
+  warnings + `--enforce-build-commit` gates without rebuilding. This path is
+  available only when the binary is compiled with `cfg(test)` OR a future
+  `cfg(feature = "test-provenance-override")` (not currently set in release
+  builds). Production binaries do NOT consult the runtime override.
+
+When both apply: the build-time override wins (the recorded value at compile
+time is locked into the binary).
+
 ## See also
 
 - TRENCH pitfall PP-34 (`docs/superpowers/specs/2026-04-30-v21-tracking.md`)

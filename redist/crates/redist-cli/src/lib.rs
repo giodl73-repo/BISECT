@@ -10,6 +10,7 @@ pub mod bisection_runner;
 pub mod civic;
 pub mod compare;
 pub mod demographics;
+pub mod depo;
 pub mod doctor;
 pub mod export_cmd;
 pub mod fetch;

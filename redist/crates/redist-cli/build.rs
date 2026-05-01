@@ -12,19 +12,32 @@
 use std::process::Command;
 
 fn main() {
-    // git commit
-    let commit = git_command(&["rev-parse", "HEAD"])
-        .unwrap_or_else(|| "unknown".to_string());
-    let commit_short = if commit.len() >= 12 { &commit[..12] } else { &commit };
-
-    // dirty marker — append "-dirty" if the working tree has uncommitted changes
-    let dirty = match Command::new("git").args(["diff", "--quiet"]).status() {
-        Ok(s) if !s.success() => "-dirty",
-        _ => "",
+    // Deposition Prep plan Task 8 (B-07): honor an explicit
+    // `REDIST_BUILD_COMMIT_OVERRIDE` env at build time. This lets reproducible-
+    // build packagers pin the recorded commit to a release tag without going
+    // through git. Production builds outside CI/release should leave this unset.
+    let commit_full = if let Ok(override_val) = std::env::var("REDIST_BUILD_COMMIT_OVERRIDE") {
+        // Honor override verbatim; do NOT append the -dirty marker (the
+        // override is the authoritative attestation).
+        println!("cargo:warning=using REDIST_BUILD_COMMIT_OVERRIDE={override_val}");
+        override_val
+    } else {
+        // Default: derive from git rev-parse HEAD + dirty-marker suffix.
+        let commit = git_command(&["rev-parse", "HEAD"])
+            .unwrap_or_else(|| "unknown".to_string());
+        let dirty = match Command::new("git").args(["diff", "--quiet"]).status() {
+            Ok(s) if !s.success() => "-dirty",
+            _ => "",
+        };
+        format!("{commit}{dirty}")
     };
-    let commit_full = format!("{commit}{dirty}");
-    let commit_short_full = format!("{commit_short}{dirty}");
+    let commit_short_full = if commit_full.len() >= 12 {
+        commit_full[..12].to_string()
+    } else {
+        commit_full.clone()
+    };
 
+    println!("cargo:rerun-if-env-changed=REDIST_BUILD_COMMIT_OVERRIDE");
     println!("cargo:rustc-env=REDIST_BUILD_COMMIT={commit_full}");
     println!("cargo:rustc-env=REDIST_BUILD_COMMIT_SHORT={commit_short_full}");
 
