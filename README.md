@@ -182,11 +182,36 @@ Compatible with: GerryChain v2.3+, Dave's Redistricting App, PlanScore, QGIS, Ar
 
 ---
 
+## The bigger picture: a federal statute analogous to Huntington-Hill
+
+The Supreme Court's *Rucho v. Common Cause* (2019) decision held that partisan-gerrymandering claims are nonjusticiable in federal court — there is no "judicially manageable standard" for federal courts to apply. But Roberts' opinion explicitly invited Congress and the States to act through positive law: state constitutions, state commissions, and **federal legislation** (HR 1 was cited by name).
+
+Two of those paths — state-court litigation and state commissions — are working but slow. The third — single-issue federal legislation — has not been seriously attempted.
+
+This project's working thesis is that the gap *Rucho* opened can be closed by a federal statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes one deterministic algorithm; states execute it; any person can verify the output byte-identically.
+
+Drafts now live under [`docs/legal/`](docs/legal/):
+
+- **[`MODEL_FEDERAL_STATUTE.md`](docs/legal/MODEL_FEDERAL_STATUTE.md)** — bill text in U.S. Code drafting style (v0.1, post 5-role review). Defines tracts, mandates recursive bisection on the tract adjacency graph, requires reproducibility artifacts (`final_assignments.json` + `manifest.json` with input SHA-256s), preserves VRA § 2 as a deviation from baseline with published *Gingles* justification, and creates a private right of action for citizens to verify byte-identity.
+- **[`STATUTE_RATIONALE.md`](docs/legal/STATUTE_RATIONALE.md)** — policy memo: why Congress (Rucho's invitation), why reproducibility (every other "fair maps" standard imports discretion), why bisection (uniquely writeable, executable, constitutionally defensible), why states execute and not Census (Elections Clause cleanliness + local knowledge + politics), why now (the implementation is mature; post-Callais clarifies disentanglement).
+- **[`STATUTE_ONE_PAGER.md`](docs/legal/STATUTE_ONE_PAGER.md)** — 90-second version for staff briefings.
+- **[`PARTISAN_OPTIONS.md`](docs/legal/PARTISAN_OPTIONS.md)** — how the project's four partisan-input postures (partisan-blind / partisan-balanced / partisan-similarity / party-overlapping) fit together. The Federal Statute prohibits inputs (2)–(4) for federal congressional districts; they remain available for state legislative districts and civic counter-proposals. The new `redist analyze --types proportionality` metric is the cross-cutting comparison lens.
+
+The architecture in one paragraph: **Algorithm and parameters → federal (Director of Census + expert panel under § 107). Execution → state. VRA § 2 deviations → state, with published *Gingles* justification. Verification → any citizen, byte-identically, with private right of action.** Federal courts get jurisdiction; a successful suit substitutes the algorithm's output for the State's published map. This is the same posture as VRA § 2 today, applied to mechanical reproducibility instead of substantive fairness.
+
+The reference implementation under § 107(a) of the model bill is what this project ships: `redist` produces the `manifest.json` + `final_assignments.json` schemas the bill requires, with byte-stable AEA-compliant replication packages (`redist analyze --paper-mode`), bloc-voting analysis for VRA § 2 (`redist analyze --types bloc-voting`), and Callais-disentangled partisan-weighted mode for state-court fairness claims. **The technical risk is zero — the algorithm has been in production scientific computing since METIS shipped in 1997. The work that remains is political: coalition assembly around a freestanding, single-issue bill.**
+
+The state-court companion ([`FAIRNESS_DOCTRINE.md`](docs/legal/FAIRNESS_DOCTRINE.md)) is the strategy for *today*. The federal-statute drafts are the strategy for the **2030 census cycle**.
+
+---
+
 ## Why bisection is fair
 
 Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
 
 It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of splitting. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
+
+Procedural fairness is a stronger property than the substantive-fairness claims federal courts have rejected post-*Rucho*. "This map is fair" is contested; "this map is the byte-identical output of running this published algorithm on these published inputs" is verifiable. That's the property the federal-statute drafts above are built on.
 
 ## How it works
 
