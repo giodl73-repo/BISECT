@@ -78,3 +78,17 @@ Major algorithmic and legal research contributions:
 - `docs/legal/PARTISAN_OPTIONS.md` — proportionality as diagnostic, not standard
 - `redist/crates/redist-data/src/fiedler.rs` — Fiedler computation
 - `redist/crates/redist-cli/src/bisection_runner.rs` — CompactBisect + Proportional Bisect
+
+## Addendum: CA failure rate finding (2026-05-01)
+
+CA (52 districts, 6 recursion levels) fails 64% of seeds (78/122) due to
+population balance violations with the flat 0.5% tolerance. This is NOT a
+bug — it's a known property of deep recursion with tight tolerances. The
+statute's tiered schedule (§104(b)(4)) addresses this: looser at levels 5+.
+
+**Action needed**: implement tiered tolerance in the bisection runner so CA
+and TX produce valid plans at a much higher rate. The tiered schedule from
+the statute draft:
+  level 1-2: 0.5%, level 3: 1.0%, level 4: 1.5%, level 5+: 2.0%
+
+This is a P2 item for the paper (mentioned in §4 Texas section).
