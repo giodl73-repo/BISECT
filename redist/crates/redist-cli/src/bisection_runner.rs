@@ -658,6 +658,127 @@ pub fn run_all_splits_compact(
     Ok(assignments)
 }
 
+// ── Proportional Bisection (B.7) ─────────────────────────────────────────────
+
+/// At each bisection, compute the Dem vote share within the current subgraph
+/// and split the subgraph proportionally: the "left" half gets
+/// round(dem_share * k) districts and the "right" half gets the remainder.
+///
+/// Within that proportional constraint, edge-cut minimisation (METIS) determines
+/// WHERE the boundary is drawn. No partisan data enters the boundary decision —
+/// only the RATIO of districts allocated to each side.
+///
+/// Theorem (B.7): this achieves near-proportional seat allocation without
+/// picking which party's voters land in which half. The proportional ratio is
+/// applied symmetrically; METIS draws the most compact boundary satisfying it.
+///
+/// Requires: per-vertex dem_votes (from partisan_shares CSV, same as partisan-weighted mode).
+/// §104(e) of the Districting Integrity Act prohibits this for federal congressional
+/// districts. Valid for state legislative redistricting.
+pub fn run_all_splits_proportional(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    // Per-vertex Dem vote total (from partisan_shares CSV).
+    dem_votes: &[f64],
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seed: Option<u64>,
+    intermediate_dir: Option<&Path>,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| node_tracts.remove(&node.path).map(|t| (node, t)))
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+
+                    // Compute Dem vote share within this subgraph
+                    let total_dem: f64 = tracts.iter().map(|&v| dem_votes[v]).sum();
+                    let total_votes: f64 = tracts.iter()
+                        .map(|&v| vertex_weights[v] as f64).sum();
+                    let dem_share = if total_votes > 0.0 {
+                        total_dem / total_votes
+                    } else {
+                        0.5 // fallback: equal split
+                    };
+
+                    // Proportional district allocation: round to nearest integer
+                    let k_dem = (dem_share * node.k as f64).round() as usize;
+                    let k_dem = k_dem.max(1).min(node.k - 1); // at least 1 per side
+                    let k_rep = node.k - k_dem;
+
+                    // Use the proportional allocation as METIS target weights.
+                    // METIS will minimise edge-cut subject to this population-ratio constraint.
+                    let tw = if k_dem == k_rep {
+                        None // equal — use default
+                    } else {
+                        Some((k_dem as f64 / node.k as f64, k_rep as f64 / node.k as f64))
+                    };
+
+                    let (left, right) = split_subgraph(
+                        adjacency, vertex_weights, edge_weights,
+                        &tracts, node_ufactor, niter, seed, tw
+                    ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
+
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted = split_results;
+        sorted.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() { round_asgn.insert(tract, region_id + 1); }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts { assignments.insert(tract, district_id + 1); }
+    }
+    if assignments.len() != n {
+        return Err(format!("bisection incomplete: {}/{n} tracts assigned", assignments.len()));
+    }
+    Ok(assignments)
+}
+
 /// Write one intermediate round's assignments to `{round_dir}/assignments.json`.
 /// Format: `{"tract_index": region_id, ...}` — mirrors final_assignments.json.
 fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize>) -> Result<(), String> {

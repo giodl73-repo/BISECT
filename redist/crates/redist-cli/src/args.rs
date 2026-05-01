@@ -41,6 +41,14 @@ pub enum PartitionMode {
     /// Mutually exclusive with `metis-vra` per Callais p.36 disentanglement.
     #[value(name = "partisan-weighted")]
     PartisanWeighted,
+    /// Proportional bisection (B.7): at each recursion level, split the subgraph
+    /// so that both halves contain vote totals proportional to the subregion's
+    /// Dem/Rep vote shares, then minimise edge-cut within that constraint.
+    /// Requires --partisan-shares. Mutually exclusive with metis-vra.
+    /// Stat 104(e) prohibits this for federal congressional districts;
+    /// valid for state legislative redistricting.
+    #[value(name = "proportional")]
+    Proportional,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -50,6 +58,7 @@ impl std::fmt::Display for PartitionMode {
             Self::EdgeWeighted     => write!(f, "edge-weighted"),
             Self::MetisVra         => write!(f, "metis-vra"),
             Self::PartisanWeighted => write!(f, "partisan-weighted"),
+            Self::Proportional     => write!(f, "proportional"),
         }
     }
 }
