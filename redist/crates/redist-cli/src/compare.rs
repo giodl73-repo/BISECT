@@ -397,6 +397,24 @@ pub fn run_compare(args: &CompareArgs) -> anyhow::Result<()> {
         CompareFormat::Json => format_comparison_json(&comparison),
         CompareFormat::Csv => format_comparison_csv(&comparison),
         CompareFormat::Table => format_comparison_table(&comparison),
+        CompareFormat::Narrative | CompareFormat::Both => {
+            // Plan Comparison plan Task 11 (CLI dispatch) is not yet wired.
+            // The narrative renderer + manifest writer are implemented and
+            // tested in `redist-report::{narrative, narrative_manifest}`;
+            // this dispatch needs the from-disk assembler that loads plan
+            // manifests + analysis JSONs and computes their SHA-256s. See
+            // docs/superpowers/plans/2026-04-30-plan-comparison-and-narrative.md
+            // Tasks 2 + 11.
+            anyhow::bail!(
+                "[CONFIG] --format narrative is not yet wired into `redist compare`. \
+                 The narrative renderer + manifest writer are implemented in \
+                 redist-report::narrative and redist-report::narrative_manifest \
+                 (see `cargo test -p redist-report narrative` for the test suite). \
+                 The CLI dispatch that loads plan manifests + analysis JSONs from \
+                 disk and feeds them to the renderer is the next session's work. \
+                 For now, use --format table or --format json."
+            );
+        }
     };
 
     // Write to file or stdout
@@ -671,6 +689,10 @@ mod tests {
             allow_cross_year: false,
             labels: vec!["only_one".into()],  // fewer than 2
             version_b: None,
+            leaning_threshold: 0.55,
+            close_call_band: 0.02,
+            approved_by: None,
+            report_dir: None,
         };
         let result = run_multi_plan_summary(&args);
         assert!(result.is_err(), "fewer than 2 labels must return error");
@@ -703,6 +725,10 @@ mod tests {
             allow_cross_year: false,
             labels: vec!["plan_a".into(), "plan_b".into()],
             version_b: None,
+            leaning_threshold: 0.55,
+            close_call_band: 0.02,
+            approved_by: None,
+            report_dir: None,
         };
         // run_multi_plan_summary should succeed and emit header — just check it doesn't error
         let result = run_multi_plan_summary(&args);
@@ -771,6 +797,10 @@ mod tests {
             allow_cross_year: false,
             labels: vec!["wa_house_tol_0_5".into(), "wa_house_tol_5_0".into()],
             version_b: None,
+            leaning_threshold: 0.55,
+            close_call_band: 0.02,
+            approved_by: None,
+            report_dir: None,
         };
 
         let args_csv = CompareArgs {
@@ -787,6 +817,10 @@ mod tests {
             allow_cross_year: false,
             labels: vec!["wa_house_tol_0_5".into(), "wa_house_tol_5_0".into()],
             version_b: None,
+            leaning_threshold: 0.55,
+            close_call_band: 0.02,
+            approved_by: None,
+            report_dir: None,
         };
 
         // (a) table format must succeed
@@ -839,6 +873,10 @@ mod tests {
             allow_cross_year: false,
             labels: vec!["plan_no_manifest_a".into(), "plan_no_manifest_b".into()],
             version_b: None,
+            leaning_threshold: 0.55,
+            close_call_band: 0.02,
+            approved_by: None,
+            report_dir: None,
         };
 
         // Should succeed — missing PlanContext just shows "-"

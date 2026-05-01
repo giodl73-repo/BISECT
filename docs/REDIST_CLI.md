@@ -539,6 +539,26 @@ redist doctor --verify-manifest outputs/v1/states/vermont/data/manifest.json
 
 Use this when independently verifying that a court-submitted plan was produced by a published `redist` binary. Combine with `sha256sum` on the adjacency file to attest to the input data: the manifest records `adjacency_sha256` (when available) and `tiger_source_url` for upstream Census provenance.
 
+## Plan Comparison & Narrative (partial — narrative + manifest layer; CLI dispatch deferred)
+
+The Plan Comparison & Narrative plan is partial. Today (2026-04-30):
+
+**Shipped (data layer + renderer + manifest writer):**
+- `redist-report::moe` (S-04 / Task 4): margin-of-error suppression with two metric monotonicities. Monotone (Dem seats, mean PP, population): suppression fires when sign of (a-b) flips inside CI overlap. Non-monotone (MM count): suppression fires when CIs overlap; per-district indeterminacy when BVAP CI straddles 50%. Canonical text constant (`"within margin of error; see numerical table."`). 13 L0 tests.
+- `redist-report::comparison` (Task 2 minimal): `ComparisonReport` + `PlanSide` + `DiffSummary` data structures with `from_loaded()` constructor. The from-disk assembler that reads plan manifests + analysis JSONs is the next session's pickup.
+- `redist-report::narrative` (Tasks 3+5): direct-Rust narrative renderer (skipped Tera for tighter value-correctness). Civic-friendly framing first (community-of-interest before partisan), `[DRAFT]` gate per paragraph, `--approved-by` sign-off, civic-counter-proposal framing label, threshold disclosure, close-call flagging, MoE suppression integration. ASCII-only output (PP-34). 16 L0 tests including all 4 value-correctness anchors (seat counts verbatim, threshold disclosure, close-call above + below threshold, threshold-rebind).
+- `redist-report::narrative_manifest` (M-04 + PP-31 + COVENANT C-3 / Task 9): `narrative-manifest v1` schema with plan SHAs (NOT just labels), template SHA, threshold values, MoE inputs, approved_by + approved_at, civic-counter-proposal attribution, baseline plan reference. Reproducible via `build_narrative_manifest_with_clock()` (env-free, parallel-test-safe). BTreeMap canonical key ordering. 13 L0 tests including byte-identical re-render.
+- `redist compare --leaning-threshold` / `--close-call-band` / `--approved-by` / `--report-dir` CLI flags wired into `args.rs`.
+- `CompareFormat::Narrative` + `CompareFormat::Both` variants added to the enum.
+
+**Deferred (next session pickup):**
+- CLI dispatch wiring (Task 11): `redist compare --format narrative` currently exits with `[CONFIG]` actionable error pointing at the implementation modules. The wiring needs the from-disk `assemble_comparison()` that reads plan manifests, hashes analysis JSONs, computes the diff. The narrative renderer + manifest writer already accept the `ComparisonReport`; the connector is the only missing piece.
+- Diff PNG visualization (Task 6): requires extending `redist-map` with a diff-renderer (third map, color-coded by destination district).
+- HTML side-by-side (Task 7): self-contained HTML with embedded base64 maps.
+- Civic summary card PNG with watermark (Task 8 / BD-N3): 1200×675 social-media share preview with diagonal watermark on civic-counter-proposal plans.
+- `--comments-label` overlay (Task 10): consumes `redist civic ingest` outputs; depends on Civic Bidirectional plan shipping first.
+- Tera-based override-template path (`--narrative-template <PATH>`).
+
 ## State Staff Interop (partial — atomic import + Callais gate + civic bypass)
 
 The State Staff Interop plan is partial. Today (2026-04-30):

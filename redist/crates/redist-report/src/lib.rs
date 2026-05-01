@@ -15,7 +15,11 @@
 pub mod audit;
 pub mod canonical;
 pub mod civic_gate;
+pub mod comparison;
 pub mod export;
+pub mod moe;
+pub mod narrative;
+pub mod narrative_manifest;
 pub mod html;
 pub mod import;
 pub mod manifest;

@@ -709,6 +709,12 @@ pub enum CompareFormat {
     Table,
     Json,
     Csv,
+    /// Civic-friendly narrative markdown + provenance manifest
+    /// (Plan Comparison plan Task 3-5, 9). Writes narrative.md + narrative_manifest.json
+    /// into outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/.
+    Narrative,
+    /// Both Table (stdout) and Narrative (file outputs).
+    Both,
 }
 
 #[derive(Debug, Parser)]
@@ -764,6 +770,33 @@ pub struct CompareArgs {
     /// Version directory for plan-b (overrides --version for plan-b lookup)
     #[arg(long)]
     pub version_b: Option<String>,
+
+    // ── Narrative / civic-facing flags (Plan Comparison plan Tasks 1, 5) ─────
+    /// Threshold (Dem-share fraction) above which a district is described as
+    /// "Democratic-leaning" in the narrative; below threshold is "Republican-leaning".
+    /// Districts within ±close-call-band of this value are flagged as close calls.
+    /// Default 0.55. TRENCH RP-03: forbid hardcoded thresholds anywhere downstream;
+    /// every read goes through this field.
+    #[arg(long, default_value_t = 0.55)]
+    pub leaning_threshold: f64,
+
+    /// Width of the close-call band (one-sided). A district within ±this of
+    /// `leaning_threshold` is flagged as a close-call in the narrative.
+    /// Default 0.02 (±2 percentage points).
+    #[arg(long, default_value_t = 0.02)]
+    pub close_call_band: f64,
+
+    /// Sign-off name for the rendered narrative. When unset, every paragraph
+    /// is prefixed `[DRAFT — review before publication]`. When set to a
+    /// non-empty string, the prefix is removed and the name is committed to
+    /// `narrative_manifest.json` as the audit trail.
+    #[arg(long)]
+    pub approved_by: Option<String>,
+
+    /// Output directory override for narrative artifacts (default:
+    /// outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/).
+    #[arg(long)]
+    pub report_dir: Option<std::path::PathBuf>,
 }
 
 // ---------------------------------------------------------------------------

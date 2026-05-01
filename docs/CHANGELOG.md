@@ -14,6 +14,18 @@ All notable changes to the Congressional Redistricting project.
 
 ## [Unreleased]
 
+### Added (2026-04-30) — Plan Comparison & Narrative (partial; renderer + manifest layer)
+- **`redist-report::moe`** (S-04): margin-of-error suppression for narrative directional claims. Monotone (Dem seats / mean PP / population) and non-monotone (MM count, BVAP step function) rules; per-district indeterminacy counter. Canonical text constant. 13 L0 tests.
+- **`redist-report::comparison`** (Task 2 minimal): ComparisonReport + PlanSide + DiffSummary structures. From-disk assembler is next session's work.
+- **`redist-report::narrative`** (Tasks 3+5): direct-Rust narrative renderer. Civic-friendly framing first, `[DRAFT]` gate per paragraph, `--approved-by` sign-off, civic-counter-proposal framing label (BD-N3 narrative side), threshold disclosure, close-call flagging, MoE suppression integration. ASCII-only output (PP-34). 16 L0 tests including all 4 value-correctness anchors from the plan's Task 13.
+- **`redist-report::narrative_manifest`** (M-04 + PP-31 + COVENANT C-3): `narrative-manifest v1` schema with plan manifest SHAs (not just labels), template SHA, threshold values, MoE inputs, approved_by + approved_at, civic-counter-proposal attribution. `build_narrative_manifest_with_clock()` for parallel-test-safe byte-identical re-render. BTreeMap canonical key ordering. 13 L0 tests.
+- **CLI surface flags** added to `redist compare`: `--leaning-threshold` (default 0.55), `--close-call-band` (default 0.02), `--approved-by`, `--report-dir`. `CompareFormat::Narrative` + `CompareFormat::Both` enum variants.
+- **45 new L0 tests** total; 0 regressions across 1113-test workspace sweep.
+
+What's deferred:
+- CLI dispatch wiring (Task 11): `redist compare --format narrative` currently exits with `[CONFIG]` actionable error pointing at the implementation modules.
+- Diff PNG visualization (Task 6), HTML side-by-side (Task 7), civic summary card with watermark (Task 8), `--comments-label` overlay (Task 10), Tera-based override-template path.
+
 ### Added (2026-04-30) — State Staff Interop (partial; atomic import + Callais gate + civic bypass)
 - **`redist-report::manifest::PlanDirGuard`** (PP-22): atomic-import infrastructure with tmp-then-rename semantics, force-overwrite gating, stale-tmp cleanup, mid-run-race protection. 6 L0 tests.
 - **`redist-report::manifest::callais_preflight`** (BOUNDARY): post-Callais p.36 mutex check on PlanManifest; refuses any plan whose manifest carries both VRA-aware (`metis-vra` OR `cvap` population) AND partisan-weighted markers. Wired into `redist analyze` (top of run) and `redist import` (before manifest write). Returns `[BOUNDARY]`-categorized error citing Callais p.36. 5 L0 tests.
