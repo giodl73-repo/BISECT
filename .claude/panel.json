@@ -1,0 +1,13 @@
+{
+  "default": "apportionment",
+  "pluginRoot": "C:/Users/giodl/.claude/plugins/cache/panel-standalone/panel/2.2.0",
+  "gitStrategy": "auto-commit",
+  "projects": {
+    "apportionment": {
+      "researchPath": "research",
+      "publicationsPath": "research/publications",
+      "projectName": "apportionment",
+      "description": "Congressional redistricting — algorithmic fairness, VRA compliance, federal statute research"
+    }
+  }
+}

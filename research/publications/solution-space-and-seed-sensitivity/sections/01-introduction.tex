@@ -1,0 +1,38 @@
+\section{Introduction}
+\label{sec:intro}
+
+% TODO: expand from plan.md §Motivation
+
+The proposed Districting Integrity Act (\S~107(c)(1)) publishes a single random
+seed that all states use as input to the METIS graph-partitioning algorithm.
+This seed is the statute's reproducibility guarantee: anyone who runs the
+reference implementation with the published seed and TIGER inputs gets the
+identical map.
+
+But METIS is a heuristic. Graph minimum $k$-bisection is NP-hard in general
+\citep{garey1979computers}; METIS finds a local optimum via multilevel
+coarsening and refinement, not the global minimum \citep{karypis1998fast}.
+The seed controls which local optimum is reached. A well-prepared challenger
+will argue that the published seed was chosen after its partisan consequences
+were known --- or that a different seed would produce a materially different
+partisan outcome.
+
+This paper addresses that challenge empirically and theoretically. We ask three
+questions:
+
+\begin{enumerate}
+  \item \textbf{Approximation quality}: How close to the true minimum edge cut
+        does METIS get in practice on U.S.\ state census-tract graphs?
+  \item \textbf{Solution-space size}: How large is the set of plans within
+        $\varepsilon\%$ of the minimum cut for a typical state?
+  \item \textbf{Partisan variance}: Across 1{,}000 seeds per state, what is the
+        distribution of partisan outcomes (proportionality gap, efficiency gap,
+        seat allocation)?
+\end{enumerate}
+
+If the partisan variance across seeds is small (e.g., $\leq 2$ percentage
+points in proportionality gap for all states), then the seed is procedurally
+irrelevant --- any seed produces a politically equivalent map --- and the
+statute's reproducibility design is fully defensible. If variance is large in
+competitive states, the statute requires a seed-selection procedure that is
+provably non-partisan.

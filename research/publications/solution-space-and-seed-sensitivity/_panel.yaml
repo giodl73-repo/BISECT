@@ -1,0 +1,21 @@
+paper: solution-space-and-seed-sensitivity
+title: "The Solution Space of Minimum-Edge-Cut Redistricting: Seed Sensitivity and Partisan Variance"
+venue: "Political Analysis / Journal of Computational Geometry"
+stage: draft
+round: 0
+content_mode: full
+reviewers: []
+reviews: {}
+p1_items: []
+history:
+  - stage: draft
+    date: "2026-05-01"
+    note: "Paper initialized — B.7 in algorithm series. Addresses the seed-sensitivity attack vector against the federal Districting Integrity Act."
+series: B
+series_number: 7
+related:
+  - B.1+recursive-bisection
+  - B.6+computational-complexity
+  - C.7+uncertainty-quantification
+  - E.4+partisan-similarity-districts
+  - docs/legal/MODEL_FEDERAL_STATUTE.md

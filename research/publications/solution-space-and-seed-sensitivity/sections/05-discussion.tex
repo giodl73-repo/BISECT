@@ -1,0 +1,22 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Statute Implications}
+
+% If variance <= 2pp: seed is procedurally irrelevant; statute's design defensible
+% If variance > 10pp in competitive states: propose content-derived seed:
+%   SHA-256(census_release_identifier || "DIA_SEED_V1")
+%   -- deterministic, not chosen by a human after knowing partisan consequences
+
+\subsection{The "Why This Bisection?" Attack}
+
+% Address the challenge: METIS picks one of many near-minimum plans
+% Answer: the selection criterion (minimize edge cuts) is what matters
+% The seed is a tie-breaker within the minimum-class, not a partisan choice
+% Defensibility depends on: (a) small variance, (b) seed chosen before knowing consequences
+
+\subsection{Relationship to Ensemble Methodology}
+
+% This paper's seed sweep IS a lightweight ensemble
+% FAIRNESS_DOCTRINE ensemble (MCMC over neutral plans) generalizes this
+% B.7 provides the seed-sensitivity grounding; ensemble provides the broader distribution
