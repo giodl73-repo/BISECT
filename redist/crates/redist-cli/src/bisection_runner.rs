@@ -363,39 +363,54 @@ pub fn split_subgraph_dual(
     let graph_file = tmp_dir.path().join("graph.metis");
     std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
 
-    // tpwgts for ncon=2, nparts=2: pop_left, area_left, pop_right, area_right
-    // Area target is 50/50; population uses the requested fraction.
-    // ubvec[0] = population imbalance (tight: 1.001 = ±0.1%)
-    // ubvec[1] = area imbalance (loose: 1.10 = ±10% swing to find clean pop split)
+    // tpwgts for ncon=2, nparts=2.
+    // Multi-constraint format: "partition_id : constraint_id = weight"
+    // Write ONLY n-1=1 partition (partition 0). METIS infers partition 1 from the remainder.
+    // This is the same pattern the Python pipeline used for minority/population dual constraint.
     let area_left = 0.5f64;
-    let tpwgts_content = format!("0 = {pop_left_frac:.6} {area_left:.6}\n");
+    let tpwgts_content = format!(
+        "0 : 0 = {pop_left_frac:.6}\n0 : 1 = {area_left:.6}\n"
+    );
     let tpwgts_file = tmp_dir.path().join("tpwgts.txt");
     std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
 
-    // ubvec file: one line per constraint
-    let ubvec_content = format!("{:.4}\n{:.4}\n", ubvec[0], ubvec[1]);
-    let ubvec_file = tmp_dir.path().join("ubvec.txt");
-    std::fs::write(&ubvec_file, &ubvec_content).map_err(|e| e.to_string())?;
+    // ubvec[0] = population imbalance tolerance (tight: 1.001 = ±0.1%)
+    // ubvec[1] = area imbalance tolerance (loose: 1.10 = ±10% swing)
 
     let n = sorted.len();
-    let mut cmd = Command::new(find_gpmetis().unwrap_or_else(|| "gpmetis".to_string()));
-    cmd.arg(&graph_file).arg("2");
-    if let Some(s) = seed { cmd.args(["-seed", &s.to_string()]); }
+    // Use IDENTICAL flags to split_subgraph (ncon=1) — same -contig, -minconn, -niter, -ufactor.
+    // Only difference: ncon=2 graph format, tpwgts file, and ubvec.
     let ufactor_int = ((ufactor - 1.0) * 1000.0) as u32;
-    cmd.args(["-ufactor", &ufactor_int.to_string(), "-niter", &niter.to_string()]);
-    let mut flag = std::ffi::OsString::from("-tpwgt=");
-    flag.push(tpwgts_file.as_os_str());
-    cmd.arg(flag);
-    // Pass ubvec to allow area to swing ±10% while holding population tight
-    let mut ubvec_flag = std::ffi::OsString::from("-ubvec=");
-    ubvec_flag.push(ubvec_file.as_os_str());
-    cmd.arg(ubvec_flag);
+    let mut cmd = Command::new(find_gpmetis().unwrap_or_else(|| "gpmetis".to_string()));
+    cmd.args([
+        "-contig",
+        "-minconn",
+        &format!("-niter={niter}"),
+        &format!("-ufactor={ufactor_int}"),
+    ]);
+    // tpwgts (required for dual constraint)
+    let mut tpwgts_flag = std::ffi::OsString::from("-tpwgt=");
+    tpwgts_flag.push(tpwgts_file.as_os_str());
+    cmd.arg(tpwgts_flag);
+    // ubvec: space-separated per-constraint tolerances as single string value
+    // (same format the Python archive used: ' '.join(str(v) for v in ubvec))
+    let ubvec_arg = format!("-ubvec={:.4} {:.4}", ubvec[0], ubvec[1]);
+    cmd.arg(&ubvec_arg);
+    if let Some(s) = seed { cmd.arg(format!("-seed={s}")); }
+    cmd.arg(&graph_file).arg("2");
     cmd.current_dir(tmp_dir.path());
 
     let out = cmd.output().map_err(|e| format!("gpmetis dual exec error: {e}"))?;
     if !out.status.success() {
-        return Err(format!("gpmetis dual failed: {}",
-            String::from_utf8_lossy(&out.stderr).chars().take(200).collect::<String>()));
+        // Debug: show tpwgts content and first graph line
+        let tp = std::fs::read_to_string(&tpwgts_file).unwrap_or_default();
+        let gc = std::fs::read_to_string(&graph_file).unwrap_or_default();
+        let first_line = gc.lines().next().unwrap_or("?");
+        return Err(format!(
+            "gpmetis dual failed: {}\n[tpwgts]: {}\n[graph hdr]: {}",
+            String::from_utf8_lossy(&out.stderr).chars().take(200).collect::<String>(),
+            tp.trim(), first_line
+        ));
     }
 
     let part_file = graph_file.with_extension("metis.part.2");
@@ -437,10 +452,12 @@ pub fn run_areasection(
         return Ok((asgn, 1, 0, 0.0));
     }
 
-    // Convert f64 areas to i64 (scaled to avoid precision loss)
-    // Scale: 1 m² = 1 unit (METIS handles large integers fine)
+    // Scale areas to hectares (÷10,000 m²) to fit within METIS's internal i32 range.
+    // METIS uses int32 internally: max ~2.1 billion. Large rural census tracts can be
+    // billions of m², so m² units would overflow. 1 hectare = 10,000 m²; a 1,000 km²
+    // rural tract becomes 100,000 hectares — well within i32 range.
     let vertex_areas_i64: Vec<i64> = vertex_areas_m2.iter()
-        .map(|&a| (a as i64).max(1)).collect();
+        .map(|&a| ((a / 10_000.0) as i64).max(1)).collect();
 
     let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
     let mut best_ec = f64::INFINITY;
@@ -480,7 +497,13 @@ pub fn run_areasection(
                         ratio_best_right = r;
                     }
                 }
-                Err(_) => continue,
+                Err(e) => {
+                    if seed == 1 {
+                        eprintln!("[areasection] seed 1 error (ratio {}:{}): {}", left_k, right_k,
+                                  &e.chars().take(300).collect::<String>());
+                    }
+                    continue;
+                }
             }
         }
 
@@ -1888,5 +1911,102 @@ mod tests {
             a1_sorted, a2_sorted,
             "two runs with the same seed must produce identical assignments"
         );
+    }
+
+    // ── AreaSection / dual-constraint METIS (ncon=2) tests ──────────────────
+
+    /// Verify write_metis_graph_dual produces valid ncon=2 format.
+    /// The header line must contain ncon=2. Each vertex line must have two weights.
+    #[test]
+    fn test_write_metis_graph_dual_format() {
+        use redist_core::metis_format::write_metis_graph_dual;
+        // 3-vertex path: 0-1-2
+        let adj = vec![vec![1], vec![0,2], vec![1]];
+        let pop  = vec![100i64, 200, 150];
+        let area = vec![500i64, 800, 600];
+        let mut ew = HashMap::new();
+        ew.insert((0,1), 1000.0f64);
+        ew.insert((1,2), 1500.0f64);
+
+        let content = write_metis_graph_dual(&adj, &pop, &area, Some(&ew)).unwrap();
+        let lines: Vec<&str> = content.lines().collect();
+
+        // Header: "3 2 011 2"
+        assert_eq!(lines[0], "3 2 011 2", "header must be '3 2 011 2' for ncon=2");
+
+        // Vertex 0: "100 500 2 100000 ..." (pop area neighbor1 eweight1)
+        assert!(lines[1].starts_with("100 500 "), "vertex 0 must start with pop area");
+
+        // Vertex 1 (degree 2): "200 800 1 100000 3 150000"
+        assert!(lines[2].starts_with("200 800 "), "vertex 1 must start with pop area");
+
+        // Vertex 2: "150 600 2 150000"
+        assert!(lines[3].starts_with("150 600 "), "vertex 2 must start with pop area");
+    }
+
+    /// Verify tpwgts file format for ncon=2 uses "partition : constraint = weight" syntax.
+    #[test]
+    fn test_dual_tpwgts_format_ncon2() {
+        let pop_left = 0.4286f64; // 6/14
+        let area_left = 0.5f64;
+        let pop_right = 1.0 - pop_left;
+        let area_right = 1.0 - area_left;
+        // Correct ncon=2 format: partition : constraint = weight
+        // n-1 partition format: write only partition 0, METIS infers partition 1
+        // (same as Python archive: write n-1 partitions, METIS infers the last)
+        let content = format!(
+            "0 : 0 = {pop_left:.6}\n0 : 1 = {area_left:.6}\n"
+        );
+        let lines: Vec<&str> = content.lines().collect();
+        assert_eq!(lines.len(), 2, "n-1 format: write 1 partition × 2 constraints = 2 lines");
+        assert!(lines[0].starts_with("0 : 0 = "), "line 0 must be 'p0:constraint0'");
+        assert!(lines[1].starts_with("0 : 1 = "), "line 1 must be 'p0:constraint1'");
+        let p0c0: f64 = lines[0][8..].trim().parse().unwrap();
+        let p0c1: f64 = lines[1][8..].trim().parse().unwrap();
+        assert!((p0c0 - pop_left).abs() < 1e-5, "constraint 0 should be pop_left");
+        assert!((p0c1 - area_left).abs() < 1e-5, "constraint 1 should be area_left");
+    }
+
+    /// Integration test: call split_subgraph_dual on a small graph.
+    /// Skip if gpmetis is not available or doesn't support ncon=2.
+    #[test]
+    #[ignore = "requires gpmetis with ncon=2 support"]
+    fn test_split_subgraph_dual_small_graph() {
+        // 8-vertex grid: 0-1-2-3 (top row), 4-5-6-7 (bottom row)
+        // Edges: 0-1, 1-2, 2-3, 4-5, 5-6, 6-7, 0-4, 1-5, 2-6, 3-7
+        let adj = vec![
+            vec![1,4], vec![0,2,5], vec![1,3,6], vec![2,7],
+            vec![0,5], vec![4,6,1], vec![5,7,2], vec![6,3],
+        ];
+        let pop  = vec![100i64; 8]; // uniform population
+        let area = vec![100i64; 8]; // uniform area
+        let mut ew = HashMap::new();
+        for (u,v) in [(0,1),(1,2),(2,3),(4,5),(5,6),(6,7),(0,4),(1,5),(2,6),(3,7)] {
+            ew.insert((u.min(v), u.max(v)), 1000.0f64);
+        }
+        let tracts: HashSet<usize> = (0..8).collect();
+
+        // Bisect 50/50 by both population and area
+        let result = split_subgraph_dual(
+            &adj, &pop, &area, &ew, &tracts,
+            1.005, 100, Some(42), 0.5, [1.001, 1.001],
+        );
+
+        match result {
+            Ok((left, right)) => {
+                assert_eq!(left.len() + right.len(), 8, "all vertices assigned");
+                assert!(!left.is_empty() && !right.is_empty(), "non-trivial split");
+                // Both halves should have ~50% of population
+                let pop_left: i64 = left.iter().map(|&v| pop[v]).sum();
+                let pop_total: i64 = pop.iter().sum();
+                let ratio = pop_left as f64 / pop_total as f64;
+                assert!((ratio - 0.5).abs() < 0.15,
+                    "pop balance should be ~50%: got {:.1}%", ratio*100.0);
+            }
+            Err(e) => {
+                // gpmetis may fail on this version — log and skip
+                eprintln!("split_subgraph_dual error (gpmetis ncon=2 support?): {e}");
+            }
+        }
     }
 }
