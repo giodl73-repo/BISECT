@@ -2103,7 +2103,7 @@ mod tests {
         let expected = [
             "unweighted", "edge-weighted", "metis-vra",
             "partisan-weighted", "proportional",
-            "compact-bisect", "geosection",
+            "compact-bisect", "geosection", "areasection",
         ];
         for (mode, name) in modes.iter().zip(expected.iter()) {
             let algo = AlgorithmParams::defaults_for_mode(mode);
