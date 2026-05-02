@@ -1,0 +1,15 @@
+paper: prime-factor-redistricting
+title: "Prime-Factored Maps: Redistricting as the Geographic Completion of Huntington-Hill"
+venue: "Political Analysis / Journal of Computational Social Science"
+stage: draft
+round: 0
+content_mode: draft
+series: B
+series_number: 11
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper initialized. Core idea: prime factorization of seat count determines
+           hierarchical geographic subdivision structure. Reuse of canonical prime
+           splits across seat counts. Constitutional anchor: Art. I §2 (apportionment)
+           rather than §4 (Manner clause alone)."

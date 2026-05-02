@@ -1,0 +1,46 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Apportionment.}
+The Huntington-Hill method \citep{huntington1921methods, hill1911method}
+allocates congressional seats using a geometric-mean priority rule: a state
+with $n$ seats receives the next seat before any state with fewer if its
+priority $P / \sqrt{n(n+1)}$ (where $P$ is population) exceeds all competitors.
+\citet{balinski2001fair} provide the canonical treatment of apportionment
+methods and their fairness properties. Crucially, no prior work connects the
+arithmetic structure of the resulting seat counts to the geometry of the
+districts those seats represent.
+
+\paragraph{Graph partitioning.}
+The $k$-way graph partitioning problem --- partition the vertices of a weighted
+graph into $k$ balanced parts minimising edge cut --- is NP-hard
+\citep{garey1979computers}. The METIS multilevel scheme
+\citep{karypis1998fast} provides practical heuristics for both recursive
+bisection ($k = 2^d$) and direct $k$-way partitioning. Our prior work
+\citep{dellaLibera2026mec} established minimum-edge-cut (MEC) redistricting
+using recursive bisection and characterised its seed sensitivity.
+PFR generalises MEC by using \emph{prime}-way splits, not only binary ones.
+
+\paragraph{Hierarchical redistricting.}
+\citet{cohen2021making} and \citet{hegeman2020recursive} study recursive
+district structures but do not connect the recursion depth or branching factor
+to the prime factorization of the seat count. Existing hierarchical methods
+treat the bisection tree structure as an implementation detail, not as a
+mathematically-determined property of the seat count.
+
+\paragraph{Constitutional basis.}
+\citet{rucho2019} (Rucho v.\ Common Cause) held that partisan gerrymandering
+claims are non-justiciable in federal court but did not foreclose congressional
+regulation of the manner of elections. \citet{moore2023} (Moore v.\ Harper)
+rejected the independent state legislature doctrine, confirming that both state
+and federal law constrain redistricting. PFR's constitutional argument anchors
+redistricting in Article~I~\S2 (apportionment) rather than \S4 (Manner),
+a distinction unexplored in the legal literature.
+
+\paragraph{Algorithmic redistricting.}
+\citet{duchin2019gerrychain} propose Markov-chain sampling of the redistricting
+plan space. \citet{herschlag2020quantifying} use sampling to quantify
+gerrymandering in North Carolina. \citet{chikina2017assessing} develop
+statistical significance tests for partisan plans. PFR differs from all of
+these by not sampling a plan space at all: the plan is uniquely determined by
+arithmetic and geography.

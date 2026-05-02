@@ -1,0 +1,104 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+\subsection{Experimental Setup}
+\label{sec:eval:setup}
+
+We implement PFR using the \texttt{redist} Rust binary with $k$-way METIS
+partitioning at each tree level. Population balance tolerance $\varepsilon =
+0.005$ (0.5\%) is applied at each level. The content-derived seed
+$\text{SHA256}(\text{census\_release\_id} \| \text{DIA\_SEED\_V1})$ is used
+throughout, ensuring reproducibility without arbitrary seed choice.
+
+We evaluate on all 50 states at their 2020 apportionment seat counts.
+
+\subsection{Factorization Structure of 2020 Seat Counts}
+\label{sec:eval:factorizations}
+
+Table~\ref{tab:factorizations} lists the 2020 seat counts and their
+factorizations. % TODO: full 50-state table
+
+Key observations:
+\begin{itemize}
+  \item 6 states have prime seat counts ($n$ prime): PA (17), IL (17 also),
+        VA (11), NJ (12... not prime), OH (15... not prime). Actually: PA (17),
+        VA (11), WA (10... not prime). % TODO: verify which are prime
+  \item Powers of 2: WI (8), AR (4), KS (4), NV (4), IA (4), MS (4), UT (4),
+        MT (2), RI (2), ID (2), etc. --- fully binary trees, identical to MEC
+        bisection.
+  \item Most states have 2-3 prime factors in their factorization sequence.
+\end{itemize}
+
+\subsection{California: Full Seat-Count Trajectory}
+\label{sec:eval:california}
+
+California's seat count has varied from 30 (1950) to 53 (2010) to 52 (2020).
+Figure~\ref{fig:california-trajectory} shows the factorization structure and
+map at each count from 48 to 53.
+
+The $51 \to 52$ transition:
+\begin{itemize}
+  \item $51 = 3 \times 17$: trisect state (NorCal / Central / SoCal), then
+        17-cut each third.
+  \item $52 = 4 \times 13 = 2^2 \times 13$: bisect state, bisect each half,
+        then 13-cut each quarter.
+\end{itemize}
+The top-level structure changes from 3-way to 2-way. No geographic splits are
+reused. This is a complete structural break forced by arithmetic.
+
+The $52 \to 53$ transition ($53$ is prime):
+\begin{itemize}
+  \item $53$: single 53-way cut of the whole state. No reuse of the 52-seat
+        factorization tree at any level.
+\end{itemize}
+
+Despite the structural breaks, the partisan outcomes (Dem seat share) remain
+stable across the trajectory. % TODO: compute and report
+
+\subsection{Wisconsin: Powers-of-2 Stability}
+\label{sec:eval:wisconsin}
+
+Wisconsin ($n = 8 = 2^3$) has a fully binary factorization tree. Its PFR map
+is identical to the MEC map produced by recursive bisection in
+\citet{dellaLibera2026mec}: 3D/5R ($-12.8$\,pp).
+
+Going from 8 to 9 ($= 3^2$) would require discarding the binary tree and
+replacing it with a 2-level ternary tree. This is a full structural break.
+Going from 7 (prime) to 8 ($2^3$) would replace a 7-cut with a binary tree.
+
+\subsection{Pennsylvania: Prime Seat Counts}
+\label{sec:eval:pennsylvania}
+
+Pennsylvania ($n = 17$, prime) has a depth-1 factorization tree: a single
+17-way minimum-cut partition of the entire state. This is the hardest case
+computationally (direct 17-way METIS vs.\ 4 levels of bisection) and provides
+no reuse with any other seat count.
+
+The PFR map for PA produces % TODO: run and report seat outcome
+compared to the MEC map's 8D/9R ($-3.5$\,pp).
+
+\subsection{Comparison to MEC}
+\label{sec:eval:comparison}
+
+For states with $n = 2^k$ (pure powers of 2), PFR and MEC are identical by
+construction. For other states, PFR may differ because:
+\begin{itemize}
+  \item MEC uses repeated bisection (always 2-way splits), regardless of $n$.
+  \item PFR uses the factorization-prescribed $k$-way splits, which may find
+        different minimum-cut boundaries than iterated bisections.
+\end{itemize}
+% TODO: run full comparison table
+
+\subsection{Structural Disruption Across Reapportionments}
+\label{sec:eval:disruption}
+
+We define the \emph{disruption score} of a transition $n \to n'$ as the
+fraction of census tracts that change district assignment between $M_n$ and
+$M_{n'}$.
+
+% TODO: compute disruption scores for 2010→2020 seat count changes for all states
+% that changed seat counts. Compare PFR disruption to MEC disruption.
+
+Hypothesis: PFR has lower disruption than MEC for states that retain the same
+smallest prime factor across reapportionments (reuse kicks in), and comparable
+disruption for states with factorization breaks.

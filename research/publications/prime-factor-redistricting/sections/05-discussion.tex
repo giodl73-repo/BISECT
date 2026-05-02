@@ -1,0 +1,97 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{The Constitutional Argument}
+\label{sec:discussion:constitutional}
+
+PFR's key constitutional claim is that the map arises from Article~I~\S2
+(apportionment) rather than from \S4 (Manner). The argument proceeds in
+three steps.
+
+\paragraph{Step 1: Apportionment encodes geometry.}
+The Huntington-Hill method assigns each state a seat count $n$ such that
+$n$ is the integer closest to $P / (435/\sum P_i)$ (subject to the priority
+rule). This count is not arbitrary --- it is the output of a constitutional
+mathematical process. PFR claims that $n$ also determines the \emph{structure}
+of the map: not as an additional choice, but as an arithmetic consequence.
+
+\paragraph{Step 2: The map IS the apportionment extended to geography.}
+Just as Huntington-Hill partitions the 435 seats among 50 states using a
+priority rule, PFR partitions each state's geography into $n$ pieces using
+the prime factorization of $n$. The same constitutional act that produces $n$
+also, through PFR, produces the map. No separate ``districting decision'' is
+required.
+
+\paragraph{Step 3: No additional degrees of freedom.}
+The only choices in PFR are (a) the prime factorization of $n$ (uniquely
+determined by arithmetic) and (b) the minimum $k$-way cut at each level
+(uniquely determined by TIGER geography, up to tie-breaking). Compare to
+manual redistricting, which introduces thousands of degrees of freedom that
+can be set to achieve partisan outcomes. PFR has zero such degrees of freedom.
+
+This argument implies that a statute requiring PFR is not merely a Manner
+regulation (\S4) subject to state override prior to congressional action
+--- it is an exercise of the apportionment power (\S2), which is exclusively
+federal.
+
+\subsection{Why Prime Factorization?}
+\label{sec:discussion:why-primes}
+
+One might ask: why use prime factorization? Why not use any factorization
+(e.g., $12 = 4 \times 3$ or $12 = 6 \times 2$ or $12 = 12$)? Three reasons:
+
+\begin{enumerate}
+  \item \textbf{Uniqueness}: The prime factorization is the \emph{unique}
+        canonical factorization of every integer (Fundamental Theorem of
+        Arithmetic). Any other factorization introduces a choice.
+  \item \textbf{Minimal splits}: Primes are irreducible --- a $p$-way split
+        cannot be further decomposed. Using composite splits would introduce
+        redundancy (a $6$-way split could have been a $2\times 3$ or
+        $3\times 2$ split, requiring an ordering choice).
+  \item \textbf{Consistency with smallest-prime-first}: The canonical ordering
+        (smallest prime first) ensures that the largest geographic units
+        (coarsest splits) correspond to the smallest prime factors. For most
+        states, this produces 2-way or 3-way top-level splits, giving
+        geographic coherence (two halves, three thirds).
+\end{enumerate}
+
+\subsection{The Funny Cases}
+\label{sec:discussion:funny}
+
+Several seat count transitions are structurally extreme:
+\begin{itemize}
+  \item $51 \to 52$: $[3, 17] \to [2, 2, 13]$. Complete structural break.
+        The ternary top level (NorCal/Central/SoCal) gives way to a binary
+        top level (North/South), with a completely different secondary
+        structure.
+  \item $52 \to 53$: $[2, 2, 13] \to [53]$. Complete structural break.
+        The two-level binary-then-13 structure gives way to a single 53-cut.
+  \item $n = $ prime $\to n+1 = 2 \times \text{something}$: gaining one seat
+        converts a depth-1 tree to a depth-$\geq 2$ tree.
+\end{itemize}
+
+These transitions are mathematically inevitable, not arbitrary. Their
+existence demonstrates that PFR takes the arithmetic of seat counts seriously
+--- the map structure follows from number theory, not from political convenience.
+
+\subsection{Limitations}
+\label{sec:discussion:limitations}
+
+\paragraph{Large prime factors.}
+For seat counts containing large prime factors (17, 13, 19, 23, \ldots),
+the required $k$-way METIS partition is harder computationally and has a
+wider solution space than bisection. The convergence analysis of
+\citet{dellaLibera2026mec} for bisection does not directly extend to
+$k$-way partitioning; a separate seed-sensitivity study is needed.
+
+\paragraph{Balance tolerance compounding.}
+Applying $\varepsilon = 0.005$ at each tree level compounds: after $d$ levels,
+the cumulative imbalance can reach $\varepsilon \cdot d$. For states with deep
+trees (many prime factors), the final balance may drift. PFR should apply the
+statutory tiered tolerance schedule rather than a flat tolerance.
+
+\paragraph{Tie-breaking.}
+METIS may produce non-unique minimum-$k$-way partitions for some inputs.
+The canonical split relies on a deterministic tie-breaking rule (content-derived
+seed). Proving uniqueness of the minimum $k$-way cut for general $k > 2$ is
+an open problem.

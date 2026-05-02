@@ -1,0 +1,138 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Notation}
+\label{sec:notation}
+
+Let $G = (V, E, w)$ be the census-tract adjacency graph for a state, where
+$V$ is the set of census tracts, $E$ is the set of shared-boundary edges, and
+$w: E \to \mathbb{R}_{>0}$ assigns each edge the TIGER boundary length between
+adjacent tracts. Let $\text{pop}: V \to \mathbb{Z}_{>0}$ be the 2020 census
+population of each tract. Let $n$ be the state's apportioned congressional seat
+count.
+
+\subsection{The Prime Factorization of a Seat Count}
+\label{sec:factorization}
+
+\begin{definition}[Canonical factorization sequence]
+  Let $n = p_1^{a_1} \times p_2^{a_2} \times \cdots \times p_r^{a_r}$ be the
+  prime factorization of $n$ with $p_1 < p_2 < \cdots < p_r$. The
+  \emph{canonical factorization sequence} of $n$ is the non-decreasing sequence
+  \[
+    F(n) = [\underbrace{p_1, \ldots, p_1}_{a_1},
+            \underbrace{p_2, \ldots, p_2}_{a_2},
+            \ldots,
+            \underbrace{p_r, \ldots, p_r}_{a_r}].
+  \]
+\end{definition}
+
+Examples: $F(8) = [2,2,2]$, $F(12) = [2,2,3]$, $F(51) = [3,17]$,
+$F(52) = [2,2,13]$. The product of $F(n)$ equals $n$; the length of $F(n)$
+is the number of prime factors of $n$ counted with multiplicity
+($\Omega(n)$ in number theory).
+
+\subsection{The PFR Algorithm}
+\label{sec:pfr}
+
+\begin{definition}[Prime-Factored Redistricting]
+  Given graph $G$ and seat count $n$ with canonical factorization sequence
+  $F(n) = [q_1, q_2, \ldots, q_d]$, the PFR map $M_n(G)$ is constructed as:
+  \begin{enumerate}
+    \item Initialise $\mathcal{R}_0 = \{G\}$ (one region: the whole state).
+    \item For $\ell = 1, \ldots, d$:
+      \begin{enumerate}
+        \item For each region $R \in \mathcal{R}_{\ell-1}$:
+          compute the minimum $q_\ell$-way partition of $R$ (balanced by
+          population, minimising edge-cut weight), obtaining $q_\ell$
+          sub-regions.
+        \item Let $\mathcal{R}_\ell = $ all sub-regions from all splits.
+      \end{enumerate}
+    \item Return $\mathcal{R}_d$ as the $n = \prod_i q_i$ districts.
+  \end{enumerate}
+\end{definition}
+
+The minimum $k$-way partition is computed by METIS $k$-way partitioning with
+population balance tolerance $\varepsilon = 0.005$ and edge-cut objective.
+Each level of the tree is a balanced $k$-way partition of its input region.
+
+\subsection{The Reuse Property}
+\label{sec:reuse}
+
+The key property of PFR is that splits are canonical:
+
+\begin{definition}[Canonical $p$-split]
+  For a state with graph $G$ and a prime $p$, the \emph{canonical $p$-split}
+  $S_p(G)$ is the minimum $p$-way partition of $G$. For a sub-region
+  $R \subseteq G$, $S_p(R)$ is the minimum $p$-way partition of the induced
+  subgraph $G[R]$.
+\end{definition}
+
+\begin{theorem}[Reuse]
+  \label{thm:reuse}
+  Let $n = p \cdot m$ and $n' = p \cdot m'$ both have $p$ as their smallest
+  prime factor, with $m, m'$ coprime to $p$. Let $F(n) = [p, \ldots]$ and
+  $F(n') = [p, \ldots]$. Then $M_n(G)$ and $M_{n'}(G)$ share the same
+  top-level $p$-way split $S_p(G)$.
+\end{theorem}
+
+\begin{proof}
+  By definition of PFR, level 1 of the factorization tree applies $q_1 = p$
+  (the smallest prime factor) to the whole state $G$ in both cases.
+  The minimum $p$-way partition of $G$ is uniquely determined (assuming no ties)
+  by $G$, $p$, and $\varepsilon$. Hence both maps use $S_p(G)$ at level 1. \qed
+\end{proof}
+
+More generally, any two seat counts $n, n'$ that agree on their first $k$ terms
+of $F(n)$ share the first $k$ levels of their factorization tree.
+
+\subsection{Factorization Tree Structure}
+\label{sec:tree}
+
+The factorization tree $T_n$ for a state has:
+\begin{itemize}
+  \item \textbf{Root}: the whole state.
+  \item \textbf{Level $\ell$ nodes}: regions produced by applying $q_1, \ldots,
+        q_\ell$ to the root. Each level-$\ell$ node has $q_\ell$ children.
+  \item \textbf{Leaves}: the $n$ districts.
+  \item \textbf{Depth}: $\Omega(n)$ (number of prime factors with multiplicity).
+\end{itemize}
+
+For $n = 2^k$ (e.g., Wisconsin: $n = 8 = 2^3$), the tree is a complete binary
+tree of depth~$k$ --- exactly the recursive bisection algorithm of
+\citet{dellaLibera2026mec}.
+
+For $n$ prime (e.g., Pennsylvania: $n = 17$), the tree has depth~1: a single
+$n$-way cut of the whole state. No reuse is possible across different prime seat
+counts.
+
+\subsection{Handling Reapportionment}
+\label{sec:reapportionment}
+
+When $n$ changes to $n' = n \pm 1$ after a decennial census, the required
+recomputation depends on the first position where $F(n)$ and $F(n')$ differ.
+
+\begin{proposition}[Recomputation depth]
+  Let $F(n) = [q_1, \ldots, q_d]$ and $F(n') = [q_1', \ldots, q_{d'}']$.
+  Let $k^* = \min\{k : q_k \neq q_k'\}$ (or $k^* = 1$ if $q_1 \neq q_1'$).
+  Then PFR reuses levels $1, \ldots, k^*-1$ and recomputes levels
+  $k^*, \ldots, \max(d, d')$.
+\end{proposition}
+
+The worst case is $k^* = 1$: the smallest prime factor changes, requiring a
+full recomputation. This occurs for the $51 \to 52$ transition
+($F(51) = [3, 17]$, $F(52) = [2, 2, 13]$, $k^* = 1$).
+
+\subsection{PFR-Smooth: Minimising Reapportionment Disruption}
+\label{sec:smooth}
+
+When the prime factorization changes structurally, PFR-smooth finds the
+largest common prefix of $F(n)$ and $F(n')$ and reuses it, completing the
+remaining levels from the best available cached splits. Specifically, for
+$n \to n+1$:
+\begin{enumerate}
+  \item Find the longest common prefix of $F(n)$ and $F(n+1)$.
+  \item Reuse those levels' cached splits.
+  \item Re-solve only the subtrees that changed.
+\end{enumerate}
+This minimises the number of census tracts that change district assignment
+across reapportionments.
