@@ -1,76 +1,135 @@
-"""Compute Fiedler lower bounds for confirmed MEC states (B.7 paper)."""
-import json, struct, math, os, sys
+"""
+Fiedler value (lambda_2) for all focal states using scipy ARPACK.
 
-def load_adj_bin(path):
-    with open(path, 'rb') as f: data = f.read()
-    pos = 4
-    _ = struct.unpack_from('<I', data, pos)[0]; pos += 4  # version
-    n = struct.unpack_from('<I', data, pos)[0]; pos += 4
-    pos += 4  # n_edges_hdr
-    for _ in range(n): pos += 8  # vertex weights (i64)
-    adj = []
+ARPACK (Arnoldi/Lanczos) with shift-invert is the standard robust method
+for sparse eigenvalue problems. It handles clustered eigenvalues correctly,
+unlike deflated power iteration which underconverges when lambda_2 ~ lambda_3.
+
+Validation: lambda_2 * n/4 must be <= the achieved level-1 bisection EC.
+If it exceeds the achieved EC, the bound is invalid (we have a bug).
+"""
+import struct, json, math, os
+import numpy as np
+from scipy.sparse import csr_matrix
+from scipy.sparse.linalg import eigsh
+
+def load_adj(path):
+    with open(path,'rb') as f: data=f.read()
+    pos=4; _=struct.unpack_from('<I',data,pos)[0]; pos+=4
+    n=struct.unpack_from('<I',data,pos)[0]; pos+=4; pos+=4
+    vw=[]
+    for _ in range(n): vw.append(struct.unpack_from('<q',data,pos)[0]); pos+=8
+    adj=[]
     for _ in range(n):
-        nb = struct.unpack_from('<I', data, pos)[0]; pos += 4
-        nbrs = [struct.unpack_from('<I', data, pos+i*4)[0] for i in range(nb)]
-        pos += nb * 4
+        nb=struct.unpack_from('<I',data,pos)[0]; pos+=4
+        nbrs=[struct.unpack_from('<I',data,pos+i*4)[0] for i in range(nb)]; pos+=nb*4
         adj.append(nbrs)
-    nw = struct.unpack_from('<I', data, pos)[0]; pos += 4
-    ew = {}
+    nw=struct.unpack_from('<I',data,pos)[0]; pos+=4
+    ew={}
     for _ in range(nw):
-        u = struct.unpack_from('<I', data, pos)[0]; pos += 4
-        v = struct.unpack_from('<I', data, pos)[0]; pos += 4
-        w = struct.unpack_from('<d', data, pos)[0]; pos += 8
-        ew[(min(u,v), max(u,v))] = w
-    return n, adj, ew
+        u=struct.unpack_from('<I',data,pos)[0]; pos+=4
+        v=struct.unpack_from('<I',data,pos)[0]; pos+=4
+        w=struct.unpack_from('<d',data,pos)[0]; pos+=8
+        ew[(min(u,v),max(u,v))]=w
+    return n, adj, ew, vw
 
-def fiedler(n, adj, ew, iters=150, tol=1e-6):
-    """Deflated power iteration for lambda_2 of weighted Laplacian."""
-    deg = [sum(ew.get((min(i,j),max(i,j)),0) for j in adj[i]) for i in range(n)]
-    def L(v): return [deg[i]*v[i] - sum(ew.get((min(i,j),max(i,j)),0)*v[j] for j in adj[i]) for i in range(n)]
-    def proj(v): m=sum(v)/len(v); return [x-m for x in v]
-    def nrm(v): s=math.sqrt(sum(x*x for x in v)); return [x/s for x in v] if s>1e-14 else v
-    # lambda_max via power iter on L restricted to 1-perp
-    v = nrm(proj([math.sin(i+1) for i in range(n)]))
-    lmax = 0
-    for _ in range(iters):
-        lv = L(v); rq = sum(a*b for a,b in zip(v,lv))
-        if abs(rq-lmax)<tol: break
-        lmax = rq; v = nrm(proj(lv))
-    if lmax < 1e-6: lmax = max(deg)
-    # lambda_2 via power iter on (lmax*I - L) on 1-perp
-    u = nrm(proj([math.cos(i+1) for i in range(n)]))
-    dom = 0
-    for _ in range(iters):
-        lu = L(u); w = proj([lmax*u[i]-lu[i] for i in range(n)])
-        rq = sum(a*b for a,b in zip(u,w))
-        if abs(rq-dom)<tol: break
-        dom = rq; u = nrm(w)
-    return max(lmax-dom, 0)
+def build_sparse_laplacian(n, adj, ew):
+    """Build sparse weighted Laplacian L = D - W."""
+    rows, cols, data = [], [], []
+    degree = [0.0] * n
+    for (u, v), w in ew.items():
+        degree[u] += w
+        degree[v] += w
+        rows.append(u); cols.append(v); data.append(-w)
+        rows.append(v); cols.append(u); data.append(-w)
+    for i in range(n):
+        rows.append(i); cols.append(i); data.append(degree[i])
+    return csr_matrix((data, (rows, cols)), shape=(n, n))
 
-confirmed = [
-    ("pa","pennsylvania",   17, 8, -3.54,  2441000),
-    ("ga","georgia",        14, 7, -0.13,  2546000),
-    ("mi","michigan",       13, 7,  2.43,  2098000),
-    ("tn","tennessee",       9, 1,-27.06,  1568000),
-    ("nc","north_carolina", 14, 5,-13.60,  2400000),
-    ("wi","wisconsin",       8, 3,-12.82,  1615000),  # 1000-seed result; still converging
-    ("tx","texas",          38,15, -7.70,  8176000),  # b7tx_ fresh sweep
-    ("mn","minnesota",       8, 3,-16.14,  1357000),
+def compute_fiedler(n, adj, ew):
+    """
+    Compute lambda_2 (Fiedler value) of weighted Laplacian via ARPACK.
+    Uses shift-invert mode (sigma=small_positive) to find smallest eigenvalues.
+    Returns (lambda2, lambda3) for diagnosing clustering.
+    """
+    L = build_sparse_laplacian(n, adj, ew)
+    # Request 4 eigenvalues: 0 (constant), lambda2, lambda3, lambda4
+    # sigma=1e-6 enables shift-invert: finds eigenvalues near 0 efficiently
+    try:
+        lam = eigsh(L, k=4, which='LM', sigma=1e-6,
+                    return_eigenvectors=False, tol=1e-10, maxiter=10000)
+        lam_sorted = sorted(abs(l) for l in lam)
+        # lam_sorted[0] ~ 0 (constant eigenvector, lambda_1=0)
+        lambda2 = lam_sorted[1]
+        lambda3 = lam_sorted[2]
+        return lambda2, lambda3
+    except Exception as e:
+        print(f"  eigsh failed: {e}")
+        return 0.0, 0.0
+
+def compute_level1_cut(n, adj, ew, vw, ver, name):
+    """Load depth_01 intermediate and compute level-1 bisection edge-cut."""
+    d1_path = f"outputs/{ver}/2020/states/{name}/intermediate/depth_01/assignments.json"
+    if not os.path.exists(d1_path):
+        return None, None, None
+    d1 = json.load(open(d1_path))
+    ec = sum(ew[(min(u,v),max(u,v))]
+             for u in range(n) for v in adj[u] if v > u
+             if d1.get(str(u)) != d1.get(str(v)))
+    count = sum(1 for u in range(n) for v in adj[u] if v > u
+                if d1.get(str(u)) != d1.get(str(v)))
+    n1 = sum(1 for i in range(n) if d1.get(str(i)) == 1)
+    n2 = sum(1 for i in range(n) if d1.get(str(i)) == 2)
+    return ec, count, min(n1, n2)
+
+# Focal states: (code, name, k, MEC_seed, MEC_km)
+states = [
+    ("pa", "pennsylvania",   17, 181,  2441),
+    ("ga", "georgia",        14, 489,  2546),
+    ("mi", "michigan",       13, 181,  2098),
+    ("tn", "tennessee",       9, 609,  1568),
+    ("nc", "north_carolina", 14,  41,  2400),
+    ("wi", "wisconsin",       8, 891,  1615),
+    ("mn", "minnesota",       8, 449,  1357),
+    ("tx", "texas",          38, 114,  8176),
 ]
 
 adj_dir = "outputs/V3/data/2020/adjacency"
-print(f"{'State':<5} {'k':>3} {'n':>5}  {'MEC(km)':>8} {'Bound(km)':>9} {'Ratio':>6}  {'MEC plan':<10} {'Gap(pp)':>8}")
-print("-" * 60)
-for code, name, k, d, gap, mec_m in confirmed:
-    p = f"{adj_dir}/{code}_adjacency_2020.adj.bin"
-    if not os.path.exists(p):
-        print(f"{code.upper()}: adj.bin not found at {p}")
-        continue
-    n, adj, ew = load_adj_bin(p)
-    lam2 = fiedler(n, adj, ew)
-    lb_m = lam2 * n / 4
-    ratio = mec_m / lb_m if lb_m > 0 else 999
-    print(f"{code.upper():<5} {k:>3} {n:>5}  {mec_m/1000:>8.0f} {lb_m/1000:>9.0f} {ratio:>6.2f}x  {d}D/{k-d}R      {gap:>+8.2f}")
+
+print(f"{'St':>3} {'k':>2} {'n':>5}  {'lambda2':>9} {'lambda3':>9} {'L2/L3':>6}  "
+      f"{'Bound(km)':>9} {'L1-EC(km)':>9} {'valid?':>7}  {'Ratio':>7}")
+print("-" * 85)
+
+for code, name, k, mec_seed, mec_km in states:
+    adj_path = f"{adj_dir}/{code}_adjacency_2020.adj.bin"
+    if not os.path.exists(adj_path):
+        print(f"{code.upper():>3}: not found"); continue
+
+    n, adj, ew, vw = load_adj(adj_path)
+
+    # Compute lambda_2 via scipy ARPACK
+    print(f"{code.upper():>3} computing lambda2...", end='\r')
+    lambda2, lambda3 = compute_fiedler(n, adj, ew)
+
+    # Fiedler lower bound on minimum balanced bisection
+    fiedler_bound_km = lambda2 * n / 4 / 1000
+
+    # Level-1 achieved cut
+    ver = f"b7tx_s{mec_seed}" if code == "tx" else f"b7_{code.upper()}_s{mec_seed}"
+    l1_ec_m, l1_count, s_size = compute_level1_cut(n, adj, ew, vw, ver, name)
+    l1_ec_km = l1_ec_m / 1000 if l1_ec_m else None
+
+    # Validation: bound must be <= achieved (it's a lower bound)
+    valid = "OK" if (l1_ec_km and fiedler_bound_km <= l1_ec_km + 1) else "BUG"
+    ratio = fiedler_bound_km / l1_ec_km if l1_ec_km else 0
+    cluster = lambda2 / lambda3 if lambda3 > 0 else 0
+
+    print(f"{code.upper():>3} {k:>2} {n:>5}  {lambda2:>9.1f} {lambda3:>9.1f} {cluster:>6.3f}  "
+          f"{fiedler_bound_km:>9.0f} {(l1_ec_km or 0):>9.0f} {valid:>7}  {ratio:>7.3f}")
+
 print()
-print("Ratio = MEC / Fiedler-bound. Closer to 1.0 = tighter certificate.")
-print("EC_min >= lambda2 * n/4  (Cheeger, unnormalized Laplacian)")
+print("lambda2/lambda3: clustering ratio. Near 1 = clusters eigenvalues")
+print("  (previous power iteration underconverged when this is near 1)")
+print("Bound = lambda2 * n/4 (lower bound on min balanced bisection EC)")
+print("valid = OK if bound <= achieved level-1 cut (as required for a lower bound)")
+print("Ratio = Bound/L1-EC (1.0 = tight; < 1 = loose; > 1 = BUG)")

@@ -188,20 +188,39 @@ a challenger can verify the certificate in $O(1)$ (by re-computing $\lambda_2$
 and checking the reported ratio), but cannot produce a materially better split
 without doing at least as much work.
 
-\subsubsection{Computation of $\lambda_2$}
+\subsubsection{Computation of $\lambda_2$ and Tightness in Practice}
 
-For US census-tract graphs with $n \approx 200$--$4{,}000$ vertices,
-$\lambda_2$ can be computed exactly via the Lanczos
-algorithm~\citep{golub2013matrix} in $O(n^2)$ time --- milliseconds per
-subgraph. The computation uses only the graph adjacency structure and TIGER
-boundary lengths, both of which are in the published reproducibility artifacts.
-Any party can verify the reported $\lambda_2$ independently using publicly
-available linear algebra libraries.
+For US census-tract graphs with $n \approx 200$--$7{,}000$ vertices,
+$\lambda_2$ can be computed via ARPACK (Arnoldi iteration with shift-invert)
+in $O(n \cdot k)$ time for $k$ requested eigenvalues --- seconds per state
+graph. The computation uses only the adjacency structure and TIGER boundary
+lengths, both of which are in the published reproducibility artifacts.
 
-The certificate is therefore fully reproducible: $\lambda_2$ is deterministic
-given the graph; the upper bound $\overline{\mathrm{GMPP}}$ follows
-algebraically; the achieved ratio is computed from the published split. No
-proprietary data or computation enters the certificate.
+\emph{Empirical tightness.} The Cheeger bound $\mathrm{EC}_{\min} \geq
+\lambda_2 n/4$ is a valid lower bound for all focal states but is
+extremely loose for US census-tract graphs: observed $\lambda_2$ values range
+from 7\,m (Pennsylvania, 3{,}446 tracts) to 46\,m (Wisconsin, 1{,}542
+tracts), giving lower bounds of 6--26\,km against achieved level-1 bisection
+cuts of 275--925\,km (bound/achieved ratios of 1.6--4.8\%). The bound is
+mathematically correct but practically non-certifying.
+
+\emph{Reason.} US census-tract adjacency graphs are planar and geographically
+sparse: every state has a ``pinch point'' (a narrow geographic isthmus) where
+very few tracts connect the two halves, each with a short shared boundary.
+This drives $\lambda_2$ toward zero regardless of how large the actual minimum
+bisection cut is. The Cheeger bound is tight only for graphs with uniform
+connectivity (e.g.\ grid graphs); geographic graphs have highly non-uniform
+connectivity driven by population density and terrain.
+
+\emph{Practical certification.} We replace the Fiedler certificate with an
+empirical convergence criterion: declare convergence when the running minimum
+edge-cut has been stable for at least $T$ consecutive seeds, where $T$ is
+calibrated to detect false floors. Our focal-state sweeps reveal that short
+stable tails (20--80 seeds) can be false floors (Georgia, Tennessee, Wisconsin
+all had interim results overturned). We require $T \geq 300$ consecutive seeds
+for certification, producing stable tails of 391--819 seeds for all converged
+states. The Fiedler certificate remains a valid \emph{theoretical} lower bound
+and is retained in the paper as context for future tighter bounds.
 
 \subsubsection{Why Neither Side Can Manipulate the Certificate}
 
