@@ -1742,6 +1742,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "metis"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3653658399c092e0912b25c591e9dc89bae5c1db377b85c52011991f8b628ceb"
+dependencies = [
+ "metis-sys",
+]
+
+[[package]]
+name = "metis-sys"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "769ee6be814b21c52afcc631f07051f578487d642f3e89a45f2a086fd94fffa9"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "mime"
 version = "0.3.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2344,6 +2362,7 @@ dependencies = [
  "geo 0.28.0",
  "geo-types 0.7.19",
  "geozero",
+ "metis",
  "polylabel",
  "rayon",
  "redist-analysis",

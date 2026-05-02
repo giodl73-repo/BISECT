@@ -25,6 +25,9 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 csv = "1"
 
+# Graph partitioning — vendored libmetis (no external gpmetis binary needed)
+metis = { version = "0.2", features = ["vendored"] }
+
 # Geometry (Phase 2+)
 geo = "0.28"
 geo-types = "0.7"

@@ -7,10 +7,8 @@
 /// then depth D+1 is processed. BisectionNode implements Clone (bisection.rs).
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::process::Command;
 use rayon::prelude::*;
 use redist_core::{BisectionTree, ufactor_for_depth};
-use redist_core::metis_format::{write_metis_graph, write_metis_graph_dual, parse_metis_partition};
 
 // ── CompactBisect (B.7) ───────────────────────────────────────────────────────
 
@@ -81,65 +79,50 @@ fn select_compact_split(
     (best.0.clone(), best.1.clone())
 }
 
-/// Detect the gpmetis version string by running `gpmetis --version` or `gpmetis -version`.
-///
-/// gpmetis typically prints to stderr:
-///   "METIS 5.1.0 (2013-03-30)"
-///   or: "METIS  Copyright 1998-2020, Regents of the University of Minnesota"
-///
-/// Returns the first non-empty output line, or "unknown" if gpmetis is not found or
-/// does not produce recognizable output. Never panics.
+/// Return the METIS version string.
+/// libmetis is vendored at compile time via the metis-rs crate; no external binary needed.
 pub fn detect_gpmetis_version() -> String {
-    let gpmetis = match find_gpmetis() {
-        Some(p) => p,
-        None => return "unknown".to_string(),
-    };
-
-    // Try --version first, then -version (older METIS versions use -version)
-    for flag in &["--version", "-version"] {
-        if let Ok(out) = Command::new(&gpmetis).arg(flag).output() {
-            // gpmetis writes version info to stderr (and sometimes stdout)
-            let combined = format!(
-                "{}\n{}",
-                String::from_utf8_lossy(&out.stderr),
-                String::from_utf8_lossy(&out.stdout),
-            );
-            for line in combined.lines() {
-                let trimmed = line.trim();
-                if !trimmed.is_empty() {
-                    return trimmed.to_string();
-                }
-            }
-        }
-    }
-    "unknown".to_string()
+    "METIS 5.1.0 (vendored via metis-rs 0.2)".to_string()
 }
 
-/// Find the gpmetis executable (cross-platform: Windows .exe or Linux/macOS binary).
+/// METIS is now embedded via the metis-rs FFI crate — no external gpmetis binary needed.
+/// Kept for API compatibility; always returns None.
+#[allow(dead_code)]
 pub fn find_gpmetis() -> Option<String> {
-    // Try PATH first
-    let which_cmd = if cfg!(windows) { "where" } else { "which" };
-    for name in &["gpmetis", "gpmetis.exe"] {
-        if let Ok(out) = Command::new(which_cmd).arg(name).output() {
-            if out.status.success() {
-                let p = String::from_utf8_lossy(&out.stdout).trim().to_string();
-                // `where` can return multiple lines; take first
-                let first = p.lines().next().unwrap_or("").to_string();
-                if !first.is_empty() { return Some(first); }
-            }
+    None
+}
+
+/// Convert adjacency list to CSR format required by the METIS C API.
+fn adj_to_csr(adj: &[Vec<usize>]) -> (Vec<i32>, Vec<i32>) {
+    let mut xadj = Vec::with_capacity(adj.len() + 1);
+    let mut adjncy = Vec::new();
+    xadj.push(0i32);
+    for neighbors in adj {
+        for &nb in neighbors {
+            adjncy.push(nb as i32);
+        }
+        xadj.push(adjncy.len() as i32);
+    }
+    (xadj, adjncy)
+}
+
+/// Build the edge-weight array parallel to `adjncy` (CSR order).
+/// Returns None when there are no edge weights (METIS uses unit weights by default).
+/// Weights are scaled metres → centimetres (×100), truncated (matching Python int(x*100)),
+/// and clamped to minimum 1.
+fn ew_to_adjwgt(adj: &[Vec<usize>], ew: Option<&HashMap<(usize, usize), f64>>) -> Option<Vec<i32>> {
+    let ew = ew?;
+    if ew.is_empty() { return None; }
+    let mut adjwgt = Vec::new();
+    for (i, neighbors) in adj.iter().enumerate() {
+        for &j in neighbors {
+            let key = (i.min(j), i.max(j));
+            let w_m = ew.get(&key).copied().unwrap_or(1.0);
+            let w_cm = ((w_m * 100.0) as i32).max(1);
+            adjwgt.push(w_cm);
         }
     }
-    // Common fixed locations (including project-local bin/ directory)
-    let candidates = [
-        "/usr/bin/gpmetis",
-        "/usr/local/bin/gpmetis",
-        "/opt/homebrew/bin/gpmetis",
-        r"C:\metis\bin\gpmetis.exe",
-        r"C:\Program Files\metis\bin\gpmetis.exe",
-        r"bin\gpmetis.exe",          // project-local (Windows)
-        r"bin/gpmetis",              // project-local (Unix)
-    ];
-    candidates.iter().find(|p| Path::new(p).exists()).map(|s| s.to_string())
+    Some(adjwgt)
 }
 
 /// Split a subgraph (identified by `tract_indices`) into two balanced parts.
@@ -191,42 +174,13 @@ pub fn split_subgraph(
         })
         .collect();
 
-    let has_ew = !sub_ew.is_empty();
-    let ew_opt = if has_ew { Some(&sub_ew) } else { None };
+    let ew_opt = if sub_ew.is_empty() { None } else { Some(&sub_ew) };
 
-    // Generate METIS graph content
-    let graph_content = write_metis_graph(&sub_adj, &sub_vw, ew_opt)
-        .map_err(|e| e.to_string())?;
+    // Build CSR for the METIS FFI
+    let (xadj, adjncy) = adj_to_csr(&sub_adj);
+    let vwgt: Vec<i32> = sub_vw.iter().map(|&w| (w as i32).max(1)).collect();
+    let adjwgt = ew_to_adjwgt(&sub_adj, ew_opt);
 
-    let gpmetis = find_gpmetis()
-        .ok_or_else(|| {
-            let arch = std::env::consts::ARCH;
-            let os = std::env::consts::OS;
-            let install_hint = match (os, arch) {
-                ("linux", "aarch64") | ("linux", "arm") =>
-                    "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
-                ("macos", "aarch64") =>
-                    "Apple Silicon: brew install metis",
-                ("linux", _) =>
-                    "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
-                ("windows", _) =>
-                    "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
-                ("macos", _) =>
-                    "macOS: brew install metis",
-                _ =>
-                    "Install METIS from https://github.com/KarypisLab/METIS",
-            };
-            format!("gpmetis not found ({os}/{arch}). {install_hint}")
-        })?;
-
-    // Write to temp directory and invoke gpmetis
-    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
-    let graph_file = tmp_dir.path().join("graph.txt");
-    let part_file = tmp_dir.path().join("graph.txt.part.2");
-
-    std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
-
-    // Write tpwgts file if target_weights specified (non-equal split)
     // AC-05: validate target weights sum to 1.0 before passing to METIS
     if let Some((lf, rf)) = target_weights {
         let sum = lf + rf;
@@ -235,74 +189,39 @@ pub fn split_subgraph(
             "target_weights must sum to 1.0: {lf:.6} + {rf:.6} = {sum:.6}"
         );
     }
-    let tpwgts_file = if let Some((left_frac, _right_frac)) = target_weights {
-        let tpwgts = tmp_dir.path().join("tpwgts.txt");
-        // Only write partition 0; METIS infers partition 1 = 1 - left_frac
-        std::fs::write(&tpwgts, format!("0 = {left_frac:.6}\n"))
-            .map_err(|e| e.to_string())?;
-        Some(tpwgts)
-    } else {
-        None
-    };
+    let tpwgts_vec: Option<Vec<f32>> = target_weights
+        .map(|(lf, rf)| vec![lf as f32, rf as f32]);
 
-    // gpmetis uses atoi() to parse -ufactor, so it MUST be an integer.
-    // The METIS manual defines: imbalance = (1 + ufactor/1000). So:
+    // METIS imbalance = (1 + ufactor/1000).
     //   ufactor=1  → 0.1% tolerance
     //   ufactor=50 → 5.0% tolerance
-    // Convert from decimal (e.g. 1.05 → 50) and clamp to [1, 1000].
-    let ufactor_int = ((ufactor - 1.0) * 1000.0).round() as u32;
-    let ufactor_int = ufactor_int.clamp(1, 1000);
+    let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
+    let uf_int = uf_int.clamp(1, 1000);
 
-    // SAFETY: Rust's std::process::Command::arg() passes arguments directly to the
-    // OS API (CreateProcess on Windows, execvp on Unix) without shell interpretation.
-    // This means individual .arg() calls handle quoting and spaces automatically —
-    // NO manual quoting is needed. Paths with spaces are safe when passed as PathBuf
-    // or OsStr via .arg(path). Only format!("{}", path.display()) inserted into a
-    // shell string would be unsafe; we avoid that pattern here.
-    let mut cmd = Command::new(&gpmetis);
-    cmd.args([
-        "-contig",
-        "-minconn",
-        &format!("-niter={niter}"),
-        &format!("-ufactor={ufactor_int}"),
-    ]);
-    if let Some(ref tpwgts) = tpwgts_file {
-        // Pass -tpwgt= by building the flag string and the path separately via OsString
-        // so that spaces in the temp dir path are handled correctly by the OS API.
-        let mut flag = std::ffi::OsString::from("-tpwgt=");
-        flag.push(tpwgts.as_os_str());
-        cmd.arg(flag);
-    }
-    if let Some(s) = seed {
-        cmd.arg(format!("-seed={s}"));
-    }
-    // Pass graph file path via .arg(PathBuf) — OS API handles spaces automatically.
-    cmd.arg(&graph_file).arg("2");
-    cmd.current_dir(tmp_dir.path());
-
-    let out = cmd.output().map_err(|e| format!("gpmetis exec error: {e}"))?;
-    if !out.status.success() {
-        return Err(format!(
-            "gpmetis failed (rc={}):\nSTDOUT: {}\nSTDERR: {}",
-            out.status.code().unwrap_or(-1),
-            String::from_utf8_lossy(&out.stdout).chars().take(300).collect::<String>(),
-            String::from_utf8_lossy(&out.stderr).chars().take(300).collect::<String>(),
-        ));
-    }
-
-    let part_content = std::fs::read_to_string(&part_file)
-        .map_err(|_| format!("gpmetis did not create partition file: {} (stdout: {})",
-            part_file.display(),
-            String::from_utf8_lossy(&out.stdout).chars().take(200).collect::<String>()
-        ))?;
-
-    let parts = parse_metis_partition(&part_content, n).map_err(|e| e.to_string())?;
+    let mut part = vec![0i32; n];
+    let graph = metis::Graph::new(1, 2, &xadj, &adjncy)
+        .map_err(|e| format!("METIS graph init: {e}"))?
+        .set_vwgt(&vwgt);
+    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+    let graph = if let Some(ref tw) = tpwgts_vec { graph.set_tpwgts(tw) } else { graph };
+    let graph = graph
+        .set_option(metis::option::UFactor(uf_int))
+        .set_option(metis::option::NIter(niter as i32))
+        .set_option(metis::option::Contig(true))
+        .set_option(metis::option::MinConn(true));
+    let graph = if let Some(s) = seed {
+        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+    } else {
+        graph
+    };
+    graph.part_recursive(&mut part)
+        .map_err(|e| format!("METIS bisection failed: {e}"))?;
 
     let mut left = HashSet::new();
     let mut right = HashSet::new();
-    for (local, part) in parts.iter().enumerate() {
+    for (local, &p) in part.iter().enumerate() {
         let global = sorted[local];
-        if *part == 0 { left.insert(global); } else { right.insert(global); }
+        if p == 0 { left.insert(global); } else { right.insert(global); }
     }
 
     Ok((left, right))
@@ -355,75 +274,145 @@ pub fn split_subgraph_dual(
         })
         .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
 
-    let graph_content = write_metis_graph_dual(&sub_adj, &sub_pop, &sub_area,
-                                               if sub_ew.is_empty() { None } else { Some(&sub_ew) })
-        .map_err(|e| e.to_string())?;
+    let ew_opt = if sub_ew.is_empty() { None } else { Some(&sub_ew) };
+    let (xadj, adjncy) = adj_to_csr(&sub_adj);
+    let adjwgt = ew_to_adjwgt(&sub_adj, ew_opt);
 
-    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
-    let graph_file = tmp_dir.path().join("graph.metis");
-    std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
+    // ncon=2: METIS expects vertex weights interleaved per vertex: [pop_0, area_0, pop_1, area_1, ...]
+    let vwgt: Vec<i32> = sub_pop.iter().zip(sub_area.iter())
+        .flat_map(|(&pop, &area)| [pop as i32, area as i32])
+        .collect();
 
-    // tpwgts for ncon=2, nparts=2.
-    // Multi-constraint format: "partition_id : constraint_id = weight"
-    // Write ONLY n-1=1 partition (partition 0). METIS infers partition 1 from the remainder.
-    // This is the same pattern the Python pipeline used for minority/population dual constraint.
-    let area_left = 0.5f64;
-    let tpwgts_content = format!(
-        "0 : 0 = {pop_left_frac:.6}\n0 : 1 = {area_left:.6}\n"
-    );
-    let tpwgts_file = tmp_dir.path().join("tpwgts.txt");
-    std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
-
-    // ubvec[0] = population imbalance tolerance (tight: 1.001 = ±0.1%)
-    // ubvec[1] = area imbalance tolerance (loose: 1.10 = ±10% swing)
+    // tpwgts for ncon=2, nparts=2: stored [nparts][ncon] row-major
+    // tpwgts[i*ncon + j] = fraction for partition i, constraint j
+    let area_left = 0.5f32;
+    let tpwgts = vec![
+        pop_left_frac as f32, area_left,                  // partition 0: pop, area
+        (1.0 - pop_left_frac) as f32, 1.0 - area_left,   // partition 1: pop, area
+    ];
+    let ubvec_f32 = vec![ubvec[0] as f32, ubvec[1] as f32];
 
     let n = sorted.len();
-    // Use IDENTICAL flags to split_subgraph (ncon=1) — same -contig, -minconn, -niter, -ufactor.
-    // Only difference: ncon=2 graph format, tpwgts file, and ubvec.
-    let ufactor_int = ((ufactor - 1.0) * 1000.0) as u32;
-    let mut cmd = Command::new(find_gpmetis().unwrap_or_else(|| "gpmetis".to_string()));
-    cmd.args([
-        "-contig",
-        "-minconn",
-        &format!("-niter={niter}"),
-        &format!("-ufactor={ufactor_int}"),
-    ]);
-    // tpwgts (required for dual constraint)
-    let mut tpwgts_flag = std::ffi::OsString::from("-tpwgt=");
-    tpwgts_flag.push(tpwgts_file.as_os_str());
-    cmd.arg(tpwgts_flag);
-    // ubvec: space-separated per-constraint tolerances as single string value
-    // (same format the Python archive used: ' '.join(str(v) for v in ubvec))
-    let ubvec_arg = format!("-ubvec={:.4} {:.4}", ubvec[0], ubvec[1]);
-    cmd.arg(&ubvec_arg);
-    if let Some(s) = seed { cmd.arg(format!("-seed={s}")); }
-    cmd.arg(&graph_file).arg("2");
-    cmd.current_dir(tmp_dir.path());
+    let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
+    let uf_int = uf_int.clamp(1, 1000);
 
-    let out = cmd.output().map_err(|e| format!("gpmetis dual exec error: {e}"))?;
-    if !out.status.success() {
-        // Debug: show tpwgts content and first graph line
-        let tp = std::fs::read_to_string(&tpwgts_file).unwrap_or_default();
-        let gc = std::fs::read_to_string(&graph_file).unwrap_or_default();
-        let first_line = gc.lines().next().unwrap_or("?");
-        return Err(format!(
-            "gpmetis dual failed: {}\n[tpwgts]: {}\n[graph hdr]: {}",
-            String::from_utf8_lossy(&out.stderr).chars().take(200).collect::<String>(),
-            tp.trim(), first_line
-        ));
-    }
+    let mut part = vec![0i32; n];
+    let graph = metis::Graph::new(2, 2, &xadj, &adjncy)
+        .map_err(|e| format!("METIS dual graph init: {e}"))?
+        .set_vwgt(&vwgt)
+        .set_tpwgts(&tpwgts)
+        .set_ubvec(&ubvec_f32);
+    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+    let graph = graph
+        .set_option(metis::option::UFactor(uf_int))
+        .set_option(metis::option::NIter(niter as i32))
+        .set_option(metis::option::Contig(true))
+        .set_option(metis::option::MinConn(true));
+    let graph = if let Some(s) = seed {
+        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+    } else {
+        graph
+    };
+    graph.part_recursive(&mut part)
+        .map_err(|e| format!("METIS dual bisection failed: {e}"))?;
 
-    let part_file = graph_file.with_extension("metis.part.2");
-    let part_content = std::fs::read_to_string(&part_file)
-        .map_err(|_| "gpmetis dual did not create partition file".to_string())?;
-    let parts = parse_metis_partition(&part_content, n).map_err(|e| e.to_string())?;
-
-    let mut left = HashSet::new(); let mut right = HashSet::new();
-    for (local, part) in parts.iter().enumerate() {
+    let mut left = HashSet::new();
+    let mut right = HashSet::new();
+    for (local, &p) in part.iter().enumerate() {
         let global = sorted[local];
-        if *part == 0 { left.insert(global); } else { right.insert(global); }
+        if p == 0 { left.insert(global); } else { right.insert(global); }
     }
     Ok((left, right))
+}
+
+/// Population-area Lorenz analysis for AreaSection feasibility.
+///
+/// Sorts tracts densest-first, accumulates cumulative (area_frac, pop_frac).
+/// Returns:
+///   - `curve`: Vec<(area_frac, pop_frac)> sampled at each tract boundary
+///   - `natural_pop_at_half_area`: population fraction contained in the densest 50% of area
+///   - `suggested_left_k`: nearest valid district count to the natural split
+///
+/// Used to pre-filter infeasible ratios before running dual-constraint METIS.
+pub fn population_lorenz(
+    vertex_weights: &[i64],
+    vertex_areas_m2: &[f64],
+    num_districts: usize,
+) -> (Vec<(f64, f64)>, f64, usize) {
+    let total_pop: f64 = vertex_weights.iter().map(|&w| w as f64).sum();
+    let total_area: f64 = vertex_areas_m2.iter().sum();
+    if total_pop == 0.0 || total_area == 0.0 {
+        return (vec![], 0.0, num_districts / 2);
+    }
+
+    // Sort tract indices by density (pop/area), densest first
+    let mut order: Vec<usize> = (0..vertex_weights.len()).collect();
+    order.sort_by(|&a, &b| {
+        let da = vertex_weights[a] as f64 / vertex_areas_m2[a].max(1.0);
+        let db = vertex_weights[b] as f64 / vertex_areas_m2[b].max(1.0);
+        db.partial_cmp(&da).unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    let mut curve: Vec<(f64, f64)> = Vec::with_capacity(order.len() + 1);
+    curve.push((0.0, 0.0));
+    let mut cum_area = 0.0f64;
+    let mut cum_pop  = 0.0f64;
+    let mut natural_pop_at_half = 0.0f64;
+    let mut crossed_half = false;
+
+    for &i in &order {
+        cum_area += vertex_areas_m2[i] / total_area;
+        cum_pop  += vertex_weights[i] as f64 / total_pop;
+        curve.push((cum_area, cum_pop));
+        if !crossed_half && cum_area >= 0.5 {
+            // Interpolate to find exact pop fraction at area = 0.5
+            let prev = curve[curve.len() - 2];
+            let t = (0.5 - prev.0) / (cum_area - prev.0).max(1e-12);
+            natural_pop_at_half = prev.1 + t * (cum_pop - prev.1);
+            crossed_half = true;
+        }
+    }
+
+    // Nearest valid district count: round natural_pop_at_half × num_districts,
+    // clamped to 1..=num_districts/2 (we always label the smaller side left).
+    let natural_k_raw = (natural_pop_at_half * num_districts as f64).round() as usize;
+    let max_left = num_districts / 2;
+    // The natural split could be on either side; take the smaller label
+    let natural_k = if natural_k_raw > max_left {
+        num_districts - natural_k_raw
+    } else {
+        natural_k_raw
+    }.clamp(1, max_left);
+
+    (curve, natural_pop_at_half, natural_k)
+}
+
+/// For a given population fraction `p`, return the minimum area fraction needed
+/// (greedily taking the densest tracts first — non-contiguous lower bound).
+fn lorenz_min_area(
+    vertex_weights: &[i64],
+    vertex_areas_m2: &[f64],
+    target_pop_frac: f64,
+) -> f64 {
+    let total_pop: f64 = vertex_weights.iter().map(|&w| w as f64).sum();
+    let total_area: f64 = vertex_areas_m2.iter().sum();
+    if total_area == 0.0 { return 0.0; }
+
+    let mut order: Vec<usize> = (0..vertex_weights.len()).collect();
+    order.sort_by(|&a, &b| {
+        let da = vertex_weights[a] as f64 / vertex_areas_m2[a].max(1.0);
+        let db = vertex_weights[b] as f64 / vertex_areas_m2[b].max(1.0);
+        db.partial_cmp(&da).unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    let mut cum_pop = 0.0f64;
+    let mut cum_area = 0.0f64;
+    for &i in &order {
+        if cum_pop >= target_pop_frac * total_pop { break; }
+        cum_pop  += vertex_weights[i] as f64;
+        cum_area += vertex_areas_m2[i];
+    }
+    cum_area / total_area
 }
 
 /// AreaSection: dual-constrained ratio-optimal bisection.
@@ -444,6 +433,7 @@ pub fn run_areasection(
     balance_tolerance: f64,
     niter: u32,
     seeds_per_ratio: usize,
+    area_swing: f64,              // e.g. 1.10 = ±10% area swing tolerance
     intermediate_dir: Option<&Path>,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
@@ -470,10 +460,40 @@ pub fn run_areasection(
     let all_tracts: HashSet<usize> = (0..n).collect();
     let max_left = num_districts / 2;
 
+    // ── Lorenz analysis: pre-filter infeasible ratios ──────────────────────
+    let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, vertex_areas_m2, num_districts);
+    let area_max = 0.5 * area_swing;        // e.g. 0.55 for ±10%
+    let area_min = 0.5 / area_swing;        // e.g. 0.4545 for ±10%
+    eprintln!("[areasection] Lorenz: dense-half contains {:.1}% of population → natural split ~{}:{}",
+              natural_pop * 100.0, num_districts - suggested_k, suggested_k);
+    let feasible: Vec<bool> = (0..=max_left).map(|left_k| {
+        if left_k == 0 { return false; }
+        let p = left_k as f64 / num_districts as f64;
+        let min_a = lorenz_min_area(vertex_weights, vertex_areas_m2, p);
+        let max_a = 1.0 - lorenz_min_area(vertex_weights, vertex_areas_m2, 1.0 - p);
+        // Feasible if the non-contiguous area range overlaps the allowed window
+        min_a <= area_max && max_a >= area_min
+    }).collect();
+    for left_k in 1..=max_left {
+        let p = left_k as f64 / num_districts as f64;
+        let min_a = lorenz_min_area(vertex_weights, vertex_areas_m2, p);
+        let max_a = 1.0 - lorenz_min_area(vertex_weights, vertex_areas_m2, 1.0 - p);
+        eprintln!("[areasection]   ratio {}:{} ({:.1}% pop): Lorenz area range [{:.1}%–{:.1}%] → {}",
+                  left_k, num_districts - left_k, p * 100.0,
+                  min_a * 100.0, max_a * 100.0,
+                  if feasible[left_k] { "feasible" } else { "INFEASIBLE (Lorenz)" });
+    }
+    // ── end Lorenz analysis ────────────────────────────────────────────────
+
     eprintln!("[areasection] {} ratios × {} seeds (pop+area dual constraint)",
               max_left, seeds_per_ratio);
 
     for left_k in 1..=max_left {
+        if !feasible[left_k] {
+            eprintln!("[areasection] skipping ratio {}:{} — Lorenz predicts infeasible area balance",
+                      left_k, num_districts - left_k);
+            continue;
+        }
         let right_k = num_districts - left_k;
         let pop_frac = left_k as f64 / num_districts as f64;
         let mut ratio_best = f64::INFINITY;
@@ -583,84 +603,41 @@ pub fn run_nway_partition(
         return Ok((0..n).map(|i| (i, 1)).collect());
     }
 
-    let graph_content = write_metis_graph(
+    let (xadj, adjncy) = adj_to_csr(adjacency);
+    let vwgt: Vec<i32> = vertex_weights.iter().map(|&w| (w as i32).max(1)).collect();
+    let adjwgt = ew_to_adjwgt(
         adjacency,
-        vertex_weights,
         if edge_weights.is_empty() { None } else { Some(edge_weights) },
-    ).map_err(|e| e.to_string())?;
+    );
 
-    let gpmetis = find_gpmetis()
-        .ok_or_else(|| {
-            let arch = std::env::consts::ARCH;
-            let os = std::env::consts::OS;
-            let install_hint = match (os, arch) {
-                ("linux", "aarch64") | ("linux", "arm") =>
-                    "ARM Linux: apt-get install metis (Debian/Ubuntu) or build from source: https://github.com/KarypisLab/METIS",
-                ("macos", "aarch64") =>
-                    "Apple Silicon: brew install metis",
-                ("linux", _) =>
-                    "Linux: apt-get install metis (Debian/Ubuntu) or dnf install metis-devel (Fedora)",
-                ("windows", _) =>
-                    "Windows: download from https://github.com/KarypisLab/METIS/releases or install via vcpkg",
-                ("macos", _) =>
-                    "macOS: brew install metis",
-                _ =>
-                    "Install METIS from https://github.com/KarypisLab/METIS",
-            };
-            format!("gpmetis not found ({os}/{arch}). {install_hint}")
-        })?;
+    // Equal target weights: 1/k per partition (ncon=1)
+    let weight_per = 1.0_f32 / num_districts as f32;
+    let tpwgts: Vec<f32> = vec![weight_per; num_districts];
 
-    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
-    let graph_file = tmp_dir.path().join("graph.txt");
-    let part_file = tmp_dir.path().join(format!("graph.txt.part.{num_districts}"));
+    let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
+    let uf_int = uf_int.clamp(1, 1000);
 
-    std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
-
-    // Write n-1 equal target weights; METIS infers the last to guarantee sum=1.0
-    // AC-05: this approach avoids floating-point drift from n independent 1/k values
-    let tpwgts_file = tmp_dir.path().join("tpwgts.txt");
-    let weight_per = 1.0_f64 / num_districts as f64;
-    let mut tpwgts_content = String::new();
-    for partition_id in 0..(num_districts - 1) {
-        tpwgts_content.push_str(&format!("{partition_id} = {weight_per:.8}\n"));
-    }
-    std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
-
-    // SAFETY: See comment in split_subgraph — .arg(PathBuf) is safe for paths with
-    // spaces; format!("{}", path.display()) in a shell string would NOT be.
-    let mut cmd = Command::new(&gpmetis);
-    cmd.args([
-        "-contig",
-        "-minconn",
-        &format!("-niter={niter}"),
-        &format!("-ufactor={ufactor:.4}"),
-    ]);
-    {
-        let mut flag = std::ffi::OsString::from("-tpwgt=");
-        flag.push(tpwgts_file.as_os_str());
-        cmd.arg(flag);
-    }
-    if let Some(s) = seed { cmd.arg(format!("-seed={s}")); }
-    // Pass graph file via .arg(PathBuf) and num_districts as a string arg.
-    cmd.arg(&graph_file).arg(num_districts.to_string());
-    cmd.current_dir(tmp_dir.path());
-
-    let out = cmd.output().map_err(|e| format!("gpmetis exec error: {e}"))?;
-    if !out.status.success() {
-        return Err(format!(
-            "gpmetis n-way failed (rc={}):\n{}",
-            out.status.code().unwrap_or(-1),
-            String::from_utf8_lossy(&out.stderr).chars().take(300).collect::<String>()
-        ));
-    }
-
-    let part_content = std::fs::read_to_string(&part_file)
-        .map_err(|_| format!("gpmetis did not create {}", part_file.display()))?;
-
-    let parts = parse_metis_partition(&part_content, n).map_err(|e| e.to_string())?;
+    let mut part = vec![0i32; n];
+    let graph = metis::Graph::new(1, num_districts as i32, &xadj, &adjncy)
+        .map_err(|e| format!("METIS n-way graph init: {e}"))?
+        .set_vwgt(&vwgt)
+        .set_tpwgts(&tpwgts);
+    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+    let graph = graph
+        .set_option(metis::option::UFactor(uf_int))
+        .set_option(metis::option::NIter(niter as i32))
+        .set_option(metis::option::Contig(true))
+        .set_option(metis::option::MinConn(true));
+    let graph = if let Some(s) = seed {
+        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+    } else {
+        graph
+    };
+    graph.part_kway(&mut part)
+        .map_err(|e| format!("METIS n-way partition failed: {e}"))?;
 
     // Convert 0-based METIS output to 1-based district IDs
-    Ok(parts.iter().enumerate().map(|(tract, &part)| (tract, part + 1)).collect())
+    Ok(part.iter().enumerate().map(|(tract, &p)| (tract, p as usize + 1)).collect())
 }
 
 /// Run the full level-parallel bisection for k districts.
@@ -1328,42 +1305,32 @@ fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize
 mod tests {
     use super::*;
 
-    // ── Task 132: detect_gpmetis_version ─────────────────────────────────────
+    // ── detect_gpmetis_version ───────────────────────────────────────────────
 
     #[test]
     fn test_detect_gpmetis_version_returns_string() {
-        // Must return a non-panicking string — "unknown" when gpmetis isn't present,
-        // or a non-empty version string when it is. Never panics.
         let version = detect_gpmetis_version();
-        assert!(!version.is_empty(),
-            "detect_gpmetis_version must return a non-empty string (got empty)");
-        // Must be either "unknown" (gpmetis absent) or contain printable characters
+        assert!(!version.is_empty(), "must return a non-empty string");
         assert!(version.chars().all(|c| !c.is_control() || c == ' '),
             "version string must contain only printable chars: {:?}", version);
+        assert!(version.contains("METIS"), "expected METIS in version string, got: {version}");
     }
 
     #[test]
-    fn test_detect_gpmetis_version_never_panics_without_gpmetis() {
-        // Simulate the case where gpmetis is not found: find_gpmetis() → None.
-        // detect_gpmetis_version() must return "unknown" in that case.
-        // We can't easily mock find_gpmetis, but we can at least verify the return
-        // value is a valid String (non-empty).
+    fn test_detect_gpmetis_version_never_panics() {
         let v = detect_gpmetis_version();
-        // Acceptable values: "unknown" (no gpmetis) or any non-empty version string
-        assert!(v == "unknown" || !v.is_empty(),
-            "must return 'unknown' or a version string, got: {:?}", v);
+        assert!(!v.is_empty(), "must return a non-empty string, got: {:?}", v);
     }
 
     #[test]
     fn test_split_four_node_graph() {
-        if find_gpmetis().is_none() { return; }
         let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
         let vw = vec![1000i64, 1000, 1000, 1000];
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..4).collect();
 
         let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.001, 100, Some(42), None)
-            .expect("gpmetis should split 4-node graph");
+            .expect("METIS should split 4-node graph");
 
         assert_eq!(left.len() + right.len(), 4, "all tracts assigned");
         assert!(!left.is_empty() && !right.is_empty(), "non-empty split");
@@ -1392,7 +1359,7 @@ mod tests {
 
     #[test]
     fn test_run_all_splits_two_districts() {
-        if find_gpmetis().is_none() { return; }
+
         let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
         let vw = vec![1000i64, 1000, 1000, 1000];
         let ew = HashMap::new();
@@ -1433,7 +1400,7 @@ mod tests {
 
     #[test]
     fn test_nway_two_districts() {
-        if find_gpmetis().is_none() { return; }
+
         let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
         let vw = vec![1000i64; 4];
         let ew: HashMap<(usize, usize), f64> = HashMap::new();
@@ -1582,7 +1549,7 @@ mod tests {
 
     #[test]
     fn test_split_subgraph_with_edge_weights() {
-        if find_gpmetis().is_none() { return; }
+
         // 4-node chain with strong edge weights on left side — should bias split
         let adj = vec![vec![1], vec![0,2], vec![1,3], vec![2]];
         let vw = vec![1000i64; 4];
@@ -1599,7 +1566,7 @@ mod tests {
 
     #[test]
     fn test_split_subgraph_unequal_target_weights() {
-        if find_gpmetis().is_none() { return; }
+
         // 6 tracts, split 4:2 (target weights 2/3 and 1/3)
         let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2,4,5], vec![3,5], vec![3,4]];
         let vw = vec![1000i64; 6];
@@ -1631,7 +1598,7 @@ mod tests {
 
     #[test]
     fn test_split_subgraph_two_tracts_always_splits() {
-        if find_gpmetis().is_none() { return; }
+
         // 2 tracts: must produce one in each partition
         let adj = vec![vec![1], vec![0]];
         let vw = vec![1000i64, 1000];
@@ -1648,7 +1615,7 @@ mod tests {
 
     #[test]
     fn test_run_nway_partition_basic() {
-        if find_gpmetis().is_none() { return; }
+
         // 12 tracts into 3 districts — n-way partition
         let n = 12;
         let adj: Vec<Vec<usize>> = (0..n).map(|i| {
@@ -1670,7 +1637,7 @@ mod tests {
 
     #[test]
     fn test_run_nway_partition_balance() {
-        if find_gpmetis().is_none() { return; }
+
         // 20 equal-weight tracts into 4 districts — should be well-balanced
         let n = 20;
         let adj: Vec<Vec<usize>> = (0..n).map(|i| {
@@ -1696,7 +1663,7 @@ mod tests {
 
     #[test]
     fn test_run_nway_partition_output_complete_and_valid() {
-        if find_gpmetis().is_none() { return; }
+
         let adj = vec![vec![1,2], vec![0,3], vec![0,3], vec![1,2]];
         let vw = vec![1000i64; 4];
         let ew = HashMap::new();
@@ -1716,7 +1683,7 @@ mod tests {
         // Verify that run_all_splits with k=8 produces exactly 8 districts
         // without calling gpmetis (test the assignment structure, not balance)
         // Use single-tract-per-district to make it trivially balanced
-        if find_gpmetis().is_none() { return; }
+
         let n = 16;
         // Grid graph: 4x4
         let adj: Vec<Vec<usize>> = (0..n).map(|i| {
@@ -1742,7 +1709,7 @@ mod tests {
     fn test_run_all_splits_tight_balance_10pct() {
         // With correct ufactor math, 10% tolerance on a 4-district map
         // should produce well-balanced output
-        if find_gpmetis().is_none() { return; }
+
         let adj = vec![
             vec![1,4], vec![0,2,5], vec![1,3,6], vec![2,7],
             vec![0,5], vec![1,4,6], vec![2,5,7], vec![3,6],
@@ -1884,7 +1851,7 @@ mod tests {
     /// twice returns identical assignments (deterministic output).
     #[test]
     fn test_rayon_results_sorted_before_insert() {
-        if find_gpmetis().is_none() { return; }
+
 
         // A simple 4-node chain graph: 0-1-2-3
         let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
