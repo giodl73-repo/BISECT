@@ -2125,6 +2125,7 @@ mod tests {
             (PM::Proportional,    "proportional"),
             (PM::CompactBisect,   "compact-bisect"),
             (PM::GeoSection,      "geosection"),
+            (PM::AreaSection,     "areasection"),
         ];
         for (mode, name) in &cases {
             let algo = AlgorithmParams::defaults_for_mode(mode);
@@ -2152,6 +2153,7 @@ mod tests {
             },
             AlgorithmParams::CompactBisect { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 },
             AlgorithmParams::GeoSection { ufactor: 5, niter: 100, seeds_per_ratio: 100, lambda: 1.0, dual_weight: false },
+            AlgorithmParams::AreaSection { ufactor: 5, niter: 100, seeds_per_ratio: 50, area_swing: 1.10 },
         ];
         for v in &variants {
             let (uf, ni, _seed) = v.metis_basics();
@@ -2233,6 +2235,7 @@ mod tests {
             }),
             ("compact-bisect",   AlgorithmParams::CompactBisect { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 }),
             ("geosection",       AlgorithmParams::GeoSection { ufactor: 5, niter: 100, seeds_per_ratio: 50, lambda: 0.0, dual_weight: false }),
+            ("areasection",      AlgorithmParams::AreaSection { ufactor: 5, niter: 100, seeds_per_ratio: 50, area_swing: 1.10 }),
         ];
         for (expected_name, variant) in all {
             assert_eq!(variant.mode_name(), *expected_name,

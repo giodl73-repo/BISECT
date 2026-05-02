@@ -59,6 +59,10 @@ pub enum PartitionMode {
     /// edge-cut. Subsequent levels use standard bisection.
     #[value(name = "geosection")]
     GeoSection,
+    /// AreaSection (B.9): dual population+area constraint bisection.
+    /// ncon=2: tight population balance AND 50/50 area (±10% swing allowed).
+    #[value(name = "areasection")]
+    AreaSection,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -71,6 +75,7 @@ impl std::fmt::Display for PartitionMode {
             Self::Proportional     => write!(f, "proportional"),
             Self::CompactBisect    => write!(f, "compact-bisect"),
             Self::GeoSection       => write!(f, "geosection"),
+            Self::AreaSection      => write!(f, "areasection"),
         }
     }
 }
