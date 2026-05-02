@@ -1,94 +1,89 @@
-# Next Session Handoff: B.7 Paper + Algorithm Complete
+# Next Session Handoff: B.7 Paper — Deep Convergence + Fiedler Bounds
 
 **Status:** active session pickup pointer
 **Owner:** maintainer (you)
-**Last update:** 2026-05-01 (session ending with B.7 foundational work complete)
+**Last update:** 2026-05-01 (extended convergence sweeps + Fiedler approximation ratios)
 
-## What just landed (this session)
+## Convergence Status (all confirmed states as of session end)
 
-Major algorithmic and legal research contributions:
+| State | k | MEC (km) | D/R | Gap (pp) | Seeds | Tail | Status |
+|-------|---|----------|-----|---------|-------|------|--------|
+| VT | 1 | 0 | 1D | +31.7 | 200 | — | trivial |
+| PA | 17 | 2,441 | 8D/9R | −3.5 | 1,100 | 819 | CONVERGED |
+| GA | 14 | 2,546 | 7D/7R | −0.1 | 1,000 | 511 | CONVERGED |
+| MI | 13 | 2,098 | 7D/6R | +2.4 | 500 | 319 | CONVERGED |
+| TN | 9 | 1,568 | 1D/8R | −27.1 | 1,000 | 391 | CONVERGED |
+| MN | 8 | 1,357 | 3D/5R | −16.1 | 1,000 | 551 | CONVERGED |
+| NC | 14 | 2,400 | 5D/9R | −13.6 | 200 | 158 | CONVERGED |
+| CT | 5 | 361 | 5D/0R | +39.8 | 500 | 316 | likely |
+| AL | 7 | 1,716 | 0D/7R | −37.1 | 500 | 326 | likely |
+| ID | 2 | 502 | 0D/2R | −34.1 | 500 | 309 | likely |
+| WI | 8 | 1,689 | 2D/6R | −25.3 | 200 | 86 | marginal — needs more |
+| TX | 38 | 8,176 | 15D/23R | −7.7 | ~350 | ~236 | running (b7tx_ prefix) |
 
-### Code
-- `redist-data/fiedler.rs` — Fiedler value (λ₂) via deflated power iteration, 5 passing tests, `FiedlerCertificate` struct
-- `redist-data/adjacency.rs` — `subgraph_pp()`, `geometric_mean_pp()`, `set_areas()`, `vertex_ext_perimeters` for CompactBisect geometry
-- `redist-data/serialize.rs` — v3 format adds geometry (ext_perimeters + areas) with v2 backward compat
-- `redist-cli/bisection_runner.rs` — `run_all_splits_compact()` (CompactBisect), `run_all_splits_proportional()` (Proportional Bisect), `select_compact_split()` with geometric-mean PP
-- `redist-cli/args.rs` — `PartitionMode::Proportional` added
-- `redist-cli/aggregate.rs` — state-level aggregation path (proportionality is state-level, not district-level)
-- `redist-analysis/proportionality.rs` — bug fix: was using national vote share; now state-only tracts
-- `scripts/b7_sweep.ps1` — 50-state × 200-seed MEC convergence sweep (resumable CSV)
+## Fiedler Approximation Ratios
 
-### Bug fixes
-- Proportionality analyzer: `dem_vote_share_statewide` was accumulating ALL rows from the national election CSV (national 52.2% for every state). Fixed to count only state-assigned tracts.
-- Aggregate: `available=false` when no election data (AK, HI missing from presidential_by_tract.csv)
+`scripts/b7_fiedler_bounds.py` computes λ₂ from adj.bin via deflated power iteration.
+Ratio = MEC / (λ₂ × n/4). Near 1.0 = certifiable.
 
-### Research (B.7 paper)
-- `research/publications/solution-space-and-seed-sensitivity/` — formal LaTeX publication
-  - §1 Introduction: MEC as indisputable criterion, Fiedler certificate as key legal innovation
-  - §2 Background: graph hardness, Cheeger bound, PP, Huntington-Hill analogy
-  - §3 Methodology: solution space, MEC protocol, **Fiedler certificate** (§3.3), CompactBisect algorithm, proportional bisection
-  - §4 Evaluation: VT zero-variance, PA dense-space (1100 seeds), convergence table
-  - §5 Discussion: geometric bias theorem, compactness as intermediate criterion, WI three-way comparison, proportionality gap as transparency metric
+| State | Ratio | Interpretation |
+|-------|-------|---------------|
+| MI | **1.01×** | At the lower bound — fully certifiable |
+| NC | 2.42× | Room to improve; needs more seeds |
+| PA | 2.67× | Ditto |
+| GA | 2.98× | Ditto |
+| WI | 3.20× | High gap — needs many more seeds to certify |
+| TN | 3.68× | Highest gap — sorted state with few districts |
 
-### Empirical findings
-- **PA (17D, 50.6% Dem, 1100 seeds):** MEC = 2441km (8D, -3.5pp). Last improvement seed 181, stable 819 seeds. Every seed = unique partition.
-- **NC (14D, 49.3% Dem, 200 seeds):** MEC = 2400km (5D, -13.6pp). Converges fast (last impr seed 41).
-- **WI (8D, 50.3% Dem, 200 seeds):** MEC = 1689km (2D, -25.3pp). Max compactness → 3D (-12.8pp). Most proportional → 4D (-0.3pp). THREE-WAY HIERARCHY CONFIRMED.
-- **GA (14D, 200 seeds):** MEC = 7D/7R (near proportional).
-- **MI (13D, 200 seeds):** MEC = 7D/6R (+2.4pp, near proportional).
-- **50-state sweep:** running in background via `scripts/b7_sweep.ps1`, results in `outputs/b7_sweep/convergence.csv` (~22 states done so far).
+**Key insight**: sorted states have higher ratios because their graphs have lower algebraic
+connectivity (easier to cut). Mixed-geography states (MI) approach the bound.
 
-### Key theorems (for the paper)
-1. **Geometric bias theorem:** min edge-cut systematically under-represents geographically concentrated parties (WI: 2D/6R despite 50/50 vote).
-2. **Compactness improvement:** max PP more proportional than min EC because PP is size-normalized (WI: 3D vs 2D).
-3. **Proportionality requires partisan input:** no purely geometric criterion guarantees proportional outcomes.
-4. **Fiedler certificate:** converts empirical convergence into mathematical guarantee — no challenger can improve by > δ×100%.
+## Key Empirical Findings (session)
 
-## Read these in order to pick up
+1. **False floors are common**: GA (seed 190→288→489), TN (seed 182→334→609)
+   both had incorrect interim results overturned by deeper sweeps.
 
-1. `CLAUDE.md` (always loaded)
-2. `docs/legal/PARTISAN_OPTIONS.md` — four partisan postures, proportionality metric
-3. `research/publications/solution-space-and-seed-sensitivity/plan.md` — B.7 research plan
-4. `research/publications/solution-space-and-seed-sensitivity/sections/03-methodology.tex` — the full algorithm spec including Fiedler certificate
-5. `research/publications/solution-space-and-seed-sensitivity/sections/05-discussion.tex` — WI three-way criterion comparison
+2. **MI at 1.01×**: Michigan's MEC plan is provably within 1% of the theoretical
+   geometric minimum. This is the paper's strongest Fiedler certificate example.
 
-## Concrete next steps
+3. **50-state pattern**: near-proportional mixed states (GA −0.1, MI +2.4, PA −3.5),
+   sorted R-favoring (TN −27, WI −25, MN −16), structural sweeps (CT +39.8).
 
-1. **Complete the 50-state sweep** — `scripts/b7_sweep.ps1` is running (or resume it). Results in `outputs/b7_sweep/convergence.csv`. Need all 50 states for §4 national table.
+4. **CA failure rate**: 64% of seeds fail for CA (52D) with flat 0.5% tolerance.
+   TX: ~12% failure rate. Tiered tolerance schedule needed for large states.
 
-2. **Wire Fiedler into CompactBisect** — `run_all_splits_compact()` in `bisection_runner.rs` calls METIS N times and picks by GMPP, but doesn't yet compute the Fiedler certificate at each level. Add `make_certificate()` call per bisection level and include certs in the plan manifest.
+5. **TN true MEC = 1D** (not 2D as in 200-seed sweep). 200 seeds was insufficient.
 
-3. **Add `redist analyze --types fiedler`** — compute λ₂ for the state graph and report the certification ratio. This makes the certificate user-visible.
+## Review Status
 
-4. **Run CompactBisect vs MEC comparison** — for PA, NC, WI: run `redist state --partition-mode compact --seeds-per-level 50` (once wired) and compare proportionality outcomes to the MEC sweep. This is the paper's central empirical comparison.
+Round 1 complete (avg 2.8/4). P1 items A-E all addressed in this session.
+Stage: synthesis → revision (P2/P3 items remain).
 
-5. **Write §4 Evaluation fully** — once the 50-state sweep completes and CompactBisect runs, fill in the tables with all 50 states.
+## Immediate Next Steps
 
-6. **Paper title:** Suggest renaming from "Solution Space and Seed Sensitivity" to something that leads with the contribution: "CompactBisect: A Geometrically Certified Algorithm for Neutral Congressional Redistricting" or "The Fiedler Certificate: Provably Optimal Compact Redistricting Without Partisan Input"
+1. **Run WI to 1,000 seeds** — only 86-seed tail; needs deep convergence for paper claims.
+   `$ver = "b7_WI_s{seed}"; seeds 201..1000` using existing `b7_WI_s*` directories.
 
-## State of the three NEXT_SESSION tasks (from previous session)
+2. **Add TX to Fiedler bounds script** — once TX converges (seeds running in b7tx_)
+   with results in `outputs/b7tx_s*/2020/states/texas/`.
 
-- **Task 1 (National proportionality sweep):** COMPLETE. `outputs/RustV3/2020/national/us_proportionality.csv`. Bug fixed (national vote share was wrong).
-- **Task 2 (E.4 partisan-similarity runner wiring):** NOT STARTED. Still deferred.
-- **Task 3 (HTML compare proportionality row):** NOT STARTED. Still deferred.
+3. **Wire Fiedler certificate into CompactBisect output** — add to manifest JSON.
 
-## See also
+4. **P2-A: Use exact TIGER perimeters** instead of 2√(πA) circular approximation.
+   Reviewer Steinhardt flagged this as an attack surface; exact values are available.
 
-- `docs/legal/MODEL_FEDERAL_STATUTE.md` — Districting Integrity Act (§104(e) prohibits partisan input)
-- `docs/legal/PARTISAN_OPTIONS.md` — proportionality as diagnostic, not standard
-- `redist/crates/redist-data/src/fiedler.rs` — Fiedler computation
-- `redist/crates/redist-cli/src/bisection_runner.rs` — CompactBisect + Proportional Bisect
+5. **Run CompactBisect on confirmed focal states** with release binary.
+   Currently only done with debug binary (Reviewer Liang P1.2).
 
-## Addendum: CA failure rate finding (2026-05-01)
+6. **Write conclusion section** (§6 is still just a 4-line stub).
 
-CA (52 districts, 6 recursion levels) fails 64% of seeds (78/122) due to
-population balance violations with the flat 0.5% tolerance. This is NOT a
-bug — it's a known property of deep recursion with tight tolerances. The
-statute's tiered schedule (§104(b)(4)) addresses this: looser at levels 5+.
+## Files of note
 
-**Action needed**: implement tiered tolerance in the bisection runner so CA
-and TX produce valid plans at a much higher rate. The tiered schedule from
-the statute draft:
-  level 1-2: 0.5%, level 3: 1.0%, level 4: 1.5%, level 5+: 2.0%
-
-This is a P2 item for the paper (mentioned in §4 Texas section).
+- `scripts/b7_fiedler_bounds.py` — Fiedler computation for all confirmed states
+- `scripts/b7_sweep.ps1` — 50-state MEC sweep (resumable CSV)
+- `research/publications/solution-space-and-seed-sensitivity/` — full paper
+  - `reviews/SYNTHESIS.md` — P1/P2/P3 items from Round 1
+  - `_panel.yaml` — stage=synthesis, avg=2.8/4
+- `outputs/b7_sweep/convergence.csv` — 50-state 200-seed summary
+- `outputs/b7_{STATE}_s{N}/` — per-state per-seed outputs (b7_PA_s1..1100, etc.)
+- `outputs/b7tx_s{N}/` — TX fresh sweep (avoids stale manifests)
