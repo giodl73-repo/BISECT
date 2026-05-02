@@ -53,7 +53,7 @@ confirmed = [
     ("mi","michigan",       13, 7,  2.43,  2098000),
     ("tn","tennessee",       9, 1,-27.06,  1568000),
     ("nc","north_carolina", 14, 5,-13.60,  2400000),
-    ("wi","wisconsin",       8, 2,-25.32,  1689000),
+    ("wi","wisconsin",       8, 3,-12.82,  1615000),  # 1000-seed result; still converging
     ("tx","texas",          38,15, -7.70,  8176000),  # b7tx_ fresh sweep
     ("mn","minnesota",       8, 3,-16.14,  1357000),
 ]

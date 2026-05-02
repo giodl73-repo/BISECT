@@ -117,17 +117,30 @@ PA & 50.6\% & 8D/9R & $-3.5$\,pp  & 2{,}441 & 7D/10R & $-9.4$\,pp & 2{,}392 \\
 
 \paragraph{Wisconsin (updated).}
 The initial 200-seed MEC result for Wisconsin was 2D/6R ($-25.3$\,pp) at
-1{,}689\,km. At seed 318 (of 1{,}000), the running minimum dropped to
-1{,}642\,km producing \textbf{3D/5R ($-12.8$\,pp)} --- a 47\,km improvement
-and a one-seat partisan shift. This is the third state in our focal analysis
-(after Georgia and Tennessee) where the 200-seed result was a false floor.
+1{,}689\,km. This is the third false floor in our focal analysis (after Georgia
+and Tennessee). The 1{,}000-seed sweep yields:
 
-Notably, the deep-sweep MEC result (3D) agrees with the \textsc{CompactBisect}
-result (also 3D, $-12.8$\,pp at 1{,}584\,km). For Wisconsin, both selection
-criteria converge on the same partisan outcome. The MEC plan achieves it at
-1{,}642\,km; \textsc{CompactBisect} at 1{,}584\,km (58\,km more compact).
-The MEC plan is converging (82-seed tail at seed 400, still running to
-1{,}000).
+\begin{center}
+\begin{tabular}{rrrl}
+\toprule
+Seed & EC (km) & D seats & Gap \\
+\midrule
+113 & 1{,}689 & 2D/6R & $-25.3$\,pp \\
+318 & 1{,}642 & 3D/5R & $-12.8$\,pp \\
+891 & 1{,}615 & 3D/5R & $-12.8$\,pp \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The partisan outcome stabilised at 3D/5R at seed 318 and did not change through
+seed 1{,}000, despite the EC improving by a further 27\,km at seed 891. The
+3D outcome has persisted through 573 consecutive seeds. The 109-seed tail at
+seed 1{,}000 (Fiedler ratio 3.06×) indicates the EC minimum is still
+converging, but the partisan outcome is stable.
+
+\textsc{CompactBisect} independently produces 3D/5R ($-12.8$\,pp) at
+1{,}584\,km --- 31\,km more compact than the 1{,}000-seed MEC. For Wisconsin,
+both geometric criteria agree on 3D when given sufficient computation.
 
 \paragraph{North Carolina.}
 Both algorithms produce 5D/9R. However, \textsc{CompactBisect} achieves this
