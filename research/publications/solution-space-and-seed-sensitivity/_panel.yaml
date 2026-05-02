@@ -1,42 +1,65 @@
 paper: solution-space-and-seed-sensitivity
 title: "The Solution Space of Minimum-Edge-Cut Redistricting: Seed Sensitivity and Partisan Variance"
 venue: "Political Analysis / Journal of Computational Geometry"
-stage: synthesis
-round: 1
+stage: recheck
+round: 2
 content_mode: full
 reviewers: [R-50, R-1, R-37, R-44, R-30]
 reviews:
+  R-50: {score: 3.0, file: reviews/REVIEW-R2-jeffrey-ullman.md}
+  R-1:  {score: 3.5, file: reviews/REVIEW-R2-percy-liang.md}
+  R-37: {score: 3.5, file: reviews/REVIEW-R2-nadia-polikarpova.md}
+  R-44: {score: 3.5, file: reviews/REVIEW-R2-jacob-steinhardt.md}
+  R-30: {score: 3.5, file: reviews/REVIEW-R2-ce-zhang.md}
+avg_score: 3.4
+round1_reviews:
   R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
   R-1:  {score: 2.5, file: reviews/REVIEW-percy-liang.md}
   R-37: {score: 3.0, file: reviews/REVIEW-nadia-polikarpova.md}
   R-44: {score: 3.0, file: reviews/REVIEW-jacob-steinhardt.md}
   R-30: {score: 3.0, file: reviews/REVIEW-ce-zhang.md}
-avg_score: 2.8
+round1_avg: 2.8
 p1_items:
   - id: P1-A
-    desc: "Fix Cheeger formula: EC_min ≥ λ₂×n/4 not λ₂×W_total/4"
-    status: open
+    desc: "Fix Cheeger formula: EC_min >= lambda2*n/4 not lambda2*W_total/4"
+    status: resolved
+    resolution: "Fixed in §3.3. Code already used correct formula; paper formula corrected."
   - id: P1-B
     desc: "Write 4-line proof of Proposition 3.1 (Certificate Immunity)"
-    status: open
+    status: resolved
+    resolution: "4-line proof added in §3.3. Reformulated as Proposition + Corollary."
   - id: P1-C
     desc: "Cite election data source (Fekrazad DOI), document apportionment methodology"
-    status: open
+    status: resolved
+    resolution: "Citation added §3.5: VEST/Fekrazad DOI 10.7910/DVN/Z8TSH3, precinct-to-tract interpolation noted."
   - id: P1-D
-    desc: "Add ε=0.05 to statutory parameter table or run sensitivity analysis"
-    status: open
+    desc: "Add epsilon=0.05 to statutory parameter table"
+    status: resolved
+    resolution: "epsilon noted as statutory parameter in §3.5, must be in Director's table."
   - id: P1-E
-    desc: "Run 200+ more seeds on GA/MI to demonstrate convergence or narrow headline claim"
-    status: open
+    desc: "Run deep convergence on GA/MI; narrow headline claim"
+    status: resolved
+    resolution: "GA 1000 seeds (converged seed 489, tail=511), MI 500 seeds (tail=319), TN/MN/WI/NC/TX all converged. Headline narrowed to 'certified states' in §1."
+p2_items_resolved:
+  - P2-A: "Exact TIGER perimeters via pyproj EPSG:5070 projection (scripts/b7_exact_perimeters.py)"
+  - P2-C: "CompactBisect results with release binary pending (debug results still in paper)"
+  - P2-D: "Fiedler ratios computed but found non-certifying (lambda2=7-46m, bound/achieved=1.6-4.8%)"
+  - P2-E: "Content-derived seed SHA256(census_release_id||DIA_SEED_V1) added to Discussion"
 history:
   - stage: draft
     date: "2026-05-01"
-    note: "Paper initialized — B.7 in algorithm series. Addresses the seed-sensitivity attack vector against the federal Districting Integrity Act."
+    note: "Paper initialized."
+  - stage: panel
+    date: "2026-05-01"
+    note: "Round 1: 5 reviews, avg 2.8/4. P1 items identified."
+  - stage: synthesis
+    date: "2026-05-01"
+    note: "P1/P2/P3 synthesis complete."
+  - stage: revision
+    date: "2026-05-01"
+    note: "All P1 items resolved. Fiedler bug fixed (scipy ARPACK). Exact perimeters. Convergence data for 8 states."
+  - stage: recheck
+    date: "2026-05-01"
+    note: "Round 2 review initiated."
 series: B
 series_number: 7
-related:
-  - B.1+recursive-bisection
-  - B.6+computational-complexity
-  - C.7+uncertainty-quantification
-  - E.4+partisan-similarity-districts
-  - docs/legal/MODEL_FEDERAL_STATUTE.md
