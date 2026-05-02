@@ -102,27 +102,32 @@ State & & \multicolumn{3}{c}{Global MEC (200 seeds)} & \multicolumn{3}{c}{\texts
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}
 & Dem\% & D seats & $\Delta$ & EC (km) & D seats & $\Delta$ & EC (km) \\
 \midrule
-WI & 50.3\% & 2D/6R & $-25.3$\,pp & 1{,}689 & \textbf{3D/5R} & $\mathbf{-12.8}$\,\textbf{pp} & 1{,}584 \\
+WI & 50.3\% & 3D/5R* & $-12.8$\,pp & 1{,}642 & 3D/5R & $-12.8$\,pp & 1{,}584 \\
 NC & 49.3\% & 5D/9R & $-13.6$\,pp & 2{,}400 & 5D/9R & $-13.6$\,pp & 2{,}271 \\
 PA & 50.6\% & 8D/9R & $-3.5$\,pp  & 2{,}441 & 7D/10R & $-9.4$\,pp & 2{,}392 \\
 \bottomrule
 \end{tabular}
-\caption{\textsc{CompactBisect} (50 seeds per bisection level, geometric-mean PP
-  selection) vs.\ global minimum-edge-cut (best of 200 seeds for full partition).
-  $\Delta$ = proportionality gap in percentage points. WI: \textsc{CompactBisect}
-  is 12.5\,pp more proportional. NC: same partisan outcome, lower edge-cut.
-  PA: \textsc{CompactBisect} slightly less proportional.}
+\caption{\textsc{CompactBisect} (50 seeds per bisection level) vs.\ global MEC
+  (best of N seeds for full partition). $\Delta$ = proportionality gap in pp.
+  *WI Global MEC updated: 200-seed false floor was 2D/6R ($-25.3$\,pp);
+  true MEC at 1{,}000 seeds is 3D/5R ($-12.8$\,pp), matching \textsc{CompactBisect}.
+  NC: same partisan outcome, lower edge-cut. PA: \textsc{CompactBisect} slightly worse.}
 \label{tab:compactbisect-vs-mec}
 \end{table}
 
-\paragraph{Wisconsin.}
-\textsc{CompactBisect} produces 3D/5R ($-12.8$\,pp) vs.\ the global MEC's
-2D/6R ($-25.3$\,pp). The 12.5\,pp improvement is substantial and confirms the
-theoretical prediction: the geometric-mean PP criterion breaks the Milwaukee
-packing by selecting bisections that distribute compact urban tracts across
-two halves rather than concentrating them in one. The edge-cut is also lower
-(1{,}584\,km vs.\ 1{,}689\,km), indicating that \textsc{CompactBisect}
-found a geometrically tighter partition.
+\paragraph{Wisconsin (updated).}
+The initial 200-seed MEC result for Wisconsin was 2D/6R ($-25.3$\,pp) at
+1{,}689\,km. At seed 318 (of 1{,}000), the running minimum dropped to
+1{,}642\,km producing \textbf{3D/5R ($-12.8$\,pp)} --- a 47\,km improvement
+and a one-seat partisan shift. This is the third state in our focal analysis
+(after Georgia and Tennessee) where the 200-seed result was a false floor.
+
+Notably, the deep-sweep MEC result (3D) agrees with the \textsc{CompactBisect}
+result (also 3D, $-12.8$\,pp at 1{,}584\,km). For Wisconsin, both selection
+criteria converge on the same partisan outcome. The MEC plan achieves it at
+1{,}642\,km; \textsc{CompactBisect} at 1{,}584\,km (58\,km more compact).
+The MEC plan is converging (82-seed tail at seed 400, still running to
+1{,}000).
 
 \paragraph{North Carolina.}
 Both algorithms produce 5D/9R. However, \textsc{CompactBisect} achieves this

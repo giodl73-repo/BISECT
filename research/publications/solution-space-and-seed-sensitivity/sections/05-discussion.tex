@@ -11,10 +11,12 @@ concentrated party than their statewide vote share would predict.
 
 Wisconsin is the paradigmatic case. With 8 congressional districts and a 50.3\%
 Democratic vote share, the proportional allocation is exactly 4D/4R. The
-minimum-edge-cut plan yields 2D/6R ($-25.3$\,pp gap). The \emph{maximum}
-edge-cut plan yields 4D/4R ($-0.3$\,pp gap). The Pearson correlation between
-edge-cut and $|\Delta|$ across 200 seeds is $r = -0.166$: lower edge-cut
-correlates with worse proportionality.
+200-seed MEC plan yielded 2D/6R ($-25.3$\,pp) --- but this was a false floor.
+The 1{,}000-seed deep sweep converged to \textbf{3D/5R ($-12.8$\,pp)} at
+1{,}642\,km (seed 318), with \textsc{CompactBisect} independently agreeing on
+3D/5R at 1{,}584\,km. The maximum edge-cut plan yields 4D/4R ($-0.3$\,pp).
+The Pearson correlation between edge-cut and $|\Delta|$ across 200 seeds is
+$r = -0.166$: lower edge-cut correlates with worse proportionality.
 
 This is not an artefact of the algorithm; it is a property of the geography.
 Wisconsin Democrats concentrate in Milwaukee, Madison, and Green Bay. A
@@ -89,11 +91,18 @@ proportionality:
 \begin{enumerate}
   \item \textbf{Proportional Bisection}: 4D/4R ($-0.3$\,pp). Requires
         partisan vote data; achieves near-perfect proportionality.
-  \item \textbf{Max Compactness (\textsc{CompactBisect})}: 3D/5R ($-12.8$\,pp).
-        No partisan data; 12.5\,pp more proportional than min edge-cut.
-  \item \textbf{Min Edge-Cut}: 2D/6R ($-25.3$\,pp). No partisan data;
-        most compact criterion measured by total boundary length.
+  \item \textbf{Max Compactness (\textsc{CompactBisect})}: 3D/5R ($-12.8$\,pp,
+        1{,}584\,km). No partisan data; agrees with deep-sweep MEC.
+  \item \textbf{Min Edge-Cut (1{,}000 seeds)}: 3D/5R ($-12.8$\,pp, 1{,}642\,km).
+        Same partisan outcome as \textsc{CompactBisect}; slightly less compact.
+        (200-seed false floor was 2D/6R at 1{,}689\,km.)
+  \item \textbf{Max Edge-Cut}: 4D/4R ($-0.3$\,pp). Least compact; most proportional.
 \end{enumerate}
+
+The convergence of criteria 2 and 3 on the same 3D/5R outcome is the paper's
+strongest methodological result: given sufficient seeds, MEC and \textsc{CompactBisect}
+agree. The difference is the path: \textsc{CompactBisect} finds 3D in 50 seeds per
+level; MEC requires 318 full-state seeds.
 
 The key empirical finding: maximum Polsby-Popper selects \emph{3D}, not 2D.
 The most compact plan by PP has PP = 0.4750 and produces 3D/5R. The most
