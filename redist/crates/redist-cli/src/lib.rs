@@ -7,6 +7,7 @@ pub mod plan_context;
 pub mod args;
 pub mod io_utils;
 pub mod bisection_runner;
+pub mod geosection_orientation;
 pub mod civic;
 pub mod compare;
 pub mod demographics;

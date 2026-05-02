@@ -10,7 +10,7 @@ use std::path::Path;
 use std::process::Command;
 use rayon::prelude::*;
 use redist_core::{BisectionTree, ufactor_for_depth};
-use redist_core::metis_format::{write_metis_graph, parse_metis_partition};
+use redist_core::metis_format::{write_metis_graph, write_metis_graph_dual, parse_metis_partition};
 
 // ── CompactBisect (B.7) ───────────────────────────────────────────────────────
 
@@ -308,6 +308,233 @@ pub fn split_subgraph(
     Ok((left, right))
 }
 
+/// Bisect a subgraph with DUAL vertex weight constraints (ncon=2).
+///
+/// Used by AreaSection: balance BOTH population (at ratio pop_left_frac) AND
+/// land area (always 50/50). Uses the dual-weight METIS graph format.
+///
+/// Returns (left, right) partition sets, or Err on failure.
+pub fn split_subgraph_dual(
+    adjacency: &[Vec<usize>],
+    vertex_weights_pop: &[i64],    // population per vertex
+    vertex_weights_area: &[i64],   // land area per vertex (ALAND in m²)
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
+    ufactor: f64,
+    niter: u32,
+    seed: Option<u64>,
+    pop_left_frac: f64,  // population fraction for left half (0..1)
+    // Per-constraint imbalance tolerance for ncon=2:
+    //   ubvec[0]: population (tight, e.g. 1.001 = ±0.1%)
+    //   ubvec[1]: area (loose, e.g. 1.10 = ±10% swing)
+    // 10% area swing lets METIS find a clean integer population split
+    // without forcing an exact 50/50 area boundary where geography resists.
+    ubvec: [f64; 2],
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    if tract_indices.len() <= 1 {
+        return Ok((tract_indices.clone(), HashSet::new()));
+    }
+
+    let sorted: Vec<usize> = {
+        let mut v: Vec<usize> = tract_indices.iter().copied().collect();
+        v.sort_unstable(); v
+    };
+    let global_to_local: HashMap<usize,usize> = sorted.iter()
+        .enumerate().map(|(local,&global)| (global,local)).collect();
+
+    let sub_pop:  Vec<i64> = sorted.iter().map(|&g| vertex_weights_pop[g].max(1)).collect();
+    let sub_area: Vec<i64> = sorted.iter().map(|&g| vertex_weights_area[g].max(1)).collect();
+    let sub_adj: Vec<Vec<usize>> = sorted.iter().map(|&g|
+        adjacency[g].iter().filter_map(|&nb| global_to_local.get(&nb).copied()).collect()
+    ).collect();
+    let sub_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
+        .filter_map(|(&(u,v),&w)| {
+            let lu = *global_to_local.get(&u)?;
+            let lv = *global_to_local.get(&v)?;
+            Some(((lu.min(lv), lu.max(lv)), w))
+        })
+        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
+
+    let graph_content = write_metis_graph_dual(&sub_adj, &sub_pop, &sub_area,
+                                               if sub_ew.is_empty() { None } else { Some(&sub_ew) })
+        .map_err(|e| e.to_string())?;
+
+    let tmp_dir = tempfile::TempDir::new().map_err(|e| e.to_string())?;
+    let graph_file = tmp_dir.path().join("graph.metis");
+    std::fs::write(&graph_file, &graph_content).map_err(|e| e.to_string())?;
+
+    // tpwgts for ncon=2, nparts=2: pop_left, area_left, pop_right, area_right
+    // Area target is 50/50; population uses the requested fraction.
+    // ubvec[0] = population imbalance (tight: 1.001 = ±0.1%)
+    // ubvec[1] = area imbalance (loose: 1.10 = ±10% swing to find clean pop split)
+    let area_left = 0.5f64;
+    let tpwgts_content = format!("0 = {pop_left_frac:.6} {area_left:.6}\n");
+    let tpwgts_file = tmp_dir.path().join("tpwgts.txt");
+    std::fs::write(&tpwgts_file, &tpwgts_content).map_err(|e| e.to_string())?;
+
+    // ubvec file: one line per constraint
+    let ubvec_content = format!("{:.4}\n{:.4}\n", ubvec[0], ubvec[1]);
+    let ubvec_file = tmp_dir.path().join("ubvec.txt");
+    std::fs::write(&ubvec_file, &ubvec_content).map_err(|e| e.to_string())?;
+
+    let n = sorted.len();
+    let mut cmd = Command::new(find_gpmetis().unwrap_or_else(|| "gpmetis".to_string()));
+    cmd.arg(&graph_file).arg("2");
+    if let Some(s) = seed { cmd.args(["-seed", &s.to_string()]); }
+    let ufactor_int = ((ufactor - 1.0) * 1000.0) as u32;
+    cmd.args(["-ufactor", &ufactor_int.to_string(), "-niter", &niter.to_string()]);
+    let mut flag = std::ffi::OsString::from("-tpwgt=");
+    flag.push(tpwgts_file.as_os_str());
+    cmd.arg(flag);
+    // Pass ubvec to allow area to swing ±10% while holding population tight
+    let mut ubvec_flag = std::ffi::OsString::from("-ubvec=");
+    ubvec_flag.push(ubvec_file.as_os_str());
+    cmd.arg(ubvec_flag);
+    cmd.current_dir(tmp_dir.path());
+
+    let out = cmd.output().map_err(|e| format!("gpmetis dual exec error: {e}"))?;
+    if !out.status.success() {
+        return Err(format!("gpmetis dual failed: {}",
+            String::from_utf8_lossy(&out.stderr).chars().take(200).collect::<String>()));
+    }
+
+    let part_file = graph_file.with_extension("metis.part.2");
+    let part_content = std::fs::read_to_string(&part_file)
+        .map_err(|_| "gpmetis dual did not create partition file".to_string())?;
+    let parts = parse_metis_partition(&part_content, n).map_err(|e| e.to_string())?;
+
+    let mut left = HashSet::new(); let mut right = HashSet::new();
+    for (local, part) in parts.iter().enumerate() {
+        let global = sorted[local];
+        if *part == 0 { left.insert(global); } else { right.insert(global); }
+    }
+    Ok((left, right))
+}
+
+/// AreaSection: dual-constrained ratio-optimal bisection.
+///
+/// For each population ratio i:(k-i):
+///   METIS satisfies TWO constraints simultaneously:
+///   1. Population: left half gets i × (total_pop/k), right gets (k-i) × (total_pop/k)
+///   2. Area: left half gets 50% of total ALAND, right gets 50%
+///
+/// Uses isoperimetric normalisation EC / √(min(i,k-i)) for ratio selection.
+/// vertex_areas_m2: ALAND in m² per vertex (from TIGER, same indexing as adjacency).
+pub fn run_areasection(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],       // population
+    vertex_areas_m2: &[f64],       // ALAND per tract in m²
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    intermediate_dir: Option<&Path>,
+) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
+    let n = adjacency.len();
+    if num_districts <= 1 {
+        let asgn = (0..n).map(|i| (i, 1)).collect();
+        return Ok((asgn, 1, 0, 0.0));
+    }
+
+    // Convert f64 areas to i64 (scaled to avoid precision loss)
+    // Scale: 1 m² = 1 unit (METIS handles large integers fine)
+    let vertex_areas_i64: Vec<i64> = vertex_areas_m2.iter()
+        .map(|&a| (a as i64).max(1)).collect();
+
+    let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
+    let mut best_ec = f64::INFINITY;
+    let mut best_normalised = f64::INFINITY;
+    let mut best_left = 0usize;
+    let mut best_right = 0usize;
+    let mut best_left_set = HashSet::new();
+    let mut best_right_set = HashSet::new();
+
+    let all_tracts: HashSet<usize> = (0..n).collect();
+    let max_left = num_districts / 2;
+
+    eprintln!("[areasection] {} ratios × {} seeds (pop+area dual constraint)",
+              max_left, seeds_per_ratio);
+
+    for left_k in 1..=max_left {
+        let right_k = num_districts - left_k;
+        let pop_frac = left_k as f64 / num_districts as f64;
+        let mut ratio_best = f64::INFINITY;
+        let mut ratio_best_left = HashSet::new();
+        let mut ratio_best_right = HashSet::new();
+
+        for seed in 1..=(seeds_per_ratio as u64) {
+            match split_subgraph_dual(
+                adjacency, vertex_weights, &vertex_areas_i64, edge_weights,
+                &all_tracts, node_ufactor, niter, Some(seed), pop_frac,
+                // Tight pop balance (±0.1%), 10% area swing allowed
+                [1.001, 1.10],
+            ) {
+                Ok((l, r)) => {
+                    let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
+                        if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
+                    }).sum();
+                    if ec < ratio_best {
+                        ratio_best = ec;
+                        ratio_best_left = l;
+                        ratio_best_right = r;
+                    }
+                }
+                Err(_) => continue,
+            }
+        }
+
+        let smaller = left_k.min(right_k) as f64;
+        let normalised = ratio_best / smaller.sqrt();
+
+        // Report actual area split achieved
+        let area_left: f64 = ratio_best_left.iter().map(|&v| vertex_areas_m2[v]).sum();
+        let total_area: f64 = vertex_areas_m2.iter().sum();
+        let area_frac = area_left / total_area;
+
+        eprintln!("[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
+                  left_k, right_k, ratio_best/1000.0, normalised/1000.0, area_frac*100.0);
+
+        if normalised < best_normalised {
+            best_normalised = normalised;
+            best_ec = ratio_best;
+            best_left = left_k;
+            best_right = right_k;
+            best_left_set = ratio_best_left;
+            best_right_set = ratio_best_right;
+        }
+    }
+
+    eprintln!("[areasection] natural ratio {}:{} at {:.0}km (normalised={:.1})",
+              best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
+
+    if let Some(dir) = intermediate_dir {
+        let round_dir = dir.join("depth_01");
+        let _ = std::fs::create_dir_all(&round_dir);
+        let mut d1: HashMap<usize, usize> = HashMap::new();
+        for &v in &best_left_set  { d1.insert(v, 1); }
+        for &v in &best_right_set { d1.insert(v, 2); }
+        let _ = write_intermediate_round(&round_dir, &d1);
+    }
+
+    // Recurse with standard bisection on each half
+    let left_asgn = recurse_standard(
+        &best_left_set, &build_subgraph_adjacency(&best_left_set, adjacency),
+        adjacency, vertex_weights, edge_weights,
+        best_left, balance_tolerance, niter, 1)?;
+    let right_asgn = recurse_standard(
+        &best_right_set, &build_subgraph_adjacency(&best_right_set, adjacency),
+        adjacency, vertex_weights, edge_weights,
+        best_right, balance_tolerance, niter, best_left + 1)?;
+
+    let mut assignments = left_asgn;
+    assignments.extend(right_asgn);
+    if assignments.len() != n {
+        return Err(format!("areasection incomplete: {}/{n}", assignments.len()));
+    }
+    Ok((assignments, best_left, best_right, best_ec))
+}
+
 /// Run n-way partitioning: call gpmetis once with nparts=k.
 ///
 /// Direct n-way is faster than recursive bisection (D.2 research: 3.68s vs 11.33s).
@@ -448,6 +675,10 @@ pub fn run_geosection(
     niter: u32,
     seeds_per_ratio: usize,
     intermediate_dir: Option<&Path>,
+    // Phase 2: centroid map for directional penalty (empty = no penalty)
+    centroids: &crate::geosection_orientation::CentroidMap,
+    // Phase 2: directional penalty strength (0.0 = off, use GeoSection without penalty)
+    lambda: f64,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
 
@@ -539,14 +770,15 @@ pub fn run_geosection(
         let _ = write_intermediate_round(&round_dir, &d1);
     }
 
-    // Recurse: apply GeoSection to each half (full recursive ratio search).
-    // Each subregion finds its own natural ratio independently.
+    // Recurse: each half finds its own natural ratio with its own orientation.
     let left_asgn  = recurse_geosection(
         &best_left_set,  adjacency, vertex_weights, edge_weights,
-        best_left,  balance_tolerance, niter, seeds_per_ratio, 1)?;
+        best_left,  balance_tolerance, niter, seeds_per_ratio, 1,
+        centroids, lambda)?;
     let right_asgn = recurse_geosection(
         &best_right_set, adjacency, vertex_weights, edge_weights,
-        best_right, balance_tolerance, niter, seeds_per_ratio, best_left + 1)?;
+        best_right, balance_tolerance, niter, seeds_per_ratio, best_left + 1,
+        centroids, lambda)?;
 
     let mut assignments = left_asgn;
     assignments.extend(right_asgn);
@@ -561,14 +793,13 @@ pub fn run_geosection(
 ///
 /// At each level:
 ///   1. Extract local subgraph (local indices)
-///   2. (Future) Compute local minor axis via PCA of subregion centroids
-///   3. Run ratio search on local graph with local orientation
-///   4. Map results back to global indices, offset by district_base
+///   2. Compute local minor axis via PCA of subregion centroids (if available)
+///   3. Apply directional penalty λ to edge weights (makes cuts straighter)
+///   4. Run isoperimetrically-normalised ratio search on local graph
+///   5. Map results back to global indices, offset by district_base
 ///
-/// Centroid-based orientation (Phase 2): each half checks its own axis
-/// so a horizontal cut produces a "top half" that may want a vertical
-/// next cut, and vice versa. Currently lambda=0 (no directional penalty)
-/// until centroids are wired in.
+/// Each half re-rotates independently — a horizontal first cut produces
+/// two halves that each find their OWN narrowest geographic axis.
 fn recurse_geosection(
     verts: &HashSet<usize>,
     adjacency: &[Vec<usize>],
@@ -579,7 +810,8 @@ fn recurse_geosection(
     niter: u32,
     seeds_per_ratio: usize,
     district_base: usize,
-    // TODO Phase 2: centroids: Option<&[(f64,f64)]>  — for local PCA / minor axis
+    centroids: &crate::geosection_orientation::CentroidMap,
+    lambda: f64,
 ) -> Result<HashMap<usize,usize>, String> {
     if k == 0 { return Ok(HashMap::new()); }
     if k == 1 {
@@ -593,7 +825,7 @@ fn recurse_geosection(
     // Build local subgraph components
     let local_adj: Vec<Vec<usize>> = build_subgraph_adjacency(verts, adjacency);
     let local_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
-    let local_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
+    let mut local_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
         .filter_map(|(&(u,v),&w)| {
             let lu = *global_to_local.get(&u)?;
             let lv = *global_to_local.get(&v)?;
@@ -601,16 +833,23 @@ fn recurse_geosection(
         })
         .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
 
-    // TODO Phase 2: compute local PCA of subregion centroids here
-    // let local_centroids: Vec<(f64,f64)> = sorted.iter()
-    //     .map(|&g| centroids.map(|c| c[g]).unwrap_or((0.0,0.0))).collect();
-    // let minor_axis_angle = pca_minor_axis(&local_centroids);
-    // let local_ew = apply_directional_penalty(&local_ew, &local_adj, minor_axis_angle, lambda);
+    // Phase 2: PCA of THIS subregion's centroids → local minor axis → directional penalty
+    if lambda > 1e-10 && !centroids.is_empty() {
+        if let Some(angle) = crate::geosection_orientation::compute_minor_axis(verts, centroids) {
+            local_ew = crate::geosection_orientation::apply_directional_penalty(
+                &local_ew, centroids, angle, lambda
+            );
+        }
+    }
 
     // Recursively find natural ratio for THIS subregion
+    // Pass empty centroids/lambda=0 here — directional penalty was already
+    // applied to local_ew above; run_geosection sees the modified weights.
+    let empty_centroids = crate::geosection_orientation::CentroidMap::new();
     let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
         &local_adj, &local_vw, &local_ew,
         k, balance_tolerance, niter, seeds_per_ratio, None,
+        &empty_centroids, 0.0,
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {

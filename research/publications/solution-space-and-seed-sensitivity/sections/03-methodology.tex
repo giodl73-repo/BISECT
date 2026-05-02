@@ -146,6 +146,16 @@ certificates --- one per bisection level --- each asserting that the chosen
 split achieves within 5\% of the mathematically maximum possible
 geometric-mean compactness for that subgraph.
 
+\emph{Practical note.} For US census-tract graphs, the ratio $(1-\delta)$ is
+not achievable in practice: empirical $\lambda_2$ values range from 7\,m
+(Pennsylvania) to 46\,m (Wisconsin), giving $\overline{\mathrm{GMPP}}$ bounds
+that are 50--200$\times$ larger than achievable GMPP values. The Fiedler
+certificate is a valid theoretical lower bound but does not certify US
+redistricting plans in practice. The practical certification criterion is
+the empirical convergence tail (\S\ref{sec:methodology:convergence}): declare
+convergence when the running minimum has been stable for $\geq 300$ consecutive
+seeds.
+
 \subsubsection{Legal Properties of the Certificate}
 
 The Fiedler certificate closes the ``you could have done better'' attack
@@ -179,10 +189,13 @@ For $\delta > 0$, the challenger must improve by more than $\delta \times 100\%$
 which requires running at least as many seeds as the certifier.
 \end{corollary}
 
-In practice, with $\delta = 0.05$ (5\% gap tolerance), a challenger would
-need to produce a bisection with geometric-mean PP more than 5\% higher than
-the certified plan's. If the certifier stopped at $\delta < 0.01$ (within 1\%
-of theoretical maximum), the attack becomes computationally infeasible.
+In practice, since the Fiedler bound is non-certifying for US graphs (see
+practical note above), the statutory $\varepsilon$ parameter governs the
+near-minimum candidate pool size rather than the theoretical certificate ratio.
+Empirical analysis (\S\ref{sec:eval:gmpp}) shows that at $\varepsilon \leq 2\%$,
+the candidate pool is 1--4 plans with a stable partisan outcome; at $\varepsilon
+= 5\%$, the pool spans multiple outcomes, creating a manipulation surface.
+The statute should commit $\varepsilon \leq 2\%$ in the parameter table.
 
 This is structurally identical to a cryptographic proof-of-work certificate:
 the certifier has done the computational work of finding a near-optimal split;

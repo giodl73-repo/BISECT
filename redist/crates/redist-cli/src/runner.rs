@@ -825,13 +825,26 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 num_districts, 1.0 + ufactor as f64 / 1000.0, niter, seed,
             ).map_err(|e| format!("n-way partition failed: {e}"))?
         }
-        AlgorithmParams::GeoSection { seeds_per_ratio, .. } => {
-            status(cfg.position, &format!("{}: GeoSection {} ratios × {} seeds",
-                   cfg.state_code, num_districts / 2, seeds_per_ratio));
+        AlgorithmParams::GeoSection { seeds_per_ratio, lambda, .. } => {
+            // Load centroids for directional penalty (Phase 2)
+            let centroids = if *lambda > 1e-10 {
+                crate::geosection_orientation::load_centroids_from_tiger(
+                    &cfg.state_code, &cfg.year, &graph.index_to_geoid)
+            } else {
+                crate::geosection_orientation::CentroidMap::new()
+            };
+            if *lambda > 1e-10 {
+                status(cfg.position, &format!("{}: GeoSection λ={:.1} ({} centroids loaded)",
+                       cfg.state_code, lambda, centroids.len()));
+            } else {
+                status(cfg.position, &format!("{}: GeoSection {} ratios × {} seeds",
+                       cfg.state_code, num_districts / 2, seeds_per_ratio));
+            }
             let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 *seeds_per_ratio, Some(&intermediate_dir),
+                &centroids, *lambda,
             ).map_err(|e| format!("geosection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));

@@ -128,22 +128,26 @@ tracts together) --- the same outcome as deliberate packing.
 
 By using PP rather than edge-cut as the selection criterion within the
 near-minimum-cut candidate set, \textsc{CompactBisect} partially corrects
-the geographic-sorting bias of pure edge-cut minimisation. It does not
-eliminate the bias entirely: the most proportional Wisconsin plan (4D/4R)
-has PP = 0.3825, \emph{lower} than the max-compactness plan's PP = 0.4750.
-Achieving full proportionality requires drawing some non-compact districts
---- specifically, splitting Milwaukee in a way that creates less circular
-but more electorally balanced sub-regions. Perfect proportionality and
-maximum compactness are in tension in geographically sorted states.
+the geographic-sorting bias of pure edge-cut minimisation. With exact TIGER
+perimeters (EPSG:5070 projection), the GMPP-maximising plan (seed 930,
+GMPP\,=\,0.397, 3D/5R) and the MEC-minimising plan (seed 891, GMPP\,=\,0.358,
+3D/5R) agree on partisan outcome. Achieving full proportionality (4D/4R)
+requires drawing some non-compact districts, confirming that perfect
+proportionality and maximum compactness are in tension in geographically
+sorted states.
 
-The \emph{Pearson correlation} between mean PP and $|\Delta|$ across 97
-Wisconsin plans is $r = 0.047$ --- essentially no linear relationship. The
-relationship is non-monotone: 3D plans (the modal outcome) have the highest
-average PP (0.4078), while 2D plans (0.3934) and 4D plans (0.3916) score
-lower. This confirms that the solution space does not organise along a
-single compactness-proportionality axis; rather, compactness and partisan
-outcomes are jointly determined by the specific geographic partitioning at
-each bisection level.
+\paragraph{Why MEC is the primary criterion over GMPP.}
+The Pearson correlation between EC and GMPP across 1{,}000 Wisconsin seeds
+is $r = -0.354$: lower EC tends to produce higher GMPP, confirming that both
+criteria point in the same direction. However, GMPP introduces three degrees
+of freedom that MEC does not: (1) which area measure (ALAND vs.\ ALAND+AWATER);
+(2) which perimeter approximation (we showed that the circular model and exact
+TIGER perimeters give different convergence stories --- GMPP last improved seed
+109 vs.\ 930); (3) which shape metric (PP, Reock, convex hull). Each choice
+could be argued post-hoc. Edge-cut has none of these: the inputs are TIGER
+boundary lengths (a federal public record), the objective is their sum, and no
+approximation is required. \textbf{MEC is the primary criterion. GMPP is
+verification: if both agree, confidence is higher; if they disagree, investigate.}
 
 \subsection{Implications for the Districting Integrity Act}
 

@@ -106,16 +106,16 @@ State & & \multicolumn{3}{c}{Global MEC (200 seeds)} & \multicolumn{3}{c}{\texts
 \cmidrule(lr){3-5}\cmidrule(lr){6-8}
 & Dem\% & D seats & $\Delta$ & EC (km) & D seats & $\Delta$ & EC (km) \\
 \midrule
-WI & 50.3\% & 3D/5R* & $-12.8$\,pp & 1{,}642 & 3D/5R & $-12.8$\,pp & 1{,}584 \\
+WI & 50.3\% & 3D/5R* & $-12.8$\,pp & 1{,}604 & 3D/5R & $-12.8$\,pp & 1{,}584 \\
 NC & 49.3\% & 5D/9R & $-13.6$\,pp & 2{,}400 & 5D/9R & $-13.6$\,pp & 2{,}271 \\
 PA & 50.6\% & 8D/9R & $-3.5$\,pp  & 2{,}441 & 7D/10R & $-9.4$\,pp & 2{,}392 \\
 \bottomrule
 \end{tabular}
-\caption{\textsc{CompactBisect} (50 seeds per bisection level) vs.\ global MEC
-  (best of N seeds for full partition). $\Delta$ = proportionality gap in pp.
-  *WI Global MEC updated: 200-seed false floor was 2D/6R ($-25.3$\,pp);
-  true MEC at 1{,}000 seeds is 3D/5R ($-12.8$\,pp), matching \textsc{CompactBisect}.
-  NC: same partisan outcome, lower edge-cut. PA: \textsc{CompactBisect} slightly worse.}
+\caption{\textsc{CompactBisect} (50 seeds/level, release binary) vs.\ global MEC
+  (best of N seeds). $\Delta$ = proportionality gap in pp.
+  *WI: 200-seed false floor was 2D ($-25.3$\,pp); 1{,}200-seed MEC is 3D ($-12.8$\,pp),
+  matching \textsc{CompactBisect}. NC: same outcome, lower edge-cut.
+  PA: \textsc{CompactBisect} slightly less proportional. Results confirmed with release binary.}
 \label{tab:compactbisect-vs-mec}
 \end{table}
 
@@ -206,21 +206,45 @@ MEC and GMPP criteria select different plans from that space.
 For North Carolina, both MEC (seed 41) and GMPP-max (seed 69) give 5D/9R.
 Correlation $r = -0.223$: moderate alignment.
 
-\paragraph{Wisconsin GMPP convergence caveat.}
-With exact TIGER perimeters, Wisconsin GMPP last improved at seed 930 with
-a 69-seed tail --- below the 300-seed certification threshold. \emph{Wisconsin
-GMPP is not yet certified.} The claim that MEC and GMPP agree on 3D for
-Wisconsin is provisional: 999 seeds of agreement, but GMPP has not reached
-the same convergence standard as MEC (MEC tail\,=\,108 seeds, also borderline).
-Both criteria need further seeds to be formally certified.
+\paragraph{Wisconsin: partisan outcome is certified, EC minimum is not.}
+At 1{,}200 seeds, the EC minimum last improved at seed 1{,}023 (1{,}604\,km,
+177-seed tail) --- not EC-certified. However, the \emph{partisan outcome}
+(3D/5R) has been stable since seed 318 for \textbf{882 consecutive seeds}.
+For legal purposes, the outcome is certified: no redistricting challenge could
+require a materially more compact 4D plan without demonstrating one.
+
+Wisconsin GMPP (exact TIGER perimeters) last improved at seed 930 with a
+69-seed tail --- not GMPP-certified. Both MEC and GMPP give 3D.
+
+\paragraph{Epsilon sensitivity.}
+The near-minimum tolerance $\varepsilon$ must be small and pre-committed to
+the parameter table. Table~\ref{tab:epsilon} shows the partisan outcomes in
+the candidate pool at different $\varepsilon$ values.
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{lrrrr}
+\toprule
+State & $\varepsilon$=1\% & $\varepsilon$=2\% & $\varepsilon$=5\% & $\varepsilon$=10\% \\
+\midrule
+WI (8D)  & 3D only & 3D only & 2D--3D & 2D--4D \\
+PA (17D) & 8D--9D  & 7D--9D  & 6D--9D & 6D--9D \\
+NC (14D) & 5D only & 5D--6D  & 4D--8D & 4D--8D \\
+\bottomrule
+\end{tabular}
+\caption{Partisan outcomes in the near-minimum candidate pool. At
+  $\varepsilon \leq 2\%$ the pool is 1--4 plans with stable outcomes.
+  At $\varepsilon = 5\%$ (prior default) the pool spans multiple outcomes,
+  creating a manipulation surface. Statutory recommendation: $\varepsilon \leq 2\%$.}
+\label{tab:epsilon}
+\end{table}
 
 \paragraph{Criterion choice.}
-GMPP analysis (approximate perimeters) found GMPP last improved at seed 109
-(890-seed tail), suggesting faster convergence than MEC. But with exact
-perimeters (EPSG:5070 projection), the GMPP last improved at seed 930 ---
-much later. The approximate analysis was misleading. The paper recommends MEC
-as primary: no degree-of-freedom choices (no area measure, no shape metric,
-no approximation), and independently verifiable from TIGER boundary data alone.
+The paper recommends MEC as primary: no degree-of-freedom choices (no area
+measure, no shape metric, no approximation), and independently verifiable
+from TIGER boundary lengths alone. GMPP (with exact perimeters) is
+verification: when MEC and GMPP agree, confidence is high.
 
 \subsection{Texas: Large-State Failures and Convergence Rate}
 \label{sec:eval:tx}
@@ -324,8 +348,8 @@ explicitly importing partisan data.
 Summing the 48 states with available election data: the MEC protocol produces
 228D/204R (52.8\% Democratic seats). Alaska (1 seat) and Hawaii (2 seats) are
 excluded due to missing tract-level election data in our source. Best-guess
-inclusion: Alaska's 2020 at-large seat went Republican (Don Young); Hawaii's
-2 seats reliably Democratic. Including these gives \textbf{229D/206R} as the
+inclusion: Alaska's 2020 at-large seat went Republican (Don Young won with
+54.1\%); Hawaii's 2 seats went Democratic (Kai Kahele and Ed Case). Including these gives \textbf{229D/206R} as the
 national estimate. Actual 2020 House outcome: 222D/213R (51.0\% D). The
 algorithmic maps give Democrats roughly 7 more seats nationally than the
 enacted plans.
