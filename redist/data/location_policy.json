@@ -1207,6 +1207,49 @@
       "data_source": "US Census TIGER/Line + PL 94-171"
     }
   },
+  "NH": {
+    "name": "New Hampshire",
+    "fips": "33",
+    "house_districts": 400,
+    "senate_districts": 24,
+    "subdivision_term": "county",
+    "subdivision_term_plural": "counties",
+    "municipal_term": "town",
+    "municipal_term_plural": "towns",
+    "balance_tolerance_house_pct": 5.0,
+    "balance_tolerance_senate_pct": 5.0,
+    "balance_tolerance_congressional_pct": 0.5,
+    "population_basis": "total",
+    "prison_gerrymandering": null,
+    "student_counting": null,
+    "nesting_requirement": null,
+    "preservation_entities": [
+      "county",
+      "town"
+    ],
+    "preservation_standard": "preserve county and town boundaries where possible",
+    "preservation_citation": "NH Const. Part II Art. 11",
+    "has_independent_commission": false,
+    "commission_type": "legislature",
+    "vra_section2_applies": false,
+    "notes": "New Hampshire redistricting is controlled by the legislature. NH has an unusually large house (400 members in multi-member floterial districts).",
+    "census_years": [
+      "2000",
+      "2010",
+      "2020"
+    ],
+    "congressional_districts_by_year": {
+      "2000": 2,
+      "2010": 2,
+      "2020": 2
+    },
+    "adjacency_convention": {
+      "convention": "us_census",
+      "path_template": "outputs/V3/data/{year}/adjacency/nh_adjacency_{year}.pkl",
+      "build_command": "redist fetch --type adjacency --states {state_upper} --year {year}",
+      "data_source": "US Census TIGER/Line + PL 94-171"
+    }
+  },
   "NJ": {
     "name": "New Jersey",
     "fips": "34",

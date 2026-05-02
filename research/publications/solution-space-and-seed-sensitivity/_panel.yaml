@@ -45,6 +45,12 @@ p2_items_resolved:
   - P2-C: "CompactBisect results with release binary pending (debug results still in paper)"
   - P2-D: "Fiedler ratios computed but found non-certifying (lambda2=7-46m, bound/achieved=1.6-4.8%)"
   - P2-E: "Content-derived seed SHA256(census_release_id||DIA_SEED_V1) added to Discussion"
+  - P2-F: "Full 50-state MEC sweep: NH added (FIPS 33 registered, 200 seeds, 2D/0R zero-variance);
+            WI deepened to 1400 seeds (last impr seed 1023, tail 377, 3D certified);
+            TX deepened to 500 seeds (last impr seed 114, tail 298, 15D provisional);
+            FL deepened to 500 seeds (last impr seed 131, tail 329, 12D CONVERGED);
+            GA/TN/MN/PA/MI all CONVERGED from deeper sweeps;
+            CSV rebuild at outputs/b7_sweep/convergence.csv (50 states, 228D/204R confirmed)"
 history:
   - stage: draft
     date: "2026-05-01"

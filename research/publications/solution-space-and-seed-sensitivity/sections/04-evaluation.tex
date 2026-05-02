@@ -122,28 +122,30 @@ PA & 50.6\% & 8D/9R & $-3.5$\,pp  & 2{,}441 & 7D/10R & $-9.4$\,pp & 2{,}392 \\
 \paragraph{Wisconsin (updated).}
 The initial 200-seed MEC result for Wisconsin was 2D/6R ($-25.3$\,pp) at
 1{,}689\,km. This is the third false floor in our focal analysis (after Georgia
-and Tennessee). The 1{,}000-seed sweep yields:
+and Tennessee). The 1{,}400-seed sweep yields:
 
 \begin{center}
 \begin{tabular}{rrrl}
 \toprule
 Seed & EC (km) & D seats & Gap \\
 \midrule
-113 & 1{,}689 & 2D/6R & $-25.3$\,pp \\
-318 & 1{,}642 & 3D/5R & $-12.8$\,pp \\
-891 & 1{,}615 & 3D/5R & $-12.8$\,pp \\
+113  & 1{,}689 & 2D/6R & $-25.3$\,pp \\
+318  & 1{,}642 & 3D/5R & $-12.8$\,pp \\
+891  & 1{,}615 & 3D/5R & $-12.8$\,pp \\
+1{,}023 & 1{,}604 & 3D/5R & $-12.8$\,pp \\
 \bottomrule
 \end{tabular}
 \end{center}
 
 The partisan outcome stabilised at 3D/5R at seed 318 and did not change through
-seed 1{,}000, despite the EC improving by a further 27\,km at seed 891. The
-3D outcome has persisted through 573 consecutive seeds. The 109-seed tail at
-seed 1{,}000 (Fiedler ratio 3.06×) indicates the EC minimum is still
-converging, but the partisan outcome is stable.
+seed 1{,}400, despite the EC improving by a further 85\,km (two updates at
+seeds 891 and 1{,}023). The 3D outcome has persisted through
+\textbf{1{,}082 consecutive seeds}. The 377-seed tail at seed 1{,}400 indicates
+the EC minimum is still slowly converging, but the partisan outcome is certified
+stable: no redistricting challenge could invoke a materially more compact 4D plan.
 
 \textsc{CompactBisect} independently produces 3D/5R ($-12.8$\,pp) at
-1{,}584\,km --- 31\,km more compact than the 1{,}000-seed MEC. For Wisconsin,
+1{,}584\,km --- 20\,km more compact than the 1{,}400-seed MEC. For Wisconsin,
 both geometric criteria agree on 3D when given sufficient computation.
 
 \paragraph{North Carolina.}
@@ -207,9 +209,9 @@ For North Carolina, both MEC (seed 41) and GMPP-max (seed 69) give 5D/9R.
 Correlation $r = -0.223$: moderate alignment.
 
 \paragraph{Wisconsin: partisan outcome is certified, EC minimum is not.}
-At 1{,}200 seeds, the EC minimum last improved at seed 1{,}023 (1{,}604\,km,
-177-seed tail) --- not EC-certified. However, the \emph{partisan outcome}
-(3D/5R) has been stable since seed 318 for \textbf{882 consecutive seeds}.
+At 1{,}400 seeds, the EC minimum last improved at seed 1{,}023 (1{,}604\,km,
+377-seed tail) --- not EC-certified. However, the \emph{partisan outcome}
+(3D/5R) has been stable since seed 318 for \textbf{1{,}082 consecutive seeds}.
 For legal purposes, the outcome is certified: no redistricting challenge could
 require a materially more compact 4D plan without demonstrating one.
 
@@ -249,17 +251,26 @@ verification: when MEC and GMPP agree, confidence is high.
 \subsection{Texas: Large-State Failures and Convergence Rate}
 \label{sec:eval:tx}
 
-Texas (38 districts) exhibited a 4\% seed-failure rate (seeds 1, 2, 6, 16
-out of 100 produced population-balance violations exceeding the 0.5\%
+Texas (38 districts) exhibited a 14\% seed-failure rate across 500 seeds
+(72 seeds produced population-balance violations exceeding the 0.5\%
 tolerance). These failures are expected: with 38 districts and $\lceil
 \log_2 38 \rceil = 6$ levels of recursion, small per-level imbalances
 compound. The statute's tiered tolerance schedule (\S~104(b)(4)) addresses
-this; our implementation applies a flat 0.5\% tolerance. % TODO: implement
-% tiered tolerance and re-run.
+this; our implementation applies a flat 0.5\% tolerance.
 
-Among 96 successful seeds, edge-cuts ranged from [TODO] to [TODO]\,km with
-[TODO] distinct seat outcomes observed. Convergence is expected to be slower
-than Pennsylvania due to the larger partition space.
+Among 412 valid seeds, edge-cuts ranged from 8{,}176--10{,}290\,km (25.8\%
+range) with 9 distinct seat outcomes observed (14D--22D). The modal outcome is
+18D/20R (35.7\% of seeds), near the proportional expectation of
+$38 \times 0.472 = 17.9$ seats. However, the MEC winner (seed 114,
+8{,}176\,km) produces 15D/23R ($-7.7$\,pp), below proportional.
+The running minimum last improved at seed 114, with a 298-seed stable tail
+(valid seeds 115--412), approaching but not fully meeting the certification
+threshold of $T \geq 300$ consecutive seeds. Texas is provisionally converged.
+
+The near-minimum pool at $\varepsilon = 1\%$ (EC $\leq 8{,}258$\,km) contains
+only 15D plans. At $\varepsilon = 5\%$ (EC $\leq 8{,}585$\,km) the pool spans
+15D--18D, making $\varepsilon \leq 2\%$ necessary to stabilise the outcome at
+15D/23R for Texas.
 
 \subsection{Georgia: Why Convergence Depth Matters}
 \label{sec:eval:ga}
@@ -321,8 +332,8 @@ concentrated in one metropolitan area.
 
 \paragraph{Sorted Republican-favoring states ($\Delta < -15$\,pp).}
 Deep-red states and states with strong geographic sorting produce large
-negative gaps: Montana ($-41.6$\,pp), Iowa ($-45.8$\,pp), Mississippi
-($-41.6$\,pp), Wisconsin ($-25.3$\,pp), North Carolina ($-13.6$\,pp). In
+negative gaps: Montana ($-41.6$\,pp), Iowa ($-20.8$\,pp), Mississippi
+($-41.6$\,pp), Wisconsin ($-12.8$\,pp), North Carolina ($-13.6$\,pp). In
 these states, Democratic voters concentrate in 1--2 urban centers; the MEC
 criterion creates compact, safe Democratic districts and leaves the remaining
 geography safely Republican.
@@ -330,9 +341,12 @@ geography safely Republican.
 \paragraph{Sorted Democratic-favoring states ($\Delta > +15$\,pp).}
 New England and coastal states produce large positive gaps: Connecticut
 ($+39.8$\,pp), Rhode Island ($+39.4$\,pp), Delaware ($+40.4$\,pp),
-Vermont ($+31.7$\,pp), Massachusetts ($+32.9$\,pp). In these states,
-Democratic majorities are large enough that compact partisan-blind
-partitioning produces Dem sweeps of all districts.
+Vermont ($+31.7$\,pp), Massachusetts ($+32.9$\,pp), New Hampshire ($+46.3$\,pp).
+In these states, Democratic majorities are large enough that compact partisan-blind
+partitioning produces Dem sweeps of all districts. New Hampshire
+(53.7\% Dem, 2 districts) confirms: the 200-seed sweep found zero partisan
+variance --- every seed produces 2D/0R, with the EC minimum varying from
+117--140\,km.
 
 \paragraph{Structural vs.\ intentional disproportion.}
 The key distinction for legal purposes: large $|\Delta_s|$ in states with
@@ -349,20 +363,21 @@ Summing the 48 states with available election data: the MEC protocol produces
 228D/204R (52.8\% Democratic seats). Alaska (1 seat) and Hawaii (2 seats) are
 excluded due to missing tract-level election data in our source. Best-guess
 inclusion: Alaska's 2020 at-large seat went Republican (Don Young won with
-54.1\%); Hawaii's 2 seats went Democratic (Kai Kahele and Ed Case). Including these gives \textbf{229D/206R} as the
-national estimate. Actual 2020 House outcome: 222D/213R (51.0\% D). The
-algorithmic maps give Democrats roughly 7 more seats nationally than the
+54.1\%); Hawaii's 2 seats went Democratic (Kai Kahele and Ed Case). Including
+these gives \textbf{230D/205R} as the national estimate.
+Actual 2020 House outcome: 222D/213R (51.0\% D). The
+algorithmic maps give Democrats roughly 8 more seats nationally than the
 enacted plans.
 
 \paragraph{Texas and California: tiered tolerance needed.}
 Texas (38 districts) and California (52 districts) exhibit high seed failure
-rates under the flat 0.5\% tolerance: TX 22\%, CA 64\%. With 5--6 recursion
-levels, cumulative balance errors compound. The Districting Integrity Act's
-statutory tiered tolerance schedule (\S~104(b)(4): 0.5\% at levels 1--2,
-1.0\% at level 3, 1.5\% at level 4, $\geq$2.0\% at level 5+) is necessary
-for large states to achieve a high success rate. Implementation of the
-tiered schedule is deferred; results for TX and CA are reported at 200 seeds
-with the flat tolerance.
+rates under the flat 0.5\% tolerance: TX 14\% (72 of 500 seeds), CA 39\%
+(78 of 200 seeds). With 5--6 recursion levels, cumulative balance errors
+compound. The Districting Integrity Act's statutory tiered tolerance schedule
+(\S~104(b)(4): 0.5\% at levels 1--2, 1.0\% at level 3, 1.5\% at level 4,
+$\geq$2.0\% at level 5+) is necessary for large states to achieve a high
+success rate. Implementation of the tiered schedule is deferred; CA results
+are reported at 200 seeds with the flat tolerance.
 
 \begin{table}[h]
 \centering\small
@@ -372,9 +387,10 @@ State & $k$ & $v_s$\% & MEC & $\Delta_s$\,pp
 & State & $k$ & $v_s$\% & MEC & $\Delta_s$\,pp \\
 \midrule
 MT & 2 & 41.6 & 0D & $-41.6$ & GA & 14 & 50.1 & 7D & $-0.1$  \\
-AL & 7 & 37.1 & 0D & $-37.1$ & MI & 13 & 51.4 & 7D & $+2.4$  \\
+NH & 2 & 53.7 & 2D & $+46.3$ & MI & 13 & 51.4 & 7D & $+2.4$  \\
+AL & 7 & 37.1 & 0D & $-37.1$ & MA &  9 & 66.6 & 9D & $+32.9$ \\
 IA & 4 & 45.8 & 1D & $-20.8$ & CO &  8 & 56.9 & 5D & $+5.6$  \\
-WI & 8 & 50.3 & 2D & $-25.3$ & IL & 17 & 58.7 &11D & $+6.1$  \\
+WI & 8 & 50.3 & 3D & $-12.8$ & IL & 17 & 58.7 &11D & $+6.1$  \\
 NC &14 & 49.3 & 5D & $-13.6$ & OR &  6 & 58.3 & 4D & $+8.4$  \\
 PA &17 & 50.6 & 8D & $-3.5$  & VA & 11 & 55.2 & 8D & $+17.6$ \\
 AZ &  9 & 50.2 & 4D & $-5.7$  & NY & 26 & 61.7 &21D & $+19.0$ \\
@@ -385,14 +401,19 @@ NV &  4 & 51.2 & 2D & $-1.2$  & VT &  1 & 68.3 & 1D & $+31.7$ \\
 \caption{Selected MEC plan results. Full 50-state table in supplementary material.
   $k$ = districts; $v_s$ = statewide Dem two-party vote share; MEC = minimum
   edge-cut plan; $\Delta_s$ = proportionality gap ($+$ = Dem over-represented).
-  200-seed results; convergence certified separately for focal states.}
+  Focal states (GA, MI, MN, PA, TN, WI) certified at 500--1{,}400 seeds;
+  TX at 500 seeds (provisional); others at 200 seeds.}
 \label{tab:national}
 \end{table}
 
 Key hypotheses to evaluate:
 \begin{itemize}
   \item \textbf{H1 (at-large states)}: States with $k=1$ (VT, AK, WY, DE, ND,
-        SD, MT) have zero seed variance. \emph{Confirmed for Vermont.}
+        SD) have zero seed variance; geographic sorting extends this to small
+        multi-district states: MT (2D, $-41.6$\,pp), NH (2D, $+46.3$\,pp),
+        DE (1D, $+40.4$\,pp), RI (2D, $+39.4$\,pp), HI (2D).
+        \emph{Confirmed: zero partisan variance for all zero-seat or
+        Democratic-sweep small states.}
   \item \textbf{H2 (competitive states)}: States with 10--20 competitive
         districts show the largest seed variance in partisan outcomes.
         \emph{Pennsylvania preliminary data: 3-seat swing across 100 seeds.}
