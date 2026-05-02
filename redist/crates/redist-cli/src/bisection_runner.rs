@@ -469,6 +469,7 @@ pub fn run_geosection(
     // Try all split ratios at the root level
     let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
     let mut best_ec = f64::INFINITY;
+    let mut best_normalised = f64::INFINITY; // isoperimetric-corrected selection criterion
     let mut best_left = 0usize;
     let mut best_right = 0usize;
     let mut best_left_set = HashSet::new();
@@ -505,10 +506,18 @@ pub fn run_geosection(
             }
         }
 
-        eprintln!("[geosection]   ratio {}:{} best={:.0}km",
-                  left_k, right_k, ratio_best/1000.0);
+        // Normalise by √(min(i,k-i)): isoperimetric correction.
+        // Raw EC always favours 1:k-1 (tiny boundary) over k/2:k/2 (full bisection).
+        // Dividing by √(smaller_half_districts) makes the comparison apples-to-apples:
+        // both represent the geometric efficiency of the cut per unit area carved.
+        let smaller = left_k.min(right_k) as f64;
+        let normalised = ratio_best / smaller.sqrt();
 
-        if ratio_best < best_ec {
+        eprintln!("[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
+                  left_k, right_k, ratio_best/1000.0, normalised/1000.0);
+
+        if normalised < best_normalised {
+            best_normalised = normalised;
             best_ec = ratio_best;
             best_left = left_k;
             best_right = right_k;
@@ -517,8 +526,8 @@ pub fn run_geosection(
         }
     }
 
-    eprintln!("[geosection] natural ratio {}:{} at {:.0}km",
-              best_left, best_right, best_ec/1000.0);
+    eprintln!("[geosection] natural ratio {}:{} at {:.0}km (normalised={:.1})",
+              best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
 
     // Write depth_01 intermediate
     if let Some(dir) = intermediate_dir {
@@ -530,16 +539,14 @@ pub fn run_geosection(
         let _ = write_intermediate_round(&round_dir, &d1);
     }
 
-    // Recurse: each half uses standard ⌊k/2⌋:⌈k/2⌉ splits from here
-    let left_adj  = build_subgraph_adjacency(&best_left_set,  adjacency);
-    let right_adj = build_subgraph_adjacency(&best_right_set, adjacency);
-
-    let left_asgn  = recurse_standard(
-        &best_left_set,  &left_adj,  adjacency, vertex_weights, edge_weights,
-        best_left,  balance_tolerance, niter, 1)?;
-    let right_asgn = recurse_standard(
-        &best_right_set, &right_adj, adjacency, vertex_weights, edge_weights,
-        best_right, balance_tolerance, niter, best_left + 1)?;
+    // Recurse: apply GeoSection to each half (full recursive ratio search).
+    // Each subregion finds its own natural ratio independently.
+    let left_asgn  = recurse_geosection(
+        &best_left_set,  adjacency, vertex_weights, edge_weights,
+        best_left,  balance_tolerance, niter, seeds_per_ratio, 1)?;
+    let right_asgn = recurse_geosection(
+        &best_right_set, adjacency, vertex_weights, edge_weights,
+        best_right, balance_tolerance, niter, seeds_per_ratio, best_left + 1)?;
 
     let mut assignments = left_asgn;
     assignments.extend(right_asgn);
@@ -548,6 +555,77 @@ pub fn run_geosection(
         return Err(format!("geosection incomplete: {}/{n}", assignments.len()));
     }
     Ok((assignments, best_left, best_right, best_ec))
+}
+
+/// Fully recursive GeoSection on a geographic subregion.
+///
+/// At each level:
+///   1. Extract local subgraph (local indices)
+///   2. (Future) Compute local minor axis via PCA of subregion centroids
+///   3. Run ratio search on local graph with local orientation
+///   4. Map results back to global indices, offset by district_base
+///
+/// Centroid-based orientation (Phase 2): each half checks its own axis
+/// so a horizontal cut produces a "top half" that may want a vertical
+/// next cut, and vice versa. Currently lambda=0 (no directional penalty)
+/// until centroids are wired in.
+fn recurse_geosection(
+    verts: &HashSet<usize>,
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize,usize),f64>,
+    k: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    district_base: usize,
+    // TODO Phase 2: centroids: Option<&[(f64,f64)]>  — for local PCA / minor axis
+) -> Result<HashMap<usize,usize>, String> {
+    if k == 0 { return Ok(HashMap::new()); }
+    if k == 1 {
+        return Ok(verts.iter().map(|&v| (v, district_base)).collect());
+    }
+
+    // Extract sorted vertex list for deterministic local indexing
+    let sorted: Vec<usize> = { let mut v: Vec<usize> = verts.iter().copied().collect(); v.sort_unstable(); v };
+    let global_to_local: HashMap<usize,usize> = sorted.iter().enumerate().map(|(i,&g)|(g,i)).collect();
+
+    // Build local subgraph components
+    let local_adj: Vec<Vec<usize>> = build_subgraph_adjacency(verts, adjacency);
+    let local_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
+    let local_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
+        .filter_map(|(&(u,v),&w)| {
+            let lu = *global_to_local.get(&u)?;
+            let lv = *global_to_local.get(&v)?;
+            Some(((lu.min(lv), lu.max(lv)), w))
+        })
+        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
+
+    // TODO Phase 2: compute local PCA of subregion centroids here
+    // let local_centroids: Vec<(f64,f64)> = sorted.iter()
+    //     .map(|&g| centroids.map(|c| c[g]).unwrap_or((0.0,0.0))).collect();
+    // let minor_axis_angle = pca_minor_axis(&local_centroids);
+    // let local_ew = apply_directional_penalty(&local_ew, &local_adj, minor_axis_angle, lambda);
+
+    // Recursively find natural ratio for THIS subregion
+    let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
+        &local_adj, &local_vw, &local_ew,
+        k, balance_tolerance, niter, seeds_per_ratio, None,
+    )?;
+
+    if local_asgn.len() < sorted.len().saturating_sub(1) {
+        // Partial assignment — fall back to standard for this subregion
+        return recurse_standard(verts, &local_adj, adjacency, vertex_weights, edge_weights,
+                                k, balance_tolerance, niter, district_base);
+    }
+
+    // Map local indices back to global with district offset
+    let result: HashMap<usize,usize> = local_asgn.iter()
+        .filter_map(|(&local, &dist)| {
+            sorted.get(local).map(|&global| (global, dist + district_base - 1))
+        })
+        .collect();
+    Ok(result)
 }
 
 /// Build adjacency restricted to a subset of vertices (for recursion).
