@@ -50,11 +50,15 @@ pub enum PartitionMode {
     #[value(name = "proportional")]
     Proportional,
     /// CompactBisect (B.7): greedy level-by-level selection by geometric-mean
-    /// Polsby-Popper. Requires --compact-seeds N. At each bisection level, runs
-    /// N METIS seeds and selects the split maximising sqrt(PP(L)·PP(R)) among
-    /// near-minimum-cut candidates. Degrades to min-EC if TIGER geometry unavailable.
+    /// Polsby-Popper. Requires --compact-seeds N.
     #[value(name = "compact-bisect")]
     CompactBisect,
+    /// GeoSection (B.8): ratio-optimal first-level bisection.
+    /// Tries all split ratios (1:k-1 through k/2:k/2) at the first level,
+    /// each with --geosection-seeds seeds. Selects the ratio with the minimum
+    /// edge-cut. Subsequent levels use standard bisection.
+    #[value(name = "geosection")]
+    GeoSection,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -66,6 +70,7 @@ impl std::fmt::Display for PartitionMode {
             Self::PartisanWeighted => write!(f, "partisan-weighted"),
             Self::Proportional     => write!(f, "proportional"),
             Self::CompactBisect    => write!(f, "compact-bisect"),
+            Self::GeoSection       => write!(f, "geosection"),
         }
     }
 }
@@ -1129,6 +1134,12 @@ pub struct StateArgs {
     /// if TIGER geometry is unavailable). Typical: 20-100.
     #[arg(long, default_value = "0")]
     pub compact_seeds: usize,
+
+    /// GeoSection (B.8): seeds per ratio at the first bisection level.
+    /// Requires --partition-mode geosection. Tries all ratios 1:k-1 through
+    /// k/2:k/2 with this many seeds each; picks minimum-EC ratio. Typical: 50-200.
+    #[arg(long, default_value = "0")]
+    pub geosection_seeds: usize,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 

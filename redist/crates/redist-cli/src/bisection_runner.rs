@@ -431,6 +431,183 @@ pub fn run_nway_partition(
 /// This prevents the compounding error (28% deviation) seen with fixed ufactor per depth.
 ///
 /// Formula: `node_ufactor = 1.0 + balance_tolerance_frac / node.k`
+/// GeoSection: find the natural geographic split ratio.
+///
+/// At the first bisection level (depth 0), try ALL feasible split ratios
+/// (1:k-1, 2:k-2, ..., ⌊k/2⌋:⌈k/2⌉), each with `seeds_per_ratio` seeds.
+/// The ratio with the globally minimum edge-cut is the "natural" ratio.
+/// All subsequent levels use the standard ⌊k/2⌋:⌈k/2⌉ split.
+///
+/// Returns (assignments, natural_ratio_left, natural_ratio_right, natural_ec).
+pub fn run_geosection(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds_per_ratio: usize,
+    intermediate_dir: Option<&Path>,
+) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        let asgn = (0..n).map(|i| (i, 1)).collect();
+        return Ok((asgn, 1, 0, 0.0));
+    }
+    if num_districts == 2 {
+        // Only one ratio possible: 1:1
+        let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
+                                   2, balance_tolerance, niter,
+                                   Some(1), intermediate_dir)?;
+        let ec: f64 = edge_weights.iter().map(|(&(u,v),&w)| {
+            if asgn.get(&u) != asgn.get(&v) { w } else { 0.0 }
+        }).sum();
+        return Ok((asgn, 1, 1, ec));
+    }
+
+    // Try all split ratios at the root level
+    let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
+    let mut best_ec = f64::INFINITY;
+    let mut best_left = 0usize;
+    let mut best_right = 0usize;
+    let mut best_left_set = HashSet::new();
+    let mut best_right_set = HashSet::new();
+
+    let all_tracts: HashSet<usize> = (0..n).collect();
+    let max_left = num_districts / 2;  // try ratios 1:k-1 through k/2:k/2
+
+    eprintln!("[geosection] trying {} ratios × {} seeds for k={}",
+              max_left, seeds_per_ratio, num_districts);
+
+    for left_k in 1..=max_left {
+        let right_k = num_districts - left_k;
+        let tw = Some((left_k as f64 / num_districts as f64,
+                       right_k as f64 / num_districts as f64));
+        let mut ratio_best = f64::INFINITY;
+        let mut ratio_best_left = HashSet::new();
+        let mut ratio_best_right = HashSet::new();
+
+        for seed in 1..=(seeds_per_ratio as u64) {
+            match split_subgraph(adjacency, vertex_weights, edge_weights,
+                                  &all_tracts, node_ufactor, niter, Some(seed), tw) {
+                Ok((l, r)) => {
+                    let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
+                        if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
+                    }).sum();
+                    if ec < ratio_best {
+                        ratio_best = ec;
+                        ratio_best_left = l;
+                        ratio_best_right = r;
+                    }
+                }
+                Err(_) => continue,
+            }
+        }
+
+        eprintln!("[geosection]   ratio {}:{} best={:.0}km",
+                  left_k, right_k, ratio_best/1000.0);
+
+        if ratio_best < best_ec {
+            best_ec = ratio_best;
+            best_left = left_k;
+            best_right = right_k;
+            best_left_set = ratio_best_left;
+            best_right_set = ratio_best_right;
+        }
+    }
+
+    eprintln!("[geosection] natural ratio {}:{} at {:.0}km",
+              best_left, best_right, best_ec/1000.0);
+
+    // Write depth_01 intermediate
+    if let Some(dir) = intermediate_dir {
+        let round_dir = dir.join("depth_01");
+        let _ = std::fs::create_dir_all(&round_dir);
+        let mut d1: HashMap<usize, usize> = HashMap::new();
+        for &v in &best_left_set  { d1.insert(v, 1); }
+        for &v in &best_right_set { d1.insert(v, 2); }
+        let _ = write_intermediate_round(&round_dir, &d1);
+    }
+
+    // Recurse: each half uses standard ⌊k/2⌋:⌈k/2⌉ splits from here
+    let left_adj  = build_subgraph_adjacency(&best_left_set,  adjacency);
+    let right_adj = build_subgraph_adjacency(&best_right_set, adjacency);
+
+    let left_asgn  = recurse_standard(
+        &best_left_set,  &left_adj,  adjacency, vertex_weights, edge_weights,
+        best_left,  balance_tolerance, niter, 1)?;
+    let right_asgn = recurse_standard(
+        &best_right_set, &right_adj, adjacency, vertex_weights, edge_weights,
+        best_right, balance_tolerance, niter, best_left + 1)?;
+
+    let mut assignments = left_asgn;
+    assignments.extend(right_asgn);
+
+    if assignments.len() != n {
+        return Err(format!("geosection incomplete: {}/{n}", assignments.len()));
+    }
+    Ok((assignments, best_left, best_right, best_ec))
+}
+
+/// Build adjacency restricted to a subset of vertices (for recursion).
+fn build_subgraph_adjacency(verts: &HashSet<usize>, adj: &[Vec<usize>])
+    -> Vec<Vec<usize>>
+{
+    let sorted: Vec<usize> = {
+        let mut v: Vec<usize> = verts.iter().copied().collect();
+        v.sort_unstable(); v
+    };
+    let global_to_local: HashMap<usize,usize> = sorted.iter()
+        .enumerate().map(|(i,&g)| (g,i)).collect();
+    sorted.iter().map(|&g| {
+        adj[g].iter().filter_map(|&nb| global_to_local.get(&nb).copied()).collect()
+    }).collect()
+}
+
+/// Recurse using standard bisection (UpfloorD k/2 : ceil k/2) within a subgraph.
+/// Returns global-index assignments offset by district_base.
+fn recurse_standard(
+    verts: &HashSet<usize>,
+    sub_adj: &[Vec<usize>],
+    global_adj: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize,usize),f64>,
+    k: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    district_base: usize,
+) -> Result<HashMap<usize,usize>, String> {
+    if k == 0 { return Ok(HashMap::new()); }
+    if k == 1 {
+        return Ok(verts.iter().map(|&v| (v, district_base)).collect());
+    }
+
+    let sorted: Vec<usize> = { let mut v: Vec<usize> = verts.iter().copied().collect(); v.sort_unstable(); v };
+    let global_to_local: HashMap<usize,usize> = sorted.iter().enumerate().map(|(i,&g)|(g,i)).collect();
+
+    // Extract sub-vertex-weights and sub-edge-weights
+    let sub_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g]).collect();
+    let sub_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
+        .filter_map(|(&(u,v),&w)| {
+            let lu = *global_to_local.get(&u)?;
+            let lv = *global_to_local.get(&v)?;
+            Some(((lu.min(lv), lu.max(lv)), w))
+        })
+        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
+
+    let sub_n = sorted.len();
+    let sub_asgn = run_all_splits(sub_adj, &sub_vw, &sub_ew,
+                                   k, balance_tolerance, niter,
+                                   Some(42), None)?;
+
+    // Map back to global indices with offset
+    let result: HashMap<usize,usize> = sub_asgn.iter()
+        .map(|(&local, &dist)| (sorted[local], dist + district_base - 1))
+        .collect();
+    Ok(result)
+}
+
 pub fn run_all_splits(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],

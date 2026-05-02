@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_compact, run_nway_partition, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_compact, run_geosection, run_nway_partition, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -57,6 +57,8 @@ pub struct StateConfig {
     /// When > 0 and partition_mode == "compact-bisect", run this many METIS seeds
     /// at each level and select by geometric-mean PP (or min-EC if no geometry).
     pub compact_seeds: usize,
+    /// GeoSection: seeds per ratio at first bisection level (0 = disabled).
+    pub geosection_seeds: usize,
     /// METIS imbalance factor (integer percent, e.g. 5 = 0.5% imbalance per level)
     pub ufactor: u32,
     /// Number of METIS refinement iterations
@@ -147,6 +149,7 @@ impl StateConfig {
             // Algorithm defaults
             partition_mode: "edge-weighted".to_string(),
             compact_seeds: 0,
+            geosection_seeds: 0,
             ufactor: 5,
             niter: 100,
             seed: None,
@@ -688,8 +691,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             status(cfg.position, &format!("{}: single district — skipping VRA (trivially compliant)", cfg.state_code));
             HashMap::new()
         }
-        "compact-bisect" => {
-            status(cfg.position, &format!("{}: compact-bisect mode ({} edges)", cfg.state_code, graph.n_edges));
+        "compact-bisect" | "geosection" => {
+            status(cfg.position, &format!("{}: {} mode ({} edges)", cfg.state_code, cfg.partition_mode, graph.n_edges));
             graph.edge_weights.clone()
         }
         _ => HashMap::new(), // unweighted
@@ -740,6 +743,21 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             cfg.niter,
             cfg.seed,
         ).map_err(|e| format!("n-way partition failed: {e}"))?
+    } else if cfg.partition_mode == "geosection" && cfg.geosection_seeds > 0 {
+        let balance_tolerance_frac = cfg.effective_balance_tolerance();
+        let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+            &graph.adjacency,
+            &graph.vertex_weights,
+            &edge_weights,
+            num_districts,
+            balance_tolerance_frac,
+            cfg.niter,
+            cfg.geosection_seeds,
+            Some(&intermediate_dir),
+        ).map_err(|e| format!("geosection failed: {e}"))?;
+        status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+               cfg.state_code, nat_left, nat_right, nat_ec/1000.0));
+        asgn
     } else if cfg.partition_mode == "compact-bisect" && cfg.compact_seeds > 0 {
         // CompactBisect: greedy level-by-level selection by geometric-mean PP.
         // Load TIGER geometry so subgraph_pp() returns real values.
@@ -1048,6 +1066,7 @@ mod tests {
             output_dir: PathBuf::from("/tmp/test"),
             partition_mode: "edge-weighted".to_string(),
             compact_seeds: 0,
+            geosection_seeds: 0,
             position: 999,
             debug: false,
             reset: false,
