@@ -49,20 +49,29 @@ impl SplitStep {
 
 /// Returns the split prescription for a region with `k` target districts.
 ///
-/// See module-level doc for the three-case rule.
+/// Rule (MAX_DIRECT_SPLIT = 3):
+///   k ≤ 3          → direct k-cut
+///   k composite    → split by **largest** prime factor p first: p sub-regions of k/p
+///   k prime > 3    → binary floor/ceil fallback
+///
+/// Largest-prime-first means that k=34 and k=51 both produce 17 top-level
+/// sub-regions of the same geographic region, enabling reuse of that shared
+/// 17-district partition. The smaller factor (2 or 3) is then applied inside
+/// each of the 17 sub-regions at the next level.
 pub fn split_prescription(k: u32) -> SplitStep {
     assert!(k >= 1, "k must be >= 1");
     if k <= MAX_DIRECT_SPLIT {
-        // k=1 (trivial), k=2, k=3: direct k-cut (sub_k=1 for leaves)
         return SplitStep::Uniform { parts: k, sub_k: 1 };
     }
     if is_prime(k) {
-        // Large prime: binary fallback
         let k_left = k / 2;
         SplitStep::Binary { k_left, k_right: k - k_left }
     } else {
-        // Composite: split by smallest prime factor
-        let p = smallest_prime_factor(k);
+        // Composite: split by LARGEST prime factor first to maximise reuse.
+        // k=34=2×17 → parts=17, sub_k=2 (same 17-map as k=51=3×17)
+        // k=51=3×17 → parts=17, sub_k=3
+        // k=52=4×13 → parts=13, sub_k=4 (same 13-map as k=26=2×13)
+        let p = largest_prime_factor(k);
         SplitStep::Uniform { parts: p, sub_k: k / p }
     }
 }
@@ -72,6 +81,17 @@ fn smallest_prime_factor(mut n: u32) -> u32 {
     let mut d = 3u32;
     while d * d <= n { if n % d == 0 { return d; } d += 2; }
     n
+}
+
+fn largest_prime_factor(n: u32) -> u32 {
+    let mut n = n;
+    let mut largest = 1u32;
+    let mut d = 2u32;
+    while d * d <= n {
+        while n % d == 0 { largest = d; n /= d; }
+        d += 1;
+    }
+    if n > 1 { n } else { largest }
 }
 
 /// Returns the canonical factorization sequence of `n`: prime factors in
@@ -207,14 +227,20 @@ mod tests {
 
     #[test]
     fn test_split_prescription_composite() {
-        // k=4=2²: p=2, sub_k=2
+        // k=4=2²: largest prime=2, parts=2, sub_k=2
         assert_eq!(split_prescription(4), SplitStep::Uniform { parts: 2, sub_k: 2 });
-        // k=6=2×3: p=2, sub_k=3
-        assert_eq!(split_prescription(6), SplitStep::Uniform { parts: 2, sub_k: 3 });
-        // k=9=3²: p=3, sub_k=3
+        // k=6=2×3: largest prime=3, parts=3, sub_k=2
+        assert_eq!(split_prescription(6), SplitStep::Uniform { parts: 3, sub_k: 2 });
+        // k=9=3²: largest prime=3, parts=3, sub_k=3
         assert_eq!(split_prescription(9), SplitStep::Uniform { parts: 3, sub_k: 3 });
-        // k=52=4×13: p=2, sub_k=26
-        assert_eq!(split_prescription(52), SplitStep::Uniform { parts: 2, sub_k: 26 });
+        // k=52=4×13: largest prime=13, parts=13, sub_k=4
+        assert_eq!(split_prescription(52), SplitStep::Uniform { parts: 13, sub_k: 4 });
+        // k=34=2×17: largest prime=17, parts=17, sub_k=2
+        assert_eq!(split_prescription(34), SplitStep::Uniform { parts: 17, sub_k: 2 });
+        // k=51=3×17: largest prime=17, parts=17, sub_k=3
+        assert_eq!(split_prescription(51), SplitStep::Uniform { parts: 17, sub_k: 3 });
+        // k=26=2×13: largest prime=13, parts=13, sub_k=2  (same top level as k=52)
+        assert_eq!(split_prescription(26), SplitStep::Uniform { parts: 13, sub_k: 2 });
     }
 
     #[test]
@@ -231,21 +257,22 @@ mod tests {
 
     #[test]
     fn test_split_prescription_trace_17() {
-        // Trace k=17 → (8,9) → 8=2³ (three binary levels), 9=3² (two ternary levels)
-        let s17 = split_prescription(17);
-        assert_eq!(s17, SplitStep::Binary { k_left: 8, k_right: 9 });
+        // k=17 (prime): binary (8, 9) — unchanged
+        assert_eq!(split_prescription(17), SplitStep::Binary { k_left: 8, k_right: 9 });
+        // k=34=2×17: parts=17 (largest prime), sub_k=2 — REUSES k=17 map
+        assert_eq!(split_prescription(34), SplitStep::Uniform { parts: 17, sub_k: 2 });
+        // k=51=3×17: parts=17 (largest prime), sub_k=3 — SAME k=17 map
+        assert_eq!(split_prescription(51), SplitStep::Uniform { parts: 17, sub_k: 3 });
+    }
 
-        let s8 = split_prescription(8);
-        assert_eq!(s8, SplitStep::Uniform { parts: 2, sub_k: 4 }); // 8=2×4
-        let s4 = split_prescription(4);
-        assert_eq!(s4, SplitStep::Uniform { parts: 2, sub_k: 2 }); // 4=2×2
-        let s2 = split_prescription(2);
-        assert_eq!(s2, SplitStep::Uniform { parts: 2, sub_k: 1 }); // leaf
-
-        let s9 = split_prescription(9);
-        assert_eq!(s9, SplitStep::Uniform { parts: 3, sub_k: 3 }); // 9=3×3
-        let s3 = split_prescription(3);
-        assert_eq!(s3, SplitStep::Uniform { parts: 3, sub_k: 1 }); // leaf
+    #[test]
+    fn test_shared_base_map() {
+        // Both k=34 and k=51 start with a 17-region top-level split.
+        // Both k=26 and k=52 start with a 13-region top-level split.
+        assert_eq!(split_prescription(34).parts(), 17);
+        assert_eq!(split_prescription(51).parts(), 17);
+        assert_eq!(split_prescription(26).parts(), 13);
+        assert_eq!(split_prescription(52).parts(), 13);
     }
 
     #[test]
