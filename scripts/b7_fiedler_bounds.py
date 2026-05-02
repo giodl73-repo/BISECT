@@ -54,6 +54,8 @@ confirmed = [
     ("tn","tennessee",       9, 1,-27.06,  1568000),
     ("nc","north_carolina", 14, 5,-13.60,  2400000),
     ("wi","wisconsin",       8, 2,-25.32,  1689000),
+    ("tx","texas",          38,15, -7.70,  8176000),  # b7tx_ fresh sweep
+    ("mn","minnesota",       8, 3,-16.14,  1357000),
 ]
 
 adj_dir = "outputs/V3/data/2020/adjacency"
