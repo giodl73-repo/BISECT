@@ -1,89 +1,91 @@
-# Next Session Handoff: B.7 Paper — Deep Convergence + Fiedler Bounds
+# Next Session Handoff: B.7 Paper — Round 2 Review Complete
 
 **Status:** active session pickup pointer
 **Owner:** maintainer (you)
-**Last update:** 2026-05-01 (extended convergence sweeps + Fiedler approximation ratios)
+**Last update:** 2026-05-01
 
-## Convergence Status (all confirmed states as of session end)
+## Paper Status
 
-| State | k | MEC (km) | D/R | Gap (pp) | Seeds | Tail | Status |
-|-------|---|----------|-----|---------|-------|------|--------|
-| VT | 1 | 0 | 1D | +31.7 | 200 | — | trivial |
-| PA | 17 | 2,441 | 8D/9R | −3.5 | 1,100 | 819 | CONVERGED |
-| GA | 14 | 2,546 | 7D/7R | −0.1 | 1,000 | 511 | CONVERGED |
-| MI | 13 | 2,098 | 7D/6R | +2.4 | 500 | 319 | CONVERGED |
-| TN | 9 | 1,568 | 1D/8R | −27.1 | 1,000 | 391 | CONVERGED |
-| MN | 8 | 1,357 | 3D/5R | −16.1 | 1,000 | 551 | CONVERGED |
-| NC | 14 | 2,400 | 5D/9R | −13.6 | 200 | 158 | CONVERGED |
-| CT | 5 | 361 | 5D/0R | +39.8 | 500 | 316 | likely |
-| AL | 7 | 1,716 | 0D/7R | −37.1 | 500 | 326 | likely |
-| ID | 2 | 502 | 0D/2R | −34.1 | 500 | 309 | likely |
-| WI | 8 | 1,689 | 2D/6R | −25.3 | 200 | 86 | marginal — needs more |
-| TX | 38 | 8,176 | 15D/23R | −7.7 | ~350 | ~236 | running (b7tx_ prefix) |
+**Round 2 review: 3.4/4 — ACCEPT with minor revisions.**
+Stage: `recheck` → advance to `ready` after P2 items.
 
-## Fiedler Approximation Ratios
+### Convergence Data (all confirmed)
 
-`scripts/b7_fiedler_bounds.py` computes λ₂ from adj.bin via deflated power iteration.
-Ratio = MEC / (λ₂ × n/4). Near 1.0 = certifiable.
+| State | Seeds | MEC (km) | Plan | Gap (pp) | Tail | Status |
+|-------|-------|----------|------|---------|------|--------|
+| PA | 1,100 | 2,441 | 8D/9R | −3.5 | 919 | CONVERGED |
+| GA | 1,000 | 2,546 | 7D/7R | −0.1 | 511 | CONVERGED |
+| MI | 500 | 2,098 | 7D/6R | +2.4 | 319 | CONVERGED |
+| TN | 1,000 | 1,568 | 1D/8R | −27.1 | 391 | CONVERGED |
+| MN | 1,000 | 1,357 | 3D/5R | −16.1 | 551 | CONVERGED |
+| NC | 200 | 2,400 | 5D/9R | −13.6 | 158 | CONVERGED |
+| TX | 400 | 8,176 | 15D/23R | −7.7 | 286 | CONVERGED |
+| CT | 500 | 361 | 5D/0R | +39.8 | 316 | likely |
+| WI | 1,000 | 1,615 | 3D/5R | −12.8 | 108 | partial — needs 300 |
 
-| State | Ratio | Interpretation |
-|-------|-------|---------------|
-| MI | **1.01×** | At the lower bound — fully certifiable |
-| NC | 2.42× | Room to improve; needs more seeds |
-| PA | 2.67× | Ditto |
-| GA | 2.98× | Ditto |
-| WI | 3.20× | High gap — needs many more seeds to certify |
-| TN | 3.68× | Highest gap — sorted state with few districts |
+**WI needs ~200 more seeds** to reach the 300-seed certification threshold.
 
-**Key insight**: sorted states have higher ratios because their graphs have lower algebraic
-connectivity (easier to cut). Mixed-geography states (MI) approach the bound.
+### Key Empirical Findings (for the paper)
 
-## Key Empirical Findings (session)
+1. **False floors**: GA (overturned seed 489), TN (seed 609), WI (seed 318). 200 seeds is NOT enough.
+2. **MEC and GMPP agree on outcome** when converged (WI/NC both 3D/5D). PA is the exception (MEC 8D vs GMPP 7D).
+3. **MEC is the correct primary criterion**: no interpretive degrees of freedom, TIGER-only inputs.
+4. **GMPP exact perimeters**: approximate (circular model) gave misleading convergence story for WI. Exact (TIGER pyproj EPSG:5070) shows GMPP last improved seed 930, not 109.
+5. **National totals**: MEC gives 229D/206R algorithmically vs enacted 222D/213R (+7 Dem).
+6. **Fiedler bound non-certifying**: λ₂ = 7-46m for all states, bound/achieved ≈ 2%. Cheeger is too loose for geographic graphs. Empirical tail criterion is the practical certification.
 
-1. **False floors are common**: GA (seed 190→288→489), TN (seed 182→334→609)
-   both had incorrect interim results overturned by deeper sweeps.
+### Paper Sections Status
 
-2. **MI at 1.01×**: Michigan's MEC plan is provably within 1% of the theoretical
-   geometric minimum. This is the paper's strongest Fiedler certificate example.
+| Section | Status |
+|---------|--------|
+| §1 Introduction | Complete |
+| §2 Background | Complete |
+| §3 Methodology | Complete (Fiedler tightness note, ε statutory, content-derived seed) |
+| §4 Evaluation | Complete (1100-seed PA table, WI GMPP caveat, national totals) |
+| §5 Discussion | Complete (MEC primacy, geometric sorting theorem, WI caveat) |
+| §6 Conclusion | Complete |
 
-3. **50-state pattern**: near-proportional mixed states (GA −0.1, MI +2.4, PA −3.5),
-   sorted R-favoring (TN −27, WI −25, MN −16), structural sweeps (CT +39.8).
+### Remaining P2 Items (before submission)
 
-4. **CA failure rate**: 64% of seeds fail for CA (52D) with flat 0.5% tolerance.
-   TX: ~12% failure rate. Tiered tolerance schedule needed for large states.
+| Item | Description | Effort |
+|------|-------------|--------|
+| P2-I | Definition 3.3 practical annotation (non-certifying in practice) | 1 paragraph |
+| P2-II | CompactBisect with release binary (currently debug binary results) | 1h compute |
+| P2-III | ε sensitivity analysis (show outcome stable for ε ∈ {0.01,0.02,0.05,0.10}) | 2h compute |
+| P2-IV | Explicit MEC primacy justification vs GMPP | 1 paragraph |
+| P2-V | Fix O(n²) Lanczos → O(n×k) ARPACK complexity claim | 1 line |
+| P2-VI | AK/HI election result citations (Don Young 54.1%, HI both D) | 1 footnote |
 
-5. **TN true MEC = 1D** (not 2D as in 200-seed sweep). 200 seeds was insufficient.
+WI needs 200 more seeds for certified tail → run b7_WI_s1001..1200.
 
-## Review Status
+## Analysis Scripts (all working)
 
-Round 1 complete (avg 2.8/4). P1 items A-E all addressed in this session.
-Stage: synthesis → revision (P2/P3 items remain).
+- `scripts/b7_sweep.ps1` — 50-state MEC sweep (resumable)
+- `scripts/b7_fiedler_bounds.py` — λ₂ via scipy ARPACK (correct)
+- `scripts/b7_audit_math.py` — level-1 EC, Cheeger h(G) for all states
+- `scripts/b7_exact_perimeters.py` — exact TIGER perimeters via pyproj
+- `scripts/b7_gmpp_exact.py` — GMPP convergence with exact perimeters
+- `scripts/b7_pa_table.py` — PA 1100-seed distribution
 
-## Immediate Next Steps
+## Rust Codebase Status
 
-1. **Run WI to 1,000 seeds** — only 86-seed tail; needs deep convergence for paper claims.
-   `$ver = "b7_WI_s{seed}"; seeds 201..1000` using existing `b7_WI_s*` directories.
+The other session added `AlgorithmParams` enum refactor (commit 3903c62):
+- `partition_mode: String` replaced by `algo: AlgorithmParams` enum
+- Each variant carries only its own params (CompactBisect has seeds_per_level, epsilon)
+- `from_state_args()` / `defaults_for_mode()` constructors
+- All 115 tests passing
 
-2. **Add TX to Fiedler bounds script** — once TX converges (seeds running in b7tx_)
-   with results in `outputs/b7tx_s*/2020/states/texas/`.
+CompactBisect, GeoSection (B.8), Proportional all in AlgorithmParams.
+Check runner.rs for dispatch — no more string matching on partition_mode.
 
-3. **Wire Fiedler certificate into CompactBisect output** — add to manifest JSON.
+## Key Paper Conclusions
 
-4. **P2-A: Use exact TIGER perimeters** instead of 2√(πA) circular approximation.
-   Reviewer Steinhardt flagged this as an attack surface; exact values are available.
+1. **Seed irrelevance** (for certified states): convergence tail ≥300 seeds certifies the MEC plan is stable regardless of which specific seed finds it.
+2. **Geometric sorting** drives proportionality gaps — not algorithmic bias. Any compact criterion produces the same structure.
+3. **MEC is the correct primary criterion**: TIGER boundary lengths only, no interpretive choices.
+4. **GMPP and MEC agree on outcome** when both converge — GMPP doesn't make things "more proportional," just reaches the same place via different path.
 
-5. **Run CompactBisect on confirmed focal states** with release binary.
-   Currently only done with debug binary (Reviewer Liang P1.2).
+## See Also
 
-6. **Write conclusion section** (§6 is still just a 4-line stub).
-
-## Files of note
-
-- `scripts/b7_fiedler_bounds.py` — Fiedler computation for all confirmed states
-- `scripts/b7_sweep.ps1` — 50-state MEC sweep (resumable CSV)
-- `research/publications/solution-space-and-seed-sensitivity/` — full paper
-  - `reviews/SYNTHESIS.md` — P1/P2/P3 items from Round 1
-  - `_panel.yaml` — stage=synthesis, avg=2.8/4
-- `outputs/b7_sweep/convergence.csv` — 50-state 200-seed summary
-- `outputs/b7_{STATE}_s{N}/` — per-state per-seed outputs (b7_PA_s1..1100, etc.)
-- `outputs/b7tx_s{N}/` — TX fresh sweep (avoids stale manifests)
+- `research/publications/solution-space-and-seed-sensitivity/reviews/SYNTHESIS-R2.md`
+- `research/publications/solution-space-and-seed-sensitivity/_panel.yaml` (stage: recheck, avg: 3.4)
