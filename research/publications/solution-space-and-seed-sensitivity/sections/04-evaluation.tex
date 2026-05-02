@@ -36,26 +36,25 @@ distributions overlap substantially across seat-outcome classes:
 \centering
 \begin{tabular}{lrrrr}
 \toprule
-Outcome & $n$ (100 seeds) & EC min & EC mean & EC max \\
+Outcome & $n$ (998 valid seeds) & EC min & EC mean & EC max \\
 \midrule
-6D/11R ($-15.3$\,pp) & 9  & 2{,}616 & 2{,}720 & 2{,}892 \\
-7D/10R ($-9.4$\,pp)  & 54 & 2{,}541 & 2{,}718 & 3{,}003 \\
-8D/9R  ($-3.5$\,pp)  & 35 & 2{,}529 & 2{,}696 & 2{,}894 \\
-9D/8R  ($+2.3$\,pp)  & 2  & 2{,}536 & 2{,}679 & 2{,}822 \\
+6D/11R ($-15.3$\,pp) & 49  (5\%) & 2{,}561 & 2{,}717 & 2{,}986 \\
+7D/10R ($-9.4$\,pp)  & 591 (59\%) & 2{,}466 & 2{,}708 & 3{,}110 \\
+8D/9R  ($-3.5$\,pp)  & 315 (32\%) & 2{,}441 & 2{,}703 & 2{,}949 \\
+9D/8R  ($+2.3$\,pp)  & 43  (4\%) & 2{,}455 & 2{,}690 & 2{,}995 \\
 \bottomrule
 \end{tabular}
-\caption{Edge-cut (km) by seat outcome, Pennsylvania, 100 seeds.
-  All four outcome classes contain plans with edge-cuts within 5\% of
-  the global minimum, confirming that minimum-edge-cut selection does not
-  deterministically favour any partisan outcome.}
+\caption{Edge-cut (km) by seat outcome, Pennsylvania, 1{,}100 seeds (998 valid).
+  All four outcome classes contain plans within 5\% of the global minimum.
+  7D is the modal outcome (59\%); 8D is the MEC winner (min EC = 2{,}441\,km).}
 \label{tab:pa-ec-by-outcome}
 \end{table}
 
 \paragraph{Convergence.}
-The running minimum improved 7 times across seeds 1--100 (at seeds 1, 2, 3,
-5, 12, 18, 34; Table~\ref{tab:pa-convergence}). The final 66 seeds produced
-no improvement. The current best plan (seed 34, EC = 2{,}529\,km) produces
-8D/9R ($-3.5$\,pp). % TODO: update with full 1000-seed results
+The running minimum improved 12 times across 1{,}100 seeds, last at seed 181
+(EC = 2{,}441\,km, 8D/9R, $-3.5$\,pp). The minimum was stable for 919
+consecutive seeds afterward (seeds 182--1{,}100), a 83.5\% stable tail.
+Table~\ref{tab:pa-convergence} shows the improvement trajectory.
 
 \begin{table}[h]
 \centering
@@ -70,11 +69,16 @@ Seed & New minimum (km) & Improvement & Outcome \\
 12  & 2{,}596 & $-$10      & 7D \\
 18  & 2{,}578 & $-$18      & 8D \\
 34  & 2{,}529 & $-$49      & 8D \\
-% TODO: insert seeds 101-1000 improvements here
+101 & 2{,}520 & $-$9       & 8D \\
+106 & 2{,}520$\to$2{,}509 & cont. & 8D \\
+181 & 2{,}441 & $-$68      & 8D \\
+\midrule
+\multicolumn{4}{l}{\emph{Seeds 182--1{,}100: no improvement (919-seed stable tail)}} \\
 \bottomrule
 \end{tabular}
-\caption{Running minimum edge-cut improvements, Pennsylvania, seeds 1--100.
-  % TODO: extend to 1000 seeds.}
+\caption{Running minimum edge-cut improvements, Pennsylvania, 1{,}100 seeds.
+  12 improvements total; final minimum 2{,}441\,km at seed 181.
+  Subsequent 919 seeds confirm convergence (83.5\% stable tail).}
 \label{tab:pa-convergence}
 \end{table}
 
@@ -202,16 +206,21 @@ MEC and GMPP criteria select different plans from that space.
 For North Carolina, both MEC (seed 41) and GMPP-max (seed 69) give 5D/9R.
 Correlation $r = -0.223$: moderate alignment.
 
-\paragraph{Implication for certification.}
-Because GMPP converges faster (shorter, more stable tails), the
-certification criterion of §\ref{sec:methodology:certificate} may require
-fewer seeds for GMPP-based stopping than for MEC-based stopping. For
-Wisconsin, GMPP is certifiably stable after 109 seeds; MEC requires 891.
-However, the certified GMPP plan and the certified MEC plan produce different
-partisan outcomes. The choice between criteria is not a partisan choice (both
-are purely geometric) but it is a consequential one, and the paper recommends
-the MEC criterion as primary because it has no degree-of-freedom choices
-(no area measure, no shape metric, no approximation).
+\paragraph{Wisconsin GMPP convergence caveat.}
+With exact TIGER perimeters, Wisconsin GMPP last improved at seed 930 with
+a 69-seed tail --- below the 300-seed certification threshold. \emph{Wisconsin
+GMPP is not yet certified.} The claim that MEC and GMPP agree on 3D for
+Wisconsin is provisional: 999 seeds of agreement, but GMPP has not reached
+the same convergence standard as MEC (MEC tail\,=\,108 seeds, also borderline).
+Both criteria need further seeds to be formally certified.
+
+\paragraph{Criterion choice.}
+GMPP analysis (approximate perimeters) found GMPP last improved at seed 109
+(890-seed tail), suggesting faster convergence than MEC. But with exact
+perimeters (EPSG:5070 projection), the GMPP last improved at seed 930 ---
+much later. The approximate analysis was misleading. The paper recommends MEC
+as primary: no degree-of-freedom choices (no area measure, no shape metric,
+no approximation), and independently verifiable from TIGER boundary data alone.
 
 \subsection{Texas: Large-State Failures and Convergence Rate}
 \label{sec:eval:tx}

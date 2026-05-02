@@ -99,14 +99,20 @@ proportionality:
   \item \textbf{Max Edge-Cut}: 4D/4R ($-0.3$\,pp). Least compact; most proportional.
 \end{enumerate}
 
-The convergence of criteria 2 and 3 on the same 3D/5R outcome is the paper's
-strongest methodological result: given sufficient seeds, MEC and \textsc{CompactBisect}
-agree. The difference is the path: \textsc{CompactBisect} finds 3D in 50 seeds per
-level; MEC requires 318 full-state seeds.
+The provisional convergence of criteria 2 and 3 on the same 3D/5R outcome
+is an encouraging methodological result: given sufficient seeds, MEC and
+\textsc{CompactBisect} appear to agree. The difference is the path:
+\textsc{CompactBisect} finds 3D in 50 seeds per level; MEC requires 318
+full-state seeds. However, MEC (seed 891) has not yet reached the 300-seed
+certification tail, and neither has GMPP (seed 930, 69-seed tail with exact
+perimeters). Both need further sweeps to be formally certified.
 
 The key empirical finding: maximum Polsby-Popper selects \emph{3D}, not 2D.
-The most compact plan by PP has PP = 0.4750 and produces 3D/5R. The most
-compact plan by edge-cut produces 2D/6R with PP = 0.4407.
+With exact TIGER perimeters (EPSG:5070), the GMPP-maximising level-1 bisection
+(seed 930) produces 3D/5R at GMPP\,=\,0.397; the MEC-minimising plan (seed 891)
+produces 3D/5R at GMPP\,=\,0.358. Both criteria agree on outcome; the
+MEC plan is 58\,km more compact in edge-cut, the GMPP plan 0.039 higher in
+geometric-mean Polsby-Popper.
 
 Why does PP perform better than edge-cut for proportionality?
 Polsby-Popper is \emph{size-normalised}: $\mathrm{PP}(R) = 4\pi A / P^2$
