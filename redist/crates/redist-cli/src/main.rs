@@ -80,6 +80,9 @@ fn main() {
                 (name, ndist)
             };
 
+            // Build algo params before any partial moves of `args`
+            let algo = redist_cli::runner::AlgorithmParams::from_state_args(&args);
+
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
                 .unwrap_or_else(|| std::path::PathBuf::from(format!("outputs/{}", args.version)));
@@ -176,17 +179,11 @@ fn main() {
                 year: year.clone(),
                 version: args.version.clone(),
                 output_dir,
-                partition_mode: args.partition_mode.to_string(),
-                compact_seeds: args.compact_seeds,
-                geosection_seeds: args.geosection_seeds,
+                algo,
                 position: args.position,
                 debug: args.debug,
                 reset: args.reset,
                 reprocess: false,
-                ufactor: args.ufactor,
-                niter: args.niter,
-                seed: args.seed,
-                // Spec 1 fields
                 num_districts_override: args.districts,
                 chamber: args.chamber.clone(),
                 label: args.label.clone(),
@@ -199,10 +196,6 @@ fn main() {
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
                 coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
-                // Plan 03: partisan-weighted bisection (Callais 2026-04-29)
-                partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
-                dem_threshold: args.dem_threshold,
-                rep_threshold: args.rep_threshold,
             }], 1);
             for r in &results {
                 if !r.success {
@@ -233,7 +226,7 @@ fn main() {
                     );
                     cfg.debug = args.debug;
                     cfg.reprocess = args.reprocess;
-                    cfg.partition_mode = args.partition_mode.to_string();
+                    cfg.algo = redist_cli::runner::AlgorithmParams::defaults_for_mode(&args.partition_mode);
                     cfg
                 })
                 .collect();
@@ -295,7 +288,7 @@ fn main() {
                         cfg.debug = args.debug;
                         cfg.reset = args.reset;
                         cfg.reprocess = args.reprocess;
-                        cfg.partition_mode = args.partition_mode.to_string();
+                        cfg.algo = redist_cli::runner::AlgorithmParams::defaults_for_mode(&args.partition_mode);
                         cfg
                     })
                     .collect();

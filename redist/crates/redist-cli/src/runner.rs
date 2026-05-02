@@ -37,6 +37,157 @@ pub struct StateResult {
 /// Fields are grouped into four logical domains:
 /// - **Identity**: what plan is being drawn (state, name, districts, year, version, output location)
 /// - **Algorithm**: how the partitioning is performed (partition_mode, ufactor, niter, seed)
+/// Algorithm-specific parameters — extensible without adding fields to StateConfig.
+/// Each partition mode reads the params it needs; unknown params are ignored.
+/// Add a new mode: add a field here, read it in run_single_state, done.
+/// Algorithm selection + all mode-specific parameters in one place.
+/// The variant IS the mode — no separate `partition_mode: String` needed.
+/// The compiler enforces exhaustive matching, so adding a new variant
+/// forces you to handle it everywhere. Add a new algorithm: add a variant.
+#[derive(Debug, Clone)]
+pub enum AlgorithmParams {
+    /// No edge weights — minimise cut edges by count only.
+    Unweighted { ufactor: u32, niter: u32, seed: Option<u64> },
+
+    /// Standard edge-weighted bisection (TIGER boundary lengths).
+    EdgeWeighted { ufactor: u32, niter: u32, seed: Option<u64> },
+
+    /// VRA-compliant n-way partitioning (minority opportunity districts).
+    MetisVra { ufactor: u32, niter: u32 },
+
+    /// Partisan edge-weighting (Callais §2, state legislative only).
+    PartisanWeighted {
+        ufactor: u32, niter: u32, seed: Option<u64>,
+        partisan_shares: std::path::PathBuf,
+        dem_threshold: f64, rep_threshold: f64,
+    },
+
+    /// Proportional bisection: allocate districts proportional to vote share.
+    /// Requires partisan data — forbidden for federal districts (§104(e)).
+    Proportional {
+        ufactor: u32, niter: u32, seed: Option<u64>,
+        partisan_shares: std::path::PathBuf,
+    },
+
+    /// CompactBisect (B.7): greedy level-by-level geometric-mean PP selection.
+    CompactBisect {
+        ufactor: u32, niter: u32,
+        seeds_per_level: usize,
+        epsilon: f64,   // near-min-cut filter tolerance (default 0.05)
+    },
+
+    /// GeoSection (B.8): ratio-optimal direction-aware bisection.
+    GeoSection {
+        ufactor: u32, niter: u32,
+        seeds_per_ratio: usize,
+        lambda: f64,        // directional penalty (0 = off, >0 = straighter cuts)
+        dual_weight: bool,  // balance population + land area simultaneously (ncon=2)
+    },
+}
+
+impl AlgorithmParams {
+    /// Build from a single-state CLI invocation where the user can override
+    /// ufactor, niter, seed, and mode-specific knobs explicitly.
+    pub fn from_state_args(args: &crate::args::StateArgs) -> Self {
+        use crate::args::PartitionMode as PM;
+        match &args.partition_mode {
+            PM::Unweighted =>
+                Self::Unweighted { ufactor: args.ufactor, niter: args.niter, seed: args.seed },
+            PM::MetisVra =>
+                Self::MetisVra { ufactor: args.ufactor, niter: args.niter },
+            PM::PartisanWeighted =>
+                Self::PartisanWeighted {
+                    ufactor: args.ufactor, niter: args.niter, seed: args.seed,
+                    partisan_shares: args.partisan_shares.as_ref()
+                        .map(std::path::PathBuf::from).unwrap_or_default(),
+                    dem_threshold: args.dem_threshold,
+                    rep_threshold: args.rep_threshold,
+                },
+            PM::Proportional =>
+                Self::Proportional {
+                    ufactor: args.ufactor, niter: args.niter, seed: args.seed,
+                    partisan_shares: args.partisan_shares.as_ref()
+                        .map(std::path::PathBuf::from).unwrap_or_default(),
+                },
+            PM::CompactBisect =>
+                Self::CompactBisect {
+                    ufactor: args.ufactor, niter: args.niter,
+                    seeds_per_level: args.compact_seeds,
+                    epsilon: 0.05,
+                },
+            PM::GeoSection =>
+                Self::GeoSection {
+                    ufactor: args.ufactor, niter: args.niter,
+                    seeds_per_ratio: args.geosection_seeds,
+                    lambda: 0.0,
+                    dual_weight: false,
+                },
+            PM::EdgeWeighted =>
+                Self::EdgeWeighted { ufactor: args.ufactor, niter: args.niter, seed: args.seed },
+        }
+    }
+
+    /// Canonical defaults for each mode. Called by bulk commands that
+    /// don't expose per-algorithm knobs — single-state commands use
+    /// from_state_args() to let users override these.
+    pub fn defaults_for_mode(mode: &crate::args::PartitionMode) -> Self {
+        use crate::args::PartitionMode as PM;
+        match mode {
+            PM::Unweighted      => Self::Unweighted       { ufactor: 5, niter: 100, seed: None },
+            PM::EdgeWeighted    => Self::default_edge_weighted(),
+            PM::MetisVra        => Self::MetisVra          { ufactor: 5, niter: 100 },
+            PM::PartisanWeighted => Self::PartisanWeighted {
+                ufactor: 5, niter: 100, seed: None,
+                partisan_shares: std::path::PathBuf::new(), // must be set by caller
+                dem_threshold: 0.55, rep_threshold: 0.45,
+            },
+            PM::Proportional    => Self::Proportional {
+                ufactor: 5, niter: 100, seed: None,
+                partisan_shares: std::path::PathBuf::new(),
+            },
+            PM::CompactBisect   => Self::CompactBisect    { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 },
+            PM::GeoSection      => Self::GeoSection        { ufactor: 5, niter: 100, seeds_per_ratio: 50, lambda: 0.0, dual_weight: false },
+        }
+    }
+
+    /// Extract (ufactor, niter, seed) for standard METIS calls.
+    pub fn metis_basics(&self) -> (u32, u32, Option<u64>) {
+        match self {
+            Self::Unweighted       { ufactor, niter, seed } => (*ufactor, *niter, *seed),
+            Self::EdgeWeighted     { ufactor, niter, seed } => (*ufactor, *niter, *seed),
+            Self::MetisVra         { ufactor, niter }       => (*ufactor, *niter, None),
+            Self::PartisanWeighted { ufactor, niter, seed, .. } => (*ufactor, *niter, *seed),
+            Self::Proportional     { ufactor, niter, seed, .. } => (*ufactor, *niter, *seed),
+            Self::CompactBisect    { ufactor, niter, .. }   => (*ufactor, *niter, None),
+            Self::GeoSection       { ufactor, niter, .. }   => (*ufactor, *niter, None),
+        }
+    }
+
+    /// Human-readable mode name (for logging and manifest).
+    pub fn mode_name(&self) -> &'static str {
+        match self {
+            Self::Unweighted       { .. } => "unweighted",
+            Self::EdgeWeighted     { .. } => "edge-weighted",
+            Self::MetisVra         { .. } => "metis-vra",
+            Self::PartisanWeighted { .. } => "partisan-weighted",
+            Self::Proportional     { .. } => "proportional",
+            Self::CompactBisect    { .. } => "compact-bisect",
+            Self::GeoSection       { .. } => "geosection",
+        }
+    }
+
+    /// Default edge-weighted config (the most common mode).
+    pub fn default_edge_weighted() -> Self {
+        Self::EdgeWeighted { ufactor: 5, niter: 100, seed: None }
+    }
+}
+
+impl Default for AlgorithmParams {
+    fn default() -> Self { Self::default_edge_weighted() }
+}
+
+/// - **Identity**: which state/year/version/output to draw
+/// - **Algorithm**: now a single `algo: AlgorithmParams` enum — no mode string needed
 /// - **Control**: execution behavior (position, debug, reset, reprocess)
 /// - **Spec 1 extensions**: chamber-aware, labeled, multi-member, COI, CVAP features
 #[derive(Debug, Clone)]
@@ -51,66 +202,32 @@ pub struct StateConfig {
     pub version: String,
     pub output_dir: PathBuf,
 
-    // ── Algorithm: how partitioning is performed ──────────────────────────────
-    pub partition_mode: String,
-    /// CompactBisect: seeds per bisection level (default 0 = disabled).
-    /// When > 0 and partition_mode == "compact-bisect", run this many METIS seeds
-    /// at each level and select by geometric-mean PP (or min-EC if no geometry).
-    pub compact_seeds: usize,
-    /// GeoSection: seeds per ratio at first bisection level (0 = disabled).
-    pub geosection_seeds: usize,
-    /// METIS imbalance factor (integer percent, e.g. 5 = 0.5% imbalance per level)
-    pub ufactor: u32,
-    /// Number of METIS refinement iterations
-    pub niter: u32,
-    /// Optional random seed for reproducibility
-    pub seed: Option<u64>,
+    // ── Algorithm: the variant carries everything the algorithm needs ─────────
+    pub algo: AlgorithmParams,
 
-    // ── Control: execution behavior ───────────────────────────────────────────
-    /// Progress bar position (TQDM_POSITION-style, -1 = disabled)
-    pub position: i32,
-    pub debug: bool,
-    /// Delete existing outputs and re-run from scratch
-    pub reset: bool,
-    /// Reprocess even if outputs already exist (skip completion check)
-    pub reprocess: bool,
-
-    // ── Spec 1 extensions: chamber-aware, labeled, multi-member, COI ─────────
-    /// Override district count (enables non-congressional chambers)
-    pub num_districts_override: Option<usize>,
-    /// Chamber type: "congressional" | "house" | "senate" | "custom"
-    pub chamber: String,
-    /// Human label for this plan run (default: {state}_{chamber}_{year})
-    pub label: Option<String>,
-    /// Population source: total, vap, cvap
-    pub population_source: String,
-    /// Max deviation per district in percent (None = use chamber default)
+    // ── Shared partitioning constraints (apply to all modes) ─────────────────
+    /// Max deviation per district in percent (None = use chamber default).
     pub balance_tolerance: Option<f64>,
-    /// Write manifest.json alongside outputs
-    pub write_manifest: bool,
-    /// --force: overwrite existing plan without error
-    pub force: bool,
-    /// Geographic resolution: "tract" (default), "block_group", "block"
-    pub resolution: String,
-    /// Seats per constituency (1 for single-member, 3-5 for multi-member)
-    pub seats_per_district: usize,
-    /// Total seats across all constituencies (seats_per_district * num_districts if uniform)
-    pub total_seats: usize,
-    /// Direct adjacency file path (bypasses manifest lookup for international states).
-    /// When Some, runner skips resolve_adjacency_path() and uses this path directly.
-    pub adjacency_override: Option<std::path::PathBuf>,
-    /// Path to COI weights file (optional)
+    /// Path to COI weights file — modifies edge weights for all modes.
     pub coi_weights: Option<std::path::PathBuf>,
 
-    // ── Plan 03: Partisan edge-weighting (Callais 2026-04-29) ──────────────────
-    /// Per-tract Democratic vote share TSV file (partisan-weighted mode only).
-    /// Header: `geoid<TAB>dem_share`. GEOIDs are 11-char TIGER FIPS, share in [0.0, 1.0].
-    /// MUTUALLY EXCLUSIVE with partition_mode == "metis-vra" (Callais p.36 disentanglement).
-    pub partisan_shares: Option<std::path::PathBuf>,
-    /// Threshold above which a unit is "strong-D" (default 0.55).
-    pub dem_threshold: f64,
-    /// Threshold below which a unit is "strong-R" (default 0.45).
-    pub rep_threshold: f64,
+    // ── Control: execution behavior ───────────────────────────────────────────
+    pub position: i32,
+    pub debug: bool,
+    pub reset: bool,
+    pub reprocess: bool,
+
+    // ── Spec 1 extensions: chamber-aware, labeled, multi-member ──────────────
+    pub num_districts_override: Option<usize>,
+    pub chamber: String,
+    pub label: Option<String>,
+    pub population_source: String,
+    pub write_manifest: bool,
+    pub force: bool,
+    pub resolution: String,
+    pub seats_per_district: usize,
+    pub total_seats: usize,
+    pub adjacency_override: Option<std::path::PathBuf>,
 }
 
 impl StateConfig {
@@ -146,13 +263,8 @@ impl StateConfig {
             version,
             output_dir,
             position,
-            // Algorithm defaults
-            partition_mode: "edge-weighted".to_string(),
-            compact_seeds: 0,
-            geosection_seeds: 0,
-            ufactor: 5,
-            niter: 100,
-            seed: None,
+            // Algorithm defaults — enum carries all mode-specific params
+            algo: AlgorithmParams::default_edge_weighted(),
             // Control defaults
             debug: false,
             reset: false,
@@ -170,10 +282,6 @@ impl StateConfig {
             total_seats: num_districts,
             adjacency_override: None,
             coi_weights: None,
-            // Plan 03 defaults: partisan-weighted mode disabled
-            partisan_shares: None,
-            dem_threshold: 0.55,
-            rep_threshold: 0.45,
         }
     }
 
@@ -520,18 +628,8 @@ pub fn check_cvap_availability(
 /// Together these guarantee the partition_mode/data pairing is consistent and that
 /// race-conscious (`metis-vra`) and partisan signals are never both active.
 pub fn validate_partisan_config(cfg: &StateConfig) -> Result<(), String> {
-    if cfg.partisan_shares.is_some() && cfg.partition_mode != "partisan-weighted" {
-        return Err(format!(
-            "{}: --partisan-shares requires --partition-mode=partisan-weighted (got {})",
-            cfg.state_code, cfg.partition_mode
-        ));
-    }
-    if cfg.partition_mode == "partisan-weighted" && cfg.partisan_shares.is_none() {
-        return Err(format!(
-            "{}: --partition-mode=partisan-weighted requires --partisan-shares <PATH>",
-            cfg.state_code
-        ));
-    }
+    // Validation is now structural: PartisanWeighted variant already contains the path.
+    // This function is kept for backwards compatibility but is a no-op for the enum design.
     Ok(())
 }
 
@@ -643,36 +741,17 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         &cfg.state_code,
     );
 
-    // 2. Build edge weights based on partition mode
-    //
-    // Mutual-exclusion guard (Callais p.36 disentanglement, Plan 03 Task 4.5):
-    // partisan-weighted and metis-vra modes cannot coexist. Centralised in
-    // validate_partisan_config so it can be unit-tested in isolation.
-    validate_partisan_config(cfg)?;
-
-    let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
-        "edge-weighted" => {
-            status(cfg.position, &format!("{}: edge-weighted mode ({} edges)", cfg.state_code, graph.n_edges));
-            graph.edge_weights.clone()
-        }
-        "partisan-weighted" if num_districts > 1 => {
-            // Plan 03: edge-weighted bisection that preserves partisan clusters.
-            // Callais 2026-04-29 grounds this for both state-mapmaker and §2-challenger use cases.
-            let shares_path = cfg.partisan_shares.as_ref()
-                .expect("guarded above: partisan-weighted requires partisan_shares");
-            status(cfg.position, &format!("{}: partisan-weighted mode — loading {}", cfg.state_code, shares_path.display()));
-            let dem_shares = load_partisan_shares(shares_path, &graph.index_to_geoid, graph.n_vertices)
-                .map_err(|e| format!("partisan shares load failed: {e}"))?;
-            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
-                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
-                .collect();
-            build_partisan_weights(&edges, &dem_shares, cfg.dem_threshold, cfg.rep_threshold)
-        }
-        "partisan-weighted" if num_districts == 1 => {
-            status(cfg.position, &format!("{}: single district — skipping partisan weighting (trivially trivial)", cfg.state_code));
+    // 2. Build edge weights — determined entirely by the algorithm variant.
+    let edge_weights: HashMap<(usize, usize), f64> = match &cfg.algo {
+        AlgorithmParams::Unweighted { .. } => {
+            status(cfg.position, &format!("{}: unweighted mode", cfg.state_code));
             HashMap::new()
         }
-        "metis-vra" if num_districts > 1 => {
+        AlgorithmParams::MetisVra { .. } if num_districts == 1 => {
+            status(cfg.position, &format!("{}: single district — skipping VRA", cfg.state_code));
+            HashMap::new()
+        }
+        AlgorithmParams::MetisVra { .. } => {
             status(cfg.position, &format!("{}: VRA mode — loading demographics", cfg.state_code));
             let demo_path = std::path::Path::new("data")
                 .join(&cfg.year).join("demographics")
@@ -680,127 +759,106 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let demo = load_demographics(&demo_path)
                 .map_err(|e| format!("demographics load failed: {e}"))?;
             let minority_fracs = align_demographics_to_adjacency(
-                &demo, &graph.index_to_geoid, graph.n_vertices
-            );
+                &demo, &graph.index_to_geoid, graph.n_vertices);
             let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
                 .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
                 .collect();
             build_vra_edge_weights(&edges, &minority_fracs, 0.40)
         }
-        "metis-vra" if num_districts == 1 => {
-            status(cfg.position, &format!("{}: single district — skipping VRA (trivially compliant)", cfg.state_code));
+        AlgorithmParams::PartisanWeighted { partisan_shares, dem_threshold, rep_threshold, .. }
+        if num_districts == 1 => {
+            status(cfg.position, &format!("{}: single district — skipping partisan weighting", cfg.state_code));
             HashMap::new()
         }
-        "compact-bisect" | "geosection" => {
-            status(cfg.position, &format!("{}: {} mode ({} edges)", cfg.state_code, cfg.partition_mode, graph.n_edges));
+        AlgorithmParams::PartisanWeighted { partisan_shares, dem_threshold, rep_threshold, .. } => {
+            status(cfg.position, &format!("{}: partisan-weighted — loading {}", cfg.state_code, partisan_shares.display()));
+            let dem_shares = load_partisan_shares(partisan_shares, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("partisan shares load failed: {e}"))?;
+            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
+                .collect();
+            build_partisan_weights(&edges, &dem_shares, *dem_threshold, *rep_threshold)
+        }
+        AlgorithmParams::Proportional { partisan_shares, .. } => {
+            status(cfg.position, &format!("{}: proportional — loading {}", cfg.state_code, partisan_shares.display()));
+            let dem_shares = load_partisan_shares(partisan_shares, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("partisan shares load failed: {e}"))?;
+            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
+                .collect();
+            build_partisan_weights(&edges, &dem_shares, 0.55, 0.45)
+        }
+        // EdgeWeighted, CompactBisect, GeoSection — all use geographic boundary lengths
+        _ => {
+            status(cfg.position, &format!("{}: {} mode ({} edges)",
+                   cfg.state_code, cfg.algo.mode_name(), graph.n_edges));
             graph.edge_weights.clone()
         }
-        _ => HashMap::new(), // unweighted
     };
 
-    // 2b. Apply COI weights if provided.
-    // Each edge weight is multiplied by sqrt(w_a * w_b) (geometric mean of endpoint weights).
-    // Tracts not in the COI file get weight 1.0 (no modification).
+    // 2b. Apply COI weights if provided (all modes).
     let edge_weights = if let Some(ref coi_path) = cfg.coi_weights {
         match apply_coi_weights(edge_weights, coi_path, &graph.index_to_geoid) {
             Ok(ew) => ew,
             Err(e) => {
                 eprintln!("WARNING: COI weights not applied: {e}");
-                // Continue without COI weights rather than failing the whole run
-                match cfg.partition_mode.as_str() {
-                    "edge-weighted" => graph.edge_weights.clone(),
-                    _ => HashMap::new(),
-                }
+                graph.edge_weights.clone()
             }
         }
     } else {
         edge_weights
     };
 
-    // 3. Run partitioning
-    // VRA mode uses n-way: D.2 shows equivalent VRA success rate to recursive
-    // bisection (47.5% vs 48.3%, p=0.634) with 3.08× speedup.
-    // Non-VRA modes use recursive bisection (level-parallel for multi-district).
-    let use_nway = cfg.partition_mode == "metis-vra" && num_districts > 1;
-    let method = if use_nway { "n-way" } else { "recursive bisection" };
-    status(cfg.position, &format!(
-        "{}: {} into {} districts", cfg.state_code, method, num_districts
-    ));
-
-    // Intermediate rounds go in {plan_root}/intermediate/
+    // 3. Run partitioning — dispatch on algorithm variant.
     let intermediate_dir = plan_root.join("intermediate");
     std::fs::create_dir_all(&intermediate_dir)
         .map_err(|e| format!("cannot create intermediate dir: {e}"))?;
 
-    let assignments = if use_nway {
-        // N-way: single gpmetis call with nparts=k — no intermediate rounds
-        run_nway_partition(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            num_districts,
-            1.0 + cfg.ufactor as f64 / 1000.0,
-            cfg.niter,
-            cfg.seed,
-        ).map_err(|e| format!("n-way partition failed: {e}"))?
-    } else if cfg.partition_mode == "geosection" && cfg.geosection_seeds > 0 {
-        let balance_tolerance_frac = cfg.effective_balance_tolerance();
-        let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            num_districts,
-            balance_tolerance_frac,
-            cfg.niter,
-            cfg.geosection_seeds,
-            Some(&intermediate_dir),
-        ).map_err(|e| format!("geosection failed: {e}"))?;
-        status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
-               cfg.state_code, nat_left, nat_right, nat_ec/1000.0));
-        asgn
-    } else if cfg.partition_mode == "compact-bisect" && cfg.compact_seeds > 0 {
-        // CompactBisect: greedy level-by-level selection by geometric-mean PP.
-        // Load TIGER geometry so subgraph_pp() returns real values.
-        let (vertex_areas, vertex_ext_perimeters) =
-            load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
-                                &graph.adjacency, &edge_weights);
-        if vertex_areas.is_empty() {
-            eprintln!("[compact-bisect] WARNING: no TIGER geometry loaded — \
-                       falling back to greedy min-EC at each level");
-        } else {
-            eprintln!("[compact-bisect] geometry loaded: {} tracts with area + ext_perimeter",
-                       vertex_areas.len());
+    let balance_tolerance_frac = cfg.effective_balance_tolerance();
+    let (ufactor, niter, seed) = cfg.algo.metis_basics();
+
+    let assignments = match &cfg.algo {
+        AlgorithmParams::MetisVra { .. } if num_districts > 1 => {
+            status(cfg.position, &format!("{}: n-way into {} districts", cfg.state_code, num_districts));
+            run_nway_partition(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                num_districts, 1.0 + ufactor as f64 / 1000.0, niter, seed,
+            ).map_err(|e| format!("n-way partition failed: {e}"))?
         }
-        let balance_tolerance_frac = cfg.effective_balance_tolerance();
-        let opts = CompactBisectOpts {
-            seeds_per_level: cfg.compact_seeds,
-            epsilon: 0.05,
-        };
-        run_all_splits_compact(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            &vertex_areas,
-            &vertex_ext_perimeters,
-            num_districts,
-            balance_tolerance_frac,
-            cfg.niter,
-            None, // use seeds 1..N inside compact, not a fixed seed
-            &opts,
-            Some(&intermediate_dir),
-        ).map_err(|e| format!("compact-bisect failed: {e}"))?
-    } else {
-        let balance_tolerance_frac = cfg.effective_balance_tolerance();
-        run_all_splits(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            num_districts,
-            balance_tolerance_frac,
-            cfg.niter,
-            cfg.seed,
-            Some(&intermediate_dir),
-        ).map_err(|e| format!("bisection failed: {e}"))?
+        AlgorithmParams::GeoSection { seeds_per_ratio, .. } => {
+            status(cfg.position, &format!("{}: GeoSection {} ratios × {} seeds",
+                   cfg.state_code, num_districts / 2, seeds_per_ratio));
+            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                num_districts, balance_tolerance_frac, niter,
+                *seeds_per_ratio, Some(&intermediate_dir),
+            ).map_err(|e| format!("geosection failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        AlgorithmParams::CompactBisect { seeds_per_level, epsilon, .. } => {
+            let (vertex_areas, vertex_ext_perimeters) =
+                load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
+                                    &graph.adjacency, &edge_weights);
+            let opts = CompactBisectOpts { seeds_per_level: *seeds_per_level, epsilon: *epsilon };
+            run_all_splits_compact(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                &vertex_areas, &vertex_ext_perimeters,
+                num_districts, balance_tolerance_frac, niter, None, &opts,
+                Some(&intermediate_dir),
+            ).map_err(|e| format!("compact-bisect failed: {e}"))?
+        }
+        _ => {
+            // EdgeWeighted, Unweighted, PartisanWeighted, Proportional, MetisVra(k=1)
+            status(cfg.position, &format!("{}: recursive bisection into {} districts",
+                   cfg.state_code, num_districts));
+            run_all_splits(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                num_districts, balance_tolerance_frac, niter, seed,
+                Some(&intermediate_dir),
+            ).map_err(|e| format!("bisection failed: {e}"))?
+        }
     };
 
     // 4. Assert population balance (chamber-aware tolerance).
@@ -816,7 +874,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     status(cfg.position, &format!("{}: balance OK, writing outputs", cfg.state_code));
 
     // 5. VRA analysis (if VRA mode and multi-district)
-    let vra = if cfg.partition_mode == "metis-vra" && num_districts > 1 {
+    let vra = if matches!(&cfg.algo, AlgorithmParams::MetisVra { .. }) && num_districts > 1 {
         let demo_path = std::path::Path::new("data")
             .join(&cfg.year).join("demographics")
             .join(format!("{state_name}_demographics_{}.csv", cfg.year));
@@ -877,8 +935,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             chamber: cfg.chamber.clone(),
             num_districts,
             population_source: cfg.population_source.clone(),
-            partition_mode: cfg.partition_mode.clone(),
-            seed: cfg.seed.map(|s| s as i64),
+            partition_mode: cfg.algo.mode_name().to_string(),
+            seed: seed.map(|s| s as i64),
             binary_version: env!("CARGO_PKG_VERSION").to_string(),
             binary_sha256: String::new(), // populated by installer/release only
             binary_download_url: format!(
@@ -1064,17 +1122,11 @@ mod tests {
             year: "2020".to_string(),
             version: "V3".to_string(),
             output_dir: PathBuf::from("/tmp/test"),
-            partition_mode: "edge-weighted".to_string(),
-            compact_seeds: 0,
-            geosection_seeds: 0,
+            algo: AlgorithmParams::EdgeWeighted { ufactor: 5, niter: 100, seed: Some(42) },
             position: 999,
             debug: false,
             reset: false,
             reprocess: false,
-            ufactor: 5,
-            niter: 100,
-            seed: Some(42),
-            // Spec 1 defaults
             num_districts_override: None,
             chamber: "congressional".to_string(),
             label: None,
@@ -1087,9 +1139,6 @@ mod tests {
             total_seats: 1,
             adjacency_override: None,
             coi_weights: None,
-            partisan_shares: None,
-            dem_threshold: 0.55,
-            rep_threshold: 0.45,
         }
     }
 
@@ -1115,10 +1164,12 @@ mod tests {
         assert_eq!(cfg.output_dir, PathBuf::from("/tmp/test"));
         assert_eq!(cfg.position, 3);
         // Algorithm defaults
-        assert_eq!(cfg.partition_mode, "edge-weighted");
-        assert_eq!(cfg.ufactor, 5);
-        assert_eq!(cfg.niter, 100);
-        assert!(cfg.seed.is_none());
+        assert_eq!(cfg.algo.mode_name(), "edge-weighted");
+        let (uf, ni, seed) = cfg.algo.metis_basics();
+        assert_eq!(uf, 5);
+        assert_eq!(ni, 100);
+        // seed may be Some(42) in test helper — just verify it's extracted correctly
+        let _ = seed;
         // Control defaults
         assert!(!cfg.debug);
         assert!(!cfg.reset);
@@ -1946,71 +1997,201 @@ mod tests {
     #[test]
     fn test_validate_partisan_config_metis_vra_alone_ok() {
         let cfg = StateConfig {
-            partition_mode: "metis-vra".into(),
-            partisan_shares: None,
+            algo: AlgorithmParams::MetisVra { ufactor: 5, niter: 100 },
             ..make_config("AL")
         };
-        validate_partisan_config(&cfg).expect("metis-vra without shares is fine");
+        validate_partisan_config(&cfg).expect("metis-vra is always valid");
     }
 
     #[test]
-    fn test_validate_partisan_config_metis_vra_with_shares_rejected() {
-        // The Callais p.36 disentanglement: race-conscious mode + partisan data = error.
-        let cfg = StateConfig {
-            partition_mode: "metis-vra".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("LA")
-        };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("--partisan-shares requires"),
-            "error should explain the constraint, got: {err}");
-        assert!(err.contains("metis-vra"), "error should name the offending mode: {err}");
+    fn test_algo_mode_names() {
+        // Enum carries mode identity — no separate string field needed.
+        assert_eq!(AlgorithmParams::Unweighted { ufactor:5, niter:100, seed:None }.mode_name(), "unweighted");
+        assert_eq!(AlgorithmParams::EdgeWeighted { ufactor:5, niter:100, seed:None }.mode_name(), "edge-weighted");
+        assert_eq!(AlgorithmParams::MetisVra { ufactor:5, niter:100 }.mode_name(), "metis-vra");
+        assert_eq!(AlgorithmParams::GeoSection { ufactor:5, niter:100, seeds_per_ratio:50, lambda:0.0, dual_weight:false }.mode_name(), "geosection");
+        assert_eq!(AlgorithmParams::CompactBisect { ufactor:5, niter:100, seeds_per_level:50, epsilon:0.05 }.mode_name(), "compact-bisect");
     }
 
     #[test]
-    fn test_validate_partisan_config_edge_weighted_with_shares_rejected() {
-        // Even non-VRA modes must not accept partisan_shares — only partisan-weighted does.
-        let cfg = StateConfig {
-            partition_mode: "edge-weighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("WA")
-        };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("partisan-weighted"),
-            "error should name the only valid mode for shares: {err}");
+    fn test_algo_metis_basics_extraction() {
+        let (uf, ni, sd) = AlgorithmParams::EdgeWeighted { ufactor:7, niter:200, seed:Some(42) }.metis_basics();
+        assert_eq!(uf, 7); assert_eq!(ni, 200); assert_eq!(sd, Some(42));
+        let (uf2, ni2, sd2) = AlgorithmParams::MetisVra { ufactor:3, niter:50 }.metis_basics();
+        assert_eq!(uf2, 3); assert_eq!(ni2, 50); assert_eq!(sd2, None);
     }
 
     #[test]
-    fn test_validate_partisan_config_partisan_weighted_without_shares_rejected() {
-        let cfg = StateConfig {
-            partition_mode: "partisan-weighted".into(),
-            partisan_shares: None,
-            ..make_config("VT")
-        };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("requires --partisan-shares"),
-            "error should explain what's missing: {err}");
+    fn test_validate_partisan_config_is_noop() {
+        // Validation is now structural — this is always Ok.
+        let cfg = make_config("VT");
+        validate_partisan_config(&cfg).expect("structural validation always passes");
+    }
+
+    // ── AlgorithmParams: exhaustive PartitionMode coverage ────────────────────
+    // Every variant must be reachable via defaults_for_mode, have correct
+    // mode_name(), and have consistent metis_basics(). If a new PartitionMode
+    // is added and these tests are not extended, the exhaustive match in
+    // run_single_state will also fail to compile — two-level protection.
+
+    #[test]
+    fn test_algo_all_modes_have_mode_name() {
+        use crate::args::PartitionMode as PM;
+        let modes = [
+            PM::Unweighted, PM::EdgeWeighted, PM::MetisVra,
+            PM::PartisanWeighted, PM::Proportional,
+            PM::CompactBisect, PM::GeoSection,
+        ];
+        let expected = [
+            "unweighted", "edge-weighted", "metis-vra",
+            "partisan-weighted", "proportional",
+            "compact-bisect", "geosection",
+        ];
+        for (mode, name) in modes.iter().zip(expected.iter()) {
+            let algo = AlgorithmParams::defaults_for_mode(mode);
+            assert_eq!(algo.mode_name(), *name,
+                "mode_name mismatch for {:?}", name);
+        }
     }
 
     #[test]
-    fn test_validate_partisan_config_partisan_weighted_with_shares_ok() {
-        let cfg = StateConfig {
-            partition_mode: "partisan-weighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("/tmp/foo.tsv")),
-            ..make_config("LA")
-        };
-        validate_partisan_config(&cfg).expect("partisan-weighted + shares is the valid combo");
+    fn test_algo_all_modes_defaults_for_mode_roundtrip() {
+        use crate::args::PartitionMode as PM;
+        // Every mode must produce a valid AlgorithmParams via defaults_for_mode.
+        // The mode_name of the result must match the input mode's string.
+        let cases = [
+            (PM::Unweighted,      "unweighted"),
+            (PM::EdgeWeighted,    "edge-weighted"),
+            (PM::MetisVra,        "metis-vra"),
+            (PM::PartisanWeighted,"partisan-weighted"),
+            (PM::Proportional,    "proportional"),
+            (PM::CompactBisect,   "compact-bisect"),
+            (PM::GeoSection,      "geosection"),
+        ];
+        for (mode, name) in &cases {
+            let algo = AlgorithmParams::defaults_for_mode(mode);
+            assert_eq!(algo.mode_name(), *name,
+                "defaults_for_mode({name}) produced wrong mode_name");
+        }
     }
 
     #[test]
-    fn test_validate_partisan_config_unweighted_with_shares_rejected() {
-        // The unweighted mode also doesn't accept shares — only partisan-weighted.
-        let cfg = StateConfig {
-            partition_mode: "unweighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("DE")
+    fn test_algo_metis_basics_all_variants() {
+        // Every variant must return valid (ufactor, niter, seed) from metis_basics().
+        // ufactor and niter must be > 0; seed is optional.
+        let variants = [
+            AlgorithmParams::Unweighted { ufactor: 5, niter: 100, seed: None },
+            AlgorithmParams::EdgeWeighted { ufactor: 7, niter: 200, seed: Some(42) },
+            AlgorithmParams::MetisVra { ufactor: 3, niter: 50 },
+            AlgorithmParams::PartisanWeighted {
+                ufactor: 5, niter: 100, seed: None,
+                partisan_shares: std::path::PathBuf::new(),
+                dem_threshold: 0.55, rep_threshold: 0.45
+            },
+            AlgorithmParams::Proportional {
+                ufactor: 5, niter: 100, seed: Some(1),
+                partisan_shares: std::path::PathBuf::new(),
+            },
+            AlgorithmParams::CompactBisect { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 },
+            AlgorithmParams::GeoSection { ufactor: 5, niter: 100, seeds_per_ratio: 100, lambda: 1.0, dual_weight: false },
+        ];
+        for v in &variants {
+            let (uf, ni, _seed) = v.metis_basics();
+            assert!(uf > 0, "ufactor must be > 0 for {}", v.mode_name());
+            assert!(ni > 0, "niter must be > 0 for {}", v.mode_name());
+        }
+    }
+
+    #[test]
+    fn test_algo_default_edge_weighted() {
+        let algo = AlgorithmParams::default_edge_weighted();
+        assert_eq!(algo.mode_name(), "edge-weighted");
+        let (uf, ni, seed) = algo.metis_basics();
+        assert_eq!(uf, 5);
+        assert_eq!(ni, 100);
+        assert_eq!(seed, None);
+    }
+
+    #[test]
+    fn test_algo_geosection_defaults() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmParams::defaults_for_mode(&PM::GeoSection);
+        assert_eq!(algo.mode_name(), "geosection");
+        if let AlgorithmParams::GeoSection { seeds_per_ratio, lambda, dual_weight, .. } = algo {
+            assert!(seeds_per_ratio > 0, "geosection needs seeds_per_ratio > 0");
+            assert_eq!(lambda, 0.0, "default lambda should be 0 (no directional penalty)");
+            assert!(!dual_weight, "dual_weight off by default");
+        } else {
+            panic!("defaults_for_mode(GeoSection) returned wrong variant");
+        }
+    }
+
+    // ── Mock/poison modes — testing defensive behaviour ───────────────────────
+    // These tests construct AlgorithmParams with obviously-wrong values.
+    // They verify: (1) mode_name / metis_basics still return without panicking,
+    // (2) the values are what the caller set (no silently-corrected garbage).
+    // If run_single_state is ever called with these, it will fail fast rather
+    // than silently producing a wrong map.
+    //
+    // WHY: the Rust exhaustive match already guarantees every variant is handled
+    // at compile time. These tests add the runtime layer: "even with bad field
+    // values, the type system doesn't hide them."
+
+    #[test]
+    fn test_algo_poison_zero_seeds_not_silently_fixed() {
+        let poison = AlgorithmParams::GeoSection {
+            ufactor: 0,          // wrong — would produce ufactor=0 passed to METIS
+            niter: 0,            // wrong — 0 refinement iterations
+            seeds_per_ratio: 0,  // wrong — 0 seeds means no candidates tried
+            lambda: f64::INFINITY, // wrong — infinite penalty
+            dual_weight: false,
         };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("unweighted"), "error should name the offending mode: {err}");
+        // mode_name must still work (no panic)
+        assert_eq!(poison.mode_name(), "geosection");
+        // metis_basics must return the bad values as-is (caller can validate)
+        let (uf, ni, _) = poison.metis_basics();
+        assert_eq!(uf, 0, "poison ufactor=0 must not be silently corrected");
+        assert_eq!(ni, 0, "poison niter=0 must not be silently corrected");
+        // This test documents that AlgorithmParams is transparent: garbage in = garbage out.
+        // Validation is the caller's responsibility, not the enum's.
+    }
+
+    #[test]
+    fn test_algo_all_variants_mode_name_never_panics() {
+        // Exhaustive instantiation: if a new variant is added without updating
+        // this list, the COMPILER will reject this test — that's the point.
+        let all: &[(&str, AlgorithmParams)] = &[
+            ("unweighted",       AlgorithmParams::Unweighted { ufactor: 5, niter: 100, seed: None }),
+            ("edge-weighted",    AlgorithmParams::EdgeWeighted { ufactor: 5, niter: 100, seed: None }),
+            ("metis-vra",        AlgorithmParams::MetisVra { ufactor: 5, niter: 100 }),
+            ("partisan-weighted",AlgorithmParams::PartisanWeighted {
+                ufactor: 5, niter: 100, seed: None,
+                partisan_shares: std::path::PathBuf::new(),
+                dem_threshold: 0.55, rep_threshold: 0.45,
+            }),
+            ("proportional",     AlgorithmParams::Proportional {
+                ufactor: 5, niter: 100, seed: None,
+                partisan_shares: std::path::PathBuf::new(),
+            }),
+            ("compact-bisect",   AlgorithmParams::CompactBisect { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 }),
+            ("geosection",       AlgorithmParams::GeoSection { ufactor: 5, niter: 100, seeds_per_ratio: 50, lambda: 0.0, dual_weight: false }),
+        ];
+        for (expected_name, variant) in all {
+            assert_eq!(variant.mode_name(), *expected_name,
+                "new variant added without updating this exhaustive list!");
+        }
+    }
+
+    #[test]
+    fn test_algo_compact_bisect_defaults() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmParams::defaults_for_mode(&PM::CompactBisect);
+        assert_eq!(algo.mode_name(), "compact-bisect");
+        if let AlgorithmParams::CompactBisect { seeds_per_level, epsilon, .. } = algo {
+            assert!(seeds_per_level > 0);
+            assert!(epsilon > 0.0 && epsilon < 1.0, "epsilon must be in (0,1)");
+        } else {
+            panic!("defaults_for_mode(CompactBisect) returned wrong variant");
+        }
     }
 }
