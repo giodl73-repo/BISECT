@@ -63,6 +63,11 @@ pub enum PartitionMode {
     /// ncon=2: tight population balance AND 50/50 area (±10% swing allowed).
     #[value(name = "areasection")]
     AreaSection,
+    /// PrimeFactor (B.11): hierarchical k-way partition driven by prime
+    /// factorization of the seat count. Geographic completion of Huntington-Hill.
+    /// Requires --compact-seeds N (seeds per level, default 1).
+    #[value(name = "prime-factor")]
+    PrimeFactor,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -76,6 +81,7 @@ impl std::fmt::Display for PartitionMode {
             Self::CompactBisect    => write!(f, "compact-bisect"),
             Self::GeoSection       => write!(f, "geosection"),
             Self::AreaSection      => write!(f, "areasection"),
+            Self::PrimeFactor      => write!(f, "prime-factor"),
         }
     }
 }
@@ -1145,6 +1151,12 @@ pub struct StateArgs {
     /// k/2:k/2 with this many seeds each; picks minimum-EC ratio. Typical: 50-200.
     #[arg(long, default_value = "0")]
     pub geosection_seeds: usize,
+
+    /// Governmental subdivision stickiness — county level (B.10).
+    /// Makes intra-county edges more expensive to cut (alpha=0 disables).
+    /// alpha=1 doubles the cost of cross-county cuts; alpha=5 = strong preference.
+    #[arg(long, default_value_t = 0.0)]
+    pub alpha_county: f64,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 

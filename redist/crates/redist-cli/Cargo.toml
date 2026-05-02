@@ -11,8 +11,9 @@ name = "redist"
 path = "src/main.rs"
 
 [dependencies]
-redist-core = { path = "../redist-core" }
-redist-data = { path = "../redist-data" }
+redist-core      = { path = "../redist-core" }
+redist-data      = { path = "../redist-data" }
+redist-apportion = { path = "../redist-apportion" }
 metis.workspace = true
 redist-analysis = { path = "../redist-analysis" }
 redist-map = { path = "../redist-map" }
