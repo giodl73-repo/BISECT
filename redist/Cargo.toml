@@ -2,6 +2,7 @@
 members = [
     "crates/redist-core",
     "crates/redist-data",
+    "crates/redist-apportion",
     "crates/redist-cli",
     "crates/redist-analysis",
     "crates/redist-map",
