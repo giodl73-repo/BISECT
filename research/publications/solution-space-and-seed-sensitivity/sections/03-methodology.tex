@@ -60,11 +60,13 @@ next 100 seeds falls below 1\% --- equivalently, when the observed gap between
 the $n$th-best and $(n+1)$th-best is consistent with the tail of a fitted
 extreme-value distribution. We validate convergence separately for each state.
 
-\emph{Empirical calibration (Pennsylvania, 100 seeds):} The running minimum
-improved 7 times at seeds $\{1,2,3,5,12,18,34\}$, then stabilised for seeds
-35--100. The improvement rate at $n=100$ is $\hat\lambda \approx 0.02$
-improvements per seed, suggesting roughly 5,000 seeds would be needed to
-achieve a 90\% confidence interval of $\pm$1\,km on the true minimum for PA.
+\emph{Empirical calibration (Pennsylvania, 1{,}100 seeds):} The running minimum
+improved 12 times, with the final improvement at seed 181. The minimum was then
+stable for 919 consecutive seeds (seeds 182--1{,}100), a tail of 83.5\%.
+The false-floor risk is real even for apparently converged results: Georgia's
+200-seed result (7D, 2{,}598\,km) was overturned at seed 288 (6D, 2{,}594\,km)
+before recovering to 7D at seed 489 (2{,}546\,km). We declare convergence when
+the tail exceeds 300 consecutive seeds without improvement.
 For states with fewer districts (e.g., Vermont with 1 district), the true
 minimum is trivially achieved at every seed; for large states (Texas, 38
 districts), convergence will be slower.

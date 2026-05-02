@@ -181,21 +181,26 @@ converges roughly 8× faster than MEC for this state.
 
 \paragraph{Criteria are aligned but not identical.}
 The Pearson correlation between EC and GMPP across 1{,}000 Wisconsin seeds is
-$r = -0.373$: lower EC tends to produce higher GMPP. This confirms that
+$r = -0.354$: lower EC tends to produce higher GMPP. This confirms that
 edge-cut minimisation and geometric-mean PP maximisation point in the same
 direction. However, the extreme cases diverge: the MEC-minimising plan
-(seed 891, 1{,}615\,km, GMPP\,=\,3.11) is not the same plan as the
-GMPP-maximising plan (seed 109, 1{,}819\,km, GMPP\,=\,3.84).
+(seed 891, 1{,}615\,km, GMPP\,=\,0.358, PP\,=\,(0.40, 0.32)) is not the same
+plan as the GMPP-maximising plan (seed 930, 1{,}880\,km, GMPP\,=\,0.397,
+PP\,=\,(0.54, 0.29)).
 
-\paragraph{Partisan outcomes disagree.}
-For Wisconsin, the single-level-1 GMPP-maximising plan gives 2D/6R; the
-MEC-minimising plan gives 3D/5R. \textsc{CompactBisect} (which applies
-GMPP optimisation at every recursion level) also gives 3D/5R, agreeing with
-the MEC result. The single-level-1 GMPP maximum produces a different outcome
-because it selects for the most geometrically balanced first split---which, in
-Wisconsin's case, happens to concentrate Democratic voters in one half. The
-MEC plan, despite lower GMPP at level-1, distributes voters more evenly across
-the recursion tree, producing the more proportional outcome.
+\paragraph{Partisan outcomes agree for Wisconsin.}
+For Wisconsin at 1{,}000 seeds, both the MEC-minimising plan (seed 891) and the
+GMPP-maximising plan (seed 930) produce 3D/5R. \textsc{CompactBisect} also
+produces 3D/5R. All three geometric criteria agree on Wisconsin's partisan
+outcome when given sufficient seeds.
+
+For Pennsylvania (200 seeds), MEC gives 8D while GMPP-max gives 7D --- the
+two criteria disagree. This reflects Pennsylvania's mixed geographic structure,
+where the near-minimum solution space spans both 7D and 8D outcomes and the
+MEC and GMPP criteria select different plans from that space.
+
+For North Carolina, both MEC (seed 41) and GMPP-max (seed 69) give 5D/9R.
+Correlation $r = -0.223$: moderate alignment.
 
 \paragraph{Implication for certification.}
 Because GMPP converges faster (shorter, more stable tails), the
@@ -305,6 +310,16 @@ because no compact district in Montana can produce a Dem majority. This is
 the ``geometric bias theorem'' (\S\ref{sec:discussion}): geographic sorting
 makes proportional representation geometrically unachievable without
 explicitly importing partisan data.
+
+\paragraph{National seat totals.}
+Summing the 48 states with available election data: the MEC protocol produces
+228D/204R (52.8\% Democratic seats). Alaska (1 seat) and Hawaii (2 seats) are
+excluded due to missing tract-level election data in our source. Best-guess
+inclusion: Alaska's 2020 at-large seat went Republican (Don Young); Hawaii's
+2 seats reliably Democratic. Including these gives \textbf{229D/206R} as the
+national estimate. Actual 2020 House outcome: 222D/213R (51.0\% D). The
+algorithmic maps give Democrats roughly 7 more seats nationally than the
+enacted plans.
 
 \paragraph{Texas and California: tiered tolerance needed.}
 Texas (38 districts) and California (52 districts) exhibit high seed failure

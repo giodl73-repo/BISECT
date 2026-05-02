@@ -179,17 +179,29 @@ The statute's procedural guarantee is a ceiling on what any algorithm can
 achieve without importing partisan data; $\Delta_s$ measures how far below the
 proportionality ceiling the geographic sorting places the outcome.
 
-\paragraph{Seed-choice neutrality.}
+\paragraph{Seed-choice neutrality and content-derived seeds.}
 Our convergence analysis demonstrates that the minimum-edge-cut plan is
-stable: for Pennsylvania, the running minimum did not improve for 919
-consecutive seeds after seed 181. The specific seed published by the Director
-of Census (\S~107(c)(1)) is therefore a computational shortcut --- any seed
-near or above the convergence threshold finds the same plan. We propose that
-the statute clarify this by defining the published seed as a \emph{default},
-with any party entitled to run the full $N$-seed sweep and submit the
-minimum-edge-cut plan as an alternative. If both sweeps agree, the plan is
-stable; if they disagree, the plan is not yet converged and more seeds are
-needed.
+stable once certified: for Pennsylvania, the running minimum did not improve
+for 819 consecutive seeds after seed 181 (out of 1{,}100 total).
+
+However, a challenger could still argue that any specific seed was chosen
+post-hoc after seeing its partisan consequences. The cleanest defence is to
+derive the seed from the census data itself, precluding any post-hoc choice:
+
+\begin{quote}
+\emph{The random seed shall be}
+$\mathrm{SHA256}(\textit{census\_release\_id} \mathbin\| \texttt{"DIA\_SEED\_V1"})$
+\emph{truncated to 64 bits, where}
+$\textit{census\_release\_id}$
+\emph{is the identifier published under \S~107(c)(4).}
+\end{quote}
+
+This seed is deterministic given public data, not chosen by any person after
+knowing the partisan consequences, and uniform across all states. We recommend
+this as the statutory default in lieu of Director-discretion seed publication.
+The full $N$-seed sweep (with convergence certification) is the reproducibility
+protocol; the content-derived seed is the statutory shortcut that any party
+can verify reproduces the certified minimum.
 
 \subsection{Relationship to Prior Work}
 
