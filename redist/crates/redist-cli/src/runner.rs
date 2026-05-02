@@ -83,6 +83,19 @@ pub enum AlgorithmParams {
         lambda: f64,        // directional penalty (0 = off, >0 = straighter cuts)
         dual_weight: bool,  // balance population + land area simultaneously (ncon=2)
     },
+
+    /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
+    /// For each population ratio i:k-i, METIS satisfies BOTH:
+    ///   (1) i × (total_pop/k) population on the left half (tight: ±0.1%)
+    ///   (2) 50% land area on the left half (loose: ±10% swing allowed)
+    /// The ±10% area swing lets the algorithm find a clean integer population split
+    /// without forcing an exact 50/50 area boundary when geography resists.
+    /// Requires TIGER ALAND data (loaded automatically from shapefile).
+    AreaSection {
+        ufactor: u32, niter: u32,
+        seeds_per_ratio: usize,
+        area_swing: f64,    // area imbalance tolerance: 1.10 = ±10% swing (default)
+    },
 }
 
 impl AlgorithmParams {
@@ -122,6 +135,12 @@ impl AlgorithmParams {
                     lambda: 0.0,
                     dual_weight: false,
                 },
+            PM::AreaSection =>
+                Self::AreaSection {
+                    ufactor: args.ufactor, niter: args.niter,
+                    seeds_per_ratio: args.geosection_seeds,
+                    area_swing: 1.10,  // ±10% area swing by default
+                },
             PM::EdgeWeighted =>
                 Self::EdgeWeighted { ufactor: args.ufactor, niter: args.niter, seed: args.seed },
         }
@@ -147,6 +166,7 @@ impl AlgorithmParams {
             },
             PM::CompactBisect   => Self::CompactBisect    { ufactor: 5, niter: 100, seeds_per_level: 50, epsilon: 0.05 },
             PM::GeoSection      => Self::GeoSection        { ufactor: 5, niter: 100, seeds_per_ratio: 50, lambda: 0.0, dual_weight: false },
+            PM::AreaSection     => Self::AreaSection       { ufactor: 5, niter: 100, seeds_per_ratio: 50, area_swing: 1.10 },
         }
     }
 
@@ -160,6 +180,7 @@ impl AlgorithmParams {
             Self::Proportional     { ufactor, niter, seed, .. } => (*ufactor, *niter, *seed),
             Self::CompactBisect    { ufactor, niter, .. }   => (*ufactor, *niter, None),
             Self::GeoSection       { ufactor, niter, .. }   => (*ufactor, *niter, None),
+            Self::AreaSection      { ufactor, niter, .. }   => (*ufactor, *niter, None),
         }
     }
 
@@ -173,6 +194,7 @@ impl AlgorithmParams {
             Self::Proportional     { .. } => "proportional",
             Self::CompactBisect    { .. } => "compact-bisect",
             Self::GeoSection       { .. } => "geosection",
+            Self::AreaSection      { .. } => "areasection",
         }
     }
 
@@ -846,6 +868,29 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 *seeds_per_ratio, Some(&intermediate_dir),
                 &centroids, *lambda,
             ).map_err(|e| format!("geosection failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        AlgorithmParams::AreaSection { seeds_per_ratio, area_swing, .. } => {
+            // Load TIGER ALAND areas for dual population+area constraint
+            let (vertex_areas_f64, _) = load_tiger_geometry(
+                &cfg.state_code, &cfg.year, &graph.index_to_geoid,
+                &graph.adjacency, &edge_weights);
+            if vertex_areas_f64.is_empty() {
+                return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
+                                   cfg.state_code));
+            }
+            status(cfg.position, &format!(
+                "{}: AreaSection {} ratios × {} seeds (±{:.0}% area swing)",
+                cfg.state_code, num_districts / 2, seeds_per_ratio,
+                (area_swing - 1.0) * 100.0));
+            let (asgn, nat_left, nat_right, nat_ec) =
+                crate::bisection_runner::run_areasection(
+                    &graph.adjacency, &graph.vertex_weights, &vertex_areas_f64,
+                    &edge_weights, num_districts, balance_tolerance_frac, niter,
+                    *seeds_per_ratio, Some(&intermediate_dir),
+                ).map_err(|e| format!("areasection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
