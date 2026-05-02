@@ -166,6 +166,48 @@ sorted states (WI: +12.5\,pp) and matches it in moderately sorted states (NC:
 outcome. The appropriate selection criterion depends on the state's geographic
 structure, which is itself a property of the census data and not a partisan choice.
 
+\subsection{GMPP Convergence vs.\ MEC Convergence}
+\label{sec:eval:gmpp}
+
+We tracked the running maximum geometric-mean Polsby-Popper of the level-1
+bisection (GMPP = $\sqrt{\mathrm{PP}(L)\cdot\mathrm{PP}(R)}$) across seeds
+in parallel with the running minimum edge-cut, for Wisconsin, Pennsylvania,
+and North Carolina at 200--1{,}000 seeds.
+
+\paragraph{Convergence rates differ.}
+For Wisconsin (1{,}000 seeds), GMPP last improved at seed 109 (890-seed
+tail, 89\%); MEC last improved at seed 891 (108-seed tail, 11\%). GMPP
+converges roughly 8× faster than MEC for this state.
+
+\paragraph{Criteria are aligned but not identical.}
+The Pearson correlation between EC and GMPP across 1{,}000 Wisconsin seeds is
+$r = -0.373$: lower EC tends to produce higher GMPP. This confirms that
+edge-cut minimisation and geometric-mean PP maximisation point in the same
+direction. However, the extreme cases diverge: the MEC-minimising plan
+(seed 891, 1{,}615\,km, GMPP\,=\,3.11) is not the same plan as the
+GMPP-maximising plan (seed 109, 1{,}819\,km, GMPP\,=\,3.84).
+
+\paragraph{Partisan outcomes disagree.}
+For Wisconsin, the single-level-1 GMPP-maximising plan gives 2D/6R; the
+MEC-minimising plan gives 3D/5R. \textsc{CompactBisect} (which applies
+GMPP optimisation at every recursion level) also gives 3D/5R, agreeing with
+the MEC result. The single-level-1 GMPP maximum produces a different outcome
+because it selects for the most geometrically balanced first split---which, in
+Wisconsin's case, happens to concentrate Democratic voters in one half. The
+MEC plan, despite lower GMPP at level-1, distributes voters more evenly across
+the recursion tree, producing the more proportional outcome.
+
+\paragraph{Implication for certification.}
+Because GMPP converges faster (shorter, more stable tails), the
+certification criterion of §\ref{sec:methodology:certificate} may require
+fewer seeds for GMPP-based stopping than for MEC-based stopping. For
+Wisconsin, GMPP is certifiably stable after 109 seeds; MEC requires 891.
+However, the certified GMPP plan and the certified MEC plan produce different
+partisan outcomes. The choice between criteria is not a partisan choice (both
+are purely geometric) but it is a consequential one, and the paper recommends
+the MEC criterion as primary because it has no degree-of-freedom choices
+(no area measure, no shape metric, no approximation).
+
 \subsection{Texas: Large-State Failures and Convergence Rate}
 \label{sec:eval:tx}
 
