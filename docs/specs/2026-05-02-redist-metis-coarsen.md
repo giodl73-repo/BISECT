@@ -19,6 +19,8 @@ g.n() <= max(coarsen_to * k, 40)
 - The absolute floor of 40 prevents over-coarsening on small states (e.g. Vermont k=1 → threshold = max(20, 40) = 40)
 - The multilevel orchestrator enforces MAX_LEVELS=50 as a hard cap, returning `Err(CoarseningStalled)` if should_stop never fires
 
+**Note**: The plain `HeavyEdgeMatch` and `SortedHeavyEdgeMatch` structs (no parameters) use a hardcoded threshold of `n <= 40`. Only the `WithParams` variants accept `coarsen_to` and `k` as fields.
+
 ## Algorithms
 
 ### HeavyEdgeMatch (HEM)
@@ -47,6 +49,8 @@ g.n() <= max(coarsen_to * k, 40)
 
 **Complexity**: O(n log n + m) — degree sort dominates
 
+**Precondition**: `coarsen()` requires `g.n() >= 2`. For `n == 1`, `CoarseningHierarchy::build()` breaks early before calling `coarsen()`. Direct callers of `coarsen()` are not protected by this guard.
+
 ## CoarseMap Contracts
 
 Output of every `coarsen()` call satisfies:
@@ -61,6 +65,7 @@ The shared helper that all three coarsenens use:
 - **Weight accumulation**: uses `i64` intermediate arithmetic, result fits in `i32` for census-realistic inputs
 - **adjwgt preservation**: if input graph has `adjwgt: None`, output MUST also have `adjwgt: None`; if `adjwgt: Some(...)`, output sums parallel edge weights
 - **Parallel edge merging**: multiple edges between same coarse vertex pair are summed into one
+- **Self-loop suppression**: edges where the coarse source and target are the same vertex (`cv == cu`) are discarded (PP-01). Matched pairs within the same coarse vertex do not become self-loops.
 
 ## Test Strategy
 
@@ -73,7 +78,7 @@ The shared helper that all three coarsenens use:
 - `shem_prefers_heavy_edges`: on weighted_path4, vertices connected by heavy edges are matched
 
 ### L1 (integration):
-- `coarsening_terminates_path255`: path-255 graph reaches should_stop within 50 coarsening rounds
+- `coarsening_terminates_path255`: path-255 graph reaches should_stop within 50 coarsening rounds. Located in `tests/contracts.rs`. Uses `SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 1 }` on a 255-vertex path.
 
 ## Files
 - `src/coarsen/mod.rs` — Coarsener trait (already implemented)
