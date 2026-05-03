@@ -7,11 +7,16 @@ license.workspace = true
 description = "Huntington-Hill apportionment + extensible prime-factor redistricting compositor"
 
 [dependencies]
-metis       = { version = "0.2", features = ["vendored"] }
+redist-metis = { path = "../redist-metis" }
+metis        = { version = "0.2", features = ["vendored"], optional = true }
 thiserror.workspace   = true
 anyhow.workspace      = true
 serde.workspace       = true
 serde_json.workspace  = true
+
+[features]
+shadow-metis = ["dep:metis"]
+default = ["shadow-metis"]   # keep C dep during validation phase
 
 [dev-dependencies]
 # unit tests only — no extra deps needed
