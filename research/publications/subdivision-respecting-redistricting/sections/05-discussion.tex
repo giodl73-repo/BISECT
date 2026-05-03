@@ -70,16 +70,45 @@ to assign each census tract to its containing jurisdiction.
 We defer this to future work; the county level alone (derivable from existing
 data) produces the majority of the reduction in splits.
 
-\subsection{Limitations}
+\subsection{Required: Multi-Seed Convergence Analysis}
 
-The current evaluation uses a single seed ($= 1$) for each state-$\alpha$ pair.
-As shown in B.7~\citep{DL2026a}, single-seed MEC results may not represent the
-converged minimum.
-A full convergence analysis would require running 100--500 seeds per state per
-$\alpha$ value.
-We regard the present results as a first-pass characterisation of the Pareto
-frontier shape; convergence is left for the full analysis.
+The evaluation in Section~\ref{sec:eval} uses a single seed ($= 1$) per state.
+This is insufficient to make reliable quantitative claims about county-split
+reduction or partisan effects.
+Specifically:
 
-Additionally, the partisan outcomes depend on the specific plan found (which
-depends on seed), so the partisan table should be interpreted as indicative
-rather than definitive.
+\begin{itemize}
+  \item \textbf{County-split counts} are moderately stable across seeds for
+    large states (the minimum-cut partition is unique or near-unique in most
+    cases), but can vary by 1--3 splits for small states.
+  \item \textbf{Partisan seat counts} are highly seed-sensitive.
+    The single-seed GA result at $\alpha = 0$ (4D seats) differs by 3 seats
+    from B.7's converged result (7D/7R) for the identical algorithm.
+\end{itemize}
+
+The required analysis is: run 25--50 seeds per state per $\alpha$,
+compute mean $\pm$ std for county splits and partisan gap,
+and use a paired Wilcoxon signed-rank test across states to confirm that the
+split reduction is significant.
+The Pareto frontier figure (splits vs.\ EC across $\alpha \in [0, 20]$)
+should be produced from a 10-seed ensemble at each of 7 $\alpha$ values.
+
+This analysis is planned as the immediate next step and will be incorporated
+before submission.
+
+\subsection{Limitations (Current Version)}
+
+Until the multi-seed analysis is complete, the following claims should be
+treated as directional rather than quantitative:
+\begin{enumerate}
+  \item The 45\% average split reduction at $\alpha = 5$ is a single-seed
+    estimate with unknown variance.
+  \item The $+0.3$~pp mean partisan gap change is consistent with neutrality
+    but not statistically established.
+  \item The Pareto frontier shape (including the location of $\alpha = 5$
+    on the tradeoff curve) is uncharacterised.
+\end{enumerate}
+The \emph{qualitative} findings --- that county stickiness reduces county splits,
+increases edge cut, and does not obviously favour either party --- are robust
+to seed variation by design (the mechanism is deterministic given the weights;
+only METIS's local search varies).

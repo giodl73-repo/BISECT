@@ -43,20 +43,35 @@ The full county FIPS is the first five characters of the GEOID.
 This information is stored in the TIGER \texttt{.adj.bin} adjacency file alongside
 the adjacency graph, requiring no additional data download.
 
-\begin{proposition}[Monotonicity]
-For any state with $k$ districts and fixed seed, the number of county splits
-$\text{splits}(\alpha)$ is weakly decreasing in $\alpha$.
+\begin{proposition}[Monotonicity, exact solver]
+\label{prop:mono}
+Let $P^*_\alpha$ denote the globally optimal $k$-way partition minimising
+$\sum_{(u,v)\in\partial P} f_\alpha(u,v)$.
+The number of county splits $\text{splits}(P^*_\alpha)$ is weakly decreasing in $\alpha$.
 \end{proposition}
 
 \begin{proof}
-The county-sticky weight $f_\alpha(u,v) \geq f_0(u,v)$ for all $(u,v)$.
-METIS minimises total cut weight, so increasing the weight of intra-county edges
-makes cuts through counties weakly more expensive relative to cuts along county
-lines.
-Formally, any partition that splits a county under weight $f_\alpha$ is also
-feasible under $f_{\alpha'}$ for $\alpha' < \alpha$, but not vice versa.
-\qed
+Let $P^*_\alpha$ be optimal under $f_\alpha$ and suppose it splits $s$ counties.
+For any $\alpha' < \alpha$, we have $f_{\alpha'}(u,v) \leq f_\alpha(u,v)$ for all
+$(u,v)$, so the cut cost of $P^*_\alpha$ under $f_{\alpha'}$ is at most its cost
+under $f_\alpha$.
+But the optimal partition under $f_{\alpha'}$ minimises cost further;
+in particular, it can always route along county boundaries (cost unchanged
+under $f_{\alpha'}$), so its county-split count is at most $s$.
+By exchange argument, reducing $\alpha$ cannot force more county splits in an
+optimal solution. \qed
 \end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:mono} applies to the \emph{exact} weighted minimum
+$k$-way cut problem.
+METIS~\citep{Karypis1998} is a multilevel heuristic and does not guarantee
+globally optimal solutions; its output need not be monotone in $\alpha$ for
+any fixed random seed.
+Empirically, Section~\ref{sec:eval} shows that mean county splits over an
+ensemble of seeds are weakly decreasing in $\alpha$ across all 44 multi-district
+states, consistent with the monotone optimal-solution property.
+\end{remark}
 
 \subsection{Hierarchical Extension}
 
