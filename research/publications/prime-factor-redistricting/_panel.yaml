@@ -1,15 +1,45 @@
 paper: prime-factor-redistricting
 title: "Prime-Factored Maps: Redistricting as the Geographic Completion of Huntington-Hill"
 venue: "Political Analysis / Journal of Computational Social Science"
-stage: draft
-round: 0
-content_mode: draft
+stage: revision
+round: 1
+content_mode: full
 series: B
 series_number: 11
+avg_score: 2.72
+reviewers: [R-50, R-1, R-37, R-9, R-6]
+reviews:
+  R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
+  R-1:  {score: 2.5, file: reviews/REVIEW-percy-liang.md}
+  R-37: {score: 2.8, file: reviews/REVIEW-nadia-polikarpova.md}
+  R-9:  {score: 3.0, file: reviews/REVIEW-joseph-gonzalez.md}
+  R-6:  {score: 2.8, file: reviews/REVIEW-matei-zaharia.md}
+p1_items:
+  - id: P1-A
+    desc: "Seed sensitivity — run >=10 seeds for all 50 states, report D/R distribution per state"
+    status: open
+  - id: P1-B
+    desc: "Formally state and prove Reuse Theorem: METIS determinism condition, definition of same partition, proof sketch"
+    status: open
+  - id: P1-C
+    desc: "Formally characterize binary fallback: define recursion uniquely, or implement direct k-way METIS, or restrict formal claims"
+    status: open
+  - id: P1-D
+    desc: "Report NC and GA results at 0.5% balance tolerance (statutory standard)"
+    status: open
+  - id: P1-E
+    desc: "Add GerryChain or ReCom comparison as additional redistricting baseline"
+    status: open
 history:
   - stage: draft
     date: "2026-05-02"
-    note: "Paper initialized. Core idea: prime factorization of seat count determines
-           hierarchical geographic subdivision structure. Reuse of canonical prime
-           splits across seat counts. Constitutional anchor: Art. I §2 (apportionment)
-           rather than §4 (Manner clause alone)."
+    note: "Paper initialized."
+  - stage: panel
+    date: "2026-05-02"
+    note: "Round 1: 5 reviews, avg 2.72/4. Reviewers: Ullman, Liang, Polikarpova, Gonzalez, Zaharia."
+  - stage: synthesis
+    date: "2026-05-02"
+    note: "Synthesis complete. NC/GA finding universally praised. Critical: seed sensitivity (P1-A) and binary fallback formalization (P1-C)."
+  - stage: revision
+    date: "2026-05-02"
+    note: "5 P1 items identified. P1-A is critical path to recheck."
