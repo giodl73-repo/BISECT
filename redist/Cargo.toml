@@ -9,6 +9,7 @@ members = [
     "crates/redist-report",
     "crates/redist-web",
     "crates/redist-tui",
+    "crates/redist-metis",
     "python/redist_py",
 ]
 resolver = "2"
