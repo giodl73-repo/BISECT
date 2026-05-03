@@ -106,20 +106,67 @@ Virginia      & 55.2\,\% &  $-0.6$\,pp & 0.043 & $\leq 4.3$\,pp & $\geq  0.0$\,p
 \end{tabular}
 \end{table}
 
-\noindent The analytically established conclusion: for Georgia, Arizona, and Wisconsin
---- the states with the largest absolute gaps --- the B.12 constraint can improve
-the proportionality gap by at most 0.1--0.4\,pp, leaving $\geq 97$\,\% of the gap
-intact. For Minnesota, Nevada, and Virginia (smaller gaps, slightly higher $\sigma$),
-the constraint is theoretically sufficient to close the gap --- but this requires
-the Lorenz feasibility condition to hold, which depends on geographic structure.
+\noindent The analytical bounds are \emph{not} tight.
+Table~\ref{tab:tradeoff-empirical} presents the actual METIS results.
 
-\begin{remark}[Empirical validation status]
-Table~\ref{tab:tradeoff} presents analytical upper bounds.
-The METIS-based empirical sweep at $\eta \in \{1.05, 1.10, 1.20\}$ for all
-competitive states is in progress and will confirm whether the bounds are tight.
-For the competitive states with near-zero $\sigma$, the bound is tight by
-construction: the constraint cannot change the partition, so the gap is unchanged.
-\end{remark}
+\begin{table}[h]
+\centering
+\caption{Empirical proportionality gap (pp) under B.12 at three $\eta$ values.
+Baseline is B.9 (geometry only). ↑ = improvement; ↓ = worsening.
+All runs: 30 seeds per ratio, 1.5\,\% balance tolerance, 2020 data.}
+\label{tab:tradeoff-empirical}
+\begin{tabular}{lrrrrrr}
+\toprule
+State & D vote & B.9 & $\eta=1.05$ & $\eta=1.10$ & $\eta=1.20$ & Best \\
+\midrule
+GA & 50.1\,\% & $-14.4$\,pp & $-7.3$\,pp \small{↑} & $-7.3$\,pp \small{↑} & $-14.4$\,pp & $-7.3$ at any \\
+\textbf{WI} & 50.3\,\% & $-12.8$\,pp & $-12.8$\,pp & $\mathbf{-0.3}$\,pp \small{↑↑} & $-25.3$\,pp \small{↓↓} & $-0.3$ at 1.10 \\
+NC & 49.3\,\% & $-6.5$\,pp  & $-13.6$\,pp \small{↓} & $-13.6$\,pp \small{↓} & $-13.6$\,pp \small{↓} & worsens all \\
+AZ & 50.2\,\% & $-5.7$\,pp  & $-5.7$\,pp  & $-5.7$\,pp  & $-5.7$\,pp  & unchanged \\
+MN & 53.6\,\% & $-3.6$\,pp  & $-16.1$\,pp \small{↓↓} & $-3.6$\,pp & $-3.6$\,pp & no improvement \\
+NV & 51.2\,\% & $-1.2$\,pp  & $-1.2$\,pp  & $+23.8$\,pp \small{↑↑} & $-1.2$\,pp  & over-proportional D \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The empirical results reveal that the tradeoff is \emph{non-monotone and state-specific}:
+
+\paragraph{Wisconsin (σ = 0.003).}
+At $\eta = 1.10$, Wisconsin achieves $-0.3$\,pp --- near-exact proportionality,
+dramatically improved from $-12.8$\,pp.
+At $\eta = 1.05$, the constraint is too tight and the partition reverts to the
+same geometry as B.9 ($-12.8$\,pp).
+At $\eta = 1.20$, the constraint is too loose and the D-bloc shrinks to
+2 districts ($-25.3$\,pp) --- worse than the baseline.
+The sweet spot is $\eta = 1.10$ for WI.
+
+\paragraph{North Carolina (σ = 0.007).}
+All three $\eta$ values \emph{worsen} NC's proportionality gap relative to B.9
+($-6.5$\,pp → $-13.6$\,pp).
+The B.12 partition attempts 7:7 (the proportional HH ratio) but the D-constraint
+forces a partition where the D-bloc has insufficient Democratic concentration
+to win all 7 districts.
+B.9's 6:8 natural ratio actually gives \emph{more} D seats (6) than B.12's
+forced 7:7 ratio (5).
+This is a case where the partisan constraint \emph{hurts} proportionality.
+
+\paragraph{Nevada (σ = 0.012).}
+At $\eta = 1.10$, Nevada produces $+23.8$\,pp --- D wins 3 of 4 districts in
+a 51.2\,\% D state, dramatically over-proportional.
+This occurs because the NV constraint pushes the D-bloc to a very dense urban
+area (Las Vegas) that contains far more than half the D votes.
+
+\paragraph{Georgia and Arizona (σ = 0.001).}
+The constraint barely changes AZ at all three $\eta$ values (geography insensitive).
+GA improves from $-14.4$\,pp to $-7.3$\,pp at $\eta \leq 1.10$, but the improvement
+plateaus --- Lorenz infeasibility prevents further improvement.
+
+\paragraph{Summary.}
+The B.12 constraint does not monotonically reduce the proportionality gap.
+For some states (WI) and some $\eta$ values, it achieves near-proportional outcomes.
+For other states (NC) it worsens outcomes.
+For others (AZ) it has no effect.
+The optimal $\eta$ is state-specific and cannot be set universally.
 
 \subsection{The Sigma Classification}
 
