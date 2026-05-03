@@ -2,6 +2,11 @@ use crate::{graph::{CsrGraph, Partition}, error::PartitionError};
 pub use crate::coarsen::Coarsener;
 pub use crate::init::InitialPartitioner;
 pub use crate::refine::Refiner;
+use crate::multilevel::hierarchy::CoarseningHierarchy;
+use crate::multilevel::pipeline::Pipeline;
+use crate::coarsen::shem::SortedHeavyEdgeMatchWithParams;
+use crate::init::grow::GrowBisect;
+use crate::refine::fm::FiducciaMattheyses;
 
 pub trait Partitioner: Send + Sync {
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
@@ -29,6 +34,64 @@ pub struct RustMetisPartitioner<C, I, R> {
     pub init:      I,
     pub refiner:   R,
     pub params:    MetisParams,
+}
+
+/// Concrete type alias: SHEM + GrowBisect + FM — the default METIS-like pipeline.
+pub type MetisPartitioner = RustMetisPartitioner<
+    SortedHeavyEdgeMatchWithParams,
+    GrowBisect,
+    FiducciaMattheyses,
+>;
+
+impl MetisPartitioner {
+    pub fn with_params(params: MetisParams, k: u32) -> Self {
+        RustMetisPartitioner {
+            coarsener: SortedHeavyEdgeMatchWithParams {
+                coarsen_to: params.coarsen_to,
+                k,
+            },
+            init:    GrowBisect,
+            refiner: FiducciaMattheyses { niter: params.niter },
+            params,
+        }
+    }
+}
+
+impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
+    for RustMetisPartitioner<C, I, R>
+{
+    fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
+        -> Result<Partition, PartitionError>
+    {
+        if k == 0 { return Err(PartitionError::ZeroParts); }
+        if g.n() == 0 { return Err(PartitionError::EmptyGraph); }
+        if !g.is_valid() {
+            return Err(PartitionError::InvalidGraph("is_valid() failed"));
+        }
+        if k as usize > g.n() {
+            return Err(PartitionError::TooManyParts { k, n: g.n() });
+        }
+
+        let rng_seed = self.params.seed.or(seed).unwrap_or(0xDEAD_BEEF_CAFE_1234u64);
+
+        let hierarchy = CoarseningHierarchy::build(g, &self.coarsener)?;
+        let p = Pipeline::new(hierarchy)
+            .initial_partition(&self.init, k, rng_seed)
+            .refine_and_project(&self.refiner)
+            .into_partition();
+
+        Ok(p)
+    }
+
+    fn split_weighted(&self, g: &CsrGraph, fracs: &[u32], seed: Option<u64>)
+        -> Result<Partition, PartitionError>
+    {
+        if fracs.is_empty() { return Err(PartitionError::ZeroParts); }
+        let k = fracs.len() as u32;
+        // v1: delegate to equal-weight split; proportional balance is handled
+        // by FM during refinement.
+        self.split(g, k, seed)
+    }
 }
 
 #[cfg(test)]
@@ -60,6 +123,17 @@ mod tests {
         fn refine(&self, _g: &CsrGraph, p: Partition) -> Partition { p }
     }
 
+    fn make_path_graph(n: usize) -> CsrGraph {
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for i in 0..n {
+            if i > 0 { adjncy.push((i - 1) as u32); }
+            if i < n - 1 { adjncy.push((i + 1) as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
     #[test]
     fn mock_traits_compile() {
         let _c: &dyn Coarsener = &AlwaysTrivial;
@@ -74,5 +148,67 @@ mod tests {
         assert_eq!(p.niter, 10);
         assert_eq!(p.seed, None);
         assert_eq!(p.coarsen_to, 20);
+    }
+
+    #[test]
+    fn full_pipeline_path10_k2() {
+        use crate::coarsen::shem::SortedHeavyEdgeMatchWithParams;
+        use crate::init::grow::GrowBisect;
+        use crate::refine::fm::FiducciaMattheyses;
+        let g = make_path_graph(10);
+        let partitioner = RustMetisPartitioner {
+            coarsener: SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 2 },
+            init:      GrowBisect,
+            refiner:   FiducciaMattheyses { niter: 10 },
+            params:    MetisParams::default(),
+        };
+        let p = partitioner.split(&g, 2, Some(42)).unwrap();
+        assert_eq!(p.assignment.len(), 10);
+        assert_eq!(p.k, 2);
+        assert!(p.assignment.contains(&0));
+        assert!(p.assignment.contains(&1));
+    }
+
+    #[test]
+    fn split_weighted_empty_fracs_errors() {
+        let g = make_path_graph(10);
+        let p = MetisPartitioner::with_params(MetisParams::default(), 1)
+            .split_weighted(&g, &[], Some(0));
+        assert!(matches!(p, Err(crate::error::PartitionError::ZeroParts)));
+    }
+
+    #[test]
+    fn split_zero_k_errors() {
+        let g = make_path_graph(10);
+        let partitioner = MetisPartitioner::with_params(MetisParams::default(), 2);
+        let result = partitioner.split(&g, 0, None);
+        assert!(matches!(result, Err(PartitionError::ZeroParts)));
+    }
+
+    #[test]
+    fn split_too_many_parts_errors() {
+        let g = make_path_graph(3);
+        let partitioner = MetisPartitioner::with_params(MetisParams::default(), 10);
+        let result = partitioner.split(&g, 10, None);
+        assert!(matches!(result, Err(PartitionError::TooManyParts { k: 10, n: 3 })));
+    }
+
+    #[test]
+    fn metis_partitioner_with_params_works() {
+        let g = make_path_graph(20);
+        let partitioner = MetisPartitioner::with_params(MetisParams::default(), 2);
+        let p = partitioner.split(&g, 2, Some(7)).unwrap();
+        assert_eq!(p.assignment.len(), 20);
+        assert_eq!(p.k, 2);
+    }
+
+    #[test]
+    fn split_weighted_delegates_to_split() {
+        let g = make_path_graph(10);
+        let partitioner = MetisPartitioner::with_params(MetisParams::default(), 2);
+        // 2 fracs → k=2 split
+        let p = partitioner.split_weighted(&g, &[50, 50], Some(0)).unwrap();
+        assert_eq!(p.assignment.len(), 10);
+        assert_eq!(p.k, 2);
     }
 }
