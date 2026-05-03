@@ -74,6 +74,14 @@ pub enum PartitionMode {
     /// Requires --compact-seeds N (seeds per level, default 1).
     #[value(name = "apportion-regions")]
     ApportionRegions,
+    /// VRASection (B.14): GeoSection + geographic alignment score.
+    /// At the first bisection level, ratio selection is modified by how well
+    /// minority VAP concentrates on one side (Gingles Prong 1 alignment).
+    /// Uses only spatial minority-VAP distribution — no partisan data.
+    /// Requires demographics CSV in data/{year}/demographics/.
+    /// Use --w-vra to control alignment weight (default 0.40).
+    #[value(name = "vra-section")]
+    VraSection,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -89,6 +97,7 @@ impl std::fmt::Display for PartitionMode {
             Self::AreaSection           => write!(f, "areasection"),
             Self::ProportionalSection   => write!(f, "proportional-section"),
             Self::ApportionRegions      => write!(f, "apportion-regions"),
+            Self::VraSection            => write!(f, "vra-section"),
         }
     }
 }
@@ -1246,6 +1255,13 @@ pub struct StateArgs {
     /// Useful for benchmarking partition cost vs. adjacency loading and output writing.
     #[arg(long, default_value_t = false)]
     pub time_partition: bool,
+
+    /// VRASection (B.14): alignment score weight.
+    /// Controls the trade-off between edge-cut compactness (60%) and geographic
+    /// minority-VAP alignment (40%). Range [0.0, 1.0]. Default 0.40.
+    /// Requires --partition-mode vra-section.
+    #[arg(long, default_value_t = 0.40)]
+    pub w_vra: f64,
 }
 
 // ---------------------------------------------------------------------------

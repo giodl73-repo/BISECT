@@ -58,6 +58,9 @@ pub enum SplitStrategy {
     /// ApportionRegions (B.11): hierarchical k-way partition driven by the prime
     /// factorization of the seat count (Huntington-Hill geographic completion).
     ApportionRegions { seeds_per_level: usize },
+    /// VRASection (B.14): GeoSection modified by geographic minority-VAP alignment score.
+    /// w_vra controls how much the alignment score shifts ratio selection (default 0.40).
+    VraSection { seeds_per_ratio: usize, w_vra: f64 },
 }
 
 impl SplitStrategy {
@@ -71,6 +74,7 @@ impl SplitStrategy {
             Self::AreaSection           { .. } => "areasection",
             Self::ProportionalSection   { .. } => "proportional-section",
             Self::ApportionRegions      { .. } => "apportion-regions",
+            Self::VraSection            { .. } => "vra-section",
         }
     }
 }
@@ -276,6 +280,16 @@ impl AlgorithmConfig {
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
+            PM::VraSection => Self {
+                split: SplitStrategy::VraSection {
+                    seeds_per_ratio: args.geosection_seeds.max(1),
+                    w_vra: args.w_vra,
+                },
+                weights: WeightSpec { alpha_county: args.alpha_county, ..WeightSpec::default() },
+                vertex_constraints: vec![VertexConstraintKind::Population],
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
         }
     }
 
@@ -357,6 +371,13 @@ impl AlgorithmConfig {
             },
             PM::ProportionalSection => Self {
                 split: SplitStrategy::ProportionalSection { seeds: 50, eta: 1.10 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::VraSection => Self {
+                split: SplitStrategy::VraSection { seeds_per_ratio: 50, w_vra: 0.40 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
@@ -1045,7 +1066,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 &graph.adjacency, &vwgt, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 *seeds_per_ratio, Some(&intermediate_dir),
-                &centroids, lambda, None, 1.10,
+                &centroids, lambda, None, 1.10, None, 0.0,
             ).map_err(|e| format!("geosection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
@@ -1064,8 +1085,47 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 *seeds_per_ratio, Some(&intermediate_dir),
-                &empty_centroids, 0.0, Some(&tiger_areas), *area_swing,
+                &empty_centroids, 0.0, Some(&tiger_areas), *area_swing, None, 0.0,
             ).map_err(|e| format!("areasection failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        SplitStrategy::VraSection { seeds_per_ratio, w_vra } => {
+            // Load minority VAP data from demographics CSV.
+            // Minority fraction = (total_pop - white_non_hispanic) / total_pop,
+            // multiplied by tract population to get approximate minority VAP counts.
+            // (This is a spatial distribution proxy — not exact VAP data, but legally
+            //  defensible because no racial targeting occurs: only the geographic
+            //  distribution of existing minority concentrations is observed.)
+            let demo_path = std::path::Path::new("data")
+                .join(&cfg.year).join("demographics")
+                .join(format!("{state_name}_demographics_{}.csv", cfg.year));
+            let minority_vap_vec: Vec<f64> = if demo_path.exists() {
+                let demo = crate::demographics::load_demographics(&demo_path)
+                    .map_err(|e| format!("{}: VRASection demographics load failed: {e}", cfg.state_code))?;
+                let fracs = crate::demographics::align_demographics_to_adjacency(
+                    &demo, &graph.index_to_geoid, graph.n_vertices);
+                // Convert fraction × population → approximate minority VAP count
+                fracs.iter().zip(graph.vertex_weights.iter())
+                    .map(|(&frac, &pop)| frac * pop as f64)
+                    .collect()
+            } else {
+                eprintln!("WARNING: {}: VRASection demographics not found at {} — running as plain GeoSection",
+                          cfg.state_code, demo_path.display());
+                vec![]
+            };
+            let mvap_opt: Option<&[f64]> = if minority_vap_vec.is_empty() { None } else { Some(&minority_vap_vec) };
+            let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+            status(cfg.position, &format!(
+                "{}: VRASection {} ratios x {} seeds w_vra={:.2}",
+                cfg.state_code, num_districts / 2, seeds_per_ratio, w_vra));
+            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac, niter,
+                *seeds_per_ratio, Some(&intermediate_dir),
+                &empty_centroids, 0.0, None, 1.10, mvap_opt, *w_vra,
+            ).map_err(|e| format!("vra-section failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
@@ -1286,6 +1346,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             split_seeds: match &cfg.algo.split {
                 SplitStrategy::GeoSection    { seeds_per_ratio }       => Some(*seeds_per_ratio),
                 SplitStrategy::AreaSection   { seeds_per_ratio, .. }   => Some(*seeds_per_ratio),
+                SplitStrategy::VraSection    { seeds_per_ratio, .. }   => Some(*seeds_per_ratio),
                 SplitStrategy::CompactBisect { seeds_per_level, .. }   => Some(*seeds_per_level),
                 SplitStrategy::ApportionRegions   { seeds_per_level }       => Some(*seeds_per_level),
                 _ => None,
@@ -2611,6 +2672,7 @@ mod tests {
             ("compact-bisect",SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 }),
             ("areasection",   SplitStrategy::AreaSection { seeds_per_ratio: 50, area_swing: 1.10 }),
             ("apportion-regions",  SplitStrategy::ApportionRegions { seeds_per_level: 1 }),
+            ("vra-section",   SplitStrategy::VraSection { seeds_per_ratio: 50, w_vra: 0.40 }),
         ];
         for (expected_name, variant) in all {
             assert_eq!(variant.mode_name(), *expected_name,

@@ -656,6 +656,12 @@ pub fn run_geosection(
     vertex_areas_m2: Option<&[f64]>,
     // AreaSection area imbalance tolerance (ubvec[1]). Default 1.10 = ±10%.
     area_swing: f64,
+    // VRASection (B.14): per-vertex minority VAP counts. None = standard GeoSection.
+    // When Some, ratio selection score is: normalised - w_vra * alignment * normalised.max(1)
+    // where alignment = |MVAP_frac(left) - MVAP_frac(right)|.
+    minority_vap: Option<&[f64]>,
+    // VRASection alignment weight (default 0.40). Only consulted when minority_vap is Some.
+    w_vra: f64,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
 
@@ -792,6 +798,31 @@ pub fn run_geosection(
         let smaller = left_k.min(right_k) as f64;
         let normalised = ratio_best / smaller.sqrt();
 
+        // VRASection (B.14): subtract alignment bonus from the normalised score.
+        // A(split) = |MVAP_frac(left) - MVAP_frac(right)| (0=equal, 1=fully concentrated)
+        // score(ratio) = normalised - w_vra * alignment * normalised.max(1.0)
+        // Lower score = preferred. Subtracting means concentrated splits win over dispersed.
+        let selection_score = if let Some(mvap) = minority_vap {
+            let mvap_total: f64 = mvap.iter().sum();
+            let score = if mvap_total > 0.0 {
+                let mvap_left: f64 = ratio_best_left.iter().map(|&v| mvap[v]).sum();
+                let alignment = (mvap_left / mvap_total - 0.5).abs() * 2.0;
+                normalised - w_vra * alignment * normalised.max(1.0)
+            } else {
+                normalised
+            };
+            if ncon == 2 {
+                // AreaSection doesn't use VRA alignment; just use normalised
+                normalised
+            } else {
+                eprintln!("[vra-section]   ratio {}:{} normalised={:.1}  score={:.1}",
+                          left_k, right_k, normalised/1000.0, score/1000.0);
+                score
+            }
+        } else {
+            normalised
+        };
+
         if ncon == 2 {
             if let Some(areas) = vertex_areas_m2 {
                 let area_left: f64 = ratio_best_left.iter().map(|&v| areas[v]).sum();
@@ -800,13 +831,13 @@ pub fn run_geosection(
                 eprintln!("[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
                           left_k, right_k, ratio_best/1000.0, normalised/1000.0, area_frac*100.0);
             }
-        } else {
+        } else if minority_vap.is_none() {
             eprintln!("[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
                       left_k, right_k, ratio_best/1000.0, normalised/1000.0);
         }
 
-        if normalised < best_normalised {
-            best_normalised = normalised;
+        if selection_score < best_normalised {
+            best_normalised = selection_score;
             best_ec = ratio_best;
             best_left = left_k;
             best_right = right_k;
@@ -815,7 +846,7 @@ pub fn run_geosection(
         }
     }
 
-    let mode_tag = if ncon == 2 { "areasection" } else { "geosection" };
+    let mode_tag = if ncon == 2 { "areasection" } else if minority_vap.is_some() { "vra-section" } else { "geosection" };
     eprintln!("[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
               best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
 
@@ -931,6 +962,7 @@ fn recurse_geosection(
         &local_adj, &local_vw, &local_ew,
         k, balance_tolerance, niter, seeds_per_ratio, None,
         &empty_centroids, 0.0, None, 1.10,  // recursive: ncon=1, area_swing unused
+        None, 0.0,  // recursive: no VRA alignment at sub-levels
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {
@@ -2142,5 +2174,81 @@ mod tests {
         let area = vec![100.0f64, 900.0];
         let min_a = lorenz_min_area(&pop, &area, 0.9);
         assert!(min_a < 0.15, "dense tract holds 90% pop in ~10% area, got {:.1}%", min_a * 100.0);
+    }
+
+    // ── VRASection (B.14): alignment score unit tests ─────────────────────────
+
+    /// Helper: compute the VRASection alignment score the same way run_geosection does.
+    /// alignment = |MVAP_frac(left) - MVAP_frac(right)| normalised to [0, 1]
+    /// = |mvap_left/mvap_total - (1 - mvap_left/mvap_total)| = |2*mvap_left/mvap_total - 1|
+    fn vra_alignment(mvap: &[f64], left: &[usize]) -> f64 {
+        let mvap_total: f64 = mvap.iter().sum();
+        if mvap_total == 0.0 { return 0.0; }
+        let mvap_left: f64 = left.iter().map(|&v| mvap[v]).sum();
+        (mvap_left / mvap_total - 0.5).abs() * 2.0
+    }
+
+    #[test]
+    fn test_vra_alignment_perfectly_concentrated() {
+        // All minority population on the left side → alignment = 1.0
+        let mvap = vec![100.0, 100.0, 0.0, 0.0];
+        let left = vec![0, 1];
+        let a = vra_alignment(&mvap, &left);
+        assert!((a - 1.0).abs() < 1e-9,
+            "all minority on left should give alignment=1.0, got {a}");
+    }
+
+    #[test]
+    fn test_vra_alignment_equal_split() {
+        // Minority population equal on both sides → alignment = 0.0
+        let mvap = vec![50.0, 50.0, 50.0, 50.0];
+        let left = vec![0, 1];
+        let a = vra_alignment(&mvap, &left);
+        assert!(a < 1e-9,
+            "equal minority split should give alignment=0.0, got {a}");
+    }
+
+    #[test]
+    fn test_vra_alignment_partial_concentration() {
+        // 3/4 of minority on left, 1/4 on right → alignment = |0.75 - 0.25| = 0.5
+        let mvap = vec![75.0, 0.0, 25.0, 0.0];  // total=100
+        let left = vec![0]; // mvap_left = 75
+        let a = vra_alignment(&mvap, &left);
+        assert!((a - 0.5).abs() < 1e-9,
+            "3/4 concentration should give alignment=0.5, got {a}");
+    }
+
+    #[test]
+    fn test_vra_selection_score_prefers_concentrated_split() {
+        // When minority_vap is provided, a split with high alignment should get a
+        // LOWER selection score (preferred) vs a split with the same normalised EC
+        // but lower alignment.
+        let normalised = 1000.0_f64;
+        let w_vra = 0.40_f64;
+
+        // High alignment (0.8): score = 1000 - 0.4 * 0.8 * max(1000, 1) = 1000 - 320 = 680
+        let alignment_high = 0.8_f64;
+        let score_high = normalised - w_vra * alignment_high * normalised.max(1.0);
+        assert!((score_high - 680.0).abs() < 1e-9,
+            "score with high alignment should be 680, got {score_high}");
+
+        // Low alignment (0.1): score = 1000 - 0.4 * 0.1 * 1000 = 1000 - 40 = 960
+        let alignment_low = 0.1_f64;
+        let score_low = normalised - w_vra * alignment_low * normalised.max(1.0);
+        assert!((score_low - 960.0).abs() < 1e-9,
+            "score with low alignment should be 960, got {score_low}");
+
+        // High alignment split (lower score) should be preferred
+        assert!(score_high < score_low,
+            "high alignment ({score_high}) should beat low alignment ({score_low})");
+    }
+
+    #[test]
+    fn test_vra_alignment_zero_mvap_returns_zero() {
+        // If there is no minority population, alignment is 0 — no preference
+        let mvap = vec![0.0, 0.0, 0.0];
+        let left = vec![0, 1];
+        let a = vra_alignment(&mvap, &left);
+        assert_eq!(a, 0.0, "zero total minority VAP must give alignment=0");
     }
 }
