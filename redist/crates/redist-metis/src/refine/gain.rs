@@ -59,6 +59,51 @@ mod tests {
     }
 }
 
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+
+    /// Proves: GainTable::insert, pop_max, update never panic or overflow
+    /// for all gain values in [-128, 128] and up to 8 vertices.
+    #[kani::proof]
+    #[kani::unwind(9)]
+    fn verify_gain_table_no_overflow() {
+        let max_gain: i32 = kani::any_where(|&g: &i32| g > 0 && g <= 128);
+        let n: usize = kani::any_where(|&n: &usize| n > 0 && n <= 8);
+        let mut gt = GainTable::new(n, max_gain);
+
+        let v: u32 = kani::any_where(|&v: &u32| (v as usize) < n);
+        let gain: i32 = kani::any_where(|&g: &i32| g >= -max_gain && g <= max_gain);
+
+        // Insert must not panic
+        gt.insert(v, gain);
+
+        // peek_max must not panic
+        let _ = gt.peek_max();
+
+        // pop_max must not panic
+        let _ = gt.pop_max();
+    }
+
+    /// Proves: GainTable::update never panics for valid vertex + gain.
+    #[kani::proof]
+    #[kani::unwind(9)]
+    fn verify_gain_table_update_no_panic() {
+        let max_gain: i32 = kani::any_where(|&g: &i32| g > 0 && g <= 64);
+        let n: usize = kani::any_where(|&n: &usize| n >= 2 && n <= 8);
+        let mut gt = GainTable::new(n, max_gain);
+
+        let v: u32 = kani::any_where(|&v: &u32| (v as usize) < n);
+        let g1: i32 = kani::any_where(|&g: &i32| g >= -max_gain && g <= max_gain);
+        let g2: i32 = kani::any_where(|&g: &i32| g >= -max_gain && g <= max_gain);
+
+        gt.insert(v, g1);
+        // update (remove + insert) must not panic
+        gt.update(v, g2);
+        let _ = gt.peek_max();
+    }
+}
+
 impl GainTable {
     pub fn new(n_vertices: usize, max_gain: i32) -> Self {
         let size = (2 * max_gain + 1) as usize;

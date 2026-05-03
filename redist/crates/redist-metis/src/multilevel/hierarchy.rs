@@ -142,3 +142,36 @@ mod tests {
         );
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use crate::coarsen::shem::SortedHeavyEdgeMatchWithParams;
+
+    fn kani_path(n: usize) -> CsrGraph {
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for i in 0..n {
+            if i > 0 { adjncy.push((i-1) as u32); }
+            if i < n-1 { adjncy.push((i+1) as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
+    /// Proves: CoarseningHierarchy::build() terminates without panic
+    /// for path graphs up to n=32. Either returns Ok (hierarchy built)
+    /// or Err(CoarseningStalled) — no panic.
+    #[kani::proof]
+    #[kani::unwind(33)]
+    fn verify_hierarchy_no_panic() {
+        let n: usize = kani::any_where(|&n: &usize| n >= 4 && n <= 32);
+        let k: u32   = kani::any_where(|&k: &u32| k >= 1 && k <= 4);
+        let g = kani_path(n);
+        kani::assume(g.is_valid());
+
+        let coarsener = SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k };
+        // Must not panic — either Ok or Err(CoarseningStalled)
+        let _ = CoarseningHierarchy::build(&g, &coarsener);
+    }
+}

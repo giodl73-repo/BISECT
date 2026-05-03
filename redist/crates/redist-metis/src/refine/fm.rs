@@ -366,3 +366,47 @@ mod tests {
         }
     }
 }
+
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use crate::refine::Refiner;
+
+    fn kani_path(n: usize) -> CsrGraph {
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for i in 0..n {
+            if i > 0 { adjncy.push((i-1) as u32); }
+            if i < n-1 { adjncy.push((i+1) as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
+    /// Proves: FiducciaMattheyses::refine() never panics or goes OOB
+    /// for valid path graphs up to n=16, k=4.
+    /// Also proves: output assignment has correct length and valid part IDs.
+    #[kani::proof]
+    #[kani::unwind(17)]
+    fn verify_fm_no_oob() {
+        let n: usize = kani::any_where(|&n: &usize| n >= 4 && n <= 16);
+        let k: u32   = kani::any_where(|&k: &u32| k >= 2 && k <= 4);
+        kani::assume(k as usize <= n);
+
+        let g = kani_path(n);
+        kani::assume(g.is_valid());
+
+        // Simple initial partition: vertex i gets part i%k
+        let p = Partition {
+            assignment: (0..n).map(|i| (i % k as usize) as u32).collect(),
+            k,
+        };
+
+        let fm = FiducciaMattheyses { niter: 2 };
+        let result = fm.refine(&g, p);
+
+        // Safety postconditions:
+        assert!(result.assignment.len() == n);
+        assert!(result.assignment.iter().all(|&a| a < k));
+    }
+}
