@@ -103,13 +103,35 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         Ok(p)
     }
 
+    /// Partition `g` into `fracs.len()` parts where part *i* should receive a
+    /// population proportional to `fracs[i] / sum(fracs)`.
+    ///
+    /// # v1 behaviour (proportional weighting deferred)
+    ///
+    /// The current implementation delegates to [`Self::split`] with equal weight
+    /// (`k = fracs.len()`).  Proportional population targets are **not** passed
+    /// to the METIS pipeline in this version.
+    ///
+    /// Full proportional support would require threading `tpwgts` (target
+    /// partition weights, one `f32` per part) through `MetisParams` down into
+    /// `GrowKway::partition` and the FM refinement loop.  That work is tracked
+    /// as a follow-up; callers that need tight proportional balance should scale
+    /// vertex weights before calling this function.
+    ///
+    /// # Errors
+    ///
+    /// * [`PartitionError::ZeroParts`] — `fracs` is empty or all entries are zero.
+    /// * Propagates all errors from [`Self::split`].
     fn split_weighted(&self, g: &CsrGraph, fracs: &[u32], seed: Option<u64>)
         -> Result<Partition, PartitionError>
     {
         if fracs.is_empty() { return Err(PartitionError::ZeroParts); }
+        let total_fracs: u32 = fracs.iter().sum();
+        if total_fracs == 0 { return Err(PartitionError::ZeroParts); }
         let k = fracs.len() as u32;
-        // v1: delegate to equal-weight split; proportional balance is handled
-        // by FM during refinement.
+        // v1: proportional tpwgts are not yet wired into the pipeline.
+        // Delegate to equal-weight split; FM refinement will balance to ±0.5%
+        // of the equal target, not the asymmetric target implied by fracs.
         self.split(g, k, seed)
     }
 }
@@ -241,12 +263,46 @@ mod tests {
     }
 
     #[test]
-    fn split_weighted_delegates_to_split() {
+    fn split_weighted_equal_fracs_produces_k2() {
         let g = make_path_graph(10);
         let partitioner = MetisPartitioner::with_params(MetisParams::default(), 2);
-        // 2 fracs → k=2 split
+        // Equal fracs — v1 delegates to equal-weight split.
         let p = partitioner.split_weighted(&g, &[50, 50], Some(0)).unwrap();
         assert_eq!(p.assignment.len(), 10);
         assert_eq!(p.k, 2);
+    }
+
+    #[test]
+    fn split_weighted_all_zero_fracs_errors() {
+        let g = make_path_graph(10);
+        let p = MetisPartitioner::with_params(MetisParams::default(), 2)
+            .split_weighted(&g, &[0u32, 0u32], Some(0));
+        assert!(matches!(p, Err(crate::error::PartitionError::ZeroParts)));
+    }
+
+    /// Verify that asymmetric fracs (e.g. [8, 9] for k=17 PfrCompositor splits)
+    /// produce a structurally valid partition even though v1 does not honour the
+    /// proportional targets.
+    ///
+    /// NOTE: This test documents the v1 limitation.  Both parts cover a
+    /// reasonable share of the 17 vertices but the split is equal-weight,
+    /// not 8/17 vs 9/17.  Update this test when proportional tpwgts land.
+    #[test]
+    fn split_weighted_asymmetric_fracs() {
+        let g = make_path_graph(17);
+        let partitioner = MetisPartitioner::with_params(MetisParams::default(), 2);
+        let p = partitioner.split_weighted(&g, &[8u32, 9u32], Some(42)).unwrap();
+        // Structural validity — correct length and k
+        assert_eq!(p.assignment.len(), 17);
+        assert_eq!(p.k, 2);
+        // Both parts must be non-empty
+        assert!(p.assignment.contains(&0), "part 0 is empty");
+        assert!(p.assignment.contains(&1), "part 1 is empty");
+        // v1: equal-weight split on 17 vertices, so each part has ~8-9 vertices.
+        // Accept any split in [3, 14] — a degenerate all-in-one result is a bug.
+        let pop0 = p.assignment.iter().filter(|&&x| x == 0).count();
+        let pop1 = p.assignment.iter().filter(|&&x| x == 1).count();
+        assert!(pop0 >= 3 && pop0 <= 14, "part 0 size unreasonable: {pop0}");
+        assert!(pop1 >= 3 && pop1 <= 14, "part 1 size unreasonable: {pop1}");
     }
 }
