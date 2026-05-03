@@ -8,10 +8,10 @@ pub struct RandomBisect;
 impl InitialPartitioner for RandomBisect {
     fn partition(&self, g: &CsrGraph, k: u32, seed: u64) -> Partition {
         debug_assert!(g.is_valid(), "RandomBisect requires valid connected graph (PP-PLAN-02)");
-        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1 }; }
+        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1, tpwgts: None }; }
         let mut rng = Pcg64::seed_from_u64(seed);
         let assignment = (0..g.n()).map(|_| rng.gen_range(0..k)).collect();
-        Partition { assignment, k }
+        Partition { assignment, k, tpwgts: None }
     }
 }
 

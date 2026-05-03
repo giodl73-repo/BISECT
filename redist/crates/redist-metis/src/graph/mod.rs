@@ -47,7 +47,14 @@ impl CsrGraph {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct Partition { pub assignment: Vec<u32>, pub k: u32 }
+pub struct Partition {
+    pub assignment: Vec<u32>,
+    pub k:          u32,
+    /// Target partition weights (one `f32` per part, summing to 1.0).
+    /// `None` means equal weights (each part gets `1/k` of total population).
+    /// Set by `split_weighted` and consumed by FM balance checks.
+    pub tpwgts:     Option<Vec<f32>>,
+}
 
 #[derive(Debug, Clone)]
 pub struct CoarseMap { pub cmap: Vec<u32> }

@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn boundary_contains_cross_part_vertices() {
         let g = path_graph(3);
-        let p = Partition { assignment: vec![0, 0, 1], k: 2 };
+        let p = Partition { assignment: vec![0, 0, 1], k: 2, tpwgts: None };
         let b = BoundarySet::from_partition(&g, &p);
         assert!(b.contains(1), "vertex 1 should be on boundary");
         assert!(b.contains(2), "vertex 2 should be on boundary");
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn boundary_all_same_part_empty() {
         let g = path_graph(5);
-        let p = Partition { assignment: vec![0; 5], k: 1 };
+        let p = Partition { assignment: vec![0; 5], k: 1, tpwgts: None };
         let b = BoundarySet::from_partition(&g, &p);
         for v in 0..5u32 { assert!(!b.contains(v)); }
     }

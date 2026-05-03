@@ -16,20 +16,40 @@ impl Refiner for FiducciaMattheyses {
             state.restore(&best);
             if !improved { break; }
         }
-        Partition { assignment: state.assignment, k: state.k }
+        Partition { assignment: state.assignment, k: state.k, tpwgts: None }
     }
 }
 
 fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
     let ncon = state.graph.ncon as usize;
+    let k    = state.k as usize;
     let total_pops: Vec<i64> = (0..ncon)
         .map(|c| state.part_pop[c].iter().sum())
         .collect();
-    let targets: Vec<i64> = total_pops.iter().map(|&tp| tp / state.k as i64).collect();
-    // INTEGER balance epsilon — ceiling of 0.5% — NO FLOATS
-    let epsilons: Vec<i64> = total_pops.iter()
-        .map(|&tp| (tp * 5 + 999) / 1000)
+
+    // Per-part, per-constraint targets and epsilons.
+    // Layout: targets_pc[part][constraint], epsilons_pc[part][constraint].
+    //
+    // When tpwgts is provided: constraint 0 gets proportional targets derived from
+    // the float weights; all other constraints (VAP, etc.) keep equal targets.
+    // When tpwgts is None: all constraints use equal targets.
+    let targets_pc: Vec<Vec<i64>> = (0..k).map(|part| {
+        (0..ncon).map(|c| {
+            if c == 0 {
+                match &state.tpwgts {
+                    Some(tw) => (total_pops[0] as f64 * tw[part] as f64).round() as i64,
+                    None     => total_pops[0] / k as i64,
+                }
+            } else {
+                total_pops[c] / k as i64
+            }
+        }).collect()
+    }).collect();
+    // INTEGER balance epsilon — ceiling of 0.5% of each part's target — NO FLOATS
+    let epsilons_pc: Vec<Vec<i64>> = targets_pc.iter()
+        .map(|row| row.iter().map(|&t| (t.abs() * 5 + 999) / 1000).collect())
         .collect();
+
     let start_cut = best.cut;
 
     // Locked set: vertices that have been popped this pass must not be re-inserted.
@@ -56,11 +76,12 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
             .map(|c| state.graph.vwgt[v * ncon + c] as i64)
             .collect();
 
-        // Balance check — ALL constraints must pass
+        // Balance check — ALL constraints must pass for BOTH parts
         let balanced = (0..ncon).all(|c| {
             let new_from = state.part_pop[c][from_part] - vwgt_v[c];
             let new_to   = state.part_pop[c][to_part]   + vwgt_v[c];
-            new_from >= targets[c] - epsilons[c] && new_to <= targets[c] + epsilons[c]
+            new_from >= targets_pc[from_part][c] - epsilons_pc[from_part][c]
+                && new_to <= targets_pc[to_part][c] + epsilons_pc[to_part][c]
         });
         if !balanced { continue; }
 
@@ -144,6 +165,9 @@ pub struct FmState<'g> {
     /// For ncon=1, `part_pop[0][part]` is equivalent to the old single-constraint `part_pop[part]`.
     pub part_pop:     Vec<Vec<i64>>,
     pub current_cut:  i64,
+    /// Per-part target weights (one f32 per part, summing to 1.0).
+    /// `None` means equal weights: each part targets `total_pop / k`.
+    pub tpwgts:       Option<Vec<f32>>,
 }
 
 #[derive(Clone)]
@@ -184,7 +208,8 @@ impl<'g> FmState<'g> {
             gain_table.insert(v, gain_clamped);
         }
 
-        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0 };
+        let tpwgts = p.tpwgts.clone();
+        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0, tpwgts };
         state.current_cut = state.cut();
         state
     }
@@ -209,7 +234,9 @@ impl<'g> FmState<'g> {
 
     pub fn restore(&mut self, cp: &Checkpoint) {
         self.assignment = cp.assignment.clone();
-        let p = Partition { assignment: self.assignment.clone(), k: self.k };
+        // tpwgts is preserved across restore — it is a property of the partition problem,
+        // not the current state, and must survive all passes.
+        let p = Partition { assignment: self.assignment.clone(), k: self.k, tpwgts: self.tpwgts.clone() };
         self.boundary = BoundarySet::from_partition(self.graph, &p);
         let n = self.graph.n();
         let max_gain = self.gain_table.max_gain;
@@ -320,7 +347,7 @@ mod tests {
         // path 0-1-2, partition [0,0,1]
         // cut edge: 1-2, so cut = 1
         let g = path_graph(3);
-        let p = Partition { assignment: vec![0, 0, 1], k: 2 };
+        let p = Partition { assignment: vec![0, 0, 1], k: 2, tpwgts: None };
         let state = FmState::new(&g, p);
         assert_eq!(state.cut(), 1);
     }
@@ -328,7 +355,7 @@ mod tests {
     #[test]
     fn fm_state_checkpoint_restore() {
         let g = path_graph(4);
-        let p = Partition { assignment: vec![0, 0, 1, 1], k: 2 };
+        let p = Partition { assignment: vec![0, 0, 1, 1], k: 2, tpwgts: None };
         let mut state = FmState::new(&g, p);
         let cp = state.checkpoint();
         assert_eq!(cp.cut, state.cut());
@@ -460,6 +487,7 @@ mod kani_proofs {
         let p = Partition {
             assignment: (0..n).map(|i| (i % k as usize) as u32).collect(),
             k,
+            tpwgts: None,
         };
 
         let fm = FiducciaMattheyses { niter: 2 };

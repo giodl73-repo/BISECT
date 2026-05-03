@@ -88,7 +88,7 @@ mod tests {
 impl InitialPartitioner for GrowBisect {
     fn partition(&self, g: &CsrGraph, k: u32, seed: u64) -> Partition {
         debug_assert!(g.is_valid(), "GrowBisect requires valid connected graph (PP-PLAN-02)");
-        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1 }; }
+        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1, tpwgts: None }; }
         grow_bisect(g, k, seed)
     }
 }
@@ -96,7 +96,7 @@ impl InitialPartitioner for GrowBisect {
 impl InitialPartitioner for GrowKway {
     fn partition(&self, g: &CsrGraph, k: u32, seed: u64) -> Partition {
         debug_assert!(g.is_valid(), "GrowKway requires valid connected graph (PP-PLAN-02)");
-        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1 }; }
+        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1, tpwgts: None }; }
         grow_kway(g, k, seed)
     }
 }
@@ -149,7 +149,7 @@ fn grow_bisect(g: &CsrGraph, k: u32, seed: u64) -> Partition {
     for a in assignment.iter_mut() {
         if *a == u32::MAX { *a = 0; }
     }
-    Partition { assignment, k: 2 }
+    Partition { assignment, k: 2, tpwgts: None }
 }
 
 fn grow_kway(g: &CsrGraph, k: u32, seed: u64) -> Partition {
@@ -217,5 +217,5 @@ fn grow_kway(g: &CsrGraph, k: u32, seed: u64) -> Partition {
     for a in assignment.iter_mut() {
         if *a == u32::MAX { *a = 0; }
     }
-    Partition { assignment, k: k as u32 }
+    Partition { assignment, k: k as u32, tpwgts: None }
 }

@@ -63,7 +63,7 @@ impl Pipeline<NeedsRefinement> {
             current_p = refiner.refine(&self.hierarchy.levels[lev + 1], current_p);
             // Project down to the finer level (lev)
             let fine_assign = self.hierarchy.project_up(lev, &current_p.assignment);
-            current_p = Partition { assignment: fine_assign, k: current_p.k };
+            current_p = Partition { assignment: fine_assign, k: current_p.k, tpwgts: current_p.tpwgts.clone() };
         }
         // Final refinement at original level (level 0)
         current_p = refiner.refine(&self.hierarchy.levels[0], current_p);
