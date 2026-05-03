@@ -1078,7 +1078,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 return Err(format!("{}: ProportionalSection requires {} — not found",
                                    cfg.state_code, election_path.display()));
             }
-            let (d_votes, _two_party) = crate::partisan_shares::load_dem_vote_counts(
+            let (d_votes, two_party) = crate::partisan_shares::load_dem_vote_counts(
                 &election_path, &graph.index_to_geoid, graph.n_vertices)
                 .map_err(|e| format!("{}: load_dem_vote_counts failed: {e}", cfg.state_code))?;
             status(cfg.position, &format!(
@@ -1086,7 +1086,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 cfg.state_code, seeds, eta));
             let (asgn, k_d, k_r, best_ec, d_state) =
                 crate::bisection_runner::run_proportional_section(
-                    &graph.adjacency, &graph.vertex_weights, &d_votes, &edge_weights,
+                    &graph.adjacency, &graph.vertex_weights, &d_votes, &two_party, &edge_weights,
                     num_districts, balance_tolerance_frac, niter, *seeds, *eta,
                     Some(&intermediate_dir),
                 ).map_err(|e| format!("proportional-section failed: {e}"))?;

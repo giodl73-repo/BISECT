@@ -511,6 +511,7 @@ pub fn run_proportional_section(
     adjacency: &[Vec<usize>],
     vertex_weights: &[i64],       // population
     vertex_d_votes: &[f64],        // Democratic vote counts per tract
+    vertex_two_party: &[f64],      // Democrat + Republican two-party vote totals per tract
     edge_weights: &std::collections::HashMap<(usize, usize), f64>,
     num_districts: usize,
     balance_tolerance: f64,
@@ -528,8 +529,9 @@ pub fn run_proportional_section(
     // Compute statewide D fraction
     let total_pop: i64 = vertex_weights.iter().sum();
     let total_d: f64 = vertex_d_votes.iter().sum();
-    let total_two_party: f64 = total_d + vertex_d_votes.len() as f64; // fallback
-    let d = (total_d / total_pop as f64).clamp(0.01, 0.99);
+    let total_two_party: f64 = vertex_two_party.iter().sum();
+    // d = Democratic fraction of TWO-PARTY vote (not census population)
+    let d = (total_d / total_two_party.max(1.0)).clamp(0.01, 0.99);
 
     // Huntington-Hill allocation
     let k_d_float = d * num_districts as f64;
