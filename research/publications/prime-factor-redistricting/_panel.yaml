@@ -1,14 +1,21 @@
 paper: prime-factor-redistricting
 title: "Prime-Factored Maps: Redistricting as the Geographic Completion of Huntington-Hill"
 venue: "Political Analysis / Journal of Computational Social Science"
-stage: revision
-round: 1
+stage: recheck
+round: 2
 content_mode: full
 series: B
 series_number: 11
-avg_score: 2.72
+avg_score: 2.90
+round1_avg: 2.72
 reviewers: [R-50, R-1, R-37, R-9, R-6]
 reviews:
+  R-50: {score: 3.0, file: reviews/REVIEW-R2-jeffrey-ullman.md}
+  R-1:  {score: 2.8, file: reviews/REVIEW-R2-percy-liang.md}
+  R-37: {score: 3.1, file: reviews/REVIEW-R2-nadia-polikarpova.md}
+  R-9:  {score: 2.9, file: reviews/REVIEW-R2-joseph-gonzalez.md}
+  R-6:  {score: 2.7, file: reviews/REVIEW-R2-matei-zaharia.md}
+round1_reviews:
   R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
   R-1:  {score: 2.5, file: reviews/REVIEW-percy-liang.md}
   R-37: {score: 2.8, file: reviews/REVIEW-nadia-polikarpova.md}
@@ -43,3 +50,6 @@ history:
   - stage: revision
     date: "2026-05-02"
     note: "5 P1 items identified. P1-A is critical path to recheck."
+  - stage: recheck
+    date: "2026-05-02"
+    note: "Round 2: avg 2.90/4.0 (+0.18). Zero-variance finding (480 seeds, all 50 states) resolved P1-A. P1-B/C resolved formally. P1-D (balance) and P1-E (GerryChain) remain open but acceptable for this stage."
