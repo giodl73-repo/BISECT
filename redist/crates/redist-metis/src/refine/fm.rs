@@ -21,10 +21,15 @@ impl Refiner for FiducciaMattheyses {
 }
 
 fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
-    let total_pop: i64 = state.part_pop.iter().sum();
-    let target_pop = total_pop / state.k as i64;
+    let ncon = state.graph.ncon as usize;
+    let total_pops: Vec<i64> = (0..ncon)
+        .map(|c| state.part_pop[c].iter().sum())
+        .collect();
+    let targets: Vec<i64> = total_pops.iter().map(|&tp| tp / state.k as i64).collect();
     // INTEGER balance epsilon — ceiling of 0.5% — NO FLOATS
-    let epsilon = (total_pop * 5 + 999) / 1000;
+    let epsilons: Vec<i64> = total_pops.iter()
+        .map(|&tp| (tp * 5 + 999) / 1000)
+        .collect();
     let start_cut = best.cut;
 
     // Locked set: vertices that have been popped this pass must not be re-inserted.
@@ -46,19 +51,25 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
             best_destination(state, v, from_part as u32)
         } as usize;
 
-        let vwgt = state.graph.vwgt[v] as i64;
-        let new_from = state.part_pop[from_part] - vwgt;
-        let new_to   = state.part_pop[to_part]   + vwgt;
+        // Gather per-constraint weights for vertex v
+        let vwgt_v: Vec<i64> = (0..ncon)
+            .map(|c| state.graph.vwgt[v * ncon + c] as i64)
+            .collect();
 
-        // Balance check — skip if move violates tolerance
-        if new_from < target_pop - epsilon || new_to > target_pop + epsilon {
-            continue;
-        }
+        // Balance check — ALL constraints must pass
+        let balanced = (0..ncon).all(|c| {
+            let new_from = state.part_pop[c][from_part] - vwgt_v[c];
+            let new_to   = state.part_pop[c][to_part]   + vwgt_v[c];
+            new_from >= targets[c] - epsilons[c] && new_to <= targets[c] + epsilons[c]
+        });
+        if !balanced { continue; }
 
         // Apply move
         state.assignment[v] = to_part as u32;
-        state.part_pop[from_part] = new_from;
-        state.part_pop[to_part]   = new_to;
+        for c in 0..ncon {
+            state.part_pop[c][from_part] -= vwgt_v[c];
+            state.part_pop[c][to_part]   += vwgt_v[c];
+        }
         state.boundary.remove(v as u32);
 
         // Update current_cut incrementally — O(degree(v)) not O(m)
@@ -129,7 +140,9 @@ pub struct FmState<'g> {
     pub k:            u32,
     pub gain_table:   GainTable,
     pub boundary:     BoundarySet,
-    pub part_pop:     Vec<i64>,
+    /// `part_pop[constraint][part]` = population sum for constraint c in part p.
+    /// For ncon=1, `part_pop[0][part]` is equivalent to the old single-constraint `part_pop[part]`.
+    pub part_pop:     Vec<Vec<i64>>,
     pub current_cut:  i64,
 }
 
@@ -143,8 +156,14 @@ impl<'g> FmState<'g> {
     pub fn new(g: &'g CsrGraph, p: Partition) -> Self {
         let n = g.n();
         let k = p.k as usize;
-        let mut part_pop = vec![0i64; k];
-        for v in 0..n { part_pop[p.assignment[v] as usize] += g.vwgt[v] as i64; }
+        let ncon = g.ncon as usize;
+        let mut part_pop = vec![vec![0i64; k]; ncon];
+        for v in 0..n {
+            let part = p.assignment[v] as usize;
+            for c in 0..ncon {
+                part_pop[c][part] += g.vwgt[v * ncon + c] as i64;
+            }
+        }
 
         // max_gain = max edge weight (or 1 if unweighted) × max degree
         let max_ew = g.adjwgt.as_ref()
@@ -204,10 +223,16 @@ impl<'g> FmState<'g> {
             let gain_clamped = gain.clamp(-max_gain, max_gain);
             self.gain_table.insert(v, gain_clamped);
         }
-        // Recompute part populations
+        // Recompute per-constraint part populations
+        let ncon = self.graph.ncon as usize;
         let k = self.k as usize;
-        self.part_pop = vec![0i64; k];
-        for v in 0..n { self.part_pop[self.assignment[v] as usize] += self.graph.vwgt[v] as i64; }
+        self.part_pop = vec![vec![0i64; k]; ncon];
+        for v in 0..n {
+            let part = self.assignment[v] as usize;
+            for c in 0..ncon {
+                self.part_pop[c][part] += self.graph.vwgt[v * ncon + c] as i64;
+            }
+        }
         self.current_cut = self.cut(); // recompute once after restore
     }
 }
@@ -363,6 +388,41 @@ mod tests {
                 .sum();
             assert!((pop - target).abs() <= eps,
                 "part {part} pop {pop} violates balance (target {target} ± {eps})");
+        }
+    }
+
+    #[test]
+    fn fm_multi_constraint_balance() {
+        // Grid 4x4 with ncon=2: constraint 0 = population, constraint 1 = VAP.
+        // Both are uniform (weight 1) so the expected balance is identical for both.
+        use crate::init::InitialPartitioner;
+        use crate::init::random::RandomBisect;
+        use crate::refine::Refiner;
+        let mut g = grid_4x4();
+        g.ncon = 2;
+        // vwgt: vertex i has [pop=1, vap=1]; interleaved layout: [1, 1, 1, 1, ...]
+        g.vwgt = vec![1i32; 32]; // 16 vertices × 2 constraints
+        let p_init = RandomBisect.partition(&g, 2, 42);
+        let fm = FiducciaMattheyses { niter: 10 };
+        let p = fm.refine(&g, p_init);
+        assert_eq!(p.assignment.len(), 16);
+        // Both constraints should be balanced within ε = ceil(0.5% × 16) = 1
+        let total = 16i64;
+        let target = 8i64;
+        let eps = (total * 5 + 999) / 1000; // = 1
+        for part in 0..2u32 {
+            let pop0: i64 = (0..16)
+                .filter(|&v| p.assignment[v] == part)
+                .map(|v| g.vwgt[v * 2] as i64)
+                .sum();
+            let pop1: i64 = (0..16)
+                .filter(|&v| p.assignment[v] == part)
+                .map(|v| g.vwgt[v * 2 + 1] as i64)
+                .sum();
+            assert!((pop0 - target).abs() <= eps,
+                "part {part} constraint 0 pop {pop0} violates balance (target {target} ± {eps})");
+            assert!((pop1 - target).abs() <= eps,
+                "part {part} constraint 1 pop {pop1} violates balance (target {target} ± {eps})");
         }
     }
 }
