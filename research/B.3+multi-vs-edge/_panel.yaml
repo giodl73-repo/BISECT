@@ -67,7 +67,8 @@ p1_items:
     resolution: "Expanded multi-constraint from 4 to 28 configs per state (140 total). Fair comparison: MC 35.7% (50/140) vs EW 47.9% (67/140), gap 12.1 pp. Critical finding: MC shows extreme state dependency - complete failure in AL/LA/SC across all 28 parameters, while EW succeeds robustly in 4/5 states."
   - id: P1-4
     title: "No statistical rigor"
-    addressed: false
+    addressed: true
+    resolution: "Section 5.6 added: Wilson 95% CI for MC (28.3%-43.9%) and EW (39.8%-56.1%) config-level success rates; chi-square test chi2(1)=4.243, p=0.039 (significant); Table 6 per-state best-config variance from 30 seeds (all zero, confirming deterministic outcomes); Table 7 phase-2 population estimates from 140 runs/state with CI upper bound 2.7% for zero-success states. All data from existing results/phase1_statistics.csv and results/phase2_state_samples.csv."
 
 # PP1 items from panel review
 pp1_items: []
@@ -98,3 +99,6 @@ history:
   - date: "2026-02-08"
     stage: revision
     note: "P1-3 COMPLETE: Balanced experimental design - expanded multi-constraint from 4 to 28 configs per state (140 total). Fair comparison 140 vs 140: MC 35.7% vs EW 47.9%, gap 12.1 pp. Critical finding: MC shows extreme state dependency with complete failure in AL/LA/SC across all 28 parameters. EW more robust (4/5 states succeed). P1-1/2/3 complete, P1-4 remaining."
+  - date: "2026-05-02"
+    stage: revision
+    note: "P1-4 COMPLETE: Added Section 5.6 'Statistical Rigor' with Wilson 95% CI (MC: 28.3%-43.9%, EW: 39.8%-56.1%), chi-square test chi2(1)=4.243 p=0.039, per-state 30-seed variance table (all zero SD confirming deterministic outcomes), and 140-run/state population estimates with CI upper bound 2.7% for zero-success states. All four P1 items now addressed; paper ready for Round 2 review."
