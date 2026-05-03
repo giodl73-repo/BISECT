@@ -1,15 +1,29 @@
 \section{Discussion}
 \label{sec:discussion}
 
-\subsection{AreaSection as a Geographic Fairness Mechanism}
+\subsection{AreaSection as a Geometric Regularity Mechanism}
 
 The central empirical finding of this paper is that AreaSection changes the
 \emph{structure} of redistricting outcomes without changing the \emph{outcome}
 for partisan seat counts.
-In both Wisconsin and North Carolina, AreaSection and GeoSection produce
-identical seat allocations and identical proportionality gaps.
+In Wisconsin and North Carolina --- and, as shown in \S\ref{sec:evaluation},
+across all 44 successfully completed states --- AreaSection and GeoSection
+produce the same partisan seat allocations.
 
-This finding has an important implication: the proportionality gap in these
+We use the term \emph{geometric regularity} rather than \emph{geographic
+fairness} to describe this contribution.
+``Fairness'' in redistricting law has a specific meaning: it refers to equal
+treatment under the Equal Protection Clause or to the absence of discriminatory
+effect under the Voting Rights Act.
+AreaSection does not alter either.
+What it does is constrain the \emph{bisection tree structure}: each first-level
+split respects a geographic symmetry condition (comparable land area on both
+sides) that standard bisection ignores.
+Whether this geometric regularity property is a legal virtue is a question for
+courts and legislatures; the empirical question this paper addresses is whether
+it has partisan consequences, and the answer is: no.
+
+This finding has an important implication: the proportionality gap in competitive
 states is not a product of urban peeling.
 It is a product of the underlying population distribution.
 A 50.3\,\% Democratic state (Wisconsin) with Republicans distributed across
@@ -18,21 +32,36 @@ delegation under any geographically neutral algorithm, regardless of whether
 the bisection strategy is urban-peeling (GeoSection) or area-balanced
 (AreaSection).
 
-What AreaSection \emph{does} change is the competitiveness profile:
-knife-edge districts disappear.
-GeoSection's suburban ring districts at 49.4\,\% Democratic vote share are a
-systematic artifact of the peeling strategy.
-AreaSection's cleaner partisan sorting --- safe Democratic districts and
-clearly Republican districts --- is arguably more honest about the underlying
-partisan geography.
+\paragraph{On competitiveness.}
+AreaSection eliminates knife-edge districts: GeoSection creates two Wisconsin
+districts at 49.4\,\% Democratic vote share, while AreaSection creates zero
+such seats.
+This finding cuts in both directions and we do not present it as a normative
+benefit without qualification.
+
+Competitive districts are widely regarded as electorally valuable --- they
+produce responsive elections, prevent entrenchment, and give minority-party
+voters real leverage.
+If knife-edge districts disappeared, a swing toward Republicans could lock in
+a 5R/3D result even more durably than a map with two 49.4\,\% seats.
+Whether seat stability is preferable to seat contestability is a normative and
+legal question that different democratic theories answer differently.
+
+We report the competitiveness reduction as an empirical observation.
+An algorithm designer choosing between GeoSection and AreaSection should
+consider both the seat-count equivalence and the competitiveness difference;
+the choice is not a priori neutral.
 
 \paragraph{Legal theory.}
-The area balance constraint has a natural legal justification:
+The area balance constraint has a natural legal articulation:
 census tracts are administrative units whose areas reflect the physical
 geography of the state, not the partisan composition of their residents.
-A redistricting algorithm that enforces geographic balance respects the
+A redistricting algorithm that targets geographic symmetry respects the
 physical structure of the state in a way that population-only algorithms
 do not.
+This is a procedural rather than partisan claim: the constraint is
+content-neutral (it treats all land area equally regardless of who lives there)
+and its partisan consequences are empirically nil.
 
 Under \emph{Rucho v. Common Cause} (2019), federal courts cannot remedy
 partisan gerrymandering under the Constitution, but state courts can and

@@ -71,6 +71,17 @@ Lorenz-infeasibility is a necessary condition for infeasibility under the
 contiguity constraint.
 \end{proof}
 
+\begin{remark}[Necessary, not sufficient]
+Proposition~\ref{prop:lorenz-feasibility} establishes a \emph{necessary} but
+not \emph{sufficient} condition for feasibility.
+A ratio may be \emph{Lorenz-feasible} (the interval overlaps the allowed area
+window) yet infeasible for the \emph{contiguous} partitioning problem that METIS
+solves: geographic chokepoints, elongated state shapes, and connected-subgraph
+requirements all tighten the achievable set beyond the non-contiguous lower bound.
+We use ``Lorenz-feasible ratio'' throughout to mean a ratio passing this filter,
+not a ratio for which METIS is guaranteed to succeed.
+\end{remark}
+
 \noindent\textbf{Natural ratio.}
 The Lorenz curve also identifies the \emph{natural population fraction}: the
 value $p^* = L(0.5)$, i.e., the population fraction contained in the densest
@@ -107,23 +118,43 @@ Each METIS call constructs a graph with $\mathtt{ncon}=2$ vertex weights
 \]
 specifying that partition 0 targets $i/k$ of the population and 50\,\% of
 the land area, and partition 1 targets the remainder.
-The $\mathtt{ubvec} = [1.001, 1.10]$ allows 0.1\,\% population imbalance and
-10\,\% area imbalance.
+The $\mathtt{ubvec} = [1.001, 1.10]$ specifies \emph{soft} imbalance tolerances:
+METIS \emph{targets} 0.1\,\% population balance and 10\,\% area balance but may
+exceed the area tolerance when the two constraints conflict.
+Because population balance uses a tighter tolerance ($\mathtt{ubvec}[0] = 1.001$),
+METIS prioritises population over area when they cannot be simultaneously
+satisfied.
+The correct interpretation is that AreaSection \emph{penalises} area imbalance
+and \emph{targets} geographic balance; it does not \emph{enforce} a hard area
+constraint.
 
 Area values are scaled from square metres to hectares ($\div 10{,}000$) to
 remain within METIS's 32-bit integer range.
 Wisconsin's largest census tract has 138{,}992 hectares, well within the
 $2^{31} - 1 \approx 2.1 \times 10^9$ limit.
 
+\paragraph{Contiguity.}
+The bisection path does not set METIS's \texttt{-contig} option at the
+$\mathtt{ncon}=1$ recursive levels.
+For planar census tract graphs, METIS empirically produces contiguous partitions
+without the flag, as established by the metis\_format.rs documentation in the
+reference implementation.
+Contiguity is not \emph{algorithmically} guaranteed; it is \emph{empirically}
+reliable for US state adjacency graphs.
+States where a non-contiguous partition is detected (rare) trigger a post-hoc
+repair that reassigns isolated components to the adjacent partition.
+
 \subsection{Recursive Structure}
 
 After the top-level natural ratio is determined, AreaSection recurses into
 each half using GeoSection's standard ratio-scanning bisection with
 \emph{population-only} vertex weights ($\mathtt{ncon}=1$).
-The area constraint applies only at the first level.
+The area constraint applies only at the first bisection level.
 This design reflects the legal theory: the natural ratio is the geographic
 structure of the state, and subsequent levels are standard minimum-edge-cut
 bisection within each geographic half.
+The geographic balance property is therefore a first-level property of the
+bisection tree, not a guarantee on individual district areas.
 
 The full algorithm is:
 \begin{enumerate}

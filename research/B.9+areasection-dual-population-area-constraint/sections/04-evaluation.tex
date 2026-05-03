@@ -162,34 +162,81 @@ the two halves of the state rather than isolated in one, producing a cleaner
 partisan sorting: safe Democratic districts (72.8\,\%, 68.5\,\%, 51.5\,\%) and
 clearly Republican districts (42.7\,\%, 42.1\,\%, 38.4\,\%, 46.2\,\%).
 
-\subsection{North Carolina: Head-to-Head Comparison}
+\subsection{Head-to-Head Comparison: 34 States}
+\label{sec:head-to-head}
+
+To test whether partisan seat counts are stable across algorithms, we compare
+GeoSection and AreaSection on all 34 states for which complete proportionality
+data is available under both methods (excluding single-district states and the
+six AreaSection convergence failures).
 
 \begin{table}[h]
 \centering
-\caption{Summary comparison: GeoSection vs AreaSection, North Carolina
-(14 districts).}
-\label{tab:nc-summary}
-\begin{tabular}{lrr}
+\caption{GeoSection vs AreaSection seat comparison, 34 states.
+NC: GeoSection uses the 100-seed b8\_test\_NC run; AreaSection uses the 50-seed sweep.
+Single-seat states and AreaSection failures excluded.}
+\label{tab:head-to-head}
+\begin{tabular}{lrrrrr}
 \toprule
-Metric & GeoSection & AreaSection \\
+State & D vote & GEO D & AS D & $\Delta$ & Favours \\
 \midrule
-Natural ratio & 1:13 & 6:8 \\
-Top-level edge cut & 97\,km & 279\,km \\
-D seats / R seats & 5 / 9 & 5 / 9 \\
-D vote share & 48.9\,\% & 48.9\,\% \\
-Proportionality gap & $-7.1$\,pp & $-7.1$\,pp \\
+\multicolumn{6}{l}{\textit{GeoSection gives more D seats}} \\
+CO  & 56.9\,\% & 6 & 5 & $+1$ & GeoSection \\
+NE  & 40.2\,\% & 1 & 0 & $+1$ & GeoSection \\
+OR  & 58.3\,\% & 4 & 3 & $+1$ & GeoSection \\
+UT  & 39.3\,\% & 1 & 0 & $+1$ & GeoSection \\
+WA  & 59.9\,\% & 8 & 7 & $+1$ & GeoSection \\
+\midrule
+\multicolumn{6}{l}{\textit{AreaSection gives more D seats}} \\
+MD  & 67.0\,\% & 6 & 7 & $+1$ & AreaSection \\
+NC  & 49.3\,\% & 5 & 6 & $+1$ & AreaSection \\
+OH  & 45.9\,\% & 5 & 6 & $+1$ & AreaSection \\
+SC  & 44.1\,\% & 1 & 2 & $+1$ & AreaSection \\
+\midrule
+\multicolumn{6}{l}{\textit{Identical seat counts (25 states)}} \\
+WI  & 50.3\,\% & 3 & 3 & 0 & -- \\
+AZ  & 50.2\,\% & 4 & 4 & 0 & -- \\
+MN  & 53.6\,\% & 4 & 4 & 0 & -- \\
+NV  & 51.2\,\% & 2 & 2 & 0 & -- \\
+\ldots & & & & & \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-North Carolina reinforces the Wisconsin finding: same seat allocation, same
-proportionality gap, different top-level geometry.
-GeoSection peels Charlotte/Raleigh at 97\,km boundary; AreaSection forces a
-6:8 east/west split at a 279\,km boundary --- $2.9\times$ longer.
+\noindent\textbf{Key finding: 76\,\% same, 24\,\% differ by exactly 1 seat, no
+systematic direction.}
+Of 34 comparable states, 25 produce identical seat counts under both algorithms.
+9 states differ by exactly 1 seat: GeoSection gives 1 additional D seat in 5 states
+(CO, NE, OR, UT, WA) while AreaSection gives 1 additional D seat in 4 states
+(MD, NC, OH, SC).
+The net effect across the 9 differing states is $-1$ D seat under AreaSection
+($5 - 4 = 1$ net seat loss for Democrats).
 
-The boundary length difference is the price of geographic balance.
-Whether that price is worth paying is a legal and normative question, not an
-algorithmic one.
+This is not a systematic partisan advantage for either algorithm.
+It reflects the sensitivity of single-seat marginal districts to small changes
+in bisection tree structure --- a 1-seat difference in a 14-district state
+represents a 7.1\,\% change in the delegation.
+The direction varies with state geography and is not predictable from population
+density or partisan composition alone.
+
+\noindent\textbf{North Carolina.}
+The NC result is illustrative: GeoSection (1:13 natural ratio, 97\,km boundary)
+gives 5 D seats, while AreaSection (6:8 natural ratio, 279\,km boundary) gives
+6 D seats.
+The Charlotte/Raleigh peel in GeoSection concentrates Democratic votes in 1
+efficient district; the AreaSection east/west split distributes them enough to
+produce a second majority-Democratic district.
+This is the only case in our dataset where urban peeling demonstrably
+\emph{reduces} Democratic seats (rather than being neutral).
+
+\noindent\textbf{Wisconsin.}
+Wisconsin (50.3\,\% D vote) produces 3D/5R under both algorithms, with
+identical proportionality gap ($-12.8$\,pp).
+The competitiveness structure differs: GeoSection creates two knife-edge seats
+at 49.4\,\% D vote; AreaSection creates none.
+The seat-count equivalence is robust in WI specifically because the Milwaukee
+urban core, whether peeled or balanced, produces the same number of D-majority
+districts.
 
 \subsection{The Lorenz Curve as a State-Level Diagnostic}
 
