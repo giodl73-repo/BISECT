@@ -191,6 +191,74 @@ fn split_weighted_produces_valid_partition() {
 
 // ── Golden RNG determinism pin ─────────────────────────────────────────────
 
+// ── Contiguity tests ───────────────────────────────────────────────────────
+
+/// A spider: one hub connected to 5 chains of 4 vertices each (21 vertices total).
+fn make_spider() -> CsrGraph {
+    // Hub = vertex 0, legs = vertices 1-4, 5-8, 9-12, 13-16, 17-20
+    let n = 21usize;
+    let mut xadj = vec![0u32];
+    let mut adjncy = Vec::new();
+    for v in 0..n {
+        let mut nbrs = Vec::new();
+        if v == 0 {
+            // Hub connects to 5 leg starts
+            for leg in 0..5usize { nbrs.push(1 + leg * 4); }
+        } else {
+            let leg = (v - 1) / 4;
+            let pos = (v - 1) % 4;
+            let leg_start = 1 + leg * 4;
+            if pos > 0 { nbrs.push(leg_start + pos - 1); }  // prev in chain
+            if pos < 3 { nbrs.push(leg_start + pos + 1); }  // next in chain
+            if pos == 0 { nbrs.push(0); }  // first in chain connects to hub
+        }
+        for &u in &nbrs { adjncy.push(u as u32); }
+        xadj.push(adjncy.len() as u32);
+    }
+    CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+}
+
+#[test]
+fn all_oracle_partitions_are_contiguous() {
+    use redist_metis::graph::check_contiguity;
+
+    let test_cases: Vec<(CsrGraph, u32)> = vec![
+        (make_path(10), 2),
+        (make_grid(4, 4), 4),
+        (make_dumbbell(), 2),
+        (make_spider(), 3),
+        (make_spider(), 5),
+    ];
+
+    for (g, k) in test_cases {
+        let p = MetisPartitioner::with_params(MetisParams::default(), k)
+            .split(&g, k, Some(42))
+            .unwrap();
+        assert!(
+            check_contiguity(&g, &p).is_ok(),
+            "partition k={k} n={} is not contiguous", g.n()
+        );
+    }
+}
+
+#[test]
+fn repair_contiguity_fixes_broken_partition() {
+    use redist_metis::graph::{repair_contiguity, check_contiguity};
+
+    // Manually construct a non-contiguous partition on path-6
+    // Path: 0-1-2-3-4-5, partition: [0,0,1,1,0,0] -> part 0 is disconnected (0,1 vs 4,5)
+    let g = make_path(6);
+    let mut p = redist_metis::Partition {
+        assignment: vec![0, 0, 1, 1, 0, 0],
+        k: 2,
+        tpwgts: None,
+    };
+    assert!(check_contiguity(&g, &p).is_err(), "partition should be non-contiguous before repair");
+    let reassigned = repair_contiguity(&g, &mut p);
+    assert!(reassigned > 0, "repair should have moved vertices");
+    assert!(check_contiguity(&g, &p).is_ok(), "partition should be contiguous after repair");
+}
+
 /// Run with `cargo test generate_golden -- --ignored` to regenerate.
 /// Commit the resulting tests/golden/vt_seed42.json.
 /// Regenerate ONLY when rand_pcg is intentionally upgraded.
