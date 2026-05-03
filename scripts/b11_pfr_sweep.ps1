@@ -64,8 +64,9 @@ $statesToRun = if ($States) {
     $allStates.GetEnumerator() | Where-Object { $done -notcontains $_.Key }
 }
 
-# Write CSV header if new file
-if (-not (Test-Path $csvPath) -or $Force) {
+# Write CSV header if new file or full-reset (all states + Force)
+$fullReset = $Force -and (-not $States)
+if (-not (Test-Path $csvPath) -or $fullReset) {
     "state,n_districts,factor_sequence,split_tree,dem_vote_pct,dem_seats,rep_seats,proportionality_gap_pp,ec_km,available" | Set-Content $csvPath -Encoding utf8
 }
 
