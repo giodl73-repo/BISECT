@@ -42,6 +42,15 @@ g.n() <= max(coarsen_to * k, 40)
 
 **Key distinction from HEM**: SHEM processes high-connectivity vertices first, producing better quality coarsened graphs. The sort MUST be bucket sort, not comparison sort.
 
+**Approximation vs original METIS SHEM**: The original METIS SHEM (Karypis & Kumar 1998)
+sorts vertices by the *sum* of edge weights incident to already-matched heavy neighbors,
+providing a better estimate of the actual coarsened edge weight after matching.
+This implementation sorts by *max* incident edge weight, which is simpler (O(n+m) bucket
+sort over the max-weight domain) and still effective. The approximation is conservative:
+it overestimates coarsening quality for vertices with many heavy edges but one very heavy
+edge, versus vertices with uniformly moderate edges. For census tract graphs with natural
+geographic locality, the practical difference is negligible.
+
 ### MinDegreeMatch
 1. Sort vertices by degree ascending (comparison sort, O(n log n))
 2. For each vertex in order: match with heaviest unmatched neighbor

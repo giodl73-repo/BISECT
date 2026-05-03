@@ -1,6 +1,7 @@
 {
   "generated": "2026-05-02",
   "note": "Criterion p50 on synthetic grid graphs matching real state tract counts. 1s warmup, 3s measurement, 100 samples, release profile. Workspace: feature/redist-metis-rust-port.",
+  "real_data_note": "Benchmarks use synthetic grid graphs for portability. For irregular census tract topology verification, use: redist state --state CA --year 2020 --time-partition (measures ~730ms debug / ~50ms release for CA k=53 on real 9129-tract adjacency). Grid graphs are regular; real census graphs have higher-degree hub vertices near urban centers.",
   "benchmarks": {
     "vt_bisect_k1_n255":    { "median_ms": 0.057, "k": 1,  "n": 255  },
     "pa_kway_k17_n5256":    { "median_ms": 3.564, "k": 17, "n": 5256 },

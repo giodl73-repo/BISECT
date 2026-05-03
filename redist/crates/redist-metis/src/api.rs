@@ -1,4 +1,4 @@
-use crate::{graph::{CsrGraph, Partition}, error::PartitionError};
+use crate::{graph::{CsrGraph, Partition, repair_contiguity}, error::PartitionError};
 pub use crate::coarsen::Coarsener;
 pub use crate::init::InitialPartitioner;
 pub use crate::refine::Refiner;
@@ -118,10 +118,18 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         let rng_seed = self.params.seed.or(seed).unwrap_or(0xDEAD_BEEF_CAFE_1234u64);
 
         let hierarchy = CoarseningHierarchy::build(g, &self.coarsener)?;
-        let p = Pipeline::new(hierarchy)
+        let mut p = Pipeline::new(hierarchy)
             .initial_partition(&self.init, k, rng_seed)
             .refine_and_project(&self.refiner)
             .into_partition();
+
+        // Contiguity check: repair if needed (METIS Contig guarantee)
+        let reassigned = repair_contiguity(g, &mut p);
+        if reassigned > 0 {
+            // Only warn in debug builds; production runs are quiet
+            #[cfg(debug_assertions)]
+            eprintln!("[redist-metis] contiguity repair: reassigned {reassigned} vertices in partition k={k}");
+        }
 
         Ok(p)
     }
@@ -161,6 +169,11 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         // Build initial partition and attach tpwgts so FM can use per-part targets
         let init_p = {
             let mut p = self.init.partition(hierarchy.coarsest(), k, rng_seed);
+            // tpwgts applies to constraint 0 (total population) only.
+            // When ncon > 1 (e.g. total_pop + VAP for VRA), constraints 1..ncon
+            // use equal-weight balance targets. This is correct for redistricting:
+            // seat allocation (fracs) is based on total population, not VAP.
+            // See: Schloegel, Karypis & Kumar (2002) §3.2 multi-constraint semantics.
             p.tpwgts = Some(tpwgts);
             p
         };
