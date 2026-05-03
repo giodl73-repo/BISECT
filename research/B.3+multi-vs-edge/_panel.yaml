@@ -3,8 +3,8 @@
 
 paper_id: gerry-multi-vs-edge
 title: "Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Asymmetric Redistricting Goals"
-stage: ready
-round: 1
+stage: recheck
+round: 2
 
 # Target venue
 venue:
@@ -50,6 +50,23 @@ scores:
     - reviewer: "Moon Duchin"
       score: 3
   average_round1: 2.6
+  round2:
+    - reviewer: "George Karypis"
+      score: 3.0
+      verdict: "Accept with minor revisions"
+    - reviewer: "Cynthia A. Phillips"
+      score: 3.0
+      verdict: "Accept with minor revisions"
+    - reviewer: "Bruce Hendrickson"
+      score: 3.5
+      verdict: "Accept with minor revisions (no re-review)"
+    - reviewer: "William J. Cook"
+      score: 3.5
+      verdict: "Accept with minor revisions (no re-review)"
+    - reviewer: "Moon Duchin"
+      score: 3.5
+      verdict: "Accept with minor revisions"
+  average_round2: 3.3
 
 # P1 items from synthesis
 p1_items:
@@ -102,3 +119,6 @@ history:
   - date: "2026-05-02"
     stage: revision
     note: "P1-4 COMPLETE: Added Section 5.6 'Statistical Rigor' with Wilson 95% CI (MC: 28.3%-43.9%, EW: 39.8%-56.1%), chi-square test chi2(1)=4.243 p=0.039, per-state 30-seed variance table (all zero SD confirming deterministic outcomes), and 140-run/state population estimates with CI upper bound 2.7% for zero-success states. All four P1 items now addressed; paper ready for Round 2 review."
+  - date: "2026-05-02"
+    stage: recheck
+    note: "Round 2 reviews generated. Average score 3.3/4. All reviewers move to 'Accept with minor revisions'. Karypis 3.0 (wants complete METIS command lines + abstract rewrite to lead with state-level evidence). Phillips 3.0 (wants reproducibility appendix, Polsby-Popper for best configs, abstract restructuring). Hendrickson 3.5 (wants ablation acknowledgment, scope qualification in conclusion, Georgia anomaly paragraph). Cook 3.5 (wants SC feasibility limitation statement, decision threshold table, METIS invocation appendix). Duchin 3.5 (wants Gingles Prong 1 compactness paragraph, aggregate-vs-group-specific VAP framing statement, one Alabama map). No re-review required from Hendrickson, Cook; Karypis and Phillips want final pass confirmation; Duchin does not require re-review."
