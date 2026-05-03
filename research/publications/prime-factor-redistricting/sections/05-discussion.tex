@@ -4,7 +4,7 @@
 \subsection{The Constitutional Argument}
 \label{sec:discussion:constitutional}
 
-PFR's key constitutional claim is that the map arises from Article~I~\S2
+AR's key constitutional claim is that the map arises from Article~I~\S2
 (apportionment) rather than from \S4 (Manner). The argument proceeds in
 three steps.
 
@@ -12,31 +12,31 @@ three steps.
 The Huntington-Hill method assigns each state a seat count $n$ such that
 $n$ is the integer closest to $P / (435/\sum P_i)$ (subject to the priority
 rule). This count is not arbitrary --- it is the output of a constitutional
-mathematical process. PFR claims that $n$ also determines the \emph{structure}
+mathematical process. AR claims that $n$ also determines the \emph{structure}
 of the map: not as an additional choice, but as an arithmetic consequence.
 
 \paragraph{Step 2: The map IS the apportionment extended to geography.}
 Just as Huntington-Hill partitions the 435 seats among 50 states using a
-priority rule, PFR partitions each state's geography into $n$ pieces using
+priority rule, AR partitions each state's geography into $n$ pieces using
 the prime factorization of $n$. The same constitutional act that produces $n$
-also, through PFR, produces the map. No separate ``districting decision'' is
+also, through AR, produces the map. No separate ``districting decision'' is
 required.
 
 \paragraph{Step 3: No additional degrees of freedom --- including the seed.}
-The only choices in PFR are (a) the prime factorization of $n$ (uniquely
+The only choices in AR are (a) the prime factorization of $n$ (uniquely
 determined by arithmetic) and (b) the minimum $k$-way cut at each level
 (uniquely determined by TIGER geography, up to tie-breaking). Compare to
 manual redistricting, which introduces thousands of degrees of freedom that
 can be set to achieve partisan outcomes.
 
 The seed-invariance result (\S\ref{sec:eval:seeds}) removes even the last
-apparent degree of freedom. PFR with $n = 14$ and $G = \text{NC's census graph}$
+apparent degree of freedom. AR with $n = 14$ and $G = \text{NC's census graph}$
 produces the same 7D/7R partition from any METIS seed. The METIS seed is
 not a free parameter in practice: the map is fully determined by $n$ and $G$.
-PFR therefore has \emph{literally zero} degrees of freedom: no seed choice,
+AR therefore has \emph{literally zero} degrees of freedom: no seed choice,
 no area measure, no shape metric, no weighting scheme.
 
-This argument implies that a statute requiring PFR is not merely a Manner
+This argument implies that a statute requiring AR is not merely a Manner
 regulation (\S4) subject to state override prior to congressional action
 --- it is an exercise of the apportionment power (\S2), which is exclusively
 federal.
@@ -78,7 +78,7 @@ Several seat count transitions are structurally extreme:
 \end{itemize}
 
 These transitions are mathematically inevitable, not arbitrary. Their
-existence demonstrates that PFR takes the arithmetic of seat counts seriously
+existence demonstrates that AR takes the arithmetic of seat counts seriously
 --- the map structure follows from number theory, not from political convenience.
 
 \subsection{Limitations}
@@ -86,7 +86,7 @@ existence demonstrates that PFR takes the arithmetic of seat counts seriously
 
 \paragraph{Seed invariance revisited.}
 The empirical zero-variance result (\S\ref{sec:eval:seeds}) resolves the
-convergence concern for partisan outcomes: PFR does not require a seed-sweep
+convergence concern for partisan outcomes: AR does not require a seed-sweep
 protocol because the outcomes are identical across seeds. However, seed
 invariance does not extend to the exact boundary positions of tracts near
 district edges. The assignment of a census tract that is equally close to two
@@ -101,16 +101,16 @@ top-level splits involving large primes ($k \geq 7$), the achieved per-part
 imbalance can reach 1--2\% due to the difficulty of balancing $k > 5$ equal
 parts on irregular planar graphs. The final district populations for NC
 (1.32\%) and GA (1.53\%) do not meet the statutory $\pm 0.5\%$ standard
-required by \emph{Wesberry v.\ Sanders}. Production deployment of PFR would
+required by \emph{Wesberry v.\ Sanders}. Production deployment of AR would
 require a post-processing step (e.g.\ a greedy tract-swap refinement that
 moves tracts between adjacent over- and under-populated districts until all
 districts are within tolerance) before the plan could be legally certified.
 
 \paragraph{GerryChain comparison.}
-The evaluation compares PFR to MEC (minimum-edge-cut via recursive bisection).
+The evaluation compares AR to MEC (minimum-edge-cut via recursive bisection).
 A comparison to sampling-based methods (GerryChain \citep{duchin2019gerrychain},
-ReCom) would situate PFR in the broader landscape: sampling methods explore the
-plan space while PFR selects a single canonical plan. Whether PFR's canonical
+ReCom) would situate AR in the broader landscape: sampling methods explore the
+plan space while AR selects a single canonical plan. Whether AR's canonical
 plan is typical or atypical within the GerryChain distribution is an open
 question and a natural direction for future work.
 
@@ -123,7 +123,7 @@ an open problem.
 \subsection{The Minimum-Three Threshold and Partisan Proportionality}
 \label{sec:discussion:min3}
 
-PFR's constitutional argument is most compelling when every state has at least
+AR's constitutional argument is most compelling when every state has at least
 three representatives, because only then can the prime-factorisation tree provide
 a non-trivial two-level geographic decomposition for all states.
 States with $k = 1$ have no factorisation; states with $k = 2$ reduce to a
@@ -190,25 +190,25 @@ At 1{,}405 seats ($k \geq 3$ for all states):
 \item Every state can return minority-party representation for a party
   with $\geq 25$\% of the statewide vote (one of three seats).
 \item The average effective threshold drops further to 7.9\%.
-\item PFR's prime-factorisation tree is non-trivial for all 50 states,
-  enabling the two-level geographic decomposition that makes PFR's
+\item AR's prime-factorisation tree is non-trivial for all 50 states,
+  enabling the two-level geographic decomposition that makes AR's
   constitutional argument strongest.
 \end{itemize}
 
-\paragraph{Connection to the PFR constitutional claim.}
+\paragraph{Connection to the AR constitutional claim.}
 The minimum-three threshold is not merely a curiosity.
-It is the point at which PFR's analogy between apportionment and redistricting
+It is the point at which AR's analogy between apportionment and redistricting
 is \emph{complete}: just as Huntington-Hill allocates seats proportionally
 among states (no state is ``winner-take-all'' for the full allocation),
-a 1{,}405-seat House with PFR would produce maps in which no state is
+a 1{,}405-seat House with AR would produce maps in which no state is
 winner-take-all at the congressional delegation level.
 The two mechanisms --- Huntington-Hill for interstate apportionment,
-PFR for intrastate geographic decomposition --- would form a coherent
+AR for intrastate geographic decomposition --- would form a coherent
 proportionality system from the national level down to the district level.
 
 Under the current 435-seat House, this coherence is incomplete: six states
-remain winner-take-all single-member districts, exempt from PFR's
+remain winner-take-all single-member districts, exempt from AR's
 geographic decomposition by the constitutional floor.
 Expanding the House to 812 seats would eliminate winner-take-all single-member
 districts entirely; reaching 1{,}405 would guarantee the three-seat minimum
-that makes the PFR tree non-trivial for every state.
+that makes the AR tree non-trivial for every state.

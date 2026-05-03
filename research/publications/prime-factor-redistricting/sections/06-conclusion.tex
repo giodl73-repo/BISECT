@@ -1,7 +1,7 @@
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have introduced Prime-Factored Redistricting (PFR), an algorithm that
+We have introduced ApportionRegions (AR), an algorithm that
 generates congressional district maps by applying the prime factorization of
 the apportioned seat count as a hierarchical geographic partition. The
 algorithm has two inputs: arithmetic (the prime factorization of $n$) and
@@ -15,19 +15,19 @@ common prefix, and complete structural breaks when they do not --- follow
 directly from the Fundamental Theorem of Arithmetic. The map is as
 non-arbitrary as the seat count itself.
 
-The constitutional argument is that PFR extends Huntington-Hill
+The constitutional argument is that AR extends Huntington-Hill
 (Article~I~\S2) from seat allocation to geographic allocation, rather than
 invoking the Manner clause (\S4) as a separate authority. The apportionment
 process, taken to its geographic conclusion, produces the map.
 
 The most striking empirical finding is the $51 \to 52$ California transition,
 where consecutive seat counts have completely disjoint prime structures,
-forcing a full map redesign. This is not a defect of PFR --- it is a
+forcing a full map redesign. This is not a defect of AR --- it is a
 consequence of the mathematics. Any redistricting algorithm that takes the
-arithmetic of seat counts seriously will face the same transitions. PFR makes
+arithmetic of seat counts seriously will face the same transitions. AR makes
 them visible and principled.
 
 Future work: seed sensitivity of $k$-way METIS for large prime $k$;
 formal proof of uniqueness for prime-$k$ minimum cuts; empirical
 disruption study for 2010$\to$2020 reapportionment transitions;
-and the PFR-smooth variant for minimising tract reassignments.
+and the AR-smooth variant for minimising tract reassignments.

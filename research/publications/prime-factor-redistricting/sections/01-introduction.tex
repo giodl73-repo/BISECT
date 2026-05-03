@@ -27,13 +27,13 @@ partitioning, this hierarchy produces a congressional map with two inputs only:
         geography, derived from federal public records.
 \end{enumerate}
 No political data enters. No human boundary choices are made. The resulting
-\emph{Prime-Factored Redistricting} (PFR) algorithm is a direct geographic
+\emph{ApportionRegions} (AR) algorithm is a direct geographic
 extension of Huntington-Hill: the same constitutional process that decides how
 many seats a state receives also decides, without further human input, where
 those seats are located.
 
 \paragraph{The reuse property.}
-The most practically significant feature of PFR is that geographic splits are
+The most practically significant feature of AR is that geographic splits are
 computed once and reused. The canonical 2-way minimum-cut partition of a state
 (``the bisection'') is computed once and applies to every even seat count.
 The canonical 3-way partition applies to every seat count divisible by~3.
@@ -45,7 +45,7 @@ contains its census tracts, and that leaf's ancestry is preserved across all
 seat counts sharing the same prime structure at that level.
 
 \paragraph{The discontinuity problem.}
-PFR also makes visible a previously unrecognized structural phenomenon:
+AR also makes visible a previously unrecognized structural phenomenon:
 consecutive seat counts can have disjoint prime factorizations, causing
 complete structural breaks in the map. California currently has 52 seats
 ($52 = 2^2 \times 13$); the preceding apportionment gave it 53 seats
@@ -55,27 +55,27 @@ whole state. Going from 51 ($= 3 \times 17$) to 52 ($= 4 \times 13$)
 replaces a ternary top level with a binary one. These discontinuities are
 \emph{mathematically forced}, not arbitrary: they reflect the prime
 structure of the integers, not political choices. We characterize when such
-breaks occur and propose a continuity-preserving variant (PFR-smooth) that
+breaks occur and propose a continuity-preserving variant (AR-smooth) that
 minimises structural change across reapportionments.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{Algorithm}: The PFR algorithm --- a deterministic,
+  \item \textbf{Algorithm}: The AR algorithm --- a deterministic,
         prime-factorization-guided redistricting procedure with formal
         reuse semantics and a two-input specification (prime factorization
         + census geography).
-  \item \textbf{Constitutional argument}: A formal claim that PFR maps
+  \item \textbf{Constitutional argument}: A formal claim that AR maps
         arise from Article~I~\S2 (apportionment) rather than \S4 (Manner),
         shifting the constitutional footing and removing the ``separate
         districting question.''
   \item \textbf{Reuse theorem}: A proof that prime-$p$ splits are
         canonical and reusable, and that the factorization tree is unique
         given the minimum-cut at each level.
-  \item \textbf{Empirical evaluation}: Full PFR maps for all 50 states at
+  \item \textbf{Empirical evaluation}: Full AR maps for all 50 states at
         their 2020 apportionment seat counts, comparison to minimum-edge-cut
         (MEC) maps from \citet{dellaLibera2026mec}, and characterisation of
         the 51$\to$52 California discontinuity.
-  \item \textbf{PFR-smooth}: A reapportionment-stable variant that preserves
+  \item \textbf{AR-smooth}: A reapportionment-stable variant that preserves
         as much of the existing factorization tree as possible when $n$
         changes by~$\pm 1$.
 \end{enumerate}

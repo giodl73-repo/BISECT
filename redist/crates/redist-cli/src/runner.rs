@@ -53,9 +53,11 @@ pub enum SplitStrategy {
     CompactBisect { seeds_per_level: usize, epsilon: f64 },
     /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
     AreaSection { seeds_per_ratio: usize, area_swing: f64 },
-    /// PrimeFactor (B.11): hierarchical k-way partition driven by the prime
+    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
+    ProportionalSection { seeds: usize, eta: f64 },
+    /// ApportionRegions (B.11): hierarchical k-way partition driven by the prime
     /// factorization of the seat count (Huntington-Hill geographic completion).
-    PrimeFactor { seeds_per_level: usize },
+    ApportionRegions { seeds_per_level: usize },
 }
 
 impl SplitStrategy {
@@ -66,8 +68,9 @@ impl SplitStrategy {
             Self::NWay                    => "metis-vra",
             Self::GeoSection       { .. } => "geosection",
             Self::CompactBisect    { .. } => "compact-bisect",
-            Self::AreaSection      { .. } => "areasection",
-            Self::PrimeFactor      { .. } => "prime-factor",
+            Self::AreaSection           { .. } => "areasection",
+            Self::ProportionalSection   { .. } => "proportional-section",
+            Self::ApportionRegions      { .. } => "apportion-regions",
         }
     }
 }
@@ -257,12 +260,19 @@ impl AlgorithmConfig {
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
-            PM::PrimeFactor => Self {
-                split: SplitStrategy::PrimeFactor {
+            PM::ApportionRegions => Self {
+                split: SplitStrategy::ApportionRegions {
                     seeds_per_level: args.compact_seeds.max(1),
                 },
                 weights: base_weights,
                 vertex_constraints: pop_only,
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::ProportionalSection => Self {
+                split: SplitStrategy::ProportionalSection { seeds: args.geosection_seeds.max(1), eta: args.eta },
+                weights: base_weights,
+                vertex_constraints: vec![VertexConstraintKind::Population],
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
@@ -338,8 +348,15 @@ impl AlgorithmConfig {
                 metis,
                 mode_label: None,
             },
-            PM::PrimeFactor => Self {
-                split: SplitStrategy::PrimeFactor { seeds_per_level: 1 },
+            PM::ApportionRegions => Self {
+                split: SplitStrategy::ApportionRegions { seeds_per_level: 1 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::ProportionalSection => Self {
+                split: SplitStrategy::ProportionalSection { seeds: 50, eta: 1.10 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
@@ -1053,6 +1070,31 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
+        SplitStrategy::ProportionalSection { seeds, eta } => {
+            // Load D_votes from presidential_by_tract.csv
+            let election_path = std::path::PathBuf::from(format!(
+                "data/{}/elections/presidential_by_tract.csv", cfg.year));
+            if !election_path.exists() {
+                return Err(format!("{}: ProportionalSection requires {} — not found",
+                                   cfg.state_code, election_path.display()));
+            }
+            let (d_votes, _two_party) = crate::partisan_shares::load_dem_vote_counts(
+                &election_path, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("{}: load_dem_vote_counts failed: {e}", cfg.state_code))?;
+            status(cfg.position, &format!(
+                "{}: ProportionalSection {} seeds eta={:.2} (pop+D_votes ncon=2)",
+                cfg.state_code, seeds, eta));
+            let (asgn, k_d, k_r, best_ec, d_state) =
+                crate::bisection_runner::run_proportional_section(
+                    &graph.adjacency, &graph.vertex_weights, &d_votes, &edge_weights,
+                    num_districts, balance_tolerance_frac, niter, *seeds, *eta,
+                    Some(&intermediate_dir),
+                ).map_err(|e| format!("proportional-section failed: {e}"))?;
+            status(cfg.position, &format!(
+                "{}: proportional {}/{}D d={:.3} EC={:.0}km",
+                cfg.state_code, k_d, k_r, d_state, best_ec / 1000.0));
+            asgn
+        }
         SplitStrategy::CompactBisect { seeds_per_level, epsilon } => {
             let (vertex_areas, vertex_ext_perimeters) =
                 load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
@@ -1065,11 +1107,11 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 Some(&intermediate_dir),
             ).map_err(|e| format!("compact-bisect failed: {e}"))?
         }
-        SplitStrategy::PrimeFactor { seeds_per_level: _ } => {
+        SplitStrategy::ApportionRegions { seeds_per_level: _ } => {
             use redist_apportion::{PfrCompositor, MetisPartitioner, pfr_tree_depth};
             let factor_seq = redist_apportion::prime_factor_sequence(num_districts as u32);
             let depth = pfr_tree_depth(num_districts as u32).max(1);
-            status(cfg.position, &format!("{}: prime-factor partition into {} districts \
+            status(cfg.position, &format!("{}: apportion-regions partition into {} districts \
                 (F={:?}, depth={})", cfg.state_code, num_districts, factor_seq, depth));
             // Per-level tolerance: (1 + per_level)^depth ≤ 1 + final_tol.
             // Use depth+1 in denominator for margin (METIS can slightly exceed ufactor).
@@ -1086,14 +1128,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts as u32,
                 seed,
-            ).map_err(|e| format!("prime-factor failed: {e}"))?;
+            ).map_err(|e| format!("apportion-regions failed: {e}"))?;
             // Check balance at relaxed 2% — report actual deviation in manifest.
             let pfr_assignments: std::collections::HashMap<usize, usize> = result.assignment
                 .iter().enumerate().map(|(t, &d)| (t, d as usize + 1)).collect();
             let pfr_partition = redist_core::Partition::from_assignments(pfr_assignments.clone());
             let pfr_balance = pfr_partition.population_balance(&graph.vertex_weights, num_districts);
             if pfr_balance > 0.03 {
-                return Err(format!("prime-factor balance {:.1}% exceeds 3% research limit",
+                return Err(format!("apportion-regions balance {:.1}% exceeds 3% research limit",
                     pfr_balance * 100.0));
             }
             status(cfg.position, &format!("{}: balance {:.2}% (cache hits={})",
@@ -1120,7 +1162,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     }
 
     // 4. Assert population balance — retry loop closes here.
-    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::PrimeFactor { .. }) {
+    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions { .. }) {
         0.03
     } else {
         balance_tolerance
@@ -1245,7 +1287,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 SplitStrategy::GeoSection    { seeds_per_ratio }       => Some(*seeds_per_ratio),
                 SplitStrategy::AreaSection   { seeds_per_ratio, .. }   => Some(*seeds_per_ratio),
                 SplitStrategy::CompactBisect { seeds_per_level, .. }   => Some(*seeds_per_level),
-                SplitStrategy::PrimeFactor   { seeds_per_level }       => Some(*seeds_per_level),
+                SplitStrategy::ApportionRegions   { seeds_per_level }       => Some(*seeds_per_level),
                 _ => None,
             },
             split_epsilon: match &cfg.algo.split {
@@ -2568,7 +2610,7 @@ mod tests {
             ("geosection",    SplitStrategy::GeoSection { seeds_per_ratio: 50 }),
             ("compact-bisect",SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 }),
             ("areasection",   SplitStrategy::AreaSection { seeds_per_ratio: 50, area_swing: 1.10 }),
-            ("prime-factor",  SplitStrategy::PrimeFactor { seeds_per_level: 1 }),
+            ("apportion-regions",  SplitStrategy::ApportionRegions { seeds_per_level: 1 }),
         ];
         for (expected_name, variant) in all {
             assert_eq!(variant.mode_name(), *expected_name,
