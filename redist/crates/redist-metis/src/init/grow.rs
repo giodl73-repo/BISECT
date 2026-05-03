@@ -1,1 +1,221 @@
-// stub
+use rand_pcg::Pcg64;
+use rand::{Rng, SeedableRng};
+use std::collections::VecDeque;
+use crate::graph::{CsrGraph, Partition};
+use crate::init::InitialPartitioner;
+
+pub struct GrowBisect;
+pub struct GrowKway;
+
+// ── test helpers ──────────────────────────────────────────────────────────
+
+#[cfg(test)]
+fn grid_4x4() -> CsrGraph {
+    // 4×4 grid: vertex i*4+j connected to neighbours
+    let n = 16usize;
+    let mut xadj = vec![0u32];
+    let mut adjncy = Vec::new();
+    for i in 0..4usize {
+        for j in 0..4usize {
+            let mut nbrs = Vec::new();
+            if i > 0 { nbrs.push((i - 1) * 4 + j); }
+            if i < 3 { nbrs.push((i + 1) * 4 + j); }
+            if j > 0 { nbrs.push(i * 4 + (j - 1)); }
+            if j < 3 { nbrs.push(i * 4 + (j + 1)); }
+            for &u in &nbrs { adjncy.push(u as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+    }
+    CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+}
+
+#[cfg(test)]
+fn path_graph(n: usize) -> CsrGraph {
+    let mut xadj = vec![0u32];
+    let mut adjncy = Vec::new();
+    for i in 0..n {
+        if i > 0 { adjncy.push((i - 1) as u32); }
+        if i < n - 1 { adjncy.push((i + 1) as u32); }
+        xadj.push(adjncy.len() as u32);
+    }
+    CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grow_bisect_valid_partition() {
+        let g = grid_4x4();
+        let p = GrowBisect.partition(&g, 2, 42);
+        assert_eq!(p.assignment.len(), 16);
+        assert_eq!(p.k, 2);
+        assert!(p.assignment.iter().all(|&x| x < 2));
+        assert!(p.assignment.contains(&0));
+        assert!(p.assignment.contains(&1));
+    }
+
+    #[test]
+    fn grow_bisect_k1_all_zero() {
+        let g = path_graph(10);
+        let p = GrowBisect.partition(&g, 1, 0);
+        assert!(p.assignment.iter().all(|&x| x == 0));
+        assert_eq!(p.k, 1);
+    }
+
+    #[test]
+    fn grow_kway_valid_k4() {
+        let g = grid_4x4();
+        let p = GrowKway.partition(&g, 4, 99);
+        assert_eq!(p.assignment.len(), 16);
+        assert_eq!(p.k, 4);
+        assert!(p.assignment.iter().all(|&x| x < 4));
+        // All 4 parts must appear
+        for part in 0..4u32 { assert!(p.assignment.contains(&part)); }
+    }
+
+    #[test]
+    fn grow_kway_k1_all_zero() {
+        let g = path_graph(8);
+        let p = GrowKway.partition(&g, 1, 0);
+        assert!(p.assignment.iter().all(|&x| x == 0));
+    }
+}
+
+// ── implementation ────────────────────────────────────────────────────────
+
+impl InitialPartitioner for GrowBisect {
+    fn partition(&self, g: &CsrGraph, k: u32, seed: u64) -> Partition {
+        debug_assert!(g.is_valid(), "GrowBisect requires valid connected graph (PP-PLAN-02)");
+        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1 }; }
+        grow_bisect(g, k, seed)
+    }
+}
+
+impl InitialPartitioner for GrowKway {
+    fn partition(&self, g: &CsrGraph, k: u32, seed: u64) -> Partition {
+        debug_assert!(g.is_valid(), "GrowKway requires valid connected graph (PP-PLAN-02)");
+        if k == 1 { return Partition { assignment: vec![0; g.n()], k: 1 }; }
+        grow_kway(g, k, seed)
+    }
+}
+
+fn grow_bisect(g: &CsrGraph, k: u32, seed: u64) -> Partition {
+    // For k=2: BFS from 2 random seeds alternating.
+    // For k>2: delegate to grow_kway (full k-way BFS expansion).
+    if k > 2 { return grow_kway(g, k, seed); }
+
+    let n = g.n();
+    let mut rng = Pcg64::seed_from_u64(seed);
+    let mut assignment = vec![u32::MAX; n];
+
+    // Pick 2 distinct random seeds
+    let seed_a = rng.gen_range(0..n);
+    let mut seed_b = rng.gen_range(0..n);
+    while seed_b == seed_a && n > 1 {
+        seed_b = rng.gen_range(0..n);
+    }
+
+    assignment[seed_a] = 0;
+    assignment[seed_b] = 1;
+    let mut queues = [VecDeque::from([seed_a]), VecDeque::from([seed_b])];
+
+    // Count initially assigned vertices
+    let initially_assigned = if seed_a == seed_b { 1 } else { 2 };
+    let mut unassigned = n - initially_assigned;
+
+    'outer: while unassigned > 0 {
+        let mut progress = false;
+        for part in 0..2usize {
+            if let Some(v) = queues[part].pop_front() {
+                for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+                    let u = g.adjncy[j] as usize;
+                    if assignment[u] == u32::MAX {
+                        assignment[u] = part as u32;
+                        queues[part].push_back(u);
+                        unassigned -= 1;
+                        progress = true;
+                        if unassigned == 0 { break 'outer; }
+                    }
+                }
+            }
+        }
+        // If both queues empty but vertices remain (shouldn't happen on valid connected graph)
+        if !progress && queues[0].is_empty() && queues[1].is_empty() { break; }
+    }
+
+    // Safe fallback: assign any remaining (disconnected) vertices to part 0
+    for a in assignment.iter_mut() {
+        if *a == u32::MAX { *a = 0; }
+    }
+    Partition { assignment, k: 2 }
+}
+
+fn grow_kway(g: &CsrGraph, k: u32, seed: u64) -> Partition {
+    let n = g.n();
+    let k = k as usize;
+    let mut rng = Pcg64::seed_from_u64(seed);
+    let mut assignment = vec![u32::MAX; n];
+    let mut queues: Vec<VecDeque<usize>> = (0..k).map(|_| VecDeque::new()).collect();
+
+    // Pick k distinct seed vertices
+    let mut seeds: Vec<usize> = Vec::with_capacity(k);
+    let mut attempts = 0usize;
+    while seeds.len() < k && attempts < n * 10 {
+        let v = rng.gen_range(0..n);
+        if !seeds.contains(&v) {
+            seeds.push(v);
+        }
+        attempts += 1;
+    }
+    // Fallback: if we couldn't find k distinct seeds (k > n), fill with wrap-around
+    while seeds.len() < k {
+        for v in 0..n {
+            if seeds.len() >= k { break; }
+            if !seeds.contains(&v) { seeds.push(v); }
+        }
+        // Last resort: allow duplicates if n < k
+        if seeds.len() < k { seeds.push(seeds.len() % n); }
+    }
+
+    // Seed each part; duplicates will be silently skipped (already assigned)
+    let mut initially_assigned = 0usize;
+    for (part, &sv) in seeds.iter().enumerate().take(k) {
+        if assignment[sv] == u32::MAX {
+            assignment[sv] = part as u32;
+            queues[part].push_back(sv);
+            initially_assigned += 1;
+        }
+    }
+
+    let mut unassigned = n - initially_assigned;
+
+    // Round-robin BFS: one dequeue per part per round
+    let mut round_part = 0usize;
+    while unassigned > 0 {
+        let part = round_part % k;
+        round_part += 1;
+
+        if let Some(v) = queues[part].pop_front() {
+            for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+                let u = g.adjncy[j] as usize;
+                if assignment[u] == u32::MAX {
+                    assignment[u] = part as u32;
+                    queues[part].push_back(u);
+                    unassigned -= 1;
+                    if unassigned == 0 { break; }
+                }
+            }
+        }
+
+        // Circuit break: all queues empty but unassigned remains (disconnected graph)
+        if queues.iter().all(|q| q.is_empty()) { break; }
+    }
+
+    // Safe fallback for any truly unreachable vertices
+    for a in assignment.iter_mut() {
+        if *a == u32::MAX { *a = 0; }
+    }
+    Partition { assignment, k: k as u32 }
+}
