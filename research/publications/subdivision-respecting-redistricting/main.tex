@@ -1,0 +1,57 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\title{Preserving Political Subdivisions in Algorithmic Redistricting:\\
+       Governmental Hierarchy as Edge-Weight Signal}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Most state redistricting statutes list ``preserving political subdivisions''
+as an explicit criterion alongside compactness and population equality.
+Yet no algorithmic redistricting system operationalizes this criterion
+as a formal, tunable parameter.
+We introduce \emph{subdivision-respecting redistricting}: a single real-valued
+stickiness parameter $\alpha$ that makes intra-jurisdiction edges more expensive
+to cut in the METIS graph bisection framework.
+When $\alpha = 0$ the algorithm reduces to standard minimum-edge-cut bisection;
+as $\alpha \to \infty$ the algorithm will only split a county when population
+balance requires it.
+We derive the edge-weight formula from first principles, show that county
+affiliation is freely available from Census TIGER tract GEOIDs (no additional
+data download), and present 50-state empirical results for $\alpha \in \{0, 5\}$.
+At $\alpha = 5$, county splits fall by 45\% on average (14.3 $\to$ 7.8 per state)
+at a 2.5$\times$ increase in total boundary length, with no systematic partisan effect
+($+D$ in 13 states, $-D$ in 8, unchanged in 23).
+The stickiness parameter is a single published number that fully determines
+the algorithm's behavior and can be independently verified from TIGER data.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

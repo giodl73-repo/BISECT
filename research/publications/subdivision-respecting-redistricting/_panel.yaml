@@ -1,0 +1,12 @@
+paper: subdivision-respecting-redistricting
+title: "Preserving Political Subdivisions in Algorithmic Redistricting: Governmental Hierarchy as Edge-Weight Signal"
+venue: "Election Law Journal / Political Analysis"
+stage: draft
+round: 0
+content_mode: full
+series: B
+series_number: 10
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper initialized. 50-state sweep complete (seed=1, alpha=0 vs alpha=5)."

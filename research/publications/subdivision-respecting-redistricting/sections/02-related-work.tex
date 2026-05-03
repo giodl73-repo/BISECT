@@ -1,0 +1,42 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Algorithmic redistricting.}
+The METIS multilevel graph partitioning framework~\citep{Karypis1998} has become
+the standard tool for compactness-optimizing redistricting~\citep{Browdy1990,
+Liu2016}.
+Edge-weighted METIS (B.2 in this series) replaces uniform edge weights with
+TIGER boundary lengths, aligning the edge-cut objective with geographic compactness
+measured by perimeter.
+The present paper extends this by adding a second edge-weight signal: county
+membership.
+
+\paragraph{Subdivision preservation in law.}
+The legal requirement to preserve political subdivisions dates to the
+Supreme Court's reapportionment decisions of the 1960s.
+\emph{Reynolds v.\ Sims} (1964) established equal population as the primary
+federal criterion for state legislative districts.
+\emph{Rucho v.\ Common Cause} (2019) held that federal courts may not hear
+partisan gerrymandering claims, but left open state-court challenges based on
+traditional redistricting criteria including subdivision preservation.
+In \emph{Harper v.\ Hall} (2022), the North Carolina Supreme Court struck down
+a congressional map that split counties unnecessarily.
+This paper provides the first formal algorithmic operationalization of this
+statutory criterion.
+
+\paragraph{County splits in practice.}
+The Princeton Gerrymandering Project and the Redistricting Data Hub track county
+splits as a standard fairness metric.
+\citet{Chen2013} showed that randomly sampled compact plans split fewer counties
+than enacted maps in several states, suggesting enacted maps are gerrymandered
+even by this apolitical measure.
+We contribute the first large-scale comparison of how an algorithmic parameter
+($\alpha$) shifts the county-splits distribution while holding everything else
+constant.
+
+\paragraph{Composition with other criteria.}
+Recent work has studied how multiple redistricting criteria interact.
+\citet{Duchin2020} showed that compactness and VRA compliance can conflict.
+Our compositional framework (Section~\ref{sec:method}) allows $\alpha$ to be
+combined with minority-weighting~\citep[B.2]{DL2026b} or GeoSection
+splits~\citep[B.8]{DL2026c} without coupling the implementations.

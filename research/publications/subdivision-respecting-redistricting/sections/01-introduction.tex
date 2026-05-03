@@ -1,0 +1,64 @@
+\section{Introduction}
+\label{sec:intro}
+
+Congressional redistricting in the United States requires satisfying multiple
+simultaneous criteria: equal population (the one-person-one-vote standard),
+geographic compactness, contiguity, and preservation of political subdivisions
+such as counties, cities, and townships.
+While the first three criteria have been extensively studied in the algorithmic
+redistricting literature~\citep{Duchin2019, Mehrotra1998}, the fourth---preserving
+political subdivisions---has received comparatively little formal treatment.
+
+This omission is legally significant.
+Most state redistricting constitutions and statutes list subdivision preservation
+as an explicit criterion.
+California's constitution requires that ``the geographic integrity of any city,
+county, or city and county be respected.''
+Florida requires that districts not ``be drawn to favor or disfavor an incumbent
+or political party.''
+The North Carolina Supreme Court in \emph{Harper v.\ Hall} (2022) invalidated
+a map in part for excessive county splits.
+Yet when redistricting commissions adopt algorithmic methods, no existing system
+provides a formal mechanism for trading off subdivision preservation against
+compactness and population balance.
+
+We fill this gap.
+The key insight is that census tract GEOIDs encode county membership in their
+first five digits (two-digit state FIPS plus three-digit county FIPS within state),
+so county affiliation is freely available from TIGER shapefiles with no additional
+data acquisition.
+We introduce a \emph{stickiness parameter} $\alpha \geq 0$ that scales the weight
+of intra-county edges in the METIS graph:
+\begin{equation}
+  w'(u,v) = w(u,v) \cdot \bigl(1 + \alpha \cdot \mathbf{1}[\text{county}(u) = \text{county}(v)]\bigr),
+  \label{eq:weight}
+\end{equation}
+where $w(u,v)$ is the TIGER boundary length between tracts $u$ and $v$.
+Setting $\alpha = 0$ recovers standard minimum-edge-cut (MEC) bisection.
+Setting $\alpha > 0$ makes the algorithm prefer cuts that run along existing
+county lines, since those edges have lower (unmodified) weight.
+
+Our 50-state empirical evaluation (Congressional districts, 2020 Census, $\alpha = 5$)
+shows county splits fall by 45\% on average relative to MEC, with no systematic
+partisan bias.
+The tradeoff is a 2.5$\times$ increase in total boundary length---the algorithm
+is drawing longer but more politically meaningful cuts.
+
+The stickiness parameter is a single published number.
+Any independent analyst with access to the Census TIGER files can verify that
+a given plan was produced by running METIS with $\alpha = 5$, confirming that
+county splits are not a product of partisan choice but of the mechanical
+application of a statutory requirement.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item We formalize subdivision preservation as a tunable edge-weight signal
+    (Section~\ref{sec:method}), show it is derivable from TIGER data alone
+    (no partisan inputs), and prove it reduces to MEC when $\alpha = 0$.
+  \item We provide a 50-state empirical evaluation (Section~\ref{sec:eval})
+    measuring county splits, edge cut, and partisan outcomes at $\alpha \in \{0, 5\}$.
+  \item We demonstrate that subdivision-respecting redistricting is compositional:
+    $\alpha$ can be combined with any split strategy (bisection, GeoSection,
+    CompactBisect) and any other edge-weight signal (partisan, minority) through
+    the $\mathtt{EdgeWeighter}$ pipeline introduced in this series.
+\end{enumerate}

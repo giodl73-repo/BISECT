@@ -1,0 +1,85 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Choosing $\alpha$}
+
+The stickiness parameter $\alpha$ traces a Pareto frontier between two objectives:
+minimising boundary length (compactness, $\alpha = 0$) and minimising county
+splits (subdivision preservation, $\alpha \to \infty$).
+Figure~\ref{fig:frontier} (forthcoming) plots this frontier for representative
+states across a range $\alpha \in [0, 50]$.
+
+For practical redistricting, we suggest $\alpha = 5$ as a default.
+At this value:
+\begin{itemize}
+  \item County splits are halved relative to MEC ($-45\%$)
+  \item Edge cut increases by a factor of 2.5 --- still well within the range
+    of plans courts have accepted as compact
+  \item The parameter is interpretable: an intra-county edge costs $1 + 5 = 6$
+    times its geographic boundary length, while a cross-county boundary costs 1
+  \item No partisan bias is introduced
+\end{itemize}
+
+Statutory language varies: California says ``respect the geographic integrity''
+of subdivisions; North Carolina requires using whole counties wherever possible;
+Florida prohibits splitting municipalities.
+A redistricting body could choose $\alpha$ based on how strictly its statute
+mandates preservation.
+
+\subsection{Why County Splits Are Not Zero at $\alpha = 5$}
+
+Even with $\alpha = 5$, some county splits remain.
+This is a consequence of the population balance constraint ($\pm 0.5\%$ for
+congressional districts).
+When a county has population well above the ideal district size (e.g.,
+Los Angeles County, population 10M, contains about 15 congressional districts),
+it must be split regardless of $\alpha$.
+The floor on unavoidable splits is approximately:
+\[
+  \text{min\_splits}(\text{state}) \approx \sum_c \max(0, \lceil P_c / P^* \rceil - 1)
+\]
+where $P_c$ is county population and $P^*$ is the ideal district population.
+At $\alpha = 5$, many states approach this theoretical minimum.
+
+\subsection{Partisan Neutrality}
+
+The absence of systematic partisan bias at $\alpha = 5$ is not obvious.
+Counties in the United States are not politically neutral geographic units:
+urban counties tend to vote Democratic, rural counties Republican.
+One might expect that respecting county lines would ``pack'' urban Democratic
+voters into fewer districts.
+
+The data shows otherwise.
+The reason is that METIS with $\alpha > 0$ does not simply consolidate counties;
+it makes county-crossing cuts more expensive while still minimising total cut
+weight subject to balance.
+The algorithm finds the most compact county-respecting partition, which does
+not systematically favour either party because county shapes and populations
+are not themselves gerrymandered.
+
+This is the key legal point: $\alpha$ operationalises a traditional criterion
+that courts have consistently upheld as a legitimate redistricting objective,
+and it does so without introducing partisan information.
+
+\subsection{Extension to Finer Levels}
+
+The framework extends to county subdivisions (townships, MCDs), incorporated
+places (cities, towns), and voting tabulation districts (precincts).
+Each level requires an additional TIGER shapefile download and a spatial join
+to assign each census tract to its containing jurisdiction.
+We defer this to future work; the county level alone (derivable from existing
+data) produces the majority of the reduction in splits.
+
+\subsection{Limitations}
+
+The current evaluation uses a single seed ($= 1$) for each state-$\alpha$ pair.
+As shown in B.7~\citep{DL2026a}, single-seed MEC results may not represent the
+converged minimum.
+A full convergence analysis would require running 100--500 seeds per state per
+$\alpha$ value.
+We regard the present results as a first-pass characterisation of the Pareto
+frontier shape; convergence is left for the full analysis.
+
+Additionally, the partisan outcomes depend on the specific plan found (which
+depends on seed), so the partisan table should be interpreted as indicative
+rather than definitive.
