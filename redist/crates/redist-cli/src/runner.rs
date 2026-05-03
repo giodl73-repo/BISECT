@@ -392,6 +392,9 @@ pub struct StateConfig {
     pub debug: bool,
     pub reset: bool,
     pub reprocess: bool,
+    /// When true, emit "[partition-time] <STATE>: k=<K> n=<N> -> <ms>ms" to stderr
+    /// after each partition call. Measures pure METIS time, excluding I/O.
+    pub time_partition: bool,
 
     // ── Spec 1 extensions: chamber-aware, labeled, multi-member ──────────────
     pub num_districts_override: Option<usize>,
@@ -445,6 +448,7 @@ impl StateConfig {
             debug: false,
             reset: false,
             reprocess: false,
+            time_partition: false,
             // Spec 1 defaults for bulk congressional runs
             num_districts_override: None,
             chamber: "congressional".to_string(),
@@ -996,6 +1000,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 cfg.state_code, attempt, MAX_BALANCE_RETRIES, seed));
         }
 
+    let partition_t0 = std::time::Instant::now();
     let assignments_attempt = match &cfg.algo.split {
         SplitStrategy::NWay if num_districts > 1 => {
             status(cfg.position, &format!("{}: n-way into {} districts", cfg.state_code, num_districts));
@@ -1105,6 +1110,14 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             ).map_err(|e| format!("bisection failed: {e}"))?
         }
     };
+
+    if cfg.time_partition {
+        let partition_elapsed_ms = partition_t0.elapsed().as_secs_f64() * 1000.0;
+        eprintln!(
+            "[partition-time] {}: k={} n={} -> {:.1}ms",
+            cfg.state_code, num_districts, graph.n_vertices, partition_elapsed_ms
+        );
+    }
 
     // 4. Assert population balance — retry loop closes here.
     let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::PrimeFactor { .. }) {
@@ -1485,6 +1498,7 @@ mod tests {
             debug: false,
             reset: false,
             reprocess: false,
+            time_partition: false,
             num_districts_override: None,
             chamber: "congressional".to_string(),
             label: None,

@@ -184,6 +184,7 @@ fn main() {
                 debug: args.debug,
                 reset: args.reset,
                 reprocess: false,
+                time_partition: args.time_partition,
                 num_districts_override: args.districts,
                 chamber: args.chamber.clone(),
                 label: args.label.clone(),

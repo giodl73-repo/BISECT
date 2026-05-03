@@ -1228,6 +1228,12 @@ pub struct StateArgs {
     /// Higher weight = stronger preference to keep tract with its neighbors
     #[arg(long)]
     pub coi_weights: Option<String>,
+
+    /// Print pure partition time (graph construction + METIS) separately from I/O.
+    /// Output goes to stderr: "[partition-time] <STATE>: k=<K> n=<N> -> <ms>ms"
+    /// Useful for benchmarking partition cost vs. adjacency loading and output writing.
+    #[arg(long, default_value_t = false)]
+    pub time_partition: bool,
 }
 
 // ---------------------------------------------------------------------------
