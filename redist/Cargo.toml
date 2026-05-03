@@ -21,14 +21,14 @@ authors = ["Gio Della-Libera"]
 license = "MIT"
 
 [workspace.dependencies]
+# Partitioning
+metis = "0.2.2"
+
 # Algorithm / data structures
 rayon = "1.10"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 csv = "1"
-
-# Graph partitioning — vendored libmetis (no external gpmetis binary needed)
-metis = { version = "0.2", features = ["vendored"] }
 
 # Geometry (Phase 2+)
 geo = "0.28"
