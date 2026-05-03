@@ -51,12 +51,24 @@ This formula gives the R-bloc exactly the minimum Democratic voter share
 needed for Republicans to win each district, while concentrating remaining
 Democratic votes in the D-bloc.
 
-A \emph{partisan Lor\-enz curve} --- sorting tracts by Democratic density ---
+We introduce the \emph{partisan signal strength} $\sigma$, the distance between
+the proportional target and the neutral equal-distribution target.
+The central empirical finding is a \textbf{proportionality paradox}: all 8
+competitive states (46--55\,\% Democratic) have $\sigma < 0.05$ --- the
+proportional target is essentially identical to the neutral target.
+Georgia ($\sigma = 0.001$) and Wisconsin ($\sigma = 0.003$) require shifting
+less than 0.3\,\% of Democratic votes from the neutral distribution to achieve
+proportionality.
+Yet both states show $-14$\,pp proportionality gaps under geography-only algorithms.
+The gap is not caused by incorrect targeting: it is caused by the Rodden effect
+making contiguous partitions geometrically incapable of reaching even the
+near-neutral proportional target.
+
+A \emph{partisan Lorenz curve} --- sorting tracts by Democratic density ---
 determines when proportional packing is geographically feasible under the
 contiguity constraint.
-We apply this framework to all 50 states, characterising the
-\emph{proportionality gap} of geography-only algorithms and measuring how
-much partisan constraint is needed to close it.
+We apply this framework to all 50 states, measuring the partisan signal strength
+and its relationship to the proportionality gap.
 
 This paper does not advocate for partisan redistricting.
 The federal \S104(e) prohibition on partisan inputs for congressional
