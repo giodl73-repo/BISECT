@@ -1,5 +1,114 @@
 use crate::graph::{CsrGraph, Partition};
 use super::{gain::GainTable, boundary::BoundarySet};
+use crate::refine::Refiner;
+
+pub struct FiducciaMattheyses { pub niter: u32 }
+
+impl Refiner for FiducciaMattheyses {
+    fn refine(&self, g: &CsrGraph, p: Partition) -> Partition {
+        let mut state = FmState::new(g, p);
+        let mut best = state.checkpoint();
+
+        for _pass in 0..self.niter {
+            let improved = fm_pass(&mut state, &mut best);
+            // Always restore to best after each pass so the next pass
+            // starts from the best-known state, not the end-of-pass state.
+            state.restore(&best);
+            if !improved { break; }
+        }
+        Partition { assignment: state.assignment, k: state.k }
+    }
+}
+
+fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
+    let total_pop: i64 = state.part_pop.iter().sum();
+    let target_pop = total_pop / state.k as i64;
+    // INTEGER balance epsilon — ceiling of 0.5% — NO FLOATS
+    let epsilon = (total_pop * 5 + 999) / 1000;
+    let start_cut = best.cut;
+
+    // Locked set: vertices that have been popped this pass must not be re-inserted.
+    // This is the fundamental FM invariant — each vertex moves at most once per pass.
+    let n = state.graph.n();
+    let mut locked = vec![false; n];
+
+    loop {
+        let Some((v, _gain)) = state.gain_table.pop_max() else { break };
+        let v = v as usize;
+        locked[v] = true;
+
+        let from_part = state.assignment[v] as usize;
+
+        // Find best destination part
+        let to_part = if state.k == 2 {
+            1 - from_part as u32
+        } else {
+            best_destination(state, v, from_part as u32)
+        } as usize;
+
+        let vwgt = state.graph.vwgt[v] as i64;
+        let new_from = state.part_pop[from_part] - vwgt;
+        let new_to   = state.part_pop[to_part]   + vwgt;
+
+        // Balance check — skip if move violates tolerance
+        if new_from < target_pop - epsilon || new_to > target_pop + epsilon {
+            continue;
+        }
+
+        // Apply move
+        state.assignment[v] = to_part as u32;
+        state.part_pop[from_part] = new_from;
+        state.part_pop[to_part]   = new_to;
+        state.boundary.remove(v as u32);
+
+        // Update gains for all unlocked neighbours of v
+        let g = state.graph;
+        for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+            let u = g.adjncy[j] as usize;
+            if locked[u] { continue; } // never re-insert a locked vertex
+
+            let new_gain = compute_gain(g, &state.assignment, u);
+            let clamped = new_gain.clamp(-state.gain_table.max_gain, state.gain_table.max_gain);
+            // Check if u is on boundary after the move
+            let u_on_boundary = (g.xadj[u] as usize..g.xadj[u + 1] as usize)
+                .any(|jj| state.assignment[g.adjncy[jj] as usize] != state.assignment[u]);
+            if u_on_boundary {
+                if state.gain_table.contains(u as u32) {
+                    state.gain_table.update(u as u32, clamped);
+                } else {
+                    state.boundary.insert(u as u32);
+                    state.gain_table.insert(u as u32, clamped);
+                }
+            } else {
+                if state.gain_table.contains(u as u32) {
+                    state.gain_table.remove(u as u32);
+                }
+                state.boundary.remove(u as u32);
+            }
+        }
+
+        // Checkpoint if improved
+        let cur_cut = state.cut();
+        if cur_cut < best.cut {
+            *best = Checkpoint { assignment: state.assignment.clone(), cut: cur_cut };
+        }
+    }
+
+    best.cut < start_cut
+}
+
+fn best_destination(state: &FmState, v: usize, from: u32) -> u32 {
+    let g = state.graph;
+    (0..state.k)
+        .filter(|&p| p != from)
+        .max_by_key(|&p| {
+            (g.xadj[v] as usize..g.xadj[v + 1] as usize)
+                .filter(|&j| state.assignment[g.adjncy[j] as usize] == p)
+                .map(|j| g.adjwgt.as_ref().map_or(1i32, |aw| aw[j]))
+                .sum::<i32>()
+        })
+        .unwrap_or(if from == 0 { 1 } else { 0 })
+}
 
 pub struct FmState<'g> {
     pub graph:      &'g CsrGraph,
@@ -107,6 +216,55 @@ mod tests {
         CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
     }
 
+    fn grid_4x4() -> CsrGraph {
+        let n = 16usize;
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for i in 0..4usize {
+            for j in 0..4usize {
+                let mut nbrs = Vec::new();
+                if i > 0 { nbrs.push((i-1)*4+j); }
+                if i < 3 { nbrs.push((i+1)*4+j); }
+                if j > 0 { nbrs.push(i*4+(j-1)); }
+                if j < 3 { nbrs.push(i*4+(j+1)); }
+                for &u in &nbrs { adjncy.push(u as u32); }
+                xadj.push(adjncy.len() as u32);
+            }
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
+    fn dumbbell_graph() -> CsrGraph {
+        // Two K5 cliques connected by a single bridge edge
+        // Vertices 0-4: left clique, vertices 5-9: right clique
+        // Bridge: vertex 4 -- vertex 5
+        let n = 10usize;
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for v in 0..n {
+            let mut nbrs: Vec<usize> = Vec::new();
+            let clique = if v < 5 { 0..5 } else { 5..10 };
+            for u in clique { if u != v { nbrs.push(u); } }
+            // bridge
+            if v == 4 { nbrs.push(5); }
+            if v == 5 { nbrs.push(4); }
+            for &u in &nbrs { adjncy.push(u as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
+    fn compute_cut_for_test(g: &CsrGraph, assignment: &[u32]) -> u32 {
+        let mut cut = 0u32;
+        for v in 0..g.n() {
+            for j in g.xadj[v] as usize..g.xadj[v+1] as usize {
+                let u = g.adjncy[j] as usize;
+                if assignment[v] != assignment[u] { cut += 1; }
+            }
+        }
+        cut / 2
+    }
+
     #[test]
     fn fm_state_cut_path3_split() {
         // path 0-1-2, partition [0,0,1]
@@ -130,5 +288,56 @@ mod tests {
         // Restore
         state.restore(&cp);
         assert_eq!(state.assignment, cp.assignment);
+    }
+
+    #[test]
+    fn fm_does_not_increase_cut() {
+        use crate::init::InitialPartitioner;
+        use crate::init::random::RandomBisect;
+        use crate::refine::Refiner;
+        let g = grid_4x4();
+        let p_init = RandomBisect.partition(&g, 2, 0);
+        let cut_before = compute_cut_for_test(&g, &p_init.assignment);
+        let fm = FiducciaMattheyses { niter: 10 };
+        let p = fm.refine(&g, p_init);
+        let cut_after = compute_cut_for_test(&g, &p.assignment);
+        assert!(cut_after <= cut_before,
+            "FM must not increase cut: before={cut_before} after={cut_after}");
+    }
+
+    #[test]
+    fn fm_oracle_dumbbell_bisect() {
+        // Dumbbell: two K5 joined by 1 edge — optimal bisection cut = 1
+        use crate::init::InitialPartitioner;
+        use crate::init::random::RandomBisect;
+        use crate::refine::Refiner;
+        let g = dumbbell_graph();
+        let p_init = RandomBisect.partition(&g, 2, 42);
+        let fm = FiducciaMattheyses { niter: 20 };
+        let p = fm.refine(&g, p_init);
+        let cut = compute_cut_for_test(&g, &p.assignment);
+        assert_eq!(cut, 1, "dumbbell bisect optimal cut is 1, got {cut}");
+    }
+
+    #[test]
+    fn fm_preserves_population_balance() {
+        use crate::init::InitialPartitioner;
+        use crate::init::random::RandomBisect;
+        use crate::refine::Refiner;
+        let g = grid_4x4();
+        let total: i64 = g.vwgt.iter().map(|&w| w as i64).sum(); // = 16
+        let target = total / 2; // = 8
+        let eps = (total * 5 + 999) / 1000; // ceiling of 0.5% = 1
+        let p_init = RandomBisect.partition(&g, 2, 99);
+        let fm = FiducciaMattheyses { niter: 10 };
+        let p = fm.refine(&g, p_init);
+        for part in 0..2u32 {
+            let pop: i64 = (0..g.n())
+                .filter(|&v| p.assignment[v] == part)
+                .map(|v| g.vwgt[v] as i64)
+                .sum();
+            assert!((pop - target).abs() <= eps,
+                "part {part} pop {pop} violates balance (target {target} ± {eps})");
+        }
     }
 }
