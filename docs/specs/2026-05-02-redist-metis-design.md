@@ -20,9 +20,10 @@ all platforms.
 
 In a deposition:
 > *"We run the same METIS algorithm the redistricting community has used since 1995.
-> We ported it to Rust to obtain formal safety guarantees. The population balance
-> constraint is not merely tested — it is a machine-verified postcondition on the
-> partition function."*
+> We ported it to Rust to obtain formal safety guarantees. For all inputs satisfying
+> the documented preconditions — which are checked at graph construction and
+> machine-verified by the Kani harness — the population balance constraint is a
+> formally proven postcondition on the partition function, not merely a tested one."*
 
 ## Scope
 
@@ -116,8 +117,11 @@ crates/redist-metis/
     prusti/              postcondition annotations
   benches/               criterion benchmarks vs C METIS quality baseline
   tests/
-    contracts.rs         output quality matches C METIS on known graphs
-    shadow.rs            parallel-run comparison harness (used during migration)
+    contracts.rs         correctness oracle — known-optimal graphs + golden RNG value
+    proptest.rs          property-based tests — random CsrGraph → is_valid() after coarsening
+    shadow.rs            parallel-run quality comparison harness (used during migration)
+  tests/golden/
+    vt_seed42.json       golden partition vector for RNG determinism pin
 ```
 
 ## Core types
@@ -142,6 +146,9 @@ Invariant (checked by `is_valid()`):
 - `xadj.len() == n + 1`
 - `xadj[0] == 0`, `xadj` is non-decreasing
 - all `adjncy[j] < n`
+- **no self-loops**: `adjncy[j] != i` for all j in `xadj[i]..xadj[i+1]` (PP-01)
+- **connected**: the graph has exactly one connected component (PP-05);
+  checked via BFS from vertex 0 — if any vertex is unreachable, `is_valid()` returns false
 - `ncon >= 1`
 - `vwgt.len() == n * ncon as usize`
 - all `vwgt[i] > 0`
@@ -151,6 +158,15 @@ Invariant (checked by `is_valid()`):
 population + voting-age population). `MultiConstraintInit` reads all `ncon` weight
 vectors; single-constraint phases read only `vwgt[i*ncon + 0]`. The flat layout
 matches C METIS's internal representation exactly — no conversion needed.
+
+**Coarsened vertex weight overflow (PP-02)**: during coarsening, matched vertices
+merge weights: `coarse_vwgt[c] = fine_vwgt[v1] + fine_vwgt[v2]`. Accumulation
+uses `i64` checked arithmetic. If the result exceeds `i32::MAX`, the coarsener
+returns `Err(PartitionError::WeightOverflow)`. The Kani harness for
+`coarsen/shem.rs` verifies no silent overflow for all inputs within the stated
+bounds. For census-realistic inputs (max tract population ~40k, max 9129 tracts
+for California), the maximum possible coarsened weight is ~40k × 9129 ≈ 365M —
+well within `i32::MAX` (2.1B). The check is a safety net for adversarial inputs.
 
 ### `Partition` and `CoarseMap`
 
@@ -232,7 +248,9 @@ pub trait Coarsener: Send + Sync {
     ///   i.e., `should_stop` returns `true` for all graphs with `n <= MIN_COARSE`
     ///   where `MIN_COARSE` is implementation-defined but ≥ 2×k.
     ///   The multilevel orchestrator enforces a hard cap of `MAX_LEVELS = 50`
-    ///   coarsening rounds regardless of `should_stop`, preventing infinite loops.
+    ///   coarsening rounds regardless of `should_stop`. If the cap is hit,
+    ///   the orchestrator returns `Err(PartitionError::CoarseningStalled)`
+    ///   — never silently proceeds with an under-coarsened graph (PP-04).
     fn should_stop(&self, g: &CsrGraph) -> bool;
 }
 
@@ -255,7 +273,13 @@ Replaces `redist-apportion::split::Partitioner`. The graph type changes from
 pub trait Partitioner: Send + Sync {
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
         -> Result<Partition, PartitionError>;
-    fn split_weighted(&self, g: &CsrGraph, fracs: &[f32], seed: Option<u64>)
+    /// Split into `fracs.len()` parts with proportional population targets.
+    /// `fracs[i]` is a proportional integer weight — the target population
+    /// fraction for part i is `fracs[i] / fracs.iter().sum()`. Integer weights
+    /// eliminate float arithmetic in the partition path, preserving the
+    /// determinism guarantee. The caller (PfrCompositor) converts rational
+    /// prime-factor ratios to integer weights before calling.
+    fn split_weighted(&self, g: &CsrGraph, fracs: &[u32], seed: Option<u64>)
         -> Result<Partition, PartitionError>;
 }
 ```
@@ -295,14 +319,16 @@ parameters — no global RNG state, no thread-local state. This means:
 
 ```rust
 pub struct MetisParams {
-    pub ufactor:    u32,      // balance tolerance × 1000 (default 5 → 0.5%)
-    pub niter:      u32,      // FM refinement iterations (default 10)
-    pub seed:       u64,      // RNG seed; 0 = use a fixed default seed
-    pub coarsen_to: u32,      // stop coarsening when n ≤ coarsen_to × k (default 20)
+    pub ufactor:    u32,           // balance tolerance × 1000 (default 5 → 0.5%)
+    pub niter:      u32,           // FM refinement iterations (default 10)
+    pub seed:       Option<u64>,   // None = fixed default; Some(s) = Pcg64 seeded with s
+    pub coarsen_to: u32,           // stop coarsening when n ≤ max(coarsen_to × k, 40) (default 20)
 }
 ```
 
-`seed = 0` uses a fixed platform-independent default (not `rand::thread_rng()`).
+`seed = None` uses a fixed platform-independent constant (not `rand::thread_rng()`).
+`seed = Some(0)` seeds Pcg64 with 0 — different from `None`. Using `Option<u64>`
+eliminates the PP-03 ambiguity where `0` could mean either "default" or "seed zero."
 The same `MetisParams` on the same graph always produces the same partition.
 
 Concrete implementations per trait:
@@ -318,27 +344,48 @@ Concrete implementations per trait:
 ### Phase 1 — Coarsening
 
 Repeatedly collapse the graph by matching vertices until `should_stop` returns
-true (default: ≤ 20×k vertices). Each call adds one level to the hierarchy.
+true (default: `n ≤ max(20×k, 40)`; the absolute floor of 40 prevents
+over-coarsening on small states like Vermont). Each call adds one level to the
+hierarchy.
 
-`SortedHeavyEdgeMatch` (default): sort vertices by max incident edge weight, then
-greedily match each unmatched vertex with its heaviest-edge unmatched neighbor.
-O(m log m).
+`SortedHeavyEdgeMatch` (default): sort vertices into buckets by max incident edge
+weight (bucket sort, O(n + m)), then greedily match each unmatched vertex with its
+heaviest-edge unmatched neighbor. **O(n + m)**, not O(m log m) — the sort is a
+bucket sort over the integer weight domain, not a comparison sort.
 
 ### Phase 2 — Initial partition
 
 Applied once at the coarsest level (tens to hundreds of vertices).
 
-`GrowBisect`: seed two regions, expand greedily by best cut gain. For k > 2:
-recursive bisection until k parts reached, or direct k-way seeding.
+**Two distinct algorithm entry points** (not a dispatch on k — they have
+different internal paths throughout):
 
-`MultiConstraintInit`: handles multiple simultaneous weight objectives — required
-for multi-constraint partitioning.
+- **Recursive bisection** (`part_recursive` entry): `GrowBisect` seeds two
+  regions and expands greedily. Recursively applied: the coarsest graph is
+  bisected, each half coarsened and bisected again, until k single-district
+  leaves are reached. Uses `GrowBisect` at every level of recursion.
+
+- **Direct k-way** (`part_kway` entry): `GrowKway` seeds k regions simultaneously
+  from k random vertices, expands in round-robin. Refinement uses `GreedyKWay`
+  rather than repeated FM bisections. Faster for large k; lower quality than
+  recursive bisection for k=2.
+
+`MultiConstraintInit`: multi-objective variant of `GrowKway` that seeds and
+expands while tracking balance across all `ncon` weight vectors simultaneously.
+Required for multi-constraint partitioning.
 
 ### Phase 3 — FM refinement
 
 `FmState` owns `assignment`, `GainTable` (bucket sort, O(1) max), and
 `BoundarySet`. Inner loop: pick highest-gain boundary vertex, move it, update
-neighbor gains. Rollback to best checkpoint after budget exhausted.
+neighbor gains.
+
+**FM pass budget and rollback**: one FM pass processes each boundary vertex at
+most once (O(n) moves per pass). The best partition seen during the pass is
+checkpointed. After the pass, the state rolls back to the best checkpoint if the
+final state is worse. Passes repeat up to `niter` times (default 10) or until
+a full pass produces zero improvement — whichever comes first. "Budget exhausted"
+means `niter` passes completed or convergence detected.
 
 `GreedyKWay` extends FM to k parts: each boundary vertex may move to any
 adjacent part, not just the complement.
@@ -398,6 +445,12 @@ distinct code paths (verified by inspecting LLVM bitcode coverage). The safety
 properties (no UB, no overflow) are not input-size-dependent once all branches are
 covered. This is documented in `verify/kani/BOUNDS.md` with coverage justification.
 
+**`unsafe` accountability (PP-06)**: `verify/kani/UNSAFE.md` lists every `unsafe`
+block in `src/` with its location, the invariant that justifies it, and the Kani
+harness that covers it. A CI step counts `unsafe` occurrences via `grep -r "unsafe"
+src/` and asserts the count matches `UNSAFE.md` entries. A new `unsafe` block
+without a corresponding entry fails CI.
+
 ### Prusti — three legal postconditions
 
 **Version**: Prusti 0.2.x (ETH Zurich, Viper backend). Pinned in `rust-toolchain.toml`
@@ -411,6 +464,20 @@ fall back to Kani for safety properties only.
 or unsupported feature), it is (a) flagged with `#[prusti_skip]`, (b) covered by
 Kani safety harness instead, and (c) documented in `verify/prusti/GAPS.md` with
 the reason. A CI step asserts that `GAPS.md` contains zero entries before release.
+
+**Verification artifact archival (COVENANT)**: Prusti generates Viper intermediate
+verification conditions (`.vpr` files) as part of its proof process. These are
+committed to `verify/prusti/artifacts/` and are the legally-archivable proof
+artifacts — not the CI pass/fail log, which expires. An opposing expert can
+re-run Viper directly against the committed `.vpr` files to independently confirm
+the postconditions without re-running the full Rust toolchain.
+
+**Binary provenance (COVENANT)**: the released binary is built via a reproducible
+build (`cargo build --locked` with a pinned `rust-toolchain.toml`). The
+`rust-toolchain.toml` pins the exact Rust channel, version, and component set.
+A SHA-256 of the compiled binary is published alongside each release tag. Any
+party can reproduce the binary from the pinned source + toolchain and verify the
+hash independently.
 
 Applied to `Pipeline<Complete>::into_partition` and `Partitioner::split`:
 
@@ -511,7 +578,9 @@ The mathematical spec covers the following sections, in this order:
    with proof sketches. These are the legally-cited properties.
 9. **Determinism** — proof that `Pcg64` with fixed seed produces identical output
    across all IEEE 754 platforms; why integer-only arithmetic in all phases
-   eliminates platform-specific float behaviour.
+   eliminates platform-specific float behaviour; scope of the claim (valid inputs
+   only, as defined by `is_valid()`); `split_weighted` uses integer proportional
+   weights (`u32`), not `f32` fracs, to maintain the integer-only guarantee.
 10. **Limitations** — what the algorithm does NOT guarantee: global optimality
     (NP-hard), uniqueness of output, matching C METIS output numerically.
 
@@ -541,21 +610,40 @@ Sub-specs (one per phase, each written before implementation of that phase):
    | Complete bipartite K_{4,4} | 2 | 16 | All bisections equal |
    | Grid 4×4 | 4 | 4 | Each quadrant = 1 part |
    | Petersen graph | 5 | 5 | Known partition |
+   | Any graph | 1 | 0 | Trivial: all vertices in part 0 |
+   | Dumbbell (two K_5 joined by one edge) | 2 | 1 | Unique minimum cut through the bridge |
+   | Weighted path: alternating heavy/light edges | 2 | lightest edge weight | Tests weight-sensitive bisection |
 
    These live in `tests/contracts.rs` and run as unit tests on every commit.
+
+   **RNG golden-value test (BENCHMARK)**: one additional test pins the output of a
+   California-scale bisection (255-vertex VT proxy graph, seed `Some(42)`) against
+   a committed golden partition vector. If `rand_pcg` changes its output sequence
+   across versions, this test fails loudly — protecting the determinism claim.
+   The golden vector is generated once and committed to `tests/golden/vt_seed42.json`.
+
+   **Property-based tests (BENCHMARK)**: `tests/proptest.rs` uses `proptest` to
+   generate random valid `CsrGraph` instances (n ≤ 32, valid invariants), apply
+   coarsening, and assert `is_valid()` holds on the output. Catches any coarsening
+   bug that produces an invalid graph at arbitrary size beyond Kani bounds.
 
 3. **Validation gate**: shadow mode must pass 50-state × 3-year run with Rust
    quality ≥ C METIS quality (avg cut ≤ C avg cut per state-year, balance ≤ 0.5%).
    Gate is automated. Performance within 20% budget (see Performance section).
+   **Note (COVENANT)**: the legal correctness claim rests on the correctness oracle
+   and the Prusti postconditions — not on the C METIS comparison. Shadow mode
+   validates quality parity, not correctness. C METIS is itself an unverified binary
+   and cannot serve as a legal correctness baseline.
 4. **Cutover**: remove `cfg` flag, `MetisPartitioner` becomes the Rust type alias.
 5. **C dep removal**: remove `metis` from `redist-apportion/Cargo.toml` and
    workspace `Cargo.toml`. No C compiler required to build the project.
 
 ## Open questions
 
-None. All design decisions resolved during brainstorming session 2026-05-02.
-All P1–P3 items from panel review (Chris Lattner, Nada Amin, Nadia Polikarpova,
-Armando Solar-Lezama, Emery Berger) addressed in revision 2026-05-02.
+None. All design decisions resolved.
+- Brainstorming session: 2026-05-02
+- Panel review (Lattner, Amin, Polikarpova, Solar-Lezama, Berger) P1–P3: addressed 2026-05-02
+- Role review (MERIDIAN, COVENANT, BENCHMARK, TRENCH, DATUM): addressed 2026-05-02
 
 ## Effort estimate
 
