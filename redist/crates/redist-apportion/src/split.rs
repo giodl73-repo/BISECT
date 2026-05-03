@@ -229,6 +229,7 @@ impl Partitioner for MetisPartitioner {
             niter:      self.niter as u32,
             seed,
             coarsen_to: 20,
+            tpwgts:     None,
         };
         let rust_part = RustMetisPartitioner::with_params(rust_params, k)
             .split(&g, k, seed)
@@ -282,6 +283,7 @@ impl Partitioner for MetisPartitioner {
             niter:      self.niter as u32,
             seed,
             coarsen_to: 20,
+            tpwgts:     None,
         };
         let rust_part = RustMetisPartitioner::with_params(rust_params, k)
             .split_weighted(&g, &fracs_u32, seed)
