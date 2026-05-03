@@ -271,30 +271,31 @@ pub fn split_subgraph(
     // METIS 5.2 (vendored) sometimes produces 0.5-1% balance error without Contig.
     // Move small boundary tracts from the heavier side to the lighter side until
     // both sides are within `ufactor` of their target weights.
-    // Target weights come from tpwgts: left_target = tpwgts[0] × total, else 50/50.
+    // left/right store GLOBAL indices; use global_to_local for local_vwgt/sub_adj access.
     let total_pop: i64 = local_vwgt.chunks(ncon).map(|c| c[0] as i64).sum();
     let left_target = tpwgts.as_ref()
         .map(|tw| (tw[0] as f64 * total_pop as f64) as i64)
         .unwrap_or(total_pop / 2);
     let tolerance_pop = (ufactor as f64 * total_pop as f64 / 1000.0) as i64 + 1;
 
-    for _ in 0..100 {
+    for _ in 0..200 {
         let left_pop: i64 = left.iter()
-            .map(|&g| local_vwgt[g * ncon] as i64).sum();
+            .map(|&g| local_vwgt[global_to_local[&g] * ncon] as i64).sum();
         let excess = left_pop - left_target;
         if excess.abs() <= tolerance_pop { break; }
 
-        // Find the boundary tract on the heavy side closest in size to |excess|.
         let (heavy, light) = if excess > 0 { (&left, &right) } else { (&right, &left) };
-        let light_set: HashSet<usize> = light.clone();
-        let heavy_set: HashSet<usize> = heavy.clone();
+        let light_global: HashSet<usize> = light.clone();
+        let heavy_global: HashSet<usize> = heavy.clone();
 
-        // Boundary tracts on the heavy side: those adjacent to the light side.
+        // Boundary tracts on the heavy side: those with a neighbor in the light side.
         let mut best: Option<(usize, i64)> = None;
-        for &g in &heavy_set {
-            let has_light_neighbor = sub_adj[g].iter().any(|&nb| light_set.contains(&nb));
-            if has_light_neighbor {
-                let pop = local_vwgt[g * ncon] as i64;
+        for &g in &heavy_global {
+            let lg = global_to_local[&g];
+            let has_light_nb = sub_adj[lg].iter()
+                .any(|&nb_local| light_global.contains(&sorted[nb_local]));
+            if has_light_nb {
+                let pop = local_vwgt[lg * ncon] as i64;
                 let score = (pop - excess.abs()).abs();
                 if best.map_or(true, |(_, s)| score < s) {
                     best = Some((g, score));
@@ -306,7 +307,7 @@ pub fn split_subgraph(
                 if excess > 0 { left.remove(&g); right.insert(g); }
                 else { right.remove(&g); left.insert(g); }
             }
-            None => break, // no boundary tract found, give up
+            None => break,
         }
     }
 
