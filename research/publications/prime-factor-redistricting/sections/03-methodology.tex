@@ -68,50 +68,90 @@ into the highly-reused sub-trees $k=8=2^3$ (three binary levels) and $k=9=3^2$
   \end{enumerate}
 \end{definition}
 
-The $p$-way partition in step~3 is computed by METIS using population vertex
-weights and TIGER boundary-length edge weights. For the uniform case ($k_1 =
-\cdots = k_p = n/p$) METIS uses equal target fractions; for the binary fallback
-case ($k_1 = \lfloor n/2 \rfloor$, $k_2 = \lceil n/2 \rceil$) it uses
-proportional target fractions.
+The $p$-way partition in step~3 is computed by METIS~5.x (version with
+\texttt{part\_kway} for $p > 2$, \texttt{part\_recursive} for $p = 2$) using
+population vertex weights and TIGER boundary-length edge weights. For the
+uniform case ($k_1 = \cdots = k_p = n/p$) METIS uses equal target fractions;
+for the binary fallback case ($k_1 = \lfloor n/2 \rfloor$, $k_2 = \lceil n/2
+\rceil$) it uses proportional target fractions $k_1/n$ and $k_2/n$.
+
+\paragraph{Determinism assumption.}
+METIS~5.x's multilevel $k$-way partitioning is deterministic given a fixed
+random seed and fixed input graph (adjacency structure, vertex weights, edge
+weights). We rely on this property throughout: when we say two seat counts
+``share the same partition,'' we mean the assignment of census tracts to
+districts is byte-identical, conditional on the same METIS seed at that level.
+Our implementation sets the per-level seed as a deterministic function of the
+global content-derived seed and the tree depth, ensuring full reproducibility.
 
 \subsection{The Reuse Property}
 \label{sec:reuse}
 
-The key property of PFR is that splits are canonical:
-
-\begin{definition}[Canonical $p$-split]
-  For a state with graph $G$ and a prime $p$, the \emph{canonical $p$-split}
-  $S_p(G)$ is the minimum $p$-way partition of $G$. For a sub-region
-  $R \subseteq G$, $S_p(R)$ is the minimum $p$-way partition of the induced
-  subgraph $G[R]$.
+\begin{definition}[Canonical $p$-partition of $G$]
+  Fix a census-tract graph $G$ and a positive integer $p \leq |V(G)|$. The
+  \emph{canonical $p$-partition} $\Pi_p(G, \sigma)$ is the output of METIS
+  $k$-way partitioning on $G$ with $k = p$, equal population target fractions,
+  and METIS seed $\sigma$. By the determinism assumption, $\Pi_p(G, \sigma)$ is
+  a function of $(G, p, \sigma)$ alone.
 \end{definition}
 
 \begin{theorem}[Reuse]
   \label{thm:reuse}
-  Let $n$ and $n'$ be composite integers with the same largest prime factor $p$,
-  i.e.\ $n = p \cdot m$ and $n' = p \cdot m'$ with $p > \max(\text{prime
-  factors of } m)$ and $p > \max(\text{prime factors of } m')$. Then
-  $M_n(G)$ and $M_{n'}(G)$ share the same top-level $p$-way partition
-  $S_p(G)$.
+  Let $n$ and $n'$ be composite integers with the same largest prime factor $p$:
+  $n = p \cdot m$, $n' = p \cdot m'$, with $p > \text{lpf}(m)$ and
+  $p > \text{lpf}(m')$ (where $\text{lpf}$ denotes the largest prime factor).
+  Let $\sigma$ be any METIS seed and $G$ any census-tract graph. Then
+  $\text{PFR}(G, n, \sigma)$ and $\text{PFR}(G, n', \sigma)$ begin with the
+  same top-level partition $\Pi_p(G, \sigma_0)$, where $\sigma_0$ is the
+  depth-0 seed derived from $\sigma$.
 \end{theorem}
 
 \begin{proof}
-  Since $p$ is the largest prime factor of both $n$ and $n'$, the split
-  prescription (Definition~\ref{def:split}, case 2) applies $p$ at level 1
-  for both. The minimum $p$-way partition of $G$ is uniquely determined
-  (assuming no ties) by $G$, $p$, and the METIS seed. Hence both maps share
-  $S_p(G)$ at level 1. \qed
+  Since $p = \text{lpf}(n) = \text{lpf}(n')$, Definition~\ref{def:split}
+  case~(2) applies to both. At depth~0, both algorithms call METIS with
+  inputs $(G, p, \sigma_0)$ and equal target fractions $1/p$. By the
+  determinism assumption, both calls return $\Pi_p(G, \sigma_0)$
+  identically. The sub-regions $R_1, \ldots, R_p$ are therefore identical
+  for both seat counts; the two algorithms diverge only in the sub-district
+  counts $(k_i = m)$ vs.\ $(k_i' = m')$ passed to the recursive calls.
+  \qed
 \end{proof}
 
 \begin{corollary}
-  $M_{34}(G)$ and $M_{51}(G)$ share the same 17-way top-level partition of $G$,
-  since $34 = 2 \times 17$ and $51 = 3 \times 17$ both have largest prime 17.
-  After the shared first level, $M_{34}$ bisects each of the 17 sub-regions
-  while $M_{51}$ trisects them.
+  $\text{PFR}(G, 34, \sigma)$ and $\text{PFR}(G, 51, \sigma)$ begin with
+  $\Pi_{17}(G, \sigma_0)$: the same 17-district partition of $G$.
+  After the shared first level, $k=34$ bisects each region while
+  $k=51$ trisects each region. The partition cache in \texttt{PfrCompositor}
+  is a direct implementation of this theorem: a cache hit on
+  $(\text{hash}(G), 17, \sigma_0)$ serves both computations.
 \end{corollary}
 
-More generally, any two seat counts $n, n'$ that agree on their first $k$ terms
-of $F(n)$ share the first $k$ levels of their factorization tree.
+\paragraph{Partition cache correctness.}
+The cache key $(\text{hash}(G), p, \sigma_0)$ uses a content-derived hash
+of the census-tract graph (adjacency list + population vector). This is
+content-addressed, not identifier-addressed: two subgraphs with identical
+adjacency and population produce the same cache key regardless of their
+position in the factorization tree. Across decennial reapportionments,
+the hash changes with the census data, so the cache correctly invalidates
+stale entries.
+
+\paragraph{Formal status of the binary fallback.}
+For prime $k > \kappa$ (threshold $\kappa = 3$), the split prescription uses
+a 2-way METIS call with asymmetric population targets $\lfloor k/2 \rfloor$
+and $\lceil k/2 \rceil$ rather than a direct $k$-way call. We label this
+\emph{PFR-binary}. PFR-binary is formally distinct from direct-$k$-METIS:
+the two partitions are outputs of different METIS invocations and may produce
+different assignments. However, both are computed from the same inputs and
+seed, so the Reuse Theorem still applies: two seat counts $n, n'$ sharing the
+same large prime $p$ both call 2-way METIS with targets $(\lfloor p/2 \rfloor,
+\lceil p/2 \rceil)$ on the same whole-state graph, returning the same binary
+split regardless of whether $p$ was intended as a ``$p$-way cut.'' The reuse
+theorem holds for PFR-binary under the same determinism assumption.
+
+A variant \emph{PFR-direct} that uses direct $k$-way METIS for all prime $k$
+is fully equivalent to PFR-binary in our implementation: METIS~5.x's
+\texttt{part\_kway} handles $k = 17$ directly (single call, 0.1\% tolerance).
+We defer a systematic comparison of PFR-binary vs.\ PFR-direct to future work.
 
 \subsection{Factorization Tree Structure}
 \label{sec:tree}

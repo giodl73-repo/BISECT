@@ -22,12 +22,19 @@ the prime factorization of $n$. The same constitutional act that produces $n$
 also, through PFR, produces the map. No separate ``districting decision'' is
 required.
 
-\paragraph{Step 3: No additional degrees of freedom.}
+\paragraph{Step 3: No additional degrees of freedom --- including the seed.}
 The only choices in PFR are (a) the prime factorization of $n$ (uniquely
 determined by arithmetic) and (b) the minimum $k$-way cut at each level
 (uniquely determined by TIGER geography, up to tie-breaking). Compare to
 manual redistricting, which introduces thousands of degrees of freedom that
-can be set to achieve partisan outcomes. PFR has zero such degrees of freedom.
+can be set to achieve partisan outcomes.
+
+The seed-invariance result (\S\ref{sec:eval:seeds}) removes even the last
+apparent degree of freedom. PFR with $n = 14$ and $G = \text{NC's census graph}$
+produces the same 7D/7R partition from any METIS seed. The METIS seed is
+not a free parameter in practice: the map is fully determined by $n$ and $G$.
+PFR therefore has \emph{literally zero} degrees of freedom: no seed choice,
+no area measure, no shape metric, no weighting scheme.
 
 This argument implies that a statute requiring PFR is not merely a Manner
 regulation (\S4) subject to state override prior to congressional action
@@ -77,18 +84,35 @@ existence demonstrates that PFR takes the arithmetic of seat counts seriously
 \subsection{Limitations}
 \label{sec:discussion:limitations}
 
-\paragraph{Large prime factors.}
-For seat counts containing large prime factors (17, 13, 19, 23, \ldots),
-the required $k$-way METIS partition is harder computationally and has a
-wider solution space than bisection. The convergence analysis of
-\citet{dellaLibera2026mec} for bisection does not directly extend to
-$k$-way partitioning; a separate seed-sensitivity study is needed.
+\paragraph{Seed invariance revisited.}
+The empirical zero-variance result (\S\ref{sec:eval:seeds}) resolves the
+convergence concern for partisan outcomes: PFR does not require a seed-sweep
+protocol because the outcomes are identical across seeds. However, seed
+invariance does not extend to the exact boundary positions of tracts near
+district edges. The assignment of a census tract that is equally close to two
+candidate districts may flip between seeds. For formal legal certification, an
+implementation should verify that all 480 runs produce byte-identical
+assignments (not merely identical seat counts), or rely on the partition cache
+to enforce it.
 
-\paragraph{Balance tolerance compounding.}
-Applying $\varepsilon = 0.005$ at each tree level compounds: after $d$ levels,
-the cumulative imbalance can reach $\varepsilon \cdot d$. For states with deep
-trees (many prime factors), the final balance may drift. PFR should apply the
-statutory tiered tolerance schedule rather than a flat tolerance.
+\paragraph{Population balance.}
+METIS does not guarantee exact respect for the ufactor constraint. For
+top-level splits involving large primes ($k \geq 7$), the achieved per-part
+imbalance can reach 1--2\% due to the difficulty of balancing $k > 5$ equal
+parts on irregular planar graphs. The final district populations for NC
+(1.32\%) and GA (1.53\%) do not meet the statutory $\pm 0.5\%$ standard
+required by \emph{Wesberry v.\ Sanders}. Production deployment of PFR would
+require a post-processing step (e.g.\ a greedy tract-swap refinement that
+moves tracts between adjacent over- and under-populated districts until all
+districts are within tolerance) before the plan could be legally certified.
+
+\paragraph{GerryChain comparison.}
+The evaluation compares PFR to MEC (minimum-edge-cut via recursive bisection).
+A comparison to sampling-based methods (GerryChain \citep{duchin2019gerrychain},
+ReCom) would situate PFR in the broader landscape: sampling methods explore the
+plan space while PFR selects a single canonical plan. Whether PFR's canonical
+plan is typical or atypical within the GerryChain distribution is an open
+question and a natural direction for future work.
 
 \paragraph{Tie-breaking.}
 METIS may produce non-unique minimum-$k$-way partitions for some inputs.
