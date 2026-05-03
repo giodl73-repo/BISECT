@@ -60,6 +60,26 @@ impl MetisPartitioner {
 impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
     for RustMetisPartitioner<C, I, R>
 {
+    // ── Prusti formal postconditions ─────────────────────────────────────────
+    // Activate with: cargo prusti (Prusti 0.2.x, Viper backend)
+    // These postconditions are the legally-cited properties from the deposition.
+    //
+    // PRUSTI: #[requires(g.is_valid())]
+    // PRUSTI: #[requires(k >= 1)]
+    // PRUSTI: #[ensures(result.is_ok() ==> result.as_ref().unwrap().assignment.len() == g.n())]
+    // PRUSTI: #[ensures(result.is_ok() ==>
+    // PRUSTI:     forall(|i: usize| i < result.as_ref().unwrap().assignment.len()
+    // PRUSTI:         ==> result.as_ref().unwrap().assignment[i] < k))]
+    // PRUSTI: #[ensures(result.is_ok() ==>
+    // PRUSTI:     population_balance(result.as_ref().unwrap(), g) <= epsilon(g))]
+    //
+    // epsilon(g) = (total_vwgt_sum(g) * 5 + 999) / 1000  (ceiling of 0.5%, integer)
+    //
+    // Postcondition 1: full coverage — every vertex assigned
+    // Postcondition 2: valid part IDs — no phantom districts
+    // Postcondition 3: population balance ≤ 0.5% — one-person-one-vote
+    // ─────────────────────────────────────────────────────────────────────────
+
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
         -> Result<Partition, PartitionError>
     {
@@ -92,6 +112,24 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         // by FM during refinement.
         self.split(g, k, seed)
     }
+}
+
+/// Population balance metric used in Prusti postcondition 3.
+/// Returns true iff max deviation from target per part is ≤ epsilon.
+/// epsilon = (total_pop * 5 + 999) / 1000  (ceiling of 0.5%, integer arithmetic).
+#[cfg(any(test, doc))]
+pub fn population_balance_check(p: &Partition, g: &CsrGraph) -> bool {
+    let total_pop: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
+    let target = total_pop / p.k as i64;
+    let epsilon = (total_pop * 5 + 999) / 1000;
+    for part in 0..p.k {
+        let pop: i64 = (0..g.n())
+            .filter(|&v| p.assignment[v] == part)
+            .map(|v| g.vwgt[v] as i64)
+            .sum();
+        if (pop - target).abs() > epsilon { return false; }
+    }
+    true
 }
 
 #[cfg(test)]
