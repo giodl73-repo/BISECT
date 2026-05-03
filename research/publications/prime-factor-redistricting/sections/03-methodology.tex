@@ -14,7 +14,7 @@ count.
 \subsection{The Split Prescription}
 \label{sec:factorization}
 
-At each level of the PFR tree, a region with $k$ target districts is split
+At each level of the AR tree, a region with $k$ target districts is split
 according to the following rule with threshold $\kappa = 3$:
 
 \begin{definition}[Split prescription]
@@ -50,12 +50,12 @@ iterated bisections. The binary fallback $17 \to (8, 9)$ naturally decomposes
 into the highly-reused sub-trees $k=8=2^3$ (three binary levels) and $k=9=3^2$
 (two ternary levels).
 
-\subsection{The PFR Algorithm}
+\subsection{The AR Algorithm}
 \label{sec:pfr}
 
-\begin{definition}[Prime-Factored Redistricting]
-  Given graph $G$ and seat count $n$, the PFR map $M_n(G)$ is constructed by
-  the recursive procedure $\text{PFR}(G, n)$:
+\begin{definition}[ApportionRegions]
+  Given graph $G$ and seat count $n$, the AR map $M_n(G)$ is constructed by
+  the recursive procedure $\text{AR}(G, n)$:
   \begin{enumerate}
     \item If $n = 1$: return $\{G\}$ (one district = whole region).
     \item Compute $\text{split}(n) = (p, k_1, \ldots, k_p)$ where $p$ is the
@@ -63,7 +63,7 @@ into the highly-reused sub-trees $k=8=2^3$ (three binary levels) and $k=9=3^2$
           (Definition~\ref{def:split}).
     \item Partition $G$ into $p$ sub-regions $R_1, \ldots, R_p$ with target
           population fractions $k_i / n$ each, minimising edge-cut weight.
-    \item For each $i$: recursively compute $\text{PFR}(R_i, k_i)$.
+    \item For each $i$: recursively compute $\text{AR}(R_i, k_i)$.
     \item Return the union of all recursive results.
   \end{enumerate}
 \end{definition}
@@ -101,7 +101,7 @@ global content-derived seed and the tree depth, ensuring full reproducibility.
   $n = p \cdot m$, $n' = p \cdot m'$, with $p > \text{lpf}(m)$ and
   $p > \text{lpf}(m')$ (where $\text{lpf}$ denotes the largest prime factor).
   Let $\sigma$ be any METIS seed and $G$ any census-tract graph. Then
-  $\text{PFR}(G, n, \sigma)$ and $\text{PFR}(G, n', \sigma)$ begin with the
+  $\text{AR}(G, n, \sigma)$ and $\text{AR}(G, n', \sigma)$ begin with the
   same top-level partition $\Pi_p(G, \sigma_0)$, where $\sigma_0$ is the
   depth-0 seed derived from $\sigma$.
 \end{theorem}
@@ -118,7 +118,7 @@ global content-derived seed and the tree depth, ensuring full reproducibility.
 \end{proof}
 
 \begin{corollary}
-  $\text{PFR}(G, 34, \sigma)$ and $\text{PFR}(G, 51, \sigma)$ begin with
+  $\text{AR}(G, 34, \sigma)$ and $\text{AR}(G, 51, \sigma)$ begin with
   $\Pi_{17}(G, \sigma_0)$: the same 17-district partition of $G$.
   After the shared first level, $k=34$ bisects each region while
   $k=51$ trisects each region. The partition cache in \texttt{PfrCompositor}
@@ -139,19 +139,19 @@ stale entries.
 For prime $k > \kappa$ (threshold $\kappa = 3$), the split prescription uses
 a 2-way METIS call with asymmetric population targets $\lfloor k/2 \rfloor$
 and $\lceil k/2 \rceil$ rather than a direct $k$-way call. We label this
-\emph{PFR-binary}. PFR-binary is formally distinct from direct-$k$-METIS:
+\emph{AR-binary}. AR-binary is formally distinct from direct-$k$-METIS:
 the two partitions are outputs of different METIS invocations and may produce
 different assignments. However, both are computed from the same inputs and
 seed, so the Reuse Theorem still applies: two seat counts $n, n'$ sharing the
 same large prime $p$ both call 2-way METIS with targets $(\lfloor p/2 \rfloor,
 \lceil p/2 \rceil)$ on the same whole-state graph, returning the same binary
 split regardless of whether $p$ was intended as a ``$p$-way cut.'' The reuse
-theorem holds for PFR-binary under the same determinism assumption.
+theorem holds for AR-binary under the same determinism assumption.
 
-A variant \emph{PFR-direct} that uses direct $k$-way METIS for all prime $k$
-is fully equivalent to PFR-binary in our implementation: METIS~5.x's
+A variant \emph{AR-direct} that uses direct $k$-way METIS for all prime $k$
+is fully equivalent to AR-binary in our implementation: METIS~5.x's
 \texttt{part\_kway} handles $k = 17$ directly (single call, 0.1\% tolerance).
-We defer a systematic comparison of PFR-binary vs.\ PFR-direct to future work.
+We defer a systematic comparison of AR-binary vs.\ AR-direct to future work.
 
 \subsection{Factorization Tree Structure}
 \label{sec:tree}
@@ -182,7 +182,7 @@ recomputation depends on the first position where $F(n)$ and $F(n')$ differ.
 \begin{proposition}[Recomputation depth]
   Let $F(n) = [q_1, \ldots, q_d]$ and $F(n') = [q_1', \ldots, q_{d'}']$.
   Let $k^* = \min\{k : q_k \neq q_k'\}$ (or $k^* = 1$ if $q_1 \neq q_1'$).
-  Then PFR reuses levels $1, \ldots, k^*-1$ and recomputes levels
+  Then AR reuses levels $1, \ldots, k^*-1$ and recomputes levels
   $k^*, \ldots, \max(d, d')$.
 \end{proposition}
 
@@ -191,10 +191,10 @@ full top-level recomputation. This occurs for the $51 \to 52$ transition:
 $51 = 3 \times 17$ (largest prime 17) vs.\ $52 = 4 \times 13$ (largest prime 13).
 No geographic sub-region is shared between the two maps.
 
-\subsection{PFR-Smooth: Minimising Reapportionment Disruption}
+\subsection{AR-Smooth: Minimising Reapportionment Disruption}
 \label{sec:smooth}
 
-When the prime factorization changes structurally, PFR-smooth finds the
+When the prime factorization changes structurally, AR-smooth finds the
 largest common prefix of $F(n)$ and $F(n')$ and reuses it, completing the
 remaining levels from the best available cached splits. Specifically, for
 $n \to n+1$:

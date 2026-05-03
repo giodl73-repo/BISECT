@@ -497,6 +497,140 @@ pub fn run_nway_partition(
 ///
 /// When `vertex_areas_m2` is Some, activates AreaSection mode (ncon=2):
 ///   - Interleaves population and area (hectares) as dual vertex weights.
+/// ProportionalSection (B.12): partisan-proportional bisection using HH seat allocation.
+///
+/// Uses ncon=2 with vertex weights [population, D_votes]. The tpwgts are set by
+/// the B.12 formula: [k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] where d is the
+/// statewide Democratic fraction and k_D/k_R are the Huntington-Hill seat counts.
+///
+/// Only the HH-proportional ratio is tried (not all ratios). Multiple seeds.
+/// Recursive calls use ncon=1 (partisan constraint only at first bisection).
+///
+/// Returns (assignments, k_D, k_R, best_ec, d_statewide).
+pub fn run_proportional_section(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],       // population
+    vertex_d_votes: &[f64],        // Democratic vote counts per tract
+    edge_weights: &std::collections::HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seeds: usize,
+    eta: f64,                      // ubvec[1] for D_votes constraint (1.05–1.20)
+    intermediate_dir: Option<&std::path::Path>,
+) -> Result<(std::collections::HashMap<usize, usize>, usize, usize, f64, f64), String> {
+    let n = adjacency.len();
+    if num_districts <= 1 {
+        let asgn = (0..n).map(|i| (i, 1)).collect();
+        return Ok((asgn, 1, 0, 0.0, 0.5));
+    }
+
+    // Compute statewide D fraction
+    let total_pop: i64 = vertex_weights.iter().sum();
+    let total_d: f64 = vertex_d_votes.iter().sum();
+    let total_two_party: f64 = total_d + vertex_d_votes.len() as f64; // fallback
+    let d = (total_d / total_pop as f64).clamp(0.01, 0.99);
+
+    // Huntington-Hill allocation
+    let k_d_float = d * num_districts as f64;
+    let k_d_floor = k_d_float as usize;
+    let k_d = if k_d_floor > 0 && k_d_float > (k_d_floor * (k_d_floor + 1)) as f64 / ((k_d_floor as f64).sqrt() * (k_d_floor as f64 + 1.0).sqrt()) {
+        k_d_floor + 1
+    } else {
+        k_d_floor.max(1)
+    };
+    let k_r = num_districts - k_d;
+
+    eprintln!("[proportional] d={:.3} k_D={} k_R={} eta={}", d, k_d, k_r, eta);
+
+    // B.12 tpwgts: right (R-bloc) gets minimum D for 50% D concentration
+    let d_right_target = (k_r as f64 / (2.0 * d * num_districts as f64)).clamp(0.01, 0.99);
+    let d_left_target = 1.0 - d_right_target;
+    let pop_left = k_d as f64 / num_districts as f64;
+    let pop_right = k_r as f64 / num_districts as f64;
+
+    let tpwgts = vec![
+        pop_left as f32, d_left_target as f32,
+        pop_right as f32, d_right_target as f32,
+    ];
+    let ubvec = vec![1.001f32, eta as f32];
+
+    // Scale D votes to integer weights for METIS (scale to match pop magnitude)
+    let pop_scale = total_pop as f64 / total_d.max(1.0);
+    let d_weights_i64: Vec<i64> = vertex_d_votes.iter()
+        .map(|&v| ((v * pop_scale) as i64).max(1))
+        .collect();
+
+    // Interleaved vwgt: [pop_0, d_0, pop_1, d_1, ...]
+    let vwgt_flat: Vec<i64> = vertex_weights.iter().zip(d_weights_i64.iter())
+        .flat_map(|(&p, &dv)| [p.max(1), dv])
+        .collect();
+
+    // Try multiple seeds on the HH ratio
+    let all_tracts: std::collections::HashSet<usize> = (0..n).collect();
+    let mut best_ec = f64::INFINITY;
+    let mut best_left = std::collections::HashSet::new();
+    let mut best_right = std::collections::HashSet::new();
+
+    for seed in 1..=(seeds as u64) {
+        match split_subgraph(
+            adjacency, &vwgt_flat, 2, edge_weights, &all_tracts,
+            1.0 + balance_tolerance / num_districts as f64,
+            niter, Some(seed),
+            Some(tpwgts.clone()), Some(ubvec.clone()),
+        ) {
+            Ok((l, r)) => {
+                let ec: f64 = edge_weights.iter()
+                    .filter_map(|(&(u, v), &w)| if l.contains(&u) != l.contains(&v) { Some(w) } else { None })
+                    .sum();
+                if ec < best_ec {
+                    best_ec = ec;
+                    best_left = l;
+                    best_right = r;
+                }
+            }
+            Err(e) => {
+                if seed == 1 { eprintln!("[proportional] seed 1 error: {}", &e.chars().take(200).collect::<String>()); }
+            }
+        }
+    }
+
+    if best_left.is_empty() {
+        return Err(format!("proportional-section: all {} seeds failed for {}:{}", seeds, k_d, k_r));
+    }
+
+    // Actual D fraction achieved
+    let d_left_actual: f64 = best_left.iter().map(|&v| vertex_d_votes[v]).sum::<f64>() / total_d;
+    eprintln!("[proportional] winner: D_left={:.1}% (target {:.1}%), EC={:.0}km",
+              d_left_actual*100.0, d_left_target*100.0, best_ec/1000.0);
+
+    if let Some(dir) = intermediate_dir {
+        let _ = std::fs::create_dir_all(dir.join("depth_01"));
+        let mut d1 = std::collections::HashMap::new();
+        for &v in &best_left  { d1.insert(v, 1); }
+        for &v in &best_right { d1.insert(v, 2); }
+        let _ = write_intermediate_round(&dir.join("depth_01"), &d1);
+    }
+
+    // Recurse with ncon=1 standard bisection
+    let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
+    let left_asgn = recurse_geosection(
+        &best_left, adjacency, vertex_weights, edge_weights,
+        k_d, balance_tolerance, niter, seeds.min(50), 1,
+        &crate::geosection_orientation::CentroidMap::new(), 0.0)?;
+    let right_asgn = recurse_geosection(
+        &best_right, adjacency, vertex_weights, edge_weights,
+        k_r, balance_tolerance, niter, seeds.min(50), k_d + 1,
+        &crate::geosection_orientation::CentroidMap::new(), 0.0)?;
+
+    let mut assignments = left_asgn;
+    assignments.extend(right_asgn);
+    if assignments.len() != n {
+        return Err(format!("proportional-section incomplete: {}/{}", assignments.len(), n));
+    }
+    Ok((assignments, k_d, k_r, best_ec, d))
+}
+
 ///   - At the top-level ratio scan, uses tpwgts=[pop_frac, 0.5, 1-pop_frac, 0.5]
 ///     and ubvec=[1.001, 1.10] (tight pop balance, 10% area swing).
 ///   - Performs Lorenz pre-filtering to skip infeasible ratios.

@@ -61,7 +61,7 @@ redist state --state <CODE> [OPTIONS]
 | `-y`, `--year` | `2020` | Census year: `2020`, `2010`, `2000` |
 | `-v`, `--version` | `v1` | Version tag (used in output path) |
 | `--output-dir` | `outputs/{version}` | Override output root directory |
-| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `partisan-weighted`, `geosection`, `areasection`, `compact-bisect`, `prime-factor` |
+| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `partisan-weighted`, `geosection`, `areasection`, `compact-bisect`, `apportion-regions` |
 | `--partisan-shares` | *(none)* | TSV file with `geoid<TAB>dem_share`. Required for `partisan-weighted` mode. **Mutually exclusive with `metis-vra`** (Callais p.36 disentanglement). |
 | `--dem-threshold` | `0.55` | dem_share ≥ this → unit is "strong-D". Partisan-weighted mode only. |
 | `--rep-threshold` | `0.45` | dem_share ≤ this → unit is "strong-R". Partisan-weighted mode only. |

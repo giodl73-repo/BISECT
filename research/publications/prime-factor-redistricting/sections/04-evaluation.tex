@@ -4,10 +4,10 @@
 \subsection{Experimental Setup}
 \label{sec:eval:setup}
 
-We implement PFR using the \texttt{redist} Rust binary (\texttt{redist-apportion}
+We implement AR using the \texttt{redist} Rust binary (\texttt{redist-apportion}
 crate) with METIS $k$-way partitioning at each tree level. The per-level balance
 tolerance is set to $\varepsilon_{\text{level}} = \varepsilon_{\text{statutory}} /
-(d+1)$ where $d$ is the actual PFR tree depth for that state (computed by
+(d+1)$ where $d$ is the actual AR tree depth for that state (computed by
 \texttt{pfr\_tree\_depth} in the implementation). The METIS minimum ufactor of
 $0.1\%$ applies as a floor.
 
@@ -17,14 +17,14 @@ constraint: the ufactor is a target, not a hard bound. For states whose
 top-level split involves a large prime ($k \geq 7$), the achieved per-part
 imbalance can reach 1--2\%, leading to final district deviations of 1.32--2.1\%
 from the global ideal. This exceeds the statutory $\pm 0.5\%$
-(\emph{Wesberry v.\ Sanders}). We report PFR results under a $3\%$ research
+(\emph{Wesberry v.\ Sanders}). We report AR results under a $3\%$ research
 tolerance and note the achieved balance for each state. Reaching statutory
-balance for PFR would require post-processing (e.g.\ tract-swap refinement on
+balance for AR would require post-processing (e.g.\ tract-swap refinement on
 the final partition) or tighter METIS constraints with restarts; we defer this
 to future work.
 
 \paragraph{Seed sensitivity.}
-PFR is evaluated at 10 seeds per state (20 seeds for the focal states NC and
+AR is evaluated at 10 seeds per state (20 seeds for the focal states NC and
 GA). Seed sensitivity results are in Section~\ref{sec:eval:seeds}. All partisan
 outcomes are measured against 2020 presidential two-party precinct returns
 interpolated to census tracts \citep{Kuriwaki2023}.
@@ -33,7 +33,7 @@ interpolated to census tracts \citep{Kuriwaki2023}.
 \label{sec:eval:factorizations}
 
 Table~\ref{tab:factorizations} shows the 2020 seat count for each state and its
-canonical PFR factorization (largest prime first). Seven seat counts are prime and
+canonical AR factorization (largest prime first). Seven seat counts are prime and
 use binary fallback at their first level: CT and OK ($k=5$, $\to 2+3$),
 SC and AL ($k=7$, $\to 3+4$), VA ($k=11$, $\to 5+6$), MI ($k=13$, $\to 6+7$),
 and PA and IL ($k=17$, $\to 8+9$). Twelve states with $k = 2^m$ have fully binary
@@ -62,17 +62,17 @@ MD,MN        & 8  & $2^3$        & 3 & CA & 52 & $13\times 2^2$      & 3 \\
 TN,AZ,MA,IN  & 9  & $3^2$        & 2 & & & & \\
 \bottomrule
 \end{tabular}
-\caption{2020 seat counts, PFR factorizations (largest prime first), and tree depth.
+\caption{2020 seat counts, AR factorizations (largest prime first), and tree depth.
   Depth = number of METIS calls per branch from root to leaf.
   Prime seat counts (5, 7, 11, 13, 17, 19) use binary floor/ceil fallback at
   that level, which is counted as 1 METIS call.}
 \label{tab:factorizations}
 \end{table}
 
-\subsection{National Comparison: PFR vs.\ MEC}
+\subsection{National Comparison: AR vs.\ MEC}
 \label{sec:eval:national}
 
-Table~\ref{tab:national-pfr-mec} compares the PFR partisan outcome to the
+Table~\ref{tab:national-pfr-mec} compares the AR partisan outcome to the
 minimum-edge-cut (MEC) outcome from \citet{dellaLibera2026mec} for all 48
 states with available precinct election data (Alaska and Hawaii excluded).
 
@@ -80,8 +80,8 @@ states with available precinct election data (Alaska and Hawaii excluded).
 \centering\small
 \begin{tabular}{lrrrr|lrrrr}
 \toprule
-State & $k$ & MEC\,D & PFR\,D & $\Delta$ &
-State & $k$ & MEC\,D & PFR\,D & $\Delta$ \\
+State & $k$ & MEC\,D & AR\,D & $\Delta$ &
+State & $k$ & MEC\,D & AR\,D & $\Delta$ \\
 \midrule
 GA & 14 & 7 & 5 & $-2$ & MN & 8  & 3  & 4  & $+1$ \\
 VA & 11 & 8 & 6 & $-2$ & TN & 9  & 1  & 2  & $+1$ \\
@@ -93,18 +93,18 @@ WI &  8 & 3 & 2 & $-1$ & & & & & \\
 NJ & 12 & 10& 9 & $-1$ & & & & & \\
 \midrule
 \multicolumn{5}{l|}{MEC national (48 states): 228D/204R (52.8\%\,D)} &
-\multicolumn{5}{l}{PFR national (48 states): 223D/209R (51.6\%\,D)} \\
+\multicolumn{5}{l}{AR national (48 states): 223D/209R (51.6\%\,D)} \\
 \bottomrule
 \end{tabular}
-\caption{PFR vs.\ MEC partisan outcomes. $\Delta$ = PFR\,D $-$ MEC\,D.
-  34 states have identical outcomes; 12 differ by 1--2 seats. PFR gives
+\caption{AR vs.\ MEC partisan outcomes. $\Delta$ = AR\,D $-$ MEC\,D.
+  34 states have identical outcomes; 12 differ by 1--2 seats. AR gives
   Democrats 5 fewer seats nationally ($-2.3\%$ seat share).
   MEC outcomes from \citet{dellaLibera2026mec} at convergence
   (1400 seeds for WI; 1000 seeds for GA, TN, MN, PA).}
 \label{tab:national-pfr-mec}
 \end{table}
 
-PFR produces 223D/209R vs.\ MEC's 228D/204R --- a 5-seat Republican shift.
+AR produces 223D/209R vs.\ MEC's 228D/204R --- a 5-seat Republican shift.
 Both totals are within 2 seats of proportional given the ~51\% aggregate
 Democratic two-party vote across the 48 states. Neither algorithm targets
 proportionality, and neither is systematically biased: the 5-seat gap reflects
@@ -116,7 +116,7 @@ state geographies, not a consistent partisan tilt of the algorithm.
 
 The paper's central empirical finding concerns two states with identical
 factorizations: both Georgia ($k=14$) and North Carolina ($k=14$) factor as
-$14 = 7 \times 2$. Under PFR, both states receive the same hierarchical
+$14 = 7 \times 2$. Under AR, both states receive the same hierarchical
 prescription: a 7-way primary split of the state, then bisect each of the 7
 sub-regions.
 
@@ -124,7 +124,7 @@ sub-regions.
 \centering
 \begin{tabular}{lrrrrrr}
 \toprule
-State & $v_s$ & Factorization & PFR\,D & PFR\,$\Delta$ & MEC\,D & MEC\,$\Delta$ \\
+State & $v_s$ & Factorization & AR\,D & AR\,$\Delta$ & MEC\,D & MEC\,$\Delta$ \\
 \midrule
 North Carolina & 49.3\% & $7\times 2$ & 7D/7R & $+0.7$\,pp & 5D/9R & $-13.6$\,pp \\
 Georgia        & 50.1\% & $7\times 2$ & 5D/9R & $-14.4$\,pp & 7D/7R & $-0.1$\,pp \\
@@ -133,8 +133,8 @@ Georgia        & 50.1\% & $7\times 2$ & 5D/9R & $-14.4$\,pp & 7D/7R & $-0.1$\,pp
 \caption{North Carolina and Georgia: identical $k=14=7\times 2$ factorization,
   opposite partisan effects. $v_s$ = statewide Dem two-party vote share.
   $\Delta$ = proportionality gap ($+$ = Dem over-represented).
-  NC under PFR achieves near-perfect proportionality ($+0.7$\,pp) while MEC
-  produces $-13.6$\,pp. GA under PFR produces $-14.4$\,pp while MEC achieves
+  NC under AR achieves near-perfect proportionality ($+0.7$\,pp) while MEC
+  produces $-13.6$\,pp. GA under AR produces $-14.4$\,pp while MEC achieves
   $-0.1$\,pp.}
 \label{tab:nc-ga}
 \end{table}
@@ -156,12 +156,12 @@ that the same factorization tree can produce outcomes that favour either party
 depending on geography --- precisely the constitutional property we seek.
 
 \paragraph{Wisconsin: single-seed limitation.}
-Wisconsin ($k = 8 = 2^3$) is a fully binary PFR tree, identical in structure
-to recursive bisection. PFR produces 2D/6R ($-25.3$\,pp) at the fixed seed.
+Wisconsin ($k = 8 = 2^3$) is a fully binary AR tree, identical in structure
+to recursive bisection. AR produces 2D/6R ($-25.3$\,pp) at the fixed seed.
 This matches the 200-seed MEC \emph{false floor} from \citet{dellaLibera2026mec}:
-the single PFR seed finds an early local optimum that MEC only escapes at seed
+the single AR seed finds an early local optimum that MEC only escapes at seed
 318 after 1{,}400 total seeds. For states with large near-minimum solution
-spaces, a multi-seed PFR protocol (run several seeds, take the minimum-EC
+spaces, a multi-seed AR protocol (run several seeds, take the minimum-EC
 factorization-tree result) would be needed to replicate MEC convergence quality.
 
 \subsection{Prime Seat Counts: Pennsylvania and Michigan}
@@ -170,15 +170,15 @@ factorization-tree result) would be needed to replicate MEC convergence quality.
 Pennsylvania ($k = 17$, prime) and Michigan ($k = 13$, prime) use binary
 floor/ceil fallback at their first split level.
 
-For Pennsylvania, PFR produces 7D/10R ($-9.4$\,pp) vs.\ the MEC convergence
-result of 8D/9R ($-3.5$\,pp). The PFR split at $k=17$ yields $\{8, 9\}$
+For Pennsylvania, AR produces 7D/10R ($-9.4$\,pp) vs.\ the MEC convergence
+result of 8D/9R ($-3.5$\,pp). The AR split at $k=17$ yields $\{8, 9\}$
 sub-regions; the 8-district side ($2^3$, fully binary) and the 9-district side
 ($3^2$, fully ternary) find different local optima than the iterated bisection
 that MEC uses. Pennsylvania's mixed geography (Philadelphia, Pittsburgh, Scranton,
 broad rural areas) makes it sensitive to first-level boundary choices.
 
 Michigan ($k = 13$, prime, $\to 6+7$) produces 7D/6R ($+2.4$\,pp) under both
-PFR and MEC --- the outcomes agree despite the different algorithmic paths. The
+AR and MEC --- the outcomes agree despite the different algorithmic paths. The
 6-district half ($2 \times 3$) and 7-district half (prime, $\to 3+4$) each
 converge to the same partisan outcome as MEC's recursive bisection.
 
@@ -187,7 +187,7 @@ converge to the same partisan outcome as MEC's recursive bisection.
 
 Texas ($k = 38 = 2 \times 19$) has a depth-2 factorization tree: a 19-way
 primary METIS split of the state, then bisect each of the 19 sub-regions.
-PFR produces 16D/22R ($-5.1$\,pp) vs.\ MEC's 15D/23R ($-7.7$\,pp) --- one
+AR produces 16D/22R ($-5.1$\,pp) vs.\ MEC's 15D/23R ($-7.7$\,pp) --- one
 more Democratic seat. The 19-way primary partition groups Texas's diverse urban
 centres (Houston, Dallas, Austin, San Antonio) differently than iterated
 bisection, yielding a slightly more proportional outcome. Texas also demonstrates
@@ -197,7 +197,7 @@ the computational tractability of large-prime top-level splits: a single METIS
 \subsection{Seed Sensitivity: Zero Variance in All 50 States}
 \label{sec:eval:seeds}
 
-We ran PFR at 10 seeds (seeds 1--10) for all 50 states, and 20 seeds
+We ran AR at 10 seeds (seeds 1--10) for all 50 states, and 20 seeds
 (seeds 1--20) for the seven focal states (NC, GA, WI, PA, MN, TN, TX).
 480 total runs were completed with 100\% success rate.
 
@@ -212,7 +212,7 @@ GA: 2{,}685\,km on all 20 seeds; TX: 9{,}068\,km on all 20 seeds).
 \centering\small
 \begin{tabular}{lrrlrr}
 \toprule
-State & $k$ & Factorization & PFR outcome & Seeds & Variance \\
+State & $k$ & Factorization & AR outcome & Seeds & Variance \\
 \midrule
 NC & 14 & $7 \times 2$ & 7D/7R ($+0.7$\,pp) & 20 & 0 \\
 GA & 14 & $7 \times 2$ & 5D/9R ($-14.4$\,pp) & 20 & 0 \\
@@ -223,29 +223,29 @@ TN & 9  & $3^2$        & 2D/7R ($-16.0$\,pp) & 20 & 0 \\
 TX & 38 & $19 \times 2$ & 16D/22R ($-5.1$\,pp) & 20 & 0 \\
 \bottomrule
 \end{tabular}
-\caption{PFR partisan outcomes across 10--20 seeds. Variance = number of seeds
+\caption{AR partisan outcomes across 10--20 seeds. Variance = number of seeds
   that produced a different outcome than seed~1. Zero variance in all cases:
-  PFR produces identical partitions regardless of METIS seed.}
+  AR produces identical partitions regardless of METIS seed.}
 \label{tab:seed-sensitivity}
 \end{table}
 
-\paragraph{Why PFR is seed-invariant.}
-PFR's hierarchical structure decomposes the redistricting problem into a
+\paragraph{Why AR is seed-invariant.}
+AR's hierarchical structure decomposes the redistricting problem into a
 sequence of small subproblems. At each level, METIS optimises over a
 subgraph containing only $1/p$ of the state's census tracts, where $p$ is the
 top-level prime. These smaller problems have fewer near-optimal solutions than
 the full-state partition problem, and METIS finds the same local optimum from
 any starting seed. This contrasts sharply with MEC, where the full-state
 minimum-edge-cut problem has hundreds of near-optimal solutions and partisan
-outcomes vary across thousands of seeds. PFR converts a hard, high-variance
+outcomes vary across thousands of seeds. AR converts a hard, high-variance
 global search into a sequence of easy, low-variance local searches.
 
 \paragraph{Implication for the constitutional argument.}
-If PFR's output is independent of the METIS seed, the map is determined by
+If AR's output is independent of the METIS seed, the map is determined by
 exactly two inputs: the prime factorization of $n$ (arithmetic) and the
 census-tract graph $G$ (geography). The METIS seed --- the last remaining
 degree of freedom in the algorithm --- turns out to be irrelevant in practice.
-This strengthens the constitutional claim: PFR is not merely reproducible given
+This strengthens the constitutional claim: AR is not merely reproducible given
 a seed; it is functionally seedless. Any seed produces the same map.
 
 \subsection{Structural Disruption Across Reapportionments}

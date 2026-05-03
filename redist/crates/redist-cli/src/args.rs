@@ -63,11 +63,17 @@ pub enum PartitionMode {
     /// ncon=2: tight population balance AND 50/50 area (±10% swing allowed).
     #[value(name = "areasection")]
     AreaSection,
-    /// PrimeFactor (B.11): hierarchical k-way partition driven by prime
+    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] bisection for partisan proportionality.
+    /// Uses HH seat allocation to set tpwgts: right (R-bloc) gets minimum D votes for 50% D.
+    /// Requires presidential_by_tract.csv in data/{year}/elections/.
+    /// Use --eta to control D_votes constraint softness (1.05=tight, 1.20=loose).
+    #[value(name = "proportional-section")]
+    ProportionalSection,
+    /// ApportionRegions (B.11): hierarchical k-way partition driven by prime
     /// factorization of the seat count. Geographic completion of Huntington-Hill.
     /// Requires --compact-seeds N (seeds per level, default 1).
-    #[value(name = "prime-factor")]
-    PrimeFactor,
+    #[value(name = "apportion-regions")]
+    ApportionRegions,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -80,8 +86,9 @@ impl std::fmt::Display for PartitionMode {
             Self::Proportional     => write!(f, "proportional"),
             Self::CompactBisect    => write!(f, "compact-bisect"),
             Self::GeoSection       => write!(f, "geosection"),
-            Self::AreaSection      => write!(f, "areasection"),
-            Self::PrimeFactor      => write!(f, "prime-factor"),
+            Self::AreaSection           => write!(f, "areasection"),
+            Self::ProportionalSection   => write!(f, "proportional-section"),
+            Self::ApportionRegions      => write!(f, "apportion-regions"),
         }
     }
 }
@@ -1157,6 +1164,11 @@ pub struct StateArgs {
     /// convergence failures for concentrated states; >1.25 approaches GeoSection.
     #[arg(long, default_value_t = 1.10)]
     pub area_swing: f64,
+
+    /// ProportionalSection (B.12): D_votes constraint softness (ubvec[1]).
+    /// 1.05 = tight partisan constraint; 1.20 = loose. Default 1.10.
+    #[arg(long, default_value_t = 1.10)]
+    pub eta: f64,
 
     /// Governmental subdivision stickiness — county level (B.10).
     /// Makes intra-county edges more expensive to cut (alpha=0 disables).

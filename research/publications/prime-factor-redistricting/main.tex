@@ -15,7 +15,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 
-\title{Prime-Factored Maps:\\
+\title{ApportionRegions:\\
        Redistricting as the Geographic Completion of Huntington-Hill}
 
 \author{Gio Della-Libera}
@@ -33,15 +33,15 @@ of district boundaries as a separate ``Manner of election'' question (Article~I,
 \S4). We propose collapsing this distinction. Given that a state receives $n$
 seats, we construct its congressional map by factoring $n$ into primes and
 applying those factors hierarchically as $k$-way geographic partitions of the
-state's census-tract graph. The resulting \emph{Prime-Factored Redistricting}
-(PFR) algorithm has two inputs: the prime factorization of the seat count
+state's census-tract graph. The resulting \emph{ApportionRegions}
+(AR) algorithm has two inputs: the prime factorization of the seat count
 (arithmetic) and the minimum-cut partition of the geographic graph (TIGER
 adjacency). All prime-$p$ splits of a given state are computed once and reused
 across every seat count sharing that prime factor. When $n$ changes after
 reapportionment, only the levels of the factorization tree affected by the new
 prime structure require recomputation. The map is uniquely determined by
 census data and number theory --- no political inputs, no interpretive degrees
-of freedom. We prove that PFR is constitutional under Article~I~\S2 directly,
+of freedom. We prove that AR is constitutional under Article~I~\S2 directly,
 evaluate the algorithm on all 50 states, and characterize the striking
 discontinuities that occur when consecutive seat counts have disjoint prime
 factorizations (e.g., California's 51\,=\,3\,$\times$\,17 and
