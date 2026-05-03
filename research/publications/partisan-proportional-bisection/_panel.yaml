@@ -1,15 +1,27 @@
 paper: partisan-proportional-bisection
 title: "The Proportionality Compromise: Dual-Constrained Bisection for Partisan-Fair Redistricting"
 venue: "Political Analysis"
-stage: draft
-round: 0
+stage: panel
+round: 1
 series: B
 series_number: 12
 content_mode: plan
 writing_completed: false
-reviewers: []
-avg_score: null
+reviewers: [Duchin, Rodden, Karypis, Stephanopoulos, Liang]
+reviews:
+  Duchin:        {score: 3.0, file: reviews/REVIEW-moon-duchin.md}
+  Rodden:        {score: 3.0, file: reviews/REVIEW-jonathan-rodden.md}
+  Karypis:       {score: 3.0, file: reviews/REVIEW-george-karypis.md}
+  Stephanopoulos:{score: 3.0, file: reviews/REVIEW-nicholas-stephanopoulos.md}
+  Liang:         {score: 2.5, file: reviews/REVIEW-percy-liang.md}
+avg_score: 2.9
 history:
   - stage: draft
     date: "2026-05-03"
     note: "Paper initialized. Core formula derived: tpwgts=[k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] for ncon=2 [pop, D_votes] bisection achieving exact partisan proportionality."
+  - stage: draft
+    date: "2026-05-03"
+    note: "Proportionality paradox discovered: all competitive states have sigma<0.05. Tradeoff invariance theorem: B.12 cannot improve competitive-state gaps by more than C*sigma. 16-page PDF compiled clean."
+  - stage: panel
+    date: "2026-05-03"
+    note: "Round 1: 5 reviews, avg 2.9/4. Common P1: empirical validation (C*sigma bound), formal gap metric definition, EG distinction, METIS parameter reporting."

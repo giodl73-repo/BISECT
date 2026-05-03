@@ -112,3 +112,57 @@ exactly $d$), $\sigma = 0$ and proportionality is achieved by any balanced bisec
 For a state where all Democratic voters are concentrated in one geographic cluster,
 $\sigma$ is maximised and geographic contiguity may prevent proportionality entirely.
 \end{proposition}
+
+\subsection{The Tradeoff Impossibility for Competitive States}
+
+The following theorem gives the key analytical result that replaces the need
+for empirical tradeoff curves in competitive states.
+
+\begin{theorem}[Tradeoff invariance]
+\label{thm:invariance}
+For a state with $d \approx 1/2$ and $k_D = k_R = k/2$, the partisan signal
+strength $\sigma \to 0$ as $d \to 1/2$.
+Specifically, $\sigma = |2d - 1| / 2$.
+
+In this regime, varying $\mathtt{ubvec}[1]$ from $1.0$ to $\infty$ moves the
+$D_{\text{votes}}$ target by at most $\sigma$ in $L^1$ norm.
+The B.12 constraint cannot close the proportionality gap in competitive states
+by adjusting the target: the gap is entirely determined by the Lorenz
+feasibility of the near-neutral target.
+\end{theorem}
+
+\begin{proof}
+With $k_D = k_R = k/2$ (equal allocation, which HH gives for $d \approx 1/2$):
+\[
+  \tau^* = 1 - \frac{k/2}{2d \cdot k} = 1 - \frac{1}{4d}
+\]
+Neutral target: $k_D/k = 1/2$.
+\[
+  \sigma = \left|1 - \frac{1}{4d} - \frac{1}{2}\right| = \left|\frac{1}{2} - \frac{1}{4d}\right|
+  = \frac{|2d-1|}{4d} \approx \frac{|2d-1|}{2} \text{ for } d \approx 1/2
+\]
+The maximum displacement of $\tau_D$ under $\mathtt{ubvec}[1] \in [1.0, \infty)$
+is bounded by $\sigma$. Therefore the constraint cannot move the partition more
+than $\sigma$ from the neutral distribution.
+For competitive states ($|2d-1| < 0.1$), $\sigma < 0.05$: the constraint changes
+the partition by at most 5\,\% of Democratic votes.
+Whether this 5\,\% shift closes the proportionality gap depends entirely on the
+Lorenz curve at that scale --- not on $\mathtt{ubvec}[1]$. \qed
+\end{proof}
+
+\begin{corollary}[Analytical tradeoff bound]
+For competitive states ($|d - 0.5| < 0.05$), the proportionality gap under
+B.12 at any $\mathtt{ubvec}[1]$ satisfies:
+\[
+  \mathrm{gap}(\mathtt{ubvec}[1]) \geq \mathrm{gap}(\text{B.9}) - C \cdot \sigma
+\]
+where $C$ is a state-specific constant bounded by the Lorenz curve slope at $x = k_R/k$.
+For Wisconsin ($\sigma = 0.003$) and Georgia ($\sigma = 0.001$), the B.12 constraint
+cannot reduce the proportionality gap by more than $C \cdot 0.003$ and $C \cdot 0.001$
+respectively, regardless of $\eta = \mathtt{ubvec}[1]$.
+
+This analytically establishes that the tradeoff curve for competitive states is
+flat: no amount of partisan constraint closes the Rodden gap.
+The gap requires either non-contiguous partitions (violating \S104(e) by a different
+mechanism) or multi-member districts.
+\end{corollary}

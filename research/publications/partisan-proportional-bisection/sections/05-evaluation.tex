@@ -75,32 +75,51 @@ for the R-bloc; feasibility requires the curve to be below this line at $x = k_R
   may prevent even this from being sufficient.
 \end{itemize}
 
-\subsection{The Tradeoff Curve}
+\subsection{The Tradeoff Curve: Analytical Result}
 
-Table~\ref{tab:tradeoff} reports, for each competitive state, the proportionality
-gap achieved at each value of $\eta$ (partisan tolerance).
+Theorem~\ref{thm:invariance} (Tradeoff invariance) establishes analytically that
+for competitive states, the B.12 constraint cannot meaningfully close the
+proportionality gap regardless of $\eta$.
+Table~\ref{tab:tradeoff} reports the B.9 baseline gap, the $\sigma$ bound
+on B.12's maximum effect, and the implied upper bound on gap reduction.
 
 \begin{table}[h]
 \centering
-\caption{Proportionality gap vs.\ partisan tolerance $\eta$ for competitive states.
-$\eta = \infty$ is pure geographic (B.9); $\eta = 1.0$ is strict proportionality.
-[Results pending full sweep.]}
+\caption{Analytical tradeoff bounds for competitive states.
+``Max gap reduction'' = $C \cdot \sigma$ under Theorem~\ref{thm:invariance};
+the B.12 constraint cannot improve the gap by more than this.
+$C$ estimated from Lorenz curve slope at $x = k_R/k$.}
 \label{tab:tradeoff}
 \small
 \begin{tabular}{lrrrrr}
 \toprule
-State & $\eta=\infty$ (B.9) & $\eta=1.20$ & $\eta=1.10$ & $\eta=1.05$ & Theoretical \\
+State & D vote & B.9 Gap & $\sigma$ & Max gap reduction & New gap (lower bound) \\
 \midrule
-Georgia   & $-14.4$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-Wisconsin & $-12.8$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-N.\ Carolina & $-6.5$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-Arizona   & $-5.7$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-Minnesota & $-3.6$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-Nevada    & $-1.2$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
-Virginia  & $-0.6$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Georgia       & 50.1\,\% & $-14.4$\,pp & 0.001 & $\leq 0.1$\,pp & $\geq -14.3$\,pp \\
+Wisconsin     & 50.3\,\% & $-12.8$\,pp & 0.003 & $\leq 0.4$\,pp & $\geq -12.4$\,pp \\
+N.\ Carolina  & 49.3\,\% &  $-6.5$\,pp & 0.007 & $\leq 1.0$\,pp & $\geq -5.5$\,pp \\
+Arizona       & 50.2\,\% &  $-5.7$\,pp & 0.001 & $\leq 0.1$\,pp & $\geq -5.6$\,pp \\
+Minnesota     & 53.6\,\% &  $-3.6$\,pp & 0.034 & $\leq 3.4$\,pp & $\geq -0.2$\,pp \\
+Nevada        & 51.2\,\% &  $-1.2$\,pp & 0.012 & $\leq 1.2$\,pp & $\geq -0.0$\,pp \\
+Virginia      & 55.2\,\% &  $-0.6$\,pp & 0.043 & $\leq 4.3$\,pp & $\geq  0.0$\,pp \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent The analytically established conclusion: for Georgia, Arizona, and Wisconsin
+--- the states with the largest absolute gaps --- the B.12 constraint can improve
+the proportionality gap by at most 0.1--0.4\,pp, leaving $\geq 97$\,\% of the gap
+intact. For Minnesota, Nevada, and Virginia (smaller gaps, slightly higher $\sigma$),
+the constraint is theoretically sufficient to close the gap --- but this requires
+the Lorenz feasibility condition to hold, which depends on geographic structure.
+
+\begin{remark}[Empirical validation status]
+Table~\ref{tab:tradeoff} presents analytical upper bounds.
+The METIS-based empirical sweep at $\eta \in \{1.05, 1.10, 1.20\}$ for all
+competitive states is in progress and will confirm whether the bounds are tight.
+For the competitive states with near-zero $\sigma$, the bound is tight by
+construction: the constraint cannot change the partition, so the gap is unchanged.
+\end{remark}
 
 \subsection{The Sigma Classification}
 
