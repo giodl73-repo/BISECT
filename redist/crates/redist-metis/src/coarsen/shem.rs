@@ -94,6 +94,38 @@ mod tests {
     }
 }
 
+#[cfg(kani)]
+mod kani_proofs {
+    use super::*;
+    use crate::coarsen::Coarsener;
+
+    /// Helper: build a valid path graph of length n for Kani
+    fn kani_path(n: usize) -> CsrGraph {
+        let mut xadj = vec![0u32];
+        let mut adjncy = Vec::new();
+        for i in 0..n {
+            if i > 0 { adjncy.push((i - 1) as u32); }
+            if i < n - 1 { adjncy.push((i + 1) as u32); }
+            xadj.push(adjncy.len() as u32);
+        }
+        CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
+    }
+
+    /// Proves: SortedHeavyEdgeMatch::coarsen() never panics or goes OOB
+    /// for any valid path graph up to n=16.
+    #[kani::proof]
+    #[kani::unwind(17)]
+    fn verify_shem_no_oob() {
+        let n: usize = kani::any_where(|&n: &usize| n >= 2 && n <= 16);
+        let g = kani_path(n);
+        kani::assume(g.is_valid());
+        let (coarsened, cmap) = SortedHeavyEdgeMatch.coarsen(&g);
+        // These must hold without panic
+        assert!(cmap.cmap.len() == g.n());
+        assert!(coarsened.n() < g.n());
+    }
+}
+
 // ── implementation ────────────────────────────────────────────────────────
 
 impl Coarsener for SortedHeavyEdgeMatch {
