@@ -61,6 +61,19 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
         state.part_pop[to_part]   = new_to;
         state.boundary.remove(v as u32);
 
+        // Update current_cut incrementally — O(degree(v)) not O(m)
+        {
+            let g = state.graph;
+            let mut cut_delta: i64 = 0;
+            for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+                let u = g.adjncy[j] as usize;
+                let ew = g.adjwgt.as_ref().map_or(1i64, |aw| aw[j] as i64);
+                if state.assignment[u] as usize == from_part { cut_delta += ew; } // was same, now cross
+                if state.assignment[u] as usize == to_part   { cut_delta -= ew; } // was cross, now same
+            }
+            state.current_cut += cut_delta;
+        }
+
         // Update gains for all unlocked neighbours of v
         let g = state.graph;
         for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
@@ -87,8 +100,8 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
             }
         }
 
-        // Checkpoint if improved
-        let cur_cut = state.cut();
+        // Checkpoint if improved — use incremental cut value, O(1)
+        let cur_cut = state.current_cut;
         if cur_cut < best.cut {
             *best = Checkpoint { assignment: state.assignment.clone(), cut: cur_cut };
         }
@@ -111,12 +124,13 @@ fn best_destination(state: &FmState, v: usize, from: u32) -> u32 {
 }
 
 pub struct FmState<'g> {
-    pub graph:      &'g CsrGraph,
-    pub assignment: Vec<u32>,
-    pub k:          u32,
-    pub gain_table: GainTable,
-    pub boundary:   BoundarySet,
-    pub part_pop:   Vec<i64>,
+    pub graph:        &'g CsrGraph,
+    pub assignment:   Vec<u32>,
+    pub k:            u32,
+    pub gain_table:   GainTable,
+    pub boundary:     BoundarySet,
+    pub part_pop:     Vec<i64>,
+    pub current_cut:  i64,
 }
 
 #[derive(Clone)]
@@ -143,11 +157,17 @@ impl<'g> FmState<'g> {
         let mut gain_table = GainTable::new(n, max_gain);
         for v in boundary.iter() {
             let gain = compute_gain(g, &p.assignment, v as usize);
+            debug_assert!(
+                gain.abs() <= max_gain,
+                "computed gain {gain} exceeds max_gain {max_gain} — max_gain estimate is wrong"
+            );
             let gain_clamped = gain.clamp(-max_gain, max_gain);
             gain_table.insert(v, gain_clamped);
         }
 
-        FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop }
+        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0 };
+        state.current_cut = state.cut();
+        state
     }
 
     pub fn cut(&self) -> i64 {
@@ -165,7 +185,7 @@ impl<'g> FmState<'g> {
     }
 
     pub fn checkpoint(&self) -> Checkpoint {
-        Checkpoint { assignment: self.assignment.clone(), cut: self.cut() }
+        Checkpoint { assignment: self.assignment.clone(), cut: self.current_cut }
     }
 
     pub fn restore(&mut self, cp: &Checkpoint) {
@@ -177,6 +197,10 @@ impl<'g> FmState<'g> {
         self.gain_table = GainTable::new(n, max_gain);
         for v in self.boundary.iter() {
             let gain = compute_gain(self.graph, &self.assignment, v as usize);
+            debug_assert!(
+                gain.abs() <= max_gain,
+                "computed gain {gain} exceeds max_gain {max_gain} — max_gain estimate is wrong"
+            );
             let gain_clamped = gain.clamp(-max_gain, max_gain);
             self.gain_table.insert(v, gain_clamped);
         }
@@ -184,6 +208,7 @@ impl<'g> FmState<'g> {
         let k = self.k as usize;
         self.part_pop = vec![0i64; k];
         for v in 0..n { self.part_pop[self.assignment[v] as usize] += self.graph.vwgt[v] as i64; }
+        self.current_cut = self.cut(); // recompute once after restore
     }
 }
 

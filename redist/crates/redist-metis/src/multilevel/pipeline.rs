@@ -20,8 +20,10 @@ pub struct Pipeline<S> {
 
 impl Pipeline<NeedsPartition> {
     pub fn new(h: CoarseningHierarchy) -> Self {
-        let levels_built = h.depth();
-        let _ = levels_built; // used in state evidence
+        debug_assert!(
+            h.cmaps.len() == h.levels.len().saturating_sub(1),
+            "CoarseningHierarchy invariant violated: cmaps.len() != levels.len()-1"
+        );
         Self { hierarchy: h, partition: None, _state: PhantomData }
     }
 
@@ -32,7 +34,10 @@ impl Pipeline<NeedsPartition> {
         seed: u64,
     ) -> Pipeline<NeedsRefinement> {
         let coarsest_n = self.hierarchy.coarsest().n();
-        let _ = coarsest_n; // used in state evidence
+        debug_assert!(
+            coarsest_n >= 1,
+            "coarsest graph must have at least 1 vertex, got {coarsest_n}"
+        );
         let p = init.partition(self.hierarchy.coarsest(), k, seed);
         Pipeline {
             hierarchy: self.hierarchy,
