@@ -22,9 +22,11 @@ pub mod prime;
 pub mod graph;
 pub mod split;
 pub mod compositor;
+pub mod nest;
 
 pub use huntington_hill::huntington_hill;
 pub use prime::{prime_factor_sequence, split_prescription, pfr_tree_depth, SplitStep, MAX_DIRECT_SPLIT};
 pub use graph::SubGraph;
 pub use split::{SplitError, Partitioner, MetisPartitioner};
 pub use compositor::PfrCompositor;
+pub use nest::{compatible_spines, spine_compatibility_score, us_state_compatibility_table, StateCompatibility};
