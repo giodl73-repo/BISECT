@@ -149,6 +149,24 @@ pub fn is_prime(n: u32) -> bool {
     true
 }
 
+/// Actual depth of the PFR factorization tree for seat count `k`.
+///
+/// This is the maximum path length from the root to any leaf, following
+/// the `split_prescription` rules (largest-prime-first, binary fallback
+/// for prime > MAX_DIRECT_SPLIT). Used to compute per-level METIS balance
+/// tolerance such that cumulative error stays within the statutory limit.
+///
+/// Examples: k=8→3, k=17→4, k=38→5, k=52→3.
+pub fn pfr_tree_depth(k: u32) -> u32 {
+    if k <= 1 { return 0; }
+    let step = split_prescription(k);
+    let max_sub = (0..step.parts())
+        .map(|i| pfr_tree_depth(step.sub_k(i as usize)))
+        .max()
+        .unwrap_or(0);
+    1 + max_sub
+}
+
 /// The "disruption level" of an `n → n+1` reapportionment transition:
 /// the depth at which the factorization trees first diverge (1-based).
 /// Returns 0 if both sequences are empty (n=1 case).
@@ -273,6 +291,23 @@ mod tests {
         assert_eq!(split_prescription(51).parts(), 17);
         assert_eq!(split_prescription(26).parts(), 13);
         assert_eq!(split_prescription(52).parts(), 13);
+    }
+
+    #[test]
+    fn test_pfr_tree_depth() {
+        assert_eq!(pfr_tree_depth(1), 0);
+        assert_eq!(pfr_tree_depth(2), 1);  // one 2-cut
+        assert_eq!(pfr_tree_depth(3), 1);  // one 3-cut
+        assert_eq!(pfr_tree_depth(4), 2);  // 2-cut → 2-cut
+        assert_eq!(pfr_tree_depth(8), 3);  // 2→2→2
+        assert_eq!(pfr_tree_depth(9), 2);  // 3-cut → 3-cut
+        // k=17 (prime): Binary(8,9). depth = 1 + max(depth(8), depth(9)) = 1+max(3,2) = 4
+        assert_eq!(pfr_tree_depth(17), 4);
+        // k=52=4×13: Uniform{parts:13, sub_k:4}. depth = 1 + depth(4) = 1+2 = 3
+        assert_eq!(pfr_tree_depth(52), 3);
+        // k=38=2×19: Uniform{parts:19, sub_k:2}. depth = 1 + depth(2) = 1+1 = 2
+        // (the 19-way cut is one single METIS call, not 19 recursive levels)
+        assert_eq!(pfr_tree_depth(38), 2);
     }
 
     #[test]

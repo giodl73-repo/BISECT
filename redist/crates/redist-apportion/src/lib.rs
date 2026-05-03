@@ -24,7 +24,7 @@ pub mod split;
 pub mod compositor;
 
 pub use huntington_hill::huntington_hill;
-pub use prime::{prime_factor_sequence, split_prescription, SplitStep, MAX_DIRECT_SPLIT};
+pub use prime::{prime_factor_sequence, split_prescription, pfr_tree_depth, SplitStep, MAX_DIRECT_SPLIT};
 pub use graph::SubGraph;
 pub use split::{SplitError, Partitioner, MetisPartitioner};
 pub use compositor::PfrCompositor;
