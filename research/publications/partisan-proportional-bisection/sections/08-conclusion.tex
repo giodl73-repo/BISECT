@@ -18,7 +18,23 @@ $\sigma \approx 0$ (free proportionality, geography already gives proportional
 outcomes) to $\sigma > 0.2$ (expensive proportionality, geographic concentration
 makes proportional maps nearly impossible).
 
-\paragraph{The core finding.}
+\paragraph{The core finding: the proportionality paradox.}
+Competitive states (46--55\,\% Democratic) have $\sigma < 0.05$ --- the
+proportional tpwgts target is essentially the same as the neutral equal-distribution
+target. Georgia needs to shift 0.1\,\% of D votes from neutral; Wisconsin needs
+0.3\,\%. Yet both have 12--14\,pp gaps under geography-only algorithms.
+
+By Theorem~\ref{thm:invariance} (Tradeoff invariance), varying the partisan
+constraint from loose ($\eta = \infty$) to strict ($\eta = 1.0$) cannot close
+more than $C \cdot \sigma$ of the gap for competitive states. For Georgia
+($\sigma = 0.001$) and Wisconsin ($\sigma = 0.003$), this is less than 0.5\,pp
+improvement on a 14\,pp gap.
+
+\textbf{The proportionality problem in competitive states is a Lorenz feasibility
+problem, not a target calibration problem.}
+The algorithm cannot find the right partition because geography prevents it,
+not because we are asking for the wrong target.
+
 The states that most need proportional redistricting are the states where
 proportionality is most expensive.
 Extreme Democratic geographic concentration --- Milwaukee, Madison, Atlanta,
