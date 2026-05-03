@@ -112,10 +112,22 @@ population balance over area balance when both constraints conflict --- the
 left subgraph gets the fraction of population that satisfies the tighter
 constraint, which may not be exactly the target.
 
-The same 5\,\% area swing sensitivity test confirms this interpretation: running
-FL, IL, MI, NY, PA, TX with a 5\,\% balance tolerance (well above the
-constitutional standard) still fails because the subgraph population imbalance
-is architectural.
+Running FL, IL, MI, NY, PA, TX with a 5\,\% balance tolerance confirms that the
+failure mode is not uniform:
+\textbf{FL, IL, and TX succeed at 5\,\%} (FL: 8:20 natural ratio with balanced
+subgraphs; IL: 8:9 with near-equal population; TX: 12:26).
+\textbf{MI, NY, and PA still fail at 5\,\%} (PA 15.9\,\% deviation, MI 13.3\,\%, NY 9.2\,\%).
+
+The distinction is the population-area structure of each state.
+For NY (natural ratio 13:13, area$_\text{left}$=54.7\,\%), the geographic 50/50
+area split gives northern New York 50\,\% of the state's land but only
+$\sim$35\,\% of its population ($\sim$7.1M for 13 districts, vs ideal 10.1M).
+No amount of seed-count increase can overcome this: the northern subgraph
+physically does not have enough population for 13 districts at the national ideal.
+The same pattern holds for PA and MI.
+
+FL, IL, and TX succeed because their area constraint produces subgraphs with
+roughly proportional populations.
 A complete fix requires one of:
 (a) applying the dual constraint at \emph{every} recursive level, not just
     the first, so each subgraph also targets its own proportional area share;
