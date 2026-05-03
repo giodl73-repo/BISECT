@@ -250,7 +250,7 @@ impl AlgorithmConfig {
             PM::AreaSection => Self {
                 split: SplitStrategy::AreaSection {
                     seeds_per_ratio: args.geosection_seeds.max(1),
-                    area_swing: 1.10,
+                    area_swing: args.area_swing,
                 },
                 weights: base_weights,
                 vertex_constraints: pop_and_area,  // ncon=2: population + land area
@@ -1023,13 +1023,13 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 &graph.adjacency, &vwgt, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 *seeds_per_ratio, Some(&intermediate_dir),
-                &centroids, lambda, None,
+                &centroids, lambda, None, 1.10,
             ).map_err(|e| format!("geosection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
-        SplitStrategy::AreaSection { seeds_per_ratio, .. } => {
+        SplitStrategy::AreaSection { seeds_per_ratio, area_swing } => {
             if tiger_areas.is_empty() {
                 return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
                                    cfg.state_code));
@@ -1042,7 +1042,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
                 *seeds_per_ratio, Some(&intermediate_dir),
-                &empty_centroids, 0.0, Some(&tiger_areas),
+                &empty_centroids, 0.0, Some(&tiger_areas), *area_swing,
             ).map_err(|e| format!("areasection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));

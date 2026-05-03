@@ -230,9 +230,12 @@ fn main() {
                     // Override seeds_per_ratio from CLI if non-default
                     use redist_cli::runner::SplitStrategy;
                     match &mut cfg.algo.split {
-                        SplitStrategy::GeoSection { seeds_per_ratio } |
-                        SplitStrategy::AreaSection { seeds_per_ratio, .. } =>
+                        SplitStrategy::GeoSection { seeds_per_ratio } =>
                             *seeds_per_ratio = args.geosection_seeds.max(1),
+                        SplitStrategy::AreaSection { seeds_per_ratio, area_swing } => {
+                            *seeds_per_ratio = args.geosection_seeds.max(1);
+                            *area_swing = args.area_swing;
+                        }
                         _ => {}
                     }
                     if let Some(tol) = args.balance_tolerance {

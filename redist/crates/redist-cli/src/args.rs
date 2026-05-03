@@ -1152,6 +1152,12 @@ pub struct StateArgs {
     #[arg(long, default_value = "0")]
     pub geosection_seeds: usize,
 
+    /// AreaSection (B.9): area imbalance tolerance multiplier (default: 1.10 = ±10%).
+    /// ubvec[1] for the land-area balance constraint. Values <1.05 may cause
+    /// convergence failures for concentrated states; >1.25 approaches GeoSection.
+    #[arg(long, default_value_t = 1.10)]
+    pub area_swing: f64,
+
     /// Governmental subdivision stickiness — county level (B.10).
     /// Makes intra-county edges more expensive to cut (alpha=0 disables).
     /// alpha=1 doubles the cost of cross-county cuts; alpha=5 = strong preference.
@@ -1294,6 +1300,10 @@ pub struct StatesArgs {
     /// Seeds per ratio for GeoSection/AreaSection (default: 50)
     #[arg(long, default_value_t = 50)]
     pub geosection_seeds: usize,
+
+    /// AreaSection area imbalance tolerance (default: 1.10 = ±10%)
+    #[arg(long, default_value_t = 1.10)]
+    pub area_swing: f64,
 
     /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
     #[arg(long)]

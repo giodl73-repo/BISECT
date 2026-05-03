@@ -518,6 +518,8 @@ pub fn run_geosection(
     lambda: f64,
     // AreaSection mode: ALAND in m² per vertex. None = standard GeoSection (ncon=1).
     vertex_areas_m2: Option<&[f64]>,
+    // AreaSection area imbalance tolerance (ubvec[1]). Default 1.10 = ±10%.
+    area_swing: f64,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
 
@@ -558,7 +560,6 @@ pub fn run_geosection(
             .flat_map(|(&p, &a)| [p, a]).collect();
 
         // Lorenz pre-filtering: skip ratios where area balance is geometrically impossible
-        let area_swing = 1.10f64;
         let area_max = 0.5 * area_swing;
         let area_min = 0.5 / area_swing;
         let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, areas, num_districts);
@@ -615,8 +616,8 @@ pub fn run_geosection(
             None
         };
         let ubvec: Option<Vec<f32>> = if ncon == 2 {
-            // Tight population balance (±0.1%), 10% area swing allowed
-            Some(vec![1.001f32, 1.10f32])
+            // Tight population balance (±0.1%), area swing from caller
+            Some(vec![1.001f32, area_swing as f32])
         } else {
             None
         };
@@ -681,6 +682,26 @@ pub fn run_geosection(
     let mode_tag = if ncon == 2 { "areasection" } else { "geosection" };
     eprintln!("[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
               best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
+
+    // For AreaSection: log the winning split's area fraction and whether it's within ubvec
+    if ncon == 2 {
+        if let Some(areas) = vertex_areas_m2 {
+            let area_left: f64 = best_left_set.iter().map(|&v| areas[v]).sum();
+            let total_area: f64 = areas.iter().sum();
+            let area_frac = area_left / total_area;
+            let area_min = 0.5 / area_swing;
+            let area_max = 0.5 * area_swing;
+            let in_bounds = area_frac >= area_min && area_frac <= area_max;
+            let pop_left: i64 = best_left_set.iter().map(|&v| vertex_weights[v]).sum();
+            let total_pop: i64 = vertex_weights.iter().sum();
+            let pop_frac = pop_left as f64 / total_pop as f64;
+            let pop_target = best_left as f64 / num_districts as f64;
+            eprintln!("[areasection] winner: area={:.1}% (target 50% ±{:.0}%, {}) pop={:.1}% (target {:.1}%)",
+                      area_frac*100.0, (area_swing-1.0)*100.0,
+                      if in_bounds { "OK" } else { "VIOLATED" },
+                      pop_frac*100.0, pop_target*100.0);
+        }
+    }
 
     // Write depth_01 intermediate
     if let Some(dir) = intermediate_dir {
@@ -773,7 +794,7 @@ fn recurse_geosection(
     let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
         &local_adj, &local_vw, &local_ew,
         k, balance_tolerance, niter, seeds_per_ratio, None,
-        &empty_centroids, 0.0, None,
+        &empty_centroids, 0.0, None, 1.10,  // recursive: ncon=1, area_swing unused
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {
