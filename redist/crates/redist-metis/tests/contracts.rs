@@ -161,6 +161,36 @@ fn coarsening_terminates_path255() {
 
 // ── Golden RNG determinism pin ─────────────────────────────────────────────
 
+// ── split_weighted tests (P2-2) ───────────────────────────────────────────
+
+#[test]
+fn split_weighted_asymmetric_fracs_errors_on_empty() {
+    let g = make_path(10);
+    let result = MetisPartitioner::with_params(MetisParams::default(), 1)
+        .split_weighted(&g, &[], Some(0));
+    assert!(matches!(result, Err(redist_metis::PartitionError::ZeroParts)));
+}
+
+#[test]
+fn split_weighted_produces_valid_partition() {
+    // fracs [8, 9] on a 17-vertex path — should get a valid k=2 partition
+    let g = make_path(17);
+    let p = MetisPartitioner::with_params(MetisParams::default(), 2)
+        .split_weighted(&g, &[8u32, 9u32], Some(42))
+        .unwrap();
+    assert_eq!(p.assignment.len(), 17);
+    assert_eq!(p.k, 2);
+    assert!(p.assignment.contains(&0));
+    assert!(p.assignment.contains(&1));
+    // v1 delegates to equal-weight split — both parts should have roughly 8-9 vertices
+    let pop0 = p.assignment.iter().filter(|&&x| x == 0).count();
+    let pop1 = p.assignment.iter().filter(|&&x| x == 1).count();
+    assert!(pop0 >= 5 && pop0 <= 12, "part 0 should have reasonable size, got {pop0}");
+    assert!(pop1 >= 5 && pop1 <= 12, "part 1 should have reasonable size, got {pop1}");
+}
+
+// ── Golden RNG determinism pin ─────────────────────────────────────────────
+
 /// Run with `cargo test generate_golden -- --ignored` to regenerate.
 /// Commit the resulting tests/golden/vt_seed42.json.
 /// Regenerate ONLY when rand_pcg is intentionally upgraded.
