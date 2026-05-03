@@ -1,7 +1,6 @@
 use rand::SeedableRng;
 use rand_pcg::Pcg64;
 use rand::Rng;
-use std::collections::HashMap;
 use crate::graph::{CsrGraph, CoarseMap};
 use crate::coarsen::Coarsener;
 
@@ -167,25 +166,41 @@ pub fn build_coarse_graph(g: &CsrGraph, cmap: &[u32], cn: usize) -> (CsrGraph, C
     }
     let cvwgt_i32: Vec<i32> = cvwgt.iter().map(|&w| w as i32).collect();
 
-    // Build coarse adjacency — merge parallel edges by summing weights
-    let mut cadj: Vec<HashMap<u32, i32>> = vec![HashMap::new(); cn];
+    // Build coarse adjacency using Vec + sort + dedup (cache-friendly, no HashMap allocs)
+    let mut cadj: Vec<Vec<(u32, i32)>> = vec![Vec::new(); cn];
     for v in 0..n {
         let cv = cmap[v] as usize;
         for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
             let cu = cmap[g.adjncy[j] as usize] as usize;
             if cu != cv {
                 let ew = g.adjwgt.as_ref().map_or(1i32, |aw| aw[j]);
-                *cadj[cv].entry(cu as u32).or_insert(0) += ew;
+                cadj[cv].push((cu as u32, ew));
             }
         }
+    }
+
+    // Sort each neighbor list and sum weights for parallel edges
+    for neighbors in cadj.iter_mut() {
+        neighbors.sort_unstable_by_key(|&(u, _)| u);
+        // In-place dedup: merge consecutive same-neighbor entries by summing weights
+        let mut write = 0usize;
+        for read in 0..neighbors.len() {
+            if write > 0 && neighbors[write - 1].0 == neighbors[read].0 {
+                neighbors[write - 1].1 += neighbors[read].1;
+            } else {
+                neighbors[write] = neighbors[read];
+                write += 1;
+            }
+        }
+        neighbors.truncate(write);
     }
 
     let mut xadj   = vec![0u32];
     let mut adjncy = Vec::new();
     let mut adjwgt = Vec::new();
 
-    for cv in 0..cn {
-        for (&cu, &ew) in &cadj[cv] {
+    for neighbors in &cadj {
+        for &(cu, ew) in neighbors {
             adjncy.push(cu);
             adjwgt.push(ew);
         }
