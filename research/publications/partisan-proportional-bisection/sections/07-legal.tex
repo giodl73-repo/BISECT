@@ -1,0 +1,56 @@
+\section{Legal Discussion}
+\label{sec:legal}
+
+\subsection{Federal Prohibition (\S104(e))}
+
+The hypothetical Districting Integrity Act \S104(e) prohibits partisan data
+as an input to federal congressional redistricting.
+B.12 is not a proposal to violate this prohibition.
+Rather, it is a mathematical analysis of what proportionality would cost if
+the prohibition were relaxed --- and a characterisation of when it costs nothing
+(free proportionality states) versus when it costs significantly.
+
+The \S104(e) prohibition is a policy choice, not a mathematical necessity.
+The choice has consequences: in expensive-proportionality states, geography-only
+algorithms produce maps where 50\,\% of voters elect 35\,\% of representatives.
+B.12 measures those consequences.
+
+\subsection{State Legislative Applications}
+
+State legislatures are not constrained by \S104(e).
+Several state constitutions require proportional representation or prohibit
+maps that unduly favour a political party \citep{lwv2018pa, harper2022nc}.
+
+For state legislative redistricting, B.12 provides a rigorous operationalisation
+of proportionality: set $\mathtt{ubvec}[1]$ to the minimum value that achieves
+proportional seat allocation, and verify the Lorenz feasibility condition is
+satisfied.
+If Lorenz feasibility fails (expensive-proportionality state), the court can
+be informed that geographic constraints make proportionality unachievable
+with single-member districts --- a fact about geography, not about intent.
+
+\subsection{The Evidentiary Role}
+
+B.12's most immediate legal contribution is evidentiary.
+For states where $\sigma$ is low (free or cheap proportionality), a court
+can assess whether a geography-only algorithm's non-proportional outcome is
+``natural'' (unavoidable given geography) or artificially produced.
+If $\sigma < 0.05$ and the algorithm still produces a $-10$\,pp gap,
+something other than geography is causing the shortfall.
+
+For states where Lorenz feasibility is violated (expensive-proportionality),
+the court has a rigorous basis for finding that proportionality is geometrically
+impossible with contiguous single-member districts, which may support a
+different remedy (e.g., multi-member districts).
+
+\subsection{\emph{Rucho v.\ Common Cause} (2019)}
+
+\emph{Rucho} held that federal courts cannot remedy partisan gerrymandering
+under the federal Constitution.
+B.12's analysis does not challenge this holding.
+What B.12 adds is a precise characterisation of what ``partisan gerrymandering''
+is on a spectrum: from zero partisan signal (geography-only, never gerrymandering)
+to full partisan signal (explicitly partisan, clearly gerrymandering).
+The \emph{Rucho} holding leaves open whether states can regulate intermediate
+points on this spectrum --- and B.12 provides the mathematical tools to
+characterise any point on the spectrum precisely.

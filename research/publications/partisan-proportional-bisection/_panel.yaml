@@ -1,0 +1,15 @@
+paper: partisan-proportional-bisection
+title: "The Proportionality Compromise: Dual-Constrained Bisection for Partisan-Fair Redistricting"
+venue: "Political Analysis"
+stage: draft
+round: 0
+series: B
+series_number: 12
+content_mode: plan
+writing_completed: false
+reviewers: []
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-03"
+    note: "Paper initialized. Core formula derived: tpwgts=[k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] for ncon=2 [pop, D_votes] bisection achieving exact partisan proportionality."

@@ -1,0 +1,86 @@
+\section{Introduction}
+\label{sec:intro}
+
+Algorithmic redistricting proposes a simple solution to partisan gerrymandering:
+replace human judgment with a mathematical algorithm that optimises a
+politically neutral criterion.
+The leading candidate --- minimum edge-cut redistricting --- minimises the
+total length of district boundaries subject to equal-population constraints,
+producing compact districts without any reference to which party's voters
+live where \citep{karypis1998,b8paper,b9paper}.
+
+The algorithm is genuinely neutral.
+Yet its outcomes are not.
+In Wisconsin, a 50.3\,\% Democratic state, minimum edge-cut redistricting
+consistently produces 3 Democratic seats out of 8, a proportionality gap of
+$-12.8$ percentage points.
+In Georgia, a near-even 50.1\,\% Democratic state, the algorithm produces
+3 of 14 Democratic seats ($-14.4$\,pp).
+These results are not idiosyncratic --- across all 8 competitive states
+(46--55\,\% Democratic vote share) in our 50-state sweep, every single one
+shows Republican over-representation, with a mean gap of $-6.2$\,pp
+\citep{b9paper}.
+
+\citet{rodden2019} provides the explanation: Democratic voters are geographically
+concentrated in dense urban cores, while Republican voters are spread across
+suburban and rural areas.
+Any compact-district algorithm --- because it minimises boundary length ---
+tends to draw boundaries that respect this geographic sorting, producing
+implicit Democratic packing without any partisan input.
+The Rodden effect is a fact about geography, not about algorithms.
+
+This raises a precise mathematical question: \emph{what partisan information
+is required to guarantee proportional outcomes, and how far do geography-only
+algorithms fall short?}
+We call the difference the \emph{proportionality gap} and characterise it
+across all 50 states.
+
+\paragraph{This paper's contribution.}
+We introduce a dual-constraint bisection framework that extends minimum-edge-cut
+redistricting to METIS's $\mathtt{ncon}=2$ mode with vertex weights
+$[\text{population},\, D_{\text{votes}}]$.
+The Democratic-vote constraint encodes how many Democratic voters belong to
+each half of a bisection.
+By choosing these targets precisely, we can guarantee that each half produces
+the correct number of party-winning districts.
+
+The central result is a closed-form formula (Theorem~\ref{thm:proportionality})
+for the $\mathtt{tpwgts}$ parameters that achieve exact partisan proportionality.
+The formula is derived from first principles: the R-bloc receives the minimum
+Democratic voter share needed for Republicans to win every district in that bloc,
+and no more.
+
+The companion result is a feasibility characterisation (Theorem~\ref{thm:lorenz-feasibility}):
+a \emph{partisan Lorenz curve}, sorting tracts from most to least Democratic,
+determines when proportional packing is achievable under the geographic
+constraint.
+States with uniform partisan geography (near-diagonal Lorenz curves) can
+achieve proportionality easily.
+States with extreme urban concentration (Lorenz curves far above the diagonal)
+cannot achieve proportionality through any contiguous redistricting.
+
+\paragraph{What this paper is not.}
+We do not advocate for partisan redistricting.
+The Districting Integrity Act's \S104(e) prohibition on partisan inputs for
+federal congressional redistricting reflects a considered policy judgment that
+we do not contest.
+The calculation we perform is analogous to computing, for a chemist, the energy
+required to break a bond --- it measures a physical quantity without advocating
+for the reaction.
+Specifically, we compute the \emph{minimum partisan signal} required to close
+the proportionality gap, and characterise when that signal is zero (when
+geography-only algorithms happen to produce proportional outcomes) versus
+large (when geographic concentration makes proportionality geometrically expensive).
+
+\paragraph{Paper structure.}
+Section~\ref{sec:related} reviews related work on efficiency gaps, partisan
+Lorenz curves, and dual-constraint graph partitioning.
+Section~\ref{sec:framework} introduces the $\mathtt{ncon}=2$ framework and
+derives the $\mathtt{tpwgts}$ formula.
+Section~\ref{sec:theory} proves the proportionality guarantee and the
+Lorenz feasibility condition.
+Section~\ref{sec:eval} presents the 50-state sweep.
+Section~\ref{sec:compromise} characterises states where proportionality is
+cheaply achievable.
+Section~\ref{sec:legal} discusses legal implications.
+Section~\ref{sec:conclusion} concludes.

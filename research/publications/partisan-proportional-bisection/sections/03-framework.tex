@@ -1,0 +1,106 @@
+\section{The Dual-Constraint Framework}
+\label{sec:framework}
+
+\subsection{Setup}
+
+Let $G = (V, E, w)$ be a state's census-tract adjacency graph.
+Each vertex $v \in V$ carries:
+\begin{itemize}
+  \item $p_v > 0$: total census population
+  \item $d_v \geq 0$: two-party Democratic votes (2020 presidential)
+\end{itemize}
+
+Let $P = \sum_v p_v$, $D = \sum_v d_v$, $R = P - D$ (two-party totals).
+Write $d = D/P$ for the statewide Democratic vote share and $r = 1 - d$.
+
+Let $k$ be the congressional district count.
+A \emph{proportional seat allocation} assigns $k_D = \mathrm{HH}(d, r, k)$
+seats to Democrats and $k_R = k - k_D$ to Republicans, where $\mathrm{HH}$
+is the Huntington-Hill rounding.
+
+\subsection{The ncon=2 Bisection}
+
+We extend the minimum-edge-cut bisection to METIS's dual-constraint mode with
+vertex weights $\mathbf{w}_v = (p_v,\, d_v)$.
+A bisection partitions $V$ into $(S,\, V \setminus S)$ subject to:
+\begin{align}
+  \frac{\sum_{v \in S} p_v}{P} &\in \left[\frac{k_D}{k} - \varepsilon_p,\; \frac{k_D}{k} + \varepsilon_p\right] \label{eq:pop-balance}\\
+  \frac{\sum_{v \in S} d_v}{D} &\in \left[\tau_D - \varepsilon_d,\; \tau_D + \varepsilon_d\right] \label{eq:dem-balance}
+\end{align}
+where $\varepsilon_p = 0.001$ (0.1\,\% population tolerance), $\varepsilon_d$ is
+the partisan tolerance parameter, and $\tau_D$ is the target Democratic fraction
+for the left (D-bloc) partition.
+
+The target is implemented via METIS's $\mathtt{tpwgts}$ array:
+\[
+  \mathtt{tpwgts} = [\underbrace{k_D/k}_{\text{left pop}},\; \underbrace{\tau_D}_{\text{left D}},\;
+                     \underbrace{k_R/k}_{\text{right pop}},\; \underbrace{1-\tau_D}_{\text{right D}}]
+\]
+
+\subsection{The Proportionality Formula}
+\label{sec:formula}
+
+The key design question is: what value of $\tau_D$ guarantees that the D-bloc
+produces $k_D$ Democratic-winning districts and the R-bloc produces $k_R$
+Republican-winning districts?
+
+\begin{definition}[Proportional target]
+A target $\tau_D^*$ is \emph{proportionally optimal} if:
+\begin{enumerate}
+  \item The right (R-bloc) has exactly 50\,\% Democratic concentration:
+    $\frac{(1-\tau_D) D}{(k_R/k) P} = 0.5$
+  \item No more Democratic votes are allocated to the R-bloc than this minimum.
+\end{enumerate}
+\end{definition}
+
+Solving condition~(1):
+\[
+  (1 - \tau_D^*) \cdot d = 0.5 \cdot \frac{k_R}{k}
+  \quad \Longrightarrow \quad
+  \tau_D^* = 1 - \frac{k_R}{2dk}
+\]
+
+The full $\mathtt{tpwgts}$ vector for proportional bisection is therefore:
+\begin{equation}
+  \label{eq:tpwgts-formula}
+  \boxed{\mathtt{tpwgts} = \left[\frac{k_D}{k},\; 1 - \frac{k_R}{2dk},\;
+                                  \frac{k_R}{k},\; \frac{k_R}{2dk}\right]}
+\end{equation}
+
+\noindent\textbf{Example (60/40 state, $k=3$, $k_D=2$, $k_R=1$):}
+\[
+  \mathtt{tpwgts} = \left[\frac{2}{3},\; 1 - \frac{1}{3.6},\; \frac{1}{3},\; \frac{1}{3.6}\right]
+                  = [0.667,\; 0.722,\; 0.333,\; 0.278]
+\]
+
+D-bloc Democratic concentration: $0.722 \times 0.6 / (2/3) = 65\,\%$ D.
+R-bloc Democratic concentration: $0.278 \times 0.6 / (1/3) = 50\,\%$ D. \checkmark
+
+\subsection{The Partisan Tolerance Parameter}
+
+METIS's $\mathtt{ubvec}[1]$ controls how strictly the Democratic-vote constraint
+is enforced:
+\begin{itemize}
+  \item $\mathtt{ubvec}[1] = 1.0$: hard constraint (exact proportionality required)
+  \item $\mathtt{ubvec}[1] = 1.05$: 5\,\% tolerance around target
+  \item $\mathtt{ubvec}[1] \to \infty$: constraint disabled (reverts to B.9/B.8)
+\end{itemize}
+
+The \emph{compromise parameter} $\mathtt{ubvec}[1]$ traces a family of algorithms
+from pure geographic neutrality ($\infty$) to strict partisan proportionality (1.0).
+Section~\ref{sec:eval} characterises the tradeoff curve for each state.
+
+\subsection{Connection to AreaSection}
+
+AreaSection (B.9) uses the identical $\mathtt{ncon}=2$ infrastructure with
+vertex weights $[\text{population},\, \text{area}]$ and
+$\mathtt{tpwgts} = [k_L/k,\; 0.5,\; k_R/k,\; 0.5]$ (targeting 50\,\%
+land area on each side).
+
+B.12 substitutes $D_{\text{votes}}$ for land area, and replaces the fixed
+$0.5$ area target with the derived $\tau_D^*$ that achieves proportionality.
+
+The algorithmic infrastructure is identical.
+The political implications differ entirely:
+land-area balance has no partisan interpretation; Democratic-vote balance
+is explicitly partisan.

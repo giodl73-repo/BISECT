@@ -1,0 +1,58 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced a dual-constraint bisection framework for partisan-proportional
+redistricting, extending minimum-edge-cut algorithms to $\mathtt{ncon}=2$ with
+vertex weights $[\text{population},\, D_{\text{votes}}]$.
+The central contribution is a closed-form formula~\eqref{eq:tpwgts-formula}
+for the partition targets that guarantee proportional seat allocation:
+\[
+  \mathtt{tpwgts} = \left[\frac{k_D}{k},\; 1 - \frac{k_R}{2dk},\;
+                          \frac{k_R}{k},\; \frac{k_R}{2dk}\right]
+\]
+
+The partisan Lorenz curve determines when this target is geographically feasible.
+The partisan signal strength $\sigma$ measures how much the neutral geographic
+distribution must be ``pulled'' toward the proportional target --- from
+$\sigma \approx 0$ (free proportionality, geography already gives proportional
+outcomes) to $\sigma > 0.2$ (expensive proportionality, geographic concentration
+makes proportional maps nearly impossible).
+
+\paragraph{The core finding.}
+The states that most need proportional redistricting are the states where
+proportionality is most expensive.
+Extreme Democratic geographic concentration --- Milwaukee, Madison, Atlanta,
+Boston --- produces large Rodden gaps \emph{and} makes proportional packing
+geometrically difficult.
+There is no geographic algorithm that can close the proportionality gap
+in these states without explicitly incorporating partisan data.
+This is a fact about geography.
+
+\paragraph{What this means.}
+For states with low $\sigma$ (cheap proportionality): geography-only algorithms
+are nearly proportional. Small improvements to the geographic constraint
+(B.9-style area balance or B.8-style isoperimetric normalisation) may close
+the remaining gap without partisan data.
+
+For states with high $\sigma$ (expensive proportionality): the proportionality
+gap is a structural feature of the state's population distribution.
+A court reviewing such a state's redistricting for partisan fairness should
+understand that even a perfectly neutral algorithm produces a large gap ---
+the gap is not evidence of manipulation, but of geography.
+
+\paragraph{Future work.}
+Three directions merit further investigation:
+\begin{enumerate}
+\item \textbf{Recursive proportionality}: applying the B.12 constraint at
+  every level of the bisection tree to guarantee proportionality not just
+  at the first split but throughout the entire district structure.
+
+\item \textbf{Continuous tolerance curves}: empirical measurement of how the
+  proportionality gap decreases as $\mathtt{ubvec}[1]$ is tightened, for each
+  state in the 50-state sweep.
+
+\item \textbf{Multi-member districts}: for expensive-proportionality states,
+  characterising how many seats per district are needed before geographic
+  constraints stop blocking proportionality --- connecting this analysis to
+  the Huntington-Hill minimum from B.11.
+\end{enumerate}

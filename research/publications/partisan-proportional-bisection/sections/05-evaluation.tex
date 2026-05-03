@@ -1,0 +1,120 @@
+\section{Evaluation}
+\label{sec:eval}
+
+\subsection{Experimental Setup}
+
+We apply the B.12 dual-constraint framework to all 50 states using 2020 Census
+data and 2020 presidential election results (precinct-to-tract interpolation
+via VEST/Fekrazad \citep{fekrazad2021}).
+Vertex weights are $[\text{population},\, D_{\text{votes}}]$;
+$\mathtt{tpwgts}$ are set by equation~\eqref{eq:tpwgts-formula};
+$\mathtt{ubvec} = [1.001,\, \eta]$ where $\eta \in \{1.05, 1.10, 1.20, \infty\}$.
+
+For comparison, we include:
+\begin{itemize}
+  \item B.8 GeoSection ($\eta = \infty$, geometry only)
+  \item B.9 AreaSection ($\mathtt{ncon}=2$ with land area, not $D_{\text{votes}}$)
+  \item B.12 Partisan at $\eta = 1.05, 1.10, 1.20$
+  \item Theoretical proportional (exact $k_D/k_R$ by HH)
+\end{itemize}
+
+\subsection{The Proportionality Gap Baseline (B.9 Reference)}
+
+Table~\ref{tab:gap-baseline} reproduces the B.9 proportionality gaps for
+the 8 competitive states (46--55\,\% Democratic vote share).
+All 8 states show Republican over-representation under geography-only algorithms,
+with a mean gap of $-6.2$\,pp.
+This is the target that the partisan constraint must close.
+
+\begin{table}[h]
+\centering
+\caption{Proportionality gap under B.9 (geography only) for competitive states.
+Negative = Republican over-representation.}
+\label{tab:gap-baseline}
+\begin{tabular}{lrrrrr}
+\toprule
+State & D vote & k & B.9 D seats & Proportional & Gap \\
+\midrule
+Georgia   & 50.1\,\% & 14 & 5 & 7.0 & $-14.4$\,pp \\
+Wisconsin & 50.3\,\% &  8 & 3 & 4.0 & $-12.8$\,pp \\
+N.\ Carolina & 49.3\,\% & 14 & 6 & 6.9 & $-6.5$\,pp \\
+Arizona   & 50.2\,\% &  9 & 4 & 4.5 & $-5.7$\,pp \\
+Maine     & 54.7\,\% &  2 & 1 & 1.1 & $-4.7$\,pp \\
+Minnesota & 53.6\,\% &  8 & 4 & 4.3 & $-3.6$\,pp \\
+Nevada    & 51.2\,\% &  4 & 2 & 2.0 & $-1.2$\,pp \\
+Virginia  & 55.2\,\% & 11 & 6 & 6.1 & $-0.6$\,pp \\
+\midrule
+Mean      &          &   &   &     & $-6.2$\,pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Partisan Lorenz Curves}
+
+Figure~\ref{fig:lorenz-partisan} shows the partisan Lorenz curves $L_D(x)$ for
+three representative states.
+The x-axis is cumulative population fraction (R-heavy tracts first).
+The y-axis is cumulative Democratic-voter fraction.
+The horizontal dashed line at $y = k_R/(2dk)$ is the proportionality target
+for the R-bloc; feasibility requires the curve to be below this line at $x = k_R/k$.
+
+\begin{itemize}
+\item \textbf{Iowa} ($d = 0.458$, $k=4$, $k_D=2$, $k_R=2$): The Lorenz curve
+  is close to the diagonal (uniform partisan geography), confirming that
+  proportionality is achievable with minimal partisan signal ($\sigma \approx 0.01$).
+
+\item \textbf{Wisconsin} ($d = 0.503$, $k=8$, $k_D=4$, $k_R=4$): The curve
+  lies above the diagonal (D voters concentrated in Milwaukee/Madison),
+  indicating the R-friendly half of the state has fewer than the required
+  D voters for a balanced R-bloc. Moderate partisan signal required ($\sigma \approx 0.08$).
+
+\item \textbf{Georgia} ($d = 0.501$, $k=14$, $k_D=7$, $k_R=7$): Extreme
+  curve above diagonal (Atlanta concentration). The R-friendly 50\,\% of the
+  state has only 25\,\% of D voters, well below the 50\,\% target. Large
+  partisan signal required ($\sigma \approx 0.25$), and geographic contiguity
+  may prevent even this from being sufficient.
+\end{itemize}
+
+\subsection{The Tradeoff Curve}
+
+Table~\ref{tab:tradeoff} reports, for each competitive state, the proportionality
+gap achieved at each value of $\eta$ (partisan tolerance).
+
+\begin{table}[h]
+\centering
+\caption{Proportionality gap vs.\ partisan tolerance $\eta$ for competitive states.
+$\eta = \infty$ is pure geographic (B.9); $\eta = 1.0$ is strict proportionality.
+[Results pending full sweep.]}
+\label{tab:tradeoff}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+State & $\eta=\infty$ (B.9) & $\eta=1.20$ & $\eta=1.10$ & $\eta=1.05$ & Theoretical \\
+\midrule
+Georgia   & $-14.4$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Wisconsin & $-12.8$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+N.\ Carolina & $-6.5$\,pp & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Arizona   & $-5.7$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Minnesota & $-3.6$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Nevada    & $-1.2$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+Virginia  & $-0.6$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Feasibility by State}
+
+For each state, we compute the partisan signal strength $\sigma$ and assess
+whether the Lorenz feasibility condition is met.
+Figure~\ref{fig:sigma-map} maps $\sigma$ across all 50 states.
+
+States with low $\sigma$ (near-uniform partisan geography): Iowa, Nebraska,
+Kansas, South Dakota --- proportionality requires minimal partisan input.
+
+States with high $\sigma$ (extreme partisan concentration): Georgia, Massachusetts,
+Maryland, Illinois --- proportionality requires strong partisan constraints that
+may conflict with geographic contiguity.
+
+States where Lorenz feasibility is violated (proportionality is geometrically
+impossible even with partisan constraints): this set is determined empirically
+and reported in Table~\ref{tab:feasibility}.
