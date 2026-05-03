@@ -1,0 +1,113 @@
+\section{Introduction}
+\label{sec:intro}
+
+Minimum-edge-cut recursive bisection draws congressional district maps by
+repeatedly splitting the state's census-tract adjacency graph into two
+population-balanced halves, minimising the total shared boundary length at
+each level.
+The algorithm makes no reference to partisan data: it sees only TIGER
+boundary lengths and census populations.
+Yet on states with concentrated metropolitan areas it reliably produces
+a specific, troubling pattern.
+
+\paragraph{The caterpillar pathology.}
+Consider Illinois with 17 congressional districts.
+The standard bisection always splits $\lfloor 17/2 \rfloor : \lceil 17/2 \rceil = 8:9$ at
+the first level (as near-equal as possible).
+But if we relax this constraint and ask METIS to try the $1:16$ split instead,
+the edge-cut is dramatically cheaper: Chicago's compact urban boundary is
+roughly 130\,km, while any boundary that bisects Illinois into
+two $8$- and $9$-district regions must cross the state's full geographic width,
+costing several hundred kilometres.
+
+Minimum edge-cut thus \emph{always} prefers to carve off the densest compact
+city before attempting a genuine bisection.
+Illinois splits $1:16$ (Chicago peel).
+New York splits $1:25$ (New York City peel).
+Texas splits $1:37$ (Houston or Dallas peel).
+Applied recursively, each level peels off the next-densest metropolitan core
+until the remaining rural population is divided equally.
+The result is a \emph{caterpillar bisection tree}: a linear chain of
+$1:(k-1)$, $1:(k-2)$, $\ldots$ splits, one per urban core.
+
+\paragraph{Why this is legally dangerous.}
+The caterpillar pathology is not an algorithm bug --- each individual split
+is a valid minimum-edge-cut bisection.
+But the sequence looks identical to deliberate partisan packing:
+one compact high-turnout Democratic district is created at every recursion
+level, and the surrounding suburban ring districts land near the 50/50
+partisan tipping point.
+Under \emph{Rucho v.\ Common Cause} (2019), this may be unreviewable in
+federal court, but state courts applying their own anti-gerrymandering
+provisions (\emph{League of Women Voters v.\ Commonwealth of Pennsylvania}, 2018;
+\emph{Harper v.\ Hall}, 2022) would scrutinise such a pattern.
+An algorithm that produces caterpillar maps without any partisan input is
+politically vulnerable, even if mathematically valid.
+
+\paragraph{The isoperimetric fix.}
+The cause of the pathology is straightforward: the raw edge-cut $\mathrm{EC}(i:k-i)$
+is not a fair comparison across ratios because a $1$-district boundary is
+intrinsically shorter than a $k/2$-district boundary.
+For a convex region, the minimum boundary length to separate fraction $f$
+of the population scales as $\sqrt{\min(f,\,1-f) \cdot A}$ where $A$ is total
+boundary length, by the isoperimetric inequality for convex sets.
+Dividing the edge-cut by $\sqrt{\min(i,\,k-i)}$ corrects for this scaling,
+producing a normalised metric that treats all ratios on equal footing:
+\[
+  \mathrm{EC}_{\text{norm}}(i:k-i) = \frac{\mathrm{EC}(i:k-i)}{\sqrt{\min(i,\,k-i)}}.
+\]
+Under this metric, $1:k-1$ wins only if the corresponding urban boundary is
+genuinely more compact per unit of geographic territory than any bisection.
+For cities with compact municipal boundaries (Milwaukee, Philadelphia, Nashville),
+$1:k-1$ still wins --- and this is the correct outcome, because those cities
+are genuinely geographically isolated.
+For states with distributed population (North Carolina's Piedmont corridor,
+Wisconsin's rural west), a near-equal split wins because the urban cores are
+not isolated enough to dominate the isoperimetric comparison.
+
+\paragraph{Our contribution.}
+We introduce \textbf{GeoSection}, a ratio-optimal recursive bisection algorithm
+with two innovations:
+
+\begin{enumerate}
+\item \textbf{Isoperimetric ratio scan} (\S\ref{sec:algorithm}):
+  at every bisection level, try all feasible ratios $1:(k-1)$ through
+  $\lfloor k/2\rfloor:\lceil k/2\rceil$ with $N$ seeds each, select the
+  ratio minimising $\mathrm{EC}/\sqrt{\min(i,k-i)}$.
+
+\item \textbf{Recursive re-orientation} (\S\ref{sec:phase2}):
+  each subregion after a split recomputes its own PCA minor axis and
+  applies a directional penalty $\lambda$ to discourage cuts parallel to
+  the subregion's narrowest extent.
+\end{enumerate}
+
+We make three additional contributions:
+
+\begin{enumerate}\setcounter{enumi}{2}
+\item \textbf{50-state empirical sweep} (\S\ref{sec:evaluation}): natural ratio
+  results for all 45 multi-district states, showing the partition between
+  states where $1:k-1$ is confirmed genuine and states where the
+  normalisation shifts the winner to a more equal split.
+
+\item \textbf{NC and WI case studies} (\S\ref{sec:case-studies}): full
+  recursive bisection trees and district-level partisan analysis for the two
+  most-studied states.
+
+\item \textbf{Comparison to standard bisection} (\S\ref{sec:comparison}):
+  head-to-head partisan outcome comparison against the MEC baseline (B.7),
+  showing that geographic sorting dominates under both algorithms.
+\end{enumerate}
+
+\paragraph{Companion paper.}
+GeoSection uses $\mathtt{ncon}=1$ (population balance only).
+B.9 (AreaSection) adds a second METIS constraint requiring each half to
+receive approximately 50\,\% of the state's land area ($\mathtt{ncon}=2$).
+AreaSection is a separate algorithm with a different legal theory and
+different empirical footprint; the two papers share notation and data.
+
+\paragraph{Paper organisation.}
+Section~\ref{sec:related} reviews related work.
+Section~\ref{sec:algorithm} defines the GeoSection algorithm formally.
+Section~\ref{sec:evaluation} presents empirical results across all 50 states.
+Section~\ref{sec:discussion} discusses legal implications and limitations.
+Section~\ref{sec:conclusion} concludes.

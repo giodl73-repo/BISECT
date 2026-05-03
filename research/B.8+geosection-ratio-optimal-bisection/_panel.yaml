@@ -1,0 +1,15 @@
+paper: geosection-ratio-optimal-bisection
+title: "GeoSection: Isoperimetrically-Normalised Ratio-Optimal Bisection for Congressional Redistricting"
+venue: "Political Analysis / ACM-SIAM ALENEX"
+stage: draft
+round: 0
+content_mode: full
+reviewers: []
+reviews: {}
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper drafted from plan.md and empirical sweep data (b8_sweep, b8_WI, b8_NC, b8_test_NC). 6 sections + algorithm pseudocode. 50-state natural ratio table. WI/NC case studies."
+series: B
+series_number: 8

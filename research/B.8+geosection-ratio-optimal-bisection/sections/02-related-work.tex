@@ -1,0 +1,90 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Minimum-edge-cut redistricting.}
+Algorithmic redistricting has converged on edge-cut minimisation as a
+mathematically clean, politically neutral criterion
+\citep{chikina2017,deford2019,duchin2020}.
+METIS multilevel graph partitioning \citep{karypis1998} is the standard solver:
+it constructs a hierarchy of progressively coarsened graphs,
+partitions the coarsest, and un-coarsens the partition back to the original.
+\citet{karypis1998} show that METIS produces near-optimal solutions for
+sparse irregular graphs in near-linear time.
+
+\citet{b7paper} establish the seed-sweep convergence property: for states where the
+minimum-edge-cut is unique (or nearly so), different METIS seeds converge
+to the same partition, and the MEC plan is a property of the graph topology
+rather than the seed.
+This convergence property is a prerequisite for GeoSection: if the MEC at
+each ratio is seed-independent, then the natural ratio selected by
+isoperimetric normalisation is also seed-independent.
+
+\paragraph{Compactness metrics.}
+Single-district compactness is measured by Polsby-Popper
+\citep{polsby1991} ($4\pi A/P^2$, where $A$ is district area and $P$ perimeter),
+Reock \citep{reock1961} (ratio of district area to area of smallest enclosing circle),
+and convex-hull ratio.
+These metrics audit individual district shapes after the bisection tree
+is complete.
+Edge-cut minimisation is related but distinct: it minimises total boundary
+length across all $k$ districts simultaneously, which is a globally stronger
+criterion than minimising individual district perimeters.
+
+The isoperimetric inequality that motivates our normalisation is classical:
+for a convex planar region of area $A$ with boundary $P$, the minimum
+perimeter enclosing fraction $f$ of the region satisfies
+$P_{\min}(f) \propto \sqrt{f(1-f) \cdot A}$ \citep{osserman1978}.
+We apply this principle to the edge-cut problem: the minimum-cost boundary
+to separate $i$ out of $k$ population units scales as $\sqrt{i(k-i)/k^2}$
+for uniform density, motivating the $\sqrt{\min(i,k-i)}$ normalisation.
+
+\paragraph{Bisection ratio selection.}
+Standard recursive bisection always uses the near-equal ratio \citep{karypis1998b}.
+\citet{hendrickson1995} note that unequal partitioning can improve load balance
+in parallel scientific computing, but do not study the normalised minimum-cut
+selection criterion.
+To our knowledge, GeoSection is the first redistricting algorithm to
+systematically scan all feasible ratios at each bisection level with
+isoperimetric normalisation.
+
+\paragraph{Urban concentration and partisan effects.}
+The geographic sorting of American voters --- Democrats concentrated in
+dense urban cores, Republicans distributed across suburban and rural areas
+--- is documented extensively \citep{rodden2019,chen2013}.
+\citet{chen2013} show that geographic sorting produces Republican-leaning maps
+under most compactness criteria without any intentional gerrymandering.
+\citet{stephanopoulos2015} propose the efficiency gap as a measure of this
+systematic bias.
+\citet{mcghee2014} confirms that geography alone explains much of the
+proportionality deficit in single-member district systems.
+
+The caterpillar pathology is the redistricting algorithm's manifestation of
+geographic sorting: because Democrats are more spatially concentrated,
+minimum-edge-cut always finds their urban cores cheaper to isolate.
+GeoSection addresses this by requiring the isolation to be confirmed
+as genuinely compact per the isoperimetric standard.
+
+\paragraph{GerryChain and Markov chain methods.}
+\citet{deford2019} introduce ReCombiination (ReCom), a Markov chain over
+redistricting plans that samples from the space of valid plans.
+GerryChain \citep{metric2018} implements ReCom for practice.
+These methods characterise the \emph{ensemble} of plans rather than
+selecting a single optimal plan.
+GeoSection is complementary: it selects a single deterministic plan
+and provides a legal rationale (isoperimetric naturalness) that ensemble
+methods do not directly supply.
+
+\paragraph{Partisan fairness and legal standards.}
+\citet{rucho2019} (\emph{Rucho v.\ Common Cause}) held that partisan
+gerrymandering claims present a political question beyond the reach of
+federal courts.
+State courts have filled this gap:
+\citet{lwv2018pa} (\emph{League of Women Voters v.\ Pennsylvania}) struck down
+a congressional map as a partisan gerrymander under the Pennsylvania Constitution;
+\citet{harper2022nc} (\emph{Harper v.\ Hall}) issued a similar ruling for
+North Carolina.
+Algorithmic redistricting that can articulate a politically neutral geometric
+rationale is increasingly relevant to state-court review.
+GeoSection's isoperimetric normalisation provides such a rationale:
+the natural ratio is determined by geographic compactness, not partisan
+composition.

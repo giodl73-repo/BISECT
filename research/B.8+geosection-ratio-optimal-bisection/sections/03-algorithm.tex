@@ -1,0 +1,235 @@
+\section{The GeoSection Algorithm}
+\label{sec:algorithm}
+
+\subsection{Setup and Notation}
+
+Let $G = (V, E, w)$ be the state's census-tract adjacency graph.
+Vertices $V$ are census tracts; edges $E$ connect tracts sharing a common
+boundary; edge weights $w(e) > 0$ are shared boundary lengths in metres,
+extracted from TIGER geometries.
+Vertex weights $\mathbf{p} \in \mathbb{Z}_{>0}^{|V|}$ are census tract populations.
+Let $k$ be the number of congressional districts allocated to this state.
+
+\begin{definition}[Feasible bisection]
+A \emph{feasible bisection} of $G$ with ratio $i:(k-i)$, $1 \leq i \leq \lfloor k/2 \rfloor$,
+is a partition $(S, V \setminus S)$ satisfying the population balance constraint:
+\[
+  \frac{\sum_{v \in S} p_v}{\sum_{v \in V} p_v} \in
+  \left[\frac{i/k}{1 + \delta},\; \frac{i/k \cdot (1+\delta)}{1}\right]
+\]
+for balance tolerance $\delta$ (congressional default: $\delta = 0.005$).
+The \emph{edge-cut} of a bisection is $\mathrm{EC}(S) = \sum_{e \in \delta(S)} w(e)$
+where $\delta(S)$ is the set of edges crossing the boundary.
+\end{definition}
+
+\begin{definition}[Natural ratio]
+The \emph{natural ratio} of $G$ for $k$ districts is the ratio $i^*:(k-i^*)$ where
+\[
+  i^* = \argmin_{1 \leq i \leq \lfloor k/2 \rfloor}
+  \frac{\mathrm{EC}_{\min}(i:k-i)}{\sqrt{\min(i,\,k-i)}}
+\]
+and $\mathrm{EC}_{\min}(i:k-i) = \min_{\text{feasible } S} \mathrm{EC}(S)$
+is the minimum edge-cut over all feasible bisections at ratio $i:(k-i)$.
+The denominator $\sqrt{\min(i,k-i)}$ is the \emph{isoperimetric correction}.
+\end{definition}
+
+\subsection{Isoperimetric Normalisation}
+\label{sec:normalisation}
+
+The isoperimetric correction is the key innovation of GeoSection.
+We motivate it formally.
+
+\begin{lemma}[Isoperimetric scaling]
+\label{lem:isoperimetric}
+For a uniformly populated convex planar region of total boundary length $L$,
+the minimum-boundary-length cut separating fraction $f \in (0,1)$ of the
+population satisfies:
+\[
+  \mathrm{EC}_{\min}(f) \approx L \cdot \sqrt{\min(f, 1-f)}.
+\]
+\end{lemma}
+
+\begin{proof}[Proof sketch]
+By the isoperimetric inequality for convex bodies, the minimum-perimeter enclosure
+of area fraction $f$ of a convex region has perimeter proportional to $\sqrt{f}$
+for small $f$ (a disk of area $f \cdot A$).
+For $f$ near $1/2$, the optimal cut approaches a straight line across the
+region's minor axis, with length proportional to $\sqrt{\min(f, 1-f)}$ by
+similar scaling.
+The approximation holds in the census tract setting when population density
+is approximately uniform within the state.
+\end{proof}
+
+\begin{remark}
+Lemma~\ref{lem:isoperimetric} is an approximation, not an exact result.
+Real states have highly non-uniform population density.
+The isoperimetric correction remains meaningful in the non-uniform case:
+$\sqrt{\min(i,k-i)}$ lower-bounds the expected edge-cut scaling for
+a $i:(k-i)$ split in any convex region, so dividing by it makes the
+normalised metric more conservative (harder to win) for small-$i$ splits.
+The correction's purpose is to prevent $1:(k-1)$ from winning by default;
+it does not guarantee that the winner is the globally optimal ratio in
+any formal sense.
+\end{remark}
+
+Without normalisation, the caterpillar pathology arises because:
+\[
+  \mathrm{EC}(1:k-1) \ll \mathrm{EC}(k/2:k/2)
+\]
+for any state with a compact urban core.
+With normalisation:
+\[
+  \frac{\mathrm{EC}(1:k-1)}{\sqrt{\min(1,k-1)}} = \mathrm{EC}(1:k-1)
+  \quad\text{vs.}\quad
+  \frac{\mathrm{EC}(k/2:k/2)}{\sqrt{k/2}}
+\]
+The $1:k-1$ ratio loses its structural advantage.
+For $k=8$ (Wisconsin), the normalised comparison is
+$\mathrm{EC}(1:7)$ vs.\ $\mathrm{EC}(4:4)/\sqrt{4} = \mathrm{EC}(4:4)/2$.
+If $\mathrm{EC}(1:7) < \mathrm{EC}(4:4)/2$, Milwaukee is genuinely compact
+by the isoperimetric standard and the $1:7$ split wins.
+If not, a more equal split wins.
+
+\subsection{The GeoSection Algorithm}
+\label{sec:geosection-alg}
+
+\begin{algorithm}[H]
+\caption{GeoSection($G$, $k$, $N$, $\delta$, $\lambda$)}
+\label{alg:geosection}
+\begin{algorithmic}[1]
+\Require Graph $G = (V, E, w)$, districts $k \geq 1$, seeds per ratio $N$,
+  balance tolerance $\delta$, directional penalty $\lambda \geq 0$
+\Ensure Partition $\{D_1, \ldots, D_k\}$ of $V$
+
+\If{$k = 1$} \Return $\{V\}$ \EndIf
+
+\State $\mathrm{node\_ufactor} \gets 1 + \delta / k$
+\hfill\Comment{per-level tolerance}
+
+\State\Comment{\textbf{Phase 1: Ratio scan (isoperimetric normalisation)}}
+\State $\mathrm{best\_norm} \gets +\infty$;
+   $i^* \gets 1$; $S^* \gets \emptyset$
+
+\For{$i = 1$ to $\lfloor k/2 \rfloor$}
+  \State $\mathrm{EC}_{\min} \gets +\infty$; $S_{\min} \gets \emptyset$
+  \For{$s = 1$ to $N$}
+    \State $S \gets \mathrm{METIS}(G,\, i:(k-i),\, \mathrm{ufactor}=\mathrm{node\_ufactor},\, \mathrm{seed}=s)$
+    \If{$\mathrm{EC}(S) < \mathrm{EC}_{\min}$}
+      $\mathrm{EC}_{\min} \gets \mathrm{EC}(S)$; $S_{\min} \gets S$
+    \EndIf
+  \EndFor
+  \State $\mathrm{norm}_i \gets \mathrm{EC}_{\min} / \sqrt{\min(i, k-i)}$
+  \If{$\mathrm{norm}_i < \mathrm{best\_norm}$}
+    $\mathrm{best\_norm} \gets \mathrm{norm}_i$; $i^* \gets i$; $S^* \gets S_{\min}$
+  \EndIf
+\EndFor
+
+\State\Comment{\textbf{Phase 2: Directional penalty (if $\lambda > 0$)}}
+\If{$\lambda > 0$}
+  \State $\hat{u} \gets \mathrm{PCA\_minor\_axis}(\mathrm{centroids}(V))$
+  \hfill\Comment{minor = narrowest direction}
+  \State $w'(u,v) \gets w(u,v) \cdot (1 + \lambda \cdot |\!\sin(\theta(u,v))|)$
+  \hfill\Comment{$\theta$ = angle between edge and cut direction}
+  \State Re-run ratio scan on $G' = (V, E, w')$ to select $S^*$
+\EndIf
+
+\State\Comment{\textbf{Recursion}}
+\State $V_L \gets S^*$;\ $V_R \gets V \setminus S^*$
+\State $G_L \gets G[V_L]$;\ $G_R \gets G[V_R]$
+\hfill\Comment{induced subgraphs}
+
+\State \Return $\mathrm{GeoSection}(G_L, i^*, N, \delta, \lambda)$
+         $\cup$ $\mathrm{GeoSection}(G_R, k - i^*, N, \delta, \lambda)$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Key properties.}
+\begin{itemize}
+\item Each recursive call finds its own natural ratio independently.
+  The right half's natural ratio is not constrained to equal the left half's.
+\item The directional penalty is computed from the \emph{current subregion's}
+  centroids, not the original state.
+  After the first split, the left subregion's minor axis may differ from the
+  full state's minor axis, allowing finer-grained orientation tracking.
+\item For $k=2$, only one ratio ($1:1$) is possible; the algorithm reduces
+  to standard minimum-edge-cut bisection.
+\item For $k=1$, no METIS call is needed; the trivial single-district
+  partition is returned.
+\end{itemize}
+
+\subsection{Directional Penalty}
+\label{sec:phase2}
+
+The directional penalty $\lambda$ in Phase 2 produces straighter district
+boundaries by discouraging cuts that run \emph{parallel} to the subregion's
+minor axis.
+The motivation is geometric: a cut parallel to the minor axis produces a
+narrow strip (like a salamander's tail); a cut perpendicular to the minor
+axis bisects the subregion across its widest dimension.
+
+\begin{definition}[Directional penalty weight]
+Let $\hat{u}$ be the minor-axis direction of the current subregion
+(unit vector in $\mathbb{R}^2$, computed by PCA on tract centroids).
+The directional penalty re-weights each edge $(u,v)$ by:
+\[
+  w'(u,v) = w(u,v) \cdot (1 + \lambda \cdot |\!\sin(\theta(u,v))|)
+\]
+where $\theta(u,v)$ is the angle between the edge direction
+$(\mathrm{centroid}(v) - \mathrm{centroid}(u))$ and $\hat{u}$.
+\end{definition}
+
+Edges running parallel to $\hat{u}$ (low $|\!\sin\theta|$) receive minimal
+penalty; edges running perpendicular (high $|\!\sin\theta|$) are heavily
+penalised.
+This steers METIS toward cuts perpendicular to the minor axis --- straight
+lines across the narrowest dimension --- and away from zigzag boundaries
+parallel to the major axis.
+
+\begin{remark}[Phase 2 deployment]
+The current implementation supports $\lambda > 0$ but the empirical sweep
+(Section~\ref{sec:evaluation}) uses $\lambda = 0$ (no directional penalty).
+The sweep results reported here are all Phase 1 (ratio scan only).
+Phase 2 is available as a CLI flag \texttt{--geosection-lambda} and its
+effect on boundary straightness is deferred to future work.
+\end{remark}
+
+\subsection{METIS Implementation Details}
+
+GeoSection calls the METIS 5.1 library via the \texttt{metis-rs} FFI crate
+(vendored, no external binary required).
+Key implementation choices:
+
+\paragraph{Unequal splits: \texttt{part\_kway} vs.\ \texttt{part\_recursive}.}
+For the equal-ratio case ($i = k/2$), METIS \texttt{part\_recursive} is used
+(better balance for equal bisection).
+For unequal ratios ($i \neq k - i$), \texttt{part\_kway} with explicit
+\texttt{tpwgts = [i/k, 1-i/k]} is used.
+METIS's \texttt{part\_recursive} does not support unequal vertex weight targets.
+
+\paragraph{Per-node balance tolerance.}
+At bisection node with $k$ remaining districts, the ufactor is set to
+$\mathrm{ufactor} = 1 + \delta / k$, so that cumulative balance error
+across all splits stays within $\delta$ per final district.
+For $k=14$ (NC, first split) with $\delta=0.005$:
+$\mathrm{ufactor} = 1 + 0.005/14 \approx 1.000357$ (very tight).
+For $k=2$ (leaf split) with same $\delta$:
+$\mathrm{ufactor} = 1 + 0.005/2 = 1.0025$ (more relaxed).
+
+\paragraph{Post-hoc boundary-swap rebalancing.}
+METIS sometimes produces $0.5$--$1$\,\% balance error without the
+\texttt{-contig} option (which is incompatible with disconnected subgraphs).
+A post-hoc boundary-swap loop (up to 200 iterations) moves single tracts
+from the heavier side to the lighter side along the boundary until the
+target balance is reached or no improvement is possible.
+This resolves balance issues for all but the largest metropolitan subgraphs
+(NYC, Philadelphia, Detroit).
+
+\paragraph{Computational cost.}
+For a state with $k$ districts and $N$ seeds per ratio, the top-level ratio
+scan runs $\lfloor k/2 \rfloor \times N$ METIS calls.
+All subsequent recursion levels use the standard single-ratio path ($N$ seeds only).
+For Wisconsin ($k=8$, $N=50$): $4 \times 50 = 200$ first-level calls,
+then 50 calls per node at subsequent levels.
+Total METIS calls: $200 + 7 \times 50 = 550$ (the $7 = k - 1$ recursive bisections).
+Compared to standard bisection ($7 \times 50 = 350$ calls), GeoSection
+adds approximately $\lfloor k/2 \rfloor - 1$ ratio scans at the first level.
