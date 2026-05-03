@@ -56,14 +56,22 @@ States with genuinely concentrated populations (Georgia: 3:11, Massachusetts: 2:
 retain asymmetric splits because the area constraint cannot be satisfied at
 more balanced ratios while maintaining contiguous regions.
 
-A head-to-head comparison on Wisconsin and North Carolina shows that
-AreaSection and GeoSection produce the \emph{same seat allocation} but
-\emph{different competitiveness profiles}: GeoSection creates knife-edge
-districts at $\sim$49\,\% Democratic vote share that arise as a byproduct
-of urban peeling; AreaSection produces cleaner partisan sorting with no
-near-toss-up seats.
+A head-to-head comparison across 34 states (all states with complete data
+for both algorithms) shows that AreaSection and GeoSection produce
+\emph{identical seat counts} in 25 of 34 states (76\,\%).
+In the 9 states that differ, 5 favour GeoSection by 1 seat and 4 favour
+AreaSection by 1 seat (net: $-1$ Democratic seat under AreaSection).
+There is no systematic partisan direction.
+Within the states that match, AreaSection produces a cleaner competitiveness
+profile: GeoSection's urban-peeling strategy creates knife-edge suburban
+districts near 49\,\% Democratic vote share as a geometric byproduct;
+AreaSection eliminates these.
 AreaSection is a geometric-regularity mechanism, not a partisan mechanism:
-it changes the bisection tree structure without changing partisan seat allocations.
+it changes the bisection tree structure without systematically changing partisan seat allocations.
+All 8 competitive states (46--55\,\% Democratic vote) show Republican
+over-representation under both algorithms (mean $-6.2$\,pp gap), confirming
+that geographic voter sorting — not the bisection algorithm — drives the
+proportionality deficit.
 \end{abstract}
 
 \input{sections/01-introduction}

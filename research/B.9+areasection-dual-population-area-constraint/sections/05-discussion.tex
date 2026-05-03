@@ -118,16 +118,28 @@ failure mode is not uniform:
 subgraphs; IL: 8:9 with near-equal population; TX: 12:26).
 \textbf{MI, NY, and PA still fail at 5\,\%} (PA 15.9\,\% deviation, MI 13.3\,\%, NY 9.2\,\%).
 
-The distinction is the population-area structure of each state.
-For NY (natural ratio 13:13, area$_\text{left}$=54.7\,\%), the geographic 50/50
-area split gives northern New York 50\,\% of the state's land but only
-$\sim$35\,\% of its population ($\sim$7.1M for 13 districts, vs ideal 10.1M).
-No amount of seed-count increase can overcome this: the northern subgraph
-physically does not have enough population for 13 districts at the national ideal.
-The same pattern holds for PA and MI.
-
+The distinction is the depth of the recursive bisection challenge.
 FL, IL, and TX succeed because their area constraint produces subgraphs with
-roughly proportional populations.
+roughly population-proportional halves; the recursive GeoSection within each
+half converges to balanced districts.
+
+For NY, MI, and PA the failure is in the \emph{recursive} bisection, not the
+first-level split.
+New York's 13:13 split achieves $\mathtt{pop\_left}=50.0\,\%$ (confirmed by
+winner logging) --- but the recursive GeoSection within the dense downstate
+subgraph (Manhattan, Brooklyn, Queens: 10.1M people, 26 dense tracts per
+district target) produces district 15 with 848K population vs. the 777K ideal
+--- a 9.2\,\% deviation that persists across 50 seeds.
+The extreme tract density and narrow geographic corridors of the NYC boroughs
+(Manhattan is $\sim$2\,km wide) create geometric constraints that METIS's
+standard bisection cannot overcome without very high seed counts or a
+Manhattan-specific coarsening.
+Pennsylvania and Michigan exhibit the same pattern in their respective dense
+metropolitan cores (Philadelphia, Detroit).
+
+In all three cases, the failure is \emph{geometric}, not algorithmic: the
+census tract graph for dense urban cores resists equal-population bisection at
+the 0.5--5\,\% level that less-dense graphs achieve easily.
 A complete fix requires one of:
 (a) applying the dual constraint at \emph{every} recursive level, not just
     the first, so each subgraph also targets its own proportional area share;

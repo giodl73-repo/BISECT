@@ -1,17 +1,24 @@
 paper: areasection-dual-population-area-constraint
 title: "AreaSection: Simultaneous Population and Land-Area Balance in Minimum-Edge-Cut Redistricting"
 venue: "Political Analysis / Journal of Computational Geometry"
-stage: panel
-round: 1
+stage: recheck
+round: 2
 content_mode: full
 reviewers: [R-50, R-1, R-37, R-44, R-30]
 reviews:
+  R-50: {score: 3.2, file: reviews/REVIEW-R2-jeffrey-ullman.md}
+  R-1:  {score: 3.4, file: reviews/REVIEW-R2-percy-liang.md}
+  R-37: {score: 3.3, file: reviews/REVIEW-R2-nadia-polikarpova.md}
+  R-44: {score: 3.1, file: reviews/REVIEW-R2-jacob-steinhardt.md}
+  R-30: {score: 3.3, file: reviews/REVIEW-R2-ce-zhang.md}
+avg_score: 3.3
+round1_reviews:
   R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
   R-1:  {score: 3.0, file: reviews/REVIEW-percy-liang.md}
   R-37: {score: 2.5, file: reviews/REVIEW-nadia-polikarpova.md}
   R-44: {score: 2.5, file: reviews/REVIEW-jacob-steinhardt.md}
   R-30: {score: 3.0, file: reviews/REVIEW-ce-zhang.md}
-avg_score: 2.7
+round1_avg: 2.7
 p1_items:
   - id: P1-A
     desc: "Lorenz condition: necessary not sufficient — fix language in §3.2"
@@ -51,5 +58,8 @@ history:
   - stage: revision
     date: "2026-05-03"
     note: "R1 revision: P1-A through P1-G resolved. Geometric regularity reframe. 34-state head-to-head."
+  - stage: recheck
+    date: "2026-05-03"
+    note: "Round 2: avg 3.3/4. All 4 accept or accept-with-minor-revision. Remaining: [TBD] 0.5% sweep count, --area-swing CLI docs, abstract mention of -1 D net result."
 series: B
 series_number: 9
