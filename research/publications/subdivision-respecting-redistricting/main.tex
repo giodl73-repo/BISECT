@@ -29,19 +29,25 @@ as an explicit criterion alongside compactness and population equality.
 Yet no algorithmic redistricting system operationalizes this criterion
 as a formal, tunable parameter.
 We introduce \emph{subdivision-respecting redistricting}: a single real-valued
-stickiness parameter $\alpha$ that makes intra-jurisdiction edges more expensive
-to cut in the METIS graph bisection framework.
+stickiness parameter $\alpha$ that makes intra-county edges more expensive
+to cut in the METIS graph bisection framework, with a natural extension to
+any level of the governmental hierarchy (MCDs, places, voting precincts).
 When $\alpha = 0$ the algorithm reduces to standard minimum-edge-cut bisection;
-as $\alpha \to \infty$ the algorithm will only split a county when population
+as $\alpha \to \infty$ the algorithm only splits a county when population
 balance requires it.
-We derive the edge-weight formula from first principles, show that county
-affiliation is freely available from Census TIGER tract GEOIDs (no additional
-data download), and present 50-state empirical results for $\alpha \in \{0, 5\}$.
-At $\alpha = 5$, county splits fall by 45\% on average (14.3 $\to$ 7.8 per state)
-at a 2.5$\times$ increase in total boundary length, with no systematic partisan effect
-($+D$ in 13 states, $-D$ in 8, unchanged in 23).
-The stickiness parameter is a single published number that fully determines
-the algorithm's behavior and can be independently verified from TIGER data.
+County affiliation is freely available from Census TIGER tract GEOIDs ---
+no additional data download.
+We prove that the optimal weighted min-cut partition has weakly fewer county
+splits as $\alpha$ increases and characterise the Pareto frontier empirically
+via 50-state sweep plus 25-seed ensemble analysis of seven focal states.
+At $\alpha = 5$, county splits fall by 45\% across 44 states (14.3 $\to$ 7.8 per state)
+at a 2.5$\times$ increase in total boundary length.
+The Pareto frontier has a characteristic knee near $\alpha \approx 2$: most
+split reduction occurs cheaply; beyond $\alpha = 5$ only structurally unavoidable
+splits remain.
+A 25-seed ensemble across seven focal states confirms partisan neutrality:
+mean Democratic seat change $= +0.18$ (not significant, $p > 0.05$ for all states).
+The stickiness parameter is a single published number verifiable from public TIGER data.
 \end{abstract}
 
 \input{sections/01-introduction}

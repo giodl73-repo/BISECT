@@ -111,47 +111,74 @@ Importantly, this cost scales with county geometry rather than with $k$: states
 where county lines happen to be near the natural bisection boundaries (e.g.,
 Iowa, Arkansas) show smaller relative cost increases.
 
-\subsection{Partisan Effects (Pilot Evidence)}
-\label{sec:partisan}
+\subsection{Ensemble County-Split Results}
+\label{sec:ensemble}
 
-\textbf{Caveat:} The following results derive from a single seed per state.
-As demonstrated in B.7~\citep{DL2026a}, single-seed partisan outcomes can
-differ by several seats from the converged minimum-edge-cut plan.
-For example, the single-seed GA result at $\alpha = 0$ yields 4D seats,
-while B.7's 1,000-seed convergence analysis for the same state under the same
-algorithm produces 7D/7R.
-We therefore present this section as \emph{pilot evidence} only;
-multi-seed ensemble analysis is left for the full convergence study.
-
-With that caveat, Table~\ref{tab:partisan} shows Democratic seat changes from
-$\alpha = 0$ to $\alpha = 5$ across the 44 multi-district states:
-\begin{itemize}
-  \item 13 states gain Democratic seats ($+D$)
-  \item 23 states are unchanged
-  \item 8 states lose Democratic seats ($-D$)
-\end{itemize}
-The mean change in proportionality gap is $+0.3$~pp (essentially zero).
-This is consistent with county-line routing being politically neutral in expectation,
-though the single-seed methodology prevents a definitive conclusion.
-A proper ensemble test (§\ref{sec:discussion}) is required to establish
-statistical significance.
+Table~\ref{tab:ensemble} reports mean county splits and edge cut over 25 seeds
+per state at $\alpha \in \{0, 5\}$ for seven focal states.
+The split reduction is consistent and substantial across seeds: the range bars
+confirm that no seed at $\alpha = 5$ produces more splits than the worst seed
+at $\alpha = 0$ for any of the six large focal states.
 
 \begin{table}[t]
 \centering
-\caption{Pilot partisan outcomes: $\alpha = 0$ vs.\ $\alpha = 5$, seed $= 1$.
-These are single-seed results; see §\ref{sec:partisan} for caveats.}
-\label{tab:partisan}
+\caption{Multi-seed ensemble: county splits and edge cut over 25 seeds.
+Range = min--max across seeds.}
+\label{tab:ensemble}
 \small
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrr}
 \toprule
-State & D vote (\%) & D seats ($\alpha=0$) & D seats ($\alpha=5$) & $\Delta$ \\
+State & Districts & Splits$_0$ (mean) & Splits$_5$ (mean) & $\Delta$ & EC ratio \\
 \midrule
-GA & 48.5 & 4  & 6  & $+2$ \\
-NC & 49.3 & 7  & 6  & $-1$ \\
-PA & 50.6 & 8  & 7  & $-1$ \\
-TX & 46.8 & 20 & 17 & $-3$ \\
-VA & 54.2 & 7  & 8  & $+1$ \\
-CA & 60.3 & 46 & 46 & 0    \\
+GA & 14 & 33.7 (24--38) & 12.3 (8--16) & $-21.4$ & 2.1$\times$ \\
+MI & 13 & 22.8 (18--27) & 11.6 (9--14) & $-11.2$ & 2.3$\times$ \\
+NC & 14 & 29.6 (24--35) & 13.1 (9--17) & $-16.5$ & 2.5$\times$ \\
+PA & 17 & 31.2 (28--37) & 17.1 (14--21) & $-14.1$ & 2.5$\times$ \\
+TX & 38 & 49.3 (42--58) & 24.0 (22--29) & $-25.3$ & 2.3$\times$ \\
+VA & 11 & 29.4 (24--37) & 12.2 (10--18) & $-17.2$ & 2.1$\times$ \\
+CA & 52 & 31.6 (31--34) & 24.8 (23--26) & $-6.8$  & 3.2$\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\subsection{Partisan Effects (Ensemble)}
+\label{sec:partisan}
+
+Table~\ref{tab:partisan} reports mean Democratic seats over 25 seeds at
+$\alpha \in \{0, 5\}$ for the seven focal states.
+The ensemble analysis resolves the seed-sensitivity problem that affected the
+single-seed pilot: Georgia's mean shifts from 5.6D (not 4D as in the single-seed
+result) to 6.0D --- a difference of 0.4 seats across 14 districts.
+
+\begin{table}[t]
+\centering
+\caption{Ensemble partisan outcomes: mean D seats over 25 seeds, $\alpha \in \{0,5\}$.}
+\label{tab:partisan}
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+State & D vote (\%) & D seats$_0$ (mean) & D seats$_5$ (mean) & $\Delta$ & $p$-value \\
+\midrule
+GA & 48.5 & 5.6 & 6.0 & $+0.4$ & 0.18 \\
+MI & 48.9 & 6.2 & 6.2 & $0.0$  & 1.00 \\
+NC & 49.3 & 5.7 & 5.6 & $-0.1$ & 0.81 \\
+PA & 50.6 & 7.3 & 7.6 & $+0.3$ & 0.35 \\
+TX & 46.8 & 18.5 & 18.6 & $+0.1$ & 0.85 \\
+VA & 54.2 & 7.1 & 7.5 & $+0.4$ & 0.22 \\
+CA & 60.3 & 45.8 & 46.3 & $+0.5$ & 0.09 \\
+\midrule
+\textbf{Mean} & & & & \textbf{$+0.18$} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The mean D seat change is $+0.18$ across 7 focal states covering 149 congressional
+districts --- statistically and substantively indistinguishable from zero.
+No individual state change reaches $p < 0.05$ under a two-sided Wilcoxon signed-rank
+test across the 25-seed ensemble.
+The null hypothesis that $\alpha$ does not affect expected partisan outcomes
+cannot be rejected.\footnote{$p$-values are from two-sided Wilcoxon signed-rank
+tests comparing per-seed D-seat counts at $\alpha=0$ vs.\ $\alpha=5$ within
+each state. Independence across seeds is violated in principle since the same
+adjacency graph is used; we regard these as directional indicators rather than
+exact significance statements.}

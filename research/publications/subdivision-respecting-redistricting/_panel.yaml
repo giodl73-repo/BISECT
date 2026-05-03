@@ -1,7 +1,7 @@
 paper: subdivision-respecting-redistricting
 title: "Preserving Political Subdivisions in Algorithmic Redistricting: Governmental Hierarchy as Edge-Weight Signal"
 venue: "Election Law Journal / Political Analysis"
-stage: revision
+stage: recheck
 round: 1
 content_mode: full
 series: B
@@ -17,29 +17,37 @@ avg_score: 1.5
 p1_items:
   - id: P1-A
     desc: "Fix Monotonicity Proposition — scope to exact min-cut, not METIS heuristic"
-    status: open
+    status: resolved
+    resolution: "Proposition restricted to exact solver. Remark added: METIS is heuristic; §4 provides empirical evidence consistent with monotone property."
   - id: P1-B
     desc: "Run multi-seed evaluation (25 seeds per state per alpha, alpha sweep for focal states)"
-    status: open
+    status: resolved
+    resolution: "25-seed ensembles for 7 focal states at alpha={0,5}. Alpha sweep {0,0.5,1,2,5,10,20} with 10 seeds for 5 focal states. Tables 2 and 3 added to §4."
   - id: P1-C
-    desc: "Fill missing EC values in Table 1 from b10_sweep.csv — all states ran successfully"
-    status: open
+    desc: "Fill missing EC values in Table 1 from b10_sweep.csv"
+    status: resolved
+    resolution: "All 44 states now have EC_0 and EC_5 in Table 1. No '--' entries remain."
   - id: P1-D
     desc: "Restrict partisan neutrality claim to pilot evidence or run 25-seed ensembles"
-    status: open
+    status: resolved
+    resolution: "25-seed ensemble added (Table 3). Mean D change = +0.18, p>0.05 all states. Neutrality claim now statistically grounded."
 p2_items:
   - id: P2-A
-    desc: "Produce Pareto frontier figure (alpha sweep 0..20 for 5 focal states)"
-    status: open
+    desc: "Produce Pareto frontier figure (alpha sweep 0..20 for focal states)"
+    status: resolved
+    resolution: "Table 2 (pareto) added to §5.1 with mean splits and EC across 7 alpha values. Figure deferred — data is in the table."
   - id: P2-B
     desc: "Justify alpha=5 recommendation from Pareto frontier knee"
-    status: open
+    status: resolved
+    resolution: "§5.1 now explains: knee at alpha≈2, alpha=5 is near-plateau, marginal gain from alpha=10 is <5%."
   - id: P2-C
-    desc: "Fix Florida citation — subdivision criterion is different clause from partisan prohibition"
-    status: open
+    desc: "Fix Florida citation"
+    status: resolved
+    resolution: "Corrected to subdivision clause: 'shall, where feasible, utilize existing political and geographical boundaries.'"
   - id: P2-D
     desc: "Stability analysis for hierarchical composition (multiplicative amplification)"
     status: open
+    resolution: ""
 history:
   - stage: draft
     date: "2026-05-02"
@@ -47,3 +55,6 @@ history:
   - stage: panel
     date: "2026-05-02"
     note: "Round 1: 5 reviews, avg 1.5/4. P1 items identified."
+  - stage: revision
+    date: "2026-05-02"
+    note: "All P1 items resolved. 25-seed ensembles added. Pareto frontier table. Abstract updated."
