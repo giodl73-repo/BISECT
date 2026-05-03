@@ -7,8 +7,9 @@
 The stickiness parameter $\alpha$ traces a Pareto frontier between two objectives:
 minimising boundary length (compactness, $\alpha = 0$) and minimising county
 splits (subdivision preservation, $\alpha \to \infty$).
-Table~\ref{tab:pareto} reports mean county splits and edge cut over 10 seeds
-at each $\alpha \in \{0, 0.5, 1, 2, 5, 10, 20\}$ for five focal states.
+Figure~\ref{fig:pareto} plots county splits and the splits-vs-EC Pareto frontier
+for five focal states across $\alpha \in \{0, 0.5, 1, 2, 5, 10, 20\}$ (10 seeds each).
+Table~\ref{tab:pareto} reports the underlying means.
 
 \begin{table}[t]
 \centering
@@ -36,6 +37,17 @@ $\alpha \approx 2$ (most of the split reduction occurs here at modest EC cost),
 followed by a plateau from $\alpha = 2$ to $\alpha = 10$ (diminishing split returns
 at continued EC growth), and a long tail beyond $\alpha = 10$ where marginal splits
 become structurally unavoidable (large counties that must be split for population balance).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/pareto_frontier}
+\caption{Left: mean county splits vs.\ $\alpha$ for five focal states (log scale).
+The dashed line marks $\alpha = 5$; most reduction occurs before this value.
+Right: Pareto frontier — mean splits vs.\ mean edge cut.
+The $\alpha = 5$ point is annotated on each curve; states with more counties
+(TX, NC) show larger absolute split reductions at comparable cost ratios.}
+\label{fig:pareto}
+\end{figure}
 
 \paragraph{Justification for $\alpha = 5$.}
 We recommend $\alpha = 5$ as a default for the following reasons:

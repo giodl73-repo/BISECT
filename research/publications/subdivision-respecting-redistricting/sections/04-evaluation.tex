@@ -123,20 +123,22 @@ at $\alpha = 0$ for any of the six large focal states.
 \begin{table}[t]
 \centering
 \caption{Multi-seed ensemble: county splits and edge cut over 25 seeds.
-Range = min--max across seeds.}
+Format: mean (min--max). EC ratio = EC$_5$ / EC$_0$ (normalised to $\alpha=0$ baseline).}
 \label{tab:ensemble}
 \small
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-State & Districts & Splits$_0$ (mean) & Splits$_5$ (mean) & $\Delta$ & EC ratio \\
+State & $k$ & Splits$_0$ & Splits$_5$ & $\Delta$ splits & EC ratio \\
 \midrule
-GA & 14 & 33.7 (24--38) & 12.3 (8--16) & $-21.4$ & 2.1$\times$ \\
-MI & 13 & 22.8 (18--27) & 11.6 (9--14) & $-11.2$ & 2.3$\times$ \\
-NC & 14 & 29.6 (24--35) & 13.1 (9--17) & $-16.5$ & 2.5$\times$ \\
+GA & 14 & 33.7 (24--38) & 12.3 (8--16)  & $-21.4$ & 2.1$\times$ \\
+MI & 13 & 22.8 (18--27) & 11.6 (9--14)  & $-11.2$ & 2.3$\times$ \\
+NC & 14 & 29.6 (24--35) & 13.1 (9--17)  & $-16.5$ & 2.5$\times$ \\
 PA & 17 & 31.2 (28--37) & 17.1 (14--21) & $-14.1$ & 2.5$\times$ \\
 TX & 38 & 49.3 (42--58) & 24.0 (22--29) & $-25.3$ & 2.3$\times$ \\
 VA & 11 & 29.4 (24--37) & 12.2 (10--18) & $-17.2$ & 2.1$\times$ \\
 CA & 52 & 31.6 (31--34) & 24.8 (23--26) & $-6.8$  & 3.2$\times$ \\
+\midrule
+\textbf{Mean} & & \textbf{32.5} & \textbf{16.4} & \textbf{$-16.1$} & \textbf{2.4$\times$} \\
 \bottomrule
 \end{tabular}
 \end{table}

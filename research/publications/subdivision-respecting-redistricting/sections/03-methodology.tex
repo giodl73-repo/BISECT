@@ -73,18 +73,31 @@ ensemble of seeds are weakly decreasing in $\alpha$ across all 44 multi-district
 states, consistent with the monotone optimal-solution property.
 \end{remark}
 
-\subsection{Hierarchical Extension}
+\subsection{Hierarchical Extension (Future Work)}
+\label{sec:hierarchy}
 
-The framework generalises immediately to any governmental hierarchy.
-Let $L = \{\text{county}, \text{MCD}, \text{place}, \text{VTD}\}$ be the set of
-governmental levels.
-The full hierarchical weighter is:
+The county weighter generalises to any level of the governmental subdivision
+hierarchy.
+Let $L = \{\text{county}, \text{MCD}, \text{place}, \text{VTD}\}$.
+The hierarchical weighter formula is:
 \[
   f_{\boldsymbol\alpha}(u,v) = w(u,v) \cdot \Bigl(1 + \sum_{\ell \in L} \alpha_\ell \cdot \mathbf{1}[\text{level}_\ell(u) = \text{level}_\ell(v)]\Bigr).
 \]
-Setting $\alpha_\ell = 0$ for any level $\ell$ removes that level's contribution.
-This paper focuses on $\alpha_{\text{county}}$ (the only level derivable from existing data);
-MCD, place, and VTD stickiness are deferred to future work.
+We state this formula for completeness; \emph{the present paper validates and
+recommends only $\alpha_{\text{county}}$}.
+The other levels require additional TIGER downloads (COUSUB, PLACE, VTD files)
+and spatial joins, and are left for future empirical validation.
+
+\begin{remark}[Composition amplification]
+When multiple levels are active simultaneously, a tract pair sharing county,
+MCD, and place membership receives multiplier $(1 + \alpha_c + \alpha_m + \alpha_p)$.
+For $\alpha = 5$ at each of three levels this is $16\times$ the base weight,
+which may dominate the geographic signal.
+Practitioners using multi-level composition should reduce per-level $\alpha$
+proportionally (e.g., $\alpha = 2$ per level for three levels gives $7\times$,
+comparable to county-only $\alpha = 5$).
+We defer a formal analysis of multi-level balance behaviour to future work.
+\end{remark}
 
 \subsection{Composition with Other Signals}
 
