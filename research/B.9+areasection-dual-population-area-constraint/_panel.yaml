@@ -1,0 +1,23 @@
+paper: areasection-dual-population-area-constraint
+title: "AreaSection: Simultaneous Population and Land-Area Balance in Minimum-Edge-Cut Redistricting"
+venue: "Political Analysis / Journal of Computational Geometry"
+stage: panel
+round: 1
+content_mode: full
+reviewers: [R-50, R-1, R-37, R-44, R-30]
+reviews:
+  R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
+  R-1:  {score: 3.0, file: reviews/REVIEW-percy-liang.md}
+  R-37: {score: 2.5, file: reviews/REVIEW-nadia-polikarpova.md}
+  R-44: {score: 2.5, file: reviews/REVIEW-jacob-steinhardt.md}
+  R-30: {score: 3.0, file: reviews/REVIEW-ce-zhang.md}
+avg_score: 2.7
+history:
+  - stage: draft
+    date: "2026-05-03"
+    note: "Paper drafted. 50-state sweep complete (44/50). All sections written."
+  - stage: panel
+    date: "2026-05-03"
+    note: "Round 1 panel review initiated."
+series: B
+series_number: 9
