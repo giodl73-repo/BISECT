@@ -5,6 +5,8 @@ pub mod aggregate;
 pub mod analyze;
 pub mod plan_context;
 pub mod args;
+pub mod edge_weights;
+pub mod vertex_weights;
 pub mod io_utils;
 pub mod bisection_runner;
 pub mod geosection_orientation;

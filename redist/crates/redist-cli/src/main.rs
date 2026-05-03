@@ -5,7 +5,7 @@ use redist_cli::suite::run_suite_stability;
 use redist_cli::verify::run_verify;
 use redist_cli::policy::run_policy;
 use redist_cli::doctor::run_doctor;
-use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
+use redist_cli::runner::{StateConfig, StateResult, AlgorithmConfig, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
 use redist_cli::policy::LocationRegistry;
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
@@ -80,8 +80,8 @@ fn main() {
                 (name, ndist)
             };
 
-            // Build algo params before any partial moves of `args`
-            let algo = redist_cli::runner::AlgorithmParams::from_state_args(&args);
+            // Build algo config before any partial moves of `args`
+            let algo = AlgorithmConfig::from_state_args(&args);
 
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
@@ -226,7 +226,7 @@ fn main() {
                     );
                     cfg.debug = args.debug;
                     cfg.reprocess = args.reprocess;
-                    cfg.algo = redist_cli::runner::AlgorithmParams::defaults_for_mode(&args.partition_mode);
+                    cfg.algo = AlgorithmConfig::defaults_for_mode(&args.partition_mode);
                     cfg
                 })
                 .collect();
@@ -288,7 +288,7 @@ fn main() {
                         cfg.debug = args.debug;
                         cfg.reset = args.reset;
                         cfg.reprocess = args.reprocess;
-                        cfg.algo = redist_cli::runner::AlgorithmParams::defaults_for_mode(&args.partition_mode);
+                        cfg.algo = AlgorithmConfig::defaults_for_mode(&args.partition_mode);
                         cfg
                     })
                     .collect();

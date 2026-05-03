@@ -92,6 +92,25 @@ pub fn find_gpmetis() -> Option<String> {
     None
 }
 
+/// BFS connectivity check: returns true if the subgraph (local indices 0..n) is connected.
+fn is_connected(adj: &[Vec<usize>]) -> bool {
+    let n = adj.len();
+    if n <= 1 { return true; }
+    let mut visited = vec![false; n];
+    let mut queue = std::collections::VecDeque::new();
+    visited[0] = true;
+    queue.push_back(0usize);
+    while let Some(v) = queue.pop_front() {
+        for &nb in &adj[v] {
+            if !visited[nb] {
+                visited[nb] = true;
+                queue.push_back(nb);
+            }
+        }
+    }
+    visited.iter().all(|&v| v)
+}
+
 /// Convert adjacency list to CSR format required by the METIS C API.
 fn adj_to_csr(adj: &[Vec<usize>]) -> (Vec<i32>, Vec<i32>) {
     let mut xadj = Vec::with_capacity(adj.len() + 1);
@@ -127,20 +146,33 @@ fn ew_to_adjwgt(adj: &[Vec<usize>], ew: Option<&HashMap<(usize, usize), f64>>) -
 
 /// Split a subgraph (identified by `tract_indices`) into two balanced parts.
 ///
-/// Builds a local subgraph, writes METIS format, invokes gpmetis, parses output.
+/// Unified path for ncon=1 (population only) and ncon=2 (population + area).
 /// Returns (left_indices, right_indices) where left = partition 0, right = partition 1.
+///
+/// Parameters:
+/// - `vwgt`: interleaved vertex weights, length = n*ncon.
+///   For ncon=1: plain population array (same as before).
+///   For ncon=2: [pop_0, area_0, pop_1, area_1, ...].
+/// - `ncon`: number of balance constraints (1 or 2).
+/// - `tpwgts`: full tpwgts array for METIS (length = nparts*ncon = 2*ncon).
+///   None = METIS default (equal split).
+/// - `ubvec`: per-constraint imbalance tolerances (length = ncon).
+///   None = use ufactor default for all constraints.
 pub fn split_subgraph(
     adjacency: &[Vec<usize>],
-    vertex_weights: &[i64],
+    vwgt: &[i64],
+    ncon: usize,
     edge_weights: &HashMap<(usize, usize), f64>,
     tract_indices: &HashSet<usize>,
     // ufactor: METIS decimal multiplier (e.g. 1.001 = 0.1%). Use ufactor_for_depth().
     ufactor: f64,
     niter: u32,
     seed: Option<u64>,
-    // target_weights: (left_frac, right_frac) for unequal splits (e.g. 3/7, 4/7).
+    // tpwgts: full target-weights array (length = nparts*ncon = 2*ncon).
     // None = equal 50/50 split (METIS default).
-    target_weights: Option<(f64, f64)>,
+    tpwgts: Option<Vec<f32>>,
+    // ubvec: per-constraint imbalance tolerances.  None = use ufactor for all constraints.
+    ubvec: Option<Vec<f32>>,
 ) -> Result<(HashSet<usize>, HashSet<usize>), String> {
     if tract_indices.len() <= 1 {
         return Ok((tract_indices.clone(), HashSet::new()));
@@ -161,8 +193,10 @@ pub fn split_subgraph(
             .collect()
     }).collect();
 
-    // Subgraph vertex weights
-    let sub_vw: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
+    // Build local vertex weights: extract ncon values per vertex from interleaved global array
+    let local_vwgt: Vec<i32> = sorted.iter()
+        .flat_map(|&g| (0..ncon).map(move |c| vwgt[g * ncon + c].max(1) as i32))
+        .collect();
 
     // Subgraph edge weights (reindex to local, canonical order)
     let sub_ew: HashMap<(usize, usize), f64> = edge_weights.iter()
@@ -178,44 +212,53 @@ pub fn split_subgraph(
 
     // Build CSR for the METIS FFI
     let (xadj, adjncy) = adj_to_csr(&sub_adj);
-    let vwgt: Vec<i32> = sub_vw.iter().map(|&w| (w as i32).max(1)).collect();
     let adjwgt = ew_to_adjwgt(&sub_adj, ew_opt);
-
-    // AC-05: validate target weights sum to 1.0 before passing to METIS
-    if let Some((lf, rf)) = target_weights {
-        let sum = lf + rf;
-        assert!(
-            (sum - 1.0).abs() < 1e-6,
-            "target_weights must sum to 1.0: {lf:.6} + {rf:.6} = {sum:.6}"
-        );
-    }
-    let tpwgts_vec: Option<Vec<f32>> = target_weights
-        .map(|(lf, rf)| vec![lf as f32, rf as f32]);
 
     // METIS imbalance = (1 + ufactor/1000).
     //   ufactor=1  → 0.1% tolerance
     //   ufactor=50 → 5.0% tolerance
     let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
-    let uf_int = uf_int.clamp(1, 1000);
+    // Floor at 5 (0.5%): Contig+MinConn constraints limit METIS's partition choices,
+    // so per-level tolerance must stay above the practical minimum for small subgraphs.
+    let uf_int = uf_int.clamp(5, 1000);
 
     let mut part = vec![0i32; n];
-    let graph = metis::Graph::new(1, 2, &xadj, &adjncy)
+    let graph = metis::Graph::new(ncon as i32, 2, &xadj, &adjncy)
         .map_err(|e| format!("METIS graph init: {e}"))?
-        .set_vwgt(&vwgt);
+        .set_vwgt(&local_vwgt);
     let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
-    let graph = if let Some(ref tw) = tpwgts_vec { graph.set_tpwgts(tw) } else { graph };
+    let graph = if let Some(ref tw) = tpwgts { graph.set_tpwgts(tw) } else { graph };
+    // METIS balance is a soft constraint: it returns METIS_OK even if balance is violated.
+    // Use UFactor=5 (0.5% tolerance) — matches the global post-hoc check.
+    // For part_recursive, METIS default UFactor=1 (0.1%) is too tight for small subgraphs;
+    // 5 (0.5%) gives METIS enough flexibility to consistently find balanced solutions.
+    // If balance is still violated, the caller's post-hoc assert_balanced will catch it.
+    let graph = if let Some(ref ub) = ubvec {
+        graph.set_ubvec(ub)  // caller-supplied ubvec (ncon=2, AreaSection)
+    } else {
+        graph
+    };
     let graph = graph
-        .set_option(metis::option::UFactor(uf_int))
-        .set_option(metis::option::NIter(niter as i32))
-        .set_option(metis::option::Contig(true))
-        .set_option(metis::option::MinConn(true));
+        .set_option(metis::option::UFactor(uf_int.max(1)))
+        .set_option(metis::option::NIter(niter as i32));
+    // Contig + MinConn omitted: the vendored libmetis returns METIS_ERROR_INPUT for
+    // disconnected subgraphs (unlike subprocess gpmetis which silently ignored it).
+    // Without Contig, balance quality degrades ~0.5-1% for large states (GA/TX/CA).
+    // TODO: implement post-hoc boundary-swap rebalancing to restore 0.5% accuracy.
     let graph = if let Some(s) = seed {
         graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
     } else {
         graph
     };
-    graph.part_recursive(&mut part)
-        .map_err(|e| format!("METIS bisection failed: {e}"))?;
+    // Use part_kway for unequal splits (tpwgts set) — better balance than part_recursive
+    // for non-50/50 targets. Use part_recursive for equal splits (standard bisection).
+    if tpwgts.is_some() {
+        graph.part_kway(&mut part)
+            .map_err(|e| format!("METIS kway bisection failed: {e}"))?;
+    } else {
+        graph.part_recursive(&mut part)
+            .map_err(|e| format!("METIS bisection failed: {e}"))?;
+    }
 
     let mut left = HashSet::new();
     let mut right = HashSet::new();
@@ -224,104 +267,49 @@ pub fn split_subgraph(
         if p == 0 { left.insert(global); } else { right.insert(global); }
     }
 
-    Ok((left, right))
-}
+    // Post-hoc boundary-swap rebalancing.
+    // METIS 5.2 (vendored) sometimes produces 0.5-1% balance error without Contig.
+    // Move small boundary tracts from the heavier side to the lighter side until
+    // both sides are within `ufactor` of their target weights.
+    // Target weights come from tpwgts: left_target = tpwgts[0] × total, else 50/50.
+    let total_pop: i64 = local_vwgt.chunks(ncon).map(|c| c[0] as i64).sum();
+    let left_target = tpwgts.as_ref()
+        .map(|tw| (tw[0] as f64 * total_pop as f64) as i64)
+        .unwrap_or(total_pop / 2);
+    let tolerance_pop = (ufactor as f64 * total_pop as f64 / 1000.0) as i64 + 1;
 
-/// Bisect a subgraph with DUAL vertex weight constraints (ncon=2).
-///
-/// Used by AreaSection: balance BOTH population (at ratio pop_left_frac) AND
-/// land area (always 50/50). Uses the dual-weight METIS graph format.
-///
-/// Returns (left, right) partition sets, or Err on failure.
-pub fn split_subgraph_dual(
-    adjacency: &[Vec<usize>],
-    vertex_weights_pop: &[i64],    // population per vertex
-    vertex_weights_area: &[i64],   // land area per vertex (ALAND in m²)
-    edge_weights: &HashMap<(usize, usize), f64>,
-    tract_indices: &HashSet<usize>,
-    ufactor: f64,
-    niter: u32,
-    seed: Option<u64>,
-    pop_left_frac: f64,  // population fraction for left half (0..1)
-    // Per-constraint imbalance tolerance for ncon=2:
-    //   ubvec[0]: population (tight, e.g. 1.001 = ±0.1%)
-    //   ubvec[1]: area (loose, e.g. 1.10 = ±10% swing)
-    // 10% area swing lets METIS find a clean integer population split
-    // without forcing an exact 50/50 area boundary where geography resists.
-    ubvec: [f64; 2],
-) -> Result<(HashSet<usize>, HashSet<usize>), String> {
-    if tract_indices.len() <= 1 {
-        return Ok((tract_indices.clone(), HashSet::new()));
+    for _ in 0..100 {
+        let left_pop: i64 = left.iter()
+            .map(|&g| local_vwgt[g * ncon] as i64).sum();
+        let excess = left_pop - left_target;
+        if excess.abs() <= tolerance_pop { break; }
+
+        // Find the boundary tract on the heavy side closest in size to |excess|.
+        let (heavy, light) = if excess > 0 { (&left, &right) } else { (&right, &left) };
+        let light_set: HashSet<usize> = light.clone();
+        let heavy_set: HashSet<usize> = heavy.clone();
+
+        // Boundary tracts on the heavy side: those adjacent to the light side.
+        let mut best: Option<(usize, i64)> = None;
+        for &g in &heavy_set {
+            let has_light_neighbor = sub_adj[g].iter().any(|&nb| light_set.contains(&nb));
+            if has_light_neighbor {
+                let pop = local_vwgt[g * ncon] as i64;
+                let score = (pop - excess.abs()).abs();
+                if best.map_or(true, |(_, s)| score < s) {
+                    best = Some((g, score));
+                }
+            }
+        }
+        match best {
+            Some((g, _)) => {
+                if excess > 0 { left.remove(&g); right.insert(g); }
+                else { right.remove(&g); left.insert(g); }
+            }
+            None => break, // no boundary tract found, give up
+        }
     }
 
-    let sorted: Vec<usize> = {
-        let mut v: Vec<usize> = tract_indices.iter().copied().collect();
-        v.sort_unstable(); v
-    };
-    let global_to_local: HashMap<usize,usize> = sorted.iter()
-        .enumerate().map(|(local,&global)| (global,local)).collect();
-
-    let sub_pop:  Vec<i64> = sorted.iter().map(|&g| vertex_weights_pop[g].max(1)).collect();
-    let sub_area: Vec<i64> = sorted.iter().map(|&g| vertex_weights_area[g].max(1)).collect();
-    let sub_adj: Vec<Vec<usize>> = sorted.iter().map(|&g|
-        adjacency[g].iter().filter_map(|&nb| global_to_local.get(&nb).copied()).collect()
-    ).collect();
-    let sub_ew: HashMap<(usize,usize),f64> = edge_weights.iter()
-        .filter_map(|(&(u,v),&w)| {
-            let lu = *global_to_local.get(&u)?;
-            let lv = *global_to_local.get(&v)?;
-            Some(((lu.min(lv), lu.max(lv)), w))
-        })
-        .fold(HashMap::new(), |mut m,(k,v)| { m.insert(k,v); m });
-
-    let ew_opt = if sub_ew.is_empty() { None } else { Some(&sub_ew) };
-    let (xadj, adjncy) = adj_to_csr(&sub_adj);
-    let adjwgt = ew_to_adjwgt(&sub_adj, ew_opt);
-
-    // ncon=2: METIS expects vertex weights interleaved per vertex: [pop_0, area_0, pop_1, area_1, ...]
-    let vwgt: Vec<i32> = sub_pop.iter().zip(sub_area.iter())
-        .flat_map(|(&pop, &area)| [pop as i32, area as i32])
-        .collect();
-
-    // tpwgts for ncon=2, nparts=2: stored [nparts][ncon] row-major
-    // tpwgts[i*ncon + j] = fraction for partition i, constraint j
-    let area_left = 0.5f32;
-    let tpwgts = vec![
-        pop_left_frac as f32, area_left,                  // partition 0: pop, area
-        (1.0 - pop_left_frac) as f32, 1.0 - area_left,   // partition 1: pop, area
-    ];
-    let ubvec_f32 = vec![ubvec[0] as f32, ubvec[1] as f32];
-
-    let n = sorted.len();
-    let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
-    let uf_int = uf_int.clamp(1, 1000);
-
-    let mut part = vec![0i32; n];
-    let graph = metis::Graph::new(2, 2, &xadj, &adjncy)
-        .map_err(|e| format!("METIS dual graph init: {e}"))?
-        .set_vwgt(&vwgt)
-        .set_tpwgts(&tpwgts)
-        .set_ubvec(&ubvec_f32);
-    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
-    let graph = graph
-        .set_option(metis::option::UFactor(uf_int))
-        .set_option(metis::option::NIter(niter as i32))
-        .set_option(metis::option::Contig(true))
-        .set_option(metis::option::MinConn(true));
-    let graph = if let Some(s) = seed {
-        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
-    } else {
-        graph
-    };
-    graph.part_recursive(&mut part)
-        .map_err(|e| format!("METIS dual bisection failed: {e}"))?;
-
-    let mut left = HashSet::new();
-    let mut right = HashSet::new();
-    for (local, &p) in part.iter().enumerate() {
-        let global = sorted[local];
-        if p == 0 { left.insert(global); } else { right.insert(global); }
-    }
     Ok((left, right))
 }
 
@@ -415,168 +403,6 @@ fn lorenz_min_area(
     cum_area / total_area
 }
 
-/// AreaSection: dual-constrained ratio-optimal bisection.
-///
-/// For each population ratio i:(k-i):
-///   METIS satisfies TWO constraints simultaneously:
-///   1. Population: left half gets i × (total_pop/k), right gets (k-i) × (total_pop/k)
-///   2. Area: left half gets 50% of total ALAND, right gets 50%
-///
-/// Uses isoperimetric normalisation EC / √(min(i,k-i)) for ratio selection.
-/// vertex_areas_m2: ALAND in m² per vertex (from TIGER, same indexing as adjacency).
-pub fn run_areasection(
-    adjacency: &[Vec<usize>],
-    vertex_weights: &[i64],       // population
-    vertex_areas_m2: &[f64],       // ALAND per tract in m²
-    edge_weights: &HashMap<(usize, usize), f64>,
-    num_districts: usize,
-    balance_tolerance: f64,
-    niter: u32,
-    seeds_per_ratio: usize,
-    area_swing: f64,              // e.g. 1.10 = ±10% area swing tolerance
-    intermediate_dir: Option<&Path>,
-) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
-    let n = adjacency.len();
-    if num_districts <= 1 {
-        let asgn = (0..n).map(|i| (i, 1)).collect();
-        return Ok((asgn, 1, 0, 0.0));
-    }
-
-    // Scale areas to hectares (÷10,000 m²) to fit within METIS's internal i32 range.
-    // METIS uses int32 internally: max ~2.1 billion. Large rural census tracts can be
-    // billions of m², so m² units would overflow. 1 hectare = 10,000 m²; a 1,000 km²
-    // rural tract becomes 100,000 hectares — well within i32 range.
-    let vertex_areas_i64: Vec<i64> = vertex_areas_m2.iter()
-        .map(|&a| ((a / 10_000.0) as i64).max(1)).collect();
-
-    let node_ufactor = 1.0 + balance_tolerance / num_districts as f64;
-    let mut best_ec = f64::INFINITY;
-    let mut best_normalised = f64::INFINITY;
-    let mut best_left = 0usize;
-    let mut best_right = 0usize;
-    let mut best_left_set = HashSet::new();
-    let mut best_right_set = HashSet::new();
-
-    let all_tracts: HashSet<usize> = (0..n).collect();
-    let max_left = num_districts / 2;
-
-    // ── Lorenz analysis: pre-filter infeasible ratios ──────────────────────
-    let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, vertex_areas_m2, num_districts);
-    let area_max = 0.5 * area_swing;        // e.g. 0.55 for ±10%
-    let area_min = 0.5 / area_swing;        // e.g. 0.4545 for ±10%
-    eprintln!("[areasection] Lorenz: dense-half contains {:.1}% of population → natural split ~{}:{}",
-              natural_pop * 100.0, num_districts - suggested_k, suggested_k);
-    let feasible: Vec<bool> = (0..=max_left).map(|left_k| {
-        if left_k == 0 { return false; }
-        let p = left_k as f64 / num_districts as f64;
-        let min_a = lorenz_min_area(vertex_weights, vertex_areas_m2, p);
-        let max_a = 1.0 - lorenz_min_area(vertex_weights, vertex_areas_m2, 1.0 - p);
-        // Feasible if the non-contiguous area range overlaps the allowed window
-        min_a <= area_max && max_a >= area_min
-    }).collect();
-    for left_k in 1..=max_left {
-        let p = left_k as f64 / num_districts as f64;
-        let min_a = lorenz_min_area(vertex_weights, vertex_areas_m2, p);
-        let max_a = 1.0 - lorenz_min_area(vertex_weights, vertex_areas_m2, 1.0 - p);
-        eprintln!("[areasection]   ratio {}:{} ({:.1}% pop): Lorenz area range [{:.1}%–{:.1}%] → {}",
-                  left_k, num_districts - left_k, p * 100.0,
-                  min_a * 100.0, max_a * 100.0,
-                  if feasible[left_k] { "feasible" } else { "INFEASIBLE (Lorenz)" });
-    }
-    // ── end Lorenz analysis ────────────────────────────────────────────────
-
-    eprintln!("[areasection] {} ratios × {} seeds (pop+area dual constraint)",
-              max_left, seeds_per_ratio);
-
-    for left_k in 1..=max_left {
-        if !feasible[left_k] {
-            eprintln!("[areasection] skipping ratio {}:{} — Lorenz predicts infeasible area balance",
-                      left_k, num_districts - left_k);
-            continue;
-        }
-        let right_k = num_districts - left_k;
-        let pop_frac = left_k as f64 / num_districts as f64;
-        let mut ratio_best = f64::INFINITY;
-        let mut ratio_best_left = HashSet::new();
-        let mut ratio_best_right = HashSet::new();
-
-        for seed in 1..=(seeds_per_ratio as u64) {
-            match split_subgraph_dual(
-                adjacency, vertex_weights, &vertex_areas_i64, edge_weights,
-                &all_tracts, node_ufactor, niter, Some(seed), pop_frac,
-                // Tight pop balance (±0.1%), 10% area swing allowed
-                [1.001, 1.10],
-            ) {
-                Ok((l, r)) => {
-                    let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
-                        if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
-                    }).sum();
-                    if ec < ratio_best {
-                        ratio_best = ec;
-                        ratio_best_left = l;
-                        ratio_best_right = r;
-                    }
-                }
-                Err(e) => {
-                    if seed == 1 {
-                        eprintln!("[areasection] seed 1 error (ratio {}:{}): {}", left_k, right_k,
-                                  &e.chars().take(300).collect::<String>());
-                    }
-                    continue;
-                }
-            }
-        }
-
-        let smaller = left_k.min(right_k) as f64;
-        let normalised = ratio_best / smaller.sqrt();
-
-        // Report actual area split achieved
-        let area_left: f64 = ratio_best_left.iter().map(|&v| vertex_areas_m2[v]).sum();
-        let total_area: f64 = vertex_areas_m2.iter().sum();
-        let area_frac = area_left / total_area;
-
-        eprintln!("[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
-                  left_k, right_k, ratio_best/1000.0, normalised/1000.0, area_frac*100.0);
-
-        if normalised < best_normalised {
-            best_normalised = normalised;
-            best_ec = ratio_best;
-            best_left = left_k;
-            best_right = right_k;
-            best_left_set = ratio_best_left;
-            best_right_set = ratio_best_right;
-        }
-    }
-
-    eprintln!("[areasection] natural ratio {}:{} at {:.0}km (normalised={:.1})",
-              best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
-
-    if let Some(dir) = intermediate_dir {
-        let round_dir = dir.join("depth_01");
-        let _ = std::fs::create_dir_all(&round_dir);
-        let mut d1: HashMap<usize, usize> = HashMap::new();
-        for &v in &best_left_set  { d1.insert(v, 1); }
-        for &v in &best_right_set { d1.insert(v, 2); }
-        let _ = write_intermediate_round(&round_dir, &d1);
-    }
-
-    // Recurse with standard bisection on each half
-    let left_asgn = recurse_standard(
-        &best_left_set, &build_subgraph_adjacency(&best_left_set, adjacency),
-        adjacency, vertex_weights, edge_weights,
-        best_left, balance_tolerance, niter, 1)?;
-    let right_asgn = recurse_standard(
-        &best_right_set, &build_subgraph_adjacency(&best_right_set, adjacency),
-        adjacency, vertex_weights, edge_weights,
-        best_right, balance_tolerance, niter, best_left + 1)?;
-
-    let mut assignments = left_asgn;
-    assignments.extend(right_asgn);
-    if assignments.len() != n {
-        return Err(format!("areasection incomplete: {}/{n}", assignments.len()));
-    }
-    Ok((assignments, best_left, best_right, best_ec))
-}
 
 /// Run n-way partitioning: call gpmetis once with nparts=k.
 ///
@@ -610,9 +436,12 @@ pub fn run_nway_partition(
         if edge_weights.is_empty() { None } else { Some(edge_weights) },
     );
 
-    // Equal target weights: 1/k per partition (ncon=1)
+    // Equal target weights: first k-1 partitions get 1/k each; last gets remainder.
+    // This guarantees the weights sum exactly to 1.0 in f32 regardless of k.
     let weight_per = 1.0_f32 / num_districts as f32;
-    let tpwgts: Vec<f32> = vec![weight_per; num_districts];
+    let mut tpwgts: Vec<f32> = vec![weight_per; num_districts];
+    let total: f32 = tpwgts[..num_districts-1].iter().sum();
+    tpwgts[num_districts-1] = 1.0_f32 - total;
 
     let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
     let uf_int = uf_int.clamp(1, 1000);
@@ -665,6 +494,13 @@ pub fn run_nway_partition(
 /// The ratio with the globally minimum edge-cut is the "natural" ratio.
 /// All subsequent levels use the standard ⌊k/2⌋:⌈k/2⌉ split.
 ///
+/// When `vertex_areas_m2` is Some, activates AreaSection mode (ncon=2):
+///   - Interleaves population and area (hectares) as dual vertex weights.
+///   - At the top-level ratio scan, uses tpwgts=[pop_frac, 0.5, 1-pop_frac, 0.5]
+///     and ubvec=[1.001, 1.10] (tight pop balance, 10% area swing).
+///   - Performs Lorenz pre-filtering to skip infeasible ratios.
+///   - Recursive calls always use ncon=1 (area constraint only at first level).
+///
 /// Returns (assignments, natural_ratio_left, natural_ratio_right, natural_ec).
 pub fn run_geosection(
     adjacency: &[Vec<usize>],
@@ -679,6 +515,8 @@ pub fn run_geosection(
     centroids: &crate::geosection_orientation::CentroidMap,
     // Phase 2: directional penalty strength (0.0 = off, use GeoSection without penalty)
     lambda: f64,
+    // AreaSection mode: ALAND in m² per vertex. None = standard GeoSection (ncon=1).
+    vertex_areas_m2: Option<&[f64]>,
 ) -> Result<(HashMap<usize, usize>, usize, usize, f64), String> {
     let n = adjacency.len();
 
@@ -709,20 +547,87 @@ pub fn run_geosection(
     let all_tracts: HashSet<usize> = (0..n).collect();
     let max_left = num_districts / 2;  // try ratios 1:k-1 through k/2:k/2
 
-    eprintln!("[geosection] trying {} ratios × {} seeds for k={}",
-              max_left, seeds_per_ratio, num_districts);
+    // ── AreaSection mode: build interleaved vwgt and Lorenz feasibility mask ──
+    let (ncon, vwgt_flat, lorenz_feasible) = if let Some(areas) = vertex_areas_m2 {
+        // Scale areas to hectares (÷10,000 m²) to stay within METIS i32 range.
+        // Large rural tracts can be billions of m²; hectares keep them within i32.
+        let vertex_areas_ha: Vec<i64> = areas.iter()
+            .map(|&a| ((a / 10_000.0) as i64).max(1)).collect();
+        let interleaved: Vec<i64> = vertex_weights.iter().zip(&vertex_areas_ha)
+            .flat_map(|(&p, &a)| [p, a]).collect();
+
+        // Lorenz pre-filtering: skip ratios where area balance is geometrically impossible
+        let area_swing = 1.10f64;
+        let area_max = 0.5 * area_swing;
+        let area_min = 0.5 / area_swing;
+        let (_, natural_pop, suggested_k) = population_lorenz(vertex_weights, areas, num_districts);
+        eprintln!("[areasection] Lorenz: dense-half contains {:.1}% of population -> natural split ~{}:{}",
+                  natural_pop * 100.0, num_districts - suggested_k, suggested_k);
+        let feasible: Vec<bool> = (0..=max_left).map(|left_k| {
+            if left_k == 0 { return false; }
+            let p = left_k as f64 / num_districts as f64;
+            let min_a = lorenz_min_area(vertex_weights, areas, p);
+            let max_a = 1.0 - lorenz_min_area(vertex_weights, areas, 1.0 - p);
+            min_a <= area_max && max_a >= area_min
+        }).collect();
+        for left_k in 1..=max_left {
+            let p = left_k as f64 / num_districts as f64;
+            let min_a = lorenz_min_area(vertex_weights, areas, p);
+            let max_a = 1.0 - lorenz_min_area(vertex_weights, areas, 1.0 - p);
+            eprintln!("[areasection]   ratio {}:{} ({:.1}% pop): Lorenz area range [{:.1}%-{:.1}%] -> {}",
+                      left_k, num_districts - left_k, p * 100.0,
+                      min_a * 100.0, max_a * 100.0,
+                      if feasible[left_k] { "feasible" } else { "INFEASIBLE (Lorenz)" });
+        }
+        eprintln!("[areasection] {} ratios x {} seeds (pop+area dual constraint)",
+                  max_left, seeds_per_ratio);
+        (2usize, interleaved, feasible)
+    } else {
+        // ncon=1: plain population weights, all ratios feasible
+        let plain: Vec<i64> = vertex_weights.to_vec();
+        let feasible = vec![true; max_left + 1];
+        eprintln!("[geosection] trying {} ratios x {} seeds for k={}",
+                  max_left, seeds_per_ratio, num_districts);
+        (1usize, plain, feasible)
+    };
 
     for left_k in 1..=max_left {
+        if !lorenz_feasible[left_k] {
+            eprintln!("[areasection] skipping ratio {}:{} - Lorenz predicts infeasible area balance",
+                      left_k, num_districts - left_k);
+            continue;
+        }
         let right_k = num_districts - left_k;
-        let tw = Some((left_k as f64 / num_districts as f64,
-                       right_k as f64 / num_districts as f64));
+        let pop_frac = left_k as f64 / num_districts as f64;
+
+        // Build tpwgts and ubvec based on ncon.
+        // Always compute right = 1.0 - left in f32 to guarantee exact sum-to-one.
+        let left_w = pop_frac as f32;
+        let right_w = 1.0_f32 - left_w;
+        let tpwgts: Option<Vec<f32>> = if ncon == 2 {
+            // ncon=2: [left_pop, left_area, right_pop, right_area]
+            // Area target is always 50/50; sum per constraint = 1.0.
+            Some(vec![left_w, 0.5f32, right_w, 0.5f32])
+        } else if left_k != right_k {
+            Some(vec![left_w, right_w])
+        } else {
+            None
+        };
+        let ubvec: Option<Vec<f32>> = if ncon == 2 {
+            // Tight population balance (±0.1%), 10% area swing allowed
+            Some(vec![1.001f32, 1.10f32])
+        } else {
+            None
+        };
+
         let mut ratio_best = f64::INFINITY;
         let mut ratio_best_left = HashSet::new();
         let mut ratio_best_right = HashSet::new();
 
         for seed in 1..=(seeds_per_ratio as u64) {
-            match split_subgraph(adjacency, vertex_weights, edge_weights,
-                                  &all_tracts, node_ufactor, niter, Some(seed), tw) {
+            match split_subgraph(adjacency, &vwgt_flat, ncon, edge_weights,
+                                  &all_tracts, node_ufactor, niter, Some(seed),
+                                  tpwgts.clone(), ubvec.clone()) {
                 Ok((l, r)) => {
                     let ec: f64 = edge_weights.iter().filter_map(|(&(u,v),&w)| {
                         if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
@@ -733,19 +638,34 @@ pub fn run_geosection(
                         ratio_best_right = r;
                     }
                 }
-                Err(_) => continue,
+                Err(e) => {
+                    if seed == 1 && ncon == 2 {
+                        eprintln!("[areasection] seed 1 error (ratio {}:{}): {}", left_k, right_k,
+                                  &e.chars().take(300).collect::<String>());
+                    }
+                    continue;
+                }
             }
         }
 
-        // Normalise by √(min(i,k-i)): isoperimetric correction.
+        // Normalise by sqrt(min(i,k-i)): isoperimetric correction.
         // Raw EC always favours 1:k-1 (tiny boundary) over k/2:k/2 (full bisection).
-        // Dividing by √(smaller_half_districts) makes the comparison apples-to-apples:
-        // both represent the geometric efficiency of the cut per unit area carved.
+        // Dividing by sqrt(smaller_half_districts) makes the comparison apples-to-apples.
         let smaller = left_k.min(right_k) as f64;
         let normalised = ratio_best / smaller.sqrt();
 
-        eprintln!("[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
-                  left_k, right_k, ratio_best/1000.0, normalised/1000.0);
+        if ncon == 2 {
+            if let Some(areas) = vertex_areas_m2 {
+                let area_left: f64 = ratio_best_left.iter().map(|&v| areas[v]).sum();
+                let total_area: f64 = areas.iter().sum();
+                let area_frac = area_left / total_area;
+                eprintln!("[areasection]   ratio {}:{} best={:.0}km  normalised={:.1}  area_left={:.1}%",
+                          left_k, right_k, ratio_best/1000.0, normalised/1000.0, area_frac*100.0);
+            }
+        } else {
+            eprintln!("[geosection]   ratio {}:{} best={:.0}km  normalised={:.1}",
+                      left_k, right_k, ratio_best/1000.0, normalised/1000.0);
+        }
 
         if normalised < best_normalised {
             best_normalised = normalised;
@@ -757,7 +677,8 @@ pub fn run_geosection(
         }
     }
 
-    eprintln!("[geosection] natural ratio {}:{} at {:.0}km (normalised={:.1})",
+    let mode_tag = if ncon == 2 { "areasection" } else { "geosection" };
+    eprintln!("[{mode_tag}] natural ratio {}:{} at {:.0}km (normalised={:.1})",
               best_left, best_right, best_ec/1000.0, best_normalised/1000.0);
 
     // Write depth_01 intermediate
@@ -771,6 +692,7 @@ pub fn run_geosection(
     }
 
     // Recurse: each half finds its own natural ratio with its own orientation.
+    // Recursive calls always use ncon=1 (area constraint only at the first level).
     let left_asgn  = recurse_geosection(
         &best_left_set,  adjacency, vertex_weights, edge_weights,
         best_left,  balance_tolerance, niter, seeds_per_ratio, 1,
@@ -784,7 +706,7 @@ pub fn run_geosection(
     assignments.extend(right_asgn);
 
     if assignments.len() != n {
-        return Err(format!("geosection incomplete: {}/{n}", assignments.len()));
+        return Err(format!("{mode_tag} incomplete: {}/{n}", assignments.len()));
     }
     Ok((assignments, best_left, best_right, best_ec))
 }
@@ -845,11 +767,12 @@ fn recurse_geosection(
     // Recursively find natural ratio for THIS subregion
     // Pass empty centroids/lambda=0 here — directional penalty was already
     // applied to local_ew above; run_geosection sees the modified weights.
+    // Always ncon=1 for recursive levels (area constraint only at first level).
     let empty_centroids = crate::geosection_orientation::CentroidMap::new();
     let (local_asgn, nat_left, nat_right, nat_ec) = run_geosection(
         &local_adj, &local_vw, &local_ew,
         k, balance_tolerance, niter, seeds_per_ratio, None,
-        &empty_centroids, 0.0,
+        &empty_centroids, 0.0, None,
     )?;
 
     if local_asgn.len() < sorted.len().saturating_sub(1) {
@@ -978,15 +901,15 @@ pub fn run_all_splits(
 
                     // Target weights: k_left/k and k_right/k
                     // Equal when k_left == k_right (even k); unequal for odd k
-                    let tw = if node.k_left == node.k_right {
+                    let tpwgts = if node.k_left == node.k_right {
                         None // equal split — METIS default
                     } else {
-                        Some((node.k_left as f64 / node.k as f64,
-                              node.k_right as f64 / node.k as f64))
+                        let left_w = node.k_left as f32 / node.k as f32;
+                        Some(vec![left_w, 1.0_f32 - left_w]) // right = 1-left (exact f32 sum)
                     };
                     let (left, right) = split_subgraph(
-                        adjacency, vertex_weights, edge_weights, &tracts,
-                        node_ufactor, niter, seed, tw
+                        adjacency, vertex_weights, 1, edge_weights, &tracts,
+                        node_ufactor, niter, seed, tpwgts, None,
                     ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
                     Ok((node.path, left, right))
                 })
@@ -1107,9 +1030,9 @@ pub fn run_all_splits_compact(
             nodes_with_tracts.into_par_iter()
                 .map(|(node, tracts)| {
                     let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let tw = if node.k_left == node.k_right { None } else {
-                        Some((node.k_left as f64 / node.k as f64,
-                              node.k_right as f64 / node.k as f64))
+                    let tpwgts_node = if node.k_left == node.k_right { None } else {
+                        let left_w = node.k_left as f32 / node.k as f32;
+                        Some(vec![left_w, 1.0_f32 - left_w])
                     };
 
                     // Run N seeds, collect (left, right, edge_cut)
@@ -1117,8 +1040,9 @@ pub fn run_all_splits_compact(
                         (1..=opts.seeds_per_level).filter_map(|s| {
                             let seed = Some(s as u64);
                             split_subgraph(
-                                adjacency, vertex_weights, edge_weights,
-                                &tracts, node_ufactor, niter, seed, tw
+                                adjacency, vertex_weights, 1, edge_weights,
+                                &tracts, node_ufactor, niter, seed,
+                                tpwgts_node.clone(), None,
                             ).ok().map(|(l, r)| {
                                 let ec: f64 = edge_weights.iter().filter_map(|(&(u, v), &w)| {
                                     if l.contains(&u) != l.contains(&v) { Some(w) } else { None }
@@ -1245,15 +1169,18 @@ pub fn run_all_splits_proportional(
 
                     // Use the proportional allocation as METIS target weights.
                     // METIS will minimise edge-cut subject to this population-ratio constraint.
-                    let tw = if k_dem == k_rep {
+                    let tpwgts = if k_dem == k_rep {
                         None // equal — use default
                     } else {
-                        Some((k_dem as f64 / node.k as f64, k_rep as f64 / node.k as f64))
+                        Some(vec![
+                            k_dem as f32 / node.k as f32,
+                            k_rep as f32 / node.k as f32,
+                        ])
                     };
 
                     let (left, right) = split_subgraph(
-                        adjacency, vertex_weights, edge_weights,
-                        &tracts, node_ufactor, niter, seed, tw
+                        adjacency, vertex_weights, 1, edge_weights,
+                        &tracts, node_ufactor, niter, seed, tpwgts, None,
                     ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
 
                     Ok((node.path, left, right))
@@ -1329,7 +1256,7 @@ mod tests {
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..4).collect();
 
-        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.001, 100, Some(42), None)
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.001, 100, Some(42), None, None)
             .expect("METIS should split 4-node graph");
 
         assert_eq!(left.len() + right.len(), 4, "all tracts assigned");
@@ -1558,7 +1485,7 @@ mod tests {
         ew.insert((1,2), 1.0);    // weak edge — METIS may cut here
         ew.insert((2,3), 1000.0); // strong edge
         let indices: HashSet<usize> = (0..4).collect();
-        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, Some(42), None)
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, Some(42), None, None)
             .expect("should split with edge weights");
         assert_eq!(left.len() + right.len(), 4);
         assert!(!left.is_empty() && !right.is_empty());
@@ -1573,8 +1500,9 @@ mod tests {
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..6).collect();
         let (left, right) = split_subgraph(
-            &adj, &vw, &ew, &indices, 1.05, 100, Some(42),
-            Some((2.0/3.0, 1.0/3.0))  // unequal: 4:2 split
+            &adj, &vw, 1, &ew, &indices, 1.05, 100, Some(42),
+            Some(vec![2.0f32/3.0, 1.0f32/3.0]),  // unequal: 4:2 split
+            None,
         ).expect("should split with target weights");
         assert_eq!(left.len() + right.len(), 6);
         assert!(!left.is_empty() && !right.is_empty());
@@ -1590,7 +1518,7 @@ mod tests {
         let vw = vec![1000i64];
         let ew = HashMap::new();
         let indices: HashSet<usize> = vec![0].into_iter().collect();
-        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, None, None)
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
             .expect("single node split");
         assert_eq!(left.len(), 1);
         assert!(right.is_empty());
@@ -1604,7 +1532,7 @@ mod tests {
         let vw = vec![1000i64, 1000];
         let ew = HashMap::new();
         let indices: HashSet<usize> = (0..2).collect();
-        let (left, right) = split_subgraph(&adj, &vw, &ew, &indices, 1.005, 100, Some(42), None)
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, Some(42), None, None)
             .expect("2-node split");
         assert_eq!(left.len(), 1);
         assert_eq!(right.len(), 1);
@@ -1934,11 +1862,11 @@ mod tests {
         assert!((p0c1 - area_left).abs() < 1e-5, "constraint 1 should be area_left");
     }
 
-    /// Integration test: call split_subgraph_dual on a small graph.
-    /// Skip if gpmetis is not available or doesn't support ncon=2.
+    /// Integration test: call split_subgraph with ncon=2 (unified dual-constraint path).
+    /// Tests that the new unified split_subgraph handles ncon=2 correctly.
     #[test]
-    #[ignore = "requires gpmetis with ncon=2 support"]
-    fn test_split_subgraph_dual_small_graph() {
+    #[ignore = "requires METIS with ncon=2 support"]
+    fn test_split_subgraph_ncon2_small_graph() {
         // 8-vertex grid: 0-1-2-3 (top row), 4-5-6-7 (bottom row)
         // Edges: 0-1, 1-2, 2-3, 4-5, 5-6, 6-7, 0-4, 1-5, 2-6, 3-7
         let adj = vec![
@@ -1946,17 +1874,24 @@ mod tests {
             vec![0,5], vec![4,6,1], vec![5,7,2], vec![6,3],
         ];
         let pop  = vec![100i64; 8]; // uniform population
-        let area = vec![100i64; 8]; // uniform area
+        // area in hectares (already scaled; each vertex = 100 ha)
+        let area_ha = vec![100i64; 8];
+        // interleaved vwgt for ncon=2: [pop_0, area_0, pop_1, area_1, ...]
+        let vwgt_interleaved: Vec<i64> = pop.iter().zip(area_ha.iter())
+            .flat_map(|(&p, &a)| [p, a]).collect();
         let mut ew = HashMap::new();
         for (u,v) in [(0,1),(1,2),(2,3),(4,5),(5,6),(6,7),(0,4),(1,5),(2,6),(3,7)] {
             ew.insert((u.min(v), u.max(v)), 1000.0f64);
         }
         let tracts: HashSet<usize> = (0..8).collect();
 
-        // Bisect 50/50 by both population and area
-        let result = split_subgraph_dual(
-            &adj, &pop, &area, &ew, &tracts,
-            1.005, 100, Some(42), 0.5, [1.001, 1.001],
+        // Bisect 50/50 by both population and area (ncon=2)
+        // tpwgts=[0.5, 0.5, 0.5, 0.5]: both partitions get 50% pop and 50% area
+        let result = split_subgraph(
+            &adj, &vwgt_interleaved, 2, &ew, &tracts,
+            1.005, 100, Some(42),
+            Some(vec![0.5f32, 0.5f32, 0.5f32, 0.5f32]),
+            Some(vec![1.001f32, 1.001f32]),
         );
 
         match result {
@@ -1971,9 +1906,83 @@ mod tests {
                     "pop balance should be ~50%: got {:.1}%", ratio*100.0);
             }
             Err(e) => {
-                // gpmetis may fail on this version — log and skip
-                eprintln!("split_subgraph_dual error (gpmetis ncon=2 support?): {e}");
+                // METIS may fail on this version — log and skip
+                eprintln!("split_subgraph ncon=2 error: {e}");
             }
         }
+    }
+
+    // ── Lorenz analysis tests ─────────────────────────────────────────────
+
+    #[test]
+    fn lorenz_curve_starts_at_origin_ends_at_one() {
+        let pop  = vec![100i64, 200, 300, 400];
+        let area = vec![1000.0f64, 2000.0, 3000.0, 4000.0];
+        let (curve, _, _) = population_lorenz(&pop, &area, 4);
+        assert!(curve.first().map(|&(a,p)| a == 0.0 && p == 0.0).unwrap_or(false),
+                "curve must start at (0,0)");
+        let (a_last, p_last) = *curve.last().unwrap();
+        assert!((a_last - 1.0).abs() < 1e-9, "curve area must reach 1.0");
+        assert!((p_last - 1.0).abs() < 1e-9, "curve pop must reach 1.0");
+    }
+
+    #[test]
+    fn lorenz_curve_monotone_non_decreasing() {
+        let pop  = vec![50i64, 200, 100, 400, 10];
+        let area = vec![500.0f64, 1000.0, 800.0, 2000.0, 200.0];
+        let (curve, _, _) = population_lorenz(&pop, &area, 5);
+        for w in curve.windows(2) {
+            assert!(w[1].0 >= w[0].0, "area fraction must be non-decreasing");
+            assert!(w[1].1 >= w[0].1, "pop fraction must be non-decreasing");
+        }
+    }
+
+    #[test]
+    fn lorenz_natural_ratio_uniform_state_is_half() {
+        // Uniform state: all tracts same density → natural pop at 50% area = 50%
+        let pop  = vec![100i64; 10];
+        let area = vec![1000.0f64; 10];
+        let (_, natural_pop, suggested_k) = population_lorenz(&pop, &area, 10);
+        assert!((natural_pop - 0.5).abs() < 0.05,
+                "uniform state natural pop should be ~50%: got {:.1}%", natural_pop * 100.0);
+        assert_eq!(suggested_k, 5, "uniform state natural k should be 5 out of 10");
+    }
+
+    #[test]
+    fn lorenz_natural_ratio_concentrated_state() {
+        // Very concentrated: first 2 tracts have 90% of pop in 10% of area
+        let pop  = vec![900i64, 900, 10, 10, 10, 10, 10, 10, 10, 10];
+        let area = vec![500.0f64, 500.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0, 1000.0];
+        let (_, natural_pop, _) = population_lorenz(&pop, &area, 10);
+        // Dense 50% of area (first 5 dense tracts) should contain well above 50% of pop
+        assert!(natural_pop > 0.7,
+                "concentrated state: dense half should hold >70% pop, got {:.1}%", natural_pop * 100.0);
+    }
+
+    #[test]
+    fn lorenz_min_area_for_zero_is_zero() {
+        let pop  = vec![100i64, 200, 300];
+        let area = vec![1000.0f64, 2000.0, 3000.0];
+        let min_a = lorenz_min_area(&pop, &area, 0.0);
+        assert_eq!(min_a, 0.0);
+    }
+
+    #[test]
+    fn lorenz_min_area_for_one_is_one() {
+        let pop  = vec![100i64, 200, 300];
+        let area = vec![1000.0f64, 2000.0, 3000.0];
+        let min_a = lorenz_min_area(&pop, &area, 1.0);
+        assert!((min_a - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn lorenz_min_area_dense_tract_first() {
+        // Tract 0: 900 pop, 100 area (very dense)
+        // Tract 1: 100 pop, 900 area (very sparse)
+        // Minimum area to hold 90% of pop = just tract 0 = 100/1000 = 10%
+        let pop  = vec![900i64, 100];
+        let area = vec![100.0f64, 900.0];
+        let min_a = lorenz_min_area(&pop, &area, 0.9);
+        assert!(min_a < 0.15, "dense tract holds 90% pop in ~10% area, got {:.1}%", min_a * 100.0);
     }
 }

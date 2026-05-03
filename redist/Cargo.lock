@@ -2352,6 +2352,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "redist-apportion"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "metis",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "redist-cli"
 version = "0.1.0"
 dependencies = [
@@ -2366,6 +2377,7 @@ dependencies = [
  "polylabel",
  "rayon",
  "redist-analysis",
+ "redist-apportion",
  "redist-core",
  "redist-data",
  "redist-map",
