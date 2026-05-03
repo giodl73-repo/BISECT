@@ -102,19 +102,92 @@ Virginia  & $-0.6$\,pp  & [TBD] & [TBD] & [TBD] & $0$\,pp \\
 \end{tabular}
 \end{table}
 
-\subsection{Feasibility by State}
+\subsection{The Sigma Classification}
 
-For each state, we compute the partisan signal strength $\sigma$ and assess
-whether the Lorenz feasibility condition is met.
-Figure~\ref{fig:sigma-map} maps $\sigma$ across all 50 states.
+Table~\ref{tab:sigma} reports the partisan signal strength $\sigma$ for
+all 42 multi-district states (excludes AK, DE, ND, SD, VT, WY, WY with $k=1$).
 
-States with low $\sigma$ (near-uniform partisan geography): Iowa, Nebraska,
-Kansas, South Dakota --- proportionality requires minimal partisan input.
+\begin{table}[h]
+\centering
+\caption{Partisan signal strength $\sigma$, proportional seat allocation, and
+B.9 proportionality gap.  Sorted by $\sigma$. Single-seat states excluded.}
+\label{tab:sigma}
+\small
+\begin{tabular}{lrrrrrl}
+\toprule
+State & D vote & $k$ & $k_D$ & $k_R$ & $\sigma$ & Category \\
+\midrule
+\multicolumn{7}{l}{\textit{Free proportionality ($\sigma < 0.05$) — 19 states}} \\
+GA & 50.1\,\% & 14 & 7 & 7 & 0.001 & free \\
+AZ & 50.2\,\% &  9 & 5 & 4 & 0.001 & free \\
+WI & 50.3\,\% &  8 & 4 & 4 & 0.003 & free \\
+NC & 49.3\,\% & 14 & 7 & 7 & 0.007 & free \\
+NV & 51.2\,\% &  4 & 2 & 2 & 0.012 & free \\
+MN & 53.6\,\% &  8 & 4 & 4 & 0.034 & free \\
+VA & 55.2\,\% & 11 & 6 & 5 & 0.043 & free \\
+IA & 45.8\,\% &  4 & 2 & 2 & 0.046 & free \\
+OH & 45.9\,\% & 15 & 7 & 8 & 0.047 & free \\
+OR & 58.3\,\% &  6 & 4 & 2 & 0.048 & free \\
+\ldots \\
+\midrule
+\multicolumn{7}{l}{\textit{Cheap proportionality ($0.05 \leq \sigma < 0.15$) — 14 states}} \\
+NJ & 58.1\,\% & 12 & 7 & 5 & 0.058 & cheap \\
+WA & 59.9\,\% & 10 & 6 & 4 & 0.066 & cheap \\
+CA & 64.9\,\% & 52 & 34 & 18 & 0.080 & cheap \\
+SC & 44.1\,\% &  7 & 3 & 4 & 0.077 & cheap \\
+\ldots \\
+\midrule
+\multicolumn{7}{l}{\textit{Expensive proportionality ($\sigma \geq 0.15$) — 9 states}} \\
+LA & 40.5\,\% &  6 & 2 & 4 & 0.156 & expensive \\
+AL & 37.1\,\% &  7 & 3 & 4 & 0.199 & expensive \\
+TN & 38.2\,\% &  9 & 3 & 6 & 0.207 & expensive \\
+KY & 36.8\,\% &  6 & 2 & 4 & 0.239 & expensive \\
+OK & 33.1\,\% &  5 & 2 & 3 & 0.307 & expensive \\
+WV & 30.2\,\% &  2 & 1 & 1 & 0.328 & expensive \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-States with high $\sigma$ (extreme partisan concentration): Georgia, Massachusetts,
-Maryland, Illinois --- proportionality requires strong partisan constraints that
-may conflict with geographic contiguity.
+\subsection{The Proportionality Paradox}
+\label{sec:paradox}
 
-States where Lorenz feasibility is violated (proportionality is geometrically
-impossible even with partisan constraints): this set is determined empirically
-and reported in Table~\ref{tab:feasibility}.
+Table~\ref{tab:sigma} reveals a striking result:
+\textbf{all 8 competitive states (46--55\,\% Democratic) are in the free
+proportionality category, with $\sigma < 0.05$.}
+
+For Wisconsin ($d = 0.503$, $k=8$, $k_D = k_R = 4$):
+\[
+  \sigma_{\text{WI}} = \left|1 - \frac{4}{2 \times 0.503 \times 8} - \frac{4}{8}\right|
+  = |0.503 - 0.500| = 0.003
+\]
+The proportional target shifts only 0.3\,\% of Democratic votes from the neutral
+equal distribution. This is essentially zero.
+
+Yet Wisconsin produces a $-12.8$\,pp proportionality gap under geography-only
+algorithms. Georgia ($\sigma = 0.001$) produces $-14.4$\,pp.
+
+\begin{quote}
+\emph{The partisan signal required to achieve proportionality in competitive states is essentially zero --- but geography prevents even the neutral algorithm from reaching proportional outcomes.}
+\end{quote}
+
+This is the \textbf{proportionality paradox}:
+\begin{enumerate}
+\item Competitive states require virtually no partisan constraint for proportionality.
+\item Yet they have the largest Rodden gaps.
+\item The gap is not because we are targeting the wrong tpwgts.
+\item The gap is because geography makes it \emph{geometrically infeasible} to achieve
+  even the near-neutral proportional target with contiguous districts.
+\end{enumerate}
+
+The B.12 formula tells us the target.
+Lorenz feasibility tells us whether geography allows the target to be reached.
+For competitive states, the target is easy to specify but hard to achieve.
+
+\paragraph{Expensive proportionality states.}
+The 9 expensive-proportionality states are all R-dominated (30--41\,\% D).
+Here $\sigma$ is large (0.16--0.33) because genuine partisan packing is
+required: Democratic voters are so few that they need to be concentrated
+into a small number of majority-D districts.
+These states require real partisan information to achieve proportionality ---
+but their current gaps are already at their natural floor (few D seats
+regardless of algorithm).
