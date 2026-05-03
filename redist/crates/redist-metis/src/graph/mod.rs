@@ -59,6 +59,110 @@ pub struct Partition {
 #[derive(Debug, Clone)]
 pub struct CoarseMap { pub cmap: Vec<u32> }
 
+/// Check if every part in `partition` is connected within `g`.
+/// Returns `Ok(())` if all parts are contiguous, or the first disconnected part ID.
+pub fn check_contiguity(g: &CsrGraph, partition: &Partition) -> Result<(), u32> {
+    let n = g.n();
+    let k = partition.k as usize;
+
+    // Find one representative vertex per part
+    let mut rep = vec![usize::MAX; k];
+    for v in 0..n {
+        let p = partition.assignment[v] as usize;
+        if rep[p] == usize::MAX { rep[p] = v; }
+    }
+
+    // BFS within each part from its representative
+    let mut visited = vec![false; n];
+    for part in 0..k {
+        if rep[part] == usize::MAX { continue; } // empty part
+        let start = rep[part];
+        visited[start] = true;
+        let mut queue = std::collections::VecDeque::from([start]);
+        while let Some(v) = queue.pop_front() {
+            for j in g.xadj[v] as usize..g.xadj[v+1] as usize {
+                let u = g.adjncy[j] as usize;
+                if !visited[u] && partition.assignment[u] as usize == part {
+                    visited[u] = true;
+                    queue.push_back(u);
+                }
+            }
+        }
+        // Check all vertices of this part were reached
+        for v in 0..n {
+            if partition.assignment[v] as usize == part && !visited[v] {
+                return Err(part as u32);
+            }
+        }
+        // Reset visited for next part (only clear this part's vertices)
+        for v in 0..n {
+            if partition.assignment[v] as usize == part { visited[v] = false; }
+        }
+    }
+    Ok(())
+}
+
+/// Repair non-contiguous partitions by reassigning disconnected components
+/// to their largest adjacent part. Modifies partition in place.
+/// Returns the number of vertices reassigned.
+pub fn repair_contiguity(g: &CsrGraph, partition: &mut Partition) -> usize {
+    let n = g.n();
+    let mut reassigned = 0usize;
+
+    // Iteratively fix until all parts are contiguous (max n iterations for safety)
+    for _ in 0..n {
+        if check_contiguity(g, partition).is_ok() { break; }
+
+        // Find and fix one disconnected component per iteration
+        let k = partition.k as usize;
+        let mut rep = vec![usize::MAX; k];
+        for v in 0..n {
+            let p = partition.assignment[v] as usize;
+            if rep[p] == usize::MAX { rep[p] = v; }
+        }
+
+        'outer: for part in 0..k {
+            if rep[part] == usize::MAX { continue; }
+
+            // BFS to find the main component
+            let mut in_main = vec![false; n];
+            let mut queue = std::collections::VecDeque::from([rep[part]]);
+            in_main[rep[part]] = true;
+            while let Some(v) = queue.pop_front() {
+                for j in g.xadj[v] as usize..g.xadj[v+1] as usize {
+                    let u = g.adjncy[j] as usize;
+                    if !in_main[u] && partition.assignment[u] as usize == part {
+                        in_main[u] = true;
+                        queue.push_back(u);
+                    }
+                }
+            }
+
+            // Reassign disconnected vertices to their most-adjacent other part
+            for v in 0..n {
+                if partition.assignment[v] as usize == part && !in_main[v] {
+                    // Find the most common adjacent part
+                    let mut adj_counts = vec![0u32; k];
+                    for j in g.xadj[v] as usize..g.xadj[v+1] as usize {
+                        let u = g.adjncy[j] as usize;
+                        let up = partition.assignment[u] as usize;
+                        if up != part { adj_counts[up] += 1; }
+                    }
+                    if let Some((best_part, _)) = adj_counts.iter().enumerate()
+                        .filter(|&(p, &c)| p != part && c > 0)
+                        .max_by_key(|&(_, &c)| c)
+                    {
+                        partition.assignment[v] = best_part as u32;
+                        reassigned += 1;
+                        break 'outer; // restart from the top
+                    }
+                }
+            }
+        }
+    }
+    reassigned
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
