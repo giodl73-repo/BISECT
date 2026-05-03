@@ -1,0 +1,87 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{GeoSection: Isoperimetrically-Normalised Ratio-Optimal\\
+       Bisection for Congressional Redistricting}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Minimum-edge-cut recursive bisection produces compact congressional district maps
+by repeatedly splitting the state's census-tract adjacency graph into
+population-balanced halves.
+Standard recursive bisection always uses the near-equal $\lfloor k/2\rfloor:\lceil k/2\rceil$ ratio.
+We show this hides a pathology: when a state contains a compact metropolitan
+core, the unnormalised edge-cut always favours the $1:(k-1)$ ratio
+--- carving off one city district and leaving the rest of the state
+to be bisected at the next level.
+Iterated, this produces the \emph{caterpillar}: a linear chain of peeled
+urban districts that looks like deliberate partisan packing even with
+zero partisan input.
+
+We introduce \textbf{GeoSection}, which adds two innovations to standard
+recursive bisection.
+First, at every bisection level, GeoSection tries all feasible split ratios
+$1:(k-1)$ through $\lfloor k/2\rfloor:\lceil k/2\rceil$ with $N$ seeds each
+and selects the ratio minimising the \emph{isoperimetrically normalised}
+edge-cut $\mathrm{EC}/\sqrt{\min(i,\,k-i)}$.
+The $\sqrt{\cdot}$ denominator is the isoperimetric correction: for a convex region,
+the minimum boundary length to enclose fraction $i/k$ of the population
+scales as $\sqrt{\min(i,k-i)/k}$, so dividing by $\sqrt{\min(i,k-i)}$
+makes all ratios compete on equal footing.
+Second, each subregion after a split recomputes its own principal axis
+(PCA of tract centroids) and applies a directional penalty $\lambda$
+to discourage cuts parallel to the new subregion's minor axis,
+producing straighter district boundaries.
+
+Applied to 45 states (2020 Census, 50 seeds per ratio), GeoSection
+selects near-equal ratios for 28 states and genuinely asymmetric ratios
+for 17 states where urban concentration is geographically real.
+Wisconsin: $1:7$ (Milwaukee is genuinely compact, 85\,km boundary).
+North Carolina: $6:8$ east/west split (Charlotte/Raleigh are not
+compact enough to win under normalisation).
+Tennessee: $1:8$ (Nashville/Memphis justify a peel).
+
+A comparison against standard minimum-edge-cut bisection (B.7 baseline)
+shows that GeoSection improves the proportionality gap by 1--2 seats in
+states with strong geographic concentration and is neutral in states
+with uniform density.
+For North Carolina, GeoSection's $6:8$ split produces 5\,D/9\,R
+($-13.6$\,pp proportionality gap); standard bisection produces 5\,D/9\,R
+($-13.6$\,pp) as well.
+Geographic voter sorting dominates the outcome under both algorithms.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

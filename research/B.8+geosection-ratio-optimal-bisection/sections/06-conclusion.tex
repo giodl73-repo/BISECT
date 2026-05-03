@@ -1,0 +1,65 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced GeoSection, a ratio-optimal recursive bisection algorithm that
+adds isoperimetric normalisation to the standard minimum-edge-cut approach.
+The core innovation --- dividing the edge-cut by $\sqrt{\min(i,k-i)}$ before
+comparing ratios --- prevents the caterpillar pathology without eliminating
+genuinely compact urban splits.
+
+The 50-state sweep demonstrates two qualitatively different outcomes.
+For states with truly compact, geographically isolated metropolitan areas
+(Wisconsin: Milwaukee, Pennsylvania: Philadelphia, Tennessee: Nashville/Memphis),
+the normalisation \emph{confirms} the asymmetric split: these urban cores
+are genuinely compact by the isoperimetric standard.
+For states with distributed population (North Carolina, Maryland), the
+normalisation selects a near-equal split: the urban cores are not compact
+enough to dominate the isoperimetric comparison.
+
+\textbf{The partisan outcome is robust across bisection strategies.}
+Of 44 comparable states, 38 produce identical seat counts under GeoSection
+and the B.7 MEC baseline.
+The mean proportionality gap in competitive states is $-7.0$\,pp under
+GeoSection, indistinguishable from the B.7 baseline.
+Geographic voter sorting --- not the bisection algorithm --- is the primary
+determinant of partisan outcomes.
+This is GeoSection's strongest empirical result: changing the bisection
+ratio structure does not change the number of Democratic seats in 86\,\%
+of states.
+
+\textbf{GeoSection is legally defensible.}
+The natural ratio is computable from public data (TIGER boundaries, census
+populations) via a single published formula.
+It does not require partisan data, and the result can be independently
+verified by any party.
+States where the peel is genuine have a stronger legal defence than under
+standard bisection: ``geography confirmed this ratio via isoperimetric
+normalisation'' is a more principled claim than ``this ratio minimises
+edge-cut.''
+
+\paragraph{Future work.}
+Three directions merit investigation:
+
+\begin{itemize}
+\item \textbf{Phase 2 evaluation.}
+  The directional penalty $\lambda$ is implemented but not characterised.
+  Systematic tests across the 50 states would quantify the tradeoff between
+  boundary straightness and edge-cut cost.
+
+\item \textbf{Cross-census stability.}
+  Computing natural ratios for 2000 and 2010 Census data would test whether
+  the geographic structure of states is stable across apportionment cycles,
+  or whether urbanisation trends shift the natural ratio over time.
+
+\item \textbf{Higher seed counts for large states.}
+  California ($k=52$), Texas ($k=38$), and Florida ($k=28$) have uncertain
+  natural ratios at 50 seeds per ratio.
+  Running 200 seeds per ratio would improve confidence in the convergence
+  of the selected ratio for these large states.
+\end{itemize}
+
+\paragraph{Code and data availability.}
+GeoSection is implemented in the open-source \texttt{redist} Rust binary
+(\texttt{redist state --partition-mode geosection}).
+50-state tract-level assignments and natural ratio logs are available in the
+replication archive (\texttt{research/A.4+replication-materials}).
