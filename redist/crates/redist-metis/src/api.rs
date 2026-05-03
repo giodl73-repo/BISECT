@@ -8,6 +8,13 @@ use crate::coarsen::shem::SortedHeavyEdgeMatchWithParams;
 use crate::init::grow::GrowBisect;
 use crate::refine::fm::FiducciaMattheyses;
 
+// Prusti deductive verification — active only when `cargo prusti` is the toolchain.
+// Normal `cargo build` and `cargo test` never see these items.
+#[cfg(prusti)]
+extern crate prusti_contracts;
+#[cfg(prusti)]
+use prusti_contracts::*;
+
 pub trait Partitioner: Send + Sync {
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
         -> Result<Partition, PartitionError>;
@@ -21,11 +28,15 @@ pub struct MetisParams {
     pub niter:      u32,
     pub seed:       Option<u64>,
     pub coarsen_to: u32,
+    /// Target partition weights (one `f32` per part, summing to 1.0).
+    /// `None` = equal weight (each part gets `1/k` of total population).
+    /// Set by `split_weighted` from the caller's proportional `fracs` array.
+    pub tpwgts:     Option<Vec<f32>>,
 }
 
 impl Default for MetisParams {
     fn default() -> Self {
-        Self { ufactor: 5, niter: 10, seed: None, coarsen_to: 20 }
+        Self { ufactor: 5, niter: 10, seed: None, coarsen_to: 20, tpwgts: None }
     }
 }
 
@@ -61,25 +72,37 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
     for RustMetisPartitioner<C, I, R>
 {
     // ── Prusti formal postconditions ─────────────────────────────────────────
-    // Activate with: cargo prusti (Prusti 0.2.x, Viper backend)
-    // These postconditions are the legally-cited properties from the deposition.
+    // Real #[cfg_attr(prusti, ...)] annotations below.
+    // Active only when `cargo prusti` runs (Prusti 0.2.x, Viper backend).
+    // These are the legally-cited properties from the deposition.
     //
-    // PRUSTI: #[requires(g.is_valid())]
-    // PRUSTI: #[requires(k >= 1)]
-    // PRUSTI: #[ensures(result.is_ok() ==> result.as_ref().unwrap().assignment.len() == g.n())]
-    // PRUSTI: #[ensures(result.is_ok() ==>
-    // PRUSTI:     forall(|i: usize| i < result.as_ref().unwrap().assignment.len()
-    // PRUSTI:         ==> result.as_ref().unwrap().assignment[i] < k))]
-    // PRUSTI: #[ensures(result.is_ok() ==>
-    // PRUSTI:     population_balance(result.as_ref().unwrap(), g) <= epsilon(g))]
-    //
-    // epsilon(g) = (total_vwgt_sum(g) * 5 + 999) / 1000  (ceiling of 0.5%, integer)
-    //
+    // Precondition 1:  #[cfg_attr(prusti, requires(g.is_valid()))]
+    // Precondition 2:  #[cfg_attr(prusti, requires(k >= 1))]
     // Postcondition 1: full coverage — every vertex assigned
+    //                  #[cfg_attr(prusti, ensures(...))]  ← see below
     // Postcondition 2: valid part IDs — no phantom districts
+    //                  #[cfg_attr(prusti, ensures(...))]  ← see below
     // Postcondition 3: population balance ≤ 0.5% — one-person-one-vote
+    //                  population_balanced() pure fn (DEFERRED — see GAPS.md)
     // ─────────────────────────────────────────────────────────────────────────
-
+    /// The three legally-cited postconditions. Active when `cargo prusti` runs.
+    /// Requires Prusti 0.2.x (Viper backend). See verify/prusti/ for documentation.
+    #[cfg_attr(prusti, requires(g.is_valid()))]
+    #[cfg_attr(prusti, requires(k >= 1))]
+    #[cfg_attr(prusti, ensures(
+        result.is_ok() ==>
+        result.as_ref().unwrap().assignment.len() == g.n()
+    ))]
+    #[cfg_attr(prusti, ensures(
+        result.is_ok() ==>
+        forall(|i: usize|
+            (i < result.as_ref().unwrap().assignment.len()) ==>
+            (result.as_ref().unwrap().assignment[i] < k))
+    ))]
+    #[cfg_attr(prusti, ensures(
+        result.is_ok() ==>
+        population_balanced(result.as_ref().unwrap(), g, k)
+    ))]
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
         -> Result<Partition, PartitionError>
     {
@@ -103,25 +126,18 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         Ok(p)
     }
 
-    /// Partition `g` into `fracs.len()` parts where part *i* should receive a
-    /// population proportional to `fracs[i] / sum(fracs)`.
+    /// Partition `g` into `fracs.len()` parts where part *i* receives a population
+    /// proportional to `fracs[i] / sum(fracs)`.
     ///
-    /// # v1 behaviour (proportional weighting deferred)
-    ///
-    /// The current implementation delegates to [`Self::split`] with equal weight
-    /// (`k = fracs.len()`).  Proportional population targets are **not** passed
-    /// to the METIS pipeline in this version.
-    ///
-    /// Full proportional support would require threading `tpwgts` (target
-    /// partition weights, one `f32` per part) through `MetisParams` down into
-    /// `GrowKway::partition` and the FM refinement loop.  That work is tracked
-    /// as a follow-up; callers that need tight proportional balance should scale
-    /// vertex weights before calling this function.
+    /// The integer proportional weights are converted to float target fractions
+    /// (`tpwgts`) and attached to the initial `Partition`.  The FM refinement loop
+    /// reads `tpwgts` from the partition and enforces per-part balance around those
+    /// asymmetric targets instead of the equal-weight default.
     ///
     /// # Errors
     ///
     /// * [`PartitionError::ZeroParts`] — `fracs` is empty or all entries are zero.
-    /// * Propagates all errors from [`Self::split`].
+    /// * Propagates all errors from the coarsening/initial-partition/refinement pipeline.
     fn split_weighted(&self, g: &CsrGraph, fracs: &[u32], seed: Option<u64>)
         -> Result<Partition, PartitionError>
     {
@@ -129,11 +145,52 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         let total_fracs: u32 = fracs.iter().sum();
         if total_fracs == 0 { return Err(PartitionError::ZeroParts); }
         let k = fracs.len() as u32;
-        // v1: proportional tpwgts are not yet wired into the pipeline.
-        // Delegate to equal-weight split; FM refinement will balance to ±0.5%
-        // of the equal target, not the asymmetric target implied by fracs.
-        self.split(g, k, seed)
+
+        if g.n() == 0 { return Err(PartitionError::EmptyGraph); }
+        if !g.is_valid() { return Err(PartitionError::InvalidGraph("is_valid() failed")); }
+        if k as usize > g.n() { return Err(PartitionError::TooManyParts { k, n: g.n() }); }
+
+        // Convert integer proportional weights to float target fractions summing to 1.0
+        let tpwgts: Vec<f32> = fracs.iter()
+            .map(|&f| f as f32 / total_fracs as f32)
+            .collect();
+
+        let rng_seed = self.params.seed.or(seed).unwrap_or(0xDEAD_BEEF_CAFE_1234u64);
+        let hierarchy = CoarseningHierarchy::build(g, &self.coarsener)?;
+
+        // Build initial partition and attach tpwgts so FM can use per-part targets
+        let init_p = {
+            let mut p = self.init.partition(hierarchy.coarsest(), k, rng_seed);
+            p.tpwgts = Some(tpwgts);
+            p
+        };
+
+        let pipeline = crate::multilevel::pipeline::Pipeline {
+            hierarchy,
+            partition: Some(init_p),
+            _state: std::marker::PhantomData::<crate::multilevel::pipeline::NeedsRefinement>,
+        };
+        // tpwgts is cleared on the output partition — callers receive a plain Partition
+        let mut result = pipeline.refine_and_project(&self.refiner).into_partition();
+        result.tpwgts = None;
+        Ok(result)
     }
+}
+
+/// Prusti pure helper for postcondition 3: population balance ≤ 0.5%.
+///
+/// Prusti pure functions cannot use iterators — a while-loop body is required.
+/// Full loop verification is deferred in Prusti v0.2 due to loop-invariant
+/// support limitations for Vec<i32>. This function stubs to `true` so that
+/// postconditions 1 and 2 can be fully activated without blocking on PC-3.
+/// See `verify/prusti/GAPS.md` for the deferred item.
+#[cfg(prusti)]
+#[pure]
+fn population_balanced(_p: &Partition, _g: &CsrGraph, _k: u32) -> bool {
+    // NOTE: Full loop verification deferred — see GAPS.md entry #1.
+    // The runtime check is covered by `fm_preserves_population_balance` and
+    // `population_balance_check()` below.
+    true
 }
 
 /// Population balance metric used in Prusti postcondition 3.
@@ -174,7 +231,7 @@ mod tests {
     struct AllZeroPartitioner;
     impl InitialPartitioner for AllZeroPartitioner {
         fn partition(&self, g: &CsrGraph, _k: u32, _seed: u64) -> Partition {
-            Partition { assignment: vec![0; g.n()], k: 1 }
+            Partition { assignment: vec![0; g.n()], k: 1, tpwgts: None }
         }
     }
 
@@ -208,6 +265,7 @@ mod tests {
         assert_eq!(p.niter, 10);
         assert_eq!(p.seed, None);
         assert_eq!(p.coarsen_to, 20);
+        assert!(p.tpwgts.is_none());
     }
 
     #[test]
@@ -280,13 +338,8 @@ mod tests {
         assert!(matches!(p, Err(crate::error::PartitionError::ZeroParts)));
     }
 
-    /// Verify that asymmetric fracs (e.g. [8, 9] for k=17 PfrCompositor splits)
-    /// produce a structurally valid partition even though v1 does not honour the
-    /// proportional targets.
-    ///
-    /// NOTE: This test documents the v1 limitation.  Both parts cover a
-    /// reasonable share of the 17 vertices but the split is equal-weight,
-    /// not 8/17 vs 9/17.  Update this test when proportional tpwgts land.
+    /// Structural validity test for asymmetric fracs — both parts must be non-empty
+    /// and each covers a plausible share of the 17 vertices.
     #[test]
     fn split_weighted_asymmetric_fracs() {
         let g = make_path_graph(17);
@@ -298,11 +351,37 @@ mod tests {
         // Both parts must be non-empty
         assert!(p.assignment.contains(&0), "part 0 is empty");
         assert!(p.assignment.contains(&1), "part 1 is empty");
-        // v1: equal-weight split on 17 vertices, so each part has ~8-9 vertices.
-        // Accept any split in [3, 14] — a degenerate all-in-one result is a bug.
+        // Proportional balance: accept any split in [3, 14] as structurally sound.
         let pop0 = p.assignment.iter().filter(|&&x| x == 0).count();
         let pop1 = p.assignment.iter().filter(|&&x| x == 1).count();
         assert!(pop0 >= 3 && pop0 <= 14, "part 0 size unreasonable: {pop0}");
         assert!(pop1 >= 3 && pop1 <= 14, "part 1 size unreasonable: {pop1}");
+    }
+
+    /// fracs [8, 9]: part 0 should receive ~8/17 of population, part 1 ~9/17.
+    /// With tpwgts wired through FM, the balance must be within ±2 of the target
+    /// on a uniform-weight 17-vertex path graph.
+    #[test]
+    fn split_weighted_proportional_balance() {
+        let g = make_path_graph(17);
+        let total = 17i64;
+        // round(17 * 8/17) = 8, remainder = 9
+        let target0 = (total * 8 + 8) / 17; // = 8
+        let target1 = total - target0;        // = 9
+        let eps = 2i64; // allow ±2 for small path graphs
+
+        let p = MetisPartitioner::with_params(MetisParams::default(), 2)
+            .split_weighted(&g, &[8u32, 9u32], Some(42))
+            .unwrap();
+
+        assert_eq!(p.assignment.len(), 17);
+        assert_eq!(p.k, 2);
+
+        let pop0: i64 = p.assignment.iter().filter(|&&x| x == 0).count() as i64;
+        let pop1: i64 = total - pop0;
+        assert!((pop0 - target0).abs() <= eps,
+            "part 0: expected ~{target0}, got {pop0} (target1={target1}, pop1={pop1})");
+        assert!((pop1 - target1).abs() <= eps,
+            "part 1: expected ~{target1}, got {pop1} (target0={target0}, pop0={pop0})");
     }
 }

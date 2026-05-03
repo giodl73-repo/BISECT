@@ -6,6 +6,12 @@ authors.workspace = true
 license.workspace = true
 description = "Pure Rust METIS graph partitioning — formally verified, deterministic"
 
+[lints.rust]
+# `cfg(prusti)` is set by the Prusti verification toolchain — not a Cargo feature.
+# `cfg(kani)` is set by the Kani model checker — not a Cargo feature.
+# Declare them here so rustc's check-cfg lint does not flag them as unexpected.
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(prusti)', 'cfg(kani)'] }
+
 [dependencies]
 rand_pcg  = "0.3"
 rand      = { version = "0.8", default-features = false, features = ["alloc"] }
