@@ -1290,6 +1290,14 @@ pub struct StatesArgs {
     /// Processing mode: streaming (default) or batch
     #[arg(long, default_value = "streaming")]
     pub processing_mode: ProcessingMode,
+
+    /// Seeds per ratio for GeoSection/AreaSection (default: 50)
+    #[arg(long, default_value_t = 50)]
+    pub geosection_seeds: usize,
+
+    /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
+    #[arg(long)]
+    pub balance_tolerance: Option<f64>,
 }
 
 #[cfg(test)]

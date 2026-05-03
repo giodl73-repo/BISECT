@@ -1,0 +1,61 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced AreaSection, a dual-constraint extension of minimum-edge-cut
+redistricting that simultaneously balances population and land area in each
+bisection.
+The algorithm uses METIS's native $\mathtt{ncon}=2$ multi-constraint
+partitioning with isoperimetric normalisation for ratio selection and a
+Lorenz-curve pre-filter for feasibility.
+
+The empirical results across 50 states show a consistent pattern:
+\textbf{AreaSection dramatically reduces urban peeling for most states}
+(Illinois: 1:16 $\to$ 8:9; New York: 1:25 $\to$ 13:13;
+Florida: 1:27 $\to$ 14:14) while retaining asymmetric splits for states
+where metropolitan concentration makes equal geographic splits infeasible
+(Georgia: 3:11, Massachusetts: 2:7).
+
+\textbf{The partisan outcome is stable}: Wisconsin and North Carolina
+produce identical seat allocations and proportionality gaps under both
+algorithms.
+AreaSection is a geographic fairness mechanism, not a partisan mechanism.
+It changes the \emph{competitiveness profile} of districts ---
+eliminating the knife-edge suburban-ring districts that GeoSection
+creates as a byproduct of urban peeling --- without changing the number
+of seats each party wins.
+
+This stability finding supports the broader claim of the Algorithmic
+Redistricting project: for states where population distribution determines
+the partisan outcome, the specific bisection algorithm is a second-order
+choice.
+The first-order question is: does the state's geography allow enough
+competitive districts for the minority party to win seats proportional to
+its vote share?
+For Wisconsin, North Carolina, and many other states, the answer is no,
+regardless of whether the algorithm is GeoSection or AreaSection.
+
+\paragraph{Future work.}
+Three directions merit further investigation:
+
+\begin{itemize}
+\item \textbf{Recursive area constraints.} We apply the area constraint only
+  at the first bisection level. Applying it at every level would enforce
+  geographic balance throughout the bisection tree.
+  Preliminary results suggest this improves balance in large states but
+  increases the balance tolerance failures.
+
+\item \textbf{Area swing parameter sensitivity.} Systematic testing of
+  different $\mathtt{ubvec}[1]$ values (from $\pm 5\,\%$ to $\pm 25\,\%$)
+  to characterise the tradeoff between geographic balance and population
+  balance feasibility.
+
+\item \textbf{Multi-year comparison.} Applying AreaSection to 2000 and 2010
+  Census data to test stability of the natural ratio structure across
+  census cycles, as population distribution shifts due to urbanisation trends.
+\end{itemize}
+
+\paragraph{Code and data availability.}
+The AreaSection implementation is part of the open-source \texttt{redist}
+Rust binary, available at \url{https://github.com/giodl73-repo/REDIST}.
+All 50-state results and tract-level assignments are available in the
+replication archive (see \texttt{research/A.4+replication-materials}).

@@ -1,0 +1,151 @@
+\section{The AreaSection Algorithm}
+\label{sec:algorithm}
+
+\subsection{Setup and Notation}
+
+Let $G = (V, E, w)$ be the state's census-tract adjacency graph with vertex
+weights $\mathbf{p} \in \mathbb{Z}_{>0}^{|V|}$ (population) and edge weights
+$w(e) > 0$ (shared boundary length in metres, from TIGER).
+Let $k$ be the number of congressional districts.
+Let $\mathbf{a} \in \mathbb{R}_{>0}^{|V|}$ be per-vertex land area (ALAND
+in square metres from TIGER, scaled to hectares).
+
+\begin{definition}[Dual-constrained bisection]
+A \emph{dual-constrained bisection} of $G$ into parts $(S, V \setminus S)$
+with parameters $(p_L, \alpha)$ satisfies:
+\begin{align}
+  \frac{\sum_{v \in S} p_v}{\sum_{v \in V} p_v} &\in \left[\frac{p_L}{1.001},\; 1.001 \cdot p_L\right]
+    & \text{(population balance)} \\
+  \frac{\sum_{v \in S} a_v}{\sum_{v \in V} a_v} &\in \left[\frac{\alpha}{1.10},\; 1.10 \cdot \alpha\right]
+    & \text{(area balance)}
+\end{align}
+where $p_L$ is the target population fraction for $S$ and $\alpha = 0.5$
+(50\,\% land area target).
+\end{definition}
+
+The population tolerance is tight (0.1\,\%, corresponding to METIS
+$\mathtt{ubvec}[0] = 1.001$).
+The area tolerance is loose (10\,\%, $\mathtt{ubvec}[1] = 1.10$) to allow
+METIS to find a good population-balanced partition while making a best-effort
+attempt at area balance.
+When the constraints conflict --- which occurs in states with highly
+concentrated populations --- METIS prioritises the tighter population
+constraint.
+
+\subsection{Lorenz Feasibility Pre-filter}
+
+Before trying any METIS calls, AreaSection computes the
+\emph{population-area Lorenz curve} to identify infeasible ratios.
+
+\begin{definition}[Population-area Lorenz curve]
+Sort tracts by density $\rho_v = p_v / a_v$ in descending order.
+The population-area Lorenz curve $L : [0,1] \to [0,1]$ maps cumulative area
+fraction $x$ to cumulative population fraction $L(x)$:
+\[
+  L(x) = \frac{\sum_{v : \mathrm{rank}(v) \leq x|V|} p_v}{\sum_v p_v}
+\]
+where tracts are ordered from densest to least dense.
+\end{definition}
+
+The Lorenz curve provides lower and upper bounds on the achievable area fraction
+for a given population fraction:
+
+\begin{proposition}[Feasibility bounds]
+For a target population fraction $p$, the set of achievable non-contiguous
+area fractions is the interval
+\[
+  [L^{-1}(p),\; 1 - L^{-1}(1-p)]
+\]
+where $L^{-1}$ is the inverse Lorenz function (minimum area fraction to
+achieve population fraction $p$).
+A ratio $i:(k-i)$ with $p = i/k$ is \emph{Lorenz-infeasible} if this interval
+does not overlap $[0.5/1.10,\; 0.5 \times 1.10] = [0.455,\; 0.55]$.
+\end{proposition}
+
+\begin{proof}
+$L^{-1}(p)$ is the minimum area fraction achievable for population fraction $p$
+(greedy dense-first selection). $1 - L^{-1}(1-p)$ is the maximum area fraction
+achievable (greedy sparse-first, equivalently leaving the densest $1-p$
+fraction to the other side). Contiguity tightens these bounds further, so
+Lorenz-infeasibility is a necessary condition for infeasibility under the
+contiguity constraint.
+\end{proof}
+
+\noindent\textbf{Natural ratio.}
+The Lorenz curve also identifies the \emph{natural population fraction}: the
+value $p^* = L(0.5)$, i.e., the population fraction contained in the densest
+50\,\% of land area.
+For a uniform-density state, $p^* = 0.5$ (equal split is natural).
+For Wisconsin, $p^* = 0.932$: the densest half of Wisconsin's land holds 93.2\,\%
+of the population, confirming that the 50/50 area constraint will force a
+near-equal population split.
+
+\subsection{Ratio Scanning and Normalisation}
+
+At the first bisection level (the ``natural ratio'' level), AreaSection tries
+all feasible ratios $i:(k-i)$ for $i = 1, \ldots, \lfloor k/2 \rfloor$,
+subject to Lorenz feasibility.
+For each ratio, it runs $N$ METIS seeds and records the minimum edge-cut.
+The winning ratio minimises the \emph{isoperimetrically normalised edge-cut}:
+\[
+  \mathrm{EC}_{\text{norm}}(i:k-i) = \frac{\mathrm{EC}(i:k-i)}{\sqrt{\min(i,\, k-i)}}
+\]
+
+The normalisation is identical to GeoSection (B.8).
+Its purpose is to prevent the caterpillar pathology: without normalisation,
+1:k-1 always wins because a 1-district boundary is cheaper than a k/2:k/2
+boundary regardless of compactness.
+The $\sqrt{\min(i,k-i)}$ factor is the isoperimetric correction for a convex
+region, ensuring that both large and small splits compete on equal footing.
+
+\subsection{METIS Dual-Constraint Implementation}
+
+Each METIS call constructs a graph with $\mathtt{ncon}=2$ vertex weights
+(population, area in hectares) and a 4-element $\mathtt{tpwgts}$ vector:
+\[
+  \mathtt{tpwgts} = \left[\frac{i}{k},\; 0.5,\; \frac{k-i}{k},\; 0.5\right]
+\]
+specifying that partition 0 targets $i/k$ of the population and 50\,\% of
+the land area, and partition 1 targets the remainder.
+The $\mathtt{ubvec} = [1.001, 1.10]$ allows 0.1\,\% population imbalance and
+10\,\% area imbalance.
+
+Area values are scaled from square metres to hectares ($\div 10{,}000$) to
+remain within METIS's 32-bit integer range.
+Wisconsin's largest census tract has 138{,}992 hectares, well within the
+$2^{31} - 1 \approx 2.1 \times 10^9$ limit.
+
+\subsection{Recursive Structure}
+
+After the top-level natural ratio is determined, AreaSection recurses into
+each half using GeoSection's standard ratio-scanning bisection with
+\emph{population-only} vertex weights ($\mathtt{ncon}=1$).
+The area constraint applies only at the first level.
+This design reflects the legal theory: the natural ratio is the geographic
+structure of the state, and subsequent levels are standard minimum-edge-cut
+bisection within each geographic half.
+
+The full algorithm is:
+\begin{enumerate}
+  \item Compute Lorenz curve; determine natural ratio $p^*$ and feasible ratios.
+  \item For each feasible ratio $i:(k-i)$, run $N$ dual-constraint METIS seeds;
+    record minimum $\mathrm{EC}_{\text{norm}}$.
+  \item Select ratio with minimum $\mathrm{EC}_{\text{norm}}$ as the natural ratio.
+  \item Recurse on each half with GeoSection (ncon=1, ratio scanning).
+\end{enumerate}
+
+\subsection{Computational Cost}
+
+AreaSection adds one dual-constraint METIS call per ratio per seed at the
+first level.
+For a state with $k$ districts and $N$ seeds per ratio, this is
+$\lfloor k/2 \rfloor \times N$ additional METIS calls compared to standard
+bisection.
+All subsequent recursion levels use the identical ncon=1 GeoSection path.
+
+In practice, Lorenz pre-filtering eliminates 0--2 ratios per state, providing
+modest speedup.
+For Wisconsin (8 districts, 50 seeds), the first-level scan runs
+$4 \times 50 = 200$ dual-constraint calls; subsequent levels run the same
+200 ncon=1 calls as GeoSection.
+Wall-clock time is approximately $2\times$ GeoSection for the first level only.

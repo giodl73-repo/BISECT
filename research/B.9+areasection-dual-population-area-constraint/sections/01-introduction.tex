@@ -1,0 +1,87 @@
+\section{Introduction}
+\label{sec:intro}
+
+Minimum-edge-cut recursive bisection produces congressional district maps by
+repeatedly splitting the state's census-tract adjacency graph into two
+population-balanced halves, minimising the total shared boundary length at each
+level. The algorithm makes no reference to partisan data: it sees only
+geography and population. Yet on states with concentrated metropolitan areas,
+it reliably produces a specific pattern:
+
+\begin{quote}
+\emph{The first bisection peels off the densest urban core as a single compact
+district, leaving the rest of the state to be bisected at subsequent levels.}
+\end{quote}
+
+We call this \textbf{urban peeling}. It arises not from any partisan intent
+but from a geometric fact: the boundary surrounding a dense city is shorter
+than any boundary that bisects the state into two comparably-populated regions.
+Illinois splits 1:17 at the first level (Chicago peel), not 8:9.
+New York splits 1:25 (New York City peel), not 13:13.
+Wisconsin splits 1:7 (Milwaukee peel), not 4:4.
+
+GeoSection (B.8) adds isoperimetric normalisation to prevent the worst form
+of this pathology --- the caterpillar, where 1:k-1 wins at every single
+level regardless of state shape --- but it does not eliminate urban peeling
+for states where the urban core is genuinely compact.
+A normalised 1:7 split in Wisconsin still wins when Milwaukee is as compact
+as it is: the normalisation says ``this boundary is as short as a 1:7 boundary
+could be,'' which does not tell us whether it is shorter than a 4:4 boundary.
+
+Urban peeling is legally contentious for two reasons.
+First, it concentrates a disproportionate share of the minority party's voters
+into a single safe district at every recursion level, producing implicitly
+packed maps.
+Second, it creates near-toss-up districts in the suburban ring around the
+peeled city --- a predictable byproduct of the boundary geometry --- that
+can influence which party controls the chamber.
+Both effects arise with zero partisan input, but they are not politically
+neutral.
+
+\paragraph{Our contribution.}
+We introduce \textbf{AreaSection}, which adds a second METIS balance constraint
+requiring each half of every bisection to receive approximately 50\,\% of the
+state's land area, with a $\pm 10$\,\% swing tolerance.
+The area constraint is enforced simultaneously with the population constraint
+using METIS's native dual-constraint (\texttt{ncon=2}) partitioning with
+per-constraint imbalance vectors (\texttt{ubvec}).
+
+The area constraint cannot be satisfied by a 1:17 split in Illinois because
+Chicago occupies $<5$\,\% of the state's land.
+A near-equal population split is therefore geometrically forced by the area
+balance requirement.
+Illinois moves from 1:17 (GeoSection) to 8:9 (AreaSection).
+New York moves from 1:25 to 13:13.
+Florida moves from 1:27 to 14:14.
+
+We make three contributions:
+
+\begin{enumerate}
+\item \textbf{The AreaSection algorithm} (\S\ref{sec:algorithm}): dual
+  population+area METIS bisection with isoperimetric ratio normalisation and
+  a Lorenz-curve feasibility pre-filter.
+
+\item \textbf{50-state empirical sweep} (\S\ref{sec:evaluation}): natural
+  ratio results for all 50 states, showing which states are forced to near-equal
+  splits and which retain asymmetric splits due to geographic concentration.
+
+\item \textbf{Partisan comparison} (\S\ref{sec:evaluation}): head-to-head
+  GeoSection vs. AreaSection on Wisconsin and North Carolina, showing identical
+  seat allocations but different competitiveness profiles.
+\end{enumerate}
+
+\paragraph{Scope and relationship to B.8.}
+AreaSection is a companion paper to GeoSection (B.8).
+Both algorithms use ratio scanning with isoperimetric normalisation.
+The difference is the vertex weight model: GeoSection uses ncon=1
+(population only); AreaSection uses ncon=2 (population + land area).
+All other algorithmic infrastructure --- recursive bisection tree,
+orientation-aware subgraph splitting, proportionality analysis --- is shared.
+
+AreaSection does not incorporate partisan data.
+It is a purely geographic constraint: land area is a federal public record
+(TIGER ALAND field), computed mechanically, with no interpretive degrees of
+freedom.
+\emph{We minimised edge-cut subject to geographic balance and verified the
+result is not implicitly partisan.} This is a stronger and more legally durable
+claim than minimising a partisan metric directly.

@@ -1,0 +1,121 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{AreaSection as a Geographic Fairness Mechanism}
+
+The central empirical finding of this paper is that AreaSection changes the
+\emph{structure} of redistricting outcomes without changing the \emph{outcome}
+for partisan seat counts.
+In both Wisconsin and North Carolina, AreaSection and GeoSection produce
+identical seat allocations and identical proportionality gaps.
+
+This finding has an important implication: the proportionality gap in these
+states is not a product of urban peeling.
+It is a product of the underlying population distribution.
+A 50.3\,\% Democratic state (Wisconsin) with Republicans distributed across
+a larger geographic footprint will consistently produce a 3D/5R congressional
+delegation under any geographically neutral algorithm, regardless of whether
+the bisection strategy is urban-peeling (GeoSection) or area-balanced
+(AreaSection).
+
+What AreaSection \emph{does} change is the competitiveness profile:
+knife-edge districts disappear.
+GeoSection's suburban ring districts at 49.4\,\% Democratic vote share are a
+systematic artifact of the peeling strategy.
+AreaSection's cleaner partisan sorting --- safe Democratic districts and
+clearly Republican districts --- is arguably more honest about the underlying
+partisan geography.
+
+\paragraph{Legal theory.}
+The area balance constraint has a natural legal justification:
+census tracts are administrative units whose areas reflect the physical
+geography of the state, not the partisan composition of their residents.
+A redistricting algorithm that enforces geographic balance respects the
+physical structure of the state in a way that population-only algorithms
+do not.
+
+Under \emph{Rucho v. Common Cause} (2019), federal courts cannot remedy
+partisan gerrymandering under the Constitution, but state courts can and
+have done so \citep{lwv2018pa,harper2022nc}.
+State courts reviewing redistricting algorithms may find the geographic
+balance criterion independently defensible:
+``we drew district boundaries to minimise total boundary length while
+giving each half of the state comparable geographic footprint''
+is a claim with a clear, politically neutral rationale.
+
+\subsection{Why Seats Don't Change}
+\label{sec:why-seats-stable}
+
+The stability of seat counts across GeoSection and AreaSection reflects
+a deeper mathematical structure.
+In states with strong geographic partisan sorting (urban Democrats,
+rural Republicans), the \emph{number} of Democratic seats is determined
+by how many contiguous geographic regions have Democratic majorities,
+not by where the bisection boundaries fall.
+AreaSection changes where the boundaries fall, but not which geographic
+regions are sufficiently Democratic to elect a Democrat.
+
+This suggests that the partisan outcome is, in a precise sense, a property
+of the population distribution, not of the bisection algorithm.
+GeoSection (B.7) establishes this claim rigorously for the seed-sweep
+convergence case.
+AreaSection provides corroborating evidence from a different direction:
+changing the geometric constraint does not change the seat count.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\paragraph{Large-state balance failures.}
+Six states --- FL, IL, MI, NY, PA, TX --- fail the 1.5\,\% population balance
+check.
+The root cause is recursive bisection rounding: when the first-level split
+produces a subgraph with an unusual population distribution (e.g., 35\,\%
+instead of 37.5\,\% of the state population), the recursive subgraph cannot
+balance to the national ideal per-district within the discrete-tract
+constraint.
+
+This is not a fundamental limitation of AreaSection but a rounding artefact
+that can be addressed by:
+(a) increasing the recursive bisection seed count to find better-balanced cuts,
+(b) relaxing the per-subgraph tolerance, or
+(c) post-processing with a population-balancing swap algorithm.
+The 44-state results demonstrate the algorithm's correctness on states where
+this artefact does not arise.
+
+\paragraph{Area vs population correlation.}
+The area constraint is an indirect measure of geographic diversity.
+In states where the area-to-population ratio is approximately uniform
+(agricultural Midwest), AreaSection behaves identically to GeoSection.
+The constraint only has meaningful effect in states with strong
+population concentration, which are precisely the states where urban peeling
+is most problematic.
+
+\paragraph{The 10\,\% swing tolerance.}
+The $\pm 10\,\%$ area swing (ubvec[1] = 1.10) is a design choice.
+Tighter tolerances (e.g., $\pm 5\,\%$) would force more equal geographic splits
+but would increase the number of Lorenz-infeasible states.
+Looser tolerances (e.g., $\pm 20\,\%$) would permit more urban peeling.
+The 10\,\% value is chosen to match the natural geographic variability of
+census-tract configurations while still preventing extreme peeling.
+Future work should test sensitivity to this parameter.
+
+\paragraph{Area measure.}
+We use TIGER ALAND (land area only, excluding water).
+ALAND + AWATER would change results for coastal and Great Lakes states
+(NY, MI, WI) by attributing large water areas to coastal tracts.
+ALAND is the more legally defensible choice: water is not habitable territory
+and should not count toward a district's geographic footprint.
+
+\subsection{Comparison to Polsby-Popper and Other Compactness Metrics}
+
+Standard compactness metrics (Polsby-Popper, Reock, convex-hull ratio) evaluate
+the shape of individual districts after the fact.
+AreaSection is an \emph{algorithmic} constraint applied during bisection:
+it shapes the structure of the bisection tree before any individual district
+boundaries are drawn.
+
+These are complementary, not competing, approaches.
+AreaSection produces bisection trees that respect geographic balance;
+Polsby-Popper audits verify that individual districts within those trees
+are not pathologically non-compact.
+A complete redistricting analysis would apply both.
