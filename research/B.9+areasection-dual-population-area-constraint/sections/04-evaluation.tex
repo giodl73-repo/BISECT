@@ -207,3 +207,52 @@ The Lorenz curve is a useful \emph{one-number summary} of whether a state is
 likely to produce equal or asymmetric splits under AreaSection:
 states with $p^* > 0.8$ (highly concentrated) retain asymmetric splits;
 states with $p^* < 0.65$ (relatively uniform) produce equal or near-equal splits.
+
+\subsection{The Rodden Effect: Proportionality Across All 44 States}
+
+Table~\ref{tab:prop-competitive} reports AreaSection proportionality results
+for the 8 competitive states (46--55\,\% Democratic presidential vote share
+in 2020).
+
+\begin{table}[h]
+\centering
+\caption{AreaSection proportionality in competitive states (46--55\,\% D vote).
+All results use 2020 Census tracts and 2020 presidential election data.}
+\label{tab:prop-competitive}
+\begin{tabular}{lrrrrr}
+\toprule
+State & D vote & D seats / total & Seat share & Gap \\
+\midrule
+Georgia       & 50.1\,\% & 5/14 & 35.7\,\% & $-14.4$\,pp \\
+Wisconsin     & 50.3\,\% & 3/8  & 37.5\,\% & $-12.8$\,pp \\
+North Carolina & 49.3\,\% & 6/14 & 42.9\,\% & $-6.5$\,pp  \\
+Arizona       & 50.2\,\% & 4/9  & 44.4\,\% & $-5.7$\,pp  \\
+Maine         & 54.7\,\% & 1/2  & 50.0\,\% & $-4.7$\,pp  \\
+Minnesota     & 53.6\,\% & 4/8  & 50.0\,\% & $-3.6$\,pp  \\
+Nevada        & 51.2\,\% & 2/4  & 50.0\,\% & $-1.2$\,pp  \\
+Virginia      & 55.2\,\% & 6/11 & 54.5\,\% & $-0.6$\,pp  \\
+\midrule
+Mean          &          &      &          & $-6.2$\,pp  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{All 8 competitive states show Republican over-representation
+under AreaSection.}
+The mean proportionality gap is $-6.2$\,pp in competitive states.
+
+This result confirms that the proportionality deficit in competitive states
+is \emph{not} a consequence of the urban-peeling bisection strategy that
+AreaSection is designed to eliminate.
+Even with geographic balance enforced at the first bisection level,
+the same states produce the same partisan tilt.
+The systematic under-representation of the Democratic Party in competitive
+states is a property of geographic voter sorting
+\citep{rodden2019,chen2013}, not of the redistricting algorithm.
+
+This is the central empirical validation of AreaSection's null hypothesis:
+the area constraint changed the \emph{structure} of the bisection tree
+(IL: 1:16 $\to$ 8:9; NY: 1:25 $\to$ 13:13) without changing the
+\emph{outcome} for any competitive state.
+The geographic balance constraint is politically inert in the sense that
+matters most: it does not shift seats.
