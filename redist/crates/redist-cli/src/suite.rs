@@ -945,4 +945,285 @@ mod tests {
         assert!(chambers.contains(&"house"));
         assert!(chambers.contains(&"senate"));
     }
+
+    // ── 15 additional L0 tests ───────────────────────────────────────────────
+
+    // -- NestMode serialisation / display ------------------------------------
+
+    #[test]
+    fn test_nest_mode_display_none() {
+        assert_eq!(NestMode::None.to_string(), "none");
+    }
+
+    #[test]
+    fn test_nest_mode_display_senate_in_house() {
+        assert_eq!(NestMode::SenateInHouse.to_string(), "senate-in-house");
+    }
+
+    #[test]
+    fn test_nest_mode_roundtrip_serde() {
+        // NestMode::SenateInHouse serialises as "senate-in-house" (kebab-case)
+        let json = serde_json::to_string(&NestMode::SenateInHouse).unwrap();
+        assert_eq!(json, "\"senate-in-house\"");
+        let back: NestMode = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, NestMode::SenateInHouse);
+    }
+
+    #[test]
+    fn test_nest_mode_none_roundtrip_serde() {
+        let json = serde_json::to_string(&NestMode::None).unwrap();
+        assert_eq!(json, "\"none\"");
+        let back: NestMode = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, NestMode::None);
+    }
+
+    #[test]
+    fn test_nest_mode_parse_unknown_gives_error_with_name() {
+        let err = "unicameral".parse::<NestMode>().unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("unicameral"), "error must echo the bad value: {msg}");
+        assert!(msg.contains("senate-in-house") || msg.contains("none"),
+            "error must list valid values: {msg}");
+    }
+
+    // -- PlanSuite / PlanEntry construction ----------------------------------
+
+    #[test]
+    fn test_plan_suite_roundtrip_serde() {
+        let suite = PlanSuite {
+            suite_name: "tx_2020".into(),
+            state: "TX".into(),
+            year: "2020".into(),
+            nest_mode: NestMode::None,
+            plans: vec![
+                PlanEntry { chamber: "house".into(), file: "tx_house.rplan".into() },
+                PlanEntry { chamber: "senate".into(), file: "tx_senate.rplan".into() },
+            ],
+        };
+        let json = serde_json::to_string(&suite).unwrap();
+        let back: PlanSuite = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.suite_name, "tx_2020");
+        assert_eq!(back.state, "TX");
+        assert_eq!(back.plans.len(), 2);
+        assert_eq!(back.nest_mode, NestMode::None);
+    }
+
+    #[test]
+    fn test_plan_suite_empty_plans_roundtrip() {
+        let suite = PlanSuite {
+            suite_name: "empty".into(),
+            state: "VT".into(),
+            year: "2020".into(),
+            nest_mode: NestMode::None,
+            plans: vec![],
+        };
+        let json = serde_json::to_string(&suite).unwrap();
+        let back: PlanSuite = serde_json::from_str(&json).unwrap();
+        assert!(back.plans.is_empty());
+    }
+
+    // -- validate_house_for_nesting ------------------------------------------
+
+    #[test]
+    fn test_validate_house_for_nesting_rejects_empty() {
+        let empty: HashMap<String, usize> = HashMap::new();
+        let result = validate_house_for_nesting(&empty);
+        assert!(result.is_err(), "empty house assignments must fail nesting validation");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("empty") || msg.contains("empty"),
+            "error must mention empty: {msg}");
+    }
+
+    #[test]
+    fn test_validate_house_for_nesting_accepts_nonempty() {
+        let mut m: HashMap<String, usize> = HashMap::new();
+        m.insert("53001000100".into(), 1);
+        m.insert("53001000200".into(), 2);
+        let result = validate_house_for_nesting(&m);
+        assert!(result.is_ok(), "non-empty assignments must pass house nesting check");
+    }
+
+    // -- compute_jaccard_similarity ------------------------------------------
+
+    #[test]
+    fn test_jaccard_empty_a_returns_zero() {
+        let a: HashMap<String, usize> = HashMap::new();
+        let mut b: HashMap<String, usize> = HashMap::new();
+        b.insert("G1".into(), 1);
+        assert_eq!(compute_jaccard_similarity(&a, &b), 0.0);
+    }
+
+    #[test]
+    fn test_jaccard_empty_b_returns_zero() {
+        let mut a: HashMap<String, usize> = HashMap::new();
+        a.insert("G1".into(), 1);
+        let b: HashMap<String, usize> = HashMap::new();
+        assert_eq!(compute_jaccard_similarity(&a, &b), 0.0);
+    }
+
+    #[test]
+    fn test_jaccard_single_element_match() {
+        let mut a: HashMap<String, usize> = HashMap::new();
+        a.insert("T1".into(), 1);
+        let b = a.clone();
+        let sim = compute_jaccard_similarity(&a, &b);
+        assert!((sim - 1.0).abs() < 1e-9, "single matching element must give 1.0");
+    }
+
+    #[test]
+    fn test_jaccard_single_element_no_match() {
+        let mut a: HashMap<String, usize> = HashMap::new();
+        a.insert("T1".into(), 1);
+        let mut b: HashMap<String, usize> = HashMap::new();
+        b.insert("T1".into(), 2);
+        let sim = compute_jaccard_similarity(&a, &b);
+        assert_eq!(sim, 0.0, "single element with different district must be 0.0");
+    }
+
+    // -- resolve_nesting_ratio edge cases ------------------------------------
+
+    #[test]
+    fn test_resolve_nesting_ratio_unknown_state_no_user_ratio() {
+        // A state not in the policy table with no user override must fail
+        let result = resolve_nesting_ratio("XX_FAKE_STATE", None);
+        assert!(result.is_err(),
+            "unknown state without --nest-ratio must error");
+    }
+
+    #[test]
+    fn test_resolve_nesting_ratio_unknown_state_with_user_ratio() {
+        // A state not in the policy table WITH a user override must succeed
+        let result = resolve_nesting_ratio("XX_FAKE_STATE", Some(2));
+        assert_eq!(result.unwrap(), 2,
+            "unknown state with explicit --nest-ratio must use user value");
+    }
+
+    // -- generate_suite_export -----------------------------------------------
+
+    #[test]
+    fn test_generate_suite_export_preserves_file_names() {
+        let suite = PlanSuite {
+            suite_name: "vt_2020".into(),
+            state: "VT".into(),
+            year: "2020".into(),
+            nest_mode: NestMode::None,
+            plans: vec![
+                PlanEntry { chamber: "house".into(), file: "vt_house.rplan".into() },
+                PlanEntry { chamber: "senate".into(), file: "vt_senate.rplan".into() },
+            ],
+        };
+        let export = generate_suite_export(&suite);
+        assert_eq!(export.plan_files[0].file, "vt_house.rplan");
+        assert_eq!(export.plan_files[1].file, "vt_senate.rplan");
+        assert_eq!(export.envelope.suite_name, "vt_2020");
+    }
+
+    // ── 10 bonus tests ───────────────────────────────────────────────────────
+
+    #[test]
+    fn test_nest_mode_equality() {
+        assert_eq!(NestMode::None, NestMode::None);
+        assert_eq!(NestMode::SenateInHouse, NestMode::SenateInHouse);
+        assert_ne!(NestMode::None, NestMode::SenateInHouse);
+    }
+
+    #[test]
+    fn test_plan_entry_clone() {
+        let e = PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() };
+        let c = e.clone();
+        assert_eq!(c.chamber, e.chamber);
+        assert_eq!(c.file, e.file);
+    }
+
+    #[test]
+    fn test_plan_suite_clone() {
+        let suite = PlanSuite {
+            suite_name: "wa_2020".into(),
+            state: "WA".into(),
+            year: "2020".into(),
+            nest_mode: NestMode::SenateInHouse,
+            plans: vec![PlanEntry { chamber: "house".into(), file: "wa_house.rplan".into() }],
+        };
+        let c = suite.clone();
+        assert_eq!(c.suite_name, suite.suite_name);
+        assert_eq!(c.nest_mode, suite.nest_mode);
+        assert_eq!(c.plans.len(), 1);
+    }
+
+    #[test]
+    fn test_nested_ratio_fixed_equality() {
+        assert_eq!(NestedRatio::Fixed(2), NestedRatio::Fixed(2));
+        assert_ne!(NestedRatio::Fixed(2), NestedRatio::Fixed(3));
+        assert_ne!(NestedRatio::Fixed(2), NestedRatio::Variable);
+    }
+
+    #[test]
+    fn test_nested_ratio_variable_equality() {
+        assert_eq!(NestedRatio::Variable, NestedRatio::Variable);
+    }
+
+    #[test]
+    fn test_constitutional_nesting_table_returns_hashmap() {
+        let table = build_constitutional_nesting_table();
+        // Must return a HashMap (even if empty on a minimal policy file)
+        // and must not contain test states
+        for key in table.keys() {
+            assert!(!key.starts_with('_'), "nesting table must not include test states: {key}");
+        }
+    }
+
+    #[test]
+    fn test_suite_validate_result_fields() {
+        use redist_analysis::NestingValidation;
+        use std::collections::HashMap;
+        let r = SuiteValidateResult {
+            suite_name: "wa_test".into(),
+            valid: true,
+            nesting: NestingValidation { valid: true, violations: vec![], senate_to_house_map: HashMap::new() },
+        };
+        assert!(r.valid);
+        assert_eq!(r.suite_name, "wa_test");
+    }
+
+    #[test]
+    fn test_suite_stability_result_fields() {
+        let r = SuiteStabilityResult {
+            num_plans: 3,
+            num_pairs: 3,
+            mean_similarity: 0.98,
+            min_similarity: 0.95,
+            max_similarity: 1.0,
+            stable: true,
+            unstable_pairs: vec![],
+        };
+        assert_eq!(r.num_plans, 3);
+        assert!(r.stable);
+        assert!(r.unstable_pairs.is_empty());
+    }
+
+    #[test]
+    fn test_stability_unstable_pair_tracking() {
+        // An unstable pair with similarity below 0.95 is flagged
+        let mut a: HashMap<String, usize> = HashMap::new();
+        for i in 0..10 { a.insert(format!("G{i}"), 1); }
+        let mut b: HashMap<String, usize> = HashMap::new();
+        for i in 0..10 { b.insert(format!("G{i}"), if i < 8 { 1 } else { 2 }); }
+        let sim = compute_jaccard_similarity(&a, &b);
+        // 8 out of 10 match → 0.8 < 0.95 → unstable
+        assert!((sim - 0.8).abs() < 1e-9, "expected 0.8 similarity, got {sim}");
+        assert!(sim < 0.95, "should be flagged as unstable");
+    }
+
+    #[test]
+    fn test_jaccard_all_same_values_different_keys() {
+        // Completely disjoint key sets → 0 matching → 0.0
+        let a: HashMap<String, usize> = (0..5)
+            .map(|i| (format!("A{i}"), 1usize))
+            .collect();
+        let b: HashMap<String, usize> = (0..5)
+            .map(|i| (format!("B{i}"), 1usize))
+            .collect();
+        let sim = compute_jaccard_similarity(&a, &b);
+        assert_eq!(sim, 0.0, "disjoint key sets must give 0.0 similarity");
+    }
 }

@@ -192,4 +192,141 @@ mod tests {
         assert!(labels[1].contains("2"), "second label must contain seed 2: {}", labels[1]);
         assert!(labels[2].contains("3"), "third label must contain seed 3: {}", labels[2]);
     }
+
+    // ── 15 additional L0 tests ───────────────────────────────────────────────
+
+    // -- validate_sweep_args -------------------------------------------------
+
+    #[test]
+    fn test_validate_sweep_zero_seeds_is_error() {
+        let args = make_sweep_args("WA", 0, 0, "compactness");
+        let result = validate_sweep_args(&args);
+        assert!(result.is_err(), "zero seeds must return error");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("seeds") || msg.contains("1"),
+            "error must mention minimum seeds: {msg}");
+    }
+
+    #[test]
+    fn test_validate_sweep_keep_top_zero_with_positive_seeds_is_ok() {
+        // keep_top=0 <= seeds=5: boundary case, should be allowed
+        let args = make_sweep_args("WA", 5, 0, "compactness");
+        let result = validate_sweep_args(&args);
+        assert!(result.is_ok(), "keep_top=0 with seeds>0 must be valid: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_validate_sweep_keep_top_one_of_one_seed_is_ok() {
+        let args = make_sweep_args("VT", 1, 1, "splits");
+        assert!(validate_sweep_args(&args).is_ok(), "seeds=1 keep_top=1 must be valid");
+    }
+
+    #[test]
+    fn test_validate_sweep_all_valid_metrics() {
+        for metric in VALID_METRICS {
+            let args = make_sweep_args("CA", 3, 2, metric);
+            let result = validate_sweep_args(&args);
+            assert!(result.is_ok(), "metric '{}' must be valid: {:?}", metric, result.err());
+        }
+    }
+
+    #[test]
+    fn test_validate_sweep_empty_metric_is_invalid() {
+        let args = make_sweep_args("WA", 5, 2, "");
+        let result = validate_sweep_args(&args);
+        assert!(result.is_err(), "empty metric string must fail");
+    }
+
+    #[test]
+    fn test_validate_sweep_case_sensitive_metric() {
+        // Metric names are case-sensitive: "Compactness" != "compactness"
+        let args = make_sweep_args("WA", 3, 1, "Compactness");
+        let result = validate_sweep_args(&args);
+        assert!(result.is_err(), "Capitalized metric must fail (case-sensitive)");
+    }
+
+    // -- generate_sweep_labels -----------------------------------------------
+
+    #[test]
+    fn test_generate_sweep_labels_single_seed() {
+        let args = make_sweep_args("VT", 1, 1, "compactness");
+        let labels = generate_sweep_labels(&args);
+        assert_eq!(labels.len(), 1);
+        assert_eq!(labels[0], "vt_congressional_seed_1");
+    }
+
+    #[test]
+    fn test_generate_sweep_labels_state_lowercased() {
+        // State code must always be lower-cased in the label
+        let args = make_sweep_args("CA", 2, 1, "splits");
+        let labels = generate_sweep_labels(&args);
+        for label in &labels {
+            assert!(label.starts_with("ca_"), "label must start with 'ca_': {label}");
+            assert!(!label.contains("CA"), "label must not contain uppercase 'CA': {label}");
+        }
+    }
+
+    #[test]
+    fn test_generate_sweep_labels_large_seed_count() {
+        let mut args = make_sweep_args("TX", 100, 10, "compactness");
+        args.seed_start = 0;
+        let labels = generate_sweep_labels(&args);
+        assert_eq!(labels.len(), 100, "100 seeds must produce 100 labels");
+        assert_eq!(labels[0], "tx_congressional_seed_0");
+        assert_eq!(labels[99], "tx_congressional_seed_99");
+    }
+
+    #[test]
+    fn test_generate_sweep_labels_seed_start_zero() {
+        let mut args = make_sweep_args("WA", 3, 2, "compactness");
+        args.seed_start = 0;
+        let labels = generate_sweep_labels(&args);
+        assert_eq!(labels[0], "wa_congressional_seed_0");
+        assert_eq!(labels[1], "wa_congressional_seed_1");
+        assert_eq!(labels[2], "wa_congressional_seed_2");
+    }
+
+    #[test]
+    fn test_generate_sweep_labels_senate_chamber() {
+        let mut args = make_sweep_args("WA", 2, 1, "compactness");
+        args.chamber = "senate".to_string();
+        let labels = generate_sweep_labels(&args);
+        assert!(labels[0].contains("senate"), "senate chamber must appear in label: {}", labels[0]);
+        assert!(!labels[0].contains("congressional"), "congressional must not appear: {}", labels[0]);
+    }
+
+    // -- run_sweep integration (pure logic only) -----------------------------
+
+    #[test]
+    fn test_run_sweep_returns_ok_for_valid_args() {
+        let args = make_sweep_args("VT", 3, 2, "compactness");
+        let result = run_sweep(&args);
+        assert!(result.is_ok(), "run_sweep with valid args must return Ok: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_run_sweep_returns_err_for_invalid_metric() {
+        let args = make_sweep_args("VT", 3, 2, "invalid_metric");
+        let result = run_sweep(&args);
+        assert!(result.is_err(), "run_sweep with invalid metric must return Err");
+    }
+
+    #[test]
+    fn test_run_sweep_run_flag_does_not_error() {
+        // --run flag is reserved for v2 (currently a no-op note); must not cause Err
+        let mut args = make_sweep_args("VT", 2, 1, "splits");
+        args.run = true;
+        let result = run_sweep(&args);
+        assert!(result.is_ok(), "run_sweep with --run flag must still return Ok: {:?}", result.err());
+    }
+
+    #[test]
+    fn test_generate_sweep_labels_count_matches_seeds() {
+        for seeds in [1, 5, 10, 50] {
+            let args = make_sweep_args("WA", seeds, seeds, "compactness");
+            let labels = generate_sweep_labels(&args);
+            assert_eq!(labels.len(), seeds,
+                "label count must equal seeds={seeds}");
+        }
+    }
 }

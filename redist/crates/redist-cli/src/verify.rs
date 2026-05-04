@@ -649,4 +649,264 @@ mod tests {
         check_binary_sha256(&bogus_sha, false); // should emit WARNING but not panic
         // No panic = pass
     }
+
+    // ── 15 additional L0 tests ───────────────────────────────────────────────
+
+    // -- jaccard_similarity edge cases ---------------------------------------
+
+    #[test]
+    fn test_jaccard_both_empty_returns_zero() {
+        let a: HashMap<String, usize> = HashMap::new();
+        let b: HashMap<String, usize> = HashMap::new();
+        assert_eq!(jaccard_similarity(&a, &b), 0.0);
+    }
+
+    #[test]
+    fn test_jaccard_left_empty_returns_zero() {
+        let a: HashMap<String, usize> = HashMap::new();
+        let mut b = HashMap::new();
+        b.insert("G1".to_string(), 1usize);
+        assert_eq!(jaccard_similarity(&a, &b), 0.0, "left empty → 0.0");
+    }
+
+    #[test]
+    fn test_jaccard_right_empty_returns_zero() {
+        let mut a = HashMap::new();
+        a.insert("G1".to_string(), 1usize);
+        let b: HashMap<String, usize> = HashMap::new();
+        assert_eq!(jaccard_similarity(&a, &b), 0.0, "right empty → 0.0");
+    }
+
+    #[test]
+    fn test_jaccard_full_match_many_tracts() {
+        // 100-tract plan, perfectly reproduced
+        let plan: HashMap<String, usize> = (0..100)
+            .map(|i| (format!("G{:05}", i), (i % 5) + 1))
+            .collect();
+        let sim = jaccard_similarity(&plan, &plan);
+        assert!((sim - 1.0).abs() < 1e-9, "identical 100-tract plan must have Jaccard 1.0");
+    }
+
+    #[test]
+    fn test_jaccard_larger_plan_dominates_union() {
+        // Plan A: 4 tracts; plan B: 8 tracts. Union = 8 (the larger).
+        let a: HashMap<String, usize> = (0..4)
+            .map(|i| (format!("G{i}"), 1usize))
+            .collect();
+        let b: HashMap<String, usize> = (0..8)
+            .map(|i| (format!("G{i}"), 1usize))
+            .collect();
+        let sim = jaccard_similarity(&a, &b);
+        // 4 matching GEOIDs out of 8 union → 0.5
+        assert!((sim - 0.5).abs() < 1e-9,
+            "union-style Jaccard with 4 of 8 common GEOIDs+values must be 0.5, got {sim}");
+    }
+
+    // -- check_binary_sha256 thoroughness -----------------------------------
+
+    #[test]
+    fn test_check_binary_sha256_whitespace_only_does_not_crash() {
+        // An all-whitespace hash is neither empty nor "(not" prefixed —
+        // the function will attempt to compare but must not panic.
+        check_binary_sha256("   ", false);
+        check_binary_sha256("   ", true);
+    }
+
+    #[test]
+    fn test_check_binary_sha256_not_available_variants() {
+        // Various "(not …" strings must all be silently skipped
+        for s in &["(not computed)", "(not available)", "(not set)", "(not-hashed)"] {
+            check_binary_sha256(s, false);
+            check_binary_sha256(s, true);
+        }
+        // No panic = pass
+    }
+
+    // -- verify label construction -------------------------------------------
+
+    #[test]
+    fn test_verify_label_with_none_and_complex_original_label() {
+        let original = "ca_congressional_2020_vra";
+        let label = None::<String>
+            .unwrap_or_else(|| format!("{}_verify", original));
+        assert_eq!(label, "ca_congressional_2020_vra_verify");
+    }
+
+    #[test]
+    fn test_verify_label_with_some_takes_priority() {
+        let original = "ca_congressional_2020";
+        let label = Some("my_label".to_string())
+            .unwrap_or_else(|| format!("{}_verify", original));
+        assert_eq!(label, "my_label");
+    }
+
+    // -- VerifyArgs field defaults -------------------------------------------
+
+    #[test]
+    fn test_verify_args_default_min_similarity() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
+        assert!((args.min_similarity - 0.99).abs() < 1e-9,
+            "default min_similarity must be 0.99, got {}", args.min_similarity);
+    }
+
+    #[test]
+    fn test_verify_args_default_output_base() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
+        assert_eq!(args.output_base, "outputs",
+            "default output_base must be 'outputs'");
+    }
+
+    #[test]
+    fn test_verify_args_dry_run_default_false() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "manifest.json"]);
+        assert!(!args.dry_run, "--dry-run must default to false");
+    }
+
+    #[test]
+    fn test_verify_args_custom_min_similarity() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from([
+            "verify", "--manifest", "manifest.json",
+            "--min-similarity", "0.85",
+        ]);
+        assert!((args.min_similarity - 0.85).abs() < 1e-9,
+            "custom min_similarity must be accepted: {}", args.min_similarity);
+    }
+
+    // -- run_verify with nonexistent manifest --------------------------------
+
+    #[test]
+    fn test_run_verify_missing_manifest_returns_err() {
+        let args = crate::args::VerifyArgs {
+            manifest: std::path::PathBuf::from("/no/such/manifest.json"),
+            min_similarity: 0.99,
+            verify_label: None,
+            output_base: "outputs".to_string(),
+            dry_run: false,
+            skip_binary_check: true,
+            label: None,
+            verify_assignments_only: false,
+            plan_ref: None,
+        };
+        let result = run_verify(&args);
+        assert!(result.is_err(), "missing manifest must return Err");
+    }
+
+    #[test]
+    fn test_run_verify_assignments_only_missing_manifest_returns_err() {
+        let args = crate::args::VerifyArgs {
+            manifest: std::path::PathBuf::from("/no/such/manifest.json"),
+            min_similarity: 0.99,
+            verify_label: None,
+            output_base: "outputs".to_string(),
+            dry_run: false,
+            skip_binary_check: true,
+            label: None,
+            verify_assignments_only: true,
+            plan_ref: Some("ref.json".to_string()),
+        };
+        let result = run_verify(&args);
+        assert!(result.is_err(), "--verify-assignments-only with missing manifest must return Err");
+    }
+
+    // ── 9 bonus tests ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_jaccard_three_quarters_match() {
+        let mut a: HashMap<String, usize> = HashMap::new();
+        a.insert("G1".to_string(), 1);
+        a.insert("G2".to_string(), 2);
+        a.insert("G3".to_string(), 1);
+        a.insert("G4".to_string(), 2);
+        let mut b = a.clone();
+        // Change one assignment
+        b.insert("G4".to_string(), 1);
+        let sim = jaccard_similarity(&a, &b);
+        // 3 matching out of 4 union → 0.75
+        assert!((sim - 0.75).abs() < 1e-9, "3/4 matching must give 0.75, got {sim}");
+    }
+
+    #[test]
+    fn test_jaccard_asymmetric_sizes_larger_denominator() {
+        // a=3 tracts, b=6 tracts; all of a's are in b with same district
+        let a: HashMap<String, usize> = (0..3)
+            .map(|i| (format!("G{i}"), 1usize))
+            .collect();
+        let b: HashMap<String, usize> = (0..6)
+            .map(|i| (format!("G{i}"), 1usize))
+            .collect();
+        let sim = jaccard_similarity(&a, &b);
+        // 3 matching, union = 6 → 0.5
+        assert!((sim - 0.5).abs() < 1e-9, "3 of 6 must give 0.5, got {sim}");
+    }
+
+    #[test]
+    fn test_jaccard_reflexive() {
+        let plan: HashMap<String, usize> = (0..20)
+            .map(|i| (format!("T{i}"), i % 4 + 1))
+            .collect();
+        let s1 = jaccard_similarity(&plan, &plan);
+        let s2 = jaccard_similarity(&plan, &plan);
+        assert!((s1 - s2).abs() < 1e-9, "jaccard must be deterministic");
+        assert!((s1 - 1.0).abs() < 1e-9, "self-similarity must be 1.0");
+    }
+
+    #[test]
+    fn test_verify_args_verify_label_none_by_default() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "m.json"]);
+        assert!(args.verify_label.is_none(), "--verify-label must default to None");
+    }
+
+    #[test]
+    fn test_verify_args_label_field_none_by_default() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "m.json"]);
+        assert!(args.label.is_none(), "--label field must default to None");
+    }
+
+    #[test]
+    fn test_verify_args_plan_ref_none_by_default() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from(["verify", "--manifest", "m.json"]);
+        assert!(args.plan_ref.is_none(), "--plan-ref must default to None");
+    }
+
+    #[test]
+    fn test_check_binary_sha256_64_char_bogus_skip_true_no_panic() {
+        // All hex chars but known wrong — skip_binary_check suppresses check
+        let sha = "b".repeat(64);
+        check_binary_sha256(&sha, true);
+    }
+
+    #[test]
+    fn test_jaccard_single_tract_mismatch_district() {
+        let mut a = HashMap::new();
+        a.insert("TRACT1".to_string(), 3usize);
+        let mut b = HashMap::new();
+        b.insert("TRACT1".to_string(), 4usize);
+        // Same GEOID, different district → no match
+        let sim = jaccard_similarity(&a, &b);
+        assert_eq!(sim, 0.0, "same GEOID but different district must give 0.0");
+    }
+
+    #[test]
+    fn test_verify_dry_run_flag_parse() {
+        use crate::args::VerifyArgs;
+        use clap::Parser;
+        let args = VerifyArgs::parse_from([
+            "verify", "--manifest", "m.json", "--dry-run",
+        ]);
+        assert!(args.dry_run, "--dry-run flag must parse to true");
+    }
 }
