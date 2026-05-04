@@ -3,7 +3,7 @@ use crate::graph::{CsrGraph, Partition};
 /// Label-propagation balance refinement.
 ///
 /// Each iteration: every boundary vertex considers moving to the adjacent
-/// part with the highest population deficit (most under target).  A move is
+/// part with the highest weight deficit (most under target).  A move is
 /// accepted only when it strictly reduces the maximum per-part imbalance and
 /// keeps both the source and destination within `target ± epsilon`.
 ///
@@ -14,14 +14,14 @@ pub fn lp_balance(g: &CsrGraph, partition: &mut Partition, _ufactor: u32, max_it
     let k = partition.k as usize;
     if k <= 1 { return; }
 
-    let total_pop: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
-    let target  = total_pop / k as i64;
+    let total_wgt: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
+    let target  = total_wgt / k as i64;
     // Ceiling of 0.5% of total, matching the FM balance epsilon
-    let epsilon = (total_pop * 5 + 999) / 1000;
+    let epsilon = (total_wgt * 5 + 999) / 1000;
 
-    let mut part_pop = vec![0i64; k];
+    let mut pwgts = vec![0i64; k];
     for v in 0..n {
-        part_pop[partition.assignment[v] as usize] += g.vwgt[v] as i64;
+        pwgts[partition.assignment[v] as usize] += g.vwgt[v] as i64;
     }
 
     for _iter in 0..max_iter {
@@ -37,22 +37,22 @@ pub fn lp_balance(g: &CsrGraph, partition: &mut Partition, _ufactor: u32, max_it
             if !is_boundary { continue; }
 
             // Source part must be overloaded before we consider moving anyone out
-            if part_pop[from] <= target + epsilon { continue; }
+            if pwgts[from] <= target + epsilon { continue; }
 
-            // Find the most under-target adjacent part (minimum part_pop wins)
+            // Find the most under-target adjacent part (minimum pwgts wins)
             let best_to = (g.xadj[v] as usize..g.xadj[v + 1] as usize)
                 .map(|j| partition.assignment[g.adjncy[j] as usize] as usize)
                 .filter(|&to| to != from)
-                .min_by_key(|&to| part_pop[to]);
+                .min_by_key(|&to| pwgts[to]);
 
             if let Some(to) = best_to {
                 // Accept the move only when it keeps both sides in balance
-                let new_from = part_pop[from] - vwgt;
-                let new_to   = part_pop[to]   + vwgt;
+                let new_from = pwgts[from] - vwgt;
+                let new_to   = pwgts[to]   + vwgt;
                 if new_from >= target - epsilon && new_to <= target + epsilon {
                     partition.assignment[v] = to as u32;
-                    part_pop[from] = new_from;
-                    part_pop[to]   = new_to;
+                    pwgts[from] = new_from;
+                    pwgts[to]   = new_to;
                     moved += 1;
                 }
             }
@@ -95,17 +95,17 @@ mod tests {
         CsrGraph { xadj, adjncy, ncon: 1, vwgt: vec![1i32; n], adjwgt: None }
     }
 
-    fn part_pops(g: &CsrGraph, p: &Partition) -> Vec<i64> {
+    fn pwgtss(g: &CsrGraph, p: &Partition) -> Vec<i64> {
         let k = p.k as usize;
-        let mut pops = vec![0i64; k];
+        let mut wgts = vec![0i64; k];
         for v in 0..g.n() {
-            pops[p.assignment[v] as usize] += g.vwgt[v] as i64;
+            wgts[p.assignment[v] as usize] += g.vwgt[v] as i64;
         }
-        pops
+        wgts
     }
 
-    fn max_imbalance(pops: &[i64], target: i64) -> i64 {
-        pops.iter().map(|&p| (p - target).abs()).max().unwrap_or(0)
+    fn max_imbalance(wgts: &[i64], target: i64) -> i64 {
+        wgts.iter().map(|&p| (p - target).abs()).max().unwrap_or(0)
     }
 
     /// LP with 0 iterations must be a no-op.
@@ -154,10 +154,10 @@ mod tests {
         let mut p = Partition { assignment, k: 4, tpwgts: None };
         let total: i64 = 16;
         let target = total / 4; // = 4
-        let before_pops = part_pops(&g, &p);
+        let before_pops = pwgtss(&g, &p);
         let before_imb = max_imbalance(&before_pops, target);
         lp_balance(&g, &mut p, 5, 20);
-        let after_pops = part_pops(&g, &p);
+        let after_pops = pwgtss(&g, &p);
         let after_imb = max_imbalance(&after_pops, target);
         assert!(after_imb <= before_imb,
             "LP must not worsen imbalance: before={before_imb} after={after_imb}");
@@ -180,7 +180,7 @@ mod tests {
 
     /// Part populations must sum to total vertex weight after LP.
     #[test]
-    fn lp_total_pop_conserved() {
+    fn lp_total_wgt_conserved() {
         let g = make_grid_graph(4, 4);
         let total_before: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
         let mut p = Partition {
@@ -191,9 +191,9 @@ mod tests {
         lp_balance(&g, &mut p, 5, 10);
         let total_after: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
         assert_eq!(total_before, total_after);
-        // Also check per-part pops sum to total
-        let pops = part_pops(&g, &p);
-        assert_eq!(pops.iter().sum::<i64>(), total_before);
+        // Also check per-part wgts sum to total
+        let wgts = pwgtss(&g, &p);
+        assert_eq!(wgts.iter().sum::<i64>(), total_before);
     }
 
     /// k=1 trivial partition — LP should be a no-op.

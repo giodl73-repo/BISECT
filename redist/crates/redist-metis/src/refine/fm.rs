@@ -39,8 +39,8 @@ impl Refiner for FiducciaMattheyses {
 fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool {
     let ncon = state.graph.ncon as usize;
     let k    = state.k as usize;
-    let total_pops: Vec<i64> = (0..ncon)
-        .map(|c| state.part_pop[c].iter().sum())
+    let total_wgts: Vec<i64> = (0..ncon)
+        .map(|c| state.pwgts[c].iter().sum())
         .collect();
 
     // Per-part, per-constraint targets and epsilons.
@@ -53,11 +53,11 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool 
         (0..ncon).map(|c| {
             if c == 0 {
                 match &state.tpwgts {
-                    Some(tw) => (total_pops[0] as f64 * tw[part] as f64).round() as i64,
-                    None     => total_pops[0] / k as i64,
+                    Some(tw) => (total_wgts[0] as f64 * tw[part] as f64).round() as i64,
+                    None     => total_wgts[0] / k as i64,
                 }
             } else {
-                total_pops[c] / k as i64
+                total_wgts[c] / k as i64
             }
         }).collect()
     }).collect();
@@ -106,8 +106,8 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool 
 
         // Balance check — ALL constraints must pass for BOTH parts
         let balanced = (0..ncon).all(|c| {
-            let new_from = state.part_pop[c][from_part] - vwgt_v[c];
-            let new_to   = state.part_pop[c][to_part]   + vwgt_v[c];
+            let new_from = state.pwgts[c][from_part] - vwgt_v[c];
+            let new_to   = state.pwgts[c][to_part]   + vwgt_v[c];
             new_from >= targets_pc[from_part][c] - epsilons_pc[from_part][c]
                 && new_to <= targets_pc[to_part][c] + epsilons_pc[to_part][c]
         });
@@ -116,8 +116,8 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool 
         // Apply move
         state.assignment[v] = to_part as u32;
         for c in 0..ncon {
-            state.part_pop[c][from_part] -= vwgt_v[c];
-            state.part_pop[c][to_part]   += vwgt_v[c];
+            state.pwgts[c][from_part] -= vwgt_v[c];
+            state.pwgts[c][to_part]   += vwgt_v[c];
         }
         state.boundary.remove(v as u32);
 
@@ -249,7 +249,7 @@ pub struct FmState<'g> {
     pub k:            u32,
     pub gain_table:   GainTable,
     pub boundary:     BoundarySet,
-    pub part_pop:     Vec<Vec<i64>>,
+    pub pwgts:     Vec<Vec<i64>>,
     pub current_cut:  i64,
     pub tpwgts:       Option<Vec<f32>>,
     pub objective:    ObjectiveType,
@@ -266,11 +266,11 @@ impl<'g> FmState<'g> {
         let n = g.n();
         let k = p.k as usize;
         let ncon = g.ncon as usize;
-        let mut part_pop = vec![vec![0i64; k]; ncon];
+        let mut pwgts = vec![vec![0i64; k]; ncon];
         for v in 0..n {
             let part = p.assignment[v] as usize;
             for c in 0..ncon {
-                part_pop[c][part] += g.vwgt[v * ncon + c] as i64;
+                pwgts[c][part] += g.vwgt[v * ncon + c] as i64;
             }
         }
 
@@ -294,7 +294,7 @@ impl<'g> FmState<'g> {
         }
 
         let tpwgts = p.tpwgts.clone();
-        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0, tpwgts, objective };
+        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, pwgts, current_cut: 0, tpwgts, objective };
         state.current_cut = state.cut();
         state
     }
@@ -338,11 +338,11 @@ impl<'g> FmState<'g> {
         // Recompute per-constraint part populations
         let ncon = self.graph.ncon as usize;
         let k = self.k as usize;
-        self.part_pop = vec![vec![0i64; k]; ncon];
+        self.pwgts = vec![vec![0i64; k]; ncon];
         for v in 0..n {
             let part = self.assignment[v] as usize;
             for c in 0..ncon {
-                self.part_pop[c][part] += self.graph.vwgt[v * ncon + c] as i64;
+                self.pwgts[c][part] += self.graph.vwgt[v * ncon + c] as i64;
             }
         }
         self.current_cut = self.cut(); // recompute once after restore
@@ -494,12 +494,12 @@ mod tests {
         let fm = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
         let p = fm.refine(&g, p_init);
         for part in 0..2u32 {
-            let pop: i64 = (0..g.n())
+            let wgt: i64 = (0..g.n())
                 .filter(|&v| p.assignment[v] == part)
                 .map(|v| g.vwgt[v] as i64)
                 .sum();
-            assert!((pop - target).abs() <= eps,
-                "part {part} pop {pop} violates balance (target {target} ± {eps})");
+            assert!((wgt - target).abs() <= eps,
+                "part {part} wgt {wgt} violates balance (target {target} ± {eps})");
         }
     }
 
@@ -523,18 +523,18 @@ mod tests {
         let target = 8i64;
         let eps = (total * 5 + 999) / 1000; // = 1
         for part in 0..2u32 {
-            let pop0: i64 = (0..16)
+            let wgt0: i64 = (0..16)
                 .filter(|&v| p.assignment[v] == part)
                 .map(|v| g.vwgt[v * 2] as i64)
                 .sum();
-            let pop1: i64 = (0..16)
+            let wgt1: i64 = (0..16)
                 .filter(|&v| p.assignment[v] == part)
                 .map(|v| g.vwgt[v * 2 + 1] as i64)
                 .sum();
-            assert!((pop0 - target).abs() <= eps,
-                "part {part} constraint 0 pop {pop0} violates balance (target {target} ± {eps})");
-            assert!((pop1 - target).abs() <= eps,
-                "part {part} constraint 1 pop {pop1} violates balance (target {target} ± {eps})");
+            assert!((wgt0 - target).abs() <= eps,
+                "part {part} constraint 0 wgt {wgt0} violates balance (target {target} ± {eps})");
+            assert!((wgt1 - target).abs() <= eps,
+                "part {part} constraint 1 wgt {wgt1} violates balance (target {target} ± {eps})");
         }
     }
 }

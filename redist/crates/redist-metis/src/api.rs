@@ -139,18 +139,18 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
     // ── Prusti formal postconditions ─────────────────────────────────────────
     // Real #[cfg_attr(prusti, ...)] annotations below.
     // Active only when `cargo prusti` runs (Prusti 0.2.x, Viper backend).
-    // These are the legally-cited properties from the deposition.
+    // The three key correctness guarantees.
     //
     // Precondition 1:  #[cfg_attr(prusti, requires(g.is_valid()))]
     // Precondition 2:  #[cfg_attr(prusti, requires(k >= 1))]
     // Postcondition 1: full coverage — every vertex assigned
     //                  #[cfg_attr(prusti, ensures(...))]  ← see below
-    // Postcondition 2: valid part IDs — no phantom districts
+    // Postcondition 2: valid part IDs — all in [0, k)
     //                  #[cfg_attr(prusti, ensures(...))]  ← see below
-    // Postcondition 3: population balance ≤ 0.5% — one-person-one-vote
-    //                  population_balanced() pure fn (DEFERRED — see GAPS.md)
+    // Postcondition 3: vertex-weight balance ≤ 0.5%
+    //                  weight_balanced() pure fn (DEFERRED — see GAPS.md)
     // ─────────────────────────────────────────────────────────────────────────
-    /// The three legally-cited postconditions. Active when `cargo prusti` runs.
+    /// Three correctness postconditions. Active when `cargo prusti` runs.
     /// Requires Prusti 0.2.x (Viper backend). See verify/prusti/ for documentation.
     #[cfg_attr(prusti, requires(g.is_valid()))]
     #[cfg_attr(prusti, requires(k >= 1))]
@@ -166,7 +166,7 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
     ))]
     #[cfg_attr(prusti, ensures(
         result.is_ok() ==>
-        population_balanced(result.as_ref().unwrap(), g, k)
+        weight_balanced(result.as_ref().unwrap(), g, k)
     ))]
     fn split(&self, g: &CsrGraph, k: u32, seed: Option<u64>)
         -> Result<Partition, PartitionError>
@@ -272,7 +272,7 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
         let init_p = {
             let mut p = self.init.partition(hierarchy.coarsest(), k, rng_seed);
             // tpwgts applies to constraint 0 (total population) only.
-            // When ncon > 1 (e.g. total_pop + VAP for VRA), constraints 1..ncon
+            // When ncon > 1 (e.g. total_wgt + VAP for VRA), constraints 1..ncon
             // use equal-weight balance targets. This is correct for redistricting:
             // seat allocation (fracs) is based on total population, not VAP.
             // See: Schloegel, Karypis & Kumar (2002) §3.2 multi-constraint semantics.
@@ -301,27 +301,27 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
 /// See `verify/prusti/GAPS.md` for the deferred item.
 #[cfg(prusti)]
 #[pure]
-fn population_balanced(_p: &Partition, _g: &CsrGraph, _k: u32) -> bool {
+fn weight_balanced(_p: &Partition, _g: &CsrGraph, _k: u32) -> bool {
     // NOTE: Full loop verification deferred — see GAPS.md entry #1.
     // The runtime check is covered by `fm_preserves_population_balance` and
-    // `population_balance_check()` below.
+    // `weight_balance_check()` below.
     true
 }
 
 /// Population balance metric used in Prusti postcondition 3.
 /// Returns true iff max deviation from target per part is ≤ epsilon.
-/// epsilon = (total_pop * 5 + 999) / 1000  (ceiling of 0.5%, integer arithmetic).
+/// epsilon = (total_wgt * 5 + 999) / 1000  (ceiling of 0.5%, integer arithmetic).
 #[cfg(any(test, doc))]
-pub fn population_balance_check(p: &Partition, g: &CsrGraph) -> bool {
-    let total_pop: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
-    let target = total_pop / p.k as i64;
-    let epsilon = (total_pop * 5 + 999) / 1000;
+pub fn weight_balance_check(p: &Partition, g: &CsrGraph) -> bool {
+    let total_wgt: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
+    let target = total_wgt / p.k as i64;
+    let epsilon = (total_wgt * 5 + 999) / 1000;
     for part in 0..p.k {
-        let pop: i64 = (0..g.n())
+        let wgt: i64 = (0..g.n())
             .filter(|&v| p.assignment[v] == part)
             .map(|v| g.vwgt[v] as i64)
             .sum();
-        if (pop - target).abs() > epsilon { return false; }
+        if (wgt - target).abs() > epsilon { return false; }
     }
     true
 }
@@ -467,10 +467,10 @@ mod tests {
         assert!(p.assignment.contains(&0), "part 0 is empty");
         assert!(p.assignment.contains(&1), "part 1 is empty");
         // Proportional balance: accept any split in [3, 14] as structurally sound.
-        let pop0 = p.assignment.iter().filter(|&&x| x == 0).count();
-        let pop1 = p.assignment.iter().filter(|&&x| x == 1).count();
-        assert!(pop0 >= 3 && pop0 <= 14, "part 0 size unreasonable: {pop0}");
-        assert!(pop1 >= 3 && pop1 <= 14, "part 1 size unreasonable: {pop1}");
+        let sz0 = p.assignment.iter().filter(|&&x| x == 0).count();
+        let sz1 = p.assignment.iter().filter(|&&x| x == 1).count();
+        assert!(sz0 >= 3 && sz0 <= 14, "part 0 size unreasonable: {sz0}");
+        assert!(sz1 >= 3 && sz1 <= 14, "part 1 size unreasonable: {sz1}");
     }
 
     /// fracs [8, 9]: part 0 should receive ~8/17 of population, part 1 ~9/17.
@@ -492,11 +492,11 @@ mod tests {
         assert_eq!(p.assignment.len(), 17);
         assert_eq!(p.k, 2);
 
-        let pop0: i64 = p.assignment.iter().filter(|&&x| x == 0).count() as i64;
-        let pop1: i64 = total - pop0;
-        assert!((pop0 - target0).abs() <= eps,
-            "part 0: expected ~{target0}, got {pop0} (target1={target1}, pop1={pop1})");
-        assert!((pop1 - target1).abs() <= eps,
-            "part 1: expected ~{target1}, got {pop1} (target0={target0}, pop0={pop0})");
+        let wgt0: i64 = p.assignment.iter().filter(|&&x| x == 0).count() as i64;
+        let wgt1: i64 = total - wgt0;
+        assert!((wgt0 - target0).abs() <= eps,
+            "part 0: expected ~{target0}, got {wgt0}");
+        assert!((wgt1 - target1).abs() <= eps,
+            "part 1: expected ~{target1}, got {wgt1}");
     }
 }

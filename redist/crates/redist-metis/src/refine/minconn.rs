@@ -13,17 +13,17 @@ pub fn minimize_connectivity(g: &CsrGraph, partition: &mut Partition, ufactor: u
     let k = partition.k as usize;
     if k <= 1 { return; }
 
-    let total_pop: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
-    let target = total_pop / k as i64;
-    // epsilon = ceiling of (total_pop * ufactor / 1000), matching METIS balance rule.
-    let epsilon = (total_pop * (ufactor as i64) + 999) / 1000;
+    let total_wgt: i64 = g.vwgt.iter().map(|&w| w as i64).sum();
+    let target = total_wgt / k as i64;
+    // epsilon = ceiling of (total_wgt * ufactor / 1000), matching METIS balance rule.
+    let epsilon = (total_wgt * (ufactor as i64) + 999) / 1000;
     let max_pop = target + epsilon;
     let min_pop = (target - epsilon).max(0);
 
     // Compute current part populations.
-    let mut part_pop = vec![0i64; k];
+    let mut pwgts = vec![0i64; k];
     for v in 0..n {
-        part_pop[partition.assignment[v] as usize] += g.vwgt[v] as i64;
+        pwgts[partition.assignment[v] as usize] += g.vwgt[v] as i64;
     }
 
     let max_iter = 10;
@@ -75,8 +75,8 @@ pub fn minimize_connectivity(g: &CsrGraph, partition: &mut Partition, ufactor: u
                 let to = to_p as usize;
 
                 // Balance constraints: source must not drop below min, dest must not exceed max.
-                if part_pop[from] - vwgt < min_pop { continue; }
-                if part_pop[to] + vwgt > max_pop { continue; }
+                if pwgts[from] - vwgt < min_pop { continue; }
+                if pwgts[to] + vwgt > max_pop { continue; }
 
                 // Would moving v out of `from` reduce `from`'s subdomain degree?
                 // This happens when `to` is the *only* part in adj_parts[from] via v,
@@ -105,8 +105,8 @@ pub fn minimize_connectivity(g: &CsrGraph, partition: &mut Partition, ufactor: u
 
             if let Some(to) = best_to {
                 partition.assignment[v] = to as u32;
-                part_pop[from] -= vwgt;
-                part_pop[to]   += vwgt;
+                pwgts[from] -= vwgt;
+                pwgts[to]   += vwgt;
                 improved = true;
                 // Rebuild adj_parts by breaking and restarting the outer loop.
                 break 'vertex_loop;
