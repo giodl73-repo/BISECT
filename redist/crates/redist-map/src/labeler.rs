@@ -172,4 +172,112 @@ mod tests {
         // Two labels 3px apart with font 12px → should overlap
         assert!(labels_overlap(("1", 5.0, 15.0), ("2", 8.0, 15.0), 12.0));
     }
+
+    // ── Additional labeler tests ──────────────────────────────────────────────
+
+    #[test]
+    fn test_adaptive_font_size_exact_mid() {
+        // radius 40 → 40*0.4 = 16, within [6,28]
+        let size = adaptive_font_size(40.0);
+        assert!((size - 16.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_adaptive_font_size_clamp_min() {
+        assert_eq!(adaptive_font_size(0.0), 6.0);
+        assert_eq!(adaptive_font_size(1.0), 6.0); // 1*0.4 = 0.4 → clamped to 6
+    }
+
+    #[test]
+    fn test_adaptive_font_size_clamp_max() {
+        assert_eq!(adaptive_font_size(1000.0), 28.0);
+    }
+
+    #[test]
+    fn test_label_fits_exact_boundary() {
+        // text "AB" = 2 chars, font 10 → width = 2*10*0.6 = 12
+        // inscribed_radius 6 → 2*6 = 12 → 12 <= 12 → fits
+        assert!(label_fits("AB", 10.0, 6.0));
+    }
+
+    #[test]
+    fn test_label_fits_long_text_fails() {
+        // "Hello World" = 11 chars, font 20 → width = 132
+        // inscribed_radius 10 → 2*10 = 20 → 132 > 20 → doesn't fit
+        assert!(!label_fits("Hello World", 20.0, 10.0));
+    }
+
+    #[test]
+    fn test_political_label_pure_dem() {
+        // 100% Dem: margin = (1.0-0.5)*200 = 100 → D+100%
+        let l = political_label(1, 1.0);
+        assert_eq!(l.stat.as_deref(), Some("D+100%"));
+    }
+
+    #[test]
+    fn test_political_label_pure_rep() {
+        // 0% Dem: margin = (0.0-0.5)*200 = -100 → R+100%
+        let l = political_label(1, 0.0);
+        assert_eq!(l.stat.as_deref(), Some("R+100%"));
+    }
+
+    #[test]
+    fn test_political_label_exact_even() {
+        // dem_frac=0.5 → margin = 0 → D+0%
+        let l = political_label(99, 0.5);
+        assert_eq!(l.stat.as_deref(), Some("D+0%"));
+    }
+
+    #[test]
+    fn test_demographic_label_zero_minority() {
+        let l = demographic_label(1, 0.0);
+        assert_eq!(l.stat.as_deref(), Some("0% min"));
+    }
+
+    #[test]
+    fn test_demographic_label_full_minority() {
+        let l = demographic_label(1, 1.0);
+        assert_eq!(l.stat.as_deref(), Some("100% min"));
+    }
+
+    #[test]
+    fn test_compactness_label_format_precision() {
+        let l = compactness_label(1, 0.0);
+        assert_eq!(l.stat.as_deref(), Some("PP: 0.00"));
+    }
+
+    #[test]
+    fn test_compactness_label_perfect_score() {
+        let l = compactness_label(1, 1.0);
+        assert_eq!(l.stat.as_deref(), Some("PP: 1.00"));
+    }
+
+    #[test]
+    fn test_halo_svg_contains_main_text() {
+        let svg = halo_text_svg(100.0, 200.0, "42", "D+5%", 14.0);
+        assert!(svg.contains("42"), "main label must be in SVG");
+    }
+
+    #[test]
+    fn test_halo_svg_contains_stat_text() {
+        let svg = halo_text_svg(100.0, 200.0, "42", "R+3%", 14.0);
+        assert!(svg.contains("R+3%"), "stat must be in SVG");
+    }
+
+    #[test]
+    fn test_round_label_with_lineage_parent() {
+        let l = round_label_with_lineage(5, 4, 52, Some(2));
+        assert_eq!(l.main, "5");
+        assert_eq!(l.annotation, Some("4".into()));
+        assert_eq!(l.lineage_superscript, Some(2));
+    }
+
+    #[test]
+    fn test_labels_overlap_symmetric() {
+        // overlap should be the same regardless of argument order
+        let a = ("X", 10.0_f64, 20.0_f64);
+        let b = ("Y", 12.0_f64, 20.0_f64);
+        let font = 15.0_f64;
+        assert_eq!(labels_overlap(a, b, font), labels_overlap(b, a, font));
+    }
 }

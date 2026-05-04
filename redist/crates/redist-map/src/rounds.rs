@@ -110,4 +110,76 @@ mod tests {
         };
         assert_eq!(districts_in_region(&tree, 0, 0), 1);
     }
+
+    // ── Additional rounds tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_districts_in_region_unknown_round_returns_zero() {
+        let tree = sample_tree();
+        assert_eq!(districts_in_region(&tree, 99, 0), 0);
+    }
+
+    #[test]
+    fn test_districts_in_region_unknown_region_returns_zero() {
+        let tree = sample_tree();
+        assert_eq!(districts_in_region(&tree, 1, 99), 0);
+    }
+
+    #[test]
+    fn test_lineage_root_has_no_parent() {
+        let tree = sample_tree();
+        let lineage = build_lineage(&tree);
+        // Round 0 has no parent — no entry in map
+        assert_eq!(lineage.parent_of(0, 0), None);
+    }
+
+    #[test]
+    fn test_lineage_round2_region1_parent_is_0() {
+        let tree = sample_tree();
+        let lineage = build_lineage(&tree);
+        // Region 1 at round 2 contains tract 1 which was in region 0 at round 1
+        assert_eq!(lineage.parent_of(2, 1), Some(0));
+    }
+
+    #[test]
+    fn test_lineage_round2_region3_parent_is_1() {
+        let tree = sample_tree();
+        let lineage = build_lineage(&tree);
+        // Region 3 at round 2 contains tract 3 which was in region 1 at round 1
+        assert_eq!(lineage.parent_of(2, 3), Some(1));
+    }
+
+    #[test]
+    fn test_empty_tree_districts_returns_zero() {
+        let tree = BisectionTree { rounds: vec![] };
+        assert_eq!(districts_in_region(&tree, 0, 0), 0);
+    }
+
+    #[test]
+    fn test_lineage_empty_region_skipped() {
+        // Build a tree where one region at round 1 has no tracts (malformed but should not panic)
+        let tree = BisectionTree {
+            rounds: vec![
+                vec![(0, vec![0, 1])],
+                vec![(0, vec![0]), (1, vec![])],   // region 1 is empty
+                vec![(0, vec![0]), (1, vec![1])],
+            ],
+        };
+        let lineage = build_lineage(&tree);
+        // Region 1 at round 2 contains tract 1 (from round 1 region 0 — because
+        // the empty region 1 would not be chosen)
+        // Just ensure it doesn't panic
+        let _ = lineage.parent_of(1, 1);
+        let _ = lineage.parent_of(2, 1);
+    }
+
+    #[test]
+    fn test_districts_in_region_final_round_is_one() {
+        let tree = sample_tree();
+        // Every leaf region at the final round should count as 1 district
+        for &region in &[0, 1, 2, 3] {
+            assert_eq!(districts_in_region(&tree, 2, region), 1,
+                "final round region {region} must be 1 district");
+        }
+    }
 }

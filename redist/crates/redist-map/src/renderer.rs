@@ -223,4 +223,92 @@ mod tests {
         // Note: labels may be omitted if polygon is tiny relative to font — check label_fits logic
         assert!(svg.contains("<path"), "SVG must contain district paths");
     }
+
+    // ── Additional renderer tests ─────────────────────────────────────────────
+
+    #[test]
+    fn test_coords_to_svg_path_empty() {
+        assert_eq!(coords_to_svg_path(&[]), "");
+    }
+
+    #[test]
+    fn test_coords_to_svg_path_single_point() {
+        let path = coords_to_svg_path(&[(5.0, 10.0)]);
+        assert!(path.starts_with("M 5.00 10.00"));
+        assert!(path.ends_with('Z'));
+    }
+
+    #[test]
+    fn test_coords_to_svg_path_three_points_has_two_l_segments() {
+        let pts = vec![(0.0, 0.0), (10.0, 0.0), (5.0, 10.0)];
+        let path = coords_to_svg_path(&pts);
+        // One M and two L commands
+        assert_eq!(path.matches(" L ").count(), 2);
+    }
+
+    #[test]
+    fn test_polygon_svg_element_contains_path_tag() {
+        let elem = polygon_svg_element(&[(0.0,0.0),(1.0,0.0),(1.0,1.0)], (100,200,50), 0.9);
+        assert!(elem.starts_with("<path "));
+        assert!(elem.ends_with("/>"));
+    }
+
+    #[test]
+    fn test_polygon_svg_element_opacity_encoded() {
+        let elem = polygon_svg_element(&[(0.0,0.0),(1.0,0.0),(1.0,1.0)], (0,0,0), 0.75);
+        assert!(elem.contains("opacity=\"0.75\""), "opacity not found: {elem}");
+    }
+
+    #[test]
+    fn test_canvas_size_portrait_aspect() {
+        // aspect 0.5 (tall): height = long edge = 720, width = 0.5*720 = 360
+        let (w, h) = canvas_size_from_dpi(90, 8.0, 0.5);
+        assert_eq!(h, 720); // long edge
+        assert_eq!(w, 360); // short edge
+    }
+
+    #[test]
+    fn test_canvas_size_square_aspect() {
+        let (w, h) = canvas_size_from_dpi(100, 8.0, 1.0);
+        assert_eq!(w, h);
+        assert_eq!(w, 800);
+    }
+
+    #[test]
+    fn test_canvas_size_min_one_pixel() {
+        // Extremely thin aspect → height clamped to 1
+        let (w, h) = canvas_size_from_dpi(100, 8.0, 100.0); // very wide
+        assert!(h >= 1);
+        assert_eq!(w, 800); // long edge
+    }
+
+    #[test]
+    fn test_build_svg_opens_with_svg_tag() {
+        let d = MultiPolygon(vec![
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)]
+        ]);
+        let proj = Projection::from_bbox(0.0, 0.0, 1.0, 1.0, 200, 200, 0.0);
+        let svg = build_svg(&[(1, d, (100u8, 100u8, 100u8), simple_label("1"))], &proj, 200, 200);
+        assert!(svg.starts_with("<svg "), "must start with <svg: {}", &svg[..40.min(svg.len())]);
+        assert!(svg.ends_with("</svg>"), "must end with </svg>");
+    }
+
+    #[test]
+    fn test_build_svg_no_districts_has_background_rect() {
+        let proj = Projection::from_bbox(0.0, 0.0, 1.0, 1.0, 100, 100, 0.0);
+        let svg = build_svg(&[], &proj, 100, 100);
+        assert!(svg.contains("<rect "), "background rect must be present");
+        assert!(svg.contains("fill=\"white\""), "background must be white");
+    }
+
+    #[test]
+    fn test_build_svg_encodes_width_height() {
+        let d = MultiPolygon(vec![
+            polygon![(x:0.,y:0.),(x:1.,y:0.),(x:1.,y:1.),(x:0.,y:1.),(x:0.,y:0.)]
+        ]);
+        let proj = Projection::from_bbox(0.0, 0.0, 1.0, 1.0, 640, 480, 0.0);
+        let svg = build_svg(&[(1, d, (0u8, 0u8, 0u8), simple_label("A"))], &proj, 640, 480);
+        assert!(svg.contains("width=\"640\""), "SVG width must be 640");
+        assert!(svg.contains("height=\"480\""), "SVG height must be 480");
+    }
 }

@@ -307,4 +307,80 @@ mod tests {
         assert_eq!(proj.canvas_w(), 1200);
         assert_eq!(proj.canvas_h(), 800);
     }
+
+    // ── Additional projection tests ───────────────────────────────────────────
+
+    #[test]
+    fn test_project_coords_batch_matches_individual() {
+        let proj = Projection::from_bbox(-80.0, 35.0, -70.0, 45.0, 800, 600, 0.05);
+        let pairs = vec![(-79.0, 36.0), (-75.0, 40.0), (-71.0, 44.0)];
+        let batch = proj.project_coords(&pairs);
+        for (i, &(lon, lat)) in pairs.iter().enumerate() {
+            let (ex, ey) = proj.project(lon, lat);
+            assert!((batch[i].0 - ex).abs() < 1e-10);
+            assert!((batch[i].1 - ey).abs() < 1e-10);
+        }
+    }
+
+    #[test]
+    fn test_scale_accessor_positive() {
+        let proj = Projection::from_bbox(0.0, 0.0, 10.0, 10.0, 1000, 1000, 0.0);
+        assert!(proj.scale() > 0.0, "scale must be positive");
+    }
+
+    #[test]
+    fn test_scale_larger_canvas_gives_larger_scale() {
+        let proj_small = Projection::from_bbox(0.0, 0.0, 10.0, 10.0, 100, 100, 0.0);
+        let proj_large = Projection::from_bbox(0.0, 0.0, 10.0, 10.0, 1000, 1000, 0.0);
+        assert!(proj_large.scale() > proj_small.scale());
+    }
+
+    #[test]
+    fn test_project_midpoint_lands_near_canvas_center() {
+        // With zero padding and square canvas, midpoint of bbox → canvas center
+        let proj = Projection::from_bbox(0.0, 0.0, 10.0, 10.0, 500, 500, 0.0);
+        let (cx, cy) = proj.project(5.0, 5.0);
+        assert!((cx - 250.0).abs() < 2.0, "mid-x={cx}");
+        assert!((cy - 250.0).abs() < 2.0, "mid-y={cy}");
+    }
+
+    #[test]
+    fn test_project_coords_empty_slice_returns_empty() {
+        let proj = Projection::from_bbox(0.0, 0.0, 1.0, 1.0, 100, 100, 0.0);
+        let result = proj.project_coords(&[]);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_padding_moves_points_inward() {
+        // With 10% padding, corners should not reach 0 or 500
+        let proj = Projection::from_bbox(0.0, 0.0, 1.0, 1.0, 500, 500, 0.10);
+        let (x0, _) = proj.project(0.0, 0.5); // left edge
+        let (x1, _) = proj.project(1.0, 0.5); // right edge
+        assert!(x0 > 0.0, "left edge must be padded in: x0={x0}");
+        assert!(x1 < 500.0, "right edge must be padded in: x1={x1}");
+    }
+
+    #[test]
+    fn test_inset_continental_height_is_positive() {
+        let proj = InsetProjection::us_national(2400, 1500);
+        assert!(proj.continental_height() > 0.0);
+    }
+
+    #[test]
+    fn test_inset_continental_height_is_75_percent_of_canvas() {
+        let proj = InsetProjection::us_national(2400, 1500);
+        let expected = (1500.0_f64 * 0.75).round();
+        assert!((proj.continental_height() - expected).abs() < 2.0,
+            "continental_height={} expected~{}", proj.continental_height(), expected);
+    }
+
+    #[test]
+    fn test_inset_alaska_is_below_continental() {
+        let proj = InsetProjection::us_national(2400, 1500);
+        let cont_h = proj.continental_height();
+        // Anchorage should map to y > cont_h
+        let (_, y) = proj.project(-149.9, 61.2);
+        assert!(y > cont_h - 10.0, "Anchorage y={y} must be below continental boundary {cont_h}");
+    }
 }

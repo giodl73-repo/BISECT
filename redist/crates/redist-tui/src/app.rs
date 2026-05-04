@@ -361,4 +361,206 @@ mod tests {
         app.cycle_sort(); // Label Desc -> Splits Asc
         assert!(matches!(app.sort, SortColumn::Splits));
     }
+
+    // ── Additional app tests ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_navigate_pushes_to_history() {
+        let mut app = App::default();
+        app.navigate(Screen::Run(RunState::default()));
+        assert_eq!(app.screen_history.len(), 1);
+        assert!(matches!(app.screen_history[0], Screen::Home));
+    }
+
+    #[test]
+    fn test_navigate_back_multi_level() {
+        let mut app = App::default();
+        app.navigate(Screen::Run(RunState::default()));
+        app.navigate(Screen::Doctor(DoctorState::default()));
+        app.navigate_back(); // back to Run
+        assert!(matches!(app.screen, Screen::Run(_)));
+        app.navigate_back(); // back to Home
+        assert!(matches!(app.screen, Screen::Home));
+    }
+
+    #[test]
+    fn test_set_error_stores_summary() {
+        let mut app = App::default();
+        app.set_error("test error message");
+        let err = app.error.as_ref().unwrap();
+        assert_eq!(err.summary, "test error message");
+        assert!(err.raw.is_none());
+        assert!(!err.show_raw);
+    }
+
+    #[test]
+    fn test_visible_plans_empty_filter_shows_all() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "wa_house".into(), state_code: "WA".into(), ..Default::default() },
+            PlanSummary { label: "ca_cong".into(), state_code: "CA".into(), ..Default::default() },
+            PlanSummary { label: "tx_senate".into(), state_code: "TX".into(), ..Default::default() },
+        ];
+        app.filter = String::new();
+        assert_eq!(app.visible_plans().len(), 3);
+    }
+
+    #[test]
+    fn test_visible_plans_filter_case_insensitive() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "WA_house".into(), state_code: "WA".into(), ..Default::default() },
+            PlanSummary { label: "ca_cong".into(), state_code: "CA".into(), ..Default::default() },
+        ];
+        app.filter = "wa".to_string();
+        let visible = app.visible_plans();
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].state_code, "WA");
+    }
+
+    #[test]
+    fn test_visible_plans_filter_by_chamber() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "wa_house".into(), state_code: "WA".into(), chamber: "house".into(), ..Default::default() },
+            PlanSummary { label: "wa_senate".into(), state_code: "WA".into(), chamber: "senate".into(), ..Default::default() },
+        ];
+        app.filter = "senate".to_string();
+        let visible = app.visible_plans();
+        assert_eq!(visible.len(), 1);
+        assert_eq!(visible[0].chamber, "senate");
+    }
+
+    #[test]
+    fn test_visible_plans_sort_by_splits_asc() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "b".into(), county_splits: Some(10), ..Default::default() },
+            PlanSummary { label: "a".into(), county_splits: Some(2), ..Default::default() },
+            PlanSummary { label: "c".into(), county_splits: Some(5), ..Default::default() },
+        ];
+        app.sort = SortColumn::Splits;
+        app.sort_dir = SortDir::Asc;
+        let visible = app.visible_plans();
+        assert_eq!(visible[0].county_splits, Some(2));
+        assert_eq!(visible[1].county_splits, Some(5));
+        assert_eq!(visible[2].county_splits, Some(10));
+    }
+
+    #[test]
+    fn test_visible_plans_sort_by_splits_desc() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "b".into(), county_splits: Some(10), ..Default::default() },
+            PlanSummary { label: "a".into(), county_splits: Some(2), ..Default::default() },
+        ];
+        app.sort = SortColumn::Splits;
+        app.sort_dir = SortDir::Desc;
+        let visible = app.visible_plans();
+        assert_eq!(visible[0].county_splits, Some(10));
+    }
+
+    #[test]
+    fn test_visible_plans_sort_by_pp_asc() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "b".into(), mean_pp: Some(0.9), ..Default::default() },
+            PlanSummary { label: "a".into(), mean_pp: Some(0.1), ..Default::default() },
+        ];
+        app.sort = SortColumn::Pp;
+        app.sort_dir = SortDir::Asc;
+        let visible = app.visible_plans();
+        assert!((visible[0].mean_pp.unwrap() - 0.1).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_visible_plans_sort_by_deviation_desc() {
+        let mut app = App::default();
+        app.plans = vec![
+            PlanSummary { label: "a".into(), max_deviation_pct: Some(0.5), ..Default::default() },
+            PlanSummary { label: "b".into(), max_deviation_pct: Some(2.0), ..Default::default() },
+        ];
+        app.sort = SortColumn::Deviation;
+        app.sort_dir = SortDir::Desc;
+        let visible = app.visible_plans();
+        assert!((visible[0].max_deviation_pct.unwrap() - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_cycle_sort_full_cycle_returns_to_label_asc() {
+        let mut app = App::default();
+        // Label Asc(0) → Label Desc(1) → Splits Asc(2) → Splits Desc(3)
+        // → Pp Asc(4) → Pp Desc(5) → Deviation Asc(6) → Label Asc(7)
+        for _ in 0..7 {
+            app.cycle_sort();
+        }
+        // After 7 cycles we should be back at Label Asc
+        assert!(matches!(app.sort, SortColumn::Label));
+        assert!(matches!(app.sort_dir, SortDir::Asc));
+    }
+
+    #[test]
+    fn test_run_progress_default_values() {
+        let p = RunProgress::default();
+        assert_eq!(p.districts_assigned, 0);
+        assert_eq!(p.districts_total, 0);
+        assert!(!p.balance_ok);
+        assert_eq!(p.elapsed_secs, 0);
+        assert!(p.depths.is_empty());
+    }
+
+    #[test]
+    fn test_run_result_default_values() {
+        let r = RunResult::default();
+        assert!(!r.success);
+        assert!(r.mean_pp.is_none());
+        assert!(r.error.is_none());
+    }
+
+    #[test]
+    fn test_check_status_variants_debug() {
+        // Ensure all CheckStatus variants can be formatted without panic
+        let statuses = [CheckStatus::Pass, CheckStatus::Warn, CheckStatus::Fail, CheckStatus::Info];
+        for s in &statuses {
+            let _ = format!("{:?}", s);
+        }
+    }
+
+    #[test]
+    fn test_doctor_check_message_stored() {
+        let check = DoctorCheck {
+            status: CheckStatus::Warn,
+            message: "adjacency file missing".into(),
+            hint: Some("run redist fetch".into()),
+        };
+        assert_eq!(check.message, "adjacency file missing");
+        assert_eq!(check.hint.as_deref(), Some("run redist fetch"));
+    }
+
+    #[test]
+    fn test_compare_result_most_changed_empty_default() {
+        let r = CompareResult::default();
+        assert!(r.most_changed.is_empty());
+        assert_eq!(r.jaccard, 0.0);
+    }
+
+    #[test]
+    fn test_verify_result_default_not_passed() {
+        let r = VerifyResult::default();
+        assert!(!r.passed);
+        assert!(r.fail_reason.is_none());
+    }
+
+    #[test]
+    fn test_app_error_no_raw_by_default() {
+        let mut app = App::default();
+        app.set_error("oops");
+        assert!(app.error.as_ref().unwrap().raw.is_none());
+    }
+
+    #[test]
+    fn test_plan_summary_default_contiguous_is_none() {
+        let p = PlanSummary::default();
+        assert!(p.all_contiguous.is_none());
+    }
 }

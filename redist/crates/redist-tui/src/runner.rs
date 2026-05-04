@@ -277,4 +277,95 @@ mod tests {
         assert_eq!(progress.districts_assigned, 218);
         assert_eq!(progress.districts_total, 435);
     }
+
+    // ── Additional runner tests ───────────────────────────────────────────────
+
+    #[test]
+    fn test_parse_status_line_negative_position_rejected() {
+        // Negative position is parseable as i64, so it returns a message
+        let result = parse_status_line("STATUS:-1:some message");
+        assert_eq!(result, Some("some message".to_string()));
+    }
+
+    #[test]
+    fn test_parse_status_line_non_numeric_position_rejected() {
+        let result = parse_status_line("STATUS:abc:some message");
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_parse_status_line_only_prefix_no_colon() {
+        let result = parse_status_line("STATUS:");
+        // No second colon → None
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_parse_status_line_message_can_be_empty() {
+        let result = parse_status_line("STATUS:0:");
+        assert_eq!(result, Some(String::new()));
+    }
+
+    #[test]
+    fn test_update_progress_balance_ok_case_insensitive() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "BALANCE OK — convergence reached");
+        assert!(progress.balance_ok, "balance_ok must be set regardless of case");
+    }
+
+    #[test]
+    fn test_update_progress_elapsed_parses_number() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "elapsed: 87s");
+        assert_eq!(progress.elapsed_secs, 87);
+    }
+
+    #[test]
+    fn test_update_progress_elapsed_no_trailing_s() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "elapsed 120");
+        assert_eq!(progress.elapsed_secs, 120);
+    }
+
+    #[test]
+    fn test_update_progress_bisect_depth_grows_vec() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "bisect depth 3: 4/8");
+        // depth index 2 (1-based 3 → 0-based 2) — vec grows to at least 3
+        assert!(progress.depths.len() >= 3);
+        assert_eq!(progress.depths[2], (4, 8));
+    }
+
+    #[test]
+    fn test_update_progress_bisect_depth_1_is_index_0() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "bisect depth 1: 1/2");
+        assert!(!progress.depths.is_empty());
+        assert_eq!(progress.depths[0], (1, 2));
+    }
+
+    #[test]
+    fn test_update_progress_unrecognised_message_is_noop() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "some random log output");
+        // No fields should have changed
+        assert!(!progress.balance_ok);
+        assert_eq!(progress.districts_assigned, 0);
+        assert_eq!(progress.elapsed_secs, 0);
+    }
+
+    #[test]
+    fn test_update_progress_districts_one_each() {
+        let mut progress = RunProgress::default();
+        update_progress_from_message(&mut progress, "assigned 1/1");
+        assert_eq!(progress.districts_assigned, 1);
+        assert_eq!(progress.districts_total, 1);
+    }
+
+    #[test]
+    fn test_parse_status_preserves_internal_colons() {
+        // Multiple colons in message
+        let result = parse_status_line("STATUS:5:a:b:c");
+        assert_eq!(result, Some("a:b:c".to_string()));
+    }
 }

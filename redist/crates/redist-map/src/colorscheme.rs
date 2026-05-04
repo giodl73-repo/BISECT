@@ -117,4 +117,130 @@ mod tests {
         assert_ne!(colors[1], colors[2]);
         assert_ne!(colors[0], colors[2]);
     }
+
+    // ── Additional colorscheme tests ─────────────────────────────────────────
+
+    #[test]
+    fn test_political_scheme_clamps_below_zero() {
+        let scheme = PoliticalScheme;
+        let at_zero = scheme.color(0.0);
+        let below = scheme.color(-1.0);
+        assert_eq!(at_zero, below, "clamping below 0 must equal color(0)");
+    }
+
+    #[test]
+    fn test_political_scheme_clamps_above_one() {
+        let scheme = PoliticalScheme;
+        let at_one = scheme.color(1.0);
+        let above = scheme.color(2.0);
+        assert_eq!(at_one, above, "clamping above 1 must equal color(1)");
+    }
+
+    #[test]
+    fn test_political_scheme_upper_half_blue_dominates_red() {
+        // In the upper half (t > 0.5) blue channel value > red channel value
+        let scheme = PoliticalScheme;
+        let (r07, _, b07) = scheme.color(0.7);
+        let (r10, _, b10) = scheme.color(1.0);
+        assert!(b07 > r07, "at t=0.7 blue channel must exceed red");
+        assert!(b10 > r10, "at t=1.0 blue channel must exceed red");
+    }
+
+    #[test]
+    fn test_political_scheme_monotone_red_channel_lower_half() {
+        // In the lower half (t=0..0.5), red channel should increase toward white
+        let scheme = PoliticalScheme;
+        let (r00, _, _) = scheme.color(0.0);
+        let (r03, _, _) = scheme.color(0.3);
+        let (r05, _, _) = scheme.color(0.5);
+        assert!(r03 >= r00, "red must increase from 0.0→0.3");
+        assert!(r05 >= r03, "red must increase from 0.3→0.5");
+    }
+
+    #[test]
+    fn test_demographic_scheme_clamps_bounds() {
+        let scheme = DemographicScheme;
+        assert_eq!(scheme.color(-0.5), scheme.color(0.0));
+        assert_eq!(scheme.color(1.5), scheme.color(1.0));
+    }
+
+    #[test]
+    fn test_demographic_scheme_endpoints() {
+        let scheme = DemographicScheme;
+        let (r0, g0, b0) = scheme.color(0.0);
+        let (r1, g1, b1) = scheme.color(1.0);
+        // At t=0 the lerp gives the 'a' endpoint values
+        assert_eq!(r0, 255);
+        assert_eq!(g0, 255);
+        assert_eq!(b0, 178);
+        // At t=1 the lerp gives the 'b' endpoint values
+        assert_eq!(r1, 102);
+        assert_eq!(g1, 51);
+        assert_eq!(b1, 0);
+    }
+
+    #[test]
+    fn test_compactness_scheme_clamps_bounds() {
+        let scheme = CompactnessScheme;
+        assert_eq!(scheme.color(-0.1), scheme.color(0.0));
+        assert_eq!(scheme.color(1.1), scheme.color(1.0));
+    }
+
+    #[test]
+    fn test_compactness_scheme_endpoints() {
+        let scheme = CompactnessScheme;
+        let (r0, g0, b0) = scheme.color(0.0);
+        let (r1, g1, b1) = scheme.color(1.0);
+        // t=0 → light green (229,245,224)
+        assert_eq!(r0, 229);
+        assert_eq!(g0, 245);
+        assert_eq!(b0, 224);
+        // t=1 → dark green (0,109,44)
+        assert_eq!(r1, 0);
+        assert_eq!(g1, 109);
+        assert_eq!(b1, 44);
+    }
+
+    #[test]
+    fn test_categorical_color_24_cycles_twice() {
+        let scheme = CategoricalScheme::default();
+        for i in 0..12 {
+            assert_eq!(scheme.color(i), scheme.color(i + 24),
+                "color({i}) should equal color({})", i + 24);
+        }
+    }
+
+    #[test]
+    fn test_graph_coloring_single_node() {
+        let adjacency: Vec<Vec<usize>> = vec![vec![]];
+        let colors = graph_color(&adjacency, &CategoricalScheme::default());
+        assert_eq!(colors.len(), 1);
+    }
+
+    #[test]
+    fn test_graph_coloring_path_uses_two_colors() {
+        // 4-node path: 0-1-2-3 — only 2 colors needed
+        let adjacency = vec![
+            vec![1usize],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2usize],
+        ];
+        let colors = graph_color(&adjacency, &CategoricalScheme::default());
+        assert_ne!(colors[0], colors[1]);
+        assert_ne!(colors[1], colors[2]);
+        assert_ne!(colors[2], colors[3]);
+        // Path graph is bipartite: alternating colors
+        assert_eq!(colors[0], colors[2]);
+        assert_eq!(colors[1], colors[3]);
+    }
+
+    #[test]
+    fn test_graph_coloring_disconnected_uses_same_color_for_isolated_nodes() {
+        // Nodes 0 and 2 have no adjacency — can share a color
+        let adjacency = vec![vec![], vec![0usize, 2], vec![]];
+        let colors = graph_color(&adjacency, &CategoricalScheme::default());
+        assert_ne!(colors[1], colors[0], "node 1 must differ from node 0");
+        assert_ne!(colors[1], colors[2], "node 1 must differ from node 2");
+    }
 }
