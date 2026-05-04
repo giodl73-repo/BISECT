@@ -1975,4 +1975,197 @@ mod tests {
         assert_eq!(back.http_status, 200);
         assert_eq!(back.snapshot_format, "headers-body");
     }
+
+    // ── Additional civic tests ────────────────────────────────────────────────
+
+    /// BOM stripping: empty input (0 bytes) must succeed with Utf8 encoding.
+    #[test]
+    fn test_detect_strip_bom_empty_input() {
+        let (out, enc) = detect_and_strip_bom(b"").unwrap();
+        assert_eq!(out, b"");
+        assert_eq!(enc, DetectedEncoding::Utf8);
+    }
+
+    /// BOM stripping: a single byte (no BOM prefix possible) must succeed.
+    #[test]
+    fn test_detect_strip_bom_single_byte() {
+        let (out, enc) = detect_and_strip_bom(b"x").unwrap();
+        assert_eq!(out, b"x");
+        assert_eq!(enc, DetectedEncoding::Utf8);
+    }
+
+    /// BOM stripping: two bytes that are not a BOM must pass through unchanged.
+    #[test]
+    fn test_detect_strip_bom_two_bytes_no_bom() {
+        let (out, enc) = detect_and_strip_bom(b"ab").unwrap();
+        assert_eq!(out, b"ab");
+        assert_eq!(enc, DetectedEncoding::Utf8);
+    }
+
+    /// detect_line_endings: empty bytes returns "lf" (default).
+    #[test]
+    fn test_detect_line_endings_empty_bytes_returns_lf() {
+        assert_eq!(detect_line_endings(b""), "lf");
+    }
+
+    /// detect_line_endings: mixed CRLF and LF; CRLF majority → "crlf".
+    #[test]
+    fn test_detect_line_endings_mixed_crlf_majority() {
+        // 3 CRLF vs 1 bare LF
+        let bytes = b"a\r\nb\r\nc\r\nd\n";
+        assert_eq!(detect_line_endings(bytes), "crlf");
+    }
+
+    /// detect_line_endings: bare LF majority → "lf".
+    #[test]
+    fn test_detect_line_endings_mixed_lf_majority() {
+        // 1 CRLF vs 3 bare LF
+        let bytes = b"a\nb\nc\nd\r\n";
+        assert_eq!(detect_line_endings(bytes), "lf");
+    }
+
+    /// GEOID validation: exactly 8 digits should produce InvalidGeoidFormat (not LeadingZeroLost).
+    #[test]
+    fn test_geoid_8_digits_invalid_format() {
+        let err = validate_geoid(1, "12345678", "AL", "2020", None).unwrap_err();
+        assert!(matches!(err, CivicError::InvalidGeoidFormat { .. }),
+            "8-digit GEOID should be InvalidGeoidFormat, not LeadingZeroLost: {err}");
+    }
+
+    /// GEOID validation: 11 digits all zeros passes structural check (valid format).
+    #[test]
+    fn test_geoid_11_zeros_passes_structural() {
+        assert!(validate_geoid(1, "00000000000", "AL", "2020", None).is_ok());
+    }
+
+    /// ValidateMode::as_str round-trips correctly.
+    #[test]
+    fn test_validate_mode_as_str_round_trip() {
+        for s in &["strict", "lenient", "advisory"] {
+            let mode = ValidateMode::from_str(s).unwrap();
+            assert_eq!(mode.as_str(), *s, "as_str must round-trip: {s}");
+        }
+    }
+
+    /// URL validation: https with a path + query string passes.
+    #[test]
+    fn test_url_https_with_path_and_query_passes() {
+        assert!(validate_source_url("https://example.org/comments?id=123&foo=bar").is_ok());
+    }
+
+    /// URL validation: http://0.0.0.0 is unspecified → rejected.
+    #[test]
+    fn test_url_ipv6_unspecified_rejected() {
+        let err = validate_source_url("http://[::]/").unwrap_err();
+        assert!(err.to_string().contains("unspecified"), ":: is unspecified: {err}");
+    }
+
+    /// URL validation: IPv4-mapped private IPv6 (::ffff:10.0.0.1) rejected.
+    #[test]
+    fn test_url_ipv4_mapped_private_rejected() {
+        let err = validate_source_url("http://[::ffff:10.0.0.1]/").unwrap_err();
+        let msg = err.to_string();
+        assert!(msg.contains("private") || msg.contains("IPv4-mapped"),
+            "::ffff:10.0.0.1 must be rejected as private/IPv4-mapped: {msg}");
+    }
+
+    /// URL validation: ftp scheme rejected.
+    #[test]
+    fn test_url_ftp_scheme_rejected() {
+        let err = validate_source_url("ftp://example.org/data.zip").unwrap_err();
+        assert!(err.to_string().contains("ftp"), "ftp scheme must be named in error: {err}");
+    }
+
+    /// Conflict detection: same GEOID in same comment_id (same input) — no conflict.
+    #[test]
+    fn test_conflicts_same_geoid_same_comment_id_no_conflict() {
+        // Both inputs agree: geoid + same comment_id → no GEOID overlap (same ID).
+        let inputs = vec![
+            ("a".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
+            ("b".to_string(), vec![make_row("01001950100", "C1", "Downtown")]),
+        ];
+        let report = detect_conflicts(&inputs);
+        // Same comment_id across both → no label mismatch either.
+        assert!(report.coi_overlap.is_empty(),
+            "same comment_id for same geoid is not an overlap");
+        assert!(report.coi_label_mismatch.is_empty());
+    }
+
+    /// Conflict detection: multiple GEOIDs in conflict simultaneously.
+    #[test]
+    fn test_conflicts_multiple_geoid_overlaps() {
+        let inputs = vec![
+            ("a".to_string(), vec![
+                make_row("01001950100", "C1", "Downtown"),
+                make_row("01001950200", "C2", "Midtown"),
+            ]),
+            ("b".to_string(), vec![
+                make_row("01001950100", "C99", "Other"),
+                make_row("01001950200", "C98", "OtherMid"),
+            ]),
+        ];
+        let report = detect_conflicts(&inputs);
+        assert_eq!(report.coi_overlap.len(), 2,
+            "both GEOIDs should show as overlaps");
+    }
+
+    /// race_conflict_robustness_violated: 0 disputed of N doesn't violate.
+    #[test]
+    fn test_b08_zero_disputed_never_violates() {
+        for n_total in 1..=100 {
+            assert!(!race_conflict_robustness_violated(0, n_total, 0.10),
+                "0 disputed should never violate: n_total={n_total}");
+        }
+    }
+
+    /// race_conflict_robustness_violated: all disputed → violates.
+    #[test]
+    fn test_b08_all_disputed_violates() {
+        assert!(race_conflict_robustness_violated(10, 10, 0.10),
+            "100% disputed must violate at any reasonable threshold");
+    }
+
+    /// csv_quote: a value with a comma gets double-quoted.
+    #[test]
+    fn test_csv_quote_comma_forces_quotes() {
+        let result = csv_quote("hello, world", false);
+        assert!(result.starts_with('"') && result.ends_with('"'),
+            "value with comma must be quoted: {result}");
+    }
+
+    /// csv_quote: a value with embedded double quotes escapes them.
+    #[test]
+    fn test_csv_quote_embedded_quotes_escaped() {
+        let result = csv_quote("say \"hi\"", false);
+        assert!(result.contains("\"\""), "embedded quotes must be escaped: {result}");
+    }
+
+    /// csv_quote: force=true always quotes even a plain value.
+    #[test]
+    fn test_csv_quote_force_always_quotes() {
+        let result = csv_quote("01001950100", true);
+        assert!(result.starts_with('"'),
+            "force=true must always quote (GEOID protection): {result}");
+    }
+
+    /// Parsing a CSV with a leading `# schema-version` comment line succeeds.
+    #[test]
+    fn test_parse_csv_with_leading_comment_line() {
+        let csv = b"# civic-coi-csv v1\ngeoid,comment_id,label,source,source_url,confidence,submitted_at\n\
+                    01001950100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z\n";
+        let (rows, _, _, _) = parse_and_canonicalize_csv(csv).unwrap();
+        assert_eq!(rows.len(), 1, "comment line must be stripped before CSV parse");
+        assert_eq!(rows[0].comment_id, "COI-1");
+    }
+
+    /// Canonicalized output always uses LF, never CRLF, even for CRLF input.
+    #[test]
+    fn test_canonical_output_no_crlf() {
+        let csv = b"geoid,comment_id,label,source,source_url,confidence,submitted_at\r\n\
+                    01001950100,COI-1,Downtown,LWV,,high,2026-04-15T00:00:00Z\r\n";
+        let (_, normalized, _, _) = parse_and_canonicalize_csv(csv).unwrap();
+        let s = std::str::from_utf8(&normalized).unwrap();
+        assert!(!s.contains("\r\n"), "canonical output must not contain CRLF");
+        assert!(s.contains('\n'), "canonical output must have LF line endings");
+    }
 }

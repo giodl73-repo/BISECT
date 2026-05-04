@@ -993,4 +993,212 @@ mod tests {
         assert!(outcome.valid);
         assert_eq!(outcome.entries_verified, 1);
     }
+
+    // ── Additional depo tests ─────────────────────────────────────────────────
+
+    /// parse_param_kv: a KEY= (empty value) for an enum parameter is rejected.
+    #[test]
+    fn test_parse_param_kv_empty_value_enum_rejected() {
+        let err = parse_param_kv("bloc_p_value_method=").unwrap_err();
+        assert!(matches!(err, DepoError::BadEnum { .. }),
+            "empty value for enum must be BadEnum: {err}");
+    }
+
+    /// parse_param_kv: boundary float (exactly at lower bound) must succeed.
+    #[test]
+    fn test_parse_param_kv_float_at_lower_bound() {
+        let (k, v) = parse_param_kv("leaning_threshold=0.0").unwrap();
+        assert_eq!(k, "leaning_threshold");
+        assert_eq!(v.as_f64(), Some(0.0));
+    }
+
+    /// parse_param_kv: boundary float (exactly at upper bound) must succeed.
+    #[test]
+    fn test_parse_param_kv_float_at_upper_bound() {
+        let (k, v) = parse_param_kv("leaning_threshold=1.0").unwrap();
+        assert_eq!(k, "leaning_threshold");
+        assert_eq!(v.as_f64(), Some(1.0));
+    }
+
+    /// parse_param_kv: just below lower bound (negative value) must be rejected.
+    #[test]
+    fn test_parse_param_kv_float_below_lower_bound_rejected() {
+        let err = parse_param_kv("leaning_threshold=-0.1").unwrap_err();
+        assert!(matches!(err, DepoError::OutOfRange { .. }),
+            "value below lower bound must be OutOfRange: {err}");
+    }
+
+    /// parse_param_kv: no '=' at all (empty string) must return BadParamKv.
+    #[test]
+    fn test_parse_param_kv_empty_string_rejected() {
+        let err = parse_param_kv("").unwrap_err();
+        assert!(matches!(err, DepoError::BadParamKv(_)),
+            "empty string must be BadParamKv: {err}");
+    }
+
+    /// overrides_hash: empty BTreeMap produces a deterministic 64-char SHA.
+    #[test]
+    fn test_overrides_hash_empty_map() {
+        let m: BTreeMap<String, serde_json::Value> = BTreeMap::new();
+        let h = overrides_hash(&m);
+        assert_eq!(h.len(), 64, "hash must be 64 hex chars");
+        assert!(h.chars().all(|c| c.is_ascii_hexdigit()),
+            "hash must be hex: {h}");
+    }
+
+    /// overrides_hash: two identical maps with different key insertion order
+    /// still produce the same hash (BTreeMap sorts keys).
+    #[test]
+    fn test_overrides_hash_three_keys_independent_of_insertion_order() {
+        let mut a = BTreeMap::new();
+        a.insert("leaning_threshold".to_string(), serde_json::json!(0.55));
+        a.insert("vra_min_bvap".to_string(), serde_json::json!(0.50));
+        a.insert("compactness_metric".to_string(), serde_json::json!("polsby_popper"));
+        let mut b = BTreeMap::new();
+        b.insert("compactness_metric".to_string(), serde_json::json!("polsby_popper"));
+        b.insert("vra_min_bvap".to_string(), serde_json::json!(0.50));
+        b.insert("leaning_threshold".to_string(), serde_json::json!(0.55));
+        assert_eq!(overrides_hash(&a), overrides_hash(&b));
+    }
+
+    /// sha256_of_line is a deterministic 64-hex-char string.
+    #[test]
+    fn test_sha256_of_line_deterministic_hex() {
+        let line = r#"{"build_commit":"abc","elapsed_ms":1,"op":"eval","params":{},"prev_sha256":"GENESIS","result_path":null,"result_summary":{},"seq":0,"timestamp":"2026-04-30T12:00:00.000Z","types":[]}"#;
+        let h1 = sha256_of_line(line);
+        let h2 = sha256_of_line(line);
+        assert_eq!(h1, h2, "sha256_of_line must be deterministic");
+        assert_eq!(h1.len(), 64, "must be 64 hex chars");
+        assert!(h1.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    /// sha256_of_line: changing one character changes the hash.
+    #[test]
+    fn test_sha256_of_line_sensitive_to_change() {
+        let a = sha256_of_line("line one");
+        let b = sha256_of_line("line two");
+        assert_ne!(a, b, "different lines must produce different hashes");
+    }
+
+    /// whitelist_compat_sha256 is stable across two calls (idempotent / deterministic).
+    #[test]
+    fn test_whitelist_compat_sha256_idempotent() {
+        let h1 = whitelist_compat_sha256();
+        let h2 = whitelist_compat_sha256();
+        assert_eq!(h1, h2, "whitelist_compat_sha256 must be stable");
+    }
+
+    /// canonicalize_json: nested objects have all keys sorted recursively.
+    #[test]
+    fn test_canonicalize_json_nested_sorted() {
+        let v = serde_json::json!({"outer": {"z": 3, "a": 1, "m": 2}});
+        let s = canonicalize_json(&v).unwrap();
+        // inner keys a, m, z must be in order inside the object
+        let inner_start = s.find("\"outer\"").unwrap() + "\"outer\":".len();
+        let inner = &s[inner_start..];
+        let pos_a = inner.find("\"a\"").unwrap();
+        let pos_m = inner.find("\"m\"").unwrap();
+        let pos_z = inner.find("\"z\"").unwrap();
+        assert!(pos_a < pos_m && pos_m < pos_z,
+            "nested keys must be sorted: {s}");
+    }
+
+    /// canonicalize_json: arrays preserve their order.
+    #[test]
+    fn test_canonicalize_json_array_order_preserved() {
+        let v = serde_json::json!({"arr": [3, 1, 2]});
+        let s = canonicalize_json(&v).unwrap();
+        // 3 must appear before 1 in the array
+        let pos3 = s.find("3,").or_else(|| s.find(",3")).or_else(|| s.find("[3"));
+        let pos1 = s.rfind(",1").or_else(|| s.rfind("1]"));
+        assert!(pos3.is_some() && pos1.is_some(), "array values must be present");
+        assert!(pos3.unwrap() < pos1.unwrap(),
+            "array order must be preserved (3 before 1): {s}");
+    }
+
+    /// WhatifManifest round-trips through serde correctly.
+    #[test]
+    fn test_whatif_manifest_serde_round_trip() {
+        let mut overrides = BTreeMap::new();
+        overrides.insert("leaning_threshold".to_string(), serde_json::json!(0.53));
+        let m = WhatifManifest {
+            schema_version: "whatif-manifest v1".to_string(),
+            parent_plan_label: "vt_2020_congressional".to_string(),
+            parent_plan_manifest_sha256: "a".repeat(64),
+            parent_report_pdf_sha256: Some("b".repeat(64)),
+            overrides: overrides.clone(),
+            overrides_hash: overrides_hash(&overrides),
+            override_path_relative: "outputs/v1/whatif/abc".to_string(),
+            redist_version: "0.1.0".to_string(),
+            redist_build_commit: "deadbeef".to_string(),
+            redist_build_commit_short: "deadbeef".to_string(),
+            rustc_version: "rustc 1.77.0".to_string(),
+            whitelist_compat_sha256: whitelist_compat_sha256(),
+            generated_at: "2026-04-30T12:00:00Z".to_string(),
+            note: Some("test recompute".to_string()),
+        };
+        let json = serde_json::to_string_pretty(&m).unwrap();
+        let back: WhatifManifest = serde_json::from_str(&json).unwrap();
+        assert_eq!(back.schema_version, "whatif-manifest v1");
+        assert_eq!(back.parent_plan_label, "vt_2020_congressional");
+        assert_eq!(back.overrides["leaning_threshold"].as_f64(), Some(0.53));
+        assert!(back.parent_report_pdf_sha256.is_some());
+    }
+
+    /// LogSidecarManifest: schema_version field is "depo-log v1".
+    #[test]
+    fn test_log_sidecar_schema_version() {
+        let tmp = TempDir::new().unwrap();
+        let mut w = make_writer(&tmp);
+        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 1, pinned_clock()).unwrap();
+        let mani: LogSidecarManifest =
+            serde_json::from_slice(&std::fs::read(&w.manifest_path).unwrap()).unwrap();
+        assert_eq!(mani.schema_version, "depo-log v1");
+    }
+
+    /// LogSidecarManifest: plan_label and build_commit are recorded.
+    #[test]
+    fn test_log_sidecar_plan_label_and_build_commit() {
+        let tmp = TempDir::new().unwrap();
+        let log = tmp.path().join("test.jsonl");
+        let mani_path = tmp.path().join("test.manifest.json");
+        let mut w = DepoLogWriter::open(
+            log,
+            mani_path.clone(),
+            "my_plan_label".to_string(),
+            "a".repeat(64),
+            "git1234".to_string(),
+            pinned_clock(),
+        ).unwrap();
+        w.append("eval", BTreeMap::new(), vec![], serde_json::json!({}), None, 5, pinned_clock()).unwrap();
+        let mani: LogSidecarManifest =
+            serde_json::from_slice(&std::fs::read(&mani_path).unwrap()).unwrap();
+        assert_eq!(mani.plan_label, "my_plan_label");
+        assert_eq!(mani.build_commit, "git1234");
+    }
+
+    /// verify_log_file returns error on non-existent path.
+    #[test]
+    fn test_verify_log_file_missing_path_returns_err() {
+        let result = verify_log_file(std::path::Path::new("/nonexistent/depo.jsonl"));
+        assert!(result.is_err(), "missing log file must return Err");
+    }
+
+    /// log writer: append with result_path stores the path in the JSONL.
+    #[test]
+    fn test_log_writer_result_path_stored_in_jsonl() {
+        let tmp = TempDir::new().unwrap();
+        let mut w = make_writer(&tmp);
+        w.append(
+            "eval",
+            BTreeMap::new(),
+            vec![],
+            serde_json::json!({}),
+            Some("outputs/v1/whatif/abc1234".to_string()),
+            10,
+            pinned_clock(),
+        ).unwrap();
+        let text = std::fs::read_to_string(&w.path).unwrap();
+        assert!(text.contains("whatif/abc1234"), "result_path must appear in JSONL: {text}");
+    }
 }

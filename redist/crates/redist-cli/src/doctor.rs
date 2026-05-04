@@ -1573,4 +1573,242 @@ mod tests {
         // Lowercase hex output
         assert!(got.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()));
     }
+
+    // ── Additional doctor tests ──────────────────────────────────────────────
+
+    /// run_verify_manifest: a valid manifest with all optional fields present
+    /// (binary_sha256, adjacency_file, adjacency_sha256, created_at) must still
+    /// return 0 when the binary_version matches.
+    #[test]
+    fn test_verify_manifest_all_optional_fields_present_returns_0() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let prov = Provenance::current();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "binary_version": prov.redist_version,
+            "binary_sha256": "a".repeat(64),
+            "adjacency_file": "vt_2020_tract.adj.bin",
+            "adjacency_sha256": "b".repeat(64),
+            "created_at": "2026-04-29T12:00:00Z",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 0);
+    }
+
+    /// run_verify_manifest: a manifest with binary_sha256 field empty string
+    /// (not recorded) must still succeed when binary_version matches.
+    #[test]
+    fn test_verify_manifest_empty_binary_sha256_is_informational_not_fail() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let prov = Provenance::current();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "binary_version": prov.redist_version,
+            "binary_sha256": "",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 0, "empty binary_sha256 is informational, not a hard failure");
+    }
+
+    /// hex_lower produces lowercase hex digits only.
+    #[test]
+    fn test_hex_lower_all_lowercase() {
+        let bytes: Vec<u8> = (0u8..=15).collect();
+        let h = hex_lower(&bytes);
+        assert!(h.chars().all(|c| c.is_ascii_hexdigit() && !c.is_ascii_uppercase()),
+            "hex_lower must produce lowercase only: {h}");
+    }
+
+    /// sha256_file on a missing path returns Err (not a panic).
+    #[test]
+    fn test_sha256_file_missing_returns_err() {
+        let result = sha256_file(std::path::Path::new("/nonexistent/sha256/target.bin"));
+        assert!(result.is_err(), "sha256_file must return Err on missing file");
+    }
+
+    /// sha256_file on an empty file returns the known SHA of 0 bytes.
+    #[test]
+    fn test_sha256_file_empty_file() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let p = tmp.path().join("empty.bin");
+        std::fs::write(&p, b"").unwrap();
+        let got = sha256_file(&p).unwrap();
+        assert_eq!(got, known_sha256(b""), "sha256 of empty file must match known value");
+        assert_eq!(got.len(), 64);
+    }
+
+    /// analysis_fetch_hint returns Some for partisan.json with the elections fetch hint.
+    #[test]
+    fn test_analysis_fetch_hint_partisan() {
+        let hint = analysis_fetch_hint("partisan.json", "WA", "2020");
+        assert!(hint.is_some(), "partisan.json must have a fetch hint");
+        let h = hint.unwrap();
+        assert!(h.contains("elections"), "hint must mention elections: {h}");
+        assert!(h.contains("WA"), "hint must include state: {h}");
+        assert!(h.contains("2020"), "hint must include year: {h}");
+    }
+
+    /// analysis_fetch_hint returns Some for demographic.json with demographics fetch hint.
+    #[test]
+    fn test_analysis_fetch_hint_demographic() {
+        let hint = analysis_fetch_hint("demographic.json", "TX", "2020");
+        assert!(hint.is_some());
+        let h = hint.unwrap();
+        assert!(h.contains("demographics"), "hint must mention demographics: {h}");
+    }
+
+    /// analysis_fetch_hint returns Some for vra_analysis.json.
+    #[test]
+    fn test_analysis_fetch_hint_vra() {
+        let hint = analysis_fetch_hint("vra_analysis.json", "AL", "2020");
+        assert!(hint.is_some());
+        let h = hint.unwrap();
+        assert!(h.contains("demographics"), "vra hint must point at demographics: {h}");
+    }
+
+    /// analysis_fetch_hint returns None for compactness.json (no extra data needed).
+    #[test]
+    fn test_analysis_fetch_hint_compactness_none() {
+        let hint = analysis_fetch_hint("compactness.json", "WA", "2020");
+        assert!(hint.is_none(), "compactness.json requires no extra data fetch");
+    }
+
+    /// analysis_fetch_hint returns None for splits.json.
+    #[test]
+    fn test_analysis_fetch_hint_splits_none() {
+        let hint = analysis_fetch_hint("splits.json", "WA", "2020");
+        assert!(hint.is_none(), "splits.json requires no extra data fetch");
+    }
+
+    /// read_analysis_summary for contiguity.json with all_contiguous=true.
+    #[test]
+    fn test_read_analysis_summary_contiguity_all_contiguous() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("cont_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "cont_test",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 1,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            }).to_string(),
+        ).unwrap();
+
+        // Contiguous
+        std::fs::write(
+            analysis_dir.join("contiguity.json"),
+            serde_json::json!({"all_contiguous": true}).to_string(),
+        ).unwrap();
+        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test").unwrap();
+        let summary = read_analysis_summary(&ctx, "contiguity.json");
+        assert!(summary.contains("all contiguous"), "must show 'all contiguous': {summary}");
+
+        // Non-contiguous
+        std::fs::write(
+            analysis_dir.join("contiguity.json"),
+            serde_json::json!({"all_contiguous": false}).to_string(),
+        ).unwrap();
+        let ctx2 = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "cont_test").unwrap();
+        let summary2 = read_analysis_summary(&ctx2, "contiguity.json");
+        assert!(summary2.contains("NON-CONTIGUOUS"), "must show 'NON-CONTIGUOUS': {summary2}");
+    }
+
+    /// read_analysis_summary for a completely unknown file name returns empty string.
+    #[test]
+    fn test_read_analysis_summary_unknown_file_empty() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("unk_test");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(
+            plan_dir.join("manifest.json"),
+            serde_json::json!({
+                "label": "unk_test",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "partition_mode": "edge-weighted",
+                "seed": null,
+                "binary_version": "0.1.0",
+                "binary_sha256": "",
+                "binary_download_url": "",
+                "adjacency_file": "",
+                "adjacency_sha256": "",
+                "adjacency_build_command": "",
+                "adjacency_build_version": "0.1.0",
+                "tiger_source_url": "",
+                "tiger_sha256": null,
+                "created_at": "2026-04-28T00:00:00Z",
+                "balance_tolerance_pct": 0.5,
+                "population_balance_valid": true,
+                "seats_per_district": 1,
+                "total_seats": 1,
+                "electoral_system": "single_member",
+                "gpmetis_version": "unknown"
+            }).to_string(),
+        ).unwrap();
+        std::fs::write(
+            analysis_dir.join("splits.json"),
+            serde_json::json!({"counties": {"split": 3}}).to_string(),
+        ).unwrap();
+        let ctx = crate::plan_context::PlanContext::from_label(tmp.path(), "v1", "2020", "unk_test").unwrap();
+        let summary = read_analysis_summary(&ctx, "splits.json");
+        // The fallback arm returns "" for unrecognized names
+        assert_eq!(summary, "", "unknown file name must return empty string: '{summary}'");
+    }
+
+    /// check_tutorial_data: build_commit and pinned_at fields are informational;
+    /// their presence doesn't change exit code when all rows pass.
+    #[test]
+    fn test_check_tutorial_data_with_build_commit_and_pinned_at_pass() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let bytes = b"deterministic content";
+        let _ = build_tutorial_fixture(
+            tmp.path(),
+            "info-fields-test",
+            &[("data/info.bin", bytes, &known_sha256(bytes))],
+            &[],
+        );
+        let exit = run_check_tutorial_data("info-fields-test", tmp.path());
+        assert_eq!(exit, 0, "build_commit + pinned_at must not affect exit code");
+    }
+
+    /// verify_manifest: a manifest with adjacency_file field present but empty
+    /// must still return 0 (no adjacency check fires).
+    #[test]
+    fn test_verify_manifest_adjacency_file_empty_no_fail() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let prov = Provenance::current();
+        let path = write_manifest(&tmp, serde_json::json!({
+            "binary_version": prov.redist_version,
+            "adjacency_file": "",
+        }));
+        let result = run_verify_manifest(path.to_str().unwrap());
+        assert_eq!(result, 0, "empty adjacency_file must not trigger a failure");
+    }
 }

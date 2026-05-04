@@ -416,4 +416,90 @@ mod tests {
         let product: u32 = seq.iter().product::<u32>().max(1);
         assert_eq!(product, 1u32);
     }
+
+    // ── Additional prime.rs tests ─────────────────────────────────────────────
+
+    /// smallest_prime_factor via composite split: k=15=3×5 should split by largest=5.
+    #[test]
+    fn split_prescription_k15_largest_prime_first() {
+        // 15 = 3 × 5; largest prime = 5; so parts=5, sub_k=3
+        let step = split_prescription(15);
+        assert_eq!(step, SplitStep::Uniform { parts: 5, sub_k: 3 });
+    }
+
+    /// k=7 (prime) → binary 3+4.
+    #[test]
+    fn split_prescription_k7_binary() {
+        assert_eq!(split_prescription(7), SplitStep::Binary { k_left: 3, k_right: 4 });
+    }
+
+    /// k=19 (prime) → binary 9+10.
+    #[test]
+    fn split_prescription_k19_binary() {
+        assert_eq!(split_prescription(19), SplitStep::Binary { k_left: 9, k_right: 10 });
+    }
+
+    /// pfr_tree_depth for k=6=2×3 → Uniform{parts:3, sub_k:2};
+    /// depth = 1 + depth(2) = 1 + 1 = 2.
+    #[test]
+    fn pfr_tree_depth_k6() {
+        assert_eq!(pfr_tree_depth(6), 2);
+    }
+
+    /// pfr_tree_depth for k=51=3×17 → Uniform{parts:17, sub_k:3};
+    /// depth = 1 + depth(3) = 1 + 1 = 2.
+    #[test]
+    fn pfr_tree_depth_k51() {
+        assert_eq!(pfr_tree_depth(51), 2);
+    }
+
+    /// pfr_tree_depth for k=34=2×17 → Uniform{parts:17, sub_k:2};
+    /// depth = 1 + depth(2) = 1 + 1 = 2.
+    #[test]
+    fn pfr_tree_depth_k34() {
+        assert_eq!(pfr_tree_depth(34), 2);
+    }
+
+    /// first_divergence_level: n=6=[2,3], n+1=7=[7]; no common prefix → level 1.
+    #[test]
+    fn first_divergence_six_to_seven() {
+        assert_eq!(first_divergence_level(6, 7), 1);
+    }
+
+    /// first_divergence_level: n=2, n+1=3; [2] vs [3] → diverge at level 1.
+    #[test]
+    fn first_divergence_two_to_three() {
+        assert_eq!(first_divergence_level(2, 3), 1);
+    }
+
+    /// is_prime: large known primes and non-primes.
+    #[test]
+    fn is_prime_larger_values() {
+        assert!(is_prime(97));
+        assert!(is_prime(101));
+        assert!(!is_prime(100));
+        assert!(!is_prime(99));
+    }
+
+    /// common_prefix_len: n=1 and m=1 both have empty sequences; prefix = 0.
+    #[test]
+    fn common_prefix_one_and_one() {
+        assert_eq!(common_prefix_len(1, 1), 0);
+    }
+
+    /// prime_factor_sequence for k=30=2×3×5: sorted [2,3,5].
+    #[test]
+    fn prime_factor_sequence_30() {
+        assert_eq!(prime_factor_sequence(30), vec![2, 3, 5]);
+    }
+
+    /// SplitStep::fraction for Binary variant sums to ~1.0.
+    #[test]
+    fn split_step_fraction_binary_sums_to_one() {
+        let step = split_prescription(17); // Binary { k_left: 8, k_right: 9 }
+        let total_k = 17u32;
+        let frac_sum: f32 = (0..2).map(|i| step.fraction(i, total_k)).sum();
+        assert!((frac_sum - 1.0).abs() < 1e-5,
+            "Binary fractions must sum to 1.0, got {frac_sum}");
+    }
 }
