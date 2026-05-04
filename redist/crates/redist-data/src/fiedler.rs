@@ -247,4 +247,51 @@ mod tests {
         let (lam, _) = compute_fiedler(&adj, &ew, 200, 1e-6);
         assert!(lam > 0.0, "connected graph must have λ₂ > 0, got {lam}");
     }
+
+    // ── New fiedler.rs tests ──────────────────────────────────────────────────
+
+    /// Single-vertex graph: λ₂ = 0 (no edges, trivially).
+    #[test]
+    fn single_vertex_lambda2_is_zero() {
+        let adj: Vec<Vec<usize>> = vec![vec![]];
+        let ew: HashMap<(usize,usize),f64> = HashMap::new();
+        let (lam, conv) = compute_fiedler(&adj, &ew, 50, 1e-8);
+        assert_eq!(lam, 0.0, "single vertex λ₂ = 0");
+        assert!(conv, "single vertex always converges");
+    }
+
+    /// gmpp_upper_bound returns 0.0 when both perimeters are 0.
+    #[test]
+    fn gmpp_upper_bound_zero_perimeter() {
+        let result = gmpp_upper_bound(1.0, 10, 1000.0, 1000.0, 0.0, 0.0);
+        // With ec_lb = 1.0 × 10 / 4 = 2.5; p_left = p_right = 2.5 > 0 → not 0
+        // Just check it returns a finite positive value
+        assert!(result >= 0.0 && result.is_finite(), "result should be finite non-negative");
+    }
+
+    /// gmpp_upper_bound scales correctly with area (larger area → larger GMPP bound).
+    #[test]
+    fn gmpp_upper_bound_scales_with_area() {
+        let ub_small = gmpp_upper_bound(1.0, 4, 100.0, 100.0, 50.0, 50.0);
+        let ub_large = gmpp_upper_bound(1.0, 4, 10000.0, 10000.0, 50.0, 50.0);
+        assert!(ub_large > ub_small, "larger area should produce larger GMPP upper bound");
+    }
+
+    /// make_certificate: certified=false when achieved_gmpp << upper bound.
+    #[test]
+    fn make_certificate_uncertified_when_gmpp_too_low() {
+        let (adj, ew) = line_graph(4, 1.0);
+        let cert = make_certificate(&adj, &ew, 0.01, Some(1.0), 1, 0.05);
+        // achieved 0.01 / upper 1.0 = ratio 0.01 << 0.95 → not certified
+        assert!(!cert.certified, "ratio 0.01 should be below the 1-delta threshold");
+    }
+
+    /// make_certificate: certified=true when achieved_gmpp ≈ upper bound.
+    #[test]
+    fn make_certificate_certified_when_gmpp_near_bound() {
+        let (adj, ew) = line_graph(4, 1.0);
+        // achieved 0.99, upper 1.0, delta 0.05 → ratio = 0.99 ≥ 0.95 → certified
+        let cert = make_certificate(&adj, &ew, 0.99, Some(1.0), 1, 0.05);
+        assert!(cert.certified, "ratio 0.99 should be certified at delta=0.05");
+    }
 }

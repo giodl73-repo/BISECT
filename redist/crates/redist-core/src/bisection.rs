@@ -312,4 +312,64 @@ mod tests {
         assert_eq!(max_depth_for_k(236), 8);  // TX senate via house nesting
         assert_eq!(max_depth_for_k(435), 9);  // congressional
     }
+
+    // ── New bisection.rs tests ────────────────────────────────────────────────
+
+    /// k=1: no bisection needed → max_depth = 0.
+    #[test]
+    fn max_depth_for_k_1_is_0() {
+        assert_eq!(max_depth_for_k(1), 0);
+    }
+
+    /// k=2: single bisection → max_depth = 1.
+    #[test]
+    fn max_depth_for_k_2_is_1() {
+        assert_eq!(max_depth_for_k(2), 1);
+    }
+
+    /// k=4 = 2²: depth 2.
+    #[test]
+    fn max_depth_for_k_4_is_2() {
+        assert_eq!(max_depth_for_k(4), 2);
+    }
+
+    /// k=8 = 2³: depth 3.
+    #[test]
+    fn max_depth_for_k_8_is_3() {
+        assert_eq!(max_depth_for_k(8), 3);
+    }
+
+    /// ufactor_for_depth: deeper levels get a more permissive (larger) ufactor.
+    #[test]
+    fn ufactor_for_depth_increases_with_depth() {
+        let base = 5u32;
+        let u1 = ufactor_for_depth(1, base);
+        let u2 = ufactor_for_depth(2, base);
+        let u3 = ufactor_for_depth(3, base);
+        let u4 = ufactor_for_depth(4, base);
+        assert!(u1 <= u2, "depth 1 ufactor should be ≤ depth 2");
+        assert!(u2 <= u3, "depth 2 ufactor should be ≤ depth 3");
+        assert!(u3 <= u4, "depth 3 ufactor should be ≤ depth 4");
+    }
+
+    /// ufactor_for_depth: base_ufactor=0 gives exactly 1.0 at all depths.
+    #[test]
+    fn ufactor_for_depth_zero_base_gives_one() {
+        for depth in 0..6 {
+            let u = ufactor_for_depth(depth, 0);
+            assert!(
+                (u - 1.0).abs() < 1e-12,
+                "base=0 should give ufactor=1.0 at depth {depth}, got {u}"
+            );
+        }
+    }
+
+    /// BisectionTree nodes_at_depth(0) for k=4 contains one root node.
+    #[test]
+    fn nodes_at_depth_zero_is_root() {
+        let tree = BisectionTree::from_k(4);
+        let d0 = tree.nodes_at_depth(0);
+        assert_eq!(d0.len(), 1, "k=4: only one root node at depth 0");
+        assert_eq!(d0[0].k, 4, "root node should have k=4");
+    }
 }

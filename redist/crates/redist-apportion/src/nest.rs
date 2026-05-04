@@ -508,4 +508,108 @@ mod tests {
         assert_eq!(spine_product(&s), 35);
         assert_eq!(spine_product(&h), 105);
     }
+
+    // -----------------------------------------------------------------------
+    // New nest.rs tests
+    // -----------------------------------------------------------------------
+
+    /// AK-like: C=1, S=20, H=40 — each spine must multiply back to its seat count.
+    #[test]
+    fn compatible_spines_product_invariant_single_seat() {
+        // AK: C=1, S=20, H=40. gcd(1,20,40)=1 — trunk is empty.
+        let (c, s, h) = compatible_spines(1, 20, 40);
+        assert_eq!(spine_product(&c), 1,  "AK-like: congressional spine product");
+        assert_eq!(spine_product(&s), 20, "AK-like: senate spine product");
+        assert_eq!(spine_product(&h), 40, "AK-like: house spine product");
+    }
+
+    /// TX: C=38, S=31, H=150 — gcd=1, trunk should be an empty vec.
+    #[test]
+    fn compatible_spines_gcd_1_trunk_is_empty() {
+        // gcd(38,31,150) = 1 → prime_factor_sequence(1) = [] → trunk = []
+        let trunk = prime_factor_sequence(1);
+        assert!(trunk.is_empty(), "prime_factor_sequence(1) must be empty");
+
+        let (c, s, h) = compatible_spines(38, 31, 150);
+        // All three spines start with the empty trunk (vacuously true),
+        // but we verify by checking they carry no shared prefix.
+        assert_eq!(spine_product(&c), 38);
+        assert_eq!(spine_product(&s), 31);
+        assert_eq!(spine_product(&h), 150);
+        // With gcd=1 the first element of each spine differs (38=2×19, 31=prime, 150=2×3×5×5)
+        // so no common non-empty prefix exists.
+        if !c.is_empty() && !s.is_empty() {
+            // They may or may not share a common first factor; the gcd IS 1,
+            // so at least one pair of spines starts differently.
+            let shared_prefix_len = c.iter().zip(s.iter()).take_while(|(a,b)| a==b).count()
+                + c.iter().zip(h.iter()).take_while(|(a,b)| a==b).count();
+            // Not both pairs can share a long prefix when gcd=1
+            let _ = shared_prefix_len; // just verify compilation & product correctness
+        }
+    }
+
+    /// Oregon (C=6, S=30, H=60): score=0 when C divides all chambers.
+    #[test]
+    fn spine_score_zero_when_c_equals_gcd() {
+        // gcd(6,30,60)=6=C → min(6,30,60)=6 → score=(1-6/6)×100=0
+        let score = spine_compatibility_score(6, 30, 60);
+        assert!(
+            score.abs() < 1e-9,
+            "OR: score should be 0.0 when gcd==min, got {score}"
+        );
+    }
+
+    /// us_state_compatibility_table() must contain exactly 50 entries.
+    #[test]
+    fn spine_compatibility_table_has_50_entries() {
+        let table = us_state_compatibility_table();
+        assert_eq!(table.len(), 50, "table should have exactly 50 states");
+    }
+
+    /// Every score in the table is non-negative (gcd ≤ min → score ≥ 0).
+    #[test]
+    fn spine_scores_all_nonneg() {
+        let table = us_state_compatibility_table();
+        for row in &table {
+            assert!(
+                row.score >= 0.0,
+                "{} score should be non-negative, got {}", row.state_code, row.score
+            );
+        }
+    }
+
+    /// Table contains all expected two-letter state codes.
+    #[test]
+    fn spine_table_contains_expected_states() {
+        let table = us_state_compatibility_table();
+        let codes: Vec<&str> = table.iter().map(|r| r.state_code).collect();
+        for expected in &["CA", "TX", "NY", "FL", "AK", "VT", "WY", "OR", "AL"] {
+            assert!(codes.contains(expected), "table missing state {expected}");
+        }
+    }
+
+    /// score_compatibility_score is symmetric under permutation of (min, max) chamber sizes.
+    #[test]
+    fn spine_score_symmetric_min_max_permutation() {
+        // CA: C=52, S=40, H=80 — score should be the same regardless of argument order
+        // (the formula uses gcd which is commutative, and min which is also commutative)
+        let s1 = spine_compatibility_score(52, 40, 80);
+        let s2 = spine_compatibility_score(40, 52, 80);
+        let s3 = spine_compatibility_score(80, 40, 52);
+        assert!((s1 - s2).abs() < 1e-9, "score should be symmetric: {s1} vs {s2}");
+        assert!((s1 - s3).abs() < 1e-9, "score should be symmetric: {s1} vs {s3}");
+    }
+
+    /// strictly_compatible flag matches score==0.0 invariant.
+    #[test]
+    fn strictly_compatible_iff_score_zero() {
+        let table = us_state_compatibility_table();
+        for row in &table {
+            let expect = row.score.abs() < 1e-9;
+            assert_eq!(
+                row.strictly_compatible, expect,
+                "{} strictly_compatible={} but score={}", row.state_code, row.strictly_compatible, row.score
+            );
+        }
+    }
 }

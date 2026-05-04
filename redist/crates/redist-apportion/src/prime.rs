@@ -319,4 +319,101 @@ mod tests {
             assert!(!seq.is_empty() || n == 1);
         }
     }
+
+    // -----------------------------------------------------------------------
+    // New prime.rs tests
+    // -----------------------------------------------------------------------
+
+    /// SplitStep::parts() returns correct count for both variants.
+    #[test]
+    fn split_step_parts_both_variants() {
+        let u = SplitStep::Uniform { parts: 5, sub_k: 3 };
+        assert_eq!(u.parts(), 5);
+        let b = SplitStep::Binary { k_left: 7, k_right: 8 };
+        assert_eq!(b.parts(), 2);
+    }
+
+    /// SplitStep::sub_k(i) returns correct value per index.
+    #[test]
+    fn split_step_sub_k_both_variants() {
+        let u = SplitStep::Uniform { parts: 4, sub_k: 13 };
+        assert_eq!(u.sub_k(0), 13);
+        assert_eq!(u.sub_k(3), 13); // all slots the same
+
+        let b = SplitStep::Binary { k_left: 6, k_right: 7 };
+        assert_eq!(b.sub_k(0), 6);
+        assert_eq!(b.sub_k(1), 7);
+    }
+
+    /// SplitStep::fraction() sums to 1.0 over all sub-regions.
+    #[test]
+    fn split_step_fraction_sums_to_one() {
+        // Uniform k=12=4×3 → parts=3, sub_k=4 (largest prime first)
+        let step = split_prescription(12);
+        let total_k = 12u32;
+        let frac_sum: f32 = (0..step.parts() as usize)
+            .map(|i| step.fraction(i, total_k))
+            .sum();
+        assert!((frac_sum - 1.0).abs() < 1e-5, "fractions should sum to 1.0, got {frac_sum}");
+    }
+
+    /// first_divergence_level for same n returns len+1 (all-common prefix).
+    #[test]
+    fn first_divergence_same_n() {
+        // n=8=[2,2,2], n+1=9=[3,3]: first diverges at level 1 (no common prefix)
+        let fdl = first_divergence_level(8, 9);
+        assert_eq!(fdl, 1, "8=[2,2,2] and 9=[3,3] diverge at level 1");
+
+        // n=4=[2,2], n+1=5=[5]: diverge at level 1
+        let fdl2 = first_divergence_level(4, 5);
+        assert_eq!(fdl2, 1);
+    }
+
+    /// first_divergence_level for n=7→8 — shares no prefix.
+    #[test]
+    fn first_divergence_level_seven_to_eight() {
+        // 7=[7], 8=[2,2,2]: no common prefix → divergence at level 1
+        let fdl = first_divergence_level(7, 8);
+        assert_eq!(fdl, 1);
+    }
+
+    /// is_prime rejects 0 and 1, accepts 2.
+    #[test]
+    fn is_prime_edge_cases() {
+        assert!(!is_prime(0));
+        assert!(!is_prime(1));
+        assert!(is_prime(2));
+        assert!(is_prime(3));
+        assert!(!is_prime(4));
+    }
+
+    /// pfr_tree_depth for k=1 returns 0.
+    #[test]
+    fn pfr_tree_depth_k1_is_zero() {
+        assert_eq!(pfr_tree_depth(1), 0);
+    }
+
+    /// split_prescription for k=2: direct Uniform{parts:2, sub_k:1}.
+    #[test]
+    fn split_prescription_k2_direct_cut() {
+        assert_eq!(split_prescription(2), SplitStep::Uniform { parts: 2, sub_k: 1 });
+    }
+
+    /// common_prefix_len for identical n: full length.
+    #[test]
+    fn common_prefix_same_n() {
+        // 8=[2,2,2] and 8=[2,2,2]: full prefix of length 3
+        assert_eq!(common_prefix_len(8, 8), 3);
+        // 12=[2,2,3] and 12=[2,2,3]: length 3
+        assert_eq!(common_prefix_len(12, 12), 3);
+    }
+
+    /// prime_factor_sequence product property holds for n=1 (empty product = 1).
+    #[test]
+    fn prime_factor_sequence_one_empty_product() {
+        let seq = prime_factor_sequence(1);
+        assert!(seq.is_empty(), "prime_factor_sequence(1) should be empty");
+        let product: u32 = seq.iter().product::<u32>().max(1);
+        assert_eq!(product, 1u32);
+    }
 }

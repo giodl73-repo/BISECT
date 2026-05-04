@@ -336,4 +336,95 @@ mod tests {
         // Vertex 1: neighbors 0 (200m→20000cm), 2 (default 1m→100cm), 3 (default 1m→100cm)
         assert_eq!(lines[2], "200 1 20000 3 100 4 100");
     }
+
+    // ── New metis_format.rs tests ─────────────────────────────────────────────
+
+    /// Empty graph (0 vertices) must return EmptyGraph error.
+    #[test]
+    fn write_graph_empty_produces_error() {
+        let result = write_metis_graph(&[], &[], None);
+        assert!(matches!(result, Err(MetisFormatError::EmptyGraph)));
+    }
+
+    /// parse_metis_partition rejects a non-integer line.
+    #[test]
+    fn parse_partition_rejects_non_integer_line() {
+        let content = "0\nabc\n1\n1\n";
+        let result = parse_metis_partition(content, 4);
+        assert!(
+            matches!(result, Err(MetisFormatError::InvalidPartitionLine(_, _))),
+            "expected InvalidPartitionLine, got {result:?}"
+        );
+    }
+
+    /// parse_metis_partition with empty input and n=0 returns empty vec.
+    #[test]
+    fn parse_partition_empty_input_returns_empty() {
+        let result = parse_metis_partition("", 0).unwrap();
+        assert!(result.is_empty(), "empty input with n=0 should give empty vec");
+    }
+
+    /// write_metis_graph_dual header contains " 2" (ncon=2) at end.
+    #[test]
+    fn write_metis_graph_dual_ncon2_header() {
+        let adj = vec![vec![1], vec![0]];
+        let pop  = vec![1000i64, 1200];
+        let area = vec![5000i64, 6000];
+        let content = write_metis_graph_dual(&adj, &pop, &area, None).unwrap();
+        let header = content.lines().next().unwrap();
+        assert!(header.ends_with(" 2"), "dual header should end with ncon=2, got {header:?}");
+    }
+
+    /// write_metis_graph_dual output has n+1 lines (header + n vertex lines).
+    #[test]
+    fn write_metis_graph_dual_vertex_count_matches() {
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let pop  = vec![1000i64, 1200, 900];
+        let area = vec![5000i64, 6000, 4500];
+        let content = write_metis_graph_dual(&adj, &pop, &area, None).unwrap();
+        let line_count = content.lines().count();
+        assert_eq!(line_count, 4, "header + 3 vertex lines = 4, got {line_count}");
+    }
+
+    /// write_metis_graph with a non-canonical edge key (u > v) returns NonCanonicalEdgeKey.
+    #[test]
+    fn write_metis_graph_noncanonical_edge_key_fails() {
+        let mut ew = HashMap::new();
+        ew.insert((2, 0), 150.0); // non-canonical: 2 > 0
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let vw  = vec![100i64, 200, 150];
+        let result = write_metis_graph(&adj, &vw, Some(&ew));
+        assert!(
+            matches!(result, Err(MetisFormatError::NonCanonicalEdgeKey(2, 0))),
+            "expected NonCanonicalEdgeKey(2,0), got {result:?}"
+        );
+    }
+
+    /// parse_metis_partition with fewer lines than n fails with PartitionLengthMismatch.
+    #[test]
+    fn parse_partition_fewer_lines_than_n_fails() {
+        let content = "0\n1\n"; // only 2 lines, but n=4
+        let result = parse_metis_partition(content, 4);
+        assert!(
+            matches!(result, Err(MetisFormatError::PartitionLengthMismatch(2, 4))),
+            "expected PartitionLengthMismatch(2,4), got {result:?}"
+        );
+    }
+
+    /// write_metis_graph_dual: empty graph returns EmptyGraph error.
+    #[test]
+    fn write_metis_graph_dual_empty_returns_error() {
+        let result = write_metis_graph_dual(&[], &[], &[], None);
+        assert!(matches!(result, Err(MetisFormatError::EmptyGraph)));
+    }
+
+    /// write_metis_graph_dual: pop/area weight length mismatch returns WeightLengthMismatch.
+    #[test]
+    fn write_metis_graph_dual_weight_mismatch() {
+        let adj = vec![vec![1], vec![0]];
+        let pop  = vec![1000i64]; // only 1 weight for 2 vertices
+        let area = vec![5000i64, 6000];
+        let result = write_metis_graph_dual(&adj, &pop, &area, None);
+        assert!(matches!(result, Err(MetisFormatError::WeightLengthMismatch(1, 2))));
+    }
 }

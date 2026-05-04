@@ -343,4 +343,100 @@ mod tests {
         assert_eq!(g.adjacency, g2.adjacency);
         assert_eq!(g.edge_weights.len(), g2.edge_weights.len());
     }
+
+    // ── New serialize.rs tests ────────────────────────────────────────────────
+
+    /// Serialized output starts with RADJ magic (4 bytes) and version 3.
+    #[test]
+    fn test_format_version_is_3() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
+        assert_eq!(version, 3, "format version should be 3 (v3 with geometry support)");
+    }
+
+    /// n_vertices header field matches actual graph size.
+    #[test]
+    fn test_n_vertices_header_field() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let n_vertices = u32::from_le_bytes(bytes[8..12].try_into().unwrap());
+        assert_eq!(n_vertices as usize, g.n_vertices);
+    }
+
+    /// Vertex weights survive roundtrip.
+    #[test]
+    fn test_vertex_weights_roundtrip() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        assert_eq!(g.vertex_weights, g2.vertex_weights);
+    }
+
+    /// n_edges header field matches actual edge count.
+    #[test]
+    fn test_n_edges_header_field() {
+        let g = make_graph();
+        let bytes = serialize_adjacency(&g);
+        let n_edges_hdr = u32::from_le_bytes(bytes[12..16].try_into().unwrap());
+        assert_eq!(n_edges_hdr as usize, g.n_edges);
+    }
+
+    /// Unsupported format version returns UnsupportedVersion error.
+    #[test]
+    fn test_unsupported_version_error() {
+        let g = make_graph();
+        let mut bytes = serialize_adjacency(&g);
+        // Overwrite version field (bytes 4..8) with version 99
+        let v: u32 = 99;
+        bytes[4..8].copy_from_slice(&v.to_le_bytes());
+        let result = deserialize_adjacency(&bytes);
+        assert!(
+            matches!(result, Err(SerializeError::UnsupportedVersion(99))),
+            "expected UnsupportedVersion(99), got {result:?}"
+        );
+    }
+
+    /// Roundtrip preserves edge weights with full float precision.
+    #[test]
+    fn test_edge_weight_float_precision_roundtrip() {
+        let mut edge_weights = HashMap::new();
+        let pi_weight = std::f64::consts::PI * 12345.0;
+        edge_weights.insert((0, 1), pi_weight);
+        let g = AdjacencyGraph {
+            adjacency: vec![vec![1], vec![0]],
+            vertex_weights: vec![100, 200],
+            edge_weights,
+            n_vertices: 2,
+            n_edges: 1,
+            vertex_areas: Vec::new(),
+            vertex_ext_perimeters: Vec::new(),
+        };
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        let recovered = g2.edge_weights[&(0, 1)];
+        assert!(
+            (recovered - pi_weight).abs() < 1e-10,
+            "edge weight precision lost: expected {pi_weight}, got {recovered}"
+        );
+    }
+
+    /// Single-vertex graph (no edges) roundtrips correctly.
+    #[test]
+    fn test_single_vertex_no_edges_roundtrip() {
+        let g = AdjacencyGraph {
+            adjacency: vec![vec![]],
+            vertex_weights: vec![42],
+            edge_weights: HashMap::new(),
+            n_vertices: 1,
+            n_edges: 0,
+            vertex_areas: Vec::new(),
+            vertex_ext_perimeters: Vec::new(),
+        };
+        let bytes = serialize_adjacency(&g);
+        let g2 = deserialize_adjacency(&bytes).unwrap();
+        assert_eq!(g2.n_vertices, 1);
+        assert_eq!(g2.n_edges, 0);
+        assert_eq!(g2.vertex_weights, vec![42]);
+    }
 }

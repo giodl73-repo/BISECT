@@ -280,4 +280,78 @@ mod tests {
         let edge_set: std::collections::HashSet<_> = edges.iter().collect();
         assert_eq!(edge_set.len(), edges.len(), "no duplicate bridge edges");
     }
+
+    // ── New bridge.rs tests ───────────────────────────────────────────────────
+
+    /// county_from_geoid for a 2-char string (state FIPS only) returns full string.
+    #[test]
+    fn test_county_from_geoid_very_short() {
+        assert_eq!(county_from_geoid("12"), "12");
+    }
+
+    /// UnionFind: self-find on a fresh node returns itself.
+    #[test]
+    fn test_union_find_self_find() {
+        let mut uf = UnionFind::new(3);
+        assert_eq!(uf.find(0), 0);
+        assert_eq!(uf.find(1), 1);
+        assert_eq!(uf.find(2), 2);
+    }
+
+    /// UnionFind: union is idempotent — unioning same pair twice leaves structure intact.
+    #[test]
+    fn test_union_find_idempotent() {
+        let mut uf = UnionFind::new(4);
+        uf.union(0, 1);
+        let r1 = uf.find(0);
+        uf.union(0, 1); // second union should be a no-op
+        assert_eq!(uf.find(0), r1, "second union should not change root");
+        assert_eq!(uf.find(0), uf.find(1));
+    }
+
+    /// find_components with all isolated nodes returns n components of size 1.
+    #[test]
+    fn test_find_components_all_isolated() {
+        let adj: Vec<Vec<usize>> = vec![vec![], vec![], vec![]];
+        let comps = find_components(&adj);
+        assert_eq!(comps.len(), 3, "3 isolated nodes → 3 components");
+        for c in &comps {
+            assert_eq!(c.len(), 1);
+        }
+    }
+
+    /// connect_island_components returns sorted edges (deterministic output).
+    #[test]
+    fn test_bridge_edges_sorted() {
+        // Main: 0-1-2. Islands: 3 and 4.
+        let adj = vec![vec![1], vec![0, 2], vec![1], vec![], vec![]];
+        let centroids = vec![
+            (0.0, 0.0), (1.0, 0.0), (2.0, 0.0),
+            (1.5, 10.0), // island near 2
+            (0.5, 10.0), // island near 0
+        ];
+        let geoids: Vec<String> = (0..5).map(|i| format!("5000100{:04}", i)).collect();
+        let edges = connect_island_components(&adj, &centroids, &geoids);
+        // Verify sorted order
+        let sorted = {
+            let mut s = edges.clone();
+            s.sort_unstable();
+            s
+        };
+        assert_eq!(edges, sorted, "bridge edges should be in sorted order");
+    }
+
+    /// dist2 between identical points is 0.
+    #[test]
+    fn test_dist2_zero() {
+        assert_eq!(dist2((3.0, 4.0), (3.0, 4.0)), 0.0);
+    }
+
+    /// dist2 computes correct Euclidean distance squared.
+    #[test]
+    fn test_dist2_basic() {
+        // 3-4-5 right triangle
+        let d = dist2((0.0, 0.0), (3.0, 4.0));
+        assert!((d - 25.0).abs() < 1e-10, "expected 25.0, got {d}");
+    }
 }
