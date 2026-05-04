@@ -101,6 +101,22 @@ We propose a two-tier statutory structure:
         standard for cross-chamber consistency.
 \end{enumerate}
 
+\paragraph{Judicial enforceability.}
+Judicial enforceability of a NestSection requirement raises two distinct
+questions.  First, who has standing to challenge a non-nested map?  The most
+natural plaintiffs are political subdivisions (counties, municipalities) whose
+territories span chamber boundaries inconsistently~--- they can argue that the
+inconsistent boundaries create administrative burdens that serve no compelling
+interest.  Second, what is the standard of review?  If NestSection is framed
+as a procedural rule (the map must be derived from a mathematical process),
+courts reviewing it apply rational-basis scrutiny, not strict scrutiny~--- the
+bar is low.  A statute stating ``state legislative districts shall be derived
+by refining the congressional factorization tree'' has a rational basis in
+administrative consistency and resistance to manipulation.  Courts striking
+down such a requirement would need to find it facially arbitrary, which the
+Bimodality Gap Theorem makes difficult: the compatible states are a
+mathematically defined class, not a politically selected one.
+
 \subsection{Limitations}
 
 \paragraph{Incompatible states.}
@@ -148,6 +164,29 @@ congressional seats at coarsened senate groups.  The Mode~2 approach is
 mathematically equivalent to Mode~1 when divisibility holds, but differs in
 the within-region recursion order when it does not.  We defer a full
 comparison to future work.
+
+\paragraph{Approximate compatibility: Arizona and Indiana as illustrative cases.}
+Two near-compatible states illustrate a continuum that the strict bimodality
+threshold ($\sigma = 0$ vs.\ $\sigma \geq 50\%$) obscures.  Arizona has
+$C = 9$, $S = 30$, $H = 60$, giving $\gcd(9, 30, 60) = 3$ and $\sigma = 67\%$.
+The spine trunk $[3]$ would create a three-way top-level geographic split
+shared across all chambers~--- a natural east/west/central Arizona division
+(roughly: Phoenix metro, Tucson corridor, and rural east).  Each side would
+hold 3 congressional, 10 senate, and 20 house districts.  This is a
+substantive, non-trivial compatible structure with real geographic content,
+even at $\sigma = 67\%$ (incompatible by strict definition).  It illustrates
+that the strict bimodality threshold hides a continuum of approximate
+compatibility that future work could formalise.
+
+Indiana has $C = 9$, $S = 50$, $H = 100$, giving $\gcd(9, 50, 100) = 1$ and
+$\sigma = 89\%$.  This is the hardest incompatible case: 9 congressional, 50
+senate, and 100 house districts share no common factor.  Any NestSection spine
+for Indiana would require either (a)~rounding congressional districts to 10
+(impossible by apportionment), or (b)~accepting that state legislative maps
+cannot be nested in the congressional structure.  Indiana represents the class
+of states where NestSection applies only to the state legislative chambers
+internally~--- senate nests into house: $\gcd(50, 100) = 50$, perfect
+compatibility~--- without congressional linkage.
 
 \subsection{Future Work}
 
