@@ -1,8 +1,8 @@
 paper: stabilitysection-cross-census-stability
 title: "StabilitySection: Cross-Census Stability of GeoSection-Optimal Redistricting Maps"
 venue: "Political Analysis / Annals of the American Association of Geographers"
-stage: revision
-round: 1
+stage: recheck
+round: 2
 content_mode: full
 reviewers:
   - jonathan-rodden
@@ -49,7 +49,44 @@ reviews:
       - "Cross-census stability does not rule out partisan determination if partisan/physical geography are correlated"
       - "Iowa result needs political geography explanation"
       - "No null hypothesis: what is the random stability rate?"
-avg_score: 2.8
+round2_reviews:
+  jonathan-rodden:
+    score: 3.5
+    recommendation: "Accept pending minor revision"
+    key_issues:
+      - "p*_2000 for Iowa still projected not computed — circular derivation from ratio geometry"
+      - "Iowa CSS prediction (0.95) inconsistent with observed Delta-f=0.31 instability"
+      - "Alabama borderline status (Delta-f=0.06) not discussed in legal section"
+  moon-duchin:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Abstract still overstates CSS computability — should say ratio-stability, not CSS"
+      - "Proxy Jaccard has no formal or empirical relationship established to actual Jaccard"
+      - "Threshold sensitivity reveals 5-state sensitive band (0.02-0.05) not characterised"
+  percy-liang:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Wilson CI [0.48, 0.82] for 20/30 still not reported — central statistical gap"
+      - "30-state selection criterion still unexplained vs 47 states with complete 2000 data"
+      - "Lorenz proxy not validated against observed Delta-f outcomes"
+  nadia-polikarpova:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Proposition 1 still unproved; C_pop still not defined as computable quantity"
+      - "Continuous s_ratio not provided; binary discontinuity acknowledged but not resolved"
+      - "p*_2000 Iowa projection is circular (derived from ratio geometry, not Lorenz curve)"
+  justin-grimmer:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Type I/Type II decomposition still not executed for any unstable state"
+      - "Null hypothesis (random stability rate ~20%) still absent"
+      - "Iowa row in Table 3 shows Same stability — inconsistent with case study finding of 1:3 in 2000"
+      - "Cross-tabulation of unstable states by seat-count-change status not reported"
+avg_score: 3.1
 history:
   - stage: draft
     date: "2026-05-03"
@@ -59,5 +96,10 @@ history:
     date: "2026-05-02"
     avg_score: 2.8
     note: "Round 1 panel reviews. 5 reviewers: Rodden 3, Duchin 3, Liang 2, Polikarpova 3, Grimmer 3. Avg 2.8/4. P1 consensus: (1) s_seat uncomputable without 2000/2010 election data — CSS formula overstates what data supports; (2) 5% threshold unjustified, no sensitivity analysis; (3) Iowa instability unexplained mechanistically; (4) legal theory is novel, not established doctrine. Percy Liang outlier at 2/4: sample size and threshold concerns."
+  - stage: recheck
+    round: 2
+    date: "2026-05-02"
+    avg_score: 3.1
+    note: "Round 2 panel reviews. 5 reviewers: Rodden 3.5, Duchin 3.0, Liang 3.0, Polikarpova 3.0, Grimmer 3.0. Avg 3.1/4. R2 consensus: Iowa Hypothesis A/B case study and threshold sensitivity (15/20/23/26) are genuine improvements. s_seat clarification (MT/TX/NY as structurally changed, not unstable) resolves definitional inconsistency. Jaccard Hungarian algorithm pseudocode resolves Polikarpova's injectivity concern. Remaining gaps: (1) p*_2000 for Iowa still projected not computed; (2) Wilson CI on 20/30 still missing (Liang); (3) Proposition 1 still unproved, C_pop undefined; (4) Type I/Type II decomposition not executed; (5) null hypothesis absent. Rodden moves to 3.5 — would accept pending p* computation. Others maintain 3.0."
 series: B
 series_number: 15
