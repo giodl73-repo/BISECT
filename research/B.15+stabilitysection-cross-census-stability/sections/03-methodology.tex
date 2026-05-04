@@ -220,3 +220,24 @@ States that both changed seat count and changed natural ratio are assigned
 $s_{\text{ratio}} = 0$ only if the normalised ratio change exceeds the
 seat-change threshold; if the ratio shifted predictably with the new seat
 count, partial credit is given.
+
+\paragraph{Seat-count-changing states and $s_{\text{seat}}$.}
+For states where the congressional seat count changed between census years
+(e.g., Montana gained a seat from 1 to 2 between the 2010 and 2020
+apportionments; Texas gained 8 seats from 2000 to 2020; New York lost 3
+seats over the same period), $s_{\text{seat}}$ is set to $0$ by definition
+in the binary formulation, since the delegation structure changed and a direct
+seat-count comparison is not meaningful.
+These states are separately categorised as \textbf{structurally changed} rather
+than ``unstable'' in the stability classification.
+The distinction matters for the legal argument: a structurally changed state
+has undergone an apportionment-driven modification that no redistricting
+algorithm could have avoided; the map necessarily looks different in the
+census year with more (or fewer) seats.
+An ``unstable'' state in our framework is one where the seat count is fixed
+but the algorithm selects a different first-level split---a genuine change in
+the geographic partition.
+For structurally changed states, the normalised seat-share comparison
+($|\text{dem\_seats}_y/k_y - \text{dem\_seats}_{y'}/k_{y'}| \leq 1/k_{\max}$)
+replaces the binary seat-count comparison to provide a proportional stability
+score that is comparable across delegation sizes.
