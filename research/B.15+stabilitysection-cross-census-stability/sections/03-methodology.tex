@@ -1,0 +1,222 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{The StabilitySection Framework}
+
+StabilitySection is not a new redistricting algorithm.
+It is an analysis framework that runs GeoSection once per census year for
+each state and compares outputs along four dimensions:
+natural ratio, bisection tree structure, district assignments, and partisan seats.
+
+\begin{algorithm}
+\caption{StabilitySection}
+\label{alg:stabilitysection}
+\begin{algorithmic}[1]
+\Require State $s$, census years $Y \subseteq \{2000, 2010, 2020\}$,
+         seat count function $k(\cdot)$, seed count $N$
+\Ensure StabilityReport for state $s$
+\For{$y \in Y$}
+  \State $G_y \gets \textsc{LoadGraph}(s, y)$ \Comment{tract adjacency graph}
+  \State $\mathcal{M}_y \gets \textsc{GeoSection}(G_y, k(s, y), N)$
+  \State $r_y \gets \mathcal{M}_y.\texttt{level1\_ratio}$
+  \State $T_y \gets \mathcal{M}_y.\texttt{bisection\_tree}$
+  \State $A_y \gets \mathcal{M}_y.\texttt{tract\_assignments}$
+  \State $p^*_y \gets \mathcal{M}_y.\texttt{lorenz\_pstar}$
+  \State $\text{seats}_y \gets \textsc{PartisanEval}(A_y)$
+\EndFor
+\State \Return $\textsc{ComputeCSS}(\{r_y\}, \{T_y\}, \{A_y\}, \{p^*_y\}, \{\text{seats}_y\})$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{The Census Stability Score}
+\label{sec:css-definition}
+
+\begin{definition}[Census Stability Score]
+For a state $s$ with GeoSection outputs across years $Y$, the
+Census Stability Score is:
+\[
+  \mathrm{CSS}(s) = 0.5 \cdot s_{\text{seat}}(s)
+                  + 0.3 \cdot s_{\text{ratio}}(s)
+                  + 0.2 \cdot s_{\text{gap}}(s),
+\]
+where each component is a normalised stability score in $[0,1]$.
+\end{definition}
+
+The weights reflect the legal importance ordering.
+Partisan seat counts ($0.5$ weight) are the primary legal question: does the
+algorithm produce the same D/R outcome regardless of which census year's data
+is used?
+Natural ratio stability ($0.3$ weight) measures geographic structure
+stability: does the algorithm identify the same first-level split?
+Gap magnitude similarity ($0.2$ weight) measures the consistency of the
+proportionality deficit, relevant for establishing that any gap is a durable
+geographic feature, not a census-specific artefact.
+
+\paragraph{Seat stability.}
+\begin{equation}
+  s_{\text{seat}}(s) = \mathbf{1}\bigl[\text{dem\_seats}_y = \text{dem\_seats}_{y'}
+                       \text{ for all } y, y' \in Y\bigr]
+\end{equation}
+A binary indicator: 1 if the Democratic seat count is identical across all
+census years, 0 if it differs by even one seat.
+For states where the seat count $k$ changes between censuses (e.g.\ TX grew from
+30 to 38), $s_{\text{seat}}$ is computed on the seat \emph{share}
+$\text{dem\_seats}/k$ rather than raw count, with a tolerance of $\pm 0.04$
+($\approx \pm0.5$ seats for $k=12$).
+
+\paragraph{Ratio stability.}
+\begin{equation}
+  s_{\text{ratio}}(s) = \mathbf{1}\bigl[r_y = r_{y'}
+                       \text{ for all } y, y' \in Y\bigr]
+\end{equation}
+A binary indicator: 1 if the GeoSection first-level natural ratio is identical
+across all census years.
+For states where $k$ changes, we compare the \emph{normalised ratio}
+$\min(r_y^L, r_y^R) / k_y$ rather than raw integers.
+
+\paragraph{Gap similarity.}
+\begin{equation}
+  s_{\text{gap}}(s) = 1 - \frac{\max_{y,y' \in Y}
+                         |\mathrm{gap}_{y} - \mathrm{gap}_{y'}|}{100}
+\end{equation}
+where $\mathrm{gap}_y$ is the proportionality gap in percentage points in year
+$y$.
+A gap that changes by 5\,pp between census years contributes
+$s_{\text{gap}} = 0.95$.
+A gap that changes by 20\,pp contributes $s_{\text{gap}} = 0.80$.
+
+\paragraph{CSS thresholds.}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+CSS range & Category & Legal interpretation \\
+\midrule
+$\geq 0.90$ & Highly stable & Strongest geographic determinism claim \\
+$0.70$--$0.90$ & Moderately stable & Seat-stable; some ratio or gap drift \\
+$0.50$--$0.70$ & Conditionally stable & Seat changes in some census years \\
+$< 0.50$ & Structurally volatile & Different outcomes across censuses \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{District Jaccard Similarity}
+\label{sec:jaccard}
+
+For states with identical $k$ across census years, we additionally compute
+the district assignment Jaccard similarity between years.
+This measures how much the actual tract-to-district assignments shift, even
+when the seat count and natural ratio remain the same.
+
+\begin{definition}[District Jaccard Similarity]
+Given tract assignments $A_y$ and $A_{y'}$ for two census years, with
+$k$ districts in both years:
+\[
+  J(A_y, A_{y'}) = \frac{\sum_{d=1}^{k} \text{pop}(d_y \cap d'_{\sigma(d)})}
+                        {\sum_{d=1}^{k} \text{pop}(d_y \cup d'_{\sigma(d)})},
+\]
+where $\sigma(d) = \arg\max_{d''} \text{pop}(d_y \cap d''_{y'})$ maps each
+year-$y$ district to the best-matching year-$y'$ district by population
+overlap.
+\end{definition}
+
+Note that Jaccard similarity requires a common unit of comparison.
+Census tracts are not spatially identical across years (Type II change).
+We address this by mapping 2000 and 2010 assignments to 2020 tracts via
+spatial intersection weighted by population, treating 2020 tracts as the
+reference geography.
+
+\subsection{Lorenz Drift as a Stability Proxy}
+\label{sec:lorenz}
+
+GeoSection's natural ratio is determined by the \emph{optimal point} $p^*$
+on the population-geography Lorenz curve: the point where the marginal
+reduction in normalised edge-cut from increasing the ratio is zero.
+A state's Lorenz curve encodes how clustered its population is relative to
+its geographic area.
+
+\begin{definition}[Lorenz Drift]
+For a state $s$ and census years $y, y'$:
+\[
+  \Delta p^*(s, y, y') = |p^*_y - p^*_{y'}|
+\]
+where $p^*_y$ is the population fraction corresponding to the winning ratio
+side at census year $y$.
+For a $1:k-1$ split in a $k$-district state, $p^* = 1/k$.
+For a $j:(k-j)$ split, $p^* = j/k$.
+\end{definition}
+
+\begin{proposition}[Lorenz Drift Predicts CSS]
+\label{prop:lorenz}
+For a state with isoperimetric gap $\Delta \mathrm{EC}_{\text{norm}} > \epsilon$
+between the winning and second-best ratio at year $y$, the ratio is stable
+at year $y'$ whenever:
+\[
+  \Delta p^*(s, y, y') < \frac{\epsilon}{2 \cdot C_{\text{pop}}},
+\]
+where $C_{\text{pop}}$ is the maximum rate of change of normalised edge-cut
+per unit of population fraction shift.
+\end{proposition}
+
+This proposition formalises the intuition that states with large isoperimetric
+gaps (clear winners) are more robust to population perturbation than states
+with narrow margins.
+We use $\Delta p^*$ as a computationally accessible proxy for CSS when
+full cross-census runs are unavailable: states where $p^*$ shifts by more
+than $0.05$ between available census years are flagged as potentially volatile.
+
+\subsection{Stability Decomposition: Type I vs.\ Type II Change}
+\label{sec:decomposition}
+
+To separate population-shift effects (Type I) from tract-redesign effects
+(Type II), we run a third experiment for a 10-state subset:
+
+\begin{enumerate}
+\item \textbf{Full cross-year stability}: GeoSection on the actual 2000 graph
+  with 2000 populations, compared to the actual 2020 graph with 2020
+  populations.
+  This is the standard CSS measurement.
+
+\item \textbf{Population-only perturbation}: GeoSection on the \emph{2020}
+  graph with 2000 populations (census population totals re-allocated to
+  2020 tracts by spatial intersection).
+  The graph topology is fixed; only the node weights change.
+  The CSS difference between (1) and (2) is the contribution of tract
+  boundary redesign.
+\end{enumerate}
+
+For most states, we expect the population-only perturbation to show higher
+stability than the full cross-year comparison, because fixing the graph
+topology removes the contribution of tract splits and merges.
+The decomposition is of independent scientific interest: states where
+tract-redesign contributes significantly to instability are states where
+the Census Bureau's geographic decisions (not just population growth) affect
+the algorithmic output.
+
+\subsection{CSS for Two Census Years}
+\label{sec:two-year-css}
+
+With complete 2020 data and partial 2000 data, we compute a two-census CSS:
+\[
+  \mathrm{CSS}_{2\text{yr}}(s) = 0.5 \cdot s_{\text{seat}}^{(2000,2020)}
+                                + 0.3 \cdot s_{\text{ratio}}^{(2000,2020)}
+                                + 0.2 \cdot s_{\text{gap}}^{(2000,2020)}.
+\]
+This covers a twenty-year span.
+The full three-census CSS will incorporate 2010 when that sweep completes:
+\[
+  \mathrm{CSS}_{3\text{yr}}(s) = 0.5 \cdot \bar{s}_{\text{seat}}
+                                + 0.3 \cdot \bar{s}_{\text{ratio}}
+                                + 0.2 \cdot \bar{s}_{\text{gap}},
+\]
+where each component is the average across all three pairwise year comparisons.
+
+\paragraph{Handling seat-count changes.}
+Fourteen states changed their congressional delegation size between 2000 and
+2020 (gained or lost seats due to apportionment).
+For these states, seat stability is measured on seat-share with tolerance
+$\pm 1/k_{\max}$, and ratio stability is measured on the normalised ratio
+as described above.
+States that both changed seat count and changed natural ratio are assigned
+$s_{\text{ratio}} = 0$ only if the normalised ratio change exceeds the
+seat-change threshold; if the ratio shifted predictably with the new seat
+count, partial credit is given.
