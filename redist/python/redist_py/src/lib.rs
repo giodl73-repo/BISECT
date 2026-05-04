@@ -289,7 +289,7 @@ fn adjacency_to_bin(
     n_vertices: usize,
     n_edges: usize,
 ) -> PyResult<pyo3::Py<pyo3::types::PyBytes>> {
-    let graph = AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices, n_edges };
+    let graph = AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices, n_edges, vertex_areas: vec![], vertex_ext_perimeters: vec![] };
     let bytes = serialize_adjacency(&graph);
     Ok(pyo3::types::PyBytes::new_bound(py, &bytes).unbind())
 }
