@@ -1070,6 +1070,70 @@ pub struct RunArgs {
 // `redist state` — single state (run_state_redistricting.py)
 // ---------------------------------------------------------------------------
 
+/// Layer 1 compositor: which tree structure to use for bisection.
+/// Overrides the structure implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum StructureMode {
+    /// Always ⌊k/2⌋:⌈k/2⌉ bisection (default for most modes)
+    #[value(name = "standard-bisect")]
+    StandardBisect,
+    /// N-way direct partition (METIS kway)
+    #[value(name = "nway")]
+    NWay,
+    /// Ratio-optimal scan: try all 1:k-1..k/2:k/2 ratios, pick min normalised EC (GeoSection)
+    #[value(name = "ratio-optimal")]
+    RatioOptimal,
+    /// Ratio-optimal + area balance constraint (AreaSection)
+    #[value(name = "ratio-optimal-area")]
+    RatioOptimalArea,
+    /// Ratio-optimal + VRA minority alignment score (VRASection)
+    #[value(name = "ratio-optimal-vra")]
+    RatioOptimalVra,
+    /// Prime-factorisation tree — ApportionRegions/Huntington-Hill extension (B.11)
+    #[value(name = "prime-factor")]
+    PrimeFactor,
+    /// Compact-by-Polsby-Popper greedy level selection (CompactBisect B.7)
+    #[value(name = "compact-polsby")]
+    CompactPolsby,
+}
+
+/// Layer 2 compositor: which edge/vertex weight signal to use.
+/// Overrides the weight implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum WeightMode {
+    /// No geographic weights — minimise cut edge count
+    #[value(name = "unweighted")]
+    Unweighted,
+    /// TIGER boundary lengths (default for most modes)
+    #[value(name = "geographic")]
+    Geographic,
+    /// Geographic + county-stickiness (requires --alpha-county > 0)
+    #[value(name = "county")]
+    County,
+    /// Geographic + minority-VAP alignment score (VRASection, requires minority data)
+    #[value(name = "vra-aligned")]
+    VraAligned,
+    /// Geographic + D_votes constraint (ProportionalSection, requires partisan-shares)
+    #[value(name = "proportional")]
+    Proportional,
+}
+
+/// Layer 3 compositor: how to search the seed space.
+/// Overrides the search strategy implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum SearchMode {
+    /// One content-derived seed (SHA-256). Deterministic. Use with ApportionRegions.
+    #[value(name = "single")]
+    Single,
+    /// Try --seeds N seeds, keep the minimum-EC result (default for most modes)
+    #[value(name = "multi")]
+    Multi,
+    /// Run until --convergence-threshold T consecutive non-improving seeds.
+    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    #[value(name = "convergence")]
+    Convergence,
+}
+
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct StateArgs {
@@ -1184,6 +1248,41 @@ pub struct StateArgs {
     /// alpha=1 doubles the cost of cross-county cuts; alpha=5 = strong preference.
     #[arg(long, default_value_t = 0.0)]
     pub alpha_county: f64,
+
+    // ── Compositor overrides (Layer 1/2/3 explicit flags) ─────────────────────
+    // These override the corresponding layer from --partition-mode when set.
+    // Allows mixing presets with individual layer customization.
+
+    /// COMPOSITOR Layer 1 — override the split structure independent of --partition-mode.
+    /// Possible values: standard-bisect, nway, ratio-optimal, ratio-optimal-area,
+    /// ratio-optimal-vra, prime-factor, compact-polsby.
+    /// Example: --partition-mode geosection --structure prime-factor
+    ///   runs ApportionRegions tree with GeoSection's other defaults.
+    #[arg(long)]
+    pub structure: Option<StructureMode>,
+
+    /// COMPOSITOR Layer 2 — override the edge/vertex weight signal.
+    /// Possible values: unweighted, geographic, county, vra-aligned, proportional.
+    /// Example: --partition-mode apportion-regions --weights county --alpha-county 3.0
+    #[arg(long)]
+    pub weights_override: Option<WeightMode>,
+
+    /// COMPOSITOR Layer 3 — override the seed search strategy.
+    /// Possible values: single, multi, convergence.
+    /// Use --seeds N with multi; --convergence-threshold T with convergence.
+    /// Example: --partition-mode geosection --search convergence --convergence-threshold 500
+    #[arg(long)]
+    pub search: Option<SearchMode>,
+
+    /// Seeds for --search multi (also used as threshold for --search convergence).
+    /// Overrides --geosection-seeds and --compact-seeds when --search is set.
+    #[arg(long)]
+    pub seeds: Option<usize>,
+
+    /// Convergence threshold for --search convergence (default: 500).
+    /// Stops when this many consecutive seeds produce no EC improvement.
+    #[arg(long, default_value_t = 500)]
+    pub convergence_threshold: u32,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 

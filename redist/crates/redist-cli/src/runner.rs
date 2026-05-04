@@ -231,7 +231,7 @@ impl AlgorithmConfig {
         };
         let pop_only = vec![VertexConstraintKind::Population];
         let pop_and_area = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
-        match &args.partition_mode {
+        let mut algo = match &args.partition_mode {
             PM::Unweighted => Self {
                 split: SplitStrategy::Bisect,
                 seeds: SeedCompositor::default(),
@@ -332,7 +332,52 @@ impl AlgorithmConfig {
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
+        };
+
+        // ── Apply compositor layer overrides ──────────────────────────────────
+        // Explicit --structure / --weights-override / --search flags override
+        // the corresponding layer set by the --partition-mode preset above.
+        use crate::args::{StructureMode as SM, WeightMode as WM, SearchMode as SeM};
+
+        // Layer 1: structure override
+        if let Some(structure) = args.structure {
+            let pop_only = vec![VertexConstraintKind::Population];
+            let pop_area  = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
+            let (new_split, new_vc) = match structure {
+                SM::StandardBisect   => (SplitStrategy::Bisect, pop_only),
+                SM::NWay             => (SplitStrategy::NWay, pop_only),
+                SM::RatioOptimal     => (SplitStrategy::GeoSection, pop_only),
+                SM::RatioOptimalArea => (SplitStrategy::AreaSection { area_swing: args.area_swing }, pop_area),
+                SM::RatioOptimalVra  => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
+                SM::PrimeFactor      => (SplitStrategy::ApportionRegions, pop_only),
+                SM::CompactPolsby    => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
+            };
+            algo.split = new_split;
+            algo.vertex_constraints = new_vc;
         }
+
+        // Layer 2: weight override
+        if let Some(weight) = args.weights_override {
+            algo.weights = match weight {
+                WM::Unweighted   => WeightSpec { geographic: false, alpha_county: 0.0, ..WeightSpec::default() },
+                WM::Geographic   => WeightSpec { geographic: true,  alpha_county: 0.0, ..WeightSpec::default() },
+                WM::County       => WeightSpec { geographic: true,  alpha_county: args.alpha_county.max(1.0), ..WeightSpec::default() },
+                WM::VraAligned   => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
+                WM::Proportional => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
+            };
+        }
+
+        // Layer 3: search strategy override
+        if let Some(search) = args.search {
+            let n = args.seeds.unwrap_or(args.geosection_seeds.max(args.compact_seeds).max(50));
+            algo.seeds = match search {
+                SeM::Single      => SeedCompositor::Single,
+                SeM::Multi       => SeedCompositor::Multi { seeds: n },
+                SeM::Convergence => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+            };
+        }
+
+        algo
     }
 
     /// Canonical defaults for each mode. Called by bulk commands that
