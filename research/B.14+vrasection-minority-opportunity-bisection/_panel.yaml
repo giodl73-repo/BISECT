@@ -1,14 +1,34 @@
 paper: vrasection-minority-opportunity-bisection
 title: "VRASection: Geographic Alignment Score for Minority Opportunity District Bisection"
 venue: "Penn Law Review / Election Law Journal"
-stage: draft
-round: 0
+stage: panel
+round: 1
 content_mode: full
 series: B
 series_number: 14
+scores:
+  round1:
+    moon-duchin: 3
+    richard-pildes: 3
+    george-karypis: 3
+    jonathan-rodden: 3
+    percy-liang: 2
+    average: 2.8
 history:
   - stage: draft
     date: "2026-05-02"
     note: "Paper drafted from plan.md and bisection_runner.rs implementation.
            6 sections. Alabama 2:5 vs 1:6 empirical result confirmed.
            Full 6-state comparison table pending pipeline run."
+  - stage: panel
+    round: 1
+    date: "2026-05-02"
+    note: "Round 1 reviews complete. Average 2.8/4. Consensus: strong algorithm design,
+           three critical P1 issues. (1) Shaw predominance argument substitutes
+           w_vra<0.5 inequality for actual doctrine — needs Cooper v. Harris and
+           counterfactual analysis. (2) No end-to-end MM district counts — Alabama
+           must show 2 Black-majority districts per Allen v. Milligan. (3) Alignment
+           score evaluated on compactness-optimal seed, not alignment-optimal (Karypis).
+           NC 7:7->1:13 shift needs political geography analysis (Rodden). Empirical
+           section needs statistical characterization of 3/6 ratio-change finding
+           and sensitivity analysis over w_vra (Liang). Target round 2 score: 3.2+."
