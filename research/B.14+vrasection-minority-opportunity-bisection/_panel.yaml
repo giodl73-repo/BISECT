@@ -2,7 +2,7 @@ paper: vrasection-minority-opportunity-bisection
 title: "VRASection: Geographic Alignment Score for Minority Opportunity District Bisection"
 venue: "Penn Law Review / Election Law Journal"
 stage: ready
-round: 2
+round: 3
 content_mode: full
 series: B
 series_number: 14
@@ -21,6 +21,13 @@ scores:
     jonathan-rodden: 3.5
     percy-liang: 3.0
     average: 3.4
+  round3:
+    moon-duchin: 3.5
+    richard-pildes: 3.5
+    george-karypis: 3.5
+    jonathan-rodden: 3.5
+    percy-liang: 3.5
+    average: 3.5
 history:
   - stage: draft
     date: "2026-05-02"
@@ -55,3 +62,12 @@ history:
            end-to-end MM counts + statistical characterization. Suitable for law review
            submission pending minor revisions; quantitative venue requires additional
            statistical work."
+  - stage: ready
+    round: 3
+    date: "2026-05-02"
+    note: "Round 3 reviews complete (Liang only). Average 3.5/4. A(winner) column in
+           Table 2 resolves no-change/change interpretation. Alabama CD-7/CD-2 MM count
+           analysis grounds ratio selection in MM district production. NC 31% Black VAP
+           note added. Seed count reconciled at 50. Liang upgrades to 3.5 — editorial
+           remaining issues only (§4.3 label, score gaps for NC/SC, bootstrapped CI for
+           quantitative venue). Paper ready for law review submission."
