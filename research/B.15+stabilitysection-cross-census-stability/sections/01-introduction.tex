@@ -1,0 +1,143 @@
+\section{Introduction}
+\label{sec:intro}
+
+GeoSection \citep{b8paper} introduced isoperimetrically-normalised ratio-optimal
+bisection for congressional redistricting, demonstrating that minimum-edge-cut
+recursive bisection with a $\sqrt{\min(i,k-i)}$ normalisation selects a
+\emph{natural ratio} for each state that reflects genuine geographic structure
+rather than computational artefact.
+B.7 \citep{b7paper} established that this natural ratio is \emph{seed-stable}
+within a single census year: running GeoSection with 1000 different random seeds
+produces the same natural ratio in $>95\,\%$ of runs for most states.
+
+This paper asks a deeper question: is the natural ratio \emph{census-stable}?
+
+\paragraph{The census-stability question.}
+Every ten years, the Census Bureau publishes new population data, tract boundary
+updates, and a new congressional apportionment.
+Redistricting commissions and courts must draw new district maps from scratch.
+The question for an algorithmic redistricting system is: if we run GeoSection on
+2000 Census data, then on 2010 data, then on 2020 data, do we get the same
+answer?
+
+If yes, the result is remarkable.
+The 2000 census measured one population distribution.
+The 2010 census measured a different distribution---ten years of births, deaths,
+migration, and urban development later.
+The 2020 census measured yet another.
+Despite these three independent snapshots of American demographic reality, the
+algorithm converges to the same geographic partition.
+That partition is not a product of any particular census cycle.
+It is the \emph{geographic structure of the state}.
+
+\paragraph{Why this matters legally.}
+The most powerful defence against a partisan gerrymandering claim is
+demonstrating that the challenged map was not drawn to achieve a particular
+partisan outcome.
+B.7's seed stability provides one dimension of this defence: the map is the
+same regardless of which random seed initialised the algorithm.
+Census stability provides a second, stronger dimension.
+
+Consider a state where GeoSection has produced the same 5\,D/9\,R seat
+distribution in 2000, 2010, and 2020.
+A challenger who claims the map was drawn to achieve Republican advantage faces
+a severe epistemic problem: the algorithm produced the same answer under three
+different population datasets spanning twenty years.
+The $-13$\,pp proportionality gap is not a product of 2020's specific partisan
+distribution.
+It was the result in 2000, when Republicans had a different geographic
+distribution.
+It was the result in 2010, after Obama-era demographic shifts.
+It was the result in 2020.
+The geographic sorting of Democratic voters into concentrated urban areas is
+the cause of the gap---and that sorting is stable across census cycles.
+
+In state-court litigation under post-\emph{Rucho} doctrine---where courts must
+find that a deviation from the natural map cannot be explained by
+geography---a census-stable GeoSection map carries the strongest possible
+geographic determinism claim:
+\emph{this partition has existed before living memory of the current partisan
+alignment}.
+
+\paragraph{The Census Stability Score.}
+We formalise this intuition as the \textbf{Census Stability Score} (CSS), a
+composite metric computed for each state by comparing GeoSection outputs across
+census years:
+\[
+  \mathrm{CSS}(\text{state}) = 0.5 \cdot s_{\text{seat}}
+                              + 0.3 \cdot s_{\text{ratio}}
+                              + 0.2 \cdot s_{\text{gap}},
+\]
+where $s_{\text{seat}}$ measures partisan-outcome stability,
+$s_{\text{ratio}}$ measures natural-ratio stability, and $s_{\text{gap}}$
+measures proportionality-gap-magnitude stability.
+A CSS of 1.0 means identical seat counts, identical natural ratios, and
+identical proportionality gaps across all census years.
+CSS $\geq 0.90$ is the threshold for ``highly stable'': the state's geographic
+structure is durably expressed by GeoSection across decades.
+
+\paragraph{Two sources of change.}
+A map may change between census years for two reasons.
+\emph{Type I}: population shifts within a fixed geographic topology.
+People move between tracts, altering population balance targets, but the
+underlying tract graph is unchanged.
+This is a smooth perturbation of the METIS input weights.
+\emph{Type II}: tract boundary redesign.
+The Census Bureau redraws some tract boundaries between decennial censuses,
+splitting or merging tracts.
+This changes the graph topology and can propagate to downstream district
+boundaries.
+StabilitySection separates these two effects, measuring each independently.
+
+\paragraph{Relationship to B.7 and B.8.}
+B.7 measures stability along the \emph{seed dimension}: fixed census year,
+varying initialisation.
+B.15 measures stability along the \emph{census dimension}: fixed algorithm,
+varying input data.
+Together they provide a 2D stability picture:
+$(s_\text{seed}, s_\text{census})$.
+States with high stability in both dimensions have the strongest geographic
+determinism claim.
+States with low stability in both dimensions require the most careful
+procedural justification for any particular map they produce.
+
+\paragraph{Our contributions.}
+\begin{enumerate}
+\item \textbf{The Census Stability Score (CSS)} (\S\ref{sec:methodology}):
+  a formally defined composite metric for cross-census algorithmic stability,
+  with sub-components measuring seat, ratio, and gap stability separately.
+
+\item \textbf{Lorenz drift as a predictive proxy} (\S\ref{sec:lorenz}):
+  the shift in the optimal ratio $p^*$ on the population-geography Lorenz
+  curve between census years predicts CSS; states where $p^*$ drifts
+  significantly are structurally volatile.
+
+\item \textbf{Two-source decomposition} (\S\ref{sec:decomposition}):
+  population-only perturbation stability vs.\ full cross-year stability,
+  isolating the contribution of tract-boundary redesign.
+
+\item \textbf{50-state 2020 GeoSection baseline} (\S\ref{sec:evaluation}):
+  complete natural ratio and proportionality results for 44 multi-district
+  states, providing the 2020 anchor for the cross-census comparison.
+
+\item \textbf{Legal and policy implications} (\S\ref{sec:legal}):
+  the CSS as a litigation tool and proposed ``Districting Integrity'' statute
+  design.
+\end{enumerate}
+
+\paragraph{Data status.}
+The 2020 GeoSection sweep (44 states, 50 seeds per ratio) is complete.
+The 2000 census sweep has completed 47 of 50 states.
+The 2010 census sweep is in progress.
+\textbf{[TBD: 2010 sweep pending]}: the three-census CSS computation awaits
+2010 completion.
+The two-census comparison (2000 vs.\ 2020) is reported in full.
+
+\paragraph{Paper organisation.}
+Section~\ref{sec:related} reviews related work.
+Section~\ref{sec:methodology} defines StabilitySection and the CSS formally.
+Section~\ref{sec:evaluation} presents the 2020 baseline and available
+cross-census comparison.
+Section~\ref{sec:discussion} discusses legal implications and predictive
+modelling.
+Section~\ref{sec:conclusion} concludes.

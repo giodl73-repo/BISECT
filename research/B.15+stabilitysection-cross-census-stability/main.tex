@@ -1,0 +1,77 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{array}
+
+\title{StabilitySection: Cross-Census Stability of\\
+       GeoSection-Optimal Redistricting Maps}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+A redistricting algorithm is \emph{census-stable} for a state if it produces
+the same natural partition---the same first-level split ratio, the same
+bisection tree structure, and the same partisan seat distribution---across
+multiple decennial census cycles.
+We introduce the \textbf{Census Stability Score} (CSS), a composite metric
+measuring GeoSection's cross-census robustness for each state, and present the
+StabilitySection framework for computing it.
+
+Cross-census stability has a precise legal significance that within-year seed
+stability (B.7) cannot provide.
+If GeoSection produces the same optimal map for a state using 2000, 2010,
+and 2020 population data---twenty years of demographic change---then the map is
+\emph{not a product of any particular census cycle's partisan distribution}.
+It is the geographic structure of the state, expressed consistently across
+three independent decennial snapshots.
+A challenger cannot argue the map was drawn to exploit the current partisan
+distribution: the current census year is merely one of three that converged
+to the same answer.
+
+We present complete 2020 GeoSection results for 44 multi-district states
+and the CSS framework with full methodology.
+For 2000 and 2010, the cross-year sweep is in progress; we report
+preliminary ratio-stability findings for the available subset of states and
+provide \textbf{[TBD: 2010 sweep pending]} placeholders for the
+three-census CSS.
+The 2000 vs.\ 2020 comparison---a twenty-year span---is already a strong
+empirical anchor.
+States expected to have CSS $\geq 0.90$: the Midwest row states (IA, KS, NE,
+MO, IN) and New England (ME, NH, VT).
+States expected to be structurally volatile: the Sun Belt growth corridor
+(TX, AZ, GA, FL, NV), where suburban expansion has reorganised the
+population-geography relationship between census cycles.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

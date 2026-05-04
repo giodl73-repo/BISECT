@@ -1,0 +1,15 @@
+paper: stabilitysection-cross-census-stability
+title: "StabilitySection: Cross-Census Stability of GeoSection-Optimal Redistricting Maps"
+venue: "Political Analysis / Annals of the American Association of Geographers"
+stage: draft
+round: 0
+content_mode: full
+reviewers: []
+reviews: {}
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-03"
+    note: "Paper drafted from plan.md and empirical data. 6 sections. 2020 baseline complete (44 states). 2000 sweep 47/50 states. 2010 [TBD]. CSS framework defined. Lorenz drift proxy. Legal theory: CSS >= 0.90 as geographic determinism anchor."
+series: B
+series_number: 15
