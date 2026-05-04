@@ -1,0 +1,42 @@
+title: "NestSection: Consistent Multi-Chamber Redistricting via Compatible Factorization Spines"
+series: B
+number: 13
+stage: draft
+type: algorithm-design
+authors:
+  - name: Gio Della-Libera
+    email: giodl@microsoft.com
+created: 2026-05-02
+updated: 2026-05-02
+status: draft
+venue_target: Harvard Journal on Legislation
+venue_backup: Election Law Journal
+venue_fallback: Computers, Environment and Urban Systems
+depends_on:
+  - B.8   # GeoSection — ratio-optimal bisection
+  - B.11  # ApportionRegions — factorization tree infrastructure
+companion:
+  - B.9   # AreaSection
+  - B.10  # SubdivisionSection
+  - B.14  # VRASection — VRA interaction
+keywords:
+  - redistricting
+  - multi-chamber consistency
+  - factorization spine
+  - gerrymandering
+  - hierarchical bisection
+  - apportionment
+  - compatible factorization
+implementation:
+  crate: redist-apportion
+  module: nest
+  functions:
+    - compatible_spines
+    - spine_compatibility_score
+    - us_state_compatibility_table
+empirical_status: theoretical  # awaiting pipeline run on census geography
+notes: >
+  50-state compatibility census complete (theoretical, from nest.rs data).
+  11 strictly compatible states (sigma=0), 39 structurally incompatible.
+  Case studies: OR (perfect), NC (Mode 3, sigma=85.7%), TX (fully incompatible, sigma=96.8%).
+  Empirical validation (running NestSection on actual census tracts) deferred.
