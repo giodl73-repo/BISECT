@@ -366,6 +366,88 @@ mod tests {
             d1.disconnected_tract_counties);
     }
 
+    // ── bfs_component_count edge cases ──────────────────────────────────────
+
+    #[test]
+    fn test_bfs_component_count_empty_set_returns_zero() {
+        let members: HashSet<usize> = HashSet::new();
+        let adj: Vec<Vec<usize>> = vec![];
+        let (count, components) = bfs_component_count(&members, &adj);
+        assert_eq!(count, 0);
+        assert!(components.is_empty());
+    }
+
+    #[test]
+    fn test_bfs_component_count_single_node() {
+        let members: HashSet<usize> = [5].iter().cloned().collect();
+        let adj = vec![vec![], vec![], vec![], vec![], vec![], vec![]]; // 6 nodes, no edges
+        let (count, comps) = bfs_component_count(&members, &adj);
+        assert_eq!(count, 1);
+        assert_eq!(comps[0].len(), 1);
+    }
+
+    #[test]
+    fn test_bfs_component_count_all_isolated() {
+        // Three nodes with no edges in common subset
+        let members: HashSet<usize> = [0, 2, 4].iter().cloned().collect();
+        let adj = vec![vec![], vec![], vec![], vec![], vec![]]; // no edges at all
+        let (count, _) = bfs_component_count(&members, &adj);
+        assert_eq!(count, 3, "three isolated nodes = 3 components");
+    }
+
+    #[test]
+    fn test_bfs_component_count_fully_connected_chain() {
+        // 5-node chain 0-1-2-3-4, all in subset → single component
+        let members: HashSet<usize> = [0, 1, 2, 3, 4].iter().cloned().collect();
+        let adj = vec![
+            vec![1],
+            vec![0, 2],
+            vec![1, 3],
+            vec![2, 4],
+            vec![3],
+        ];
+        let (count, _) = bfs_component_count(&members, &adj);
+        assert_eq!(count, 1);
+    }
+
+    // ── check_contiguity edge cases ─────────────────────────────────────────
+
+    #[test]
+    fn test_check_contiguity_empty_district_is_contiguous() {
+        // District 2 has no tracts → should be marked contiguous with tract_count=0
+        let adj = vec![vec![1usize], vec![0usize]];
+        let geoids: Vec<String> = vec!["t0".to_string(), "t1".to_string()];
+        let assignments: HashMap<String, usize> =
+            [("t0".to_string(), 1), ("t1".to_string(), 1)].into_iter().collect();
+        let result = check_contiguity(&assignments, &adj, &geoids, 2);
+        let d2 = result.districts.iter().find(|d| d.district == 2).unwrap();
+        assert!(d2.contiguous, "empty district must be treated as contiguous");
+        assert_eq!(d2.tract_count, 0);
+        assert_eq!(d2.component_count, 0);
+    }
+
+    #[test]
+    fn test_check_contiguity_three_components_reports_correct_count() {
+        // District 1 has 5 tracts in 3 separate components
+        let adj = vec![
+            vec![1], vec![0], // component A: 0-1
+            vec![3], vec![2], // component B: 2-3
+            vec![],           // component C: 4 isolated
+        ];
+        let geoids: Vec<String> = (0..5).map(|i| format!("t{i:011}")).collect();
+        let assignments: HashMap<String, usize> = geoids
+            .iter()
+            .cloned()
+            .zip(std::iter::repeat(1))
+            .collect();
+        let result = check_contiguity(&assignments, &adj, &geoids, 1);
+        let d1 = &result.districts[0];
+        assert!(!d1.contiguous);
+        assert_eq!(d1.component_count, 3);
+        // The primary component has size 2; the other two (size 2 + 1) are disconnected
+        assert!(!d1.disconnected_tracts.is_empty());
+    }
+
     #[test]
     fn test_nesting_violation_senate_contains_three_house_districts() {
         let house: HashMap<String, usize> = make_assignments(&[

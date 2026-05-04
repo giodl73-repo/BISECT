@@ -210,4 +210,124 @@ mod tests {
         assert_eq!(out[0], 1); // 0 m² → clamped to 1
         assert_eq!(out[1], 1); // 500 m² = 0 ha → clamped to 1
     }
+
+    // ── ComposedVertexWeighter additional cases ──────────────────────────────
+
+    #[test]
+    fn empty_composer_ncon_is_1() {
+        // Even with no steps, ncon() must return at least 1 (METIS requires ≥1 constraint)
+        let c = ComposedVertexWeighter::new();
+        assert_eq!(c.ncon(), 1);
+    }
+
+    #[test]
+    fn two_step_composer_is_not_default() {
+        let c = ComposedVertexWeighter::new()
+            .push(PopulationWeighter::from_graph(vec![100, 200]))
+            .push(AreaWeighter::from_tiger(vec![10_000.0, 20_000.0]));
+        assert!(!c.is_default(), "two-constraint composer must not be flagged as default");
+    }
+
+    #[test]
+    fn single_step_composer_is_default() {
+        let c = ComposedVertexWeighter::new()
+            .push(PopulationWeighter::from_graph(vec![100, 200]));
+        assert!(c.is_default(), "single-constraint composer must be flagged as default");
+    }
+
+    #[test]
+    fn interleaved_ncon_2_vertex_ordering() {
+        // Verify exact byte-layout: for ncon=2 the output must be
+        // [pop_v0, area_v0, pop_v1, area_v1] — METIS requires column-major interleave
+        let c = ComposedVertexWeighter::new()
+            .push(PopulationWeighter::from_graph(vec![500, 800]))
+            .push(AreaWeighter::from_tiger(vec![10_000.0, 30_000.0]));
+        let out = c.interleaved(2);
+        assert_eq!(out.len(), 4, "ncon=2 × n_vertices=2 = 4 elements");
+        assert_eq!(out[0], 500, "v0 population");
+        assert_eq!(out[1], 1,   "v0 area = 10000/10000 = 1 ha");
+        assert_eq!(out[2], 800, "v1 population");
+        assert_eq!(out[3], 3,   "v1 area = 30000/10000 = 3 ha");
+    }
+
+    // ── PopulationWeighter edge cases ────────────────────────────────────────
+
+    #[test]
+    fn population_weighter_empty_populations_returns_uniform() {
+        let pw = PopulationWeighter::from_graph(vec![]);
+        let out = pw.weights(3);
+        assert_eq!(out, vec![1, 1, 1], "empty populations must return uniform weight=1");
+    }
+
+    #[test]
+    fn population_weighter_single_vertex() {
+        let pw = PopulationWeighter::from_graph(vec![42000]);
+        let out = pw.weights(1);
+        assert_eq!(out, vec![42000]);
+    }
+
+    // ── AreaWeighter edge cases ──────────────────────────────────────────────
+
+    #[test]
+    fn area_weighter_empty_areas_returns_uniform() {
+        let aw = AreaWeighter::from_tiger(vec![]);
+        let out = aw.weights(4);
+        assert_eq!(out, vec![1, 1, 1, 1], "empty areas must return uniform weight=1");
+    }
+
+    #[test]
+    fn area_weighter_very_large_area_fits_in_i64() {
+        // Alaska's largest census tract ≈ 200 billion m² — must not overflow i64
+        let large = 2e11_f64; // 200,000,000,000 m² = 20,000,000 ha
+        let aw = AreaWeighter::from_tiger(vec![large]);
+        let out = aw.weights(1);
+        let expected = (large / 10_000.0) as i64;
+        assert_eq!(out[0], expected, "very large area must be representable as i64");
+        assert!(out[0] > 0, "large area must remain positive");
+    }
+
+    // ── build_vertex_weights function ────────────────────────────────────────
+
+    #[test]
+    fn build_vertex_weights_empty_constraints_defaults_to_population() {
+        let pops = vec![100i64, 200, 300];
+        let areas: Vec<f64> = vec![];
+        let c = build_vertex_weights(&[], &pops, &areas);
+        // Empty constraint list → fallback to population
+        assert_eq!(c.ncon(), 1);
+        let out = c.interleaved(3);
+        assert_eq!(out, vec![100, 200, 300]);
+    }
+
+    #[test]
+    fn build_vertex_weights_population_only() {
+        let pops = vec![10i64, 20, 30];
+        let c = build_vertex_weights(&[VertexConstraintKind::Population], &pops, &[]);
+        assert_eq!(c.ncon(), 1);
+        assert_eq!(c.interleaved(3), vec![10, 20, 30]);
+    }
+
+    #[test]
+    fn build_vertex_weights_area_only_ncon_1() {
+        let areas = vec![10_000.0f64, 20_000.0, 30_000.0];
+        let c = build_vertex_weights(&[VertexConstraintKind::Area], &[], &areas);
+        assert_eq!(c.ncon(), 1);
+        let out = c.interleaved(3);
+        assert_eq!(out, vec![1, 2, 3]); // 10k/20k/30k m² → 1/2/3 ha
+    }
+
+    #[test]
+    fn build_vertex_weights_population_and_area_ncon_2() {
+        let pops  = vec![100i64, 200];
+        let areas = vec![50_000.0f64, 100_000.0];
+        let c = build_vertex_weights(
+            &[VertexConstraintKind::Population, VertexConstraintKind::Area],
+            &pops,
+            &areas,
+        );
+        assert_eq!(c.ncon(), 2);
+        let out = c.interleaved(2);
+        // [pop_v0=100, area_v0=5ha, pop_v1=200, area_v1=10ha]
+        assert_eq!(out, vec![100, 5, 200, 10]);
+    }
 }

@@ -486,4 +486,149 @@ mod tests {
         assert!((out[&(1,2)] - 50.0).abs() < 1e-9,
             "cross-partisan edge should be 0.1×, got {}", out[&(1,2)]);
     }
+
+    // ── ComposedWeighter additional cases ───────────────────────────────────
+
+    #[test]
+    fn composed_weighter_is_empty_true_when_no_steps() {
+        assert!(ComposedWeighter::new().is_empty());
+    }
+
+    #[test]
+    fn composed_weighter_is_empty_false_after_push() {
+        let geo = GeographicWeighter::from_map(edge_map(&[]));
+        assert!(!ComposedWeighter::new().push(geo).is_empty());
+    }
+
+    #[test]
+    fn single_step_composer_matches_direct_apply() {
+        let geo_map = edge_map(&[((0, 1), 42.0), ((2, 3), 99.0)]);
+        let geo = GeographicWeighter::from_map(geo_map.clone());
+        let composed = ComposedWeighter::new().push(GeographicWeighter::from_map(geo_map));
+        let out = composed.apply();
+        assert_eq!(out[&(0, 1)], 42.0);
+        assert_eq!(out[&(2, 3)], 99.0);
+    }
+
+    #[test]
+    fn geographic_weighter_empty_input_empty_output() {
+        let geo = GeographicWeighter::from_map(EdgeMap::new());
+        let out = geo.apply(edge_map(&[((0, 1), 1.0)]));
+        assert!(out.is_empty(), "empty geo lengths must produce empty output");
+    }
+
+    // ── SubdivisionWeighter edge cases ──────────────────────────────────────
+
+    #[test]
+    fn subdivision_cross_county_no_bonus() {
+        let lengths = edge_map(&[((0, 1), 200.0)]);
+        let mut geoid_map = HashMap::new();
+        geoid_map.insert(0usize, "01001000100".to_string()); // county 01001
+        geoid_map.insert(1usize, "01003000100".to_string()); // county 01003
+        let sw = SubdivisionWeighter::county_only(&geoid_map, 2, 3.0);
+        let out = sw.apply(lengths);
+        assert!((out[&(0, 1)] - 200.0).abs() < 1e-9,
+            "cross-county edge must be unchanged, got {}", out[&(0, 1)]);
+    }
+
+    #[test]
+    fn subdivision_same_mcd_adds_mcd_bonus() {
+        let lengths = edge_map(&[((0, 1), 100.0)]);
+        let county = vec![Some("01001".to_string()), Some("01002".to_string())]; // different county
+        let mcd    = vec![Some("11111".to_string()), Some("11111".to_string())]; // same MCD
+        let place  = vec![None, None];
+        let vtd    = vec![None, None];
+        let sw = SubdivisionWeighter::full(county, mcd, place, vtd, 0.0, 2.0, 0.0, 0.0);
+        let out = sw.apply(lengths);
+        // only MCD bonus applies: 100 × (1 + 2) = 300
+        assert!((out[&(0, 1)] - 300.0).abs() < 1e-9,
+            "same-MCD bonus must be applied, got {}", out[&(0, 1)]);
+    }
+
+    #[test]
+    fn subdivision_same_vtd_adds_vtd_bonus() {
+        let lengths = edge_map(&[((0, 1), 50.0)]);
+        let county = vec![None, None];
+        let mcd    = vec![None, None];
+        let place  = vec![None, None];
+        let vtd    = vec![Some("VTD001".to_string()), Some("VTD001".to_string())];
+        let sw = SubdivisionWeighter::full(county, mcd, place, vtd, 0.0, 0.0, 0.0, 4.0);
+        let out = sw.apply(lengths);
+        // only VTD bonus: 50 × (1 + 4) = 250
+        assert!((out[&(0, 1)] - 250.0).abs() < 1e-9,
+            "same-VTD bonus must be applied, got {}", out[&(0, 1)]);
+    }
+
+    // ── MinorityAugmentWeighter edge cases ──────────────────────────────────
+
+    #[test]
+    fn minority_augment_both_below_threshold_boosts_2x() {
+        // Both low-minority (same side) → 2× boost
+        let lengths = edge_map(&[((0, 1), 100.0)]);
+        let mw = MinorityAugmentWeighter::new(vec![0.1, 0.2], 0.40);
+        let out = mw.apply(lengths);
+        assert!((out[&(0, 1)] - 200.0).abs() < 1e-9,
+            "both below threshold → same side → 2×, got {}", out[&(0, 1)]);
+    }
+
+    #[test]
+    fn minority_augment_exactly_at_threshold_is_high() {
+        // Exactly at threshold (0.40) counts as high-minority
+        let lengths = edge_map(&[((0, 1), 100.0)]);
+        let mw = MinorityAugmentWeighter::new(vec![0.40, 0.40], 0.40);
+        let out = mw.apply(lengths);
+        // both >= 0.40 → same side → 2×
+        assert!((out[&(0, 1)] - 200.0).abs() < 1e-9,
+            "exactly at threshold should be high-minority, got {}", out[&(0, 1)]);
+    }
+
+    // ── PartisanAugmentWeighter edge cases ──────────────────────────────────
+
+    #[test]
+    fn partisan_augment_both_neutral_leaves_unchanged() {
+        // Both vertices between rep_threshold and dem_threshold → neither strong
+        let lengths = edge_map(&[((0, 1), 300.0)]);
+        let pw = PartisanAugmentWeighter::new(vec![0.50, 0.50], 0.55, 0.45);
+        let out = pw.apply(lengths);
+        assert!((out[&(0, 1)] - 300.0).abs() < 1e-9,
+            "neutral-neutral edge must be unchanged, got {}", out[&(0, 1)]);
+    }
+
+    #[test]
+    fn partisan_augment_both_strong_rep_unchanged() {
+        let lengths = edge_map(&[((0, 1), 400.0)]);
+        let pw = PartisanAugmentWeighter::new(vec![0.1, 0.2], 0.55, 0.45);
+        let out = pw.apply(lengths);
+        // Both strong-R → same lean → factor 1.0
+        assert!((out[&(0, 1)] - 400.0).abs() < 1e-9,
+            "same-lean (both strong-R) should be unchanged, got {}", out[&(0, 1)]);
+    }
+
+    // ── Multiple-step compose ordering ──────────────────────────────────────
+
+    #[test]
+    fn composed_three_steps_apply_in_order() {
+        // Geo sets base to 100. SubdivisionWeighter with same county multiplies by (1+2)=300.
+        // A second SubdivisionWeighter with same MCD multiplies by (1+1)=600.
+        let geo_map = edge_map(&[((0, 1), 100.0)]);
+        let mut geoid_map = HashMap::new();
+        geoid_map.insert(0usize, "01001000100".to_string());
+        geoid_map.insert(1usize, "01001000200".to_string()); // same county
+
+        let county  = vec![Some("01001".to_string()), Some("01001".to_string())];
+        let mcd_v   = vec![Some("AAA".to_string()), Some("AAA".to_string())];
+        let place_v = vec![None, None];
+        let vtd_v   = vec![None, None];
+
+        let sw1 = SubdivisionWeighter::county_only(&geoid_map, 2, 2.0); // county bonus only
+        let sw2 = SubdivisionWeighter::full(county, mcd_v, place_v, vtd_v, 0.0, 1.0, 0.0, 0.0); // MCD bonus only
+
+        let composed = ComposedWeighter::new()
+            .push(GeographicWeighter::from_map(geo_map))
+            .push(sw1)  // 100 × (1+2) = 300
+            .push(sw2); // 300 × (1+1) = 600
+        let out = composed.apply();
+        assert!((out[&(0, 1)] - 600.0).abs() < 1e-9,
+            "three-step compose should give 600, got {}", out[&(0, 1)]);
+    }
 }

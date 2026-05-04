@@ -431,4 +431,83 @@ mod tests {
         let split = &result.split_list[0];
         assert_eq!(split.county_name.as_deref(), Some("Orleans Parish"));
     }
+
+    // ── analyze_county_splits edge cases ────────────────────────────────────
+
+    #[test]
+    fn test_county_split_empty_assignments_returns_zero() {
+        let result = analyze_county_splits(&HashMap::new(), None);
+        assert_eq!(result.total, 0);
+        assert_eq!(result.split, 0);
+        assert!((result.preservation_score - 1.0).abs() < 1e-9,
+            "empty plan must have preservation_score=1.0");
+    }
+
+    #[test]
+    fn test_county_split_multiple_counties_all_preserved() {
+        // Three different counties, each in their own single district → no splits
+        let assignments = make_assignments(&[
+            ("53033000001", 1), // King County
+            ("53035000001", 2), // Kitsap County
+            ("53053000001", 3), // Pierce County
+        ]);
+        let result = analyze_county_splits(&assignments, None);
+        assert_eq!(result.split, 0);
+        assert_eq!(result.total, 3);
+        assert!((result.preservation_score - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_county_split_tract_count_reported() {
+        // King County has 3 tracts but is split
+        let assignments = make_assignments(&[
+            ("53033000001", 1),
+            ("53033000002", 1),
+            ("53033000003", 2),
+        ]);
+        let result = analyze_county_splits(&assignments, None);
+        assert_eq!(result.split, 1);
+        assert_eq!(result.split_list[0].tract_count, 3);
+    }
+
+    #[test]
+    fn test_county_fips_from_geoid_short_geoid_returns_as_is() {
+        // GEOID shorter than 5 chars returns itself unchanged
+        assert_eq!(county_fips_from_geoid("530"), "530");
+    }
+
+    #[test]
+    fn test_municipal_split_no_split_when_place_in_single_district() {
+        let assignments = make_assignments(&[
+            ("53033005000", 3),
+            ("53033005100", 3),
+        ]);
+        let mut place_to_tracts = HashMap::new();
+        place_to_tracts.insert(
+            "5363000".to_string(),
+            vec!["53033005000".to_string(), "53033005100".to_string()],
+        );
+        let place_names = HashMap::new();
+        let result = analyze_municipal_splits(&assignments, &place_to_tracts, &place_names);
+        assert!(result.available);
+        assert_eq!(result.split, 0);
+        assert!((result.preservation_score - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_municipal_split_unknown_place_uses_fips_as_name() {
+        // Place FIPS not in place_names → name falls back to FIPS
+        let assignments = make_assignments(&[
+            ("53033005000", 1),
+            ("53033005100", 2),
+        ]);
+        let mut place_to_tracts = HashMap::new();
+        place_to_tracts.insert(
+            "9999999".to_string(),
+            vec!["53033005000".to_string(), "53033005100".to_string()],
+        );
+        let result = analyze_municipal_splits(&assignments, &place_to_tracts, &HashMap::new());
+        assert_eq!(result.split, 1);
+        assert_eq!(result.split_list[0].place_name, "9999999");
+    }
 }

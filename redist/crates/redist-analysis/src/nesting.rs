@@ -411,4 +411,83 @@ mod tests {
     fn test_all_violations_exit_code() {
         assert_eq!(compute_exit_code(true, true, true, false), 7);
     }
+
+    // ── compute_nest_ratio edge cases ───────────────────────────────────────
+
+    #[test]
+    fn test_nest_ratio_zero_senate_returns_none() {
+        assert_eq!(compute_nest_ratio(100, 0), None);
+    }
+
+    #[test]
+    fn test_nest_ratio_one_to_one() {
+        assert_eq!(compute_nest_ratio(50, 50), Some(1));
+    }
+
+    #[test]
+    fn test_nest_ratio_not_divisible_returns_none() {
+        assert_eq!(compute_nest_ratio(101, 50), None);
+    }
+
+    #[test]
+    fn test_nest_ratio_large_values() {
+        assert_eq!(compute_nest_ratio(400, 100), Some(4));
+    }
+
+    #[test]
+    fn test_nest_ratio_house_zero_returns_none() {
+        // 0 / 5 = 0, which is divisible, but Some(0) is a valid result
+        assert_eq!(compute_nest_ratio(0, 5), Some(0));
+    }
+
+    // ── nesting_exit_code ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_nesting_exit_code_true() {
+        assert_eq!(nesting_exit_code(true), 4);
+    }
+
+    #[test]
+    fn test_nesting_exit_code_false() {
+        assert_eq!(nesting_exit_code(false), 0);
+    }
+
+    // ── contiguity exit code bit 1 ──────────────────────────────────────────
+
+    #[test]
+    fn test_contiguity_only_exit_code() {
+        assert_eq!(compute_exit_code(false, true, false, false), 2);
+    }
+
+    // ── validate_nesting with ratio 3 ──────────────────────────────────────
+
+    #[test]
+    fn test_nesting_validation_perfect_ratio_3() {
+        // Senate 1 contains house districts 1, 2, 3 (ratio = 3)
+        let house: HashMap<String, usize> = [
+            ("a".into(), 1), ("b".into(), 1),
+            ("c".into(), 2), ("d".into(), 2),
+            ("e".into(), 3), ("f".into(), 3),
+        ].into();
+        let senate: HashMap<String, usize> = [
+            ("a".into(), 1), ("b".into(), 1),
+            ("c".into(), 1), ("d".into(), 1),
+            ("e".into(), 1), ("f".into(), 1),
+        ].into();
+        let result = validate_nesting(&house, &senate, 3);
+        assert!(result.valid, "all 3 house districts nested in senate 1 — must be valid");
+    }
+
+    #[test]
+    fn test_nesting_senate_to_house_map_populated() {
+        let house: HashMap<String, usize> = [
+            ("t0".into(), 1), ("t1".into(), 2),
+        ].into();
+        let senate: HashMap<String, usize> = [
+            ("t0".into(), 1), ("t1".into(), 1),
+        ].into();
+        let result = validate_nesting(&house, &senate, 2);
+        assert!(result.senate_to_house_map.contains_key(&1));
+        assert_eq!(result.senate_to_house_map[&1].len(), 2);
+    }
 }

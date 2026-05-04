@@ -408,4 +408,151 @@ mod tests {
         let result = compute_partisan_metrics(&districts, None, 100);
         assert_eq!(result.efficiency_gap.direction, "Republican");
     }
+
+    // ── compute_mean_median additional cases ────────────────────────────────
+
+    #[test]
+    fn test_mean_median_empty_returns_zero() {
+        assert_eq!(compute_mean_median(&[]), 0.0);
+    }
+
+    #[test]
+    fn test_mean_median_single_district_is_zero() {
+        // mean == median for a single value → always 0
+        let d = vec![make_district(1, 0.7, 0.3)];
+        assert!(compute_mean_median(&d).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_mean_median_positive_when_dem_skewed_high() {
+        // If a few districts have very high Dem % and most are moderate, mean > median
+        let districts: Vec<DistrictElection> = vec![
+            make_district(1, 0.95, 0.05),
+            make_district(2, 0.95, 0.05),
+            make_district(3, 0.51, 0.49),
+            make_district(4, 0.51, 0.49),
+            make_district(5, 0.51, 0.49),
+        ];
+        let mm = compute_mean_median(&districts);
+        assert!(mm > 0.0, "mean > median when high-D outliers present, got {mm}");
+    }
+
+    #[test]
+    fn test_mean_median_even_count_uses_midpoint() {
+        // Even count: median = average of two middle values
+        let districts: Vec<DistrictElection> = vec![
+            make_district(1, 0.40, 0.60),
+            make_district(2, 0.50, 0.50),
+            make_district(3, 0.60, 0.40),
+            make_district(4, 0.70, 0.30),
+        ];
+        let mm = compute_mean_median(&districts);
+        // mean = (0.4+0.5+0.6+0.7)/4 = 0.55, median = (0.5+0.6)/2 = 0.55 → MM = 0
+        assert!(mm.abs() < 1e-9, "symmetric 4-district plan should have MM=0, got {mm}");
+    }
+
+    // ── compute_partisan_bias additional cases ──────────────────────────────
+
+    #[test]
+    fn test_partisan_bias_empty_returns_zero() {
+        assert_eq!(compute_partisan_bias(&[]), 0.0);
+    }
+
+    #[test]
+    fn test_partisan_bias_rep_gerrymander_positive() {
+        // Packed-Dem plan = Republican gerrymander: swing at 50% gives Dems more seats
+        // than current → seats_at_50 > 0.5*n → pb = 0.5 - (>0.5) < 0? Let's verify
+        // the actual sign from the formula and document it correctly.
+        // packed_dem: 6 narrow Rep wins (0.49D), 4 blowout Dem wins (0.80D)
+        // statewide_dem = (6*490 + 4*800)/(10*1000) = (2940+3200)/10000 = 0.614
+        // swing = 0.5 - 0.614 = -0.114 (subtract from each share)
+        // adjusted shares: 0.49-0.114=0.376, 0.80-0.114=0.686
+        // seats at 50%: districts where adjusted >= 0.5 → only the 4 blowout Dem ones
+        // seats_at_50 = 4 → pb = 0.5 - 4/10 = 0.1 > 0
+        let districts = packed_dem_plan();
+        let pb = compute_partisan_bias(&districts);
+        assert!(pb > 0.0, "packed-Dem plan swing formula gives positive bias, got {pb}");
+    }
+
+    #[test]
+    fn test_partisan_bias_dem_gerrymander_negative() {
+        // Packed-Rep plan = Democratic gerrymander: swing analysis gives negative bias
+        // packed_rep: 6 narrow Dem wins (0.51D), 4 blowout Rep wins (0.20D)
+        // statewide_dem = (6*510 + 4*200)/(10*1000) = (3060+800)/10000 = 0.386
+        // swing = 0.5 - 0.386 = 0.114
+        // adjusted: 0.51+0.114=0.624, 0.20+0.114=0.314
+        // seats at 50%: only the 6 Dem-win districts → seats_at_50 = 6
+        // pb = 0.5 - 6/10 = -0.1 < 0
+        let districts = packed_rep_plan();
+        let pb = compute_partisan_bias(&districts);
+        assert!(pb < 0.0, "packed-Rep plan swing formula gives negative bias, got {pb}");
+    }
+
+    // ── compute_efficiency_gap additional cases ─────────────────────────────
+
+    #[test]
+    fn test_efficiency_gap_empty_returns_zero() {
+        assert_eq!(compute_efficiency_gap(&[]), 0.0);
+    }
+
+    #[test]
+    fn test_efficiency_gap_zero_vote_district() {
+        let d = DistrictElection { district: 1, dem_votes: 0.0, rep_votes: 0.0 };
+        let eg = compute_efficiency_gap(&[d]);
+        assert_eq!(eg, 0.0, "zero-vote district should give EG=0");
+    }
+
+    #[test]
+    fn test_efficiency_gap_symmetric_ten_exact_value() {
+        // 5 Dem wins at 60/40 and 5 Rep wins at 40/60 with 1000 votes each
+        // For a Dem-win district (60/40): wasted_D=100 (=600-500), wasted_R=400
+        // For a Rep-win district (40/60): wasted_D=400, wasted_R=100
+        // Sum: wasted_D=5*100+5*400=2500, wasted_R=5*400+5*100=2500 → EG=0
+        let districts = symmetric_plan_10();
+        let eg = compute_efficiency_gap(&districts);
+        assert!(eg.abs() < 1e-9, "symmetric plan EG must be 0, got {eg}");
+    }
+
+    // ── DistrictElection helpers ────────────────────────────────────────────
+
+    #[test]
+    fn test_district_dem_pct_zero_vote_returns_half() {
+        let d = DistrictElection { district: 1, dem_votes: 0.0, rep_votes: 0.0 };
+        assert!((d.dem_pct() - 0.5).abs() < 1e-9, "zero-vote district should return 0.5");
+    }
+
+    #[test]
+    fn test_district_margin_zero_vote_returns_zero() {
+        let d = DistrictElection { district: 1, dem_votes: 0.0, rep_votes: 0.0 };
+        assert_eq!(d.margin(), 0.0);
+    }
+
+    #[test]
+    fn test_district_margin_close_race() {
+        let d = DistrictElection { district: 1, dem_votes: 510.0, rep_votes: 490.0 };
+        let m = d.margin();
+        assert!((m - 0.02).abs() < 1e-9, "margin should be 20/1000 = 0.02, got {m}");
+    }
+
+    #[test]
+    fn test_district_dem_won_tie_returns_false() {
+        let d = DistrictElection { district: 1, dem_votes: 500.0, rep_votes: 500.0 };
+        assert!(!d.dem_won(), "exact tie → dem_won() must be false");
+    }
+
+    // ── statewide shares computed by compute_partisan_metrics ───────────────
+
+    #[test]
+    fn test_statewide_dem_vote_share_correct() {
+        let districts = uniform_plan(4, 0.60);
+        let result = compute_partisan_metrics(&districts, None, 100);
+        assert!((result.statewide_dem_vote_share - 0.60).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_statewide_dem_seat_share_all_dem_wins() {
+        let districts = uniform_plan(5, 0.60);
+        let result = compute_partisan_metrics(&districts, None, 100);
+        assert!((result.statewide_dem_seat_share - 1.0).abs() < 1e-9);
+    }
 }
