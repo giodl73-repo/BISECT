@@ -9,3 +9,5 @@ pub mod gain;
 pub mod boundary;
 pub mod fm;
 pub mod kway;
+pub mod lp;
+pub mod minconn;

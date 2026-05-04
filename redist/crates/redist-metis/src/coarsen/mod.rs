@@ -13,3 +13,4 @@ pub trait Coarsener: Send + Sync {
 pub mod hem;
 pub mod shem;
 pub mod mindegree;
+pub mod twohop;

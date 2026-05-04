@@ -219,3 +219,49 @@ fn grow_kway(g: &CsrGraph, k: u32, seed: u64) -> Partition {
     }
     Partition { assignment, k: k as u32, tpwgts: None }
 }
+
+/// Multilevel recursive bisection for k parts. Bisects into (k/2, k-k/2) halves
+/// and recurses on each subgraph. Mirrors METIS_PartGraphRecursive.
+pub struct RecursiveBisect {
+    pub niter:      u32,
+    pub ncuts:      u32,
+    pub coarsen_to: u32,
+    pub ufactor:    u32,
+    pub contig_fm:  bool,
+}
+
+impl Default for RecursiveBisect {
+    fn default() -> Self {
+        Self { niter: 10, ncuts: 1, coarsen_to: 20, ufactor: 5, contig_fm: true }
+    }
+}
+
+impl RecursiveBisect {
+    pub fn partition_graph(
+        &self, g: &CsrGraph, k: u32, seed: u64,
+    ) -> Result<crate::graph::Partition, crate::error::PartitionError> {
+        use crate::graph::{extract_subgraph, repair_contiguity, Partition};
+        use crate::api::{MetisParams, MetisPartitioner, Partitioner, ObjectiveType, CoarseningMethod};
+        if k == 0 { return Err(crate::error::PartitionError::ZeroParts); }
+        if k == 1 { return Ok(Partition { assignment: vec![0; g.n()], k: 1, tpwgts: None }); }
+        let params = MetisParams {
+            ufactor: self.ufactor, niter: self.niter, seed: Some(seed),
+            coarsen_to: self.coarsen_to, ncuts: self.ncuts, tpwgts: None,
+            contig_fm: self.contig_fm, use_recursive: false, objective: ObjectiveType::Cut,
+            min_conn: false, lp_refine: false, lp_iter: 0, coarsen_method: CoarseningMethod::Shem,
+        };
+        let bisection = MetisPartitioner::with_params(params, 2).split(g, 2, Some(seed))?;
+        if k == 2 { return Ok(bisection); }
+        let k_left = k / 2; let k_right = k - k_left;
+        let (left_g,  _, l2g_l) = extract_subgraph(g, &bisection.assignment, 0);
+        let (right_g, _, l2g_r) = extract_subgraph(g, &bisection.assignment, 1);
+        let left_p  = self.partition_graph(&left_g,  k_left,  seed.wrapping_add(0x9E3779B97F4A7C15))?;
+        let right_p = self.partition_graph(&right_g, k_right, seed.wrapping_add(0x6C62272E07BB0142))?;
+        let mut assignment = vec![0u32; g.n()];
+        for (lv, &gv) in l2g_l.iter().enumerate() { assignment[gv] = left_p.assignment[lv]; }
+        for (lv, &gv) in l2g_r.iter().enumerate() { assignment[gv] = right_p.assignment[lv] + k_left; }
+        let mut p = Partition { assignment, k, tpwgts: None };
+        repair_contiguity(g, &mut p);
+        Ok(p)
+    }
+}

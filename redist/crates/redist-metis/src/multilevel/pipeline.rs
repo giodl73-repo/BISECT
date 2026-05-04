@@ -109,7 +109,7 @@ mod tests {
         let coarsener = SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 2 };
         let hierarchy = CoarseningHierarchy::build(&g, &coarsener).unwrap();
         let init = GrowBisect;
-        let refiner = FiducciaMattheyses { niter: 10 };
+        let refiner = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
 
         let p = Pipeline::new(hierarchy)
             .initial_partition(&init, 2, 42)
@@ -129,7 +129,7 @@ mod tests {
         let coarsener = SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 4 };
         let hierarchy = CoarseningHierarchy::build(&g, &coarsener).unwrap();
         let init = GrowBisect;
-        let refiner = FiducciaMattheyses { niter: 10 };
+        let refiner = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
 
         let p = Pipeline::new(hierarchy)
             .initial_partition(&init, 4, 99)
@@ -152,7 +152,7 @@ mod tests {
         let hierarchy = CoarseningHierarchy::build(&g, &coarsener).unwrap();
         assert_eq!(hierarchy.depth(), 0, "should not have coarsened");
         let init = GrowBisect;
-        let refiner = FiducciaMattheyses { niter: 10 };
+        let refiner = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
 
         let p = Pipeline::new(hierarchy)
             .initial_partition(&init, 2, 0)

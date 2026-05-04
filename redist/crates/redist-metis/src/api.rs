@@ -22,21 +22,80 @@ pub trait Partitioner: Send + Sync {
         -> Result<Partition, PartitionError>;
 }
 
+/// Coarsening algorithm. Mirrors the METIS `-ctype` option.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum CoarseningMethod {
+    #[default]
+    Shem,      // Sorted Heavy-Edge Matching — O(n+m) bucket sort (default)
+    Hem,       // Heavy-Edge Matching — random visit order
+    MinDegree, // Minimum-degree matching
+    TwoHop,    // Two-hop matching for sparse/irregular graphs
+}
+
+/// Objective function for FM refinement. Mirrors METIS `-objtype`.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum ObjectiveType {
+    #[default]
+    Cut,    // minimise edge cut (default, METIS_OBJTYPE_CUT)
+    Volume, // minimise communication volume (METIS_OBJTYPE_VOL)
+}
+
+fn compute_cut(g: &CsrGraph, assignment: &[u32]) -> i64 {
+    let mut cut = 0i64;
+    for v in 0..g.n() {
+        for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+            let u = g.adjncy[j] as usize;
+            if assignment[v] != assignment[u] {
+                cut += g.adjwgt.as_ref().map_or(1i64, |aw| aw[j] as i64);
+            }
+        }
+    }
+    cut / 2
+}
+
 #[derive(Debug, Clone)]
 pub struct MetisParams {
     pub ufactor:    u32,
     pub niter:      u32,
     pub seed:       Option<u64>,
     pub coarsen_to: u32,
-    /// Target partition weights (one `f32` per part, summing to 1.0).
-    /// `None` = equal weight (each part gets `1/k` of total population).
-    /// Set by `split_weighted` from the caller's proportional `fracs` array.
+    /// Target partition weights for asymmetric splits (set by split_weighted).
     pub tpwgts:     Option<Vec<f32>>,
+    /// Number of independent partition trials; best cut is returned. Default: 1.
+    pub ncuts:      u32,
+    /// Skip FM moves that would disconnect the source part. Default: true.
+    pub contig_fm:  bool,
+    /// Use multilevel recursive bisection for k>2. Default: false.
+    pub use_recursive: bool,
+    /// Objective function (Cut or Volume). Default: Cut.
+    pub objective:  ObjectiveType,
+    /// Minimize subdomain connectivity after partitioning. Default: true.
+    pub min_conn:   bool,
+    /// Label-propagation balance pass before FM. Default: true.
+    pub lp_refine:  bool,
+    /// Max LP balance iterations. Default: 10.
+    pub lp_iter:    u32,
+    /// Coarsening algorithm. Default: Shem.
+    pub coarsen_method: CoarseningMethod,
 }
 
 impl Default for MetisParams {
     fn default() -> Self {
-        Self { ufactor: 5, niter: 10, seed: None, coarsen_to: 20, tpwgts: None }
+        Self {
+            ufactor:        5,
+            niter:          10,
+            seed:           None,
+            coarsen_to:     20,
+            tpwgts:         None,
+            ncuts:          1,
+            contig_fm:      true,
+            use_recursive:  false,
+            objective:      ObjectiveType::Cut,
+            min_conn:       true,
+            lp_refine:      true,
+            lp_iter:        10,
+            coarsen_method: CoarseningMethod::Shem,
+        }
     }
 }
 
@@ -62,7 +121,13 @@ impl MetisPartitioner {
                 k,
             },
             init:    GrowBisect,
-            refiner: FiducciaMattheyses { niter: params.niter },
+            refiner: FiducciaMattheyses {
+                niter:     params.niter,
+                contig_fm: params.contig_fm,
+                objective: params.objective,
+                lp_iter:   if params.lp_refine { params.lp_iter } else { 0 },
+                ..FiducciaMattheyses::default()
+            },
             params,
         }
     }
@@ -115,22 +180,59 @@ impl<C: Coarsener, I: InitialPartitioner, R: Refiner> Partitioner
             return Err(PartitionError::TooManyParts { k, n: g.n() });
         }
 
-        let rng_seed = self.params.seed.or(seed).unwrap_or(0xDEAD_BEEF_CAFE_1234u64);
+        let base_seed = self.params.seed.or(seed).unwrap_or(0xDEAD_BEEF_CAFE_1234u64);
 
-        let hierarchy = CoarseningHierarchy::build(g, &self.coarsener)?;
-        let mut p = Pipeline::new(hierarchy)
-            .initial_partition(&self.init, k, rng_seed)
-            .refine_and_project(&self.refiner)
-            .into_partition();
-
-        // Contiguity check: repair if needed (METIS Contig guarantee)
-        let reassigned = repair_contiguity(g, &mut p);
-        if reassigned > 0 {
-            // Only warn in debug builds; production runs are quiet
-            #[cfg(debug_assertions)]
-            eprintln!("[redist-metis] contiguity repair: reassigned {reassigned} vertices in partition k={k}");
+        // Recursive bisection path
+        if self.params.use_recursive && k > 2 {
+            use crate::init::grow::RecursiveBisect;
+            let rb = RecursiveBisect {
+                niter: self.params.niter, ncuts: self.params.ncuts,
+                coarsen_to: self.params.coarsen_to, ufactor: self.params.ufactor,
+                contig_fm: self.params.contig_fm,
+            };
+            let mut p = rb.partition_graph(g, k, base_seed)?;
+            repair_contiguity(g, &mut p);
+            if self.params.min_conn {
+                crate::refine::minconn::minimize_connectivity(g, &mut p, self.params.ufactor);
+                repair_contiguity(g, &mut p);
+            }
+            return Ok(p);
         }
 
+        // Alternate coarsener when coarsen_method != Shem
+        use crate::coarsen::{hem::HeavyEdgeMatchWithParams, mindegree::MinDegreeMatch,
+                              twohop::TwoHopMatchWithParams};
+        let alt_coarsener: Option<Box<dyn Coarsener>> = match self.params.coarsen_method {
+            CoarseningMethod::Shem      => None,
+            CoarseningMethod::Hem       => Some(Box::new(HeavyEdgeMatchWithParams { coarsen_to: self.params.coarsen_to, k })),
+            CoarseningMethod::MinDegree => Some(Box::new(MinDegreeMatch)),
+            CoarseningMethod::TwoHop    => Some(Box::new(TwoHopMatchWithParams { coarsen_to: self.params.coarsen_to, k })),
+        };
+
+        let ncuts = self.params.ncuts.max(1) as usize;
+        let mut best: Option<(Partition, i64)> = None;
+
+        for trial in 0..ncuts {
+            let trial_seed = base_seed.wrapping_add((trial as u64).wrapping_mul(0x9E3779B97F4A7C15));
+            let hierarchy = if let Some(ref ac) = alt_coarsener {
+                CoarseningHierarchy::build(g, ac.as_ref())?
+            } else {
+                CoarseningHierarchy::build(g, &self.coarsener)?
+            };
+            let p = Pipeline::new(hierarchy)
+                .initial_partition(&self.init, k, trial_seed)
+                .refine_and_project(&self.refiner)
+                .into_partition();
+            let cut = compute_cut(g, &p.assignment);
+            if best.as_ref().map_or(true, |&(_, bc)| cut < bc) { best = Some((p, cut)); }
+        }
+
+        let (mut p, _) = best.unwrap();
+        repair_contiguity(g, &mut p);
+        if self.params.min_conn {
+            crate::refine::minconn::minimize_connectivity(g, &mut p, self.params.ufactor);
+            repair_contiguity(g, &mut p);
+        }
         Ok(p)
     }
 
@@ -290,7 +392,7 @@ mod tests {
         let partitioner = RustMetisPartitioner {
             coarsener: SortedHeavyEdgeMatchWithParams { coarsen_to: 20, k: 2 },
             init:      GrowBisect,
-            refiner:   FiducciaMattheyses { niter: 10 },
+            refiner:   FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() },
             params:    MetisParams::default(),
         };
         let p = partitioner.split(&g, 2, Some(42)).unwrap();

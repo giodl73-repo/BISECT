@@ -16,7 +16,7 @@ serde_json.workspace  = true
 
 [features]
 shadow-metis = ["dep:metis"]
-default = ["shadow-metis"]   # keep C dep during validation phase
+default = []
 
 [dev-dependencies]
 # unit tests only — no extra deps needed

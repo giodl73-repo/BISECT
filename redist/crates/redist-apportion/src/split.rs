@@ -230,6 +230,7 @@ impl Partitioner for MetisPartitioner {
             seed,
             coarsen_to: 20,
             tpwgts:     None,
+            ..MetisParams::default()
         };
         let rust_part = RustMetisPartitioner::with_params(rust_params, k)
             .split(&g, k, seed)
@@ -284,6 +285,7 @@ impl Partitioner for MetisPartitioner {
             seed,
             coarsen_to: 20,
             tpwgts:     None,
+            ..MetisParams::default()
         };
         let rust_part = RustMetisPartitioner::with_params(rust_params, k)
             .split_weighted(&g, &fracs_u32, seed)
