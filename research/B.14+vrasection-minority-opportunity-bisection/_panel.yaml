@@ -1,0 +1,14 @@
+paper: vrasection-minority-opportunity-bisection
+title: "VRASection: Geographic Alignment Score for Minority Opportunity District Bisection"
+venue: "Penn Law Review / Election Law Journal"
+stage: draft
+round: 0
+content_mode: full
+series: B
+series_number: 14
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper drafted from plan.md and bisection_runner.rs implementation.
+           6 sections. Alabama 2:5 vs 1:6 empirical result confirmed.
+           Full 6-state comparison table pending pipeline run."

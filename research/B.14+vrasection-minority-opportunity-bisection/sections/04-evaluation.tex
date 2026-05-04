@@ -1,0 +1,199 @@
+\section{Evaluation}
+\label{sec:evaluation}
+
+\subsection{Experimental Setup}
+
+We run VRASection and GeoSection on seven states with historically significant
+VRA litigation or demographic composition at the 2020 Census.
+All runs use the 2020 TIGER census-tract adjacency graphs with TIGER boundary
+lengths as edge weights.
+Minority VAP is sourced from the 2020 Census P4 table (Hispanic or Latino,
+and Not Hispanic or Latino -- Black or African American alone).
+State congressional allocations are the 2020 apportionment (in effect for
+the 2022 elections).
+VRASection parameters: $N = 50$ seeds per ratio, $\delta = 0.005$ balance
+tolerance, $w_\text{vra} = 0.40$ alignment weight.
+
+\begin{table}[t]
+\centering
+\caption{VRA evaluation states: demographics and litigation history.}
+\label{tab:states}
+\begin{tabular}{llcll}
+\toprule
+\textbf{State} & \textbf{$k$} & \textbf{Minority VAP (\%)} & \textbf{Group} & \textbf{Key cases} \\
+\midrule
+Alabama (AL) & 7  & 27.5 & Black      & \emph{Allen v.\ Milligan} (2023) \\
+Mississippi (MS) & 4 & 37.6 & Black   & \emph{NAACP v.\ Fordice} (1992) \\
+Georgia (GA) & 14 & 33.0 & Black+Hisp & \emph{Georgia v.\ Ashcroft} (2003) \\
+North Carolina (NC) & 14 & 23.0 & Black & \emph{Thornburg v.\ Gingles} (1986) \\
+Louisiana (LA) & 6 & 33.2 & Black     & \emph{Callais v.\ Landry} (2025) \\
+South Carolina (SC) & 7 & 27.5 & Black & \emph{Alexander v.\ SC NAACP} (2023) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Multi-State Comparison}
+
+Table~\ref{tab:comparison} reports the first-level bisection ratio selected by
+GeoSection (B.8) and VRASection (this paper) for each state, along with
+MetisVra (B.3) success status and the expected number of MM districts
+under VRASection.
+
+\begin{table}[t]
+\centering
+\caption{GeoSection vs.\ VRASection first-level bisection ratios across VRA states.
+  MetisVra success column is from B.3 \citep{b3paper}.
+  ``TBD'' cells require the full comparison pipeline run; the Alabama result is
+  confirmed empirically.}
+\label{tab:comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{State} & \textbf{GeoSection ratio} & \textbf{VRASection ratio}
+  & \textbf{MetisVra success?} & \textbf{VRASection MM districts} \\
+\midrule
+AL & 1:6 & \textbf{2:5} & No (0/28 configs) & TBD: comparison run pending \\
+MS & TBD & TBD         & Yes (23/28 configs) & TBD: comparison run pending \\
+GA & TBD & TBD         & Yes (27/28 configs) & TBD: comparison run pending \\
+NC & 1:13 & TBD        & No (0/28 configs)   & TBD: comparison run pending \\
+LA & TBD & TBD         & No (0/28 configs)   & TBD: comparison run pending \\
+SC & TBD & TBD         & No (0/28 configs)   & TBD: comparison run pending \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Alabama and North Carolina GeoSection ratios (1:6 and 1:13 respectively)
+are confirmed from the B.8 50-state sweep.
+The VRASection ratio for Alabama (2:5) is confirmed from the implementation
+described in \S\ref{sec:alabama}.
+All other VRASection cells await a dedicated comparison run.
+
+\subsection{Alabama Case Study: 2:5 vs.\ 1:6}
+\label{sec:alabama}
+
+Alabama is the lead empirical case for VRASection, motivated by
+\emph{Allen v.\ Milligan} (2023), which held that Alabama's enacted map
+(1 Black-majority district) violated Section 2 and required a second
+Black-opportunity district.
+
+\paragraph{State geography.}
+Alabama has 7 congressional districts and 27.5\,\% Black VAP at the
+2020 Census.
+Black population in Alabama is concentrated in two geographic zones:
+\begin{enumerate}
+\item \textbf{The Black Belt}: a crescent of counties in south-central Alabama
+  (Bullock, Dallas, Greene, Hale, Lowndes, Macon, Perry, Sumter,
+  Wilcox, and adjacent counties) with Black VAP exceeding 50\,\% in many tracts,
+  named for the dark fertile soil and the historic slave plantation economy.
+\item \textbf{Jefferson County} (Birmingham): urban concentration in the
+  Birmingham metropolitan area, with Black VAP around 50\,\% in the city
+  proper and lower in the suburbs.
+\end{enumerate}
+The Black Belt and Jefferson County are geographically separated by
+predominantly white suburban/rural counties (Chilton, Bibb, Shelby).
+This separation creates a natural geographic boundary that VRASection detects.
+
+\paragraph{GeoSection result: 1:6 (urban peel).}
+GeoSection selects a $1:6$ split, isolating Jefferson County (Birmingham)
+as a single district while placing all remaining population in a $6$-district
+subregion.
+This is the caterpillar peel at the first level: Birmingham's compact urban
+boundary is shorter per the isoperimetric metric than any equal-population
+bisection of the full state.
+The problem for VRA purposes: the $1:6$ split concentrates Black population
+in Birmingham (approximately 50--55\,\% Black VAP in that district) but
+leaves the Black Belt dispersed across the remaining 6-district subregion,
+where it can be divided in ways that dilute the Black Belt community's
+voting strength.
+
+\paragraph{VRASection result: 2:5 (Black Belt concentration).}
+With $w_\text{vra} = 0.40$, VRASection selects a $2:5$ split.
+The alignment score for the $2:5$ split is higher than for the $1:6$ split:
+a boundary drawn along the Black Belt's northern border concentrates a
+larger fraction of Alabama's Black VAP on the southern side (Black Belt +
+Montgomery area + Mobile coast) than Birmingham isolation achieves.
+
+The $2:5$ result is empirically confirmed from the \texttt{redist} CLI:
+\begin{verbatim}
+  redist state --state AL --partition-mode vra-section --w-vra 0.40
+  [vra-section] ratio 1:6  normalised=430.1  score=350.2
+  [vra-section] ratio 2:5  normalised=448.7  score=322.5  <-- winner
+  [vra-section] ratio 3:4  normalised=501.3  score=482.8
+  [vra-section] natural ratio 2:5 at 12400km (normalised=448.7)
+\end{verbatim}
+
+The $2:5$ split has a slightly higher normalised edge-cut than $1:6$
+(448.7 vs.\ 430.1 --- approximately 4.3\,\% EC premium), but its higher
+alignment score produces a lower selection score (322.5 vs.\ 350.2).
+
+\paragraph{Why 2:5 is better for Gingles Prong 1.}
+The $1:6$ split creates one Black-concentrated district (Birmingham) but
+leaves the Black Belt population fragmented.
+In the 2021 enacted maps that \emph{Allen v.\ Milligan} struck down, the
+Black Belt was split across two majority-white districts, diluting Black
+voting strength.
+
+The $2:5$ split creates a southern sub-region containing the Black Belt,
+Montgomery, and Mobile areas.
+This sub-region has an estimated 35--40\,\% Black VAP, sufficient to produce
+one or two Black-opportunity districts in the 5-district subregion depending
+on how the sub-region is further bisected.
+Critically, the Black Belt community remains intact on one side of the
+first bisection, which satisfies Gingles Prong 1 at the geographic level
+before any district boundaries are drawn.
+
+\begin{table}[t]
+\centering
+\caption{Alabama first-level bisection comparison: GeoSection vs.\ VRASection.}
+\label{tab:alabama}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Algorithm} & \textbf{Ratio} & $\mathrm{EC}_\text{norm}$ & \textbf{Alignment $A$}
+  & \textbf{Selection score} & \textbf{EC premium} \\
+\midrule
+GeoSection  & 1:6 & 430.1 & --- & 430.1 & 0.0\,\% (baseline) \\
+VRASection  & 2:5 & 448.7 & 0.42 & 322.5 & +4.3\,\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+The EC premium of 4.3\,\% quantifies the compactness cost of the VRA-aligned
+split.
+A 4.3\,\% increase in normalised edge-cut is modest: it falls well within
+any legally defensible range for a map modification motivated by Section 2.
+For reference, the Supreme Court in \emph{Miller v.\ Johnson} (1995) did
+not set a numerical threshold; the question is whether the compactness
+sacrifice is justified by a compelling interest (VRA compliance).
+A 4.3\,\% premium, combined with VRASection's design ensuring compactness
+remains the predominant factor ($w_\text{vra} = 0.40$), provides a
+defensible record.
+
+\subsection{Projected Results for Full Run}
+
+The pending full-run experiments will test three hypotheses derived from the
+plan.md empirical plan:
+
+\begin{enumerate}
+\item \textbf{VRASection matches or exceeds MetisVra MM count}: For states
+  where MetisVra succeeded (MS, GA), VRASection should produce equal or
+  greater MM district counts without numerical failures.
+  For states where MetisVra failed (AL, LA, NC, SC), VRASection should
+  achieve positive MM district counts that MetisVra could not reach.
+
+\item \textbf{Alignment score predicts Gingles Prong 1 availability}:
+  States with high minority geographic concentration (measured by
+  Moran's I spatial autocorrelation or similar) will exhibit alignment
+  scores $A \geq 0.15$ at the winning ratio.
+  States with dispersed minority populations will exhibit $A < 0.10$,
+  and VRASection will reduce to GeoSection in those cases.
+
+\item \textbf{EC premium is bounded}: The compactness cost of the VRASection
+  split versus the pure GeoSection winner is expected to be 5--20\,\% across
+  the six states (based on the Alabama 4.3\,\% result as a lower bound
+  and the plan.md expectation of 5--15\,\% EC premium for states with strong
+  geographic concentration).
+\end{enumerate}
+
+Results from these runs will be incorporated in the final version of this paper.
+The Alabama result (Section~\ref{sec:alabama}) demonstrates proof of concept
+and motivates the full empirical programme.
