@@ -228,16 +228,17 @@ fn main() {
                     cfg.debug = args.debug;
                     cfg.reprocess = args.reprocess;
                     cfg.algo = AlgorithmConfig::defaults_for_mode(&args.partition_mode);
-                    // Override seeds_per_ratio from CLI if non-default
-                    use redist_cli::runner::SplitStrategy;
+                    // Override seeds from CLI if non-default
+                    use redist_cli::runner::{SplitStrategy, SeedCompositor};
                     match &mut cfg.algo.split {
-                        SplitStrategy::GeoSection { seeds_per_ratio } =>
-                            *seeds_per_ratio = args.geosection_seeds.max(1),
-                        SplitStrategy::AreaSection { seeds_per_ratio, area_swing } => {
-                            *seeds_per_ratio = args.geosection_seeds.max(1);
-                            *area_swing = args.area_swing;
+                        SplitStrategy::GeoSection | SplitStrategy::AreaSection { .. } => {
+                            cfg.algo.seeds = SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) };
                         }
                         _ => {}
+                    }
+                    // Override area_swing for AreaSection
+                    if let SplitStrategy::AreaSection { area_swing } = &mut cfg.algo.split {
+                        *area_swing = args.area_swing;
                     }
                     if let Some(tol) = args.balance_tolerance {
                         cfg.balance_tolerance = Some(tol / 100.0);

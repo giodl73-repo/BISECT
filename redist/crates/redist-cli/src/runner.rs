@@ -41,26 +41,67 @@ pub struct StateResult {
 /// Adding a new strategy requires only a new variant here and a new arm in the
 /// split dispatch inside `run_single_state`. It does NOT require touching
 /// `WeightSpec`, `MetisParams`, or `AlgorithmConfig`.
+
+/// How the seed space is searched at each evaluation point.
+///
+/// This is the third compositor layer (after structure and weights).
+/// Seed counts are no longer embedded in SplitStrategy variants — they live here.
+#[derive(Debug, Clone)]
+pub enum SeedCompositor {
+    /// Single content-derived seed. Deterministic, fast.
+    /// Used by ApportionRegions for the federal statute default.
+    Single,
+    /// Try N seeds at each evaluation point, keep the minimum-EC result.
+    /// Used by GeoSection, AreaSection, VRASection, CompactBisect.
+    Multi { seeds: usize },
+    /// Run seeds sequentially from the content-derived start until
+    /// `threshold` consecutive seeds produce no improvement in normalised EC.
+    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    ConvergenceSweep { threshold: u32 },
+}
+
+impl SeedCompositor {
+    /// Return the seed count for modes that use Multi. Panics if Single or Sweep.
+    pub fn seed_count(&self) -> usize {
+        match self {
+            Self::Multi { seeds } => *seeds,
+            Self::ConvergenceSweep { threshold } => *threshold as usize,
+            Self::Single => 1,
+        }
+    }
+
+    pub fn is_single(&self) -> bool { matches!(self, Self::Single) }
+}
+
+impl Default for SeedCompositor {
+    fn default() -> Self { Self::Multi { seeds: 50 } }
+}
+
+/// Layer 1 (structure): what tree of splits?
+///
+/// Seed counts removed — those belong to SeedCompositor.
+/// Algorithm-specific tuning parameters (epsilon, area_swing, w_vra, eta)
+/// remain here because they define the split criterion, not the search.
 #[derive(Debug, Clone)]
 pub enum SplitStrategy {
-    /// No edge weights — minimise cut edges by count only.
+    /// Standard bisection: always ⌊k/2⌋:⌈k/2⌉.
     Bisect,
     /// VRA-compliant n-way partitioning (minority opportunity districts).
     NWay,
     /// GeoSection (B.8): ratio-optimal direction-aware bisection.
-    GeoSection { seeds_per_ratio: usize },
+    /// Seeds controlled by SeedCompositor.
+    GeoSection,
     /// CompactBisect (B.7): greedy level-by-level geometric-mean PP selection.
-    CompactBisect { seeds_per_level: usize, epsilon: f64 },
+    CompactBisect { epsilon: f64 },
     /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
-    AreaSection { seeds_per_ratio: usize, area_swing: f64 },
+    AreaSection { area_swing: f64 },
     /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
-    ProportionalSection { seeds: usize, eta: f64 },
-    /// ApportionRegions (B.11): hierarchical k-way partition driven by the prime
-    /// factorization of the seat count (Huntington-Hill geographic completion).
-    ApportionRegions { seeds_per_level: usize },
+    ProportionalSection { eta: f64 },
+    /// ApportionRegions (B.11): prime-factorisation tree — Huntington-Hill geographic completion.
+    /// Default seed strategy: Single (content-derived). ConvergenceSweep for federal statute.
+    ApportionRegions,
     /// VRASection (B.14): GeoSection modified by geographic minority-VAP alignment score.
-    /// w_vra controls how much the alignment score shifts ratio selection (default 0.40).
-    VraSection { seeds_per_ratio: usize, w_vra: f64 },
+    VraSection { w_vra: f64 },
 }
 
 impl SplitStrategy {
@@ -69,12 +110,12 @@ impl SplitStrategy {
         match self {
             Self::Bisect                  => "edge-weighted",
             Self::NWay                    => "metis-vra",
-            Self::GeoSection       { .. } => "geosection",
+            Self::GeoSection              => "geosection",
             Self::CompactBisect    { .. } => "compact-bisect",
-            Self::AreaSection           { .. } => "areasection",
-            Self::ProportionalSection   { .. } => "proportional-section",
-            Self::ApportionRegions      { .. } => "apportion-regions",
-            Self::VraSection            { .. } => "vra-section",
+            Self::AreaSection      { .. } => "areasection",
+            Self::ProportionalSection { .. } => "proportional-section",
+            Self::ApportionRegions        => "apportion-regions",
+            Self::VraSection       { .. } => "vra-section",
         }
     }
 }
@@ -137,27 +178,28 @@ impl Default for MetisParams {
     fn default() -> Self { Self { ufactor: 5, niter: 100, seed: None } }
 }
 
-/// Composable algorithm configuration: split strategy + weight signals + METIS knobs.
+/// Three-layer algorithm compositor.
 ///
-/// - **Identity**: what plan is being drawn (state, name, districts, year, version, output location)
-/// - **Algorithm**: how the partitioning is performed (partition_mode, ufactor, niter, seed)
-/// Add a new edge weight signal → add a field to `WeightSpec`.
-/// Add a new split strategy → add a variant to `SplitStrategy`.
-/// Neither change requires touching `AlgorithmConfig` or the other structs.
+/// Layer 1 — `split`: structure (what tree of splits?)
+/// Layer 2 — `weights` + `vertex_constraints`: what costs (edge + vertex weights)
+/// Layer 3 — `seeds`: search strategy (single / multi / convergence-sweep)
 ///
-/// `mode_label`: optional override for manifest/logging mode name. Used only when two
-/// different CLI presets (e.g. partisan-weighted vs proportional) share the same struct
-/// layout but need to be distinguished in the output record.
+/// All three layers compose independently. Adding a new edge signal → WeightSpec.
+/// Adding a new split structure → SplitStrategy. Changing search strategy → SeedCompositor.
+/// None of these changes require touching the other two layers.
 #[derive(Debug, Clone)]
 pub struct AlgorithmConfig {
+    /// Layer 1: tree structure
     pub split: SplitStrategy,
+    /// Layer 2a: edge weight signals
     pub weights: WeightSpec,
-    /// Which vertex balance constraints METIS enforces (ncon = len).
-    /// Default: [Population] (ncon=1). Add Area for AreaSection (ncon=2).
-    /// Populated at config time; actual data loaded from graph in run_single_state.
+    /// Layer 2b: vertex balance constraints (ncon = len)
     pub vertex_constraints: Vec<VertexConstraintKind>,
+    /// Layer 3: seed search strategy
+    pub seeds: SeedCompositor,
+    /// METIS optimizer knobs (ufactor, niter, single-seed value)
     pub metis: MetisParams,
-    /// Optional manifest label override. When `Some`, `mode_name()` returns this value.
+    /// Optional manifest label override.
     pub mode_label: Option<&'static str>,
 }
 
@@ -192,6 +234,7 @@ impl AlgorithmConfig {
         match &args.partition_mode {
             PM::Unweighted => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec { geographic: false, alpha_county: args.alpha_county, ..WeightSpec::default() },
                 vertex_constraints: pop_only,
                 metis,
@@ -199,6 +242,7 @@ impl AlgorithmConfig {
             },
             PM::EdgeWeighted => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: base_weights,
                 vertex_constraints: pop_only,
                 metis,
@@ -206,6 +250,7 @@ impl AlgorithmConfig {
             },
             PM::MetisVra => Self {
                 split: SplitStrategy::NWay,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec { minority_weighting: true, alpha_county: args.alpha_county, ..WeightSpec::default() },
                 vertex_constraints: pop_only,
                 metis: MetisParams { seed: None, ..metis },
@@ -213,6 +258,7 @@ impl AlgorithmConfig {
             },
             PM::PartisanWeighted => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec {
                     partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
                     dem_threshold: args.dem_threshold,
@@ -226,6 +272,7 @@ impl AlgorithmConfig {
             },
             PM::Proportional => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec {
                     partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
                     dem_threshold: 0.55,
@@ -238,53 +285,48 @@ impl AlgorithmConfig {
                 mode_label: Some("proportional"),
             },
             PM::CompactBisect => Self {
-                split: SplitStrategy::CompactBisect {
-                    seeds_per_level: args.compact_seeds.max(1),
-                    epsilon: 0.05,
-                },
+                split: SplitStrategy::CompactBisect { epsilon: 0.05 },
+                seeds: SeedCompositor::Multi { seeds: args.compact_seeds.max(1) },
                 weights: base_weights,
                 vertex_constraints: pop_only,
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
             PM::GeoSection => Self {
-                split: SplitStrategy::GeoSection { seeds_per_ratio: args.geosection_seeds.max(1) },
+                split: SplitStrategy::GeoSection,
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
                 weights: WeightSpec { directional_lambda: 0.0, alpha_county: args.alpha_county, ..WeightSpec::default() },
                 vertex_constraints: pop_only,
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
             PM::AreaSection => Self {
-                split: SplitStrategy::AreaSection {
-                    seeds_per_ratio: args.geosection_seeds.max(1),
-                    area_swing: args.area_swing,
-                },
+                split: SplitStrategy::AreaSection { area_swing: args.area_swing },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
                 weights: base_weights,
                 vertex_constraints: pop_and_area,  // ncon=2: population + land area
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
             PM::ApportionRegions => Self {
-                split: SplitStrategy::ApportionRegions {
-                    seeds_per_level: args.compact_seeds.max(1),
-                },
+                split: SplitStrategy::ApportionRegions,
+                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
                 weights: base_weights,
                 vertex_constraints: pop_only,
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
             PM::ProportionalSection => Self {
-                split: SplitStrategy::ProportionalSection { seeds: args.geosection_seeds.max(1), eta: args.eta },
+                split: SplitStrategy::ProportionalSection { eta: args.eta },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
                 weights: base_weights,
                 vertex_constraints: vec![VertexConstraintKind::Population],
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
             PM::VraSection => Self {
-                split: SplitStrategy::VraSection {
-                    seeds_per_ratio: args.geosection_seeds.max(1),
-                    w_vra: args.w_vra,
-                },
+                split: SplitStrategy::VraSection { w_vra: args.w_vra },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
                 weights: WeightSpec { alpha_county: args.alpha_county, ..WeightSpec::default() },
                 vertex_constraints: vec![VertexConstraintKind::Population],
                 metis: MetisParams { seed: None, ..metis },
@@ -304,6 +346,7 @@ impl AlgorithmConfig {
         match mode {
             PM::Unweighted => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec { geographic: false, ..WeightSpec::default() },
                 vertex_constraints: pop,
                 metis,
@@ -312,6 +355,7 @@ impl AlgorithmConfig {
             PM::EdgeWeighted => Self::default(),
             PM::MetisVra => Self {
                 split: SplitStrategy::NWay,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
                 vertex_constraints: pop,
                 metis,
@@ -319,6 +363,7 @@ impl AlgorithmConfig {
             },
             PM::PartisanWeighted => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec {
                     partisan_shares: None,
                     dem_threshold: 0.55,
@@ -331,6 +376,7 @@ impl AlgorithmConfig {
             },
             PM::Proportional => Self {
                 split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
                 weights: WeightSpec {
                     partisan_shares: None,
                     dem_threshold: 0.55,
@@ -342,42 +388,48 @@ impl AlgorithmConfig {
                 mode_label: Some("proportional"),
             },
             PM::CompactBisect => Self {
-                split: SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 },
+                split: SplitStrategy::CompactBisect { epsilon: 0.05 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
             },
             PM::GeoSection => Self {
-                split: SplitStrategy::GeoSection { seeds_per_ratio: 50 },
+                split: SplitStrategy::GeoSection,
+                seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec { directional_lambda: 0.0, ..WeightSpec::default() },
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
             },
             PM::AreaSection => Self {
-                split: SplitStrategy::AreaSection { seeds_per_ratio: 50, area_swing: 1.10 },
+                split: SplitStrategy::AreaSection { area_swing: 1.10 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop_area,  // ncon=2: population + land area
                 metis,
                 mode_label: None,
             },
             PM::ApportionRegions => Self {
-                split: SplitStrategy::ApportionRegions { seeds_per_level: 1 },
+                split: SplitStrategy::ApportionRegions,
+                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
             },
             PM::ProportionalSection => Self {
-                split: SplitStrategy::ProportionalSection { seeds: 50, eta: 1.10 },
+                split: SplitStrategy::ProportionalSection { eta: 1.10 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
                 mode_label: None,
             },
             PM::VraSection => Self {
-                split: SplitStrategy::VraSection { seeds_per_ratio: 50, w_vra: 0.40 },
+                split: SplitStrategy::VraSection { w_vra: 0.40 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
@@ -392,6 +444,7 @@ impl Default for AlgorithmConfig {
     fn default() -> Self {
         Self {
             split: SplitStrategy::Bisect,
+            seeds: SeedCompositor::Multi { seeds: 50 },
             weights: WeightSpec::default(),
             vertex_constraints: vec![VertexConstraintKind::Population],
             metis: MetisParams::default(),
@@ -1047,7 +1100,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 num_districts, 1.0 + ufactor as f64 / 1000.0, niter, seed,
             ).map_err(|e| format!("n-way partition failed: {e}"))?
         }
-        SplitStrategy::GeoSection { seeds_per_ratio } => {
+        SplitStrategy::GeoSection => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
             let lambda = cfg.algo.weights.directional_lambda;
             let centroids = if lambda > 1e-10 {
                 crate::geosection_orientation::load_centroids_from_tiger(
@@ -1065,14 +1119,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
                 &graph.adjacency, &vwgt, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
-                *seeds_per_ratio, Some(&intermediate_dir),
+                seeds_per_ratio, Some(&intermediate_dir),
                 &centroids, lambda, None, 1.10, None, 0.0,
             ).map_err(|e| format!("geosection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
-        SplitStrategy::AreaSection { seeds_per_ratio, area_swing } => {
+        SplitStrategy::AreaSection { area_swing } => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
             if tiger_areas.is_empty() {
                 return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
                                    cfg.state_code));
@@ -1084,14 +1139,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
                 &graph.adjacency, &graph.vertex_weights, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
-                *seeds_per_ratio, Some(&intermediate_dir),
+                seeds_per_ratio, Some(&intermediate_dir),
                 &empty_centroids, 0.0, Some(&tiger_areas), *area_swing, None, 0.0,
             ).map_err(|e| format!("areasection failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
-        SplitStrategy::VraSection { seeds_per_ratio, w_vra } => {
+        SplitStrategy::VraSection { w_vra } => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
             // Load minority VAP data from demographics CSV.
             // Minority fraction = (total_pop - white_non_hispanic) / total_pop,
             // multiplied by tract population to get approximate minority VAP counts.
@@ -1123,14 +1179,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
                 &graph.adjacency, &vwgt, &edge_weights,
                 num_districts, balance_tolerance_frac, niter,
-                *seeds_per_ratio, Some(&intermediate_dir),
+                seeds_per_ratio, Some(&intermediate_dir),
                 &empty_centroids, 0.0, None, 1.10, mvap_opt, *w_vra,
             ).map_err(|e| format!("vra-section failed: {e}"))?;
             status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
                    cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
             asgn
         }
-        SplitStrategy::ProportionalSection { seeds, eta } => {
+        SplitStrategy::ProportionalSection { eta } => {
+            let seeds = cfg.algo.seeds.seed_count();
             // Load D_votes from presidential_by_tract.csv
             let election_path = std::path::PathBuf::from(format!(
                 "data/{}/elections/presidential_by_tract.csv", cfg.year));
@@ -1147,7 +1204,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let (asgn, k_d, k_r, best_ec, d_state) =
                 crate::bisection_runner::run_proportional_section(
                     &graph.adjacency, &graph.vertex_weights, &d_votes, &two_party, &edge_weights,
-                    num_districts, balance_tolerance_frac, niter, *seeds, *eta,
+                    num_districts, balance_tolerance_frac, niter, seeds, *eta,
                     Some(&intermediate_dir),
                 ).map_err(|e| format!("proportional-section failed: {e}"))?;
             status(cfg.position, &format!(
@@ -1155,11 +1212,12 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 cfg.state_code, k_d, k_r, d_state, best_ec / 1000.0));
             asgn
         }
-        SplitStrategy::CompactBisect { seeds_per_level, epsilon } => {
+        SplitStrategy::CompactBisect { epsilon } => {
+            let seeds_per_level = cfg.algo.seeds.seed_count();
             let (vertex_areas, vertex_ext_perimeters) =
                 load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
                                     &graph.adjacency, &edge_weights);
-            let opts = CompactBisectOpts { seeds_per_level: *seeds_per_level, epsilon: *epsilon };
+            let opts = CompactBisectOpts { seeds_per_level, epsilon: *epsilon };
             run_all_splits_compact(
                 &graph.adjacency, &vwgt, &edge_weights,
                 &vertex_areas, &vertex_ext_perimeters,
@@ -1167,7 +1225,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 Some(&intermediate_dir),
             ).map_err(|e| format!("compact-bisect failed: {e}"))?
         }
-        SplitStrategy::ApportionRegions { seeds_per_level: _ } => {
+        SplitStrategy::ApportionRegions => {
             use redist_apportion::{PfrCompositor, MetisPartitioner, pfr_tree_depth};
             let factor_seq = redist_apportion::prime_factor_sequence(num_districts as u32);
             let depth = pfr_tree_depth(num_districts as u32).max(1);
@@ -1222,7 +1280,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     }
 
     // 4. Assert population balance — retry loop closes here.
-    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions { .. }) {
+    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions) {
         0.03
     } else {
         balance_tolerance
@@ -1344,11 +1402,13 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             alpha_county: cfg.algo.weights.alpha_county,
             directional_lambda: cfg.algo.weights.directional_lambda,
             split_seeds: match &cfg.algo.split {
-                SplitStrategy::GeoSection    { seeds_per_ratio }       => Some(*seeds_per_ratio),
-                SplitStrategy::AreaSection   { seeds_per_ratio, .. }   => Some(*seeds_per_ratio),
-                SplitStrategy::VraSection    { seeds_per_ratio, .. }   => Some(*seeds_per_ratio),
-                SplitStrategy::CompactBisect { seeds_per_level, .. }   => Some(*seeds_per_level),
-                SplitStrategy::ApportionRegions   { seeds_per_level }       => Some(*seeds_per_level),
+                SplitStrategy::GeoSection
+                | SplitStrategy::AreaSection   { .. }
+                | SplitStrategy::VraSection    { .. }
+                | SplitStrategy::CompactBisect { .. }
+                | SplitStrategy::ProportionalSection { .. }
+                    => Some(cfg.algo.seeds.seed_count()),
+                SplitStrategy::ApportionRegions => Some(cfg.algo.seeds.seed_count()),
                 _ => None,
             },
             split_epsilon: match &cfg.algo.split {
