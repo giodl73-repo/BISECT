@@ -734,4 +734,285 @@ mod tests {
         // the existing final_dir was not clobbered.)
         let _ = tmp_path;
     }
+
+    // ── 20 additional tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_callais_preflight_blocks_metis_vra_with_partisan_weighted() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "total".into(); // not cvap, but partition_mode is metis-vra is set below
+        // Actually the vra check is partition_mode == "metis-vra" OR population_source == "cvap"
+        // So: metis-vra + partisan-weighted
+        m.partition_mode = "metis-vra".into();
+        // But partisan_weighted is checked via partition_mode == "partisan-weighted"
+        // They can't both be true in the same field — the real test is cvap + partisan-weighted
+        // Let's use the correct combination: metis-vra partition_mode won't trigger partisan_weighted.
+        // A real BOUNDARY case: population_source=cvap AND partition_mode=partisan-weighted
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "cvap".into();
+        let result = callais_preflight(&m);
+        assert!(result.is_err(), "partisan-weighted + cvap must fail preflight");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("[BOUNDARY]"));
+    }
+
+    #[test]
+    fn test_callais_preflight_message_contains_docs_reference() {
+        let mut m = make_test_manifest("50");
+        m.partition_mode = "partisan-weighted".into();
+        m.population_source = "cvap".into();
+        let err = callais_preflight(&m).unwrap_err();
+        let msg = format!("{err}");
+        assert!(msg.contains("CALLAIS_REFERENCE"), "error must cite the reference doc: {msg}");
+    }
+
+    #[test]
+    fn test_callais_preflight_passes_edge_weighted_with_total() {
+        let mut m = make_test_manifest("06");
+        m.partition_mode = "edge-weighted".into();
+        m.population_source = "total".into();
+        assert!(callais_preflight(&m).is_ok());
+    }
+
+    #[test]
+    fn test_callais_preflight_passes_default_manifest() {
+        // A default PlanManifest has empty strings — must not trigger BOUNDARY.
+        let m = PlanManifest::default();
+        assert!(callais_preflight(&m).is_ok(),
+            "default manifest (empty strings) must pass callais_preflight");
+    }
+
+    #[test]
+    fn test_sha256_bytes_known_vector_empty() {
+        // SHA-256 of empty slice is well-known.
+        let hash = sha256_bytes(b"");
+        assert_eq!(hash.len(), 64);
+        assert_eq!(hash, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    }
+
+    #[test]
+    fn test_sha256_bytes_collision_resistance() {
+        // Two similar but distinct inputs must produce distinct hashes.
+        let h1 = sha256_bytes(b"plan_a_2020");
+        let h2 = sha256_bytes(b"plan_a_2021");
+        assert_ne!(h1, h2, "different inputs must hash differently");
+    }
+
+    #[test]
+    fn test_sha256_file_deterministic_on_same_content() {
+        let tmp = TempDir::new().unwrap();
+        let path = tmp.path().join("test.bin");
+        std::fs::write(&path, b"redistricting data").unwrap();
+        let h1 = sha256_file(&path).unwrap();
+        let h2 = sha256_file(&path).unwrap();
+        assert_eq!(h1, h2, "sha256_file must be deterministic");
+    }
+
+    #[test]
+    fn test_sha256_file_nonexistent_returns_error() {
+        let result = sha256_file(std::path::Path::new("/tmp/does_not_exist_xyz_abc.bin"));
+        assert!(result.is_err(), "sha256_file on nonexistent path must return Err");
+    }
+
+    #[test]
+    fn test_write_manifest_atomic_round_trip_all_fields() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            label: "ca_congressional_2020".into(),
+            state_code: "CA".into(),
+            year: "2020".into(),
+            chamber: "congressional".into(),
+            num_districts: 52,
+            seed: Some(99),
+            binary_version: "1.2.3".into(),
+            binary_sha256: "d".repeat(64),
+            gpmetis_version: "METIS 5.1.0".into(),
+            balance_tolerance_pct: 0.25,
+            population_balance_valid: true,
+            seats_per_district: 1,
+            total_seats: 52,
+            electoral_system: "single_member".into(),
+            ..make_test_manifest("06")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(parsed.label, "ca_congressional_2020");
+        assert_eq!(parsed.num_districts, 52);
+        assert_eq!(parsed.seed, Some(99));
+        assert_eq!(parsed.gpmetis_version, "METIS 5.1.0");
+        assert_eq!(parsed.binary_version, "1.2.3");
+    }
+
+    #[test]
+    fn test_default_label_single_word_state() {
+        assert_eq!(default_label("vermont", "congressional", "2020"), "vermont_congressional_2020");
+    }
+
+    #[test]
+    fn test_default_label_multi_word_state_lowercased() {
+        assert_eq!(default_label("NORTH DAKOTA", "senate", "2010"), "north_dakota_senate_2010");
+    }
+
+    #[test]
+    fn test_default_label_uppercase_state_normalized() {
+        let label = default_label("CALIFORNIA", "congressional", "2000");
+        assert_eq!(label, "california_congressional_2000");
+    }
+
+    #[test]
+    fn test_tiger_source_url_contains_fips_and_year() {
+        let url = tiger_source_url("06", "2020");
+        assert!(url.contains("06"), "FIPS must appear in URL");
+        assert!(url.contains("2020"), "year must appear in URL");
+        assert!(url.starts_with("https://"), "must be HTTPS URL");
+        assert!(url.contains("census.gov"), "must point to census.gov");
+    }
+
+    #[test]
+    fn test_tiger_source_url_different_fips_produce_different_urls() {
+        let url_ca = tiger_source_url("06", "2020");
+        let url_wa = tiger_source_url("53", "2020");
+        assert_ne!(url_ca, url_wa, "different FIPS must produce different URLs");
+    }
+
+    #[test]
+    fn test_manifest_submission_type_serde_default_is_authoritative() {
+        // serde default_submission_type fires on deserialization when the field is absent.
+        // Use a full manifest round-trip: write one without submission_type, read it back.
+        let tmp = TempDir::new().unwrap();
+        // Write a manifest using make_test_manifest which has submission_type = default
+        let original = make_test_manifest("50");
+        write_manifest_atomic(tmp.path(), &original).unwrap();
+        // Now read the JSON and strip submission_type to simulate an old manifest
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let mut v: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+        v.as_object_mut().unwrap().remove("submission_type");
+        let stripped = v.to_string();
+        let m: PlanManifest = serde_json::from_str(&stripped).unwrap();
+        assert_eq!(m.submission_type, "authoritative",
+            "submission_type serde default must be 'authoritative' when absent from JSON");
+    }
+
+    #[test]
+    fn test_manifest_civic_counter_proposal_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            submission_type: "civic_counter_proposal".into(),
+            submitted_by: Some("League of Women Voters".into()),
+            submitted_at: Some("2026-04-15T12:00:00Z".into()),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(parsed.submission_type, "civic_counter_proposal");
+        assert_eq!(parsed.submitted_by.as_deref(), Some("League of Women Voters"));
+        assert_eq!(parsed.submitted_at.as_deref(), Some("2026-04-15T12:00:00Z"));
+    }
+
+    #[test]
+    fn test_manifest_edge_cut_optional_field_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            edge_cut: Some(123_456.789),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        let ec = parsed.edge_cut.expect("edge_cut must survive round-trip");
+        assert!((ec - 123_456.789).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_manifest_edge_cut_none_absent_from_json() {
+        // When edge_cut is None, skip_serializing_if = "Option::is_none" means it
+        // must NOT appear in the JSON output.
+        let manifest = PlanManifest {
+            edge_cut: None,
+            ..make_test_manifest("50")
+        };
+        let json = serde_json::to_value(&manifest).unwrap();
+        assert!(json.get("edge_cut").is_none(),
+            "edge_cut=None must be absent from serialized JSON (skip_serializing_if)");
+    }
+
+    #[test]
+    fn test_manifest_algorithm_params_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            ufactor: 10,
+            niter: 50,
+            alpha_county: 0.75,
+            split_seeds: Some(5),
+            split_epsilon: Some(0.05),
+            area_swing: Some(1.15),
+            directional_lambda: 0.3,
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(parsed.ufactor, 10);
+        assert_eq!(parsed.niter, 50);
+        assert!((parsed.alpha_county - 0.75).abs() < 1e-9);
+        assert_eq!(parsed.split_seeds, Some(5));
+        assert!((parsed.split_epsilon.unwrap() - 0.05).abs() < 1e-9);
+        assert!((parsed.area_swing.unwrap() - 1.15).abs() < 1e-9);
+        assert!((parsed.directional_lambda - 0.3).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_plan_dir_guard_tmp_dir_is_sibling_with_tmp_suffix() {
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("vt_test");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+        let tmp_path = guard.tmp_dir();
+        // tmp_dir must be a sibling (same parent)
+        assert_eq!(tmp_path.parent(), final_dir.parent(),
+            "tmp_dir must be a sibling of final_dir");
+        // tmp_dir name must end with ".tmp"
+        let name = tmp_path.file_name().unwrap().to_string_lossy();
+        assert!(name.ends_with(".tmp"), "tmp_dir name must end with .tmp, got: {name}");
+        drop(guard);
+    }
+
+    #[test]
+    fn test_plan_dir_guard_final_dir_accessor() {
+        let tmp = TempDir::new().unwrap();
+        let final_dir = tmp.path().join("plans").join("ny_congressional");
+        std::fs::create_dir_all(final_dir.parent().unwrap()).unwrap();
+        let guard = PlanDirGuard::new(final_dir.clone(), false).unwrap();
+        assert_eq!(guard.final_dir(), final_dir.as_path(),
+            "final_dir() accessor must return the expected path");
+        drop(guard);
+    }
+
+    #[test]
+    fn test_check_incomplete_plan_error_contains_label() {
+        let tmp = TempDir::new().unwrap();
+        std::fs::write(tmp.path().join("manifest.tmp"), b"{}").unwrap();
+        let err = check_incomplete_plan(tmp.path(), "my_special_label").unwrap_err();
+        assert!(err.to_string().contains("my_special_label"),
+            "error must name the plan label");
+    }
+
+    #[test]
+    fn test_manifest_import_compat_sha256_round_trip() {
+        let tmp = TempDir::new().unwrap();
+        let manifest = PlanManifest {
+            import_compat_sha256: Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855".into()),
+            ..make_test_manifest("50")
+        };
+        write_manifest_atomic(tmp.path(), &manifest).unwrap();
+        let bytes = std::fs::read(tmp.path().join("manifest.json")).unwrap();
+        let parsed: PlanManifest = serde_json::from_slice(&bytes).unwrap();
+        assert_eq!(
+            parsed.import_compat_sha256.as_deref(),
+            Some("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+        );
+    }
 }

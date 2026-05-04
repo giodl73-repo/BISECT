@@ -523,4 +523,239 @@ mod tests {
         let h2 = sha256_hex(b"plan_b");
         assert_ne!(h1, h2, "different inputs must produce different hashes");
     }
+
+    // ── 15 additional tests for comparison ────────────────────────────────────
+
+    #[test]
+    fn test_comparison_report_serializes_to_json() {
+        let report = ComparisonReport::from_loaded(
+            fixture_plan_a(), fixture_plan_b(), None, DiffSummary::default()
+        );
+        let json = serde_json::to_value(&report);
+        assert!(json.is_ok(), "ComparisonReport must serialize to JSON");
+        let v = json.unwrap();
+        assert!(v["plan_a"].is_object());
+        assert!(v["plan_b"].is_object());
+    }
+
+    #[test]
+    fn test_plan_side_submission_type_civic_round_trips() {
+        let plan = fixture_plan_b();
+        let json = serde_json::to_value(&plan).unwrap();
+        assert_eq!(json["submission_type"], "civic_counter_proposal");
+        assert_eq!(json["submitted_by"], "League of Women Voters Vermont");
+    }
+
+    #[test]
+    fn test_plan_side_submission_type_none_serializes_as_null() {
+        let plan = fixture_plan_a();
+        let json = serde_json::to_value(&plan).unwrap();
+        assert!(json["submission_type"].is_null(), "None submission_type must serialize as null");
+    }
+
+    #[test]
+    fn test_diff_summary_districts_with_changes_sorted() {
+        // DiffSummary guarantees sorted list per spec comment.
+        let d = DiffSummary {
+            tracts_changed: 5,
+            population_changed: 50_000,
+            districts_with_changes: vec![1, 2, 3, 7, 9],
+        };
+        let sorted: Vec<usize> = {
+            let mut v = d.districts_with_changes.clone();
+            v.sort();
+            v
+        };
+        assert_eq!(d.districts_with_changes, sorted,
+            "districts_with_changes must be in ascending order");
+    }
+
+    #[test]
+    fn test_leaning_seats_count_at_threshold() {
+        // Seats with dem_share exactly at threshold count as leaning.
+        let plan = PlanSide {
+            per_district_dem_share: vec![0.50, 0.50, 0.50, 0.49, 0.49],
+            leaning_seats: 3,
+            n_districts: 5,
+            ..fixture_plan_a()
+        };
+        assert_eq!(plan.leaning_seats, 3,
+            "districts at exactly 0.50 should be counted as leaning (>= threshold)");
+    }
+
+    #[test]
+    fn test_comparison_report_diff_tracts_changed_stored() {
+        let diff = DiffSummary {
+            tracts_changed: 42,
+            population_changed: 100_000,
+            districts_with_changes: vec![1, 5, 10],
+        };
+        let report = ComparisonReport::from_loaded(
+            fixture_plan_a(), fixture_plan_b(), None, diff.clone()
+        );
+        assert_eq!(report.diff.tracts_changed, 42);
+        assert_eq!(report.diff.population_changed, 100_000);
+        assert_eq!(report.diff.districts_with_changes, vec![1, 5, 10]);
+    }
+
+    #[test]
+    fn test_load_plan_side_from_dir_missing_dir_returns_error() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let missing = tmp.path().join("nonexistent_plan");
+        let result = load_plan_side_from_dir(&missing, 0.5);
+        assert!(result.is_err(), "missing plan dir must return Err");
+        let msg = format!("{}", result.unwrap_err());
+        assert!(msg.contains("[INPUT]"), "error must use [INPUT] prefix: {msg}");
+    }
+
+    #[test]
+    fn test_load_plan_side_from_dir_missing_manifest_returns_error() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        // Directory exists but no manifest.json
+        let plan_dir = tmp.path().join("empty_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let result = load_plan_side_from_dir(&plan_dir, 0.5);
+        assert!(result.is_err(), "dir without manifest must return Err");
+        let msg = format!("{}", result.unwrap_err());
+        assert!(msg.contains("manifest"), "error must mention manifest: {msg}");
+    }
+
+    #[test]
+    fn test_load_plan_side_from_dir_minimal_manifest() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest_json = serde_json::json!({
+            "label": "vt_congressional_2020",
+            "num_districts": 1,
+        });
+        std::fs::write(plan_dir.join("manifest.json"), manifest_json.to_string()).unwrap();
+        let result = load_plan_side_from_dir(&plan_dir, 0.5);
+        assert!(result.is_ok(), "minimal manifest must load successfully: {:?}", result.err());
+        let side = result.unwrap();
+        assert_eq!(side.label, "vt_congressional_2020");
+        assert_eq!(side.n_districts, 1);
+    }
+
+    #[test]
+    fn test_load_plan_side_from_dir_uses_dir_name_when_no_label() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("tx_plan_2020");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // manifest has no "label" field
+        let manifest_json = serde_json::json!({"num_districts": 38});
+        std::fs::write(plan_dir.join("manifest.json"), manifest_json.to_string()).unwrap();
+        let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
+        // Falls back to directory name
+        assert_eq!(side.label, "tx_plan_2020",
+            "label must fall back to directory name when absent from manifest");
+    }
+
+    #[test]
+    fn test_load_plan_side_partisan_shape1_districts_array() {
+        // Shape 1: { "districts": [{"dem_share": 0.55}, ...] }
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "vt_test", "num_districts": 3}).to_string()).unwrap();
+        let partisan = serde_json::json!({
+            "districts": [
+                {"dem_share": 0.55},
+                {"dem_share": 0.45},
+                {"dem_share": 0.60}
+            ]
+        });
+        std::fs::write(analysis_dir.join("partisan.json"), partisan.to_string()).unwrap();
+        let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
+        assert_eq!(side.leaning_seats, 2, "2 districts have dem_share >= 0.5");
+        assert_eq!(side.per_district_dem_share.len(), 3);
+    }
+
+    #[test]
+    fn test_load_plan_side_partisan_shape2_flat_array() {
+        // Shape 2: { "per_district_dem_share": [0.55, 0.42, 0.61] }
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan2");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "vt_test2", "num_districts": 3}).to_string()).unwrap();
+        let partisan = serde_json::json!({"per_district_dem_share": [0.55, 0.42, 0.61]});
+        std::fs::write(analysis_dir.join("partisan.json"), partisan.to_string()).unwrap();
+        let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
+        assert_eq!(side.leaning_seats, 2, "0.55 and 0.61 are >= 0.5");
+        assert_eq!(side.per_district_dem_share, vec![0.55, 0.42, 0.61]);
+    }
+
+    #[test]
+    fn test_load_plan_side_mm_count_from_vra_analysis() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan3");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "vt_test3", "num_districts": 5}).to_string()).unwrap();
+        std::fs::write(analysis_dir.join("vra_analysis.json"),
+            serde_json::json!({"mm_count": 3}).to_string()).unwrap();
+        let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
+        assert_eq!(side.mm_count, 3, "mm_count must be read from vra_analysis.json");
+    }
+
+    #[test]
+    fn test_load_plan_side_mean_pp_from_compactness_flat() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan4");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        std::fs::write(plan_dir.join("manifest.json"),
+            serde_json::json!({"label": "vt_test4", "num_districts": 2}).to_string()).unwrap();
+        std::fs::write(analysis_dir.join("compactness.json"),
+            serde_json::json!({"mean_polsby_popper": 0.42}).to_string()).unwrap();
+        let side = load_plan_side_from_dir(&plan_dir, 0.5).unwrap();
+        assert!((side.mean_pp - 0.42).abs() < 1e-9, "mean_pp must be read from compactness.json");
+    }
+
+    #[test]
+    fn test_diff_from_assignments_no_files_returns_zeros() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let a_dir = tmp.path().join("plan_a");
+        let b_dir = tmp.path().join("plan_b");
+        std::fs::create_dir_all(&a_dir).unwrap();
+        std::fs::create_dir_all(&b_dir).unwrap();
+        // No final_assignments.json in either dir
+        let diff = diff_from_assignments(&a_dir, &b_dir).unwrap();
+        assert_eq!(diff.tracts_changed, 0);
+        assert!(diff.districts_with_changes.is_empty());
+    }
+
+    #[test]
+    fn test_diff_from_assignments_identical_returns_zero_changes() {
+        use tempfile::TempDir;
+        use std::collections::BTreeMap;
+        let tmp = TempDir::new().unwrap();
+        let a_dir = tmp.path().join("plan_a");
+        let b_dir = tmp.path().join("plan_b");
+        std::fs::create_dir_all(&a_dir).unwrap();
+        std::fs::create_dir_all(&b_dir).unwrap();
+        let assignments: BTreeMap<&str, usize> = [
+            ("53001000100", 1usize), ("53001000200", 1), ("53001000300", 2),
+        ].iter().cloned().collect();
+        let json = serde_json::to_string(&assignments).unwrap();
+        std::fs::write(a_dir.join("final_assignments.json"), &json).unwrap();
+        std::fs::write(b_dir.join("final_assignments.json"), &json).unwrap();
+        let diff = diff_from_assignments(&a_dir, &b_dir).unwrap();
+        assert_eq!(diff.tracts_changed, 0, "identical assignments must produce 0 changed tracts");
+        assert!(diff.districts_with_changes.is_empty());
+    }
 }

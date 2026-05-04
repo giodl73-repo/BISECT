@@ -11,7 +11,7 @@ use redist_report::{
 };
 
 /// Return true if the path has a shapefile-family extension (.shp, .shx, .dbf, .prj, .zip).
-fn is_shapefile_extension(path: &std::path::Path) -> bool {
+pub fn is_shapefile_extension(path: &std::path::Path) -> bool {
     matches!(
         path.extension().and_then(|e| e.to_str()),
         Some("shp") | Some("shx") | Some("dbf") | Some("prj") | Some("zip")
@@ -19,7 +19,7 @@ fn is_shapefile_extension(path: &std::path::Path) -> bool {
 }
 
 /// Build the shapefile guidance error message for a given extension.
-fn shapefile_error_message(path: &std::path::Path) -> String {
+pub fn shapefile_error_message(path: &std::path::Path) -> String {
     let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("shp");
     let (title, extra) = if ext == "zip" {
         (
@@ -426,5 +426,148 @@ mod tests {
         };
         assert_eq!(args.state, "WA");
         assert_eq!(args.label, "wa_house_old");
+    }
+
+    // ── 15 additional tests for import_cmd ────────────────────────────────────
+
+    #[test]
+    fn test_is_shapefile_extension_shp() {
+        assert!(is_shapefile_extension(std::path::Path::new("input.shp")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_shx() {
+        assert!(is_shapefile_extension(std::path::Path::new("input.shx")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_dbf() {
+        assert!(is_shapefile_extension(std::path::Path::new("input.dbf")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_prj() {
+        assert!(is_shapefile_extension(std::path::Path::new("input.prj")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_zip() {
+        assert!(is_shapefile_extension(std::path::Path::new("tiger_2020.zip")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_geojson_not_shapefile() {
+        assert!(!is_shapefile_extension(std::path::Path::new("plan.geojson")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_json_not_shapefile() {
+        assert!(!is_shapefile_extension(std::path::Path::new("plan.json")));
+    }
+
+    #[test]
+    fn test_is_shapefile_extension_csv_not_shapefile() {
+        assert!(!is_shapefile_extension(std::path::Path::new("dra_export.csv")));
+    }
+
+    #[test]
+    fn test_shapefile_error_message_shp_mentions_qgis() {
+        let msg = shapefile_error_message(std::path::Path::new("plan.shp"));
+        assert!(msg.contains("qgis") || msg.contains("QGIS") || msg.contains("qgis"),
+            "error must mention QGIS alternative: {msg}");
+    }
+
+    #[test]
+    fn test_shapefile_error_message_contains_python_geopandas() {
+        let msg = shapefile_error_message(std::path::Path::new("plan.shp"));
+        assert!(msg.contains("geopandas"), "error must mention geopandas Python option: {msg}");
+    }
+
+    #[test]
+    fn test_import_dbf_extension_gives_error() {
+        let args = ImportArgs {
+            file: std::path::PathBuf::from("plan.dbf"),
+            state: "CA".into(),
+            year: "2020".into(),
+            label: "ca_test".into(),
+            version: "test".into(),
+            format: "geojson".into(),
+            output_base: "outputs".into(),
+            as_civic_counter_proposal: false,
+            submitted_by: None,
+            submitted_at: None,
+        };
+        let result = run_import(&args);
+        assert!(result.is_err(), "importing .dbf should fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("Shapefile") || msg.contains("shapefile"),
+            "error must mention shapefile format: {msg}");
+    }
+
+    #[test]
+    fn test_import_dra_csv_empty_fails() {
+        let result = import_assignments_from_dra_csv("");
+        assert!(result.is_err(), "empty CSV must fail");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("empty"), "error must mention empty CSV: {msg}");
+    }
+
+    #[test]
+    fn test_import_dra_csv_no_data_rows_fails() {
+        // Header line only, no data
+        let csv = "GEOID,DISTRICT\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_err(), "CSV with header only must fail with no assignments");
+    }
+
+    #[test]
+    fn test_import_dra_csv_large_dataset() {
+        // 100 rows
+        let mut csv = String::from("GEOID,DISTRICT\n");
+        for i in 0..100usize {
+            csv.push_str(&format!("{:011},1\n", 53_001_000_100u64 + i as u64));
+        }
+        let result = import_assignments_from_dra_csv(&csv);
+        assert!(result.is_ok(), "100-row CSV must parse successfully");
+        assert_eq!(result.unwrap().len(), 100);
+    }
+
+    #[test]
+    fn test_import_dra_csv_auto_detect_reversed_columns_no_header() {
+        // Reversed with no header: district (small int) comes first,
+        // but auto-detect should handle 5-char FIPS + 11-char GEOID swap.
+        // Let's test the actual auto-swap: small district val on left, 11-char geoid on right.
+        let csv = "1,53001000100\n2,53001000200\n";
+        let result = import_assignments_from_dra_csv(csv);
+        assert!(result.is_ok(), "auto-swap must handle reversed no-header CSV: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments["53001000100"], 1);
+        assert_eq!(assignments["53001000200"], 2);
+    }
+
+    #[test]
+    fn test_import_geojson_properties_geoid_lowercase_and_uppercase() {
+        // Both "geoid" and "GEOID" keys must be detected
+        let geojson = serde_json::json!({
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": {"geoid": "53001000100", "district": 1}
+                },
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": {"GEOID": "53001000200", "district": 2}
+                }
+            ]
+        });
+        let result = import_assignments_from_geojson_properties(&geojson.to_string());
+        assert!(result.is_ok(), "must handle both geoid and GEOID: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments.len(), 2);
+        assert_eq!(assignments["53001000100"], 1);
+        assert_eq!(assignments["53001000200"], 2);
     }
 }

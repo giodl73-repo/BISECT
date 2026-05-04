@@ -488,4 +488,347 @@ mod tests {
         let audit_val: serde_json::Value = serde_json::from_str(&audit_content).unwrap();
         assert!(audit_val["audit"].is_object(), "audit.json must contain an 'audit' object");
     }
+
+    // ── 15 additional tests for export_cmd ────────────────────────────────────
+
+    #[test]
+    fn test_export_format_reproducibility_package_variant() {
+        let args = ExportArgs {
+            label: "vt_congressional_2020".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ExportFormat::ReproducibilityPackage],
+            out: None,
+            output_base: "outputs".into(),
+        };
+        assert!(args.format.contains(&ExportFormat::ReproducibilityPackage));
+    }
+
+    #[test]
+    fn test_export_args_custom_out_dir() {
+        let args = ExportArgs {
+            label: "vt_congressional_2020".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ExportFormat::GeoJson],
+            out: Some("/tmp/my_exports".into()),
+            output_base: "outputs".into(),
+        };
+        assert_eq!(args.out.as_deref(), Some("/tmp/my_exports"));
+    }
+
+    #[test]
+    fn test_export_args_multiple_formats() {
+        let args = ExportArgs {
+            label: "ca_congressional_2020".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ExportFormat::GeoJson, ExportFormat::Csv, ExportFormat::GerryChain],
+            out: None,
+            output_base: "outputs".into(),
+        };
+        assert_eq!(args.format.len(), 3);
+        assert!(args.format.contains(&ExportFormat::Csv));
+    }
+
+    #[test]
+    fn test_warn_if_null_geometry_plan_with_real_geometry_no_warn() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+
+        let plan_with_geom = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "vt_real".into(),
+                state_code: "VT".into(),
+                year: "2020".into(),
+                ..Default::default()
+            },
+            assignments: HashMap::new(),
+            geometry: Some(serde_json::json!({
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "MultiPolygon",
+                            "coordinates": [[[[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]]]]
+                        },
+                        "properties": {"district_id": 1}
+                    }
+                ]
+            })),
+        };
+        let has_geometry = plan_with_geom.geometry.as_ref().map(|g| {
+            g["type"].as_str() == Some("FeatureCollection")
+                && g["features"].as_array().map(|f| {
+                    f.iter().any(|feat| !feat["geometry"].is_null())
+                }).unwrap_or(false)
+        }).unwrap_or(false);
+        assert!(has_geometry, "plan with real geometry must be detected as having geometry");
+        // Must not panic
+        warn_if_null_geometry(&plan_with_geom, "vt_real", "2020");
+    }
+
+    #[test]
+    fn test_load_rplan_from_plan_dir_missing_both_files_fails() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // Neither .rplan nor final_assignments.json present
+        let result = load_rplan_from_plan_dir(&plan_dir, "test_label");
+        assert!(result.is_err(), "must fail when neither .rplan nor assignments file exists");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("No .rplan"), "error must mention missing file: {msg}");
+    }
+
+    #[test]
+    fn test_load_rplan_from_plan_dir_from_root_assignments() {
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // Write assignments at root (legacy layout)
+        let assignments: HashMap<String, usize> = [
+            ("50001000100".to_string(), 1usize),
+        ].iter().cloned().collect();
+        std::fs::write(
+            plan_dir.join("final_assignments.json"),
+            serde_json::to_string(&assignments).unwrap()
+        ).unwrap();
+        let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_plan").unwrap();
+        assert_eq!(rplan.assignments.len(), 1);
+        assert_eq!(rplan.assignments["50001000100"], 1);
+    }
+
+    #[test]
+    fn test_load_rplan_from_plan_dir_from_data_subdir_assignments() {
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("ca_plan");
+        let data_dir = plan_dir.join("data");
+        std::fs::create_dir_all(&data_dir).unwrap();
+        // Write assignments in new data/ layout
+        let assignments: HashMap<String, usize> = [
+            ("06001000100".to_string(), 2usize),
+            ("06001000200".to_string(), 3usize),
+        ].iter().cloned().collect();
+        std::fs::write(
+            data_dir.join("final_assignments.json"),
+            serde_json::to_string(&assignments).unwrap()
+        ).unwrap();
+        let rplan = load_rplan_from_plan_dir(&plan_dir, "ca_plan").unwrap();
+        assert_eq!(rplan.assignments.len(), 2);
+    }
+
+    #[test]
+    fn test_load_rplan_reads_rplan_file_first() {
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("vt_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // Write both .rplan and final_assignments.json; .rplan should win
+        let rplan_data = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {
+                "label": "vt_plan",
+                "state_fips": "50",
+                "state_code": "VT",
+                "year": "2020",
+                "chamber": "congressional",
+                "num_districts": 1,
+                "population_source": "total",
+                "balance_tolerance_pct": 0.5,
+                "created_at": "2026-04-26T00:00:00Z",
+                "created_by": "test"
+            },
+            "assignments": {"50001000100": 1}
+        });
+        std::fs::write(plan_dir.join("vt_plan.rplan"), rplan_data.to_string()).unwrap();
+        // Also write a different assignments file that should be ignored
+        let other: HashMap<String, usize> = [("99999999999".to_string(), 9)].iter().cloned().collect();
+        std::fs::write(plan_dir.join("final_assignments.json"), serde_json::to_string(&other).unwrap()).unwrap();
+        let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_plan").unwrap();
+        // Should read the .rplan, not the assignments file
+        assert!(rplan.assignments.contains_key("50001000100"),
+            ".rplan file must take priority over final_assignments.json");
+        assert!(!rplan.assignments.contains_key("99999999999"),
+            "assignments from final_assignments.json must not appear when .rplan exists");
+    }
+
+    #[test]
+    fn test_load_rplan_with_manifest_reads_metadata() {
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("ca_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // Write a minimal manifest
+        let manifest = make_test_manifest_for_repro();
+        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string(&manifest).unwrap()).unwrap();
+        // Write assignments
+        let assignments: HashMap<String, usize> = [("06001000100".to_string(), 1)].iter().cloned().collect();
+        std::fs::write(plan_dir.join("final_assignments.json"), serde_json::to_string(&assignments).unwrap()).unwrap();
+        let rplan = load_rplan_from_plan_dir(&plan_dir, "vt_congressional_2020").unwrap();
+        assert_eq!(rplan.metadata.label, "vt_congressional_2020");
+        assert_eq!(rplan.metadata.state_code, "VT");
+        assert_eq!(rplan.metadata.year, "2020");
+    }
+
+    #[test]
+    fn test_reproducibility_package_audit_json_has_binary_version() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest = make_test_manifest_for_repro();
+        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        let label = "vt_congressional_2020";
+        let rplan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        let out_dir = tmp.path().join("exports");
+        std::fs::create_dir_all(&out_dir).unwrap();
+        write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
+        let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+        let audit: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap()
+        ).unwrap();
+        assert!(audit["audit"]["binary_version"].is_string(),
+            "audit.json must contain binary_version");
+        assert_eq!(audit["audit"]["binary_version"], "0.1.0");
+    }
+
+    #[test]
+    fn test_reproducibility_package_verify_sh_contains_label() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest = make_test_manifest_for_repro();
+        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        let label = "vt_congressional_2020";
+        let rplan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        let out_dir = tmp.path().join("exports");
+        std::fs::create_dir_all(&out_dir).unwrap();
+        write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
+        let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+        let verify_content = std::fs::read_to_string(pkg_dir.join("verify.sh")).unwrap();
+        assert!(!verify_content.is_empty(), "verify.sh must not be empty");
+    }
+
+    #[test]
+    fn test_reproducibility_package_analysis_files_copied() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan");
+        let analysis_dir = plan_dir.join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        let manifest = make_test_manifest_for_repro();
+        std::fs::write(plan_dir.join("manifest.json"), serde_json::to_string_pretty(&manifest).unwrap()).unwrap();
+        // Write 3 analysis files
+        for name in &["summary.json", "partisan.json", "compactness.json"] {
+            std::fs::write(analysis_dir.join(name), serde_json::json!({"ok": true}).to_string()).unwrap();
+        }
+        let label = "vt_congressional_2020";
+        let rplan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        let out_dir = tmp.path().join("exports");
+        std::fs::create_dir_all(&out_dir).unwrap();
+        write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
+        let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+        // All 3 analysis files must appear in analysis/ subdirectory
+        for name in &["summary.json", "partisan.json", "compactness.json"] {
+            assert!(pkg_dir.join("analysis").join(name).exists(),
+                "{} must be copied to reproducibility package analysis dir", name);
+        }
+    }
+
+    #[test]
+    fn test_reproducibility_package_no_manifest_audit_note() {
+        use redist_report::{RplanFile, RplanMetadata};
+        use std::collections::HashMap;
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plan_no_manifest");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        // Intentionally no manifest.json
+        let label = "no_manifest_label";
+        let rplan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata { label: label.into(), ..Default::default() },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        let out_dir = tmp.path().join("exports");
+        std::fs::create_dir_all(&out_dir).unwrap();
+        write_reproducibility_package(&plan_dir, &out_dir, label, &rplan).unwrap();
+        let pkg_dir = out_dir.join(format!("{}_reproducibility", label));
+        let audit: serde_json::Value = serde_json::from_str(
+            &std::fs::read_to_string(pkg_dir.join("audit.json")).unwrap()
+        ).unwrap();
+        // When manifest is missing, audit must contain a "note" field
+        let note = audit["audit"]["note"].as_str().unwrap_or("");
+        assert!(note.contains("manifest"), "audit note must mention manifest when missing: {note}");
+    }
+
+    #[test]
+    fn test_export_args_version_field_propagated() {
+        let args = ExportArgs {
+            label: "ny_state_2020".into(),
+            year: "2010".into(),
+            version: "v2".into(),
+            format: vec![ExportFormat::GeoJson],
+            out: None,
+            output_base: "outputs".into(),
+        };
+        assert_eq!(args.version, "v2");
+        assert_eq!(args.year, "2010");
+    }
+
+    #[test]
+    fn test_export_args_label_preserved() {
+        let args = ExportArgs {
+            label: "tx_congressional_2020".into(),
+            year: "2020".into(),
+            version: "v1".into(),
+            format: vec![ExportFormat::Csv],
+            out: None,
+            output_base: "outputs".into(),
+        };
+        assert_eq!(args.label, "tx_congressional_2020");
+    }
+
+    #[test]
+    fn test_export_format_all_variants_distinct() {
+        let formats = vec![
+            ExportFormat::GeoJson,
+            ExportFormat::GerryChain,
+            ExportFormat::Csv,
+            ExportFormat::ReproducibilityPackage,
+        ];
+        // All 4 variants must be distinct (PartialEq is derived).
+        for (i, a) in formats.iter().enumerate() {
+            for (j, b) in formats.iter().enumerate() {
+                if i == j {
+                    assert_eq!(a, b, "same variant must be equal");
+                } else {
+                    assert_ne!(a, b, "different variants must not be equal");
+                }
+            }
+        }
+    }
 }

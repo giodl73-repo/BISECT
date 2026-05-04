@@ -312,4 +312,342 @@ mod tests {
         assert!(msg.contains("--allow-non-strict-civic"));
         assert!(msg.contains("manifests.md"));
     }
+
+    // ── 20 additional tests for civic_gate ────────────────────────────────────
+
+    #[test]
+    fn test_classify_empty_manifests_returns_none_found() {
+        let outcome = classify(vec![], false).unwrap();
+        assert_eq!(outcome, CivicGateOutcome::NoneFound);
+    }
+
+    #[test]
+    fn test_classify_single_strict_is_all_strict() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "coi_strict".into(),
+            validate_mode: "strict".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], false).unwrap();
+        match outcome {
+            CivicGateOutcome::AllStrict { paths } => assert_eq!(paths.len(), 1),
+            other => panic!("expected AllStrict, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_multiple_strict_paths_all_returned() {
+        let make = |lbl: &str| CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: lbl.into(),
+            validate_mode: "strict".into(),
+        };
+        let manifests = vec![
+            (PathBuf::from("a/manifest.json"), make("a")),
+            (PathBuf::from("b/manifest.json"), make("b")),
+            (PathBuf::from("c/manifest.json"), make("c")),
+        ];
+        let outcome = classify(manifests, false).unwrap();
+        match outcome {
+            CivicGateOutcome::AllStrict { paths } => assert_eq!(paths.len(), 3),
+            other => panic!("expected AllStrict, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_advisory_refused_without_flag() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "advisory_input".into(),
+            validate_mode: "advisory".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending.len(), 1);
+                assert_eq!(offending[0].validate_mode, "advisory");
+                assert_eq!(offending[0].label, "advisory_input");
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_advisory_allowed_with_flag() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "advisory_input".into(),
+            validate_mode: "advisory".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], true).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictAllowed { offending } => {
+                assert_eq!(offending.len(), 1);
+                assert_eq!(offending[0].validate_mode, "advisory");
+            }
+            other => panic!("expected NonStrictAllowed, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_mixed_strict_and_lenient_reports_only_offending() {
+        let strict = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "strict_org".into(),
+            validate_mode: "strict".into(),
+        };
+        let lenient = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "lenient_org".into(),
+            validate_mode: "lenient".into(),
+        };
+        let manifests = vec![
+            (PathBuf::from("s/manifest.json"), strict),
+            (PathBuf::from("l/manifest.json"), lenient),
+        ];
+        let outcome = classify(manifests, false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending.len(), 1, "only lenient should be in offending");
+                assert_eq!(offending[0].label, "lenient_org");
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_unknown_mode_has_unknown_prefix_in_validate_mode() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "future_input".into(),
+            validate_mode: "experimental".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert!(offending[0].validate_mode.starts_with("unknown:"),
+                    "unknown mode must be prefixed: {}", offending[0].validate_mode);
+                assert!(offending[0].validate_mode.contains("experimental"));
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_unknown_mode_allowed_with_flag() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "future_input".into(),
+            validate_mode: "experimental".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("a/manifest.json"), m)], true).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictAllowed { offending } => {
+                assert_eq!(offending.len(), 1);
+            }
+            other => panic!("expected NonStrictAllowed, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_two_lenient_both_in_offending() {
+        let make_lenient = |lbl: &str| CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: lbl.into(),
+            validate_mode: "lenient".into(),
+        };
+        let manifests = vec![
+            (PathBuf::from("a/manifest.json"), make_lenient("org_a")),
+            (PathBuf::from("b/manifest.json"), make_lenient("org_b")),
+        ];
+        let outcome = classify(manifests, false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending.len(), 2, "both lenient inputs must appear in offending");
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_classify_mixed_advisory_and_lenient_both_offending() {
+        let advisory = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "org_advisory".into(),
+            validate_mode: "advisory".into(),
+        };
+        let lenient = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "org_lenient".into(),
+            validate_mode: "lenient".into(),
+        };
+        let manifests = vec![
+            (PathBuf::from("a/manifest.json"), advisory),
+            (PathBuf::from("b/manifest.json"), lenient),
+        ];
+        let outcome = classify(manifests, false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending.len(), 2);
+                let modes: Vec<&str> = offending.iter().map(|r| r.validate_mode.as_str()).collect();
+                assert!(modes.contains(&"advisory"));
+                assert!(modes.contains(&"lenient"));
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_refusal_message_contains_boundary_prefix() {
+        let offending = vec![NonStrictRow {
+            path: PathBuf::from("civic_inputs/naacp/manifest.json"),
+            validate_mode: "advisory".into(),
+            label: "naacp_coi".into(),
+        }];
+        let msg = refusal_message(&offending);
+        assert!(msg.starts_with("[BOUNDARY]"), "must start with [BOUNDARY]: {msg}");
+    }
+
+    #[test]
+    fn test_refusal_message_lists_all_offending_rows() {
+        let offending = vec![
+            NonStrictRow {
+                path: PathBuf::from("civic_inputs/org1/manifest.json"),
+                validate_mode: "lenient".into(),
+                label: "org1".into(),
+            },
+            NonStrictRow {
+                path: PathBuf::from("civic_inputs/org2/manifest.json"),
+                validate_mode: "advisory".into(),
+                label: "org2".into(),
+            },
+        ];
+        let msg = refusal_message(&offending);
+        assert!(msg.contains("org1"), "org1 must appear in refusal message");
+        assert!(msg.contains("org2"), "org2 must appear in refusal message");
+        assert!(msg.contains("lenient"), "lenient must appear in refusal message");
+        assert!(msg.contains("advisory"), "advisory must appear in refusal message");
+    }
+
+    #[test]
+    fn test_refusal_message_is_ascii_only() {
+        // PP-34: must not contain non-ASCII bytes (Windows CP1252 console policy)
+        let offending = vec![NonStrictRow {
+            path: PathBuf::from("civic_inputs/lwv/manifest.json"),
+            validate_mode: "lenient".into(),
+            label: "lwv".into(),
+        }];
+        let msg = refusal_message(&offending);
+        assert!(msg.is_ascii(), "refusal_message must be ASCII-only per PP-34");
+    }
+
+    #[test]
+    fn test_refusal_message_mentions_task_doc() {
+        let offending = vec![NonStrictRow {
+            path: PathBuf::from("civic_inputs/lwv/manifest.json"),
+            validate_mode: "lenient".into(),
+            label: "lwv".into(),
+        }];
+        let msg = refusal_message(&offending);
+        assert!(msg.contains("court-submission-reports"), "must cite court-submission-reports plan doc");
+    }
+
+    #[test]
+    fn test_non_strict_row_serialize_has_path_and_mode() {
+        let row = NonStrictRow {
+            path: PathBuf::from("civic_inputs/lwv_lenient/manifest.json"),
+            validate_mode: "lenient".into(),
+            label: "lwv_lenient".into(),
+        };
+        let json = serde_json::to_value(&row).unwrap();
+        assert!(json.get("validate_mode").is_some(), "validate_mode must be serialized");
+        assert!(json.get("label").is_some(), "label must be serialized");
+        assert_eq!(json["validate_mode"], "lenient");
+        assert_eq!(json["label"], "lwv_lenient");
+    }
+
+    #[test]
+    fn test_check_civic_inputs_none_path_returns_none_found() {
+        // Passing None as the root skips filesystem — useful when the caller
+        // already knows no civic_inputs directory exists.
+        let outcome = check_civic_inputs(None, false).unwrap();
+        assert_eq!(outcome, CivicGateOutcome::NoneFound);
+    }
+
+    #[test]
+    fn test_check_civic_inputs_all_strict_multi_entries() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path().join("civic_inputs");
+        write_civic_manifest(&root, "org_a", "strict");
+        write_civic_manifest(&root, "org_b", "strict");
+        write_civic_manifest(&root, "org_c", "strict");
+        let outcome = check_civic_inputs(Some(&root), false).unwrap();
+        match outcome {
+            CivicGateOutcome::AllStrict { paths } => assert_eq!(paths.len(), 3),
+            other => panic!("expected AllStrict, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_check_civic_inputs_advisory_allowed_with_flag() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path().join("civic_inputs");
+        write_civic_manifest(&root, "org_advisory", "advisory");
+        let outcome = check_civic_inputs(Some(&root), true).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictAllowed { offending } => {
+                assert_eq!(offending.len(), 1);
+                assert_eq!(offending[0].validate_mode, "advisory");
+            }
+            other => panic!("expected NonStrictAllowed, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_check_civic_inputs_subdirectory_without_manifest_ignored() {
+        // A subdirectory that has no manifest.json should be silently skipped.
+        let tmp = tempfile::TempDir::new().unwrap();
+        let root = tmp.path().join("civic_inputs");
+        let empty_subdir = root.join("no_manifest_here");
+        std::fs::create_dir_all(&empty_subdir).unwrap();
+        // Write a file that is NOT manifest.json
+        std::fs::write(empty_subdir.join("readme.txt"), b"ignore me").unwrap();
+        let outcome = check_civic_inputs(Some(&root), false).unwrap();
+        assert_eq!(outcome, CivicGateOutcome::NoneFound,
+            "subdir without manifest.json must be silently ignored");
+    }
+
+    #[test]
+    fn test_non_strict_row_label_preserved() {
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "naacp_vra_coi".into(),
+            validate_mode: "lenient".into(),
+        };
+        let outcome = classify(vec![(PathBuf::from("path/manifest.json"), m)], false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending[0].label, "naacp_vra_coi",
+                    "label from manifest must be preserved in NonStrictRow");
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_non_strict_row_path_preserved() {
+        let path = PathBuf::from("outputs/v1/civic_inputs/lwv/manifest.json");
+        let m = CivicManifestRead {
+            schema_version: "civic-coi v1".into(),
+            label: "lwv".into(),
+            validate_mode: "lenient".into(),
+        };
+        let outcome = classify(vec![(path.clone(), m)], false).unwrap();
+        match outcome {
+            CivicGateOutcome::NonStrictRefused { offending } => {
+                assert_eq!(offending[0].path, path, "path must be preserved in NonStrictRow");
+            }
+            other => panic!("expected NonStrictRefused, got {:?}", other),
+        }
+    }
 }
