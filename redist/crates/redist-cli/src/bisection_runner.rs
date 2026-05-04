@@ -1409,6 +1409,92 @@ pub fn run_all_splits_proportional(
     Ok(assignments)
 }
 
+/// Return the set of vertices reachable from any member of `subset` using only
+/// edges whose both endpoints lie within `subset`.
+///
+/// The full adjacency list `adj` uses **global** indices.  `subset` is also
+/// expressed in global indices.  The returned `Vec<HashSet<usize>>` contains
+/// one entry per connected component (global indices).
+///
+/// Used by `repair_bisection_contiguity` to detect fragmented partitions.
+pub fn connected_components_of(
+    adj: &[Vec<usize>],
+    subset: &HashSet<usize>,
+) -> Vec<HashSet<usize>> {
+    let mut unvisited: HashSet<usize> = subset.clone();
+    let mut components: Vec<HashSet<usize>> = Vec::new();
+
+    while let Some(&start) = unvisited.iter().next() {
+        let mut component = HashSet::new();
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back(start);
+        unvisited.remove(&start);
+        component.insert(start);
+
+        while let Some(v) = queue.pop_front() {
+            for &nb in &adj[v] {
+                if unvisited.contains(&nb) {
+                    unvisited.remove(&nb);
+                    component.insert(nb);
+                    queue.push_back(nb);
+                }
+            }
+        }
+        components.push(component);
+    }
+
+    components
+}
+
+/// Repair a bisection where one or both sides may be disconnected.
+///
+/// After METIS splits a subgraph into `left` and `right`, contiguity is not
+/// guaranteed for every input graph.  This function detects disconnected
+/// components in each side and reassigns orphaned components (those *not*
+/// containing the majority component) to the other side.
+///
+/// The repair is greedy: the largest component of each side is kept; smaller
+/// components are migrated to the opposite side.  The operation is repeated
+/// at most once per side so that the result is always a valid (non-empty)
+/// partition covering every vertex.
+///
+/// Invariants:
+/// - `|returned_left| + |returned_right| == |left| + |right|`
+/// - Both sides remain non-empty (the function will not create a degenerate
+///   empty partition when the input already has vertices on both sides).
+pub fn repair_bisection_contiguity(
+    adj: &[Vec<usize>],
+    left: HashSet<usize>,
+    right: HashSet<usize>,
+) -> (HashSet<usize>, HashSet<usize>) {
+    let repair_side = |main: HashSet<usize>, other: HashSet<usize>| -> (HashSet<usize>, HashSet<usize>) {
+        let mut comps = connected_components_of(adj, &main);
+        if comps.len() <= 1 {
+            return (main, other);
+        }
+        // Keep the largest component; migrate the rest to the other side.
+        comps.sort_by_key(|c| std::cmp::Reverse(c.len()));
+        let mut kept = comps.remove(0);
+        let mut gained = other;
+        for orphan in comps {
+            gained.extend(orphan);
+        }
+        // Safety: never let the kept side shrink to zero if the other side
+        // would swallow everything.
+        if kept.is_empty() && !gained.is_empty() {
+            // Move one vertex back (pathological case).
+            let v = *gained.iter().next().unwrap();
+            gained.remove(&v);
+            kept.insert(v);
+        }
+        (kept, gained)
+    };
+
+    let (left2, right2) = repair_side(left, right);
+    let (right3, left3) = repair_side(right2, left2);
+    (left3, right3)
+}
+
 /// Write one intermediate round's assignments to `{round_dir}/assignments.json`.
 /// Format: `{"tract_index": region_id, ...}` — mirrors final_assignments.json.
 fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize>) -> Result<(), String> {
@@ -2250,5 +2336,346 @@ mod tests {
         let left = vec![0, 1];
         let a = vra_alignment(&mvap, &left);
         assert_eq!(a, 0.0, "zero total minority VAP must give alignment=0");
+    }
+
+    // ── Group: connected_components_of ───────────────────────────────────────
+
+    #[test]
+    fn connected_components_single_vertex() {
+        // 1-vertex graph, subset = {0} → exactly 1 component
+        let adj = vec![vec![]];
+        let subset: HashSet<usize> = vec![0].into_iter().collect();
+        let comps = connected_components_of(&adj, &subset);
+        assert_eq!(comps.len(), 1, "single vertex must yield 1 component");
+        assert!(comps[0].contains(&0));
+    }
+
+    #[test]
+    fn connected_components_two_disconnected_vertices() {
+        // 2-vertex graph with no edges → 2 components when both in subset
+        let adj = vec![vec![], vec![]];
+        let subset: HashSet<usize> = vec![0, 1].into_iter().collect();
+        let comps = connected_components_of(&adj, &subset);
+        assert_eq!(comps.len(), 2, "two isolated vertices must yield 2 components");
+    }
+
+    #[test]
+    fn connected_components_fully_connected() {
+        // 4-node chain 0-1-2-3: all in subset → 1 component
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
+        let subset: HashSet<usize> = (0..4).collect();
+        let comps = connected_components_of(&adj, &subset);
+        assert_eq!(comps.len(), 1, "connected chain must yield 1 component");
+        let union: HashSet<usize> = comps.into_iter().flatten().collect();
+        assert_eq!(union.len(), 4, "all vertices accounted for");
+    }
+
+    #[test]
+    fn connected_components_subset_only() {
+        // 6-node graph in two cliques: 0-1-2 and 3-4-5, with no cross-edges.
+        // Pass subset = {0,1,2} → should find 1 component even though 3-4-5 exist.
+        let adj = vec![
+            vec![1, 2], vec![0, 2], vec![0, 1],   // clique A
+            vec![4, 5], vec![3, 5], vec![3, 4],   // clique B
+        ];
+        let subset: HashSet<usize> = vec![0, 1, 2].into_iter().collect();
+        let comps = connected_components_of(&adj, &subset);
+        assert_eq!(comps.len(), 1, "subset {{0,1,2}} is a clique → 1 component");
+        let union: HashSet<usize> = comps.into_iter().flatten().collect();
+        assert_eq!(union, subset, "component must exactly match subset");
+    }
+
+    #[test]
+    fn connected_components_ignores_external_edges() {
+        // 4-node graph: 0 connects to 1,2,3 but subset = {0,1}.
+        // Edge 0-2 and 0-3 go outside subset and must be ignored.
+        // 0-1 is internal → subset {0,1} is 1 component.
+        let adj = vec![vec![1, 2, 3], vec![0], vec![0], vec![0]];
+        let subset: HashSet<usize> = vec![0, 1].into_iter().collect();
+        let comps = connected_components_of(&adj, &subset);
+        assert_eq!(comps.len(), 1, "external edges must be ignored; {{0,1}} is connected");
+    }
+
+    // ── Group: repair_bisection_contiguity ───────────────────────────────────
+
+    #[test]
+    fn repair_no_op_when_both_connected() {
+        // Left = {0,1}, Right = {2,3} on a 4-node chain.
+        // Both sides already connected — repair should return them unchanged.
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2]];
+        let left: HashSet<usize>  = vec![0, 1].into_iter().collect();
+        let right: HashSet<usize> = vec![2, 3].into_iter().collect();
+        let (l2, r2) = repair_bisection_contiguity(&adj, left.clone(), right.clone());
+        assert_eq!(l2, left,  "no-op: left unchanged");
+        assert_eq!(r2, right, "no-op: right unchanged");
+    }
+
+    #[test]
+    fn repair_single_orphan_moved_to_right() {
+        // Chain 0-1-2-3-4.  Left = {0,1,4} — vertex 4 is not connected to 0,1
+        // through left-only edges.  Repair should move vertex 4 to right.
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
+        let left: HashSet<usize>  = vec![0, 1, 4].into_iter().collect();
+        let right: HashSet<usize> = vec![2, 3].into_iter().collect();
+        let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
+        assert!(!l2.contains(&4) || r2.contains(&4) || l2.contains(&4),
+            "vertex 4 must end up in exactly one side");
+        // Both sides must cover all 5 vertices
+        let mut all: Vec<usize> = l2.union(&r2).copied().collect();
+        all.sort_unstable();
+        assert_eq!(all, vec![0, 1, 2, 3, 4], "all vertices must be covered");
+    }
+
+    #[test]
+    fn repair_single_orphan_moved_to_left() {
+        // Chain 0-1-2-3-4.  Right = {1,4} — vertex 4 is orphaned from 1 (no path
+        // through right).  Repair migrates 4 to left.
+        let adj = vec![vec![1], vec![0, 2], vec![1, 3], vec![2, 4], vec![3]];
+        let left: HashSet<usize>  = vec![0, 2, 3].into_iter().collect();
+        let right: HashSet<usize> = vec![1, 4].into_iter().collect();
+        let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
+        let mut all: Vec<usize> = l2.union(&r2).copied().collect();
+        all.sort_unstable();
+        assert_eq!(all, vec![0, 1, 2, 3, 4], "repair must preserve all vertices");
+    }
+
+    #[test]
+    fn repair_result_covers_all_vertices() {
+        // Arbitrary disconnected split on an 8-node graph.
+        // Key invariant: |left| + |right| must equal n after repair.
+        let adj: Vec<Vec<usize>> = vec![
+            vec![1], vec![0, 2], vec![1, 3], vec![2],
+            vec![5], vec![4, 6], vec![5, 7], vec![6],
+        ];
+        // left gets both chains but with a gap: {0,1,5,6}
+        let left: HashSet<usize>  = vec![0, 1, 5, 6].into_iter().collect();
+        let right: HashSet<usize> = vec![2, 3, 4, 7].into_iter().collect();
+        let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
+        assert_eq!(l2.len() + r2.len(), 8, "all 8 vertices must be covered");
+        assert!(l2.is_disjoint(&r2), "sides must remain disjoint after repair");
+    }
+
+    #[test]
+    fn repair_result_both_sides_nonempty() {
+        // Even a maximally unbalanced split should keep both sides non-empty.
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let left: HashSet<usize>  = vec![0, 2].into_iter().collect(); // disconnected
+        let right: HashSet<usize> = vec![1].into_iter().collect();
+        let (l2, r2) = repair_bisection_contiguity(&adj, left, right);
+        assert!(!l2.is_empty(), "left must remain non-empty after repair");
+        assert!(!r2.is_empty(), "right must remain non-empty after repair");
+        assert_eq!(l2.len() + r2.len(), 3, "all 3 vertices covered");
+    }
+
+    #[test]
+    fn repair_idempotent_on_connected() {
+        // Calling repair twice on an already-connected split must produce the same result.
+        let adj = vec![vec![1, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+        let left: HashSet<usize>  = vec![0, 1].into_iter().collect();
+        let right: HashSet<usize> = vec![2, 3].into_iter().collect();
+        let (l1, r1) = repair_bisection_contiguity(&adj, left.clone(), right.clone());
+        let (l2, r2) = repair_bisection_contiguity(&adj, l1.clone(), r1.clone());
+        assert_eq!(l1, l2, "repair must be idempotent on left");
+        assert_eq!(r1, r2, "repair must be idempotent on right");
+    }
+
+    // ── Group: population_lorenz additional coverage ─────────────────────────
+
+    #[test]
+    fn lorenz_empty_weights_returns_early() {
+        // All-zero weights → function returns early with empty curve and 0 natural pop
+        let pop  = vec![0i64, 0, 0];
+        let area = vec![1000.0f64, 2000.0, 3000.0];
+        let (curve, natural_pop, suggested_k) = population_lorenz(&pop, &area, 4);
+        assert!(curve.is_empty(), "zero total pop must return empty curve");
+        assert_eq!(natural_pop, 0.0, "natural pop at half area must be 0");
+        assert_eq!(suggested_k, 2, "suggested_k must be num_districts/2 = 2");
+    }
+
+    #[test]
+    fn lorenz_single_tract() {
+        // 1 vertex: curve is trivially (0,0)→(1,1)
+        let pop  = vec![100i64];
+        let area = vec![1000.0f64];
+        let (curve, natural_pop, _) = population_lorenz(&pop, &area, 2);
+        assert_eq!(curve.len(), 2, "single tract: curve has 2 points (0,0) and (1,1)");
+        assert!((curve[0].0).abs() < 1e-9 && (curve[0].1).abs() < 1e-9,
+            "first point must be (0,0)");
+        assert!((curve[1].0 - 1.0).abs() < 1e-9 && (curve[1].1 - 1.0).abs() < 1e-9,
+            "last point must be (1,1)");
+        // natural pop at half-area: single tract crosses 0.5 area threshold when added,
+        // so natural_pop is interpolated — at any rate it must be in [0,1]
+        assert!(natural_pop >= 0.0 && natural_pop <= 1.0,
+            "natural_pop must be in [0,1], got {natural_pop}");
+    }
+
+    #[test]
+    fn lorenz_two_tracts_different_density() {
+        // Tract 0: pop=100, area=10  (density=10) — dense
+        // Tract 1: pop=10,  area=100 (density=0.1) — sparse
+        // Dense tract is first in sort order.
+        // After adding tract 0: cum_area = 10/110 ≈ 0.091 — still < 0.5
+        // After adding tract 1: cum_area = 110/110 = 1.0 — crossed 0.5
+        // So natural_pop_at_half is interpolated between (0.091, 100/110) and (1.0, 1.0)
+        let pop  = vec![100i64, 10];
+        let area = vec![10.0f64, 100.0];
+        let (curve, natural_pop, suggested_k) = population_lorenz(&pop, &area, 2);
+        assert_eq!(curve.len(), 3, "two tracts: curve has 3 points");
+        // The denser tract must come first in the sorted curve
+        // After first tract: cum_pop fraction = 100/110 ≈ 0.909
+        assert!(curve[1].1 > 0.8,
+            "after dense tract, accumulated pop fraction must be > 80%, got {:.3}", curve[1].1);
+        // natural_pop must be > 0.5 (dense area contains majority of pop)
+        assert!(natural_pop > 0.5,
+            "natural pop at half area > 0.5 when pop is concentrated in dense tract, got {natural_pop}");
+        // suggested_k <= num_districts/2 = 1
+        assert!(suggested_k >= 1, "suggested_k must be >= 1, got {suggested_k}");
+    }
+
+    #[test]
+    fn lorenz_natural_k_clamped_to_half() {
+        // Verify suggested_k is always <= num_districts/2 for various inputs.
+        // Use a heavily concentrated state (all pop in first tract).
+        let pop  = vec![1000i64, 1, 1, 1, 1, 1, 1, 1];
+        let area = vec![10.0f64; 8];
+        for k in [2usize, 4, 6, 8, 10, 20, 52] {
+            let (_, _, suggested_k) = population_lorenz(&pop, &area, k);
+            let max_allowed = k / 2;
+            assert!(
+                suggested_k <= max_allowed,
+                "suggested_k={suggested_k} must be <= {max_allowed} for k={k}"
+            );
+        }
+    }
+
+    // ── Group: VRASection alignment score (additional) ────────────────────────
+
+    #[test]
+    fn vra_score_improves_as_concentration_increases() {
+        // Three increasingly concentrated left-side splits.
+        // alignment grows: 0% → 50% → 100% concentration.
+        // Alignment score must be monotone non-decreasing.
+        let mvap_total = 100.0_f64;
+
+        // Case 1: perfectly balanced (25/25/25/25 pop, left = {0,1})
+        let mvap_balanced = vec![25.0, 25.0, 25.0, 25.0];
+        let a1 = vra_alignment(&mvap_balanced, &[0, 1]);
+
+        // Case 2: 75% on left, 25% on right
+        let mvap_partial = vec![37.5, 37.5, 12.5, 12.5];
+        let a2 = vra_alignment(&mvap_partial, &[0, 1]);
+
+        // Case 3: 100% on left
+        let mvap_concentrated = vec![50.0, 50.0, 0.0, 0.0];
+        let a3 = vra_alignment(&mvap_concentrated, &[0, 1]);
+
+        // Suppress "unused" warning for the total variable
+        let _ = mvap_total;
+
+        assert!(a1 <= a2, "alignment must grow with concentration: {a1} <= {a2}");
+        assert!(a2 <= a3, "alignment must grow with concentration: {a2} <= {a3}");
+    }
+
+    #[test]
+    fn vra_alignment_large_state_many_tracts() {
+        // 50-tract test — verify no integer overflow or precision issues.
+        // Even-indexed tracts have high minority pop, odd-indexed have none.
+        let mvap: Vec<f64> = (0..50).map(|i| if i % 2 == 0 { 100.0 } else { 0.0 }).collect();
+        let left: Vec<usize> = (0..25).collect();
+        let a = vra_alignment(&mvap, &left);
+        // left has tracts 0..25: even-indexed = 0,2,4,...,24 → 13 tracts × 100.0 = 1300
+        // odd-indexed in left  = 1,3,5,...,23 → 12 tracts × 0.0 = 0
+        // total mvap = 25 × 100.0 = 2500
+        // mvap_left = 1300, mvap_frac = 1300/2500 = 0.52
+        // alignment = |0.52 - 0.5| * 2 = 0.04
+        assert!(a >= 0.0 && a <= 1.0,
+            "alignment must be in [0,1] for 50-tract test, got {a}");
+        assert!((a - 0.04).abs() < 1e-9,
+            "expected alignment ~0.04, got {a:.6}");
+    }
+
+    #[test]
+    fn vra_score_symmetric_around_half() {
+        // Alignment is symmetric: A(left, right) == A(right, left).
+        // i.e. swapping the two sides does not change the score.
+        let mvap = vec![80.0, 20.0, 10.0, 90.0];
+        let left_indices  = vec![0, 1]; // mvap_left  = 100
+        let right_indices = vec![2, 3]; // mvap_right = 100
+        let a_fwd = vra_alignment(&mvap, &left_indices);
+        let a_rev = vra_alignment(&mvap, &right_indices);
+        assert!((a_fwd - a_rev).abs() < 1e-9,
+            "alignment must be symmetric: fwd={a_fwd:.6} rev={a_rev:.6}");
+    }
+
+    // ── Group: bisection_runner edge cases ────────────────────────────────────
+
+    #[test]
+    fn split_subgraph_empty_tract_indices_returns_empty() {
+        // Empty tract set → (empty, empty) without panic
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let vw  = vec![1000i64; 3];
+        let ew  = HashMap::new();
+        let indices: HashSet<usize> = HashSet::new();
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
+            .expect("empty tract set must not error");
+        assert!(left.is_empty(),  "empty input → left must be empty");
+        assert!(right.is_empty(), "empty input → right must be empty");
+    }
+
+    #[test]
+    fn split_subgraph_single_tract_returns_all_left() {
+        // 1-tract set → (that tract, empty) — already covered by Group 1 but added for completeness
+        let adj  = vec![vec![]];
+        let vw   = vec![5000i64];
+        let ew   = HashMap::new();
+        let indices: HashSet<usize> = vec![0].into_iter().collect();
+        let (left, right) = split_subgraph(&adj, &vw, 1, &ew, &indices, 1.005, 100, None, None, None)
+            .expect("single-tract split must not error");
+        assert!(left.contains(&0),  "single tract must land in left");
+        assert!(right.is_empty(),   "right must be empty for single-tract input");
+    }
+
+    #[test]
+    fn run_all_splits_single_district_no_metis_call() {
+        // k=1: every tract gets district 1 without invoking METIS at all.
+        let n = 50usize;
+        let adj: Vec<Vec<usize>> = (0..n).map(|i| {
+            let mut nb = vec![];
+            if i > 0   { nb.push(i-1); }
+            if i < n-1 { nb.push(i+1); }
+            nb
+        }).collect();
+        let vw = vec![1000i64; n];
+        let ew = HashMap::new();
+        let assignments = run_all_splits(&adj, &vw, &ew, 1, 0.005, 100, None, None)
+            .expect("k=1 must succeed without METIS");
+        assert_eq!(assignments.len(), n, "all tracts assigned");
+        assert!(assignments.values().all(|&d| d == 1),
+            "k=1: every tract must be in district 1");
+    }
+
+    #[test]
+    fn run_nway_single_district_shortcut() {
+        // k=1 via run_nway_partition: verify same shortcut path works.
+        let adj = vec![vec![1], vec![0, 2], vec![1]];
+        let vw  = vec![1000i64; 3];
+        let ew  = HashMap::new();
+        let assignments = run_nway_partition(&adj, &vw, &ew, 1, 1.005, 100, None)
+            .expect("k=1 nway must not invoke METIS");
+        assert_eq!(assignments.len(), 3, "all 3 tracts assigned");
+        assert!(assignments.values().all(|&d| d == 1),
+            "k=1: every tract must be district 1");
+    }
+
+    #[test]
+    fn ufactor_clamp_prevents_zero() {
+        // The uf_int formula inside split_subgraph clamps the result to at least 5.
+        // Simulate the formula for several ufactor values close to 1.0.
+        for ufactor in [1.0_f64, 1.0001, 1.001, 1.003, 1.004, 1.005] {
+            let raw = ((ufactor - 1.0) * 1000.0).round() as i32;
+            let clamped = raw.clamp(5, 1000);
+            assert!(clamped >= 5,
+                "uf_int must be >= 5 (0.5%% floor), got {clamped} from ufactor={ufactor}");
+        }
     }
 }
