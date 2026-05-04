@@ -555,4 +555,101 @@ mod tests {
         assert_eq!(percentile_rank(&samples, 10.0), 1.0);
         assert!(percentile_rank(&[], 5.0).is_nan());
     }
+
+    // ── percentile_rank: additional edge cases ────────────────────────────────
+
+    #[test]
+    fn percentile_rank_single_sample_at_value_is_one() {
+        // The only sample IS the value → 1/1 = 1.0.
+        assert_eq!(percentile_rank(&[42.0], 42.0), 1.0);
+    }
+
+    #[test]
+    fn percentile_rank_single_sample_below_value_is_one() {
+        // Sample (1.0) is <= value (100.0) → 1/1 = 1.0.
+        assert_eq!(percentile_rank(&[1.0], 100.0), 1.0);
+    }
+
+    #[test]
+    fn percentile_rank_single_sample_above_value_is_zero() {
+        // Sample (10.0) > value (5.0) → 0/1 = 0.0.
+        assert_eq!(percentile_rank(&[10.0], 5.0), 0.0);
+    }
+
+    #[test]
+    fn percentile_rank_all_below_is_zero() {
+        let samples: Vec<f64> = (1..=100).map(|x| x as f64).collect();
+        // value = 0: no sample <= 0 → 0.0.
+        assert_eq!(percentile_rank(&samples, 0.0), 0.0);
+    }
+
+    #[test]
+    fn percentile_rank_all_at_or_below_is_one() {
+        let samples: Vec<f64> = (1..=100).map(|x| x as f64).collect();
+        assert_eq!(percentile_rank(&samples, 100.0), 1.0);
+    }
+
+    #[test]
+    fn percentile_rank_duplicate_values_handled_correctly() {
+        // All samples equal. If value == sample → all <= value → rank = 1.0.
+        let samples = vec![5.0, 5.0, 5.0, 5.0];
+        assert_eq!(percentile_rank(&samples, 5.0), 1.0);
+        // Value below all samples.
+        assert_eq!(percentile_rank(&samples, 4.9), 0.0);
+    }
+
+    #[test]
+    fn percentile_rank_fractional_result_correct() {
+        // 10 samples; exactly 3 are <= 3.0.
+        let samples: Vec<f64> = (1..=10).map(|x| x as f64).collect();
+        let pr = percentile_rank(&samples, 3.0);
+        assert!((pr - 0.3).abs() < 1e-12, "expected 0.3, got {pr}");
+    }
+
+    // ── run_validate_ensemble: ensemble robustness ────────────────────────────
+
+    #[test]
+    fn validate_ensemble_exactly_four_chains_passes_min_requirement() {
+        let tmp = TempDir::new().unwrap();
+        write_well_mixed_chains(tmp.path(), 4, 50);
+        let args = ValidateEnsembleArgs {
+            ensemble_dir: tmp.path().to_path_buf(),
+            output: None,
+            rhat_threshold: 1.5,
+            ess_min: 10.0,
+            enacted: None,
+            strict: false,
+        };
+        let result = run_validate_ensemble(&args);
+        assert!(result.is_ok(), "exactly 4 chains must satisfy S-03 requirement: {:?}", result.err());
+    }
+
+    #[test]
+    fn validate_ensemble_six_chains_accepted() {
+        let tmp = TempDir::new().unwrap();
+        write_well_mixed_chains(tmp.path(), 6, 50);
+        let args = ValidateEnsembleArgs {
+            ensemble_dir: tmp.path().to_path_buf(),
+            output: None,
+            rhat_threshold: 1.5,
+            ess_min: 10.0,
+            enacted: None,
+            strict: false,
+        };
+        assert!(run_validate_ensemble(&args).is_ok(), "6 chains must be accepted");
+    }
+
+    #[test]
+    fn validate_ensemble_non_existent_dir_is_error() {
+        let args = ValidateEnsembleArgs {
+            ensemble_dir: std::path::PathBuf::from("/nonexistent/path/to/ensemble"),
+            output: None,
+            rhat_threshold: 1.05,
+            ess_min: 100.0,
+            enacted: None,
+            strict: false,
+        };
+        let err = run_validate_ensemble(&args).unwrap_err().to_string();
+        assert!(err.contains("[INPUT]"), "missing dir must emit [INPUT] error: {err}");
+    }
 }

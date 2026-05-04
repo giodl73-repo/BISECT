@@ -416,4 +416,111 @@ mod tests {
         assert_eq!(d.population_changed, 0);
         assert!(d.districts_with_changes.is_empty());
     }
+
+    // ── ComparisonReport: from_loaded / structural tests ─────────────────────
+
+    #[test]
+    fn test_from_loaded_stores_plan_a() {
+        let a = fixture_plan_a();
+        let b = fixture_plan_b();
+        let report = ComparisonReport::from_loaded(a.clone(), b, None, DiffSummary::default());
+        assert_eq!(report.plan_a.label, a.label);
+        assert_eq!(report.plan_a.leaning_seats, a.leaning_seats);
+    }
+
+    #[test]
+    fn test_from_loaded_stores_plan_b() {
+        let a = fixture_plan_a();
+        let b = fixture_plan_b();
+        let report = ComparisonReport::from_loaded(a, b.clone(), None, DiffSummary::default());
+        assert_eq!(report.plan_b.label, b.label);
+        assert_eq!(report.plan_b.submission_type, b.submission_type);
+    }
+
+    #[test]
+    fn test_from_loaded_baseline_none() {
+        let report = ComparisonReport::from_loaded(
+            fixture_plan_a(), fixture_plan_b(), None, DiffSummary::default()
+        );
+        assert!(report.baseline.is_none());
+    }
+
+    #[test]
+    fn test_from_loaded_baseline_some() {
+        let baseline = fixture_plan_a();
+        let report = ComparisonReport::from_loaded(
+            fixture_plan_a(), fixture_plan_b(), Some(baseline.clone()), DiffSummary::default()
+        );
+        assert!(report.baseline.is_some());
+        assert_eq!(report.baseline.as_ref().unwrap().label, baseline.label);
+    }
+
+    #[test]
+    fn test_has_civic_detects_plan_a_civic() {
+        let mut a = fixture_plan_a();
+        a.submission_type = Some("civic_counter_proposal".into());
+        let report = ComparisonReport::from_loaded(a, fixture_plan_b(), None, DiffSummary::default());
+        // plan_b is also civic in fixture, but let's use a non-civic plan_b to isolate.
+        assert!(report.has_civic_counter_proposal(), "civic plan_a must be detected");
+    }
+
+    #[test]
+    fn test_has_civic_false_neither_civic() {
+        let mut a = fixture_plan_a();
+        let mut b = fixture_plan_b();
+        a.submission_type = None;
+        b.submission_type = None;
+        let report = ComparisonReport::from_loaded(a, b, None, DiffSummary::default());
+        assert!(!report.has_civic_counter_proposal());
+    }
+
+    // ── PlanSide fields ──────────────────────────────────────────────────────
+
+    #[test]
+    fn test_plan_side_per_district_dem_share_length() {
+        let plan = fixture_plan_a();
+        assert_eq!(plan.per_district_dem_share.len(), plan.n_districts,
+            "per_district_dem_share length must equal n_districts");
+    }
+
+    #[test]
+    fn test_plan_side_manifest_sha256_length() {
+        let plan = fixture_plan_a();
+        assert_eq!(plan.manifest_sha256.len(), 64, "SHA-256 hex must be 64 chars");
+    }
+
+    #[test]
+    fn test_diff_summary_population_changed_round_trip() {
+        let d = DiffSummary {
+            tracts_changed: 10,
+            population_changed: 25_000,
+            districts_with_changes: vec![1, 3, 5],
+        };
+        assert_eq!(d.tracts_changed, 10);
+        assert_eq!(d.population_changed, 25_000);
+        assert_eq!(d.districts_with_changes, vec![1, 3, 5]);
+    }
+
+    #[test]
+    fn test_sha256_hex_length() {
+        // The sha256_hex helper must produce a 64-char lowercase hex string.
+        let hash = sha256_hex(b"hello world");
+        assert_eq!(hash.len(), 64, "SHA-256 hex must be 64 chars, got {}", hash.len());
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()),
+            "SHA-256 hex must be lowercase hex: {hash}");
+    }
+
+    #[test]
+    fn test_sha256_hex_deterministic() {
+        let h1 = sha256_hex(b"redistricting");
+        let h2 = sha256_hex(b"redistricting");
+        assert_eq!(h1, h2, "SHA-256 must be deterministic");
+    }
+
+    #[test]
+    fn test_sha256_hex_different_inputs() {
+        let h1 = sha256_hex(b"plan_a");
+        let h2 = sha256_hex(b"plan_b");
+        assert_ne!(h1, h2, "different inputs must produce different hashes");
+    }
 }

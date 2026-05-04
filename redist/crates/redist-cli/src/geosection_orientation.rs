@@ -454,4 +454,200 @@ mod tests {
         assert!((result[&(99,100)] - 500.0).abs() < 1e-9,
             "edge with missing centroids must be treated as penalty=0 → unchanged");
     }
+
+    // ── compute_minor_axis: 3+ non-collinear points ────────────────────────
+
+    #[test]
+    fn compute_minor_axis_square_grid_returns_some() {
+        // 4 points forming a square — variance equal in both directions.
+        // Result angle is undefined but must be Some.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (44.0, -71.0));
+        centroids.insert(2, (45.0, -72.0));
+        centroids.insert(3, (45.0, -71.0));
+        let verts: std::collections::HashSet<usize> = (0..4).collect();
+        assert!(compute_minor_axis(&verts, &centroids).is_some(),
+            "square grid must return Some minor axis");
+    }
+
+    #[test]
+    fn compute_minor_axis_tall_north_south_band_minor_is_ew() {
+        // Tall N-S band: large lat spread, tiny lon spread → lon axis (E-W) has smallest variance.
+        // Minor axis angle should be near 0 (E-W direction = atan2(0,1) = 0).
+        let centroids: CentroidMap = (0..20).map(|i| {
+            let lat = 40.0 + (i % 10) as f64; // 10 distinct lat values → large N-S spread
+            let lon = if i < 10 { -72.0 } else { -71.9 }; // tiny E-W spread
+            (i, (lat, lon))
+        }).collect();
+        let verts: std::collections::HashSet<usize> = (0..20).collect();
+        let angle = compute_minor_axis(&verts, &centroids).unwrap();
+        // Minor axis is E-W (angle near 0).
+        let deg = angle.to_degrees();
+        let near_zero = deg.abs() < 30.0 || (deg.abs() - 180.0).abs() < 30.0;
+        assert!(near_zero,
+            "tall N-S band → minor axis should be E-W (near 0°), got {deg:.1}°");
+    }
+
+    #[test]
+    fn compute_minor_axis_diagonal_band_ne_sw() {
+        // Points along a NE-SW diagonal: (0,0), (1,1), (2,2), (3,3) in lat/lon.
+        // Both axes have equal variance → covariance not zero, minor axis near 45°.
+        let centroids: CentroidMap = (0..4usize).map(|i| {
+            (i, (i as f64, i as f64))
+        }).collect();
+        let verts: std::collections::HashSet<usize> = (0..4).collect();
+        // Must return Some and have a finite angle.
+        let angle = compute_minor_axis(&verts, &centroids).unwrap();
+        assert!(angle.is_finite(), "angle must be finite for diagonal band, got {angle}");
+    }
+
+    #[test]
+    fn compute_minor_axis_three_non_collinear_returns_some() {
+        // Triangle of points — neither collinear nor square.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (44.5, -71.0));
+        centroids.insert(2, (45.5, -72.5));
+        let verts: std::collections::HashSet<usize> = (0..3).collect();
+        assert!(compute_minor_axis(&verts, &centroids).is_some());
+    }
+
+    #[test]
+    fn compute_minor_axis_large_cluster_is_finite() {
+        // 50 points scattered in a 2° × 10° region; result must be finite.
+        let centroids: CentroidMap = (0..50usize).map(|i| {
+            let lat = 40.0 + (i % 5) as f64 * 0.5;  // 2° range
+            let lon = -80.0 + (i % 10) as f64;       // 10° range
+            (i, (lat, lon))
+        }).collect();
+        let verts: std::collections::HashSet<usize> = (0..50).collect();
+        let angle = compute_minor_axis(&verts, &centroids).unwrap();
+        assert!(angle.is_finite(), "large cluster must yield finite angle, got {angle}");
+    }
+
+    // ── apply_directional_penalty: large lambda ────────────────────────────
+
+    #[test]
+    fn apply_directional_penalty_very_large_lambda_still_positive() {
+        // lambda = 1000; all output weights must remain positive.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (45.0, -72.0)); // N-S edge
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0, 1), 1.0);
+        let result = apply_directional_penalty(&ew, &centroids, 0.0, 1000.0);
+        assert!(result[&(0,1)] > 0.0, "weight must be positive even with lambda=1000");
+    }
+
+    #[test]
+    fn apply_directional_penalty_large_lambda_scales_perpendicular_edge() {
+        // lambda=10, edge is perpendicular to minor axis → weight × (1 + 10×1) = 11×.
+        let minor_axis = 0.0_f64; // E-W
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(10, (44.0, -72.0));
+        centroids.insert(11, (45.0, -72.0)); // N-S → angle=π/2 → perpendicular to E-W minor axis
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((10, 11), 1.0);
+        let result = apply_directional_penalty(&ew, &centroids, minor_axis, 10.0);
+        let w = result[&(10, 11)];
+        // sin(π/2) = 1 → factor = 1 + 10×1 = 11
+        assert!((w - 11.0).abs() < 1e-4, "perpendicular edge with lambda=10 must scale to 11.0, got {w}");
+    }
+
+    #[test]
+    fn apply_directional_penalty_preserves_edge_count() {
+        // Output must have exactly the same number of edges as input.
+        let mut centroids: CentroidMap = HashMap::new();
+        for i in 0..10usize {
+            centroids.insert(i, (44.0 + i as f64 * 0.1, -72.0 + i as f64 * 0.1));
+        }
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        for i in 0..9usize {
+            ew.insert((i, i+1), (i+1) as f64 * 100.0);
+        }
+        let result = apply_directional_penalty(&ew, &centroids, 0.5, 2.0);
+        assert_eq!(result.len(), ew.len(), "output must have same number of edges as input");
+    }
+
+    #[test]
+    fn apply_directional_penalty_only_source_centroid_missing_no_penalty() {
+        // Source node missing, dest present → both needed for angle → defaults to 0 penalty.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(1, (44.0, -72.0)); // only dest
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0, 1), 200.0);
+        let result = apply_directional_penalty(&ew, &centroids, 0.5, 5.0);
+        assert!((result[&(0,1)] - 200.0).abs() < 1e-9,
+            "edge with missing source centroid must use penalty=0 → unchanged");
+    }
+
+    // ── CentroidMap type alias ────────────────────────────────────────────────
+
+    #[test]
+    fn centroid_map_insert_and_retrieve() {
+        let mut cm: CentroidMap = HashMap::new();
+        cm.insert(42, (38.9072, -77.0369)); // Washington DC approx
+        assert!(cm.contains_key(&42));
+        let (lat, lon) = cm[&42];
+        assert!((lat - 38.9072).abs() < 1e-10);
+        assert!((lon - (-77.0369)).abs() < 1e-10);
+    }
+
+    #[test]
+    fn state_code_to_fips_2_all_standard_codes() {
+        // Quick round-trip for a selection of state codes.
+        assert_eq!(state_code_to_fips_2("CA"), Some("06"));
+        assert_eq!(state_code_to_fips_2("TX"), Some("48"));
+        assert_eq!(state_code_to_fips_2("NY"), Some("36"));
+        assert_eq!(state_code_to_fips_2("FL"), Some("12"));
+        assert_eq!(state_code_to_fips_2("DC"), None); // DC not in fips_2
+    }
+
+    #[test]
+    fn state_code_to_fips_2_lowercase_works() {
+        assert_eq!(state_code_to_fips_2("ca"), Some("06"));
+        assert_eq!(state_code_to_fips_2("tx"), Some("48"));
+    }
+
+    #[test]
+    fn state_code_to_fips_2_unknown_returns_none() {
+        assert_eq!(state_code_to_fips_2("ZZ"), None);
+        assert_eq!(state_code_to_fips_2(""), None);
+    }
+
+    #[test]
+    fn apply_directional_penalty_multiple_edges_mixed_angles() {
+        // Three edges: E-W, N-S, diagonal. Diagonal should land between the two extremes.
+        let minor_axis = 0.0_f64; // E-W = minor axis
+        let lambda = 4.0;
+        let mut centroids: CentroidMap = HashMap::new();
+        // E-W edge (parallel to minor axis → penalty 0)
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (44.0, -71.0));
+        // N-S edge (perpendicular → max penalty)
+        centroids.insert(2, (44.0, -72.0));
+        centroids.insert(3, (45.0, -72.0));
+        // NE-SW diagonal (45°)
+        centroids.insert(4, (44.0, -72.0));
+        centroids.insert(5, (44.5, -71.5));
+
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0,1), 100.0); // E-W
+        ew.insert((2,3), 100.0); // N-S
+        ew.insert((4,5), 100.0); // 45°
+
+        let result = apply_directional_penalty(&ew, &centroids, minor_axis, lambda);
+        let w_ew   = result[&(0,1)];
+        let w_ns   = result[&(2,3)];
+        let w_diag = result[&(4,5)];
+
+        // E-W: sin(0)=0 → unchanged
+        assert!((w_ew - 100.0).abs() < 1e-4, "E-W edge unchanged: got {w_ew}");
+        // N-S: sin(π/2)=1 → ×(1+4)=5
+        assert!((w_ns - 500.0).abs() < 1e-4, "N-S edge ×5: got {w_ns}");
+        // diagonal: sin(π/4)≈0.707 → between 100 and 500
+        assert!(w_diag > 100.0 && w_diag < 500.0,
+            "diagonal edge must be between E-W and N-S penalties: got {w_diag}");
+    }
 }

@@ -255,4 +255,184 @@ mod tests {
         assert!((districts[&1].unsigned_area() - 2.0).abs() < 1e-9);
         assert!((districts[&2].unsigned_area() - 2.0).abs() < 1e-9);
     }
+
+    // ── state_name_to_code ────────────────────────────────────────────────────
+
+    #[test]
+    fn state_name_to_code_vermont() {
+        assert_eq!(state_name_to_code("vermont"), Some("VT"));
+    }
+
+    #[test]
+    fn state_name_to_code_california() {
+        assert_eq!(state_name_to_code("california"), Some("CA"));
+    }
+
+    #[test]
+    fn state_name_to_code_new_york() {
+        assert_eq!(state_name_to_code("new_york"), Some("NY"));
+    }
+
+    #[test]
+    fn state_name_to_code_new_hampshire() {
+        assert_eq!(state_name_to_code("new_hampshire"), Some("NH"));
+    }
+
+    #[test]
+    fn state_name_to_code_north_carolina() {
+        assert_eq!(state_name_to_code("north_carolina"), Some("NC"));
+    }
+
+    #[test]
+    fn state_name_to_code_rhode_island() {
+        assert_eq!(state_name_to_code("rhode_island"), Some("RI"));
+    }
+
+    #[test]
+    fn state_name_to_code_district_of_columbia() {
+        assert_eq!(state_name_to_code("district_of_columbia"), Some("DC"));
+    }
+
+    #[test]
+    fn state_name_to_code_unknown_returns_none() {
+        assert_eq!(state_name_to_code("unknown_state"), None);
+    }
+
+    #[test]
+    fn state_name_to_code_empty_returns_none() {
+        assert_eq!(state_name_to_code(""), None);
+    }
+
+    #[test]
+    fn state_name_to_code_case_sensitive_uppercase_returns_none() {
+        // The function only matches lowercase_underscore form.
+        assert_eq!(state_name_to_code("California"), None);
+    }
+
+    #[test]
+    fn state_name_to_code_texas() {
+        assert_eq!(state_name_to_code("texas"), Some("TX"));
+    }
+
+    #[test]
+    fn state_name_to_code_alaska() {
+        assert_eq!(state_name_to_code("alaska"), Some("AK"));
+    }
+
+    #[test]
+    fn state_name_to_code_hawaii() {
+        assert_eq!(state_name_to_code("hawaii"), Some("HI"));
+    }
+
+    #[test]
+    fn state_name_to_code_all_50_have_some() {
+        // Quick smoke test: none of the 50 canonical lowercase names returns None.
+        let names = [
+            "alabama", "alaska", "arizona", "arkansas", "california", "colorado",
+            "connecticut", "delaware", "florida", "georgia", "hawaii", "idaho",
+            "illinois", "indiana", "iowa", "kansas", "kentucky", "louisiana",
+            "maine", "maryland", "massachusetts", "michigan", "minnesota",
+            "mississippi", "missouri", "montana", "nebraska", "nevada",
+            "new_hampshire", "new_jersey", "new_mexico", "new_york",
+            "north_carolina", "north_dakota", "ohio", "oklahoma", "oregon",
+            "pennsylvania", "rhode_island", "south_carolina", "south_dakota",
+            "tennessee", "texas", "utah", "vermont", "virginia", "washington",
+            "west_virginia", "wisconsin", "wyoming",
+        ];
+        for name in &names {
+            assert!(state_name_to_code(name).is_some(), "expected Some for: {name}");
+        }
+    }
+
+    // ── resolve_to_geoid_assignments ─────────────────────────────────────────
+
+    #[test]
+    fn resolve_to_geoid_assignments_long_keys_passthrough() {
+        // Keys already >= 11 chars → treated as GEOIDs, returned unchanged.
+        let mut raw = HashMap::new();
+        raw.insert("50005957100".to_string(), 1usize);
+        raw.insert("50005957200".to_string(), 2usize);
+        let result = resolve_to_geoid_assignments(
+            raw.clone(),
+            std::path::Path::new("/nonexistent"),
+            "VT",
+            "2020",
+        );
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.get("50005957100"), Some(&1));
+        assert_eq!(result.get("50005957200"), Some(&2));
+    }
+
+    #[test]
+    fn resolve_to_geoid_assignments_empty_map_passthrough() {
+        let raw: HashMap<String, usize> = HashMap::new();
+        let result = resolve_to_geoid_assignments(
+            raw,
+            std::path::Path::new("/nonexistent"),
+            "VT",
+            "2020",
+        );
+        assert!(result.is_empty(), "empty input must produce empty output");
+    }
+
+    #[test]
+    fn resolve_to_geoid_assignments_short_keys_without_geoid_file_returns_original() {
+        // Keys < 11 chars look like indices, but geoid file doesn't exist →
+        // falls back to returning the raw map unchanged (with a warning).
+        let mut raw = HashMap::new();
+        raw.insert("0".to_string(), 1usize);
+        raw.insert("1".to_string(), 2usize);
+        let result = resolve_to_geoid_assignments(
+            raw.clone(),
+            std::path::Path::new("/nonexistent"),
+            "VT",
+            "2020",
+        );
+        // Returns the original raw map since geoid file doesn't exist.
+        assert_eq!(result.len(), 2);
+    }
+
+    // ── group_dissolve single district ───────────────────────────────────────
+
+    #[test]
+    fn group_dissolve_single_district_four_unit_squares() {
+        // Four unit squares all in district 1 → combined area = 4.0
+        let make_sq = |x0: f64, y0: f64| -> Geometry<f64> {
+            Geometry::Polygon(polygon![
+                (x: x0,     y: y0),
+                (x: x0+1.0, y: y0),
+                (x: x0+1.0, y: y0+1.0),
+                (x: x0,     y: y0+1.0),
+                (x: x0,     y: y0)
+            ])
+        };
+        let geoms = vec![make_sq(0.0,0.0), make_sq(1.0,0.0), make_sq(2.0,0.0), make_sq(3.0,0.0)];
+        let assignments = vec![1usize, 1, 1, 1];
+        let districts = group_dissolve(&geoms, &assignments, 1);
+        assert_eq!(districts.len(), 1);
+        assert!((districts[&1].unsigned_area() - 4.0).abs() < 1e-9,
+            "four unit squares in one district should have area 4.0");
+    }
+
+    #[test]
+    fn group_dissolve_three_districts_equal_area() {
+        // Three unit squares in three separate districts → each area = 1.0
+        let make_sq = |x0: f64| -> Geometry<f64> {
+            Geometry::Polygon(polygon![
+                (x: x0,     y: 0.0),
+                (x: x0+1.0, y: 0.0),
+                (x: x0+1.0, y: 1.0),
+                (x: x0,     y: 1.0),
+                (x: x0,     y: 0.0)
+            ])
+        };
+        let geoms = vec![make_sq(0.0), make_sq(1.0), make_sq(2.0)];
+        let assignments = vec![1usize, 2, 3];
+        let districts = group_dissolve(&geoms, &assignments, 3);
+        assert_eq!(districts.len(), 3);
+        for d in 1..=3 {
+            assert!((districts[&d].unsigned_area() - 1.0).abs() < 1e-9,
+                "district {d} should have area 1.0");
+        }
+    }
 }

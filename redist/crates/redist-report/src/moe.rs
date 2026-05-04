@@ -259,4 +259,140 @@ mod tests {
             "within margin of error; see numerical table."
         );
     }
+
+    // ── CiBand constructor ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_ciband_new_stores_values() {
+        let band = CiBand::new(5.0, 4.5, 5.5);
+        assert_eq!(band.point, 5.0);
+        assert_eq!(band.low, 4.5);
+        assert_eq!(band.high, 5.5);
+    }
+
+    #[test]
+    fn test_ciband_new_degenerate_zero_width() {
+        // Zero-width CI (point estimate with no uncertainty) must be accepted.
+        let band = CiBand::new(3.0, 3.0, 3.0);
+        assert_eq!(band.point, 3.0);
+        assert_eq!(band.low, 3.0);
+        assert_eq!(band.high, 3.0);
+    }
+
+    #[test]
+    fn test_ciband_equality() {
+        let a = CiBand::new(1.0, 0.8, 1.2);
+        let b = CiBand::new(1.0, 0.8, 1.2);
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn test_ciband_copy_semantics() {
+        // CiBand derives Copy — verify no borrow issues.
+        let band = CiBand::new(2.0, 1.5, 2.5);
+        let copy = band;
+        assert_eq!(band, copy);
+    }
+
+    // ── MetricMonotonicity ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_metric_monotonicity_equality() {
+        assert_eq!(MetricMonotonicity::Monotone, MetricMonotonicity::Monotone);
+        assert_eq!(MetricMonotonicity::NonMonotone, MetricMonotonicity::NonMonotone);
+        assert_ne!(MetricMonotonicity::Monotone, MetricMonotonicity::NonMonotone);
+    }
+
+    // ── Monotone: boundary and asymmetric cases ─────────────────────────────
+
+    #[test]
+    fn test_monotone_b_greater_no_overlap_emits_no_suppression() {
+        // A < B with no CI overlap: a.high < b.low → safe.
+        let a = CiBand::new(3.0, 2.7, 3.3);
+        let b = CiBand::new(6.0, 5.7, 6.3);
+        assert_eq!(suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b), None,
+            "B clearly greater than A: no suppression");
+    }
+
+    #[test]
+    fn test_monotone_b_greater_with_overlap_emits_suppression() {
+        // A < B but overlapping CIs.
+        let a = CiBand::new(4.0, 3.5, 4.5);
+        let b = CiBand::new(4.2, 3.7, 4.7);
+        let result = suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b);
+        assert_eq!(result, Some(MOE_SUPPRESSED_TEXT.to_string()));
+    }
+
+    #[test]
+    fn test_monotone_wide_ci_always_suppressed() {
+        // When CIs are very wide (huge uncertainty), always suppress.
+        let a = CiBand::new(5.0, 0.0, 10.0);
+        let b = CiBand::new(5.0, 0.0, 10.0);
+        let result = suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b);
+        assert_eq!(result, Some(MOE_SUPPRESSED_TEXT.to_string()));
+    }
+
+    #[test]
+    fn test_monotone_tight_ci_a_greater_no_suppression() {
+        // Very tight CIs: a.low (6.99) > b.high (5.01) → safe.
+        let a = CiBand::new(7.0, 6.99, 7.01);
+        let b = CiBand::new(5.0, 4.99, 5.01);
+        assert_eq!(suppress_or_emit("seats", MetricMonotonicity::Monotone, a, b), None,
+            "tight non-overlapping CIs must not be suppressed");
+    }
+
+    // ── Non-monotone: additional cases ──────────────────────────────────────
+
+    #[test]
+    fn test_non_monotone_no_overlap_both_above_threshold_no_suppression() {
+        // A: [2.5, 3.0], B: [0.0, 0.3] — clearly distinct.
+        let a = CiBand::new(2.8, 2.5, 3.0);
+        let b = CiBand::new(0.1, 0.0, 0.3);
+        assert_eq!(
+            suppress_or_emit("mm_count", MetricMonotonicity::NonMonotone, a, b),
+            None,
+            "non-overlapping MM CIs must not be suppressed"
+        );
+    }
+
+    #[test]
+    fn test_non_monotone_both_degenerate_equal_suppressed() {
+        // Both plans have identical point estimates with zero-width CI: a.low == b.high → suppress.
+        let a = CiBand::new(2.0, 2.0, 2.0);
+        let b = CiBand::new(2.0, 2.0, 2.0);
+        let result = suppress_or_emit("mm_count", MetricMonotonicity::NonMonotone, a, b);
+        // a.low (2.0) <= b.high (2.0) AND b.low (2.0) <= a.high (2.0) → overlap → suppress.
+        assert_eq!(result, Some(MOE_SUPPRESSED_TEXT.to_string()));
+    }
+
+    // ── count_indeterminate_districts: additional cases ─────────────────────
+
+    #[test]
+    fn test_count_indeterminate_all_straddle() {
+        let cis = vec![(0.40, 0.60), (0.45, 0.55), (0.49, 0.51)];
+        assert_eq!(count_indeterminate_districts(&cis, 0.50), 3,
+            "all three CIs straddle 0.50 → all indeterminate");
+    }
+
+    #[test]
+    fn test_count_indeterminate_empty_slice_zero() {
+        assert_eq!(count_indeterminate_districts(&[], 0.50), 0,
+            "empty slice must return 0 indeterminate districts");
+    }
+
+    #[test]
+    fn test_count_indeterminate_threshold_at_low_boundary_not_counted() {
+        // CI is [0.50, 0.60]: low == threshold, not strictly less → doesn't straddle.
+        let cis = vec![(0.50, 0.60)];
+        assert_eq!(count_indeterminate_districts(&cis, 0.50), 0,
+            "low == threshold is not strictly below → not indeterminate");
+    }
+
+    #[test]
+    fn test_count_indeterminate_very_narrow_ci_straddling() {
+        // CI = [0.4999, 0.5001]: tiny but straddles 0.5.
+        let cis = vec![(0.4999, 0.5001)];
+        assert_eq!(count_indeterminate_districts(&cis, 0.50), 1,
+            "narrow CI straddling threshold must count as indeterminate");
+    }
 }

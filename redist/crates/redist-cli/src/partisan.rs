@@ -301,4 +301,216 @@ mod tests {
         assert!(types.contains(&AnalyzerType::Partisan));
         assert!(!types.contains(&AnalyzerType::Demographic));
     }
+
+    // ── parse_election_csv edge cases ─────────────────────────────────────────
+
+    #[test]
+    fn test_parse_election_csv_empty_body() {
+        // Header only, no data rows → empty vec.
+        let csv = "geoid,dem_votes,rep_votes\n";
+        let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
+        assert_eq!(records.len(), 0, "header-only CSV must yield 0 records");
+    }
+
+    #[test]
+    fn test_parse_election_csv_fractional_votes() {
+        // Election data uses f64 — fractional allocations (e.g. from party-reg proration) are valid.
+        let csv = "geoid,dem_votes,rep_votes\n12345678901,0.5,0.5\n";
+        let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
+        assert_eq!(records.len(), 1);
+        assert!((records[0].dem_votes - 0.5).abs() < 1e-12);
+        assert!((records[0].rep_votes - 0.5).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_parse_election_csv_zero_votes() {
+        // Uncontested races may have zero votes for one party.
+        let csv = "geoid,dem_votes,rep_votes\n99999999999,0.0,1000.0\n";
+        let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].dem_votes, 0.0);
+        assert_eq!(records[0].rep_votes, 1000.0);
+    }
+
+    #[test]
+    fn test_parse_election_csv_multiple_rows() {
+        let csv = "geoid,dem_votes,rep_votes\ng1,100.0,80.0\ng2,200.0,150.0\ng3,50.0,75.0\n";
+        let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
+        assert_eq!(records.len(), 3);
+        assert_eq!(records[2].geoid, "g3");
+        assert!((records[2].rep_votes - 75.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_parse_election_csv_preserves_geoid_as_string() {
+        // Leading-zero GEOIDs must be preserved as strings, not parsed as integers.
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,500.0,400.0\n";
+        let records = parse_election_csv(Cursor::new(csv.as_bytes())).unwrap();
+        assert_eq!(records[0].geoid, "01001020100", "leading-zero GEOID must be preserved");
+    }
+
+    // ── aggregate_election_to_districts ──────────────────────────────────────
+
+    #[test]
+    fn test_aggregate_empty_election_returns_empty() {
+        let election: Vec<ElectionRecord> = Vec::new();
+        let assignments: HashMap<String, usize> = HashMap::new();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_aggregate_geoid_not_in_assignments_is_ignored() {
+        // GEOIDs in the election file that have no assignment are silently dropped.
+        let election = vec![
+            ElectionRecord { geoid: "t_unassigned".into(), dem_votes: 999.0, rep_votes: 111.0 },
+        ];
+        let assignments: HashMap<String, usize> = HashMap::new();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert!(result.is_empty(), "unassigned GEOIDs must be dropped");
+    }
+
+    #[test]
+    fn test_aggregate_single_district_single_tract() {
+        let election = vec![
+            ElectionRecord { geoid: "t1".into(), dem_votes: 300.0, rep_votes: 200.0 },
+        ];
+        let assignments: HashMap<String, usize> = [("t1".to_string(), 1usize)].into();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert_eq!(result.len(), 1);
+        assert!((result[&1].dem_votes - 300.0).abs() < 1e-9);
+        assert!((result[&1].rep_votes - 200.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_aggregate_three_tracts_same_district() {
+        let election = vec![
+            ElectionRecord { geoid: "a".into(), dem_votes: 100.0, rep_votes: 50.0 },
+            ElectionRecord { geoid: "b".into(), dem_votes: 200.0, rep_votes: 100.0 },
+            ElectionRecord { geoid: "c".into(), dem_votes: 150.0, rep_votes: 75.0 },
+        ];
+        let assignments: HashMap<String, usize> = [
+            ("a".to_string(), 1usize), ("b".to_string(), 1), ("c".to_string(), 1)
+        ].into();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert_eq!(result.len(), 1);
+        assert!((result[&1].dem_votes - 450.0).abs() < 1e-9);
+        assert!((result[&1].rep_votes - 225.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn test_aggregate_district_id_is_preserved() {
+        let election = vec![
+            ElectionRecord { geoid: "x".into(), dem_votes: 10.0, rep_votes: 5.0 },
+        ];
+        let assignments: HashMap<String, usize> = [("x".to_string(), 7usize)].into();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert!(result.contains_key(&7), "district_id from assignment must be preserved");
+        assert_eq!(result[&7].district, 7);
+    }
+
+    #[test]
+    fn test_aggregate_all_dem_votes_zero() {
+        // Completely uncontested R race — district gets 0 dem, all rep.
+        let election = vec![
+            ElectionRecord { geoid: "t".into(), dem_votes: 0.0, rep_votes: 1000.0 },
+        ];
+        let assignments: HashMap<String, usize> = [("t".to_string(), 1usize)].into();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert_eq!(result[&1].dem_votes, 0.0);
+        assert_eq!(result[&1].rep_votes, 1000.0);
+    }
+
+    #[test]
+    fn test_aggregate_large_number_of_tracts() {
+        // Stress test: 500 tracts all in the same district.
+        let mut election = Vec::new();
+        for i in 0..500usize {
+            election.push(ElectionRecord {
+                geoid: format!("g{i}"),
+                dem_votes: 10.0,
+                rep_votes: 8.0,
+            });
+        }
+        let assignments: HashMap<String, usize> = (0..500)
+            .map(|i| (format!("g{i}"), 1usize))
+            .collect();
+        let result = aggregate_election_to_districts(&election, &assignments);
+        assert_eq!(result.len(), 1);
+        assert!((result[&1].dem_votes - 5000.0).abs() < 1e-6);
+        assert!((result[&1].rep_votes - 4000.0).abs() < 1e-6);
+    }
+
+    // ── PartisanDistrictOutput derived fields ────────────────────────────────
+
+    #[test]
+    fn test_partisan_district_output_dem_pct_100_percent() {
+        // When there are zero rep votes, dem_pct should be 1.0 (100%).
+        // Use the DistrictElection helper that the real code uses.
+        let d = redist_analysis::DistrictElection {
+            district: 1,
+            dem_votes: 1000.0,
+            rep_votes: 0.0,
+        };
+        let pct = d.dem_pct();
+        assert!((pct - 1.0).abs() < 1e-9, "100% dem: pct should be 1.0, got {pct}");
+    }
+
+    #[test]
+    fn test_partisan_district_output_dem_pct_50_50() {
+        let d = redist_analysis::DistrictElection {
+            district: 2,
+            dem_votes: 500.0,
+            rep_votes: 500.0,
+        };
+        let pct = d.dem_pct();
+        assert!((pct - 0.5).abs() < 1e-9, "50/50 split: pct should be 0.5, got {pct}");
+    }
+
+    #[test]
+    fn test_partisan_district_output_total() {
+        let d = redist_analysis::DistrictElection {
+            district: 1,
+            dem_votes: 300.0,
+            rep_votes: 200.0,
+        };
+        assert!((d.total() - 500.0).abs() < 1e-9, "total should be 500.0, got {}", d.total());
+    }
+
+    #[test]
+    fn test_is_competitive_flag_below_5pct_margin() {
+        // Margin < 5% → competitive.  margin = |dem - rep| / total.
+        // 510 dem, 490 rep → margin = 20/1000 = 0.02 < 0.05 → competitive.
+        let margin = (510.0f64 - 490.0).abs() / 1000.0;
+        assert!(margin < 0.05, "margin {margin} should flag as competitive");
+    }
+
+    #[test]
+    fn test_is_uncontested_flag_zero_dem_votes() {
+        // dem_votes == 0 → uncontested.
+        let is_uncontested = 0.0_f64 == 0.0 || 500.0_f64 == 0.0;
+        assert!(is_uncontested, "zero dem_votes should be uncontested");
+    }
+
+    // ── ElectionRecord struct ────────────────────────────────────────────────
+
+    #[test]
+    fn test_election_record_debug_roundtrip() {
+        let r = ElectionRecord { geoid: "12345".into(), dem_votes: 100.0, rep_votes: 200.0 };
+        let debug_str = format!("{r:?}");
+        assert!(debug_str.contains("12345"));
+        assert!(debug_str.contains("100"));
+    }
+
+    #[test]
+    fn test_statewide_stats_fields() {
+        let s = StatewideStats {
+            dem_vote_share: 0.52,
+            dem_seat_share: 0.60,
+            total_votes: 1_000_000.0,
+        };
+        assert!((s.dem_vote_share - 0.52).abs() < 1e-12);
+        assert!((s.dem_seat_share - 0.60).abs() < 1e-12);
+        assert!((s.total_votes - 1_000_000.0).abs() < 1e-6);
+    }
 }

@@ -562,4 +562,141 @@ mod tests {
             );
         }
     }
+
+    // ── NarrativeConfig defaults ─────────────────────────────────────────────
+
+    #[test]
+    fn test_narrative_config_default_threshold() {
+        let cfg = NarrativeConfig::default();
+        assert!((cfg.leaning_threshold - 0.55).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_narrative_config_default_close_call_band() {
+        let cfg = NarrativeConfig::default();
+        assert!((cfg.close_call_band - 0.02).abs() < 1e-12);
+    }
+
+    #[test]
+    fn test_narrative_config_default_approved_by_none() {
+        let cfg = NarrativeConfig::default();
+        assert!(cfg.approved_by.is_none());
+    }
+
+    #[test]
+    fn test_narrative_config_default_ci_fields_none() {
+        let cfg = NarrativeConfig::default();
+        assert!(cfg.partisan_seat_ci.is_none());
+        assert!(cfg.mm_count_ci.is_none());
+        assert!(cfg.mean_pp_ci.is_none());
+    }
+
+    // ── render_narrative: structural content ──────────────────────────────────
+
+    #[test]
+    fn test_narrative_contains_compactness_section() {
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("Compactness"), "compactness paragraph must appear: {s}");
+        assert!(s.contains("Polsby-Popper"), "Polsby-Popper must be mentioned: {s}");
+    }
+
+    #[test]
+    fn test_narrative_contains_mm_count_section() {
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("Majority-minority"), "MM section must appear: {s}");
+    }
+
+    #[test]
+    fn test_narrative_contains_diff_scope_section() {
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("Plan B reassigns"), "diff scope section must appear: {s}");
+    }
+
+    #[test]
+    fn test_narrative_no_civic_framing_for_plain_plans() {
+        let report = ComparisonReport::from_loaded(
+            plan_a_5dem(),
+            {
+                let mut b = plan_b_4dem_civic();
+                b.submission_type = None;
+                b
+            },
+            None,
+            DiffSummary::default(),
+        );
+        let s = render_narrative(&report, &NarrativeConfig::default());
+        assert!(!s.contains("civic counter-proposal"),
+            "no civic framing when no civic submission type: {s}");
+    }
+
+    #[test]
+    fn test_narrative_audit_footer_always_present() {
+        // Even without approval, the audit footer separator --- must appear.
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("---"), "audit footer separator must always appear");
+    }
+
+    #[test]
+    fn test_narrative_approved_by_name_appears_in_footer() {
+        let mut cfg = NarrativeConfig::default();
+        cfg.approved_by = Some("Dr. Expert Witness".into());
+        let s = render_narrative(&fixture_report(), &cfg);
+        assert!(s.contains("Dr. Expert Witness"), "signer name must appear in footer: {s}");
+    }
+
+    #[test]
+    fn test_narrative_compactness_values_appear() {
+        // Plan A pp=0.42, Plan B pp=0.40 must appear in the output.
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("0.420") || s.contains("0.42"), "Plan A PP value must appear: {s}");
+        assert!(s.contains("0.400") || s.contains("0.40"), "Plan B PP value must appear: {s}");
+    }
+
+    #[test]
+    fn test_narrative_plan_a_more_compact_directional_phrase() {
+        // Plan A pp=0.42 > Plan B pp=0.40 → "Plan A is more compact".
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("Plan A is more compact"), "directional compactness phrase: {s}");
+    }
+
+    #[test]
+    fn test_narrative_equal_compactness_phrase() {
+        let mut report = fixture_report();
+        report.plan_a.mean_pp = 0.42;
+        report.plan_b.mean_pp = 0.42; // equal
+        let s = render_narrative(&report, &NarrativeConfig::default());
+        assert!(s.contains("essentially equally compact"),
+            "equal PP must produce 'equally compact' phrase: {s}");
+    }
+
+    #[test]
+    fn test_narrative_plan_b_more_compact_phrase() {
+        let mut report = fixture_report();
+        report.plan_a.mean_pp = 0.35;
+        report.plan_b.mean_pp = 0.50; // B is more compact
+        let s = render_narrative(&report, &NarrativeConfig::default());
+        assert!(s.contains("Plan B is more compact"),
+            "when Plan B has higher PP, 'Plan B is more compact' must appear: {s}");
+    }
+
+    #[test]
+    fn test_narrative_mm_equal_phrase() {
+        // Both plans have mm_count=1 (from fixtures) → "same number of MM districts".
+        let s = render_narrative(&fixture_report(), &NarrativeConfig::default());
+        assert!(s.contains("same number of MM districts"),
+            "equal MM counts must say 'same number': {s}");
+    }
+
+    #[test]
+    fn test_narrative_moe_compactness_suppression() {
+        // Supply overlapping PP CIs → compactness paragraph should show suppression text.
+        let mut cfg = NarrativeConfig::default();
+        cfg.mean_pp_ci = Some((
+            CiBand::new(0.42, 0.38, 0.46),
+            CiBand::new(0.41, 0.37, 0.45), // overlap
+        ));
+        let s = render_narrative(&fixture_report(), &cfg);
+        assert!(s.contains(MOE_SUPPRESSED_TEXT),
+            "overlapping PP CIs must trigger MoE suppression: {s}");
+    }
 }
