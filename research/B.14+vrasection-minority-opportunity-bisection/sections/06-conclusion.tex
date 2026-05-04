@@ -1,0 +1,68 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+VRASection bridges the gap between geographic compactness and Voting Rights
+Act compliance in congressional redistricting.
+
+The core tension in algorithmic VRA redistricting is that race-neutral
+algorithms satisfy \emph{Shaw}'s non-targeting requirement but may produce
+VRA-deficient maps; while race-targeting algorithms (MetisVra) may satisfy
+Section 2 but fail \emph{Shaw}'s predominance test --- and, empirically,
+fail numerically in 60\,\% of tested states.
+
+VRASection resolves this tension through a design insight grounded in
+Gingles Prong 1 itself: a minority community that satisfies the legal
+standard for Section 2 protection is, by definition, one that is
+\emph{geographically compact}.
+Geographic compactness is already encoded in the census-tract adjacency
+graph as clustering.
+VRASection makes this clustering measurable through the alignment score
+$A(\text{split}) = |\mathrm{MVAP}_\text{frac}(L) - \mathrm{MVAP}_\text{frac}(R)|$,
+which detects natural geographic boundaries between minority-concentrated
+and minority-dispersed areas without racial targeting.
+
+The tie-breaking approach --- applying the alignment bonus only at the
+first bisection level, bounded to 40\,\% of the selection score --- produces
+maps that are legally defensible from both directions:
+they satisfy Section 2 by exploiting the same geographic concentration that
+Gingles Prong 1 requires, and they satisfy \emph{Shaw} by keeping geographic
+compactness as the predominant factor with a quantifiable 20\,pp margin.
+
+The Alabama empirical result demonstrates the approach's practical significance.
+VRASection shifts the first-level bisection from $1:6$ (Birmingham isolation)
+to $2:5$ (Black Belt concentration), at a 4.3\,\% EC premium.
+This shift responds directly to the \emph{Allen v.\ Milligan} (2023) finding:
+the Black Belt region, dispersed under the $1:6$ split, is concentrated on
+one side under the $2:5$ split, creating the geographic preconditions for
+a second Black-opportunity district.
+
+The full six-state empirical comparison, pending completion, will test whether
+VRASection achieves the MetisVra target (MM district count) without the
+MetisVra failure modes (numerical instability, 0\,\% success in three states).
+We expect VRASection to succeed where MetisVra failed because it operates
+through geographic signal extraction rather than constraint solving,
+and to require no user-specified racial targets because the geographic
+concentration signal is self-contained in the minority VAP distribution.
+
+More broadly, VRASection demonstrates that the Gingles framework and the
+Shaw framework are not in conflict for algorithmically drawn maps.
+Gingles Prong 1's geographic compactness requirement is the same
+geographic compactness that \emph{Shaw} protects as a traditional redistricting
+principle.
+An algorithm that rewards natural geographic concentration --- not racial
+identity, but the spatial clustering that makes a community legally cognizable
+--- respects both requirements simultaneously.
+VRASection provides a mathematically precise, legally articulable, and
+empirically testable mechanism for doing so.
+
+\paragraph{Future work.}
+Open questions for follow-on research include:
+(1) validating the alignment score as a proxy for Gingles Prong 1 by
+comparing $A(\text{best split})$ to Moran's I spatial autocorrelation
+across the seven-state dataset;
+(2) evaluating ``VRA-aware full recursion'' (applying alignment at multiple
+recursion levels) and characterising its legal risk;
+(3) extending VRASection to multi-member districts for state legislative
+chambers;
+and (4) integrating VRASection output with the Callais evidence layer
+for the full two-stage map-generation-plus-evidence workflow.

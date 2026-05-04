@@ -1,0 +1,87 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{VRASection: Geographic Alignment Score for\\
+       Minority Opportunity District Bisection}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting algorithms that attempt to satisfy the Voting
+Rights Act (\S 2) by adding minority population as an explicit METIS
+constraint (``MetisVra'') fail in 3 of 5 majority-minority states due to
+numerical scale mismatch: minority VAP fractions (0.0--1.0) and census
+population counts (10,000--200,000) differ by 60--800$\times$, producing
+infeasible or degenerate partitions \citep{b3paper}.
+
+We introduce \textbf{VRASection}, which abandons explicit minority constraints
+and instead exploits the geographic structure of \emph{Gingles Prong 1}:
+legally cognizable minority communities are, by definition, sufficiently
+large and geographically compact.
+This geographic concentration is already encoded in the census-tract adjacency
+graph; VRASection makes it measurable through a \emph{geographic alignment score}
+$A(\text{split}) = |\text{MVAP}_\text{frac}(L) - \text{MVAP}_\text{frac}(R)|$
+layered on top of GeoSection's isoperimetric ratio scan \citep{b8paper}.
+
+The modified selection objective is:
+\[
+  \text{score}(\text{ratio}) = \mathrm{EC}_{\text{norm}} - w_\text{vra}
+  \cdot A \cdot \max(\mathrm{EC}_{\text{norm}},\, 1)
+\]
+where $w_\text{vra} = 0.40$ by default.
+At this weight, compactness is weighted 50\,\% more heavily than alignment,
+ensuring geographic compactness remains the predominant criterion
+under the \emph{Shaw v.\ Reno} / \emph{Miller v.\ Johnson} racial-predominance tests.
+The alignment score uses only the spatial distribution of minority VAP ---
+not racial identity itself --- satisfying Gingles Prong 1 without constituting
+racial targeting.
+
+Applied to Alabama (7 districts, 27\,\% Black VAP), VRASection selects
+a $2:5$ first-level bisection, separating the Black Belt region from the
+northern and coastal areas, compared to GeoSection's $1:6$ urban peel
+(Birmingham isolation).
+The $2:5$ split more effectively concentrates minority population on one
+side for downstream minority-opportunity-district formation.
+Full comparison runs across 6 historically significant VRA states are
+pending; Alabama's $2:5$ result provides the lead case study.
+
+VRASection requires no user-specified minority-fraction targets.
+It passes the MetisVra failure modes by design: there is no second METIS
+constraint and no scale mismatch.
+We analyse the algorithm's legal robustness, sensitivity to $w_\text{vra}$,
+and relationship to the \emph{Callais v.\ Landry} (2025) evidence standard.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

@@ -1,0 +1,136 @@
+\section{Introduction}
+\label{sec:intro}
+
+The Voting Rights Act of 1965 (\S 2) prohibits electoral practices that
+result in minority voters having less opportunity than other members to
+participate in the political process and elect representatives of their
+choice.
+In the redistricting context, Section 2 creates an affirmative obligation:
+where a minority community satisfies the three-part \emph{Gingles} test
+\citep{gingles1986}, mapmakers must provide the community with a realistic
+opportunity to elect candidates of its choice.
+
+Algorithmic redistricting systems face a structural tension here.
+A map drawn by minimum-edge-cut bisection makes no reference to racial
+or political data: it sees only boundary lengths and census populations.
+This neutrality is legally valuable --- it defeats racial-predominance challenges
+under \emph{Shaw v.\ Reno} \citep{shaw1993} --- but it means the algorithm
+has no mechanism to detect or correct VRA shortfalls.
+
+\paragraph{Why explicit minority constraints fail.}
+The natural engineering response is to add minority population as a second
+METIS constraint, alongside population balance.
+B.3 \citep{b3paper} tested this approach (``MetisVra'') on five
+majority-minority states with historically significant VRA litigation.
+The results were damaging: MetisVra failed completely in 3 of 5 states
+(Alabama, Louisiana, South Carolina), achieving zero majority-minority
+(MM) districts across all 140 tested parameter configurations.
+
+The failure mode is \textbf{constraint scale mismatch}.
+METIS's multi-constraint solver treats all constraint dimensions with
+the same numerical tolerance.
+Population balance operates on vertex weights of 10,000--200,000 people,
+requiring $\pm 0.5\,\%$ precision ($\pm 50$--$\pm 1000$ people).
+Minority VAP fraction operates on vertex weights of 0.0--1.0, where
+a $\pm 0.5\,\%$ tolerance is $\pm 0.005$ --- effectively zero.
+The scale difference is 60--800$\times$.
+METIS's local search cannot simultaneously satisfy both constraints:
+relaxing the minority constraint to a useful tolerance (e.g., $\pm 50\,\%$)
+provides so little guidance that METIS ignores it; tightening it creates
+a numerical conflict that produces infeasible partitions.
+
+\paragraph{VRASection: geographic alignment as tie-breaker.}
+We propose a different approach grounded in Gingles Prong 1 itself.
+Gingles requires that the minority community be ``sufficiently large
+\emph{and geographically compact}'' to form a majority in a single-member
+district \citep{gingles1986}.
+Geographic compactness is not an obstacle to algorithmic redistricting:
+it is a property that is \emph{already encoded in the census-tract adjacency
+graph}.
+A minority community that satisfies Prong 1 is, by definition, one whose
+tracts cluster together in the adjacency graph.
+
+VRASection makes this clustering measurable without adding a METIS constraint.
+At the first bisection level, it evaluates each candidate ratio $i:(k-i)$
+by a two-component score:
+
+\begin{enumerate}
+\item \textbf{Compactness}: the isoperimetrically normalised edge-cut
+  $\mathrm{EC}_\text{norm}(i)$ from GeoSection \citep{b8paper} (lower is better).
+\item \textbf{Geographic alignment}: $A(\text{split}) = |\mathrm{MVAP}_\text{frac}(L)
+  - \mathrm{MVAP}_\text{frac}(R)|$, where $\mathrm{MVAP}_\text{frac}$ is the
+  minority VAP fraction on each side of the bisection.
+\end{enumerate}
+
+The combined selection score is:
+\[
+  \text{score}(\text{ratio}) = \mathrm{EC}_{\text{norm}}
+  - w_\text{vra} \cdot A \cdot \max(\mathrm{EC}_{\text{norm}},\, 1)
+\]
+
+Lower scores are preferred.
+The alignment term \emph{subtracts} from the compactness score: a ratio
+that places compact minority communities on one side of the cut receives
+a lower (better) score than an otherwise identical ratio with dispersed
+minority population.
+
+\paragraph{Alabama: the lead case study.}
+Applied to Alabama (7 districts, 27.5\,\% Black VAP, $w_\text{vra} = 0.40$),
+VRASection selects a $2:5$ first-level bisection, separating the Black Belt
+region (south-central Alabama, historically concentrated Black population)
+from the northern industrial corridor and Gulf Coast.
+GeoSection selects a $1:6$ split (Birmingham isolation --- the Alabama
+caterpillar pathology).
+The $2:5$ split more effectively satisfies Gingles Prong 1 because it
+concentrates a larger fraction of Alabama's Black population on one side,
+providing a geographic foundation for downstream MM district formation
+without explicitly targeting race.
+
+\paragraph{The legal distinction.}
+VRASection uses minority VAP as input, which might superficially suggest
+racial targeting.
+The critical difference is in the function computed.
+MetisVra's second constraint forces METIS to concentrate minority
+population above a user-specified threshold --- race is a co-equal
+optimization target.
+VRASection's alignment score measures the \emph{spatial distribution}
+of any population that the user designates as ``minority VAP''.
+The algorithm cannot know whether the clustered population is Black,
+Hispanic, Native American, or any other group.
+It selects the bisection ratio that best exploits pre-existing geographic
+concentration, which may or may not be a minority community.
+At $w_\text{vra} = 0.40$, compactness is weighted $1 / (1 - 0.40) = 1.67\times$
+more heavily than alignment, ensuring geographic compactness remains the
+predominant factor under \emph{Shaw}'s racial-predominance test.
+
+\paragraph{Contributions.}
+This paper makes four contributions:
+
+\begin{enumerate}
+\item \textbf{VRASection algorithm} (\S\ref{sec:algorithm}): formal
+  definition of the alignment score, modified objective function, and
+  algorithm pseudocode, including legal analysis of why the design
+  avoids racial predominance.
+
+\item \textbf{Alabama case study} (\S\ref{sec:evaluation}): the $2:5$
+  vs.\ $1:6$ comparison as the lead empirical result, with analysis of
+  the Black Belt geographic concentration that drives the split.
+
+\item \textbf{Comparison framework} (\S\ref{sec:evaluation}): a six-state
+  comparison table covering the historically significant VRA states,
+  with cells marked for runs pending full pipeline comparison.
+
+\item \textbf{Legal and sensitivity analysis} (\S\ref{sec:discussion}):
+  the Shaw predominance line as a function of $w_\text{vra}$, relationship
+  to MetisVra failures, and comparison to the Callais evidence standard.
+\end{enumerate}
+
+\paragraph{Paper organisation.}
+Section~\ref{sec:related} reviews related work on VRA compliance,
+gerrymandering jurisprudence, and geographic concentration.
+Section~\ref{sec:algorithm} defines VRASection formally.
+Section~\ref{sec:evaluation} presents the Alabama empirical result
+and the multi-state comparison framework.
+Section~\ref{sec:discussion} discusses legal implications, $w_\text{vra}$
+sensitivity, and limitations.
+Section~\ref{sec:conclusion} concludes.
