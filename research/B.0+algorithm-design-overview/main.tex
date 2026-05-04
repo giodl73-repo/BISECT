@@ -1,0 +1,109 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{rotating}
+\usepackage{pdflscape}
+
+%% Legal case emphasis
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+\newcommand{\wesberry}{\case{Wesberry v.\ Sanders}}
+\newcommand{\shaw}{\case{Shaw v.\ Reno}}
+\newcommand{\miller}{\case{Miller v.\ Johnson}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\lwvpa}{\case{League of Women Voters v.\ Commonwealth of Pennsylvania}}
+\newcommand{\allenmilligan}{\case{Allen v.\ Milligan}}
+
+%% Note marker for estimated values
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\pending}{$^{\ddagger}$}
+
+\title{\textbf{A Complete Algorithmic Toolbox for Congressional Redistricting:\\
+       Legal Requirements, Algorithm Components, and Callais-Compliant\\
+       Design for the Post-2026 Redistricting Cycle}\\[0.5em]
+       \large B.0 Series Synthesis}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting must satisfy eleven distinct legal requirements
+spanning constitutional population equality, geographic compactness, county
+preservation, the Voting Rights Act, and the racial-predominance bar set by
+\shaw{} (1993).
+The 2026 Supreme Court decision in \callais{} adds a critical constraint:
+race-conscious and partisan signals must be kept \emph{disentangled} in any
+redistricting algorithm---they cannot be combined in a single optimisation run.
+
+We present a unified algorithmic toolbox organised along three axes:
+(A) vertex weights governing what METIS balances,
+(B) edge management controlling compactness and subdivision preservation, and
+(C) division strategy determining how the bisection tree is structured.
+Fifteen algorithm components developed across the B-series papers (B.1--B.15)
+map to these axes, and each legal requirement maps to at least one component.
+
+The toolbox is structured so that each mode uses exactly one signal type.
+\textbf{VRASection} (B.14) addresses Gingles Prong~1 using geographic alignment
+alone---no racial target, no racial count.
+\textbf{ProportionalSection} (B.12, planned) addresses proportionality using
+partisan vote share alone.
+A \texttt{callais\_preflight} gate enforces mutual exclusion: the two signals
+cannot be combined in one run.
+This is not a limitation but the legally required architecture under \callais{}.
+
+We present a bakeoff of eight algorithm combinations across four legally
+contested states (Wisconsin 8D, North Carolina 14D, Georgia 14D,
+Alabama 7D), measuring edge cut, population balance, D-seat count,
+majority-minority district count, natural bisection ratio, and county split count.
+The results confirm that geographic voter sorting---not the bisection algorithm---
+drives partisan outcomes in all four states, and that VRASection produces the
+minority-opportunity district patterns required by \allenmilligan{} (2023)
+without any racial targeting.
+
+A court can audit exactly which signals were used in any plan by reading the
+\texttt{whatif-manifest v1} JSON sidecar produced by the \texttt{redist} CLI.
+Every run is parameter-reproducible and hash-chain verifiable.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-legal-requirements}
+\input{sections/03-algorithm-components}
+\input{sections/04-requirements-matrix}
+\input{sections/05-bakeoff}
+\input{sections/06-callais-compliance}
+\input{sections/07-discussion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

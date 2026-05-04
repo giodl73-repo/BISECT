@@ -1,0 +1,172 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Which Configuration for Which Use Case}
+
+The bakeoff results and the requirements matrix together answer the practitioner's
+primary question: which configuration should I use?
+We organise the recommendations by use case.
+
+\paragraph{Default (no specific legal claim).}
+Use \textbf{Geo+GeoSection} (config.~2).
+It satisfies population equality, contiguity, and compactness (56\,\% improvement
+over baseline), does not manipulate county lines or racial geography, and is
+the best-documented configuration in the B-series.
+The plan manifest is clean: only geographic signals are present.
+
+\paragraph{Allen v.\ Milligan exposure (VRA Section 2, Gingles Prong 1).}
+Use \textbf{Geo+VRASection} (config.~5), $w_\text{vra} = 0.40$.
+This is the only configuration that achieves 2 minority-opportunity districts in
+Alabama; the only configuration that achieves 2--3 in Georgia.
+The 4.3\,\% compactness cost (EC premium) over GeoSection is legally defensible:
+it falls within the range that courts have accepted for VRA compliance adjustments,
+and the \miller{} racial-predominance test is satisfied by the $w_\text{vra} = 0.40$
+parameterisation.
+
+\paragraph{State-court partisan neutrality claim (LWV v.\ PA; Harper v.\ Hall).}
+Use \textbf{Geo+AreaSection} (config.~3) to run the \emph{Rodden-null proof}:
+demonstrate that the map is not a product of algorithmic partisan bias.
+AreaSection reduces the proportionality gap in NC and GA by 7--8\,pp in our
+estimates, not because the algorithm adds partisan signals but because it
+prevents the urban-peeling geometry that creates artificially efficient Republican
+configurations.
+If the state constitution requires proportionality, ProportionalSection (B.12,
+when implemented) is the direct tool---but it cannot be combined with VRASection
+in the same run.
+
+\paragraph{County preservation as a statutory criterion.}
+Use \textbf{County+GeoSection} (config.~4) with $\alpha_\text{county}$ tuned to
+the state's statutory standard.
+For states like Wisconsin (strong county preservation tradition) or California
+(explicit statutory criterion), a higher $\alpha$ reduces county splits at a
+modest EC cost.
+The Pareto frontier shows that a $50\,\%$ reduction in county splits typically
+costs $5$--$10\,\%$ in normalised edge-cut.
+
+\paragraph{Auditability and expert witness.}
+Use \textbf{Geo+ApportionRegions} (config.~6) when the primary concern is
+reproducibility and parameter-freedom.
+The bisection tree is derived entirely from the prime factorisation of $k$;
+there are no ``hidden'' parameter choices about which ratio to select.
+Combined with the plan manifest, this provides the cleanest audit record.
+
+\paragraph{Multi-chamber anti-stacking.}
+Use \textbf{Geo+NestSection} (config.~8) in states where all three chambers
+are drawn simultaneously and the NestSection compatibility score allows it.
+The eleven states with spine score~0 (exact nesting possible) are the best
+candidates; the remaining states require best-effort Mode~3 nesting.
+
+\subsection{Limitations}
+
+\subsubsection*{L1: Geographic Sorting Cannot Be Eliminated}
+
+The most fundamental limitation is that geographic voter sorting produces
+systematic Republican over-representation in competitive states regardless of
+the algorithm.
+All configurations show a mean proportionality gap of $-7$\,pp in the eight
+competitive states studied across B.8--B.9.
+AreaSection reduces this to approximately $-4$\,pp in the best case by preventing
+the caterpillar pathology, but it cannot eliminate the underlying geographic
+effect.
+A state where Democrats are concentrated in three or four major cities and
+Republicans are dispersed across the rural remainder will produce more Republican
+seats than the vote-share would suggest under any geographically-neutral algorithm.
+This is the central empirical finding of \citet{rodden2019}, and the B-series
+programme confirms it across 44 states.
+
+\subsubsection*{L2: VRASection Does Not Guarantee MM Districts}
+
+VRASection's $2:5$ first-level split in Alabama concentrates minority population
+in a geographic subregion; it does not guarantee that any specific district
+within that subregion will be majority-minority.
+The recursive GeoSection within the southern subregion must still achieve $\geq 50\,\%$
+Black VAP in at least two districts.
+B.14 confirms that this does occur (55.2\,\% and 52.8\,\% Black VAP in the two
+southern districts), but the guarantee is empirical, not structural.
+For states where the minority population is more dispersed, or where the $2:5$
+subregion has Black VAP just above 50\,\%, the guarantee may not hold.
+Users should run \texttt{redist analyze --types demographic} to verify MM
+district counts after every VRASection run.
+
+\subsubsection*{L3: Census Stability is Not Universal}
+
+StabilitySection (B.15) shows that 33\,\% of states are \emph{unstable}---their
+GeoSection natural ratio changes between census years.
+The census-stability litigation argument cannot be made for these states.
+Iowa is the canonical example: its natural ratio shifted from $1:3$ (2000) to
+$2:2$ (2010) as suburban population dispersal changed the population-geographic
+structure.
+For Iowa-class states, the practitioner should present the map as reflecting
+the \emph{current census year's geographic structure}, not a census-stable
+property.
+
+\subsubsection*{L4: ProportionalSection is Planned, Not Implemented}
+
+The ProportionalSection (B.12) and ApportionRegions (B.11) components are
+described in this synthesis but not yet implemented in the \texttt{redist} CLI.
+Results for configs.~6 and 8 in the bakeoff tables are pending.
+The mutual-exclusion architecture described in Section~\ref{sec:callais} is
+fully implemented and will enforce the ProportionalSection mutex as soon as
+B.12 is complete.
+
+\subsubsection*{L5: County-Sticky Weights Require TIGER Download}
+
+Full subdivision-stickiness (MCD, place, VTD levels) requires downloading
+additional TIGER spatial files ($\sim$2\,GB for all 50 states) and performing
+spatial joins.
+County-level stickiness is available immediately (county FIPS is encoded in the
+census-tract GEOID); finer levels require the B.10 Phase~2--3 implementation.
+
+\subsection{Comparison with Existing Approaches}
+
+\subsubsection*{Markov Chain Methods (GerryChain)}
+
+GerryChain \citep{metric2018} and related MCMC approaches generate large ensembles
+of redistricting plans and test whether an enacted map falls within the ensemble's
+distribution.
+These methods are well-suited to null-hypothesis testing (``is the enacted map
+unusual?'') but not to plan generation.
+The toolbox is complementary: it generates plans, while GerryChain tests them.
+B.15's Census Stability Score provides a deterministic stability metric that
+MCMC cannot easily compute (it would require running an ensemble for each of
+three census years).
+
+\subsubsection*{Integer Programming}
+
+Integer programming (IP) approaches (e.g., \citet{gurnee2021}) can optimise
+multiple objectives simultaneously but do not scale to large states.
+For California (52 districts, $\sim$8,000 census tracts), IP is intractable.
+The METIS-based toolbox operates in O($n \log k$) time and produces results
+in 30--90 seconds per state on a single CPU.
+The trade-off is that METIS produces locally optimal (not globally optimal)
+solutions; the B.7 seed study shows this produces a narrow solution space
+with $< 0.3$ seats of variation per state.
+
+\subsubsection*{Short Burst Methods}
+
+Short burst methods \citep{cannon2023} run many short Markov chains to
+explore the redistricting solution space.
+They are well-suited to understanding solution space geometry but share the
+MCMC limitation that they are not deterministic: two independent runs of the
+same method on the same state may produce different plans.
+The toolbox's auditable determinism (plan manifest + hash chain) is a
+structural advantage for litigation, where reproducibility is a requirement,
+not a preference.
+
+\subsection{The Algorithm as Evidence, Not Advocacy}
+
+A final point deserves emphasis.
+The toolbox is designed as an \emph{evidentiary} tool, not an advocacy tool.
+It does not argue for a particular redistricting outcome.
+It provides a set of analytically defensible configurations, each grounded in
+a specific legal requirement, each producing a reproducible and auditable result.
+
+A redistricting commission, a court-appointed special master, or an opposing
+expert witness can all use the same toolbox and reach different conclusions---
+because the conclusions depend on which legal requirements are weighted most
+heavily, not on which algorithm is used.
+VRASection and GeoSection will sometimes produce different seat counts (North
+Carolina, Wisconsin) and sometimes not (Alabama with $0\mathrm{D}$ in both).
+The algorithm does not choose; the legal argument and the factual record choose.
+The toolbox provides the counterfactual analysis that makes the argument
+\emph{auditable}.

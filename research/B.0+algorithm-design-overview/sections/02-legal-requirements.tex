@@ -1,0 +1,250 @@
+\section{Legal Requirements for Congressional Redistricting}
+\label{sec:legal-requirements}
+
+Congressional redistricting must satisfy a hierarchy of legal requirements
+derived from the federal Constitution, the Voting Rights Act, and state
+constitutions and statutes.
+We enumerate eleven requirements that any redistricting algorithm must address,
+organising them from the hardest federal floor to the softer state-specific ceilings.
+Each requirement has a precise algorithmic interpretation that Section~\ref{sec:requirements-matrix}
+will map to specific toolbox components.
+
+\subsection{Constitutional Floor Requirements}
+
+\subsubsection*{R1: Population Equality ($\pm 0.5\,\%$)}
+
+\textbf{Legal basis}: \wesberry{} v.\ Sanders, 376 U.S.\ 1 (1964) (``one person,
+one vote''); Karcher v.\ Daggett, 462 U.S.\ 725 (1983) (near-perfect equality
+required for congressional districts).
+
+Congressional districts must contain as close to equal population as mathematically
+possible.
+Unlike state legislative districts, which allow deviations up to $\pm 10\,\%$
+under \emph{Mahan v.\ Howell} (1973), congressional districts face a near-zero
+tolerance: any deviation must be ``unavoidable'' or justified by a legitimate
+state policy.
+
+\textbf{Algorithmic interpretation}: All METIS calls use $\mathtt{ubvec}[0] = 1.001$
+(0.1\,\% tolerance per part, yielding $\leq 0.5\,\%$ maximum deviation across $k$
+parts by the triangle inequality).
+Population balance is the hard constraint; all other objectives are soft.
+
+\subsubsection*{R2: Contiguity}
+
+\textbf{Legal basis}: Article~I, \S2 (no explicit text, but universally treated
+as a constitutional floor by courts); all 50 state constitutions require contiguous
+districts.
+
+Every district must be a connected geographic region.
+No district may consist of non-adjacent parcels even if they share the same
+population.
+
+\textbf{Algorithmic interpretation}: METIS's \texttt{-contig} flag is set at
+every bisection level.
+For planar census-tract adjacency graphs, METIS empirically produces contiguous
+partitions even without this flag \citep{b8paper}, but the flag is set explicitly
+to provide a formal guarantee.
+
+\subsection{Compactness Requirements}
+
+\subsubsection*{R3: Compactness}
+
+\textbf{Legal basis}: Most state constitutions (California Constitution Art.\ XXI
+\S2(d); New York ELEC \S4-100; Iowa Code \S42.4); some states treat compactness
+as a federal equal-protection requirement under \shaw{} v.\ Reno, 509 U.S.\ 630
+(1993) (``bizarre'' shapes trigger heightened scrutiny).
+
+Districts should be reasonably compact in shape: not elongated, not fractal,
+not reaching tentacles into remote areas to capture or avoid specific communities.
+Courts have measured compactness via the Polsby-Popper score (ratio of district
+area to area of circumscribed circle), the Reock score (ratio to minimum
+bounding circle), and the isoperimetric ratio (perimeter squared over area).
+
+\textbf{Algorithmic interpretation}: Geographic edge weights (B.2) encode TIGER
+boundary lengths as edge costs, making it expensive for METIS to cut across long
+geographic boundaries.
+The isoperimetric normalisation of GeoSection (B.8) additionally prevents the
+caterpillar pathology (sequential urban peeling) that creates compactness violations
+invisible to per-district metrics but visible in the bisection tree structure.
+
+\subsection{Subdivision Preservation}
+
+\subsubsection*{R4: County and Subdivision Preservation}
+
+\textbf{Legal basis}: Rucho v.\ Common Cause, 588 U.S.\ 684 (2019) (partisan
+gerrymandering nonjusticiable, but traditional criteria---including county
+preservation---remain valid state-court grounds); Harper v.\ Hall (N.C. Sup.\ Ct.,
+2022) (required county grouping); most state redistricting statutes list
+``preserving political subdivisions'' as an explicit criterion.
+
+Districts should avoid splitting counties, municipalities, and townships where
+possible, consistent with the population-equality requirement.
+County preservation has two rationales: it minimises disruption to existing
+community administrative structures, and it provides a measurable baseline that
+prevents ``county-splitting gerrymandering'' where a partisan actor systematically
+splits unfriendly counties to dilute their political influence.
+
+\textbf{Algorithmic interpretation}: County-sticky edge weights (B.10) multiply
+edge costs by $(1 + \alpha_\text{county})$ for pairs of census tracts sharing the
+same county FIPS code.
+As $\alpha_\text{county} \to \infty$, county splits occur only when the
+population-equality constraint forces them.
+The $\alpha$ parameter is a published number; a court can read it from the
+plan manifest.
+
+\subsection{Voting Rights Act Requirements}
+
+\subsubsection*{R5: VRA \S2 Gingles Prong 1 --- Minority Geographic Compactness}
+
+\textbf{Legal basis}: 52 U.S.C.\ \S10301; Thornburg v.\ Gingles, 478 U.S.\ 30
+(1986) (three-prong test: minority group sufficiently large and geographically
+compact; minority cohesion; majority bloc voting); Allen v.\ Milligan,
+598 U.S.\ 1 (2023) (Alabama required two Black-opportunity districts);
+\callais{}, 608 U.S.\ \_\_\_ (2026) (Gingles Prong 1 is geographic, not racial
+targeting).
+
+\S2 requires states to draw majority-minority districts where a minority
+community is (1) sufficiently large and geographically compact to form a majority
+in a single district, (2) politically cohesive, and (3) faces bloc voting by
+the majority.
+The geographic concentration prong (Prong 1) is the one that algorithmic
+redistricting can directly address: the algorithm must be capable of identifying
+whether a compact minority community exists at the geographic scale of a
+congressional district.
+
+\textbf{Algorithmic interpretation}: VRASection (B.14) adds a geographic alignment
+score $A = |\text{MVAP}_\text{frac}(L) - \text{MVAP}_\text{frac}(R)|$ to the
+ratio selection objective.
+This score is a \emph{geographic property}: it measures whether the bisection
+places minority population on one side.
+Critically, the score uses only the spatial distribution of minority VAP,
+not racial identity or any racial target.
+At $w_\text{vra} = 0.40$, compactness is weighted 50\,\% more heavily than
+alignment, ensuring racial geometry does not predominate.
+
+\subsubsection*{R6: No Racial Predominance}
+
+\textbf{Legal basis}: \shaw{} v.\ Reno, 509 U.S.\ 630 (1993); \miller{} v.\
+Johnson, 515 U.S.\ 900 (1995) (race cannot be the ``predominant factor'' in
+drawing district lines); \callais{} p.~36 (race-conscious and partisan signals
+must be disentangled).
+
+A district whose shape is ``so bizarre'' that it can only be explained by race
+triggers strict scrutiny under \shaw{}.
+Under \miller{}, any time race is the predominant factor overriding traditional
+criteria (compactness, contiguity, political subdivisions), the district
+requires a compelling interest.
+
+\textbf{Algorithmic interpretation}: VRASection's $w_\text{vra} = 0.40$ weight
+is calibrated to fall well below the \shaw{}--\miller{} racial-predominance
+threshold.
+The score does not specify a racial target (no ``district must be 50\,\% Black VAP'');
+it uses only the geographic alignment of existing population distribution.
+The design ensures that compactness remains the predominant objective
+(see Section~\ref{sec:callais} for the formal analysis).
+
+\subsection{Partisan Neutrality}
+
+\subsubsection*{R7: Partisan Neutrality (State Courts)}
+
+\textbf{Legal basis}: \lwvpa{} (Pa.\ Sup.\ Ct., 2018) (partisan gerrymander
+violates Pennsylvania Constitution); Harper v.\ Hall (N.C.\ Sup.\ Ct., 2022)
+(initial decision found unconstitutional partisan gerrymander); Harkenrider v.\
+Hochul (N.Y.\ Ct.\ App., 2022) (struck down partisan gerrymander under
+New York Constitution).
+
+While \rucho{} (2019) closed the federal door to partisan gerrymandering claims,
+state courts in Pennsylvania, North Carolina, New York, and other states have
+entertained partisan-neutrality claims under state constitutional grounds.
+The legal standard varies: some courts require proportionality of seats to votes,
+others require map-making processes that do not give undue advantage.
+
+\textbf{Algorithmic interpretation}: The Rodden-null test is the key tool here.
+The B.9 AreaSection paper demonstrated that AreaSection and GeoSection produce
+identical seat counts in 76\,\% of states and differ by only 1 seat in the
+remaining states, with no systematic partisan direction.
+The partisan outcomes in all competitive states are explained by geographic
+voter sorting (the ``Rodden effect'' \citep{rodden2019}), not by algorithmic bias.
+ProportionalSection (B.12, planned) addresses this directly by incorporating
+partisan vote share as a separate, Callais-compliant mode.
+
+\subsection{Cross-Census Stability}
+
+\subsubsection*{R8: Census Stability (Litigation Argument)}
+
+\textbf{Legal basis}: Not a statutory requirement, but a powerful litigation
+argument against partisan gerrymandering claims.
+If a redistricting algorithm produces the same map---the same natural bisection
+ratio, the same seat counts---across 2000, 2010, and 2020 Census data, then
+the map is not a product of the current census cycle's partisan distribution.
+A challenger cannot argue the algorithm exploited the current population counts
+to achieve partisan ends when the identical map would have been drawn from
+twenty-year-old data.
+
+\textbf{Algorithmic interpretation}: StabilitySection (B.15) measures the Census
+Stability Score (CSS): a composite of seat-count stability, ratio stability, and
+proportionality-gap stability across census years.
+The 2000--2010 sweep found 67\,\% of states are stable at the $\Delta f \leq 0.05$
+threshold; Iowa is the canonical unstable state.
+A CSS $\geq 0.67$ threshold is proposed as the minimum for making the
+census-stability legal argument.
+
+\subsection{Auditability and Seed Invariance}
+
+\subsubsection*{R9: Seed and Auditability Invariance}
+
+\textbf{Legal basis}: No explicit legal requirement, but a pervasive requirement
+in redistricting litigation: courts need to be able to reproduce the map from
+the stated parameters.
+A plan produced by an algorithm whose outputs vary with undisclosed random seeds
+is not auditable; a challenger can always claim the seed was chosen to achieve
+a specific partisan outcome.
+
+\textbf{Algorithmic interpretation}: The B.7 paper certified that GeoSection
+achieves near-zero partisan variance across random seeds (seat-count variance
+$< 0.3$ seats per state at 50 seeds per ratio).
+ApportionRegions (B.11, planned) extends this to the Huntington-Hill linkage:
+the natural bisection ratio can be derived from the state's prime factorisation
+of district counts, making it parameter-free and auditable.
+The \texttt{redist} CLI records every parameter in the \texttt{whatif-manifest v1}
+JSON sidecar, and a hash chain verifies that no parameter was altered after
+the run.
+
+\subsection{Multi-Chamber Consistency}
+
+\subsubsection*{R10: Multi-Chamber Consistency}
+
+\textbf{Legal basis}: State constitutions require that congressional and state
+legislative district maps be drawn consistently; the ``one-map'' approach prevents
+``stacked'' gerrymandering where a partisan actor controls all three chambers and
+packs or cracks a community at every level.
+
+\textbf{Algorithmic interpretation}: NestSection (B.13) forces all chambers
+sharing a state to use a \emph{compatible factorisation spine} derived from
+$g = \gcd(C, S, H)$ where $C$, $S$, $H$ are the congressional, senate, and
+house seat counts.
+Eleven states achieve exact nesting (spine compatibility score 0); the remainder
+require best-effort Mode~3 nesting.
+A shared spine is an anti-gerrymandering mechanism: a partisan actor who locks
+in a congressional tree cannot then draw senate boundaries that contradict it.
+
+\subsection{Huntington-Hill Linkage}
+
+\subsubsection*{R11: Apportionment Linkage}
+
+\textbf{Legal basis}: Article~I, \S2 (apportionment proportional to population);
+the Huntington-Hill method (2 U.S.C.\ \S2a) as the statutory apportionment
+algorithm.
+A redistricting algorithm that uses a bisection tree structurally linked to the
+state's Huntington-Hill seat count provides an additional layer of constitutional
+grounding: the geographic partition reflects the same proportionality principle
+as the apportionment itself.
+
+\textbf{Algorithmic interpretation}: ApportionRegions (B.11, planned) determines
+the bisection tree structure from the prime factorisation of $k$, mirroring the
+successive subdivision implicit in the Huntington-Hill priority sequence.
+A state with $k = 8 = 2^3$ can be exactly bisected three levels deep.
+A state with $k = 7$ (prime) requires a near-equal first split and defers the
+odd seat to the final level.
+The linkage is not a hard constitutional requirement but provides additional
+grounding for the algorithm's objectivity claim in litigation.

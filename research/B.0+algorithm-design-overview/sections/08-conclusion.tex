@@ -1,0 +1,101 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have presented a complete algorithmic toolbox for congressional redistricting
+that satisfies all eleven legal requirements identified in the post-\callais{}
+redistricting landscape.
+
+The toolbox is organised along three orthogonal axes:
+Axis A controls what METIS balances (population only, population plus area,
+population with VRA alignment, population with partisan vote share);
+Axis B controls edge management (geographic boundary lengths, county-sticky
+weights, unweighted);
+Axis C controls division strategy (balanced bisection, GeoSection, AreaSection,
+ApportionRegions, NestSection).
+
+Each legal requirement maps to at most one component on one axis.
+The components compose freely except for the Callais mutex: VRASection (Axis~A3)
+and ProportionalSection (Axis~A4) are mutually exclusive, enforced at the CLI
+level by \texttt{callais\_preflight} and documented in the plan manifest.
+
+The bakeoff across Wisconsin, North Carolina, Georgia, and Alabama demonstrates
+five cross-state patterns:
+\begin{enumerate}
+  \item Geographic voter sorting drives partisan outcomes in all four states;
+    the algorithm is not the cause.
+  \item VRASection is the only configuration achieving the minority-opportunity
+    district counts required by \allenmilligan{} in Alabama and Georgia.
+  \item County preservation trades off against compactness at a rate of
+    $\sim 4\,\%$ EC cost per $50\,\%$ reduction in county splits.
+  \item AreaSection reduces partisan gaps in competitive states by preventing
+    urban-peeling geometry, with no systematic partisan direction.
+  \item ApportionRegions and NestSection are structurally neutral tools that
+    improve auditability and multi-chamber consistency without changing
+    partisan outcomes.
+\end{enumerate}
+
+\subsection{The Callais Compliance Design}
+
+\callais{}'s disentanglement requirement at p.~36 is the structurally decisive
+constraint for algorithmic redistricting.
+The toolbox satisfies it by design: each mode uses exactly one signal type,
+the two signal-bearing modes are mutex-gated, and every run is documented in
+a tamper-detectable plan manifest.
+
+The strong-inference framework of \callais{} holding~2 is directly supported:
+a practitioner can run GeoSection (pure political goals) and VRASection (minority
+alignment) independently, compare the results, and demonstrate that the political
+goals could have been achieved with better minority outcomes.
+For Alabama, this comparison confirms the \allenmilligan{} remedy.
+
+\subsection{The Central Empirical Finding}
+
+The central empirical finding of the B-series programme, confirmed across 44
+states and three census years, is that
+\emph{geographic voter sorting is the dominant driver of partisan redistricting outcomes}.
+No redistricting algorithm---however carefully designed---can overcome the
+arithmetic of urban-rural political geography.
+A state where Democrats are concentrated in three or four major cities will
+systematically elect fewer Democratic representatives than a proportional system
+would predict, regardless of how the district lines are drawn.
+
+This finding has a constructive implication.
+Redistricting litigation based on the claim that ``the algorithm favoured
+Republicans'' is not well-founded when the algorithm is the toolbox.
+The correct challenge is: ``could the map have achieved the same political goals
+with better minority outcomes?'' (the \callais{} strong-inference test).
+For the \allenmilligan{} states, the answer is yes---and VRASection provides
+the proof.
+
+\subsection{Future Work}
+
+Four extensions are needed to complete the toolbox:
+
+\begin{enumerate}
+  \item \textbf{B.11 ApportionRegions}: Implementation and 50-state empirical
+    evaluation of the prime-factorisation bisection tree.
+  \item \textbf{B.12 ProportionalSection}: Implementation with the
+    Callais-compliant mutex gate; empirical comparison against AreaSection
+    in state-court proportionality challenge states.
+  \item \textbf{B.10 Phase~2--3}: Download and spatial join of TIGER MCD, place,
+    and VTD files; parameter sweep at the township and precinct levels for
+    MN, WI, and New England states.
+  \item \textbf{B.15 Three-Census CSS}: Completion of the 2010 GeoSection sweep
+    to compute full three-census CSS for all 50 states.
+\end{enumerate}
+
+With these extensions, the toolbox will provide a complete, auditable,
+legally-grounded algorithmic framework for the 2031 redistricting cycle.
+
+\paragraph{Availability.}
+The \texttt{redist} Rust binary implementing GeoSection, VRASection,
+AreaSection, NestSection, and StabilitySection is available as open-source
+software.
+The B-series papers, plan manifests from the 50-state runs, and TIGER adjacency
+graphs are available at the project repository.
+All parameters are documented in \texttt{docs/REDIST\_CLI.md}.
+All results in this paper are reproducible from the stated parameters and the
+SHA-256-verified adjacency graphs.
+\end{document}

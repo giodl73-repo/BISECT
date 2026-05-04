@@ -1,0 +1,136 @@
+\section{Composing Requirements: The Algorithm Matrix}
+\label{sec:requirements-matrix}
+
+\subsection{The Requirements $\times$ Algorithm Matrix}
+
+Table~\ref{tab:requirements-matrix} is the central reference of this synthesis.
+It maps every legal requirement from Section~\ref{sec:legal-requirements} to its
+primary algorithm component, the METIS implementation detail, and the primary
+B-series evidence paper.
+
+\begin{landscape}
+\begin{table}[p]
+\centering
+\small
+\caption{Legal requirements mapped to algorithm components.
+  All modes share the population-balance hard constraint (R1: $\mathtt{ubvec}[0]=1.001$).
+  The ``component'' column names the B-series component that primarily addresses each requirement.
+  ``Mutex'' = Callais mutual exclusion enforced by \texttt{callais\_preflight}.}
+\label{tab:requirements-matrix}
+\begin{tabular}{p{3.5cm}p{2.5cm}p{3.5cm}p{2.0cm}p{1.5cm}}
+\toprule
+\textbf{Legal requirement} & \textbf{Legal basis} & \textbf{Algorithm component} & \textbf{METIS detail} & \textbf{Evidence} \\
+\midrule
+R1: Population equality $\pm 0.5\,\%$ & \wesberry{} (1964); Karcher (1983) & All modes: hard pop.\ constraint & $\mathtt{ubvec}[0]=1.001$ & B.1, B.7 \\[0.5em]
+
+R2: Contiguity & Art.~I const.\ floor; all state constitutions & All modes: \texttt{-contig} flag & METIS \texttt{METIS\_PartGraphRecursive} & B.1, B.8 \\[0.5em]
+
+R3: Compactness & Most state constitutions; \shaw{} ``bizarre shape'' & Geographic edge weights (B.2) + GeoSection isoperimetric norm (B.8) & Edge weight $= $ TIGER boundary length; $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$ & B.2, B.8 \\[0.5em]
+
+R4: County/subdivision preservation & \rucho{}; Harper v.\ Hall; most state redistricting statutes & County-sticky $\alpha$ (B.10) & $w'(u,v)=(1+\alpha)\cdot w_\text{geo}$ for same-county edges & B.10 \\[0.5em]
+
+R5: VRA \S2 / Gingles Prong 1 & 52 U.S.C.\ \S10301; Gingles (1986); Allen v.\ Milligan (2023); \callais{} (2026) & VRASection alignment score (B.14) & $A=|\mathrm{MVAP}_L - \mathrm{MVAP}_R|$; $w_\text{vra}=0.40$; Mutex enforced & B.14 \\[0.5em]
+
+R6: No racial predominance & \shaw{} (1993); \miller{} (1995); \callais{} p.~36 & VRASection $w_\text{vra}=0.40 < $ Shaw threshold; Callais p.~36 mutex enforced & Compactness weighted $1.5\times$ over alignment; no racial target & B.14 \\[0.5em]
+
+R7: Partisan neutrality (state courts) & LWV v.\ PA; Harper v.\ Hall; Harkenrider & AreaSection proves Rodden-null: seat counts same as GeoSection in 76\,\% of states & $\mathtt{ncon}=2$, area balance; $\mathtt{ubvec}[1]=1.10$ & B.9 \\[0.5em]
+
+R8: Census stability & Litigation argument B.15 & StabilitySection CSS $\geq 0.67$; Iowa as known-unstable case study & Lorenz drift proxy $\Delta p^* = |p^*_{2000} - p^*_{2020}|$ & B.15 \\[0.5em]
+
+R9: Seed/auditability invariance & Expert witness standard; court reproducibility & B.7 certification: seed variance $<0.3$ seats at 50 seeds; plan manifest + hash chain & $N=50$ seeds per ratio; \texttt{whatif-manifest v1} JSON & B.7 \\[0.5em]
+
+R10: Multi-chamber consistency & State constitutions; anti-stacking doctrine & NestSection compatible spine (B.13) & $g=\gcd(C,S,H)$; spine score $\in [0, 100]$ & B.13 \\[0.5em]
+
+R11: HH apportionment linkage & Art.~I \S2; 2 U.S.C.\ \S2a & ApportionRegions prime factorisation (B.11) & Bisection tree from prime factors of $k$ & B.11 \\
+\bottomrule
+\end{tabular}
+\end{table}
+\end{landscape}
+
+\subsection{Configuration Recommendations}
+
+No single configuration satisfies all eleven requirements simultaneously;
+the requirements are logically independent and sometimes conflicting.
+Table~\ref{tab:configurations} lists the configurations recommended for specific
+legal contexts.
+
+\begin{table}[h]
+\centering
+\caption{Recommended configurations by legal context.
+  Each row is an independent configuration choice --- the columns are the
+  three axes (A, B, C) from Section~\ref{sec:components}.
+  \textit{Key}: A1=pop-only, A2=pop+area, A3=VRA-alignment, A4=prop-partisan;
+  B1=unweighted, B2=geo-edges, B3=county-sticky;
+  C1=balanced, C2=GeoSection, C3=AreaSection, C4=ApportionRegions, C5=NestSection.}
+\label{tab:configurations}
+\begin{tabular}{p{4.5cm}ccc}
+\toprule
+\textbf{Legal context} & \textbf{Axis A} & \textbf{Axis B} & \textbf{Axis C} \\
+\midrule
+\multicolumn{4}{l}{\textit{Default --- no specific legal claim}} \\
+Baseline (B.1 standard) & A1 & B1 & C1 \\
+Compactness-optimised & A1 & B2 & C2 \\[0.5em]
+\multicolumn{4}{l}{\textit{VRA Section 2 claim}} \\
+Gingles Prong 1 analysis & A3 & B2 & C2 \\
+VRA + county preservation & A3 & B3 & C2 \\[0.5em]
+\multicolumn{4}{l}{\textit{State-court partisan neutrality claim}} \\
+Rodden-null proof & A2 & B2 & C3 \\
+County-fair + geographic balance & A2 & B3 & C3 \\[0.5em]
+\multicolumn{4}{l}{\textit{Auditability / expert witness}} \\
+Auditable + HH-linked & A1 & B2 & C4 \\[0.5em]
+\multicolumn{4}{l}{\textit{Multi-chamber anti-stacking}} \\
+Nested all chambers & A1 & B2 & C5 \\[0.5em]
+\multicolumn{4}{l}{\textit{Census stability litigation argument}} \\
+Stability-filtered plans & A1 & B2 & C2 $+$ CSS filter \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Mutual Exclusion Constraint}
+
+Rows containing A3 (VRASection) and A4 (ProportionalSection) are mutually
+exclusive.
+This is not a software limitation but a constitutional requirement under
+\callais{} p.~36.
+The \texttt{callais\_preflight} function in the \texttt{redist} CLI enforces
+this at runtime:
+
+\begin{verbatim}
+  redist state --state AL --partition-mode vra-section \
+    --proportional-section           # ERROR
+  [BOUNDARY] callais_preflight: VRASection and ProportionalSection
+  cannot be combined in a single run (Callais p.36, disentanglement
+  requirement). Run each mode independently and compare results.
+  See docs/legal/FAIRNESS_DOCTRINE.md.
+\end{verbatim}
+
+A court reviewing the plan manifest can verify compliance by checking that
+\texttt{partition\_mode} is either \texttt{vra-section} or
+\texttt{proportional-section} but never both.
+The \texttt{whatif-manifest v1} JSON records the exact mode, parameter values,
+and SHA-256 hash of the input adjacency graph.
+
+\subsection{Combining Axes: Compatibility Rules}
+
+Within the mutex constraint, axes can be combined freely.
+The following table documents known compatibility and incompatibility:
+
+\begin{table}[h]
+\centering
+\small
+\caption{Axis combination compatibility. ``OK'' = fully compatible; ``Soft'' =
+  compatible but computationally expensive or legally redundant;
+  ``Mutex'' = mutually exclusive (Callais constraint or algorithmic conflict).}
+\label{tab:compatibility}
+\begin{tabular}{l ccc}
+\toprule
+ & A3 (VRA) & A4 (Partisan) & B3 (County-sticky) \\
+\midrule
+A2 (Pop+Area) & OK (different axes) & Mutex (A3 vs A4) & OK \\
+A3 (VRA) & --- & Mutex (Callais p.36) & OK \\
+A4 (Partisan) & Mutex (Callais p.36) & --- & OK \\
+C4 (ApportionRegions) & OK & OK & Soft \\
+C5 (NestSection) & OK & OK & OK \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,123 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Redistricting Problem}
+
+Every ten years, following the decennial census, all 50 American states must
+redraw their congressional district boundaries.
+The process allocates 435 seats across states via the Huntington-Hill method
+(Article~I, \S2, operationalised since 1941), then asks each state to partition
+its population into exactly $k$ districts where $k$ is its apportioned seat count.
+The constitutional floor is simple: districts must be as close to equal in
+population as practicable (\wesberry{}, 1964, one person one vote).
+Everything above that floor has accumulated as a dense forest of legal requirements
+over six decades of redistricting litigation.
+
+The forest has grown denser since 2020.
+\rucho{} v.\ \textit{Common Cause} (2019) removed federal courts from partisan
+gerrymandering review, but \emph{immediately redirected challengers to state
+courts} under state constitutional grounds.
+Pennsylvania's \emph{League of Women Voters} (2018) and North Carolina's
+\emph{Harper v.\ Hall} (2022) established that state constitutions can ban
+partisan gerrymandering even where Rucho closes the federal door.
+\allenmilligan{} (2023) reaffirmed and clarified the Voting Rights Act~\S2
+obligation to draw minority-opportunity districts where Gingles conditions are met.
+And \callais{} (2026) settled the disentanglement question: a state may not
+use race-conscious criteria to justify what is actually partisan manipulation,
+and the ``strong-inference'' framework requires challengers to show that a
+state's stated political goals could have been achieved \emph{with better
+minority outcomes}---meaning the algorithm must be capable of separating the
+two signals.
+
+This paper provides what the litigation landscape demands:
+a \emph{toolbox} of algorithm components where each tool addresses exactly one
+legal requirement, and the tools compose without conflict because they are
+legally required to be separate.
+
+\subsection{Why a Toolbox, Not a Single Algorithm}
+
+No single redistricting algorithm can satisfy all requirements simultaneously.
+The requirements pull in different directions.
+Geographic compactness (round districts) conflicts with county preservation
+(keeping existing political lines).
+VRA minority-opportunity district formation requires concentrating minority
+population, which can conflict with equal geographic spread.
+Proportionality requires a partisan signal, which \callais{} prohibits from
+being mixed with a racial signal.
+Census stability across decades requires that the algorithm converges on the
+same geographic structure regardless of which census year's data is used.
+
+The toolbox architecture acknowledges these tensions explicitly.
+Each tool is a parameter dial:
+the \emph{geographic edge weights} of B.2 control compactness;
+the \emph{county-sticky weights} of B.10 control subdivision preservation;
+the \emph{VRASection alignment score} of B.14 controls Gingles Prong~1 alignment;
+the \emph{AreaSection dual constraint} of B.9 controls geographic fairness.
+These dials can be tuned independently.
+They cannot all be maximised simultaneously, but the tradeoffs are \emph{explicit
+and auditable}: a court can read the parameter values from the plan manifest and
+understand exactly which tradeoffs were made.
+
+\subsection{The Callais Constraint}
+
+\callais{}, 608 U.S.\ \_\_\_ (2026), has three holdings relevant to algorithmic
+redistricting.
+
+First, Louisiana's extra minority district was unconstitutional racial
+gerrymandering: the VRA did not require a second majority-minority district
+where the first compactness prong of \emph{Thornburg v.\ Gingles} (1986) was
+not met.
+
+Second, \S2 challengers must use the ``strong-inference'' framework: they must
+show that the state's \emph{stated political goals} (partisan advantage, community
+preservation, compactness) could have been achieved \emph{with better minority
+outcomes}.
+This shifts the burden from ``the map is racially unfair'' to ``a race-neutral
+algorithm could have done better on both dimensions''.
+The toolbox is precisely positioned to provide this counterfactual: one can
+run GeoSection (no minority signal) and VRASection (geographic minority alignment)
+on the same state and compare.
+
+Third, at p.~36, the majority holds that race-conscious and partisan signals
+must be \emph{disentangled}: a redistricting run that mixes minority VAP
+concentrations as a constraint alongside partisan vote share as a constraint
+is constitutionally suspect because a court cannot separate the racial motivation
+from the partisan motivation in the resulting map.
+
+This third holding is the architecturally decisive constraint.
+It means that a redistricting system with multiple simultaneous signals---
+minority population fractions plus partisan vote shares in the same METIS
+objective function---fails the Callais disentanglement test.
+The toolbox's structure, where each mode uses exactly one signal type, is
+therefore not a simplification or limitation but a constitutionally correct design.
+
+\subsection{Paper Scope and Contributions}
+
+This paper is the capstone of the B-series algorithmic redistricting programme.
+It synthesises findings from B.1 through B.15 into a unified framework.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item A complete mapping of all eleven legal redistricting requirements to
+    specific algorithm components (Section~\ref{sec:requirements-matrix}).
+  \item A three-axis taxonomy of algorithm variants (Section~\ref{sec:components}).
+  \item A bakeoff of eight algorithm combinations across four litigated states,
+    with empirical results on compactness, partisanship, minority representation,
+    and county preservation (Section~\ref{sec:bakeoff}).
+  \item A formal Callais compliance architecture showing how the toolbox
+    enforces p.~36 disentanglement at the CLI level (Section~\ref{sec:callais}).
+  \item Practitioner recommendations for which configuration to choose for which
+    legal context (Section~\ref{sec:discussion}).
+\end{enumerate}
+
+\paragraph{Notation.}
+Throughout this paper, $G = (V, E, w)$ denotes the state's census-tract
+adjacency graph with vertex population weights and edge boundary-length weights.
+$k$ denotes the state's congressional seat count.
+$\mathrm{EC}(i:j)$ denotes the minimum edge-cut at split ratio $i:j$.
+$\mathrm{EC}_\text{norm}(i:j) = \mathrm{EC}(i:j) / \sqrt{\min(i,j)}$ denotes
+the isoperimetrically normalised edge-cut introduced in GeoSection (B.8).
+$p^* = L(0.5)$ denotes the Lorenz-curve natural population fraction
+(population in the densest 50\,\% of land area).
+D\,votes\,\% is the 2020 presidential Democratic two-party vote share.
+\end{document}

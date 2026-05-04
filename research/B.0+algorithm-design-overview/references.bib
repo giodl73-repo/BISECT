@@ -1,0 +1,520 @@
+%% B.0 Synthesis Paper — References
+%% Covers all B.1–B.15 papers plus legal and algorithmic literature
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b1paper,
+  author = {Della-Libera, Gio},
+  title  = {Recursive Bisection for Congressional Redistricting:
+            The Huntington-Hill Precedent and Graph-Partitioning Approach},
+  year   = {2026},
+  note   = {B.1 in Algorithmic Redistricting series. Research paper.},
+}
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.},
+}
+
+@misc{b3paper,
+  author = {Della-Libera, Gio},
+  title  = {Multi-Constraint vs.\ Edge-Weighted Bisection:
+            Why Single-Objective Formulations Outperform Constrained Optimisation},
+  year   = {2026},
+  note   = {B.3 in Algorithmic Redistricting series.
+            Documents MetisVra scale-mismatch failure in 3 of 5 VRA states.},
+}
+
+@misc{b4paper,
+  author = {Della-Libera, Gio},
+  title  = {Adaptive Bisection and Parameter Robustness in Recursive Redistricting},
+  year   = {2026},
+  note   = {B.4 in Algorithmic Redistricting series.
+            Shows tree structure accounts for $< 3\,\%$ variance at $\alpha \geq 5$.},
+}
+
+@misc{b5paper,
+  author = {Della-Libera, Gio},
+  title  = {N-Way vs.\ Recursive Bisection: Temporal Stability and Compactness Tradeoffs},
+  year   = {2026},
+  note   = {B.5 in Algorithmic Redistricting series.
+            Recursive: $80\,\%$ tract retention; N-way: $66\,\%$.
+            Compactness equivalent ($p=0.08$).},
+}
+
+@misc{b6paper,
+  author = {Della-Libera, Gio},
+  title  = {Computational Complexity of Recursive Bisection Redistricting:
+            O(n log k) Analysis and Empirical Runtime},
+  year   = {2026},
+  note   = {B.6 in Algorithmic Redistricting series.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            Certified: seat-count variance $< 0.3$ at 50 seeds per ratio.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$.
+            NC: 6:8 east/west split confirmed. WI: 1:7 Milwaukee peel confirmed.},
+}
+
+@misc{b9paper,
+  author = {Della-Libera, Gio},
+  title  = {{AreaSection}: Simultaneous Population and Land-Area Balance
+            in Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.9 in Algorithmic Redistricting series.
+            76\,\% seat-count agreement with GeoSection; $-1$ net D seat.
+            No systematic partisan direction.},
+}
+
+@misc{b10paper,
+  author = {Della-Libera, Gio},
+  title  = {Subdivision-Respecting Redistricting:
+            Governmental Hierarchy as Edge-Weight Signal},
+  year   = {2026},
+  note   = {B.10 in Algorithmic Redistricting series. Planning stage.
+            Introduces county-sticky $\alpha$ parameter.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to Huntington-Hill Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series. Planned.},
+}
+
+@misc{b12paper,
+  author = {Della-Libera, Gio},
+  title  = {{ProportionalSection}: Partisan-Vote-Share Balancing
+            for Proportional Congressional Redistricting},
+  year   = {2026},
+  note   = {B.12 in Algorithmic Redistricting series. Planned.
+            Callais-mutex partner of VRASection.},
+}
+
+@misc{b13paper,
+  author = {Della-Libera, Gio},
+  title  = {{NestSection}: Consistent Multi-Chamber Redistricting
+            via Compatible Factorization Spines},
+  year   = {2026},
+  note   = {B.13 in Algorithmic Redistricting series.
+            11 states with spine score 0 (exact nesting).},
+}
+
+@misc{b14paper,
+  author = {Della-Libera, Gio},
+  title  = {{VRASection}: Geographic Alignment Score for
+            Minority Opportunity District Bisection},
+  year   = {2026},
+  note   = {B.14 in Algorithmic Redistricting series.
+            Alabama 2:5 result confirmed. 2 MM districts at 55.2\,\% and 52.8\,\% Black VAP.
+            $w_\text{vra}=0.40$ calibrated below Shaw-Miller racial-predominance threshold.},
+}
+
+@misc{b15paper,
+  author = {Della-Libera, Gio},
+  title  = {{StabilitySection}: Cross-Census Stability of
+            GeoSection-Optimal Redistricting Maps},
+  year   = {2026},
+  note   = {B.15 in Algorithmic Redistricting series.
+            67\,\% of states stable at $\Delta f \leq 0.05$ threshold.
+            Iowa: canonical unstable state ($\Delta f = 0.31$).},
+}
+
+%% ===================================================================
+%% LEGAL CASES
+%% ===================================================================
+
+@misc{callais2026,
+  title  = {Louisiana v.\ Callais},
+  year   = {2026},
+  note   = {608 U.S. ___ (2026).
+            Holdings: (1) Louisiana's extra minority district was unconstitutional
+            racial gerrymandering; (2) strong-inference framework for \S2 challengers;
+            (3) p.36: race-conscious and partisan signals must be disentangled.},
+}
+
+@misc{wesberry1964,
+  title  = {Wesberry v.\ Sanders},
+  year   = {1964},
+  note   = {376 U.S. 1 (1964). Established one-person-one-vote for congressional
+            districts; near-perfect population equality required.},
+}
+
+@misc{karcher1983,
+  title  = {Karcher v.\ Daggett},
+  year   = {1983},
+  note   = {462 U.S. 725 (1983). Any population deviation in congressional
+            districts must be justified; essentially zero tolerance.},
+}
+
+@misc{shaw1993,
+  title  = {Shaw v.\ Reno},
+  year   = {1993},
+  note   = {509 U.S. 630 (1993). Districts with ``bizarre'' shapes suggesting
+            racial predominance trigger strict scrutiny.},
+}
+
+@misc{miller1995,
+  title  = {Miller v.\ Johnson},
+  year   = {1995},
+  note   = {515 U.S. 900 (1995). Race cannot be the ``predominant factor''
+            overriding traditional districting principles.},
+}
+
+@misc{gingles1986,
+  title  = {Thornburg v.\ Gingles},
+  year   = {1986},
+  note   = {478 U.S. 30 (1986). Established three-prong test for VRA \S2:
+            (1) geographic compactness/size, (2) minority cohesion,
+            (3) majority bloc voting.},
+}
+
+@misc{allenmilligan2023,
+  title  = {Allen v.\ Milligan},
+  year   = {2023},
+  note   = {598 U.S. 1 (2023). Alabama required to draw two Black-opportunity
+            districts; reaffirmed and clarified Gingles three-prong test.},
+}
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Partisan gerrymandering claims present political
+            questions beyond federal court reach; state courts retain jurisdiction.},
+}
+
+@misc{lwvpa2018,
+  title  = {League of Women Voters v.\ Commonwealth of Pennsylvania},
+  year   = {2018},
+  note   = {Pa. Supreme Court No. 159 MM 2017. Pennsylvania's congressional map
+            struck down as partisan gerrymander under Pennsylvania Constitution.
+            Demonstrates post-Rucho state-court route.},
+}
+
+@misc{harper2022,
+  title  = {Harper v.\ Hall},
+  year   = {2022},
+  note   = {N.C. Supreme Court, 2022 (initial decision).
+            Found unconstitutional partisan gerrymander under North Carolina
+            Constitution; required county grouping compliance. Reversed 2023.},
+}
+
+@misc{harkenrider2022,
+  title  = {Harkenrider v.\ Hochul},
+  year   = {2022},
+  note   = {N.Y. Court of Appeals, 2022.
+            Struck down partisan gerrymander under New York Constitution.},
+}
+
+@misc{bushvvera1996,
+  title  = {Bush v.\ Vera},
+  year   = {1996},
+  note   = {517 U.S. 952 (1996). Applied Miller racial-predominance test;
+            clarified that race can be a factor but not the predominant factor.},
+}
+
+@misc{vra1965,
+  title  = {Voting Rights Act of 1965},
+  year   = {1965},
+  note   = {52 U.S.C. \S10301 (formerly 42 U.S.C. \S1973).
+            Section 2 prohibits voting practices that dilute minority voting strength.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+}
+
+@techreport{karypis1999metis,
+  author      = {Karypis, George and Kumar, Vipin},
+  title       = {{METIS}: A Software Package for Partitioning Unstructured Graphs},
+  institution = {University of Minnesota, Department of Computer Science},
+  year        = {1999},
+}
+
+@article{hendrickson1995,
+  author  = {Hendrickson, Bruce and Leland, Robert},
+  title   = {A Multilevel Algorithm for Partitioning Graphs},
+  journal = {Proceedings of Supercomputing},
+  year    = {1995},
+}
+
+@inproceedings{sanders2011,
+  author    = {Sanders, Peter and Schulz, Christian},
+  title     = {Engineering Multilevel Graph Partitioning Algorithms},
+  booktitle = {Proceedings of the 19th Annual European Symposium on Algorithms (ESA)},
+  year      = {2011},
+  pages     = {469--480},
+}
+
+%% ===================================================================
+%% REDISTRICTING ALGORITHMS
+%% ===================================================================
+
+@misc{deford2019,
+  author = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title  = {Recombination: A Family of {M}arkov Chains for Redistricting},
+  year   = {2019},
+  note   = {arXiv:1911.05725},
+}
+
+@misc{metric2018,
+  author = {{MGGG Redistricting Lab}},
+  title  = {{GerryChain}: A {M}arkov Chain {M}onte {C}arlo Framework for Redistricting},
+  year   = {2018},
+  note   = {Available at \url{https://github.com/mggg/GerryChain}},
+}
+
+@article{chikina2017,
+  author  = {Chikina, Maria and Frieze, Alan and Pegden, Wesley},
+  title   = {Assessing Significance in a {M}arkov Chain Without Mixing},
+  journal = {Proceedings of the National Academy of Sciences},
+  volume  = {114},
+  number  = {11},
+  pages   = {2860--2864},
+  year    = {2017},
+}
+
+@article{gurnee2021,
+  author  = {Gurnee, Wes and Shmoys, David B.},
+  title   = {Fairmandering: A Column Generation Heuristic for Fairness-Optimized Political Districting},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume  = {81},
+  number  = {4},
+  pages   = {1456--1482},
+  year    = {2021},
+}
+
+@inproceedings{cannon2023,
+  author    = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+               and Matthews, Julie and Suwal, Bhushan},
+  title     = {Voting Rights, Markov Chains, and Optimization by Short Bursts},
+  booktitle = {Proceedings of the 2023 ACM-SIAM Symposium on Discrete Algorithms},
+  year      = {2023},
+  pages     = {3074--3091},
+}
+
+@article{cho2016measuring,
+  author  = {Cho, Wendy K. Tam and Liu, Yan Y.},
+  title   = {Toward a Talismanic Redistricting Tool: A Computational Method
+             for Identifying Extreme Redistricting Plans},
+  journal = {Election Law Journal},
+  volume  = {15},
+  number  = {4},
+  pages   = {351--366},
+  year    = {2016},
+}
+
+%% ===================================================================
+%% POLITICAL GEOGRAPHY AND PARTISAN ANALYSIS
+%% ===================================================================
+
+@book{rodden2019,
+  author    = {Rodden, Jonathan A.},
+  title     = {Why Cities Lose: The Deep Roots of the Urban-Rural Political Divide},
+  publisher = {Basic Books},
+  year      = {2019},
+}
+
+@article{chen2013,
+  author  = {Chen, Jowei and Rodden, Jonathan},
+  title   = {Unintentional Gerrymandering: Political Geography and Electoral Bias in Legislatures},
+  journal = {Quarterly Journal of Political Science},
+  volume  = {8},
+  number  = {3},
+  pages   = {239--269},
+  year    = {2013},
+}
+
+@article{stephanopoulos2015,
+  author  = {Stephanopoulos, Nicholas O. and McGhee, Eric M.},
+  title   = {Partisan Gerrymandering and the Efficiency Gap},
+  journal = {University of Chicago Law Review},
+  volume  = {82},
+  number  = {2},
+  pages   = {831--900},
+  year    = {2015},
+}
+
+@article{mcghee2014,
+  author  = {McGhee, Eric},
+  title   = {Measuring Partisan Bias in Single-Member District Electoral Systems},
+  journal = {Legislative Studies Quarterly},
+  volume  = {39},
+  number  = {1},
+  pages   = {55--85},
+  year    = {2014},
+}
+
+%% ===================================================================
+%% COMPACTNESS AND GEOMETRY
+%% ===================================================================
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law \& Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+}
+
+@techreport{reock1961,
+  author      = {Reock, Ernest C.},
+  title       = {A Note: Measuring Compactness as a Requirement of Legislative Apportionment},
+  institution = {Midwest Journal of Political Science},
+  volume      = {5},
+  number      = {1},
+  pages       = {70--74},
+  year        = {1961},
+}
+
+@book{osserman1978,
+  author    = {Osserman, Robert},
+  title     = {The Isoperimetric Inequality},
+  journal   = {Bulletin of the American Mathematical Society},
+  volume    = {84},
+  number    = {6},
+  pages     = {1182--1238},
+  year      = {1978},
+}
+
+@book{duchin2018geometry,
+  author    = {Duchin, Moon and Needham, Thomas and Weighill, Thomas},
+  title     = {The (Quantitative) Geography of Gerrymandering},
+  year      = {2018},
+  note      = {Working paper, Metric Geometry and Gerrymandering Group},
+}
+
+%% ===================================================================
+%% VRA AND MINORITY REPRESENTATION
+%% ===================================================================
+
+@article{engstrom2010,
+  author  = {Engstrom, Richard L.},
+  title   = {The Post-2010 Redistricting Rounds and the Voting Rights Act},
+  journal = {Political Science Quarterly},
+  volume  = {131},
+  number  = {3},
+  pages   = {549--575},
+  year    = {2016},
+}
+
+@article{groffman2008,
+  author  = {Grofman, Bernard and Handley, Lisa},
+  title   = {Minority Representation and the Quest for Voting Equality},
+  journal = {Cambridge University Press},
+  year    = {1992},
+}
+
+@article{imai2020,
+  author  = {Imai, Kosuke and others},
+  title   = {Automated Redistricting Simulation Using {M}arkov Chain {M}onte {C}arlo},
+  journal = {Journal of Computational and Graphical Statistics},
+  volume  = {29},
+  number  = {4},
+  pages   = {715--728},
+  year    = {2020},
+}
+
+%% ===================================================================
+%% DATA SOURCES
+%% ===================================================================
+
+@misc{fekrazad2021,
+  author = {Fekrazad, Amir},
+  title  = {Voting and Election Science Team (VEST) 2020 Precinct-Level Election Results},
+  year   = {2021},
+  doi    = {10.7910/DVN/Z8TSH3},
+  note   = {Harvard Dataverse},
+}
+
+@misc{census2020pl,
+  author = {{U.S. Census Bureau}},
+  title  = {2020 Census Redistricting Data (P.L. 94-171)},
+  year   = {2021},
+  note   = {Available from data.census.gov. Provides population and
+            minority VAP at census-tract level.},
+}
+
+@misc{tiger2020,
+  author = {{U.S. Census Bureau}},
+  title  = {TIGER/Line Shapefiles, 2020},
+  year   = {2020},
+  note   = {Available from census.gov/geographies/mapping-files.
+            Provides tract boundaries, county boundaries, and
+            shared boundary lengths used as edge weights.},
+}
+
+%% ===================================================================
+%% APPORTIONMENT
+%% ===================================================================
+
+@article{balinski1982,
+  author  = {Balinski, Michel L. and Young, H. Peyton},
+  title   = {Fair Representation: Meeting the Ideal of One Man, One Vote},
+  journal = {Yale University Press},
+  year    = {1982},
+}
+
+@article{huntington1928,
+  author  = {Huntington, Edward V.},
+  title   = {The Apportionment of Representatives in Congress},
+  journal = {Transactions of the American Mathematical Society},
+  volume  = {30},
+  number  = {1},
+  pages   = {85--110},
+  year    = {1928},
+}
+
+%% ===================================================================
+%% LEGAL DOCTRINE — DEPOSITION / AUDIT
+%% ===================================================================
+
+@article{issacharoff2002,
+  author  = {Issacharoff, Samuel and Karlan, Pamela S.},
+  title   = {Where to Draw the Line? Judicial Review of Political Gerrymanders},
+  journal = {University of Pennsylvania Law Review},
+  volume  = {153},
+  pages   = {541--578},
+  year    = {2004},
+}
+
+@book{elmendorf2022,
+  author    = {Elmendorf, Christopher S. and Quinn, Kevin M.},
+  title     = {Bayesian Umpires: Partisan Gerrymandering and the Search
+               for Judicially Manageable Standards},
+  year      = {2022},
+  note      = {Working paper},
+}
