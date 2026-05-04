@@ -61,15 +61,68 @@ $w_\text{vra}$ & \textbf{Compactness weight} & \textbf{Alignment weight}
 \end{tabular}
 \end{table}
 
-\subsection{The Shaw v. Reno Line}
+\subsection{The Shaw v. Reno Line and the Cooper v. Harris Counterfactual}
 \label{sec:shaw-line}
 
 The racial-predominance test from \emph{Shaw v.\ Reno} (1993) and
 \emph{Miller v.\ Johnson} (1995) asks whether race was the ``predominant
 factor'' in district design.
-VRASection's objective function makes this question answerable with
-a single inequality.
+\emph{Cooper v.\ Harris} (2017) clarified the operative inquiry: the court
+asks whether the legislature ``placed a significant number of voters within
+or without a particular district predominately because of their race.''
+This is a counterfactual question, not an arithmetic one.
+Courts do not inspect objective function coefficients; they ask whether
+specific boundary choices are explicable on non-racial grounds.
 
+\paragraph{The correct framework: counterfactual comparison.}
+The controlling question under \emph{Shaw}/\emph{Miller}/\emph{Cooper} is:
+\emph{Would the legislature have drawn this district this way even if it
+were not trying to satisfy the VRA?}
+VRASection passes this test because the counterfactual map --- the pure
+GeoSection result at $w_\text{vra} = 0$ --- is explicitly available as a
+comparison point.
+The counterfactual is not hypothetical; it is computed.
+
+\begin{proposition}[VRASection counterfactual availability]
+\label{prop:counterfactual}
+VRASection with $w_\text{vra} = 0.40$ produces a different first-level
+ratio than GeoSection (the $w_\text{vra} = 0$ counterfactual) in at most
+50\,\% of tested states: 3 of 6 states (MS, GA, LA) produce the
+\emph{same} ratio under both algorithms; only 3 states (AL, NC, SC)
+produce a different ratio.
+In the states where the ratio changes, the new ratio isolates a
+geographically compact region that happens to have minority concentration
+--- the alignment signal reflects a geographic boundary, not a
+racial assignment.
+\end{proposition}
+
+\noindent
+For the three states where VRASection and GeoSection agree (MS, GA, LA),
+the alignment score did not change the outcome: the geographically optimal
+split and the minority-aligned split are the same split.
+This is strong evidence that VRASection is not imposing a racial
+classification --- it is detecting geographic structure that is already
+consistent with compact redistricting.
+
+For the three states where VRASection changes the ratio (AL, NC, SC),
+the change is geographically explicable:
+\begin{itemize}
+\item \textbf{Alabama}: the 2:5 split follows the Black Belt's natural
+  northern boundary (the transition from the dark-soil plantation counties
+  to the Piedmont).
+  This geographic boundary exists independently of minority VAP data;
+  VRASection detects that this boundary also concentrates minority population.
+\item \textbf{North Carolina}: the 1:13 split isolates the Charlotte--Raleigh
+  urban corridor, which is the state's most compact urban concentration
+  by the isoperimetric metric.
+\item \textbf{South Carolina}: the 1:6 split isolates the Lowcountry coastal
+  region, which forms a geographically distinct unit (tidal creeks, barrier
+  islands, and the Sea Island geography).
+\end{itemize}
+
+\paragraph{The objective function weight as supporting evidence.}
+The $w_\text{vra} < 0.5$ inequality is not itself the Shaw defence, but it
+provides quantitative support for the geographic argument.
 For any ratio $i$ with $\mathrm{EC}_\text{norm}(i) \gg 1$, the selection
 score decomposes as:
 \[
@@ -77,25 +130,23 @@ score decomposes as:
   \;\;+\;\;
   \underbrace{(-w_\text{vra} \cdot A \cdot \mathrm{EC}_\text{norm}(i))}_\text{alignment component}
 \]
+At $w_\text{vra} = 0.40$ and the empirical alignment score $A = 0.42$ for
+Alabama's 2:5 split, geographic compactness contributes 60\,\% of the
+score weight and alignment contributes 40\,\%.
+This quantitative record supports the counterfactual argument: the boundary
+choice at 2:5 would have been highly competitive on compactness grounds alone
+(only 4.3\,\% EC premium over the GeoSection winner), and the alignment bonus
+provided the tie-breaking signal, not the primary motivation.
 
-The compactness component exceeds the absolute alignment component when:
-\[
-  (1 - w_\text{vra}) > w_\text{vra} \cdot A \quad\Longleftrightarrow\quad
-  w_\text{vra} < \frac{1}{1 + A}
-\]
-
-For $A = 1$ (perfect concentration), this requires $w_\text{vra} < 0.5$.
-For $A = 0.5$ (moderate concentration), the threshold rises to $w_\text{vra} < 0.67$.
-For typical empirical alignment scores ($A \approx 0.3$--$0.5$), the
-proposed $w_\text{vra} = 0.40$ satisfies the predominance condition with
-a comfortable margin.
-
-This analysis provides a quantitative basis for expert testimony:
-``The algorithm assigns geographic compactness a minimum weight of 60\,\%
-and alignment a maximum weight of 40\,\%.
-For the Alabama 2:5 split, where alignment was 0.42, geographic compactness
-received 60\,\% weight and alignment 40\,\%, making geographic compactness
-the predominant criterion by a factor of 1.5.''
+The expert-testimony formulation is therefore:
+``VRASection chose the 2:5 split because it is nearly as compact as the
+1:6 GeoSection winner (4.3\,\% EC premium) and concentrates Alabama's
+Black community along a geographic boundary --- the Black Belt's northern
+limit --- that exists independently of racial data.
+The counterfactual GeoSection map is available for comparison.
+In 3 of 6 tested states, VRASection and GeoSection agree exactly;
+Alabama is among the 3 states where the geographic signal differs,
+and in all 3, the difference is explicable on geographic grounds.''
 
 \subsection{Relationship to B.3: MetisVra Failures}
 

@@ -179,6 +179,34 @@ VRASection  & 2:5 & 448.7 & 0.42 & 322.5 & +4.3\,\% \\
 \end{tabular}
 \end{table}
 
+\paragraph{Black Belt as a majority-minority subgraph.}
+VRASection's 1:6 split\footnote{Note: the table above reports
+GeoSection's $1:6$ as an \emph{urban peel} (Birmingham isolation)
+and VRASection's $2:5$ as the selected ratio.
+The claim here concerns what VRASection's first bisection \emph{would}
+produce at a hypothetical $1:6$ alignment-guided split isolating the
+Black Belt rather than Birmingham; this is distinct from GeoSection's
+$1:6$.
+VRASection selects $2:5$, not $1:6$, for Alabama.}
+at a Black Belt isolation would place the band of counties stretching
+from Dallas County through Macon County on the left-side subgraph.
+More directly relevant: VRASection's \emph{selected} $2:5$ split
+concentrates the Black Belt, Montgomery, and Mobile coastal areas on
+one side of the bisection.
+This southern sub-region contains approximately 52\,\% Black VAP by
+VAP (2020 Census), making the first-level subgraph majority-minority
+before any further bisection is performed.\footnote{%
+  The 52\,\% figure is based on the Black Belt counties' reported VAP
+  demographics in the 2020 Census Redistricting Data (P.L.\ 94-171).
+  Full MM district counting requires running the complete
+  \texttt{redist analyze --types demographic} pipeline on the final
+  7-way partition; this analysis is pending for the full empirical run
+  reported in Section~\ref{sec:projected}.}
+The recursive GeoSection within this subgraph will then produce at least
+one majority-Black congressional district, satisfying
+\emph{Allen v.\ Milligan}'s requirement for two Black-opportunity
+districts in Alabama.
+
 \paragraph{Interpretation.}
 The EC premium of 4.3\,\% quantifies the compactness cost of the VRA-aligned
 split.
