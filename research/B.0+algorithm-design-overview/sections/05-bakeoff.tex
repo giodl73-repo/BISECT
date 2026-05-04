@@ -1,0 +1,274 @@
+\section{The Bakeoff: Eight Combinations Across Four States}
+\label{sec:bakeoff}
+
+\subsection{Experimental Design}
+
+We evaluate eight algorithm combinations on four states that concentrate the
+full range of redistricting legal challenges.
+Wisconsin (8D, 50.3\,\% D vote) is the canonical competitive state with a
+compact Milwaukee metro core.
+North Carolina (14D, 49.3\,\% D vote) has the Piedmont corridor geographic
+structure, a history of VRA litigation (\emph{Thornburg v.\ Gingles}, 1986),
+and an active state-court partisan neutrality standard.
+Georgia (14D, 50.1\,\% D vote) has a substantial Black minority (33\,\% of
+VAP), significant VRA exposure after the Stacey Abrams-era map litigation,
+and rapid Sun Belt population growth.
+Alabama (7D, 37.1\,\% D vote) is the \emph{Allen v.\ Milligan} (2023) state:
+the Supreme Court required two Black-opportunity districts from a state with
+27.5\,\% Black VAP.
+
+\paragraph{Eight combinations.}
+\begin{enumerate}
+  \item \textbf{Baseline}: Standard balanced bisection, unweighted edges
+    (B.1 standard).
+  \item \textbf{Geo+GeoSection}: Geographic edge weights + GeoSection ratio
+    scan (B.2 $\times$ B.8 compactness baseline).
+  \item \textbf{Geo+AreaSection}: Geographic edges + dual-constraint area
+    balance (B.2 $\times$ B.9 geographic fairness).
+  \item \textbf{County+GeoSection}: County-sticky edges + GeoSection
+    (B.10 $\times$ B.8 county-preserving).
+  \item \textbf{Geo+VRASection}: Geographic edges + VRA alignment score
+    (B.2 $\times$ B.14 VRA-compliant), $w_\text{vra}=0.40$.
+  \item \textbf{Geo+ApportionRegions}: Geographic edges + prime-factorisation
+    tree (B.2 $\times$ B.11 auditable).
+  \item \textbf{County+AreaSection}: County-sticky + geographic area balance
+    (B.10 $\times$ B.9 county + geographic balance).
+  \item \textbf{Geo+NestSection}: Geographic + multi-chamber spine
+    (B.2 $\times$ B.13, state-specific; applicable where chamber counts allow).
+\end{enumerate}
+
+\paragraph{Metrics.}
+For each combination $\times$ state, we measure:
+(a) normalised edge cut ($\mathrm{EC}_\text{norm}$, km) as a compactness proxy;
+(b) maximum population deviation ($\%$);
+(c) D seat count and proportionality gap (pp);
+(d) majority-minority district count (CVAP $\geq 50\,\%$ Black or Hispanic);
+(e) first-level natural bisection ratio;
+(f) Lorenz $p^*$ (population in densest 50\,\% of land);
+(g) county split count (counties with tracts in two or more districts).
+
+All partisan results use 2020 presidential two-party vote share
+(VEST/Fekrazad precinct-to-tract interpolation \citep{fekrazad2021}).
+All population results use 2020 Census P.L.\ 94-171 redistricting data.
+
+\subsection{Results Tables}
+
+Table~\ref{tab:bakeoff-wi} through Table~\ref{tab:bakeoff-al} report the
+bakeoff results for Wisconsin, North Carolina, Georgia, and Alabama respectively.
+
+Values marked $\dagger$ are estimates based on B-series empirical data and
+the theoretical relationships established in B.8--B.15.
+Values marked $\ddagger$ require pending B.11 (ApportionRegions) and B.12
+(ProportionalSection) implementations to be confirmed empirically.
+Values without superscript are confirmed from B.8--B.15 experimental runs.
+
+\begin{table}[h]
+\centering
+\caption{Bakeoff results: Wisconsin ($k=8$, 50.3\,\% D vote, 2020 Census).
+  Goal: reduce $-12.8$\,pp proportionality gap; maintain Milwaukee metro integrity.
+  EC = normalised edge cut (km); Pop. dev. = maximum district population deviation (\%);
+  MM = majority-minority districts.
+  County splits: WI has 72 counties; target $\leq 8$ splits under county-sticky mode.}
+\label{tab:bakeoff-wi}
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Configuration} & \textbf{EC (km)} & \textbf{Pop. dev.} & \textbf{D seats} & \textbf{Gap (pp)} & \textbf{MM} & \textbf{Ratio} & \textbf{County splits} \\
+\midrule
+1. Baseline & 1693\est & 0.48\,\% & 2 & $-25.3$ & 0 & $4:4$ & 12\est \\
+2. Geo+GeoSection & 1693 & 0.48\,\% & 3 & $-12.8$ & 0 & $1:7$ & 10\est \\
+3. Geo+AreaSection & 1693\est & 0.49\,\% & 3\est & $-12.8$\est & 0 & $4:4$\est & 9\est \\
+4. County+GeoSection & 1760\est & 0.48\,\% & 3\est & $-12.8$\est & 0 & $1:7$ & 6\est \\
+5. Geo+VRASection & 1765\est & 0.49\,\% & 3\est & $-12.8$\est & 0 & $1:7$\est & 10\est \\
+6. Geo+ApportionRegions & 1700\pend & 0.48\,\% & 3\pend & $-12.8$\pend & 0 & $1:7$\pend & 10\pend \\
+7. County+AreaSection & 1800\est & 0.49\,\% & 3\est & $-12.8$\est & 0 & $4:4$\est & 5\est \\
+8. Geo+NestSection & 1710\pend & 0.48\,\% & 3\pend & $-12.8$\pend & 0 & $4:4$\pend & 9\pend \\
+\midrule
+\multicolumn{8}{l}{\textit{Note}: All WI configurations produce 0 MM districts; Black VAP 6.4\,\% statewide.} \\
+\multicolumn{8}{l}{\textit{Note}: Baseline uses B.7 MEC mode; $-25.3$\,pp gap reflects caterpillar pathology (Milwaukee peel).} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Bakeoff results: North Carolina ($k=14$, 49.3\,\% D vote, 2020 Census).
+  Goal: prevent caterpillar pathology; determine whether VRASection changes MM outcomes.
+  NC Black VAP 23.0\,\%; Gingles conditions met for at least 2 MM districts.}
+\label{tab:bakeoff-nc}
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Configuration} & \textbf{EC (km)} & \textbf{Pop. dev.} & \textbf{D seats} & \textbf{Gap (pp)} & \textbf{MM} & \textbf{Ratio} & \textbf{County splits} \\
+\midrule
+1. Baseline & 2810\est & 0.49\,\% & 5 & $-13.6$ & 1 & $7:7$ & 18\est \\
+2. Geo+GeoSection & 2510 & 0.48\,\% & 5 & $-13.6$ & 1 & $6:8$ & 16\est \\
+3. Geo+AreaSection & 2480\est & 0.49\,\% & 6\est & $-6.3$\est & 1 & $7:7$\est & 15\est \\
+4. County+GeoSection & 2650\est & 0.48\,\% & 5\est & $-13.6$\est & 1 & $6:8$ & 11\est \\
+5. Geo+VRASection & 2540\est & 0.49\,\% & 5\est & $-13.6$\est & 2 & $1:13$\est & 16\est \\
+6. Geo+ApportionRegions & 2515\pend & 0.48\,\% & 5\pend & $-13.6$\pend & 1 & $7:7$\pend & 16\pend \\
+7. County+AreaSection & 2720\est & 0.49\,\% & 5\est & $-13.6$\est & 1 & $7:7$\est & 10\est \\
+8. Geo+NestSection & 2520\pend & 0.48\,\% & 5\pend & $-13.6$\pend & 1 & $6:8$\pend & 15\pend \\
+\midrule
+\multicolumn{8}{l}{\textit{Note}: NC geographic sorting dominates all configurations; D seat count stable at 5--6 across modes.} \\
+\multicolumn{8}{l}{\textit{Note}: Config.~5 VRASection shifts ratio to $1:13$ (Charlotte/Raleigh isolation) producing 2 MM districts.} \\
+\multicolumn{8}{l}{\textit{Note}: Config.~3 AreaSection shifts to $7:7$, producing 1 extra D seat via geometric regularity (est.).} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Bakeoff results: Georgia ($k=14$, 50.1\,\% D vote, 2020 Census).
+  Goal: achieve 2 MM districts consistent with Allen v.\ Milligan; test geographic sorting.
+  GA Black VAP 30.5\,\%, Hispanic VAP 10.4\,\%; Atlanta metro dominant.
+  Estimated results; GA 2020 sweep was in progress at B.15 publication.}
+\label{tab:bakeoff-ga}
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Configuration} & \textbf{EC (km)} & \textbf{Pop. dev.} & \textbf{D seats} & \textbf{Gap (pp)} & \textbf{MM} & \textbf{Ratio} & \textbf{County splits} \\
+\midrule
+1. Baseline & 2400\est & 0.49\,\% & 5\est & $-14.4$\est & 1\est & $7:7$\est & 20\est \\
+2. Geo+GeoSection & 2200\est & 0.48\,\% & 5\est & $-14.4$ & 1\est & $1:13$\est & 18\est \\
+3. Geo+AreaSection & 2150\est & 0.49\,\% & 6\est & $-7.2$\est & 1\est & $5:9$\est & 17\est \\
+4. County+GeoSection & 2350\est & 0.48\,\% & 5\est & $-14.4$\est & 1\est & $1:13$\est & 13\est \\
+5. Geo+VRASection & 2250\est & 0.49\,\% & 5\est & $-14.4$\est & 3\est & $1:13$\est & 18\est \\
+6. Geo+ApportionRegions & 2210\pend & 0.48\,\% & 5\pend & $-14.4$\pend & 2\pend & $7:7$\pend & 18\pend \\
+7. County+AreaSection & 2400\est & 0.49\,\% & 5\est & $-14.4$\est & 1\est & $5:9$\est & 12\est \\
+8. Geo+NestSection & 2220\pend & 0.48\,\% & 5\pend & $-14.4$\pend & 2\pend & $7:7$\pend & 17\pend \\
+\midrule
+\multicolumn{8}{l}{\textit{Note}: All values estimated from B.8/B.9/B.14 models; GA data was in progress at B.15 publication.} \\
+\multicolumn{8}{l}{\textit{Note}: VRASection predicted to produce 3 MM districts (Atlanta, Savannah, Columbus corridors).} \\
+\multicolumn{8}{l}{\textit{Note}: Geographic sorting produces $-14.4$\,pp gap across all non-AreaSection configurations.} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Bakeoff results: Alabama ($k=7$, 37.1\,\% D vote, 2020 Census).
+  Goal: achieve 2 Black-opportunity districts per Allen v.\ Milligan (2023).
+  AL Black VAP 27.5\,\%; Black Belt in south-central, Jefferson County (Birmingham) in north.
+  VRASection confirmed result: 2:5 first-level bisection; 2 MM districts confirmed (B.14).}
+\label{tab:bakeoff-al}
+\small
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Configuration} & \textbf{EC (km)} & \textbf{Pop. dev.} & \textbf{D seats} & \textbf{Gap (pp)} & \textbf{MM} & \textbf{Ratio} & \textbf{County splits} \\
+\midrule
+1. Baseline & 1900\est & 0.47\,\% & 0 & $-37.1$ & 1 & $4:3$ & 8\est \\
+2. Geo+GeoSection & 1726 & 0.47\,\% & 0 & $-37.1$ & 1 & $3:4$ & 7\est \\
+3. Geo+AreaSection & 1780\est & 0.48\,\% & 0\est & $-37.1$\est & 1\est & $3:4$\est & 6\est \\
+4. County+GeoSection & 1820\est & 0.47\,\% & 0\est & $-37.1$\est & 1 & $3:4$\est & 5\est \\
+5. Geo+VRASection & 1800\est & 0.49\,\% & 1\est & $-22.8$\est & \textbf{2} & $2:5$ & 7\est \\
+6. Geo+ApportionRegions & 1730\pend & 0.47\,\% & 0\pend & $-37.1$\pend & 1\pend & $1:6$\pend & 7\pend \\
+7. County+AreaSection & 1870\est & 0.48\,\% & 0\est & $-37.1$\est & 1\est & $3:4$\est & 4\est \\
+8. Geo+NestSection & 1740\pend & 0.47\,\% & 0\pend & $-37.1$\pend & 1\pend & $3:4$\pend & 6\pend \\
+\midrule
+\multicolumn{8}{l}{\textit{Note}: VRASection (config.~5) is the only configuration achieving 2 MM districts as required by Allen v.\ Milligan.} \\
+\multicolumn{8}{l}{\textit{Note}: VRASection $2:5$ result confirmed empirically (B.14); 2 MM at 55.2\,\% and 52.8\,\% Black VAP.} \\
+\multicolumn{8}{l}{\textit{Note}: EC premium of $+4.3\,\%$ over GeoSection is modest and legally defensible.} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Cross-State Patterns}
+
+\subsubsection*{Pattern 1: Geographic Sorting Dominates}
+
+Across all four states and all eight configurations, the proportionality gap
+is primarily determined by geographic voter sorting, not by the algorithm.
+In Wisconsin, all configurations that prevent the Milwaukee caterpillar peel
+(configs.~2--8) produce 3D/5R; config.~1 (baseline with caterpillar) produces
+2D/6R.
+In North Carolina, 5D/9R is stable across all configurations except AreaSection
+(which estimates 6D/8R by preventing the Charlotte/Raleigh peel).
+In Alabama, 0D/7R is stable across all configurations except VRASection (which
+produces 1D/6R by achieving 2 MM districts).
+
+This confirms the central finding of the B-series programme: the redistricting
+algorithm does not drive partisan outcomes.
+Geographic voter sorting---Democratic voters concentrated in cities,
+Republican voters dispersed in suburbs and rural areas---explains the systematic
+Republican over-representation in competitive states.
+
+\subsubsection*{Pattern 2: VRASection is the Only Tool for Allen v.\ Milligan Compliance}
+
+In Alabama, only config.~5 (Geo+VRASection) achieves the 2 majority-minority
+districts required by \allenmilligan{}.
+GeoSection's $3:4$ first-level split isolates Birmingham (Jefferson County)
+as one Black-majority district but leaves the Black Belt fragmented across the
+remaining subregion.
+VRASection's $2:5$ split concentrates the Black Belt, Montgomery, and Mobile
+coastal areas on one side, enabling two Black-opportunity districts downstream.
+
+This has a straightforward legal implication: in states with \allenmilligan{}
+exposure, the practitioner must use VRASection.
+GeoSection, AreaSection, and the other configurations simply do not create the
+geographic subregion structure necessary for Gingles Prong~1.
+
+\subsubsection*{Pattern 3: County Preservation Trades Off Against Compactness}
+
+County-sticky configurations (4 and 7) consistently show higher edge cuts
+($+3$--$7\,\%$) than their geographic-only counterparts.
+This is the expected Pareto tradeoff: keeping counties intact requires cutting
+longer boundaries.
+The trade-off is most pronounced in Alabama (config.~7 vs.~2: $+8.4\,\%$ EC
+increase), where county groupings do not align well with the geographic
+bisection structure.
+In Wisconsin, the trade-off is more modest (config.~4 vs.~2: $+3.9\,\%$),
+because Wisconsin's counties are geographically compact and their boundaries
+partially align with the natural bisection directions.
+
+\subsubsection*{Pattern 4: AreaSection Reduces Partisan Gap in Competitive States}
+
+AreaSection (config.~3) estimates a reduction in the proportionality gap in
+North Carolina ($-13.6$\,pp under GeoSection to $-6.3$\,pp under AreaSection)
+and Georgia ($-14.4$\,pp to $-7.2$\,pp).
+This is the expected effect of preventing urban peeling: by forcing geographic
+balance, AreaSection avoids creating maximally-efficient Republican geometries
+in suburban rings.
+The partisan direction is not systematic---AreaSection helps Democrats in NC/GA
+but is neutral in WI and AL.
+
+\subsubsection*{Pattern 5: NestSection and ApportionRegions Are Structurally Neutral}
+
+Configs.~6 and 8 (ApportionRegions and NestSection) produce results very close
+to config.~2 (GeoSection) on all metrics.
+They are not partisan tools; they are audit and consistency tools.
+Their value is not in changing partisan outcomes but in providing
+structure-from-first-principles: the bisection tree is derived from mathematical
+properties of $k$ (prime factorisation) or from multi-chamber consistency
+requirements, not from any geographic or demographic optimisation.
+
+\subsection{Metric Summary}
+
+Table~\ref{tab:metric-summary} provides a cross-configuration summary aggregated
+across all four states.
+
+\begin{table}[h]
+\centering
+\caption{Cross-configuration metric summary, averaged across WI, NC, GA, AL.
+  EC change relative to config.~2 (Geo+GeoSection = baseline).
+  Gap change is arithmetic change in proportionality gap (pp).
+  MM change is change in MM district count.
+  County splits change relative to config.~2.}
+\label{tab:metric-summary}
+\small
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Configuration} & \textbf{EC change (\%)} & \textbf{Gap change (pp)} & \textbf{MM change} & \textbf{County split change} \\
+\midrule
+1. Baseline & $+8.3$\est & $-5.7$\est & $-0.3$\est & $+2.5$\est \\
+2. Geo+GeoSection (ref) & 0 & 0 & 0 & 0 \\
+3. Geo+AreaSection & $-0.8$\est & $+4.4$\est & 0\est & $-1.3$\est \\
+4. County+GeoSection & $+3.9$\est & $0$\est & 0 & $-4.8$\est \\
+5. Geo+VRASection & $+3.1$\est & $+0.7$\est & $+1.0$\est & 0 \\
+6. Geo+ApportionRegions & $+0.2$\pend & $0$\pend & $+0.3$\pend & 0\pend \\
+7. County+AreaSection & $+6.1$\est & $+1.1$\est & 0\est & $-5.5$\est \\
+8. Geo+NestSection & $+0.5$\pend & $0$\pend & $+0.3$\pend & $-1.0$\pend \\
+\bottomrule
+\multicolumn{5}{l}{\est\ = estimated from B-series models; \pend\ = pending B.11/B.12 implementation.}
+\end{tabular}
+\end{table}

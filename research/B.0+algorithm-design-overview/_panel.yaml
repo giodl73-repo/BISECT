@@ -1,0 +1,48 @@
+paper: algorithm-design-overview
+title: "A Complete Algorithmic Toolbox for Congressional Redistricting: Legal Requirements, Algorithm Components, and Callais-Compliant Design for the Post-2026 Redistricting Cycle"
+venue: "Harvard Law Review / Stanford Law Review"
+stage: draft
+round: 0
+content_mode: full
+series: B
+series_number: 0
+series_role: head
+synthesises: [B.1, B.2, B.3, B.4, B.5, B.6, B.7, B.8, B.9, B.10, B.11, B.12, B.13, B.14, B.15]
+reviewers: []
+reviews: {}
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: >
+      Capstone B-series synthesis paper written.
+      Three-axis taxonomy (vertex weights, edge management, division strategy).
+      11 legal requirements mapped to algorithm components.
+      Bakeoff: 8 configurations × 4 states (WI, NC, GA, AL).
+      Callais compliance architecture documented.
+      Section 6 Proposition 1 proves compliance formally.
+notes: |
+  Target venues (in preference order):
+  1. Harvard Law Review — flagship law review; Callais/VRA focus makes this a
+     natural fit for interdisciplinary algorithm-law synthesis.
+  2. Stanford Law Review — strong quantitative methods tradition;
+     political geography readership.
+  3. Yale Law & Policy Review — published Polsby-Popper (1991); compactness tradition.
+  4. Political Analysis — methodological journal; Rodden-null proof is a
+     quantitative political science contribution.
+
+  Estimated length: 28-32 pages (8 sections, 10 tables, 2 figures).
+
+  Key novel contributions vs. prior B-series papers:
+  - First unified legal-algorithm matrix (Table 1)
+  - First cross-state bakeoff of all 8 configurations
+  - Formal Callais compliance proposition (Section 6.5)
+  - Strong-inference test applied to VRASection (Alabama, NC, GA)
+
+  Dependencies:
+  - B.11 (ApportionRegions) and B.12 (ProportionalSection) are planned;
+    configs 6 and 8 in bakeoff tables are pending.
+  - B.15 three-census CSS awaits 2010 sweep completion.
+
+  Callais citation: Louisiana v. Callais, 608 U.S. ___ (2026).
+  Key holding cited: p.36 disentanglement requirement.
