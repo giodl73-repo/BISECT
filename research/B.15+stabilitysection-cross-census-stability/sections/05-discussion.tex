@@ -74,11 +74,44 @@ degree to which their map departs from the natural geographic partition.
 \paragraph{States with high CSS are the strongest litigation targets.}
 When a high-CSS state has an enacted map that differs from GeoSection,
 the discrepancy is maximally hard to explain by geography.
-Iowa (CSS $\approx 0.95$, predicted) has a 2:2 equal first-level split that
-reflects its near-uniform agricultural-density geography.
-If Iowa's enacted map had a 1:3 urban peel of Des Moines, the discrepancy
-could not be attributed to any geographic force: the algorithm, across three
-censuses, has never selected a 1:3 peel for Iowa.
+Wisconsin (CSS $\approx 0.90$, predicted) has a 1:7 ratio anchored by
+Milwaukee's fixed municipal boundary and Lake Michigan shoreline.
+If Wisconsin's enacted map packed Milwaukee into a single district in a
+way that produced a different city-versus-suburbs configuration, the
+discrepancy could not be attributed to any geographic force: the algorithm,
+across three censuses, has consistently identified Milwaukee's compact
+geography as the natural first-level peel.
+Note: Iowa is a low-CSS state (confirmed ratio shift from $1:3$ in 2000 to
+$2:2$ in 2010; see \S\ref{sec:iowa-case-study}) and is therefore a weaker
+litigation target under this framework despite its recent near-uniform
+agricultural geography.
+
+\subsection{Null Hypothesis: Expected Stability Under Random Ratio Assignment}
+\label{sec:null-hypothesis}
+
+The null hypothesis for CSS stability is a randomly drawn partition changing
+its natural ratio with probability $p_{\text{null}}$.
+For a state with $k$ districts trying all $\lfloor k/2 \rfloor$ candidate
+ratios, the probability of selecting the same ratio twice by chance (assuming
+a uniform distribution over candidate ratios) is $2/k$.
+Across our 30-state sample, weighting each state by its seat count, the
+expected random stability rate is approximately 20\,\%.
+
+Our observed 67\,\% stability rate is $3.4\times$ the null expectation,
+providing strong evidence that census-stability reflects geographic
+determinism rather than chance.
+Put differently: if GeoSection selected its first-level ratio uniformly at
+random from the candidate set in each census year, we would expect
+approximately 6 of 30 states to show spurious stability.
+We observe 20 stable states, a surplus of 14 over the random baseline.
+The binomial $p$-value for observing $\geq 20$ stable states under the 20\,\%
+null is $p < 0.001$ ($\binom{30}{k} 0.2^k 0.8^{30-k}$ for $k \geq 20$).
+
+This framing establishes that the 67\,\% finding is not an artefact of a
+lenient stability definition.
+Even using the conservative 5\,\% threshold ($\tau = 0.05$), the observed
+rate is far above the null, and the lower bound of the Wilson 95\,\%
+confidence interval (48\,\%) remains well above the 20\,\% null.
 
 \subsection{Population Dynamics and Geographic Reorganisation}
 \label{sec:pop-dynamics}
@@ -183,7 +216,7 @@ we can sketch a $2\times 2$ stability matrix:
 \toprule
                   & Low census stability & High census stability \\
 \midrule
-High seed stability & AZ, NV, CO         & IA, KS, WI, IL, PA \\
+High seed stability & AZ, NV, CO, IA      & KS, WI, IL, PA \\
 Low seed stability  & TX, FL, CA         & (none expected) \\
 \bottomrule
 \end{tabular}

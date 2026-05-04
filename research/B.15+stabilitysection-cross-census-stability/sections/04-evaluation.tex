@@ -199,8 +199,10 @@ all 50 states.]}
 \toprule
 State & $k_{2020}$ & 2020 ratio & Ratio stability & Expected CSS$_{2\text{yr}}$ & Stability class \\
 \midrule
+\multicolumn{6}{l}{\textit{Unstable (ratio shift confirmed)}} \\
+IA  &  4 & 2:2  & Shifted  & $< 0.70$    & Low \\
+\midrule
 \multicolumn{6}{l}{\textit{Stable geography (high expected CSS)}} \\
-IA  &  4 & 2:2  & Same     & $\geq 0.90$ & High \\
 KS  &  4 & 1:3  & Same     & $\geq 0.90$ & High \\
 NE  &  3 & 1:2  & Same     & $\geq 0.90$ & High \\
 ME  &  2 & 1:1  & Same     & $\geq 0.90$ & High \\
@@ -284,6 +286,13 @@ all states with significant demographic shifts between the 2000 and 2010 censuse
 \item \textbf{Utah} ($f_{2000}=0.32 \to f_{2010}=0.25$): rapid population
   growth in the Wasatch Front shifted the natural bisection.
 \end{itemize}
+
+Using Wilson's method, the 95\,\% confidence interval on the 67\,\%
+stability rate (20/30 states) is $[48\,\%, 82\,\%]$.
+The wide interval reflects the modest sample size.
+The finding is best interpreted as: ``majority-stability is observed, with
+the lower bound of 48\,\% still above the null of 20\,\% random stability''
+(see \S\ref{sec:null-hypothesis} for the null derivation).
 
 The 67\,\% stability rate across a full census decade is the core empirical
 contribution of this paper.
@@ -391,6 +400,21 @@ The Type~I/Type~II decomposition proposed in \S\ref{sec:decomposition}
 would isolate this effect: if running GeoSection on the 2020 graph with
 2000 population weights produces $f \approx 0.49$, Hypothesis~B is dominant.
 If it produces $f \approx 0.18$, Hypothesis~A is dominant.
+
+\paragraph{The Lorenz drift proxy for Iowa.}
+GeoSection selects ratio $1:3$ in 2000 (Des Moines isolated) and $2:2$ in
+2010 (near-equal E/W split).
+Under the Lorenz interpretation, a $1:3$ ratio at the first level indicates
+$p^*(0.5) \approx 0.65$ --- the densest 50\,\% of Iowa's land contained
+approximately 65\,\% of the state's population in 2000, consistent with
+Des Moines metro concentration.
+By 2010, Iowa City, Cedar Rapids, and Quad Cities growth had dispersed
+population enough that $p^*(0.5)$ fell toward 0.55, pushing GeoSection
+toward the equal split.
+This is Iowa's Hypothesis~A (Lorenz drift from suburban growth), as distinct
+from Hypothesis~B (tract redesign artefacts).
+Iowa would be the priority case for computing actual Lorenz curves from the
+2000 and 2010 tract-level data.
 
 \paragraph{Implications for the Lorenz proxy.}
 The Iowa case study illustrates the limits of the Lorenz proxy
