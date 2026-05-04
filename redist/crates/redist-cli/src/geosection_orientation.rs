@@ -241,4 +241,217 @@ mod tests {
         assert_eq!(state_code_to_fips_2("PA"), Some("42"));
         assert_eq!(state_code_to_fips_2("XX"), None);
     }
+
+    // ── compute_minor_axis: edge / corner cases ───────────────────────────────
+
+    #[test]
+    fn compute_minor_axis_empty_returns_none() {
+        let centroids: CentroidMap = HashMap::new();
+        let verts: std::collections::HashSet<usize> = std::collections::HashSet::new();
+        assert!(compute_minor_axis(&verts, &centroids).is_none(),
+            "empty vertex set must return None");
+    }
+
+    #[test]
+    fn compute_minor_axis_single_vertex_returns_none() {
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        let verts: std::collections::HashSet<usize> = std::iter::once(0).collect();
+        assert!(compute_minor_axis(&verts, &centroids).is_none(),
+            "single vertex cannot form a covariance matrix — must return None");
+    }
+
+    #[test]
+    fn compute_minor_axis_two_collinear_horizontal() {
+        // Two points at the same latitude but different longitudes → E-W axis has
+        // ALL the variance; the N-S axis (lat) is the minor (zero-variance) axis.
+        // Minor axis eigenvector = (1, 0) → atan2(1, 0) == π/2.
+        // But depending on the c01==0 branch the function takes, we may get
+        // atan2(0,1)==0 (lon minor) when c00<c11 is false.  The key invariant is
+        // that the returned angle is close to 0 or close to ±π/2 (one of the axes).
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (44.0, -71.0)); // same lat, different lon
+        let verts: std::collections::HashSet<usize> = vec![0usize, 1].into_iter().collect();
+        let angle = compute_minor_axis(&verts, &centroids).unwrap();
+        // c00 (lat variance) == 0; c11 (lon variance) > 0 → c00 < c11 → evx=(1,0)
+        // atan2(1,0) == π/2
+        let expected = std::f64::consts::FRAC_PI_2;
+        assert!((angle - expected).abs() < 1e-9,
+            "two collinear horizontal points: minor axis should be N-S (π/2), got {angle}");
+    }
+
+    #[test]
+    fn compute_minor_axis_two_collinear_vertical() {
+        // Two points at the same longitude but different latitudes → N-S axis has all
+        // the variance; the E-W (lon) axis is the minor (zero-variance) axis.
+        // c00 > c11 → evx=(0,1) → atan2(0,1)==0.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (45.0, -72.0)); // same lon, different lat
+        let verts: std::collections::HashSet<usize> = vec![0usize, 1].into_iter().collect();
+        let angle = compute_minor_axis(&verts, &centroids).unwrap();
+        // c00 (lat variance) > 0; c11 (lon variance) == 0 → c00 >= c11 → evx=(0,1)
+        // atan2(0,1) == 0
+        assert!(angle.abs() < 1e-9,
+            "two collinear vertical points: minor axis should be E-W (0 rad), got {angle}");
+    }
+
+    #[test]
+    fn compute_minor_axis_returns_some_for_two_distinct_points() {
+        // Any two points with distinct coordinates must produce Some.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.5));
+        centroids.insert(1, (45.2, -71.3));
+        let verts: std::collections::HashSet<usize> = vec![0usize, 1].into_iter().collect();
+        assert!(compute_minor_axis(&verts, &centroids).is_some(),
+            "two distinct diagonal points must return Some");
+    }
+
+    #[test]
+    fn compute_minor_axis_verts_without_centroids_skipped() {
+        // Vertices not in the centroid map are silently skipped; need at least 2 matched.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(5, (44.0, -72.0));
+        // verts includes indices that are NOT in centroids → only vertex 5 matches → < 2
+        let verts: std::collections::HashSet<usize> = vec![0usize, 1, 5].into_iter().collect();
+        assert!(compute_minor_axis(&verts, &centroids).is_none(),
+            "fewer than 2 matched centroids must return None");
+    }
+
+    #[test]
+    fn centroid_map_from_two_points_pca_consistent() {
+        // Manually construct a CentroidMap and verify PCA is deterministic.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (40.0, -80.0));
+        centroids.insert(1, (40.0, -79.0));
+        centroids.insert(2, (40.0, -78.0));
+        centroids.insert(3, (40.0, -77.0));
+        // Four points on a perfectly horizontal line → lat variance is 0.
+        let verts: std::collections::HashSet<usize> = vec![0usize,1,2,3].into_iter().collect();
+        let a1 = compute_minor_axis(&verts, &centroids).unwrap();
+        let a2 = compute_minor_axis(&verts, &centroids).unwrap();
+        assert!((a1 - a2).abs() < 1e-12, "PCA must be deterministic: {a1} vs {a2}");
+        // Along a horizontal line the minor axis is N-S → angle ≈ π/2
+        let expected = std::f64::consts::FRAC_PI_2;
+        assert!((a1 - expected).abs() < 1e-9,
+            "horizontal line → minor axis N-S (π/2), got {a1}");
+    }
+
+    // ── apply_directional_penalty ─────────────────────────────────────────────
+
+    #[test]
+    fn apply_directional_penalty_zero_lambda_no_change() {
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0,1), 100.0);
+        ew.insert((2,3), 250.0);
+        let centroids: CentroidMap = HashMap::new();
+        let result = apply_directional_penalty(&ew, &centroids, 1.0, 0.0);
+        assert!((result[&(0,1)] - 100.0).abs() < 1e-9, "lambda=0 must leave weight unchanged");
+        assert!((result[&(2,3)] - 250.0).abs() < 1e-9, "lambda=0 must leave weight unchanged");
+    }
+
+    #[test]
+    fn apply_directional_penalty_positive_lambda_increases_parallel_edges() {
+        // Edge runs horizontally (E-W, angle ≈ 0 rad).
+        // Minor axis is also E-W (angle = 0).
+        // An E-W edge is PARALLEL to the minor axis → sin(θ)=0 → NO penalty.
+        // A N-S edge is PERPENDICULAR to the minor axis → sin(π/2)=1 → MAX penalty.
+        // Wait — re-read the code:
+        //   theta = |edge_angle - minor_axis_angle|, normalised to [0, π/2]
+        //   penalty = lambda × sin(theta)
+        // Minor axis angle = 0 (E-W).
+        // Parallel edge (E-W, angle=0): theta=0, sin=0, factor = 1+0 = 1 → unchanged.
+        // Perpendicular edge (N-S, angle=π/2): theta=π/2, sin=1, factor = 1+lambda.
+        let minor_axis = 0.0_f64; // E-W
+        let lambda = 2.0_f64;
+
+        let mut centroids: CentroidMap = HashMap::new();
+        // Horizontal (E-W) edge: u=0 at (44.0, -72.0), v=1 at (44.0, -71.0)
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (44.0, -71.0));
+        // Vertical (N-S) edge: u=2 at (44.0, -72.0), v=3 at (45.0, -72.0)
+        centroids.insert(2, (44.0, -72.0));
+        centroids.insert(3, (45.0, -72.0));
+
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0,1), 100.0); // parallel to minor axis → theta=0 → no penalty
+        ew.insert((2,3), 100.0); // perpendicular to minor axis → theta=π/2 → full penalty
+
+        let result = apply_directional_penalty(&ew, &centroids, minor_axis, lambda);
+        let w_parallel = result[&(0,1)];
+        let w_perp = result[&(2,3)];
+
+        // Perpendicular edge must get a higher weight than parallel edge
+        assert!(w_perp > w_parallel,
+            "N-S edge must be penalised more than E-W edge when minor axis is E-W; \
+             got parallel={w_parallel}, perp={w_perp}");
+        // Parallel edge: sin(0)=0 → weight unchanged
+        assert!((w_parallel - 100.0).abs() < 1e-6,
+            "parallel edge (sin=0) must be unchanged; got {w_parallel}");
+        // Perpendicular edge: sin(π/2)≈1 → weight × (1+lambda) = 100 × 3 = 300
+        assert!((w_perp - 300.0).abs() < 1e-4,
+            "perpendicular edge must be ×(1+lambda)=×3.0=300; got {w_perp}");
+    }
+
+    #[test]
+    fn apply_directional_penalty_always_positive() {
+        // Output weights must always be > 0 for positive input weights.
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (45.0, -71.5));
+        centroids.insert(2, (43.5, -73.0));
+        centroids.insert(3, (44.5, -70.0));
+
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0,1), 1.0);
+        ew.insert((1,2), 50.0);
+        ew.insert((2,3), 999.0);
+
+        let result = apply_directional_penalty(&ew, &centroids, 0.785, 5.0); // lambda=5
+        for (&edge, &w) in &result {
+            assert!(w > 0.0, "weight for edge {edge:?} must be positive, got {w}");
+        }
+    }
+
+    #[test]
+    fn apply_directional_penalty_parallel_edges_unchanged_approx() {
+        // An edge exactly parallel to the minor axis gets factor (1 + lambda × sin(0)) = 1.
+        // Minor axis = π/4 (NE-SW diagonal).
+        // Create an edge also running NE-SW: u=(0,0), v=(1,1) in lat/lon.
+        let minor_axis = std::f64::consts::FRAC_PI_4; // 45°
+        let lambda = 10.0;
+
+        let mut centroids: CentroidMap = HashMap::new();
+        centroids.insert(0, (44.0, -72.0));
+        centroids.insert(1, (45.0, -71.0)); // diff_lat=1, diff_lon=1 → angle=atan2(1,1)=π/4
+
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((0,1), 200.0);
+
+        let result = apply_directional_penalty(&ew, &centroids, minor_axis, lambda);
+        let w = result[&(0,1)];
+        // theta = |π/4 - π/4| = 0 → sin(0) = 0 → factor = 1
+        assert!((w - 200.0).abs() < 1e-6,
+            "edge parallel to minor axis must be unchanged (×1); got {w}");
+    }
+
+    #[test]
+    fn apply_directional_penalty_empty_weights_empty_output() {
+        let ew: HashMap<(usize,usize),f64> = HashMap::new();
+        let centroids: CentroidMap = HashMap::new();
+        let result = apply_directional_penalty(&ew, &centroids, 0.0, 1.0);
+        assert!(result.is_empty(), "empty input must produce empty output");
+    }
+
+    #[test]
+    fn apply_directional_penalty_missing_centroid_no_penalty() {
+        // Edge where one or both nodes lack centroids → penalty defaults to 0 → weight unchanged.
+        let mut ew: HashMap<(usize,usize),f64> = HashMap::new();
+        ew.insert((99, 100), 500.0);
+        let centroids: CentroidMap = HashMap::new(); // neither 99 nor 100 have centroids
+        let result = apply_directional_penalty(&ew, &centroids, 1.0, 3.0);
+        assert!((result[&(99,100)] - 500.0).abs() < 1e-9,
+            "edge with missing centroids must be treated as penalty=0 → unchanged");
+    }
 }

@@ -548,4 +548,189 @@ mod tests {
             assert!(url.contains("census.gov"), "{code} PL URL must be census.gov");
         }
     }
+
+    // ── Additional fetch.rs coverage ─────────────────────────────────────────
+
+    #[test]
+    fn test_fetch_item_not_done_when_done_marker_missing() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let local_path = tmp.path().join("data.shp");
+        let done_marker = tmp.path().join("data.done");
+        std::fs::write(&local_path, b"data").unwrap();
+        // done_marker NOT created → is_done() must be false
+        let item = FetchItem {
+            state_code: "VT".to_string(),
+            year: "2020".to_string(),
+            kind: "tiger".to_string(),
+            url: None,
+            local_path,
+            done_marker, // does not exist
+            available_locally: true,
+        };
+        assert!(!item.is_done(), "is_done must be false when done_marker is absent");
+    }
+
+    #[test]
+    fn test_fetch_item_not_done_when_local_file_missing() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let local_path = tmp.path().join("data.shp"); // NOT created
+        let done_marker = tmp.path().join("data.done");
+        std::fs::write(&done_marker, b"done").unwrap();
+        let item = FetchItem {
+            state_code: "VT".to_string(),
+            year: "2020".to_string(),
+            kind: "tiger".to_string(),
+            url: None,
+            local_path, // does not exist
+            done_marker,
+            available_locally: false,
+        };
+        assert!(!item.is_done(), "is_done must be false when local file is absent");
+    }
+
+    #[test]
+    fn test_build_fetch_list_empty_states_returns_all_states() {
+        let manifest = load_manifest().unwrap();
+        // Passing empty states slice means "all states"
+        let items = build_fetch_list(&manifest, &[], "2020", &[]);
+        // With 50 states and 3 types each: expect 150 items
+        assert_eq!(items.len(), 50 * 3,
+            "empty state list must fetch all 50 states × 3 types = 150 items");
+    }
+
+    #[test]
+    fn test_build_fetch_list_pl94171_only() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["VT".to_string()], "2020", &[DataType::Redistricting]
+        );
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].kind, "pl94171");
+        assert!(items[0].url.as_deref().unwrap().contains("census.gov"),
+            "PL URL must be from census.gov");
+    }
+
+    #[test]
+    fn test_build_fetch_list_adjacency_only() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["VT".to_string()], "2020", &[DataType::Adjacency]
+        );
+        assert_eq!(items.len(), 1);
+        assert_eq!(items[0].kind, "adjacency");
+        // Adjacency items have no direct URL (come from GitHub Release)
+        assert!(items[0].url.is_none(),
+            "adjacency items must have url=None (fetched from GitHub Release)");
+    }
+
+    #[test]
+    fn test_build_fetch_list_unknown_state_is_ignored() {
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["XX".to_string()], "2020", &[]
+        );
+        assert!(items.is_empty(),
+            "unknown state code must produce zero fetch items");
+    }
+
+    #[test]
+    fn test_build_fetch_list_adjacency_filename_includes_state_and_year() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["VT".to_string()], "2020", &[DataType::Adjacency]
+        );
+        let path_str = items[0].local_path.to_string_lossy().to_lowercase();
+        assert!(path_str.contains("vt"), "adjacency path must contain state code");
+        assert!(path_str.contains("2020"), "adjacency path must contain year");
+        assert!(path_str.ends_with(".pkl"), "adjacency file must have .pkl extension");
+    }
+
+    #[test]
+    fn test_build_fetch_list_tiger_url_has_fips_code() {
+        use crate::args::DataType;
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest, &["VT".to_string()], "2020", &[DataType::Tiger]
+        );
+        let url = items[0].url.as_deref().unwrap();
+        assert!(url.contains("50"), "VT tiger URL must contain FIPS '50'");
+        assert!(url.contains("2020"), "tiger URL must contain year");
+    }
+
+    #[test]
+    fn test_manifest_releases_fields_present() {
+        let manifest = load_manifest().unwrap();
+        assert!(!manifest.releases.data_inputs.is_empty(),
+            "releases.data_inputs must not be empty");
+        assert!(!manifest.releases.outputs_v3.is_empty(),
+            "releases.outputs_v3 must not be empty");
+        assert!(!manifest.releases.outputs_v4.is_empty(),
+            "releases.outputs_v4 must not be empty");
+    }
+
+    #[test]
+    fn test_manifest_github_repo_field_present() {
+        let manifest = load_manifest().unwrap();
+        assert!(!manifest.github_repo.is_empty(), "github_repo must not be empty");
+        // Must look like an owner/repo slug
+        assert!(manifest.github_repo.contains('/'),
+            "github_repo must be owner/repo format; got: {}", manifest.github_repo);
+    }
+
+    #[test]
+    fn test_manifest_local_dirs_fields_present() {
+        let manifest = load_manifest().unwrap();
+        assert!(!manifest.local_data_dir.is_empty(),
+            "local_data_dir must be set in manifest");
+        assert!(!manifest.local_outputs_dir.is_empty(),
+            "local_outputs_dir must be set in manifest");
+    }
+
+    #[test]
+    fn test_all_states_have_name_and_fips() {
+        let manifest = load_manifest().unwrap();
+        for (code, state) in &manifest.states {
+            assert!(!state.name.is_empty(),
+                "{code} must have a non-empty name");
+            assert!(!state.fips.is_empty(),
+                "{code} must have a non-empty FIPS code");
+            assert_eq!(state.fips.len(), 2,
+                "{code} FIPS code must be exactly 2 digits; got '{}'", state.fips);
+        }
+    }
+
+    #[test]
+    fn test_all_states_have_districts_2020() {
+        let manifest = load_manifest().unwrap();
+        for (code, state) in &manifest.states {
+            let n = state.districts.get("2020")
+                .unwrap_or_else(|| panic!("{code} missing districts.2020"));
+            assert!(*n >= 1, "{code} must have at least 1 district in 2020");
+            assert!(*n <= 53, "{code} must have at most 53 districts (CA=52 + potential rounding)");
+        }
+    }
+
+    #[test]
+    fn test_verify_file_sha256_nonexistent_file_returns_err() {
+        let path = std::path::Path::new("/nonexistent/path/file.bin");
+        let result = verify_file_sha256(path, "abc123");
+        assert!(result.is_err(),
+            "verify_file_sha256 on nonexistent file must return Err");
+    }
+
+    #[test]
+    fn test_build_fetch_list_two_states_correct_count() {
+        let manifest = load_manifest().unwrap();
+        let items = build_fetch_list(
+            &manifest,
+            &["VT".to_string(), "DE".to_string()],
+            "2020",
+            &[], // all types → 3 per state
+        );
+        assert_eq!(items.len(), 6,
+            "2 states × 3 types must produce 6 fetch items; got {}", items.len());
+    }
 }

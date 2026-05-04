@@ -479,4 +479,174 @@ mod tests {
         assert!(lines[1].contains("vermont"), "data row must contain state name");
         assert!(lines[1].contains("643077"), "data row must contain population");
     }
+
+    // ── Additional aggregate.rs coverage ─────────────────────────────────────
+
+    #[test]
+    fn test_merge_analyzer_outputs_empty_returns_zero_districts() {
+        let merged = merge_analyzer_outputs(&[]);
+        assert_eq!(merged["district_count"].as_u64().unwrap(), 0);
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 0);
+        assert!(merged["districts"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_merge_analyzer_outputs_unknown_analyzer_when_no_states() {
+        let merged = merge_analyzer_outputs(&[]);
+        assert_eq!(merged["analyzer"].as_str().unwrap(), "unknown");
+    }
+
+    #[test]
+    fn test_merge_analyzer_outputs_scope_is_national() {
+        let vt = serde_json::json!({"analyzer": "compactness", "districts": []});
+        let merged = merge_analyzer_outputs(&[("vermont", &vt)]);
+        assert_eq!(merged["scope"].as_str().unwrap(), "national");
+    }
+
+    #[test]
+    fn test_merge_analyzer_outputs_state_with_no_districts_key() {
+        // A state JSON that lacks "districts" should contribute 0 records gracefully.
+        let vt = serde_json::json!({"analyzer": "demographic"});
+        let merged = merge_analyzer_outputs(&[("vermont", &vt)]);
+        assert_eq!(merged["district_count"].as_u64().unwrap(), 0,
+            "missing districts key must be treated as empty list");
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 1,
+            "state count still reflects number of inputs");
+    }
+
+    #[test]
+    fn test_merge_analyzer_outputs_multiple_districts_across_states() {
+        // Verify total district count sums correctly across many states.
+        let ca = serde_json::json!({"analyzer": "political", "districts":
+            (1..=52).map(|i| serde_json::json!({"district": i})).collect::<Vec<_>>()});
+        let tx = serde_json::json!({"analyzer": "political", "districts":
+            (1..=38).map(|i| serde_json::json!({"district": i})).collect::<Vec<_>>()});
+        let vt = serde_json::json!({"analyzer": "political", "districts":
+            [serde_json::json!({"district": 1})]});
+        let merged = merge_analyzer_outputs(&[
+            ("california", &ca), ("texas", &tx), ("vermont", &vt),
+        ]);
+        assert_eq!(merged["district_count"].as_u64().unwrap(), 52 + 38 + 1);
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 3);
+    }
+
+    #[test]
+    fn test_districts_to_csv_empty_input_returns_empty_string() {
+        let merged = serde_json::json!({"analyzer": "demographic", "districts": []});
+        let csv = districts_to_csv(&merged);
+        assert!(csv.is_empty(), "empty districts array must return empty CSV string");
+    }
+
+    #[test]
+    fn test_districts_to_csv_missing_field_emits_empty_cell() {
+        // If a later district row lacks a field present in the first row, cell is empty.
+        let merged = serde_json::json!({
+            "analyzer": "demographic",
+            "districts": [
+                {"state": "vermont", "district": 1, "total_pop": 643077},
+                {"state": "alabama", "district": 1}  // missing total_pop
+            ]
+        });
+        let csv = districts_to_csv(&merged);
+        let lines: Vec<&str> = csv.lines().collect();
+        assert_eq!(lines.len(), 3, "header + 2 data rows");
+        // Second data row should have a trailing comma (empty total_pop cell)
+        let row2 = lines[2];
+        assert!(row2.contains("alabama"), "second row must name alabama");
+        // The missing field produces an empty string cell (two adjacent commas or trailing)
+        let cells: Vec<&str> = row2.splitn(4, ',').collect();
+        assert!(cells.len() >= 3);
+    }
+
+    #[test]
+    fn test_districts_to_csv_strings_with_commas_are_quoted() {
+        let merged = serde_json::json!({
+            "analyzer": "demographic",
+            "districts": [
+                {"state": "new,state", "district": 1}
+            ]
+        });
+        let csv = districts_to_csv(&merged);
+        assert!(csv.contains("\"new,state\""),
+            "strings containing commas must be quoted in CSV; got: {csv}");
+    }
+
+    #[test]
+    fn test_districts_to_json_array_empty_input_returns_empty_array() {
+        let merged = serde_json::json!({"analyzer": "demographic", "districts": []});
+        let arr = districts_to_json_array(&merged);
+        assert!(arr.is_array());
+        assert!(arr.as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_districts_to_json_array_missing_districts_key_returns_empty() {
+        let merged = serde_json::json!({"analyzer": "demographic"});
+        let arr = districts_to_json_array(&merged);
+        assert!(arr.is_array());
+        assert!(arr.as_array().unwrap().is_empty(),
+            "missing districts key must produce empty array");
+    }
+
+    #[test]
+    fn test_merge_state_level_empty_states_returns_empty_records() {
+        let merged = merge_state_level_outputs("2020", &[]);
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 0);
+        assert!(merged["states"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_state_records_to_csv_empty_states_returns_empty() {
+        let merged = merge_state_level_outputs("2020", &[]);
+        let csv = state_records_to_csv(&merged);
+        assert!(csv.is_empty(), "no states → no CSV output");
+    }
+
+    #[test]
+    fn test_state_records_to_json_array_preserves_all_states() {
+        let vt = serde_json::json!({"analyzer": "proportionality", "n_districts": 1});
+        let tx = serde_json::json!({"analyzer": "proportionality", "n_districts": 38});
+        let ca = serde_json::json!({"analyzer": "proportionality", "n_districts": 52});
+        let merged = merge_state_level_outputs("2020",
+            &[("vermont", &vt), ("texas", &tx), ("california", &ca)]);
+        let arr = state_records_to_json_array(&merged);
+        assert_eq!(arr.as_array().unwrap().len(), 3,
+            "json array must contain one entry per state");
+    }
+
+    #[test]
+    fn test_merge_state_level_preserves_numeric_fields() {
+        let vt = serde_json::json!({
+            "analyzer": "proportionality",
+            "dem_vote_share_statewide": 0.665,
+            "proportionality_gap_pp": 33.5,
+            "n_districts": 1
+        });
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let state = &merged["states"][0];
+        assert!((state["dem_vote_share_statewide"].as_f64().unwrap() - 0.665).abs() < 1e-9,
+            "numeric fields must be preserved through merge");
+        assert!((state["proportionality_gap_pp"].as_f64().unwrap() - 33.5).abs() < 1e-9);
+        assert_eq!(state["n_districts"].as_u64().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_state_records_to_csv_sorts_extra_columns_alphabetically() {
+        // Extra fields beyond state/year are sorted alphabetically for stable output.
+        let vt = serde_json::json!({
+            "analyzer": "proportionality",
+            "zebra_metric": 1.0,
+            "alpha_metric": 2.0,
+            "n_districts": 1
+        });
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let csv = state_records_to_csv(&merged);
+        let header = csv.lines().next().unwrap();
+        // After state,year, the remaining columns must be alphabetically sorted
+        assert!(header.starts_with("state,year,"), "header must start with state,year");
+        let extra: Vec<&str> = header.splitn(3, ',').nth(2).unwrap().split(',').collect();
+        let mut sorted = extra.clone();
+        sorted.sort();
+        assert_eq!(extra, sorted, "extra columns must be in alphabetical order; got: {header}");
+    }
 }

@@ -197,3 +197,159 @@ pub fn load_dem_vote_counts(
 
     Ok((dem_votes, two_party))
 }
+
+#[cfg(test)]
+mod dem_vote_tests {
+    use super::*;
+    use std::io::Write;
+
+    fn write_tmp(content: &str) -> std::path::PathBuf {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        static COUNTER: AtomicUsize = AtomicUsize::new(0);
+        let id = COUNTER.fetch_add(1, Ordering::SeqCst);
+        let mut tmp = std::env::temp_dir();
+        tmp.push(format!("dem_vote_test_{}_{}.csv", std::process::id(), id));
+        let mut f = std::fs::File::create(&tmp).expect("create tmp");
+        f.write_all(content.as_bytes()).expect("write tmp");
+        tmp
+    }
+
+    fn make_idx(pairs: &[(usize, &str)]) -> HashMap<usize, String> {
+        pairs.iter().map(|&(i, g)| (i, g.to_string())).collect()
+    }
+
+    #[test]
+    fn test_dem_vote_counts_basic() {
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,600,400\n01001020200,200,800\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100"), (1, "01001020200")]);
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 2).expect("should parse");
+        assert!((dem[0] - 600.0).abs() < 1e-9, "vertex 0 dem_votes");
+        assert!((dem[1] - 200.0).abs() < 1e-9, "vertex 1 dem_votes");
+        assert!((total[0] - 1000.0).abs() < 1e-9, "vertex 0 total two-party");
+        assert!((total[1] - 1000.0).abs() < 1e-9, "vertex 1 total two-party");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_missing_geoid_defaults() {
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,600,400\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100"), (1, "99999999999")]); // 1 not in CSV
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 2).expect("should parse");
+        assert!((dem[1] - 0.0).abs() < 1e-9, "missing geoid → dem_votes=0.0");
+        assert!((total[1] - 1.0).abs() < 1e-9, "missing geoid → total=1.0 (avoid div/0)");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_skips_comment_lines() {
+        let csv = "# comment\ngeoid,dem_votes,rep_votes\n01001020100,300,700\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100")]);
+        let (dem, _) = load_dem_vote_counts(&path, &idx, 1).expect("comments must be skipped");
+        assert!((dem[0] - 300.0).abs() < 1e-9);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_skips_blank_lines() {
+        let csv = "geoid,dem_votes,rep_votes\n\n01001020100,400,600\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100")]);
+        let (dem, _) = load_dem_vote_counts(&path, &idx, 1).expect("blank lines must be skipped");
+        assert!((dem[0] - 400.0).abs() < 1e-9);
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_missing_file_errors() {
+        let idx: HashMap<usize, String> = HashMap::new();
+        let result = load_dem_vote_counts(
+            std::path::Path::new("/nonexistent_votes.csv"), &idx, 0
+        );
+        assert!(result.is_err(), "missing file must return Err");
+    }
+
+    #[test]
+    fn test_dem_vote_counts_correct_output_length() {
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,500,500\n";
+        let path = write_tmp(csv);
+        let idx: HashMap<usize, String> = HashMap::new(); // empty mapping
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 5).expect("should parse");
+        assert_eq!(dem.len(), 5, "dem_votes vector length must equal n_tracts");
+        assert_eq!(total.len(), 5, "two_party vector length must equal n_tracts");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_zero_n_tracts_empty_vecs() {
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,500,500\n";
+        let path = write_tmp(csv);
+        let idx: HashMap<usize, String> = HashMap::new();
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 0).expect("should parse");
+        assert!(dem.is_empty());
+        assert!(total.is_empty());
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_unparseable_votes_default_zero() {
+        // If a dem_votes cell is non-numeric, defaults to 0.0
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,abc,400\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100")]);
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 1).expect("should parse");
+        assert!((dem[0] - 0.0).abs() < 1e-9, "unparseable dem_votes → 0.0");
+        assert!((total[0] - 400.0).abs() < 1e-9, "total = 0 + 400");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_header_always_skipped() {
+        // The first non-comment non-blank line is always treated as header.
+        // Even if it looks numeric, it must be skipped (first-row-is-header rule).
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,700,300\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "geoid")]); // if header not skipped, "geoid" row would be data
+        let (dem, _) = load_dem_vote_counts(&path, &idx, 1).expect("should parse");
+        // vertex 0 maps to "geoid" which is NOT in dem_map (header was skipped), so dem=0.0
+        assert!((dem[0] - 0.0).abs() < 1e-9,
+            "header row must be skipped; should not appear as a data row");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_total_is_dem_plus_rep() {
+        let csv = "geoid,dem_votes,rep_votes\n01001020100,350,450\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[(0, "01001020100")]);
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 1).expect("should parse");
+        assert!((dem[0] - 350.0).abs() < 1e-9);
+        assert!((total[0] - 800.0).abs() < 1e-9, "total must be 350+450=800");
+        std::fs::remove_file(&path).ok();
+    }
+
+    #[test]
+    fn test_dem_vote_counts_multiple_tracts_correct_alignment() {
+        let csv = "geoid,dem_votes,rep_votes\n\
+            01001020100,600,400\n\
+            01001020200,100,900\n\
+            01001020300,500,500\n";
+        let path = write_tmp(csv);
+        let idx = make_idx(&[
+            (0, "01001020300"), // note: reversed order
+            (1, "01001020100"),
+            (2, "01001020200"),
+        ]);
+        let (dem, total) = load_dem_vote_counts(&path, &idx, 3).expect("should parse");
+        // Vertex 0 → "01001020300" → dem=500, total=1000
+        assert!((dem[0] - 500.0).abs() < 1e-9);
+        assert!((total[0] - 1000.0).abs() < 1e-9);
+        // Vertex 1 → "01001020100" → dem=600, total=1000
+        assert!((dem[1] - 600.0).abs() < 1e-9);
+        // Vertex 2 → "01001020200" → dem=100, total=1000
+        assert!((dem[2] - 100.0).abs() < 1e-9);
+        std::fs::remove_file(&path).ok();
+    }
+}

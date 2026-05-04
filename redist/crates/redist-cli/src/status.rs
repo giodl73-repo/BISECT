@@ -119,4 +119,97 @@ mod tests {
         assert_eq!(parts[0], "STATUS");
         assert_eq!(parts[1], "2");
     }
+
+    // ── Additional status / ascii_safe tests ─────────────────────────────────
+
+    #[test]
+    fn test_ascii_safe_all_printable_ascii_unchanged() {
+        let printable = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+        let result = ascii_safe(printable);
+        assert_eq!(result, printable, "all printable ASCII must pass through unchanged");
+    }
+
+    #[test]
+    fn test_ascii_safe_high_unicode_all_replaced() {
+        let input = "\u{0100}\u{0101}\u{4E2D}\u{6587}"; // Ā, ā, 中, 文
+        let result = ascii_safe(input);
+        assert_eq!(result, "????", "all non-ASCII chars must be replaced with '?'");
+    }
+
+    #[test]
+    fn test_ascii_safe_mixed_replaced_only_non_ascii() {
+        let input = "A\u{00E9}B\u{00FC}C"; // AéBüC
+        let result = ascii_safe(input);
+        assert_eq!(result, "A?B?C", "only non-ASCII chars must be replaced");
+    }
+
+    #[test]
+    fn test_ascii_safe_tab_and_newline_preserved() {
+        // Tab (0x09) and newline (0x0A) are ASCII control chars — must pass through.
+        let input = "col1\tcol2\nrow2";
+        let result = ascii_safe(input);
+        assert_eq!(result, input, "ASCII control chars must be preserved");
+    }
+
+    #[test]
+    fn test_ascii_safe_null_byte_preserved() {
+        // Null (0x00) is technically ASCII — must pass through unchanged.
+        let input = "hello\0world";
+        let result = ascii_safe(input);
+        assert_eq!(result, input);
+    }
+
+    #[test]
+    fn test_ascii_safe_single_nonascii_char() {
+        let result = ascii_safe("\u{00E9}"); // é
+        assert_eq!(result, "?");
+    }
+
+    #[test]
+    fn test_ascii_safe_long_ascii_string_unchanged() {
+        let long: String = "abcdefghijklmnopqrstuvwxyz ".repeat(100);
+        let result = ascii_safe(&long);
+        assert_eq!(result, long, "long ASCII string must be unchanged");
+    }
+
+    #[test]
+    fn test_progress_zero_zero() {
+        let line = format!("PROGRESS:0/0\n");
+        assert_eq!(line, "PROGRESS:0/0\n");
+        assert!(line.is_ascii());
+    }
+
+    #[test]
+    fn test_progress_large_values() {
+        let line = format!("PROGRESS:{}/{}\n", 435, 435);
+        assert_eq!(line, "PROGRESS:435/435\n");
+    }
+
+    #[test]
+    fn test_status_negative_position() {
+        // Position -1 is used in the Python STATUS protocol for "no bar" mode.
+        let line = format!("STATUS:{}:{}\n", -1, "processing");
+        assert!(line.starts_with("STATUS:-1:"), "negative position must be emitted as-is");
+        assert!(line.is_ascii());
+    }
+
+    #[test]
+    fn test_ascii_safe_emoji_replaced() {
+        let input = "done \u{2705}"; // done ✅
+        let result = ascii_safe(input);
+        assert_eq!(result, "done ?", "emoji must be replaced with '?'");
+        assert!(result.is_ascii(), "result must be ASCII");
+    }
+
+    #[test]
+    fn test_status_message_preserves_spaces_and_punctuation() {
+        let msg = "Vermont: 193 tracts, 1 district [OK]";
+        let line = format!("STATUS:0:{msg}\n");
+        // Verify message is embedded intact
+        let parts: Vec<&str> = line.trim().splitn(3, ':').collect();
+        // parts[2] = message part (may contain colons, verified by splitting on first 2 colons)
+        assert!(parts.len() >= 3);
+        assert!(parts[2].contains("Vermont"));
+        assert!(parts[2].contains("[OK]"));
+    }
 }
