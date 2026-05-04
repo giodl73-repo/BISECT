@@ -1,0 +1,58 @@
+paper: one-federal-law
+title: "The Districting Integrity Act: Huntington-Hill as the Constitutional Standard for Intrastate Apportionment"
+venue: "Stanford Law Review / Harvard Law Review"
+stage: draft
+round: 0
+content_mode: full
+series: B
+series_number: "02"
+series_role: advocacy
+synthesises: [B.7, B.11, B.13, B.15, B.0]
+reviewers: []
+reviews: {}
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: >
+      Advocacy paper proposing the Districting Integrity Act.
+      First-principles argument: Huntington-Hill interstate -> intrastate.
+      Bipartisan acceptance case. Callais compliance framework.
+      VRA overlay architecture. County-preservation default.
+      Fallback for gcd=1 states.
+notes: |
+  Target venues (in preference order):
+  1. Stanford Law Review — strong quantitative methods tradition;
+     political geography readership; receptive to algorithmic governance.
+  2. Harvard Law Review — flagship; Callais/VRA/redistricting focus.
+  3. Yale Law Journal — published Polsby-Popper (1991); compactness tradition.
+  4. Michigan Law Review — redistricting reform scholarship.
+
+  Paper type: ADVOCACY. Argues a specific legislative position.
+  This is NOT a neutral survey.
+
+  Core argument:
+  - HH is the agreed constitutional standard for interstate seat allocation.
+  - The intrastate problem is structurally identical.
+  - Therefore HH (via ApportionRegions) must apply intrastate.
+  - ApportionRegions is uniquely prescribed by first principles;
+    all other algorithms are practitioner choices, hence political choices.
+
+  Key empirical hooks:
+  - B.0 WI bakeoff: unweighted 4D/4R vs GeoSection 3D/5R (-12.8pp gap).
+    Algorithm selection IS a political choice.
+  - B.11: Zero seed variance — map is seed-independent.
+  - B.7: Certified convergence for most states (<0.3 seat-count variance at 50 seeds).
+  - B.15: 67% census stability — maps survive decennial cycle.
+  - B.13: 11 states with spine score 0 (exact nesting). gcd=1 states need fallback.
+
+  Proposed statute text:
+  "Each State shall apportion its congressional districts by applying the
+  Huntington-Hill priority rule to its census tracts, using as input only
+  the prime factorization of the State's apportioned seat count and the
+  federal TIGER/Line adjacency graph for the census year in which the
+  apportionment was performed, with a seed determined by the formula
+  SHA-256(census_release_id || 'DIA_SEED_V1')."
+  -- Proposed 2 U.S.C. sec. 2a(c) [new].
+
+  Estimated length: 45-55 pages (6 sections, law-review format).

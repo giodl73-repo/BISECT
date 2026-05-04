@@ -1,0 +1,200 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Problem That Everyone Agrees Is a Problem}
+
+Gerrymandering is the one scandal in American politics that enjoys truly
+bipartisan outrage---when the other party is doing it.
+Republicans sued over Maryland's congressional map in 2011, calling it a
+``drastic partisan gerrymander'' engineered to eliminate a Republican
+incumbent.\footnote{%
+  \textit{Benisek v.\ Lamone}, 585 U.S. 155 (2019).
+}
+Democrats sued over North Carolina's map in 2019, securing a ruling from
+the state Supreme Court that it violated the state constitution.\footnote{%
+  \harper{}, N.C. Supreme Ct., 2022.
+}
+Republicans sued over New York's map in 2022 and won.\footnote{%
+  \harkenrider{}, N.Y. Ct.\ of App., 2022.
+}
+The litigation never ends because the maps never stop being drawn by people
+with a direct interest in the outcome.
+
+The Supreme Court has declined to help.
+In \rucho{} v.\ \textit{Common Cause} (2019), the Court held that partisan
+gerrymandering presents a political question beyond the federal courts'
+reach.\footnote{%
+  \rucho{}, 588 U.S. 684, 701 (2019): ``Excessive partisanship in
+  districting leads to results that reasonably seem unjust.
+  But the fact that such gerrymandering is `unjust' does not mean that it is
+  unconstitutional or that it is something federal courts can provide a remedy
+  for.''
+}
+That decision has not ended the problem; it has simply moved the litigation
+to state courts, which now manage fifty simultaneous and inconsistent lines
+of redistricting jurisprudence.
+
+Meanwhile, the algorithmic solutions proposed by academics and reform advocates
+have stalled.
+Not because the math is wrong---it is not---but because none of the proposed
+algorithms is grounded in a principle that both parties have already accepted.
+Every proposed algorithm is a practitioner's choice.
+And a practitioner's choice, however mathematically elegant, is a political choice.
+
+This Article proposes a different approach.
+It argues that the first principles underlying the existing constitutional
+framework---principles that Republicans, Democrats, and the Supreme Court have
+all already endorsed without dissent---compel a specific algorithm.
+The algorithm is \ar{}.
+The principle is \hh{} apportionment applied at the intrastate level.
+The law is the \dia{}.
+
+\subsection{Why Algorithmic Solutions Have Stalled}
+
+The academic redistricting literature is rich.
+Markov chain Monte Carlo methods \citep{deford2019,metric2018} can generate
+large ensembles of valid maps and flag outliers.
+Optimization methods \citep{gurnee2021} can minimize specific measures of
+unfairness.
+Column-generation heuristics can satisfy complex multi-constraint formulations.
+Computer scientists have published hundreds of papers on redistricting algorithms
+since 2010.
+
+None of this has produced a federal law.
+The reason is structural: every proposed algorithm requires a practitioner to
+choose which algorithm to use.
+That choice is itself a political act.
+
+The empirical evidence is stark.
+In Wisconsin, which has eight congressional seats and has been a national
+flashpoint for redistricting litigation, the choice of algorithm determines
+whether Democrats win four seats or three---an eight-seat delegation swinging
+on a methodological choice made before any data is examined.
+The bakeoff results documented in \citet{b0paper} show that running the
+unweighted bisection algorithm (no geographic weights) on Wisconsin's
+2020 census tracts produces a 4~Democrat / 4~Republican split with a partisan
+gap of $-0.3$~percentage points.
+Running GeoSection---a mathematically sophisticated, geographically rigorous
+algorithm developed in \citet{b8paper}---on the same data produces a
+3~Democrat / 5~Republican split with a partisan gap of $-12.8$~percentage points.
+
+Neither algorithm has political inputs.
+Neither algorithm is trying to advantage one party.
+The 12.5-percentage-point difference is entirely an artifact of which algorithm
+was chosen.
+
+This is the compactness-proportionality paradox: the choice between
+mathematically valid, politically neutral algorithms is itself a political
+choice.
+The only resolution is to mandate the algorithm that is prescribed by
+first principles, not selected by practitioners.
+And there is exactly one such algorithm: \hh{} apportionment, which is already
+the constitutionally mandated method for the structurally identical
+interstate problem.
+
+\subsection{The Argument in Brief}
+
+The argument in this Article has four steps, each resting on a principle
+that has already been accepted without meaningful dissent.
+
+\paragraph{Step~1: Equal population.}
+\wesberry{} v.\ \textit{Sanders} (1964) held that congressional districts
+must have equal population.\footnote{%
+  \wesberry{}, 376 U.S. 1, 18 (1964): ``as nearly as is practicable one man's
+  vote in a congressional election is to be worth as much as another's.''
+}
+\karcher{} v.\ \textit{Daggett} (1983) operationalized this as effectively
+zero tolerance for population deviations in congressional districts.\footnote{%
+  \karcher{}, 462 U.S. 725, 730 (1983): ``the `as nearly as practicable'
+  standard requires that the State make a good-faith effort to achieve precise
+  mathematical equality.''
+}
+This is not controversial.
+Both parties accept population equality as the floor.
+
+\paragraph{Step~2: Huntington-Hill is the agreed interstate method.}
+Article~I, \S2 requires that seats be apportioned among states
+``according to their respective Numbers,'' and Congress has operationalized
+this via the Huntington-Hill equal-proportions method since 1941
+(2~U.S.C.~\usca{}~2a(a)).\footnote{%
+  The method of equal proportions has been used for every apportionment since
+  1941.
+  The Supreme Court upheld it in \textit{United States Department of Commerce
+  v.\ Montana}, 503 U.S. 442 (1992), noting that while the Constitution does
+  not mandate a specific mathematical method, equal proportions ``minimizes
+  the percentage differences between the average district populations.''
+}
+No one disputes that Huntington-Hill is the correct method for the interstate
+problem.
+It is law.
+
+\paragraph{Step~3: Politicians should not draw their own districts.}
+Both parties have articulated this principle when the other party holds the pen.
+Republicans in Maryland, Democrats in North Carolina, Republicans in New York---
+each has argued, on the record, in court, that self-interested map-drawing
+is antidemocratic.\footnote{%
+  See \rucho{}, 588 U.S. at 689--690 (cataloguing bipartisan complaints);
+  \textit{Common Cause v.\ Lewis}, N.C. Super. Ct., 2019 (Democratic plaintiffs
+  challenging Republican-drawn maps using bipartisan reform arguments).
+}
+Independent redistricting commissions have been adopted in seventeen states
+for exactly this reason.
+This is not a partisan point.
+It is a point about institutional integrity.
+
+\paragraph{Step~4: If Huntington-Hill is right for the interstate problem,
+it is right for the structurally identical intrastate problem.}
+The interstate problem is: given a state's population, allocate
+$k$~congressional seats to the state in proportion to population.
+The intrastate problem is: given a state's geographic units (census tracts),
+allocate $k$~congressional districts to those units in proportion to population.
+Both problems require apportioning $k$ indivisible units among sub-units
+in proportion to a weight (population).
+Both require minimizing the percentage deviation between actual and ideal
+allocation.
+The problems are isomorphic.
+
+If \hh{} is correct for the interstate problem---and it is, because Congress
+said so and no one has challenged it in eighty years---then \hh{} is correct
+for the intrastate problem by the same logic.
+No new constitutional theory is required.
+No new doctrine needs to be invented.
+The same principle, applied at the next level down.
+
+\paragraph{The conclusion.}
+Apply \hh{} within states via \ar{}.
+The prime factorization of the seat count determines the bisection tree.
+The TIGER adjacency graph determines the boundaries.
+No political choices remain.
+The \dia{} encodes this in one sentence.
+
+\subsection{Scope of This Article}
+
+This Article proceeds as follows.
+Section~\ref{sec:first-principles} develops the four-step argument in full,
+addressing each premise and the logical connection between them.
+Section~\ref{sec:why-apportionregions} explains why \ar{} is the uniquely
+correct intrastate implementation of \hh{}---and why the other algorithms
+in the B-series toolbox, however sophisticated, are practitioner choices
+rather than constitutionally derived ones.
+Section~\ref{sec:bipartisan} addresses, separately, the specific objections
+that Republicans and Democrats have historically raised against federal
+redistricting mandates, and shows why the \dia{} satisfies each party's
+legitimate interests.
+Section~\ref{sec:implementation} details the statute's implementation:
+the \hh{} bisection tree, the VRA overlay for Gingles-qualified states,
+the county-preservation default, the seed formula, and the fallback for
+states where the seat count's factorization is incompatible with a
+strict \hh{} tree.
+Section~\ref{sec:conclusion} restates the argument, presents the proposed
+statutory text, and explains why this is the right moment---after \callais{},
+after \rucho{}, after a decade of state-court redistricting chaos---to enact it.
+
+A word on tone.
+This Article is an advocacy piece, not a survey.
+It argues a specific position: the \dia{} should pass, in the form
+proposed in Section~\ref{sec:conclusion}.
+The Article presents objections fairly and responds to them.
+But it does not pretend to be agnostic.
+The argument from first principles is, in the author's view, airtight.
+The reader is invited to find the flaw.

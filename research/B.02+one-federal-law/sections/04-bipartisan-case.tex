@@ -1,0 +1,316 @@
+\section{The Bipartisan Case}
+\label{sec:bipartisan}
+
+\subsection{Why Both Parties Have Reason to Accept the DIA}
+
+Federal redistricting mandates have historically failed not for lack of a
+mathematical solution but for lack of a political coalition.
+Republicans resist mandates that they perceive as designed to reduce their
+seat count; Democrats resist mandates that would reduce theirs.
+Every proposed algorithm has been attacked as partisan by whichever party
+it disfavors in the current cycle.
+
+The \dia{} is designed to be genuinely acceptable to both parties---not
+by splitting the difference between their preferences, but by satisfying
+each party's \emph{legitimate} interest in a redistricting system that
+cannot be weaponized against them.
+
+The argument to each party is different because each party's legitimate
+interest is different.
+We address them separately.
+
+\subsection{The Republican Case}
+
+Republicans' core objection to federal redistricting mandates has been, in
+order of importance: (1) racial targeting that packs non-Hispanic white voters
+to dilute their influence, (2) algorithms that produce non-compact,
+bizarrely shaped districts in urban areas, (3) mandates that lock in
+Democratic advantages in high-population states, and (4) federal
+overreach into a traditionally state function.
+
+The \dia{} addresses each concern directly.
+
+\paragraph{No racial targeting.}
+The default \ar{} run contains zero racial data.
+The inputs are: the prime factorization of $k$, the TIGER adjacency graph,
+and census tract populations.
+The TIGER graph is a geometric description of which tracts share a boundary.
+The population data is a count of persons in each tract.
+Neither input contains any racial identification.
+
+The algorithm minimizes edge cut---total shared boundary length between
+districts.
+This criterion produces compact districts.
+It does not, by construction or by outcome, target any racial group.
+
+This is not an evasion.
+\callais{} (2026) establishes the legal framework for algorithmic
+redistricting, and it is precisely the framework that \ar{} satisfies.
+The majority at page 36 requires that ``race-conscious and partisan signals
+must be disentangled.''
+\ar{}'s default run uses \emph{neither} signal---it is below the threshold
+of either racial-conscious districting or partisan-conscious districting.
+A court applying the \shaw{}--\miller{} racial-predominance test to an
+\ar{} map has nothing to find, because race was not an input.
+
+\paragraph{Compact districts.}
+The minimum-edge-cut criterion is a mathematically rigorous formulation of
+compactness.
+It minimizes the total length of district boundaries, which is equivalent
+to minimizing the perimeter-to-area ratio across the map as a whole.
+The resulting districts are, in the language of \textit{Polsby and Popper}
+\citep{polsby1991}, compact: their boundaries follow natural geographic
+contours rather than the population-concentration boundaries that
+characterize racial or partisan gerrymanders.
+
+The edge-weighted version of the algorithm (using shared boundary lengths
+as edge weights, from \citet{b2paper}) produces an additional 56\%
+improvement in the Polsby-Popper compactness score over the unweighted
+version.
+Republican objections to oddly shaped districts---the objections raised
+against majority-minority districts and against Democratic urban gerrymanders
+alike---are addressed by this criterion.
+
+\paragraph{County preservation by default.}
+The \dia{} specifies a default county-preservation weight of $\alpha_\text{county} = 2.0$,
+implemented via the B.10 subdivision-respecting edge-weighting scheme
+\citep{b10paper}.
+At this weight, county boundaries are treated as strong natural lines:
+the algorithm strongly prefers to place an entire county in a single
+district rather than splitting it across district boundaries.
+County-line preservation is a traditionally Republican concern, reflecting
+the role of counties as the basic unit of Republican local political
+organization.
+The statutory default encodes this preference while allowing states that
+wish to use a different weight to petition for a variance through the
+Election Assistance Commission.
+
+\paragraph{No locked-in Democratic advantage.}
+The bipartisan concern about locked-in advantages cuts both ways.
+Republicans who currently control map-drawing in their states worry that
+a federal mandate will reduce their advantage.
+But the advantage they currently hold was purchased through a process that
+Democrats will eventually reverse when they gain legislative control in those
+states.
+The cycle is costly, litigious, and produces maps that serve no one's
+constituents.
+
+\ar{} breaks the cycle by removing the control that either party can exercise.
+In a state like Wisconsin, where the current Republican map has been found
+unconstitutional by the state Supreme Court, \ar{} produces a map that
+neither party drew and neither party can attack as partisan.
+The Wisconsin bakeoff shows that \ar{} produces a 4D/4R split---which, in a
+state with a roughly 50/50 partisan environment, is the outcome that most
+closely tracks the state's actual partisan composition.
+
+More importantly: a statute mandating \ar{} \emph{cannot be used later to
+favor Democrats}, because the algorithm has no partisan inputs.
+When Democrats next hold legislative majorities in red-leaning states, they
+cannot use \ar{} to gerrymander---not because the statute forbids it, but
+because the algorithm's inputs (factorization of $k$ and TIGER graph) do not
+contain the partisan data required for partisan manipulation.
+The protection is structural, not merely statutory.
+
+\paragraph{Federal authority has a well-established constitutional basis.}
+Article~I, \S4 of the Constitution provides that ``The Times, Places and
+Manner of holding Elections for Senators and Representatives, shall be
+prescribed in each State by the Legislature thereof; but the Congress may
+at any time by Law make or alter such Regulations.''\footnote{%
+  U.S. Const., Art.\ I, \usca{}~4, cl.\ 1.
+}
+The Elections Clause gives Congress plenary authority to regulate the
+manner of congressional elections, including the redistricting process.
+The Supreme Court confirmed this in \textit{Smiley v.\ Holm},
+285 U.S. 355, 366--67 (1932), and again in \textit{Arizona State
+Legislature v.\ Arizona Independent Redistricting Commission},
+576 U.S. 787 (2015).\footnote{%
+  \textit{Arizona State Legislature v.\ Arizona Independent Redistricting
+  Commission}, 576 U.S. 787, 813 (2015): ``Congress has the power to
+  regulate congressional elections, and the Elections Clause gives Congress
+  authority that covers redistricting.''
+}
+A Republican objection to federal authority over redistricting would have
+to run against 85 years of settled constitutional law.
+
+\subsection{The Democratic Case}
+
+Democrats' core objections to federal redistricting mandates have been:
+(1) algorithms that systematically undercount urban and minority populations,
+(2) VRA non-compliance that dilutes minority voting strength, (3) mandates
+that lock in Republican structural advantages in rural-majority states,
+and (4) census-stability requirements that prevent courts from correcting
+constitutional violations mid-decade.
+
+The \dia{} addresses each concern.
+
+\paragraph{Strict population equality.}
+The $\pm 0.05\%$ population tolerance (\texttt{ubvec[0]=1.001}) is an
+order of magnitude tighter than any redistricting plan that has survived
+judicial review.
+\karcher{} tolerance is effectively zero, but courts have upheld plans
+with deviations of less than 1\%.
+The \dia{} goes further: its maximum district-population deviation is
+smaller than the Census Bureau's margin of error in counting individual tracts.
+Democratic concerns about minority undercounting are addressed at the
+input stage, not the algorithm stage: if the Census Bureau's decennial count
+undercounts minority communities, the remedy is census methodology reform,
+not redistricting algorithm manipulation.
+But the algorithm will apply the correct population equality standard to
+whatever population data the Census Bureau provides.
+
+\paragraph{VRA compliance via the Gingles overlay.}
+The \dia{} mandates a separate VRA overlay process for states where the
+Gingles three-prong test is met \citep{b14paper}.
+The overlay, implemented via VRASection, uses geographic alignment scores
+to prefer bisection ratios that allow geographically compact minority
+communities to form majority-minority districts.
+
+This is not racial targeting in the \shaw{}--\miller{} sense.
+The alignment score measures where minority population is geographically
+concentrated, not how many minority voters the district should contain.
+It is a geographic property of the existing population distribution.
+The Gingles prong-1 requirement---that the minority group must be
+``sufficiently large and geographically compact'' to constitute a majority
+in a single-member district---is a geographic test.
+VRASection operationalizes it as a geographic measurement.
+
+\allenmilligan{} (2023) required Alabama to draw two Black-opportunity
+districts.
+The VRASection overlay, calibrated to Alabama's 2020 census data, produces
+exactly this outcome: two districts with Black voting-age population
+above 50\%, confirmed empirically by \citet{b14paper}.\footnote{%
+  \citet{b14paper}: Alabama 2:5 result confirmed.
+  Two majority-minority districts at 55.2\% and 52.8\% Black VAP.
+  VRA weight $w_\text{vra} = 0.40$ calibrated below the \shaw{}--\miller{}
+  racial-predominance threshold.
+}
+
+The VRA overlay is Callais-compliant because it contains no partisan
+signal: VRASection uses only the geographic alignment of minority VAP
+concentration, not any measurement of how minority voters vote.
+The \callais{} disentanglement requirement is satisfied at the architectural
+level.
+
+\paragraph{No structural Republican advantage.}
+The concern that algorithmic redistricting systematically advantages
+Republicans reflects the empirical reality that geographic voter sorting
+\citep{rodden2019,chen2013}---the concentration of Democratic voters in
+urban areas---creates a Republican structural advantage under any compact-district
+algorithm.
+This is the Rodden-Chen result: compact districts, drawn without political
+inputs, tend to produce Republican-leaning outcomes in states with
+significant urban Democratic concentrations.
+
+This concern is real, but it does not argue against the \dia{}.
+It argues for proportional representation, which requires a change to the
+single-member-district system that is itself a statutory default, not a
+constitutional requirement.
+The \dia{} proposes the best redistricting algorithm within the
+single-member-district system.
+If Democrats wish to challenge the single-member-district system, the
+appropriate vehicle is different legislation.
+
+More practically: \ar{}'s Wisconsin outcome (4D/4R) is better for Democrats
+than GeoSection's outcome (3D/5R) in that state, as the bakeoff confirms.
+The algorithm that is constitutionally derived is also, in Wisconsin, the
+one that produces a more proportional outcome.
+This is not coincidental: the \hh{} bisection tree divides the state into
+geographic regions based on the natural factorization of the seat count,
+which in Wisconsin (8 = 2$\times$2$\times$2) produces a four-quadrant split
+that roughly tracks the state's political geography.
+The constitutional algorithm happens to be more proportional than the
+practitioner's algorithm in the most-litigated state in the country.
+
+\paragraph{Census stability does not prevent constitutional correction.}
+The \dia{}'s census-stability provision (\citet{b15paper}: 67\% of states
+produce maps that remain valid across all three census years) does not prevent
+courts from ordering corrective redistricting when a constitutional violation
+occurs.
+The statute provides that maps shall remain in effect for the decade, but
+this provision is subject to the courts' remedial authority.
+A court finding a constitutional violation may order a new \ar{} run using
+updated data.
+The statutory stability provision addresses voluntary mid-decade redrawing,
+not court-ordered remediation.
+
+\paragraph{The process is transparent and auditable.}
+Every decision in the \ar{} process is documented in the \texttt{whatif-manifest
+v1} JSON sidecar produced by the \texttt{redist} CLI \citep{b0paper}.
+The manifest records every parameter used, the seed (derivable from the
+census release identifier), the TIGER graph version, and the resulting
+district boundaries.
+A civil rights organization, a Democratic advocacy group, or a court
+can independently reproduce the map from the census data and the
+manifest in approximately 30 minutes using the open-source \texttt{redist}
+binary.
+There is no black box.
+There is no discretion.
+There is no room for the algorithm to be run in a way that produces a
+different output.
+The audit trail is complete and independently verifiable.
+
+\subsection{The Courts Will Accept It}
+
+Courts have struggled with redistricting because the legal standards for
+evaluating maps are contested.
+Partisan gerrymandering is non-justiciable at the federal level after \rucho{}.
+Racial gerrymandering is justiciable but the standard---racial predominance
+under \shaw{}--\miller{}---requires a factual inquiry into the mapmaker's
+intent that is difficult to resolve on the record.
+Compactness is a criterion in most state statutes but courts have declined
+to make it a constitutional floor.
+
+The \dia{} sidesteps all of these difficulties.
+
+\paragraph{No new constitutional doctrine required.}
+The first-principles argument in Section~\ref{sec:first-principles} extends
+an existing constitutional standard---the Huntington-Hill method mandated by
+2~U.S.C.~\usca{}~2a(a)---to the next level of the apportionment hierarchy.
+Courts do not need to invent new standards.
+They need only to recognize that the same principle applies at the intrastate
+level as at the interstate level.
+This is the kind of doctrinal extension that courts find most comfortable:
+applying an established rule to a new factual context.
+
+\paragraph{The racial-predominance test is moot.}
+When the mapmaker is an algorithm with no racial inputs, the question
+``did race predominate?'' has an obvious answer: no.
+The \shaw{}--\miller{} standard asks whether ``race was the predominant factor
+overriding traditional districting principles.''
+In an \ar{} map, the only inputs are population, adjacency, and the seat-count
+factorization.
+Race is not an input.
+The racial-predominance inquiry is foreclosed by the algorithm's design,
+not by the court's deference.
+
+\paragraph{Partisan gerrymandering is moot.}
+\rucho{} held that partisan gerrymandering is non-justiciable as a federal
+constitutional matter.
+\ar{} maps contain no partisan inputs.
+There is no partisan gerrymandering to adjudicate.
+The entire class of Rucho-type litigation disappears.
+
+\paragraph{The content-derived seed forecloses seed-manipulation claims.}
+One potential avenue for challenging any algorithmic map is that the
+mapmaker chose a seed that produced a favorable outcome.
+This concern is addressed by the statutory seed formula:
+\texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')}.
+The seed is computed from the Census Bureau's public release identifier
+for the decennial census data, which is known at the moment the census
+data is released.
+No one---not the mapmaker, not the controlling party, not the Census Bureau---
+can retroactively choose a seed to favor a particular outcome.
+The seed is content-derived, publicly computable, and verifiable.
+This forecloses any claim that the seed was manipulated.
+
+\paragraph{The strong-inference test under Callais is satisfied.}
+\callais{} at page 23 establishes that \S2 challengers must show that the
+state's stated political goals could have been achieved with better minority
+outcomes.
+The \dia{} explicitly provides this counterfactual capacity.
+A challenger can run the VRASection overlay---the \callais{}-compliant
+strong-inference alternative---on the same data and show that better minority
+outcomes are achievable.
+The toolbox provides both the default map and the VRA-optimized alternative
+in a form that courts can directly compare.
+The \callais{} strong-inference framework is not just satisfied; it is operationalized.

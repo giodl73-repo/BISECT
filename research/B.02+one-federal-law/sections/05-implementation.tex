@@ -1,0 +1,363 @@
+\section{Implementation}
+\label{sec:implementation}
+
+\subsection{Overview of the Statutory Mechanism}
+
+The \dia{} has six implementation components:
+\begin{enumerate}
+  \item The \ar{} default run, implementing the \hh{} bisection tree.
+  \item The content-derived seed formula.
+  \item The county-preservation default ($\alpha_\text{county} = 2.0$).
+  \item The VRA overlay for Gingles-qualified states.
+  \item The \callais{} preflight gate enforcing signal disentanglement.
+  \item The gcd-incompatibility fallback for states where the seat count
+    has a factorization incompatible with a strict \hh{} tree.
+\end{enumerate}
+
+We address each in turn.
+
+\subsection{Component 1: The ApportionRegions Default Run}
+
+The default redistricting run implements the \hh{} bisection tree on the
+state's TIGER/Line adjacency graph.
+
+The algorithm proceeds as follows.
+Let $k$ be the state's apportioned seat count and $k = p_1^{a_1} \cdot p_2^{a_2} \cdots p_r^{a_r}$
+be its prime factorization, with factors in non-increasing order.
+\begin{enumerate}
+  \item Compute the \hh{} bisection tree from $k$'s prime factorization.
+    At each level of the tree, the split is into $p_i$ equal sub-groups.
+  \item Initialize METIS with the state's TIGER adjacency graph, with census
+    tract populations as vertex weights and shared boundary lengths as
+    edge weights \citep{b2paper}.
+  \item For each node in the bisection tree, from root to leaves:
+    \begin{enumerate}
+      \item Identify the sub-graph corresponding to the current geographic region.
+      \item Run METIS $k$-way partitioning, where $k = p_i$ is the split factor
+        at this level.
+      \item Apply the \hh{} priority rule to assign census tracts to the $p_i$
+        child regions.
+    \end{enumerate}
+  \item Output the resulting $k$ districts, each consisting of a set of
+    census tracts.
+\end{enumerate}
+
+The population balance tolerance is set to $\texttt{ubvec}[0] = 1.001$,
+imposing a maximum $\pm 0.05\%$ deviation from the ideal district population
+$P/k$.
+This satisfies the \karcher{} population equality standard with a large margin.
+
+The algorithm is implemented in the \texttt{redist} Rust binary
+\citep{b0paper}, which runs a 50-state apportionment in approximately
+30 minutes on a laptop.
+The \dia{} would require states to run the algorithm within 30 days of
+the release of the decennial census data, with maps submitted to the
+Election Assistance Commission for verification.
+
+\subsection{Component 2: The Content-Derived Seed Formula}
+
+The random seed for METIS initialization is computed as:
+\[
+  \texttt{seed} = \text{SHA-256}(\texttt{census\_release\_id}\ \|\ \texttt{`DIA\_SEED\_V1'})
+\]
+where \texttt{census\_release\_id} is the Census Bureau's official public
+identifier for the decennial redistricting data release (e.g.,
+\texttt{P.L.\ 94-171\ 2020-08-12}), and \texttt{`DIA\_SEED\_V1'} is a
+fixed string identifying the statute version.
+
+The formula has three properties:
+\begin{itemize}
+  \item \textbf{Deterministic}: Given the census release identifier, the seed
+    is uniquely determined.
+    Anyone can compute it.
+  \item \textbf{Content-derived}: The seed depends on the census data itself,
+    not on any choice made by a political actor.
+    The Census Bureau's release identifier is fixed at the moment the data
+    is released, before any state has begun redistricting.
+  \item \textbf{Audit-ready}: The formula is specified in the statute.
+    Any court, expert, or citizen can verify that the correct seed was used
+    by computing SHA-256 of the census release identifier and comparing it
+    to the seed recorded in the plan manifest.
+\end{itemize}
+
+Because \ar{} has zero seed variance in practice \citep{b11paper}, the seed
+formula is primarily an audit mechanism rather than a decision-making input.
+The same map would be produced by any seed.
+The formula provides a canonical reference point for independent verification.
+
+\subsection{Component 3: County Preservation by Default}
+
+The \dia{} specifies a default county-preservation weight of $\alpha_\text{county} = 2.0$,
+implemented via the B.10 subdivision-respecting edge-weighting scheme \citep{b10paper}.
+
+At $\alpha_\text{county} = 2.0$, county boundaries are weighted twice as
+heavily as other geographic boundaries in the edge-cut criterion.
+The algorithm therefore strongly prefers to keep counties intact within a
+single district.
+When a county must be split (because its population exceeds the ideal district
+population), the algorithm minimizes the number of county splits.
+
+The county-preservation default is a statutory default, not an absolute
+requirement.
+The proposed statute text specifies $\alpha_\text{county} = 2.0$ as the
+default, but provides that a state may petition the Election Assistance
+Commission for a different weight, subject to demonstrating that the
+alternative weight is necessary to comply with the VRA or with the
+state's constitution.
+
+This provision reflects the reality that county-preservation is a legitimate
+redistricting criterion---embodied in North Carolina's county-grouping
+requirement upheld in \textit{Stephenson v.\ Bartlett}---but that
+over-weighting county boundaries can conflict with population equality
+in states with large counties.
+Texas's Harris County (Houston), with a population of 4.7 million, would
+require five congressional districts regardless of any county-preservation
+weight; the weight affects only the boundary placement at the county's
+edges.
+The default weight handles this correctly by treating county boundaries as
+strong preferences rather than hard constraints.
+
+\subsection{Component 4: The VRA Overlay}
+
+For states where the Gingles three-prong test is met for a protected minority
+group, the \dia{} mandates a separate VRA overlay run using VRASection \citep{b14paper}.
+
+\paragraph{When the overlay applies.}
+The overlay applies when:
+\begin{enumerate}
+  \item A minority group constitutes more than 50\% of the voting-age population
+    in a geographic area that could form a compact congressional district
+    (Gingles Prong~1: geographic compactness and size);
+  \item The minority group votes cohesively (Gingles Prong~2: minority cohesion),
+    as evidenced by precinct-level election results \citep{fekrazad2021}; and
+  \item The majority votes sufficiently as a bloc to defeat the minority's
+    preferred candidate in the absence of a majority-minority district
+    (Gingles Prong~3: majority bloc voting).
+\end{enumerate}
+
+The first prong is evaluated algorithmically using the TIGER adjacency graph:
+the Election Assistance Commission determines whether any set of adjacent
+census tracts with combined minority VAP above 50\% can be assembled into
+a geographically compact district.
+The second and third prongs require precinct-level election data and are
+evaluated by the Election Assistance Commission using ecological inference
+\citep{imai2020} on the most recent federal election results.
+
+\paragraph{How VRASection works.}
+When the overlay applies, VRASection modifies the ratio-selection step of
+the \hh{} bisection.
+Normally, \ar{} selects the bisection ratio that minimizes the normalized
+edge-cut $\mathrm{EC}_\text{norm}(i:j)$ at each level of the tree.
+VRASection introduces a geographic alignment score:
+\[
+  A = \left|\text{MVAP}_\text{frac}(L) - \text{MVAP}_\text{frac}(R)\right|
+\]
+where $\text{MVAP}_\text{frac}(L)$ and $\text{MVAP}_\text{frac}(R)$ are
+the minority VAP fractions in the left and right sub-regions.
+The modified score function is:
+\[
+  \text{score}(\text{ratio}) = \mathrm{EC}_\text{norm} - w_\text{vra} \cdot A \cdot \max(\mathrm{EC}_\text{norm}, 1)
+\]
+where $w_\text{vra} = 0.40$ is calibrated below the \shaw{}--\miller{}
+racial-predominance threshold: the alignment bonus reduces the compactness
+score by at most 40\%, ensuring that compactness remains the dominant criterion.
+
+\paragraph{Callais-mutex enforcement.}
+The \callais{} preflight gate (Component 5, below) enforces that VRASection
+and ProportionalSection---the partisan-signal mode---cannot be run in the
+same redistricting process.
+If a state triggers the VRA overlay, the partisan-proportionality mechanism
+is disabled for that cycle.
+This is not a policy choice; it is the architectural implementation of the
+\callais{} disentanglement requirement.
+
+\paragraph{Empirical validation.}
+VRASection has been validated against Alabama (2020 census data).
+The algorithm produces two majority-minority districts with Black VAP of
+55.2\% and 52.8\%---satisfying the \allenmilligan{} requirement of two
+Black-opportunity districts \citep{b14paper}.
+The VRA weight $w_\text{vra} = 0.40$ is calibrated to produce this result
+without exceeding the racial-predominance threshold.
+
+\subsection{Component 5: The Callais Preflight Gate}
+
+The \callais{} disentanglement requirement (at p.~36 of the majority opinion)
+mandates that race-conscious and partisan signals cannot be combined in a
+single redistricting run.
+The \dia{} implements this as a hard computational gate---the
+\texttt{callais\_preflight}---that enforces mutual exclusion at the CLI level.
+
+If VRASection is activated (VRA overlay applies), ProportionalSection is
+automatically disabled.
+If ProportionalSection is activated (a state petitions for a proportionality
+adjustment), VRASection is automatically disabled.
+The two modes are mutually exclusive and the gate is enforced by the
+\texttt{redist} binary at runtime: attempting to configure both will cause
+the run to fail with a \texttt{[CONFIG]} error message referencing the
+\callais{} disentanglement requirement.
+
+This enforcement is documented in the plan manifest: the manifest records
+which mode was used, and the absence of the other mode is cryptographically
+verified by the manifest's hash chain.
+A court reviewing a plan's compliance with \callais{} can verify compliance
+by reading the manifest.
+
+\subsection{Component 6: The GCD-Incompatibility Fallback}
+
+Not all seat counts have factorizations that map cleanly onto a \hh{} bisection
+tree.
+\citet{b13paper} identifies that states where $\gcd(k, k-1) > 1$---where
+the seat count and the seat count minus one share a common factor---present
+factorization-spine difficulties.
+
+More practically: states with large prime seat counts create bisection trees
+with one very large leaf.
+Texas ($k = 38 = 2 \times 19$) requires a first-level 2-way split followed
+by a 19-way partition of each half.
+The 19-way partition is a direct $k$-way METIS run, which is computationally
+and geographically equivalent to the unweighted multi-way algorithm.
+For Texas, the \hh{} tree is dominated by a single 19-way leaf, and the
+first-level 2-way split is the only structural contribution of the \ar{} approach.
+
+States with $k$ equal to a prime number are the limiting case.
+If $k$ is prime, the only factorization is $1 \times k$: the entire state
+is a single ``region'' that must be partitioned directly into $k$ districts
+without any hierarchical bisection.
+For such states, \ar{} reduces to a direct $k$-way METIS partition with
+population balance tolerance $\texttt{ubvec}[0] = 1.001$.
+
+\citet{b13paper} identifies the following states where the current seat count
+is prime or where the largest prime factor is unusually large:
+Wyoming ($k=1$, trivial), Alaska ($k=1$, trivial), Vermont ($k=1$, trivial),
+Delaware ($k=1$, trivial), North Dakota ($k=1$, trivial), South Dakota ($k=1$,
+trivial), Montana ($k=2$), Maine ($k=2$), New Hampshire ($k=2$),
+Rhode Island ($k=2$), Hawaii ($k=2$), Idaho ($k=2$), West Virginia ($k=2$),
+Nebraska ($k=3$), New Mexico ($k=3$), Kansas ($k=4 = 2 \times 2$, clean),
+Nevada ($k=4$, clean), Utah ($k=4$, clean), Arkansas ($k=4$, clean).
+
+For $k = 1$ states, redistricting is trivial: the entire state is one district.
+For $k = 2$ states, the \hh{} tree requires a single 2-way split: the algorithm
+bisects the state into two equal-population halves.
+For $k = 3$ and larger primes, the fallback applies.
+
+\paragraph{The prime-seat-count fallback.}
+For states where $k$ is prime and $k \geq 3$, the \dia{} specifies the
+following fallback:
+\begin{enumerate}
+  \item Run a direct $k$-way METIS partition with \texttt{ubvec}[0] = 1.001.
+  \item Use edge weights from B.2 (geographic boundary lengths) and the
+    county-preservation default ($\alpha_\text{county} = 2.0$).
+  \item Use the content-derived seed.
+\end{enumerate}
+
+This fallback preserves all the properties of the \ar{} default
+(population equality, compactness, county preservation, zero political inputs)
+without the hierarchical bisection structure that the prime factorization
+provides.
+The loss is the multi-chamber compatibility property (the factorization spine):
+a prime-seat-count state cannot nest its congressional districts cleanly
+within a state-legislative factorization hierarchy.
+This is a secondary concern; it does not affect the constitutional validity
+of the resulting map.
+
+The fallback applies to at most 6 states in the current apportionment
+(those with $k$ prime and $k \geq 3$).
+Nebraska ($k=3$) and New Mexico ($k=3$) are the most significant cases.
+Congress could address the factorization incompatibility in these states
+by providing that a state with a prime seat count may apportion by either
+the fallback or a two-level split into $\lceil k/2 \rceil$ and $\lfloor k/2 \rfloor$
+sub-regions, with the split selection made by the Election Assistance Commission
+to maximize geographic compactness.
+
+\subsection{The Full Statutory Text}
+
+The complete proposed text of the \dia{} follows.
+The operative provision is the one-sentence statutory command in subsection (c).
+The remaining provisions are definitions and administrative details necessary
+for implementation.
+
+\begin{statute}
+\noindent\textbf{Districting Integrity Act}\\
+\textit{Proposed 2 U.S.C.\ \usca{}\ 2a(c)--(g) [new].}
+
+\medskip
+\noindent\textbf{(c) Intrastate Apportionment Method.}
+Each State shall apportion its congressional districts by applying the
+Huntington-Hill priority rule to its census tracts, using as input only
+the prime factorization of the State's apportioned seat count and the
+federal TIGER/Line adjacency graph for the census year in which the
+apportionment was performed, with a seed determined by the formula
+\texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')}.
+
+\medskip
+\noindent\textbf{(d) County Preservation Default.}
+In applying subsection (c), the State shall use a county boundary weight
+of $\alpha_\text{county} = 2.0$, as specified in regulations promulgated by
+the Election Assistance Commission, unless the Election Assistance Commission
+has approved a different weight pursuant to subsection (f).
+
+\medskip
+\noindent\textbf{(e) VRA Overlay.}
+In any State where the Election Assistance Commission determines that the
+three-prong test of \textit{Thornburg v.\ Gingles}, 478 U.S. 30 (1986),
+is met for a protected minority group, the State shall apply the
+VRASection overlay to the allocation of bisection ratios, using a geographic
+alignment weight of $w_\text{vra} = 0.40$, prior to running the algorithm
+specified in subsection (c).
+A State to which this subsection applies shall not simultaneously apply any
+partisan-proportionality adjustment.
+
+\medskip
+\noindent\textbf{(f) Variance Petitions.}
+A State may petition the Election Assistance Commission for a variance from
+the county preservation weight specified in subsection (d) upon demonstrating
+that the default weight is inconsistent with the State's constitution or
+with subsection (e).
+The Commission shall grant or deny the petition within 30 days.
+
+\medskip
+\noindent\textbf{(g) Prime Factorization Fallback.}
+If the State's apportioned seat count $k$ is a prime number greater than 2,
+the State shall apply a direct $k$-way METIS partition with population balance
+tolerance \texttt{ubvec}[0] = 1.001, using the edge weights, county preservation
+default, and seed formula specified in subsections (c), (d), and the
+content-derived seed of subsection (c).
+
+\medskip
+\noindent\textbf{(h) Plan Verification.}
+Each State shall submit its redistricting plan to the Election Assistance
+Commission within 30 days of the release of the decennial census redistricting
+data.
+The plan submission shall include the plan manifest specified by the Election
+Assistance Commission, which shall record all parameters, the seed, the TIGER
+graph version, and the resulting district assignments, in a format that permits
+independent verification of compliance with subsection (c).
+\end{statute}
+
+\subsection{The Decade-Stable Map Property}
+
+\citet{b15paper} establishes that 67\% of states produce \ar{} maps that are
+census-stable: running the algorithm on the 2000, 2010, and 2020 census data
+produces the same district boundaries (to within a single-tract boundary
+variation at the margins) in all three census years.
+This property means that, in two-thirds of states, the map drawn after the
+2030 census will closely resemble the map that would have been drawn after
+the 2020 census, providing a decade of stable representation.
+
+The 33\% of states that are not census-stable are those experiencing
+significant population redistribution between census decades---primarily
+Sun Belt states (Texas, Florida, Arizona, Nevada) with high population
+growth and internal migration.
+In these states, the \dia{} map will change when the new census data shifts
+the factorization of the seat count (due to reapportionment) or shifts the
+population distribution enough to change which bisection ratios are optimal.
+This is not a bug.
+It is the intended behavior: the map should update when the population changes
+significantly, and the algorithm should produce the correct map for the
+current census data without regard to what the previous map looked like.
+
+The census-stability property is a feature of the algorithm, not a statutory
+requirement.
+The \dia{} does not mandate stability; it mandates the correct algorithm.
+Stability is the empirical consequence of applying the correct algorithm
+to a state with a stable population distribution.

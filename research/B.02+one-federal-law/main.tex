@@ -1,0 +1,160 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+
+%% Law-review style: section headings in small caps
+\titleformat{\section}{\normalfont\large\scshape\centering}{}{0em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{}{0em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{}{0em}{}
+
+%% Spacing
+\setstretch{1.5}
+
+%% Legal case macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+\newcommand{\wesberry}{\case{Wesberry v.\ Sanders}}
+\newcommand{\karcher}{\case{Karcher v.\ Daggett}}
+\newcommand{\shaw}{\case{Shaw v.\ Reno}}
+\newcommand{\miller}{\case{Miller v.\ Johnson}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\lwvpa}{\case{League of Women Voters v.\ Commonwealth of Pennsylvania}}
+\newcommand{\allenmilligan}{\case{Allen v.\ Milligan}}
+\newcommand{\gingles}{\case{Thornburg v.\ Gingles}}
+\newcommand{\harper}{\case{Harper v.\ Hall}}
+\newcommand{\harkenrider}{\case{Harkenrider v.\ Hochul}}
+\newcommand{\bushvvera}{\case{Bush v.\ Vera}}
+
+%% Statute macro
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\hh}{\textsc{Huntington-Hill}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\usca}{\textsection}
+
+%% Proposed statute box
+\usepackage{mdframed}
+\newenvironment{statute}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\pending}{$^{\ddagger}$}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{The Districting Integrity Act}\\[0.4em]
+  \large Huntington-Hill as the Constitutional Standard for\\
+  Intrastate Congressional Apportionment\\[0.8em]
+  \normalsize\textit{B.02 --- Advocacy Paper}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Every ten years, Congress apportions 435 seats among the fifty states using
+the Huntington-Hill priority rule---an algorithm whose constitutional
+pedigree is uncontested.
+Yet when each state then divides its seats into districts, no federal standard
+governs the method.
+The result is partisan gerrymandering, litigation that consumes a decade, and
+maps that fail to represent anyone's constituents well.
+
+This Article proposes a fix grounded entirely in first principles that both
+parties have already endorsed.
+The argument is four steps.
+\emph{First} (\wesberry{}, 1964): congressional districts must have equal
+population.
+\emph{Second} (Article~I, \S2): the interstate allocation method is
+Huntington-Hill.
+\emph{Third} (both parties, on record): the map should not be drawn by
+politicians with a personal stake in the outcome.
+\emph{Fourth} (logic): if Huntington-Hill is the right method for the
+interstate problem---allocating seats to states---and the within-state problem
+is structurally identical---allocating districts to geographic regions---then
+Huntington-Hill should apply within states too.
+
+The legislative vehicle is simple.
+We call it the \dia{}.
+Its operative text is one sentence, proposed as 2~U.S.C.~\usca{}~2a(c) [new]:
+
+\begin{quote}
+  \itshape
+  Each State shall apportion its congressional districts by applying the
+  Huntington-Hill priority rule to its census tracts, using as input only the
+  prime factorization of the State's apportioned seat count and the federal
+  TIGER/Line adjacency graph for the census year in which the apportionment
+  was performed, with a seed determined by the formula
+  \texttt{SHA-256(census\_release\_id \textbar\textbar{} `DIA\_SEED\_V1')}.
+\end{quote}
+
+This is not a new constitutional theory.
+It is the existing constitutional standard applied at the next level down.
+It satisfies Republican concerns about compact, non-racially-targeted maps.
+It satisfies Democratic concerns about equal population and VRA compliance.
+It satisfies the courts, which need not develop any new doctrine.
+And it satisfies \callais{} (2026), whose disentanglement requirement fits
+the algorithm's architecture exactly.
+
+The empirical case is equally strong.
+Algorithm selection \emph{itself} is a political choice: in Wisconsin,
+switching from ApportionRegions to GeoSection shifts the partisan outcome by
+more than twelve percentage points---purely by changing which algorithm draws
+the map, with no political inputs in either algorithm.
+The only way to remove politics from the process is to mandate the algorithm
+that is prescribed by first principles, not selected by practitioners.
+\hh{} is that algorithm.
+\ar{} is its intrastate extension.
+The \dia{} is the law.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-first-principles}
+\input{sections/03-why-apportionregions}
+\input{sections/04-bipartisan-case}
+\input{sections/05-implementation}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
