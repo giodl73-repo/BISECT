@@ -1,15 +1,63 @@
 paper: stabilitysection-cross-census-stability
 title: "StabilitySection: Cross-Census Stability of GeoSection-Optimal Redistricting Maps"
 venue: "Political Analysis / Annals of the American Association of Geographers"
-stage: draft
-round: 0
+stage: panel
+round: 1
 content_mode: full
-reviewers: []
-reviews: {}
-avg_score: null
+reviewers:
+  - jonathan-rodden
+  - moon-duchin
+  - percy-liang
+  - nadia-polikarpova
+  - justin-grimmer
+reviews:
+  jonathan-rodden:
+    score: 3
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Iowa case study needed: f shift 0.18->0.49 unexplained mechanistically"
+      - "33% instability rate not confronted in legal section"
+      - "Seat stability (s_seat) requires 2000/2010 election data not available"
+  moon-duchin:
+    score: 3
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "CSS formula not computable: s_seat requires unavailable 2000/2010 partisan data"
+      - "Cross-census stability is not a legally recognized concept — present as novel theory"
+      - "Jaccard similarity announced as contribution but not executed"
+  percy-liang:
+    score: 2
+    recommendation: "Major revision required"
+    key_issues:
+      - "30-state sample too small: 95% CI on 67% is [0.48, 0.82]"
+      - "5% threshold unjustified and not subjected to sensitivity analysis"
+      - "CSS weights arbitrary, not validated, not robustness-checked"
+      - "Iowa Delta-f may partially reflect tract redesign (Type II), not geographic change"
+  nadia-polikarpova:
+    score: 3
+    recommendation: "Revise"
+    key_issues:
+      - "Proposition 1 unproved; C_pop undefined as computable quantity"
+      - "Jaccard matching uses argmax which may not be injective — should use assignment problem"
+      - "Binary s_ratio is discontinuous — continuous version more informative"
+      - "s_seat definition inconsistent between fixed and changing seat-count states"
+  justin-grimmer:
+    score: 3
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Three uncontrolled confounders in cross-census comparison (population, graph topology, seat count)"
+      - "Cross-census stability does not rule out partisan determination if partisan/physical geography are correlated"
+      - "Iowa result needs political geography explanation"
+      - "No null hypothesis: what is the random stability rate?"
+avg_score: 2.8
 history:
   - stage: draft
     date: "2026-05-03"
     note: "Paper drafted from plan.md and empirical data. 6 sections. 2020 baseline complete (44 states). 2000 sweep 47/50 states. 2010 [TBD]. CSS framework defined. Lorenz drift proxy. Legal theory: CSS >= 0.90 as geographic determinism anchor."
+  - stage: panel
+    round: 1
+    date: "2026-05-02"
+    avg_score: 2.8
+    note: "Round 1 panel reviews. 5 reviewers: Rodden 3, Duchin 3, Liang 2, Polikarpova 3, Grimmer 3. Avg 2.8/4. P1 consensus: (1) s_seat uncomputable without 2000/2010 election data — CSS formula overstates what data supports; (2) 5% threshold unjustified, no sensitivity analysis; (3) Iowa instability unexplained mechanistically; (4) legal theory is novel, not established doctrine. Percy Liang outlier at 2/4: sample size and threshold concerns."
 series: B
 series_number: 15
