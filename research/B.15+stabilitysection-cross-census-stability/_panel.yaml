@@ -2,7 +2,7 @@ paper: stabilitysection-cross-census-stability
 title: "StabilitySection: Cross-Census Stability of GeoSection-Optimal Redistricting Maps"
 venue: "Political Analysis / Annals of the American Association of Geographers"
 stage: recheck
-round: 2
+round: 3
 content_mode: full
 reviewers:
   - jonathan-rodden
@@ -87,6 +87,37 @@ round2_reviews:
       - "Iowa row in Table 3 shows Same stability — inconsistent with case study finding of 1:3 in 2000"
       - "Cross-tabulation of unstable states by seat-count-change status not reported"
 avg_score: 3.1
+round3_reviews:
+  jonathan-rodden:
+    score: 3.5
+    recommendation: "Accept pending minor revision"
+    note: "Unchanged from R2; Rodden satisfied by Iowa p* and CSS reclassification."
+  moon-duchin:
+    score: 3.5
+    recommendation: "Accept with minor revisions"
+    key_issues:
+      - "Proxy Jaccard still not validated against actual district Jaccard — low-medium severity"
+      - "Abstract title vs measurement gap (ratio stability vs CSS) — editorial"
+      - "p* formal definition not stated in paper"
+  percy-liang:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    note: "Unchanged from R2; Lorenz proxy not validated against Delta-f outcomes."
+  nadia-polikarpova:
+    score: 3.0
+    recommendation: "Revise and resubmit"
+    key_issues:
+      - "Proposition 1 still unproved — downgrade to Conjecture label is sufficient fix"
+      - "Continuous s_ratio alternative still not provided"
+      - "p* formal definition missing"
+  justin-grimmer:
+    score: 3.5
+    recommendation: "Accept with minor revisions"
+    key_issues:
+      - "Type I/Type II decomposition still not executed — deferred to future work"
+      - "Iowa Table 3 entry consistency should be verified"
+      - "Structural determinism alternative to null hypothesis not acknowledged"
+avg_score_r3: 3.3
 history:
   - stage: draft
     date: "2026-05-03"
@@ -101,5 +132,18 @@ history:
     date: "2026-05-02"
     avg_score: 3.1
     note: "Round 2 panel reviews. 5 reviewers: Rodden 3.5, Duchin 3.0, Liang 3.0, Polikarpova 3.0, Grimmer 3.0. Avg 3.1/4. R2 consensus: Iowa Hypothesis A/B case study and threshold sensitivity (15/20/23/26) are genuine improvements. s_seat clarification (MT/TX/NY as structurally changed, not unstable) resolves definitional inconsistency. Jaccard Hungarian algorithm pseudocode resolves Polikarpova's injectivity concern. Remaining gaps: (1) p*_2000 for Iowa still projected not computed; (2) Wilson CI on 20/30 still missing (Liang); (3) Proposition 1 still unproved, C_pop undefined; (4) Type I/Type II decomposition not executed; (5) null hypothesis absent. Rodden moves to 3.5 — would accept pending p* computation. Others maintain 3.0."
+  - stage: recheck
+    round: 3
+    date: "2026-05-02"
+    avg_score: 3.3
+    note: "Round 3 reviews (Grimmer, Duchin, Polikarpova). Iowa p*_2000=0.65 and p*_2010=0.55 from
+           Lorenz curve resolves circularity concern (Polikarpova R2 Issue 3). Iowa reclassified to
+           Low CSS — table inconsistency corrected. Wilson CI [48%, 82%] added. Null hypothesis:
+           67% = 3.4x binomial null of 20%, p<0.001. Grimmer and Duchin upgrade to 3.5; Polikarpova
+           holds at 3.0 (Proposition 1 still unproved — downgrade to Conjecture would resolve).
+           Liang unchanged at 3.0 (Lorenz proxy not validated against actual Delta-f outcomes).
+           Remaining binding issues: (1) Proposition 1 needs Conjecture label — one-word fix;
+           (2) continuous s_ratio note needed; (3) Type I/II decomposition still deferred;
+           (4) proxy Jaccard unvalidated. Stage remains recheck pending Proposition 1 fix."
 series: B
 series_number: 15
