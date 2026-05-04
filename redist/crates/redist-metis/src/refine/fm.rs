@@ -1,18 +1,34 @@
 use crate::graph::{CsrGraph, Partition};
 use super::{gain::GainTable, boundary::BoundarySet};
 use crate::refine::Refiner;
+use crate::api::ObjectiveType;
 
-pub struct FiducciaMattheyses { pub niter: u32 }
+pub struct FiducciaMattheyses {
+    pub niter:     u32,
+    pub contig_fm: bool,
+    pub objective: ObjectiveType,
+    pub lp_iter:   u32,
+}
+
+impl Default for FiducciaMattheyses {
+    fn default() -> Self {
+        Self { niter: 10, contig_fm: true, objective: ObjectiveType::Cut, lp_iter: 0 }
+    }
+}
 
 impl Refiner for FiducciaMattheyses {
     fn refine(&self, g: &CsrGraph, p: Partition) -> Partition {
-        let mut state = FmState::new(g, p);
+        let p = if self.lp_iter > 0 {
+            let mut p = p;
+            crate::refine::lp::lp_balance(g, &mut p, 5, self.lp_iter);
+            p
+        } else { p };
+
+        let mut state = FmState::new(g, p, self.objective);
         let mut best = state.checkpoint();
 
         for _pass in 0..self.niter {
-            let improved = fm_pass(&mut state, &mut best);
-            // Always restore to best after each pass so the next pass
-            // starts from the best-known state, not the end-of-pass state.
+            let improved = fm_pass(&mut state, &mut best, self.contig_fm);
             state.restore(&best);
             if !improved { break; }
         }
@@ -20,7 +36,7 @@ impl Refiner for FiducciaMattheyses {
     }
 }
 
-fn fm_pass(state: &mut FmState, best: &mut Checkpoint) -> bool {
+fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool {
     let ncon = state.graph.ncon as usize;
     let k    = state.k as usize;
     let total_pops: Vec<i64> = (0..ncon)
@@ -161,13 +177,10 @@ pub struct FmState<'g> {
     pub k:            u32,
     pub gain_table:   GainTable,
     pub boundary:     BoundarySet,
-    /// `part_pop[constraint][part]` = population sum for constraint c in part p.
-    /// For ncon=1, `part_pop[0][part]` is equivalent to the old single-constraint `part_pop[part]`.
     pub part_pop:     Vec<Vec<i64>>,
     pub current_cut:  i64,
-    /// Per-part target weights (one f32 per part, summing to 1.0).
-    /// `None` means equal weights: each part targets `total_pop / k`.
     pub tpwgts:       Option<Vec<f32>>,
+    pub objective:    ObjectiveType,
 }
 
 #[derive(Clone)]
@@ -177,7 +190,7 @@ pub struct Checkpoint {
 }
 
 impl<'g> FmState<'g> {
-    pub fn new(g: &'g CsrGraph, p: Partition) -> Self {
+    pub fn new(g: &'g CsrGraph, p: Partition, objective: ObjectiveType) -> Self {
         let n = g.n();
         let k = p.k as usize;
         let ncon = g.ncon as usize;
@@ -209,7 +222,7 @@ impl<'g> FmState<'g> {
         }
 
         let tpwgts = p.tpwgts.clone();
-        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0, tpwgts };
+        let mut state = FmState { graph: g, assignment: p.assignment, k: p.k, gain_table, boundary, part_pop, current_cut: 0, tpwgts, objective };
         state.current_cut = state.cut();
         state
     }
@@ -348,7 +361,7 @@ mod tests {
         // cut edge: 1-2, so cut = 1
         let g = path_graph(3);
         let p = Partition { assignment: vec![0, 0, 1], k: 2, tpwgts: None };
-        let state = FmState::new(&g, p);
+        let state = FmState::new(&g, p, ObjectiveType::Cut);
         assert_eq!(state.cut(), 1);
     }
 
@@ -356,7 +369,7 @@ mod tests {
     fn fm_state_checkpoint_restore() {
         let g = path_graph(4);
         let p = Partition { assignment: vec![0, 0, 1, 1], k: 2, tpwgts: None };
-        let mut state = FmState::new(&g, p);
+        let mut state = FmState::new(&g, p, ObjectiveType::Cut);
         let cp = state.checkpoint();
         assert_eq!(cp.cut, state.cut());
         // Modify assignment (simulate a move)
@@ -375,7 +388,7 @@ mod tests {
         let g = grid_4x4();
         let p_init = RandomBisect.partition(&g, 2, 0);
         let cut_before = compute_cut_for_test(&g, &p_init.assignment);
-        let fm = FiducciaMattheyses { niter: 10 };
+        let fm = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
         let p = fm.refine(&g, p_init);
         let cut_after = compute_cut_for_test(&g, &p.assignment);
         assert!(cut_after <= cut_before,
@@ -390,7 +403,7 @@ mod tests {
         use crate::refine::Refiner;
         let g = dumbbell_graph();
         let p_init = RandomBisect.partition(&g, 2, 42);
-        let fm = FiducciaMattheyses { niter: 20 };
+        let fm = FiducciaMattheyses { niter: 20, ..FiducciaMattheyses::default() };
         let p = fm.refine(&g, p_init);
         let cut = compute_cut_for_test(&g, &p.assignment);
         assert_eq!(cut, 1, "dumbbell bisect optimal cut is 1, got {cut}");
@@ -406,7 +419,7 @@ mod tests {
         let target = total / 2; // = 8
         let eps = (total * 5 + 999) / 1000; // ceiling of 0.5% = 1
         let p_init = RandomBisect.partition(&g, 2, 99);
-        let fm = FiducciaMattheyses { niter: 10 };
+        let fm = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
         let p = fm.refine(&g, p_init);
         for part in 0..2u32 {
             let pop: i64 = (0..g.n())
@@ -430,7 +443,7 @@ mod tests {
         // vwgt: vertex i has [pop=1, vap=1]; interleaved layout: [1, 1, 1, 1, ...]
         g.vwgt = vec![1i32; 32]; // 16 vertices × 2 constraints
         let p_init = RandomBisect.partition(&g, 2, 42);
-        let fm = FiducciaMattheyses { niter: 10 };
+        let fm = FiducciaMattheyses { niter: 10, ..FiducciaMattheyses::default() };
         let p = fm.refine(&g, p_init);
         assert_eq!(p.assignment.len(), 16);
         // Both constraints should be balanced within ε = ceil(0.5% × 16) = 1
@@ -490,7 +503,7 @@ mod kani_proofs {
             tpwgts: None,
         };
 
-        let fm = FiducciaMattheyses { niter: 2 };
+        let fm = FiducciaMattheyses { niter: 2, ..FiducciaMattheyses::default() };
         let result = fm.refine(&g, p);
 
         // Safety postconditions:

@@ -59,6 +59,43 @@ pub struct Partition {
 #[derive(Debug, Clone)]
 pub struct CoarseMap { pub cmap: Vec<u32> }
 
+/// Extract the induced subgraph of vertices where `assignment[v] == part`.
+/// Returns `(subgraph, global_to_local_map, local_to_global_map)`.
+pub fn extract_subgraph(g: &CsrGraph, assignment: &[u32], part: u32)
+    -> (CsrGraph, Vec<usize>, Vec<usize>)
+{
+    let n = g.n();
+    let mut global_to_local = vec![usize::MAX; n];
+    let mut local_to_global = Vec::new();
+    for v in 0..n {
+        if assignment[v] == part {
+            global_to_local[v] = local_to_global.len();
+            local_to_global.push(v);
+        }
+    }
+    let ncon = g.ncon as usize;
+    let mut xadj = vec![0u32];
+    let mut adjncy = Vec::new();
+    let mut adjwgt = Vec::new();
+    let mut vwgt = Vec::new();
+    for &v in &local_to_global {
+        for c in 0..ncon { vwgt.push(g.vwgt[v * ncon + c]); }
+        for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+            let u = g.adjncy[j] as usize;
+            if assignment[u] == part {
+                adjncy.push(global_to_local[u] as u32);
+                if let Some(ref aw) = g.adjwgt { adjwgt.push(aw[j]); }
+            }
+        }
+        xadj.push(adjncy.len() as u32);
+    }
+    let sub = CsrGraph {
+        xadj, adjncy, ncon: g.ncon, vwgt,
+        adjwgt: if g.adjwgt.is_some() { Some(adjwgt) } else { None },
+    };
+    (sub, global_to_local, local_to_global)
+}
+
 /// Check if every part in `partition` is connected within `g`.
 /// Returns `Ok(())` if all parts are contiguous, or the first disconnected part ID.
 pub fn check_contiguity(g: &CsrGraph, partition: &Partition) -> Result<(), u32> {
