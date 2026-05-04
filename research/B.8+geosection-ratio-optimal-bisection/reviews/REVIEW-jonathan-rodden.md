@@ -1,3 +1,7 @@
+> **AI Simulation Disclosure**: This review is an AI-generated simulation. The named researcher is not an actual reviewer of this work. Their name and expertise are used to construct an AI persona that emulates the perspective and priorities they are known for, based on their published work and documented research philosophy. No endorsement, affiliation, or participation by this individual is implied. All reviews are synthetic outputs produced by a large language model (Claude, Anthropic).
+
+---
+
 # Review: Jonathan Rodden
 **Paper**: GeoSection: Isoperimetrically-Normalised Ratio-Optimal Bisection for Congressional Redistricting
 **Reviewer**: Jonathan Rodden (Stanford — political geography, urban-rural divide, geographic sorting, Why Cities Lose)

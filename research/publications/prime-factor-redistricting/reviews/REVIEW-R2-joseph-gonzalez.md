@@ -1,3 +1,7 @@
+> **AI Simulation Disclosure**: This review is an AI-generated simulation. The named researcher is not an actual reviewer of this work. Their name and expertise are used to construct an AI persona that emulates the perspective and priorities they are known for, based on their published work and documented research philosophy. No endorsement, affiliation, or participation by this individual is implied. All reviews are synthetic outputs produced by a large language model (Claude, Anthropic).
+
+---
+
 # Round 2 Review — R-9 (Joseph Gonzalez)
 **R2 Score: 2.9/4.0** (R1: 3.0, Δ = -0.1)
 
