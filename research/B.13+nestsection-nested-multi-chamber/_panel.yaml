@@ -1,14 +1,24 @@
 title: "NestSection: Consistent Multi-Chamber Redistricting via Compatible Factorization Spines"
 series: B
 number: 13
-stage: panel
+stage: revision
 type: algorithm-design
 authors:
   - name: Gio Della-Libera
     email: giodl@microsoft.com
 created: 2026-05-02
 updated: 2026-05-02
-status: under-review
+status: revision
+
+revision_history:
+  - round: 1
+    date: 2026-05-02
+    avg_score_before: 2.6
+    items_addressed:
+      - "P1-1: Bimodality Gap theorem (Theorem 3) added to §3 after score definition, with full proof and remark"
+      - "P1-2: §4 restructured — trivially compatible (C=1, 7 states) vs weakly compatible (C=2, 2 states) vs non-trivially compatible (OR/AL) distinction added; headline 11-state count caveated"
+      - "P1-3: New subsection §4.3 (Oregon and Alabama) with geographic spine descriptions and figure environments for both states"
+      - "P1-4: Elections Clause scope paragraph added to §5 before statutory design proposal, scoping the mandate to state legislative maps only"
 
 reviews:
   round: 1

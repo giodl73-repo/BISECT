@@ -249,6 +249,34 @@ selection score, satisfying a proportionality standard rather than maximisation.
 \end{algorithmic}
 \end{algorithm}
 
+\begin{remark}[Decoupled Optimization]
+\label{rem:decoupled}
+The current implementation evaluates the alignment score $A(\mathrm{split})$
+on the minimum-EC bisection found for each seed, rather than jointly
+optimising $\mathrm{EC}_\text{norm}$ and alignment.
+Concretely, lines 7--10 of Algorithm~\ref{alg:vrasection} select $L_{\min}$
+by $\min \mathrm{EC}(L)$; the alignment score of that compactness-optimal
+bisection is then applied post-hoc as a ratio-selection input.
+Seeds are searched for their compactness quality, not their alignment quality.
+
+A joint optimisation would evaluate $A(\mathrm{split})$ for every seed
+at every ratio and select the seed minimising
+$\mathrm{score}(i, s) = \mathrm{EC}_\text{norm}(i,s) - w_\text{vra}
+\cdot A(L_s) \cdot \max(\mathrm{EC}_\text{norm}(i,s),\, 1)$
+directly across the joint (seed, ratio) space.
+This would require evaluating the full score for all $N \cdot \lfloor k/2 \rfloor$
+(seed, ratio) pairs --- identical METIS call count, but with alignment
+computed for every seed rather than only the EC-minimising one.
+The decoupled approach is a conservative approximation: by fixing the
+compactness-optimal seed and reading off its alignment post-hoc,
+VRASection may underestimate the achievable alignment at each ratio.
+In the empirical results (Alabama 2:5 at $A = 0.42$), the approximation
+is sufficient for the correct ratio to win by a substantial margin (27.7
+score points).
+The joint optimisation is left for future work; it would not change the
+METIS call count but would change the seed-selection criterion.
+\end{remark}
+
 \paragraph{Design rationale: VRA alignment only at level 1.}
 VRASection applies the alignment bonus only at the first bisection level.
 Recursive calls use standard GeoSection (\texttt{ncon=1}, $w_\text{vra}=0$).

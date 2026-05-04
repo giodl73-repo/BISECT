@@ -100,6 +100,52 @@ $\min(C,S,H) \leq C \leq 52$, so the score is at most $100(1 - 1/52) \approx 98.
 but no state achieves this because $C=52$ (California) has $g=4 > 1$.
 \end{proof}
 
+\begin{theorem}[Bimodality Gap]
+\label{thm:bimodal}
+For positive integers $C$, $S$, $H$ with $g = \gcd(C,S,H)$ and
+$m = \min(C,S,H)$, the compatibility score $\sigma = (1 - g/m)\times 100$
+satisfies
+\[
+  \sigma \;\in\; \{0\} \;\cup\; [50, 100).
+\]
+There are no states with $0 < \sigma < 50$.
+\end{theorem}
+
+\begin{proof}
+Suppose for contradiction that $0 < \sigma < 50$.  Then
+\[
+  0 \;<\; 1 - \frac{g}{m} \;<\; \frac{1}{2},
+  \quad\text{i.e.,}\quad
+  \frac{m}{2} \;<\; g \;<\; m.
+\]
+Since $g = \gcd(C,S,H)$ divides every element, in particular $g \mid m$.
+We therefore need a divisor of $m$ that lies strictly between $m/2$ and $m$.
+Such a divisor would be $m/p$ for some integer $p$ with $1 < p < 2$ ---
+but no such integer exists, since no prime is less than~$2$.
+
+More precisely: if $g \mid m$ and $g > m/2$, then $m/g < 2$, so $m/g = 1$
+(it must be a positive integer), which gives $g = m$ and $\sigma = 0$ ---
+a contradiction with $\sigma > 0$.
+
+\medskip
+\noindent\textit{Boundary cases.}
+\begin{itemize}
+  \item If $m = 1$, then $g = \gcd(C,S,H) = 1$ (the only positive divisor of
+        $1$ is $1$ itself), so $\sigma = (1 - 1/1)\times 100 = 0$.  Consistent.
+  \item The infimum of the non-zero range is achieved when $g = 1$ and $m = 2$:
+        $\sigma = (1 - 1/2)\times 100 = 50$.  Hence the non-zero values begin
+        at exactly~$50$, confirming $\sigma \in \{0\} \cup [50, 100)$.
+\end{itemize}
+\end{proof}
+
+\begin{remark}
+The Bimodality Gap theorem is a pure number-theoretic fact: it holds for any
+positive integers $(C, S, H)$, not merely for current US apportionments.
+The empirical observation that no US state falls in the range $0 < \sigma < 50$
+is therefore not an accident of the current apportionment cycle but a structural
+invariant of the GCD-based score.
+\end{remark}
+
 \subsection{Nesting Modes}
 
 The compatibility score determines which nesting mode is achievable.
