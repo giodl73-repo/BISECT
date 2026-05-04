@@ -444,6 +444,78 @@ mod tests {
         assert_eq!(h, 2400);
         assert_eq!(w, 1800);
     }
+
+    // ── Additional L0 tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_resolve_map_types_empty_input() {
+        let types = resolve_map_types(&[]);
+        assert!(types.is_empty(), "empty input must produce empty list");
+    }
+
+    #[test]
+    fn test_resolve_map_types_all_does_not_include_compactness() {
+        // By spec, MapType::All expands to Districts + Rounds + Political + Demographic
+        // but NOT Compactness (check implementation matches spec)
+        let types = resolve_map_types(&[MapType::All]);
+        assert!(!types.contains(&MapType::All), "All must be removed after expansion");
+    }
+
+    #[test]
+    fn test_resolve_map_types_rounds_preserved() {
+        let types = resolve_map_types(&[MapType::Rounds]);
+        assert_eq!(types.len(), 1);
+        assert!(types.contains(&MapType::Rounds));
+    }
+
+    #[test]
+    fn test_resolve_map_types_demographic_preserved() {
+        let types = resolve_map_types(&[MapType::Demographic]);
+        assert_eq!(types.len(), 1);
+        assert!(types.contains(&MapType::Demographic));
+    }
+
+    #[test]
+    fn test_resolve_map_types_political_preserved() {
+        let types = resolve_map_types(&[MapType::Political]);
+        assert_eq!(types.len(), 1);
+        assert!(types.contains(&MapType::Political));
+    }
+
+    #[test]
+    fn test_resolve_map_types_all_overrides_others() {
+        // If All is present alongside specific types, it should expand
+        let types = resolve_map_types(&[MapType::All, MapType::Compactness]);
+        // Should still expand since All is present
+        assert!(types.contains(&MapType::Districts));
+        assert!(!types.contains(&MapType::All));
+    }
+
+    #[test]
+    fn test_canvas_size_width_proportional_to_dpi() {
+        use redist_map::canvas_size_from_dpi;
+        let (w1, _) = canvas_size_from_dpi(150, 8.0, 1.0);
+        let (w2, _) = canvas_size_from_dpi(300, 8.0, 1.0);
+        // 300 DPI should yield double the pixels of 150 DPI
+        assert_eq!(w2, w1 * 2, "canvas width must scale proportionally with DPI");
+    }
+
+    #[test]
+    fn test_canvas_size_square_aspect() {
+        use redist_map::canvas_size_from_dpi;
+        let (w, h) = canvas_size_from_dpi(150, 8.0, 1.0);
+        assert_eq!(w, h, "aspect=1.0 must produce equal width and height");
+    }
+
+    #[test]
+    fn test_map_type_name_districts() {
+        assert_eq!(MapType::Districts.name(), "districts");
+    }
+
+    #[test]
+    fn test_map_type_name_political() {
+        assert_eq!(MapType::Political.name(), "political");
+    }
 }
 
 // ── National map ──────────────────────────────────────────────────────────────

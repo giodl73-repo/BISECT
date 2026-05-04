@@ -284,4 +284,147 @@ mod tests {
             "electoral_system must be 'single_member' for legacy US plans"
         );
     }
+
+    // ── Additional L0 tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_migrate_manifest_label_matches_arg() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "vermont");
+        run_migrate(tmp.path(), "vermont", "vt_congressional_2020", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("vt_congressional_2020").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        assert_eq!(v["label"].as_str().unwrap(), "vt_congressional_2020");
+    }
+
+    #[test]
+    fn test_migrate_state_code_uppercased_in_manifest() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "vermont");
+        run_migrate(tmp.path(), "vermont", "vt_plan", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("vt_plan").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        // state_code is set from state_identifier.to_uppercase()
+        assert_eq!(v["state_code"].as_str().unwrap(), "VERMONT");
+    }
+
+    #[test]
+    fn test_migrate_creates_analysis_subdir() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "delaware");
+        run_migrate(tmp.path(), "delaware", "de_plan", false).unwrap();
+        let analysis_dir = tmp.path().join("plans").join("de_plan").join("analysis");
+        assert!(analysis_dir.exists(), "migrate must create analysis/ subdirectory");
+    }
+
+    #[test]
+    fn test_migrate_creates_maps_subdir() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "delaware");
+        run_migrate(tmp.path(), "delaware", "de_plan2", false).unwrap();
+        let maps_dir = tmp.path().join("plans").join("de_plan2").join("maps");
+        assert!(maps_dir.exists(), "migrate must create maps/ subdirectory");
+    }
+
+    #[test]
+    fn test_migrate_creates_intermediate_subdir() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "delaware");
+        run_migrate(tmp.path(), "delaware", "de_plan3", false).unwrap();
+        let int_dir = tmp.path().join("plans").join("de_plan3").join("intermediate");
+        assert!(int_dir.exists(), "migrate must create intermediate/ subdirectory");
+    }
+
+    #[test]
+    fn test_migrate_num_districts_counted_correctly() {
+        let tmp = TempDir::new().unwrap();
+        // 5 distinct districts
+        let state_dir = tmp.path().join("states").join("oregon");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        std::fs::write(
+            state_dir.join("final_assignments.json"),
+            r#"{"41000001":1,"41000002":2,"41000003":3,"41000004":4,"41000005":5}"#,
+        ).unwrap();
+        run_migrate(tmp.path(), "oregon", "or_plan", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("or_plan").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        assert_eq!(v["num_districts"].as_u64().unwrap(), 5);
+    }
+
+    #[test]
+    fn test_migrate_single_assignment_gives_one_district() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "alaska"); // only 1 assignment → 1 district
+        run_migrate(tmp.path(), "alaska", "ak_plan", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("ak_plan").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        assert_eq!(v["num_districts"].as_u64().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_migrate_no_assignments_file_gives_one_district() {
+        let tmp = TempDir::new().unwrap();
+        // State dir exists but no final_assignments.json
+        let state_dir = tmp.path().join("states").join("wyoming");
+        std::fs::create_dir_all(&state_dir).unwrap();
+        run_migrate(tmp.path(), "wyoming", "wy_plan", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("wy_plan").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        assert_eq!(v["num_districts"].as_u64().unwrap(), 1,
+            "missing assignments file must default to 1 district");
+    }
+
+    #[test]
+    fn test_migrate_copies_subdirectory_recursively() {
+        let tmp = TempDir::new().unwrap();
+        // State dir with a data/ subdirectory
+        let state_dir = tmp.path().join("states").join("nevada");
+        let data_dir = state_dir.join("data");
+        std::fs::create_dir_all(&data_dir).unwrap();
+        std::fs::write(state_dir.join("final_assignments.json"), r#"{"32001000100":1}"#).unwrap();
+        std::fs::write(data_dir.join("summary.json"), r#"{"districts":[]}"#).unwrap();
+
+        run_migrate(tmp.path(), "nevada", "nv_plan", false).unwrap();
+
+        // data/summary.json must be copied under the plan dir
+        let copied = tmp.path().join("plans").join("nv_plan").join("data").join("summary.json");
+        assert!(copied.exists(), "subdirectory files must be copied recursively");
+    }
+
+    #[test]
+    fn test_chrono_now_format() {
+        let ts = chrono_now();
+        // Must look like 2026-05-02T12:00:00Z
+        assert!(ts.contains('T'), "timestamp must contain T separator");
+        assert!(ts.ends_with('Z'), "timestamp must end with Z");
+        assert_eq!(ts.len(), 20, "timestamp must be exactly 20 chars (YYYY-MM-DDTHH:MM:SSZ)");
+    }
+
+    #[test]
+    fn test_epoch_days_to_date_unix_epoch() {
+        // Day 0 = 1970-01-01
+        let date = epoch_days_to_date(0);
+        assert_eq!(date, "1970-01-01");
+    }
+
+    #[test]
+    fn test_epoch_days_to_date_known_date() {
+        // 2026-05-02 = 20574 days since epoch (approx)
+        // Days: 56 * 365 + leap years (14) + 31 (Jan) + 28 (Feb) + 31 (Mar) + 30 (Apr) + 2 = ?
+        // Let's verify 2000-01-01 = 10957 days
+        let date = epoch_days_to_date(10957);
+        assert_eq!(date, "2000-01-01", "epoch day 10957 must be 2000-01-01");
+    }
+
+    #[test]
+    fn test_migrate_adjacency_file_name_in_manifest() {
+        let tmp = TempDir::new().unwrap();
+        setup_legacy_state_dir(tmp.path(), "utah");
+        run_migrate(tmp.path(), "utah", "ut_plan", false).unwrap();
+        let manifest_path = tmp.path().join("plans").join("ut_plan").join("manifest.json");
+        let v: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(manifest_path).unwrap()).unwrap();
+        let adj_file = v["adjacency_file"].as_str().unwrap_or("");
+        assert!(adj_file.contains("adjacency"), "adjacency_file must contain 'adjacency'");
+        assert!(adj_file.ends_with(".adj.bin"), "adjacency_file must end with .adj.bin");
+    }
 }

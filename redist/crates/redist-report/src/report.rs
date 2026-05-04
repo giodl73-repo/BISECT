@@ -445,4 +445,191 @@ mod tests {
             "partisan.json should not be listed as required missing"
         );
     }
+
+    // ── Additional L0 tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_required_analysis_files_contains_summary() {
+        assert!(REQUIRED_ANALYSIS_FILES.contains(&"summary.json"),
+            "summary.json must be in REQUIRED_ANALYSIS_FILES");
+    }
+
+    #[test]
+    fn test_required_analysis_files_contains_contiguity() {
+        assert!(REQUIRED_ANALYSIS_FILES.contains(&"contiguity.json"),
+            "contiguity.json must be in REQUIRED_ANALYSIS_FILES");
+    }
+
+    #[test]
+    fn test_required_analysis_files_contains_compactness() {
+        assert!(REQUIRED_ANALYSIS_FILES.contains(&"compactness.json"),
+            "compactness.json must be in REQUIRED_ANALYSIS_FILES");
+    }
+
+    #[test]
+    fn test_optional_analysis_files_contains_partisan() {
+        assert!(OPTIONAL_ANALYSIS_FILES.contains(&"partisan.json"),
+            "partisan.json must be in OPTIONAL_ANALYSIS_FILES");
+    }
+
+    #[test]
+    fn test_optional_analysis_files_contains_vra() {
+        assert!(OPTIONAL_ANALYSIS_FILES.contains(&"vra_analysis.json"),
+            "vra_analysis.json must be in OPTIONAL_ANALYSIS_FILES");
+    }
+
+    #[test]
+    fn test_optional_files_not_in_required() {
+        for optional in OPTIONAL_ANALYSIS_FILES {
+            assert!(!REQUIRED_ANALYSIS_FILES.contains(optional),
+                "{optional} must not appear in both REQUIRED and OPTIONAL lists");
+        }
+    }
+
+    #[test]
+    fn test_required_files_not_in_optional() {
+        for required in REQUIRED_ANALYSIS_FILES {
+            assert!(!OPTIONAL_ANALYSIS_FILES.contains(required),
+                "{required} must not appear in both REQUIRED and OPTIONAL lists");
+        }
+    }
+
+    #[test]
+    fn test_report_context_new_sets_map_dir() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plans").join("test");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest = make_test_manifest("test");
+        let ctx = ReportContext::new(plan_dir.clone(), manifest);
+        assert_eq!(ctx.map_dir, Some(plan_dir.join("maps")));
+    }
+
+    #[test]
+    fn test_report_context_plan_dir_stored() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = tmp.path().join("plans").join("stored_test");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest = make_test_manifest("stored_test");
+        let ctx = ReportContext::new(plan_dir.clone(), manifest);
+        assert_eq!(ctx.plan_dir, plan_dir);
+    }
+
+    #[test]
+    fn test_check_required_files_all_present_returns_empty() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_full");
+        let missing = check_required_analysis_files(&ctx);
+        assert!(missing.is_empty(), "all required files present → missing must be empty");
+    }
+
+    #[test]
+    fn test_check_required_files_missing_compactness_reported() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_missing_file(&tmp, "vt_no_compact", "compactness.json");
+        let missing = check_required_analysis_files(&ctx);
+        assert!(missing.contains(&"compactness.json"),
+            "missing compactness.json must be in missing list");
+    }
+
+    #[test]
+    fn test_check_required_files_missing_summary_reported() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_missing_file(&tmp, "vt_no_summary", "summary.json");
+        let missing = check_required_analysis_files(&ctx);
+        assert!(missing.contains(&"summary.json"),
+            "missing summary.json must be in missing list");
+    }
+
+    #[test]
+    fn test_assemble_report_sets_label() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_label_check");
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.label, "vt_label_check");
+    }
+
+    #[test]
+    fn test_assemble_report_sets_state() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_state_check");
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.state, "VT");
+    }
+
+    #[test]
+    fn test_assemble_report_sets_year() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_year_check");
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.year, "2020");
+    }
+
+    #[test]
+    fn test_assemble_report_generated_at_is_iso8601() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_ts_check");
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.generated_at.len(), 20,
+            "generated_at must be 20-char ISO 8601 string");
+        assert!(report.generated_at.contains('T'));
+        assert!(report.generated_at.ends_with('Z'));
+    }
+
+    #[test]
+    fn test_assemble_report_has_external_analyzers_false_by_default() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_ext_check");
+        let report = assemble_report(&ctx).unwrap();
+        assert!(!report.has_external_analyzers,
+            "has_external_analyzers must be false by default");
+    }
+
+    #[test]
+    fn test_assemble_report_executive_summary_has_label() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_exec_check");
+        let report = assemble_report(&ctx).unwrap();
+        let label = report.sections.executive_summary["label"].as_str().unwrap_or("");
+        assert_eq!(label, "vt_exec_check");
+    }
+
+    #[test]
+    fn test_assemble_report_audit_section_has_binary_version() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_bin_check");
+        let report = assemble_report(&ctx).unwrap();
+        let ver = report.sections.audit["binary_version"].as_str().unwrap_or("");
+        assert!(!ver.is_empty(), "audit section must have non-empty binary_version");
+    }
+
+    #[test]
+    fn test_assemble_report_returns_err_on_missing_contiguity() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_missing_file(&tmp, "vt_no_cont", "contiguity.json");
+        let result = assemble_report(&ctx);
+        assert!(result.is_err());
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("contiguity.json"), "error must mention contiguity.json");
+    }
+
+    #[test]
+    fn test_assemble_report_vra_unavailable_when_missing() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_vra_test");
+        // Remove vra_analysis.json (optional) to ensure it returns "unavailable"
+        let _ = std::fs::remove_file(ctx.plan_dir.join("analysis").join("vra_analysis.json"));
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.sections.vra_compliance["status"].as_str().unwrap_or(""), "unavailable",
+            "vra_compliance must show 'unavailable' when file absent");
+    }
+
+    #[test]
+    fn test_assemble_report_comparison_unavailable_when_missing() {
+        let tmp = TempDir::new().unwrap();
+        let ctx = setup_plan_dir_with_all_required(&tmp, "vt_comp_test");
+        let _ = std::fs::remove_file(ctx.plan_dir.join("analysis").join("comparison.json"));
+        let report = assemble_report(&ctx).unwrap();
+        assert_eq!(report.sections.comparison["status"].as_str().unwrap_or(""), "unavailable",
+            "comparison must show 'unavailable' when file absent");
+    }
 }

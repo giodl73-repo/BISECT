@@ -287,4 +287,204 @@ mod tests {
             "CSV must have one row per assignment"
         );
     }
+
+    // ── Additional L0 tests ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_geojson_export_type_is_feature_collection() {
+        let plan = fixture_wa_congressional_plan();
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(v["type"].as_str().unwrap(), "FeatureCollection",
+            "top-level type must be FeatureCollection");
+    }
+
+    #[test]
+    fn test_geojson_export_features_is_array() {
+        let plan = fixture_wa_congressional_plan();
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        assert!(v["features"].is_array(), "features must be a JSON array");
+    }
+
+    #[test]
+    fn test_geojson_empty_plan_produces_zero_features() {
+        let plan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "empty".into(),
+                state_fips: "00".into(),
+                state_code: "XX".into(),
+                year: "2020".into(),
+                chamber: "congressional".into(),
+                num_districts: 0,
+                population_source: "total".into(),
+                balance_tolerance_pct: 0.5,
+                created_at: "2026-01-01T00:00:00Z".into(),
+                created_by: "test".into(),
+                ..Default::default()
+            },
+            assignments: HashMap::new(),
+            geometry: None,
+        };
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(v["features"].as_array().unwrap().len(), 0,
+            "empty plan must produce 0 features");
+    }
+
+    #[test]
+    fn test_geojson_single_district_plan() {
+        let mut assignments = HashMap::new();
+        assignments.insert("50000000001".to_string(), 1usize);
+        let plan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "vt_congressional_2020".into(),
+                state_fips: "50".into(),
+                state_code: "VT".into(),
+                year: "2020".into(),
+                chamber: "congressional".into(),
+                num_districts: 1,
+                population_source: "total".into(),
+                balance_tolerance_pct: 0.5,
+                created_at: "2026-01-01T00:00:00Z".into(),
+                created_by: "test".into(),
+                ..Default::default()
+            },
+            assignments,
+            geometry: None,
+        };
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        assert_eq!(v["features"].as_array().unwrap().len(), 1);
+        assert_eq!(v["features"][0]["properties"]["district_id"].as_u64().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_geojson_tract_count_in_properties() {
+        let plan = fixture_wa_congressional_plan();
+        // Each of 10 districts has 5 tracts
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        for feature in v["features"].as_array().unwrap() {
+            let tract_count = feature["properties"]["tract_count"].as_u64().unwrap();
+            assert_eq!(tract_count, 5, "each district must have 5 tracts");
+        }
+    }
+
+    #[test]
+    fn test_gerrychain_export_has_version_field() {
+        let plan = fixture_wa_congressional_plan();
+        let gc_json = export_gerrychain_v23(&plan).unwrap();
+        let v: Value = serde_json::from_str(&gc_json).unwrap();
+        assert_eq!(v["gerrychain_version_target"].as_str().unwrap(), "2.3",
+            "GerryChain export must declare version target 2.3");
+    }
+
+    #[test]
+    fn test_gerrychain_export_has_label_and_state() {
+        let plan = fixture_wa_congressional_plan();
+        let gc_json = export_gerrychain_v23(&plan).unwrap();
+        let v: Value = serde_json::from_str(&gc_json).unwrap();
+        assert_eq!(v["label"].as_str().unwrap(), "wa_congressional_2020");
+        assert_eq!(v["state"].as_str().unwrap(), "WA");
+    }
+
+    #[test]
+    fn test_gerrychain_export_has_num_districts() {
+        let plan = fixture_wa_congressional_plan();
+        let gc_json = export_gerrychain_v23(&plan).unwrap();
+        let v: Value = serde_json::from_str(&gc_json).unwrap();
+        assert_eq!(v["num_districts"].as_u64().unwrap(), 10);
+    }
+
+    #[test]
+    fn test_gerrychain_assignment_count_matches_plan() {
+        let plan = fixture_wa_congressional_plan();
+        let gc_json = export_gerrychain_v23(&plan).unwrap();
+        let v: Value = serde_json::from_str(&gc_json).unwrap();
+        let assignment = v["assignment"].as_object().unwrap();
+        assert_eq!(assignment.len(), plan.assignments.len());
+    }
+
+    #[test]
+    fn test_gerrychain_import_missing_assignment_field_errors() {
+        let json = r#"{"not_assignment": {"53001": 1}}"#;
+        let result = import_gerrychain_to_assignments(json);
+        assert!(result.is_err(), "missing 'assignment' field must produce error");
+        let msg = result.unwrap_err().to_string();
+        assert!(msg.contains("assignment"), "error must mention 'assignment' field");
+    }
+
+    #[test]
+    fn test_gerrychain_import_non_integer_district_errors() {
+        let json = r#"{"assignment": {"53001": "one"}}"#;
+        let result = import_gerrychain_to_assignments(json);
+        assert!(result.is_err(), "non-integer district value must produce error");
+    }
+
+    #[test]
+    fn test_gerrychain_import_empty_assignment_ok() {
+        let json = r#"{"assignment": {}}"#;
+        let result = import_gerrychain_to_assignments(json).unwrap();
+        assert!(result.is_empty(), "empty assignment field must produce empty map");
+    }
+
+    #[test]
+    fn test_csv_export_is_sorted_by_geoid() {
+        let plan = fixture_wa_congressional_plan();
+        let csv_str = export_tracts_csv(&plan).unwrap();
+        let mut reader = csv::Reader::from_reader(csv_str.as_bytes());
+        let geoids: Vec<String> = reader.records()
+            .map(|r| r.unwrap()[0].to_string())
+            .collect();
+        let mut sorted = geoids.clone();
+        sorted.sort();
+        assert_eq!(geoids, sorted, "CSV rows must be sorted by GEOID");
+    }
+
+    #[test]
+    fn test_csv_export_single_row_plan() {
+        let mut assignments = HashMap::new();
+        assignments.insert("50000000001".to_string(), 1usize);
+        let plan = RplanFile {
+            rplan_version: "0.1".into(),
+            metadata: RplanMetadata {
+                label: "vt".into(),
+                state_fips: "50".into(),
+                state_code: "VT".into(),
+                year: "2020".into(),
+                chamber: "congressional".into(),
+                num_districts: 1,
+                population_source: "total".into(),
+                balance_tolerance_pct: 0.5,
+                created_at: "2026-01-01T00:00:00Z".into(),
+                created_by: "test".into(),
+                ..Default::default()
+            },
+            assignments,
+            geometry: None,
+        };
+        let csv_str = export_tracts_csv(&plan).unwrap();
+        let mut reader = csv::Reader::from_reader(csv_str.as_bytes());
+        let records: Vec<_> = reader.records().collect();
+        assert_eq!(records.len(), 1);
+        let record = records[0].as_ref().unwrap();
+        assert_eq!(&record[0], "50000000001");
+        assert_eq!(&record[1], "1");
+    }
+
+    #[test]
+    fn test_geojson_with_geometry_uses_provided_coordinates() {
+        let plan = fixture_wa_congressional_plan_with_geometry();
+        let geojson_str = export_geojson(&plan).unwrap();
+        let v: Value = serde_json::from_str(&geojson_str).unwrap();
+        let features = v["features"].as_array().unwrap();
+        assert_eq!(features.len(), 10, "geometry FeatureCollection must have 10 features");
+        // All features must have geometry (not null) since we provided it
+        for f in features {
+            assert!(!f["geometry"].is_null(), "features from provided geometry must have geometry");
+        }
+    }
 }
