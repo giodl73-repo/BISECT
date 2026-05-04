@@ -80,6 +80,18 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool 
 
         let from_part = state.assignment[v] as usize;
 
+        // Contiguity check: skip if removing v from from_part would disconnect it.
+        // Fast path: ≤1 from_part neighbour → cannot be a cut vertex.
+        if contig_fm {
+            let g = state.graph;
+            let from_nbr_count = (g.xadj[v] as usize..g.xadj[v + 1] as usize)
+                .filter(|&j| state.assignment[g.adjncy[j] as usize] as usize == from_part)
+                .count();
+            if from_nbr_count >= 2 && would_disconnect(g, &state.assignment, v, from_part) {
+                continue;
+            }
+        }
+
         // Find best destination part
         let to_part = if state.k == 2 {
             1 - from_part as u32
@@ -156,6 +168,66 @@ fn fm_pass(state: &mut FmState, best: &mut Checkpoint, contig_fm: bool) -> bool 
     }
 
     best.cut < start_cut
+}
+
+/// Returns true if removing vertex `v` from `from_part` would disconnect that part.
+/// Uses BFS from an arbitrary from_part neighbour of v; if not all from_part vertices
+/// (excluding v) are reachable, the part would become disconnected.
+fn would_disconnect(g: &CsrGraph, assignment: &[u32], v: usize, from_part: usize) -> bool {
+    let start = (g.xadj[v] as usize..g.xadj[v + 1] as usize)
+        .find(|&j| assignment[g.adjncy[j] as usize] as usize == from_part)
+        .map(|j| g.adjncy[j] as usize);
+    let start = match start { Some(s) => s, None => return false };
+    let part_size: usize = assignment.iter().enumerate()
+        .filter(|&(u, &p)| u != v && p as usize == from_part).count();
+    if part_size == 0 { return false; }
+    let n = g.n();
+    let mut visited = vec![false; n];
+    let mut queue = std::collections::VecDeque::new();
+    visited[start] = true; queue.push_back(start);
+    let mut reached = 1usize;
+    while let Some(u) = queue.pop_front() {
+        for j in g.xadj[u] as usize..g.xadj[u + 1] as usize {
+            let w = g.adjncy[j] as usize;
+            if !visited[w] && w != v && assignment[w] as usize == from_part {
+                visited[w] = true; queue.push_back(w); reached += 1;
+            }
+        }
+    }
+    reached < part_size
+}
+
+/// Gain of moving vertex `v` from `from_part` to `to_part` under the volume objective.
+pub fn compute_volume_gain(
+    g: &CsrGraph, assignment: &[u32], v: usize, from_part: u32, to_part: u32,
+) -> i32 {
+    let mut gain = 0i32;
+    for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+        let u = g.adjncy[j] as usize;
+        let u_part = assignment[u];
+        if u_part == from_part {
+            let u_already_has_to = (g.xadj[u] as usize..g.xadj[u + 1] as usize)
+                .any(|jj| assignment[g.adjncy[jj] as usize] == to_part);
+            if !u_already_has_to { gain -= 1; }
+        } else if u_part == to_part {
+            let u_has_other_from = (g.xadj[u] as usize..g.xadj[u + 1] as usize)
+                .filter(|&jj| g.adjncy[jj] as usize != v)
+                .any(|jj| assignment[g.adjncy[jj] as usize] == from_part);
+            if !u_has_other_from { gain += 1; }
+        }
+    }
+    let mut other_parts = std::collections::BTreeSet::new();
+    let mut v_has_from = false; let mut v_has_to = false;
+    for j in g.xadj[v] as usize..g.xadj[v + 1] as usize {
+        let up = assignment[g.adjncy[j] as usize];
+        if up == from_part { v_has_from = true; }
+        else if up == to_part { v_has_to = true; }
+        else { other_parts.insert(up); }
+    }
+    let s_before = other_parts.len() as i32 + if v_has_to  { 1 } else { 0 };
+    let s_after  = other_parts.len() as i32 + if v_has_from { 1 } else { 0 };
+    gain += s_before - s_after;
+    gain
 }
 
 fn best_destination(state: &FmState, v: usize, from: u32) -> u32 {
