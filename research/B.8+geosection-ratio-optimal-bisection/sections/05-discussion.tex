@@ -1,0 +1,191 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Legal Theory: Why Isoperimetric Naturalness Matters}
+
+GeoSection's central legal claim is that the natural ratio is determined by
+geography, not by partisan composition.
+The isoperimetric normalisation makes this claim auditable: any party can
+independently compute the normalised edge-cut for every feasible ratio using
+only TIGER boundary data and census populations.
+If the algorithm selects $6:8$ for North Carolina, the justification is
+publicly reproducible: $\mathrm{EC}(1:13)/\sqrt{1} = 98$\,km $>$ $\mathrm{EC}(6:8)/\sqrt{6} = 92.6$\,km.
+
+This is a procedural rather than a partisan claim, which is important for
+state-court review after \emph{Rucho v.\ Common Cause} (2019).
+State courts applying their own anti-gerrymandering provisions have shown
+receptiveness to procedural arguments: \emph{League of Women Voters v.\
+Pennsylvania} (2018) and \emph{Harper v.\ Hall} (2022) both emphasised
+the procedural neutrality of the algorithm used to construct the challenged
+maps \citep{lwv2018pa,harper2022nc}.
+
+\paragraph{Why the caterpillar is problematic.}
+The caterpillar pathology is legally vulnerable for two reasons.
+
+First, it systematically concentrates Democratic voters into a small number
+of highly efficient districts while spreading Republicans across many
+competitive ones.
+This produces a proportionality gap mechanically, without any partisan input.
+A court observer who does not understand the algorithm would see the same
+pattern as in a deliberate partisan gerrymander: safe Democratic urban seats
+ringing a sea of Republican-leaning suburban and rural districts.
+
+Second, the caterpillar cannot be justified on geographic grounds.
+If asked ``why did you split North Carolina $1:13$ instead of $6:8$?'',
+the answer under standard bisection is simply ``because $1:13$ has a smaller
+edge-cut.''
+Under GeoSection, the answer is ``because the $6:8$ east/west split has a
+smaller \emph{isoperimetrically normalised} edge-cut, confirming that it is
+the natural geographic division.''
+The second answer is far more defensible: it articulates a principled
+geometric criterion that is neutral with respect to partisanship.
+
+\paragraph{States where the peel is confirmed genuine.}
+GeoSection does not eliminate all asymmetric splits.
+For states where the urban core is genuinely geographically isolated, the
+normalisation \emph{confirms} the peel rather than overriding it.
+Philadelphia ($k=17$, PA): $\mathrm{EC}(1:16)/\sqrt{1} = 39$\,km $<$ any
+normalised equal-split comparison.
+The algorithm's selection of $1:16$ carries a stronger legal argument:
+``we tried the equal split and it costs more per unit of geographic territory;
+Philadelphia is genuinely compact and geographically isolated.''
+
+This self-certifying property is important: GeoSection's answer is not ``we
+imposed equal splits on principle'' but ``geography chose the ratio.''
+For states where geography genuinely warrants a peel, the peel is confirmed.
+For states where it does not (NC), a genuine bisection is selected.
+
+\subsection{Relationship to AreaSection (B.9)}
+
+GeoSection and AreaSection (B.9) address the same caterpillar pathology but
+through different mechanisms.
+
+GeoSection says: ``among all feasible ratios, select the one whose boundary
+is most compact per unit of geographic coverage.''
+The constraint is on the \emph{selection criterion}: normalised edge-cut.
+
+AreaSection says: ``require each bisection half to contain approximately
+50\,\% of the state's land area.''
+The constraint is on the \emph{partition itself}: dual population+area balance.
+
+Both algorithms prevent the caterpillar pathology; they differ in how far
+they go.
+For North Carolina, both algorithms select $6:8$ as the natural ratio
+(AreaSection via area constraint, GeoSection via normalised edge-cut).
+For Illinois, GeoSection still selects $1:16$ (Chicago's compact boundary
+wins the isoperimetric comparison), while AreaSection selects $8:9$
+(Chicago occupies $<5$\,\% of Illinois's land, making area balance infeasible
+at $1:16$).
+
+Table~\ref{tab:geosection-vs-areasection} summarises the key differences.
+
+\begin{table}[h]
+\centering
+\caption{GeoSection (B.8) vs.\ AreaSection (B.9) comparison.}
+\label{tab:geosection-vs-areasection}
+\begin{tabular}{lll}
+\toprule
+& GeoSection & AreaSection \\
+\midrule
+METIS mode & ncon=1 (population only) & ncon=2 (pop + area) \\
+Constraint & Normalised edge-cut & Area balance ($\pm 10$\,\%) \\
+IL first-level ratio & 1:16 & 8:9 \\
+NC first-level ratio & 6:8 & 6:8 \\
+WI first-level ratio & 1:7 & 3:5 (area forces higher) \\
+Caterpillar prevention & Partial (density-dependent) & Stronger \\
+Legal rationale & ``Compact per unit area'' & ``Geographic balance'' \\
+Implementation & Simpler (ncon=1) & More complex (ncon=2) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two algorithms are complementary: GeoSection is simpler and faster;
+AreaSection provides a stronger anti-caterpillar guarantee for the largest
+states.
+An analyst could reasonably choose GeoSection for states where the caterpillar
+is not the primary concern, and AreaSection for states where area balance
+is independently desirable (large, geographically diverse states).
+
+\subsection{Why Partisan Outcomes Are Stable}
+\label{sec:stability}
+
+The head-to-head comparison in Section~\ref{sec:comparison} shows that
+38 of 44 states produce identical seat counts under GeoSection and the
+MEC baseline.
+This stability is not a coincidence.
+
+In states with strong geographic partisan sorting (urban Democrats, rural
+Republicans), the \emph{number} of Democratic congressional seats is
+determined by how many contiguous geographic regions are sufficiently
+Democratic to elect a Democrat.
+GeoSection changes the structure of the bisection tree --- which tracts
+are in the same district --- but not which geographic regions are
+sufficiently Democratic.
+
+The B.7 seed-sweep convergence result establishes this rigorously for
+the MEC case: for states where the MEC is unique, the partisan outcome
+is determined by the graph topology.
+GeoSection provides corroborating evidence: even when the bisection ratio
+changes ($1:13$ to $6:8$ for NC), the partisan outcome does not change.
+The five North Carolina districts with Democratic majorities are determined
+by the locations of Charlotte, Raleigh, and the Research Triangle ---
+not by whether they are all in the same bisection half.
+
+The six states where GeoSection and MEC differ (CO, IL, MN, OK, WA, WI)
+are cases where the specific placement of suburban ring tracts depends
+sensitively on which bisection tree structure is used.
+In Wisconsin, the MEC standard bisection places two suburban Milwaukee
+tracts in the same district as Milwaukee's urban core, creating a 2\,D
+outcome; GeoSection's $1:7$ split keeps Milwaukee as a compact single
+district and distributes the suburban ring tracts differently, creating
+one additional Democratic district in the Madison area.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\paragraph{Approximation of the natural ratio.}
+The ratio scan approximates the true minimum edge-cut at each ratio using
+$N=50$ seeds.
+The natural ratio selected is the ratio with the minimum normalised edge-cut
+\emph{among observed seeds}, which may differ from the true minimum.
+For the seed-sweep states identified in B.7, 50 seeds is sufficient for
+convergence; for large states (CA, TX, FL) with complex geography, higher
+seed counts may be needed.
+We mark these states as having uncertain natural ratios in Table~\ref{tab:natural-ratios}.
+
+\paragraph{Isoperimetric approximation.}
+Lemma~\ref{lem:isoperimetric} assumes approximately uniform density within
+the state.
+For states with extreme density concentration (Manhattan vs.\ upstate New York),
+the approximation may not hold: the true isoperimetric cost of separating
+Manhattan from the rest of New York depends on Manhattan's specific geographic
+shape, not just the fraction of population it contains.
+In practice, the normalisation works well because METIS reports the actual
+edge-cut (not the approximated minimum), so the normalised comparison is
+comparing real boundary lengths.
+
+\paragraph{Phase 2 not evaluated.}
+The directional penalty ($\lambda > 0$) is implemented but not included in
+the 50-state sweep.
+Its effect on boundary straightness and partisan outcomes remains to be
+characterised.
+Preliminary single-state tests suggest $\lambda = 0.1$--$0.3$ produces
+noticeably straighter boundaries without changing seat counts.
+
+\paragraph{Population balance in deep recursive levels.}
+The per-node ufactor formula ($1 + \delta/k$) sets very tight tolerances
+at the root level ($k=17$ for Illinois: $1.000294$) and relaxed tolerances
+at leaf nodes ($k=2$: $1.0025$).
+For the largest states (CA: $k=52$, TX: $k=38$), root-level ufactor is
+extremely tight ($\sim 0.0001$\,\% tolerance).
+METIS occasionally fails to meet this constraint, requiring the post-hoc
+boundary-swap rebalancing.
+In the 50-state sweep, all states pass the 0.5\,\% balance check at the
+level used for the natural ratio; deeper recursive levels use relaxed
+tolerances.
+
+\paragraph{Single census year.}
+All results use 2020 Census data.
+The natural ratio structure may differ for 2000 and 2010 Census data
+due to population shifts (urban growth, suburban expansion).
+Cross-census stability of the natural ratio is deferred to future work.

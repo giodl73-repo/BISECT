@@ -1,0 +1,222 @@
+\section{The Spine* Algorithm}
+\label{sec:algorithm}
+
+\subsection{Preliminaries}
+
+Let $G = (V, E, w)$ be a planar graph representing the census units (tracts
+or blocks) of a state, with vertex weights $w_v$ equal to the 2020 census
+population of unit $v$.  Let $C$, $S$, and $H$ be the state's congressional,
+senate, and house seat counts under the 2020 apportionment.
+
+A \emph{bisection spine} for a chamber with $k$ seats is a sequence of
+positive integers $[s_1, s_2, \ldots, s_\ell]$ with $\prod_i s_i = k$,
+interpreted as a recursion schedule: first split $G$ into $s_1$ sub-graphs,
+then each sub-graph into $s_2$ sub-sub-graphs, and so on.  The canonical
+choice is the prime factorization of $k$ in non-decreasing order.
+
+\begin{definition}[Compatible Spines]
+\label{def:compatible}
+A \emph{compatible triple of spines} for $(C, S, H)$ is a triple
+$(P_C, P_S, P_H)$ of bisection spines such that $P_C$, $P_S$, and $P_H$
+share a common prefix $\tau$, called the \emph{trunk}.  The trunk product
+$\prod \tau$ equals $g = \gcd(C, S, H)$.
+\end{definition}
+
+The trunk $\tau$ is the prime factorization of $g$ in non-decreasing order.
+The chamber-specific tails are the prime factorizations of $C/g$, $S/g$,
+and $H/g$ respectively.  A tail of length zero (quotient $= 1$) means the
+chamber ends exactly at the trunk level.
+
+\subsection{Algorithm: \textsc{CompatibleSpines}}
+
+\begin{algorithm}
+\caption{\textsc{CompatibleSpines}$(C, S, H)$}
+\label{alg:compatible_spines}
+\begin{algorithmic}[1]
+\Require $C, S, H \geq 1$
+\Ensure $(P_C, P_S, P_H)$ --- compatible triple of bisection spines
+\State $g \leftarrow \gcd(C, S, H)$
+\State $\tau \leftarrow \textsc{PrimeFactors}(g)$ \Comment{sorted non-decreasing}
+\State $\text{tail}_C \leftarrow \textsc{PrimeFactors}(C / g)$
+\State $\text{tail}_S \leftarrow \textsc{PrimeFactors}(S / g)$
+\State $\text{tail}_H \leftarrow \textsc{PrimeFactors}(H / g)$
+\State $P_C \leftarrow \tau \Vert \text{tail}_C$
+\State $P_S \leftarrow \tau \Vert \text{tail}_S$
+\State $P_H \leftarrow \tau \Vert \text{tail}_H$
+\State \Return $(P_C, P_S, P_H)$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{proposition}[Correctness]
+\label{prop:correct}
+For any $C, S, H \geq 1$, $\textsc{CompatibleSpines}(C, S, H)$ returns
+a triple $(P_C, P_S, P_H)$ satisfying:
+\begin{enumerate}
+  \item $\prod P_C = C$, $\prod P_S = S$, $\prod P_H = H$.
+  \item $P_C$, $P_S$, $P_H$ all begin with $\tau = \textsc{PrimeFactors}(\gcd(C,S,H))$.
+  \item The trunk $\tau$ is the \emph{longest} common prefix that can be
+        guaranteed for any $(C, S, H)$ with the given GCD.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+(1) The product of a spine equals the product of its trunk and tail.
+$\prod \tau = g$ and $\prod \text{tail}_C = C/g$, so $\prod P_C = g \cdot (C/g) = C$.
+Analogously for $S$ and $H$.
+
+(2) By construction, all three spines begin with $\tau$.
+
+(3) Suppose a longer common prefix $\tau'$ with $\prod \tau' = g' > g$ existed.
+Then $g'$ would divide all of $C$, $S$, $H$, contradicting $g = \gcd(C,S,H)$.
+\end{proof}
+
+\subsection{Compatibility Score}
+
+\begin{definition}[Spine Compatibility Score]
+\label{def:score}
+The \emph{spine compatibility score} of $(C, S, H)$ is:
+\begin{equation}
+  \sigma(C, S, H) \;=\; \left(1 - \frac{\gcd(C,S,H)}{\min(C,S,H)}\right) \times 100.
+\end{equation}
+\end{definition}
+
+\begin{lemma}[Score Properties]
+\label{lem:score}
+\begin{enumerate}
+  \item $\sigma(C, S, H) \in [0, 100]$.
+  \item $\sigma(C, S, H) = 0$ if and only if $\gcd(C,S,H) = \min(C,S,H)$, i.e.,
+        the smallest chamber's count divides both larger counts.
+  \item $\sigma(C, S, H) = 100$ only in the degenerate limit; the maximum
+        attained score for any US state is $\approx 96.8$ (Texas: $g=1$,
+        $\min = 31$).
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(1) Since $\gcd(C,S,H) \leq \min(C,S,H)$, the fraction is in $[0,1]$.
+(2) Immediate from the definition.
+(3) The score equals $100(1 - 1/m)$ when $g=1$.  For any US state,
+$\min(C,S,H) \leq C \leq 52$, so the score is at most $100(1 - 1/52) \approx 98.1$,
+but no state achieves this because $C=52$ (California) has $g=4 > 1$.
+\end{proof}
+
+\begin{theorem}[Bimodality Gap]
+\label{thm:bimodal}
+For positive integers $C$, $S$, $H$ with $g = \gcd(C,S,H)$ and
+$m = \min(C,S,H)$, the compatibility score $\sigma = (1 - g/m)\times 100$
+satisfies
+\[
+  \sigma \;\in\; \{0\} \;\cup\; [50, 100).
+\]
+There are no states with $0 < \sigma < 50$.
+\end{theorem}
+
+\begin{proof}
+Suppose for contradiction that $0 < \sigma < 50$.  Then
+\[
+  0 \;<\; 1 - \frac{g}{m} \;<\; \frac{1}{2},
+  \quad\text{i.e.,}\quad
+  \frac{m}{2} \;<\; g \;<\; m.
+\]
+Since $g = \gcd(C,S,H)$ divides every element, in particular $g \mid m$.
+We therefore need a divisor of $m$ that lies strictly between $m/2$ and $m$.
+Such a divisor would be $m/p$ for some integer $p$ with $1 < p < 2$ ---
+but no such integer exists, since no prime is less than~$2$.
+
+More precisely: if $g \mid m$ and $g > m/2$, then $m/g < 2$, so $m/g = 1$
+(it must be a positive integer), which gives $g = m$ and $\sigma = 0$ ---
+a contradiction with $\sigma > 0$.
+
+\medskip
+\noindent\textit{Boundary cases.}
+\begin{itemize}
+  \item If $m = 1$, then $g = \gcd(C,S,H) = 1$ (the only positive divisor of
+        $1$ is $1$ itself), so $\sigma = (1 - 1/1)\times 100 = 0$.  Consistent.
+  \item The infimum of the non-zero range is achieved when $g = 1$ and $m = 2$:
+        $\sigma = (1 - 1/2)\times 100 = 50$.  Hence the non-zero values begin
+        at exactly~$50$, confirming $\sigma \in \{0\} \cup [50, 100)$.
+\end{itemize}
+\end{proof}
+
+\begin{remark}
+The Bimodality Gap theorem is a pure number-theoretic fact: it holds for any
+positive integers $(C, S, H)$, not merely for current US apportionments.
+The empirical observation that no US state falls in the range $0 < \sigma < 50$
+is therefore not an accident of the current apportionment cycle but a structural
+invariant of the GCD-based score.
+\end{remark}
+
+\subsection{Nesting Modes}
+
+The compatibility score determines which nesting mode is achievable.
+
+\paragraph{Mode 1 --- Strict nesting ($\sigma = 0$).}
+When $\gcd(C,S,H) = \min(C,S,H)$, the smallest chamber is exactly the trunk.
+Its districts are the trunk regions.  The larger chambers are refinements of
+the trunk.  No boundary violations occur.
+
+\paragraph{Mode 2 --- Partial nesting ($0 < \sigma < 50$).}
+The trunk covers more than half the structural degrees of freedom of the
+smallest chamber.  The spine provides a strong geographic anchor, but the
+tail splits produce boundary zones where chambers partially overlap.
+
+\paragraph{Mode 3 --- Best-effort nesting ($\sigma \geq 50$).}
+The trunk is a small fraction of the smallest chamber.  The chambers can
+share only a coarse geographic skeleton.  A mismatch tolerance $\tau_\text{pop}$
+(population fraction allowed in boundary zones) is required.
+
+\subsection{The Full NestSection Algorithm}
+
+\begin{algorithm}
+\caption{\textsc{NestSection}$(G, C, S, H, \tau_\text{pop})$}
+\label{alg:nestsection}
+\begin{algorithmic}[1]
+\Require Graph $G$, seat counts $C, S, H$, tolerance $\tau_\text{pop} \geq 0$
+\Ensure Tri-chamber district plan $(D_C, D_S, D_H)$
+\State $(P_C, P_S, P_H) \leftarrow \textsc{CompatibleSpines}(C, S, H)$
+\State $g \leftarrow \gcd(C, S, H)$
+\State $\mathcal{R} \leftarrow \textsc{GeoSection}(G, g)$
+  \Comment{$g$ trunk regions via GeoSection~\citep{B8}}
+\ForAll{trunk region $R_i \in \mathcal{R}$, $i = 1, \ldots, g$}
+  \State $c_i \leftarrow \textsc{ApportionRegions}(\{w(R_j)\}_j, C)[i]$
+    \Comment{Integer seats per trunk~\citep{B11}}
+  \State $s_i \leftarrow S / g$
+  \State $h_i \leftarrow H / g$
+  \State $D_C[i] \leftarrow \textsc{GeoSection}(R_i, c_i)$
+  \State $D_S[i] \leftarrow \textsc{GeoSection}(R_i, s_i)$
+  \State $D_H[i] \leftarrow \textsc{NestRefine}(D_S[i], h_i / s_i, \tau_\text{pop})$
+\EndFor
+\State \Return $(\bigcup_i D_C[i],\; \bigcup_i D_S[i],\; \bigcup_i D_H[i])$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{NestRefine.}  \textsc{NestRefine} splits each senate district into
+$h_i / s_i$ house sub-districts.  When $h_i / s_i$ is not an integer, it
+assigns floor or ceiling counts by population weight and marks boundary zones
+where a house district straddles a senate boundary.  The population fraction
+in boundary zones must not exceed $\tau_\text{pop}$.
+
+\subsection{Trunk Size and Geographic Scale}
+
+The trunk size $g$ determines the geographic scale of the shared structure.
+For Oregon ($g = 6$), the shared trunk has 6 regions averaging roughly 700,000
+residents each --- approximately the size of a single congressional district.
+For Alabama ($g = 7$), the trunk has 7 regions matching the 7 congressional
+districts exactly, and senate districts are unions of exactly 5 trunk regions
+each.
+
+For states with $g = 1$ (e.g., Texas with $C=38$, $S=31$, $H=150$), the
+``trunk'' is the entire state, and the three chambers share no sub-state
+geographic anchor beyond the state boundary.  In these cases NestSection
+reduces to three independent GeoSection calls with the shared property that
+they start from the same census graph $G$ --- a weak form of consistency.
+
+\subsection{Complexity}
+
+Algorithm~\ref{alg:compatible_spines} runs in $O(\log(\max(C,S,H)))$ time
+(GCD computation plus factorization).  The dominant cost of
+Algorithm~\ref{alg:nestsection} is the $g+3$ calls to \textsc{GeoSection},
+each of which runs in time proportional to graph-partitioning cost.  The
+total additional cost over three independent GeoSection runs is the $g$
+trunk-level calls, which is at most $\min(C,S,H)$ additional partitioning
+operations.

@@ -1,0 +1,279 @@
+\section{The Algorithm Toolbox: Three Axes}
+\label{sec:components}
+
+The B-series papers collectively define fifteen algorithm components, organised
+along three orthogonal axes.
+Each axis is a dial that can be set independently, and the legal requirements in
+Section~\ref{sec:legal-requirements} map cleanly to at most one dial per requirement.
+This orthogonality is the key property that makes the Callais disentanglement
+constraint satisfiable: the race dial (VRASection) and the partisan dial
+(ProportionalSection) are on different axes and can never be set simultaneously
+without triggering the \texttt{callais\_preflight} gate.
+
+Figure~\ref{fig:three-axes} provides a visual overview of the three axes and
+their components.
+
+\begin{figure}[h]
+\centering
+\fbox{%
+\begin{minipage}{0.9\textwidth}
+\centering
+\textbf{Three-Axis Algorithm Taxonomy}\\[1em]
+\begin{tabular}{p{3.5cm}|p{3.5cm}|p{4.5cm}}
+\textbf{Axis A: Vertex weights} & \textbf{Axis B: Edge weights} & \textbf{Axis C: Division strategy} \\[0.5em]
+What METIS balances & Boundary cost function & How the bisection tree is structured \\
+\hline
+\textit{ncon=1, pop only} & \textit{Unweighted} & \textit{Balanced bisection} \\
+Standard (B.1, B.7, B.8) & Minimal intervention & Standard $k/2:k/2$ \\[0.5em]
+\textit{ncon=2, pop+area} & \textit{Geographic (TIGER)} & \textit{GeoSection (B.8)} \\
+AreaSection (B.9) & Compactness & Isoperimetric ratio scan \\[0.5em]
+\textit{ncon=1+alignment} & \textit{County-sticky ($\alpha$)} & \textit{AreaSection (B.9)} \\
+VRASection (B.14) & Subdivision preservation & Dual-constraint ratio scan \\[0.5em]
+\textit{ncon=2, pop+D\_votes} & & \textit{ApportionRegions (B.11)} \\
+ProportionalSection (B.12) & & Prime factorisation tree \\[0.5em]
+ & & \textit{NestSection (B.13)} \\
+ & & Compatible spine \\[0.5em]
+ & & \textit{StabilitySection (B.15)} \\
+ & & Cross-census CSS filter \\
+\end{tabular}
+\end{minipage}%
+}
+\caption{Three-axis taxonomy of the algorithmic redistricting toolbox.
+  Axis A controls what METIS optimises (population fractions to balance).
+  Axis B controls how edges are weighted (which boundaries are expensive to cut).
+  Axis C controls how the bisection tree is structured.
+  Each legal requirement maps to at most one component on one axis.}
+\label{fig:three-axes}
+\end{figure}
+
+\subsection{Axis A: Vertex Weights (What METIS Balances)}
+
+METIS's graph bisection algorithm balances one or two ``constraints'' per vertex,
+specified as integer weight vectors.
+The choice of what to balance is the first algorithmic design decision.
+
+\subsubsection*{A1: Population Only (\textit{ncon=1})}
+
+The baseline choice: each vertex carries one weight (population from the census),
+and METIS balances population fractions.
+This is the standard used in B.1 (recursive bisection) and B.7 (solution space
+certification).
+It satisfies R1 (population equality) and is neutral with respect to all other
+requirements.
+
+\textbf{METIS configuration}: $\mathtt{ncon}=1$, $\mathtt{ubvec}[0]=1.001$.
+
+\subsubsection*{A2: Population + Land Area (\textit{ncon=2}) --- AreaSection}
+
+AreaSection (B.9) adds a second METIS constraint: land area.
+Each vertex carries two weights (population, area in hectares).
+METIS simultaneously targets 50\,\% population balance and 50\,\% area balance
+at the first bisection level, with the population constraint taking priority
+when the two conflict.
+
+The area constraint eliminates \emph{urban peeling}---the systematic first-level
+separation of compact metropolitan cores from the rural remainder.
+Urban peeling is not a constitutional violation but creates implicitly packed
+maps even with zero partisan input: every recursion level concentrates Democratic
+voters into one compact district.
+Area balance prevents this by requiring that both halves of the state contain
+approximately equal land areas, forcing the algorithm to cross urban-rural
+geographic boundaries.
+
+\textbf{METIS configuration}: $\mathtt{ncon}=2$,
+$\mathtt{ubvec}=[1.001, 1.10]$,
+$\mathtt{tpwgts}=[p_L, 0.5, 1-p_L, 0.5]$ for population fraction $p_L$ at ratio $p_L:1-p_L$.
+
+\textbf{Rodden-null result (B.9)}: AreaSection produces identical seat counts to
+GeoSection in 76\,\% of states (25/34 with complete data); the 9 divergent states
+differ by exactly 1 seat, with no systematic partisan direction.
+The mean proportionality gap in competitive states is $-6.2$\,pp under both
+algorithms, confirming geographic voter sorting as the dominant effect.
+
+\subsubsection*{A3: Population + Alignment Signal --- VRASection}
+
+VRASection (B.14) does not add a second METIS constraint.
+Instead, it modifies the \emph{ratio selection objective} at each bisection level
+by adding a geographic alignment score:
+\[
+  \text{score}(\text{ratio}) = \mathrm{EC}_\text{norm} - w_\text{vra}
+  \cdot A \cdot \max(\mathrm{EC}_\text{norm},\, 1)
+\]
+where $A = |\text{MVAP}_\text{frac}(L) - \text{MVAP}_\text{frac}(R)|$
+is the alignment score (how much minority population is concentrated on one side).
+
+This design explicitly avoids the MetisVra failure mode \citep{b3paper}:
+minority VAP fractions (0.0--1.0) and census population counts (10,000--200,000)
+differ by $60$--$800\times$, causing numerical degeneration in any METIS
+multi-constraint formulation that combines them.
+VRASection bypasses this by using $A$ only as a \emph{ratio selector}, not as
+a METIS constraint.
+
+\textbf{Key property (Callais compliance)}: The alignment score $A$ uses only
+the spatial distribution of minority VAP, not a racial target.
+At $w_\text{vra} = 0.40$, compactness is weighted 50\,\% more heavily than
+alignment.
+The algorithm cannot see how many people of any race are in any district;
+it sees only whether one side of a proposed bisection has more minority VAP
+\emph{concentration} than the other.
+
+\subsubsection*{A4: Population + Partisan Votes (\textit{ncon=2}) --- ProportionalSection}
+
+ProportionalSection (B.12, planned) is the \emph{Callais-mutex partner} of
+VRASection.
+It adds partisan vote share (D-vote fraction per tract) as a second METIS balance
+constraint, targeting proportional representation.
+
+\textbf{Callais constraint}: ProportionalSection is mutually exclusive with
+VRASection.
+The \texttt{callais\_preflight} gate in the \texttt{redist} CLI enforces
+this mutex: any attempt to run both signals simultaneously is rejected with
+an explicit \texttt{[BOUNDARY]} error citing \callais{} p.~36.
+
+\subsection{Axis B: Edge Management}
+
+METIS minimises the total cost of cut edges.
+Edge weights determine which boundaries are expensive to cut, thereby shaping
+the resulting district geometry.
+
+\subsubsection*{B1: Unweighted Edges}
+
+All edges have weight 1 (or boundary length in metres from TIGER, but not
+amplified).
+This is the baseline of Paper B.1.
+METIS minimises the number of cut adjacency relationships, producing districts
+that respect geographic adjacency but do not specifically favour compact shapes.
+
+\subsubsection*{B2: Geographic Edge Weights (TIGER Boundary Lengths)}
+
+Paper B.2 (edge-weighted bisection) demonstrated that weighting edges by their
+TIGER boundary length produces a 56\,\% improvement in mean Polsby-Popper
+compactness over unweighted bisection.
+The mechanism is direct: long borders (between adjacent tracts with extensive
+shared boundary) are expensive to cut, so METIS prefers to keep them intact.
+Districts therefore tend to follow natural geographic contours (rivers,
+ridgelines, coastlines) rather than cutting across them.
+
+\textbf{Compactness result (B.2)}: Mean Polsby-Popper improves from PP~$=0.25$
+(unweighted) to PP~$=0.39$ at standard geographic weighting, exceeding the
+mean Polsby-Popper of 2020 enacted congressional maps (PP~$=0.32$).
+
+\subsubsection*{B3: County-Sticky Weights --- SubdivisionBisect}
+
+Paper B.10 introduces the governmental stickiness weight:
+\[
+  w'(u,v) = w_\text{geo}(u,v) \times (1 + \alpha_\text{county} \cdot \mathbf{1}[\text{county}(u) = \text{county}(v)])
+\]
+Pairs of tracts sharing the same county FIPS code are harder to separate by
+a factor of $(1 + \alpha_\text{county})$.
+As $\alpha_\text{county}$ increases, county splits are reduced, approached
+only when population-equality arithmetic forces them.
+The formula generalises to municipality, township, and precinct levels via
+$\alpha_\text{mcd}$, $\alpha_\text{place}$, $\alpha_\text{vtd}$.
+
+\textbf{Legal hook}: ``Preserving political subdivisions'' is an explicit
+statutory criterion in most state redistricting codes.
+B.10 provides the first formal algorithmic operationalisation of this criterion
+as a tunable parameter.
+
+\subsection{Axis C: Division Strategy}
+
+The division strategy determines how the recursive bisection tree is structured:
+what split ratios are tried, how ratios are selected, and how the tree is
+linked to other legal constraints.
+
+\subsubsection*{C1: Balanced Bisection (Standard)}
+
+The standard approach: always split at $\lfloor k/2 \rfloor : \lceil k/2 \rceil$.
+This is the baseline of B.1 (recursive bisection) and B.7 (solution space).
+It produces a perfectly balanced binary tree, which is computationally efficient
+and well-studied.
+Its weakness is the caterpillar pathology: in states with compact urban cores,
+the balanced split at each level \emph{still} costs less than any alternative
+because the urban boundary is shorter than any geographic bisection of the full
+state---even after the 1:(k-1) ratio has already been excluded from consideration.
+
+\subsubsection*{C2: GeoSection --- Isoperimetric Ratio Scan}
+
+GeoSection (B.8) scans all feasible split ratios $1:(k-1)$ through
+$\lfloor k/2 \rfloor:\lceil k/2 \rceil$ and selects the ratio minimising
+$\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i, k-i)}$.
+
+The $\sqrt{\min(i,k-i)}$ denominator is the isoperimetric correction: for a
+convex region enclosing population fraction $i/k$, the minimum boundary length
+scales as $\sqrt{\min(i,k-i)/k}$.
+This makes all ratios compete on equal footing: the $1:(k-1)$ ratio must win
+the isoperimetric competition against the balanced split, not merely be shorter
+in absolute terms.
+
+\textbf{Key finding (B.8)}: GeoSection selects the balanced split (or near-equal
+split within 20\,\%) for 12 of 44 multi-district states.
+For 32 states, it selects asymmetric ratios---but only where the urban core
+passes the isoperimetric test.
+North Carolina ($k=14$) is the most important case: without normalisation, the
+Charlotte/Raleigh peel ($1:13$) wins; with normalisation, the east/west
+bisection ($6:8$) wins, reflecting the Piedmont corridor's actual geographic
+structure.
+
+\subsubsection*{C3: AreaSection --- Dual-Constraint Ratio Scan}
+
+AreaSection (B.9) combines the GeoSection ratio scan with the dual-constraint
+vertex weights of A2.
+The Lorenz-curve pre-filter eliminates ratios where simultaneous population-and-area
+balance is geometrically infeasible before running any METIS calls.
+
+\textbf{Key finding (B.9)}: AreaSection shifts the natural ratio from asymmetric
+to near-equal in many densely urban states: Illinois moves from 1:17 to 8:9,
+New York from 1:16 to 13:13, Florida from 1:27 to 14:14.
+States with genuinely concentrated populations (Georgia 3:11, Massachusetts 2:7)
+retain asymmetric splits because the area constraint cannot be satisfied at
+more balanced ratios.
+
+\subsubsection*{C4: ApportionRegions --- Prime Factorisation Tree}
+
+ApportionRegions (B.11, planned) derives the bisection tree structure from the
+prime factorisation of $k$, linking it to the Huntington-Hill apportionment
+sequence.
+For $k = 8 = 2^3$, the tree is a perfect three-level binary tree.
+For $k = 14 = 2 \times 7$, the first split is $7:7$, then each half splits
+recursively using the factorisation of 7 (prime, so near-equal splits all the
+way).
+
+\textbf{Auditability property}: The bisection tree is entirely determined by
+$k$, the seed count, and the state's tract adjacency graph.
+There are no ``hidden'' parameters.
+The plan manifest need only record $k$ and the seed; the full tree follows
+deterministically from the published algorithm.
+
+\subsubsection*{C5: NestSection --- Compatible Factorisation Spine}
+
+NestSection (B.13) extends ApportionRegions to multi-chamber consistency.
+Given congressional ($C$), senate ($S$), and house ($H$) seat counts,
+NestSection computes $g = \gcd(C, S, H)$ and derives a \emph{compatible
+factorisation spine} that all three chambers share.
+
+\textbf{Anti-gerrymandering property (B.13)}: A shared geographic hierarchy
+is an anti-gerrymandering mechanism by construction.
+A partisan actor who locks in a congressional spine cannot draw senate boundaries
+that contradict it, because the senate tree is geometrically derived from the
+same trunk sequence.
+Eleven states achieve score~0 (exact nesting): Oregon, Alabama, Montana, Wyoming,
+and others where $g = \min(C, S, H)$.
+
+\subsubsection*{C6: StabilitySection --- Cross-Census CSS Filter}
+
+StabilitySection (B.15) is not a division strategy per se, but a post-hoc
+filter that evaluates whether the GeoSection natural ratio is stable across
+census years.
+The Census Stability Score (CSS) is computed as a weighted combination of
+seat stability, ratio stability, and proportionality-gap similarity.
+
+\textbf{Key finding (B.15)}: 67\,\% of comparable states are stable at
+$\Delta f \leq 0.05$ across the 2000--2010 census decade.
+Iowa is the canonical unstable state: its GeoSection natural ratio shifted from
+$1:3$ (asymmetric Des Moines peel) in 2000 to $2:2$ (near-equal east/west split)
+in 2010, reflecting dramatic suburban population dispersal.
+States with fixed municipal boundaries (Milwaukee, Philadelphia, Chicago) are
+highly stable; states with rapidly expanding metro footprints (Phoenix, Las Vegas)
+are low-stability.
+\end{document}

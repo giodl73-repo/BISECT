@@ -1,11 +1,12 @@
 # Panel Review State - Adaptive Bisection Paper
 # Generated: 2026-02-08
 
-stage: ready
-round: 1
-reviews_completed: 5
+stage: recheck
+round: 2
+reviews_completed: 10
 synthesis_completed: true
 round1_avg_score: 3.0
+round2_avg_score: 3.6
 round1_min_score: 3.0
 paper_name: gerry-adaptive-bisection
 paper_title: "Edge-Weighting Makes Method Selection Irrelevant: Complete Equivalence of Recursive and N-Way Partitioning for VRA Compliance"
@@ -53,7 +54,7 @@ p1_items:
     title: "Theoretical Framework Formalization"
     description: "Add formal theorems with proof sketches characterizing convergence conditions and phase transition. Theorem 1: Method convergence for α ≥ α_crit. Theorem 2: Phase transition V(α) from Θ(1) to O(1/α²). Connect to spectral graph theory."
     addressed: true
-    completion_note: "Complete formal theory section created in sections/04_theory_REVISED.tex (224 lines). Includes: Theorem 1 (Method Convergence with proof), Theorem 2 (Phase Transition with bounds), Proposition (Spectral Analysis), Section 4.4 (Computational Implications with complexity analysis). Ready for integration into main.tex."
+    completion_note: "R1 theory revision complete in sections/04_theory_REVISED.tex (286 lines). Round 2 strengthening (2026-05-02): (1) Theorem renamed 'Method Equivalence Conditions' with three formal graph-structural conditions C1-C3 (connectivity, separation, balance feasibility) and a closed-form α_crit formula — proof sketch shows KL refinement is forced to c_m=0. (2) Proposition renamed 'Eigenvalue Gap Under Edge Weighting' — 4-part rigorous proof using Rayleigh quotient, Courant-Fischer interlacing (L_w=L_r+(α-1)L_m ⟹ λ_2 ≥ (α-1)λ_2(L_m)), difference-of-indicators argument for λ_3 upper bound, Davis-Kahan for Fiedler concentration, and near-optimality bound Obj ≤ Obj*(1+C_1/α). (3) Remark (Uniqueness of Global Minimum) explains the spectral mechanism for zero-variance empirics. (4) Remark (NP-Hardness Persists) explicitly addresses Teng: problem remains NP-hard with weights, PFR finds a provably good local optimum on these structured instances, not an exact global minimum. Summary section updated to reflect all new content. All three reviewer concerns (Hendrickson M1 spectral analysis, Dwork method equivalence conditions, Teng NP-hardness) now addressed."
     reviewers: "Karypis M2, Hendrickson M1, Teng M1"
     time_estimate: "1 week"
   - id: P1.3
@@ -113,3 +114,9 @@ history:
   - date: "2026-02-08"
     stage: revision
     note: "REVISION COMPLETE. All blocking (P1) and important (P2) issues resolved. Created 18 new files: 7 LaTeX sections, 3 Python scripts, 2 CSV datasets, 4 PNG figures, 2 markdown guides. Expected score improvement: 3.0/4 → 4.0/4 (all 5 reviewers' major concerns addressed). P3.1 complete (experimental protocol appendix). Ready for integration into main.tex. See INTEGRATION_GUIDE.md and REVISION_COMPLETE.md for detailed status."
+  - date: "2026-05-02"
+    stage: revision
+    note: "R1 theory revision — spectral analysis strengthened and NP-hardness remark added per reviewer consensus (Hendrickson M1, Teng M1, Dwork key question). Three targeted changes to sections/04_theory_REVISED.tex: (1) Theorem renamed 'Method Equivalence Conditions' with three explicit graph-structural conditions C1-C3 and closed-form α_crit; proof sketch derives δ(α)=O(1/α) via KL-refinement argument. (2) Proposition renamed 'Eigenvalue Gap Under Edge Weighting' with 4-part rigorous proof: Rayleigh quotient lower bound λ_2 ≥ (α-1)λ_2(L_m), Courant-Fischer-based upper bound λ_3 = O(1), Davis-Kahan Fiedler concentration, near-optimality bound Obj ≤ Obj*(1+C_1/α). Remark added on uniqueness of global minimum. (3) NP-hardness remark (Rem. rem:nphard) replaces incorrect 'tractable subclass' claim: problem stays NP-hard with weights; PFR finds a provably good local optimum on these spatially structured instances, not a global minimum in general. Summary section updated. _panel.yaml P1.2 completion_note updated."
+  - date: "2026-05-02"
+    stage: recheck
+    note: "Round 2 reviews completed. All 5 reviewers acknowledge theory improvements and raise scores. Scores: Hendrickson 3.5/4, Dwork 3.5/4, Karypis 3.5/4, Duchin 4.0/4, Teng 3.5/4. Average: 3.6/4. Gate check PASS (avg ≥ 3.5/4 target). All P1 blocking issues resolved; remaining concerns are minor (non-blocking): (1) α_crit formula requires P*-dependent quantities — add estimation guidance; (2) empirical transition [20,50] vs. theory [11,38] needs cleaner reconciliation in Discussion; (3) Part 4 of Proposition needs feasibility assumption flagged; (4) METIS random seed/version still not reported; (5) Shaw v. Reno argument needs explicit paragraph (Duchin). Duchin upgrades to 4/4 (Accept); all others at 3.5/4 (Accept with minor revisions). Paper ready for submission to SIAM JSC or INFORMS JOC after minor production edits."

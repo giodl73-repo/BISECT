@@ -5,7 +5,7 @@ use redist_cli::suite::run_suite_stability;
 use redist_cli::verify::run_verify;
 use redist_cli::policy::run_policy;
 use redist_cli::doctor::run_doctor;
-use redist_cli::runner::{StateConfig, StateResult, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
+use redist_cli::runner::{StateConfig, StateResult, AlgorithmConfig, run_states_parallel, load_all_states, filter_incomplete, chamber_district_count};
 use redist_cli::policy::LocationRegistry;
 use redist_cli::fetch::{load_manifest, build_fetch_list, print_check_report, download_items};
 use redist_cli::analyze::run_analyze;
@@ -79,6 +79,9 @@ fn main() {
                     });
                 (name, ndist)
             };
+
+            // Build algo config before any partial moves of `args`
+            let algo = AlgorithmConfig::from_state_args(&args);
 
             let output_dir = args.output_dir
                 .map(std::path::PathBuf::from)
@@ -176,15 +179,12 @@ fn main() {
                 year: year.clone(),
                 version: args.version.clone(),
                 output_dir,
-                partition_mode: args.partition_mode.to_string(),
+                algo,
                 position: args.position,
                 debug: args.debug,
                 reset: args.reset,
                 reprocess: false,
-                ufactor: args.ufactor,
-                niter: args.niter,
-                seed: args.seed,
-                // Spec 1 fields
+                time_partition: args.time_partition,
                 num_districts_override: args.districts,
                 chamber: args.chamber.clone(),
                 label: args.label.clone(),
@@ -197,10 +197,6 @@ fn main() {
                 total_seats,
                 adjacency_override: args.adjacency.as_ref().map(std::path::PathBuf::from),
                 coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
-                // Plan 03: partisan-weighted bisection (Callais 2026-04-29)
-                partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
-                dem_threshold: args.dem_threshold,
-                rep_threshold: args.rep_threshold,
             }], 1);
             for r in &results {
                 if !r.success {
@@ -231,7 +227,22 @@ fn main() {
                     );
                     cfg.debug = args.debug;
                     cfg.reprocess = args.reprocess;
-                    cfg.partition_mode = args.partition_mode.to_string();
+                    cfg.algo = AlgorithmConfig::defaults_for_mode(&args.partition_mode);
+                    // Override seeds from CLI if non-default
+                    use redist_cli::runner::{SplitStrategy, SeedCompositor};
+                    match &mut cfg.algo.split {
+                        SplitStrategy::GeoSection | SplitStrategy::AreaSection { .. } => {
+                            cfg.algo.seeds = SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) };
+                        }
+                        _ => {}
+                    }
+                    // Override area_swing for AreaSection
+                    if let SplitStrategy::AreaSection { area_swing } = &mut cfg.algo.split {
+                        *area_swing = args.area_swing;
+                    }
+                    if let Some(tol) = args.balance_tolerance {
+                        cfg.balance_tolerance = Some(tol / 100.0);
+                    }
                     cfg
                 })
                 .collect();
@@ -293,7 +304,7 @@ fn main() {
                         cfg.debug = args.debug;
                         cfg.reset = args.reset;
                         cfg.reprocess = args.reprocess;
-                        cfg.partition_mode = args.partition_mode.to_string();
+                        cfg.algo = AlgorithmConfig::defaults_for_mode(&args.partition_mode);
                         cfg
                     })
                     .collect();

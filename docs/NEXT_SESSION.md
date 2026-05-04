@@ -1,99 +1,91 @@
-# Next Session Handoff: Proportionality + E.4 Pilot
+# Next Session Handoff: B.7 Paper — Round 2 Review Complete
 
 **Status:** active session pickup pointer
 **Owner:** maintainer (you)
-**Last update:** 2026-05-01 (commits `9084f4d5` + `9defb022`)
+**Last update:** 2026-05-01
 
-This file tells your next session — possibly on another machine — where to start. The repo is the durable artifact; auto-memory is local to a single machine and does not travel.
+## Paper Status
 
-## What just landed
+**Round 2 review: 3.4/4 — ACCEPT with minor revisions.**
+Stage: `recheck` → advance to `ready` after P2 items.
 
-Two commits introduced six new features and a federal-statute strategy package:
+### Convergence Data (all confirmed)
 
-- **`9084f4d5`** — Six features: proportionality analyzer, `--paper-mode`, `validate-ensemble`, HTML compare, civic URL-snapshot + candidate-race CLI, partisan-similarity primitive. 1278 workspace tests pass, 0 regressions.
-- **`9defb022`** — Federal Districting Integrity Act drafts: `MODEL_FEDERAL_STATUTE.md` v0.1 + `STATUTE_RATIONALE.md` + `STATUTE_ONE_PAGER.md` + `STATUTE_REVIEW_NOTES.md` + `PARTISAN_OPTIONS.md`.
+| State | Seeds | MEC (km) | Plan | Gap (pp) | Tail | Status |
+|-------|-------|----------|------|---------|------|--------|
+| PA | 1,100 | 2,441 | 8D/9R | −3.5 | 919 | CONVERGED |
+| GA | 1,000 | 2,546 | 7D/7R | −0.1 | 511 | CONVERGED |
+| MI | 500 | 2,098 | 7D/6R | +2.4 | 319 | CONVERGED |
+| TN | 1,000 | 1,568 | 1D/8R | −27.1 | 391 | CONVERGED |
+| MN | 1,000 | 1,357 | 3D/5R | −16.1 | 551 | CONVERGED |
+| NC | 200 | 2,400 | 5D/9R | −13.6 | 158 | CONVERGED |
+| TX | 400 | 8,176 | 15D/23R | −7.7 | 286 | CONVERGED |
+| CT | 500 | 361 | 5D/0R | +39.8 | 316 | likely |
+| WI | 1,000 | 1,615 | 3D/5R | −12.8 | 108 | partial — needs 300 |
 
-## Read these in order to pick up
+**WI needs ~200 more seeds** to reach the 300-seed certification threshold.
 
-1. **`CLAUDE.md`** — project instructions (always loaded).
-2. **`docs/CHANGELOG.md`** — top entries describe the just-shipped features.
-3. **`docs/legal/PARTISAN_OPTIONS.md`** — the doc that ties together the four partisan-input postures and explains how the new proportionality metric is the cross-cutting comparison lens. **§§ 6 + 7** are the open-work pointers.
-4. **`docs/legal/STATUTE_REVIEW_NOTES.md`** — open tensions in the federal-statute work; Option B (conditional-spending architectural alternative) deferred.
-5. **`redist/crates/redist-analysis/src/proportionality.rs`** — the new analyzer's source (well-commented; the unit tests at the bottom illustrate every signal).
-6. **`research/E.4+partisan-similarity-districts/plan.md`** — E.4 paper plan; the math primitive shipped, the runner wiring + ablation are the next steps.
+### Key Empirical Findings (for the paper)
 
-## What's NOT in the repo
+1. **False floors**: GA (overturned seed 489), TN (seed 609), WI (seed 318). 200 seeds is NOT enough.
+2. **MEC and GMPP agree on outcome** when converged (WI/NC both 3D/5D). PA is the exception (MEC 8D vs GMPP 7D).
+3. **MEC is the correct primary criterion**: no interpretive degrees of freedom, TIGER-only inputs.
+4. **GMPP exact perimeters**: approximate (circular model) gave misleading convergence story for WI. Exact (TIGER pyproj EPSG:5070) shows GMPP last improved seed 930, not 109.
+5. **National totals**: MEC gives 229D/206R algorithmically vs enacted 222D/213R (+7 Dem).
+6. **Fiedler bound non-certifying**: λ₂ = 7-46m for all states, bound/achieved ≈ 2%. Cheeger is too loose for geographic graphs. Empirical tail criterion is the practical certification.
 
-- **Auto-memory entries** at `C:\Users\giodl\.claude\projects\C--src-apportionment\memory\` — local to the original machine. If you start on a different machine and want continuity, the relevant memories are summarized below in this file.
-- **Election data + outputs** — per `.gitignore`. The proportionality analyzer needs `data/{year}/elections/presidential_by_tract.csv`. If you're on the machine with that data, the commands below work directly.
+### Paper Sections Status
 
-## Memory summary (for machines without auto-memory)
+| Section | Status |
+|---------|--------|
+| §1 Introduction | Complete |
+| §2 Background | Complete |
+| §3 Methodology | Complete (Fiedler tightness note, ε statutory, content-derived seed) |
+| §4 Evaluation | Complete (1100-seed PA table, WI GMPP caveat, national totals) |
+| §5 Discussion | Complete (MEC primacy, geometric sorting theorem, WI caveat) |
+| §6 Conclusion | Complete |
 
-The auto-memory system on the original machine has these project entries:
+### Remaining P2 Items (before submission)
 
-- **Partitioning preference**: prefer recursive bisection; n-way disrupted fairness metrics.
-- **Post-Callais design**: single constraint-driven bisection engine, three modes (state, challenger, commission).
-- **Federal-statute strategy** (2026-05-01 pivot): advocate for a Huntington-Hill-style federal Districting Integrity Act; states execute, citizens verify byte-identically. State-court strategy (FAIRNESS_DOCTRINE) is for today; federal-statute strategy is for the 2030 census cycle.
+| Item | Description | Effort |
+|------|-------------|--------|
+| P2-I | Definition 3.3 practical annotation (non-certifying in practice) | 1 paragraph |
+| P2-II | CompactBisect with release binary (currently debug binary results) | 1h compute |
+| P2-III | ε sensitivity analysis (show outcome stable for ε ∈ {0.01,0.02,0.05,0.10}) | 2h compute |
+| P2-IV | Explicit MEC primacy justification vs GMPP | 1 paragraph |
+| P2-V | Fix O(n²) Lanczos → O(n×k) ARPACK complexity claim | 1 line |
+| P2-VI | AK/HI election result citations (Don Young 54.1%, HI both D) | 1 footnote |
 
-## Concrete next steps (when you have the data)
+WI needs 200 more seeds for certified tail → run b7_WI_s1001..1200.
 
-```bash
-# 0. Pull the latest two commits if you're on a fresh machine:
-git pull
+## Analysis Scripts (all working)
 
-# 1. Build the binary (or just run via cargo):
-cargo build --release --manifest-path redist/Cargo.toml
+- `scripts/b7_sweep.ps1` — 50-state MEC sweep (resumable)
+- `scripts/b7_fiedler_bounds.py` — λ₂ via scipy ARPACK (correct)
+- `scripts/b7_audit_math.py` — level-1 EC, Cheeger h(G) for all states
+- `scripts/b7_exact_perimeters.py` — exact TIGER perimeters via pyproj
+- `scripts/b7_gmpp_exact.py` — GMPP convergence with exact perimeters
+- `scripts/b7_pa_table.py` — PA 1100-seed distribution
 
-# 2. Confirm the data is in the expected place:
-ls data/2020/elections/presidential_by_tract.csv
-ls outputs/v1/2020/states/VT/data/final_assignments.json
+## Rust Codebase Status
 
-# 3. Run proportionality on a single state to sanity-check:
-redist analyze --state VT --year 2020 --version v1 --types proportionality
-# Expected output:
-# [OK] proportionality -> ... (gap = +XX.Xpp; D vote YY.Y% / D seats ZZ.Z%)
+The other session added `AlgorithmParams` enum refactor (commit 3903c62):
+- `partition_mode: String` replaced by `algo: AlgorithmParams` enum
+- Each variant carries only its own params (CompactBisect has seeds_per_level, epsilon)
+- `from_state_args()` / `defaults_for_mode()` constructors
+- All 115 tests passing
 
-# 4. National sweep (loop over all 50 states):
-for state in AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD \
-             MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC \
-             SD TN TX UT VT VA WA WV WI WY; do
-    redist analyze --state $state --year 2020 --version v1 --types proportionality 2>&1 | grep '\[OK\] proportionality'
-done
+CompactBisect, GeoSection (B.8), Proportional all in AlgorithmParams.
+Check runner.rs for dispatch — no more string matching on partition_mode.
 
-# 5. Compare to enacted maps — same loop with --label enacted_<state>_2020
-#    once enacted plans are imported; or use redist compare --format json
-#    to side-by-side numerical compare.
-```
+## Key Paper Conclusions
 
-## Specific carry-over tasks (each well-scoped)
+1. **Seed irrelevance** (for certified states): convergence tail ≥300 seeds certifies the MEC plan is stable regardless of which specific seed finds it.
+2. **Geometric sorting** drives proportionality gaps — not algorithmic bias. Any compact criterion produces the same structure.
+3. **MEC is the correct primary criterion**: TIGER boundary lengths only, no interpretive choices.
+4. **GMPP and MEC agree on outcome** when both converge — GMPP doesn't make things "more proportional," just reaches the same place via different path.
 
-1. **National proportionality sweep + 50-state table.** Roll up per-state `proportionality.json` into a single CSV: `state, year, dem_vote_share, dem_seats, dem_seat_share, gap_pp` for both algorithmic and enacted plans. This answers the New England question (and the broader "what does default bisection score on proportionality") quantitatively. Estimated effort: 1–2 hours including a small `redist aggregate --types proportionality` wiring.
+## See Also
 
-2. **E.4 partisan-similarity runner wiring.** Add `--partition-mode partisan-similarity` flag to `redist state` + integrate `build_partisan_similarity_weights` into `bisection_runner`. The math primitive is shipped (`redist-core::partisan_weights::build_partisan_similarity_weights`, 10 unit tests); this connects it. After wiring, run E.4's 3-state pilot (CA, PA, NC × α=10 / α=50 / α=100) and report proportionality deltas.
-
-3. **`redist compare --format html` proportionality row.** The HTML side-by-side report (`redist-report::html_comparison`) currently shows Districts / Dem-leaning seats / MM count / Mean Polsby-Popper / Total population. Add a Proportionality row showing each plan's gap. Fed by the `redist-analysis::ProportionalityResult` already plumbed through `analysis/proportionality.json`.
-
-4. **Federal Statute v0.2 (only if needed).** v0.1 incorporates the 5-role-review kill-shot fixes. Triggers to revisit:
-   - Coalition outreach reveals categorical opposition to the mandate posture → invoke Option B (conditional spending under Dole) per `STATUTE_REVIEW_NOTES.md` § 2.
-   - Tightening on the §106 race-predominance issue (the unresolved VRA-vs-EP tension) per `STATUTE_REVIEW_NOTES.md` § 1.
-
-## What's complete and does not need re-doing
-
-- Federal Statute drafts (v0.1) — committed.
-- Proportionality analyzer (math + CLI + 10 tests) — committed.
-- `--paper-mode` AEA replication renderer — committed.
-- `redist research validate-ensemble` CLI — committed.
-- `redist compare --format html` self-contained report — committed.
-- `redist civic ingest --snapshot-urls` URL archival — committed.
-- `redist civic add-candidate-race` end-to-end — committed.
-- E.4 partisan-similarity edge-weighting math primitive — committed.
-- `PARTISAN_OPTIONS.md` cross-cutting strategy doc — committed.
-
-## See also
-
-- `docs/legal/PARTISAN_OPTIONS.md` — partisan-input postures (1)–(4) explained
-- `docs/legal/MODEL_FEDERAL_STATUTE.md` — bill text v0.1
-- `docs/legal/STATUTE_REVIEW_NOTES.md` — open tensions
-- `docs/legal/FAIRNESS_DOCTRINE.md` — state-court companion strategy
-- `docs/CHANGELOG.md` — what shipped when
-- `docs/REDIST_CLI.md` — operational CLI reference
+- `research/publications/solution-space-and-seed-sensitivity/reviews/SYNTHESIS-R2.md`
+- `research/publications/solution-space-and-seed-sensitivity/_panel.yaml` (stage: recheck, avg: 3.4)

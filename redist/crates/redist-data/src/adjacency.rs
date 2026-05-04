@@ -10,7 +10,7 @@
 /// 3. Rayon parallel map over candidate pairs → intersection classification
 /// 4. Return adjacency list + edge weights (boundary lengths in metres)
 use std::collections::HashMap;
-use geo::{BoundingRect, Intersects};
+use geo::{BoundingRect, Intersects, EuclideanLength};
 use geo_types::{Polygon, Rect, Coord};
 use rayon::prelude::*;
 use thiserror::Error;
@@ -37,6 +37,76 @@ pub struct AdjacencyGraph {
     pub edge_weights: HashMap<(usize, usize), f64>,
     pub n_vertices: usize,
     pub n_edges: usize,
+
+    // ── CompactBisect geometry (B.7) ─────────────────────────────────────────
+    /// Land area of each tract in m². Empty if not loaded (old .adj.bin files);
+    /// CompactBisect falls back to edge-cut selection when empty.
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub vertex_areas: Vec<f64>,
+    /// External perimeter of each tract in metres: the portion of the tract's
+    /// total boundary that is NOT shared with any adjacent tract (state borders,
+    /// coastlines, rivers). Computed as total_perimeter - Σ(shared edge weights).
+    /// Empty when vertex_areas is empty.
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub vertex_ext_perimeters: Vec<f64>,
+}
+
+impl AdjacencyGraph {
+    /// Polsby-Popper score of an arbitrary subset of vertices.
+    ///
+    /// PP(S) = 4π·A(S) / P(S)²  where:
+    ///   A(S) = Σ vertex_areas[v]           (total land area, m²)
+    ///   P(S) = Σ vertex_ext_perimeters[v]  (external state/coast boundary)
+    ///        + Σ edge_weights[(u,v)] for edges crossing the S boundary
+    ///
+    /// Returns None if geometry data is not loaded (vertex_areas is empty).
+    /// Returns 0.0 if P(S) = 0 (degenerate; should not occur with real TIGER data).
+    pub fn subgraph_pp(&self, vertices: &std::collections::HashSet<usize>) -> Option<f64> {
+        if self.vertex_areas.is_empty() { return None; }
+
+        let area: f64 = vertices.iter().map(|&v| self.vertex_areas[v]).sum();
+
+        // External perimeter contribution from each tract's non-shared boundary
+        let ext: f64 = vertices.iter().map(|&v| self.vertex_ext_perimeters[v]).sum();
+
+        // Internal boundary: edges where one endpoint is in S and the other is not
+        let boundary: f64 = vertices.iter().flat_map(|&v| {
+            self.adjacency[v].iter().filter(|&&u| !vertices.contains(&u)).map(move |&u| {
+                let key = if v < u { (v, u) } else { (u, v) };
+                self.edge_weights.get(&key).copied().unwrap_or(0.0)
+            })
+        }).sum();
+
+        let perimeter = ext + boundary;
+        if perimeter == 0.0 { return Some(0.0); }
+        Some(4.0 * std::f64::consts::PI * area / (perimeter * perimeter))
+    }
+
+    /// Set per-vertex land areas (m²) from TIGER ALAND data.
+    /// Must be called after `build_adjacency_graph` if CompactBisect is desired.
+    /// Panics if `areas.len() != self.n_vertices`.
+    pub fn set_areas(&mut self, areas: Vec<f64>) {
+        assert_eq!(areas.len(), self.n_vertices,
+            "set_areas: got {} areas for {} vertices", areas.len(), self.n_vertices);
+        self.vertex_areas = areas;
+    }
+
+    /// Returns true if geometry data is loaded and subgraph_pp() will return Some.
+    pub fn has_geometry(&self) -> bool {
+        !self.vertex_areas.is_empty() && !self.vertex_ext_perimeters.is_empty()
+    }
+
+    /// Geometric-mean Polsby-Popper of two complementary subsets.
+    /// Returns None if geometry data is not loaded.
+    pub fn geometric_mean_pp(
+        &self,
+        left: &std::collections::HashSet<usize>,
+        right: &std::collections::HashSet<usize>,
+    ) -> Option<f64> {
+        let pp_l = self.subgraph_pp(left)?;
+        let pp_r = self.subgraph_pp(right)?;
+        Some((pp_l * pp_r).sqrt())
+    }
 }
 
 /// Classify an intersection geometry by type.
@@ -155,7 +225,44 @@ pub fn build_adjacency_graph(
     let n_edges = edge_weights.len();
     // vertex_weights are populated later from demographics/pkl; default to 1 here
     let vertex_weights = vec![1i64; n];
-    Ok(AdjacencyGraph { adjacency, vertex_weights, edge_weights, n_vertices: n, n_edges })
+
+    // ── CompactBisect geometry: area + external perimeter per vertex ──────────
+    // vertex_areas[v] = polygon land area in m² (caller-supplied via areas_m2).
+    // vertex_ext_perimeters[v] = total polygon perimeter − Σ(shared edge weights).
+    // The external perimeter is the non-shared boundary: state borders, coasts, rivers.
+    // If areas_m2 is empty (old call sites that don't supply area data), both vecs
+    // remain empty and CompactBisect gracefully degrades to edge-cut selection.
+    let (vertex_areas, vertex_ext_perimeters) = {
+        // Total perimeter of each polygon = sum of all ring exterior lengths
+        let total_perimeters: Vec<f64> = polygons.iter().map(|poly| {
+            let ext_len = poly.exterior().euclidean_length();
+            let holes_len: f64 = poly.interiors().iter()
+                .map(|ring| ring.euclidean_length())
+                .sum();
+            ext_len + holes_len
+        }).collect();
+
+        // External perimeter = total perimeter − shared boundaries with neighbors
+        let ext_perimeters: Vec<f64> = (0..n).map(|v| {
+            let shared: f64 = adjacency[v].iter().map(|&u| {
+                let key = (v.min(u), v.max(u));
+                edge_weights.get(&key).copied().unwrap_or(0.0)
+            }).sum();
+            (total_perimeters[v] - shared).max(0.0) // clamp: float errors can give -ε
+        }).collect();
+
+        (Vec::<f64>::new(), ext_perimeters) // areas filled in by caller via set_areas()
+    };
+    // Note: vertex_areas left empty here — callers that have ALAND data should
+    // call graph.set_areas(areas) after construction.
+    let _ = vertex_areas; // suppress warning; see set_areas() below
+
+    Ok(AdjacencyGraph {
+        adjacency, vertex_weights, edge_weights,
+        n_vertices: n, n_edges,
+        vertex_areas: Vec::new(),
+        vertex_ext_perimeters,
+    })
 }
 
 /// Public wrapper for tests and PyO3 (compactness module needs to parse WKB).

@@ -1,7 +1,7 @@
 # Apportionment Research Papers
 
 **Module**: Congressional redistricting via METIS recursive bisection
-**Papers**: 9
+**Papers**: 10
 **Author**: Giovanni De Luca
 
 ---
@@ -19,6 +19,7 @@
 | 7 | [14+county-representation](14+county-representation/) | Direct County Representation: An Alternative to Congressional Redistricting | [PDF](docs/14+county-representation.pdf) | State Politics & Policy Quarterly | — | — |
 | 8 | [11+efficiency-gap-analysis](11+efficiency-gap-analysis/) | Measuring Partisan Fairness in Algorithmic Redistricting: A National Efficiency Gap Analysis | [PDF](docs/11+efficiency-gap-analysis.pdf) | American Political Science Review | — | — |
 | 9 | [17+partisan-similarity-districts](17+partisan-similarity-districts/) | Partisan Similarity Districts: Algorithmic Safe Seats | [PDF](docs/17+partisan-similarity-districts.pdf) | American Journal of Political Science | — | — |
+| 10 | [publications/solution-space-and-seed-sensitivity](publications/solution-space-and-seed-sensitivity/) | The Solution Space of Minimum-Edge-Cut Redistricting: Seed Sensitivity and Partisan Variance | [PDF](docs/solution-space-and-seed-sensitivity.pdf) | Political Analysis | — | B.7 |
 
 ---
 

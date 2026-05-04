@@ -1,0 +1,260 @@
+{
+  "verdict": "PASS",
+  "date": "2026-05-02",
+  "states": [
+    {
+      "state": "AK",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "AL",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "AR",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "AZ",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "CA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "CO",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "CT",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "DE",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "FL",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "GA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "HI",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "IA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "ID",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "IL",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "IN",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "KS",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "KY",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "LA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MD",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "ME",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MI",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MN",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MO",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MS",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "MT",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NC",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "ND",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NE",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NH",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NJ",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NM",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NV",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "NY",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "OH",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "OK",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "OR",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "PA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "RI",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "SC",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "SD",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "TN",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "TX",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "UT",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "VA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "VT",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "WA",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "WI",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "WV",
+      "warnings": 0,
+      "ok": true
+    },
+    {
+      "state": "WY",
+      "warnings": 0,
+      "ok": true
+    }
+  ],
+  "year": 2020,
+  "total_states": 50,
+  "gate": "rust_cut <= c_cut * 1.20",
+  "warnings": 0
+}

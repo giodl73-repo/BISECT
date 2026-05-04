@@ -1,0 +1,27 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced subdivision-respecting redistricting: a single stickiness
+parameter $\alpha$ that formally operationalises the statutory requirement to
+preserve political subdivisions in algorithmic redistricting.
+The parameter is derived from TIGER GEOID data alone, requires no partisan
+inputs, composes with any split strategy and any other edge-weight signal,
+and is independently verifiable from public data.
+
+At $\alpha = 5$, county splits fall by 45\% on average across all 50 states,
+the edge-cut increases by a factor of 2.5, and there is no systematic partisan
+effect.
+The algorithm respects existing county lines simply because those lines already
+exist and are cheaper to cut along than through counties.
+
+The stickiness framework generalises beyond counties to any level of the
+governmental subdivision hierarchy (MCDs, incorporated places, voting precincts),
+providing a unified mechanism for statutory compliance across states with
+different primary subdivision requirements.
+This makes it directly applicable to state legislative redistricting, which
+often has stricter subdivision-preservation requirements than congressional
+redistricting.
+
+Future work will study the full $\alpha$ sweep across multiple seeds (convergence),
+extend to MCD and place-level stickiness using the COUSUB and PLACE TIGER files,
+and examine the interaction between subdivision stickiness and VRA compliance.

@@ -41,6 +41,47 @@ pub enum PartitionMode {
     /// Mutually exclusive with `metis-vra` per Callais p.36 disentanglement.
     #[value(name = "partisan-weighted")]
     PartisanWeighted,
+    /// Proportional bisection (B.7): at each recursion level, split the subgraph
+    /// so that both halves contain vote totals proportional to the subregion's
+    /// Dem/Rep vote shares, then minimise edge-cut within that constraint.
+    /// Requires --partisan-shares. Mutually exclusive with metis-vra.
+    /// Stat 104(e) prohibits this for federal congressional districts;
+    /// valid for state legislative redistricting.
+    #[value(name = "proportional")]
+    Proportional,
+    /// CompactBisect (B.7): greedy level-by-level selection by geometric-mean
+    /// Polsby-Popper. Requires --compact-seeds N.
+    #[value(name = "compact-bisect")]
+    CompactBisect,
+    /// GeoSection (B.8): ratio-optimal first-level bisection.
+    /// Tries all split ratios (1:k-1 through k/2:k/2) at the first level,
+    /// each with --geosection-seeds seeds. Selects the ratio with the minimum
+    /// edge-cut. Subsequent levels use standard bisection.
+    #[value(name = "geosection")]
+    GeoSection,
+    /// AreaSection (B.9): dual population+area constraint bisection.
+    /// ncon=2: tight population balance AND 50/50 area (±10% swing allowed).
+    #[value(name = "areasection")]
+    AreaSection,
+    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] bisection for partisan proportionality.
+    /// Uses HH seat allocation to set tpwgts: right (R-bloc) gets minimum D votes for 50% D.
+    /// Requires presidential_by_tract.csv in data/{year}/elections/.
+    /// Use --eta to control D_votes constraint softness (1.05=tight, 1.20=loose).
+    #[value(name = "proportional-section")]
+    ProportionalSection,
+    /// ApportionRegions (B.11): hierarchical k-way partition driven by prime
+    /// factorization of the seat count. Geographic completion of Huntington-Hill.
+    /// Requires --compact-seeds N (seeds per level, default 1).
+    #[value(name = "apportion-regions")]
+    ApportionRegions,
+    /// VRASection (B.14): GeoSection + geographic alignment score.
+    /// At the first bisection level, ratio selection is modified by how well
+    /// minority VAP concentrates on one side (Gingles Prong 1 alignment).
+    /// Uses only spatial minority-VAP distribution — no partisan data.
+    /// Requires demographics CSV in data/{year}/demographics/.
+    /// Use --w-vra to control alignment weight (default 0.40).
+    #[value(name = "vra-section")]
+    VraSection,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -50,6 +91,13 @@ impl std::fmt::Display for PartitionMode {
             Self::EdgeWeighted     => write!(f, "edge-weighted"),
             Self::MetisVra         => write!(f, "metis-vra"),
             Self::PartisanWeighted => write!(f, "partisan-weighted"),
+            Self::Proportional     => write!(f, "proportional"),
+            Self::CompactBisect    => write!(f, "compact-bisect"),
+            Self::GeoSection       => write!(f, "geosection"),
+            Self::AreaSection           => write!(f, "areasection"),
+            Self::ProportionalSection   => write!(f, "proportional-section"),
+            Self::ApportionRegions      => write!(f, "apportion-regions"),
+            Self::VraSection            => write!(f, "vra-section"),
         }
     }
 }
@@ -1022,6 +1070,70 @@ pub struct RunArgs {
 // `redist state` — single state (run_state_redistricting.py)
 // ---------------------------------------------------------------------------
 
+/// Layer 1 compositor: which tree structure to use for bisection.
+/// Overrides the structure implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum StructureMode {
+    /// Always ⌊k/2⌋:⌈k/2⌉ bisection (default for most modes)
+    #[value(name = "standard-bisect")]
+    StandardBisect,
+    /// N-way direct partition (METIS kway)
+    #[value(name = "nway")]
+    NWay,
+    /// Ratio-optimal scan: try all 1:k-1..k/2:k/2 ratios, pick min normalised EC (GeoSection)
+    #[value(name = "ratio-optimal")]
+    RatioOptimal,
+    /// Ratio-optimal + area balance constraint (AreaSection)
+    #[value(name = "ratio-optimal-area")]
+    RatioOptimalArea,
+    /// Ratio-optimal + VRA minority alignment score (VRASection)
+    #[value(name = "ratio-optimal-vra")]
+    RatioOptimalVra,
+    /// Prime-factorisation tree — ApportionRegions/Huntington-Hill extension (B.11)
+    #[value(name = "prime-factor")]
+    PrimeFactor,
+    /// Compact-by-Polsby-Popper greedy level selection (CompactBisect B.7)
+    #[value(name = "compact-polsby")]
+    CompactPolsby,
+}
+
+/// Layer 2 compositor: which edge/vertex weight signal to use.
+/// Overrides the weight implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum WeightMode {
+    /// No geographic weights — minimise cut edge count
+    #[value(name = "unweighted")]
+    Unweighted,
+    /// TIGER boundary lengths (default for most modes)
+    #[value(name = "geographic")]
+    Geographic,
+    /// Geographic + county-stickiness (requires --alpha-county > 0)
+    #[value(name = "county")]
+    County,
+    /// Geographic + minority-VAP alignment score (VRASection, requires minority data)
+    #[value(name = "vra-aligned")]
+    VraAligned,
+    /// Geographic + D_votes constraint (ProportionalSection, requires partisan-shares)
+    #[value(name = "proportional")]
+    Proportional,
+}
+
+/// Layer 3 compositor: how to search the seed space.
+/// Overrides the search strategy implied by --partition-mode when set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum SearchMode {
+    /// One content-derived seed (SHA-256). Deterministic. Use with ApportionRegions.
+    #[value(name = "single")]
+    Single,
+    /// Try --seeds N seeds, keep the minimum-EC result (default for most modes)
+    #[value(name = "multi")]
+    Multi,
+    /// Run until --convergence-threshold T consecutive non-improving seeds.
+    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    #[value(name = "convergence")]
+    Convergence,
+}
+
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct StateArgs {
@@ -1107,6 +1219,71 @@ pub struct StateArgs {
     #[arg(long)]
     pub seed: Option<u64>,
 
+    /// CompactBisect: seeds per bisection level (default: 0 = disabled).
+    /// Requires --partition-mode compact-bisect. At each level, runs this many
+    /// METIS seeds and selects by geometric-mean Polsby-Popper (or min edge-cut
+    /// if TIGER geometry is unavailable). Typical: 20-100.
+    #[arg(long, default_value = "0")]
+    pub compact_seeds: usize,
+
+    /// GeoSection (B.8): seeds per ratio at the first bisection level.
+    /// Requires --partition-mode geosection. Tries all ratios 1:k-1 through
+    /// k/2:k/2 with this many seeds each; picks minimum-EC ratio. Typical: 50-200.
+    #[arg(long, default_value = "0")]
+    pub geosection_seeds: usize,
+
+    /// AreaSection (B.9): area imbalance tolerance multiplier (default: 1.10 = ±10%).
+    /// ubvec[1] for the land-area balance constraint. Values <1.05 may cause
+    /// convergence failures for concentrated states; >1.25 approaches GeoSection.
+    #[arg(long, default_value_t = 1.10)]
+    pub area_swing: f64,
+
+    /// ProportionalSection (B.12): D_votes constraint softness (ubvec[1]).
+    /// 1.05 = tight partisan constraint; 1.20 = loose. Default 1.10.
+    #[arg(long, default_value_t = 1.10)]
+    pub eta: f64,
+
+    /// Governmental subdivision stickiness — county level (B.10).
+    /// Makes intra-county edges more expensive to cut (alpha=0 disables).
+    /// alpha=1 doubles the cost of cross-county cuts; alpha=5 = strong preference.
+    #[arg(long, default_value_t = 0.0)]
+    pub alpha_county: f64,
+
+    // ── Compositor overrides (Layer 1/2/3 explicit flags) ─────────────────────
+    // These override the corresponding layer from --partition-mode when set.
+    // Allows mixing presets with individual layer customization.
+
+    /// COMPOSITOR Layer 1 — override the split structure independent of --partition-mode.
+    /// Possible values: standard-bisect, nway, ratio-optimal, ratio-optimal-area,
+    /// ratio-optimal-vra, prime-factor, compact-polsby.
+    /// Example: --partition-mode geosection --structure prime-factor
+    ///   runs ApportionRegions tree with GeoSection's other defaults.
+    #[arg(long)]
+    pub structure: Option<StructureMode>,
+
+    /// COMPOSITOR Layer 2 — override the edge/vertex weight signal.
+    /// Possible values: unweighted, geographic, county, vra-aligned, proportional.
+    /// Example: --partition-mode apportion-regions --weights county --alpha-county 3.0
+    #[arg(long)]
+    pub weights_override: Option<WeightMode>,
+
+    /// COMPOSITOR Layer 3 — override the seed search strategy.
+    /// Possible values: single, multi, convergence.
+    /// Use --seeds N with multi; --convergence-threshold T with convergence.
+    /// Example: --partition-mode geosection --search convergence --convergence-threshold 500
+    #[arg(long)]
+    pub search: Option<SearchMode>,
+
+    /// Seeds for --search multi (also used as threshold for --search convergence).
+    /// Overrides --geosection-seeds and --compact-seeds when --search is set.
+    #[arg(long)]
+    pub seeds: Option<usize>,
+
+    /// Convergence threshold for --search convergence (default: 500).
+    /// Stops when this many consecutive seeds produce no EC improvement.
+    #[arg(long, default_value_t = 500)]
+    pub convergence_threshold: u32,
+
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 
     /// Override district count. For house/senate chambers, count is auto-resolved
@@ -1171,6 +1348,19 @@ pub struct StateArgs {
     /// Higher weight = stronger preference to keep tract with its neighbors
     #[arg(long)]
     pub coi_weights: Option<String>,
+
+    /// Print pure partition time (graph construction + METIS) separately from I/O.
+    /// Output goes to stderr: "[partition-time] <STATE>: k=<K> n=<N> -> <ms>ms"
+    /// Useful for benchmarking partition cost vs. adjacency loading and output writing.
+    #[arg(long, default_value_t = false)]
+    pub time_partition: bool,
+
+    /// VRASection (B.14): alignment score weight.
+    /// Controls the trade-off between edge-cut compactness (60%) and geographic
+    /// minority-VAP alignment (40%). Range [0.0, 1.0]. Default 0.40.
+    /// Requires --partition-mode vra-section.
+    #[arg(long, default_value_t = 0.40)]
+    pub w_vra: f64,
 }
 
 // ---------------------------------------------------------------------------
@@ -1239,6 +1429,18 @@ pub struct StatesArgs {
     /// Processing mode: streaming (default) or batch
     #[arg(long, default_value = "streaming")]
     pub processing_mode: ProcessingMode,
+
+    /// Seeds per ratio for GeoSection/AreaSection (default: 50)
+    #[arg(long, default_value_t = 50)]
+    pub geosection_seeds: usize,
+
+    /// AreaSection area imbalance tolerance (default: 1.10 = ±10%)
+    #[arg(long, default_value_t = 1.10)]
+    pub area_swing: f64,
+
+    /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
+    #[arg(long)]
+    pub balance_tolerance: Option<f64>,
 }
 
 #[cfg(test)]

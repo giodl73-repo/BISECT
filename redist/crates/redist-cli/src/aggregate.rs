@@ -2,6 +2,12 @@ use std::path::PathBuf;
 use crate::args::AggregateArgs;
 use redist_analysis::AnalyzerType;
 
+/// Analyzers that produce one record per STATE (not per district).
+/// These need a different merge + CSV path than district-level analyzers.
+fn is_state_level_analyzer(t: &AnalyzerType) -> bool {
+    matches!(t, AnalyzerType::Proportionality)
+}
+
 pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
     let year = args.year.to_string();
     let output_root = PathBuf::from("outputs").join(&args.version);
@@ -55,7 +61,12 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
         let refs: Vec<(&str, &serde_json::Value)> = state_data.iter()
             .map(|(n, v)| (n.as_str(), v))
             .collect();
-        let merged = merge_analyzer_outputs(&refs);
+
+        let merged = if is_state_level_analyzer(typ) {
+            merge_state_level_outputs(&year, &refs)
+        } else {
+            merge_analyzer_outputs(&refs)
+        };
 
         // Atomic write
         let tmp = out_path.with_extension("tmp.json");
@@ -63,22 +74,38 @@ pub fn run_aggregate(args: &AggregateArgs) -> anyhow::Result<()> {
         std::fs::rename(&tmp, &out_path)?;
 
         let n_states = merged["state_count"].as_u64().unwrap_or(0);
-        let n_districts = merged["district_count"].as_u64().unwrap_or(0);
-        eprintln!("[OK] {type_name} -> {} ({n_states} states, {n_districts} districts)",
-            out_path.display());
+        if is_state_level_analyzer(typ) {
+            eprintln!("[OK] {type_name} -> {} ({n_states} states)", out_path.display());
+        } else {
+            let n_districts = merged["district_count"].as_u64().unwrap_or(0);
+            eprintln!("[OK] {type_name} -> {} ({n_states} states, {n_districts} districts)",
+                out_path.display());
+        }
 
         // CSV export
         if args.csv || args.format == "csv" {
             let csv_path = national_dir.join(format!("us_{type_name}.csv"));
-            let csv = districts_to_csv(&merged);
+            let csv = if is_state_level_analyzer(typ) {
+                state_records_to_csv(&merged)
+            } else {
+                districts_to_csv(&merged)
+            };
             std::fs::write(&csv_path, csv)?;
             eprintln!("[OK] {type_name} CSV -> {}", csv_path.display());
         }
 
         // JSON format export (explicit --format json)
         if args.format == "json" {
-            let json_path = national_dir.join(format!("us_{type_name}_districts.json"));
-            let rows = districts_to_json_array(&merged);
+            let json_path = if is_state_level_analyzer(typ) {
+                national_dir.join(format!("us_{type_name}_states.json"))
+            } else {
+                national_dir.join(format!("us_{type_name}_districts.json"))
+            };
+            let rows = if is_state_level_analyzer(typ) {
+                state_records_to_json_array(&merged)
+            } else {
+                districts_to_json_array(&merged)
+            };
             let tmp = json_path.with_extension("tmp.json");
             std::fs::write(&tmp, serde_json::to_string_pretty(&rows)?)?;
             std::fs::rename(&tmp, &json_path)?;
@@ -123,6 +150,89 @@ pub fn merge_analyzer_outputs(states: &[(&str, &serde_json::Value)]) -> serde_js
         "district_count": all_districts.len(),
         "districts": all_districts,
     })
+}
+
+/// Merge per-state STATE-LEVEL analyzer JSONs (e.g. proportionality) into one
+/// national JSON. Each state's whole JSON becomes one record in the "states"
+/// array, with "state" and "year" fields injected.
+pub fn merge_state_level_outputs(year: &str, states: &[(&str, &serde_json::Value)]) -> serde_json::Value {
+    let analyzer = states.first()
+        .and_then(|(_, v)| v.get("analyzer"))
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    let mut records: Vec<serde_json::Value> = vec![];
+    for (state_name, state_json) in states {
+        let mut record = match state_json.as_object() {
+            Some(obj) => serde_json::Value::Object(obj.clone()),
+            None => continue,
+        };
+        record["state"] = serde_json::Value::String(state_name.to_string());
+        record["year"] = serde_json::Value::String(year.to_string());
+        records.push(record);
+    }
+
+    serde_json::json!({
+        "analyzer": analyzer,
+        "scope": "national",
+        "year": year,
+        "state_count": records.len(),
+        "states": records,
+    })
+}
+
+/// Convert state-level national JSON to CSV. Each state record becomes one row.
+/// Column order: state, year, then all other fields from the first record
+/// (excluding "analyzer" and "state"/"year" which are placed first).
+pub fn state_records_to_csv(merged: &serde_json::Value) -> String {
+    let records = match merged.get("states").and_then(|d| d.as_array()) {
+        Some(d) => d,
+        None => return String::new(),
+    };
+    if records.is_empty() { return String::new(); }
+
+    // Build header: state + year first, then remaining fields in stable order
+    let first = match records[0].as_object() {
+        Some(o) => o,
+        None => return String::new(),
+    };
+    let mut extra_headers: Vec<String> = first.keys()
+        .filter(|k| *k != "state" && *k != "year" && *k != "analyzer"
+                    && *k != "per_district_dem_share_sorted")
+        .cloned()
+        .collect();
+    extra_headers.sort(); // stable ordering
+    let mut headers = vec!["state".to_string(), "year".to_string()];
+    headers.extend(extra_headers);
+
+    let mut out = headers.join(",") + "\n";
+    for record in records {
+        let row: Vec<String> = headers.iter().map(|h| {
+            match record.get(h) {
+                None => String::new(),
+                Some(serde_json::Value::String(s)) => {
+                    if s.contains(',') { format!("\"{}\"", s) } else { s.clone() }
+                }
+                Some(serde_json::Value::Bool(b)) => b.to_string(),
+                Some(serde_json::Value::Number(n)) => n.to_string(),
+                Some(serde_json::Value::Null) => String::new(),
+                Some(v) => v.to_string(),
+            }
+        }).collect();
+        out += &row.join(",");
+        out += "\n";
+    }
+    out
+}
+
+/// Convert state-level national JSON to a JSON array.
+pub fn state_records_to_json_array(merged: &serde_json::Value) -> serde_json::Value {
+    let records = merged.get("states")
+        .and_then(|d| d.as_array())
+        .cloned()
+        .unwrap_or_default();
+    serde_json::Value::Array(records)
 }
 
 /// Convert national JSON to CSV string. Uses first district's keys as headers.
@@ -278,6 +388,79 @@ mod tests {
         // We verify the field is correctly stored.
         assert_eq!(args.format, "parquet",
             "parquet format should be stored for runtime guidance");
+    }
+
+    // ── State-level aggregation (proportionality) ─────────────────────────────
+
+    #[test]
+    fn test_merge_state_level_injects_state_and_year() {
+        let vt = serde_json::json!({
+            "analyzer": "proportionality",
+            "available": true,
+            "dem_vote_share_statewide": 0.665,
+            "proportionality_gap_pp": 33.5,
+            "n_districts": 1
+        });
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let state = &merged["states"][0];
+        assert_eq!(state["state"].as_str().unwrap(), "vermont");
+        assert_eq!(state["year"].as_str().unwrap(), "2020");
+        assert_eq!(merged["year"].as_str().unwrap(), "2020");
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_merge_state_level_two_states() {
+        let vt = serde_json::json!({"analyzer": "proportionality", "proportionality_gap_pp": 33.5, "n_districts": 1});
+        let tx = serde_json::json!({"analyzer": "proportionality", "proportionality_gap_pp": -8.2, "n_districts": 38});
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt), ("texas", &tx)]);
+        assert_eq!(merged["state_count"].as_u64().unwrap(), 2);
+        assert_eq!(merged["states"][0]["state"].as_str().unwrap(), "vermont");
+        assert_eq!(merged["states"][1]["state"].as_str().unwrap(), "texas");
+    }
+
+    #[test]
+    fn test_state_records_to_csv_has_state_year_first() {
+        let vt = serde_json::json!({"analyzer": "proportionality", "proportionality_gap_pp": 33.5, "n_districts": 1, "available": true});
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let csv = state_records_to_csv(&merged);
+        let lines: Vec<&str> = csv.lines().collect();
+        assert!(lines.len() >= 2);
+        let header = lines[0];
+        assert!(header.starts_with("state,year"), "header must start with state,year; got: {header}");
+        assert!(lines[1].contains("vermont"));
+        assert!(lines[1].contains("2020"));
+        assert!(lines[1].contains("33.5"));
+    }
+
+    #[test]
+    fn test_state_records_to_csv_excludes_per_district_array() {
+        let vt = serde_json::json!({
+            "analyzer": "proportionality",
+            "proportionality_gap_pp": 33.5,
+            "per_district_dem_share_sorted": [0.665]
+        });
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let csv = state_records_to_csv(&merged);
+        assert!(!csv.contains("per_district_dem_share_sorted"),
+            "per_district array must be excluded from CSV");
+    }
+
+    #[test]
+    fn test_is_state_level_proportionality() {
+        assert!(is_state_level_analyzer(&AnalyzerType::Proportionality));
+        assert!(!is_state_level_analyzer(&AnalyzerType::Demographic));
+        assert!(!is_state_level_analyzer(&AnalyzerType::Political));
+        assert!(!is_state_level_analyzer(&AnalyzerType::Summary));
+    }
+
+    #[test]
+    fn test_state_records_to_json_array_is_array() {
+        let vt = serde_json::json!({"analyzer": "proportionality", "proportionality_gap_pp": 33.5});
+        let merged = merge_state_level_outputs("2020", &[("vermont", &vt)]);
+        let arr = state_records_to_json_array(&merged);
+        assert!(arr.is_array());
+        assert_eq!(arr.as_array().unwrap().len(), 1);
     }
 
     #[test]

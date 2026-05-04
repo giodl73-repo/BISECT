@@ -1,0 +1,22 @@
+[package]
+name = "redist-apportion"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Huntington-Hill apportionment + extensible prime-factor redistricting compositor"
+
+[dependencies]
+redist-metis = { path = "../redist-metis" }
+metis        = { version = "0.2", features = ["vendored"], optional = true }
+thiserror.workspace   = true
+anyhow.workspace      = true
+serde.workspace       = true
+serde_json.workspace  = true
+
+[features]
+shadow-metis = ["dep:metis"]
+default = []
+
+[dev-dependencies]
+# unit tests only — no extra deps needed

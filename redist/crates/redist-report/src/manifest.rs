@@ -87,11 +87,44 @@ pub struct PlanManifest {
     /// Lets a future reader determine which compat ranges were active.
     #[serde(default)]
     pub import_compat_sha256: Option<String>,
+
+    // ── AlgorithmConfig reproducibility fields ────────────────────────────────
+    /// METIS imbalance tolerance factor (ufactor). Default 5 = ±0.5%.
+    #[serde(default = "default_ufactor")]
+    pub ufactor: u32,
+    /// METIS refinement iterations (niter). Default 100.
+    #[serde(default = "default_niter")]
+    pub niter: u32,
+    /// Governmental subdivision county stickiness (alpha_county). 0 = off.
+    #[serde(default)]
+    pub alpha_county: f64,
+    /// GeoSection/CompactBisect seeds per ratio or level. None if not applicable.
+    #[serde(default)]
+    pub split_seeds: Option<usize>,
+    /// CompactBisect near-min-cut filter epsilon. None if not applicable.
+    #[serde(default)]
+    pub split_epsilon: Option<f64>,
+    /// AreaSection area-swing tolerance (e.g. 1.10 = ±10%). None if not applicable.
+    #[serde(default)]
+    pub area_swing: Option<f64>,
+    /// GeoSection directional penalty lambda. 0.0 = off.
+    #[serde(default)]
+    pub directional_lambda: f64,
+
+    // ── B.7: solution-space research ─────────────────────────────────────────
+    /// Total edge-cut of the final partition: sum of edge weights (boundary
+    /// lengths in meters) across all edges whose two endpoints are assigned to
+    /// different districts. Lower = more compact. Enables seed-sensitivity
+    /// research without re-running the algorithm.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_cut: Option<f64>,
 }
 
 fn default_seats_per_district() -> usize { 1 }
 fn default_electoral_system() -> String { "single_member".to_string() }
 fn default_submission_type() -> String { "authoritative".to_string() }
+fn default_ufactor() -> u32 { 5 }
+fn default_niter() -> u32 { 100 }
 
 /// Compute SHA-256 of a byte slice. Returns 64-character lowercase hex string.
 pub fn sha256_bytes(data: &[u8]) -> String {

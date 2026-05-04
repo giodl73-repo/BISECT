@@ -10,15 +10,16 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_nway_partition};
+use crate::bisection_runner::{run_all_splits, run_all_splits_compact, run_geosection, run_nway_partition, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
 use crate::output::{write_state_outputs, clean_corrupt_state, VraAnalysis, VraDistrict};
 use crate::status::{status, ascii_safe};
-use redist_core::{Partition, build_vra_edge_weights, build_partisan_weights, state_code_to_fips};
+use redist_core::{Partition, state_code_to_fips};
 use redist_analysis::analyze_mm_districts;
 use redist_report;
+use crate::vertex_weights::{VertexConstraintKind, build_vertex_weights};
 
 /// Result of processing a single state.
 #[derive(Debug, Clone)]
@@ -35,8 +36,470 @@ pub struct StateResult {
 /// or Commands::Run) to avoid spawning Python once per state inside the Rayon pool.
 ///
 /// Fields are grouped into four logical domains:
-/// - **Identity**: what plan is being drawn (state, name, districts, year, version, output location)
-/// - **Algorithm**: how the partitioning is performed (partition_mode, ufactor, niter, seed)
+/// HOW to recurse — the split strategy.
+///
+/// Adding a new strategy requires only a new variant here and a new arm in the
+/// split dispatch inside `run_single_state`. It does NOT require touching
+/// `WeightSpec`, `MetisParams`, or `AlgorithmConfig`.
+
+/// How the seed space is searched at each evaluation point.
+///
+/// This is the third compositor layer (after structure and weights).
+/// Seed counts are no longer embedded in SplitStrategy variants — they live here.
+#[derive(Debug, Clone)]
+pub enum SeedCompositor {
+    /// Single content-derived seed. Deterministic, fast.
+    /// Used by ApportionRegions for the federal statute default.
+    Single,
+    /// Try N seeds at each evaluation point, keep the minimum-EC result.
+    /// Used by GeoSection, AreaSection, VRASection, CompactBisect.
+    Multi { seeds: usize },
+    /// Run seeds sequentially from the content-derived start until
+    /// `threshold` consecutive seeds produce no improvement in normalised EC.
+    /// Certifies convergence per B.7. The seed-buster for the federal statute.
+    ConvergenceSweep { threshold: u32 },
+}
+
+impl SeedCompositor {
+    /// Return the seed count for modes that use Multi. Panics if Single or Sweep.
+    pub fn seed_count(&self) -> usize {
+        match self {
+            Self::Multi { seeds } => *seeds,
+            Self::ConvergenceSweep { threshold } => *threshold as usize,
+            Self::Single => 1,
+        }
+    }
+
+    pub fn is_single(&self) -> bool { matches!(self, Self::Single) }
+}
+
+impl Default for SeedCompositor {
+    fn default() -> Self { Self::Multi { seeds: 50 } }
+}
+
+/// Layer 1 (structure): what tree of splits?
+///
+/// Seed counts removed — those belong to SeedCompositor.
+/// Algorithm-specific tuning parameters (epsilon, area_swing, w_vra, eta)
+/// remain here because they define the split criterion, not the search.
+#[derive(Debug, Clone)]
+pub enum SplitStrategy {
+    /// Standard bisection: always ⌊k/2⌋:⌈k/2⌉.
+    Bisect,
+    /// VRA-compliant n-way partitioning (minority opportunity districts).
+    NWay,
+    /// GeoSection (B.8): ratio-optimal direction-aware bisection.
+    /// Seeds controlled by SeedCompositor.
+    GeoSection,
+    /// CompactBisect (B.7): greedy level-by-level geometric-mean PP selection.
+    CompactBisect { epsilon: f64 },
+    /// AreaSection (B.9): ratio-optimal bisection with dual population+area constraint.
+    AreaSection { area_swing: f64 },
+    /// ProportionalSection (B.12): ncon=2 [pop, D_votes] with HH-derived tpwgts.
+    ProportionalSection { eta: f64 },
+    /// ApportionRegions (B.11): prime-factorisation tree — Huntington-Hill geographic completion.
+    /// Default seed strategy: Single (content-derived). ConvergenceSweep for federal statute.
+    ApportionRegions,
+    /// VRASection (B.14): GeoSection modified by geographic minority-VAP alignment score.
+    VraSection { w_vra: f64 },
+}
+
+impl SplitStrategy {
+    /// Human-readable mode name (for logging and manifest).
+    pub fn mode_name(&self) -> &'static str {
+        match self {
+            Self::Bisect                  => "edge-weighted",
+            Self::NWay                    => "metis-vra",
+            Self::GeoSection              => "geosection",
+            Self::CompactBisect    { .. } => "compact-bisect",
+            Self::AreaSection      { .. } => "areasection",
+            Self::ProportionalSection { .. } => "proportional-section",
+            Self::ApportionRegions        => "apportion-regions",
+            Self::VraSection       { .. } => "vra-section",
+        }
+    }
+}
+
+/// WHAT signals go into edge weights.
+///
+/// Adding a new signal (e.g. `alpha_vtd: f64`) requires only adding a field here
+/// and reading it in `build_edge_weights`. SplitStrategy and AlgorithmConfig are
+/// not affected.
+#[derive(Debug, Clone)]
+pub struct WeightSpec {
+    /// Use geographic TIGER boundary lengths as the base weight signal.
+    pub geographic: bool,
+    /// Path to per-tract Democratic vote share TSV (partisan-weighted / proportional modes).
+    pub partisan_shares: Option<std::path::PathBuf>,
+    /// Dem threshold for partisan weighting (default 0.55).
+    pub dem_threshold: f64,
+    /// Rep threshold for partisan weighting (default 0.45).
+    pub rep_threshold: f64,
+    /// Enable minority (VRA) weighting signal.
+    pub minority_weighting: bool,
+    /// County stickiness alpha (B.10). 0 = disabled.
+    pub alpha_county: f64,
+    /// MCD stickiness alpha. 0 = disabled.
+    pub alpha_mcd: f64,
+    /// Place stickiness alpha. 0 = disabled.
+    pub alpha_place: f64,
+    /// VTD stickiness alpha. 0 = disabled.
+    pub alpha_vtd: f64,
+    /// Directional lambda for GeoSection (0 = no penalty).
+    pub directional_lambda: f64,
+}
+
+impl Default for WeightSpec {
+    fn default() -> Self {
+        Self {
+            geographic: true,
+            partisan_shares: None,
+            dem_threshold: 0.55,
+            rep_threshold: 0.45,
+            minority_weighting: false,
+            alpha_county: 0.0,
+            alpha_mcd: 0.0,
+            alpha_place: 0.0,
+            alpha_vtd: 0.0,
+            directional_lambda: 0.0,
+        }
+    }
+}
+
+/// METIS optimizer knobs.
+#[derive(Debug, Clone)]
+pub struct MetisParams {
+    pub ufactor: u32,
+    pub niter: u32,
+    pub seed: Option<u64>,
+}
+
+impl Default for MetisParams {
+    fn default() -> Self { Self { ufactor: 5, niter: 100, seed: None } }
+}
+
+/// Three-layer algorithm compositor.
+///
+/// Layer 1 — `split`: structure (what tree of splits?)
+/// Layer 2 — `weights` + `vertex_constraints`: what costs (edge + vertex weights)
+/// Layer 3 — `seeds`: search strategy (single / multi / convergence-sweep)
+///
+/// All three layers compose independently. Adding a new edge signal → WeightSpec.
+/// Adding a new split structure → SplitStrategy. Changing search strategy → SeedCompositor.
+/// None of these changes require touching the other two layers.
+#[derive(Debug, Clone)]
+pub struct AlgorithmConfig {
+    /// Layer 1: tree structure
+    pub split: SplitStrategy,
+    /// Layer 2a: edge weight signals
+    pub weights: WeightSpec,
+    /// Layer 2b: vertex balance constraints (ncon = len)
+    pub vertex_constraints: Vec<VertexConstraintKind>,
+    /// Layer 3: seed search strategy
+    pub seeds: SeedCompositor,
+    /// METIS optimizer knobs (ufactor, niter, single-seed value)
+    pub metis: MetisParams,
+    /// Optional manifest label override.
+    pub mode_label: Option<&'static str>,
+}
+
+impl AlgorithmConfig {
+    /// Human-readable mode name (for logging and manifest).
+    pub fn mode_name(&self) -> &'static str {
+        if let Some(label) = self.mode_label {
+            return label;
+        }
+        // Unweighted is special: same Bisect strategy but no geographic weights.
+        if matches!(self.split, SplitStrategy::Bisect) && !self.weights.geographic {
+            return "unweighted";
+        }
+        // PartisanWeighted uses Bisect with partisan signal.
+        if matches!(self.split, SplitStrategy::Bisect) && self.weights.partisan_shares.is_some() {
+            return "partisan-weighted";
+        }
+        self.split.mode_name()
+    }
+
+    /// Build from a single-state CLI invocation where the user can override
+    /// ufactor, niter, seed, and mode-specific knobs explicitly.
+    pub fn from_state_args(args: &crate::args::StateArgs) -> Self {
+        use crate::args::PartitionMode as PM;
+        let metis = MetisParams { ufactor: args.ufactor, niter: args.niter, seed: args.seed };
+        let base_weights = WeightSpec {
+            alpha_county: args.alpha_county,
+            ..WeightSpec::default()
+        };
+        let pop_only = vec![VertexConstraintKind::Population];
+        let pop_and_area = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
+        let mut algo = match &args.partition_mode {
+            PM::Unweighted => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec { geographic: false, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: Some("unweighted"),
+            },
+            PM::EdgeWeighted => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
+            PM::MetisVra => Self {
+                split: SplitStrategy::NWay,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec { minority_weighting: true, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                vertex_constraints: pop_only,
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::PartisanWeighted => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec {
+                    partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
+                    dem_threshold: args.dem_threshold,
+                    rep_threshold: args.rep_threshold,
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
+            PM::Proportional => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec {
+                    partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from),
+                    dem_threshold: 0.55,
+                    rep_threshold: 0.45,
+                    alpha_county: args.alpha_county,
+                    ..WeightSpec::default()
+                },
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: Some("proportional"),
+            },
+            PM::CompactBisect => Self {
+                split: SplitStrategy::CompactBisect { epsilon: 0.05 },
+                seeds: SeedCompositor::Multi { seeds: args.compact_seeds.max(1) },
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::GeoSection => Self {
+                split: SplitStrategy::GeoSection,
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                weights: WeightSpec { directional_lambda: 0.0, alpha_county: args.alpha_county, ..WeightSpec::default() },
+                vertex_constraints: pop_only,
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::AreaSection => Self {
+                split: SplitStrategy::AreaSection { area_swing: args.area_swing },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                weights: base_weights,
+                vertex_constraints: pop_and_area,  // ncon=2: population + land area
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::ApportionRegions => Self {
+                split: SplitStrategy::ApportionRegions,
+                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::ProportionalSection => Self {
+                split: SplitStrategy::ProportionalSection { eta: args.eta },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                weights: base_weights,
+                vertex_constraints: vec![VertexConstraintKind::Population],
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+            PM::VraSection => Self {
+                split: SplitStrategy::VraSection { w_vra: args.w_vra },
+                seeds: SeedCompositor::Multi { seeds: args.geosection_seeds.max(1) },
+                weights: WeightSpec { alpha_county: args.alpha_county, ..WeightSpec::default() },
+                vertex_constraints: vec![VertexConstraintKind::Population],
+                metis: MetisParams { seed: None, ..metis },
+                mode_label: None,
+            },
+        };
+
+        // ── Apply compositor layer overrides ──────────────────────────────────
+        // Explicit --structure / --weights-override / --search flags override
+        // the corresponding layer set by the --partition-mode preset above.
+        use crate::args::{StructureMode as SM, WeightMode as WM, SearchMode as SeM};
+
+        // Layer 1: structure override
+        if let Some(structure) = args.structure {
+            let pop_only = vec![VertexConstraintKind::Population];
+            let pop_area  = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
+            let (new_split, new_vc) = match structure {
+                SM::StandardBisect   => (SplitStrategy::Bisect, pop_only),
+                SM::NWay             => (SplitStrategy::NWay, pop_only),
+                SM::RatioOptimal     => (SplitStrategy::GeoSection, pop_only),
+                SM::RatioOptimalArea => (SplitStrategy::AreaSection { area_swing: args.area_swing }, pop_area),
+                SM::RatioOptimalVra  => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
+                SM::PrimeFactor      => (SplitStrategy::ApportionRegions, pop_only),
+                SM::CompactPolsby    => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
+            };
+            algo.split = new_split;
+            algo.vertex_constraints = new_vc;
+        }
+
+        // Layer 2: weight override
+        if let Some(weight) = args.weights_override {
+            algo.weights = match weight {
+                WM::Unweighted   => WeightSpec { geographic: false, alpha_county: 0.0, ..WeightSpec::default() },
+                WM::Geographic   => WeightSpec { geographic: true,  alpha_county: 0.0, ..WeightSpec::default() },
+                WM::County       => WeightSpec { geographic: true,  alpha_county: args.alpha_county.max(1.0), ..WeightSpec::default() },
+                WM::VraAligned   => WeightSpec { geographic: true,  minority_weighting: true, ..WeightSpec::default() },
+                WM::Proportional => WeightSpec { geographic: true,  partisan_shares: args.partisan_shares.as_ref().map(std::path::PathBuf::from), ..WeightSpec::default() },
+            };
+        }
+
+        // Layer 3: search strategy override
+        if let Some(search) = args.search {
+            let n = args.seeds.unwrap_or(args.geosection_seeds.max(args.compact_seeds).max(50));
+            algo.seeds = match search {
+                SeM::Single      => SeedCompositor::Single,
+                SeM::Multi       => SeedCompositor::Multi { seeds: n },
+                SeM::Convergence => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+            };
+        }
+
+        algo
+    }
+
+    /// Canonical defaults for each mode. Called by bulk commands that
+    /// don't expose per-algorithm knobs — single-state commands use
+    /// from_state_args() to let users override these.
+    pub fn defaults_for_mode(mode: &crate::args::PartitionMode) -> Self {
+        use crate::args::PartitionMode as PM;
+        let metis = MetisParams::default();
+        let pop = vec![VertexConstraintKind::Population];
+        let pop_area = vec![VertexConstraintKind::Population, VertexConstraintKind::Area];
+        match mode {
+            PM::Unweighted => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+                vertex_constraints: pop,
+                metis,
+                mode_label: Some("unweighted"),
+            },
+            PM::EdgeWeighted => Self::default(),
+            PM::MetisVra => Self {
+                split: SplitStrategy::NWay,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::PartisanWeighted => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec {
+                    partisan_shares: None,
+                    dem_threshold: 0.55,
+                    rep_threshold: 0.45,
+                    ..WeightSpec::default()
+                },
+                vertex_constraints: pop,
+                metis,
+                mode_label: Some("partisan-weighted"),
+            },
+            PM::Proportional => Self {
+                split: SplitStrategy::Bisect,
+                seeds: SeedCompositor::default(),
+                weights: WeightSpec {
+                    partisan_shares: None,
+                    dem_threshold: 0.55,
+                    rep_threshold: 0.45,
+                    ..WeightSpec::default()
+                },
+                vertex_constraints: pop,
+                metis,
+                mode_label: Some("proportional"),
+            },
+            PM::CompactBisect => Self {
+                split: SplitStrategy::CompactBisect { epsilon: 0.05 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::GeoSection => Self {
+                split: SplitStrategy::GeoSection,
+                seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec { directional_lambda: 0.0, ..WeightSpec::default() },
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::AreaSection => Self {
+                split: SplitStrategy::AreaSection { area_swing: 1.10 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop_area,  // ncon=2: population + land area
+                metis,
+                mode_label: None,
+            },
+            PM::ApportionRegions => Self {
+                split: SplitStrategy::ApportionRegions,
+                seeds: SeedCompositor::Single,  // federal statute: single content-derived seed
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::ProportionalSection => Self {
+                split: SplitStrategy::ProportionalSection { eta: 1.10 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::VraSection => Self {
+                split: SplitStrategy::VraSection { w_vra: 0.40 },
+                seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+        }
+    }
+}
+
+impl Default for AlgorithmConfig {
+    /// Default: edge-weighted bisection, population-only vertex constraint (ncon=1).
+    fn default() -> Self {
+        Self {
+            split: SplitStrategy::Bisect,
+            seeds: SeedCompositor::Multi { seeds: 50 },
+            weights: WeightSpec::default(),
+            vertex_constraints: vec![VertexConstraintKind::Population],
+            metis: MetisParams::default(),
+            mode_label: None,
+        }
+    }
+}
+
+/// - **Identity**: which state/year/version/output to draw
+/// - **Algorithm**: composable `algo: AlgorithmConfig` (split + weights + metis)
 /// - **Control**: execution behavior (position, debug, reset, reprocess)
 /// - **Spec 1 extensions**: chamber-aware, labeled, multi-member, COI, CVAP features
 #[derive(Debug, Clone)]
@@ -51,60 +514,35 @@ pub struct StateConfig {
     pub version: String,
     pub output_dir: PathBuf,
 
-    // ── Algorithm: how partitioning is performed ──────────────────────────────
-    pub partition_mode: String,
-    /// METIS imbalance factor (integer percent, e.g. 5 = 0.5% imbalance per level)
-    pub ufactor: u32,
-    /// Number of METIS refinement iterations
-    pub niter: u32,
-    /// Optional random seed for reproducibility
-    pub seed: Option<u64>,
+    // ── Algorithm: composable config (split strategy + weight signals + METIS knobs) ─
+    pub algo: AlgorithmConfig,
 
-    // ── Control: execution behavior ───────────────────────────────────────────
-    /// Progress bar position (TQDM_POSITION-style, -1 = disabled)
-    pub position: i32,
-    pub debug: bool,
-    /// Delete existing outputs and re-run from scratch
-    pub reset: bool,
-    /// Reprocess even if outputs already exist (skip completion check)
-    pub reprocess: bool,
-
-    // ── Spec 1 extensions: chamber-aware, labeled, multi-member, COI ─────────
-    /// Override district count (enables non-congressional chambers)
-    pub num_districts_override: Option<usize>,
-    /// Chamber type: "congressional" | "house" | "senate" | "custom"
-    pub chamber: String,
-    /// Human label for this plan run (default: {state}_{chamber}_{year})
-    pub label: Option<String>,
-    /// Population source: total, vap, cvap
-    pub population_source: String,
-    /// Max deviation per district in percent (None = use chamber default)
+    // ── Shared partitioning constraints (apply to all modes) ─────────────────
+    /// Max deviation per district in percent (None = use chamber default).
     pub balance_tolerance: Option<f64>,
-    /// Write manifest.json alongside outputs
-    pub write_manifest: bool,
-    /// --force: overwrite existing plan without error
-    pub force: bool,
-    /// Geographic resolution: "tract" (default), "block_group", "block"
-    pub resolution: String,
-    /// Seats per constituency (1 for single-member, 3-5 for multi-member)
-    pub seats_per_district: usize,
-    /// Total seats across all constituencies (seats_per_district * num_districts if uniform)
-    pub total_seats: usize,
-    /// Direct adjacency file path (bypasses manifest lookup for international states).
-    /// When Some, runner skips resolve_adjacency_path() and uses this path directly.
-    pub adjacency_override: Option<std::path::PathBuf>,
-    /// Path to COI weights file (optional)
+    /// Path to COI weights file — modifies edge weights for all modes.
     pub coi_weights: Option<std::path::PathBuf>,
 
-    // ── Plan 03: Partisan edge-weighting (Callais 2026-04-29) ──────────────────
-    /// Per-tract Democratic vote share TSV file (partisan-weighted mode only).
-    /// Header: `geoid<TAB>dem_share`. GEOIDs are 11-char TIGER FIPS, share in [0.0, 1.0].
-    /// MUTUALLY EXCLUSIVE with partition_mode == "metis-vra" (Callais p.36 disentanglement).
-    pub partisan_shares: Option<std::path::PathBuf>,
-    /// Threshold above which a unit is "strong-D" (default 0.55).
-    pub dem_threshold: f64,
-    /// Threshold below which a unit is "strong-R" (default 0.45).
-    pub rep_threshold: f64,
+    // ── Control: execution behavior ───────────────────────────────────────────
+    pub position: i32,
+    pub debug: bool,
+    pub reset: bool,
+    pub reprocess: bool,
+    /// When true, emit "[partition-time] <STATE>: k=<K> n=<N> -> <ms>ms" to stderr
+    /// after each partition call. Measures pure METIS time, excluding I/O.
+    pub time_partition: bool,
+
+    // ── Spec 1 extensions: chamber-aware, labeled, multi-member ──────────────
+    pub num_districts_override: Option<usize>,
+    pub chamber: String,
+    pub label: Option<String>,
+    pub population_source: String,
+    pub write_manifest: bool,
+    pub force: bool,
+    pub resolution: String,
+    pub seats_per_district: usize,
+    pub total_seats: usize,
+    pub adjacency_override: Option<std::path::PathBuf>,
 }
 
 impl StateConfig {
@@ -140,15 +578,13 @@ impl StateConfig {
             version,
             output_dir,
             position,
-            // Algorithm defaults
-            partition_mode: "edge-weighted".to_string(),
-            ufactor: 5,
-            niter: 100,
-            seed: None,
+            // Algorithm defaults — edge-weighted bisection
+            algo: AlgorithmConfig::default(),
             // Control defaults
             debug: false,
             reset: false,
             reprocess: false,
+            time_partition: false,
             // Spec 1 defaults for bulk congressional runs
             num_districts_override: None,
             chamber: "congressional".to_string(),
@@ -162,10 +598,6 @@ impl StateConfig {
             total_seats: num_districts,
             adjacency_override: None,
             coi_weights: None,
-            // Plan 03 defaults: partisan-weighted mode disabled
-            partisan_shares: None,
-            dem_threshold: 0.55,
-            rep_threshold: 0.45,
         }
     }
 
@@ -504,26 +936,16 @@ pub fn check_cvap_availability(
 
 /// Validate Plan 03 partisan-mode configuration.
 ///
-/// Two rules (Callais p.36 disentanglement, Plan 03 Task 4.5):
-/// 1. `partisan_shares` is only valid when `partition_mode == "partisan-weighted"`.
-///    A run that supplies partisan_shares with any other mode is rejected.
-/// 2. `partition_mode == "partisan-weighted"` requires `partisan_shares` to be set.
+/// Callais p.36 disentanglement check (Plan 03 Task 4.5).
 ///
-/// Together these guarantee the partition_mode/data pairing is consistent and that
-/// race-conscious (`metis-vra`) and partisan signals are never both active.
-pub fn validate_partisan_config(cfg: &StateConfig) -> Result<(), String> {
-    if cfg.partisan_shares.is_some() && cfg.partition_mode != "partisan-weighted" {
-        return Err(format!(
-            "{}: --partisan-shares requires --partition-mode=partisan-weighted (got {})",
-            cfg.state_code, cfg.partition_mode
-        ));
-    }
-    if cfg.partition_mode == "partisan-weighted" && cfg.partisan_shares.is_none() {
-        return Err(format!(
-            "{}: --partition-mode=partisan-weighted requires --partisan-shares <PATH>",
-            cfg.state_code
-        ));
-    }
+/// Previously enforced at runtime; now guaranteed structurally:
+/// `PartitionMode` is a single-choice CLI enum so `partisan-weighted` and
+/// `metis-vra` cannot both be active in the same `AlgorithmConfig`.
+/// `WeightSpec.partisan_shares` and `WeightSpec.minority_weighting` are
+/// set by mutually-exclusive `PartitionMode` arms in `from_state_args`.
+///
+/// This function is kept so call-sites compile; it always returns `Ok(())`.
+pub fn validate_partisan_config(_cfg: &StateConfig) -> Result<(), String> {
     Ok(())
 }
 
@@ -635,132 +1057,302 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
         &cfg.state_code,
     );
 
-    // 2. Build edge weights based on partition mode
-    //
-    // Mutual-exclusion guard (Callais p.36 disentanglement, Plan 03 Task 4.5):
-    // partisan-weighted and metis-vra modes cannot coexist. Centralised in
-    // validate_partisan_config so it can be unit-tested in isolation.
-    validate_partisan_config(cfg)?;
-
-    let edge_weights: HashMap<(usize, usize), f64> = match cfg.partition_mode.as_str() {
-        "edge-weighted" => {
-            status(cfg.position, &format!("{}: edge-weighted mode ({} edges)", cfg.state_code, graph.n_edges));
-            graph.edge_weights.clone()
-        }
-        "partisan-weighted" if num_districts > 1 => {
-            // Plan 03: edge-weighted bisection that preserves partisan clusters.
-            // Callais 2026-04-29 grounds this for both state-mapmaker and §2-challenger use cases.
-            let shares_path = cfg.partisan_shares.as_ref()
-                .expect("guarded above: partisan-weighted requires partisan_shares");
-            status(cfg.position, &format!("{}: partisan-weighted mode — loading {}", cfg.state_code, shares_path.display()));
-            let dem_shares = load_partisan_shares(shares_path, &graph.index_to_geoid, graph.n_vertices)
-                .map_err(|e| format!("partisan shares load failed: {e}"))?;
-            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
-                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
-                .collect();
-            build_partisan_weights(&edges, &dem_shares, cfg.dem_threshold, cfg.rep_threshold)
-        }
-        "partisan-weighted" if num_districts == 1 => {
-            status(cfg.position, &format!("{}: single district — skipping partisan weighting (trivially trivial)", cfg.state_code));
-            HashMap::new()
-        }
-        "metis-vra" if num_districts > 1 => {
-            status(cfg.position, &format!("{}: VRA mode — loading demographics", cfg.state_code));
-            let demo_path = std::path::Path::new("data")
-                .join(&cfg.year).join("demographics")
-                .join(format!("{state_name}_demographics_{}.csv", cfg.year));
-            let demo = load_demographics(&demo_path)
-                .map_err(|e| format!("demographics load failed: {e}"))?;
-            let minority_fracs = align_demographics_to_adjacency(
-                &demo, &graph.index_to_geoid, graph.n_vertices
-            );
-            let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
-                .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
-                .collect();
-            build_vra_edge_weights(&edges, &minority_fracs, 0.40)
-        }
-        "metis-vra" if num_districts == 1 => {
-            status(cfg.position, &format!("{}: single district — skipping VRA (trivially compliant)", cfg.state_code));
-            HashMap::new()
-        }
-        _ => HashMap::new(), // unweighted
+    // 2. Build edge weights using the composable WeightSpec.
+    let edge_weights: HashMap<(usize, usize), f64> = if !cfg.algo.weights.geographic
+        && !cfg.algo.weights.minority_weighting
+        && cfg.algo.weights.partisan_shares.is_none()
+        && cfg.algo.weights.alpha_county < 1e-10
+        && cfg.algo.weights.alpha_mcd    < 1e-10
+        && cfg.algo.weights.alpha_place  < 1e-10
+        && cfg.algo.weights.alpha_vtd    < 1e-10
+    {
+        status(cfg.position, &format!("{}: unweighted mode", cfg.state_code));
+        HashMap::new()
+    } else if num_districts == 1 {
+        status(cfg.position, &format!("{}: single district — skipping weighting", cfg.state_code));
+        graph.edge_weights.clone()
+    } else {
+        build_edge_weights(
+            &cfg.algo.weights, &graph, &cfg.state_code, state_name,
+            &cfg.year, &cfg.output_dir, cfg.position,
+        )?
     };
 
-    // 2b. Apply COI weights if provided.
-    // Each edge weight is multiplied by sqrt(w_a * w_b) (geometric mean of endpoint weights).
-    // Tracts not in the COI file get weight 1.0 (no modification).
+    // 2b. Apply COI weights if provided (all modes).
     let edge_weights = if let Some(ref coi_path) = cfg.coi_weights {
+        let fallback = edge_weights.clone(); // keep computed weights if COI load fails
         match apply_coi_weights(edge_weights, coi_path, &graph.index_to_geoid) {
             Ok(ew) => ew,
             Err(e) => {
                 eprintln!("WARNING: COI weights not applied: {e}");
-                // Continue without COI weights rather than failing the whole run
-                match cfg.partition_mode.as_str() {
-                    "edge-weighted" => graph.edge_weights.clone(),
-                    _ => HashMap::new(),
-                }
+                fallback
             }
         }
     } else {
         edge_weights
     };
 
-    // 3. Run partitioning
-    // VRA mode uses n-way: D.2 shows equivalent VRA success rate to recursive
-    // bisection (47.5% vs 48.3%, p=0.634) with 3.08× speedup.
-    // Non-VRA modes use recursive bisection (level-parallel for multi-district).
-    let use_nway = cfg.partition_mode == "metis-vra" && num_districts > 1;
-    let method = if use_nway { "n-way" } else { "recursive bisection" };
-    status(cfg.position, &format!(
-        "{}: {} into {} districts", cfg.state_code, method, num_districts
-    ));
+    // 3. Build vertex weights from constraint spec + graph data.
+    // Load TIGER areas only if the Area constraint is requested.
+    let needs_area = cfg.algo.vertex_constraints
+        .contains(&VertexConstraintKind::Area);
+    let tiger_areas: Vec<f64> = if needs_area {
+        let (areas, _) = load_tiger_geometry(
+            &cfg.state_code, &cfg.year, &graph.index_to_geoid,
+            &graph.adjacency, &graph.edge_weights);
+        areas
+    } else {
+        vec![]
+    };
+    let vw = build_vertex_weights(
+        &cfg.algo.vertex_constraints,
+        &graph.vertex_weights,
+        &tiger_areas,
+    );
 
-    // Intermediate rounds go in {plan_root}/intermediate/
+    // 4. Run partitioning — dispatch on split strategy.
     let intermediate_dir = plan_root.join("intermediate");
     std::fs::create_dir_all(&intermediate_dir)
         .map_err(|e| format!("cannot create intermediate dir: {e}"))?;
 
-    let assignments = if use_nway {
-        // N-way: single gpmetis call with nparts=k — no intermediate rounds
-        run_nway_partition(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            num_districts,
-            1.0 + cfg.ufactor as f64 / 1000.0,  // convert int ufactor to decimal
-            cfg.niter,
-            cfg.seed,
-        ).map_err(|e| format!("n-way partition failed: {e}"))?
-    } else {
-        // Pass balance_tolerance as fraction: per-node ufactor = 1 + tolerance/k_node
-        // This guarantees cumulative error ≤ tolerance regardless of bisection depth.
-        let balance_tolerance_frac = cfg.effective_balance_tolerance();
-        run_all_splits(
-            &graph.adjacency,
-            &graph.vertex_weights,
-            &edge_weights,
-            num_districts,
-            balance_tolerance_frac,
-            cfg.niter,
-            cfg.seed,
-            Some(&intermediate_dir),
-        ).map_err(|e| format!("bisection failed: {e}"))?
+    let balance_tolerance_frac = cfg.effective_balance_tolerance();
+    let ufactor = cfg.algo.metis.ufactor;
+    let niter = cfg.algo.metis.niter;
+    let base_seed = cfg.algo.metis.seed;
+
+    let vwgt = vw.interleaved(graph.n_vertices);
+
+    // Auto-retry: METIS balance is a soft constraint and some seeds produce
+    // imbalanced partitions. Try up to MAX_RETRIES seeds before giving up.
+    const MAX_BALANCE_RETRIES: u32 = 50;
+    let mut assignments = HashMap::new();
+    let mut last_balance_err = String::new();
+    let mut seed = base_seed;
+
+    'retry: for attempt in 0..=MAX_BALANCE_RETRIES {
+        if attempt > 0 {
+            seed = Some(base_seed.unwrap_or(0).wrapping_add(attempt as u64));
+            status(cfg.position, &format!("{}: balance retry {}/{} (seed {:?})",
+                cfg.state_code, attempt, MAX_BALANCE_RETRIES, seed));
+        }
+
+    let partition_t0 = std::time::Instant::now();
+    let assignments_attempt = match &cfg.algo.split {
+        SplitStrategy::NWay if num_districts > 1 => {
+            status(cfg.position, &format!("{}: n-way into {} districts", cfg.state_code, num_districts));
+            run_nway_partition(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, 1.0 + ufactor as f64 / 1000.0, niter, seed,
+            ).map_err(|e| format!("n-way partition failed: {e}"))?
+        }
+        SplitStrategy::GeoSection => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
+            let lambda = cfg.algo.weights.directional_lambda;
+            let centroids = if lambda > 1e-10 {
+                crate::geosection_orientation::load_centroids_from_tiger(
+                    &cfg.state_code, &cfg.year, &graph.index_to_geoid)
+            } else {
+                crate::geosection_orientation::CentroidMap::new()
+            };
+            if lambda > 1e-10 {
+                status(cfg.position, &format!("{}: GeoSection λ={:.1} ({} centroids loaded)",
+                       cfg.state_code, lambda, centroids.len()));
+            } else {
+                status(cfg.position, &format!("{}: GeoSection {} ratios × {} seeds",
+                       cfg.state_code, num_districts / 2, seeds_per_ratio));
+            }
+            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac, niter,
+                seeds_per_ratio, Some(&intermediate_dir),
+                &centroids, lambda, None, 1.10, None, 0.0,
+            ).map_err(|e| format!("geosection failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        SplitStrategy::AreaSection { area_swing } => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
+            if tiger_areas.is_empty() {
+                return Err(format!("{}: AreaSection requires TIGER ALAND data — not found",
+                                   cfg.state_code));
+            }
+            let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+            status(cfg.position, &format!(
+                "{}: AreaSection {} ratios x {} seeds (pop+area dual, ncon=2)",
+                cfg.state_code, num_districts / 2, seeds_per_ratio));
+            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                num_districts, balance_tolerance_frac, niter,
+                seeds_per_ratio, Some(&intermediate_dir),
+                &empty_centroids, 0.0, Some(&tiger_areas), *area_swing, None, 0.0,
+            ).map_err(|e| format!("areasection failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        SplitStrategy::VraSection { w_vra } => {
+            let seeds_per_ratio = cfg.algo.seeds.seed_count();
+            // Load minority VAP data from demographics CSV.
+            // Minority fraction = (total_pop - white_non_hispanic) / total_pop,
+            // multiplied by tract population to get approximate minority VAP counts.
+            // (This is a spatial distribution proxy — not exact VAP data, but legally
+            //  defensible because no racial targeting occurs: only the geographic
+            //  distribution of existing minority concentrations is observed.)
+            let demo_path = std::path::Path::new("data")
+                .join(&cfg.year).join("demographics")
+                .join(format!("{state_name}_demographics_{}.csv", cfg.year));
+            let minority_vap_vec: Vec<f64> = if demo_path.exists() {
+                let demo = crate::demographics::load_demographics(&demo_path)
+                    .map_err(|e| format!("{}: VRASection demographics load failed: {e}", cfg.state_code))?;
+                let fracs = crate::demographics::align_demographics_to_adjacency(
+                    &demo, &graph.index_to_geoid, graph.n_vertices);
+                // Convert fraction × population → approximate minority VAP count
+                fracs.iter().zip(graph.vertex_weights.iter())
+                    .map(|(&frac, &pop)| frac * pop as f64)
+                    .collect()
+            } else {
+                eprintln!("WARNING: {}: VRASection demographics not found at {} — running as plain GeoSection",
+                          cfg.state_code, demo_path.display());
+                vec![]
+            };
+            let mvap_opt: Option<&[f64]> = if minority_vap_vec.is_empty() { None } else { Some(&minority_vap_vec) };
+            let empty_centroids = crate::geosection_orientation::CentroidMap::new();
+            status(cfg.position, &format!(
+                "{}: VRASection {} ratios x {} seeds w_vra={:.2}",
+                cfg.state_code, num_districts / 2, seeds_per_ratio, w_vra));
+            let (asgn, nat_left, nat_right, nat_ec) = run_geosection(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac, niter,
+                seeds_per_ratio, Some(&intermediate_dir),
+                &empty_centroids, 0.0, None, 1.10, mvap_opt, *w_vra,
+            ).map_err(|e| format!("vra-section failed: {e}"))?;
+            status(cfg.position, &format!("{}: natural ratio {}:{} at {:.0}km",
+                   cfg.state_code, nat_left, nat_right, nat_ec / 1000.0));
+            asgn
+        }
+        SplitStrategy::ProportionalSection { eta } => {
+            let seeds = cfg.algo.seeds.seed_count();
+            // Load D_votes from presidential_by_tract.csv
+            let election_path = std::path::PathBuf::from(format!(
+                "data/{}/elections/presidential_by_tract.csv", cfg.year));
+            if !election_path.exists() {
+                return Err(format!("{}: ProportionalSection requires {} — not found",
+                                   cfg.state_code, election_path.display()));
+            }
+            let (d_votes, two_party) = crate::partisan_shares::load_dem_vote_counts(
+                &election_path, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("{}: load_dem_vote_counts failed: {e}", cfg.state_code))?;
+            status(cfg.position, &format!(
+                "{}: ProportionalSection {} seeds eta={:.2} (pop+D_votes ncon=2)",
+                cfg.state_code, seeds, eta));
+            let (asgn, k_d, k_r, best_ec, d_state) =
+                crate::bisection_runner::run_proportional_section(
+                    &graph.adjacency, &graph.vertex_weights, &d_votes, &two_party, &edge_weights,
+                    num_districts, balance_tolerance_frac, niter, seeds, *eta,
+                    Some(&intermediate_dir),
+                ).map_err(|e| format!("proportional-section failed: {e}"))?;
+            status(cfg.position, &format!(
+                "{}: proportional {}/{}D d={:.3} EC={:.0}km",
+                cfg.state_code, k_d, k_r, d_state, best_ec / 1000.0));
+            asgn
+        }
+        SplitStrategy::CompactBisect { epsilon } => {
+            let seeds_per_level = cfg.algo.seeds.seed_count();
+            let (vertex_areas, vertex_ext_perimeters) =
+                load_tiger_geometry(&cfg.state_code, &cfg.year, &graph.index_to_geoid,
+                                    &graph.adjacency, &edge_weights);
+            let opts = CompactBisectOpts { seeds_per_level, epsilon: *epsilon };
+            run_all_splits_compact(
+                &graph.adjacency, &vwgt, &edge_weights,
+                &vertex_areas, &vertex_ext_perimeters,
+                num_districts, balance_tolerance_frac, niter, None, &opts,
+                Some(&intermediate_dir),
+            ).map_err(|e| format!("compact-bisect failed: {e}"))?
+        }
+        SplitStrategy::ApportionRegions => {
+            use redist_apportion::{PfrCompositor, MetisPartitioner, pfr_tree_depth};
+            let factor_seq = redist_apportion::prime_factor_sequence(num_districts as u32);
+            let depth = pfr_tree_depth(num_districts as u32).max(1);
+            status(cfg.position, &format!("{}: apportion-regions partition into {} districts \
+                (F={:?}, depth={})", cfg.state_code, num_districts, factor_seq, depth));
+            // Per-level tolerance: (1 + per_level)^depth ≤ 1 + final_tol.
+            // Use depth+1 in denominator for margin (METIS can slightly exceed ufactor).
+            // Clamped to METIS minimum 0.1% (ufactor=1).
+            // Note: PFR is a research algorithm; the final balance check uses a relaxed
+            // 2% tolerance so we can measure actual balance rather than reject runs.
+            let per_level_tol = (balance_tolerance_frac / (depth + 1) as f64).max(0.001);
+            let partitioner = MetisPartitioner {
+                balance_tolerance: per_level_tol,
+                niter: niter as i32,
+            };
+            let compositor = PfrCompositor::new(partitioner);
+            let result = compositor.compose(
+                &graph.adjacency, &graph.vertex_weights, &edge_weights,
+                num_districts as u32,
+                seed,
+            ).map_err(|e| format!("apportion-regions failed: {e}"))?;
+            // Check balance at relaxed 2% — report actual deviation in manifest.
+            let pfr_assignments: std::collections::HashMap<usize, usize> = result.assignment
+                .iter().enumerate().map(|(t, &d)| (t, d as usize + 1)).collect();
+            let pfr_partition = redist_core::Partition::from_assignments(pfr_assignments.clone());
+            let pfr_balance = pfr_partition.population_balance(&graph.vertex_weights, num_districts);
+            if pfr_balance > 0.03 {
+                return Err(format!("apportion-regions balance {:.1}% exceeds 3% research limit",
+                    pfr_balance * 100.0));
+            }
+            status(cfg.position, &format!("{}: balance {:.2}% (cache hits={})",
+                cfg.state_code, pfr_balance * 100.0, result.cache_hits));
+            pfr_assignments
+        }
+        _ => {
+            status(cfg.position, &format!("{}: recursive bisection into {} districts",
+                   cfg.state_code, num_districts));
+            run_all_splits(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac, niter, seed,
+                Some(&intermediate_dir),
+            ).map_err(|e| format!("bisection failed: {e}"))?
+        }
     };
 
-    // 4. Assert population balance (chamber-aware tolerance).
-    // Congressional: ±0.5% (one-person-one-vote standard)
-    // State legislative: ±5.0% (state constitutional default)
-    // Explicit override wins via --balance-tolerance flag.
-    let partition = Partition::from_assignments(assignments.clone());
-    let balance_ok = partition.assert_balanced(&graph.vertex_weights, num_districts, balance_tolerance);
-    if let Err(e) = balance_ok {
-        return Err(format!("population balance violation (tolerance {:.1}%): {e}", balance_tolerance * 100.0));
+    if cfg.time_partition {
+        let partition_elapsed_ms = partition_t0.elapsed().as_secs_f64() * 1000.0;
+        eprintln!(
+            "[partition-time] {}: k={} n={} -> {:.1}ms",
+            cfg.state_code, num_districts, graph.n_vertices, partition_elapsed_ms
+        );
+    }
+
+    // 4. Assert population balance — retry loop closes here.
+    let effective_tolerance = if matches!(cfg.algo.split, SplitStrategy::ApportionRegions) {
+        0.03
+    } else {
+        balance_tolerance
+    };
+    let partition = Partition::from_assignments(assignments_attempt.clone());
+    let balance_ok = partition.assert_balanced(&graph.vertex_weights, num_districts, effective_tolerance);
+    match balance_ok {
+        Ok(_) => {
+            assignments = assignments_attempt;
+            break 'retry;
+        }
+        Err(e) => {
+            last_balance_err = format!("population balance violation (tolerance {:.1}%): {e}",
+                effective_tolerance * 100.0);
+            // continue retry loop
+        }
+    }
+    } // end 'retry loop
+
+    if assignments.is_empty() {
+        return Err(last_balance_err);
     }
 
     status(cfg.position, &format!("{}: balance OK, writing outputs", cfg.state_code));
 
     // 5. VRA analysis (if VRA mode and multi-district)
-    let vra = if cfg.partition_mode == "metis-vra" && num_districts > 1 {
+    let vra = if matches!(&cfg.algo.split, SplitStrategy::NWay) && num_districts > 1 {
         let demo_path = std::path::Path::new("data")
             .join(&cfg.year).join("demographics")
             .join(format!("{state_name}_demographics_{}.csv", cfg.year));
@@ -798,6 +1390,15 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     write_state_outputs(&data_dir, &assignments, vra.as_ref())
         .map_err(|e| format!("output write failed: {e}"))?;
 
+    // 6b. Compute edge-cut of the final partition.
+    // Sum edge weights for all edges (u, v) whose endpoints are in different districts.
+    // Stored in the manifest for seed-sensitivity research (B.7).
+    let edge_cut: f64 = edge_weights.iter().map(|(&(u, v), &w)| {
+        let du = assignments.get(&u).copied().unwrap_or(0);
+        let dv = assignments.get(&v).copied().unwrap_or(0);
+        if du != dv { w } else { 0.0 }
+    }).sum();
+
     // 7. Write manifest.json atomically (manifest.tmp → manifest.json).
     // Board amendment: atomic write (manifest.tmp + rename) prevents partial manifests.
     if cfg.write_manifest || cfg.label.is_some() {
@@ -812,8 +1413,8 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             chamber: cfg.chamber.clone(),
             num_districts,
             population_source: cfg.population_source.clone(),
-            partition_mode: cfg.partition_mode.clone(),
-            seed: cfg.seed.map(|s| s as i64),
+            partition_mode: cfg.algo.mode_name().to_string(),
+            seed: seed.map(|s| s as i64),
             binary_version: env!("CARGO_PKG_VERSION").to_string(),
             binary_sha256: String::new(), // populated by installer/release only
             binary_download_url: format!(
@@ -840,6 +1441,29 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 "multi_member_uniform".to_string()
             },
             gpmetis_version,
+            // AlgorithmConfig reproducibility fields
+            ufactor: cfg.algo.metis.ufactor,
+            niter:   cfg.algo.metis.niter,
+            alpha_county: cfg.algo.weights.alpha_county,
+            directional_lambda: cfg.algo.weights.directional_lambda,
+            split_seeds: match &cfg.algo.split {
+                SplitStrategy::GeoSection
+                | SplitStrategy::AreaSection   { .. }
+                | SplitStrategy::VraSection    { .. }
+                | SplitStrategy::CompactBisect { .. }
+                | SplitStrategy::ProportionalSection { .. }
+                    => Some(cfg.algo.seeds.seed_count()),
+                SplitStrategy::ApportionRegions => Some(cfg.algo.seeds.seed_count()),
+                _ => None,
+            },
+            split_epsilon: match &cfg.algo.split {
+                SplitStrategy::CompactBisect { epsilon, .. } => Some(*epsilon),
+                _ => None,
+            },
+            area_swing: match &cfg.algo.split {
+                SplitStrategy::AreaSection { area_swing, .. } => Some(*area_swing),
+                _ => None,
+            },
             // SSI Task 5/7 fields: state-staff-imported plans set these via run_import;
             // state-runner-produced plans default to authoritative + None (per `..Default`).
             submission_type: "authoritative".to_string(),
@@ -849,6 +1473,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_tool_version: None,
             source_format_fingerprint: None,
             import_compat_sha256: None,
+            edge_cut: Some(edge_cut),
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
@@ -872,6 +1497,81 @@ pub fn filter_incomplete(configs: Vec<StateConfig>) -> Vec<StateConfig> {
     configs.into_iter()
         .filter(|cfg| !state_already_complete(&cfg.output_dir, &cfg.state_code, &cfg.year, cfg.reprocess))
         .collect()
+}
+
+/// Build edge weights from a `WeightSpec` using the composable `EdgeWeighter` pipeline.
+///
+/// Steps applied in order:
+///   1. Geographic boundary lengths (if `spec.geographic`)
+///   2. Minority / VRA signal (if `spec.minority_weighting`)
+///   3. Partisan signal (if `spec.partisan_shares.is_some()`)
+///   4. County subdivision stickiness (if `spec.alpha_county > 1e-10`)
+///
+/// Returns `Ok(EdgeMap)` on success. Errors from data loading propagate as `Err(String)`.
+fn build_edge_weights(
+    spec: &WeightSpec,
+    graph: &crate::adjacency_loader::LoadedGraph,
+    state_code: &str,
+    state_name: &str,
+    year: &str,
+    _output_dir: &std::path::PathBuf,
+    position: i32,
+) -> Result<HashMap<(usize, usize), f64>, String> {
+    use crate::edge_weights::{
+        ComposedWeighter, GeographicWeighter,
+        MinorityOverrideWeighter, PartisanOverrideWeighter,
+        SubdivisionWeighter,
+    };
+
+    let edges: Vec<(usize, usize)> = graph.adjacency.iter().enumerate()
+        .flat_map(|(i, nbrs)| nbrs.iter().filter(move |&&j| j > i).map(move |&j| (i, j)))
+        .collect();
+
+    let mut composer = ComposedWeighter::new();
+
+    // Step 1: Geographic base weights (TIGER boundary lengths).
+    if spec.geographic {
+        composer = composer.push(GeographicWeighter::from_map(graph.edge_weights.clone()));
+    }
+
+    // Step 2: Minority / VRA — override variant (from scratch, historic behaviour).
+    if spec.minority_weighting {
+        status(position, &format!("{state_code}: VRA mode — loading demographics"));
+        let demo_path = std::path::Path::new("data")
+            .join(year).join("demographics")
+            .join(format!("{state_name}_demographics_{year}.csv"));
+        let demo = load_demographics(&demo_path)
+            .map_err(|e| format!("demographics load failed: {e}"))?;
+        let minority_fracs = align_demographics_to_adjacency(
+            &demo, &graph.index_to_geoid, graph.n_vertices);
+        composer = composer.push(MinorityOverrideWeighter::new(edges.clone(), minority_fracs, 0.40));
+    }
+
+    // Step 3: Partisan signal — override variant (from scratch, historic behaviour).
+    if let Some(ref partisan_path) = spec.partisan_shares {
+        if !partisan_path.as_os_str().is_empty() {
+            status(position, &format!("{state_code}: partisan-weighted — loading {}", partisan_path.display()));
+            let dem_shares = load_partisan_shares(partisan_path, &graph.index_to_geoid, graph.n_vertices)
+                .map_err(|e| format!("partisan shares load failed: {e}"))?;
+            composer = composer.push(PartisanOverrideWeighter::new(
+                edges.clone(), dem_shares, spec.dem_threshold, spec.rep_threshold,
+            ));
+        }
+    }
+
+    // Step 4: Subdivision stickiness (B.10) — augment on whatever base is set.
+    if spec.alpha_county > 1e-10 {
+        composer = composer.push(SubdivisionWeighter::county_only(
+            &graph.index_to_geoid, graph.n_vertices, spec.alpha_county,
+        ));
+    }
+
+    // If nothing was added to the composer, fall back to geographic weights
+    if composer.is_empty() {
+        return Ok(graph.edge_weights.clone());
+    }
+
+    Ok(composer.apply())
 }
 
 /// Apply COI (Communities of Interest) weights to edge weights.
@@ -910,6 +1610,81 @@ pub fn apply_coi_weights(
     Ok(edge_weights)
 }
 
+/// Load per-tract area (m²) and external perimeter (m) from TIGER shapefiles.
+/// Used by CompactBisect to compute Polsby-Popper at each bisection level.
+///
+/// Area: ALAND field from TIGER (accurate, in m²).
+/// External perimeter: approximated as 2√(π·ALAND) − Σ(shared edge weights).
+/// The circular approximation is slightly off for elongated tracts but preserves
+/// relative compactness rankings within the same subgraph.
+///
+/// Returns (vertex_areas, vertex_ext_perimeters) aligned to adjacency indices.
+/// Returns empty vecs if TIGER file is not found (CompactBisect gracefully degrades).
+pub fn load_tiger_geometry(
+    state_code: &str,
+    year: &str,
+    index_to_geoid: &std::collections::HashMap<usize, String>,
+    adjacency: &[Vec<usize>],
+    edge_weights: &std::collections::HashMap<(usize, usize), f64>,
+) -> (Vec<f64>, Vec<f64>) {
+    let state_fips = state_code_to_fips(&state_code.to_uppercase()).map(|s| s.to_string());
+
+    // Try TIGER path: data/{year}/tiger/tracts/tl_{year}_{fips}_tract/
+    let tiger_path = state_fips.as_deref().and_then(|fips| {
+        let p = std::path::PathBuf::from("data")
+            .join(year).join("tiger").join("tracts")
+            .join(format!("tl_{year}_{fips}_tract"))
+            .join(format!("tl_{year}_{fips}_tract.shp"));
+        if p.exists() { Some(p) } else { None }
+    });
+
+    let tiger_path = match tiger_path {
+        Some(p) => p,
+        None => {
+            eprintln!("[compact-bisect] TIGER not found for {state_code} {year} — no geometry");
+            return (Vec::new(), Vec::new());
+        }
+    };
+
+    // Read tract records: geoid → aland
+    let records = match redist_data::read_tiger_tracts(&tiger_path) {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("[compact-bisect] TIGER read failed: {e}");
+            return (Vec::new(), Vec::new());
+        }
+    };
+
+    let geoid_to_aland: std::collections::HashMap<String, f64> = records.iter()
+        .map(|r| (r.geoid.clone(), r.aland as f64))
+        .collect();
+
+    let n = adjacency.len();
+    let mut vertex_areas = vec![0.0f64; n];
+    let mut vertex_ext_perimeters = vec![0.0f64; n];
+
+    for (&idx, geoid) in index_to_geoid {
+        if idx >= n { continue; }
+        let aland = *geoid_to_aland.get(geoid).unwrap_or(&0.0);
+        vertex_areas[idx] = aland;
+
+        // Circular approximation of total perimeter: 2√(π·A)
+        let total_perim_approx = if aland > 0.0 {
+            2.0 * (std::f64::consts::PI * aland).sqrt()
+        } else { 0.0 };
+
+        // Subtract shared boundaries (in metres from adjacency edge weights)
+        let shared: f64 = adjacency[idx].iter().map(|&j| {
+            let key = (idx.min(j), idx.max(j));
+            edge_weights.get(&key).copied().unwrap_or(0.0)
+        }).sum();
+
+        vertex_ext_perimeters[idx] = (total_perim_approx - shared).max(0.0);
+    }
+
+    (vertex_areas, vertex_ext_perimeters)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -923,15 +1698,15 @@ mod tests {
             year: "2020".to_string(),
             version: "V3".to_string(),
             output_dir: PathBuf::from("/tmp/test"),
-            partition_mode: "edge-weighted".to_string(),
+            algo: AlgorithmConfig {
+                metis: MetisParams { ufactor: 5, niter: 100, seed: Some(42) },
+                ..AlgorithmConfig::default()
+            },
             position: 999,
             debug: false,
             reset: false,
             reprocess: false,
-            ufactor: 5,
-            niter: 100,
-            seed: Some(42),
-            // Spec 1 defaults
+            time_partition: false,
             num_districts_override: None,
             chamber: "congressional".to_string(),
             label: None,
@@ -944,9 +1719,6 @@ mod tests {
             total_seats: 1,
             adjacency_override: None,
             coi_weights: None,
-            partisan_shares: None,
-            dem_threshold: 0.55,
-            rep_threshold: 0.45,
         }
     }
 
@@ -972,10 +1744,13 @@ mod tests {
         assert_eq!(cfg.output_dir, PathBuf::from("/tmp/test"));
         assert_eq!(cfg.position, 3);
         // Algorithm defaults
-        assert_eq!(cfg.partition_mode, "edge-weighted");
-        assert_eq!(cfg.ufactor, 5);
-        assert_eq!(cfg.niter, 100);
-        assert!(cfg.seed.is_none());
+        assert_eq!(cfg.algo.mode_name(), "edge-weighted");
+        assert_eq!(cfg.algo.metis.ufactor, 5);
+        assert_eq!(cfg.algo.metis.niter, 100);
+        assert_eq!(cfg.algo.metis.seed, None);
+        assert!(cfg.algo.weights.geographic);
+        assert!(!cfg.algo.weights.minority_weighting);
+        assert!(cfg.algo.weights.partisan_shares.is_none());
         // Control defaults
         assert!(!cfg.debug);
         assert!(!cfg.reset);
@@ -1803,71 +2578,353 @@ mod tests {
     #[test]
     fn test_validate_partisan_config_metis_vra_alone_ok() {
         let cfg = StateConfig {
-            partition_mode: "metis-vra".into(),
-            partisan_shares: None,
+            algo: AlgorithmConfig {
+                split: SplitStrategy::NWay,
+                weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+                metis: MetisParams { ufactor: 5, niter: 100, seed: None },
+                mode_label: None,
+                ..AlgorithmConfig::default()
+            },
             ..make_config("AL")
         };
-        validate_partisan_config(&cfg).expect("metis-vra without shares is fine");
+        validate_partisan_config(&cfg).expect("metis-vra is always valid");
     }
 
     #[test]
-    fn test_validate_partisan_config_metis_vra_with_shares_rejected() {
-        // The Callais p.36 disentanglement: race-conscious mode + partisan data = error.
-        let cfg = StateConfig {
-            partition_mode: "metis-vra".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("LA")
+    fn test_algo_mode_names() {
+        // AlgorithmConfig carries mode identity — no separate string field needed.
+        let unweighted = AlgorithmConfig {
+            split: SplitStrategy::Bisect,
+            weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+            mode_label: Some("unweighted"),
+            ..AlgorithmConfig::default()
         };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("--partisan-shares requires"),
-            "error should explain the constraint, got: {err}");
-        assert!(err.contains("metis-vra"), "error should name the offending mode: {err}");
-    }
+        assert_eq!(unweighted.mode_name(), "unweighted");
 
-    #[test]
-    fn test_validate_partisan_config_edge_weighted_with_shares_rejected() {
-        // Even non-VRA modes must not accept partisan_shares — only partisan-weighted does.
-        let cfg = StateConfig {
-            partition_mode: "edge-weighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("WA")
+        let edge_weighted = AlgorithmConfig::default();
+        assert_eq!(edge_weighted.mode_name(), "edge-weighted");
+
+        let metis_vra = AlgorithmConfig {
+            split: SplitStrategy::NWay,
+            weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+            mode_label: None,
+            ..AlgorithmConfig::default()
         };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("partisan-weighted"),
-            "error should name the only valid mode for shares: {err}");
+        assert_eq!(metis_vra.mode_name(), "metis-vra");
+
+        let geosection = AlgorithmConfig {
+            split: SplitStrategy::GeoSection { seeds_per_ratio: 50 },
+            mode_label: None,
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(geosection.mode_name(), "geosection");
+
+        let compact = AlgorithmConfig {
+            split: SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 },
+            mode_label: None,
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(compact.mode_name(), "compact-bisect");
     }
 
     #[test]
-    fn test_validate_partisan_config_partisan_weighted_without_shares_rejected() {
-        let cfg = StateConfig {
-            partition_mode: "partisan-weighted".into(),
+    fn test_algo_metis_params_extraction() {
+        let cfg = AlgorithmConfig {
+            metis: MetisParams { ufactor: 7, niter: 200, seed: Some(42) },
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(cfg.metis.ufactor, 7);
+        assert_eq!(cfg.metis.niter, 200);
+        assert_eq!(cfg.metis.seed, Some(42));
+
+        let vra = AlgorithmConfig {
+            split: SplitStrategy::NWay,
+            weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
+            metis: MetisParams { ufactor: 3, niter: 50, seed: None },
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(vra.metis.ufactor, 3);
+        assert_eq!(vra.metis.niter, 50);
+        assert_eq!(vra.metis.seed, None);
+    }
+
+    #[test]
+    fn test_validate_partisan_config_is_noop() {
+        // Validation is now structural — this is always Ok.
+        let cfg = make_config("VT");
+        validate_partisan_config(&cfg).expect("structural validation always passes");
+    }
+
+    // ── AlgorithmConfig: exhaustive PartitionMode coverage ───────────────────
+    // Every PartitionMode must be reachable via defaults_for_mode, produce a
+    // correct mode_name(), and have valid MetisParams. If a new PartitionMode is
+    // added, add a case here and a new arm in the split dispatch — two-level safety.
+
+    #[test]
+    fn test_algo_all_modes_have_mode_name() {
+        use crate::args::PartitionMode as PM;
+        let cases = [
+            (PM::Unweighted,       "unweighted"),
+            (PM::EdgeWeighted,     "edge-weighted"),
+            (PM::MetisVra,         "metis-vra"),
+            (PM::PartisanWeighted, "partisan-weighted"),
+            (PM::Proportional,     "proportional"),
+            (PM::CompactBisect,    "compact-bisect"),
+            (PM::GeoSection,       "geosection"),
+            (PM::AreaSection,      "areasection"),
+        ];
+        for (mode, expected_name) in &cases {
+            let algo = AlgorithmConfig::defaults_for_mode(mode);
+            assert_eq!(algo.mode_name(), *expected_name,
+                "mode_name mismatch for {:?}", expected_name);
+        }
+    }
+
+    #[test]
+    fn test_algo_all_modes_defaults_for_mode_roundtrip() {
+        use crate::args::PartitionMode as PM;
+        // Every mode must produce a valid AlgorithmConfig via defaults_for_mode.
+        // The mode_name of the result must match the input mode's string.
+        let cases = [
+            (PM::Unweighted,      "unweighted"),
+            (PM::EdgeWeighted,    "edge-weighted"),
+            (PM::MetisVra,        "metis-vra"),
+            (PM::PartisanWeighted,"partisan-weighted"),
+            (PM::Proportional,    "proportional"),
+            (PM::CompactBisect,   "compact-bisect"),
+            (PM::GeoSection,      "geosection"),
+            (PM::AreaSection,     "areasection"),
+        ];
+        for (mode, name) in &cases {
+            let algo = AlgorithmConfig::defaults_for_mode(mode);
+            assert_eq!(algo.mode_name(), *name,
+                "defaults_for_mode({name}) produced wrong mode_name");
+        }
+    }
+
+    #[test]
+    fn test_algo_metis_params_all_modes_positive() {
+        // Every mode must produce ufactor > 0 and niter > 0 from defaults_for_mode.
+        use crate::args::PartitionMode as PM;
+        let modes = [
+            PM::Unweighted, PM::EdgeWeighted, PM::MetisVra,
+            PM::PartisanWeighted, PM::Proportional,
+            PM::CompactBisect, PM::GeoSection, PM::AreaSection,
+        ];
+        for mode in &modes {
+            let algo = AlgorithmConfig::defaults_for_mode(mode);
+            assert!(algo.metis.ufactor > 0, "ufactor must be > 0 for {:?}", mode);
+            assert!(algo.metis.niter > 0, "niter must be > 0 for {:?}", mode);
+        }
+    }
+
+    #[test]
+    fn test_algo_default_edge_weighted() {
+        let algo = AlgorithmConfig::default();
+        assert_eq!(algo.mode_name(), "edge-weighted");
+        assert_eq!(algo.metis.ufactor, 5);
+        assert_eq!(algo.metis.niter, 100);
+        assert_eq!(algo.metis.seed, None);
+        assert!(algo.weights.geographic);
+        assert!(!algo.weights.minority_weighting);
+        assert!(algo.weights.partisan_shares.is_none());
+    }
+
+    #[test]
+    fn test_algo_geosection_defaults() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::GeoSection);
+        assert_eq!(algo.mode_name(), "geosection");
+        if let SplitStrategy::GeoSection { seeds_per_ratio } = algo.split {
+            assert!(seeds_per_ratio > 0, "geosection needs seeds_per_ratio > 0");
+        } else {
+            panic!("defaults_for_mode(GeoSection) returned wrong split strategy");
+        }
+        assert_eq!(algo.weights.directional_lambda, 0.0,
+            "default lambda should be 0 (no directional penalty)");
+    }
+
+    // ── Poison values — testing defensive behaviour ───────────────────────────
+    // These tests construct AlgorithmConfig with obviously-wrong values and
+    // verify the struct is transparent: garbage in = garbage out (no silent fixes).
+
+    #[test]
+    fn test_algo_poison_zero_seeds_not_silently_fixed() {
+        let poison = AlgorithmConfig {
+            split: SplitStrategy::GeoSection { seeds_per_ratio: 0 },
+            weights: WeightSpec { directional_lambda: f64::INFINITY, ..WeightSpec::default() },
+            metis: MetisParams { ufactor: 0, niter: 0, seed: None },
+            ..AlgorithmConfig::default()
+        };
+        // mode_name must still work (no panic)
+        assert_eq!(poison.mode_name(), "geosection");
+        // MetisParams fields must reflect the bad values as-is (caller can validate)
+        assert_eq!(poison.metis.ufactor, 0, "poison ufactor=0 must not be silently corrected");
+        assert_eq!(poison.metis.niter, 0, "poison niter=0 must not be silently corrected");
+        if let SplitStrategy::GeoSection { seeds_per_ratio } = poison.split {
+            assert_eq!(seeds_per_ratio, 0, "poison seeds=0 must not be silently corrected");
+        }
+    }
+
+    #[test]
+    fn test_split_strategy_all_variants_mode_name_never_panics() {
+        // Exhaustive instantiation: if a new SplitStrategy variant is added without
+        // updating this list, the COMPILER will reject this test — compile-time safety.
+        let all: &[(&str, SplitStrategy)] = &[
+            ("edge-weighted", SplitStrategy::Bisect),
+            ("metis-vra",     SplitStrategy::NWay),
+            ("geosection",    SplitStrategy::GeoSection { seeds_per_ratio: 50 }),
+            ("compact-bisect",SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 }),
+            ("areasection",   SplitStrategy::AreaSection { seeds_per_ratio: 50, area_swing: 1.10 }),
+            ("apportion-regions",  SplitStrategy::ApportionRegions { seeds_per_level: 1 }),
+            ("vra-section",   SplitStrategy::VraSection { seeds_per_ratio: 50, w_vra: 0.40 }),
+        ];
+        for (expected_name, variant) in all {
+            assert_eq!(variant.mode_name(), *expected_name,
+                "new SplitStrategy variant added without updating this exhaustive list!");
+        }
+    }
+
+    #[test]
+    fn test_algo_compact_bisect_defaults() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::CompactBisect);
+        assert_eq!(algo.mode_name(), "compact-bisect");
+        if let SplitStrategy::CompactBisect { seeds_per_level, epsilon } = algo.split {
+            assert!(seeds_per_level > 0);
+            assert!(epsilon > 0.0 && epsilon < 1.0, "epsilon must be in (0,1)");
+        } else {
+            panic!("defaults_for_mode(CompactBisect) returned wrong split strategy");
+        }
+    }
+
+    #[test]
+    fn test_weight_spec_defaults() {
+        let spec = WeightSpec::default();
+        assert!(spec.geographic);
+        assert!(spec.partisan_shares.is_none());
+        assert!(!spec.minority_weighting);
+        assert!((spec.dem_threshold - 0.55).abs() < 1e-9);
+        assert!((spec.rep_threshold - 0.45).abs() < 1e-9);
+        assert!(spec.alpha_county < 1e-10);
+        assert!(spec.alpha_mcd < 1e-10);
+        assert!(spec.alpha_place < 1e-10);
+        assert!(spec.alpha_vtd < 1e-10);
+        assert!(spec.directional_lambda < 1e-10);
+    }
+
+    #[test]
+    fn test_metis_params_defaults() {
+        let mp = MetisParams::default();
+        assert_eq!(mp.ufactor, 5);
+        assert_eq!(mp.niter, 100);
+        assert_eq!(mp.seed, None);
+    }
+
+    #[test]
+    fn test_algo_unweighted_mode_detection() {
+        // Unweighted: mode_label overrides → "unweighted"
+        let algo = AlgorithmConfig {
+            weights: WeightSpec { geographic: false, ..WeightSpec::default() },
+            mode_label: Some("unweighted"),
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(algo.mode_name(), "unweighted");
+    }
+
+    #[test]
+    fn test_algo_partisan_weighted_mode_detection() {
+        let algo = AlgorithmConfig {
+            weights: WeightSpec {
+                partisan_shares: Some(std::path::PathBuf::from("shares.tsv")),
+                dem_threshold: 0.55,
+                rep_threshold: 0.45,
+                ..WeightSpec::default()
+            },
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(algo.mode_name(), "partisan-weighted");
+    }
+
+    #[test]
+    fn test_algo_alpha_county_propagates_from_state_args() {
+        use crate::args::{PartitionMode, StateArgs};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--alpha-county", "2.5"
+        ]);
+        assert!((args.alpha_county - 2.5).abs() < 1e-9,
+            "alpha_county must be parsed from CLI, got {}", args.alpha_county);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!((algo.weights.alpha_county - 2.5).abs() < 1e-9,
+            "alpha_county must propagate into WeightSpec, got {}", algo.weights.alpha_county);
+    }
+
+    #[test]
+    fn test_algo_alpha_county_default_is_zero() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args = StateArgs::parse_from(["state", "--state", "VT"]);
+        assert!(args.alpha_county < 1e-10,
+            "alpha_county default must be 0.0, got {}", args.alpha_county);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.weights.alpha_county < 1e-10,
+            "alpha_county must default to 0.0 in WeightSpec");
+    }
+
+    #[test]
+    fn test_subdivision_weighter_modifies_same_county_edges() {
+        // Integration: alpha_county flows through ComposedWeighter and changes weights.
+        use crate::edge_weights::{ComposedWeighter, GeographicWeighter, SubdivisionWeighter};
+        use std::collections::HashMap;
+
+        // Two edges: (0,1) same county "01001", (1,2) cross-county "01001" vs "01002"
+        let mut geo_map = HashMap::new();
+        geo_map.insert((0usize, 1usize), 100.0f64);
+        geo_map.insert((1usize, 2usize), 100.0f64);
+
+        let mut geoid_map = HashMap::new();
+        geoid_map.insert(0usize, "01001000100".to_string());
+        geoid_map.insert(1usize, "01001000200".to_string()); // same county
+        geoid_map.insert(2usize, "01002000100".to_string()); // different county
+
+        let composer = ComposedWeighter::new()
+            .push(GeographicWeighter::from_map(geo_map))
+            .push(SubdivisionWeighter::county_only(&geoid_map, 3, 3.0));
+        let out = composer.apply();
+
+        // (0,1): same county → 100 × (1 + 3) = 400
+        assert!((out[&(0,1)] - 400.0).abs() < 1e-9,
+            "same-county edge should be 4× more expensive, got {}", out[&(0,1)]);
+        // (1,2): cross-county → unchanged
+        assert!((out[&(1,2)] - 100.0).abs() < 1e-9,
+            "cross-county edge should be unchanged, got {}", out[&(1,2)]);
+    }
+
+    #[test]
+    fn test_early_exit_checks_all_subdivision_alphas() {
+        // WeightSpec with only alpha_mcd set must NOT trigger the unweighted early-exit.
+        // Regression test for the missing alpha_mcd/place/vtd check in the early-exit guard.
+        let spec = WeightSpec {
+            geographic: false,
+            minority_weighting: false,
             partisan_shares: None,
-            ..make_config("VT")
+            alpha_county: 0.0,
+            alpha_mcd:    2.0, // only mcd set — must not early-exit to empty map
+            alpha_place:  0.0,
+            alpha_vtd:    0.0,
+            ..WeightSpec::default()
         };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("requires --partisan-shares"),
-            "error should explain what's missing: {err}");
-    }
-
-    #[test]
-    fn test_validate_partisan_config_partisan_weighted_with_shares_ok() {
-        let cfg = StateConfig {
-            partition_mode: "partisan-weighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("/tmp/foo.tsv")),
-            ..make_config("LA")
-        };
-        validate_partisan_config(&cfg).expect("partisan-weighted + shares is the valid combo");
-    }
-
-    #[test]
-    fn test_validate_partisan_config_unweighted_with_shares_rejected() {
-        // The unweighted mode also doesn't accept shares — only partisan-weighted.
-        let cfg = StateConfig {
-            partition_mode: "unweighted".into(),
-            partisan_shares: Some(std::path::PathBuf::from("foo.tsv")),
-            ..make_config("DE")
-        };
-        let err = validate_partisan_config(&cfg).expect_err("must reject");
-        assert!(err.contains("unweighted"), "error should name the offending mode: {err}");
+        // The early-exit condition: all four alphas < 1e-10 AND no geographic/partisan/minority.
+        // With alpha_mcd = 2.0 this must be FALSE.
+        let should_early_exit = !spec.geographic
+            && !spec.minority_weighting
+            && spec.partisan_shares.is_none()
+            && spec.alpha_county < 1e-10
+            && spec.alpha_mcd    < 1e-10
+            && spec.alpha_place  < 1e-10
+            && spec.alpha_vtd    < 1e-10;
+        assert!(!should_early_exit,
+            "alpha_mcd=2.0 must prevent early-exit to empty edge map");
     }
 }

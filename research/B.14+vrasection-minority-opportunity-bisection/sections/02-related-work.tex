@@ -1,0 +1,132 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Voting Rights Act Section 2 and the Gingles test.}
+Section 2 of the Voting Rights Act of 1965, as amended in 1982,
+prohibits electoral practices that result in minority voters having less
+opportunity than other members to participate in the political process
+\citep{vra1965}.
+In \emph{Thornburg v.\ Gingles} (1986), the Supreme Court established
+a three-part test for Section 2 vote dilution claims in redistricting
+\citep{gingles1986}:
+
+\begin{enumerate}
+\item \textbf{Prong 1 (geographic compactness)}: The minority group is
+  sufficiently large and geographically compact to constitute a majority
+  in a single-member district.
+\item \textbf{Prong 2 (political cohesion)}: The minority group is
+  politically cohesive.
+\item \textbf{Prong 3 (bloc voting)}: The white majority votes sufficiently
+  as a bloc to usually defeat the minority's preferred candidate.
+\end{enumerate}
+
+Gingles Prong 1 is the geographic predicate: it asks whether the minority
+community is compact enough to form a district.
+VRASection operationalises Prong 1 directly: the alignment score $A$ measures
+geographic concentration, and $A \geq 0.15$ (proposed threshold)
+identifies communities concentrated enough for VRASection to detect them.
+
+\paragraph{Shaw v. Reno and racial predominance.}
+\emph{Shaw v.\ Reno} (1993) and \emph{Miller v.\ Johnson} (1995)
+established that racial considerations cannot be the ``predominant factor''
+in district design \citep{shaw1993,miller1995}.
+A district is presumptively unconstitutional if it is so ``bizarrely shaped''
+that it is unexplainable on grounds other than race.
+The predominance test asks whether the legislature subordinated traditional
+redistricting principles --- compactness, contiguity, preservation of
+political subdivisions --- to racial considerations.
+
+VRASection's $w_\text{vra}$ parameter makes the Shaw analysis quantitative:
+at $w_\text{vra} < 0.5$, the compactness component of the selection score
+exceeds the alignment component for any ratio, ensuring that geographic
+compactness is the predominant factor (Section~\ref{sec:legal-analysis}).
+At $w_\text{vra} = 0.40$ (the proposed default), compactness is explicitly
+weighted 60\,\% against alignment's 40\,\%.
+
+\paragraph{Allen v. Milligan and the modern Section 2 standard.}
+\emph{Allen v.\ Milligan} (2023) reaffirmed the Gingles framework and
+held that Alabama's 2021 congressional map, which produced only one
+Black-majority district despite Alabama's 27\,\% Black VAP, violated
+Section 2 \citep{allen2023}.
+The Court's 5--4 opinion confirmed that race-neutral algorithms do not
+insulate a map from Section 2 challenge if the resulting map dilutes
+minority voting strength.
+Alabama is the lead case study for VRASection precisely because its
+geography --- concentrated Black Belt population, dispersed northern
+industrial and coastal areas --- provides a strong alignment signal that
+the algorithm should detect and act on.
+
+\paragraph{Callais v. Landry and the Louisiana remedy.}
+\emph{Callais v.\ Landry} (2025) addressed Louisiana's remedial maps
+following Section 2 litigation \citep{callais2025}.
+The case establishes that the remedy --- two Black-majority congressional
+districts --- must be achieved while maintaining other traditional
+redistricting criteria.
+VRASection is designed to produce plans that satisfy this requirement:
+the alignment score concentrates minority population without abandoning
+compactness or contiguity.
+Validation against Louisiana's Section 2 remedy (2 Black-majority districts
+from $k=6$) is a key experiment in the full empirical suite.
+
+\paragraph{Geographic concentration and the Rodden thesis.}
+\citet{rodden2019} documents the deep geographic sorting of American voters:
+Democrats are concentrated in dense urban cores; Republicans are distributed
+across suburban and rural areas.
+This sorting interacts with redistricting in two ways.
+For partisan purposes, minimum-edge-cut bisection tends to isolate urban
+cores, producing the caterpillar pathology identified in B.8 \citep{b8paper}.
+For VRA purposes, the Rodden thesis implies that minority communities
+(disproportionately Democratic) are already geographically concentrated
+in urban cores and specific rural corridors (e.g., the Black Belt, the
+Rio Grande Valley, the Mississippi Delta).
+VRASection exploits this concentration directly: states where minority
+communities have high geographic clustering will exhibit high alignment
+scores, and the algorithm's tie-breaking will concentrate them on one
+side of the first bisection.
+
+\citet{chen2013} confirm that geographic sorting produces predictable
+partisan outcomes under compactness criteria.
+VRASection's alignment score provides a parallel signal for minority
+communities: the geographic sorting that makes a community legally cognizable
+under Gingles Prong 1 is the same sorting that produces a high alignment score.
+
+\paragraph{Compactness in the VRA context.}
+Compactness serves a dual function in VRA jurisprudence.
+Under Gingles Prong 1, compactness is a predicate for coverage: only
+compact minority communities trigger Section 2's affirmative obligation.
+Under Shaw, compactness is a limiting principle: racial predominance is
+established when compactness is sacrificed in service of racial targets.
+VRASection navigates this tension by making compactness the primary criterion
+(the $\mathrm{EC}_\text{norm}$ term in the objective) and alignment a bounded
+secondary term ($w_\text{vra} \leq 0.5$).
+The algorithm satisfies Gingles Prong 1's geographic compact requirement
+by rewarding natural geographic concentration --- the same geographic
+compactness required by Shaw.
+
+\paragraph{MetisVra (B.3): the explicit constraint approach.}
+B.3 \citep{b3paper} introduced MetisVra, which adds minority VAP as an
+explicit second METIS constraint (ncon=2).
+The approach fails in 3 of 5 tested states due to constraint scale mismatch:
+minority VAP fractions (0.0--1.0) and census population counts
+(10,000--200,000) differ by 60--800$\times$, and METIS's numerical solver
+cannot simultaneously satisfy both constraints with meaningful precision.
+Alabama (0\,\% success across 140 configurations) and Louisiana (0\,\%)
+are the clearest failures; South Carolina also fails completely.
+MetisVra succeeds only in states with large $k$ (Georgia, $k=14$) or
+very high minority concentration (Mississippi, $k=4$, 38.8\,\% Black VAP).
+
+VRASection addresses the MetisVra failure at the architectural level:
+there is no second METIS constraint, so there is no scale mismatch.
+The alignment score is computed post-hoc from the METIS output, not
+used as a constraint input.
+
+\paragraph{GeoSection (B.8): the isoperimetric ratio scan.}
+VRASection extends GeoSection \citep{b8paper}, which introduced
+isoperimetrically normalised ratio scanning for recursive bisection.
+GeoSection's key contribution --- the $\mathrm{EC}/\sqrt{\min(i,k-i)}$
+normalisation that prevents the caterpillar pathology --- carries over
+to VRASection unchanged.
+VRASection adds a single modification: the selection score at the first
+bisection level incorporates the alignment bonus.
+All subsequent recursion levels use standard GeoSection (no alignment),
+so that race is observed at most once in the bisection tree.

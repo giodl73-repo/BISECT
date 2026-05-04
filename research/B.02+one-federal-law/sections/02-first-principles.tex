@@ -1,0 +1,298 @@
+\section{First Principles}
+\label{sec:first-principles}
+
+\subsection{The Structure of the Argument}
+
+The argument for the \dia{} rests on four premises and one logical step.
+The premises are not contested.
+Each has been endorsed, explicitly or implicitly, by both parties, by
+Congress, and by the Supreme Court.
+The logical step is elementary.
+The conclusion is that \hh{} apportionment, applied within states via \ar{},
+is the constitutionally correct method for congressional redistricting.
+
+The argument may be stated formally as follows.
+
+\begin{quotation}
+\noindent
+\textbf{Premise~1} (\wesberry{}, 1964): Congressional districts must have
+equal population.\\[0.5em]
+\textbf{Premise~2} (2~U.S.C.~\usca{}~2a(a), enacted 1941, upheld 1992):
+The correct method for the interstate apportionment problem---allocating
+congressional seats among states in proportion to population---is the
+Huntington-Hill equal-proportions algorithm.\\[0.5em]
+\textbf{Premise~3} (both parties, on record in courts across six decades):
+The map should not be drawn by politicians with a personal stake in the
+outcome.\\[0.5em]
+\textbf{Premise~4} (logic): The interstate problem and the intrastate
+problem are structurally isomorphic: both require apportioning $k$
+indivisible units among sub-units in proportion to population,
+minimizing percentage deviation from ideal allocation.\\[0.5em]
+\textbf{Conclusion}: \hh{} should apply to the intrastate problem.
+The algorithm that implements this is \ar{}.
+The statute that mandates it is the \dia{}.
+\end{quotation}
+
+We develop each premise in turn.
+
+\subsection{Premise 1: One Person, One Vote}
+
+\wesberry{} v.\ \textit{Sanders}, 376 U.S. 1 (1964), is the foundational
+principle of congressional redistricting.
+Writing for the Court, Justice Black held that Article~I, \S2---``chosen by
+the People of the several States''---means that ``as nearly as is practicable
+one man's vote in a congressional election is to be worth as much as
+another's.''\footnote{%
+  \wesberry{}, 376 U.S. at 7--8, 18.
+}
+The Court declined to specify a precise tolerance, but the requirement was
+clear: districts must be as equal in population as is practicable.
+
+Nineteen years later, \karcher{} v.\ \textit{Daggett}, 462 U.S. 725 (1983),
+converted this principle into a near-zero tolerance standard.
+Any population deviation in a congressional district plan must be justified
+by a legitimate state objective, and the state bears the burden of proving
+the deviation was necessary to achieve that objective.\footnote{%
+  \karcher{}, 462 U.S. at 730--731.
+  The Court struck down a New Jersey plan with a maximum deviation of 0.6984\%
+  because the state had not demonstrated that the deviation was required to
+  achieve any legitimate objective.
+}
+
+The practical effect of \wesberry{} and \karcher{} together is that population
+equality is, effectively, a hard constraint.
+The target population for each district is $P/k$, where $P$ is the state's
+total population and $k$ is its congressional seat count.
+Each district must contain approximately $P/k$ persons.
+This is not negotiable; it is the constitutional floor.
+
+The \dia{} treats this as a hard constraint.
+The parameter \texttt{ubvec[0]=1.001} in the \ar{} implementation
+(the METIS population balance tolerance) imposes a $\pm 0.05\%$ deviation
+ceiling---an order of magnitude tighter than the tightest maps that have
+survived judicial review.
+Premise~1 is satisfied by design.
+
+\subsection{Premise 2: Huntington-Hill Is the Agreed Interstate Standard}
+
+The Huntington-Hill method is codified at 2~U.S.C.~\usca{}~2a(a), which
+provides that following each decennial census, the Clerk of the House of
+Representatives shall ``determine the number of Representatives to which each
+State is entitled'' using the ``method of equal proportions.''\footnote{%
+  The statute does not name the method; the phrase ``method of equal
+  proportions'' is the standard mathematical name for the algorithm
+  devised by Joseph A.\ Hill and developed by Edward V.\ Huntington.
+  See \textit{Department of Commerce v.\ Montana}, 503 U.S. 442, 448 (1992).
+}
+
+The method works as follows.
+Assign one seat to each state (the constitutional minimum).
+Then, iteratively, assign the next seat to the state with the highest
+\emph{priority value}, defined as:
+\[
+  P_s(n) = \frac{\text{population}_s}{\sqrt{n(n+1)}}
+\]
+where $n$ is the state's current seat count and the divisor
+$\sqrt{n(n+1)}$ is the geometric mean of $n$ and $n+1$.
+Repeat until all 435 seats are assigned.
+
+The geometric mean divisor minimizes the percentage difference between
+any two states' average district populations.
+This is the ``equal proportions'' property: Huntington-Hill is the method
+that makes the seat allocation as proportional to population as possible,
+in the sense of minimizing maximum percentage deviation.
+
+The Supreme Court addressed Huntington-Hill directly in
+\textit{United States Department of Commerce v.\ Montana},
+503 U.S. 442 (1992), where Montana challenged an apportionment that
+left it with one seat despite a population that would have entitled it to
+nearly two seats under alternative methods.
+The Court upheld the method, noting that the Constitution ``vests Congress
+with the responsibility to configure and design the apportionment process,''
+and that the equal-proportions method represents a ``rational decision'' within
+Congress's discretion.\footnote{%
+  \textit{Department of Commerce v.\ Montana}, 503 U.S. at 462--463.
+}
+
+No party has challenged the use of Huntington-Hill for the interstate
+apportionment since 1992.
+It is, for all practical purposes, the constitutional standard.
+
+\subsection{Premise 3: Political Self-Interest Is the Source of the Problem}
+
+The diagnosis of gerrymandering as an institutional-integrity failure---
+map-drawing captured by those with a personal stake in the outcome---is not
+a partisan position.
+It is the position of both parties when they are the victim.
+
+Republicans challenged the Maryland congressional map in 2011, which was
+designed to flip a Republican-held district to Democratic.
+The case eventually reached the Supreme Court as part of the consolidated
+redistricting cases decided alongside \rucho{}.\footnote{%
+  \textit{Rucho v.\ Common Cause} consolidated two cases: a Republican-drawn
+  map in North Carolina challenged by Democrats, and a Democratic-drawn map
+  in Maryland challenged by Republicans.
+  The Court treated both as presenting the same issue.
+  \rucho{}, 588 U.S. at 690--692.
+}
+Democrats challenged the Wisconsin legislative map, the North Carolina
+congressional map, and the Texas congressional map.
+Republicans challenged the Maryland congressional map, the New York
+congressional map, and the Illinois legislative map.
+
+Each challenge used similar language: the map was drawn to entrench the
+drawing party's power, not to serve constituents.
+Each challenge was, at its core, an argument that politicians should not
+draw their own districts.
+
+This bipartisan consensus on the diagnosis has produced bipartisan action
+on the remedy.
+Independent redistricting commissions, which remove map-drawing from
+legislators and assign it to a panel of citizens or experts, have been
+adopted in Arizona, California, Colorado, Michigan, and thirteen other states.
+Most of these reforms were passed by ballot initiative, and most commanded
+bipartisan support from voters even where they were opposed by legislators
+of both parties.
+
+The \dia{} takes the independent-commission insight one step further.
+Rather than substituting human commissioners for human legislators---
+with all the selection, deliberation, and potential for capture that
+commissions entail---it substitutes a mathematical algorithm whose
+parameters are entirely determined by federal census data.
+No commission needed.
+No deliberation required.
+The census tells the algorithm everything it needs to know.
+
+\subsection{Premise 4: The Interstate and Intrastate Problems Are Isomorphic}
+
+This is the logical hinge on which the argument turns.
+If the interstate and intrastate problems are structurally different, the
+analogy fails and the argument collapses.
+We argue that they are structurally identical.
+
+\paragraph{The interstate problem.}
+Given: 50 states, each with a population $P_s$.
+Total seats: $K = 435$.
+Minimum: each state gets at least one seat.
+Goal: assign $k_s$ seats to each state such that $\sum k_s = K$ and
+the average district population $P_s / k_s$ is as equal across states
+as possible, minimizing the percentage deviation $|P_s/k_s - P_t/k_t|$
+for all state pairs $(s, t)$.
+Method: Huntington-Hill.
+
+\paragraph{The intrastate problem.}
+Given: a state with $m$ geographic units (census tracts), each with a
+population $p_i$.
+Total districts: $k$ (the state's apportioned seat count).
+Minimum: each district gets at least one unit.
+Goal: assign each unit to one of $k$ districts such that the district
+populations are as equal as possible.
+Method: ???
+
+The mathematical objects in the two problems are different---states with
+populations versus census tracts with populations, 435 seats versus
+$k$ districts---but the \emph{structure} of the optimization is identical.
+Both problems require:
+\begin{enumerate}
+  \item Partitioning a set of weighted units into exactly $k$ groups.
+  \item Minimizing the population deviation across groups.
+  \item Respecting a minimum-allocation constraint (one unit per group).
+\end{enumerate}
+
+The only structural difference is the adjacency constraint.
+In the interstate problem, any set of states can be combined into a
+``district'': there is no geographic requirement that congressional
+states be contiguous (and indeed, they are not, since Alaska and Hawaii
+are not contiguous with the mainland).
+In the intrastate problem, districts must be geographically contiguous:
+a district whose tracts are not connected is constitutionally suspect.\footnote{%
+  Contiguity is universally required by state redistricting statutes,
+  though it is not explicitly mandated by the federal constitution.
+  Every state that has addressed the question requires contiguity,
+  and no federal court has suggested that non-contiguous districts
+  would be permissible.
+}
+
+The adjacency constraint does not change the problem's structure; it changes
+the feasible set.
+The Huntington-Hill priority rule---assign the next unit to the district
+with the highest priority value---still applies.
+In the intrastate case, the ``unit'' being assigned is a census tract,
+and the adjacency graph of the state constrains which tracts can be
+assigned together.
+This is what \ar{} implements: a graph-partitioning realization of the
+Huntington-Hill priority rule on the state's TIGER/Line adjacency graph.
+
+\subsection{The Logical Step: If HH Is Right at Level~$n$, It Is Right at Level~$n+1$}
+
+The argument does not require any new constitutional theory.
+It requires only the recognition that the same principle---equal proportions,
+implemented via Huntington-Hill---applies at each level of the apportionment
+hierarchy.
+
+Level~1: Allocate 435 seats among 50 states.
+Method: Huntington-Hill.
+Authority: 2~U.S.C.~\usca{}~2a(a), upheld in \textit{Department of Commerce
+v.\ Montana}.
+
+Level~2: Allocate $k$ districts among $m$ census tracts within a state.
+Method: Huntington-Hill (via \ar{}).
+Authority: the same principle, applied at the next level down.
+
+This is not a novel judicial construction.
+Courts routinely apply the same principle at multiple levels of a hierarchy.
+The Equal Protection Clause applies at the federal, state, and local levels.
+The First Amendment applies to federal, state, and local governments.
+The principle of one person, one vote (\wesberry{}) already applies at the
+state level.
+Applying the equal-proportions method (\hh{}) at the intrastate level
+is the natural extension of a principle the Court has already applied
+at the interstate level.
+
+The Congress that enacted 2~U.S.C.~\usca{}~2a(a) in 1941 did not have the
+computational tools to implement \hh{} at the intrastate level.
+We do now.
+The \dia{} corrects an 85-year gap in the statutory implementation of the
+apportionment principle.
+
+\subsection{The One-Sentence Law}
+
+The conclusion of the four-step argument is a single sentence of federal
+statutory law.
+We propose it as 2~U.S.C.~\usca{}~2a(c) [new]:
+
+\begin{statute}
+\noindent\textbf{Proposed 2 U.S.C.\ \usca{}\ 2a(c) [new].}
+Each State shall apportion its congressional districts by applying the
+Huntington-Hill priority rule to its census tracts, using as input only
+the prime factorization of the State's apportioned seat count and the
+federal TIGER/Line adjacency graph for the census year in which the
+apportionment was performed, with a seed determined by the formula
+\texttt{SHA-256(census\_release\_id \textbar\textbar\ `DIA\_SEED\_V1')}.
+\end{statute}
+
+Every word in this sentence is load-bearing.
+
+\begin{itemize}
+  \item \textit{Huntington-Hill priority rule}: specifies the mathematical
+    method, preventing practitioner substitution.
+  \item \textit{census tracts}: specifies the geographic unit, preventing
+    gerrymandering by unit selection.
+  \item \textit{only the prime factorization of the State's apportioned
+    seat count}: limits inputs to the factorization of $k$, excluding
+    all political data.
+  \item \textit{federal TIGER/Line adjacency graph}: specifies the
+    geographic source, preventing manipulation of the underlying graph.
+  \item \textit{census year in which the apportionment was performed}:
+    ties the geographic data to the apportionment cycle, preventing
+    mid-decade redrawing using updated data.
+  \item \textit{SHA-256(census\_release\_id \textbar\textbar\
+    `DIA\_SEED\_V1')}: makes the random seed content-derived and publicly
+    computable, eliminating seed manipulation as a vector for gaming.
+\end{itemize}
+
+The full implementation details---the VRA overlay, the county-preservation
+default, the gcd-incompatibility fallback---are addressed in
+Section~\ref{sec:implementation}.
+But the operative principle is captured in these 67 words.
+Everything else is implementation detail, governed by the principle they embody.

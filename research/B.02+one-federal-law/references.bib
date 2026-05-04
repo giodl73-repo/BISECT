@@ -1,0 +1,494 @@
+%% B.02 — The Districting Integrity Act
+%% References: B-series papers, legal cases, and related literature
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b0paper,
+  author = {Della-Libera, Gio},
+  title  = {A Complete Algorithmic Toolbox for Congressional Redistricting:
+            Legal Requirements, Algorithm Components, and {Callais}-Compliant
+            Design for the Post-2026 Redistricting Cycle},
+  year   = {2026},
+  note   = {B.0 in Algorithmic Redistricting series. Synthesis paper.
+            Key result: Wisconsin bakeoff --- unweighted 4D/4R vs.\ GeoSection
+            3D/5R ($-12.8$~pp partisan gap). Proves algorithm selection is
+            a political choice.},
+}
+
+@misc{b1paper,
+  author = {Della-Libera, Gio},
+  title  = {Recursive Bisection for Congressional Redistricting:
+            The {Huntington-Hill} Precedent and Graph-Partitioning Approach},
+  year   = {2026},
+  note   = {B.1 in Algorithmic Redistricting series.},
+}
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            Certifies convergence: seat-count variance $< 0.3$ at 50 seeds
+            per ratio, for 47 of 50 states.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$.
+            WI: 3D/5R result ($-12.8$~pp gap vs.\ unweighted 4D/4R).},
+}
+
+@misc{b9paper,
+  author = {Della-Libera, Gio},
+  title  = {{AreaSection}: Simultaneous Population and Land-Area Balance
+            in Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.9 in Algorithmic Redistricting series.
+            Shows area-balancing systematically advantages rural (Republican)
+            areas; 76\,\% seat-count agreement with GeoSection.},
+}
+
+@misc{b10paper,
+  author = {Della-Libera, Gio},
+  title  = {Subdivision-Respecting Redistricting:
+            Governmental Hierarchy as Edge-Weight Signal},
+  year   = {2026},
+  note   = {B.10 in Algorithmic Redistricting series.
+            Introduces county-sticky $\alpha$ parameter.
+            Default $\alpha_\text{county} = 2.0$ specified in DIA.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: zero seed variance --- map is same across all seeds.
+            Constitutional-extension argument: HH interstate $\to$ intrastate.},
+}
+
+@misc{b13paper,
+  author = {Della-Libera, Gio},
+  title  = {{NestSection}: Consistent Multi-Chamber Redistricting
+            via Compatible Factorization Spines},
+  year   = {2026},
+  note   = {B.13 in Algorithmic Redistricting series.
+            11 states with spine score 0 (exact nesting): OR, AL, ID, ME, MT,
+            NE, NV, NH, ND, RI, SD.
+            Identifies gcd-incompatible states requiring DIA fallback.},
+}
+
+@misc{b14paper,
+  author = {Della-Libera, Gio},
+  title  = {{VRASection}: Geographic Alignment Score for
+            Minority Opportunity District Bisection},
+  year   = {2026},
+  note   = {B.14 in Algorithmic Redistricting series.
+            Alabama 2:5 result: two MM districts at 55.2\,\% and 52.8\,\%
+            Black VAP. $w_\text{vra}=0.40$ calibrated below
+            \textit{Shaw}--\textit{Miller} threshold.},
+}
+
+@misc{b15paper,
+  author = {Della-Libera, Gio},
+  title  = {{StabilitySection}: Cross-Census Stability of
+            {GeoSection}-Optimal Redistricting Maps},
+  year   = {2026},
+  note   = {B.15 in Algorithmic Redistricting series.
+            Key result: 67\,\% of states stable across 2000/2010/2020 census.
+            Iowa: canonical unstable state ($\Delta f = 0.31$).},
+}
+
+%% ===================================================================
+%% LEGAL CASES
+%% ===================================================================
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S.\ \_\_\_ (2026).
+            Holdings: (1) extra minority district was unconstitutional racial
+            gerrymandering; (2) strong-inference framework for \S2 challengers;
+            (3) p.36: race-conscious and partisan signals must be disentangled.
+            Architecturally decisive for algorithmic redistricting design.},
+}
+
+@misc{wesberry1964,
+  title  = {Wesberry v.\ Sanders},
+  year   = {1964},
+  note   = {376 U.S. 1 (1964). One person, one vote; congressional districts
+            must have equal population ``as nearly as is practicable.''
+            Foundational premise of all federal redistricting law.},
+}
+
+@misc{karcher1983,
+  title  = {Karcher v.\ Daggett},
+  year   = {1983},
+  note   = {462 U.S. 725 (1983). Any population deviation in congressional
+            districts must be justified; effectively zero tolerance standard.
+            Operationalizes Wesberry into a near-absolute requirement.},
+}
+
+@misc{montana1992,
+  title  = {United States Department of Commerce v.\ Montana},
+  year   = {1992},
+  note   = {503 U.S. 442 (1992). Upheld Huntington-Hill (equal proportions)
+            as a rational congressional choice for the apportionment method.
+            Confirmed Article~I authority over apportionment methodology.},
+}
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Partisan gerrymandering presents political
+            questions beyond federal court reach; state courts retain
+            jurisdiction. Creates legislative opening for the DIA.},
+}
+
+@misc{allenmilligan2023,
+  title  = {Allen v.\ Milligan},
+  year   = {2023},
+  note   = {598 U.S. 1 (2023). Alabama required to draw two Black-opportunity
+            districts; reaffirmed and clarified Gingles three-prong test.
+            VRASection produces the required two-district result empirically.},
+}
+
+@misc{gingles1986,
+  title  = {Thornburg v.\ Gingles},
+  year   = {1986},
+  note   = {478 U.S. 30 (1986). Three-prong test for VRA \S2:
+            (1) minority group sufficiently large and geographically compact,
+            (2) minority cohesion, (3) majority bloc voting.
+            DIA VRA overlay triggered only when all three prongs are met.},
+}
+
+@misc{shaw1993,
+  title  = {Shaw v.\ Reno},
+  year   = {1993},
+  note   = {509 U.S. 630 (1993). Districts with ``bizarre'' shapes suggesting
+            racial predominance trigger strict scrutiny. ApportionRegions
+            default run contains zero racial input; Shaw is moot.},
+}
+
+@misc{miller1995,
+  title  = {Miller v.\ Johnson},
+  year   = {1995},
+  note   = {515 U.S. 900 (1995). Race cannot be the ``predominant factor''
+            overriding traditional districting principles.
+            VRASection $w_\text{vra}=0.40$ calibrated below this threshold.},
+}
+
+@misc{bushvvera1996,
+  title  = {Bush v.\ Vera},
+  year   = {1996},
+  note   = {517 U.S. 952 (1996). Applied Miller racial-predominance test;
+            ``race was not the predominant factor overriding traditional
+            districting principles'' is the operative standard.
+            VRASection satisfies this because compactness dominates at $w=0.40$.},
+}
+
+@misc{lwvpa2018,
+  title  = {League of Women Voters v.\ Commonwealth of Pennsylvania},
+  year   = {2018},
+  note   = {Pa. Supreme Court No.\ 159 MM 2017. Pennsylvania's congressional
+            map struck down as partisan gerrymander under Pennsylvania Constitution.
+            Demonstrates post-Rucho state-court litigation burden the DIA eliminates.},
+}
+
+@misc{harper2022,
+  title  = {Harper v.\ Hall},
+  year   = {2022},
+  note   = {N.C. Supreme Court, 2022 (initial decision).
+            Found unconstitutional partisan gerrymander; required county grouping
+            compliance. Demonstrates state-court redistricting litigation costs
+            the DIA avoids.},
+}
+
+@misc{harkenrider2022,
+  title  = {Harkenrider v.\ Hochul},
+  year   = {2022},
+  note   = {N.Y. Court of Appeals, 2022.
+            Struck down Democratic partisan gerrymander under New York Constitution.
+            Demonstrates bipartisan nature of gerrymandering abuse.},
+}
+
+@misc{benilek2019,
+  title  = {Benisek v.\ Lamone},
+  year   = {2019},
+  note   = {585 U.S. 155 (2019). Maryland congressional map challenged as
+            ``drastic partisan gerrymander'' by Republican plaintiffs.
+            Consolidated with Rucho; illustrates bipartisan gerrymandering.},
+}
+
+@misc{smiley1932,
+  title  = {Smiley v.\ {Holm}},
+  year   = {1932},
+  note   = {285 U.S. 355 (1932). Congress has plenary authority under the
+            Elections Clause to regulate congressional elections, including
+            redistricting. Article~I, \S4 authority for the DIA.},
+}
+
+@misc{arizonalegislature2015,
+  title  = {Arizona State Legislature v.\ Arizona Independent Redistricting Commission},
+  year   = {2015},
+  note   = {576 U.S. 787 (2015). Elections Clause covers redistricting;
+            affirmed federal authority over congressional district lines.
+            Confirms constitutional basis for the DIA.},
+}
+
+@misc{stephenson2002,
+  title  = {Stephenson v.\ Bartlett},
+  year   = {2002},
+  note   = {N.C. Supreme Court, 355 N.C. 354 (2002).
+            County-grouping requirement established for North Carolina
+            redistricting. Precedent for county preservation as a legitimate
+            redistricting criterion.},
+}
+
+@misc{vra1965,
+  title  = {Voting Rights Act of 1965},
+  year   = {1965},
+  note   = {52 U.S.C.\ \S10301 (formerly 42 U.S.C.\ \S1973).
+            Section 2 prohibits voting practices that dilute minority voting
+            strength. DIA VRA overlay implements \S2 compliance algorithmically.},
+}
+
+@misc{huntingtonhill1941,
+  title  = {Apportionment Act of 1941},
+  year   = {1941},
+  note   = {2 U.S.C.\ \S2a(a). Codifies the method of equal proportions
+            (Huntington-Hill) as the statutory method for apportioning
+            congressional seats among states. The DIA proposes to extend this
+            method intrastate as 2 U.S.C.\ \S2a(c) [new].},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+}
+
+@techreport{karypis1999metis,
+  author      = {Karypis, George and Kumar, Vipin},
+  title       = {{METIS}: A Software Package for Partitioning Unstructured
+                Graphs, Partitioning Meshes, and Computing Fill-Reducing
+                Orderings of Sparse Matrices},
+  institution = {University of Minnesota, Department of Computer Science},
+  year        = {1999},
+}
+
+%% ===================================================================
+%% REDISTRICTING ALGORITHMS AND REFORM
+%% ===================================================================
+
+@misc{deford2019,
+  author = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title  = {Recombination: A Family of {Markov} Chains for Redistricting},
+  year   = {2019},
+  note   = {arXiv:1911.05725. Ensemble approach; produces distribution of
+            valid maps rather than single map. Requires practitioner choices
+            about ensemble interpretation.},
+}
+
+@misc{metric2018,
+  author = {{MGGG Redistricting Lab}},
+  title  = {{GerryChain}: A {Markov} Chain {Monte Carlo} Framework for
+            Redistricting},
+  year   = {2018},
+  note   = {Available at \url{https://github.com/mggg/GerryChain}.
+            Practitioner's algorithm requiring choice of stopping criterion
+            and ensemble evaluation method.},
+}
+
+@article{gurnee2021,
+  author  = {Gurnee, Wes and Shmoys, David B.},
+  title   = {Fairmandering: A Column Generation Heuristic for
+             Fairness-Optimized Political Districting},
+  journal = {SIAM Journal on Applied Mathematics},
+  volume  = {81},
+  number  = {4},
+  pages   = {1456--1482},
+  year    = {2021},
+}
+
+@article{cho2016measuring,
+  author  = {Cho, Wendy K. Tam and Liu, Yan Y.},
+  title   = {Toward a Talismanic Redistricting Tool: A Computational Method
+             for Identifying Extreme Redistricting Plans},
+  journal = {Election Law Journal},
+  volume  = {15},
+  number  = {4},
+  pages   = {351--366},
+  year    = {2016},
+}
+
+%% ===================================================================
+%% POLITICAL GEOGRAPHY AND PARTISAN ANALYSIS
+%% ===================================================================
+
+@book{rodden2019,
+  author    = {Rodden, Jonathan A.},
+  title     = {Why Cities Lose: The Deep Roots of the Urban-Rural
+               Political Divide},
+  publisher = {Basic Books},
+  year      = {2019},
+}
+
+@article{chen2013,
+  author  = {Chen, Jowei and Rodden, Jonathan},
+  title   = {Unintentional Gerrymandering: Political Geography and
+             Electoral Bias in Legislatures},
+  journal = {Quarterly Journal of Political Science},
+  volume  = {8},
+  number  = {3},
+  pages   = {239--269},
+  year    = {2013},
+}
+
+@article{stephanopoulos2015,
+  author  = {Stephanopoulos, Nicholas O. and McGhee, Eric M.},
+  title   = {Partisan Gerrymandering and the Efficiency Gap},
+  journal = {University of Chicago Law Review},
+  volume  = {82},
+  number  = {2},
+  pages   = {831--900},
+  year    = {2015},
+}
+
+%% ===================================================================
+%% COMPACTNESS AND GEOMETRY
+%% ===================================================================
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law \& Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+}
+
+@book{duchin2018geometry,
+  author = {Duchin, Moon and Needham, Thomas and Weighill, Thomas},
+  title  = {The (Quantitative) Geography of Gerrymandering},
+  year   = {2018},
+  note   = {Working paper, Metric Geometry and Gerrymandering Group.},
+}
+
+%% ===================================================================
+%% VRA AND MINORITY REPRESENTATION
+%% ===================================================================
+
+@article{engstrom2016,
+  author  = {Engstrom, Richard L.},
+  title   = {The Post-2010 Redistricting Rounds and the Voting Rights Act},
+  journal = {Political Science Quarterly},
+  volume  = {131},
+  number  = {3},
+  pages   = {549--575},
+  year    = {2016},
+}
+
+@article{imai2020,
+  author  = {Imai, Kosuke and others},
+  title   = {Automated Redistricting Simulation Using {Markov} Chain
+             {Monte Carlo}},
+  journal = {Journal of Computational and Graphical Statistics},
+  volume  = {29},
+  number  = {4},
+  pages   = {715--728},
+  year    = {2020},
+}
+
+%% ===================================================================
+%% DATA SOURCES
+%% ===================================================================
+
+@misc{fekrazad2021,
+  author = {Fekrazad, Amir},
+  title  = {Voting and Election Science Team (VEST) 2020 Precinct-Level
+            Election Results},
+  year   = {2021},
+  doi    = {10.7910/DVN/Z8TSH3},
+  note   = {Harvard Dataverse. Used for Gingles Prong~2 and Prong~3
+            ecological inference in the DIA VRA overlay.},
+}
+
+@misc{census2020,
+  author = {{U.S. Census Bureau}},
+  title  = {2020 Decennial Census: {P.L.}~94-171 Redistricting Data},
+  year   = {2021},
+  note   = {Released August 12, 2021.
+            \texttt{census\_release\_id = "PL94-171-2020-08-12"}.
+            Used as the DIA seed formula's content-derived input.},
+}
+
+@misc{tiger2020,
+  author = {{U.S. Census Bureau}},
+  title  = {{TIGER/Line} Shapefiles 2020: Census Tract Boundaries},
+  year   = {2020},
+  note   = {Available at \url{https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html}.
+            Mandatory adjacency graph source under the DIA.},
+}
+
+%% ===================================================================
+%% CONGRESSIONAL APPORTIONMENT HISTORY
+%% ===================================================================
+
+@book{balinski2001,
+  author    = {Balinski, Michel L. and Young, H. Peyton},
+  title     = {Fair Representation: Meeting the Ideal of One Man, One Vote},
+  publisher = {Brookings Institution Press},
+  edition   = {2nd},
+  year      = {2001},
+  note      = {Definitive treatment of the Huntington-Hill method and its
+               alternatives. Shows HH minimizes percentage deviation.},
+}
+
+@article{huntington1928,
+  author  = {Huntington, Edward V.},
+  title   = {The Apportionment of Representatives in Congress},
+  journal = {Transactions of the American Mathematical Society},
+  volume  = {30},
+  number  = {1},
+  pages   = {85--110},
+  year    = {1928},
+}
+
+@misc{fairness2026,
+  author = {Della-Libera, Gio},
+  title  = {The Fairness Doctrine: Procedural Fairness in Congressional
+            Redistricting for State-Court Litigation Post-{Rucho}},
+  year   = {2026},
+  note   = {Companion legal document to the B-series research program.
+            Articulates the procedural-fairness claim under state constitutional
+            law. Companion to the DIA federal statutory proposal.},
+}

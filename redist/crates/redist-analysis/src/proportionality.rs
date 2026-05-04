@@ -105,9 +105,12 @@ pub fn aggregate_proportionality(
             let e = per_district.entry(district).or_insert((0.0, 0.0));
             e.0 += row.dem_votes;
             e.1 += row.rep_votes;
+            // Only accumulate statewide totals for tracts in this state's assignment.
+            // The election CSV is national; counting all rows would produce the
+            // national vote share, not the state vote share.
+            total_dem += row.dem_votes;
+            total_rep += row.rep_votes;
         }
-        total_dem += row.dem_votes;
-        total_rep += row.rep_votes;
     }
 
     let total_two_party = total_dem + total_rep;
@@ -154,10 +157,13 @@ pub fn aggregate_proportionality(
     };
 
     let proportionality_gap_pp = 100.0 * (dem_seat_share - dem_share_statewide);
+    // If no vote data matched any assigned tract, the CSV lacks this state's tracts.
+    // Mark unavailable so callers can exclude it rather than silently getting zeros.
+    let available = total_two_party > 0.0;
 
     ProportionalityResult {
         analyzer: "proportionality",
-        available: true,
+        available,
         dem_vote_share_statewide: dem_share_statewide,
         rep_vote_share_statewide: rep_share_statewide,
         total_two_party_votes: total_two_party,
@@ -322,10 +328,22 @@ mod tests {
         let result = aggregate_proportionality(&[], &asgn(&[]), 5);
         assert_eq!(result.dem_vote_share_statewide, 0.0);
         assert_eq!(result.total_two_party_votes, 0.0);
-        // With no votes, every district is "uncontested" and counts as Rep
-        // by tie-break (dem_pct < 0.5). The metric is degenerate but well-defined.
         assert_eq!(result.dem_seats, 0);
         assert_eq!(result.n_districts, 5);
+        // No vote data -> marked unavailable (e.g. Alaska/Hawaii missing from CSV)
+        assert!(!result.available, "zero vote data must set available=false");
+    }
+
+    #[test]
+    fn available_false_when_no_state_tracts_in_csv() {
+        // Simulates Alaska: CSV has rows but none match the state's assignment GEOIDs.
+        let rows = vec![
+            row("99001000100", 1000.0, 500.0), // wrong state GEOID
+            row("99001000200", 800.0, 400.0),
+        ];
+        let result = aggregate_proportionality(&rows, &asgn(&[("02013000100", 1)]), 1);
+        assert!(!result.available, "no matching tracts must set available=false");
+        assert_eq!(result.total_two_party_votes, 0.0);
     }
 
     #[test]

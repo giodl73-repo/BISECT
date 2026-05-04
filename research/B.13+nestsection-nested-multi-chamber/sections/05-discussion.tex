@@ -1,0 +1,227 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{The Legal Argument: Shared Hierarchy as Anti-Gerrymandering}
+
+\paragraph{The structural constraint argument.}
+NestSection's central legal contribution is the observation that a shared
+bisection hierarchy is an anti-gerrymandering mechanism by \emph{construction},
+not by detection.  Once the trunk is fixed by GeoSection at the spine level,
+the congressional, senate, and house maps are all constrained to respect the
+same initial geographic cuts.  A partisan actor who wishes to pack a community
+into a safe congressional district must use the same geographic bisection that
+the senate and house maps will also use.  If the trunk bisects that community,
+the pack is constrained to one side of the trunk for all three chambers.
+
+This is fundamentally different from post-hoc gerrymandering detection methods
+(ensemble analysis, partisan symmetry tests), which evaluate a map after it is
+drawn.  NestSection reduces the feasible plan space before any partisan
+optimization occurs.
+
+\paragraph{Degrees-of-freedom reduction.}
+Formally, the number of distinct geographic configurations compatible with the
+spine constraint is smaller than the number compatible with three independent
+maps.  In a state with $g$ trunk regions, the congressional map is constrained
+to respect the $g$ trunk boundaries; only within each trunk region does the
+congressional mapmaker have freedom.  The partisan optimizer's effective search
+space is reduced by a factor related to the trunk-to-state ratio of geographic
+complexity.
+
+This is the ``mutual constraint'' property: because the senate mapmaker is also
+bound to the same trunk, the congressional mapmaker cannot gerrymander in a way
+that the senate mapmaker could then undo.  The constraint is symmetric and
+enforced at the algorithmic level, not at the political level.
+
+\paragraph{Comparison to independent maps.}
+With three independent maps, a unified partisan majority can achieve what
+we call \emph{coherent gerrymandering}: packing or cracking the same
+geographic community at all three levels simultaneously.  NestSection makes
+coherent gerrymandering structurally harder: a pack at the congressional level
+propagates to the senate and house levels, reducing the remaining degrees of
+freedom for optimization at those levels.  Conversely, a crack at the
+congressional level (splitting a community between two congressional districts)
+automatically splits that community at the senate and house levels in the same
+geographic location.
+
+\paragraph{Relation to state constitutional nesting requirements.}
+Many state constitutions and redistricting statutes require that districts be
+``composed of contiguous, compact'' territory (e.g., NC Const.\ art.\ II, \S\S 3, 5)
+or that county lines be respected.  Some statutes require state house districts
+to be subsets of senate districts (e.g., Arizona, Indiana).  NestSection
+operationalizes such requirements as a \emph{cross-chamber} computational
+constraint rather than a within-chamber compactness check.
+
+The NestSection compatibility score $\sigma$ provides a precise measure of
+whether such a requirement is feasible: a state with $\sigma = 0$ can satisfy
+exact nesting without any population imbalance penalty; a state with
+$\sigma = 96.8\%$ (Texas) cannot satisfy any meaningful nesting without large
+boundary exceptions.
+
+\paragraph{Elections Clause scope.}
+The Elections Clause (Art.\ I, \S4) grants states authority to regulate the
+``Times, Places and Manner'' of congressional elections, subject to congressional
+override.  A federal statute \emph{requiring} NestSection for congressional maps
+could face Art.\ I, \S4 challenges from states arguing that the spine constraint
+intrudes on their redistricting discretion (cf.\ \textit{Rucho v.\ Common Cause},
+588 U.S.\ 684 (2019), which declined to review partisan gerrymandering of
+congressional maps under federal law, leaving the field to state courts and
+state law).  This paper does not advocate for such a federal mandate.
+
+NestSection's most natural application is to \emph{state legislative} maps
+--- the senate and house tiers --- where the governing law is state
+constitutional provisions on compactness, contiguity, and integrity of
+political subdivisions, not Art.\ I, \S4.  States that voluntarily adopt
+NestSection for their state legislative chambers, drawing those maps to be
+consistent with a pre-existing federal congressional map, face no federal
+constitutional barrier.  The compatibility score $\sigma$ operates on the
+relationship among all three chamber sizes, but the structural constraint
+it enforces on the senate and house maps is a matter of state law.
+
+The federal constitutional question arises only in the distinct scenario where
+Congress were to mandate that state congressional maps conform to a
+three-chamber spine constraint --- a proposal this paper explicitly does not
+make.  The statutory design proposal in this section is addressed to
+\emph{state legislatures and independent redistricting commissions}, which
+have plenary authority over state legislative districts and, within Supremacy
+Clause limits, broad discretion over the manner of drawing congressional
+districts under Art.\ I, \S4.
+
+\paragraph{Statutory design: the $g \geq k$ threshold.}
+We propose a two-tier statutory structure:
+\begin{enumerate}
+  \item \textbf{Mandatory strict nesting} for states where $\gcd(C,S,H) \geq 5$:
+        Oregon ($g=6$) and Alabama ($g=7$) currently qualify.  These states
+        can achieve exact hierarchical nesting (Mode~1) with no population
+        tolerance.  A statute requiring Mode~1 for these states would be
+        straightforwardly achievable with existing redistricting algorithms.
+  \item \textbf{Best-effort nesting} (Mode~3 with $\tau_\text{pop} \leq 0.02$)
+        for states where $\gcd(C,S,H) \geq 2$: 22 states currently qualify.
+        The statute would require the published boundary-zone fraction $\tau$ to
+        be minimized and publicly reported, creating an empirically verifiable
+        standard for cross-chamber consistency.
+\end{enumerate}
+
+\paragraph{Judicial enforceability.}
+Judicial enforceability of a NestSection requirement raises two distinct
+questions.  First, who has standing to challenge a non-nested map?  The most
+natural plaintiffs are political subdivisions (counties, municipalities) whose
+territories span chamber boundaries inconsistently~--- they can argue that the
+inconsistent boundaries create administrative burdens that serve no compelling
+interest.  Second, what is the standard of review?  If NestSection is framed
+as a procedural rule (the map must be derived from a mathematical process),
+courts reviewing it apply rational-basis scrutiny, not strict scrutiny~--- the
+bar is low.  A statute stating ``state legislative districts shall be derived
+by refining the congressional factorization tree'' has a rational basis in
+administrative consistency and resistance to manipulation.  Courts striking
+down such a requirement would need to find it facially arbitrary, which the
+Bimodality Gap Theorem makes difficult: the compatible states are a
+mathematically defined class, not a politically selected one.
+
+\subsection{Limitations}
+
+\paragraph{Incompatible states.}
+For 18 states with $g = 1$ and congressional seat counts $C \geq 5$, NestSection
+reduces to three independent GeoSection runs with a shared census graph.  The
+algorithm provides no geographic anchor beyond the state boundary.  Statutory
+mandates for cross-chamber consistency in these states would require either
+(a)~changing the senate chamber size to be compatible with $C$ (a major
+political change), or (b)~tolerating large boundary zones that may undermine
+the legal defensibility of the nesting constraint.
+
+\paragraph{Population balance.}
+The spine constraint interacts with the statutory $\pm 0.5\%$ population
+equality requirement for congressional districts.  In a strict-nesting state,
+the trunk regions must have populations that are simultaneously divisible
+into $C/g$, $S/g$, and $H/g$ equal-population sub-districts.  Population
+heterogeneity within trunk regions may require slight adjustments to trunk
+boundaries (Mode~2 or Mode~3) even in nominally compatible states.
+The empirical validation in Section~\ref{sec:evaluation} is theoretical;
+full empirical confirmation requires running the NestSection pipeline on
+actual census data.
+
+\paragraph{Single-seat states.}
+Eleven states have $C = 1$, which trivially achieves $g = 1 = \min(C,S,H)$
+and $\sigma = 0$.  However, a single-seat congressional delegation has no
+internal geographic structure to share with the state legislature.  The
+``strict compatibility'' of these states is a mathematical artifact of the
+formula rather than a meaningful cross-chamber constraint.  In practice,
+single-seat states require the congressional district to be the entire state,
+which makes any cross-chamber nesting trivial (the congressional district
+contains all senate and house districts by definition).
+
+\paragraph{Nebraska's unicameral legislature.}
+Nebraska is unique among US states in having a unicameral legislature (49
+senators, no separate house).  The nest.rs implementation uses $H = S = 49$
+for Nebraska; in practice, NestSection would apply only to the two-chamber
+relationship (congressional vs.\ senate), and the house tier is vacuous.
+
+\paragraph{Senate-first vs.\ congressional-first recursion.}
+NestSection as defined uses the GCD trunk and then recurses independently
+within each trunk region for all three chambers.  An alternative is to define
+the spine from the largest chamber (house) and coarsen upward.  This is the
+Mode~2 design from the plan: using the senate as the spine and placing
+congressional seats at coarsened senate groups.  The Mode~2 approach is
+mathematically equivalent to Mode~1 when divisibility holds, but differs in
+the within-region recursion order when it does not.  We defer a full
+comparison to future work.
+
+\paragraph{Approximate compatibility: Arizona and Indiana as illustrative cases.}
+Two near-compatible states illustrate a continuum that the strict bimodality
+threshold ($\sigma = 0$ vs.\ $\sigma \geq 50\%$) obscures.  Arizona has
+$C = 9$, $S = 30$, $H = 60$, giving $\gcd(9, 30, 60) = 3$ and $\sigma = 67\%$.
+The spine trunk $[3]$ would create a three-way top-level geographic split
+shared across all chambers~--- a natural east/west/central Arizona division
+(roughly: Phoenix metro, Tucson corridor, and rural east).  Each side would
+hold 3 congressional, 10 senate, and 20 house districts.  This is a
+substantive, non-trivial compatible structure with real geographic content,
+even at $\sigma = 67\%$ (incompatible by strict definition).  It illustrates
+that the strict bimodality threshold hides a continuum of approximate
+compatibility that future work could formalise.
+
+Indiana has $C = 9$, $S = 50$, $H = 100$, giving $\gcd(9, 50, 100) = 1$ and
+$\sigma = 89\%$.  This is the hardest incompatible case: 9 congressional, 50
+senate, and 100 house districts share no common factor.  Any NestSection spine
+for Indiana would require either (a)~rounding congressional districts to 10
+(impossible by apportionment), or (b)~accepting that state legislative maps
+cannot be nested in the congressional structure.  Indiana represents the class
+of states where NestSection applies only to the state legislative chambers
+internally~--- senate nests into house: $\gcd(50, 100) = 50$, perfect
+compatibility~--- without congressional linkage.
+
+\subsection{Future Work}
+
+\paragraph{Empirical pipeline validation.}
+The most important near-term extension is running NestSection on actual census
+data for the case-study states (Oregon, North Carolina, Texas) and measuring:
+(a) the actual nesting violation $V$ achieved on census geography;
+(b) the edge-cut premium vs.\ independent GeoSection runs;
+(c) the partisan outcome distribution across 100 GeoSection seeds.
+
+\paragraph{Gerrymander resistance hypothesis.}
+Section~\ref{sec:intro} conjectures that NestSection reduces partisan variance
+by approximately 30--50\% in moderate-compatibility states.  Testing this
+hypothesis requires the ensemble-diagnostics infrastructure from
+\texttt{redist-analysis::ensemble\_diagnostics} (R-hat, ESS, Hamming
+autocorrelation).  A formal test would compare the standard deviation of
+Democratic seat share across 100 NestSection seeds vs.\ 100 independent
+GeoSection seeds for NC and WI.
+
+\paragraph{Reapportionment stability.}
+When a state gains or loses a congressional seat after reapportionment,
+the GCD $g$ may change, altering which nesting mode applies.  Montana gained
+a seat in 2020 (going from $C=1$ to $C=2$), preserving $\sigma=0$ because
+$g=2$ still equals $\min = 2$.  Texas will likely gain seats after 2030,
+possibly achieving a GCD $> 1$ with its senate.  A longitudinal analysis of
+how $\sigma$ has changed across census decades would quantify the stability
+of nesting constraints over reapportionment cycles.
+
+\paragraph{VRA interaction.}
+The NestSection trunk constraint interacts with Voting Rights Act
+Section~2 compliance.  If a minority-majority community is bisected by the
+trunk, it will be split at all three legislative levels simultaneously.  This
+could harm VRA compliance if the split reduces the minority's ability to elect
+representatives of their choice.  The \texttt{redist analyze --types bloc-voting}
+Callais pipeline provides the tools to measure this interaction.  A NestSection
+implementation should include a VRA preflight check (analogous to the
+\texttt{callais\_preflight} function in the existing pipeline) to detect cases
+where the spine bisects a protected community.

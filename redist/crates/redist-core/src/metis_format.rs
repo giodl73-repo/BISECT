@@ -98,6 +98,63 @@ pub fn write_metis_graph(
     Ok(out)
 }
 
+/// Generate METIS .graph file content with TWO vertex weight constraints (ncon=2).
+///
+/// Used by AreaSection: vertex_weights_1 = population, vertex_weights_2 = land area.
+/// tpwgts for ncon=2, nparts=2: [pop_left, area_left, pop_right, area_right].
+///
+/// Header becomes: `n n_edges fmt 2` (ncon=2).
+/// Each vertex line: `pop area neighbor+1 ew ...`
+pub fn write_metis_graph_dual(
+    adjacency: &[Vec<usize>],
+    vertex_weights_pop: &[i64],   // constraint 1: population
+    vertex_weights_area: &[i64],  // constraint 2: land area (ALAND)
+    edge_weights: Option<&HashMap<(usize, usize), f64>>,
+) -> Result<String, MetisFormatError> {
+    let n = adjacency.len();
+    if n == 0 { return Err(MetisFormatError::EmptyGraph); }
+    if vertex_weights_pop.len() != n {
+        return Err(MetisFormatError::WeightLengthMismatch(vertex_weights_pop.len(), n));
+    }
+    if vertex_weights_area.len() != n {
+        return Err(MetisFormatError::WeightLengthMismatch(vertex_weights_area.len(), n));
+    }
+    if let Some(ew) = edge_weights {
+        for &(u, v) in ew.keys() {
+            if u > v { return Err(MetisFormatError::NonCanonicalEdgeKey(u, v)); }
+        }
+    }
+
+    let n_edges = adjacency.iter().map(|nbrs| nbrs.len()).sum::<usize>() / 2;
+    let has_ew = edge_weights.map(|m| !m.is_empty()).unwrap_or(false);
+    let fmt = if has_ew { "011" } else { "010" };
+
+    let mut out = String::with_capacity(n * 40 + 20);
+    // ncon=2 in the header
+    out.push_str(&format!("{n} {n_edges} {fmt} 2\n"));
+
+    for i in 0..n {
+        let pop  = vertex_weights_pop[i].max(1);
+        let area = vertex_weights_area[i].max(1);
+        // Two vertex weights: population then area
+        out.push_str(&format!("{pop} {area}"));
+
+        for &j in &adjacency[i] {
+            out.push(' ');
+            out.push_str(&(j + 1).to_string());
+            if has_ew {
+                let key = (i.min(j), i.max(j));
+                let ew_m = edge_weights.unwrap().get(&key).copied().unwrap_or(1.0);
+                let ew_cm = ((ew_m * 100.0) as i64).max(1);
+                out.push(' ');
+                out.push_str(&ew_cm.to_string());
+            }
+        }
+        out.push('\n');
+    }
+    Ok(out)
+}
+
 /// Parse the gpmetis output partition file (one assignment per line, 0-based).
 pub fn parse_metis_partition(
     content: &str,

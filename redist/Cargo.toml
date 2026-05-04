@@ -2,12 +2,14 @@
 members = [
     "crates/redist-core",
     "crates/redist-data",
+    "crates/redist-apportion",
     "crates/redist-cli",
     "crates/redist-analysis",
     "crates/redist-map",
     "crates/redist-report",
     "crates/redist-web",
     "crates/redist-tui",
+    "crates/redist-metis",
     "python/redist_py",
 ]
 resolver = "2"
@@ -19,6 +21,9 @@ authors = ["Gio Della-Libera"]
 license = "MIT"
 
 [workspace.dependencies]
+# Partitioning
+metis = "0.2.2"
+
 # Algorithm / data structures
 rayon = "1.10"
 serde = { version = "1", features = ["derive"] }

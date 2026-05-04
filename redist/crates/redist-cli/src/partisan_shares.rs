@@ -160,3 +160,40 @@ mod tests {
         std::fs::remove_file(&path).ok();
     }
 }
+
+/// Load per-GEOID Democratic vote counts from the presidential CSV.
+/// Format: geoid,dem_votes,rep_votes,...
+/// Returns aligned Vec<f64> of dem_votes and a separate Vec<f64> of (dem+rep) totals.
+pub fn load_dem_vote_counts(
+    csv_path: &Path,
+    index_to_geoid: &HashMap<usize, String>,
+    n_tracts: usize,
+) -> Result<(Vec<f64>, Vec<f64>), String> {
+    let content = std::fs::read_to_string(csv_path)
+        .map_err(|e| format!("cannot read {}: {e}", csv_path.display()))?;
+
+    let mut dem_map: HashMap<String, f64> = HashMap::new();
+    let mut total_map: HashMap<String, f64> = HashMap::new();
+    let mut header_seen = false;
+    for line in content.lines() {
+        let line = line.trim();
+        if line.is_empty() || line.starts_with('#') { continue; }
+        if !header_seen { header_seen = true; continue; } // skip header
+        let cols: Vec<&str> = line.split(',').collect();
+        if cols.len() < 3 { continue; }
+        let geoid = cols[0].to_string();
+        let dem: f64 = cols[1].parse().unwrap_or(0.0);
+        let rep: f64 = cols[2].parse().unwrap_or(0.0);
+        dem_map.insert(geoid.clone(), dem);
+        total_map.insert(geoid, dem + rep);
+    }
+
+    let dem_votes: Vec<f64> = (0..n_tracts)
+        .map(|i| index_to_geoid.get(&i).and_then(|g| dem_map.get(g)).copied().unwrap_or(0.0))
+        .collect();
+    let two_party: Vec<f64> = (0..n_tracts)
+        .map(|i| index_to_geoid.get(&i).and_then(|g| total_map.get(g)).copied().unwrap_or(1.0))
+        .collect();
+
+    Ok((dem_votes, two_party))
+}

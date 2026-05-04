@@ -1,0 +1,50 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+\title{The Solution Space of Minimum-Edge-Cut Redistricting:\\
+       Seed Sensitivity and Partisan Variance}
+
+\author{Gio Della-Libera}
+
+\date{Draft — \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  % TODO: write abstract after sections are drafted
+  The Districting Integrity Act proposes that each state draw its congressional
+  districts by executing a deterministic graph-bisection algorithm with a
+  single federally published random seed. This paper asks: how much does seed
+  choice matter? Because graph minimum bisection is NP-hard, the METIS
+  multilevel heuristic finds a local optimum whose identity depends on the
+  seed used in the initial partitioning phase. We characterize the
+  \emph{near-optimal solution space} --- the set of plans within $\varepsilon$
+  of the minimum edge cut --- and measure the distribution of partisan outcomes
+  (proportionality gap, efficiency gap, seat allocation) across 1{,}000 seeds
+  per state for all 50 states. [Results TBD].
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references,../../references}
+
+\end{document}

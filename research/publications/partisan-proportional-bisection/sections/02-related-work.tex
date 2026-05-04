@@ -1,0 +1,61 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Partisan redistricting metrics.}
+The efficiency gap \citep{stephanopoulos2015} measures partisan asymmetry as
+the difference in wasted votes between the two parties.
+Mean-median difference \citep{mcdonald2015} measures whether the median district
+outcome differs systematically from the mean.
+Both metrics characterise the \emph{outcome} of a redistricting plan but do
+not prescribe an algorithm that achieves a target outcome.
+\citet{mcghee2014} shows that geographic sorting produces Republican-favourable
+gaps under most compactness criteria, even without intentional gerrymandering ---
+the direct precursor to the Rodden effect documented empirically in B.9.
+
+\paragraph{Proportional representation mechanisms.}
+Multi-member districts and ranked-choice voting achieve proportionality by
+changing the electoral rule rather than the map \citep{lijphart1994}.
+Seat-optimal gerrymandering \citep{chen2013, friedman2009} uses partisan data
+to draw maximally advantageous maps.
+Our approach differs from both: we use partisan data only to the minimum extent
+needed for proportionality, while retaining the single-member, first-past-the-post
+structure and the minimum-edge-cut geographic objective.
+
+\paragraph{Algorithmic redistricting.}
+Minimum-edge-cut redistricting \citep{karypis1998, b1paper} and its extensions
+--- edge-weighted bisection (B.2), GeoSection (B.8), AreaSection (B.9) ---
+are the foundation of this work.
+B.9 establishes the key empirical fact exploited here: the proportionality
+gap in competitive states is $\sim$$-6.2$\,pp under pure geographic algorithms,
+and this gap is stable across different geographic constraints.
+B.11 (PrimeFactor) provides the Huntington-Hill seat allocation $k_D$, $k_R$
+used to parameterise the $\mathtt{tpwgts}$ targets.
+
+\paragraph{Multi-constraint graph partitioning.}
+METIS $\mathtt{ncon} > 1$ has been used in scientific computing for load
+balancing with multiple objectives \citep{karypis1999metis}.
+AreaSection (B.9) introduced $\mathtt{ncon}=2$ for redistricting with vertex
+weights $[\text{population},\, \text{land area}]$.
+This paper applies the same $\mathtt{ncon}=2$ infrastructure with vertex
+weights $[\text{population},\, D_{\text{votes}}]$, establishing the partisan
+analogue of the area-balance constraint.
+
+\paragraph{Partisan Lorenz curves.}
+\citet{rodden2019} uses density plots of partisan composition by geography to
+visualise sorting.
+\citet{frank2010} applies spatial Lorenz curves to income concentration.
+We introduce the \emph{partisan Lorenz curve} --- tracts sorted by Democratic
+density, mapping cumulative population to cumulative Democratic-voter fraction ---
+as a feasibility diagnostic for proportional packing, directly paralleling the
+population-area Lorenz curve of B.9.
+
+\paragraph{Legal background.}
+\emph{Rucho v.\ Common Cause} (2019) held that federal courts cannot remedy
+partisan gerrymandering under the federal Constitution.
+State courts remain empowered to do so under state constitutions
+\citep{lwv2018pa, harper2022nc}.
+This paper's analysis of the minimum partisan signal required for proportionality
+is directly relevant to state-court proportionality claims: it measures the
+\emph{cost} of proportionality in partisan information, which is one factor
+courts weigh when evaluating whether geographic sorting constitutes a
+constitutional violation.

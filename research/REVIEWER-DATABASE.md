@@ -18,6 +18,16 @@ A comprehensive pool of expert reviewers for AI-simulated paper reviews across a
 
 ## Reviewer Categories
 
+### Category: Graph Algorithms & Scientific Computing
+*For papers on: graph partitioning, combinatorial optimization, numerical methods, mesh generation*
+
+| Name | Affiliation | Expertise | Key Question |
+|------|-------------|-----------|--------------|
+| **George Karypis** | U. Minnesota | METIS, ParMETIS, multilevel graph partitioning, GKlib, hMETIS | Is the multilevel structure correct? Does coarsening quality hold across irregular graphs? |
+| **Vipin Kumar** | U. Minnesota | Parallel graph algorithms, scientific computing, high-performance partitioning | How does it scale? What's the communication-to-computation ratio? |
+| **Bruce Hendrickson** | Sandia National Labs | Spectral methods, Chaco partitioner, load balancing | Why not spectral? What does FM gain over simpler local search? |
+| **Kirk Schloegel** | Cray | Multi-constraint partitioning, ParMETIS, dynamic repartitioning | Are multi-constraint semantics correct (ubvec, balance per constraint)? |
+
 ### Category: Systems & Infrastructure
 *For papers on: distributed systems, state management, fault tolerance, scalability*
 
@@ -202,6 +212,7 @@ Quick reference for expertise matching:
 
 | Tag | Reviewers |
 |-----|-----------|
+| `graph-partitioning` | George Karypis, Vipin Kumar, Bruce Hendrickson, Kirk Schloegel |
 | `distributed-systems` | Matei Zaharia, Ion Stoica, Joseph Gonzalez |
 | `compilers` | Chris Lattner, Jonathan Ragan-Kelley, Tianqi Chen |
 | `pl-theory` | Nada Amin, Armando Solar-Lezama |

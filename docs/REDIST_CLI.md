@@ -61,13 +61,16 @@ redist state --state <CODE> [OPTIONS]
 | `-y`, `--year` | `2020` | Census year: `2020`, `2010`, `2000` |
 | `-v`, `--version` | `v1` | Version tag (used in output path) |
 | `--output-dir` | `outputs/{version}` | Override output root directory |
-| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `partisan-weighted` |
+| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `partisan-weighted`, `geosection`, `areasection`, `compact-bisect`, `apportion-regions` |
 | `--partisan-shares` | *(none)* | TSV file with `geoid<TAB>dem_share`. Required for `partisan-weighted` mode. **Mutually exclusive with `metis-vra`** (Callais p.36 disentanglement). |
 | `--dem-threshold` | `0.55` | dem_share ≥ this → unit is "strong-D". Partisan-weighted mode only. |
 | `--rep-threshold` | `0.45` | dem_share ≤ this → unit is "strong-R". Partisan-weighted mode only. |
 | `--ufactor` | `5` | METIS imbalance tolerance (5 = ±0.5%) |
 | `--niter` | `100` | METIS refinement iterations |
 | `--seed` | *(random)* | METIS random seed for reproducible runs |
+| `--geosection-seeds` | `50` | Seeds per ratio for GeoSection (B.8) and AreaSection (B.9). Each ratio 1:k-1 through k/2:k/2 is tried with this many seeds; the minimum-normalised-EC ratio wins. Typical: 50–200. |
+| `--area-swing` | `1.10` | **AreaSection only.** METIS `ubvec[1]` for the land-area balance constraint: `1.10` = ±10% swing from 50/50. Empirically validated range: `1.05`–`1.15`. Below `1.05` forces near-equal splits for concentrated states (GA → 7:7). Above `1.15` allows urban peeling to return (WI → 2:6 at `1.20`). |
+| `--balance-tolerance` | `0.5` | Max deviation per district in percent (0.5 = ±0.5%, the congressional one-person-one-vote standard). Pass as percent, not fraction. |
 | `-r`, `--reset` | false | Delete output directory before starting |
 | `-d`, `--debug` | false | Extra diagnostic output |
 | `-p`, `--print-only` | false | Dry run — print actions without executing |
@@ -115,7 +118,10 @@ redist states --year <YEAR> --version <VERSION> --output-dir <DIR> [OPTIONS]
 | `--output-dir` | *(required)* | Output root directory |
 | `-w`, `--workers` | `4` | Parallel workers (match CPU core count) |
 | `--states <CODES>` | *(all 50)* | Space-separated state codes to include |
-| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra` |
+| `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `geosection`, `areasection`, `compact-bisect` |
+| `--geosection-seeds` | `50` | Seeds per ratio for GeoSection/AreaSection |
+| `--area-swing` | `1.10` | **AreaSection only.** Area imbalance tolerance `ubvec[1]`. See `redist state --help`. |
+| `--balance-tolerance` | `0.5` | Max deviation per district in percent |
 | `--reprocess` | false | Re-run states that already have outputs |
 | `-d`, `--debug` | false | Extra diagnostic output |
 
