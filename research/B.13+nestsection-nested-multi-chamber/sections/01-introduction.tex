@@ -1,0 +1,83 @@
+\section{Introduction}
+\label{sec:intro}
+
+Every decade following the census, state legislatures draw three sets of
+district boundaries for the same geographic territory: congressional districts
+(determined by federal apportionment), state senate districts, and state house
+districts.  Under current practice these three processes are legally and
+computationally independent.  A legislature controlling all three maps can
+exploit this independence to reinforce partisan advantages across chambers: pack
+a geographic community into a safe district at the congressional level, pack the
+same community into a safe senate district, and pack it again at the house
+level.  No single anti-gerrymandering doctrine spans all three chambers
+simultaneously.
+
+\subsection{The Structural Independence Problem}
+
+Consider North Carolina after 2020 apportionment: $C = 14$ congressional
+seats, $S = 50$ senate seats, $H = 120$ house seats.  A partisan legislature
+facing a competitive map at one level can draw the other two levels to
+compensate.  If a court strikes down the congressional map, the partisan sorting
+of communities is preserved in the senate and house maps, which then serve as
+the foundation for the next round of congressional redistricting.  The maps are
+legally independent but geographically entangled.
+
+The \emph{structural} version of this problem is even more basic.  The three
+seat counts $(C, S, H)$ rarely share a compatible prime factorization.  There is
+in general no way to recurse a 14-seat bisection tree to produce exactly 50
+senate children and 120 house grandchildren.  Each chamber's map is drawn by a
+different algorithm, consultant, or commission, with different geographic
+anchors, producing three maps that are at best loosely correlated.
+
+\subsection{NestSection}
+
+We propose \emph{NestSection}, an algorithm that forces the three chambers to
+share a common \emph{compatible factorization spine}.  The spine is the
+coarsest geographic division that all three chambers agree on: it is
+determined by $g = \gcd(C, S, H)$, the greatest common divisor of the three
+seat counts.  Within each of the $g$ spine regions, the three chambers recurse
+independently, but they share the same geographic boundaries at the top level.
+
+The key insight is that $g$ determines how much cross-chamber structure can
+be shared.  When $g = \min(C, S, H)$, the smallest chamber's seat count divides
+both larger counts exactly, and the nesting is perfect: every district of the
+smaller chamber is a union of districts from the larger chambers.  When $g = 1$,
+no non-trivial common structure exists and the three chambers can only share a
+root node (the state boundary itself).
+
+\paragraph{Formal compatibility score.}  We define the
+\emph{spine compatibility score} as:
+\begin{equation}
+  \label{eq:score}
+  \sigma(C, S, H) \;=\; \left(1 - \frac{\gcd(C,S,H)}{\min(C,S,H)}\right) \times 100 \;\in\; [0, 100].
+\end{equation}
+A score of 0 means the smallest chamber is entirely captured by the shared
+trunk; a score of 100 means the trunk is trivially a single root.
+
+\paragraph{Main contributions.}
+\begin{enumerate}
+  \item A formal definition of compatible factorization spines and a
+        polynomial-time algorithm ($\spine$) for their construction
+        (Section~\ref{sec:algorithm}).
+  \item A 50-state compatibility census under the 2020 apportionment, including
+        an exact classification of which states admit strict nesting and which
+        require best-effort Mode~3 nesting (Section~\ref{sec:evaluation}).
+  \item A legal argument that shared-spine redistricting is an anti-gerrymandering
+        mechanism by construction, and a statutory design proposal for states
+        where $g \geq 5$ (Section~\ref{sec:discussion}).
+\end{enumerate}
+
+\paragraph{Roadmap.}  Section~\ref{sec:related} reviews multi-member district
+theory, nested districting proposals, and the gerrymandering literature
+relevant to cross-chamber coherence.  Section~\ref{sec:algorithm} defines
+the $\spine$ algorithm formally, proves its key properties, and describes the
+three nesting modes.  Section~\ref{sec:evaluation} presents the 50-state
+compatibility census and three case studies (Oregon, North Carolina, Texas).
+Section~\ref{sec:discussion} develops the legal argument, addresses limitations,
+and outlines future work.  Section~\ref{sec:conclusion} summarizes.
+
+\paragraph{Implementation note.}  The $\spine$ algorithm is implemented in the
+\texttt{redist-apportion} crate of the \texttt{redist} Rust workspace; the
+\texttt{compatible\_spines}, \texttt{spine\_compatibility\_score}, and
+\texttt{us\_state\_compatibility\_table} functions are publicly exported and
+tested against all 50 states.

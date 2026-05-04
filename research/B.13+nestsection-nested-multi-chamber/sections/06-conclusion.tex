@@ -1,0 +1,49 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced NestSection, an algorithm for constructing hierarchically
+consistent redistricting maps across the congressional, state senate, and state
+house chambers.  The central contribution is the \textsc{CompatibleSpines}
+algorithm, which identifies the largest geographic structure that all three
+chambers can share: the factorization trunk determined by $g = \gcd(C, S, H)$.
+
+The spine compatibility score $\sigma(C, S, H) = (1 - g/\min(C,S,H)) \times 100$
+provides a single number summarizing how tightly the three chambers are
+structurally linked.  We applied this score to all 50 US states under the 2020
+apportionment, finding that 11 states admit strict nesting ($\sigma = 0$) and
+39 require best-effort Mode~3 nesting ($\sigma \geq 50$).  The absence of
+states in the intermediate range is a structural property of current US
+apportionments, not an artifact of the metric.
+
+The three case studies illustrate the range of outcomes:
+\begin{itemize}
+  \item \textbf{Oregon} ($g = 6$, $\sigma = 0$): A clean $1:5:10$
+        congressional/senate/house ratio admits exact hierarchical nesting.
+        The three chambers share a 6-region trunk and diverge only in the
+        tail splits within each trunk region.
+  \item \textbf{North Carolina} ($g = 2$, $\sigma = 85.7\%$): A single trunk
+        bisection is all that can be shared.  Mode~3 nesting with
+        $\tau_\text{pop} \leq 0.04$ is achievable, but the partisan consequences
+        of the trunk bisection are non-trivial.
+  \item \textbf{Texas} ($g = 1$, $\sigma = 96.8\%$): The primality of the
+        31-seat senate makes the state structurally incompatible.  No meaningful
+        cross-chamber nesting is achievable without restructuring the chamber
+        sizes.
+\end{itemize}
+
+The legal argument is constructive: requiring NestSection for compatible states
+reduces the degrees of freedom available for partisan optimization before the
+map is drawn, not after.  States with $g \geq 2$ (22 states) could be subject
+to a best-effort nesting mandate; states with $g \geq 5$ (Oregon and Alabama)
+could be subject to a strict nesting mandate with zero boundary tolerance.
+Such a statute would be the first anti-gerrymandering rule that operates at
+the level of geometric structure rather than partisan outcome.
+
+The implementation is available in \texttt{redist-apportion::nest} and is fully
+tested against all 50 states.  Future work will validate the algorithm on actual
+census geography and measure the gerrymander-resistance effect empirically.
+
+\paragraph{Acknowledgments.}
+The authors thank the NCSL for chamber-size data and the Census Bureau for the
+2020 apportionment figures.  The \texttt{redist} Rust workspace is available
+at \url{https://github.com/apportionment-research/redist}.
