@@ -2075,6 +2075,87 @@ mod tests {
         let args = AnalyzeArgs::parse_from(["analyze", "--state", "VT"]);
         assert!(!args.stdout);
     }
+
+    // ── Group 9: enum Display + parse round-trips ─────────────────────────────
+
+    #[test]
+    fn partition_mode_display_all_variants() {
+        // Every PartitionMode variant must round-trip through Display.
+        // If a new variant is added without updating this list the test
+        // will fail to compile — compile-time safety net.
+        let cases: &[(PartitionMode, &str)] = &[
+            (PartitionMode::Unweighted,          "unweighted"),
+            (PartitionMode::EdgeWeighted,         "edge-weighted"),
+            (PartitionMode::MetisVra,             "metis-vra"),
+            (PartitionMode::PartisanWeighted,     "partisan-weighted"),
+            (PartitionMode::Proportional,         "proportional"),
+            (PartitionMode::CompactBisect,        "compact-bisect"),
+            (PartitionMode::GeoSection,           "geosection"),
+            (PartitionMode::AreaSection,          "areasection"),
+            (PartitionMode::ProportionalSection,  "proportional-section"),
+            (PartitionMode::ApportionRegions,     "apportion-regions"),
+            (PartitionMode::VraSection,           "vra-section"),
+        ];
+        for (variant, expected) in cases {
+            assert_eq!(format!("{variant}"), *expected,
+                "PartitionMode::{variant:?} Display must be '{expected}'");
+        }
+    }
+
+    #[test]
+    fn structure_mode_all_variants_parse() {
+        // StructureMode is a ValueEnum — every variant must parse from its string value.
+        use clap::ValueEnum;
+        let cases: &[(&str, StructureMode)] = &[
+            ("standard-bisect",    StructureMode::StandardBisect),
+            ("nway",               StructureMode::NWay),
+            ("ratio-optimal",      StructureMode::RatioOptimal),
+            ("ratio-optimal-area", StructureMode::RatioOptimalArea),
+            ("ratio-optimal-vra",  StructureMode::RatioOptimalVra),
+            ("prime-factor",       StructureMode::PrimeFactor),
+            ("compact-polsby",     StructureMode::CompactPolsby),
+        ];
+        for (s, expected) in cases {
+            let parsed = StructureMode::from_str(s, true)
+                .unwrap_or_else(|_| panic!("StructureMode must parse from '{s}'"));
+            assert_eq!(parsed, *expected,
+                "StructureMode parsed from '{s}' must equal {:?}", expected);
+        }
+    }
+
+    #[test]
+    fn search_mode_all_variants() {
+        use clap::ValueEnum;
+        let cases: &[(&str, SearchMode)] = &[
+            ("single",      SearchMode::Single),
+            ("multi",       SearchMode::Multi),
+            ("convergence", SearchMode::Convergence),
+        ];
+        for (s, expected) in cases {
+            let parsed = SearchMode::from_str(s, true)
+                .unwrap_or_else(|_| panic!("SearchMode must parse from '{s}'"));
+            assert_eq!(parsed, *expected,
+                "SearchMode parsed from '{s}' must equal {:?}", expected);
+        }
+    }
+
+    #[test]
+    fn weight_mode_all_variants() {
+        use clap::ValueEnum;
+        let cases: &[(&str, WeightMode)] = &[
+            ("unweighted",   WeightMode::Unweighted),
+            ("geographic",   WeightMode::Geographic),
+            ("county",       WeightMode::County),
+            ("vra-aligned",  WeightMode::VraAligned),
+            ("proportional", WeightMode::Proportional),
+        ];
+        for (s, expected) in cases {
+            let parsed = WeightMode::from_str(s, true)
+                .unwrap_or_else(|_| panic!("WeightMode must parse from '{s}'"));
+            assert_eq!(parsed, *expected,
+                "WeightMode parsed from '{s}' must equal {:?}", expected);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -2261,4 +2342,3 @@ pub struct AggregateArgs {
     #[arg(long, default_value = "csv")]
     pub format: String,
 }
-

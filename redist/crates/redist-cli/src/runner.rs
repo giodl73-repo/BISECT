@@ -3195,4 +3195,224 @@ mod tests {
             panic!("--search multi must produce SeedCompositor::Multi");
         }
     }
+
+    // ── Group 5: WeightMode compositor override ───────────────────────────────
+
+    #[test]
+    fn weights_override_unweighted_disables_geographic() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--weights-override", "unweighted",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(!algo.weights.geographic,
+            "--weights-override unweighted must set geographic=false, got true");
+    }
+
+    #[test]
+    fn weights_override_geographic_enables_geographic() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // Start with unweighted mode so the preset would disable geographic.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--partition-mode", "unweighted",
+            "--weights-override", "geographic",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.weights.geographic,
+            "--weights-override geographic must set geographic=true even when preset is unweighted");
+    }
+
+    #[test]
+    fn weights_override_county_sets_alpha_positive() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--weights-override", "county",
+            "--alpha-county", "3.0",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.weights.alpha_county >= 1.0,
+            "--weights-override county must set alpha_county >= 1.0, got {}",
+            algo.weights.alpha_county);
+    }
+
+    #[test]
+    fn weights_override_none_preserves_preset() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // Without --weights-override, --partition-mode unweighted keeps geographic=false.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--partition-mode", "unweighted",
+        ]);
+        assert!(args.weights_override.is_none(),
+            "no --weights-override flag must leave weights_override=None");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(!algo.weights.geographic,
+            "unweighted preset without override must keep geographic=false");
+    }
+
+    #[test]
+    fn weights_override_vra_sets_minority_weighting() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--weights-override", "vra-aligned",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.weights.minority_weighting,
+            "--weights-override vra-aligned must set minority_weighting=true");
+    }
+
+    // ── Group 6: AlgorithmConfig.mode_name() method ───────────────────────────
+
+    #[test]
+    fn mode_name_from_algo_config() {
+        use crate::args::PartitionMode as PM;
+        // mode_name() from AlgorithmConfig must agree with SplitStrategy::mode_name()
+        // for every preset that doesn't use mode_label.
+        let cases = [
+            (PM::EdgeWeighted,     "edge-weighted"),
+            (PM::MetisVra,         "metis-vra"),
+            (PM::GeoSection,       "geosection"),
+            (PM::CompactBisect,    "compact-bisect"),
+            (PM::AreaSection,      "areasection"),
+            (PM::ApportionRegions, "apportion-regions"),
+        ];
+        for (mode, expected) in &cases {
+            let algo = AlgorithmConfig::defaults_for_mode(mode);
+            assert_eq!(algo.mode_name(), *expected,
+                "AlgorithmConfig::mode_name() must match SplitStrategy::mode_name() \
+                 for mode {:?}", expected);
+            assert_eq!(algo.mode_name(), algo.split.mode_name(),
+                "AlgorithmConfig and SplitStrategy mode_name must agree for {:?}", expected);
+        }
+    }
+
+    #[test]
+    fn mode_name_after_structure_override() {
+        use crate::args::{StateArgs, StructureMode};
+        use clap::Parser;
+        // --structure prime-factor overrides split to ApportionRegions.
+        // mode_name must reflect the overridden split.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--partition-mode", "geosection",
+            "--structure", "prime-factor",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert_eq!(algo.mode_name(), "apportion-regions",
+            "after prime-factor structure override, mode_name must be 'apportion-regions'");
+        assert_eq!(algo.mode_name(), algo.split.mode_name(),
+            "AlgorithmConfig and SplitStrategy mode_name must agree after structure override");
+    }
+
+    #[test]
+    fn mode_name_uses_mode_label_override() {
+        // When mode_label is Some(...), mode_name() must return that label regardless
+        // of the split strategy.
+        let algo = AlgorithmConfig {
+            split: SplitStrategy::Bisect,
+            weights: WeightSpec::default(),
+            mode_label: Some("custom"),
+            ..AlgorithmConfig::default()
+        };
+        assert_eq!(algo.mode_name(), "custom",
+            "mode_label=Some('custom') must take priority over split strategy");
+    }
+
+    // ── Group 7: ConvergenceSweep properties ─────────────────────────────────
+
+    #[test]
+    fn convergence_sweep_threshold_preserved() {
+        let sc = SeedCompositor::ConvergenceSweep { threshold: 500 };
+        assert_eq!(sc.seed_count(), 500,
+            "ConvergenceSweep{{threshold: 500}}.seed_count() must return 500");
+    }
+
+    #[test]
+    fn convergence_sweep_is_not_single() {
+        let sc = SeedCompositor::ConvergenceSweep { threshold: 500 };
+        assert!(!sc.is_single(),
+            "ConvergenceSweep must not be is_single()");
+    }
+
+    #[test]
+    fn convergence_sweep_default_threshold_via_args() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // --search convergence without explicit --convergence-threshold uses default 500.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--search", "convergence",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
+            assert_eq!(threshold, 500,
+                "default convergence threshold must be 500, got {threshold}");
+        } else {
+            panic!("--search convergence must produce ConvergenceSweep");
+        }
+    }
+
+    #[test]
+    fn convergence_sweep_custom_threshold() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--search", "convergence",
+            "--convergence-threshold", "200",
+        ]);
+        assert_eq!(args.convergence_threshold, 200,
+            "convergence_threshold must be parsed as 200");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
+            assert_eq!(threshold, 200,
+                "--convergence-threshold 200 must produce ConvergenceSweep{{threshold: 200}}");
+        } else {
+            panic!("--search convergence must produce ConvergenceSweep");
+        }
+    }
+
+    // ── Group 8: SeedCompositor interaction with AlgorithmConfig ─────────────
+
+    #[test]
+    fn apportion_regions_from_state_args_single() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // ApportionRegions preset → Single seed (federal statute determinism).
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--partition-mode", "apportion-regions",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.seeds.is_single(),
+            "apportion-regions from_state_args must produce SeedCompositor::Single");
+        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
+            "apportion-regions split must be ApportionRegions");
+    }
+
+    #[test]
+    fn search_override_wins_over_preset_seed() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // compact-bisect preset normally yields Multi seeds.
+        // --search convergence must override that to ConvergenceSweep.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT",
+            "--partition-mode", "compact-bisect",
+            "--search", "convergence",
+        ]);
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(matches!(algo.seeds, SeedCompositor::ConvergenceSweep { .. }),
+            "--search convergence must override compact-bisect Multi preset to ConvergenceSweep");
+        assert!(!algo.seeds.is_single(),
+            "ConvergenceSweep must not be is_single()");
+    }
 }
