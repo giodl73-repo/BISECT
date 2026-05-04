@@ -2613,14 +2613,14 @@ mod tests {
         assert_eq!(metis_vra.mode_name(), "metis-vra");
 
         let geosection = AlgorithmConfig {
-            split: SplitStrategy::GeoSection { seeds_per_ratio: 50 },
+            split: SplitStrategy::GeoSection,
             mode_label: None,
             ..AlgorithmConfig::default()
         };
         assert_eq!(geosection.mode_name(), "geosection");
 
         let compact = AlgorithmConfig {
-            split: SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 },
+            split: SplitStrategy::CompactBisect { epsilon: 0.05 },
             mode_label: None,
             ..AlgorithmConfig::default()
         };
@@ -2735,11 +2735,9 @@ mod tests {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::GeoSection);
         assert_eq!(algo.mode_name(), "geosection");
-        if let SplitStrategy::GeoSection { seeds_per_ratio } = algo.split {
-            assert!(seeds_per_ratio > 0, "geosection needs seeds_per_ratio > 0");
-        } else {
-            panic!("defaults_for_mode(GeoSection) returned wrong split strategy");
-        }
+        assert!(matches!(algo.split, SplitStrategy::GeoSection),
+            "defaults_for_mode(GeoSection) returned wrong split strategy");
+        assert!(algo.seeds.seed_count() > 0, "geosection needs seeds > 0");
         assert_eq!(algo.weights.directional_lambda, 0.0,
             "default lambda should be 0 (no directional penalty)");
     }
@@ -2751,7 +2749,7 @@ mod tests {
     #[test]
     fn test_algo_poison_zero_seeds_not_silently_fixed() {
         let poison = AlgorithmConfig {
-            split: SplitStrategy::GeoSection { seeds_per_ratio: 0 },
+            split: SplitStrategy::GeoSection,
             weights: WeightSpec { directional_lambda: f64::INFINITY, ..WeightSpec::default() },
             metis: MetisParams { ufactor: 0, niter: 0, seed: None },
             ..AlgorithmConfig::default()
@@ -2761,8 +2759,8 @@ mod tests {
         // MetisParams fields must reflect the bad values as-is (caller can validate)
         assert_eq!(poison.metis.ufactor, 0, "poison ufactor=0 must not be silently corrected");
         assert_eq!(poison.metis.niter, 0, "poison niter=0 must not be silently corrected");
-        if let SplitStrategy::GeoSection { seeds_per_ratio } = poison.split {
-            assert_eq!(seeds_per_ratio, 0, "poison seeds=0 must not be silently corrected");
+        if let SeedCompositor::Multi { seeds } = poison.seeds {
+            assert_eq!(seeds, 50, "default seeds=50 preserved even with poison metis params");
         }
     }
 
@@ -2773,11 +2771,11 @@ mod tests {
         let all: &[(&str, SplitStrategy)] = &[
             ("edge-weighted", SplitStrategy::Bisect),
             ("metis-vra",     SplitStrategy::NWay),
-            ("geosection",    SplitStrategy::GeoSection { seeds_per_ratio: 50 }),
-            ("compact-bisect",SplitStrategy::CompactBisect { seeds_per_level: 50, epsilon: 0.05 }),
-            ("areasection",   SplitStrategy::AreaSection { seeds_per_ratio: 50, area_swing: 1.10 }),
-            ("apportion-regions",  SplitStrategy::ApportionRegions { seeds_per_level: 1 }),
-            ("vra-section",   SplitStrategy::VraSection { seeds_per_ratio: 50, w_vra: 0.40 }),
+            ("geosection",    SplitStrategy::GeoSection),
+            ("compact-bisect",SplitStrategy::CompactBisect { epsilon: 0.05 }),
+            ("areasection",   SplitStrategy::AreaSection { area_swing: 1.10 }),
+            ("apportion-regions",  SplitStrategy::ApportionRegions),
+            ("vra-section",   SplitStrategy::VraSection { w_vra: 0.40 }),
         ];
         for (expected_name, variant) in all {
             assert_eq!(variant.mode_name(), *expected_name,
@@ -2790,12 +2788,12 @@ mod tests {
         use crate::args::PartitionMode as PM;
         let algo = AlgorithmConfig::defaults_for_mode(&PM::CompactBisect);
         assert_eq!(algo.mode_name(), "compact-bisect");
-        if let SplitStrategy::CompactBisect { seeds_per_level, epsilon } = algo.split {
-            assert!(seeds_per_level > 0);
+        if let SplitStrategy::CompactBisect { epsilon } = algo.split {
             assert!(epsilon > 0.0 && epsilon < 1.0, "epsilon must be in (0,1)");
         } else {
             panic!("defaults_for_mode(CompactBisect) returned wrong split strategy");
         }
+        assert!(algo.seeds.seed_count() > 0, "compact-bisect needs seeds > 0");
     }
 
     #[test]
@@ -2926,5 +2924,275 @@ mod tests {
             && spec.alpha_vtd    < 1e-10;
         assert!(!should_early_exit,
             "alpha_mcd=2.0 must prevent early-exit to empty edge map");
+    }
+
+    // ── Group 1: SeedCompositor ───────────────────────────────────────────────
+
+    #[test]
+    fn seed_count_single_returns_1() {
+        let sc = SeedCompositor::Single;
+        assert_eq!(sc.seed_count(), 1,
+            "Single seed_count must return 1");
+    }
+
+    #[test]
+    fn seed_count_multi_returns_seeds() {
+        let sc = SeedCompositor::Multi { seeds: 77 };
+        assert_eq!(sc.seed_count(), 77,
+            "Multi seed_count must return the seeds field");
+    }
+
+    #[test]
+    fn seed_count_convergence_sweep_returns_threshold() {
+        let sc = SeedCompositor::ConvergenceSweep { threshold: 250 };
+        assert_eq!(sc.seed_count(), 250,
+            "ConvergenceSweep seed_count must return threshold as usize");
+    }
+
+    #[test]
+    fn is_single_true_for_single() {
+        assert!(SeedCompositor::Single.is_single(),
+            "is_single must be true for Single variant");
+    }
+
+    #[test]
+    fn is_single_false_for_multi() {
+        assert!(!SeedCompositor::Multi { seeds: 10 }.is_single(),
+            "is_single must be false for Multi variant");
+        assert!(!SeedCompositor::ConvergenceSweep { threshold: 100 }.is_single(),
+            "is_single must be false for ConvergenceSweep variant");
+    }
+
+    #[test]
+    fn default_is_multi_50() {
+        let sc = SeedCompositor::default();
+        if let SeedCompositor::Multi { seeds } = sc {
+            assert_eq!(seeds, 50, "Default SeedCompositor must be Multi{{seeds: 50}}");
+        } else {
+            panic!("Default SeedCompositor must be Multi, got a different variant");
+        }
+    }
+
+    #[test]
+    fn clone_preserves_variant() {
+        let orig = SeedCompositor::ConvergenceSweep { threshold: 999 };
+        let cloned = orig.clone();
+        if let SeedCompositor::ConvergenceSweep { threshold } = cloned {
+            assert_eq!(threshold, 999, "Clone must preserve ConvergenceSweep threshold");
+        } else {
+            panic!("Clone must preserve the ConvergenceSweep variant");
+        }
+
+        let orig2 = SeedCompositor::Multi { seeds: 42 };
+        let cloned2 = orig2.clone();
+        if let SeedCompositor::Multi { seeds } = cloned2 {
+            assert_eq!(seeds, 42, "Clone must preserve Multi seeds");
+        } else {
+            panic!("Clone must preserve the Multi variant");
+        }
+    }
+
+    // ── Group 2: SplitStrategy with SeedCompositor separation ────────────────
+
+    #[test]
+    fn split_strategy_geosection_has_no_fields() {
+        // GeoSection carries no seeds field — seeds live in SeedCompositor now.
+        let s = SplitStrategy::GeoSection;
+        assert_eq!(s.mode_name(), "geosection",
+            "GeoSection mode_name must be 'geosection'");
+        // Confirm it matches the enum variant (compiler enforces no extra fields).
+        assert!(matches!(s, SplitStrategy::GeoSection),
+            "GeoSection must match the bare variant");
+    }
+
+    #[test]
+    fn split_strategy_apportion_regions_has_no_fields() {
+        let s = SplitStrategy::ApportionRegions;
+        assert_eq!(s.mode_name(), "apportion-regions",
+            "ApportionRegions mode_name must be 'apportion-regions'");
+        assert!(matches!(s, SplitStrategy::ApportionRegions));
+    }
+
+    #[test]
+    fn split_strategy_area_section_has_area_swing() {
+        let s = SplitStrategy::AreaSection { area_swing: 1.15 };
+        assert_eq!(s.mode_name(), "areasection",
+            "AreaSection mode_name must be 'areasection'");
+        if let SplitStrategy::AreaSection { area_swing } = s {
+            assert!((area_swing - 1.15).abs() < 1e-9,
+                "area_swing field must round-trip, got {area_swing}");
+        } else {
+            panic!("AreaSection variant destructure failed");
+        }
+    }
+
+    #[test]
+    fn split_strategy_vra_section_has_w_vra() {
+        let s = SplitStrategy::VraSection { w_vra: 0.30 };
+        assert_eq!(s.mode_name(), "vra-section",
+            "VraSection mode_name must be 'vra-section'");
+        if let SplitStrategy::VraSection { w_vra } = s {
+            assert!((w_vra - 0.30).abs() < 1e-9,
+                "w_vra field must round-trip, got {w_vra}");
+        } else {
+            panic!("VraSection variant destructure failed");
+        }
+    }
+
+    #[test]
+    fn all_variants_mode_name_stable() {
+        // Exhaustive: new variants added without updating this list → compile error.
+        let all: &[(&str, SplitStrategy)] = &[
+            ("edge-weighted",      SplitStrategy::Bisect),
+            ("metis-vra",          SplitStrategy::NWay),
+            ("geosection",         SplitStrategy::GeoSection),
+            ("compact-bisect",     SplitStrategy::CompactBisect { epsilon: 0.05 }),
+            ("areasection",        SplitStrategy::AreaSection { area_swing: 1.10 }),
+            ("proportional-section", SplitStrategy::ProportionalSection { eta: 1.10 }),
+            ("apportion-regions",  SplitStrategy::ApportionRegions),
+            ("vra-section",        SplitStrategy::VraSection { w_vra: 0.40 }),
+        ];
+        for (expected_name, variant) in all {
+            assert_eq!(variant.mode_name(), *expected_name,
+                "SplitStrategy variant added without updating exhaustive list!");
+        }
+    }
+
+    // ── Group 3: AlgorithmConfig with seeds field ─────────────────────────────
+
+    #[test]
+    fn algorithm_config_has_seeds_field() {
+        // AlgorithmConfig::default() must expose a seeds field with 50 seeds.
+        let algo = AlgorithmConfig::default();
+        if let SeedCompositor::Multi { seeds } = algo.seeds {
+            assert_eq!(seeds, 50, "default seeds must be Multi{{50}}");
+        } else {
+            panic!("default AlgorithmConfig seeds must be Multi{{50}}");
+        }
+    }
+
+    #[test]
+    fn apportion_regions_defaults_to_single_seed() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::ApportionRegions);
+        assert!(algo.seeds.is_single(),
+            "ApportionRegions defaults_for_mode must use SeedCompositor::Single \
+             (federal statute requires deterministic single-seed)");
+        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
+            "defaults_for_mode(ApportionRegions) split must be ApportionRegions");
+    }
+
+    #[test]
+    fn geosection_defaults_to_multi_50() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::GeoSection);
+        if let SeedCompositor::Multi { seeds } = algo.seeds {
+            assert_eq!(seeds, 50,
+                "GeoSection defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}");
+        } else {
+            panic!("GeoSection defaults_for_mode seeds must be Multi, not Single or Sweep");
+        }
+    }
+
+    #[test]
+    fn compact_bisect_defaults_to_multi_50() {
+        use crate::args::PartitionMode as PM;
+        let algo = AlgorithmConfig::defaults_for_mode(&PM::CompactBisect);
+        if let SeedCompositor::Multi { seeds } = algo.seeds {
+            assert_eq!(seeds, 50,
+                "CompactBisect defaults_for_mode must produce Multi{{seeds: 50}}, got {seeds}");
+        } else {
+            panic!("CompactBisect defaults_for_mode seeds must be Multi, not Single or Sweep");
+        }
+    }
+
+    // ── Group 4: Compositor StructureMode / WeightMode / SearchMode overrides ──
+
+    #[test]
+    fn structure_override_none_leaves_split_unchanged() {
+        use crate::args::StateArgs;
+        use clap::Parser;
+        // No --structure flag: split comes from --partition-mode preset.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--partition-mode", "geosection",
+            "--geosection-seeds", "30",
+        ]);
+        assert!(args.structure.is_none(), "no --structure flag → structure must be None");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(matches!(algo.split, SplitStrategy::GeoSection),
+            "without --structure override, GeoSection preset must set GeoSection split");
+    }
+
+    #[test]
+    fn structure_override_prime_factor_sets_apportion_regions() {
+        use crate::args::{StateArgs, StructureMode};
+        use clap::Parser;
+        // --structure prime-factor overrides the split regardless of --partition-mode.
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--partition-mode", "geosection",
+            "--structure", "prime-factor",
+        ]);
+        assert_eq!(args.structure, Some(StructureMode::PrimeFactor),
+            "parsed structure must be PrimeFactor");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(matches!(algo.split, SplitStrategy::ApportionRegions),
+            "prime-factor structure override must set ApportionRegions split");
+    }
+
+    #[test]
+    fn search_override_single_sets_single_compositor() {
+        use crate::args::{StateArgs, SearchMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--partition-mode", "geosection",
+            "--geosection-seeds", "30", "--search", "single",
+        ]);
+        assert_eq!(args.search, Some(SearchMode::Single),
+            "parsed search must be Single");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        assert!(algo.seeds.is_single(),
+            "--search single must produce SeedCompositor::Single");
+    }
+
+    #[test]
+    fn search_override_convergence_sets_sweep() {
+        use crate::args::{StateArgs, SearchMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--partition-mode", "geosection",
+            "--search", "convergence", "--convergence-threshold", "300",
+        ]);
+        assert_eq!(args.search, Some(SearchMode::Convergence),
+            "parsed search must be Convergence");
+        assert_eq!(args.convergence_threshold, 300,
+            "convergence_threshold must be 300");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        if let SeedCompositor::ConvergenceSweep { threshold } = algo.seeds {
+            assert_eq!(threshold, 300,
+                "--search convergence must set ConvergenceSweep with the parsed threshold");
+        } else {
+            panic!("--search convergence must produce SeedCompositor::ConvergenceSweep");
+        }
+    }
+
+    #[test]
+    fn search_override_multi_with_seeds() {
+        use crate::args::{StateArgs, SearchMode};
+        use clap::Parser;
+        let args = StateArgs::parse_from([
+            "state", "--state", "VT", "--partition-mode", "geosection",
+            "--search", "multi", "--seeds", "100",
+        ]);
+        assert_eq!(args.search, Some(SearchMode::Multi),
+            "parsed search must be Multi");
+        assert_eq!(args.seeds, Some(100),
+            "--seeds 100 must be parsed");
+        let algo = AlgorithmConfig::from_state_args(&args);
+        if let SeedCompositor::Multi { seeds } = algo.seeds {
+            assert_eq!(seeds, 100,
+                "--search multi --seeds 100 must produce Multi{{seeds: 100}}");
+        } else {
+            panic!("--search multi must produce SeedCompositor::Multi");
+        }
     }
 }
