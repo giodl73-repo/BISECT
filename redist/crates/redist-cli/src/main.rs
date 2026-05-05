@@ -243,6 +243,20 @@ fn main() {
                     if let Some(tol) = args.balance_tolerance {
                         cfg.balance_tolerance = Some(tol / 100.0);
                     }
+                    // Wire alpha_county into weights
+                    if args.alpha_county > 0.0 {
+                        cfg.algo.weights.alpha_county = args.alpha_county;
+                    }
+                    // Wire search strategy override
+                    if let Some(search) = args.search {
+                        use redist_cli::args::SearchMode as SeM;
+                        let n = args.seeds.unwrap_or(args.geosection_seeds.max(50));
+                        cfg.algo.seeds = match search {
+                            SeM::Single      => SeedCompositor::Single,
+                            SeM::Multi       => SeedCompositor::Multi { seeds: n },
+                            SeM::Convergence => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+                        };
+                    }
                     cfg
                 })
                 .collect();

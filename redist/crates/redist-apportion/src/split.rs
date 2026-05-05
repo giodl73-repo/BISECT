@@ -128,7 +128,6 @@ impl MetisPartitioner {
 
     /// Run C METIS on `region` with equal target weights.
     /// Only compiled when `shadow-metis` feature is active.
-    #[cfg(feature = "shadow-metis")]
     fn split_c_metis(
         &self,
         region: &SubGraph,
@@ -166,7 +165,6 @@ impl MetisPartitioner {
 
     /// Run C METIS on `region` with asymmetric target fractions.
     /// Only compiled when `shadow-metis` feature is active.
-    #[cfg(feature = "shadow-metis")]
     fn split_c_metis_weighted(
         &self,
         region: &SubGraph,
@@ -223,35 +221,35 @@ impl Partitioner for MetisPartitioner {
         // Build CsrGraph for the Rust METIS engine.
         let g = CsrGraph::from(region);
 
-        // Run Rust METIS (primary).
-        let rust_params = MetisParams {
-            ufactor:    self.ufactor(),
-            niter:      self.niter as u32,
-            seed,
-            coarsen_to: 20,
-            tpwgts:     None,
-            ..MetisParams::default()
-        };
-        let rust_part = RustMetisPartitioner::with_params(rust_params, k)
-            .split(&g, k, seed)
-            .map_err(|e| SplitError::Metis(e.to_string()))?;
+        // Primary: C METIS FFI (battle-tested, handles all graph sizes and k values).
+        // The pure Rust METIS (redist-metis) may stall on planar census tract graphs
+        // at certain k values due to coarsening limits. C METIS is used as primary.
+        let c_assignment = self.split_c_metis(region, k, seed)?;
 
-        // Shadow comparison: run C METIS and warn if Rust cut is >20% larger.
+        // Optional shadow: compare Rust METIS result and warn on quality regression.
         #[cfg(feature = "shadow-metis")]
         {
-            if let Ok(c_assignment) = self.split_c_metis(region, k, seed) {
-                let rust_cut = compute_cut(&g, &rust_part.assignment);
+            let rust_params = MetisParams {
+                ufactor:    self.ufactor(),
+                niter:      self.niter as u32,
+                seed,
+                coarsen_to: 20,
+                tpwgts:     None,
+                ..MetisParams::default()
+            };
+            if let Ok(rust_part) = RustMetisPartitioner::with_params(rust_params, k).split(&g, k, seed) {
                 let c_cut    = compute_cut(&g, &c_assignment);
-                if c_cut > 0 && rust_cut > c_cut * 12 / 10 {
+                let rust_cut = compute_cut(&g, &rust_part.assignment);
+                if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                     eprintln!(
-                        "[shadow-metis] k={k}: Rust cut {rust_cut} > C cut {c_cut} ({:.0}% over)",
-                        (rust_cut as f64 / c_cut as f64 - 1.0) * 100.0
+                        "[shadow-metis] k={k}: C cut {c_cut} > Rust cut {rust_cut} ({:.0}% over)",
+                        (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
                     );
                 }
             }
         }
 
-        Ok(rust_part.assignment)
+        Ok(c_assignment)
     }
 
     /// Override: passes actual target fractions for accurate population balance
@@ -287,26 +285,27 @@ impl Partitioner for MetisPartitioner {
             tpwgts:     None,
             ..MetisParams::default()
         };
-        let rust_part = RustMetisPartitioner::with_params(rust_params, k)
-            .split_weighted(&g, &fracs_u32, seed)
-            .map_err(|e| SplitError::Metis(e.to_string()))?;
+        // Primary: C METIS FFI for weighted splits (population-balanced binary splits).
+        let c_assignment = self.split_c_metis_weighted(region, target_fracs, seed)?;
 
-        // Shadow comparison with C METIS weighted split.
+        // Optional shadow: compare Rust METIS result.
         #[cfg(feature = "shadow-metis")]
         {
-            if let Ok(c_assignment) = self.split_c_metis_weighted(region, target_fracs, seed) {
-                let rust_cut = compute_cut(&g, &rust_part.assignment);
+            if let Ok(rust_part) = RustMetisPartitioner::with_params(rust_params, k)
+                .split_weighted(&g, &fracs_u32, seed)
+            {
                 let c_cut    = compute_cut(&g, &c_assignment);
-                if c_cut > 0 && rust_cut > c_cut * 12 / 10 {
+                let rust_cut = compute_cut(&g, &rust_part.assignment);
+                if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                     eprintln!(
-                        "[shadow-metis] weighted k={k}: Rust cut {rust_cut} > C cut {c_cut} ({:.0}% over)",
-                        (rust_cut as f64 / c_cut as f64 - 1.0) * 100.0
+                        "[shadow-metis] weighted k={k}: C cut {c_cut} > Rust cut {rust_cut} ({:.0}% over)",
+                        (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
                     );
                 }
             }
         }
 
-        Ok(rust_part.assignment)
+        Ok(c_assignment)
     }
 }
 

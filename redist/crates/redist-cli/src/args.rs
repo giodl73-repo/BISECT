@@ -1441,6 +1441,23 @@ pub struct StatesArgs {
     /// Max deviation per district in percent (default: 0.5 congressional, 5.0 state)
     #[arg(long)]
     pub balance_tolerance: Option<f64>,
+
+    /// County stickiness alpha for subdivision-respecting redistricting (B.10).
+    /// Default 0 = disabled. 2.0 = statutory default for the official proposal.
+    #[arg(long, default_value_t = 0.0)]
+    pub alpha_county: f64,
+
+    /// COMPOSITOR Layer 3 — override seed search strategy for all states.
+    #[arg(long)]
+    pub search: Option<SearchMode>,
+
+    /// Seeds for --search multi or threshold for --search convergence.
+    #[arg(long)]
+    pub seeds: Option<usize>,
+
+    /// Convergence threshold for --search convergence (default: 600).
+    #[arg(long, default_value_t = 600)]
+    pub convergence_threshold: u32,
 }
 
 #[cfg(test)]

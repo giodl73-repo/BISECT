@@ -8,14 +8,14 @@ description = "Huntington-Hill apportionment + extensible prime-factor redistric
 
 [dependencies]
 redist-metis = { path = "../redist-metis" }
-metis        = { version = "0.2", features = ["vendored"], optional = true }
+metis        = { version = "0.2", features = ["vendored"] }
 thiserror.workspace   = true
 anyhow.workspace      = true
 serde.workspace       = true
 serde_json.workspace  = true
 
 [features]
-shadow-metis = ["dep:metis"]
+shadow-metis = []
 default = []
 
 [dev-dependencies]
