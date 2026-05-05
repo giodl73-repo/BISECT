@@ -14,6 +14,8 @@
 
 First time on a clean machine? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) from the repo root. Target wall-clock: ≤ 10 minutes from `git clone` to first useful run.
 
+**[→ All research papers with PDF links](docs/PAPERS.md)**
+
 ## What this is — and is not
 
 **Is:** an algorithmic redistricting engine with bisection-based district drawing, plan analysis (compactness, VRA, partisan, splits), and reproducibility-grade manifests suitable for court submission and public verification.
@@ -283,13 +285,13 @@ redist label-report wa_house_v1 --year 2020 --format html json pdf
 
 **Headline result (2020 Census):** mean Polsby-Popper compactness **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over enacted 2020 congressional districts (PP 0.296). 37 of 44 multi-district states beat their own enacted maps.
 
-**ApportionRegions (B.11) — 2020 sweep:** 223D/209R national (51.6% D). NC k=14=7×2 → **7D/7R** (near-perfectly proportional, −0.7pp gap) vs. standard bisection 5D/9R (−13.6pp). Structure, not criterion, drives partisan outcomes.
+**ApportionRegions (B.11 — draft):** 223D/209R national (51.6% D). NC k=14=7×2 → **7D/7R** (near-perfectly proportional, −0.7pp gap) vs. standard bisection 5D/9R (−13.6pp). Structure, not criterion, drives partisan outcomes.
 
-**GeoSection (B.8) — 50-state sweep:** 5D/9R stable for NC across all tested seeds. Algorithm characterised: ratio selectivity follows isoperimetric EC/√(min(i,k−i)) normalisation; 6D/8R not achievable for NC without multi-level area constraint.
+**[GeoSection (B.8)](docs/papers/B.8+geosection-ratio-optimal-bisection.pdf) — 50-state sweep:** 5D/9R stable for NC across all tested seeds. Algorithm characterised: ratio selectivity follows isoperimetric EC/√(min(i,k−i)) normalisation; 6D/8R not achievable for NC without multi-level area constraint.
 
-**AreaSection (B.9) — 50-state sweep:** 76% of seat-distribution outcomes stable vs. standard bisection. Lorenz infeasibility filter identifies states (GA, concentrated) where equal-area splits are geographically impossible. Dual-constraint regime boundary at area_swing=1.10 (B.9 §4).
+**[AreaSection (B.9)](docs/papers/B.9+areasection-dual-population-area-constraint.pdf) — 50-state sweep:** 76% of seat-distribution outcomes stable vs. standard bisection. Lorenz infeasibility filter identifies states (GA, concentrated) where equal-area splits are geographically impossible. Dual-constraint regime boundary at area_swing=1.10 (B.9 §4).
 
-**ConvergenceSweep (B.16):** T=600 non-improving seeds is empirically sufficient for all 50 states. Seed space explored via SHA-256 chain `BLAKE3(census_release_id‖"DIA_SEED_V1"‖i)`.
+**[ConvergenceSweep (B.16)](docs/papers/B.16+convergence-sweep.pdf):** T=600 non-improving seeds is empirically sufficient for all 50 states. Seed space explored via SHA-256 chain `BLAKE3(census_release_id‖"DIA_SEED_V1"‖i)`.
 
 **[View all dashboards](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
 
