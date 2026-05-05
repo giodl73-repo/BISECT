@@ -9,16 +9,16 @@
 | Court-appointed special master | [docs/quickstart/quickstart-special-master.md](docs/quickstart/quickstart-special-master.md) | 5–10 min |
 | Academic researcher (parameter sweeps) | [docs/quickstart/quickstart-researcher.md](docs/quickstart/quickstart-researcher.md) | 10–15 min |
 | §2 plaintiff's expert (post-Callais) | [docs/quickstart/quickstart-callais-expert.md](docs/quickstart/quickstart-callais-expert.md) | 30–60 min |
-| State legislative staff (Districtr backend) | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
+| State legislative staff | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
 | Civic advocacy group | [docs/quickstart/quickstart-civic-advocate.md](docs/quickstart/quickstart-civic-advocate.md) | 15–30 min |
 
 First time on a clean machine? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) from the repo root. Target wall-clock: ≤ 10 minutes from `git clone` to first useful run.
 
 ## What this is — and is not
 
-**Is:** an algorithmic redistricting engine with bisection-based district drawing, plan analysis (compactness, VRA, partisan, splits), reproducibility-grade manifests, and a backend for Districtr/DRA round-tripping.
+**Is:** an algorithmic redistricting engine with bisection-based district drawing, plan analysis (compactness, VRA, partisan, splits), and reproducibility-grade manifests suitable for court submission and public verification.
 
-**Is not:** a GUI for interactive map drawing (use Districtr; we are the analytical backend), a real-time multiplayer editor, an automated litigation predictor, or a partisan tool. The algorithm itself is partisan-blind by default; partisan-weighted bisection is opt-in and mutually exclusive with VRA-aware bisection per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36.
+**Is not:** a GUI for interactive map drawing, a real-time multiplayer editor, an automated litigation predictor, or a partisan tool. The algorithm is partisan-blind by default; partisan-weighted bisection is opt-in and mutually exclusive with VRA-aware bisection per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36.
 
 ---
 
