@@ -3416,3 +3416,398 @@ mod tests {
             "ConvergenceSweep must not be is_single()");
     }
 }
+
+// ── Phase 8: End-to-end label pipeline integration tests ─────────────────────
+//
+// These are L0 tests that exercise the full label pipeline API functions
+// directly (not the CLI binary).  All file I/O goes through a temp directory
+// created per test.
+//
+// Because `std::env::set_current_dir` is process-wide, every test here that
+// changes the CWD MUST be run with `--test-threads=1`.  The helper
+// `with_tempdir` restores the original directory after each closure so that
+// tests can be chained without leaking CWD state.
+//
+// Tests reference §9.2 of the Spec 7 official_proposal workflow.
+
+#[cfg(test)]
+mod label_pipeline_tests {
+    use std::path::{Path, PathBuf};
+    use tempfile::TempDir;
+
+    use crate::label;
+    use crate::run_registry::Registry;
+    use crate::algo_config::AlgoYaml;
+    use crate::build_cmd::{BuildArgs, BuildIndex};
+    use crate::import_label::run_label_import;
+    use crate::label_cmd::run_mv;
+
+    // ── Helper: switch CWD to a TempDir for registry isolation ───────────────
+    //
+    // Returns the TempDir so callers can keep it alive while inspecting files.
+    // The original directory is restored BEFORE the TempDir is dropped.
+    fn with_tempdir<F: FnOnce()>(f: F) -> TempDir {
+        let dir = TempDir::new().expect("tempdir");
+        let original = std::env::current_dir().expect("current_dir");
+        std::env::set_current_dir(dir.path()).expect("set_current_dir");
+        f();
+        std::env::set_current_dir(&original).expect("restore current_dir");
+        dir
+    }
+
+    // ── Test 1: label path convention round-trip (no I/O) ────────────────────
+    //
+    // §9.2 Step 1: the three top-level directories follow a fixed pattern.
+    // This test verifies the pattern without touching the filesystem.
+    #[test]
+    fn test_label_path_convention_roundtrip() {
+        let label = "test_run";
+
+        let runs = label::runs_dir(label);
+        let analysis = label::analysis_dir(label);
+        let reports = label::reports_dir(label);
+
+        assert_eq!(
+            runs,
+            PathBuf::from("runs/test_run"),
+            "runs_dir must be runs/{{label}}"
+        );
+        assert_eq!(
+            analysis,
+            PathBuf::from("analysis/test_run"),
+            "analysis_dir must be analysis/{{label}}"
+        );
+        assert_eq!(
+            reports,
+            PathBuf::from("reports/test_run"),
+            "reports_dir must be reports/{{label}}"
+        );
+    }
+
+    // ── Test 2: full registry pipeline in tempdir ─────────────────────────────
+    //
+    // Mirrors §9.2 Steps 2-6: mark_built → mark_analyzed → mark_reported
+    // all complete successfully, registry entry reflects all three stages,
+    // and `.redist` is valid JSON.
+    #[test]
+    fn test_registry_full_pipeline_in_tempdir() {
+        let dir = with_tempdir(|| {
+            // Step 1: mark built
+            Registry::mark_built("pipeline_test", "2020")
+                .expect("mark_built must succeed");
+
+            // Step 2: mark analyzed (requires built)
+            Registry::mark_analyzed("pipeline_test", "2020")
+                .expect("mark_analyzed must succeed after mark_built");
+
+            // Step 3: mark reported (requires analyzed)
+            Registry::mark_reported("pipeline_test", "2020")
+                .expect("mark_reported must succeed after mark_analyzed");
+
+            // Verify list_labels returns the label with all three stages set.
+            let labels = Registry::list_labels().expect("list_labels");
+            let entry = labels
+                .iter()
+                .find(|(name, _)| name == "pipeline_test")
+                .map(|(_, e)| e)
+                .expect("pipeline_test must be in registry");
+
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "built must contain 2020: {:?}", entry.built
+            );
+            assert!(
+                entry.analyzed.contains(&"2020".to_string()),
+                "analyzed must contain 2020: {:?}", entry.analyzed
+            );
+            assert!(
+                entry.reported.contains(&"2020".to_string()),
+                "reported must contain 2020: {:?}", entry.reported
+            );
+
+            // Verify .redist exists and is valid JSON.
+            let registry_path = PathBuf::from(".redist");
+            assert!(registry_path.exists(), ".redist must exist after pipeline");
+            let content = std::fs::read_to_string(&registry_path)
+                .expect("read .redist");
+            let parsed: serde_json::Value = serde_json::from_str(&content)
+                .expect(".redist must be valid JSON");
+            assert!(parsed.is_object(), ".redist must be a JSON object");
+        });
+        drop(dir);
+    }
+
+    // ── Test 3: mark_analyzed fails without prior mark_built ─────────────────
+    //
+    // §9.3 error scenario: "Attempt to analyze before building".
+    // The error must contain "[CONFIG]" per the project error convention.
+    #[test]
+    fn test_registry_mark_analyzed_fails_without_build() {
+        let dir = with_tempdir(|| {
+            let result = Registry::mark_analyzed("not_built", "2020");
+            assert!(result.is_err(), "mark_analyzed must fail when year not built");
+
+            let msg = result.unwrap_err();
+            assert!(
+                msg.contains("[CONFIG]"),
+                "error must contain [CONFIG] prefix: {msg}"
+            );
+        });
+        drop(dir);
+    }
+
+    // ── Test 4: BuildIndex schema is valid ────────────────────────────────────
+    //
+    // Constructs a BuildIndex via build_build_index (the same path run_build uses)
+    // and verifies all required keys are present with the correct types.
+    #[test]
+    fn test_build_index_schema_valid() {
+        use std::io::Write;
+        use crate::build_cmd::build_build_index;
+
+        let mut f = tempfile::NamedTempFile::new().unwrap();
+        f.write_all(b"name: test_plan\nalgorithm:\n  structure: apportion-regions\n  search: single\n").unwrap();
+
+        let yaml = AlgoYaml::from_file(f.path()).expect("parse YAML");
+        let sha = AlgoYaml::file_sha256(f.path()).expect("sha256");
+
+        let index = build_build_index(
+            "test_plan",
+            "2020",
+            &sha,
+            &yaml,
+            &[],
+            &[],
+        ).expect("build_build_index");
+
+        // Verify the JSON representation has all required keys.
+        let json_val = serde_json::to_value(&index).expect("serialize");
+        let obj = json_val.as_object().expect("must be object");
+
+        for key in &["label", "year", "created", "redist_version", "config_sha256", "algorithm", "states", "summary"] {
+            assert!(
+                obj.contains_key(*key),
+                "BuildIndex JSON must contain key '{}', got keys: {:?}",
+                key,
+                obj.keys().collect::<Vec<_>>()
+            );
+        }
+
+        // SHA is 64-char hex.
+        let sha_in_index = obj["config_sha256"].as_str().expect("config_sha256 must be string");
+        assert_eq!(sha_in_index.len(), 64, "config_sha256 must be 64 chars");
+        assert!(
+            sha_in_index.chars().all(|c| c.is_ascii_hexdigit()),
+            "config_sha256 must be hex: {sha_in_index}"
+        );
+
+        // Summary has total/succeeded/failed.
+        let summary = obj["summary"].as_object().expect("summary must be object");
+        assert!(summary.contains_key("total"), "summary must have 'total'");
+        assert!(summary.contains_key("succeeded"), "summary must have 'succeeded'");
+        assert!(summary.contains_key("failed"), "summary must have 'failed'");
+    }
+
+    // ── Test 5: import CSV then verify registry and directory layout ──────────
+    //
+    // §9.2: external plan import creates the same directory layout as build.
+    // Wisconsin FIPS prefix = "55".
+    #[test]
+    fn test_import_csv_then_list() {
+        let dir = with_tempdir(|| {
+            // Write a minimal Wisconsin CSV.
+            let csv = "GEOID,district\n55001010100,1\n55001010200,2\n";
+            let csv_path = PathBuf::from("plan.csv");
+            std::fs::write(&csv_path, csv).expect("write CSV");
+
+            // Import.
+            run_label_import("import_test", &csv_path, "2020", Some("csv"))
+                .expect("run_label_import must succeed");
+
+            // Registry must show the label as built for 2020.
+            let entry = Registry::get("import_test")
+                .expect("get must not error")
+                .expect("import_test must be in registry");
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "registry must mark import_test/2020 as built: {:?}", entry.built
+            );
+
+            // runs/import_test/2020/index.json must exist with algorithm.structure="external".
+            let index_path = PathBuf::from("runs/import_test/2020/index.json");
+            assert!(index_path.exists(), "index.json must exist: {}", index_path.display());
+            let content = std::fs::read_to_string(&index_path).expect("read index.json");
+            let val: serde_json::Value = serde_json::from_str(&content).expect("parse JSON");
+            assert_eq!(
+                val["algorithm"]["structure"].as_str(),
+                Some("external"),
+                "algorithm.structure must be 'external' for imported plans"
+            );
+
+            // runs/import_test/2020/wisconsin/assignments.json must exist (FIPS "55").
+            let assignments_path =
+                PathBuf::from("runs/import_test/2020/wisconsin/assignments.json");
+            assert!(
+                assignments_path.exists(),
+                "wisconsin/assignments.json must exist: {}",
+                assignments_path.display()
+            );
+        });
+        drop(dir);
+    }
+
+    // ── Test 6: mv label updates registry and filesystem ─────────────────────
+    //
+    // §9.2-adjacent: label renaming (run_mv) must update both the `.redist`
+    // registry and the `runs/` directory on disk.
+    #[test]
+    fn test_mv_label_updates_registry() {
+        let dir = with_tempdir(|| {
+            // Set up: mark old_label as built.
+            Registry::mark_built("old_label", "2020").expect("mark_built");
+
+            // Create runs/old_label/2020/ on disk so mv has a directory to rename.
+            let old_runs = PathBuf::from("runs/old_label/2020");
+            std::fs::create_dir_all(&old_runs).expect("create runs dir");
+
+            // Execute mv.
+            run_mv("old_label", "new_label", false).expect("run_mv must succeed");
+
+            // old_label must be gone from registry.
+            assert!(
+                Registry::get("old_label").expect("get old_label").is_none(),
+                "old_label must not be in registry after mv"
+            );
+
+            // new_label must be in registry with built = ["2020"].
+            let entry = Registry::get("new_label")
+                .expect("get new_label")
+                .expect("new_label must be in registry after mv");
+            assert!(
+                entry.built.contains(&"2020".to_string()),
+                "new_label must carry the built years: {:?}", entry.built
+            );
+
+            // runs/new_label/ must exist; runs/old_label/ must not.
+            assert!(
+                PathBuf::from("runs/new_label").exists(),
+                "runs/new_label must exist after mv"
+            );
+            assert!(
+                !PathBuf::from("runs/old_label").exists(),
+                "runs/old_label must not exist after mv"
+            );
+        });
+        drop(dir);
+    }
+
+    // ── Test 7: config YAML loads official_proposal algorithm section ─────────
+    //
+    // §9.1 config file: the official_proposal.yml specifies
+    // structure=apportion-regions, weights=county, search=convergence.
+    // We write it to a temp file and verify round-trip via AlgoYaml.
+    //
+    // Note: We write the YAML inline rather than reading the real
+    // configs/official_proposal.yml because that file may not exist on
+    // all developer machines (it is not in the repo, only in CWD of runs).
+    #[test]
+    fn test_config_yaml_loads_official_proposal() {
+        use std::io::Write;
+
+        let yaml_content = r#"
+name: official_proposal
+description: >
+  Reference implementation for the proposed federal redistricting statute.
+algorithm:
+  structure: apportion-regions
+  weights: county
+  alpha_county: 2.0
+  search: convergence
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 6
+years: ["2020", "2010", "2000"]
+analysis_types: [demographic, political, compactness, contiguity, splits, summary]
+"#;
+
+        let mut f = tempfile::NamedTempFile::new().unwrap();
+        f.write_all(yaml_content.as_bytes()).unwrap();
+
+        // Load and parse.
+        let yaml = AlgoYaml::from_file(f.path())
+            .expect("official_proposal YAML must parse");
+
+        // Verify structure == "apportion-regions".
+        assert_eq!(
+            yaml.algorithm.structure, "apportion-regions",
+            "structure must be 'apportion-regions'"
+        );
+
+        // Verify weights == "county".
+        assert_eq!(
+            yaml.algorithm.weights.as_deref(),
+            Some("county"),
+            "weights must be 'county'"
+        );
+
+        // Round-trip to AlgorithmConfig must succeed.
+        let algo = yaml.to_algorithm_config()
+            .expect("to_algorithm_config must succeed for official_proposal YAML");
+
+        // Confirm the split strategy is ApportionRegions.
+        assert!(
+            matches!(algo.split, crate::runner::SplitStrategy::ApportionRegions),
+            "structure apportion-regions must map to SplitStrategy::ApportionRegions"
+        );
+    }
+
+    // ── Test 8: full label workflow dry-run creates no files ──────────────────
+    //
+    // §9.2 Step 1: "smoke test with Vermont before committing to a full run".
+    // With --dry-run, run_build must return Ok(()) without creating any
+    // directory under runs/ or modifying the registry.
+    #[test]
+    fn test_full_label_workflow_dry_run() {
+        use std::io::Write;
+
+        let dir = with_tempdir(|| {
+            // Write a minimal config YAML to configs/test_run.yml.
+            let configs_dir = PathBuf::from("configs");
+            std::fs::create_dir_all(&configs_dir).expect("create configs dir");
+            let config_path = configs_dir.join("test_run.yml");
+
+            let yaml_content =
+                "name: test_run\nalgorithm:\n  structure: apportion-regions\n  search: single\nyears: [\"2020\"]\n";
+            std::fs::write(&config_path, yaml_content).expect("write config");
+
+            let args = BuildArgs {
+                label: "test_run".to_string(),
+                config: config_path,
+                year: Some("2020".to_string()),
+                states: vec![],
+                workers: None,
+                dry_run: true,
+                force: false,
+                no_interactive: false,
+            };
+
+            // run_build with dry_run=true must succeed.
+            let result = crate::build_cmd::run_build(args);
+            assert!(result.is_ok(), "dry_run run_build must succeed: {:?}", result);
+
+            // runs/test_run/ must NOT exist (dry run creates nothing).
+            assert!(
+                !PathBuf::from("runs/test_run").exists(),
+                "runs/test_run must not be created by dry_run build"
+            );
+
+            // Registry must remain empty (dry run does not call mark_built).
+            let labels = Registry::list_labels().expect("list_labels");
+            assert!(
+                labels.is_empty(),
+                "registry must be empty after dry_run build: {:?}", labels
+            );
+        });
+        drop(dir);
+    }
+}

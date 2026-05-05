@@ -348,7 +348,7 @@ fn is_year_built(label: &str, year: &str) -> Result<bool, String> {
 }
 
 /// Construct the `BuildIndex` from run results.
-fn build_build_index(
+pub fn build_build_index(
     label: &str,
     year: &str,
     config_sha256: &str,
