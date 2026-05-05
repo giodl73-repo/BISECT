@@ -19,6 +19,8 @@ use redist_cli::import_cmd::run_import;
 use redist_cli::build_cmd::run_build;
 use redist_cli::label_cmd::{run_ls, run_show, run_mv, run_verify as run_label_verify};
 use redist_cli::analyze_label::{run_label_analyze, run_label_report};
+use redist_cli::plan_cmd::run_plan;
+use redist_cli::args::PlanArgs;
 
 fn main() {
     let cli = Cli::parse();
@@ -652,24 +654,59 @@ fn main() {
             .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
-        // ── redist tui: interactive terminal UI ───────────────────────────────
-        Commands::Tui(args) => {
-            let mut tui_bin = std::env::current_exe()
-                .unwrap_or_else(|_| std::path::PathBuf::from("redist-tui"));
-            tui_bin.set_file_name(if cfg!(windows) { "redist-tui.exe" } else { "redist-tui" });
+        // ── redist label-import: import external plan into label layout (Spec 7 Phase 5) ──
+        Commands::LabelImport(args) => {
+            redist_cli::import_label::run_label_import(
+                &args.label,
+                &args.from,
+                &args.year,
+                args.format.as_deref(),
+            )
+            .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
 
-            let mut cmd = std::process::Command::new(&tui_bin);
+        // ── redist label-compare: compare two label-based plans (Spec 7 Phase 5) ──
+        Commands::LabelCompare(args) => {
+            redist_cli::import_label::run_label_compare(
+                &args.label_a,
+                &args.label_b,
+                &args.year,
+                args.json,
+                args.out.as_deref(),
+            )
+            .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist tui: interactive terminal UI (alias for redist plan) ──────
+        Commands::Tui(args) => {
+            // Backward-compatible: `redist tui` delegates to `redist plan`.
+            // The --no-session flag is forwarded directly to the TUI binary
+            // because run_plan does not expose that flag.
             if args.no_session {
+                let mut tui_bin = std::env::current_exe()
+                    .unwrap_or_else(|_| std::path::PathBuf::from("redist-tui"));
+                tui_bin.set_file_name(if cfg!(windows) { "redist-tui.exe" } else { "redist-tui" });
+
+                let mut cmd = std::process::Command::new(&tui_bin);
                 cmd.arg("--no-session");
-            }
-            match cmd.status() {
-                Ok(status) => std::process::exit(status.code().unwrap_or(1)),
-                Err(e) => {
-                    eprintln!("ERROR: could not launch redist-tui: {e}");
-                    eprintln!("Build it with: cargo build --release -p redist-tui");
-                    std::process::exit(1);
+                match cmd.status() {
+                    Ok(status) => std::process::exit(status.code().unwrap_or(1)),
+                    Err(e) => {
+                        eprintln!("[INFO] redist-tui not found: {e}");
+                        eprintln!("[INFO] Install with: cargo install --path redist/crates/redist-tui");
+                        std::process::exit(1);
+                    }
                 }
+            } else {
+                run_plan(PlanArgs { label: None, configure: false, config: None })
+                    .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
             }
+        }
+
+        // ── redist plan: label-aware TUI hub (Spec 7 Phase 6) ────────────────
+        Commands::Plan(args) => {
+            run_plan(args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
     }
 }

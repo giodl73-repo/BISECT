@@ -205,6 +205,12 @@ pub struct App {
     pub subprocess_log: std::sync::Arc<std::sync::Mutex<Vec<String>>>,
     /// None = still running, Some(true) = success, Some(false) = failed.
     pub subprocess_done: std::sync::Arc<std::sync::Mutex<Option<bool>>>,
+    /// Label passed via --label at startup (pre-scopes the plan list).
+    pub startup_label: Option<String>,
+    /// When true, the TUI was launched with --configure (opens compositor wizard on start).
+    pub startup_configure: bool,
+    /// Optional config path passed via --config at startup.
+    pub startup_config: Option<String>,
 }
 
 impl Default for App {
@@ -228,6 +234,9 @@ impl Default for App {
             run_started_at: None,
             subprocess_log: std::sync::Arc::new(std::sync::Mutex::new(Vec::new())),
             subprocess_done: std::sync::Arc::new(std::sync::Mutex::new(None)),
+            startup_label: None,
+            startup_configure: false,
+            startup_config: None,
         }
     }
 }

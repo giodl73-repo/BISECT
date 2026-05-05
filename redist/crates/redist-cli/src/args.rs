@@ -247,6 +247,17 @@ pub enum Commands {
     LabelAnalyze(LabelAnalyzeArgs),
     /// Generate a report for a label across one or more analyzed years (Spec 7 Phase 3)
     LabelReport(LabelReportArgs),
+    /// Import an external plan file (CSV/GeoJSON) into the label-based layout
+    /// without running the redistricting algorithm (Spec 7 Phase 5).
+    /// `redist import X --from FILE [--year Y] [--format csv|geojson|shapefile|rplan]`
+    LabelImport(LabelImportArgs),
+    /// Compare two label-based plans using existing analysis outputs (Spec 7 Phase 5).
+    /// `redist label-compare A B [--year Y] [--json] [--out PATH]`
+    LabelCompare(LabelCompareArgs),
+    /// Interactive TUI hub — label-aware frontend for the full pipeline (Spec 7 Phase 6).
+    /// With no label: shows label picker. With a label: pre-scoped to that label.
+    /// With --configure: opens the three-layer compositor wizard.
+    Plan(PlanArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -2281,6 +2292,26 @@ pub struct TuiArgs {
 }
 
 // ---------------------------------------------------------------------------
+// `redist plan` — interactive TUI hub with label awareness (Spec 7 Phase 6)
+// ---------------------------------------------------------------------------
+
+/// Args for `redist plan [X] [--configure]`.
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct PlanArgs {
+    /// Label to scope to (optional — if omitted, shows label picker)
+    pub label: Option<String>,
+
+    /// Open the three-layer compositor wizard to edit the algorithm config
+    #[arg(long)]
+    pub configure: bool,
+
+    /// Path to config file (for --configure mode)
+    #[arg(long)]
+    pub config: Option<std::path::PathBuf>,
+}
+
+// ---------------------------------------------------------------------------
 // `redist config` — algorithm config management (Spec 7 §7.3)
 // ---------------------------------------------------------------------------
 
@@ -2592,6 +2623,64 @@ pub struct LabelReportArgs {
     pub format: String,
 
     /// Output directory override (default: reports/{label}/{year}/)
+    #[arg(long = "out", value_name = "PATH")]
+    pub out: Option<std::path::PathBuf>,
+}
+
+// ---------------------------------------------------------------------------
+// `redist label-import` — import external plan into label layout (Spec 7 Phase 5)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Import an external plan file (CSV/GeoJSON) into the label-based directory layout \
+             (Spec 7 Phase 5). Writes runs/{label}/{year}/... and marks the label built in .redist."
+)]
+pub struct LabelImportArgs {
+    /// Label to import into (e.g., official_proposal, senate_draft)
+    pub label: String,
+
+    /// Source file to import (CSV or GeoJSON)
+    #[arg(long, value_name = "FILE")]
+    pub from: std::path::PathBuf,
+
+    /// Census year for the import (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020", value_name = "YEAR")]
+    pub year: String,
+
+    /// File format: csv, geojson, shapefile, rplan.
+    /// Auto-detected from the file extension if not supplied.
+    #[arg(long, value_name = "FORMAT")]
+    pub format: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `redist label-compare` — compare two label-based plans (Spec 7 Phase 5)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Compare two label-based plans using existing analysis outputs (Spec 7 Phase 5). \
+             Both labels must be built and analyzed for the given year."
+)]
+pub struct LabelCompareArgs {
+    /// First plan label (must be built + analyzed)
+    pub label_a: String,
+
+    /// Second plan label (must be built + analyzed)
+    pub label_b: String,
+
+    /// Census year to compare (default: 2020)
+    #[arg(short = 'y', long, default_value = "2020", value_name = "YEAR")]
+    pub year: String,
+
+    /// Emit structured JSON instead of the human-readable summary
+    #[arg(long)]
+    pub json: bool,
+
+    /// Write output to this file instead of stdout
     #[arg(long = "out", value_name = "PATH")]
     pub out: Option<std::path::PathBuf>,
 }

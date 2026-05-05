@@ -25,13 +25,29 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     if args.iter().any(|a| a == "--help" || a == "-h") {
-        println!("Usage: redist-tui [--no-session] [--version]");
-        println!("  --no-session  Start with clean state (no saved config)");
+        println!("Usage: redist-tui [--no-session] [--label LABEL] [--configure] [--config PATH] [--version]");
+        println!("  --no-session        Start with clean state (no saved config)");
+        println!("  --label LABEL       Pre-scope to a specific label (skips label picker)");
+        println!("  --configure         Start directly in the compositor wizard");
+        println!("  --config PATH       Path to algorithm config YAML (used with --configure)");
         return Ok(());
     }
 
     // Parse --no-session flag
     let no_session = args.iter().any(|a| a == "--no-session");
+
+    // Parse --label LABEL (next arg after --label)
+    let startup_label: Option<String> = args.windows(2)
+        .find(|w| w[0] == "--label")
+        .map(|w| w[1].clone());
+
+    // Parse --configure flag
+    let startup_configure = args.iter().any(|a| a == "--configure");
+
+    // Parse --config PATH (next arg after --config)
+    let startup_config: Option<String> = args.windows(2)
+        .find(|w| w[0] == "--config")
+        .map(|w| w[1].clone());
 
     // Install panic hook to restore terminal state on crash
     let original_hook = std::panic::take_hook();
@@ -56,6 +72,11 @@ fn main() -> anyhow::Result<()> {
     let mut app = App::default();
     app.no_session = no_session;
 
+    // Store startup flags for downstream use
+    app.startup_label = startup_label.clone();
+    app.startup_configure = startup_configure;
+    app.startup_config = startup_config;
+
     // Load session (applies saved location/sort preferences)
     let sess = if !no_session {
         session::load_session()
@@ -75,6 +96,13 @@ fn main() -> anyhow::Result<()> {
         version: sess.version.clone(),
         ..Default::default()
     };
+
+    // If --label was given, pre-select that label in the plan list
+    if let Some(ref lbl) = startup_label {
+        if let Some(idx) = app.plans.iter().position(|p| p.label == *lbl) {
+            app.selected_plan = idx;
+        }
+    }
 
     // Run main event loop
     let result = run_app(&mut terminal, &mut app, &sess);
