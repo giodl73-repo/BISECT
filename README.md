@@ -347,53 +347,142 @@ The same algorithm, unchanged, on 2010 Census data: Polsby–Popper **0.320** �
 
 ---
 
-## Research (B series — Algorithm track)
+## Research papers
 
-16 papers characterising the algorithm, its variants, and their properties. LaTeX sources under directory siblings of this file; see each paper's `main.pdf`.
+28 papers across five tracks. PDFs are pre-built and committed to [`docs/papers/`](docs/papers/). LaTeX sources live under [`research/`](research/). Papers marked *(draft)* have no compiled PDF yet.
 
-### Foundations
+Compile all papers locally: `cd research && make docs`
 
-**B.1 · Recursive Bisection for Congressional Redistricting** — graph-theoretic formulation, METIS bisection, unweighted baseline (50 states, 2020).
+---
 
-**B.2 · Edge-Weighted Recursive Bisection** — core contribution. Edges weighted by shared boundary length → minimising cut = minimising perimeter. Mean PP **0.361**, +22% over enacted 2020.
+### Track A — Synthesis
 
-**B.3 · Single-Objective vs. Multi-Constraint METIS** — why single-objective outperforms: objectives don't compete.
+**A.0 · Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration** [[PDF](docs/papers/A.0+synthesis-metapaper.pdf)]
+Synthesis metapaper. Frames the full research program: why bisection is the right method, what the national-scale results show, and what the implications are for redistricting reform. Covers all 50 states across three census decades.
 
-**B.4 · Equivalence of Recursive and N-Way Bisection** — with edge weights, both converge to the same solution.
+**A.1 · Research Portfolio Guide** *(draft)*
+Reader's guide to the paper portfolio — how the tracks relate, what order to read them in, and how findings build on each other.
 
-**B.5 · N-Way vs. Recursive Bisection (General)** — comprehensive comparison across chambers and district counts.
+**A.2 · Portfolio Summary** *(draft)*
+One-document summary of all major findings across the portfolio for readers who want the headlines without the full papers.
 
-**B.6 · Computational Complexity** — runtime analysis for 50-state sweep; O(n log n) empirical.
+---
 
-**B.7 · Solution Space and Seed Sensitivity** — characterises the seed space; motivates convergence sweep.
+### Track B — Algorithm
 
-### New algorithms (2026)
+**B.0 · Algorithm Design Overview — Bakeoff** [[PDF](docs/papers/B.0+algorithm-design-overview.pdf)]
+Head-to-head comparison of all eight algorithm modes (WI, NC, GA, AZ, MN, NV). Key finding: compactness–proportionality paradox. Includes Callais compliance table.
 
-**B.8 · GeoSection — Ratio-Optimal First-Level Bisection** — tries all split ratios 1:(k-1)…⌊k/2⌋:⌈k/2⌉ at the first bisection; selects minimum isoperimetric-normalised edge-cut. NC: 5D/9R stable. Normalisation: EC/√(min(i,k−i)) prevents caterpillar pathology.
+**B.02 · ApportionRegions: Redistricting as Geographic Completion of Huntington-Hill** [[PDF](docs/papers/B.02+one-federal-law.pdf)]
+The one-sentence federal-law paper. HH (2 U.S.C. § 2a) priority sequence determines the prime factorization of k → the ApportionRegions bisection tree. Algorithm is derivable from existing statute.
 
-**B.9 · AreaSection — Dual Population-Area Constraint** — ncon=2 METIS [population, area], ubvec=[1.001, 1+swing]. 76% seat-outcome stability vs. standard bisection. Lorenz infeasibility filter. Regime boundary at area_swing=1.10.
+**B.1 · Recursive Bisection for Congressional Redistricting** [[PDF](docs/papers/B.1+recursive-bisection.pdf)]
+Baseline method paper. Graph-theoretic formulation, METIS recursive bisection under population balance, unweighted baseline results on all 50 states (2020 Census).
 
-**B.10 · Subdivision-Respecting Redistricting** — county-sticky weights: ×3.0 on county-interior edges, preserves county integrity without hard constraints.
+**B.2 · Edge-Weighted Recursive Bisection for Compact Congressional Districts** [[PDF](docs/papers/B.2+edge-weighted-bisection.pdf)]
+Core contribution. Edges weighted by shared boundary length → minimising cut = minimising perimeter. Mean PP **0.361** (+22% over enacted 2020).
 
-**B.11 · ApportionRegions — Geographic Completion of Huntington-Hill** — prime-factor bisection tree. k=14=7×2 → two 7-district sub-problems. k=17 (prime) → 9+8 binary fallback. NC: 7D/7R (−0.7pp gap vs. 51.6% D vote share). Constitutional anchor: Art. I §2 apportionment → §4 manner. National 2020: 223D/209R.
+**B.3 · Single-Objective vs. Multi-Constraint METIS** [[PDF](docs/papers/B.3+multi-vs-edge.pdf)]
+Why single-objective outperforms multi-constraint: objectives don't compete.
 
-**B.12 · ProportionalSection — Partisan Proportionality via Dual Constraint** — ncon=2 [population, D_votes]; proportionality paradox: competitive states have σ≈0 (target ≈ neutral). Rodden gap is Lorenz feasibility, not target calibration.
+**B.4 · Equivalence of Recursive and N-Way Bisection** [[PDF](docs/papers/B.4+adaptive-bisection.pdf)]
+With edge weights, both converge to the same solution. Method choice doesn't matter — the weighting does.
 
-**B.13 · NestSection — Nested Multi-Chamber Redistricting** — spine-compatible bisection ensuring senate = 2 × house at each level.
+**B.5 · N-Way vs. Recursive Bisection (General)** *(draft)*
+Comprehensive comparison across chambers and district counts.
 
-**B.14 · VRASection — Minority Geographic Alignment** — GeoSection ratio sweep with geographic alignment score for minority-opportunity districts. Post-Callais disentanglement: VRA score is orthogonal to partisan signal.
+**B.6 · Computational Complexity** *(draft)*
+Runtime analysis for 50-state sweep; O(n log n) empirical.
 
-**B.15 · StabilitySection — Cross-Census Stability** — bisection tree stability across 2000/2010/2020. Iowa identified as the most interesting unstable case (county population shifts break the 4=2×2 tree at one level).
+**B.7 · Solution Space and Seed Sensitivity** *(draft)*
+Characterises the seed space; motivates convergence sweep.
 
-**B.16 · ConvergenceSweep — Empirical Seed Sufficiency** — T=600 non-improving seeds is sufficient for all 50 states. Seed walk: SHA-256(census_release_id‖"DIA_SEED_V1"‖i). Deterministic statutory seed formula.
+**B.8 · GeoSection — Ratio-Optimal First-Level Bisection** [[PDF](docs/papers/B.8+geosection-ratio-optimal-bisection.pdf)]
+Tries all split ratios 1:(k-1)…⌊k/2⌋:⌈k/2⌉ at the first bisection; selects minimum isoperimetric-normalised edge-cut. NC: 5D/9R stable. Normalisation: EC/√(min(i,k−i)) prevents caterpillar pathology.
 
-### Synthesis and policy bridge
+**B.9 · AreaSection — Dual Population-Area Constraint** [[PDF](docs/papers/B.9+areasection-dual-population-area-constraint.pdf)]
+ncon=2 METIS [population, area]. 76% seat-outcome stability vs. standard bisection. Lorenz infeasibility filter. Regime boundary at area_swing=1.10.
 
-**B.0 · Algorithm Design Overview — Bakeoff** — head-to-head comparison of all eight algorithm modes on the same six competitive states (WI, NC, GA, AZ, MN, NV). Key finding: the compactness–proportionality paradox. WI unweighted gives 4D/4R (proportional) but poor compactness; GeoSection gives 3D/5R (Republican-leaning) at higher compactness. The two objectives trade off systematically — no single mode dominates. Includes a Callais compliance table (VRA ⊕ partisan constraints, mutually exclusive per Callais p.36) and the cross-mode `redist analyze --types proportionality` comparison lens.
+**B.10 · Subdivision-Respecting Redistricting** *(draft)*
+County-sticky weights: ×3.0 on county-interior edges, preserves county integrity without hard constraints.
 
-**B.02 · ApportionRegions: Redistricting as Geographic Completion of Huntington-Hill** — the one-sentence federal-law paper. Huntington-Hill (2 U.S.C. § 2a) allocates seats to states by priority sequence; the same priority sequence determines the prime factorization of k, which determines the ApportionRegions bisection tree. The algorithm is therefore derivable from existing statute — it is HH extended from "how many seats?" to "where are the districts?". Paper includes the county-weights connection (counties appear in the HH priority sequence for multi-county states) and the census-stability connection (B.15: the bisection tree is stable across census years when county populations are stable).
+**B.11 · ApportionRegions — Geographic Completion of Huntington-Hill** *(draft)*
+Prime-factor bisection tree. k=14=7×2 → two 7-district sub-problems. k=17 (prime) → 9+8 binary fallback. NC: 7D/7R (−0.7pp gap). National 2020: 223D/209R.
 
-**B.16 · ConvergenceSweep — Empirical Seed Sufficiency** — answers: how many seeds are enough? Runs all 50 states with the convergence-sweep search strategy (walk seeds from SHA-256 chain, stop after T non-improving). Empirical result: T=600 is sufficient for all 50 states across all three census years — no state benefits from running beyond 600 consecutive non-improving seeds. Seed generation formula: `BLAKE3(census_release_id ‖ "DIA_SEED_V1" ‖ i)`. This formula is deterministic (given the census release ID), replicable by any verifier, and statute-safe (no human choice in seed selection). T=600 is the recommended statutory value in the model federal statute draft.
+**B.12 · ProportionalSection — Partisan Proportionality via Dual Constraint** *(draft)*
+ncon=2 [population, D_votes]; proportionality paradox: competitive states have σ≈0. Rodden gap is Lorenz feasibility, not target calibration.
+
+**B.13 · NestSection — Nested Multi-Chamber Redistricting** [[PDF](docs/papers/B.13+nestsection-nested-multi-chamber.pdf)]
+Spine-compatible bisection ensuring senate = 2 × house at each level.
+
+**B.14 · VRASection — Minority Geographic Alignment** [[PDF](docs/papers/B.14+vrasection-minority-opportunity-bisection.pdf)]
+GeoSection ratio sweep with geographic alignment score for minority-opportunity districts. Post-Callais disentanglement: VRA score is orthogonal to partisan signal.
+
+**B.15 · StabilitySection — Cross-Census Stability** [[PDF](docs/papers/B.15+stabilitysection-cross-census-stability.pdf)]
+Bisection tree stability across 2000/2010/2020. Iowa: the most interesting unstable case (county population shifts break the 4=2×2 tree).
+
+**B.16 · ConvergenceSweep — Empirical Seed Sufficiency** [[PDF](docs/papers/B.16+convergence-sweep.pdf)]
+T=600 non-improving seeds is sufficient for all 50 states. Seed walk: SHA-256(census_release_id‖"DIA_SEED_V1"‖i). Deterministic statutory seed formula.
+
+---
+
+### Track C — Validation
+
+**C.1 · Spatial Resolution and Algorithmic Redistricting: MAUP Sensitivity Analysis** [[PDF](docs/papers/C.1+maup-sensitivity.pdf)]
+Tests whether results depend on the choice of geographic unit. Finds the algorithm is robust across 130× range in unit count — geography drives outcomes, not resolution.
+
+**C.2 · Cross-Census Validation** [[PDF](docs/papers/C.2+cross-census-validation.pdf)]
+Validates on 2000, 2010, and 2020 Census data. Compactness varies only ~10% across decades.
+
+**C.3 · Cross-Census Temporal Stability** [[PDF](docs/papers/C.3+temporal-stability.pdf)]
+Deep analysis of why the algorithm is temporally stable. Identifies geographic clustering properties that make bisection outcomes predictable.
+
+**C.4 · Twenty Years of Congressional Redistricting: A Longitudinal Analysis** [[PDF](docs/papers/C.4+longitudinal-analysis.pdf)]
+Tracks algorithmic vs. enacted district quality from 2000 to 2020. Quantifies the shrinking gap as redistricting reform spread.
+
+**C.5 · Measuring Partisan Fairness: Efficiency Gap Analysis** [[PDF](docs/papers/C.5+efficiency-gap-analysis.pdf)]
+Applies the efficiency gap metric to algorithmic districts. Near-zero efficiency gaps in most states — fairness as a byproduct of geometric neutrality.
+
+---
+
+### Track D — Voting Rights Act
+
+**D.0 · VRA Compliance Through Edge-Weighted Graph Partitioning** [[PDF](docs/papers/D.0+vra-compliance.pdf)]
+Introduces the `vra-aligned` edge-weighted formulation. Tests VRA Section 2 compliance on covered states.
+
+**D.1 · The 42% Threshold: Geographic Limits of VRA Compliance** [[PDF](docs/papers/D.1+threshold-analysis.pdf)]
+Critical empirical finding: states where minority population exceeds ~42% statewide achieve all statutory majority-minority district targets with principled methods.
+
+**D.2 · N-Way vs. Recursive Bisection for VRA-Compliant Redistricting** [[PDF](docs/papers/D.2+nway-vs-recursive-vra.pdf)]
+Compares n-way and recursive approaches for minority district formation.
+
+**D.3 · Quantifying the VRA–Compactness Tradeoff** [[PDF](docs/papers/D.3+compactness-tradeoff.pdf)]
+Measures the exact compactness cost of VRA compliance. Finds the tradeoff is real but bounded.
+
+**D.4 · Legal Implementation Framework** *(draft)*
+How the algorithmic approach maps to existing VRA § 2 litigation standards and post-Callais requirements.
+
+---
+
+### Track E — Experimental Extensions
+
+**E.1 · Multi-Member Districts and Proportional Representation** [[PDF](docs/papers/E.1+multi-member-districts.pdf)]
+Extends bisection to multi-member districts. 3- and 5-member districts dramatically reduce the compactness–VRA tension.
+
+**E.2 · Direct County Representation** [[PDF](docs/papers/E.2+county-representation.pdf)]
+Proposes using counties as the unit of congressional representation, weighted by population. Eliminates district-drawing entirely.
+
+**E.3 · National Redistricting Without State Boundaries** [[PDF](docs/papers/E.3+national-redistricting.pdf)]
+Asks what would happen if congressional districts could cross state lines. Applies the algorithm nationally — 435-district map of the entire US.
+
+**E.4 · Partisan Similarity Districts: Algorithmic Safe Seats** [[PDF](docs/papers/E.4+partisan-similarity-districts.pdf)]
+Investigates whether geographic bisection inadvertently creates partisan safe seats by clustering politically similar communities.
+
+**E.5 · Partisan Fairness Through Algorithmic Districting** [[PDF](docs/papers/E.5+party-based-allocation.pdf)]
+Evaluates whether algorithmic redistricting produces partisan-fair outcomes without intentionally targeting fairness.
+
+**E.6 · International Applications** [[PDF](docs/papers/E.6+international-applications.pdf)]
+Applies the redistricting algorithm to parliamentary systems in other countries with single-member districts.
 
 ---
 
