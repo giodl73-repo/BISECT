@@ -1,302 +1,627 @@
-# Spec 7: Run Manifest — Declarative Run Configuration
+# Spec 7: Label-Based Run Management
 
 **Date**: 2026-05-04
 **Status**: Draft
-**Dependencies**: Specs 1–6 (PlanManifest, three-layer compositor)
+**Dependencies**: Specs 1–6 (PlanManifest, three-layer compositor, analysis pipeline)
 **Depended on by**: Future dashboard automation, CI/CD integration
 
 ---
 
 ## 1. Problem Statement
 
-### 1.1 Output path inconsistency
+### 1.1 Paths are the current API — and they break
 
-`redist state` and `redist states` produce outputs under incompatible directory structures:
-
-```
-# redist state --state VT --year 2020 --version v1
-→ outputs/v1/2020/states/vermont/
-
-# redist states --year 2020 --output-dir outputs/my_run/2020
-→ outputs/my_run/2020/states/vermont/
-```
-
-`redist state` computes the path from `--version` using the rule
-`outputs/{version}/{year}/states/{state_name}/`. `redist states` requires a raw
-`--output-dir` string and does NOT embed version in any structured way. The two
-commands are therefore path-incompatible: outputs from `states` cannot be found
-by `analyze`, `map`, `report`, or `aggregate` unless the user manually mirrors
-the directory layout that `state` would have produced.
-
-Practical consequence: a three-year official run (`redist states` × 3) produces
-three trees with bespoke paths. The dashboard generator hardcodes assumptions
-about where files live. If the operator changes the base directory between years,
-the dashboard breaks silently.
-
-### 1.2 No declarative run configuration
-
-The three-layer algorithm compositor (Spec 1 extension, B.7–B.16) exposes roughly
-twenty flags that must be passed identically across `state`, `states`, and `run`.
-Reproducing the official federal proposal requires:
+Every `redist` command today requires the user to manage paths explicitly:
 
 ```bash
-redist states \
-  --year 2020 --version official_proposal \
-  --output-dir outputs/official_proposal/2020 \
-  --partition-mode apportion-regions \
-  --weights-override county --alpha-county 2.0 \
-  --search convergence --convergence-threshold 600 \
-  --workers 6
+redist states --year 2020 --output-dir outputs/official_proposal/2020 \
+  --partition-mode apportion-regions --weights-override county \
+  --alpha-county 2.0 --search convergence --convergence-threshold 600
+
+redist analyze --version official_proposal --year 2020 --types proportionality splits
+
+redist report --version official_proposal --year 2020 \
+  --out outputs/official_proposal/reports/
 ```
 
-This command must be run three times (2020, 2010, 2000). There is no checked-in
-artifact that records these flags. A operator reproducing the run must know to
-use identical flags for all three years. A flag mismatch — e.g., using the wrong
-`--convergence-threshold` for one year — produces outputs that look structurally
-correct but differ silently from the other years.
+The output directory for `states` and the `--version` argument for `analyze` are
+manually kept in sync by the operator. There is no enforcement. A mismatch — e.g.,
+running `states` with `--output-dir outputs/op_2020` but then calling `analyze
+--version official_proposal` — produces no error, no output, and no diagnosis.
 
-### 1.3 Dashboard generation is hardcoded
+Practical consequence: the three-year run (`states` × 3) produces three trees with
+bespoke paths. The dashboard generator hardcodes assumptions about where files live.
+If the operator changes the base directory between years, the dashboard breaks
+silently. Operators reproduce runs from shell history, not from committed artifacts.
 
-`generate_master_dashboard.py` and `deploy_docs.py` take explicit `--version` and
-`--year` arguments. They have no way to discover what algorithm produced a given
-output tree, what artifact types were requested, or whether national-summary
-files should exist alongside per-state outputs. Every dashboard generation is
-operator-scripted and undocumented.
+### 1.2 Flag duplication across invocations
 
-### 1.4 Outputs are algorithmically opaque
+The three-layer algorithm compositor exposes roughly twenty flags that must be
+passed identically across `state`, `states`, `analyze`, `report`, and `compare`.
+There is no committed artifact that records these flags. A flag mismatch — e.g.,
+the wrong `--convergence-threshold` for one year — produces outputs that look
+structurally correct but differ silently.
+
+### 1.3 Outputs are algorithmically opaque
 
 Given a directory `outputs/official_proposal/2020/states/vermont/`, there is no
-machine-readable record of which partition mode, alpha-county value, or
-convergence threshold produced those outputs. The `manifest.json` written by
-`redist state` records provenance for a single state plan, but does not record
-run-level configuration (which states were included, which years were run, which
-artifact types were generated). Auditors inspecting outputs must reconstruct this
-from shell history or memory.
+machine-readable record of which partition mode, alpha-county value, or convergence
+threshold produced those outputs. The per-state `manifest.json` (Spec 1) records
+state-level provenance but not run-level configuration. Auditors must reconstruct
+this from shell history or memory.
 
-### 1.5 Run reproducibility is fragile
+### 1.4 The core insight
 
-Reproducing a run on a fresh machine requires:
-
-1. Knowing the exact CLI flags for all three years
-2. Knowing the worker count and output directory structure used
-3. Knowing which artifact types (`--run-analysis`, `--skip-political`, maps, etc.)
-   were enabled
-4. Running the commands in the correct order across years
-
-None of this is captured in any committed artifact today.
+The problem is not that paths are wrong — it is that paths are the API. Users
+should name things, not locate them. The system should resolve names to paths
+through convention, not require the user to thread path strings through every
+subcommand.
 
 ---
 
-## 2. Solution: The RunManifest YAML Format
+## 2. Solution: Label-Based Run Management
 
-A **RunManifest** is a single YAML file that completely specifies a multi-year,
-multi-state redistricting run: which algorithm, which years, which output
-directories, and which artifacts to generate. It is:
+**Core principle: names are the API; paths are the implementation.**
 
-- **Committed to version control** alongside the code
-- **Machine-readable** by `redist run-manifest` for execution
-- **Human-readable** for audit and review
-- **Purely declarative** — no side effects until `run-manifest` is invoked
-- **Additive** — existing `state`/`states`/`run` commands are unchanged
+A **label** is a short human name for a run (`official_proposal`, `senate_draft2`,
+`vt_test`). The user names runs once; every `redist` command resolves the label to
+the correct directory through fixed convention. There are no path arguments in
+normal use.
 
-### 2.1 Complete YAML Schema
+```bash
+redist build   official_proposal --config configs/statute.yml --year 2020
+redist analyze official_proposal --types proportionality splits
+redist report  official_proposal
+redist compare official_proposal senate_draft2 --year 2020
+redist ls
+redist show    official_proposal
+```
+
+### 2.1 Convention-based directory resolution
+
+Every command resolves its input and output directories from the label alone:
+
+| Command | Reads from | Writes to |
+|---------|-----------|-----------|
+| `build X` | — | `runs/X/` |
+| `analyze X` | `runs/X/` | `analysis/X/` |
+| `report X` | `analysis/X/` | `reports/X/` |
+| `compare A B` | `analysis/A/`, `analysis/B/` | — (stdout or `--out`) |
+
+No path arguments. No `--version` flags. No `--output-dir` strings. The label is
+the only identifier the user ever types.
+
+### 2.2 The `.redist` registry
+
+A single JSON file at the repository root tracks what has been done to each label.
+It is never edited by the user — only written by `redist` commands.
+
+```json
+{
+  "official_proposal": {
+    "built":    ["2020", "2010", "2000"],
+    "analyzed": ["2020"],
+    "reported": []
+  },
+  "senate_draft2": {
+    "built":    ["2020"],
+    "analyzed": ["2020"],
+    "reported": ["2020"]
+  }
+}
+```
+
+The registry is git-ignored and auto-managed. Every `build`/`analyze`/`report`
+call updates it. It is the authoritative answer to "what has been done."
+
+### 2.3 One `index.json` per stage per label
+
+Each stage writes a single `index.json` at the root of its output directory.
+This is the machine-readable record of what happened — the algorithm, the year,
+the state-by-state results.
+
+```
+runs/official_proposal/index.json          ← build index
+analysis/official_proposal/index.json      ← analysis index (references run)
+reports/official_proposal/index.json       ← report index (references analysis)
+```
+
+### 2.4 Separation of concerns: config vs. registry
+
+The **config file** (`configs/official_proposal.yml`) declares WHAT TO DO:
+algorithm parameters, years, workers. The user edits this before running.
+
+The **registry** (`.redist`) records WHAT WAS DONE: which years were built,
+analyzed, reported. The system writes this; the user never edits it.
+
+The **index files** (`runs/X/index.json`, `analysis/X/index.json`) record HOW IT
+WENT: state-by-state status, timestamps, version. The system writes these; the
+user reads them for diagnosis.
+
+---
+
+## 3. Verb Inventory
+
+### 3.1 `redist build X` — run redistricting for a label
+
+```bash
+# Full build (all years in config)
+redist build official_proposal --config configs/statute.yml
+
+# Single year
+redist build official_proposal --config configs/statute.yml --year 2020
+
+# Subset of states
+redist build official_proposal --config configs/statute.yml --year 2020 \
+  --states VT DE
+
+# Override worker count
+redist build official_proposal --config configs/statute.yml --workers 4
+
+# Dry run — print what would run without executing
+redist build official_proposal --config configs/statute.yml --dry-run
+
+# Use explicit label flag (equivalent to first positional argument)
+redist build --label official_proposal --config configs/statute.yml
+```
+
+`build` writes outputs to `runs/official_proposal/` and updates `.redist`
+with the years successfully built.
+
+### 3.2 `redist analyze X` — run analysis for a label
+
+```bash
+# All analysis types (default)
+redist analyze official_proposal
+
+# Specific types only
+redist analyze official_proposal --types proportionality splits
+
+# Single year
+redist analyze official_proposal --types proportionality --year 2020
+
+# Subset of states
+redist analyze official_proposal --types compactness --year 2020 --states CA TX NY
+```
+
+`analyze` reads from `runs/official_proposal/` and writes to
+`analysis/official_proposal/`. Requires the label to appear in `.redist` with at
+least one built year. If `--year Y` is requested but `Y` is not in `.redist`
+`built` list, exits with:
+
+```
+[CONFIG] analyze: 'official_proposal' has not been built for year 2010.
+Run: redist build official_proposal --year 2010
+```
+
+### 3.3 `redist report X` — generate reports for a label
+
+```bash
+# HTML dashboard (default)
+redist report official_proposal
+
+# Single year
+redist report official_proposal --year 2020
+
+# Format selection
+redist report official_proposal --year 2020 --format json
+redist report official_proposal --year 2020 --format html
+
+# Expert-witness mode (for court submission)
+redist report official_proposal --year 2020 --format pdf \
+  --expert-name "Dr. Jane Smith" --jurisdiction "Wisconsin"
+```
+
+`report` reads from `analysis/official_proposal/` and writes to
+`reports/official_proposal/`. Requires the label to have been analyzed for the
+requested year.
+
+### 3.4 `redist compare A B` — compare two labels
+
+```bash
+# Compare two runs for a year
+redist compare official_proposal senate_draft2 --year 2020
+
+# Specific metrics
+redist compare official_proposal senate_draft2 --year 2020 \
+  --metrics compactness splits proportionality
+
+# Output to file
+redist compare official_proposal senate_draft2 --year 2020 \
+  --out comparison_2020.json
+
+# Compare against enacted districts (downloads if absent)
+redist compare official_proposal --enacted --year 2020
+```
+
+`compare` reads from `analysis/A/` and `analysis/B/`. Both labels must appear
+in `.redist` with the requested year analyzed.
+
+### 3.5 `redist ls` — list all labels and their stage completion
+
+```
+$ redist ls
+
+Label                Built           Analyzed        Reported
+official_proposal    2020 2010 2000  2020            —
+senate_draft2        2020            2020            2020
+vt_test              2020            —               —
+```
+
+### 3.6 `redist show X` — show details for a label
+
+```
+$ redist show official_proposal
+
+Label:     official_proposal
+Config:    configs/statute.yml
+Algorithm: apportion-regions / county (alpha=2.0) / convergence (t=600)
+Workers:   6
+
+Built:
+  2020  runs/official_proposal/2020/  50/50 states OK
+  2010  runs/official_proposal/2010/  50/50 states OK
+  2000  runs/official_proposal/2000/  50/50 states OK
+
+Analyzed:
+  2020  analysis/official_proposal/2020/  [proportionality, splits, compactness, summary]
+
+Reported:
+  (none)
+
+Paths:
+  runs/     runs/official_proposal/
+  analysis/ analysis/official_proposal/
+  reports/  reports/official_proposal/
+```
+
+### 3.7 `redist rm X` — delete a stage
+
+```bash
+# Delete the report stage only
+redist rm official_proposal --stage report
+
+# Delete the analysis stage (also deletes report if it exists)
+redist rm official_proposal --stage analyze
+
+# Delete everything (build + analysis + report)
+redist rm official_proposal
+
+# Delete a specific year's build outputs only
+redist rm official_proposal --stage build --year 2010
+```
+
+`rm` updates `.redist` to reflect the deleted stages. Prompts for confirmation
+unless `--force` is set.
+
+### 3.8 `redist label X Y` — copy a label
+
+```bash
+# Point label Y at the same runs as X (does not copy files — updates registry)
+redist label official_proposal official_proposal_v1
+```
+
+Creates registry entry `official_proposal_v1` pointing to the same run directories
+as `official_proposal`. Useful for tagging a completed run before starting a new
+build under the same label.
+
+### 3.9 Escape hatches for power users
+
+```bash
+# Override output directory (build writes here instead of runs/X/)
+redist build official_proposal --out /mnt/results/
+
+# Show all resolved paths without running
+redist show official_proposal
+
+# Read analysis from a non-standard location
+redist report official_proposal --analysis-dir /mnt/results/analysis/
+```
+
+---
+
+## 4. Directory Structure
+
+```
+.redist                                    ← registry JSON (git-ignored, auto-managed)
+
+configs/
+  official_proposal.yml                   ← algorithm config (git-tracked, user-edited)
+  senate_draft2.yml
+
+runs/
+  official_proposal/
+    index.json                             ← build index (what was built)
+    2020/
+      wisconsin/
+        assignments.json                   ← tract → district map
+        provenance.json                    ← per-state audit chain
+      california/
+        assignments.json
+        provenance.json
+      ...
+    2010/
+      ...
+    2000/
+      ...
+  senate_draft2/
+    index.json
+    2020/
+      ...
+
+analysis/
+  official_proposal/
+    index.json                             ← analysis index (what was analyzed)
+    2020/
+      wisconsin/
+        proportionality.json
+        splits.json
+        compactness.json
+        summary.json
+      california/
+        ...
+    2010/
+      ...
+  senate_draft2/
+    index.json
+    2020/
+      ...
+
+reports/
+  official_proposal/
+    index.json                             ← report index (what was reported)
+    dashboard_2020.html
+    dashboard_2010.html
+    dashboard_2000.html
+  senate_draft2/
+    index.json
+    dashboard_2020.html
+```
+
+All three top-level directories (`runs/`, `analysis/`, `reports/`) are
+git-ignored. The only committed artifacts are the config files in `configs/`
+and the spec documents in `docs/specs/`.
+
+---
+
+## 5. Index.json Schemas
+
+### 5.1 Build index (`runs/X/index.json`)
+
+Written by `redist build` after each year completes. Updated atomically
+(write to `.tmp`, rename).
+
+```json
+{
+  "label": "official_proposal",
+  "schema_version": "1",
+  "algorithm": {
+    "structure": "apportion-regions",
+    "weights": "county",
+    "alpha_county": 2.0,
+    "search": "convergence",
+    "convergence_threshold": 600,
+    "balance_tolerance": 0.5
+  },
+  "config_file": "configs/official_proposal.yml",
+  "config_sha256": "a3f8bc2d...",
+  "created": "2026-05-04T18:30:00Z",
+  "redist_version": "0.1.0",
+  "git_commit": "f263823a...",
+  "years": {
+    "2020": {
+      "started":   "2026-05-04T18:30:00Z",
+      "completed": "2026-05-04T19:45:00Z",
+      "workers": 6,
+      "succeeded": 50,
+      "failed": 0,
+      "states": {
+        "wisconsin":      { "status": "ok",   "districts": 8  },
+        "california":     { "status": "ok",   "districts": 52 },
+        "vermont":        { "status": "ok",   "districts": 1  }
+      }
+    },
+    "2010": {
+      "started":   "2026-05-04T19:46:00Z",
+      "completed": "2026-05-04T21:02:00Z",
+      "workers": 6,
+      "succeeded": 50,
+      "failed": 0,
+      "states": {}
+    }
+  }
+}
+```
+
+### 5.2 Analysis index (`analysis/X/index.json`)
+
+Written by `redist analyze` after each year completes. References the run
+by label (not by path — the path is derived from the label by convention).
+
+```json
+{
+  "label": "official_proposal",
+  "schema_version": "1",
+  "run": "official_proposal",
+  "run_index_sha256": "d4e7a1c9...",
+  "types": ["proportionality", "splits", "compactness", "summary"],
+  "created": "2026-05-04T19:00:00Z",
+  "redist_version": "0.1.0",
+  "git_commit": "f263823a...",
+  "years": {
+    "2020": {
+      "started":   "2026-05-04T19:00:00Z",
+      "completed": "2026-05-04T19:15:00Z",
+      "states": {
+        "wisconsin": {
+          "proportionality": "ok",
+          "splits":          "ok",
+          "compactness":     "ok",
+          "summary":         "ok"
+        },
+        "california": {
+          "proportionality": "ok",
+          "splits":          "ok",
+          "compactness":     "ok",
+          "summary":         "ok"
+        }
+      }
+    }
+  }
+}
+```
+
+The `run` field references by NAME not by path. The path to the run outputs
+is always `runs/{run}/` — this is the convention. An auditor reading the
+analysis index knows exactly where to find the corresponding run outputs.
+
+### 5.3 Report index (`reports/X/index.json`)
+
+Written by `redist report` after generation completes.
+
+```json
+{
+  "label": "official_proposal",
+  "schema_version": "1",
+  "analysis": "official_proposal",
+  "analysis_index_sha256": "c9b2e3f1...",
+  "created": "2026-05-04T20:00:00Z",
+  "redist_version": "0.1.0",
+  "git_commit": "f263823a...",
+  "years": {
+    "2020": {
+      "format": "html",
+      "output": "reports/official_proposal/dashboard_2020.html",
+      "output_sha256": "8f2a1c7b..."
+    }
+  }
+}
+```
+
+---
+
+## 6. The `.redist` Registry
+
+### 6.1 Format
+
+```json
+{
+  "official_proposal": {
+    "built":    ["2020", "2010", "2000"],
+    "analyzed": ["2020"],
+    "reported": []
+  },
+  "senate_draft2": {
+    "built":    ["2020"],
+    "analyzed": ["2020"],
+    "reported": ["2020"]
+  },
+  "vt_test": {
+    "built":    ["2020"],
+    "analyzed": [],
+    "reported": []
+  }
+}
+```
+
+### 6.2 Invariants
+
+- Every label in the registry has exactly three lists: `built`, `analyzed`, `reported`.
+- A year appears in `analyzed` only if it also appears in `built`.
+- A year appears in `reported` only if it also appears in `analyzed`.
+- The registry is updated atomically after each stage completes for a year.
+- The registry is never read for path resolution — paths are always derived from
+  the label by convention. The registry is read only to validate that prerequisites
+  are met before a command runs.
+
+### 6.3 Location and gitignore
+
+`.redist` lives at the repository root. It is git-ignored:
+
+```
+# .gitignore addition
+.redist
+runs/
+analysis/
+reports/
+```
+
+If `.redist` does not exist, `redist ls` prints an empty table and any command
+that reads the registry (e.g., `analyze`) treats all labels as having no prior work.
+
+---
+
+## 7. Algorithm Config File
+
+The config file is a YAML document the user edits and commits. It declares what to
+do when `redist build` is called with this label. It is separate from the registry
+(which records what was done) and separate from the index (which records how it went).
+
+### 7.1 Schema
 
 ```yaml
-# RunManifest v1
-# Location: outputs/{name}/run.yml  OR  ~/.redist/runs/{name}.yml
-# Written by: redist init-manifest  OR  manually
-# Executed by: redist run-manifest <path>
+# configs/official_proposal.yml
+# User-editable. Commit this. Do not confuse with .redist (auto-managed).
 
-# ── Identity ──────────────────────────────────────────────────────────────────
-schema_version: "1"
 name: official_proposal
 description: >
   Federal redistricting proposal for all 50 states across three census years.
-  Uses ApportionRegions structure, county-stickiness weights (alpha=2.0),
-  and convergence search (threshold=600). Reference implementation for the
-  proposed federal redistricting statute.
-version: "1.0"
-created: "2026-05-04"
+  Uses ApportionRegions structure (B.11), county-stickiness weights (alpha=2.0,
+  B.10), and convergence search (threshold=600, B.7/B.16). Reference implementation
+  for the proposed federal redistricting statute.
 
-# ── Algorithm (three-layer compositor) ────────────────────────────────────────
 algorithm:
-  # Layer 1: structure — which tree of splits?
+  # Layer 1: bisection structure
   # Values: standard-bisect | nway | ratio-optimal | ratio-optimal-area |
   #         ratio-optimal-vra | prime-factor | compact-polsby | apportion-regions
   structure: apportion-regions
 
-  # Layer 2: weights — what signals go into edge costs?
+  # Layer 2: edge weights
   # Values: unweighted | geographic | county | vra-aligned | proportional
   weights: county
 
-  # Layer 2 tuning: county stickiness factor (B.10). Ignored if weights != county.
+  # County stickiness factor (B.10). Ignored if weights != county.
   alpha_county: 2.0
 
-  # Layer 3: search — how to explore the seed space?
+  # Layer 3: seed search strategy
   # Values: single | multi | convergence
   search: convergence
 
-  # Convergence threshold: consecutive non-improving seeds before stopping (B.7).
-  # Required when search: convergence. Ignored otherwise.
+  # Consecutive non-improving seeds before stopping (B.7/B.16).
+  # Required when search: convergence.
   convergence_threshold: 600
-
-  # Optional multi-seed count. Required when search: multi. Ignored otherwise.
-  # seeds: 50
 
   # Population balance tolerance (percent). Congressional standard: 0.5.
   balance_tolerance: 0.5
 
-  # Parallel workers per year.
-  workers: 6
+# Parallel workers per year.
+workers: 6
 
-# ── Census years ──────────────────────────────────────────────────────────────
+# Census years to build. All three is standard for a federal proposal.
 years: [2020, 2010, 2000]
 
-# ── Output directory structure ────────────────────────────────────────────────
-# Template variables available in all path strings:
-#   {name}        → manifest name (e.g., "official_proposal")
-#   {year}        → census year being processed (e.g., "2020")
-#   {state_name}  → lowercase underscore state name (e.g., "north_carolina")
-#   {base}        → resolved value of outputs.base
-#
-# All paths are relative to the repository root unless they begin with /.
-outputs:
-  base: "outputs/{name}"
-  states: "{base}/{year}/states/{state_name}/"
-  analysis: "{base}/{year}/states/{state_name}/analysis/"
-  intermediate: "{base}/{year}/states/{state_name}/intermediate/"
-  national: "{base}/national/"
-
-# ── Artifact generation (opt-in; default false for all) ───────────────────────
-artifacts:
-  # Per-state analysis types to run after redistricting.
-  # Mirrors redist analyze --types <list>.
-  analysis_types: [demographic, political, compactness, summary]
-
-  # Generate per-state district maps (PNG).
-  maps: false
-  map_types: [districts]          # only consulted when maps: true
-  dpi: 150                        # only consulted when maps: true
-
-  # Generate a static dashboard HTML for each year.
-  dashboard: true
-  dashboard_path: "{base}/dashboard_{year}.html"
-
-  # Generate national rollup files (us_summary.json, us_demographic.json, etc.)
-  national_summary: true
-  national_path: "{base}/national_{year}.json"
-
-  # Generate proportionality analysis (requires partisan data).
-  proportionality: false
-
-# ── State filter ──────────────────────────────────────────────────────────────
-# Empty list = all 50 US states (default).
-# Subset list: process only these states (two-letter codes).
-states: []
-# states: [VT, DE]  # for quick smoke tests
-
-# ── Run metadata (auto-populated at execution time; null in committed file) ───
-meta:
-  git_commit: null          # filled by redist run-manifest at start
-  redist_version: null      # filled by redist run-manifest at start
-  started_at: null          # ISO-8601 UTC timestamp
-  completed_at: null        # ISO-8601 UTC timestamp; null until run finishes
-  completed_years: []       # years successfully completed
-  failed_states: {}         # map of year -> [state codes that errored]
+# Analysis types to run after each build year.
+# Values: demographic | political | compactness | contiguity | splits | summary
+analysis_types: [demographic, political, compactness, contiguity, splits, summary]
 ```
 
-### 2.2 Template variable resolution
+### 7.2 Rules
 
-Template variables are resolved left-to-right, with each resolved value available
-to subsequent expressions. Resolution is eager and eager-only: no circular
-references are permitted.
+- `name` must match the label used in `redist build` commands. If they differ,
+  `build` exits with `[CONFIG] build: config name 'X' does not match label 'Y'`.
+- All `algorithm` fields are required except `convergence_threshold` (required only
+  when `search: convergence`) and `alpha_county` (required only when
+  `weights: county`).
+- `workers` defaults to 4 if omitted.
+- `years` defaults to `[2020, 2010, 2000]` if omitted.
+- `analysis_types` defaults to `[compactness, splits, summary]` if omitted.
+- Unknown keys cause a parse error (`[CONFIG] config: unknown field 'weigths'`).
 
-| Variable | Resolved as |
-|----------|-------------|
-| `{name}` | `manifest.name` field |
-| `{base}` | Resolved value of `outputs.base` (after substituting `{name}`) |
-| `{year}` | The census year currently being processed as a string: `"2020"` |
-| `{state_name}` | Lowercase underscore state name, e.g., `"north_carolina"` |
-
-Resolution is performed by `redist_cli::manifest_runner::resolve_path(template,
-ctx)` where `ctx` carries the four variable values for the current iteration.
-
-All resolved paths are validated to be within the repository root or an absolute
-path starting with `/`. Paths escaping the working directory via `..` are
-rejected at load time with `[CONFIG] RunManifest: path template '{template}'
-resolves outside repository root`.
-
-### 2.3 Schema versioning and forward compatibility
-
-`schema_version: "1"` is required. Future schema versions may add fields; a v1
-runner encountering an unrecognised top-level key emits a warning and continues.
-A runner encountering `schema_version: "2"` or higher exits with
-`[CONFIG] RunManifest: schema_version "2" requires redist >= 2.0.0 (running 1.x)`.
-
----
-
-## 3. CLI Interface
-
-### 3.1 `redist run-manifest` — execute a manifest
+### 7.3 Creating a config
 
 ```bash
-# Run all years defined in the manifest
-redist run-manifest outputs/official_proposal/run.yml
-
-# Run a single year from the manifest (overrides manifest years list)
-redist run-manifest outputs/official_proposal/run.yml --year 2020
-
-# Run a subset of states (overrides manifest states list)
-redist run-manifest outputs/official_proposal/run.yml --states VT DE
-
-# Dry run: print what would be executed without running anything
-redist run-manifest outputs/official_proposal/run.yml --dry-run
-
-# Reprocess all states even if completion markers exist
-redist run-manifest outputs/official_proposal/run.yml --reprocess
-
-# Reset (delete) output tree before starting
-redist run-manifest outputs/official_proposal/run.yml --reset
-
-# Force overwrite of existing plans
-redist run-manifest outputs/official_proposal/run.yml --force
-```
-
-**Dry-run output format** (`--dry-run`):
-
-```
-RunManifest: official_proposal (schema v1)
-  Algorithm: apportion-regions / county (alpha=2.0) / convergence (t=600)
-  Years: [2020, 2010, 2000]
-  States: all 50
-  Outputs:
-    base:     outputs/official_proposal
-    states:   outputs/official_proposal/{year}/states/{state_name}/
-    national: outputs/official_proposal/national/
-  Artifacts: analysis=[demographic political compactness summary]
-             dashboard=true  national_summary=true  maps=false
-
-Would execute:
-  [2020] redist states --year 2020 --output-dir outputs/official_proposal/2020 \
-           --partition-mode apportion-regions --weights-override county \
-           --alpha-county 2.0 --search convergence --convergence-threshold 600 \
-           --workers 6
-  [2020] redist aggregate --year 2020 --version official_proposal --types all
-  [2020] python scripts/web/generate_master_dashboard.py --year 2020 \
-           --out outputs/official_proposal/dashboard_2020.html
-  [2010] redist states --year 2010 ...
-  [2010] ...
-  [2000] redist states --year 2000 ...
-  [2000] ...
-```
-
-### 3.2 `redist init-manifest` — generate a manifest interactively
-
-```bash
-# Generate manifest for the official federal proposal
-redist init-manifest \
-  --name official_proposal \
-  --description "Federal redistricting statute reference implementation" \
+# Generate a config interactively
+redist config new official_proposal \
   --structure apportion-regions \
   --weights county \
   --alpha-county 2.0 \
@@ -304,476 +629,237 @@ redist init-manifest \
   --convergence-threshold 600 \
   --years 2020 2010 2000 \
   --workers 6 \
-  --out outputs/official_proposal/run.yml
+  --out configs/official_proposal.yml
 
-# Generate a quick-test manifest for Vermont only
-redist init-manifest \
-  --name vt_test \
-  --structure apportion-regions \
-  --weights county \
-  --alpha-county 2.0 \
-  --search convergence \
-  --convergence-threshold 600 \
-  --states VT \
-  --years 2020 \
-  --out outputs/vt_test/run.yml
+# Print to stdout without writing
+redist config new official_proposal ... --dry-run
+
+# Validate an existing config
+redist config validate configs/official_proposal.yml
 ```
-
-If `--out` is omitted, the manifest is printed to stdout and not written.
-If the output file already exists and `--force` is not set, exits with
-`[CONFIG] init-manifest: outputs/official_proposal/run.yml already exists.
-Use --force to overwrite.`
-
-### 3.3 `redist dashboard` — generate dashboard from manifest
-
-```bash
-# Generate dashboard for all years defined in the manifest
-redist dashboard outputs/official_proposal/run.yml
-
-# Generate dashboard for a specific year only
-redist dashboard outputs/official_proposal/run.yml --year 2020
-
-# Override output path (ignores manifest dashboard_path template)
-redist dashboard outputs/official_proposal/run.yml --year 2020 \
-  --out web/dashboard_2020.html
-```
-
-This command reads `artifacts.dashboard_path` from the manifest, resolves the
-template, and invokes the dashboard generator. It is a thin wrapper over
-`generate_master_dashboard.py` that eliminates the need to manually construct
-`--version`, `--year`, and `--out` flags.
-
-### 3.4 Exit codes
-
-| Code | Meaning |
-|------|---------|
-| 0 | All years and states succeeded |
-| 1 | One or more states failed (partial failure); outputs for successful states are intact |
-| 2 | Manifest parse or validation error |
-| 3 | Prerequisite data missing for at least one year |
-| 4 | All states failed for at least one year (total failure) |
-
-Exit code 1 (partial failure) is not fatal: the manifest `meta.failed_states`
-field records which states errored. A subsequent `redist run-manifest --reprocess`
-will retry only the failed states.
 
 ---
 
-## 4. Implementation Plan
+## 8. Implementation Plan
 
-### 4.1 New file: `redist/crates/redist-cli/src/manifest_runner.rs`
+### 8.1 New files
+
+```
+redist/crates/redist-cli/src/
+  label.rs            ← label resolution: label → path convention
+  registry.rs         ← .redist read/write, atomic update, invariant enforcement
+  build_cmd.rs        ← `redist build` dispatcher (replaces/wraps states runner)
+  config_cmd.rs       ← `redist config new/validate`
+  ls_cmd.rs           ← `redist ls` and `redist show`
+  rm_cmd.rs           ← `redist rm`
+
+configs/
+  official_proposal.yml   ← committed algorithm config (this spec's reference)
+```
+
+### 8.2 Modified files
+
+```
+redist/crates/redist-cli/src/
+  args.rs     ← add Build, Ls, Show, Rm, Label, ConfigNew, ConfigValidate variants
+  main.rs     ← dispatch new Commands variants
+```
+
+### 8.3 New `Commands` variants
 
 ```rust
-//! RunManifest executor — parses YAML, resolves templates, dispatches to
-//! existing state/states/aggregate commands.
+/// Run redistricting for a label (reads config, writes runs/X/)
+Build(BuildArgs),
+/// Run analysis for a label (reads runs/X/, writes analysis/X/)
+Analyze(AnalyzeArgs),       // replaces existing analyze with label-aware version
+/// Generate reports for a label (reads analysis/X/, writes reports/X/)
+Report(ReportArgs),         // replaces existing report with label-aware version
+/// Compare two labels (reads analysis/A/, analysis/B/)
+Compare(CompareArgs),       // replaces existing compare with label-aware version
+/// List all labels and their stage completion
+Ls(LsArgs),
+/// Show details for a label
+Show(ShowArgs),
+/// Delete a stage for a label
+Rm(RmArgs),
+/// Copy a label (update registry only)
+Label(LabelArgs),
+/// Config subcommand group (new, validate)
+Config(ConfigArgs),
+```
 
+### 8.4 `label.rs` — path convention
+
+```rust
+/// Resolve the runs directory for a label.
+/// Convention: runs/{label}/
+pub fn runs_dir(label: &str) -> PathBuf {
+    PathBuf::from("runs").join(label)
+}
+
+/// Resolve the analysis directory for a label.
+/// Convention: analysis/{label}/
+pub fn analysis_dir(label: &str) -> PathBuf {
+    PathBuf::from("analysis").join(label)
+}
+
+/// Resolve the reports directory for a label.
+/// Convention: reports/{label}/
+pub fn reports_dir(label: &str) -> PathBuf {
+    PathBuf::from("reports").join(label)
+}
+
+/// Resolve the build index path for a label.
+pub fn build_index_path(label: &str) -> PathBuf {
+    runs_dir(label).join("index.json")
+}
+
+/// Resolve the analysis index path for a label.
+pub fn analysis_index_path(label: &str) -> PathBuf {
+    analysis_dir(label).join("index.json")
+}
+
+/// Resolve the report index path for a label.
+pub fn report_index_path(label: &str) -> PathBuf {
+    reports_dir(label).join("index.json")
+}
+```
+
+### 8.5 `registry.rs` — `.redist` read/write
+
+```rust
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 
-// ── Schema ────────────────────────────────────────────────────────────────────
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct RunManifest {
-    pub schema_version: String,
-    pub name: String,
-    pub description: Option<String>,
-    pub version: String,
-    pub created: String,
-    pub algorithm: AlgorithmSpec,
-    pub years: Vec<u16>,
-    pub outputs: OutputSpec,
-    pub artifacts: ArtifactSpec,
-    #[serde(default)]
-    pub states: Vec<String>,
-    #[serde(default)]
-    pub meta: RunMeta,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct AlgorithmSpec {
-    pub structure: String,
-    pub weights: String,
-    #[serde(default)]
-    pub alpha_county: f64,
-    pub search: String,
-    #[serde(default = "default_convergence_threshold")]
-    pub convergence_threshold: u32,
-    pub seeds: Option<usize>,
-    #[serde(default = "default_balance_tolerance")]
-    pub balance_tolerance: f64,
-    #[serde(default = "default_workers")]
-    pub workers: usize,
-}
-
-fn default_convergence_threshold() -> u32 { 600 }
-fn default_balance_tolerance() -> f64 { 0.5 }
-fn default_workers() -> usize { 6 }
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct OutputSpec {
-    pub base: String,
-    pub states: String,
-    pub analysis: String,
-    #[serde(default)]
-    pub intermediate: Option<String>,
-    #[serde(default)]
-    pub national: Option<String>,
+#[derive(Debug, Default, Deserialize, Serialize)]
+pub struct Registry {
+    #[serde(flatten)]
+    pub labels: HashMap<String, LabelRecord>,
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-pub struct ArtifactSpec {
-    #[serde(default)]
-    pub analysis_types: Vec<String>,
-    #[serde(default)]
-    pub maps: bool,
-    #[serde(default)]
-    pub map_types: Vec<String>,
-    #[serde(default = "default_dpi")]
-    pub dpi: u32,
-    #[serde(default)]
-    pub dashboard: bool,
-    pub dashboard_path: Option<String>,
-    #[serde(default)]
-    pub national_summary: bool,
-    pub national_path: Option<String>,
-    #[serde(default)]
-    pub proportionality: bool,
+pub struct LabelRecord {
+    pub built:    Vec<String>,
+    pub analyzed: Vec<String>,
+    pub reported: Vec<String>,
 }
 
-fn default_dpi() -> u32 { 150 }
+/// Load .redist from the repository root. Returns empty registry if absent.
+pub fn load() -> Result<Registry, String> { ... }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct RunMeta {
-    pub git_commit: Option<String>,
-    pub redist_version: Option<String>,
-    pub started_at: Option<String>,
-    pub completed_at: Option<String>,
-    #[serde(default)]
-    pub completed_years: Vec<u16>,
-    #[serde(default)]
-    pub failed_states: HashMap<String, Vec<String>>,
-}
+/// Write .redist atomically (write to .redist.tmp, rename).
+pub fn save(registry: &Registry) -> Result<(), String> { ... }
 
-// ── Template resolution ───────────────────────────────────────────────────────
+/// Mark a year as built for a label. Enforces invariants.
+pub fn mark_built(label: &str, year: &str) -> Result<(), String> { ... }
 
-pub struct TemplateCtx<'a> {
-    pub name: &'a str,
-    pub year: &'a str,
-    pub state_name: &'a str,
-    pub base: &'a str,
-}
+/// Mark a year as analyzed. Returns Err if year not in built.
+pub fn mark_analyzed(label: &str, year: &str) -> Result<(), String> { ... }
 
-/// Resolve a path template by substituting {name}, {year}, {state_name}, {base}.
-/// Returns Err if the resolved path escapes the repository root via '..'.
-pub fn resolve_path(template: &str, ctx: &TemplateCtx) -> Result<PathBuf, String> {
-    let s = template
-        .replace("{name}", ctx.name)
-        .replace("{base}", ctx.base)
-        .replace("{year}", ctx.year)
-        .replace("{state_name}", ctx.state_name);
-    let p = PathBuf::from(&s);
-    // Reject path traversal via ..
-    for component in p.components() {
-        if component.as_os_str() == ".." {
-            return Err(format!(
-                "[CONFIG] RunManifest: path template '{}' resolves to '{}' which contains '..'",
-                template, s
-            ));
-        }
-    }
-    Ok(p)
-}
+/// Mark a year as reported. Returns Err if year not in analyzed.
+pub fn mark_reported(label: &str, year: &str) -> Result<(), String> { ... }
 
-// ── Load and validate ─────────────────────────────────────────────────────────
+/// Require that a year has been built. Used by analyze for pre-flight checks.
+pub fn require_built(label: &str, year: &str) -> Result<(), String> { ... }
 
-pub fn load_manifest(path: &Path) -> Result<RunManifest, String> {
-    let text = std::fs::read_to_string(path)
-        .map_err(|e| format!("[CONFIG] RunManifest: cannot read '{}': {}", path.display(), e))?;
-    let manifest: RunManifest = serde_yaml::from_str(&text)
-        .map_err(|e| format!("[CONFIG] RunManifest: YAML parse error in '{}': {}", path.display(), e))?;
-    validate_manifest(&manifest)?;
-    Ok(manifest)
-}
-
-pub fn validate_manifest(m: &RunManifest) -> Result<(), String> {
-    if m.schema_version != "1" {
-        return Err(format!(
-            "[CONFIG] RunManifest: schema_version \"{}\" requires a newer redist (running 1.x)",
-            m.schema_version
-        ));
-    }
-    if m.years.is_empty() {
-        return Err("[CONFIG] RunManifest: years list must not be empty".to_string());
-    }
-    let valid_structures = ["standard-bisect","nway","ratio-optimal","ratio-optimal-area",
-        "ratio-optimal-vra","prime-factor","compact-polsby","apportion-regions"];
-    if !valid_structures.contains(&m.algorithm.structure.as_str()) {
-        return Err(format!(
-            "[CONFIG] RunManifest: unknown algorithm.structure '{}'", m.algorithm.structure
-        ));
-    }
-    let valid_weights = ["unweighted","geographic","county","vra-aligned","proportional"];
-    if !valid_weights.contains(&m.algorithm.weights.as_str()) {
-        return Err(format!(
-            "[CONFIG] RunManifest: unknown algorithm.weights '{}'", m.algorithm.weights
-        ));
-    }
-    let valid_search = ["single","multi","convergence"];
-    if !valid_search.contains(&m.algorithm.search.as_str()) {
-        return Err(format!(
-            "[CONFIG] RunManifest: unknown algorithm.search '{}'", m.algorithm.search
-        ));
-    }
-    Ok(())
-}
+/// Require that a year has been analyzed. Used by report for pre-flight checks.
+pub fn require_analyzed(label: &str, year: &str) -> Result<(), String> { ... }
 ```
 
-### 4.2 New `Commands` variants in `args.rs`
-
-```rust
-/// Execute a RunManifest YAML file (Spec 7)
-RunManifest(RunManifestArgs),
-/// Generate a RunManifest YAML file interactively (Spec 7)
-InitManifest(InitManifestArgs),
-/// Generate dashboards from a RunManifest (Spec 7)
-Dashboard(DashboardArgs),
-```
+### 8.6 `BuildArgs` struct
 
 ```rust
 #[derive(Debug, Parser)]
-#[command(disable_version_flag = true)]
-pub struct RunManifestArgs {
-    /// Path to RunManifest YAML file
-    pub manifest: std::path::PathBuf,
+pub struct BuildArgs {
+    /// Label for this run (first positional argument or --label)
+    #[arg(group = "label_source")]
+    pub label: Option<String>,
 
-    /// Process only this census year (overrides manifest years list)
+    #[arg(long = "label", group = "label_source")]
+    pub label_flag: Option<String>,
+
+    /// Path to algorithm config YAML
+    #[arg(long)]
+    pub config: std::path::PathBuf,
+
+    /// Build only this census year (overrides config years list)
     #[arg(short = 'y', long)]
     pub year: Option<String>,
 
-    /// Process only these states (overrides manifest states list)
+    /// Build only these states (overrides config years list)
     #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
     pub states: Vec<String>,
+
+    /// Parallel workers (overrides config workers)
+    #[arg(short = 'w', long)]
+    pub workers: Option<usize>,
 
     /// Print commands without executing
     #[arg(long)]
     pub dry_run: bool,
 
-    /// Reprocess all states (ignore completion markers)
-    #[arg(long)]
-    pub reprocess: bool,
-
-    /// Delete output tree before starting
-    #[arg(long)]
-    pub reset: bool,
-
-    /// Force overwrite of existing plan outputs
+    /// Force overwrite of existing outputs
     #[arg(long)]
     pub force: bool,
-}
 
-#[derive(Debug, Parser)]
-#[command(disable_version_flag = true)]
-pub struct InitManifestArgs {
-    /// Manifest name (becomes {name} in path templates)
-    #[arg(long)]
-    pub name: String,
-
-    /// Human-readable description
-    #[arg(long)]
-    pub description: Option<String>,
-
-    /// Layer 1: structure (default: apportion-regions)
-    #[arg(long, default_value = "apportion-regions")]
-    pub structure: String,
-
-    /// Layer 2: weights (default: county)
-    #[arg(long, default_value = "county")]
-    pub weights: String,
-
-    /// County stickiness alpha (default: 2.0)
-    #[arg(long, default_value_t = 2.0)]
-    pub alpha_county: f64,
-
-    /// Layer 3: search (default: convergence)
-    #[arg(long, default_value = "convergence")]
-    pub search: String,
-
-    /// Convergence threshold (default: 600)
-    #[arg(long, default_value_t = 600)]
-    pub convergence_threshold: u32,
-
-    /// Census years to include (default: 2020 2010 2000)
-    #[arg(long = "years", num_args = 1.., value_delimiter = ' ', default_values = ["2020","2010","2000"])]
-    pub years: Vec<u16>,
-
-    /// Parallel workers (default: 6)
-    #[arg(short = 'w', long, default_value_t = 6)]
-    pub workers: usize,
-
-    /// State codes to include (default: all 50)
-    #[arg(long = "states", num_args = 0.., value_delimiter = ' ')]
-    pub states: Vec<String>,
-
-    /// Output path for generated YAML (default: stdout)
-    #[arg(long)]
-    pub out: Option<std::path::PathBuf>,
-
-    /// Overwrite existing manifest file
-    #[arg(long)]
-    pub force: bool,
-}
-
-#[derive(Debug, Parser)]
-#[command(disable_version_flag = true)]
-pub struct DashboardArgs {
-    /// Path to RunManifest YAML file
-    pub manifest: std::path::PathBuf,
-
-    /// Generate dashboard for this year only (default: all manifest years)
-    #[arg(short = 'y', long)]
-    pub year: Option<String>,
-
-    /// Override dashboard output path (ignores manifest dashboard_path template)
+    /// Override output directory (default: runs/{label}/)
     #[arg(long)]
     pub out: Option<std::path::PathBuf>,
 }
 ```
 
-### 4.3 Dispatcher in `main.rs`
+### 8.7 Migration from existing commands
 
-```rust
-Commands::RunManifest(args) => {
-    let manifest = manifest_runner::load_manifest(&args.manifest)
-        .unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(2); });
-    std::process::exit(manifest_runner::execute(&manifest, &args)?);
-}
-Commands::InitManifest(args) => {
-    manifest_runner::init_manifest(&args)
-        .unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(2); });
-}
-Commands::Dashboard(args) => {
-    let manifest = manifest_runner::load_manifest(&args.manifest)
-        .unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(2); });
-    manifest_runner::generate_dashboards(&manifest, &args)
-        .unwrap_or_else(|e| { eprintln!("{}", e); std::process::exit(1); });
-}
-```
+The existing `redist state`, `redist states`, and `redist run` commands are
+**unchanged**. No deprecations are introduced in this spec. Label-based commands
+are new top-level verbs that call the same internal runner functions:
 
-### 4.4 Execution logic: how `run-manifest` calls existing commands
+| Label command | Delegates to |
+|---------------|-------------|
+| `redist build X` | `runner::run_states_parallel()` with resolved output dir |
+| `redist analyze X` | existing analyze pipeline with resolved input/output dirs |
+| `redist report X` | existing report pipeline with resolved paths |
+| `redist compare A B` | existing compare with resolved analysis dirs |
 
-`manifest_runner::execute()` translates a `RunManifest` into a sequence of
-`AlgorithmConfig + StatesArgs` invocations by constructing the same data
-structures that `main.rs` would build from CLI flags, then calling the existing
-runner functions directly — no subprocess spawning, no shell escaping.
+The resolved output directory for `build` follows the same tree that `redist states`
+produces: `runs/{label}/{year}/states/{state_name}/`. This means build outputs are
+immediately consumable by the existing per-state tooling.
 
-For each `year` in `manifest.years` (in order):
+### 8.8 Index.json writing
 
-1. **Resolve paths**: call `resolve_path()` for `outputs.base` with the current
-   year substituted. The resolved base becomes `--output-dir` for the internal
-   `states` invocation.
-2. **Build `AlgorithmConfig`**: translate `algorithm.structure`, `algorithm.weights`,
-   `algorithm.search` → `SplitStrategy`, `WeightSpec`, `SeedCompositor` using the
-   same mapping that `StateArgs` uses in `main.rs`.
-3. **Determine state list**: use `args.states` override if non-empty, else
-   `manifest.states` if non-empty, else all 50 US states from the registry.
-4. **Call `runner::run_states_parallel()`** with the constructed config.
-5. **Run analysis** for each state if `artifacts.analysis_types` is non-empty.
-6. **Run aggregate** if `artifacts.national_summary` is true.
-7. **Generate dashboard** if `artifacts.dashboard` is true.
-8. **Update `meta`** in the manifest YAML on disk: add the completed year to
-   `meta.completed_years`, record any `meta.failed_states`, update
-   `meta.completed_at`.
+After each year completes in `build`:
 
-Step 8 writes the manifest file atomically (write to `.tmp`, rename). This
-means the manifest on disk always reflects the last completed state — a partial
-run can be resumed with `--reprocess`.
+1. Load existing `runs/{label}/index.json` if it exists.
+2. Merge the new year's results into the `years` map.
+3. Write back atomically (`.tmp` + rename).
+4. Call `registry::mark_built(label, year)`.
 
-### 4.5 Provenance capture
+After each year completes in `analyze`:
 
-At step 1 of each year, before any computation:
+1. Load existing `analysis/{label}/index.json` if it exists.
+2. Merge results. Write back atomically.
+3. Call `registry::mark_analyzed(label, year)`.
 
-```rust
-meta.git_commit = Some(env!("REDIST_BUILD_COMMIT_OVERRIDE")
-    .to_string()
-    .or_else(|| /* git rev-parse HEAD */));
-meta.redist_version = Some(env!("CARGO_PKG_VERSION").to_string());
-meta.started_at = Some(chrono::Utc::now().to_rfc3339());
-```
+After `report` completes:
 
-`REDIST_BUILD_COMMIT_OVERRIDE` is already set by the build system (per the
-Deposition Prep plan, `depo::build_commit()`). No new environment variable is
-introduced.
-
-### 4.6 Meta update atomicity
-
-The manifest is written back to disk after each year completes (not after each
-state, to avoid write amplification). If the process is killed mid-year,
-`meta.completed_years` will not include the interrupted year. A subsequent
-`run-manifest --reprocess` will re-run that year from scratch.
+1. Write `reports/{label}/index.json` with output paths and SHAs.
+2. Call `registry::mark_reported(label, year)`.
 
 ---
 
-## 5. Migration Path
+## 9. The Official Proposal End-to-End
 
-### 5.1 Existing commands are unchanged
-
-`redist state`, `redist states`, and `redist run` accept exactly the same flags
-as before. No deprecations are introduced. Existing shell scripts and CI
-configurations continue to work.
-
-### 5.2 The manifest is pure sugar
-
-`redist run-manifest` is a thin coordinator that calls the same internal
-functions as `redist states` and `redist run`. It does not introduce new
-algorithm logic or new output formats. Every output produced by
-`redist run-manifest` could also be produced by a shell script calling
-`redist states` three times with the appropriate flags.
-
-### 5.3 Incremental adoption path
-
-Teams can adopt the manifest at their own pace:
-
-| Stage | Adoption |
-|-------|---------|
-| 0 | Existing shell scripts unchanged |
-| 1 | `redist init-manifest` generates a run.yml; team reviews and commits it |
-| 2 | Shell scripts replaced by `redist run-manifest run.yml` |
-| 3 | `--dry-run` used to audit what each run will execute before committing |
-| 4 | CI/CD invokes `redist run-manifest` directly |
-
-### 5.4 Path unification
-
-The manifest output path templates enforce the same structure that `redist state`
-produces: `{base}/{year}/states/{state_name}/`. This means outputs from a
-manifest run are immediately consumable by `redist analyze --version {name}`,
-`redist map --version {name}`, and `redist aggregate --version {name}` —
-because the version-keyed directory tree is identical.
-
-The inconsistency between `state` and `states` is resolved by the manifest
-always generating a `--output-dir` that embeds the year, making the output
-tree isomorphic to what `state` would have produced.
-
----
-
-## 6. The Official Proposal Manifest
-
-The following YAML should be committed at `outputs/official_proposal/run.yml`.
-This is the reference implementation for the proposed federal redistricting
-statute. It is not generated — it is authored once and committed.
+### 9.1 Config file (committed)
 
 ```yaml
-schema_version: "1"
+# configs/official_proposal.yml
 name: official_proposal
 description: >
   Reference implementation for the proposed federal redistricting statute.
-  Algorithm: ApportionRegions (B.11) structure, county-stickiness weights
-  alpha=2.0 (B.10), convergence search threshold=600 (B.7/B.16).
-  All 50 states, three census years: 2020, 2010, 2000.
-  This manifest is the citable artifact that defines the "official proposal" run.
-  Any run claiming to reproduce these results must use this manifest unmodified.
-version: "1.0"
-created: "2026-05-04"
+  Algorithm: ApportionRegions (B.11), county weights alpha=2.0 (B.10),
+  convergence search threshold=600 (B.7/B.16). All 50 states, 2020/2010/2000.
+  This config is the citable artifact defining the official proposal parameters.
+  Any run claiming to reproduce these results must use this config unmodified.
 
 algorithm:
   structure: apportion-regions
@@ -782,121 +868,236 @@ algorithm:
   search: convergence
   convergence_threshold: 600
   balance_tolerance: 0.5
-  workers: 6
 
+workers: 6
 years: [2020, 2010, 2000]
-
-outputs:
-  base: "outputs/{name}"
-  states: "{base}/{year}/states/{state_name}/"
-  analysis: "{base}/{year}/states/{state_name}/analysis/"
-  intermediate: "{base}/{year}/states/{state_name}/intermediate/"
-  national: "{base}/national/"
-
-artifacts:
-  analysis_types: [demographic, political, compactness, summary]
-  maps: false
-  map_types: [districts]
-  dpi: 150
-  dashboard: true
-  dashboard_path: "{base}/dashboard_{year}.html"
-  national_summary: true
-  national_path: "{base}/national_{year}.json"
-  proportionality: true
-
-states: []
-
-meta:
-  git_commit: null
-  redist_version: null
-  started_at: null
-  completed_at: null
-  completed_years: []
-  failed_states: {}
+analysis_types: [demographic, political, compactness, contiguity, splits, summary]
 ```
 
-**To execute the official proposal:**
+### 9.2 Full workflow
 
 ```bash
-redist run-manifest outputs/official_proposal/run.yml
-```
-
-**To reproduce a single year for verification:**
-
-```bash
-redist run-manifest outputs/official_proposal/run.yml --year 2020
-```
-
-**To perform a smoke test with Vermont only before committing to a full run:**
-
-```bash
-redist run-manifest outputs/official_proposal/run.yml \
+# Step 1: Smoke test with Vermont before committing to a full run
+redist build official_proposal --config configs/official_proposal.yml \
   --year 2020 --states VT --dry-run
+
+# Step 2: Build all 50 states, all three years (~2–4h)
+redist build official_proposal --config configs/official_proposal.yml
+
+# Step 3: Check what was built
+redist ls
+# official_proposal    2020 2010 2000    —    —
+
+# Step 4: Run analysis for 2020
+redist analyze official_proposal --year 2020
+
+# Step 5: Generate report
+redist report official_proposal --year 2020 --format html
+
+# Step 6: Inspect status
+redist show official_proposal
+# Label:     official_proposal
+# Built:     2020 2010 2000
+# Analyzed:  2020
+# Reported:  2020
+
+# Step 7: Compare against an alternative plan
+redist build senate_draft2 --config configs/senate_draft2.yml --year 2020
+redist analyze senate_draft2 --year 2020
+redist compare official_proposal senate_draft2 --year 2020 \
+  --metrics compactness splits proportionality
+```
+
+### 9.3 Error scenarios
+
+```bash
+# Attempt to analyze before building
+$ redist analyze official_proposal --year 2010
+[CONFIG] analyze: 'official_proposal' has not been built for year 2010.
+Run: redist build official_proposal --year 2010
+
+# Attempt to report before analyzing
+$ redist report official_proposal --year 2000
+[CONFIG] report: 'official_proposal' has not been analyzed for year 2000.
+Run: redist analyze official_proposal --year 2000
+
+# Config name mismatch
+$ redist build senate_draft2 --config configs/official_proposal.yml
+[CONFIG] build: config name 'official_proposal' does not match label 'senate_draft2'.
+
+# Label collision without --force
+$ redist build official_proposal --config configs/official_proposal.yml --year 2020
+[CONFIG] build: 'official_proposal' year 2020 already exists (built 2026-05-04T18:30Z).
+Use --force to overwrite.
 ```
 
 ---
 
-## 7. Tests
+## 10. Tests
 
 ### L0 (unit — no pipeline data required)
 
 | Test | What it checks |
 |------|---------------|
-| `test_resolve_path_substitutes_all_variables` | `{base}/{year}/states/{state_name}/` → correct expansion |
-| `test_resolve_path_rejects_dotdot_traversal` | `../../etc/passwd` exits with `[CONFIG]` error |
-| `test_resolve_path_ignores_unknown_variables` | unknown `{foo}` preserved literally |
-| `test_validate_manifest_unknown_structure` | unknown `algorithm.structure` returns Err |
-| `test_validate_manifest_unknown_weights` | unknown `algorithm.weights` returns Err |
-| `test_validate_manifest_empty_years` | empty `years` returns Err |
-| `test_validate_manifest_schema_v2_rejected` | `schema_version: "2"` returns Err with message |
-| `test_load_manifest_round_trips_yaml` | serialize → deserialize → serialize produces identical YAML |
-| `test_init_manifest_produces_valid_yaml` | `init_manifest()` output passes `validate_manifest()` |
-| `test_dry_run_output_contains_all_years` | dry-run output mentions all three years |
-| `test_meta_update_writes_completed_year` | after year completes, `meta.completed_years` includes it |
-| `test_meta_update_is_atomic` | temp file + rename pattern used (no partial write) |
-| `test_state_override_wins_over_manifest` | `--states VT` overrides `states: [CA, TX]` in manifest |
-| `test_official_proposal_manifest_is_valid` | `load_manifest("outputs/official_proposal/run.yml")` passes |
+| `test_label_runs_dir` | `label::runs_dir("official_proposal")` == `runs/official_proposal` |
+| `test_label_analysis_dir` | convention consistent with runs_dir |
+| `test_label_reports_dir` | convention consistent with runs_dir |
+| `test_registry_mark_built_updates_built_list` | year appears in `built` after mark |
+| `test_registry_mark_analyzed_requires_built` | year not in `built` → Err |
+| `test_registry_mark_reported_requires_analyzed` | year not in `analyzed` → Err |
+| `test_registry_write_is_atomic` | tmp file renamed, no partial write |
+| `test_registry_load_missing_returns_empty` | absent `.redist` → empty registry |
+| `test_registry_invariants_built_superset_of_analyzed` | invariant enforced |
+| `test_registry_invariants_analyzed_superset_of_reported` | invariant enforced |
+| `test_build_index_round_trip` | serialize → deserialize → serialize → identical JSON |
+| `test_analysis_index_references_run_by_name` | `"run": "official_proposal"` not a path |
+| `test_report_index_records_sha256` | output file SHA in report index |
+| `test_config_name_mismatch_exits_error` | config `name: X` + label `Y` → `[CONFIG]` |
+| `test_config_missing_required_field_exits_error` | missing `structure` → `[CONFIG]` |
+| `test_config_unknown_field_exits_error` | typo `weigths` → `[CONFIG]` |
+| `test_require_built_exits_with_actionable_message` | error message contains fix |
+| `test_require_analyzed_exits_with_actionable_message` | error message contains fix |
+| `test_label_collision_exits_with_timestamp` | error message shows `built` timestamp |
+| `test_dry_run_prints_all_years` | dry-run output lists all config years |
+| `test_ls_empty_registry_prints_empty_table` | no crash when `.redist` absent |
+| `test_official_proposal_config_is_valid` | `load_config("configs/official_proposal.yml")` passes |
 
-### L2 acceptance (requires VT or DE adjacency data)
+### L2 acceptance (requires VT adjacency data)
 
 | Test | What it checks |
 |------|---------------|
-| `test_run_manifest_vt_2020_produces_outputs` | single-state manifest run produces `final_assignments.json` |
-| `test_run_manifest_partial_failure_records_failed_states` | intentional bad state → `meta.failed_states` populated |
-| `test_run_manifest_reprocess_reruns_failed_states` | `--reprocess` on partial run retries failed states |
-| `test_dashboard_command_resolves_template_path` | `redist dashboard run.yml --year 2020` resolves dashboard_path |
+| `test_build_vt_2020_produces_index_json` | `runs/vt_test/index.json` written after build |
+| `test_build_updates_registry_built_list` | `.redist` contains `vt_test.built: ["2020"]` |
+| `test_analyze_vt_2020_produces_analysis_index` | `analysis/vt_test/index.json` written |
+| `test_analyze_updates_registry_analyzed_list` | `.redist` updated after analyze |
+| `test_report_vt_2020_produces_dashboard` | `reports/vt_test/dashboard_2020.html` exists |
+| `test_show_vt_test_displays_correct_paths` | `redist show vt_test` output matches actual paths |
+| `test_rm_stage_report_deletes_reports_dir` | `reports/vt_test/` removed, `.redist` updated |
+| `test_compare_two_labels_produces_output` | `redist compare A B` exits 0 with metric table |
 
 ---
 
-## 8. Alignment with Existing Specs and Plans
+## 11. Alignment with Existing Specs and Plans
 
 | Spec/Plan | Alignment |
 |-----------|-----------|
-| **Spec 1 (Custom Parameters)** | `RunManifest.algorithm` maps 1:1 to `StateArgs` compositor flags |
-| **Spec 2 (Plan Comparison)** | Manifest outputs use standard `{version}/{year}/states/` tree — compatible with `redist compare --version {name}` |
-| **Spec 6 (Reports)** | `PlanManifest` written per-state is unchanged; `RunManifest` records run-level provenance above it |
-| **Deposition Prep** | `meta.git_commit` uses `REDIST_BUILD_COMMIT_OVERRIDE` (already defined); `DepoLogWriter` can be pointed at the manifest file |
-| **B.10 (county weights)** | `algorithm.alpha_county` maps directly to `WeightSpec.alpha_county` |
+| **Spec 1 (Custom Parameters)** | `BuildArgs` passes `--balance-tolerance`, `--population-source` through to `StateConfig` unchanged |
+| **Spec 2 (Plan Comparison)** | `redist compare A B` is the label-aware replacement for `redist compare --plan-a --plan-b` |
+| **Spec 3 (Constraint Analysis)** | Analysis types in config file map to `--types` flag |
+| **Spec 4 (Partisan Metrics)** | `political` in `analysis_types` triggers partisan analysis |
+| **Spec 5 (Multi-chamber)** | `redist build X --config configs/wa_house.yml` — label and config independent |
+| **Spec 6 (Reports)** | `PlanManifest` per-state is unchanged; `reports/X/index.json` is the new run-level audit anchor |
+| **Deposition Prep** | `git_commit` in every index uses `REDIST_BUILD_COMMIT_OVERRIDE`; `DepoLogWriter` can reference index files |
+| **B.10 (county weights)** | `algorithm.alpha_county` in config maps to `WeightSpec.alpha_county` |
 | **B.11 (ApportionRegions)** | `algorithm.structure: apportion-regions` maps to `SplitStrategy::ApportionRegions` |
-| **B.16 (convergence)** | `algorithm.search: convergence` + `algorithm.convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
+| **B.16 (convergence)** | `algorithm.search: convergence` + `convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
 
 ---
 
-## 9. Open Questions (deferred)
+## 12. Open Questions (deferred)
 
-1. **Per-year worker overrides**: Should `workers` be specifiable per year
-   (e.g., 2020 uses 6, 2000 uses 4 because data is smaller)? Deferred: flat
-   `workers` is sufficient for v1.
+1. **Per-year worker overrides**: Should `workers` be specifiable per year in the
+   config? Deferred: flat `workers` is sufficient for v1.
 
-2. **Manifest registry**: Should `redist` maintain a registry of named manifests
-   in `~/.redist/runs/` accessible by name rather than path?
-   (`redist run-manifest official_proposal` vs. `redist run-manifest outputs/.../run.yml`)
-   Deferred: path-based is simpler and more explicit for v1.
+2. **Global config search path**: Should `redist build X` search for `configs/X.yml`
+   automatically, making `--config` optional? Deferred: explicit `--config` is safer
+   for v1; auto-discovery can be added when the pattern proves stable.
 
-3. **Resume semantics**: Should `run-manifest` resume from the last completed
-   state within a year (not just the last completed year)? Deferred: year-level
-   granularity is sufficient for v1; state-level resume can be added when needed.
+3. **Label namespacing**: Should labels be namespaced (e.g., `federal/official_proposal`
+   vs. `wa/senate_draft2`)? Deferred: flat namespace is simpler for v1. Subdirectory
+   support in `runs/`, `analysis/`, `reports/` can be added transparently.
 
-4. **Manifest signing**: Should the committed `run.yml` carry a GPG signature
-   so that any modification is detectable? Deferred: `meta.git_commit` provides
-   implicit tamper detection through git history.
+4. **Registry signing**: Should `.redist` carry a signature so that tampering
+   (e.g., manually marking a year as built) is detectable? Deferred: git history
+   provides implicit tamper detection. Explicit signing can be added for deposition
+   workflows.
+
+5. **Remote registry**: Should `.redist` be sharable (e.g., stored in S3 alongside
+   outputs) so a team member can run `redist ls` against a shared output tree without
+   running `build` locally? Deferred: local-only for v1.
+
+---
+
+---
+
+## Panel Reviews
+
+**Date**: 2026-05-04
+**Spec**: `2026-05-04-spec7-run-manifest.md` (Label-Based Run Management rewrite)
+**Round**: 1
+
+---
+
+### Reviewer 1: Ce Zhang (ETH Zurich — Systems, ML Infrastructure)
+
+**Score**: 9/10 — The design is substantially cleaner than the previous version.
+
+Replacing path-as-API with label-as-API is the correct abstraction. The three-directory convention (`runs/`, `analysis/`, `reports/`) is fixed, predictable, and machine-verifiable. Every command that touches files can validate its inputs by checking the convention rather than trusting a user-supplied string. This is a meaningful reliability improvement over the manifest-runner approach.
+
+The registry invariants (§6.2) are well-specified. Enforcing that `analyzed` is a subset of `built` at write time — not at read time — means the invariant cannot be violated by concurrent writes, provided writes are atomic. The atomic write protocol (`.tmp` + rename) in §8.5 is correct for single-process use. For multi-process use (e.g., a CI system running two `analyze` commands concurrently), the rename is not sufficient. Add a note that `.redist` writes use advisory file locking (`flock` on Linux, `LockFile` on Windows) to serialize concurrent updates.
+
+The `test_registry_write_is_atomic` test is listed but its assertion is underspecified. "No partial write" is not a testable predicate without injecting a failure between the write and the rename. The test should simulate a kill between those steps (by wrapping the write in a closure that panics after the `.tmp` write) and verify that the pre-existing `.redist` is intact.
+
+One gap: the spec does not address the case where `runs/official_proposal/` exists on disk but `official_proposal` is not in `.redist` (e.g., the registry was deleted or the user ran `redist states` directly). `redist ls` should detect this and offer a recovery path: `[WARN] Found runs/official_proposal/ not in registry. Run: redist registry sync to import.`
+
+---
+
+### Reviewer 2: Nadia Polikarpova (UC San Diego — Formal Methods, Program Synthesis)
+
+**Score**: 8.5/10 — Much stronger than the prior draft. Two schema concerns remain.
+
+The separation of config (what to do), registry (what was done), and index (how it went) is the right decomposition. The previous spec's dual-use of a single YAML file as both specification and execution state was a correctness hazard; this spec eliminates it.
+
+The config schema (§7.1) now specifies `deny_unknown_fields` behavior via the rule "unknown keys cause a parse error" — this closes the silent-misconfiguration bug I flagged previously. The required-vs-optional field rules in §7.2 are stated normatively and testable. Both are improvements.
+
+Two remaining concerns. First, the analysis index (§5.2) has `"run": "official_proposal"` — a name reference to the build label. The spec says "the path is derived from the label by convention." This is fine when the label is the same for both run and analyze. But `redist analyze X --out /mnt/custom/` (the escape hatch in §3.9) breaks the convention: the analysis is now in a non-standard location but the index still says `"run": "official_proposal"` with no path override recorded. Either the escape hatch must also write a `run_dir` field to the index, or the escape hatch should be restricted to `report` (where no downstream commands read the output directory from the index). Leaving this inconsistency makes the index schema unreliable for auditors.
+
+Second, the `BuildArgs` struct (§8.6) has a `group = "label_source"` that accepts the label as either a positional argument or `--label`. This pattern is underspecified: what happens when both are supplied? Clap's `group` makes them mutually exclusive, which is correct, but the error message will be Clap's default rather than a user-friendly `[CONFIG]` message. Add a test for this case.
+
+---
+
+### Reviewer 3: Percy Liang (Stanford — Empirical ML, Reproducibility)
+
+**Score**: 9.5/10 — This is the right reproducibility primitive for redistricting work.
+
+The previous spec's `meta.git_commit` field was good but buried in the YAML execution state. This spec puts `git_commit` in every index — build, analysis, report — which means any index file is independently verifiable against the source repository. That is the correct design for a system where outputs are shared with auditors who did not run the pipeline themselves.
+
+The `config_sha256` field in the build index (§5.1) is the critical addition I would have requested. It means an auditor can take `configs/official_proposal.yml` from the git repository, hash it, and verify against the build index that the committed config was the one actually used. This closes the "was the config modified between commit and run?" gap.
+
+One improvement: the analysis index records `run_index_sha256` (the SHA of `runs/X/index.json`). But `runs/X/index.json` itself references `config_sha256`. A full audit chain is therefore: report index → analysis index → build index → config SHA → committed config. This chain should be documented explicitly in §5 as the "audit chain" so special masters know how to traverse it. Without documentation, auditors will not know to follow the chain.
+
+The `analysis_types` field in the official proposal config (§9.1) now includes `contiguity` and `splits` — a concrete improvement over the previous draft that omitted these legally significant outputs. The inclusion of both in the reference config is the right default.
+
+---
+
+### Reviewer 4: Moon Duchin (Tufts — Mathematics, Redistricting Practice)
+
+**Score**: 9/10 — Practitioner workflow is now first-class.
+
+The label system is the right mental model for redistricting practitioners. In every engagement I work on, plans have names — `draft1`, `commission_proposal`, `court_submission`. The previous system required translating names into paths; this system treats names as the fundamental unit and derives everything else. The cognitive load reduction is real and significant.
+
+The error messages in §9.3 are exemplary. "You have not built year 2010. Run: redist build official_proposal --year 2010" is exactly what a practitioner needs. It is actionable, specific, and does not require reading documentation. The label-collision message showing the timestamp of the existing build is equally good.
+
+One gap: the `redist ls` output (§3.5) shows which years are in each stage but not how many states succeeded. A commission director checking in on a long run wants to know "50 states done or 47?" before looking at the full `redist show`. Suggest adding a state count column to `redist ls`, or at minimum a "partial" indicator when `succeeded < total states expected`:
+
+```
+Label                Built               Analyzed   Reported
+official_proposal    2020(50) 2010(50)   2020        —
+senate_draft2        2020(47/50 partial) —           —
+```
+
+The `redist rm` command (§3.7) correctly cascades — deleting `analyze` also deletes `report`. The cascade direction (removing a stage also removes all dependent stages) should be stated as a rule in §3.7, not just implied by the examples. Practitioners will want to know: does `redist rm official_proposal --stage build` also delete the analysis and report, or just the build outputs? The spec implies yes but does not state it.
+
+---
+
+### Reviewer 5: Dana Hendricks (Wisconsin Legislative Technology Office — State GIS Director)
+
+**Score**: 8/10 — Clear improvement. Three workflow gaps from actual use.
+
+I manage redistricting data for the Wisconsin Legislature. We receive proposed plans from multiple parties — the commission, minority caucus, advocacy groups — and need to analyze each one and compare them side-by-side. The label system directly matches how we think about plans. "Commission_v3 versus minority_proposal_2" is how we talk in meetings, not "outputs/v3/2020 versus outputs/minority/2020."
+
+Three gaps from actual use. First: we often receive a plan as a shapefile or CSV from an outside party, not as a set of tract assignments produced by `redist build`. We need `redist import minority_proposal --from minority_proposal.csv --year 2020` that creates `runs/minority_proposal/` from an external file. The current spec assumes all runs are produced by `redist build`. Adding an `import` verb to the label system would make it usable for the adversarial-plan-review workflow, which is the most common redistricting scenario in state legislatures.
+
+Second: we share outputs with legal staff and commissioners who do not run the pipeline themselves. They need to browse `reports/official_proposal/` and find a dashboard they can open in a browser. The current directory structure has `reports/official_proposal/dashboard_2020.html` — good — but there is no `reports/official_proposal/index.html` that links to all years. `redist report X` should generate a top-level index page alongside the per-year dashboards.
+
+Third: the `redist rm` cascade (deleting build deletes analysis and report) is dangerous without an explicit confirmation step. Add `--dry-run` to `redist rm` so staff can preview what will be deleted before confirming. The `--force` flag that skips confirmation should require typing the label name, not just passing a flag: `redist rm official_proposal --force official_proposal`. This pattern (confirming by retyping the label) is used by Heroku and prevents the most common accidental-deletion scenario.
