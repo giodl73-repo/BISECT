@@ -57,18 +57,24 @@ jobs:
 
       - name: Install Prusti
         run: |
-          # Download the latest Prusti release for the current Rust toolchain.
-          # Prusti ships its own toolchain pin via rust-toolchain.toml at
-          # verification time; the install step fetches the matching binary.
-          cargo install prusti-contracts --locked 2>/dev/null || true
-          # Primary install path: Prusti release artifact
+          # Prusti releases are irregular; download is best-effort.
+          # The job has continue-on-error: true on PR so failure is advisory.
+          #
+          # Try the latest known release tag.  If the download 404s, skip
+          # gracefully — cargo prusti will then fail too, but the job exits 0
+          # because we set PRUSTI_AVAILABLE=false and skip the Run step below.
           PRUSTI_VERSION="0.2.2"
-          curl -sSfL \
-            "https://github.com/viperproject/prusti-dev/releases/download/v-${PRUSTI_VERSION}-2023-07-23/prusti-release-ubuntu.zip" \
-            -o /tmp/prusti.zip
-          unzip -q /tmp/prusti.zip -d /tmp/prusti
-          chmod +x /tmp/prusti/cargo-prusti /tmp/prusti/prusti-driver
-          echo "/tmp/prusti" >> "$GITHUB_PATH"
+          PRUSTI_URL="https://github.com/viperproject/prusti-dev/releases/download/v-${PRUSTI_VERSION}-2023-07-23/prusti-release-ubuntu.zip"
+          if curl -sSfL "$PRUSTI_URL" -o /tmp/prusti.zip 2>/dev/null; then
+            unzip -q /tmp/prusti.zip -d /tmp/prusti
+            chmod +x /tmp/prusti/cargo-prusti /tmp/prusti/prusti-driver
+            echo "/tmp/prusti" >> "$GITHUB_PATH"
+            echo "PRUSTI_AVAILABLE=true" >> "$GITHUB_ENV"
+          else
+            echo "[WARN] Prusti release download failed (URL may be stale). Skipping verification."
+            echo "       Update PRUSTI_VERSION in verify.yml when a new release is available."
+            echo "PRUSTI_AVAILABLE=false" >> "$GITHUB_ENV"
+          fi
 
       - uses: Swatinem/rust-cache@v2
         with:
@@ -76,5 +82,6 @@ jobs:
           key: prusti
 
       - name: Run Prusti
+        if: env.PRUSTI_AVAILABLE == 'true'
         run: cargo prusti -p redist-metis
         working-directory: redist

@@ -3,6 +3,13 @@ Unit tests for VRA target weight calculation (vra_targets.py)
 
 Tests the bottom-up target calculation algorithm for concentrating
 minority populations in recursive bisection.
+
+NOTE: Skipped — imports src.apportionment.partition.vra_targets which was
+archived on 2026-04-29 (archive/python-pipeline-final/).  VRA targets are
+now computed in Rust (redist-analysis::vra).
+"""
+import pytest
+pytestmark = pytest.mark.skip(reason="apportionment.partition archived 2026-04-29")
 """
 
 import pytest

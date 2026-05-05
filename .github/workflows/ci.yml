@@ -24,10 +24,24 @@ jobs:
         with:
           workspaces: redist
 
-      - name: Run tests
-        # Exclude redist_py (requires Python dev headers + maturin/pyo3 build)
-        # and redist-web (stub crate — no tests yet).
-        run: cargo test --workspace --lib --exclude redist_py --exclude redist-web
+      - name: Install METIS (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libmetis-dev
+
+      - name: Install METIS (macOS)
+        if: runner.os == 'macOS'
+        run: brew install metis
+
+      - name: Run tests (workspace, excluding redist-cli)
+        # Exclude redist_py (Python dev headers), redist-web (stub), and
+        # redist-cli (run separately below with --test-threads=1).
+        run: cargo test --workspace --lib --exclude redist_py --exclude redist-web --exclude redist-cli
+        working-directory: redist
+
+      - name: Run tests (redist-cli — serialised)
+        # label_cmd.rs tests use set_current_dir(), which is process-global.
+        # Running them in parallel races on CWD → ENOENT.  Single-threaded is safe.
+        run: cargo test -p redist-cli --lib -- --test-threads=1
         working-directory: redist
 
   build:

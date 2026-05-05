@@ -2,7 +2,13 @@
 Unit tests for VRA mode in recursive bisection (recursive_bisection.py)
 
 Tests VRA target weight lookup and multi-constraint integration.
+
+NOTE: Skipped — imports src.apportionment.partition.recursive_bisection which
+was archived on 2026-04-29 (archive/python-pipeline-final/).  VRA mode is now
+implemented in Rust (redist-cli --partition-mode metis-vra / vra-section).
 """
+import pytest
+pytestmark = pytest.mark.skip(reason="apportionment.partition archived 2026-04-29")
 
 import pytest
 import numpy as np
