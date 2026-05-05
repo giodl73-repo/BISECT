@@ -1196,5 +1196,174 @@ mod tests {
             "error message must contain 'demographics' to trigger fetch hint: {msg}"
         );
     }
+
+    // ── 15 new L0 tests: analyzer dispatch, missing analysis files, multi-type ─
+
+    /// resolve_types with a duplicate All entry behaves the same as single All.
+    #[test]
+    fn test_resolve_types_duplicate_all_same_as_single() {
+        let single = resolve_types(&[AnalyzerType::All]);
+        let dup = resolve_types(&[AnalyzerType::All, AnalyzerType::All]);
+        // Both must expand to concrete types; dup may not be longer than single
+        // (the second All is a no-op since we check any() for All)
+        assert_eq!(single.len(), dup.len(),
+            "duplicate All in input must not duplicate the expanded list");
+    }
+
+    /// resolve_types preserves explicit order when no All is present.
+    #[test]
+    fn test_resolve_types_preserves_explicit_order() {
+        let types = resolve_types(&[AnalyzerType::Urban, AnalyzerType::Demographic]);
+        assert_eq!(types[0], AnalyzerType::Urban);
+        assert_eq!(types[1], AnalyzerType::Demographic);
+    }
+
+    /// check_election_census_year_mismatch: 2008 election + 2020 plan → warns.
+    #[test]
+    fn test_election_year_mismatch_2008_with_2020_plan() {
+        let warning = check_election_census_year_mismatch(2008, "2020");
+        assert!(!warning.is_empty(), "2008 + 2020 plan must produce a warning");
+        assert!(warning.contains("2008"), "warning must mention election year 2008");
+    }
+
+    /// check_election_census_year_mismatch: 2004 election + 2020 plan → warns.
+    #[test]
+    fn test_election_year_mismatch_2004_with_2020_plan() {
+        let warning = check_election_census_year_mismatch(2004, "2020");
+        assert!(!warning.is_empty(), "2004 + 2020 plan must produce a warning");
+        assert!(warning.contains("2004"), "warning must mention election year 2004");
+    }
+
+    /// check_election_census_year_mismatch: 2018 election + 2010 plan → warns.
+    #[test]
+    fn test_election_year_mismatch_2018_with_2010_plan() {
+        let warning = check_election_census_year_mismatch(2018, "2010");
+        assert!(!warning.is_empty(), "2018 election + 2010 plan must produce a warning");
+    }
+
+    /// check_election_census_year_mismatch: 2022 election + 2010 plan → warns.
+    #[test]
+    fn test_election_year_mismatch_2022_with_2010_plan() {
+        let warning = check_election_census_year_mismatch(2022, "2010");
+        assert!(!warning.is_empty(), "2022 election + 2010 plan must produce a warning");
+    }
+
+    /// check_election_census_year_mismatch: 2012 election + 2010 plan → no warning.
+    #[test]
+    fn test_election_year_no_mismatch_2012_with_2010_plan() {
+        let warning = check_election_census_year_mismatch(2012, "2010");
+        assert!(warning.is_empty(),
+            "2012 election + 2010 plan (same boundary year) must not warn: {warning}");
+    }
+
+    /// check_election_census_year_mismatch: 2022 election + 2020 plan → no warning.
+    #[test]
+    fn test_election_year_no_mismatch_2022_with_2020_plan() {
+        let warning = check_election_census_year_mismatch(2022, "2020");
+        assert!(warning.is_empty(),
+            "2022 election + 2020 plan (same boundary year) must not warn: {warning}");
+    }
+
+    /// check_election_census_year_mismatch: 2016 election + 2000 plan → no explicit mismatch.
+    #[test]
+    fn test_election_year_2016_with_2000_plan_no_warning() {
+        // 2016 uses 2010 boundaries, 2000 plan uses 2000 boundaries.
+        // The mismatch check only explicitly handles 2010↔2020; 2000 is not a mismatch target.
+        let warning = check_election_census_year_mismatch(2016, "2000");
+        // Either way (warn or not) is acceptable — we just verify it doesn't panic.
+        let _ = warning;
+    }
+
+    /// resolve_types([Summary]) contains exactly Summary.
+    #[test]
+    fn test_resolve_types_summary_only() {
+        let types = resolve_types(&[AnalyzerType::Summary]);
+        assert_eq!(types, vec![AnalyzerType::Summary]);
+    }
+
+    /// resolve_types([Contiguity, Summary]) contains exactly those two types.
+    #[test]
+    fn test_resolve_types_two_explicit_types() {
+        let types = resolve_types(&[AnalyzerType::Contiguity, AnalyzerType::Summary]);
+        assert_eq!(types.len(), 2);
+        assert!(types.contains(&AnalyzerType::Contiguity));
+        assert!(types.contains(&AnalyzerType::Summary));
+    }
+
+    /// resolve_types([All]) does not contain BlocVoting unless all_concrete includes it.
+    #[test]
+    fn test_resolve_types_all_does_not_contain_all_variant() {
+        let types = resolve_types(&[AnalyzerType::All]);
+        assert!(!types.contains(&AnalyzerType::All),
+            "expanded All must not contain the All variant itself");
+    }
+
+    /// Missing plans directory produces a path-not-found hint, not a panic.
+    #[test]
+    fn test_missing_plans_dir_produces_path_not_found_hint() {
+        let plans_dir = std::path::PathBuf::from("/totally/nonexistent/path/plans");
+        let available_hint = if plans_dir.exists() {
+            "should not reach".to_string()
+        } else {
+            format!("\nPlans directory not found: {}", plans_dir.display())
+        };
+        assert!(available_hint.contains("not found"),
+            "missing plans directory must produce 'not found' hint: {available_hint}");
+        assert!(available_hint.contains("nonexistent"),
+            "hint must include the path: {available_hint}");
+    }
+
+    /// Empty plans directory produces a 'exists but is empty' hint.
+    #[test]
+    fn test_empty_plans_dir_produces_empty_hint() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plans_dir = tmp.path().to_path_buf();
+        // plans_dir exists but has no subdirectories
+        let available_hint = if plans_dir.exists() {
+            let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+                .ok()
+                .into_iter()
+                .flatten()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.path().is_dir())
+                .filter_map(|e| e.file_name().into_string().ok())
+                .take(10)
+                .collect();
+            labels.sort();
+            if labels.is_empty() {
+                format!("\nPlans directory exists but is empty: {}", plans_dir.display())
+            } else {
+                format!("\nAvailable plans: {}", labels.join(", "))
+            }
+        } else {
+            format!("\nPlans directory not found: {}", plans_dir.display())
+        };
+        assert!(available_hint.contains("empty"),
+            "empty plans directory must produce 'empty' hint: {available_hint}");
+    }
+
+    /// Plans directory with 3 subdirs lists them all.
+    #[test]
+    fn test_plans_dir_with_subdirs_lists_labels() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let plans_dir = tmp.path().to_path_buf();
+        for name in &["wa_congressional_2020", "or_congressional_2020", "ca_congressional_2020"] {
+            std::fs::create_dir(plans_dir.join(name)).unwrap();
+        }
+        let mut labels: Vec<String> = std::fs::read_dir(&plans_dir)
+            .ok()
+            .into_iter()
+            .flatten()
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().is_dir())
+            .filter_map(|e| e.file_name().into_string().ok())
+            .take(10)
+            .collect();
+        labels.sort();
+        assert_eq!(labels.len(), 3, "must list 3 plan directories");
+        assert!(labels.contains(&"wa_congressional_2020".to_string()));
+        assert!(labels.contains(&"or_congressional_2020".to_string()));
+        assert!(labels.contains(&"ca_congressional_2020".to_string()));
+    }
 }
 

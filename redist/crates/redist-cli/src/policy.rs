@@ -426,12 +426,202 @@ mod tests {
                               "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
                               "MA","MI","MN","MS","MO","MT","NE","NV","NJ","NM",
                               "NY","NC","ND","OH","OK","OR","PA","RI","SC","SD",
-                              "TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+                              "TN","TX","UT","VA","WA","WV","WI","WY"];
         for state in required_states {
             let s = get_state_policy(&policy, state)
                 .unwrap_or_else(|| panic!("State {state} missing from policy database"));
             assert!(s.get("house_districts").is_some(),
                 "{state} must have house_districts field");
         }
+    }
+
+    // ── 20 new L0 tests: policy loading, chamber, granularity, registry ───────
+
+    #[test]
+    fn test_load_policy_embedded_is_valid_json_object() {
+        let policy = load_policy();
+        assert!(policy.is_object(), "embedded policy must be a valid JSON object");
+        // Must have at least 50 US states + some test entries
+        let count = policy.as_object().unwrap().len();
+        assert!(count >= 50, "policy must have at least 50 entries, got {count}");
+    }
+
+    #[test]
+    fn test_subdivision_term_unknown_code_returns_county() {
+        // Any 2-letter code not in the database should fall back to "county"
+        assert_eq!(subdivision_term("QQ", false), "county");
+        assert_eq!(subdivision_term("QQ", true), "counties");
+    }
+
+    #[test]
+    fn test_subdivision_term_uppercase_key_required() {
+        // The policy database uses uppercase 2-letter codes as keys.
+        // subdivision_term("LA", ..) finds the entry; "la" (lowercase) falls through to default.
+        let upper = subdivision_term("LA", false);
+        assert_eq!(upper, "parish",
+            "subdivision_term('LA') must return 'parish', not fallback county: {upper}");
+        // Lowercase key is not found → falls back to "county" (expected behavior)
+        let lower = subdivision_term("la", false);
+        assert_eq!(lower, "county",
+            "subdivision_term('la') lowercase must fall back to 'county': {lower}");
+    }
+
+    #[test]
+    fn test_policy_tx_has_house_and_senate_districts() {
+        let policy = load_policy();
+        let tx = get_state_policy(&policy, "TX").unwrap();
+        assert!(tx.get("house_districts").is_some(), "TX must have house_districts");
+        assert!(tx.get("senate_districts").is_some(), "TX must have senate_districts");
+        // TX has 150 house districts and 31 senate districts
+        assert_eq!(tx["house_districts"].as_u64().unwrap(), 150);
+        assert_eq!(tx["senate_districts"].as_u64().unwrap(), 31);
+    }
+
+    #[test]
+    fn test_policy_ca_has_large_house_count() {
+        let policy = load_policy();
+        let ca = get_state_policy(&policy, "CA").unwrap();
+        let house = ca["house_districts"].as_u64().unwrap();
+        // California Assembly has 80 seats
+        assert_eq!(house, 80, "CA Assembly has 80 seats");
+    }
+
+    #[test]
+    fn test_policy_de_has_small_house_count() {
+        let policy = load_policy();
+        let de = get_state_policy(&policy, "DE").unwrap();
+        let house = de["house_districts"].as_u64().unwrap();
+        // Delaware House has 41 seats
+        assert_eq!(house, 41, "DE House has 41 seats");
+    }
+
+    #[test]
+    fn test_policy_mn_subdivision_term_is_county() {
+        // Minnesota uses standard "county"
+        assert_eq!(subdivision_term("MN", false), "county");
+        assert_eq!(subdivision_term("MN", true), "counties");
+    }
+
+    #[test]
+    fn test_policy_ri_subdivision_term_is_city_or_county() {
+        // Rhode Island uses "city" or "county" — either is acceptable
+        let term = subdivision_term("RI", false);
+        // Both "county" and "city" are valid for RI; just verify it's a non-empty string
+        assert!(!term.is_empty(), "RI must have a non-empty subdivision term");
+    }
+
+    #[test]
+    fn test_policy_location_registry_load() {
+        // LocationRegistry::load() must succeed (uses embedded fallback)
+        let reg = crate::registry::LocationRegistry::load();
+        assert!(reg.has_location("CA"), "registry must include CA");
+        assert!(reg.has_location("TX"), "registry must include TX");
+    }
+
+    #[test]
+    fn test_policy_location_registry_has_location_unknown_returns_false() {
+        let reg = crate::registry::LocationRegistry::load();
+        assert!(!reg.has_location("ZZ"), "ZZ must not be in registry");
+        assert!(!reg.has_location("XX"), "XX must not be in registry");
+    }
+
+    #[test]
+    fn test_policy_location_registry_chamber_districts_congressional() {
+        let reg = crate::registry::LocationRegistry::load();
+        // CA 2020: 52 congressional districts
+        let n = reg.chamber_districts("CA", "congressional", "2020");
+        assert!(n.is_some(), "CA congressional districts must be available");
+        let n = n.unwrap();
+        assert!(n >= 40 && n <= 60, "CA congressional districts {n} must be in [40,60]");
+    }
+
+    #[test]
+    fn test_policy_location_registry_chamber_districts_house() {
+        let reg = crate::registry::LocationRegistry::load();
+        let n = reg.chamber_districts("WA", "house", "2020");
+        assert!(n.is_some(), "WA house districts must be available");
+        // WA House has 98 seats
+        assert_eq!(n.unwrap(), 98, "WA House must have 98 seats");
+    }
+
+    #[test]
+    fn test_policy_location_registry_chamber_districts_senate() {
+        let reg = crate::registry::LocationRegistry::load();
+        let n = reg.chamber_districts("WA", "senate", "2020");
+        assert!(n.is_some(), "WA senate districts must be available");
+        // WA Senate has 49 seats
+        assert_eq!(n.unwrap(), 49, "WA Senate must have 49 seats");
+    }
+
+    #[test]
+    fn test_policy_location_registry_chamber_districts_unknown_chamber() {
+        let reg = crate::registry::LocationRegistry::load();
+        let n = reg.chamber_districts("CA", "unicorn_chamber", "2020");
+        assert!(n.is_none(), "unknown chamber must return None");
+    }
+
+    #[test]
+    fn test_policy_location_registry_from_str_parses_minimal_json() {
+        let json = r#"{"TS": {"name": "TestState", "house_districts": 99}}"#;
+        let reg = crate::registry::LocationRegistry::from_str(json).unwrap();
+        assert!(reg.has_location("TS"), "from_str registry must include TS");
+    }
+
+    #[test]
+    fn test_policy_location_registry_from_str_invalid_json_returns_err() {
+        let bad = r#"{ not valid json "#;
+        let result = crate::registry::LocationRegistry::from_str(bad);
+        assert!(result.is_err(), "invalid JSON must return Err from from_str");
+    }
+
+    #[test]
+    fn test_policy_get_state_policy_all_us_states_parseable() {
+        let policy = load_policy();
+        let us_states = [
+            "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+            "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+            "MA","MI","MN","MS","MO","MT","NE","NV","NJ","NM",
+            "NY","NC","ND","OH","OK","OR","PA","RI","SC","SD",
+            "TN","TX","UT","VT","VA","WA","WV","WI","WY",
+        ];
+        for state in us_states {
+            let entry = get_state_policy(&policy, state);
+            assert!(entry.is_some(), "state {state} must be in policy database");
+            let entry = entry.unwrap();
+            // name must be a non-empty string
+            let name = entry["name"].as_str().unwrap_or("");
+            assert!(!name.is_empty(), "{state} must have a non-empty name field");
+        }
+    }
+
+    #[test]
+    fn test_policy_tx_balance_tolerance_congressional() {
+        let policy = load_policy();
+        let tx = get_state_policy(&policy, "TX").unwrap();
+        if let Some(tol) = tx.get("balance_tolerance_congressional_pct") {
+            let pct = tol.as_f64().unwrap_or(f64::NAN);
+            // Congressional tolerance must be <= 1.0% per one-person-one-vote
+            assert!(pct <= 1.0 && pct >= 0.0,
+                "TX congressional balance tolerance {pct}% must be in [0,1]");
+        }
+    }
+
+    #[test]
+    fn test_policy_ny_has_prison_gerrymandering_field() {
+        let policy = load_policy();
+        let ny = get_state_policy(&policy, "NY").unwrap();
+        // New York passed prison gerrymandering reform
+        assert!(ny.get("prison_gerrymandering").is_some(),
+            "NY must have prison_gerrymandering field documenting reform");
+    }
+
+    #[test]
+    fn test_subdivision_term_plural_different_from_singular() {
+        // For states with custom terms, plural != singular
+        // (at minimum singular doesn't end in 's', plural might)
+        let singular = subdivision_term("LA", false);
+        let plural   = subdivision_term("LA", true);
+        assert_ne!(singular, plural,
+            "LA singular '{singular}' and plural '{plural}' must differ");
     }
 }

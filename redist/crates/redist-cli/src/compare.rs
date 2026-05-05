@@ -1184,4 +1184,211 @@ mod tests {
         assert_eq!(assignments["53033000200"], 2);
         assert_eq!(assignments["53033000300"], 1);
     }
+
+    // ── 15 new L0 tests: plan comparison metrics, Jaccard, missing plan errors ─
+
+    /// Missing plan label returns Err with descriptive message.
+    #[test]
+    fn test_load_plan_assignments_missing_plan_returns_err() {
+        let result = load_plan_assignments(
+            "completely_nonexistent_plan_xyz",
+            "outputs",
+            "v1",
+            "2020",
+            None,
+        );
+        assert!(result.is_err(), "missing plan label must return Err");
+    }
+
+    /// Error message from missing plan mentions the label.
+    #[test]
+    fn test_load_plan_assignments_missing_plan_error_mentions_label() {
+        let label = "nonexistent_plan_abc";
+        let err = load_plan_assignments(label, "outputs", "v1", "2020", None)
+            .unwrap_err()
+            .to_string();
+        assert!(err.contains(label),
+            "error message must mention the missing label '{label}': {err}");
+    }
+
+    /// rplan with missing 'assignments' field returns Err.
+    #[test]
+    fn test_rplan_missing_assignments_field_returns_err() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("bad.rplan");
+        let json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {"label": "x", "year": "2020"},
+            // no "assignments" key
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_err(), ".rplan without 'assignments' must return Err");
+    }
+
+    /// rplan with invalid (non-integer) district values returns Err.
+    #[test]
+    fn test_rplan_non_integer_district_value_returns_err() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("bad_vals.rplan");
+        let json = serde_json::json!({
+            "rplan_version": "0.1",
+            "metadata": {"label": "x", "year": "2020"},
+            "assignments": {
+                "53001000100": "not_a_number"  // string instead of int
+            }
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_err(), "non-integer assignment value must return Err");
+    }
+
+    /// GerryChain flat format with district 0 is handled.
+    #[test]
+    fn test_gerrychain_flat_format_district_zero() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("gc_zero.json");
+        let json = serde_json::json!({
+            "53001000100": 0,
+            "53001000200": 1,
+        });
+        std::fs::write(&path, json.to_string()).unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_ok(), "district 0 must be valid: {:?}", result.err());
+        let assignments = result.unwrap();
+        assert_eq!(assignments["53001000100"], 0);
+    }
+
+    /// sha256_hex produces a 64-char lowercase hex string.
+    #[test]
+    fn test_sha256_hex_produces_64_char_hex() {
+        let hash = sha256_hex(b"hello world");
+        assert_eq!(hash.len(), 64, "SHA-256 hex must be 64 chars");
+        assert!(hash.chars().all(|c| c.is_ascii_hexdigit()),
+            "SHA-256 hex must be all hex digits: {hash}");
+    }
+
+    /// sha256_hex is deterministic for the same input.
+    #[test]
+    fn test_sha256_hex_deterministic() {
+        let h1 = sha256_hex(b"redistricting");
+        let h2 = sha256_hex(b"redistricting");
+        assert_eq!(h1, h2, "SHA-256 must be deterministic");
+    }
+
+    /// sha256_hex differs for different inputs.
+    #[test]
+    fn test_sha256_hex_differs_for_different_inputs() {
+        let h1 = sha256_hex(b"plan_a");
+        let h2 = sha256_hex(b"plan_b");
+        assert_ne!(h1, h2, "different inputs must produce different SHA-256");
+    }
+
+    /// pick_civic_attribution: plan B tagged civic → B wins.
+    #[test]
+    fn test_pick_civic_attribution_b_wins_when_b_is_civic() {
+        let (typ, attr) = pick_civic_attribution(
+            None, "plan_a", None, None,
+            Some("civic_counter_proposal"), "civic_plan", Some("ACLU"), Some("2026-01-01"),
+        );
+        assert_eq!(typ.as_deref(), Some("civic_counter_proposal"));
+        let a = attr.unwrap();
+        assert_eq!(a.plan_label, "civic_plan");
+        assert_eq!(a.submitted_by, "ACLU");
+    }
+
+    /// pick_civic_attribution: only plan A tagged civic → A wins.
+    #[test]
+    fn test_pick_civic_attribution_a_wins_when_only_a_is_civic() {
+        let (typ, attr) = pick_civic_attribution(
+            Some("civic_counter_proposal"), "civic_plan_a", Some("NAACP"), Some("2026-02-01"),
+            None, "plan_b", None, None,
+        );
+        assert_eq!(typ.as_deref(), Some("civic_counter_proposal"));
+        let a = attr.unwrap();
+        assert_eq!(a.plan_label, "civic_plan_a");
+        assert_eq!(a.submitted_by, "NAACP");
+    }
+
+    /// pick_civic_attribution: neither tagged → both None.
+    #[test]
+    fn test_pick_civic_attribution_neither_tagged_returns_none() {
+        let (typ, attr) = pick_civic_attribution(
+            None, "plan_a", None, None,
+            None, "plan_b", None, None,
+        );
+        assert!(typ.is_none(), "no civic tag → submission_type must be None");
+        assert!(attr.is_none(), "no civic tag → attribution must be None");
+    }
+
+    /// resolve_plan_dir with nonexistent dir returns None.
+    #[test]
+    fn test_resolve_plan_dir_nonexistent_returns_none() {
+        let result = resolve_plan_dir(
+            "completely_nonexistent_label_xyz",
+            "outputs",
+            "v1",
+            "2020",
+            None,
+        );
+        assert!(result.is_none(),
+            "resolve_plan_dir for nonexistent label must return None");
+    }
+
+    /// resolve_plan_dir with a directory containing manifest.json returns Some.
+    #[test]
+    fn test_resolve_plan_dir_finds_manifest_in_directory() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        std::fs::write(tmp.path().join("manifest.json"), r#"{"label":"test"}"#).unwrap();
+        let result = resolve_plan_dir(
+            tmp.path().to_str().unwrap(),
+            "outputs",
+            "v1",
+            "2020",
+            None,
+        );
+        assert!(result.is_some(),
+            "resolve_plan_dir must find manifest.json in a real directory");
+    }
+
+    /// load_plan_assignments resolves from output_dir override.
+    #[test]
+    fn test_load_plan_assignments_from_output_dir_override() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Create: {tmp}/2020/plans/my_plan/data/final_assignments.json
+        let plan_data = tmp.path().join("2020").join("plans").join("my_plan").join("data");
+        std::fs::create_dir_all(&plan_data).unwrap();
+        let assignments = serde_json::json!({"53001000100": 1, "53001000200": 2});
+        std::fs::write(plan_data.join("final_assignments.json"), assignments.to_string()).unwrap();
+
+        let result = load_plan_assignments("my_plan", "outputs", "v1", "2020", Some(&tmp.path().to_path_buf()));
+        assert!(result.is_ok(), "output_dir override must find plan: {:?}", result.err());
+        let a = result.unwrap();
+        assert_eq!(a.len(), 2, "must load 2 assignments");
+    }
+
+    /// load_plan_assignments with JSON missing assignments key returns Err for .rplan.
+    #[test]
+    fn test_rplan_invalid_json_returns_err() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        let path = tmp.path().join("corrupt.rplan");
+        std::fs::write(&path, b"this is not json").unwrap();
+        let result = load_plan_assignments(path.to_str().unwrap(), "outputs", "v1", "2020", None);
+        assert!(result.is_err(), "corrupt .rplan JSON must return Err");
+    }
+
+    /// read_plan_year from manifest.json (non-rplan path).
+    #[test]
+    fn test_read_plan_year_from_manifest_json() {
+        let tmp = tempfile::TempDir::new().unwrap();
+        // Create: {tmp}/v1/2020/plans/my_plan/manifest.json
+        let plan_dir = tmp.path().join("v1").join("2020").join("plans").join("my_plan");
+        std::fs::create_dir_all(&plan_dir).unwrap();
+        let manifest = serde_json::json!({"label": "my_plan", "year": "2020", "state_code": "WA"});
+        std::fs::write(plan_dir.join("manifest.json"), manifest.to_string()).unwrap();
+
+        let year = read_plan_year("my_plan", tmp.path().to_str().unwrap(), "v1", "2020", None);
+        assert_eq!(year, Some("2020".to_string()),
+            "read_plan_year must read year from manifest.json");
+    }
 }
