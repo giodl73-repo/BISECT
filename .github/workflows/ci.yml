@@ -9,20 +9,23 @@ on:
     branches: [main, master]
 
 jobs:
-  test:
-    name: Test (${{ matrix.os }})
+  # ---------------------------------------------------------------------------
+  # Engine: c-ffi  (C METIS FFI via libmetis — default production engine)
+  # Requires libmetis installed.  Runs on Linux + macOS (Windows TBD).
+  # ---------------------------------------------------------------------------
+  test-engine-c-ffi:
+    name: Test / c-ffi engine (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
-
       - uses: dtolnay/rust-toolchain@stable
-
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: redist
+          key: c-ffi
 
       - name: Install METIS (Linux)
         if: runner.os == 'Linux'
@@ -32,12 +35,7 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install metis
 
-      # ── Per-crate test steps ──────────────────────────────────────────────
-      # Breaking by crate gives clear attribution when a crate's tests fail
-      # and lets each crate's --lib + --tests run together.
-      # redist-cli runs last with --test-threads=1 because its inline tests
-      # call set_current_dir() (process-global); parallel execution races → ENOENT.
-
+      # All crates except redist-cli run in parallel (no CWD issue).
       - name: Test redist-metis
         run: cargo test -p redist-metis --lib --tests
         working-directory: redist
@@ -54,7 +52,7 @@ jobs:
         run: cargo test -p redist-analysis --lib --tests
         working-directory: redist
 
-      - name: Test redist-apportion
+      - name: Test redist-apportion (c-ffi engine — requires libmetis)
         run: cargo test -p redist-apportion --lib --tests
         working-directory: redist
 
@@ -66,12 +64,77 @@ jobs:
         run: cargo test -p redist-report --lib --tests
         working-directory: redist
 
-      - name: Test redist-cli (serialised — CWD-sensitive inline tests)
-        # --lib  : inline #[cfg(test)] modules (label_cmd, run_registry, …)
-        # --tests: integration test files (spec7_pipeline_l2 is all #[ignore])
+      # redist-cli runs last with --test-threads=1: set_current_dir() is
+      # process-global; parallel tests race on CWD → ENOENT.
+      - name: Test redist-cli (c-ffi engine, serialised)
         run: cargo test -p redist-cli --lib --tests -- --test-threads=1
         working-directory: redist
 
+  # ---------------------------------------------------------------------------
+  # Engine: redist-metis  (pure-Rust METIS — no C dependency)
+  # No libmetis required.  Runs on all three platforms including Windows.
+  # ---------------------------------------------------------------------------
+  test-engine-redist-metis:
+    name: Test / redist-metis engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    env:
+      # Tell redist-apportion tests to use the pure-Rust engine.
+      REDIST_METIS_ENGINE: redist-metis
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: redist
+          key: redist-metis
+
+      # No METIS install step — that is the whole point of this job.
+
+      - name: Test redist-metis (pure-Rust engine — no C dep)
+        run: cargo test -p redist-metis --lib --tests
+        working-directory: redist
+
+      - name: Test redist-core
+        run: cargo test -p redist-core --lib --tests
+        working-directory: redist
+
+      - name: Test redist-data
+        run: cargo test -p redist-data --lib --tests
+        working-directory: redist
+
+      - name: Test redist-analysis
+        run: cargo test -p redist-analysis --lib --tests
+        working-directory: redist
+
+      # redist-apportion links C METIS unconditionally (MetisEngine::CFfi is
+      # used in the default MetisPartitioner::default()).  On this job we have
+      # no libmetis, so skip redist-apportion — its pure-Rust path is covered
+      # by the redist-metis crate tests above.
+      # TODO: add a Cargo feature that makes the C METIS dependency optional so
+      # redist-apportion can be tested with --features redist-metis-only.
+
+      - name: Test redist-map
+        run: cargo test -p redist-map --lib --tests
+        working-directory: redist
+
+      - name: Test redist-report
+        run: cargo test -p redist-report --lib --tests
+        working-directory: redist
+
+      - name: Test redist-cli (redist-metis engine, serialised)
+        # redist-apportion is a dependency of redist-cli, so this build still
+        # links C METIS.  On windows-latest this may fail if libmetis is not
+        # available — the matrix will surface that clearly.
+        run: cargo test -p redist-cli --lib --tests -- --test-threads=1
+        working-directory: redist
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
+
+  # ---------------------------------------------------------------------------
+  # Release builds (tag-triggered only)
+  # ---------------------------------------------------------------------------
   build:
     name: Build release (${{ matrix.os }})
     if: startsWith(github.ref, 'refs/tags/v')
@@ -96,12 +159,18 @@ jobs:
               redist/target/release/redist-tui
     steps:
       - uses: actions/checkout@v4
-
       - uses: dtolnay/rust-toolchain@stable
-
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: redist
+
+      - name: Install METIS (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y libmetis-dev
+
+      - name: Install METIS (macOS)
+        if: runner.os == 'macOS'
+        run: brew install metis
 
       - name: Build release binaries
         run: cargo build --release -p redist-cli -p redist-tui

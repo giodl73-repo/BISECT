@@ -51,15 +51,42 @@ redist ls
 
 ## The three-layer compositor
 
-Every `redist` run is fully described by three independent choices:
+Every `redist` run is fully described by four independent choices:
 
 | Layer | Flag | What it controls |
 |-------|------|-----------------|
+| **Engine** | `--metis-engine` | *Which* METIS implementation runs the graph partitioning |
 | **Structure** | `--structure` | *How* the bisection tree is organized |
 | **Weights** | `--weights-override` | *What* graph signal METIS optimises |
 | **Search** | `--search` | *How* the seed space is explored |
 
-These three choices are orthogonal. You can mix any structure with any weights and any search strategy.
+These choices are orthogonal — any engine works with any structure, weights, and search strategy.
+
+### METIS engines (`--metis-engine`)
+
+Three implementations are available. The engine is also selectable in the YAML config via `engine:`.
+
+| Value | Aliases | Backend | System requirement | Notes |
+|-------|---------|---------|-------------------|-------|
+| `c-ffi` | `c`, `metis-rs` | `metis` Rust FFI crate → C METIS library | `libmetis.so/.dll/.dylib` installed | **Default.** Battle-tested, handles all k values including prime k without stalling. |
+| `redist-metis` | `rust` | Pure-Rust METIS (`redist-metis` crate) | None — no C dependency | Fully portable standalone binary. May stall on prime k for large graphs (>1000 tracts). Use when shipping `redist.exe` without system libs. |
+| `gpmetis` | `subprocess` | External `gpmetis` binary | `gpmetis` on PATH | Reserved — returns a clear error today. Planned for environments where only the gpmetis binary is available. |
+
+**For portable distribution**: build with `--metis-engine redist-metis` (or set `engine: redist-metis` in your config YAML). The resulting binary requires no installed METIS and runs on any machine.
+
+**For production runs** (official proposal, 50-state sweeps): use the default `c-ffi`. It handles all edge cases including prime district counts like PA (k=17).
+
+```bash
+# Portable run — no libmetis required
+redist state --state VT --year 2020 --version vt_test --metis-engine redist-metis
+
+# Default C METIS FFI (explicit)
+redist state --state PA --year 2020 --version pa_v1 --metis-engine c-ffi
+
+# In YAML config
+# algorithm:
+#   engine: redist-metis   # or c-ffi (default), gpmetis (reserved)
+```
 
 ### Structure modes (`--structure`)
 
