@@ -194,22 +194,6 @@ def make_disconnected_plan():
     return _make
 
 
-# ---------------------------------------------------------------------------
-# Files to exclude from collection entirely.
-#
-# These test files import from apportionment.partition.* (Python algorithm
-# library archived 2026-04-29 → archive/python-pipeline-final/).  Listing
-# them here prevents pytest from even trying to open/parse them, which means
-# ImportError and SyntaxError inside those files cannot surface as collection
-# errors.  They remain in the repo as forensic reference only.
-# ---------------------------------------------------------------------------
-collect_ignore = [
-    "unit/test_ablation_analysis.py",
-    "unit/test_vra_recursive_bisection.py",
-    "unit/test_vra_targets.py",
-]
-
-
 def pytest_configure(config):
     """Pytest configuration hook."""
     # Ensure tests directory is in Python path
