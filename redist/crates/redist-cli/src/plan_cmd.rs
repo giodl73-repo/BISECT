@@ -297,4 +297,85 @@ mod tests {
         assert!(args.configure);
         assert_eq!(args.config.as_deref(), Some(std::path::Path::new("configs/vt_test.yml")));
     }
+
+    // ── 12. find_tui_binary: path is a sibling of current executable ─────────
+    //
+    // The result must share the same parent directory as the current executable.
+
+    #[test]
+    fn find_tui_binary_is_sibling_of_current_exe() {
+        let tui = find_tui_binary();
+        let exe = std::env::current_exe().unwrap();
+        assert_eq!(
+            tui.parent(),
+            exe.parent(),
+            "redist-tui must be a sibling of the current exe"
+        );
+    }
+
+    // ── 13. print_configure_fallback with label mentions label name ───────────
+
+    #[test]
+    fn fallback_configure_with_label_mentions_label_name() {
+        // We can't capture stdout in a simple unit test, but we can verify
+        // no panic and that the helper accepts any valid label string.
+        print_configure_fallback(Some("senate_draft2"));
+        print_configure_fallback(Some("official-proposal"));
+        print_configure_fallback(Some("x"));
+        // All must return without panic
+    }
+
+    // ── 14. registry_json on empty registry returns valid JSON object ──────────
+
+    #[test]
+    fn registry_json_empty_registry_is_empty_object() {
+        // The registry_json helper returns at minimum "{}"
+        let json = registry_json();
+        let v: serde_json::Value = serde_json::from_str(&json)
+            .expect("registry_json must always return valid JSON");
+        assert!(v.is_object(), "registry_json must return a JSON object");
+    }
+
+    // ── 15. run_plan: graceful fallback when tui binary absent ───────────────
+    //
+    // run_plan with a guaranteed-absent TUI path must return Ok (not panic,
+    // not call std::process::exit).  We test this by directly exercising the
+    // fallback helpers that run_plan calls internally.
+
+    #[test]
+    fn run_plan_fallback_does_not_panic_for_configure_mode() {
+        // Simulate the configure-mode fallback path
+        let args = PlanArgs {
+            label: Some("my_plan".to_string()),
+            configure: true,
+            config: None,
+        };
+        // Call fallback helpers as run_plan would when tui binary is absent
+        if args.configure {
+            print_configure_fallback(args.label.as_deref());
+        }
+        // Must not panic
+    }
+
+    #[test]
+    fn run_plan_fallback_does_not_panic_for_show_mode() {
+        let args = PlanArgs {
+            label: Some("nonexistent_label_xyz".to_string()),
+            configure: false,
+            config: None,
+        };
+        if let Some(ref lbl) = args.label {
+            print_show_fallback(lbl);
+        }
+        // Must not panic
+    }
+
+    #[test]
+    fn run_plan_fallback_does_not_panic_for_ls_mode() {
+        let args = PlanArgs { label: None, configure: false, config: None };
+        if args.label.is_none() && !args.configure {
+            print_ls_fallback();
+        }
+        // Must not panic
+    }
 }

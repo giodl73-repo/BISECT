@@ -330,4 +330,95 @@ mod tests {
             PathBuf::from("reports/official_proposal/index.json")
         );
     }
+
+    // ── validate_label_name — error message format (HIGH) ────────────────────
+
+    /// The [CONFIG] error for reserved names must include the reserved-name hint.
+    #[test]
+    fn invalid_reserved_error_message_format() {
+        let err = validate_label_name("configs").unwrap_err();
+        // Must name the label and say "reserved"
+        assert!(err.contains("configs"),   "error must name the label: {err}");
+        assert!(err.contains("reserved"),  "error must say 'reserved': {err}");
+    }
+
+    /// Invalid-character error must name both the label AND the bad character.
+    #[test]
+    fn invalid_char_error_names_bad_character() {
+        let err = validate_label_name("my@label").unwrap_err();
+        assert!(err.contains("my@label"), "error must name the label: {err}");
+        assert!(err.contains('@'),        "error must name the bad char: {err}");
+    }
+
+    /// Dot-prefix error message must name the label.
+    #[test]
+    fn invalid_dot_prefix_error_names_label() {
+        let err = validate_label_name(".gitignore").unwrap_err();
+        assert!(err.contains(".gitignore"), "error must name the label: {err}");
+    }
+
+    // ── validate_label_name — boundary / edge cases (MEDIUM) ─────────────────
+
+    /// A label that is all hyphens (valid — hyphens are allowed).
+    #[test]
+    fn valid_all_hyphens() {
+        assert!(validate_label_name("---").is_ok());
+    }
+
+    /// A label that is all underscores (valid).
+    #[test]
+    fn valid_all_underscores() {
+        assert!(validate_label_name("___").is_ok());
+    }
+
+    /// Uppercase letters are valid.
+    #[test]
+    fn valid_uppercase_letters() {
+        assert!(validate_label_name("MyPlan").is_ok());
+    }
+
+    /// A tab character is rejected.
+    #[test]
+    fn invalid_tab_character() {
+        let err = validate_label_name("my\tlabel").unwrap_err();
+        assert!(err.contains('\t'), "error must name the tab char: {err}");
+    }
+
+    /// A null byte is rejected.
+    #[test]
+    fn invalid_null_byte() {
+        let err = validate_label_name("my\x00label").unwrap_err();
+        assert!(err.contains('\x00') || err.contains("invalid"),
+            "error must mention the invalid character: {err}");
+    }
+
+    /// The ".redist" reserved name hits the dot-prefix rule before the reserved check.
+    #[test]
+    fn invalid_redist_hits_dot_rule_first() {
+        let err = validate_label_name(".redist").unwrap_err();
+        // Must be caught by the dot-prefix rule (checked before reserved list)
+        assert!(err.contains("'.'"), "dot-prefix rule must fire first: {err}");
+    }
+
+    // ── Path helpers — additional combinations (MEDIUM) ───────────────────────
+
+    /// state_analysis_dir with hyphenated label.
+    #[test]
+    fn state_analysis_dir_hyphenated_label() {
+        assert_eq!(
+            super::state_analysis_dir("senate-draft2", "2010", "texas"),
+            PathBuf::from("analysis/senate-draft2/2010/texas")
+        );
+    }
+
+    /// year_reports_dir with multi-word state.
+    #[test]
+    fn year_reports_dir_multiword_state() {
+        // state lives at the next level, not part of year_reports_dir, but test
+        // the function doesn't strip path separators from label
+        assert_eq!(
+            super::year_reports_dir("x", "2000"),
+            PathBuf::from("reports/x/2000")
+        );
+    }
 }

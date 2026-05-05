@@ -626,4 +626,165 @@ mod tests {
             assert!(msg.contains("nonexistent"), "must name the missing label: {msg}");
         });
     }
+
+    // ── 21. require_built succeeds when year IS built ─────────────────────────
+    //
+    // The happy path of require_built was never tested (only the error path was).
+
+    #[test]
+    fn test_require_built_succeeds_when_year_is_built() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2020").unwrap();
+            let result = Registry::require_built("lbl", "2020");
+            assert!(result.is_ok(), "require_built must succeed when year is built: {:?}", result);
+        });
+    }
+
+    // ── 22. require_analyzed succeeds when year IS analyzed ───────────────────
+
+    #[test]
+    fn test_require_analyzed_succeeds_when_year_is_analyzed() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2020").unwrap();
+            Registry::mark_analyzed("lbl", "2020").unwrap();
+            let result = Registry::require_analyzed("lbl", "2020");
+            assert!(result.is_ok(), "require_analyzed must succeed when year is analyzed: {:?}", result);
+        });
+    }
+
+    // ── 23. mark_analyzed idempotent ─────────────────────────────────────────
+    //
+    // Calling mark_analyzed twice for the same year must not create a duplicate.
+
+    #[test]
+    fn test_mark_analyzed_idempotent() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2020").unwrap();
+            Registry::mark_analyzed("lbl", "2020").unwrap();
+            Registry::mark_analyzed("lbl", "2020").unwrap();
+            let entry = Registry::get("lbl").unwrap().unwrap();
+            assert_eq!(
+                entry.analyzed.iter().filter(|y| *y == "2020").count(),
+                1,
+                "analyzed list must not contain duplicate 2020"
+            );
+        });
+    }
+
+    // ── 24. mark_reported idempotent ─────────────────────────────────────────
+
+    #[test]
+    fn test_mark_reported_idempotent() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2020").unwrap();
+            Registry::mark_analyzed("lbl", "2020").unwrap();
+            Registry::mark_reported("lbl", "2020").unwrap();
+            Registry::mark_reported("lbl", "2020").unwrap();
+            let entry = Registry::get("lbl").unwrap().unwrap();
+            assert_eq!(
+                entry.reported.iter().filter(|y| *y == "2020").count(),
+                1,
+                "reported list must not contain duplicate 2020"
+            );
+        });
+    }
+
+    // ── 25. require_built: label exists but year missing → [CONFIG] ───────────
+    //
+    // Distinct from test 14 where the label itself is absent; here the label
+    // exists but is built for a DIFFERENT year.
+
+    #[test]
+    fn test_require_built_label_exists_but_wrong_year() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2010").unwrap();  // built for 2010, not 2020
+            let result = Registry::require_built("lbl", "2020");
+            assert!(result.is_err(), "must error when year not in built list");
+            let msg = result.unwrap_err();
+            assert!(msg.contains("[CONFIG]"),  "[CONFIG] prefix required: {msg}");
+            assert!(msg.contains("2020"),      "must name the missing year: {msg}");
+            assert!(msg.contains("redist build"), "must suggest fix: {msg}");
+        });
+    }
+
+    // ── 26. require_analyzed: label exists but year not analyzed → [CONFIG] ──
+
+    #[test]
+    fn test_require_analyzed_label_exists_but_wrong_year() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2010").unwrap();
+            Registry::mark_analyzed("lbl", "2010").unwrap();
+            // 2020 is built but not analyzed for lbl (actually not even built)
+            let result = Registry::require_analyzed("lbl", "2020");
+            assert!(result.is_err(), "must error when year not analyzed");
+            let msg = result.unwrap_err();
+            assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+            assert!(msg.contains("redist analyze"), "must suggest fix: {msg}");
+        });
+    }
+
+    // ── 27. mark_reported error message contains [CONFIG] and redist analyze ──
+    //
+    // Verify the exact format of the error for the report prerequisite guard.
+
+    #[test]
+    fn test_mark_reported_error_message_format() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("my_plan", "2020").unwrap();
+            let result = Registry::mark_reported("my_plan", "2020");
+            assert!(result.is_err());
+            let msg = result.unwrap_err();
+            assert!(msg.contains("[CONFIG]"),       "[CONFIG] prefix required: {msg}");
+            assert!(msg.contains("my_plan"),        "must name the label: {msg}");
+            assert!(msg.contains("2020"),           "must name the year: {msg}");
+            assert!(msg.contains("redist analyze"), "must suggest the fix: {msg}");
+        });
+    }
+
+    // ── 28. invalidate_year on label that does not exist is a no-op ───────────
+    //
+    // If the label is not in the registry, invalidate_year must succeed silently.
+
+    #[test]
+    fn test_invalidate_year_on_absent_label_is_noop() {
+        let _dir = with_tempdir(|| {
+            let result = Registry::invalidate_year("ghost_label", "2020");
+            assert!(result.is_ok(), "invalidate_year on absent label must succeed: {:?}", result);
+            // Registry should still be empty
+            let labels = Registry::list_labels().unwrap();
+            assert!(labels.is_empty(), "registry must remain empty: {labels:?}");
+        });
+    }
+
+    // ── 29. mark_built multiple years for one label ───────────────────────────
+
+    #[test]
+    fn test_mark_built_multiple_years() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("lbl", "2020").unwrap();
+            Registry::mark_built("lbl", "2010").unwrap();
+            Registry::mark_built("lbl", "2000").unwrap();
+            let entry = Registry::get("lbl").unwrap().unwrap();
+            assert!(entry.built.contains(&"2020".to_string()), "2020 must be built");
+            assert!(entry.built.contains(&"2010".to_string()), "2010 must be built");
+            assert!(entry.built.contains(&"2000".to_string()), "2000 must be built");
+        });
+    }
+
+    // ── 30. Registry round-trips through JSON: .redist is valid JSON ──────────
+
+    #[test]
+    fn test_registry_is_valid_json_after_mutations() {
+        let _dir = with_tempdir(|| {
+            Registry::mark_built("plan_x", "2020").unwrap();
+            Registry::mark_analyzed("plan_x", "2020").unwrap();
+
+            let content = std::fs::read_to_string(".redist")
+                .expect(".redist must exist after mutations");
+            let v: serde_json::Value = serde_json::from_str(&content)
+                .expect(".redist must be valid JSON");
+            assert!(v.is_object(), ".redist must be a JSON object");
+            assert!(v.get("plan_x").is_some(), "plan_x must appear in JSON");
+        });
+    }
 }

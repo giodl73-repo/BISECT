@@ -920,4 +920,414 @@ algorithm:
         let err = result.unwrap_err();
         assert!(err.contains("[CONFIG]"), "error must contain [CONFIG]: {err}");
     }
+
+    // ── Test 22: structure "standard-bisect" maps to SplitStrategy::Bisect ──
+
+    #[test]
+    fn test_structure_standard_bisect_maps_correctly() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: standard-bisect
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(
+            matches!(algo.split, SplitStrategy::Bisect),
+            "standard-bisect must map to SplitStrategy::Bisect, got: {:?}", algo.split
+        );
+    }
+
+    // ── Test 23: structure "nway" maps to SplitStrategy::NWay ───────────────
+
+    #[test]
+    fn test_structure_nway_maps_correctly() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: nway
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(
+            matches!(algo.split, SplitStrategy::NWay),
+            "nway must map to SplitStrategy::NWay, got: {:?}", algo.split
+        );
+    }
+
+    // ── Test 24: structure "ratio-optimal-area" uses default area_swing 0.10 ─
+
+    #[test]
+    fn test_structure_ratio_optimal_area_default_area_swing() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: ratio-optimal-area
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        match algo.split {
+            SplitStrategy::AreaSection { area_swing } => {
+                assert!(
+                    (area_swing - 0.10).abs() < 1e-9,
+                    "default area_swing must be 0.10, got: {area_swing}"
+                );
+            }
+            other => panic!("expected AreaSection, got: {:?}", other),
+        }
+    }
+
+    // ── Test 25: structure "ratio-optimal-vra" uses default w_vra 0.40 ───────
+
+    #[test]
+    fn test_structure_ratio_optimal_vra_default_w_vra() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: ratio-optimal-vra
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        match algo.split {
+            SplitStrategy::VraSection { w_vra } => {
+                assert!(
+                    (w_vra - 0.40).abs() < 1e-9,
+                    "default w_vra must be 0.40, got: {w_vra}"
+                );
+            }
+            other => panic!("expected VraSection, got: {:?}", other),
+        }
+    }
+
+    // ── Test 26: structure "compact-polsby" maps to CompactBisect ────────────
+
+    #[test]
+    fn test_structure_compact_polsby_maps_correctly() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: compact-polsby
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(
+            matches!(algo.split, SplitStrategy::CompactBisect { .. }),
+            "compact-polsby must map to SplitStrategy::CompactBisect, got: {:?}", algo.split
+        );
+    }
+
+    // ── Test 27: weights "unweighted" → geographic=false, alpha=0.0 ──────────
+
+    #[test]
+    fn test_weights_unweighted_disables_geographic() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  weights: unweighted
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(!algo.weights.geographic, "unweighted must set geographic=false");
+        assert_eq!(algo.weights.alpha_county, 0.0, "unweighted must have alpha_county=0.0");
+    }
+
+    // ── Test 28: weights "vra-aligned" sets minority_weighting=true ──────────
+
+    #[test]
+    fn test_weights_vra_aligned_sets_minority_weighting() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  weights: vra-aligned
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        assert!(algo.weights.minority_weighting, "vra-aligned must set minority_weighting=true");
+        assert!(algo.weights.geographic, "vra-aligned must also set geographic=true");
+    }
+
+    // ── Test 29: search "multi" with no seeds → defaults to 50 ───────────────
+
+    #[test]
+    fn test_search_multi_without_seeds_defaults_to_50() {
+        use crate::runner::SeedCompositor;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: multi
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        match &algo.seeds {
+            SeedCompositor::Multi { seeds } => {
+                assert_eq!(*seeds, 50, "default seeds for multi must be 50");
+            }
+            other => panic!("expected Multi, got: {:?}", other),
+        }
+    }
+
+    // ── Test 30: unknown search → [CONFIG] error names the bad value ──────────
+
+    #[test]
+    fn test_unknown_search_error_names_bad_value() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: turbo-search
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let err = doc.to_algorithm_config().unwrap_err();
+        assert!(err.contains("[CONFIG]"), "[CONFIG] prefix required: {err}");
+        assert!(err.contains("turbo-search"), "error must name the bad value: {err}");
+    }
+
+    // ── Test 31: resolved_workers respects explicit value ─────────────────────
+
+    #[test]
+    fn test_resolved_workers_respects_explicit_value() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: single
+workers: 12
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        assert_eq!(doc.resolved_workers(), 12, "explicit workers value must be respected");
+    }
+
+    // ── Test 32: resolved_years respects single-year config ───────────────────
+
+    #[test]
+    fn test_resolved_years_single_year() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: single
+years: ["2020"]
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let years = doc.resolved_years();
+        assert_eq!(years, vec!["2020"], "single-year config must resolve to [2020]");
+    }
+
+    // ── Test 33: resolved_analysis_types defaults to compactness/splits/summary
+
+    #[test]
+    fn test_resolved_analysis_types_defaults() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let types = doc.resolved_analysis_types();
+        assert!(types.contains(&"compactness".to_string()), "default types must include compactness: {types:?}");
+        assert!(types.contains(&"splits".to_string()),      "default types must include splits: {types:?}");
+        assert!(types.contains(&"summary".to_string()),     "default types must include summary: {types:?}");
+    }
+
+    // ── Test 34: resolved_analysis_types respects config value ────────────────
+
+    #[test]
+    fn test_resolved_analysis_types_respects_config() {
+        let yaml = r#"
+name: test
+algorithm:
+  structure: apportion-regions
+  search: single
+analysis_types: [demographic, summary]
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let types = doc.resolved_analysis_types();
+        assert_eq!(types, vec!["demographic", "summary"],
+            "configured analysis_types must be returned: {types:?}");
+    }
+
+    // ── Test 35: file_sha256 on missing file → [CONFIG] error ─────────────────
+
+    #[test]
+    fn test_file_sha256_missing_file_returns_config_error() {
+        let result = AlgoYaml::file_sha256(std::path::Path::new("/nonexistent/config_xyz.yml"));
+        assert!(result.is_err(), "sha256 of missing file must fail");
+        let err = result.unwrap_err();
+        assert!(err.contains("[CONFIG]"), "[CONFIG] prefix required: {err}");
+    }
+
+    // ── Test 36: from_file on missing file → [CONFIG] error ──────────────────
+
+    #[test]
+    fn test_from_file_missing_file_returns_config_error() {
+        let result = AlgoYaml::from_file(std::path::Path::new("/nonexistent/config_xyz.yml"));
+        assert!(result.is_err(), "loading missing file must fail");
+        let err = result.unwrap_err();
+        assert!(err.contains("[CONFIG]"), "[CONFIG] prefix required: {err}");
+    }
+
+    // ── Test 37: description field is optional and preserved ─────────────────
+
+    #[test]
+    fn test_description_field_is_optional_and_preserved() {
+        let yaml = r#"
+name: test
+description: "A detailed test plan for redistricting."
+algorithm:
+  structure: apportion-regions
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        assert_eq!(
+            doc.description.as_deref(),
+            Some("A detailed test plan for redistricting."),
+            "description must be preserved when present"
+        );
+    }
+
+    // ── Test 38: area_swing explicit value is used ────────────────────────────
+
+    #[test]
+    fn test_structure_area_section_custom_area_swing() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: ratio-optimal-area
+  area_swing: 0.25
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        match algo.split {
+            SplitStrategy::AreaSection { area_swing } => {
+                assert!(
+                    (area_swing - 0.25).abs() < 1e-9,
+                    "explicit area_swing 0.25 must be used, got: {area_swing}"
+                );
+            }
+            other => panic!("expected AreaSection, got: {:?}", other),
+        }
+    }
+
+    // ── Test 39: w_vra explicit value is used ────────────────────────────────
+
+    #[test]
+    fn test_structure_vra_section_custom_w_vra() {
+        use crate::runner::SplitStrategy;
+        let yaml = r#"
+name: test
+algorithm:
+  structure: ratio-optimal-vra
+  w_vra: 0.60
+  search: single
+"#;
+        let f = write_yaml(yaml);
+        let doc = AlgoYaml::from_file(f.path()).unwrap();
+        let algo = doc.to_algorithm_config().unwrap();
+        match algo.split {
+            SplitStrategy::VraSection { w_vra } => {
+                assert!(
+                    (w_vra - 0.60).abs() < 1e-9,
+                    "explicit w_vra 0.60 must be used, got: {w_vra}"
+                );
+            }
+            other => panic!("expected VraSection, got: {:?}", other),
+        }
+    }
+
+    // ── Test 40: write_template_config: force overwrites existing file ────────
+
+    #[test]
+    fn test_write_template_config_force_overwrites() {
+        use tempfile::TempDir;
+        let tmp = TempDir::new().unwrap();
+        let out_path = tmp.path().join("my_plan.yml");
+
+        // Write a first time
+        let years = vec!["2020".to_string()];
+        write_template_config(
+            "my_plan", "apportion-regions", None, None, Some("single"),
+            None, None, None, &years, 4, Some(&out_path), false, false
+        ).unwrap();
+        assert!(out_path.exists(), "file must be written on first call");
+
+        // Write a second time without force — must fail
+        let result = write_template_config(
+            "my_plan", "apportion-regions", None, None, Some("single"),
+            None, None, None, &years, 4, Some(&out_path), false, false
+        );
+        assert!(result.is_err(), "second write without force must fail");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("--force"), "error must mention --force: {msg}");
+
+        // Write a third time WITH force — must succeed
+        let result = write_template_config(
+            "my_plan", "apportion-regions", None, None, Some("single"),
+            None, None, None, &years, 4, Some(&out_path), true, false
+        );
+        assert!(result.is_ok(), "write with force must succeed: {:?}", result);
+    }
+
+    // ── Test 41: write_template_config with invalid structure → error ─────────
+
+    #[test]
+    fn test_write_template_config_invalid_structure_returns_error() {
+        let years = vec!["2020".to_string()];
+        let result = write_template_config(
+            "my_plan", "flying-saucer", None, None, Some("single"),
+            None, None, None, &years, 4, None, false, true // dry_run
+        );
+        assert!(result.is_err(), "invalid structure must fail config generation");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("[CONFIG]"), "[CONFIG] prefix required: {msg}");
+    }
+
+    // ── Test 42: balance_tolerance default 0.5 appears in template ───────────
+
+    #[test]
+    fn test_write_template_config_default_balance_tolerance() {
+        let years = vec!["2020".to_string()];
+        let content = write_template_config(
+            "my_plan", "apportion-regions", None, None, Some("single"),
+            None, None, None, // balance_tolerance=None → default 0.5
+            &years, 4, None, false, true // dry_run
+        ).unwrap();
+        assert!(
+            content.contains("balance_tolerance: 0.5"),
+            "default balance_tolerance 0.5 must appear in template: {content}"
+        );
+    }
 }

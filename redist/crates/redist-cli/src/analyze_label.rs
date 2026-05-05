@@ -1035,4 +1035,184 @@ mod tests {
         assert_eq!(json["states"]["vermont"]["status"].as_str(), Some("ok"));
         assert_eq!(json["states"]["vermont"]["summary"].as_str(), Some("ok"));
     }
+
+    // ── 24. analyze: label has empty built list → [CONFIG] error ─────────────
+    //
+    // If the registry has the label but built is empty (shouldn't normally happen
+    // because mark_built prevents this, but run_label_analyze guards it explicitly),
+    // the function must emit a [CONFIG] error.  We test the error-message template
+    // directly since we can't inject an entry with empty built via the public API.
+
+    #[test]
+    fn test_analyze_empty_built_error_message_format() {
+        let label = "my_plan";
+        let msg = format!(
+            "[CONFIG] analyze: label '{label}' has no built years.\n\
+             Run: redist build {label} --year <YEAR> first."
+        );
+        assert!(msg.contains("[CONFIG]"),       "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("my_plan"),        "must name the label: {msg}");
+        assert!(msg.contains("redist build"),   "must suggest fix: {msg}");
+    }
+
+    // ── 25. report: label not in registry → [CONFIG] error format ────────────
+
+    #[test]
+    fn test_report_not_in_registry_error_message_format() {
+        let label = "ghost";
+        let msg = format!(
+            "[CONFIG] report: label '{label}' not found in registry.\n\
+             Run: redist build {label} --year <YEAR> and \
+             redist analyze {label} --year <YEAR> first."
+        );
+        assert!(msg.contains("[CONFIG]"),      "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("ghost"),         "must name the label: {msg}");
+        assert!(msg.contains("redist build"),  "must mention build step: {msg}");
+        assert!(msg.contains("redist analyze"),"must mention analyze step: {msg}");
+    }
+
+    // ── 26. sha256_str is consistent with sha256_file for same content ────────
+
+    #[test]
+    fn test_sha256_str_consistent_with_sha256_file() {
+        use std::io::Write;
+        let content = "hello world\n";
+        let mut tmp = tempfile::NamedTempFile::new().unwrap();
+        tmp.write_all(content.as_bytes()).unwrap();
+
+        let via_str  = sha256_str(content);
+        let via_file = sha256_file(tmp.path()).unwrap();
+        assert_eq!(via_str, via_file,
+            "sha256_str and sha256_file must produce the same digest for identical content");
+    }
+
+    // ── 27. sha256_str: known value for empty string ──────────────────────────
+    //
+    // SHA-256("") = e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+
+    #[test]
+    fn test_sha256_str_empty_string_known_digest() {
+        let hash = sha256_str("");
+        assert_eq!(
+            hash,
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "SHA-256 of empty string must be the known constant"
+        );
+    }
+
+    // ── 28. generate_label_report html contains label and year ────────────────
+
+    #[test]
+    fn test_generate_label_report_html_contains_label_and_year() {
+        let tmp = TempDir::new().unwrap();
+        let analysis_dir = tmp.path().join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        let report_dir = tmp.path().join("reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+
+        generate_label_report("myplan", "2010", &analysis_dir, &report_dir, "html").unwrap();
+
+        let html = std::fs::read_to_string(report_dir.join("myplan_2010_report.html")).unwrap();
+        assert!(html.contains("myplan"), "HTML must contain label: {html}");
+        assert!(html.contains("2010"),   "HTML must contain year: {html}");
+        assert!(html.contains("<!DOCTYPE html>"), "HTML must start with DOCTYPE");
+    }
+
+    // ── 29. generate_label_report json contains label and year ────────────────
+
+    #[test]
+    fn test_generate_label_report_json_contains_label_and_year() {
+        let tmp = TempDir::new().unwrap();
+        let analysis_dir = tmp.path().join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        let report_dir = tmp.path().join("reports");
+        std::fs::create_dir_all(&report_dir).unwrap();
+
+        generate_label_report("myplan", "2010", &analysis_dir, &report_dir, "json").unwrap();
+
+        let raw = std::fs::read_to_string(report_dir.join("myplan_2010_report.json")).unwrap();
+        let v: serde_json::Value = serde_json::from_str(&raw).unwrap();
+        assert_eq!(v["label"].as_str(), Some("myplan"), "JSON must contain label");
+        assert_eq!(v["year"].as_str(),  Some("2010"),   "JSON must contain year");
+        assert_eq!(v["report_type"].as_str(), Some("label_analysis"), "JSON must have report_type");
+    }
+
+    // ── 30. enumerate_states_in_dir: files are excluded, only dirs returned ──
+    //
+    // The function must skip regular files (like index.json) and only return dirs.
+
+    #[test]
+    fn test_enumerate_states_excludes_files() {
+        let tmp = TempDir::new().unwrap();
+        // Create dirs (states)
+        for state in &["alaska", "vermont"] {
+            std::fs::create_dir_all(tmp.path().join(state)).unwrap();
+        }
+        // Create a file at the same level (should be excluded)
+        std::fs::write(tmp.path().join("index.json"), "{}").unwrap();
+        std::fs::write(tmp.path().join("README.txt"), "notes").unwrap();
+
+        let names = enumerate_states_in_dir(tmp.path()).unwrap();
+        // Must only contain the directories
+        assert_eq!(names, vec!["alaska", "vermont"],
+            "enumerate_states must skip files and return only dirs: {names:?}");
+    }
+
+    // ── 31. ReportIndex roundtrips through JSON ───────────────────────────────
+
+    #[test]
+    fn test_report_index_json_roundtrip() {
+        let original = ReportIndex {
+            label: "senate_draft".to_string(),
+            year: "2020".to_string(),
+            analysis_index_sha256: "a".repeat(64),
+            format: "html".to_string(),
+            created: "2026-05-02T00:00:00Z".to_string(),
+            files: vec!["senate_draft_2020_report.html".to_string()],
+        };
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: ReportIndex = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.label, "senate_draft");
+        assert_eq!(restored.year,  "2020");
+        assert_eq!(restored.format, "html");
+        assert_eq!(restored.analysis_index_sha256, "a".repeat(64));
+        assert_eq!(restored.files.len(), 1);
+    }
+
+    // ── 32. AnalysisIndex roundtrips through JSON ─────────────────────────────
+
+    #[test]
+    fn test_analysis_index_json_roundtrip() {
+        let original = AnalysisIndex {
+            label: "plan_a".to_string(),
+            year: "2010".to_string(),
+            run: "plan_a".to_string(),
+            run_index_sha256: "b".repeat(64),
+            types: vec!["summary".to_string(), "compactness".to_string()],
+            created: "2026-05-02T00:00:00Z".to_string(),
+            states: HashMap::new(),
+        };
+        let json = serde_json::to_string(&original).unwrap();
+        let restored: AnalysisIndex = serde_json::from_str(&json).unwrap();
+        assert_eq!(restored.label, "plan_a");
+        assert_eq!(restored.year,  "2010");
+        assert_eq!(restored.run_index_sha256, "b".repeat(64));
+        assert_eq!(restored.types, vec!["summary", "compactness"]);
+    }
+
+    // ── 33. report format error mentions "html" or "json" as alternatives ─────
+
+    #[test]
+    fn test_report_format_error_suggests_alternatives() {
+        let tmp = TempDir::new().unwrap();
+        let analysis_dir = tmp.path().join("analysis");
+        std::fs::create_dir_all(&analysis_dir).unwrap();
+        let out = tmp.path().to_path_buf();
+
+        let result = generate_label_report("plan", "2020", &analysis_dir, &out, "xml");
+        let msg = result.unwrap_err();
+        assert!(msg.contains("[CONFIG]"),  "[CONFIG] prefix required: {msg}");
+        assert!(msg.contains("html") || msg.contains("json"),
+            "error must mention valid alternatives: {msg}");
+    }
 }

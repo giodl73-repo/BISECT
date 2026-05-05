@@ -839,4 +839,102 @@ years: ["2020"]
         assert!(msg.contains("my_plan/2020"), "must mention label/year: {msg}");
         assert!(msg.contains("--force"),      "must mention --force flag: {msg}");
     }
+
+    // ── Test 15: build_build_index with failed states records error text ──────
+
+    #[test]
+    fn test_build_index_failed_state_records_error_text() {
+        use crate::runner::StateResult;
+
+        let f = write_yaml(MINIMAL_YAML);
+        let yaml = AlgoYaml::from_file(f.path()).unwrap();
+        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+
+        let results = vec![
+            StateResult {
+                state_code: "TX".into(),
+                success: false,
+                error: Some("METIS failed with exit code 127".into()),
+                elapsed_ms: 500,
+            },
+        ];
+        let cfgs: Vec<StateConfig> = vec![
+            StateConfig::new_bulk(
+                "TX".into(), "texas".into(), 38, "2020".into(), "lbl".into(),
+                PathBuf::from("runs/lbl/2020/texas"), 1
+            ),
+        ];
+
+        let index = build_build_index("lbl", "2020", &sha, &yaml, &cfgs, &results).unwrap();
+        assert_eq!(index.states["texas"].status, "failed");
+        assert_eq!(
+            index.states["texas"].error.as_deref(),
+            Some("METIS failed with exit code 127"),
+            "failed state must record the error message"
+        );
+    }
+
+    // ── Test 16: build_build_index with empty configs and results ─────────────
+
+    #[test]
+    fn test_build_index_empty_run_has_zero_summary() {
+        let f = write_yaml(MINIMAL_YAML);
+        let yaml = AlgoYaml::from_file(f.path()).unwrap();
+        let sha  = AlgoYaml::file_sha256(f.path()).unwrap();
+
+        let index = build_build_index("lbl", "2020", &sha, &yaml, &[], &[]).unwrap();
+        assert_eq!(index.summary.total,     0);
+        assert_eq!(index.summary.succeeded, 0);
+        assert_eq!(index.summary.failed,    0);
+        assert!(index.states.is_empty(), "states map must be empty for empty run");
+    }
+
+    // ── Test 17: days_to_ymd — known leap year date ───────────────────────────
+
+    #[test]
+    fn test_unix_to_ymd_hms_leap_year() {
+        // 2020-02-29 00:00:00 UTC = 1582934400
+        let (y, mo, d, h, mi, s) = unix_to_ymd_hms(1_582_934_400);
+        assert_eq!((y, mo, d), (2020, 2, 29), "2020 is a leap year");
+        assert_eq!((h, mi, s), (0, 0, 0), "must be midnight");
+    }
+
+    // ── Test 18: algorithm_section_json does not include missing optional fields
+
+    #[test]
+    fn test_algorithm_section_json_omits_none_optionals() {
+        // Minimal YAML — only structure and search, no weights/alpha/seeds/etc.
+        let f = write_yaml(MINIMAL_YAML);
+        let yaml = AlgoYaml::from_file(f.path()).unwrap();
+        let val = algorithm_section_to_json(&yaml);
+        let obj = val.as_object().expect("must be object");
+
+        // Keys that were not set in MINIMAL_YAML must be absent
+        assert!(!obj.contains_key("alpha_county"),          "alpha_county must be absent when not set");
+        assert!(!obj.contains_key("convergence_threshold"), "convergence_threshold must be absent");
+        assert!(!obj.contains_key("seeds"),                 "seeds must be absent");
+        assert!(!obj.contains_key("balance_tolerance"),     "balance_tolerance must be absent");
+    }
+
+    // ── Test 19: BuildCliArgs with explicit config path ───────────────────────
+
+    #[test]
+    fn test_build_cli_args_explicit_config_path() {
+        let explicit = PathBuf::from("custom/path/config.yml");
+        let cli = BuildCliArgs {
+            label: "my_plan".to_string(),
+            config: Some(explicit.clone()),
+            year: Some("2020".to_string()),
+            states: vec!["VT".to_string()],
+            workers: Some(8),
+            dry_run: false,
+            force: true,
+            no_interactive: true,
+        };
+        let args = cli.into_build_args();
+        assert_eq!(args.config, explicit, "explicit config path must be preserved");
+        assert!(args.force,          "force flag must be preserved");
+        assert!(args.no_interactive, "no_interactive flag must be preserved");
+        assert_eq!(args.workers, Some(8), "workers must be preserved");
+    }
 }
