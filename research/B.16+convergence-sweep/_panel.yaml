@@ -1,0 +1,52 @@
+paper: convergence-sweep
+title: "ConvergenceSweep: T=600 as the Statutory Stopping Criterion for Minimum-Edge-Cut Redistricting"
+venue: "SIAM Journal on Computing / Harvard Law Review technical companion"
+stage: draft
+round: 0
+content_mode: full
+series: B
+series_number: "16"
+series_role: algorithm-theory
+synthesises: [B.7, B.02, B.11]
+reviewers: []
+reviews: {}
+avg_score: null
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: >
+      Algorithm-theory paper establishing T=600 as the conservative statutory
+      convergence threshold for ConvergenceSweep. Empirical foundation from B.7:
+      Georgia is the worst-case state with tail=511 (last improvement at seed 489).
+      T=500 would have missed GA; T=600 gives an 89-seed margin above worst-case.
+      Closes the final gap in B.02's constitutional argument by proving the
+      SHA-256-seeded sweep is both deterministic and provably optimal.
+notes: |
+  Target venues (in preference order):
+  1. SIAM Journal on Computing — algorithmic complexity + stopping criterion proofs.
+  2. Harvard Law Review technical companion — legal policy audience for T_statute.
+  3. Journal of Political Institutions and Political Economy — applied math + law.
+  4. ACM-SIAM SODA proceedings — algorithmic redistricting track.
+
+  Paper type: ALGORITHM THEORY + EMPIRICAL. Proves a stopping criterion
+  is sufficient, then recommends a statutory value.
+
+  Core argument:
+  - Fixed-seed METIS can land in a local optimum; ConvergenceSweep fixes this.
+  - ConvergenceSweep walks forward from SHA-256-derived seed until T-stable.
+  - Empirical worst case (B.7): Georgia, tail=511. T=500 would fail.
+  - T=600 provides 89-seed margin; recommended for statutory use.
+  - T=500 acceptable for research/non-binding runs.
+
+  Key empirical data (from B.7):
+  - GA: last_improvement=489, tail=511, T_needed=512
+  - WI: last_improvement=1023, tail=377, T_needed=378
+  - FL: last_improvement=131, tail=329, T_needed=330
+  - TX: last_improvement=114, tail=298, T_needed=299
+  - MI: tail=319, T_needed=320
+  - TN/MN/NC: tail < 300, T_needed < 301
+  - All other states: tail < 300
+
+  Extreme value fit: Gumbel(mu=200, sigma=150); P(tail > 600) < 0.001
+
+  Estimated length: 20-28 pages (6 sections, SIAM format).

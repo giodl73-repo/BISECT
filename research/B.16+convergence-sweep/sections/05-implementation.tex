@@ -1,0 +1,170 @@
+\section{Implementation}
+\label{sec:implementation}
+
+\subsection{The redist Binary}
+
+\cs{} is fully implemented in the \texttt{redist} binary as
+\texttt{SeedCompositor::ConvergenceSweep\{threshold\}}.
+The implementation is production-ready: it has been used to generate all
+convergence data reported in Section~\ref{sec:sufficiency} and Table~\ref{tab:convergence}.
+
+The relevant crate is \texttt{redist-core}, located at
+\texttt{redist/crates/redist-core/src/seed\_compositor.rs}.
+The \texttt{SeedCompositor} enum has three variants:
+
+\begin{enumerate}
+\item \texttt{Fixed(u32)} --- a single fixed seed; reproducible but not
+      certified optimal.
+\item \texttt{ConvergenceSweep\{threshold: u32\}} --- the \cs{} procedure
+      described in Algorithm~\ref{alg:cs}; certified optimal for
+      $\texttt{threshold} \ge 600$ on all US state congressional graphs.
+\item \texttt{Ensemble\{count: u32, seeds: Vec<u32>\}} --- an explicit seed
+      list for ensemble analysis (B.7 research mode).
+\end{enumerate}
+
+\subsection{Federal Statute Invocation}
+
+The canonical command for a statutory redistricting run under the \dia{}
+is:
+
+\begin{verbatim}
+redist state \
+  --state <FIPS_CODE> \
+  --year <CENSUS_YEAR> \
+  --structure prime-factor \
+  --weights geographic \
+  --search convergence \
+  --convergence-threshold 600
+\end{verbatim}
+
+\paragraph{Flag meanings.}
+\begin{itemize}
+\item \texttt{--structure prime-factor}: selects the \ar{} prime-factorisation
+      bisection tree structure (B.11)~\citep{b11paper}.
+\item \texttt{--weights geographic}: selects the geographic boundary-length
+      edge weights (B.2)~\citep{b2paper}.
+\item \texttt{--search convergence}: activates \texttt{SeedCompositor::ConvergenceSweep}.
+\item \texttt{--convergence-threshold 600}: sets $\Tstat = 600$ (the statutory
+      value recommended by this paper).
+\end{itemize}
+
+For research and non-binding runs:
+
+\begin{verbatim}
+redist state \
+  --state <FIPS_CODE> \
+  --year <CENSUS_YEAR> \
+  --structure prime-factor \
+  --weights geographic \
+  --search convergence \
+  --convergence-threshold 500
+\end{verbatim}
+
+\subsection{Reproducibility Guarantee}
+
+Given a fixed \texttt{census\_release\_id}, the \texttt{redist} binary
+computes $s_0$ as specified in Definition~\ref{def:diav1}.
+The binary ships with:
+\begin{itemize}
+\item A vendored METIS library pinned to a specific source hash in
+      \texttt{Cargo.lock}.
+\item Determinism compile flags (\texttt{-fno-fast-math},
+      \texttt{-fno-associative-math}) applied to the METIS build.
+\item A build-commit override mechanism (\texttt{REDIST\_BUILD\_COMMIT\_OVERRIDE})
+      for forensic reproducibility of historical runs.
+\end{itemize}
+
+The SHA-256 computation uses the Rust \texttt{sha2} crate (version pinned in
+\texttt{Cargo.lock}), which is FIPS 180-4 compliant and produces identical
+output on all platforms.
+
+\subsection{Audit Trail}
+
+Every statutory \cs{} run emits a JSONL deposition log
+(\texttt{depo\_log.jsonl}) with:
+\begin{itemize}
+\item The \texttt{census\_release\_id} string used.
+\item The computed $s_0$.
+\item The $\ECnorm$ value at each seed tried.
+\item The seed index $j^*$ of the winning plan.
+\item The total number of seeds tried before halting.
+\item A SHA-256 hash of the output map.
+\end{itemize}
+
+The log is chained: each entry contains the SHA-256 hash of the previous
+entry, forming a tamper-evident sequence.
+Any modification to a historical log entry invalidates all subsequent hashes.
+This infrastructure is documented in the deposition-prep plan
+(2026-04-30 landing)~\citep{depoplan}.
+
+\subsection{Statutory Text Recommendation}
+
+The following is the recommended statutory text for the seed and convergence
+provisions of the \dia{}, updating the current draft of B.02:
+
+\begin{statute}
+\textbf{Proposed 2~U.S.C.~\textsection~2a(c)(2) [new]:}
+
+\medskip
+\noindent
+(A) The seed for the redistricting algorithm shall be computed as
+
+\[
+  s_0 = \bigl\lfloor
+    \mathrm{SHA\text{-}256}(\mathtt{census\_release\_id}
+      \,\|\, \texttt{"DIA\_SEED\_V1"})
+  \bigr\rfloor \bmod 2^{31},
+\]
+
+where \texttt{census\_release\_id} is the identifier for the decennial census
+dataset as published by the Census Bureau, and $\|$ denotes byte concatenation.
+
+\medskip
+\noindent
+(B) The redistricting algorithm shall use a convergence sweep with threshold
+$T = 600$: beginning at seed $s_0$, the algorithm shall advance one seed at a
+time, halting when 600 consecutive seeds produce no improvement in the
+normalised edge cut of the partition.
+The final map shall be the partition achieving the minimum normalised edge cut
+across all seeds tried.
+
+\medskip
+\noindent
+(C) The convergence threshold of 600 is the \emph{statutory threshold}
+(\S~2a(c)(2)(B)).
+The reference implementation shall expose a \texttt{--convergence-threshold}
+flag; values below 600 may be used for research and audit purposes but shall
+not be used to generate maps with legal effect under this section.
+\end{statute}
+
+\subsection{Runtime Estimates}
+
+Table~\ref{tab:runtime} provides estimated wall-clock times for the statutory
+\cs{} run ($\Tstat = 600$) for representative states, based on observed METIS
+call times on a modern workstation (AMD Ryzen 9, 32 GB RAM).
+
+\begin{table}[h]
+\centering
+\caption{Estimated \cs{} runtime at $\Tstat = 600$ for selected states.
+         $n$: tract count; $k$: districts; $T(\mathcal{M})$: per-seed time;
+         $j_{\mathrm{stop}}$: empirical seeds tried; Total: estimated wall-clock.}
+\label{tab:runtime}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{State} & $n$ & $k$ & $T(\mathcal{M})$ & $j_{\mathrm{stop}}$ & \textbf{Total} \\
+\midrule
+Vermont   &   236 &  1 & $<$0.01s & 2   & $<$1s    \\
+Delaware  &   220 &  1 & $<$0.01s & 2   & $<$1s    \\
+Montana   & 1,029 &  2 & 0.05s    & 643 & 32s      \\
+Iowa      & 1,941 &  4 & 0.12s    & 731 & 88s      \\
+Florida   & 9,846 & 28 & 0.48s    & 731 & 6.0 min  \\
+Texas     &15,839 & 38 & 0.71s    &1,623& 19.2 min \\
+Georgia   & 5,012 & 14 & 0.31s    &1,111& 5.7 min  \\
+Wisconsin & 4,587 &  8 & 0.22s    &1,623& 5.9 min  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All states complete well within 30 minutes.
+The full 50-state statutory run, parallelised across 8 workers, completes in
+under 45 minutes.

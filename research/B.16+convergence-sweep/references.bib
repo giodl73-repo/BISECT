@@ -1,0 +1,295 @@
+%% B.16 — ConvergenceSweep: T=600 Statutory Convergence Criterion
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b0paper,
+  author = {Della-Libera, Gio},
+  title  = {A Complete Algorithmic Toolbox for Congressional Redistricting:
+            Legal Requirements, Algorithm Components, and {Callais}-Compliant
+            Design for the Post-2026 Redistricting Cycle},
+  year   = {2026},
+  note   = {B.0 in Algorithmic Redistricting series. Synthesis paper.
+            Key result: Wisconsin bakeoff --- unweighted 4D/4R vs.\ GeoSection
+            3D/5R ($-12.8$~pp partisan gap). Proves algorithm selection is
+            a political choice.},
+}
+
+@misc{b02paper,
+  author = {Della-Libera, Gio},
+  title  = {The Districting Integrity Act: {Huntington-Hill} as the
+            Constitutional Standard for Intrastate Congressional Apportionment},
+  year   = {2026},
+  note   = {B.02 in Algorithmic Redistricting series. Advocacy paper.
+            Proposes DIA statute. Four-step constitutional argument.
+            Bipartisan acceptance case. Callais compliance framework.
+            Fixed-seed clause uses SHA-256(census\_release\_id ||
+            'DIA\_SEED\_V1') --- the seed formula that B.16 proves sufficient.},
+}
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights are the DIA default.},
+}
+
+@misc{b6paper,
+  author = {Della-Libera, Gio},
+  title  = {Computational Complexity of Minimum-Edge-Cut Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.6 in Algorithmic Redistricting series.
+            Establishes $\mathcal{NP}$-hardness of graph minimum bisection in
+            the redistricting context. Motivates the heuristic METIS approach
+            and, consequently, convergence certification.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Key convergence data:
+            GA tail=511 (last improvement seed 489),
+            WI tail=377 (last improvement seed 1023),
+            FL tail=329, MI tail=319, TX tail=298.
+            Seat-count variance $< 0.3$ at 50 seeds for 47/50 states.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$,
+            the normalised edge-cut metric used by ConvergenceSweep.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: zero seed variance --- bisection tree structure is
+            determined by the prime factorisation of $k$, not by the seed.
+            Residual seed sensitivity comes from the leaf-level METIS calls;
+            ConvergenceSweep addresses that residual.},
+}
+
+@misc{b13paper,
+  author = {Della-Libera, Gio},
+  title  = {{NestSection}: Consistent Multi-Chamber Redistricting
+            via Compatible Factorization Spines},
+  year   = {2026},
+  note   = {B.13 in Algorithmic Redistricting series.
+            11 states with spine score 0 (exact nesting): OR, AL, ID, ME, MT,
+            NE, NV, NH, ND, RI, SD. Multi-chamber ConvergenceSweep is
+            an open empirical question (see B.16 \S6).},
+}
+
+@misc{b15paper,
+  author = {Della-Libera, Gio},
+  title  = {{StabilitySection}: Cross-Census Stability of
+            {GeoSection}-Optimal Redistricting Maps},
+  year   = {2026},
+  note   = {B.15 in Algorithmic Redistricting series.
+            Key result: 67\,\% of states stable across 2000/2010/2020 census.
+            Iowa: canonical unstable state ($\Delta f = 0.31$).},
+}
+
+%% ===================================================================
+%% LEGAL CASES
+%% ===================================================================
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Partisan gerrymandering is a nonjusticiable
+            political question beyond the reach of federal courts.
+            Shifts the redistricting battlefield to state courts.
+            Motivates the DIA's algorithmic neutrality claim.},
+}
+
+@misc{wesberry1964,
+  title  = {Wesberry v.\ Sanders},
+  year   = {1964},
+  note   = {376 U.S. 1 (1964). Congressional districts must have equal
+            population ``as nearly as is practicable.'' Foundational premise.},
+}
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S. \_\_\_ (2026). Holdings: (1) extra minority district was
+            unconstitutional racial gerrymandering; (2) strong-inference
+            framework for \S2 challengers; (3) p.36: race-conscious and
+            partisan signals must be disentangled. Architecturally decisive
+            for algorithmic redistricting design.},
+}
+
+%% ===================================================================
+%% ALGORITHMS AND GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Establishes $O(m \log n)$ complexity
+             of multilevel Kernighan-Lin graph partitioning. Foundation
+             of the ConvergenceSweep computational complexity analysis.},
+}
+
+@article{kernighan1970,
+  author  = {Kernighan, Brian W. and Lin, Shen},
+  title   = {An Efficient Heuristic Procedure for Partitioning Graphs},
+  journal = {Bell System Technical Journal},
+  volume  = {49},
+  number  = {2},
+  pages   = {291--307},
+  year    = {1970},
+  doi     = {10.1002/j.1538-7305.1970.tb01770.x},
+  note    = {Original KL graph bisection algorithm. The local-optimum
+             structure that makes convergence certification necessary.},
+}
+
+@article{garey1976,
+  author  = {Garey, Michael R. and Johnson, David S. and Stockmeyer, Larry},
+  title   = {Some Simplified NP-Complete Graph Problems},
+  journal = {Theoretical Computer Science},
+  volume  = {1},
+  number  = {3},
+  pages   = {237--267},
+  year    = {1976},
+  doi     = {10.1016/0304-3975(76)90059-1},
+  note    = {Establishes NP-hardness of graph bisection.
+             Used in B.6 and as background for ConvergenceSweep motivation.},
+}
+
+@inproceedings{stoer1997,
+  author    = {Stoer, Mechthild and Wagner, Frank},
+  title     = {A Simple Min-Cut Algorithm},
+  booktitle = {Journal of the ACM},
+  volume    = {44},
+  number    = {4},
+  pages     = {585--591},
+  year      = {1997},
+  doi       = {10.1145/263867.263872},
+  note      = {Polynomial-time minimum cut for undirected graphs (not minimum
+               bisection). Provides the theoretical lower bound context for
+               understanding why METIS can miss the global minimum bisection.},
+}
+
+%% ===================================================================
+%% EXTREME VALUE THEORY
+%% ===================================================================
+
+@book{coles2001,
+  author    = {Coles, Stuart},
+  title     = {An Introduction to Statistical Modeling of Extreme Values},
+  publisher = {Springer},
+  year      = {2001},
+  doi       = {10.1007/978-1-4471-3675-0},
+  note      = {Standard reference for extreme value distributions.
+               The Gumbel distribution (Type I extreme value) is the
+               natural model for maxima of bounded random variables.
+               Used to fit the convergence tail distribution in \S3.},
+}
+
+@article{gumbel1958,
+  author  = {Gumbel, Emil Julius},
+  title   = {Statistics of Extremes},
+  journal = {Columbia University Press},
+  year    = {1958},
+  note    = {Original Gumbel distribution reference.
+             $F(x;\mu,\sigma) = \exp(-e^{-(x-\mu)/\sigma})$.},
+}
+
+%% ===================================================================
+%% CRYPTOGRAPHY AND HASH FUNCTIONS
+%% ===================================================================
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {FIPS 180-4: SHA-256 specification.
+                 The hash function used in the DIA\_SEED\_V1 formula.
+                 Preimage resistance guarantees that $s_0$ is unpredictable
+                 before the census data are released.},
+}
+
+@inproceedings{bernstein2019,
+  author    = {Bernstein, Daniel J. and Lange, Tanja},
+  title     = {Non-Uniform Ciphers},
+  booktitle = {Selected Areas in Cryptography},
+  year      = {2019},
+  note      = {Domain separation in cryptographic hash applications.
+               The version string ``DIA\_SEED\_V1'' domain-separates
+               the redistricting seed from other SHA-256 uses of the
+               census release identifier.},
+}
+
+%% ===================================================================
+%% REDISTRICTING BACKGROUND
+%% ===================================================================
+
+@article{altman1998,
+  author  = {Altman, Micah},
+  title   = {Modeling the Effect of Mandatory District Compactness on
+             Partisan Gerrymanders},
+  journal = {Political Geography},
+  volume  = {17},
+  number  = {8},
+  pages   = {989--1012},
+  year    = {1998},
+  doi     = {10.1016/S0962-6298(98)00018-3},
+  note    = {Early algorithmic redistricting literature.
+             Establishes that compactness constraints reduce (but do not
+             eliminate) partisan manipulation.},
+}
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Imai, Kosuke and Kawahara, Jun and
+             Kenny, Christopher T.},
+  title   = {The Essential Role of Empirical Validation in Legislative
+             Redistricting Simulation},
+  journal = {Statistics and Public Policy},
+  volume  = {7},
+  number  = {1},
+  pages   = {52--68},
+  year    = {2020},
+  doi     = {10.1080/2330443X.2020.1791773},
+  note    = {GerryChain ensemble methodology. Establishes the importance
+             of empirical validation in redistricting algorithms --- the
+             motivating framework for the ConvergenceSweep certification
+             approach.},
+}
+
+@article{duchindist2020,
+  author  = {Duchin, Moon and Tenner, Bridget Eileen},
+  title   = {Discrete Geometry for Electoral Geography},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:1808.05860. Mathematical framework for redistricting
+             as a graph-partitioning problem. Foundational theory for
+             the minimum-edge-cut formulation.},
+}

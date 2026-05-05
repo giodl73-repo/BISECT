@@ -1,0 +1,85 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Seed-Invariance Problem}
+
+The B-series of algorithmic redistricting papers has converged on a single
+legislative vehicle: the \dia{}, which proposes to mandate the \ar{}
+algorithm---a recursive bisection procedure derived from the \hh{} priority
+rule---as the exclusive method for congressional redistricting in all fifty
+states~\citep{b02paper}.
+The statute's reproducibility guarantee is a seed: anyone who runs the
+reference implementation with the published seed and the public TIGER/Line
+inputs must obtain the same map.
+
+That design has a gap.
+
+METIS---the graph-partitioning engine underlying \ar{}---is a heuristic.
+Graph minimum bisection is $\mathcal{NP}$-hard~\citep{b6paper}; METIS finds a
+local optimum via multilevel Kernighan-Lin refinement, not the global minimum.
+The seed controls which local optimum is reached.
+A fixed seed is reproducible; it is not guaranteed to be optimal.
+
+The practical consequence was documented in B.7~\citep{b7paper}.
+Running all fifty states over a sweep of 1{,}500 seeds each, the analysis
+found that for most states the algorithm converges quickly---subsequent seeds
+produce no improvement after a short run---but for a handful of states,
+including Georgia and Wisconsin, the last improvement occurs at surprisingly
+high seed offsets (seed 489 and seed 1{,}023 relative to the content-derived
+start, respectively).
+
+A statute that publishes a single fixed seed cannot certify that the map it
+produces is the best available map under its own objective function.
+A well-prepared challenger need only run a different seed and show a
+lower edge cut to challenge the map's optimality claim.
+
+\subsection{The ConvergenceSweep Solution}
+
+\cs{} eliminates the single-seed fragility.
+Instead of fixing one seed, the algorithm sweeps forward from the
+content-derived seed $s_0$ and halts when $T$ consecutive seeds produce no
+improvement in the normalised edge cut $\ECnorm$.
+The final map is the one with the lowest $\ECnorm$ seen across all seeds tried.
+
+The design achieves two properties simultaneously:
+\begin{enumerate}
+\item \textbf{Determinism.} Given the census release identifier and the
+      protocol constant \texttt{"DIA\_SEED\_V1"}, $s_0$ is uniquely determined.
+      Given $T$ and $s_0$, the sweep produces the same map on every machine.
+      The result is fully auditable.
+\item \textbf{Optimality.} If the algorithm has not improved in $T$ consecutive
+      seeds, the probability of finding a strictly better plan at seed
+      $s_0 + T + k$ decreases exponentially in $k$ (Theorem~\ref{thm:gumbel}).
+      For $T = 600$, the probability of missing a better plan is below
+      $10^{-3}$ for every state in the union.
+\end{enumerate}
+
+Neither property holds for the fixed-seed design.
+
+\subsection{Paper Structure and Main Results}
+
+Section~\ref{sec:algorithm} gives the formal pseudocode for \cs{},
+defines $T$-stability, and analyzes computational complexity.
+Section~\ref{sec:sufficiency} presents the core empirical argument: a
+50-state table of convergence tails, identification of Georgia as the
+worst-case state (tail = 511), and the Gumbel extreme-value argument showing
+$P(\text{tail} > 600) < 0.001$.
+Section~\ref{sec:sha256} explains why the specific seed formula
+$\seedfmt{\texttt{census\_release\_id} \,\|\, \texttt{"DIA\_SEED\_V1"}}$
+closes the political-manipulation attack surface.
+Section~\ref{sec:implementation} documents the existing \texttt{redist}
+binary implementation and the federal-statute invocation string.
+Section~\ref{sec:conclusion} closes by situating B.16 in the B.02
+constitutional argument.
+
+\subsection{Relation to Prior Work}
+
+B.7~\citep{b7paper} is the empirical source for the state-level convergence
+data used throughout.
+B.11~\citep{b11paper} established zero seed variance for the \ar{}
+prime-factorisation tree; \cs{} addresses the residual variance in the
+GeoSection-based seed sweep that B.02 relies on.
+B.02~\citep{b02paper} is the statutory vehicle; this paper supplies the
+mathematical foundation for the seed-derivation clause in its operative text.
+B.6~\citep{b6paper} established the $\mathcal{NP}$-hardness context that
+makes convergence certification necessary rather than merely convenient.

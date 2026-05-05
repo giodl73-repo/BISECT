@@ -1,0 +1,151 @@
+\section{The SHA-256 Seed Formula}
+\label{sec:sha256}
+
+\subsection{Why a Fixed Numerical Seed Is Constitutionally Insufficient}
+
+Early iterations of the \dia{} statute proposed a fixed integer seed---a
+specific value published in the statutory text or by the Director of the Census
+Bureau before the redistricting cycle begins.
+This design is reproducible but exposes a manipulation attack that any
+competent opponent will press in litigation.
+
+\begin{description}
+\item[The cherry-picking attack.]
+If the Director of Census (or any government official with early access to the
+census data) can enumerate the partisan consequences of different seeds before
+publishing one, the published seed can be selected to advantage one party.
+The attack is structurally identical to the ``algorithm selection is a
+political choice'' argument established in B.0~\citep{b0paper}: choosing the
+seed after knowing its consequences is as political as choosing the algorithm
+after knowing its consequences.
+
+\item[The legal consequence.]
+Under \rucho{}~\citep{rucho2019}, partisan gerrymandering is a nonjusticiable
+federal question.
+But the \dia{}'s constitutional claim rests on algorithmic neutrality---the
+statute works precisely because no human chose the map.
+A fixed seed chosen by an official with knowledge of its partisan consequences
+reintroduces the human choice the statute was designed to eliminate.
+\end{description}
+
+The SHA-256 formula closes this attack surface completely.
+
+\subsection{The Formula and Its Properties}
+
+\begin{definition}[DIA Seed Protocol v1]
+\label{def:diav1}
+The seed for the statutory \cs{} run under the \dia{} is
+\[
+  s_0 = \bigl\lfloor
+    \mathrm{SHA\text{-}256}(\mathtt{census\_release\_id}
+      \,\|\, \mathtt{"DIA\_SEED\_V1"})
+  \bigr\rfloor \bmod 2^{31},
+\]
+where:
+\begin{itemize}
+\item $\mathtt{census\_release\_id}$ is the official identifier string for the
+      decennial census dataset, published by the Census Bureau under
+      42~U.S.C.~\S{}~141 (or successor) at the moment of data release.
+      Example: \texttt{"2020-PL94-171-v1.0"}.
+\item $\mathtt{"DIA\_SEED\_V1"}$ is the ASCII constant fixed in statute.
+      It encodes the version of the seed protocol; a future \dia{} amendment
+      adopting a different formula would use \texttt{"DIA\_SEED\_V2"}.
+\item $\|$ denotes byte concatenation.
+\item SHA-256 is the NIST-standardised cryptographic hash function
+      \citep{sha256nist}.
+\end{itemize}
+\end{definition}
+
+The formula has four properties that jointly satisfy the constitutional
+neutrality requirement.
+
+\paragraph{Property~1: Determined by the census, not by any political actor.}
+$\mathtt{census\_release\_id}$ is set by the Census Bureau at the moment of
+data release and published simultaneously to all parties.
+No one---not the party in power, not the Director of Census, not the court
+appointing a special master---can know $s_0$ until after the census data is
+released.
+The seed is discovered, not chosen.
+
+\paragraph{Property~2: The protocol constant is version-locked in statute.}
+$\mathtt{"DIA\_SEED\_V1"}$ is a literal string in the statutory text.
+Neither Congress nor the Executive can change it without a formal statutory
+amendment, which is subject to the full legislative process.
+This prevents administrative modification of the seed formula.
+
+\paragraph{Property~3: The seed changes automatically with the census.}
+SHA-256 is a cryptographic hash: a one-character change in the input produces
+a completely different 256-bit output.
+The 2020 census release identifier differs from the 2010 identifier; therefore
+$s_0^{2020} \ne s_0^{2010}$.
+Each census cycle produces an independent seed, preventing any carry-over
+advantage from one cycle to the next.
+
+\paragraph{Property~4: No one can predict the seed before the census is published.}
+SHA-256 is computationally preimage-resistant: given $s_0$, no efficient
+algorithm can recover $\mathtt{census\_release\_id}$, and given a partial
+census, no efficient algorithm can predict the final
+$\mathtt{census\_release\_id}$ well enough to precompute $s_0$.
+The partisan consequences of $s_0$ are unknowable until after the census
+data---and therefore the redistricting problem itself---is fully specified.
+
+\subsection{Why the Version String Is Necessary}
+
+Without the version string \texttt{"DIA\_SEED\_V1"}, the formula would be
+$s_0 = \lfloor \mathrm{SHA\text{-}256}(\mathtt{census\_release\_id}) \rfloor
+\bmod 2^{31}$.
+This has an undesirable property: any other application that hashes the census
+release identifier (for any purpose) produces the same value.
+If the Census Bureau or any government agency independently publishes a SHA-256
+hash of the release identifier as a data-integrity check, an adversary could
+use that published hash to precompute $s_0$ before the redistricting cycle
+begins.
+
+The version string \texttt{"DIA\_SEED\_V1"} domain-separates the
+redistricting seed from all other SHA-256 uses of the same input.
+It is standard cryptographic hygiene (domain separation)~\citep{bernstein2019}.
+
+\subsection{The Seed Is Not Secret}
+
+A common misunderstanding is that the SHA-256 formula is designed to hide the
+seed from adversaries.
+It is not.
+$s_0$ is public information: the moment the Census Bureau releases the census
+data, any party can compute $s_0$ in milliseconds.
+
+The protection the formula provides is \emph{temporal}, not \emph{epistemic}.
+The seed cannot be known before the census is published.
+Once the census is published, $s_0$ is universally known, the redistricting
+run is public, and the resulting map is auditable by any party.
+This is the correct design for a democratic institution: the process is opaque
+before the data exist, and fully transparent afterward.
+
+\subsection{Litigation Posture}
+
+The SHA-256 formula allows the \dia{} to make the following affirmative claim
+in any court challenge:
+
+\begin{statute}
+\textbf{Certificate of Seed Neutrality.}
+
+The redistricting seed used in this proceeding is
+$s_0 = \lfloor \mathrm{SHA\text{-}256}(\texttt{census\_release\_id} \,\|\,
+\texttt{"DIA\_SEED\_V1"}) \rfloor \bmod 2^{31}$.
+
+\medskip
+
+This value was not known to any party until the Census Bureau published the
+dataset identifier $\mathtt{census\_release\_id}$ on the date of record.
+No human selected this seed; it was computed mechanically from public data.
+The partisan consequences of this seed were not knowable before that date.
+
+\medskip
+
+The seed is reproducible: any party, any court, any special master may
+independently compute $s_0$ from the public census release identifier and
+verify that the \cs{} run with this seed and threshold $T = 600$ produced the
+map now before the court.
+\end{statute}
+
+No fixed-integer seed can make this certificate.
+The SHA-256 formula can.

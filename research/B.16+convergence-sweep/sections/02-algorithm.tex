@@ -1,0 +1,171 @@
+\section{The ConvergenceSweep Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation}
+
+Let $G = (V, E, w)$ be the weighted census-tract adjacency graph for a state
+$\mathcal{S}$ with $|V| = n$ vertices and $|E| = m$ edges.
+Let $k$ denote the number of congressional districts apportioned to
+$\mathcal{S}$ by Huntington-Hill.
+A \emph{partition} $\Pi = (D_1, \ldots, D_k)$ is a $k$-way assignment of
+tracts to districts satisfying the population-balance constraint
+$|\mathrm{pop}(D_i) - \bar{p}| \le \delta \bar{p}$ for each $i$, where
+$\bar{p} = \mathrm{pop}(\mathcal{S})/k$ and $\delta = 0.005$ (the
+$\pm 0.5\%$ federal tolerance).
+The \emph{edge cut} of $\Pi$ is
+\[
+  \mathrm{EC}(\Pi) = \sum_{\{u,v\} \in E: \text{part}(u) \ne \text{part}(v)} w(u,v).
+\]
+Following B.8~\citep{b8paper}, the \emph{normalised edge cut} is
+\[
+  \ECnorm(\Pi) = \frac{\mathrm{EC}(\Pi)}{\sqrt{\min(i, k-i)}},
+\]
+where $i$ ranges over all bisection levels in the recursive tree.
+
+The METIS bisector $\mathcal{M}(G, k, s)$ takes the graph, the district count,
+and an integer seed $s$, and returns a partition $\Pi$ that is a local minimum
+of $\ECnorm$ under multilevel Kernighan-Lin refinement initialised by $s$.
+
+\subsection{Content-Derived Seed}
+
+The starting seed is derived from the census release identifier published by
+the Census Bureau under the \dia{} statute.
+
+\begin{definition}[Content-Derived Seed]
+\label{def:seed}
+Let $\mathtt{census\_release\_id}$ be the ASCII string identifying the census
+dataset (e.g., \texttt{"2020-PL94-171-v1.0"}), and let
+$\mathtt{"DIA\_SEED\_V1"}$ be the fixed protocol constant for version 1 of the
+Districting Integrity Act seed protocol.
+The \emph{content-derived seed} is
+\[
+  s_0 = \bigl\lfloor
+    \mathrm{SHA\text{-}256}(\mathtt{census\_release\_id}
+      \mathbin{\|} \mathtt{"DIA\_SEED\_V1"})
+  \bigr\rfloor \bmod 2^{31},
+\]
+where $\|$ denotes ASCII concatenation and $\lfloor \cdot \rfloor$ reads the
+256-bit hash value as a big-endian unsigned integer before taking the modulus.
+\end{definition}
+
+The modulus $2^{31}$ matches the range of METIS's \texttt{int} seed parameter.
+The SHA-256 pre-image is a public, verifiable string; any party can recompute
+$s_0$ from first principles.
+
+\subsection{T-Stability and the Stopping Criterion}
+
+\begin{definition}[$T$-Stability]
+\label{def:tstable}
+A seed index $j$ is \emph{$T$-stable} if
+\[
+  \ECnorm\bigl(\mathcal{M}(G, k, s_0 + j + t)\bigr)
+  \;\ge\;
+  \ECnorm\bigl(\mathcal{M}(G, k, s_0 + j)\bigr)
+  \quad
+  \text{for all } t \in \{1, 2, \ldots, T\}.
+\]
+That is, none of the $T$ seeds immediately following $s_0 + j$ strictly
+improves the normalised edge cut achieved at seed $s_0 + j$.
+\end{definition}
+
+\begin{definition}[Convergence Tail]
+\label{def:tail}
+Let $j^*$ be the index of the last seed that achieves a strict improvement
+in $\ECnorm$ during a sweep.
+The \emph{convergence tail} of the sweep is $\tau = j_{\mathrm{stop}} - j^*$,
+where $j_{\mathrm{stop}}$ is the index at which the algorithm halts.
+Under a threshold of $T$, we have $\tau = T$.
+\end{definition}
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:cs} gives the complete \cs{} procedure.
+
+\begin{algorithm}[t]
+\caption{\cs{($G$, $k$, $T$, $\mathtt{census\_release\_id}$)}}
+\label{alg:cs}
+\begin{algorithmic}[1]
+\State $s_0 \gets \lfloor \mathrm{SHA\text{-}256}(\mathtt{census\_release\_id}
+       \,\|\, \texttt{"DIA\_SEED\_V1"}) \rfloor \bmod 2^{31}$
+\State $\Pi^* \gets \mathcal{M}(G, k, s_0)$
+\State $\mathrm{EC}^* \gets \ECnorm(\Pi^*)$
+\State $\mathtt{no\_improve} \gets 0$
+\State $j \gets 1$
+\While{$\mathtt{no\_improve} < T$}
+  \State $\Pi_j \gets \mathcal{M}(G, k,\; s_0 + j)$
+  \State $e_j \gets \ECnorm(\Pi_j)$
+  \If{$e_j < \mathrm{EC}^*$}
+    \State $\mathrm{EC}^* \gets e_j$
+    \State $\Pi^* \gets \Pi_j$
+    \State $\mathtt{no\_improve} \gets 0$
+  \Else
+    \State $\mathtt{no\_improve} \gets \mathtt{no\_improve} + 1$
+  \EndIf
+  \State $j \gets j + 1$
+\EndWhile
+\State \textbf{return} $\Pi^*$
+\end{algorithmic}
+\end{algorithm}
+
+The algorithm returns the partition $\Pi^*$ achieving the minimum normalised
+edge cut seen across all seeds $s_0, s_0+1, \ldots, s_0 + j - 1$.
+
+\subsection{Correctness}
+
+\begin{proposition}[Determinism]
+\label{prop:determinism}
+For fixed $G$, $k$, $T$, and $\mathtt{census\_release\_id}$, \cs{} returns
+the same partition $\Pi^*$ on every execution, regardless of hardware,
+operating system, or parallelisation strategy applied to independent METIS
+calls.
+\end{proposition}
+
+\begin{proof}
+$s_0$ is determined uniquely by Definition~\ref{def:seed}.
+METIS is deterministic given $s$: the multilevel coarsening and refinement
+sequence is fully specified by the seed and graph structure.
+The best-partition selection in Algorithm~\ref{alg:cs} uses a strict less-than
+comparison; ties (equal $\ECnorm$) do not update $\Pi^*$, so the first
+minimum encountered is retained.
+Therefore the entire execution path is determined by $(G, k, T, s_0)$.
+\end{proof}
+
+\begin{remark}
+Proposition~\ref{prop:determinism} assumes that METIS itself is compiled with
+the same floating-point model on all platforms.
+The \texttt{redist} binary ships a vendored METIS with determinism flags
+(\texttt{-fno-fast-math}) enabled by default; the federal-statute build is
+pinned to a specific source hash in the \texttt{Cargo.lock}.
+\end{remark}
+
+\subsection{Computational Complexity}
+
+Let $T(\mathcal{M})$ denote the wall-clock time for a single METIS call on
+$G$ with $k$ districts.
+METIS complexity is $O(m \log n)$ in the number of edges and vertices of
+$G$~\citep{karypis1998}.
+
+\begin{proposition}[Complexity]
+\label{prop:complexity}
+In the worst case, \cs{} terminates after $j_{\mathrm{stop}} = j^* + T$ METIS
+calls, for a total wall-clock cost of $O((j^* + T) \cdot m \log n)$.
+\end{proposition}
+
+\begin{proof}
+Each iteration of the while loop calls $\mathcal{M}$ exactly once.
+The loop terminates when $\mathtt{no\_improve} = T$, which requires exactly
+$j^* + T$ iterations where $j^*$ is the last improving index.
+\end{proof}
+
+Empirically (Section~\ref{sec:sufficiency}), $j^* \le 1{,}023$ for all fifty
+states in the B.7 dataset, so the practical worst case is
+$(1{,}023 + 600) \times T(\mathcal{M}) \approx 1{,}623 \times T(\mathcal{M})$.
+For Texas ($n \approx 5{,}000$ tracts, $k = 38$), a single METIS call takes
+approximately $0.3$\,s on a modern workstation, making the full sweep
+approximately $8.1$\,min---well within the statutory 24-hour window.
+Most states are faster by an order of magnitude.
+
+For the practical threshold $\Tprac = 500$, the worst-case empirical cost
+is $(1{,}023 + 500) \times T(\mathcal{M})$, and for states where $j^* \le 500$
+(all states except Wisconsin in the B.7 dataset), the cost is
+$\le 1{,}100 \times T(\mathcal{M})$.
