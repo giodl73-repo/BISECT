@@ -1,31 +1,80 @@
 //! `Partitioner` trait and `MetisPartitioner` implementation.
 //!
-//! A `Partitioner` takes a `SubGraph` region and a target part count `k`,
-//! and returns a partition assignment `part[local_vertex] ∈ [0, k)`.
+//! Three METIS backends are supported, selectable via [`MetisEngine`]:
 //!
-//! Implementors can use any algorithm: METIS k-way, spectral, random, etc.
-//! The default `MetisPartitioner` uses `redist-metis` (pure Rust) as its
-//! primary partitioner. When the `shadow-metis` feature is enabled (the
-//! default during the validation phase), C METIS also runs in parallel and
-//! the two cut sizes are compared; a warning is logged when the Rust cut
-//! exceeds the C cut by more than 20%.
+//! | Engine | Rust name | Dependency | Notes |
+//! |--------|-----------|------------|-------|
+//! | C METIS FFI | `MetisEngine::CFfi` | `libmetis.so` / `.dll` / `.dylib` | Default; battle-tested, handles all k |
+//! | metis-rs (alias) | same as CFfi | same | The `metis` Rust crate IS the C FFI |
+//! | redist-metis | `MetisEngine::RedistMetis` | none | Pure Rust; portable standalone binary; may stall on prime k for large graphs |
+//! | gpmetis subprocess | `MetisEngine::Gpmetis` | `gpmetis` on PATH | Reserved; not yet implemented |
+//!
+//! When the `shadow-metis` Cargo feature is enabled with engine `CFfi`, the
+//! `redist-metis` Rust implementation also runs as a quality oracle: a warning
+//! is emitted when the Rust edge-cut exceeds the C edge-cut by more than 20%.
 //!
 //! Note: `redist-cli` has an unrelated `SplitStrategy` *enum* that controls
-//! METIS mode selection for a single bisection call. This trait is different:
-//! it is the polymorphic interface that `PfrCompositor` uses to compose a
-//! full multi-level partition.
+//! the high-level bisection mode. This module's `Partitioner` trait is the
+//! lower-level primitive that `PfrCompositor` calls at each tree level.
 
 use std::collections::HashMap;
 use thiserror::Error;
 use crate::graph::SubGraph;
 
-// Alias to avoid name collision with the local `Partitioner` trait below.
 use redist_metis::api::{
     MetisPartitioner as RustMetisPartitioner,
     MetisParams,
     Partitioner as RustPartitioner,
 };
 use redist_metis::graph::CsrGraph;
+
+// ── MetisEngine ───────────────────────────────────────────────────────────────
+
+/// Which METIS backend `MetisPartitioner` uses for each split call.
+///
+/// Select via `--metis-engine` CLI flag or `engine:` in the YAML config.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum MetisEngine {
+    /// **C METIS FFI** (default) — the `metis` Rust crate links against
+    /// `libmetis` at runtime.  Battle-tested; handles all graph sizes and
+    /// all k values including prime k (no coarsening stall).
+    /// Requires `libmetis.so` / `libmetis.dll` / `libmetis.dylib` installed.
+    #[default]
+    CFfi,
+
+    /// **`redist-metis`** — our pure-Rust METIS implementation.
+    /// No C dependency; produces a fully self-contained portable binary.
+    /// May stall on planar census-tract graphs at certain prime k values
+    /// due to coarsening depth limits.  Use for portable distributions
+    /// or when libmetis is unavailable.
+    RedistMetis,
+
+    /// **gpmetis subprocess** — shells out to the external `gpmetis` binary.
+    /// Requires `gpmetis` on `PATH`.
+    /// ⚠ Not yet implemented — returns `SplitError::Metis` if selected.
+    Gpmetis,
+}
+
+impl MetisEngine {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            MetisEngine::CFfi        => "c-ffi",
+            MetisEngine::RedistMetis => "redist-metis",
+            MetisEngine::Gpmetis     => "gpmetis",
+        }
+    }
+
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "c-ffi" | "c" | "metis-rs" => Some(MetisEngine::CFfi),
+            "redist-metis" | "rust"    => Some(MetisEngine::RedistMetis),
+            "gpmetis" | "subprocess"   => Some(MetisEngine::Gpmetis),
+            _                          => None,
+        }
+    }
+}
+
+// ── Errors ────────────────────────────────────────────────────────────────────
 
 #[derive(Debug, Error)]
 pub enum SplitError {
@@ -41,21 +90,12 @@ pub enum SplitError {
     WrongPartCount { returned: usize, k: u32 },
 }
 
-/// A pluggable region-splitting algorithm.
-///
-/// Each call receives a `SubGraph` (the current region) and the number of
-/// parts `k` to split it into. The seed, if any, is for METIS's internal RNG.
-///
-/// Implementors must:
-/// - Return exactly `k` distinct part IDs in `[0, k)`.
-/// - Respect population balance (each part's vertex-weight sum ≈ equal).
-/// - Produce contiguous parts when possible.
+// ── Partitioner trait ─────────────────────────────────────────────────────────
+
 /// Pluggable k-way region partitioning algorithm for `PfrCompositor`.
 ///
-/// Named `Partitioner` to avoid confusion with the `SplitStrategy` *enum* in
-/// `redist-cli::runner`, which is the CLI-level discriminator for which
-/// high-level algorithm to run. This trait is the inner split primitive that
-/// `PfrCompositor` calls at each level of the factorization tree.
+/// Each call receives a `SubGraph` (the current region) and the number of
+/// parts `k`. The seed, if any, is forwarded to the backend's internal RNG.
 pub trait Partitioner: Send + Sync {
     /// Split `region` into `k` parts with **equal** population targets.
     fn split(
@@ -66,11 +106,10 @@ pub trait Partitioner: Send + Sync {
     ) -> Result<Vec<u32>, SplitError>;
 
     /// Split `region` into `target_fracs.len()` parts with **specified**
-    /// population fractions (must sum to ~1.0). Used for binary fallback on
-    /// prime k, where the two halves hold unequal district counts (e.g. 8/17
-    /// and 9/17 for k=17).
+    /// population fractions (must sum to ~1.0).  Used for the binary
+    /// fallback on prime k (e.g. 8/17 and 9/17 for k=17).
     ///
-    /// Default: delegates to `split` with equal weights (ignores fractions).
+    /// Default: delegates to `split` with equal weights.
     /// Override for accurate population balance on asymmetric splits.
     fn split_weighted(
         &self,
@@ -82,10 +121,9 @@ pub trait Partitioner: Send + Sync {
     }
 }
 
-/// Compute the edge cut of a partition on a `CsrGraph`.
-/// Each crossing edge (u,v) with `assignment[u] != assignment[v]` is counted
-/// once (the raw loop counts both directions so we divide by 2).
-#[cfg_attr(not(feature = "shadow-metis"), allow(dead_code))]
+// ── Edge-cut helper (used by shadow comparison) ───────────────────────────────
+
+#[allow(dead_code)]
 fn compute_cut(g: &CsrGraph, assignment: &[u32]) -> usize {
     let mut cut = 0usize;
     for v in 0..g.n() {
@@ -99,36 +137,38 @@ fn compute_cut(g: &CsrGraph, assignment: &[u32]) -> usize {
     cut / 2
 }
 
-/// Default `Partitioner`: pure-Rust METIS (`redist-metis`) with population
-/// vertex weights and TIGER edge weights.
-///
-/// When the `shadow-metis` feature is enabled, C METIS runs concurrently as a
-/// quality oracle. A warning is emitted to `stderr` when the Rust edge cut
-/// exceeds the C edge cut by more than 20%.
+// ── MetisPartitioner ──────────────────────────────────────────────────────────
+
+/// Concrete `Partitioner` that dispatches to one of the three METIS backends.
 pub struct MetisPartitioner {
     /// Population balance tolerance (0.005 = 0.5%).
     pub balance_tolerance: f64,
     /// Number of METIS refinement iterations (default: 10).
     pub niter: i32,
+    /// Which METIS backend to use (default: `CFfi`).
+    pub engine: MetisEngine,
 }
 
 impl Default for MetisPartitioner {
     fn default() -> Self {
-        Self { balance_tolerance: 0.005, niter: 10 }
+        Self { balance_tolerance: 0.005, niter: 10, engine: MetisEngine::default() }
     }
 }
 
 impl MetisPartitioner {
-    /// UFactor: METIS encodes balance as ufactor where
-    /// allowed imbalance = 1 + ufactor/1000.
-    /// So balance_tolerance=0.005 → ufactor=5.
+    pub fn with_engine(engine: MetisEngine) -> Self {
+        Self { engine, ..Self::default() }
+    }
+
+    /// UFactor encoding: ufactor = balance_tolerance * 1000 (clamped to [1, 1000]).
     fn ufactor(&self) -> u32 {
         ((self.balance_tolerance * 1000.0).round() as u32).clamp(1, 1000)
     }
 
-    /// Run C METIS on `region` with equal target weights.
-    /// Only compiled when `shadow-metis` feature is active.
-    fn split_c_metis(
+    // ── C METIS FFI path ──────────────────────────────────────────────────────
+
+    /// Equal-weight k-way split via the `metis` Rust FFI crate → libmetis.
+    fn split_c_ffi(
         &self,
         region: &SubGraph,
         k: u32,
@@ -154,18 +194,17 @@ impl MetisPartitioner {
 
         if k == 2 {
             graph.part_recursive(&mut part)
-                .map_err(|e| SplitError::Metis(format!("C bisection: {e}")))?;
+                .map_err(|e| SplitError::Metis(format!("c-ffi bisection: {e}")))?;
         } else {
             graph.part_kway(&mut part)
-                .map_err(|e| SplitError::Metis(format!("C kway k={k}: {e}")))?;
+                .map_err(|e| SplitError::Metis(format!("c-ffi kway k={k}: {e}")))?;
         }
 
         Ok(part.iter().map(|&p| p as u32).collect())
     }
 
-    /// Run C METIS on `region` with asymmetric target fractions.
-    /// Only compiled when `shadow-metis` feature is active.
-    fn split_c_metis_weighted(
+    /// Asymmetric-weight k-way split via the `metis` Rust FFI crate → libmetis.
+    fn split_c_ffi_weighted(
         &self,
         region: &SubGraph,
         target_fracs: &[f32],
@@ -190,11 +229,59 @@ impl MetisPartitioner {
         } else { graph };
 
         graph.part_kway(&mut part)
-            .map_err(|e| SplitError::Metis(format!("C weighted kway k={k}: {e}")))?;
+            .map_err(|e| SplitError::Metis(format!("c-ffi weighted kway k={k}: {e}")))?;
 
         Ok(part.iter().map(|&p| p as u32).collect())
     }
+
+    // ── redist-metis pure-Rust path ───────────────────────────────────────────
+
+    /// Equal-weight k-way split via the `redist-metis` pure-Rust engine.
+    fn split_redist_metis(
+        &self,
+        g: &CsrGraph,
+        k: u32,
+        seed: Option<u64>,
+    ) -> Result<Vec<u32>, SplitError> {
+        let params = MetisParams {
+            ufactor:    self.ufactor(),
+            niter:      self.niter as u32,
+            seed,
+            coarsen_to: 20,
+            tpwgts:     None,
+            ..MetisParams::default()
+        };
+        RustMetisPartitioner::with_params(params, k)
+            .split(g, k, seed)
+            .map(|r| r.assignment)
+            .map_err(|e| SplitError::Metis(format!("redist-metis k={k}: {e}")))
+    }
+
+    /// Asymmetric-weight k-way split via `redist-metis`.
+    /// Falls back to equal-weight split (v1 does not support tpwgts).
+    fn split_redist_metis_weighted(
+        &self,
+        g: &CsrGraph,
+        k: u32,
+        fracs_u32: &[u32],
+        seed: Option<u64>,
+    ) -> Result<Vec<u32>, SplitError> {
+        let params = MetisParams {
+            ufactor:    self.ufactor(),
+            niter:      self.niter as u32,
+            seed,
+            coarsen_to: 20,
+            tpwgts:     None,
+            ..MetisParams::default()
+        };
+        RustMetisPartitioner::with_params(params, k)
+            .split_weighted(g, fracs_u32, seed)
+            .map(|r| r.assignment)
+            .map_err(|e| SplitError::Metis(format!("redist-metis weighted k={k}: {e}")))
+    }
 }
+
+// ── Partitioner impl ──────────────────────────────────────────────────────────
 
 impl Partitioner for MetisPartitioner {
     fn split(
@@ -206,57 +293,45 @@ impl Partitioner for MetisPartitioner {
         if k == 0 { return Err(SplitError::ZeroParts); }
         let n = region.n_vertices();
         if n == 0 { return Err(SplitError::EmptyRegion); }
+        if k == 1 { return Ok(vec![0u32; n]); }
+        if k as usize >= n { return Ok((0..n as u32).collect()); }
 
-        // Trivial case: only one part requested.
-        if k == 1 {
-            return Ok(vec![0u32; n]);
-        }
+        match self.engine {
+            MetisEngine::CFfi => {
+                let assignment = self.split_c_ffi(region, k, seed)?;
 
-        // Guard: redist-metis rejects k > n (C METIS silently produced trivial
-        // results in this case). When k >= n, assign each vertex its own part.
-        if k as usize >= n {
-            return Ok((0..n as u32).collect());
-        }
-
-        // Build CsrGraph for the Rust METIS engine.
-        let g = CsrGraph::from(region);
-
-        // Primary: C METIS FFI (battle-tested, handles all graph sizes and k values).
-        // The pure Rust METIS (redist-metis) may stall on planar census tract graphs
-        // at certain k values due to coarsening limits. C METIS is used as primary.
-        let c_assignment = self.split_c_metis(region, k, seed)?;
-
-        // Optional shadow: compare Rust METIS result and warn on quality regression.
-        #[cfg(feature = "shadow-metis")]
-        {
-            let rust_params = MetisParams {
-                ufactor:    self.ufactor(),
-                niter:      self.niter as u32,
-                seed,
-                coarsen_to: 20,
-                tpwgts:     None,
-                ..MetisParams::default()
-            };
-            if let Ok(rust_part) = RustMetisPartitioner::with_params(rust_params, k).split(&g, k, seed) {
-                let c_cut    = compute_cut(&g, &c_assignment);
-                let rust_cut = compute_cut(&g, &rust_part.assignment);
-                if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
-                    eprintln!(
-                        "[shadow-metis] k={k}: C cut {c_cut} > Rust cut {rust_cut} ({:.0}% over)",
-                        (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
-                    );
+                // Optional shadow: compare redist-metis quality.
+                #[cfg(feature = "shadow-metis")]
+                {
+                    let g = CsrGraph::from(region);
+                    if let Ok(rust_assignment) = self.split_redist_metis(&g, k, seed) {
+                        let c_cut    = compute_cut(&g, &assignment);
+                        let rust_cut = compute_cut(&g, &rust_assignment);
+                        if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
+                            eprintln!(
+                                "[shadow-metis] k={k}: c-ffi cut {c_cut} > redist-metis cut \
+                                 {rust_cut} ({:.0}% over)",
+                                (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
+                            );
+                        }
+                    }
                 }
-            }
-        }
 
-        Ok(c_assignment)
+                Ok(assignment)
+            }
+
+            MetisEngine::RedistMetis => {
+                let g = CsrGraph::from(region);
+                self.split_redist_metis(&g, k, seed)
+            }
+
+            MetisEngine::Gpmetis => Err(SplitError::Metis(
+                "gpmetis subprocess engine is not yet implemented; \
+                 use c-ffi (default) or redist-metis".into()
+            )),
+        }
     }
 
-    /// Override: passes actual target fractions for accurate population balance
-    /// on asymmetric binary splits (prime-k fallback).
-    ///
-    /// `redist-metis` v1 delegates to equal-weight split; the shadow check
-    /// still runs C METIS with the supplied fractions for a fair comparison.
     fn split_weighted(
         &self,
         region: &SubGraph,
@@ -268,48 +343,55 @@ impl Partitioner for MetisPartitioner {
         if region.n_vertices() == 0 { return Err(SplitError::EmptyRegion); }
         if k == 1 { return Ok(vec![0u32; region.n_vertices()]); }
 
-        // Build CsrGraph for the Rust METIS engine.
-        let g = CsrGraph::from(region);
+        match self.engine {
+            MetisEngine::CFfi => {
+                let assignment = self.split_c_ffi_weighted(region, target_fracs, seed)?;
 
-        // Convert f32 fracs to proportional u32 weights (thousandths).
-        let fracs_u32: Vec<u32> = target_fracs
-            .iter()
-            .map(|&f| (f * 1000.0).round() as u32)
-            .collect();
-
-        let rust_params = MetisParams {
-            ufactor:    self.ufactor(),
-            niter:      self.niter as u32,
-            seed,
-            coarsen_to: 20,
-            tpwgts:     None,
-            ..MetisParams::default()
-        };
-        // Primary: C METIS FFI for weighted splits (population-balanced binary splits).
-        let c_assignment = self.split_c_metis_weighted(region, target_fracs, seed)?;
-
-        // Optional shadow: compare Rust METIS result.
-        #[cfg(feature = "shadow-metis")]
-        {
-            if let Ok(rust_part) = RustMetisPartitioner::with_params(rust_params, k)
-                .split_weighted(&g, &fracs_u32, seed)
-            {
-                let c_cut    = compute_cut(&g, &c_assignment);
-                let rust_cut = compute_cut(&g, &rust_part.assignment);
-                if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
-                    eprintln!(
-                        "[shadow-metis] weighted k={k}: C cut {c_cut} > Rust cut {rust_cut} ({:.0}% over)",
-                        (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
-                    );
+                #[cfg(feature = "shadow-metis")]
+                {
+                    let g = CsrGraph::from(region);
+                    let fracs_u32: Vec<u32> = target_fracs
+                        .iter()
+                        .map(|&f| (f * 1000.0).round() as u32)
+                        .collect();
+                    if let Ok(rust_assignment) =
+                        self.split_redist_metis_weighted(&g, k, &fracs_u32, seed)
+                    {
+                        let c_cut    = compute_cut(&g, &assignment);
+                        let rust_cut = compute_cut(&g, &rust_assignment);
+                        if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
+                            eprintln!(
+                                "[shadow-metis] weighted k={k}: c-ffi cut {c_cut} > \
+                                 redist-metis cut {rust_cut} ({:.0}% over)",
+                                (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
+                            );
+                        }
+                    }
                 }
-            }
-        }
 
-        Ok(c_assignment)
+                Ok(assignment)
+            }
+
+            MetisEngine::RedistMetis => {
+                let g = CsrGraph::from(region);
+                let fracs_u32: Vec<u32> = target_fracs
+                    .iter()
+                    .map(|&f| (f * 1000.0).round() as u32)
+                    .collect();
+                self.split_redist_metis_weighted(&g, k, &fracs_u32, seed)
+            }
+
+            MetisEngine::Gpmetis => Err(SplitError::Metis(
+                "gpmetis subprocess engine is not yet implemented; \
+                 use c-ffi (default) or redist-metis".into()
+            )),
+        }
     }
 }
 
-/// Convenience: build a SubGraph from raw arrays and split it in one call.
+// ── Convenience function ──────────────────────────────────────────────────────
+
+/// Build a SubGraph from raw arrays and split it in one call.
 pub fn split_region(
     strategy: &dyn Partitioner,
     vertices: &[usize],

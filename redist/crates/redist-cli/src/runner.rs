@@ -166,16 +166,21 @@ impl Default for WeightSpec {
     }
 }
 
-/// METIS optimizer knobs.
+/// METIS optimizer knobs, including engine selection.
 #[derive(Debug, Clone)]
 pub struct MetisParams {
     pub ufactor: u32,
     pub niter: u32,
     pub seed: Option<u64>,
+    /// Which METIS backend to use. Default: `CFfi` (links libmetis).
+    /// Set to `RedistMetis` for a portable standalone binary with no C dependency.
+    pub engine: redist_apportion::split::MetisEngine,
 }
 
 impl Default for MetisParams {
-    fn default() -> Self { Self { ufactor: 5, niter: 100, seed: None } }
+    fn default() -> Self {
+        Self { ufactor: 5, niter: 100, seed: None, engine: redist_apportion::split::MetisEngine::default() }
+    }
 }
 
 /// Three-layer algorithm compositor.
@@ -224,7 +229,10 @@ impl AlgorithmConfig {
     /// ufactor, niter, seed, and mode-specific knobs explicitly.
     pub fn from_state_args(args: &crate::args::StateArgs) -> Self {
         use crate::args::PartitionMode as PM;
-        let metis = MetisParams { ufactor: args.ufactor, niter: args.niter, seed: args.seed };
+        let engine = args.metis_engine
+            .map(|e| e.into())
+            .unwrap_or_default();
+        let metis = MetisParams { ufactor: args.ufactor, niter: args.niter, seed: args.seed, engine };
         let base_weights = WeightSpec {
             alpha_county: args.alpha_county,
             ..WeightSpec::default()
@@ -1285,6 +1293,7 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             let partitioner = MetisPartitioner {
                 balance_tolerance: per_level_tol,
                 niter: niter as i32,
+                engine: cfg.algo.metis.engine,
             };
             let compositor = PfrCompositor::new(partitioner);
             let result = compositor.compose(

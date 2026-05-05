@@ -87,6 +87,13 @@ pub struct AlgorithmSection {
 
     /// VRA alignment weight for ratio-optimal-vra (VRASection). Default 0.40.
     pub w_vra: Option<f64>,
+
+    /// METIS backend engine.
+    /// Values: c-ffi (default) | redist-metis | gpmetis
+    /// c-ffi: links libmetis (battle-tested, all k values).
+    /// redist-metis: pure Rust, no C dependency, portable standalone binary.
+    /// gpmetis: external subprocess (reserved, not yet implemented).
+    pub engine: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -231,12 +238,26 @@ impl AlgoYaml {
             }
         };
 
+        // ── Engine selection ───────────────────────────────────────────────────
+        let engine = match sec.engine.as_deref().unwrap_or("c-ffi") {
+            "c-ffi" | "c" | "metis-rs" => redist_apportion::split::MetisEngine::CFfi,
+            "redist-metis" | "rust"    => redist_apportion::split::MetisEngine::RedistMetis,
+            "gpmetis" | "subprocess"   => redist_apportion::split::MetisEngine::Gpmetis,
+            other => {
+                return Err(format!(
+                    "[CONFIG] config: unknown engine '{}'. \
+                     Valid values: c-ffi | redist-metis | gpmetis",
+                    other
+                ));
+            }
+        };
+
         Ok(AlgorithmConfig {
             split,
             weights,
             vertex_constraints,
             seeds,
-            metis: MetisParams::default(),
+            metis: MetisParams { engine, ..MetisParams::default() },
             mode_label: None,
         })
     }
@@ -309,6 +330,7 @@ pub fn write_template_config(
         balance_tolerance,
         area_swing: None,
         w_vra: None,
+        engine: None,
     };
     let yaml_doc = AlgoYaml {
         name: name.to_string(),

@@ -1161,6 +1161,34 @@ pub enum SearchMode {
     Convergence,
 }
 
+/// Which METIS backend to use for graph partitioning.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum MetisEngineArg {
+    /// C METIS via the `metis` Rust FFI crate (links libmetis). Default.
+    /// Battle-tested; handles all k values including prime k without stalling.
+    #[value(name = "c-ffi")]
+    CFfi,
+    /// Pure-Rust METIS (`redist-metis` crate). No C dependency.
+    /// Produces a fully portable standalone binary. May stall on prime k
+    /// for large graphs (>1000 tracts with prime k).
+    #[value(name = "redist-metis")]
+    RedistMetis,
+    /// External `gpmetis` binary subprocess. Requires gpmetis on PATH.
+    /// Not yet implemented — returns an error if selected.
+    #[value(name = "gpmetis")]
+    Gpmetis,
+}
+
+impl From<MetisEngineArg> for redist_apportion::split::MetisEngine {
+    fn from(arg: MetisEngineArg) -> Self {
+        match arg {
+            MetisEngineArg::CFfi        => Self::CFfi,
+            MetisEngineArg::RedistMetis => Self::RedistMetis,
+            MetisEngineArg::Gpmetis     => Self::Gpmetis,
+        }
+    }
+}
+
 #[derive(Debug, Parser)]
 #[command(disable_version_flag = true)]
 pub struct StateArgs {
@@ -1310,6 +1338,13 @@ pub struct StateArgs {
     /// Stops when this many consecutive seeds produce no EC improvement.
     #[arg(long, default_value_t = 500)]
     pub convergence_threshold: u32,
+
+    /// METIS backend engine.
+    /// c-ffi (default): links libmetis.so/dll — battle-tested, handles all k.
+    /// redist-metis: pure Rust, no C dependency — portable standalone binary.
+    /// gpmetis: external gpmetis subprocess (reserved, not yet implemented).
+    #[arg(long, value_enum)]
+    pub metis_engine: Option<MetisEngineArg>,
 
     // ── Spec 1: custom parameters ─────────────────────────────────────────────
 
