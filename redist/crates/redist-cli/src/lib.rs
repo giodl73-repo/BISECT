@@ -1,4 +1,6 @@
 pub mod adjacency_loader;
+pub mod algo_config;
+pub mod label;
 #[cfg(test)]
 mod integration_pipeline_tests;
 pub mod aggregate;
@@ -28,6 +30,7 @@ pub mod partisan_shares;
 pub mod policy;
 pub mod provenance;
 pub mod registry;
+pub mod run_registry;
 pub mod research;
 pub mod report_cmd;
 pub mod runner;
