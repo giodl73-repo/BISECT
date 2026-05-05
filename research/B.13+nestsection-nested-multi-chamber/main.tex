@@ -2,6 +2,8 @@
 
 %% Packages
 \usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
 \usepackage{hyperref}
@@ -25,7 +27,8 @@
 \newtheorem{remark}[theorem]{Remark}
 
 %% Math operators
-\DeclareMathOperator{\gcd}{gcd}
+% \gcd is predefined by amsmath; use \renewcommand instead
+\renewcommand{\gcd}{\operatorname{gcd}}
 \DeclareMathOperator{\lcm}{lcm}
 \DeclareMathOperator{\spine}{spine^*}
 
