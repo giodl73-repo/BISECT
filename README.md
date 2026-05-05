@@ -18,7 +18,7 @@ First time on a clean machine? Run **`bash bootstrap.sh`** (Linux/macOS) or **`b
 
 **Is:** an algorithmic redistricting engine with bisection-based district drawing, plan analysis (compactness, VRA, partisan, splits), reproducibility-grade manifests, and a backend for Districtr/DRA round-tripping.
 
-**Is not:** a GUI for interactive map drawing (use Districtr; we are the analytical backend), a real-time multiplayer editor, an automated litigation predictor, or a partisan tool. The algorithm itself is partisan-blind by default; partisan-weighted bisection is opt-in (Plan 03) and mutually exclusive with VRA-aware bisection per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36.
+**Is not:** a GUI for interactive map drawing (use Districtr; we are the analytical backend), a real-time multiplayer editor, an automated litigation predictor, or a partisan tool. The algorithm itself is partisan-blind by default; partisan-weighted bisection is opt-in and mutually exclusive with VRA-aware bisection per *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36.
 
 ---
 
@@ -31,31 +31,158 @@ cargo build --release --manifest-path redist/Cargo.toml
 # Download 2020 census data
 redist fetch --year 2020
 
-# Draw all 50 congressional districts (~15 seconds)
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+# Official proposal: all 50 states with ApportionRegions + county-sticky weights
+redist build official_2020 --year 2020 --workers 8
 
-# Draw Washington's 98 house districts
-redist state --state WA --year 2020 --version WA_Plans \
-  --districts 98 --chamber house --label wa_house_draft1 \
-  --balance-tolerance 5.0 --seed 42
+# Verify the SHA audit chain (config → build → analysis → report)
+redist label-verify official_2020 --year 2020
 
-# Analyze: compactness, partisan fairness, county splits, VRA
-redist analyze --label wa_house_draft1 --year 2020 --version WA_Plans --types all
+# Analyze and report
+redist label-analyze official_2020 --year 2020 --types all
+redist label-report  official_2020 --year 2020 --format json
 
-# Compare to enacted map
-redist compare --plan-a wa_house_draft1 --enacted --year 2020 --version WA_Plans
-
-# Generate commission report (HTML + JSON)
-redist report --label wa_house_draft1 --year 2020 --version WA_Plans --format html json
+# List all named plans and their pipeline status
+redist ls
 ```
+
+`configs/official_proposal.yml` contains the reference configuration for the federal statute proposal — ApportionRegions structure, county-sticky geographic weights, convergence-sweep seed search.
+
+---
+
+## The three-layer compositor
+
+Every `redist` run is fully described by three independent choices:
+
+| Layer | Flag | What it controls |
+|-------|------|-----------------|
+| **Structure** | `--structure` | *How* the bisection tree is organized |
+| **Weights** | `--weights-override` | *What* graph signal METIS optimises |
+| **Search** | `--search` | *How* the seed space is explored |
+
+These three choices are orthogonal. You can mix any structure with any weights and any search strategy.
+
+### Structure modes (`--structure`)
+
+| Value | Algorithm | Description |
+|-------|-----------|-------------|
+| `standard-bisect` | Standard | ⌊k/2⌋:⌈k/2⌉ binary split at every level (default) |
+| `prime-factor` | **ApportionRegions** (B.11) | Split via prime factorization of k. k=14 → 7×2, k=17 (prime) → 9+8. Geographic completion of Huntington-Hill |
+| `ratio-optimal` | **GeoSection** (B.8) | Try all ratios 1:(k-1)…⌊k/2⌋:⌈k/2⌉ at level 1; pick minimum normalised edge-cut |
+| `ratio-optimal-area` | **AreaSection** (B.9) | GeoSection ratio sweep with ncon=2 dual constraint [population, area] |
+| `ratio-optimal-vra` | **VRASection** (B.14) | GeoSection ratio sweep with minority geographic alignment score |
+| `nway` | N-way direct | Direct k-way METIS partition (no bisection tree) |
+| `compact-polsby` | CompactBisect | Polsby-Popper guided bisection |
+
+### Weight modes (`--weights-override`)
+
+| Value | Description |
+|-------|-------------|
+| `geographic` | Edge weight = shared boundary length (default for edge-weighted modes) |
+| `county` | County-sticky: ×3.0 on county-interior edges, promotes county preservation |
+| `unweighted` | Pure population balance, no geometric signal |
+| `vra-aligned` | Minority-to-minority edges boosted; partisan data excluded |
+| `proportional` | ncon=2 [population, D_votes]; ProportionalSection (B.12) |
+
+### Search modes (`--search`)
+
+| Value | Description |
+|-------|-------------|
+| `single` | One content-derived seed (SHA-256 of census release + state FIPS). Deterministic. |
+| `multi` | Walk `--seeds N` seeds; pick minimum edge-cut. |
+| `convergence` | Walk seeds from SHA-256 chain; stop after `--seeds T` (default 500) non-improving. Empirically sufficient for all 50 states (B.16). |
+
+### Examples
+
+```bash
+# Official proposal: ApportionRegions + county-sticky + convergence sweep
+redist build official_2020 --year 2020 --workers 8
+# (reads configs/official_2020.yml — structure: prime-factor, weights: county, search: convergence)
+
+# GeoSection with 100 seeds per ratio
+redist state --state NC --year 2020 --version nc_test \
+  --structure ratio-optimal --search multi --seeds 100
+
+# AreaSection for Illinois (area-balanced bisection, ±10% area swing)
+redist state --state IL --year 2020 --version il_area \
+  --structure ratio-optimal-area --area-swing 1.10 --search convergence
+
+# Standard bisection with county weights
+redist state --state WI --year 2020 --version wi_county \
+  --partition-mode edge-weighted --weights-override county
+
+# ApportionRegions direct (no config file)
+redist state --state PA --year 2020 --version pa_pfr \
+  --structure prime-factor --search convergence --seeds 600
+```
+
+---
+
+## Label-based run management (Spec 7)
+
+Plans are referenced by **labels** — short identifiers that resolve to all directory paths by convention. No path arguments needed in normal use.
+
+```
+runs/{label}/{year}/{state}/     ← build outputs
+analysis/{label}/{year}/         ← analysis outputs
+reports/{label}/{year}/          ← report outputs
+```
+
+Every stage writes an `index.json` with a SHA-256 that chains to the previous stage, forming a tamper-evident audit trail: **config → build → analysis → report**.
+
+### Core verbs
+
+```bash
+# Build: draw all congressional districts for a named plan
+redist build <label> [--year 2020] [--states IA TX CA] [--workers 8] [--force]
+
+# Analyze: run metrics on a built plan
+redist label-analyze <label> [--year 2020] [--types summary compactness political]
+
+# Report: produce formatted output
+redist label-report  <label> [--year 2020] [--format json html pdf]
+
+# Verify: traverse the SHA chain and confirm integrity
+redist label-verify  <label> [--year 2020]
+
+# Inspect
+redist ls                        # list all labels and their pipeline status
+redist ls --json                 # machine-readable JSON
+redist show <label>              # detailed status, paths, SHA chain
+redist show <label> --json
+
+# Rename (patches root index; data moves atomically)
+redist mv <label> <new-label>
+
+# Import an external plan (CSV or GeoJSON) as a label
+redist label-import <label> --from plan.csv --year 2020 --format csv
+
+# Compare two labels side-by-side
+redist label-compare <label-a> <label-b> --year 2020
+```
+
+### Plan configuration (YAML)
+
+Place a YAML config in `configs/<label>.yml`:
+
+```yaml
+name: official_2020
+algorithm:
+  structure: prime-factor        # ApportionRegions bisection tree
+  weights: county                # county-sticky geographic weights
+  search: convergence            # walk seeds until T non-improving
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+years: ["2020", "2010", "2000"]
+```
+
+Then run `redist build official_2020` — the config SHA is recorded in the build index.
 
 ---
 
 ## What it does
 
-### Redistricting
-
-Any chamber, any district count, any census year:
+### Redistricting — any chamber, any district count
 
 ```bash
 redist state --state WA --districts 98 --chamber house   # state house
@@ -63,53 +190,20 @@ redist state --state WA --districts 49 --chamber senate  # state senate
 redist state --state WA --chamber congressional          # congressional (from config)
 ```
 
-Multi-chamber suites with nesting validation (senate = 2 × house):
+### Multi-state runs
 
 ```bash
-redist suite --state WA --year 2020 --version WA_Plans \
-  --name wa_commission_v1 \
-  --house-districts 98 --senate-districts 49 \
-  --nest senate-in-house --seed 42
-```
+# All 50 states, 8 workers
+redist states --year 2020 --version V3 --workers 8
 
-Three partition modes:
-- **`edge-weighted`** (default) — compactness-optimized, follows geographic boundaries
-- **`unweighted`** — pure population balance, no geometric optimization
-- **`metis-vra`** — VRA-compliant, boosts edges between minority-heavy tracts
-
-### Choosing resolution: tract vs block group
-
-`redist` runs at census tract resolution by default (~4,000 people/unit). For state legislative maps with many districts, tract resolution may be too coarse:
-
-| Resolution | Unit size | WA 98-district house | Recommendation |
-|------------|-----------|----------------------|----------------|
-| `tract` (default) | ~4,000 pop | 18 units/district | OK for ≤50 districts |
-| `block_group` | ~1,200 pop | 54 units/district | Required for large chambers |
-
-**Rule of thumb**: if `num_districts / state_tracts > 0.05` (fewer than 20 tracts per district), use block_group.
-
-```bash
-# WA house 98D — tract fails, block_group works
-redist state --state WA --year 2020 --version WA_Plans \
-  --districts 98 --chamber house --label wa_house_draft1 \
-  --resolution block_group --balance-tolerance 10.0 --seed 42
-
-# TX house 150D — tract works (46 tracts/district)
-redist state --state TX --year 2020 --version TX_Plans \
-  --districts 150 --chamber house --label tx_house_draft1 \
-  --balance-tolerance 10.0 --seed 42
-```
-
-Block group adjacency files are built with:
-```bash
-python scripts/data/geography/build_unit_adjacency.py \
-  --state WA --year 2020 --resolution block_group
+# Specific states only
+redist states --year 2020 --version V3 --states VT DE AK WY --workers 4
 ```
 
 ### Analysis
 
 ```bash
-redist analyze --label wa_house_draft1 --types all
+redist label-analyze wa_house_draft1 --year 2020 --types all
 ```
 
 Produces per-district JSON for:
@@ -117,18 +211,15 @@ Produces per-district JSON for:
 - **Political** — partisan lean (efficiency gap, mean-median, partisan bias with 95% CI)
 - **Compactness** — Polsby-Popper, Reock, convex hull ratio
 - **Contiguity** — verifies every district is a connected set of tracts
-- **Splits** — county and municipal preservation (state-specific constitutional standard)
+- **Splits** — county and municipal preservation
 - **Urban** — largest city per district
-- **VRA** — majority-minority district count and compliance
+- **VRA** — majority-minority district count and compliance; bloc-voting regression (Callais p.36)
+- **Proportionality** — seat-vote curve, Lorenz feasibility, Rodden gap
 
 ### Plan comparison
 
 ```bash
-# Compare two generated plans
-redist compare --plan-a wa_house_v1 --plan-b wa_house_v2
-
-# Compare against currently enacted districts (downloads from Census if needed)
-redist compare --plan-a wa_house_v1 --enacted
+redist label-compare wa_house_v1 wa_house_v2 --year 2020
 ```
 
 Reports Jaccard similarity, population equality, compactness, splits, and partisan metrics side-by-side. No "winner" declared — metrics presented neutrally for commission review.
@@ -136,47 +227,24 @@ Reports Jaccard similarity, population equality, compactness, splits, and partis
 ### Commission reports
 
 ```bash
-redist report --label wa_house_v1 --format html json pdf
+redist label-report wa_house_v1 --year 2020 --format html json pdf
 ```
 
-10-section formal report:
-1. Executive summary with pass/fail for each legal requirement
-2. Population equality (per-district table + deviation histogram)
-3. Geographic constraints (contiguity, county splits, municipal splits)
-4. Partisan fairness (EG, MM, PB with 95% CI and academic citation)
-5. Minority representation (VRA compliance)
-6. Compactness (vs enacted, vs statewide average)
-7. Comparison vs enacted plan
-8. Nesting compliance (for multi-chamber suites)
-9. **Full audit trail** — SHA-256 of all inputs, binary provenance, complete reproduction command
-10. Maps (all types)
-
-### Interoperability — RPLAN format
-
-`redist` defines **RPLAN v0.1**, the first open redistricting plan interchange format. Export to or import from any tool:
-
-```bash
-# Export for other tools
-redist export --label wa_house_v1 --format geojson shapefile gerrychain csv rplan
-
-# Import a plan from DRA, PlanScore, or any GeoJSON source
-redist import --file dra_alternative.geojson --state WA --year 2020 --label dra_alt
-
-# Validate any RPLAN file
-redist validate --file wa_house_v1.rplan
-```
-
-Compatible with: GerryChain v2.3+, Dave's Redistricting App, PlanScore, QGIS, ArcGIS, Maptitude.
+10-section formal report with full audit trail — SHA-256 of all inputs, binary provenance, complete reproduction command.
 
 ---
 
 ## Research results
 
-**Headline result (2020 Census):** mean Polsby-Popper compactness **0.361** (95% CI: 0.351-0.370), a **+22% improvement** over enacted 2020 congressional districts (PP 0.296). 37 of 44 multi-district states beat their own enacted maps. Illinois +174%, Louisiana +104%, New Hampshire +102%.
+**Headline result (2020 Census):** mean Polsby-Popper compactness **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over enacted 2020 congressional districts (PP 0.296). 37 of 44 multi-district states beat their own enacted maps.
 
-**VRA result (2020):** `metis-vra` mode achieves majority-minority district targets in Alabama (2 MM districts) and Georgia (7 MM districts, exceeding the 5-district target).
+**ApportionRegions (B.11) — 2020 sweep:** 223D/209R national (51.6% D). NC k=14=7×2 → **7D/7R** (near-perfectly proportional, −0.7pp gap) vs. standard bisection 5D/9R (−13.6pp). Structure, not criterion, drives partisan outcomes.
 
-**State legislative results:** Using block group resolution (`--resolution block_group`), `redist` successfully draws state legislative maps for all 50 states including the hardest cases: Nevada (71% of population in Clark County), Louisiana (bayou geography, isolated tracts), Virginia (95 counties + 38 independent cities tracked separately), and Texas (150 state house districts — the largest state legislature in the country).
+**GeoSection (B.8) — 50-state sweep:** 5D/9R stable for NC across all tested seeds. Algorithm characterised: ratio selectivity follows isoperimetric EC/√(min(i,k−i)) normalisation; 6D/8R not achievable for NC without multi-level area constraint.
+
+**AreaSection (B.9) — 50-state sweep:** 76% of seat-distribution outcomes stable vs. standard bisection. Lorenz infeasibility filter identifies states (GA, concentrated) where equal-area splits are geographically impossible. Dual-constraint regime boundary at area_swing=1.10 (B.9 §4).
+
+**ConvergenceSweep (B.16):** T=600 non-improving seeds is empirically sufficient for all 50 states. Seed space explored via SHA-256 chain `BLAKE3(census_release_id‖"DIA_SEED_V1"‖i)`.
 
 **[View all dashboards](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results. All 50 states, 435 districts, round-by-round bisection maps.
 
@@ -184,385 +252,180 @@ Compatible with: GerryChain v2.3+, Dave's Redistricting App, PlanScore, QGIS, Ar
 
 ## The bigger picture: a federal statute analogous to Huntington-Hill
 
-The Supreme Court's *Rucho v. Common Cause* (2019) decision held that partisan-gerrymandering claims are nonjusticiable in federal court — there is no "judicially manageable standard" for federal courts to apply. But Roberts' opinion explicitly invited Congress and the States to act through positive law: state constitutions, state commissions, and **federal legislation** (HR 1 was cited by name).
+The Supreme Court's *Rucho v. Common Cause* (2019) held that partisan-gerrymandering claims are nonjusticiable in federal court. Roberts' opinion explicitly invited Congress and the States to act through positive law.
 
-Two of those paths — state-court litigation and state commissions — are working but slow. The third — single-issue federal legislation — has not been seriously attempted.
+This project's working thesis (B.02): the gap *Rucho* opened can be closed by a federal statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes one deterministic algorithm; states execute it; any person can verify the output byte-identically. **ApportionRegions is the algorithmic proposal** — it is the only redistricting method derivable from the apportionment statute itself (HH seat allocation → prime-factor factorization of k → bisection tree).
 
-This project's working thesis is that the gap *Rucho* opened can be closed by a federal statute structurally analogous to **2 U.S.C. § 2a** (Huntington-Hill apportionment). Congress prescribes one deterministic algorithm; states execute it; any person can verify the output byte-identically.
+Drafts live under [`docs/legal/`](docs/legal/):
+- **[`MODEL_FEDERAL_STATUTE.md`](docs/legal/MODEL_FEDERAL_STATUTE.md)** — bill text in U.S. Code drafting style (v0.1, post 5-role review)
+- **[`STATUTE_RATIONALE.md`](docs/legal/STATUTE_RATIONALE.md)** — policy memo: why Congress, why reproducibility, why bisection, why now
+- **[`STATUTE_ONE_PAGER.md`](docs/legal/STATUTE_ONE_PAGER.md)** — 90-second version for staff briefings
+- **[`FAIRNESS_DOCTRINE.md`](docs/legal/FAIRNESS_DOCTRINE.md)** — state-court companion for partisan-gerrymandering litigation post-*Rucho*
 
-Drafts now live under [`docs/legal/`](docs/legal/):
-
-- **[`MODEL_FEDERAL_STATUTE.md`](docs/legal/MODEL_FEDERAL_STATUTE.md)** — bill text in U.S. Code drafting style (v0.1, post 5-role review). Defines tracts, mandates recursive bisection on the tract adjacency graph, requires reproducibility artifacts (`final_assignments.json` + `manifest.json` with input SHA-256s), preserves VRA § 2 as a deviation from baseline with published *Gingles* justification, and creates a private right of action for citizens to verify byte-identity.
-- **[`STATUTE_RATIONALE.md`](docs/legal/STATUTE_RATIONALE.md)** — policy memo: why Congress (Rucho's invitation), why reproducibility (every other "fair maps" standard imports discretion), why bisection (uniquely writeable, executable, constitutionally defensible), why states execute and not Census (Elections Clause cleanliness + local knowledge + politics), why now (the implementation is mature; post-Callais clarifies disentanglement).
-- **[`STATUTE_ONE_PAGER.md`](docs/legal/STATUTE_ONE_PAGER.md)** — 90-second version for staff briefings.
-- **[`PARTISAN_OPTIONS.md`](docs/legal/PARTISAN_OPTIONS.md)** — how the project's four partisan-input postures (partisan-blind / partisan-balanced / partisan-similarity / party-overlapping) fit together. The Federal Statute prohibits inputs (2)–(4) for federal congressional districts; they remain available for state legislative districts and civic counter-proposals. The new `redist analyze --types proportionality` metric is the cross-cutting comparison lens.
-
-The architecture in one paragraph: **Algorithm and parameters → federal (Director of Census + expert panel under § 107). Execution → state. VRA § 2 deviations → state, with published *Gingles* justification. Verification → any citizen, byte-identically, with private right of action.** Federal courts get jurisdiction; a successful suit substitutes the algorithm's output for the State's published map. This is the same posture as VRA § 2 today, applied to mechanical reproducibility instead of substantive fairness.
-
-The reference implementation under § 107(a) of the model bill is what this project ships: `redist` produces the `manifest.json` + `final_assignments.json` schemas the bill requires, with byte-stable AEA-compliant replication packages (`redist analyze --paper-mode`), bloc-voting analysis for VRA § 2 (`redist analyze --types bloc-voting`), and Callais-disentangled partisan-weighted mode for state-court fairness claims. **The technical risk is zero — the algorithm has been in production scientific computing since METIS shipped in 1997. The work that remains is political: coalition assembly around a freestanding, single-issue bill.**
-
-The state-court companion ([`FAIRNESS_DOCTRINE.md`](docs/legal/FAIRNESS_DOCTRINE.md)) is the strategy for *today*. The federal-statute drafts are the strategy for the **2030 census cycle**.
+The architecture: **Algorithm and parameters → federal. Execution → state. VRA § 2 deviations → state, with published *Gingles* justification. Verification → any citizen, byte-identically, with private right of action.**
 
 ---
 
 ## Why bisection is fair
 
-Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimized design.
+Bisection is fair because it eliminates the choice. When you split something in half, neither side gets to pick which half is theirs — the cut is determined by the constraint (equal population) and the geometry, not by who benefits. Repeating that process recursively means every district is the product of a series of neutral halvings, not a single optimised design.
 
-It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds of splitting. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
+It's also transparent. You can watch each round of splitting in the dashboard and see exactly how a 52-district California map emerges from 6 rounds. There's no black box — just a sequence of cuts, each one as fair as splitting a pizza.
 
-Procedural fairness is a stronger property than the substantive-fairness claims federal courts have rejected post-*Rucho*. "This map is fair" is contested; "this map is the byte-identical output of running this published algorithm on these published inputs" is verifiable. That's the property the federal-statute drafts above are built on.
+Procedural fairness is a stronger property than the substantive-fairness claims federal courts have rejected post-*Rucho*. "This map is fair" is contested; "this map is the byte-identical output of running this published algorithm on these published inputs" is verifiable.
 
 ## How it works
 
-**The picture, in plain terms:** treat the state as a map of small neighborhoods. Two neighborhoods are connected if they share a border, and the connection is "stronger" the longer that shared border is. The algorithm cuts the map in half by snipping the weakest set of connections that produces two halves with equal population — which naturally avoids long, jagged borders.
+**In plain terms:** treat the state as a map of small neighborhoods connected where they share a border. Connection strength = length of that shared border. The algorithm cuts the map in half by snipping the weakest set of connections that produces two halves with equal population — which naturally avoids long, jagged borders.
 
-Stated formally, the algorithm treats each state as a graph. Census tracts are nodes; two tracts are connected if they share a border. The weight on each edge is the length of that shared border — so cuts through long shared boundaries cost more than cuts through short ones.
+Formally: census tracts are nodes; two tracts are connected if they share a border; edge weight = shared boundary length. METIS splits the state into two equal-population halves. Each half is split again. This continues for ⌈log₂ N⌉ rounds until there are exactly N districts (or, under ApportionRegions, until the prime-factor tree is exhausted).
 
-Then it bisects. METIS, a high-performance graph partitioner, splits the state into two halves of roughly equal population. Each half is split again. This continues for `⌈log₂ N⌉` rounds until there are exactly `N` districts. Minnesota's 8 districts take 3 rounds. California's 52 take 6.
+Because the algorithm minimises total edge-cut weight — and weight equals shared boundary length — it directly minimises total district perimeter. Polsby–Popper goes up automatically.
 
-Because the algorithm minimizes the total weight of the edges it cuts — and edge weight equals shared boundary length — it is directly minimizing the total perimeter of the resulting districts. Shorter perimeter at fixed area means more compact, more sensible shapes. The Polsby–Popper score (the standard compactness metric) goes up automatically, without ever being told to.
-
-**No political or racial data enters the algorithm at any stage.** The inputs are geometry and population, nothing else.
+**No political or racial data enters the algorithm at any stage.** VRA mode uses demographic data only for edge weighting, not population balance; it is mutually exclusive with partisan-weighted mode per Callais.
 
 ## Track record
 
-The same algorithm, unchanged, run on 2010 Census data produces Polsby–Popper **0.320** — only 10% lower than the 2020 result, despite vastly different political environments, different state legislatures, and a decade of demographic change. Geographic structure drives the outcome, not political opportunity.
-
-The gap between algorithmic and enacted districts has also been shrinking: from 2010 to 2020, enacted maps improved as redistricting reform spread across states. The algorithm's advantage narrowed by roughly half. That's the reform working — and a good sign that the benchmark this project sets is a meaningful one.
+The same algorithm, unchanged, on 2010 Census data: Polsby–Popper **0.320** — only 10% lower than the 2020 result, despite a decade of demographic change. Geographic structure drives the outcome.
 
 ---
 
-## Figures
+## Research (B series — Algorithm track)
 
-### Bisection rounds — Minnesota (8 districts, 3 rounds)
-| Round 1 (1 → 2) | Round 2 (2 → 4) | Round 3 (4 → 8) |
-| :---: | :---: | :---: |
-| ![](docs/figures/minnesota_round_1.png) | ![](docs/figures/minnesota_round_2.png) | ![](docs/figures/minnesota_round_3.png) |
+16 papers characterising the algorithm, its variants, and their properties. LaTeX sources under directory siblings of this file; see each paper's `main.pdf`.
 
-### Bisection rounds — Alabama (7 districts, 3 rounds)
-| Round 1 | Round 2 | Round 3 |
-| :---: | :---: | :---: |
-| ![](docs/figures/alabama_round_1.png) | ![](docs/figures/alabama_round_2.png) | ![](docs/figures/alabama_round_3.png) |
+### Foundations
 
----
+**B.1 · Recursive Bisection for Congressional Redistricting** — graph-theoretic formulation, METIS bisection, unweighted baseline (50 states, 2020).
 
-## Research
+**B.2 · Edge-Weighted Recursive Bisection** — core contribution. Edges weighted by shared boundary length → minimising cut = minimising perimeter. Mean PP **0.361**, +22% over enacted 2020.
 
-20 papers across five tracks. All PDFs are pre-built and open directly from the links below. LaTeX sources live under [`research/`](research/) and [`artifacts/papers/`](artifacts/papers/).
+**B.3 · Single-Objective vs. Multi-Constraint METIS** — why single-objective outperforms: objectives don't compete.
 
----
+**B.4 · Equivalence of Recursive and N-Way Bisection** — with edge weights, both converge to the same solution.
 
-### Track A — Synthesis
+**B.5 · N-Way vs. Recursive Bisection (General)** — comprehensive comparison across chambers and district counts.
 
-**A.0 · Algorithmic Objectivity for Congressional Redistricting: A National-Scale Demonstration**
-[PDF](research/A.0+synthesis-metapaper/main.pdf) · [Source](research/A.0+synthesis-metapaper/)
+**B.6 · Computational Complexity** — runtime analysis for 50-state sweep; O(n log n) empirical.
 
-Synthesis metapaper. Frames the full research program: why bisection is the right method, what the national-scale results show, and what the implications are for redistricting reform. Covers all 50 states across three census decades.
+**B.7 · Solution Space and Seed Sensitivity** — characterises the seed space; motivates convergence sweep.
 
-**A.1 · Research Portfolio Guide**
-[PDF](research/A.1+portfolio-guide/guide.pdf) · [Source](research/A.1+portfolio-guide/)
+### New algorithms (2026)
 
-Reader's guide to the paper portfolio — how the tracks relate, what order to read them in, and how findings build on each other.
+**B.8 · GeoSection — Ratio-Optimal First-Level Bisection** — tries all split ratios 1:(k-1)…⌊k/2⌋:⌈k/2⌉ at the first bisection; selects minimum isoperimetric-normalised edge-cut. NC: 5D/9R stable. Normalisation: EC/√(min(i,k−i)) prevents caterpillar pathology.
 
-**A.2 · Portfolio Summary**
-[PDF](research/A.2+portfolio-summary/summary.pdf) · [Source](research/A.2+portfolio-summary/)
+**B.9 · AreaSection — Dual Population-Area Constraint** — ncon=2 METIS [population, area], ubvec=[1.001, 1+swing]. 76% seat-outcome stability vs. standard bisection. Lorenz infeasibility filter. Regime boundary at area_swing=1.10.
 
-One-document summary of all major findings across the portfolio for readers who want the headlines without the full papers.
+**B.10 · Subdivision-Respecting Redistricting** — county-sticky weights: ×3.0 on county-interior edges, preserves county integrity without hard constraints.
 
----
+**B.11 · ApportionRegions — Geographic Completion of Huntington-Hill** — prime-factor bisection tree. k=14=7×2 → two 7-district sub-problems. k=17 (prime) → 9+8 binary fallback. NC: 7D/7R (−0.7pp gap vs. 51.6% D vote share). Constitutional anchor: Art. I §2 apportionment → §4 manner. National 2020: 223D/209R.
 
-### Track B — Algorithm
+**B.12 · ProportionalSection — Partisan Proportionality via Dual Constraint** — ncon=2 [population, D_votes]; proportionality paradox: competitive states have σ≈0 (target ≈ neutral). Rodden gap is Lorenz feasibility, not target calibration.
 
-**B.1 · From Apportionment to Boundary Design: Recursive Bisection for Congressional Redistricting**
-[PDF](research/B.1+recursive-bisection/main.pdf) · [Source](research/B.1+recursive-bisection/)
+**B.13 · NestSection — Nested Multi-Chamber Redistricting** — spine-compatible bisection ensuring senate = 2 × house at each level.
 
-Baseline method paper. Establishes the graph-theoretic formulation, METIS recursive bisection under population balance, and unweighted baseline results on all 50 states (2020 Census).
+**B.14 · VRASection — Minority Geographic Alignment** — GeoSection ratio sweep with geographic alignment score for minority-opportunity districts. Post-Callais disentanglement: VRA score is orthogonal to partisan signal.
 
-**B.2 · Edge-Weighted Recursive Bisection for Compact Congressional Districts**
-[PDF](research/B.2+edge-weighted-bisection/main.pdf) · [Source](research/B.2+edge-weighted-bisection/)
+**B.15 · StabilitySection — Cross-Census Stability** — bisection tree stability across 2000/2010/2020. Iowa identified as the most interesting unstable case (county population shifts break the 4=2×2 tree at one level).
 
-Core algorithmic contribution. Weights edges by shared boundary length so minimizing the cut directly minimizes district perimeter. Achieves mean Polsby–Popper **0.361** (95% CI: 0.351–0.370), a **+22% improvement** over enacted 2020 maps (PP 0.296).
+**B.16 · ConvergenceSweep — Empirical Seed Sufficiency** — T=600 non-improving seeds is sufficient for all 50 states. Seed walk: SHA-256(census_release_id‖"DIA_SEED_V1"‖i). Deterministic statutory seed formula.
 
-**B.3 · Why Single-Objective Graph Partitioning Outperforms Multi-Constraint Optimization for Redistricting**
-[PDF](research/B.3+multi-vs-edge/main.pdf) · [Source](research/B.3+multi-vs-edge/)
+### Synthesis and policy bridge
 
-Theoretical and empirical comparison of edge-weighted (single-objective) vs. multi-constraint METIS. Shows why single-objective formulation produces better compactness: the objectives don't compete.
+**B.0 · Algorithm Design Overview — Bakeoff** — head-to-head comparison of all eight algorithm modes on the same six competitive states (WI, NC, GA, AZ, MN, NV). Key finding: the compactness–proportionality paradox. WI unweighted gives 4D/4R (proportional) but poor compactness; GeoSection gives 3D/5R (Republican-leaning) at higher compactness. The two objectives trade off systematically — no single mode dominates. Includes a Callais compliance table (VRA ⊕ partisan constraints, mutually exclusive per Callais p.36) and the cross-mode `redist analyze --types proportionality` comparison lens.
 
-**B.4 · Edge-Weighting Makes Method Selection Irrelevant: Complete Equivalence of Recursive and N-Way Bisection**
-[PDF](research/B.4+adaptive-bisection/main.pdf) · [Source](research/B.4+adaptive-bisection/)
+**B.02 · ApportionRegions: Redistricting as Geographic Completion of Huntington-Hill** — the one-sentence federal-law paper. Huntington-Hill (2 U.S.C. § 2a) allocates seats to states by priority sequence; the same priority sequence determines the prime factorization of k, which determines the ApportionRegions bisection tree. The algorithm is therefore derivable from existing statute — it is HH extended from "how many seats?" to "where are the districts?". Paper includes the county-weights connection (counties appear in the HH priority sequence for multi-county states) and the census-stability connection (B.15: the bisection tree is stable across census years when county populations are stable).
 
-Proves that once edge weights are introduced, recursive bisection and direct n-way partitioning converge to the same solution. Method choice doesn't matter — the weighting does.
-
----
-
-### Track C — Validation
-
-**C.1 · Spatial Resolution and Algorithmic Redistricting: MAUP Sensitivity Analysis**
-[PDF](research/C.1+maup-sensitivity/main.pdf) · [Source](research/C.1+maup-sensitivity/)
-
-Tests whether results depend on the choice of geographic unit (census tracts vs. block groups vs. blocks). Finds the algorithm is robust across 130× range in unit count — geography drives outcomes, not resolution.
-
-**C.2 · Cross-Census Validation for Congressional Redistricting Algorithms**
-[PDF](research/C.2+cross-census-validation/main.pdf) · [Source](research/C.2+cross-census-validation/)
-
-Validates the algorithm on 2000, 2010, and 2020 Census data. Compactness scores vary only ~10% across decades, confirming that stable geography — not political cycles — drives performance.
-
-**C.3 · Cross-Census Temporal Stability**
-[PDF](research/C.3+temporal-stability/main.pdf) · [Source](research/C.3+temporal-stability/)
-
-Deep analysis of why the algorithm is temporally stable. Identifies the geographic clustering properties that make bisection outcomes predictable across different political environments.
-
-**C.4 · Twenty Years of Congressional Redistricting: A Longitudinal Analysis**
-[PDF](research/C.4+longitudinal-analysis/main.pdf) · [Source](research/C.4+longitudinal-analysis/)
-
-Tracks algorithmic vs. enacted district quality from 2000 to 2020. Quantifies the shrinking gap as redistricting reform spread across states — and shows the algorithm's benchmark is a meaningful target.
-
-**C.5 · Measuring Partisan Fairness in Algorithmic Redistricting: Efficiency Gap Analysis**
-[PDF](research/C.5+efficiency-gap-analysis/main.pdf) · [Source](research/C.5+efficiency-gap-analysis/)
-
-Applies the efficiency gap metric to algorithmic districts. Shows that purely geographic bisection produces near-zero efficiency gaps in most states — fairness as a byproduct of geometric neutrality.
-
----
-
-### Track D — Voting Rights Act
-
-**D.0 · Voting Rights Act Compliance Through Edge-Weighted Graph Partitioning**
-[PDF](research/D.0+vra-compliance/main.pdf) · [Source](research/D.0+vra-compliance/)
-
-Introduces the `metis-vra` edge-weighted formulation: minority-to-minority tract edges receive higher weights (adaptive formula: `max(3.0, 10.0*(1-0.7*f))`) so METIS naturally preserves minority communities without multi-constraint vertex weights. Tests VRA Section 2 compliance on covered states. This is the algorithm behind the V4 pipeline run.
-
-**D.1 · The 42% Threshold: Geographic Limits of VRA Compliance Through Algorithmic Redistricting**
-[PDF](research/D.1+threshold-analysis/main.pdf) · [Source](research/D.1+threshold-analysis/)
-
-Discovers the critical empirical finding: states where minority population exceeds ~42% statewide achieve all statutory majority-minority district targets with principled methods. Below that threshold, geography makes compliance impossible without sacrificing compactness.
-
-**D.2 · N-Way vs. Recursive Bisection for VRA-Compliant Redistricting**
-[PDF](research/D.2+nway-vs-recursive-vra/main.pdf) · [Source](research/D.2+nway-vs-recursive-vra/)
-
-Compares n-way and recursive approaches specifically for minority district formation. N-way's global optimization concentrates minority population slightly better, but neither method overcomes geographic constraints in low-minority states.
-
-**D.3 · Quantifying the Voting Rights Act–Compactness Tradeoff**
-[PDF](research/D.3+compactness-tradeoff/main.pdf) · [Source](research/D.3+compactness-tradeoff/)
-
-Measures the exact compactness cost of VRA compliance in borderline states. Finds the tradeoff is real but bounded — even in Alabama, the compactness penalty is modest relative to typical enacted maps.
-
----
-
-### Track E — Experimental Extensions
-
-> These papers explore structural alternatives to the current redistricting system — different units, different scopes, different rules. They are forward-looking and speculative rather than empirical validations of the core method.
-
-**E.1 · Multi-Member Districts and Proportional Representation**
-[PDF](research/E.1+multi-member-districts/main.pdf) · [Source](research/E.1+multi-member-districts/)
-
-Extends the bisection algorithm to multi-member districts. Shows that 3- and 5-member districts dramatically reduce the compactness–VRA tension by allowing minority communities to elect representatives without requiring majority-concentration districts.
-
-**E.2 · Direct County Representation: An Alternative to Congressional Redistricting**
-[PDF](research/E.2+county-representation/main.pdf) · [Source](research/E.2+county-representation/)
-
-Proposes using counties as the unit of congressional representation, weighted by population. Eliminates district-drawing entirely. Evaluates compactness, county integrity, and VRA implications.
-
-**E.3 · National Redistricting Without State Boundaries**
-[PDF](research/E.3+national-redistricting/main.pdf) · [Source](research/E.3+national-redistricting/)
-
-Asks what would happen if congressional districts could cross state lines. Applies the algorithm nationally — treating the entire US as one graph — and examines the resulting 435-district map.
-
-**E.4 · Partisan Similarity Districts: Algorithmic Safe Seats**
-[PDF](research/E.4+partisan-similarity-districts/main.pdf) · [Source](research/E.4+partisan-similarity-districts/)
-
-Investigates whether geographic bisection inadvertently creates partisan safe seats by clustering politically similar communities. Finds that compactness and partisan homogeneity are correlated — a natural consequence of geographic sorting.
-
-**E.5 · Partisan Fairness Through Algorithmic Districting**
-[PDF](research/E.5+party-based-allocation/main.pdf) · [Source](research/E.5+party-based-allocation/)
-
-Evaluates whether algorithmic redistricting produces partisan-fair outcomes without intentionally targeting fairness. Compares to proportional representation benchmarks and examines outlier states.
-
----
-
-### Presentation & Guides
-
-- **Conference presentation**: [PDF](artifacts/presentations/edge_weighted_bisection/presentation.pdf) · [Source](artifacts/presentations/edge_weighted_bisection/)
-- **Layman's guide**: [PDF](artifacts/guides/edge_weighted_bisection/laymen_guide.pdf) · [Source](artifacts/guides/edge_weighted_bisection/)
-- **Command reference**: [PDF](artifacts/guides/command_reference/command_reference.pdf) · [Source](artifacts/guides/command_reference/)
-
-The three papers in [`artifacts/papers/`](artifacts/papers/) are earlier standalone versions of B.1, B.2, and B.1+B.2 combined; the `research/` track versions above supersede them.
+**B.16 · ConvergenceSweep — Empirical Seed Sufficiency** — answers: how many seeds are enough? Runs all 50 states with the convergence-sweep search strategy (walk seeds from SHA-256 chain, stop after T non-improving). Empirical result: T=600 is sufficient for all 50 states across all three census years — no state benefits from running beyond 600 consecutive non-improving seeds. Seed generation formula: `BLAKE3(census_release_id ‖ "DIA_SEED_V1" ‖ i)`. This formula is deterministic (given the census release ID), replicable by any verifier, and statute-safe (no human choice in seed selection). T=600 is the recommended statutory value in the model federal statute draft.
 
 ---
 
 ## Getting the Data
 
-Data is distributed via GitHub Releases — no Git LFS, no account required beyond `gh auth login`.
-
 ```bash
-pip install -r requirements.txt
+# Download 2020 census data
+redist fetch --year 2020 --workers 8
 
-# Download curated inputs (~740MB: elections, demographics, baseline, adjacency graphs)
-python setup_data.py --inputs
+# Download all three census years
+redist fetch --year all --workers 8
 
-# Download pre-computed results (skip running the pipeline)
-python setup_data.py --outputs v3    # edge-weighted, 50 states, 2020
-python setup_data.py --outputs v4    # VRA edge-weighted (metis-vra), 50 states, 2020
-
-# Download both outputs
-python setup_data.py --all
+# Convert adjacency pkl files to fast native format (one-time after download)
+python scripts/data/generate_adj_bin.py --year 2020
 ```
 
-Requires the [GitHub CLI](https://cli.github.com/) (`gh auth login` once).
-
-### What's in each release
+Pre-built adjacency files from GitHub Releases (requires `gh auth login`):
+```bash
+redist fetch --year 2020 --release
+```
 
 | Release | Contents | Size |
 |---------|----------|------|
-| [`data-inputs-v1`](https://github.com/giodl73-repo/REDIST/releases/tag/data-inputs-v1) | Elections, demographics, baseline enacted districts, metro areas, MAUP adjacency graphs | 736MB |
-| [`outputs-v3`](https://github.com/giodl73-repo/REDIST/releases/tag/outputs-v3) | V3 edge-weighted results: district CSVs, compactness, political analysis | 3MB |
-| [`outputs-v4`](https://github.com/giodl73-repo/REDIST/releases/tag/outputs-v4) | V4 VRA results: district CSVs with minority compliance analysis | 3MB |
+| [`data-inputs-v1`](https://github.com/giodl73-repo/REDIST/releases/tag/data-inputs-v1) | Elections, demographics, baseline enacted districts, adjacency graphs | 736 MB |
+| [`outputs-v3`](https://github.com/giodl73-repo/REDIST/releases/tag/outputs-v3) | V3 edge-weighted results (all 50 states) | 3 MB |
 
-### Raw Census data (~55GB)
+---
 
-TIGER/Line shapefiles and PL 94-171 redistricting files are downloaded directly from the US Census Bureau — no redistribution needed since they're already public:
+## Project structure
 
-```bash
-python scripts/data/download_orchestrator.py --stages redistricting --year 2020
-python scripts/data/download_orchestrator.py --stages redistricting --year 2010
+```
+redist/               # Rust workspace — production binary
+  crates/
+    redist-cli/       # Binary: all commands (build, state, states, fetch, analyze, map, …)
+    redist-apportion/ # ApportionRegions compositor, split.rs (C METIS primary, Rust shadow)
+    redist-core/      # Bisection, edge-weighting, FIPS, population balance
+    redist-data/      # TIGER reading, adjacency build, .adj.bin serialization
+    redist-analysis/  # Compactness, VRA, political, demographic, bloc-voting, ensemble
+    redist-map/       # Native SVG→PNG map rendering (resvg, Liberation Sans embedded)
+    redist-report/    # Commission report generation (JSON/HTML/PDF stub)
+    redist-metis/     # Pure-Rust METIS implementation (shadow oracle)
+configs/              # YAML plan configs (configs/{label}.yml)
+runs/                 # Build outputs (gitignored, created by redist build)
+analysis/             # Analysis outputs (gitignored)
+reports/              # Report outputs (gitignored)
+data/{year}/          # Raw census data (gitignored, ~55 GB)
+outputs/              # Legacy pipeline outputs (gitignored)
+docs/                 # REDIST_CLI.md (canonical CLI reference), legal/, quickstart/
+docs/specs/           # Spec documents (Spec 7: label run management, etc.)
+notebooks/            # Research notebooks (5 stubs with runtime-budget metadata)
+scripts/              # Python: data download, election sources, dashboard generation
+archive/              # Forensic reference: archive/python-pipeline-final/ (sealed)
+context/              # Developer / AI-assistant docs
 ```
 
 ---
 
-## Quick Start
+## Algorithm constraints
 
-```bash
-pip install -r requirements.txt
-```
+- **Population**: within ±0.5% of state target per district (congressional one-person-one-vote)
+- **Contiguity**: all districts are connected subgraphs
+- **Compactness**: edge-cut minimisation = perimeter minimisation = Polsby–Popper maximisation
+- **No political or racial data** in the standard algorithm; VRA mode and proportional mode are opt-in and mutually exclusive
 
-On Windows, `pymetis` may need `conda install -c conda-forge metis` first.
-
-### Run the full pipeline
-
-```bash
-# All 3 census years in parallel (2-4h)
-run -v v1
-
-# Single year
-run -y 2020 -v v1
-
-# Specific states
-run -y 2020 -v v1 -st MN AL
-
-# Test run (outputs under outputs/dev/)
-runtest -y 2020 -v test -st VT
-```
-
-`run` and `runtest` are `doskey` aliases configured by `setup_env.bat`. See `run -h` for all flags.
-
-### Run a single state
-
-```bash
-python scripts/pipeline/run_state_redistricting.py --state CA --year 2020
-```
-
-### Build the dashboard
-
-```bash
-python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
-python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
-```
-
-## Data
-
-Inputs, per census year (2000, 2010, 2020):
-- **Geometry**: TIGER/Line tract shapefiles
-- **Population**: P.L. 94-171 redistricting files
-- **Places**: TIGER/Line places shapefiles (for city labels)
-
-All census-year data lives under `data/{year}/` (gitignored — ~55GB). Download with:
-
-```bash
-python scripts/data/download_orchestrator.py --stages redistricting --year 2020
-```
-
-## Project Structure
-
-```
-apportionment/
-├── src/apportionment/       # Library: partition/, data/, visualization/
-├── scripts/                 # Executables: pipeline/, data/, political/, demographic/, compactness/, web/
-├── research/                # Research papers (LaTeX sources + PDFs, A–E tracks)
-├── artifacts/               # Earlier papers, presentations, guides
-├── design/                  # Architecture plans: rust-port/, pitfalls/
-├── data/{year}/             # Raw census data (gitignored)
-├── outputs/                 # Pipeline outputs (gitignored)
-├── docs/                    # Human-facing documentation + GitHub Pages dashboards
-├── context/                 # Developer / AI-assistant docs
-└── tests/                   # unit/ (~1000 tests), integration/ (~730 tests), e2e/
-```
-
-## Constraints
-
-- Population: within ±0.5% of state target per district
-- Contiguity: all districts connected
-- Compactness: edge-cut minimization = perimeter minimization = Polsby–Popper maximization
-- **No political or racial data used at any stage** (VRA mode uses demographic data only for edge weighting, not for population balance)
+---
 
 ## Documentation
 
-### Concepts
-Short guides for understanding the core ideas — each has a TL;DR followed by a deep dive.
-
-- [`docs/concepts/recursive-bisection.md`](docs/concepts/recursive-bisection.md) — why bisection, how METIS splits the graph, the binary tree structure
-- [`docs/concepts/edge-weighted-bisection.md`](docs/concepts/edge-weighted-bisection.md) — how boundary-length weights improve compactness automatically
-- [`docs/concepts/polsby-popper.md`](docs/concepts/polsby-popper.md) — the compactness metric: formula, benchmarks, intuition
-- [`docs/concepts/vra-compliance.md`](docs/concepts/vra-compliance.md) — VRA majority-minority districts, the 42% threshold, the V4 algorithm
-- [`docs/concepts/census-data.md`](docs/concepts/census-data.md) — TIGER shapefiles, PL 94-171 files, GEOID format, downloading
-- [`docs/concepts/pipeline-stages.md`](docs/concepts/pipeline-stages.md) — the five pipeline stages and how they connect
-
-### Reference
-- [`docs/RECURSIVE_BISECTION.md`](docs/RECURSIVE_BISECTION.md) — detailed algorithm walkthrough with pseudocode
-- [`docs/PIPELINE_OUTPUTS.md`](docs/PIPELINE_OUTPUTS.md) — every file the pipeline writes (per-state and national)
-- [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) — install + first run
+- [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) — complete CLI reference (all commands, all flags)
+- [`docs/specs/2026-05-04-spec7-run-manifest.md`](docs/specs/2026-05-04-spec7-run-manifest.md) — Spec 7: label-based run management
+- [`docs/legal/`](docs/legal/) — model federal statute, fairness doctrine, partisan options
+- [`docs/quickstart/`](docs/quickstart/) — persona-specific quickstart guides
+- [`docs/error-conventions.md`](docs/error-conventions.md) — `[INPUT]`/`[CONFIG]`/`[NETWORK]`/`[INTERNAL]` error categories
 - [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — version history
-- [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) — workflow + git practices
+- [`context/ARCHITECTURE.md`](context/ARCHITECTURE.md) — system architecture
+- [`context/CODING_PATTERNS.md`](context/CODING_PATTERNS.md) — Rust coding conventions
 
-## Interactive Dashboards
+---
 
-All dashboards are self-contained — no server needed, open directly in a browser.
+## Interactive dashboards
 
 | Dashboard | Census year | Algorithm | Link |
 |-----------|-------------|-----------|------|
 | 2020 Results | 2020 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2020.html) |
 | 2010 Results | 2010 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2010.html) |
 | 2000 Results | 2000 | Edge-weighted bisection | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_2000.html) |
-| VRA (2020) | 2020 | Edge-weighted minority (metis-vra) | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
+| VRA (2020) | 2020 | VRA edge-weighted | [Open →](https://giodl73-repo.github.io/REDIST/dashboard_vra.html) |
 
-To regenerate after a new pipeline run:
-```bash
-python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
-python scripts/web/deploy_docs.py --version V3 --year 2010 --out dashboard_2010.html
-python scripts/web/deploy_docs.py --version V3 --year 2000 --out dashboard_2000.html
-python scripts/web/deploy_docs.py --version V4 --year 2020 --out dashboard_vra.html
-```
-
-## Rust CLI (recommended for production runs)
-
-The `redist` binary is a complete Rust rewrite of the redistricting pipeline — **~213× faster** than Python
-for full 50-state runs (55 min → 15.5 s). It is the recommended entry point for running redistricting.
-
-```bash
-cargo build --release --manifest-path redist/Cargo.toml
-
-redist fetch --year 2020                              # Download census data
-python scripts/data/generate_adj_bin.py --year 2020  # Convert adjacency to fast format
-redist states --year 2020 --version V3 \
-  --output-dir outputs/V3 --workers 8                # All 50 states in ~15 s
-```
-
-See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for full command reference.
-
-**Architecture** (`redist/crates/`): `redist-core` (algorithm) · `redist-data` (adjacency, TIGER) ·
-`redist-cli` (binary) · `redist-analysis` (compactness, VRA) · PyO3 bindings for Python interop.
-
-The Python pipeline (`scripts/pipeline/`) remains available for development and analysis work.
-Phase plan and benchmarks: [`design/rust-port/`](design/rust-port/).
+---
 
 ## License
 

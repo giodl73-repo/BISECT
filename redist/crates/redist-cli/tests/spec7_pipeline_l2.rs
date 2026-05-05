@@ -1,11 +1,14 @@
 //! Spec 7 Label Pipeline — L2 integration test harness.
 //!
-//! Shells out to the `redist` binary and exercises the full label-based
-//! pipeline: `build` → `label-analyze` → `label-report` → `label-verify`,
+//! Uses Iowa 2020 (4 congressional districts, k=4=2×2 — exercises the full
+//! ApportionRegions bisection tree). Vermont was the original state but only
+//! has 1 district (trivial, no bisection). Iowa tests the real algorithm.
+//!
+//! Pipeline exercised: `build` → `label-analyze` → `label-report` → `label-verify`
 //! plus `ls`, `show`, `mv`, and `label-compare`.
 //!
-//! All tests are `#[ignore]` — they require Vermont 2020 adjacency data
-//! at `outputs/V3/data/2020/adjacency/vt_adjacency_2020.adj.bin` relative
+//! All tests are `#[ignore]` — they require Iowa 2020 adjacency data
+//! at `outputs/V3/data/2020/adjacency/ia_adjacency_2020.adj.bin` relative
 //! to the apportionment project root.
 //!
 //! Run with:
@@ -16,6 +19,12 @@
 //!
 //! Spec: Spec 7 §2 (label directory conventions), §3 (analyze/report),
 //!       §4 (ls/show/mv/verify), §5 (import/compare).
+//!
+//! Why Iowa?
+//! - k=4 = 2×2 → ApportionRegions tree has two bisection levels
+//! - Actually exercises the METIS bisection and contiguity enforcement
+//! - ~1,542 census tracts (same order as Wisconsin used in papers)
+//! - Stable geography (B.15: Iowa is the most interesting unstable case)
 
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -27,17 +36,17 @@ const REDIST: &str = env!("CARGO_BIN_EXE_redist");
 
 // ── Adjacency path resolution ─────────────────────────────────────────────────
 
-/// Try to locate the VT 2020 `.adj.bin` file.
+/// Try to locate the IA 2020 `.adj.bin` file.
 ///
 /// Search order (all resolve from environment / compile-time paths):
-/// 1. `REDIST_ADJ_VT` env var (absolute path, useful in CI)
+/// 1. `REDIST_ADJ_IA` env var (absolute path, useful in CI)
 /// 2. `CARGO_MANIFEST_DIR` → navigate up to apportionment project root
 /// 3. Current working directory heuristic
 ///
 /// Returns `None` if the file cannot be found.
-fn find_vt_adj_bin() -> Option<PathBuf> {
+fn find_ia_adj_bin() -> Option<PathBuf> {
     // 1. Explicit env override
-    if let Ok(p) = std::env::var("REDIST_ADJ_VT") {
+    if let Ok(p) = std::env::var("REDIST_ADJ_IA") {
         let path = PathBuf::from(p);
         if path.exists() {
             return Some(path);
@@ -60,7 +69,7 @@ fn find_vt_adj_bin() -> Option<PathBuf> {
             .join("data")
             .join("2020")
             .join("adjacency")
-            .join("vt_adjacency_2020.adj.bin");
+            .join("ia_adjacency_2020.adj.bin");
         if candidate.exists() {
             return Some(candidate);
         }
@@ -72,7 +81,7 @@ fn find_vt_adj_bin() -> Option<PathBuf> {
         .join("data")
         .join("2020")
         .join("adjacency")
-        .join("vt_adjacency_2020.adj.bin");
+        .join("ia_adjacency_2020.adj.bin");
     if cwd_candidate.exists() {
         return Some(cwd_candidate);
     }
@@ -86,7 +95,7 @@ fn find_vt_adj_bin() -> Option<PathBuf> {
 ///
 /// Each fixture:
 /// - Gets its own `TempDir` (no shared state between tests).
-/// - Copies the VT adjacency `.adj.bin` to the expected relative path inside
+/// - Copies the IA adjacency `.adj.bin` to the expected relative path inside
 ///   the tempdir so `redist build` can find it.
 /// - Exposes helper methods for every Spec-7 pipeline command.
 struct PipelineFixture {
@@ -98,9 +107,9 @@ struct PipelineFixture {
 impl PipelineFixture {
     /// Create a fixture for the given label and year.
     ///
-    /// Returns `None` if the VT adjacency data is not available (test is skipped).
+    /// Returns `None` if the IA adjacency data is not available (test is skipped).
     fn new(label: &str, year: &str) -> Option<Self> {
-        let adj_src = find_vt_adj_bin()?;
+        let adj_src = find_ia_adj_bin()?;
 
         let tmp = TempDir::new().expect("create TempDir");
         let root = tmp.path();
@@ -122,15 +131,15 @@ impl PipelineFixture {
         //
         // Path resolution in runner.rs::resolve_adjacency_path():
         //   manifest.local_outputs_dir ("outputs") +
-        //   "V3/data/{year}/adjacency/vt_adjacency_{year}.pkl"
+        //   "V3/data/{year}/adjacency/ia_adjacency_{year}.pkl"
         //
         // That path is returned to load_adjacency_pkl(), which then derives the
         // .adj.bin path by replacing the extension.  resolve_adjacency_path checks
         // that the .pkl EXISTS before returning it.  Therefore we must place a
         // placeholder .pkl alongside the real .adj.bin so the existence check passes;
         // load_adjacency_pkl will prefer the .adj.bin automatically.
-        let adj_bin_dst = adj_dir.join("vt_adjacency_2020.adj.bin");
-        let adj_pkl_dst = adj_dir.join("vt_adjacency_2020.pkl");
+        let adj_bin_dst = adj_dir.join("ia_adjacency_2020.adj.bin");
+        let adj_pkl_dst = adj_dir.join("ia_adjacency_2020.pkl");
 
         std::fs::copy(&adj_src, &adj_bin_dst).unwrap_or_else(|e| {
             panic!(
@@ -148,9 +157,9 @@ impl PipelineFixture {
 
         // Copy _geoids.json sidecar if present (optional — enables GEOID mapping).
         let adj_src_dir = adj_src.parent().unwrap_or_else(|| Path::new("."));
-        let geoids_src = adj_src_dir.join("vt_adjacency_2020_geoids.json");
+        let geoids_src = adj_src_dir.join("ia_adjacency_2020_geoids.json");
         if geoids_src.exists() {
-            let geoids_dst = adj_dir.join("vt_adjacency_2020_geoids.json");
+            let geoids_dst = adj_dir.join("ia_adjacency_2020_geoids.json");
             let _ = std::fs::copy(geoids_src, geoids_dst); // best-effort
         }
 
@@ -186,7 +195,7 @@ impl PipelineFixture {
             .unwrap_or_else(|e| panic!("failed to write config: {e}"));
     }
 
-    /// Run `redist build {label} --year {year} --states VT --workers 1`.
+    /// Run `redist build {label} --year {year} --states IA --workers 1`.
     fn build(&self) -> Output {
         Command::new(REDIST)
             .arg("build")
@@ -194,7 +203,7 @@ impl PipelineFixture {
             .arg("--year")
             .arg(&self.year)
             .arg("--states")
-            .arg("VT")
+            .arg("IA")
             .arg("--workers")
             .arg("1")
             .arg("--no-interactive")
@@ -367,12 +376,12 @@ fn assert_success(output: &Output, context: &str) {
 // ── Test 1: build creates correct label directory structure ───────────────────
 
 #[test]
-#[ignore = "L2: requires VT adjacency data at outputs/V3/data/2020/adjacency/"]
-fn test_build_vermont_creates_correct_structure() {
-    let fixture = match PipelineFixture::new("vt_build_test", "2020") {
+#[ignore = "L2: requires IA adjacency data at outputs/V3/data/2020/adjacency/"]
+fn test_build_iowa_creates_correct_structure() {
+    let fixture = match PipelineFixture::new("ia_build_test", "2020") {
         Some(f) => f,
         None => {
-            eprintln!("[SKIP] test_build_vermont_creates_correct_structure: adjacency data not found");
+            eprintln!("[SKIP] test_build_iowa_creates_correct_structure: adjacency data not found");
             return;
         }
     };
@@ -381,14 +390,14 @@ fn test_build_vermont_creates_correct_structure() {
 
     // ── Build ─────────────────────────────────────────────────────────────────
     let build_out = fixture.build();
-    assert_success(&build_out, "redist build vt_build_test");
+    assert_success(&build_out, "redist build ia_build_test");
 
     // ── Build index assertions ────────────────────────────────────────────────
     let index = fixture.assert_build_index();
 
     assert_eq!(
         index["label"].as_str(),
-        Some("vt_build_test"),
+        Some("ia_build_test"),
         "build index must record the label name: {index}"
     );
     assert_eq!(
@@ -405,22 +414,22 @@ fn test_build_vermont_creates_correct_structure() {
         "build index algorithm.structure must match config: {algo}"
     );
 
-    // States block — VT must be present with status "ok" and districts = 1
+    // States block — IA must be present with status "ok" and districts = 4
     let states = &index["states"];
     assert!(
         states.is_object(),
         "build index 'states' must be an object: {states}"
     );
-    let vt = &states["vermont"];
+    let ia = &states["iowa"];
     assert_eq!(
-        vt["status"].as_str(),
+        ia["status"].as_str(),
         Some("ok"),
-        "vermont must have status 'ok': {vt}"
+        "iowa must have status 'ok': {ia}"
     );
     assert_eq!(
-        vt["districts"].as_u64(),
-        Some(1),
-        "vermont must have 1 congressional district: {vt}"
+        ia["districts"].as_u64(),
+        Some(4),
+        "iowa must have 4 congressional districts: {ia}"
     );
 
     // Summary
@@ -436,24 +445,24 @@ fn test_build_vermont_creates_correct_structure() {
     );
 
     // ── Directory structure ───────────────────────────────────────────────────
-    let vt_dir = fixture.root()
+    let ia_dir = fixture.root()
         .join("runs")
-        .join("vt_build_test")
+        .join("ia_build_test")
         .join("2020")
-        .join("vermont");
+        .join("iowa");
     assert!(
-        vt_dir.exists(),
-        "runs/vt_build_test/2020/vermont/ must exist after build: {}",
-        vt_dir.display()
+        ia_dir.exists(),
+        "runs/ia_build_test/2020/iowa/ must exist after build: {}",
+        ia_dir.display()
     );
 
     // ── ls --json must include this label ────────────────────────────────────
     let ls = fixture.ls_json();
     assert!(
-        ls.get("vt_build_test").is_some(),
-        "redist ls --json must contain 'vt_build_test' after build: {ls}"
+        ls.get("ia_build_test").is_some(),
+        "redist ls --json must contain 'ia_build_test' after build: {ls}"
     );
-    let entry = &ls["vt_build_test"];
+    let entry = &ls["ia_build_test"];
     let built = entry["built"].as_array().expect("built must be an array");
     assert!(
         built.iter().any(|v| v.as_str() == Some("2020")),
@@ -464,7 +473,7 @@ fn test_build_vermont_creates_correct_structure() {
     let show = fixture.show_json();
     assert_eq!(
         show["label"].as_str(),
-        Some("vt_build_test"),
+        Some("ia_build_test"),
         "show JSON must echo the label: {show}"
     );
     let years = &show["years"];
@@ -487,15 +496,15 @@ fn test_build_vermont_creates_correct_structure() {
         "show JSON must include paths.runs: {show}"
     );
 
-    eprintln!("[PASS] test_build_vermont_creates_correct_structure");
+    eprintln!("[PASS] test_build_iowa_creates_correct_structure");
 }
 
 // ── Test 2: full pipeline: build → analyze → report → verify ─────────────────
 
 #[test]
-#[ignore = "L2: requires VT adjacency data and full label pipeline (build+analyze+report)"]
+#[ignore = "L2: requires IA adjacency data and full label pipeline (build+analyze+report)"]
 fn test_full_pipeline_build_analyze_verify() {
-    let fixture = match PipelineFixture::new("vt_pipeline_test", "2020") {
+    let fixture = match PipelineFixture::new("ia_pipeline_test", "2020") {
         Some(f) => f,
         None => {
             eprintln!("[SKIP] test_full_pipeline_build_analyze_verify: adjacency data not found");
@@ -507,7 +516,7 @@ fn test_full_pipeline_build_analyze_verify() {
 
     // ── Step 1: build ─────────────────────────────────────────────────────────
     let build_out = fixture.build();
-    assert_success(&build_out, "redist build vt_pipeline_test");
+    assert_success(&build_out, "redist build ia_pipeline_test");
 
     // config_sha256 must be a 64-char hex string
     let build_index = fixture.assert_build_index();
@@ -548,7 +557,7 @@ fn test_full_pipeline_build_analyze_verify() {
         );
         assert_eq!(
             analysis_index["label"].as_str(),
-            Some("vt_pipeline_test"),
+            Some("ia_pipeline_test"),
             "analysis index must record the correct label: {analysis_index}"
         );
         assert_eq!(
@@ -563,7 +572,7 @@ fn test_full_pipeline_build_analyze_verify() {
             let report_index = fixture.assert_report_index();
             assert_eq!(
                 report_index["label"].as_str(),
-                Some("vt_pipeline_test"),
+                Some("ia_pipeline_test"),
                 "report index must record the label: {report_index}"
             );
             assert_eq!(
@@ -618,9 +627,9 @@ fn test_full_pipeline_build_analyze_verify() {
 // ── Test 3: build → mv renames label correctly ───────────────────────────────
 
 #[test]
-#[ignore = "L2: requires VT adjacency data"]
+#[ignore = "L2: requires IA adjacency data"]
 fn test_build_then_mv_preserves_data() {
-    let fixture = match PipelineFixture::new("vt_mv_source", "2020") {
+    let fixture = match PipelineFixture::new("ia_mv_source", "2020") {
         Some(f) => f,
         None => {
             eprintln!("[SKIP] test_build_then_mv_preserves_data: adjacency data not found");
@@ -632,40 +641,40 @@ fn test_build_then_mv_preserves_data() {
 
     // ── Build under the source label ──────────────────────────────────────────
     let build_out = fixture.build();
-    assert_success(&build_out, "redist build vt_mv_source");
+    assert_success(&build_out, "redist build ia_mv_source");
 
     // Sanity: source directories exist
     let src_year_dir = fixture.root()
         .join("runs")
-        .join("vt_mv_source")
+        .join("ia_mv_source")
         .join("2020");
-    assert!(src_year_dir.exists(), "runs/vt_mv_source/2020/ must exist before mv");
+    assert!(src_year_dir.exists(), "runs/ia_mv_source/2020/ must exist before mv");
 
-    // ── mv vt_mv_source → vt_mv_dest ─────────────────────────────────────────
+    // ── mv ia_mv_source → ia_mv_dest ─────────────────────────────────────────
     let mv_out = Command::new(REDIST)
         .arg("mv")
-        .arg("vt_mv_source")
-        .arg("vt_mv_dest")
+        .arg("ia_mv_source")
+        .arg("ia_mv_dest")
         .current_dir(fixture.root())
         .output()
         .expect("spawn redist mv");
-    assert_success(&mv_out, "redist mv vt_mv_source vt_mv_dest");
+    assert_success(&mv_out, "redist mv ia_mv_source ia_mv_dest");
 
     // ── Post-mv directory assertions ──────────────────────────────────────────
     let dst_year_dir = fixture.root()
         .join("runs")
-        .join("vt_mv_dest")
+        .join("ia_mv_dest")
         .join("2020");
     assert!(
         dst_year_dir.exists(),
-        "runs/vt_mv_dest/2020/ must exist after mv: {}",
+        "runs/ia_mv_dest/2020/ must exist after mv: {}",
         dst_year_dir.display()
     );
 
-    let src_runs_dir = fixture.root().join("runs").join("vt_mv_source");
+    let src_runs_dir = fixture.root().join("runs").join("ia_mv_source");
     assert!(
         !src_runs_dir.exists(),
-        "runs/vt_mv_source/ must NOT exist after mv: {}",
+        "runs/ia_mv_source/ must NOT exist after mv: {}",
         src_runs_dir.display()
     );
 
@@ -679,7 +688,7 @@ fn test_build_then_mv_preserves_data() {
     let dst_index_path = dst_year_dir.join("index.json");
     assert!(
         dst_index_path.exists(),
-        "runs/vt_mv_dest/2020/index.json must exist after mv: {}",
+        "runs/ia_mv_dest/2020/index.json must exist after mv: {}",
         dst_index_path.display()
     );
     let content = std::fs::read_to_string(&dst_index_path)
@@ -710,12 +719,12 @@ fn test_build_then_mv_preserves_data() {
     };
 
     assert!(
-        ls.get("vt_mv_dest").is_some(),
-        "ls must contain 'vt_mv_dest' after mv: {ls}"
+        ls.get("ia_mv_dest").is_some(),
+        "ls must contain 'ia_mv_dest' after mv: {ls}"
     );
     assert!(
-        ls.get("vt_mv_source").is_none(),
-        "ls must NOT contain 'vt_mv_source' after mv: {ls}"
+        ls.get("ia_mv_source").is_none(),
+        "ls must NOT contain 'ia_mv_source' after mv: {ls}"
     );
 
     eprintln!("[PASS] test_build_then_mv_preserves_data");
@@ -724,9 +733,9 @@ fn test_build_then_mv_preserves_data() {
 // ── Test 4: import external CSV then compare with a built label ───────────────
 
 #[test]
-#[ignore = "L2: requires VT adjacency data and label-import + label-compare"]
+#[ignore = "L2: requires IA adjacency data and label-import + label-compare"]
 fn test_import_then_compare_with_build() {
-    let fixture = match PipelineFixture::new("vt_compare_base", "2020") {
+    let fixture = match PipelineFixture::new("ia_compare_base", "2020") {
         Some(f) => f,
         None => {
             eprintln!("[SKIP] test_import_then_compare_with_build: adjacency data not found");
@@ -738,36 +747,36 @@ fn test_import_then_compare_with_build() {
 
     // ── Step 1: build the base label ──────────────────────────────────────────
     let build_out = fixture.build();
-    assert_success(&build_out, "redist build vt_compare_base");
+    assert_success(&build_out, "redist build ia_compare_base");
 
     // Confirm it built
     let build_index = fixture.assert_build_index();
-    let vt_state = &build_index["states"]["vermont"];
+    let ia_state = &build_index["states"]["iowa"];
     assert_eq!(
-        vt_state["status"].as_str(),
+        ia_state["status"].as_str(),
         Some("ok"),
-        "vermont must build successfully for compare test: {vt_state}"
+        "iowa must build successfully for compare test: {ia_state}"
     );
 
-    // ── Step 2: create a minimal VT CSV for external import ───────────────────
+    // ── Step 2: create a minimal IA CSV for external import ───────────────────
     //
-    // Vermont GEOIDs have FIPS prefix "50".
-    // We create a CSV that assigns a handful of synthetic GEOIDs to district 1.
+    // Iowa GEOIDs have FIPS prefix "19".
+    // We create a CSV that assigns a handful of synthetic GEOIDs to districts 1–4.
     // The import command accepts csv format: GEOID,district
     let csv_content = "\
 GEOID,district\n\
-5000100101001,1\n\
-5000100101002,1\n\
-5000100201001,1\n\
-5000100201002,1\n\
+1900100101001,1\n\
+1900100101002,2\n\
+1900100201001,3\n\
+1900100201002,4\n\
 ";
-    let csv_path = fixture.root().join("external_vt.csv");
+    let csv_path = fixture.root().join("external_ia.csv");
     std::fs::write(&csv_path, csv_content).expect("write external CSV");
 
     // ── Step 3: import as a new label ─────────────────────────────────────────
     let import_out = Command::new(REDIST)
         .arg("label-import")
-        .arg("vt_compare_external")
+        .arg("ia_compare_external")
         .arg("--from")
         .arg(&csv_path)
         .arg("--year")
@@ -796,7 +805,7 @@ GEOID,district\n\
         // Even if import failed, the base label must still be visible in ls
         let ls = fixture.ls_json();
         assert!(
-            ls.get("vt_compare_base").is_some(),
+            ls.get("ia_compare_base").is_some(),
             "base label must appear in ls even if import failed: {ls}"
         );
         eprintln!("[PASS] test_import_then_compare_with_build (import skipped)");
@@ -806,12 +815,12 @@ GEOID,district\n\
     // ── Step 4: both labels visible in ls --json ──────────────────────────────
     let ls = fixture.ls_json();
     assert!(
-        ls.get("vt_compare_base").is_some(),
-        "vt_compare_base must appear in ls after import: {ls}"
+        ls.get("ia_compare_base").is_some(),
+        "ia_compare_base must appear in ls after import: {ls}"
     );
     assert!(
-        ls.get("vt_compare_external").is_some(),
-        "vt_compare_external must appear in ls after import: {ls}"
+        ls.get("ia_compare_external").is_some(),
+        "ia_compare_external must appear in ls after import: {ls}"
     );
 
     // ── Step 5: analyze both labels so label-compare can run ─────────────────
@@ -829,7 +838,7 @@ GEOID,district\n\
 
     let analyze_ext_out = Command::new(REDIST)
         .arg("label-analyze")
-        .arg("vt_compare_external")
+        .arg("ia_compare_external")
         .arg("--year")
         .arg("2020")
         .arg("--types")
@@ -847,8 +856,8 @@ GEOID,district\n\
     // ── Step 6: label-compare ─────────────────────────────────────────────────
     let compare_out = Command::new(REDIST)
         .arg("label-compare")
-        .arg("vt_compare_base")
-        .arg("vt_compare_external")
+        .arg("ia_compare_base")
+        .arg("ia_compare_external")
         .arg("--year")
         .arg("2020")
         .current_dir(fixture.root())
