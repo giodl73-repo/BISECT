@@ -138,6 +138,36 @@ edges.
 The default weight handles this correctly by treating county boundaries as
 strong preferences rather than hard constraints.
 
+\paragraph{County preservation and census stability.}
+There is a second, independently significant reason to prefer county-sticky
+edge weights in the federal statute: \emph{census stability}.
+B.15 (\citealt{b15paper}) shows that 67\,\% of states produce the same
+first-level bisection across the 2000 and 2010 census years.
+The four unstable states --- Alabama, Iowa, South Carolina, and Utah --- all
+underwent dramatic demographic shifts between census years.
+County boundaries, by contrast, are among the most physically stable
+features in US geography.
+A redistricting algorithm that respects county structure is anchored to
+fixed geographic features rather than to the decennial population snapshot,
+and therefore tends to produce census-stable maps.
+
+\begin{quote}
+\textit{Legal significance}: A map that emerges from the same county-anchored
+algorithm in 2000, 2010, and 2020 cannot plausibly be the product of partisan
+intent.
+Counties did not move.
+The algorithm did not know which party would benefit from any particular
+county grouping in any particular decade.
+The convergence of three independent algorithmic runs --- across different
+population snapshots but the same county structure --- is the strongest
+possible evidence of geographic rather than partisan determination.
+\end{quote}
+
+This is the argument that connects B.10 (county preservation), B.15 (census
+stability), and B.02 (the federal statute) into a single constitutional claim:
+a county-anchored, prime-factored, convergence-certified map is the most
+legally defensible redistricting plan available under current US doctrine.
+
 \subsection{Component 4: The VRA Overlay}
 
 For states where the Gingles three-prong test is met for a protected minority
@@ -307,8 +337,20 @@ Each State shall apportion its congressional districts by applying the
 Huntington-Hill priority rule to its census tracts, using as input only
 the prime factorization of the State's apportioned seat count and the
 federal TIGER/Line adjacency graph for the census year in which the
-apportionment was performed, with a seed determined by the formula
-\texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')}.
+apportionment was performed, with county boundaries weighted at
+$\alpha_\text{county} = 2.0$ (subsection (d)), beginning from a seed
+determined by the formula \texttt{SHA-256(census\_release\_id || `DIA\_SEED\_V1')},
+and halting when 600 consecutive seeds produce no improvement in normalised
+edge cut (subsection (c)(2)).
+
+\medskip
+\noindent\textbf{(c)(2) Convergence Criterion.}
+The algorithm shall iterate over seeds beginning at the content-derived
+seed value computed under subsection (c), halting when no improvement in
+normalised edge cut has been observed for 600 consecutive seeds, and shall
+use the minimum edge cut plan found across all seeds evaluated.
+This criterion is certified to suffice for all 50 states at the congressional
+district level by the ConvergenceSweep analysis (\citealt{b16paper}).
 
 \medskip
 \noindent\textbf{(d) County Preservation Default.}
