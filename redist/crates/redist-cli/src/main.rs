@@ -562,6 +562,39 @@ fn main() {
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
+        // ── redist config: algorithm config management (Spec 7 §7.3) ─────────
+        Commands::Config(config_args) => {
+            use redist_cli::args::ConfigCommands;
+            use redist_cli::algo_config::{write_template_config, validate_config};
+            match config_args.command {
+                ConfigCommands::New(args) => {
+                    let weights = if args.weights.is_empty() { None } else { Some(args.weights.as_str()) };
+                    let search = if args.search.is_empty() { None } else { Some(args.search.as_str()) };
+                    let result = write_template_config(
+                        &args.name,
+                        &args.structure,
+                        weights,
+                        args.alpha_county,
+                        search,
+                        args.convergence_threshold,
+                        args.seeds,
+                        args.balance_tolerance,
+                        &args.years,
+                        args.workers,
+                        args.out.as_deref(),
+                        args.force,
+                        args.dry_run,
+                    ).unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                    println!("{result}");
+                }
+                ConfigCommands::Validate(args) => {
+                    let result = validate_config(&args.path)
+                        .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+                    println!("{result}");
+                }
+            }
+        }
+
         // ── redist tui: interactive terminal UI ───────────────────────────────
         Commands::Tui(args) => {
             let mut tui_bin = std::env::current_exe()

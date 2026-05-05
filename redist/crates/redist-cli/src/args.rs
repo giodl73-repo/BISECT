@@ -231,6 +231,8 @@ pub enum Commands {
     Sweep(SweepArgs),
     /// Launch the interactive terminal UI
     Tui(TuiArgs),
+    /// Algorithm config management: create or validate configs/X.yml (Spec 7 §7.3)
+    Config(ConfigArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -2262,6 +2264,96 @@ pub struct TuiArgs {
     /// Start with a clean session (no saved config loaded)
     #[arg(long)]
     pub no_session: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist config` — algorithm config management (Spec 7 §7.3)
+// ---------------------------------------------------------------------------
+
+/// Top-level args for `redist config <subcommand>`.
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true, about = "Create or validate algorithm config YAML files")]
+pub struct ConfigArgs {
+    #[command(subcommand)]
+    pub command: ConfigCommands,
+}
+
+/// Subcommands for `redist config`.
+#[derive(Debug, Subcommand)]
+pub enum ConfigCommands {
+    /// Generate a template config YAML and write it to configs/{name}.yml
+    New(ConfigNewArgs),
+    /// Load and validate a config YAML file without running
+    Validate(ConfigValidateArgs),
+}
+
+/// Args for `redist config new`.
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct ConfigNewArgs {
+    /// Config name (written to configs/{name}.yml)
+    #[arg(long)]
+    pub name: String,
+
+    /// Layer 1: bisection structure
+    /// Values: standard-bisect | nway | ratio-optimal | ratio-optimal-area |
+    ///         ratio-optimal-vra | prime-factor | compact-polsby | apportion-regions
+    #[arg(long, default_value = "apportion-regions")]
+    pub structure: String,
+
+    /// Layer 2: edge weight mode
+    /// Values: unweighted | geographic | county | vra-aligned | proportional
+    #[arg(long, default_value = "geographic")]
+    pub weights: String,
+
+    /// County stickiness alpha (required when --weights county)
+    #[arg(long)]
+    pub alpha_county: Option<f64>,
+
+    /// Layer 3: seed search strategy
+    /// Values: single | multi | convergence
+    #[arg(long, default_value = "single")]
+    pub search: String,
+
+    /// Convergence threshold (required when --search convergence)
+    #[arg(long)]
+    pub convergence_threshold: Option<u32>,
+
+    /// Fixed seed count (used when --search multi)
+    #[arg(long)]
+    pub seeds: Option<usize>,
+
+    /// Population balance tolerance in percent (default: 0.5)
+    #[arg(long)]
+    pub balance_tolerance: Option<f64>,
+
+    /// Census years to build (default: 2020 2010 2000)
+    #[arg(long, num_args = 1.., default_values = ["2020", "2010", "2000"])]
+    pub years: Vec<String>,
+
+    /// Parallel workers per year (default: 4)
+    #[arg(long, default_value_t = 4)]
+    pub workers: usize,
+
+    /// Output path override (default: configs/{name}.yml)
+    #[arg(long)]
+    pub out: Option<std::path::PathBuf>,
+
+    /// Print the generated YAML without writing to disk
+    #[arg(long)]
+    pub dry_run: bool,
+
+    /// Overwrite an existing config file without error
+    #[arg(long)]
+    pub force: bool,
+}
+
+/// Args for `redist config validate`.
+#[derive(Debug, Parser)]
+#[command(disable_version_flag = true)]
+pub struct ConfigValidateArgs {
+    /// Path to the YAML config file to validate
+    pub path: std::path::PathBuf,
 }
 
 // ---------------------------------------------------------------------------
