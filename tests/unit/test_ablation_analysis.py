@@ -3,13 +3,9 @@ Unit tests for ablation study analysis scripts.
 
 Tests the boundary penalty ablation analysis infrastructure.
 
-NOTE: Skipped — depends on scripts/experimental/run_boundary_penalty_ablation.py
-which imports apportionment.partition.recursive_bisection.  The Python partition
-library was archived on 2026-04-29 (archive/python-pipeline-final/).  These tests
-remain as forensic reference only.
+NOTE: Excluded from collection via tests/conftest.py collect_ignore.
+Depends on apportionment.partition which was archived 2026-04-29.
 """
-import pytest
-pytestmark = pytest.mark.skip(reason="apportionment.partition archived 2026-04-29")
 
 import pytest
 import pickle

@@ -32,16 +32,44 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install metis
 
-      - name: Run tests (workspace, excluding redist-cli)
-        # Exclude redist_py (Python dev headers), redist-web (stub), and
-        # redist-cli (run separately below with --test-threads=1).
-        run: cargo test --workspace --lib --exclude redist_py --exclude redist-web --exclude redist-cli
+      # ── Per-crate test steps ──────────────────────────────────────────────
+      # Breaking by crate gives clear attribution when a crate's tests fail
+      # and lets each crate's --lib + --tests run together.
+      # redist-cli runs last with --test-threads=1 because its inline tests
+      # call set_current_dir() (process-global); parallel execution races → ENOENT.
+
+      - name: Test redist-metis
+        run: cargo test -p redist-metis --lib --tests
         working-directory: redist
 
-      - name: Run tests (redist-cli — serialised)
-        # label_cmd.rs tests use set_current_dir(), which is process-global.
-        # Running them in parallel races on CWD → ENOENT.  Single-threaded is safe.
-        run: cargo test -p redist-cli --lib -- --test-threads=1
+      - name: Test redist-core
+        run: cargo test -p redist-core --lib --tests
+        working-directory: redist
+
+      - name: Test redist-data
+        run: cargo test -p redist-data --lib --tests
+        working-directory: redist
+
+      - name: Test redist-analysis
+        run: cargo test -p redist-analysis --lib --tests
+        working-directory: redist
+
+      - name: Test redist-apportion
+        run: cargo test -p redist-apportion --lib --tests
+        working-directory: redist
+
+      - name: Test redist-map
+        run: cargo test -p redist-map --lib --tests
+        working-directory: redist
+
+      - name: Test redist-report
+        run: cargo test -p redist-report --lib --tests
+        working-directory: redist
+
+      - name: Test redist-cli (serialised — CWD-sensitive inline tests)
+        # --lib  : inline #[cfg(test)] modules (label_cmd, run_registry, …)
+        # --tests: integration test files (spec7_pipeline_l2 is all #[ignore])
+        run: cargo test -p redist-cli --lib --tests -- --test-threads=1
         working-directory: redist
 
   build:
