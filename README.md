@@ -64,29 +64,47 @@ These choices are orthogonal — any engine works with any structure, weights, a
 
 ### METIS engines (`--metis-engine`)
 
-Three implementations are available. The engine is also selectable in the YAML config via `engine:`.
+Three implementations are available, selectable at runtime via `--metis-engine` or via `engine:` in the YAML config.
 
-| Value | Aliases | Backend | System requirement | Notes |
+| Value | Aliases | Backend | Build requirement | Notes |
 |-------|---------|---------|-------------------|-------|
-| `c-ffi` | `c`, `metis-rs` | `metis` Rust FFI crate → C METIS library | `libmetis.so/.dll/.dylib` installed | **Default.** Battle-tested, handles all k values including prime k without stalling. |
-| `redist-metis` | `rust` | Pure-Rust METIS (`redist-metis` crate) | None — no C dependency | Fully portable standalone binary. May stall on prime k for large graphs (>1000 tracts). Use when shipping `redist.exe` without system libs. |
-| `gpmetis` | `subprocess` | External `gpmetis` binary | `gpmetis` on PATH | Reserved — returns a clear error today. Planned for environments where only the gpmetis binary is available. |
+| `c-ffi` | `c`, `metis-rs` | `metis` Rust crate → bundled C METIS source (`vendored`) | C compiler at build time; **no runtime lib needed** | **Default for normal builds.** Battle-tested; handles all k including prime k. |
+| `redist-metis` | `rust` | `redist-metis` pure-Rust crate | None — no C at all | **Default for `--no-default-features` builds.** Fully portable. Known gaps below. |
+| `gpmetis` | `subprocess` | External `gpmetis` binary on PATH | `gpmetis` installed | Reserved stub — returns `[CONFIG]` error today. Planned. |
 
-**For portable distribution**: build with `--metis-engine redist-metis` (or set `engine: redist-metis` in your config YAML). The resulting binary requires no installed METIS and runs on any machine.
+**What "default" means** depends on how the binary was compiled:
 
-**For production runs** (official proposal, 50-state sweeps): use the default `c-ffi`. It handles all edge cases including prime district counts like PA (k=17).
+```
+cargo build                        → default engine: c-ffi       (C source bundled, no runtime dep)
+cargo build --no-default-features  → default engine: redist-metis (zero C, pure Rust)
+```
+
+The binary self-describes: you never need to set `--metis-engine` unless you want to override the compiled-in default.
 
 ```bash
-# Portable run — no libmetis required
-redist state --state VT --year 2020 --version vt_test --metis-engine redist-metis
+# Standard run — uses compiled-in default (c-ffi for release builds)
+redist state --state IA --year 2020 --version ia_v1
 
-# Default C METIS FFI (explicit)
+# Explicit portable run — pure Rust, no C toolchain at runtime or build time
+redist state --state VT --year 2020 --version vt_rust --metis-engine redist-metis
+
+# Explicit c-ffi (useful when binary was built --no-default-features but c-ffi is now installed)
 redist state --state PA --year 2020 --version pa_v1 --metis-engine c-ffi
 
-# In YAML config
+# In YAML config:
 # algorithm:
-#   engine: redist-metis   # or c-ffi (default), gpmetis (reserved)
+#   engine: redist-metis   # or c-ffi, gpmetis
 ```
+
+#### Known gaps (as of v0.2.0)
+
+| Gap | Affects | Workaround |
+|-----|---------|-----------|
+| `redist-metis` may stall on prime k (e.g. PA k=17, TX k=38) for large graphs | `redist-metis` engine, `prime-factor` structure | Use `c-ffi` engine for states with prime seat counts |
+| `AreaSection` (`ratio-optimal-area`) requires ncon=2 dual constraint — not supported in `redist-metis` | `redist-metis` engine + `ratio-optimal-area` structure | Use `c-ffi` engine, or use `ratio-optimal` (GeoSection, ncon=1) instead |
+| `gpmetis` subprocess not yet implemented | `gpmetis` engine | Use `c-ffi` or `redist-metis` |
+
+These gaps are tracked; the `test-engine-redist-metis` CI gate surfaces them on every push.
 
 ### Structure modes (`--structure`)
 

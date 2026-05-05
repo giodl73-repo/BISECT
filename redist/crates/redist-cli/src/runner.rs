@@ -1708,7 +1708,7 @@ mod tests {
             version: "V3".to_string(),
             output_dir: PathBuf::from("/tmp/test"),
             algo: AlgorithmConfig {
-                metis: MetisParams { ufactor: 5, niter: 100, seed: Some(42) },
+                metis: MetisParams { ufactor: 5, niter: 100, seed: Some(42), ..MetisParams::default() },
                 ..AlgorithmConfig::default()
             },
             position: 999,
@@ -2590,7 +2590,7 @@ mod tests {
             algo: AlgorithmConfig {
                 split: SplitStrategy::NWay,
                 weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
-                metis: MetisParams { ufactor: 5, niter: 100, seed: None },
+                metis: MetisParams { ufactor: 5, niter: 100, seed: None, ..MetisParams::default() },
                 mode_label: None,
                 ..AlgorithmConfig::default()
             },
@@ -2639,7 +2639,7 @@ mod tests {
     #[test]
     fn test_algo_metis_params_extraction() {
         let cfg = AlgorithmConfig {
-            metis: MetisParams { ufactor: 7, niter: 200, seed: Some(42) },
+            metis: MetisParams { ufactor: 7, niter: 200, seed: Some(42), ..MetisParams::default() },
             ..AlgorithmConfig::default()
         };
         assert_eq!(cfg.metis.ufactor, 7);
@@ -2649,7 +2649,7 @@ mod tests {
         let vra = AlgorithmConfig {
             split: SplitStrategy::NWay,
             weights: WeightSpec { minority_weighting: true, ..WeightSpec::default() },
-            metis: MetisParams { ufactor: 3, niter: 50, seed: None },
+            metis: MetisParams { ufactor: 3, niter: 50, seed: None, ..MetisParams::default() },
             ..AlgorithmConfig::default()
         };
         assert_eq!(vra.metis.ufactor, 3);
@@ -2760,7 +2760,7 @@ mod tests {
         let poison = AlgorithmConfig {
             split: SplitStrategy::GeoSection,
             weights: WeightSpec { directional_lambda: f64::INFINITY, ..WeightSpec::default() },
-            metis: MetisParams { ufactor: 0, niter: 0, seed: None },
+            metis: MetisParams { ufactor: 0, niter: 0, seed: None, ..MetisParams::default() },
             ..AlgorithmConfig::default()
         };
         // mode_name must still work (no panic)
