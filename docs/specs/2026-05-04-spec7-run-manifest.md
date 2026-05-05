@@ -305,7 +305,84 @@ Creates registry entry `official_proposal_v1` pointing to the same run directori
 as `official_proposal`. Useful for tagging a completed run before starting a new
 build under the same label.
 
-### 3.9 Escape hatches for power users
+### 3.9 `redist plan [X]` — interactive TUI for the full pipeline
+
+`redist plan` is the interactive terminal frontend for the entire label system.
+It replaces `redist tui` with a label-aware, action-oriented interface.
+
+```bash
+redist plan                      # TUI — pick a label from registry
+redist plan official_proposal    # TUI — pre-scoped to this label
+redist plan official_proposal --configure  # TUI — edit algorithm config
+```
+
+**Entry screen (no label specified):**
+```
+┌─ redist ─────────────────────────────────────────────────────┐
+│ Labels                          Built    Analyzed   Reported  │
+│ ──────                          ──────   ────────   ──────── │
+│ official_proposal               2020–00  2020       —        │
+│ bakeoff_geo                     2020     —          —        │
+│                                                              │
+│ [n] New label  [Enter] Select  [q] Quit                      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Label screen (`redist plan official_proposal`):**
+```
+┌─ official_proposal ──────────────────────────────────────────┐
+│ Algorithm: ApportionRegions + County(α=2.0) + Convergence(600)│
+│                                                              │
+│ Year   Built     Analyzed   Reported                        │
+│ ────   ──────    ────────   ────────                        │
+│ 2020   ✓ 50/50  ✓ 50/50   —                               │
+│ 2010   ✓ 50/50  —          —                               │
+│ 2000   ✓ 49/50  —          —                               │
+│                                                              │
+│ [b] Build  [a] Analyze  [r] Report  [c] Configure  [q] Back  │
+└──────────────────────────────────────────────────────────────┘
+```
+
+**Configure screen (`redist plan official_proposal --configure`):**
+
+Interactive three-layer compositor wizard:
+```
+┌─ Configure: official_proposal ───────────────────────────────┐
+│                                                              │
+│ Layer 1 — Structure                                         │
+│   ● apportion-regions   HH prime-factor tree (B.11)        │
+│   ○ ratio-optimal       GeoSection (B.8)                   │
+│   ○ ratio-optimal-area  AreaSection (B.9)                  │
+│                                                              │
+│ Layer 2 — Weights                                           │
+│   ● county  α=[ 2.0 ]   County-sticky (B.10)              │
+│   ○ geographic           TIGER boundary lengths             │
+│   ○ vra-aligned          Minority alignment (B.14)         │
+│                                                              │
+│ Layer 3 — Search                                            │
+│   ● convergence  T=[ 600 ]   Seed buster (B.16)           │
+│   ○ multi        N=[ 50  ]   Fixed seeds                   │
+│   ○ single                   Content-derived seed only     │
+│                                                              │
+│ [↑↓] Select  [←→] Adjust values  [s] Save  [q] Cancel      │
+└──────────────────────────────────────────────────────────────┘
+```
+
+Pressing `[s]` writes the selected configuration to `configs/official_proposal.yml`.
+The user then runs `redist build official_proposal` (or presses `[b]` from the
+label screen) to execute.
+
+The configure screen is the interactive frontend for the three-layer compositor —
+it exposes the full `--structure` / `--weights-override` / `--search` flags
+through menus rather than CLI flags, making the algorithm choices visible and
+explorable without memorising flag names.
+
+**Implementation note:** `redist plan` calls the existing `redist-tui` binary
+(already in the workspace) with a new `--label` flag. The TUI crate handles
+terminal rendering; `redist plan` is a thin dispatcher. This makes `redist tui`
+an alias for `redist plan` with no label specified.
+
+### 3.10 Escape hatches for power users
 
 ```bash
 # Override output directory (build writes here instead of runs/X/)
@@ -686,6 +763,9 @@ Rm(RmArgs),
 Label(LabelArgs),
 /// Config subcommand group (new, validate)
 Config(ConfigArgs),
+/// Interactive TUI for the full pipeline — label-aware frontend
+/// Replaces `redist tui`; `redist tui` becomes an alias for `redist plan`
+Plan(PlanArgs),
 ```
 
 ### 8.4 `label.rs` — path convention
@@ -930,6 +1010,57 @@ $ redist build official_proposal --config configs/official_proposal.yml --year 2
 [CONFIG] build: 'official_proposal' year 2020 already exists (built 2026-05-04T18:30Z).
 Use --force to overwrite.
 ```
+
+### 9.3 Interactive workflow via `redist plan`
+
+For operators who prefer a menu-driven interface rather than CLI flags:
+
+```bash
+# Open the interactive planner for this label
+redist plan official_proposal
+```
+
+This opens the TUI showing current build/analyze/report status.
+From inside the TUI:
+- Press `[c]` → opens the three-layer compositor wizard to view or modify `configs/official_proposal.yml`
+- Press `[b]` for year 2010 → runs `redist build official_proposal --year 2010` in the background
+- Press `[a]` for year 2020 → runs `redist analyze official_proposal --year 2020`
+- Press `[r]` for year 2020 → runs `redist report official_proposal --year 2020`
+- Navigate state table → drill into per-state metrics and maps
+
+The plan TUI is the operator's primary interface. CLI flags are the power-user
+and scripting interface. Both produce identical outputs — `plan` is a thin
+dispatcher over the same underlying commands.
+
+**Configure screen** (accessible via `[c]` or `redist plan X --configure`):
+```
+┌─ Configure: official_proposal ───────────────────────────────┐
+│                                                              │
+│ Layer 1 — Structure                                         │
+│   ● apportion-regions   HH prime-factor tree (B.11)        │
+│   ○ ratio-optimal       GeoSection (B.8)                   │
+│   ○ ratio-optimal-area  AreaSection (B.9)                  │
+│                                                              │
+│ Layer 2 — Weights                                           │
+│   ● county  α=[ 2.0 ]   County-sticky (B.10)              │
+│   ○ geographic           TIGER boundary lengths (default)   │
+│   ○ vra-aligned  w=[ 0.40 ]  Minority alignment (B.14)    │
+│                                                              │
+│ Layer 3 — Search                                            │
+│   ● convergence  T=[ 600 ]   Certified optimal (B.16)     │
+│   ○ multi        N=[ 50  ]   Fixed seed count              │
+│   ○ single                   Content-derived seed only     │
+│                                                              │
+│ Balance tolerance: [ 3.0 ]%    Workers: [ 6 ]             │
+│                                                              │
+│ [↑↓] Select layer  [←→] Adjust values  [s] Save  [q] Cancel │
+└──────────────────────────────────────────────────────────────┘
+```
+
+`[s]` writes to `configs/official_proposal.yml`. The in-TUI description
+("`HH prime-factor tree (B.11)`", "`Certified optimal (B.16)`") links each
+choice to its research paper, making the legal justification visible at the
+point of decision.
 
 ---
 
