@@ -109,12 +109,14 @@ jobs:
         run: cargo test -p redist-analysis --lib --tests
         working-directory: redist
 
-      # redist-apportion links C METIS unconditionally (MetisEngine::CFfi is
-      # used in the default MetisPartitioner::default()).  On this job we have
-      # no libmetis, so skip redist-apportion — its pure-Rust path is covered
-      # by the redist-metis crate tests above.
-      # TODO: add a Cargo feature that makes the C METIS dependency optional so
-      # redist-apportion can be tested with --features redist-metis-only.
+      # --no-default-features disables c-ffi on all crates:
+      # redist-apportion skips the metis crate entirely (pure-Rust paths only).
+      # redist-cli uses the redist-metis fallback in bisection_runner.rs for
+      # all bisect/nway paths; AreaSection returns a clear [CONFIG] error.
+
+      - name: Test redist-apportion (redist-metis engine — no C dep)
+        run: cargo test -p redist-apportion --lib --tests --no-default-features
+        working-directory: redist
 
       - name: Test redist-map
         run: cargo test -p redist-map --lib --tests
@@ -124,13 +126,9 @@ jobs:
         run: cargo test -p redist-report --lib --tests
         working-directory: redist
 
-      - name: Test redist-cli (redist-metis engine, serialised)
-        # redist-apportion is a dependency of redist-cli, so this build still
-        # links C METIS.  On windows-latest this may fail if libmetis is not
-        # available — the matrix will surface that clearly.
-        run: cargo test -p redist-cli --lib --tests -- --test-threads=1
+      - name: Test redist-cli (redist-metis engine — no C dep, serialised)
+        run: cargo test -p redist-cli --lib --tests --no-default-features -- --test-threads=1
         working-directory: redist
-        continue-on-error: ${{ matrix.os == 'windows-latest' }}
 
   # ---------------------------------------------------------------------------
   # Release builds (tag-triggered only)

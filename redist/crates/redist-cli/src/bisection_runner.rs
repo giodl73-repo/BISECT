@@ -222,43 +222,79 @@ pub fn split_subgraph(
     // so per-level tolerance must stay above the practical minimum for small subgraphs.
     let uf_int = uf_int.clamp(5, 1000);
 
-    let mut part = vec![0i32; n];
-    let graph = metis::Graph::new(ncon as i32, 2, &xadj, &adjncy)
-        .map_err(|e| format!("METIS graph init: {e}"))?
-        .set_vwgt(&local_vwgt);
-    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
-    let graph = if let Some(ref tw) = tpwgts { graph.set_tpwgts(tw) } else { graph };
-    // METIS balance is a soft constraint: it returns METIS_OK even if balance is violated.
-    // Use UFactor=5 (0.5% tolerance) — matches the global post-hoc check.
-    // For part_recursive, METIS default UFactor=1 (0.1%) is too tight for small subgraphs;
-    // 5 (0.5%) gives METIS enough flexibility to consistently find balanced solutions.
-    // If balance is still violated, the caller's post-hoc assert_balanced will catch it.
-    let graph = if let Some(ref ub) = ubvec {
-        graph.set_ubvec(ub)  // caller-supplied ubvec (ncon=2, AreaSection)
-    } else {
-        graph
+    // ── Bisect via the selected METIS backend ────────────────────────────────
+    let part: Vec<i32> = {
+        #[cfg(feature = "c-ffi-engine")]
+        {
+            let mut part = vec![0i32; n];
+            let graph = metis::Graph::new(ncon as i32, 2, &xadj, &adjncy)
+                .map_err(|e| format!("METIS graph init: {e}"))?
+                .set_vwgt(&local_vwgt);
+            let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+            let graph = if let Some(ref tw) = tpwgts { graph.set_tpwgts(tw) } else { graph };
+            let graph = if let Some(ref ub) = ubvec {
+                graph.set_ubvec(ub)
+            } else {
+                graph
+            };
+            let graph = graph
+                .set_option(metis::option::UFactor(uf_int.max(1)))
+                .set_option(metis::option::NIter(niter as i32));
+            let graph = if let Some(s) = seed {
+                graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+            } else {
+                graph
+            };
+            if tpwgts.is_some() {
+                graph.part_kway(&mut part)
+                    .map_err(|e| format!("METIS kway bisection failed: {e}"))?;
+            } else {
+                graph.part_recursive(&mut part)
+                    .map_err(|e| format!("METIS bisection failed: {e}"))?;
+            }
+            part
+        }
+        #[cfg(not(feature = "c-ffi-engine"))]
+        {
+            // Pure-Rust fallback via redist-metis.
+            // ncon=2 (AreaSection dual constraint) is not supported without c-ffi-engine.
+            if ncon > 1 {
+                return Err(
+                    "[CONFIG] AreaSection (ncon=2) requires the c-ffi-engine feature. \
+                     Rebuild with default features or use --metis-engine c-ffi.".to_string()
+                );
+            }
+            use redist_metis::api::{
+                MetisPartitioner as RustBisectPartitioner,
+                MetisParams as RustBisectParams,
+                Partitioner as RustBisectTrait,
+            };
+            use redist_metis::graph::CsrGraph as RustCsrGraph;
+            let g = RustCsrGraph {
+                xadj:   xadj.iter().map(|&x| x as u32).collect(),
+                adjncy: adjncy.iter().map(|&x| x as u32).collect(),
+                ncon:   1,
+                vwgt:   local_vwgt.clone(),
+                adjwgt: adjwgt.clone(),
+            };
+            let uf_u32 = (uf_int as u32).clamp(1, 1000);
+            let params = RustBisectParams {
+                ufactor: uf_u32, niter, seed, coarsen_to: 20, tpwgts: None,
+                ..RustBisectParams::default()
+            };
+            let partition = if let Some(ref tw) = tpwgts {
+                // Asymmetric split: convert f32 fracs (first 2 values) to u32 thousandths.
+                let fracs: Vec<u32> = tw.iter().take(2)
+                    .map(|&f| (f * 1000.0).round() as u32).collect();
+                RustBisectPartitioner::with_params(params, 2)
+                    .split_weighted(&g, &fracs, seed)
+            } else {
+                RustBisectPartitioner::with_params(params, 2)
+                    .split(&g, 2, seed)
+            }.map_err(|e| format!("redist-metis bisection: {e}"))?;
+            partition.assignment.iter().map(|&p| p as i32).collect()
+        }
     };
-    let graph = graph
-        .set_option(metis::option::UFactor(uf_int.max(1)))
-        .set_option(metis::option::NIter(niter as i32));
-    // Contig + MinConn omitted: the vendored libmetis returns METIS_ERROR_INPUT for
-    // disconnected subgraphs (unlike subprocess gpmetis which silently ignored it).
-    // Without Contig, balance quality degrades ~0.5-1% for large states (GA/TX/CA).
-    // TODO: implement post-hoc boundary-swap rebalancing to restore 0.5% accuracy.
-    let graph = if let Some(s) = seed {
-        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
-    } else {
-        graph
-    };
-    // Use part_kway for unequal splits (tpwgts set) — better balance than part_recursive
-    // for non-50/50 targets. Use part_recursive for equal splits (standard bisection).
-    if tpwgts.is_some() {
-        graph.part_kway(&mut part)
-            .map_err(|e| format!("METIS kway bisection failed: {e}"))?;
-    } else {
-        graph.part_recursive(&mut part)
-            .map_err(|e| format!("METIS bisection failed: {e}"))?;
-    }
 
     let mut left = HashSet::new();
     let mut right = HashSet::new();
@@ -447,24 +483,57 @@ pub fn run_nway_partition(
     let uf_int = ((ufactor - 1.0) * 1000.0).round() as i32;
     let uf_int = uf_int.clamp(1, 1000);
 
-    let mut part = vec![0i32; n];
-    let graph = metis::Graph::new(1, num_districts as i32, &xadj, &adjncy)
-        .map_err(|e| format!("METIS n-way graph init: {e}"))?
-        .set_vwgt(&vwgt)
-        .set_tpwgts(&tpwgts);
-    let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
-    let graph = graph
-        .set_option(metis::option::UFactor(uf_int))
-        .set_option(metis::option::NIter(niter as i32))
-        .set_option(metis::option::Contig(true))
-        .set_option(metis::option::MinConn(true));
-    let graph = if let Some(s) = seed {
-        graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
-    } else {
-        graph
+    // ── k-way partition via the selected METIS backend ───────────────────────
+    let part: Vec<i32> = {
+        #[cfg(feature = "c-ffi-engine")]
+        {
+            let mut part = vec![0i32; n];
+            let graph = metis::Graph::new(1, num_districts as i32, &xadj, &adjncy)
+                .map_err(|e| format!("METIS n-way graph init: {e}"))?
+                .set_vwgt(&vwgt)
+                .set_tpwgts(&tpwgts);
+            let graph = if let Some(ref ew) = adjwgt { graph.set_adjwgt(ew) } else { graph };
+            let graph = graph
+                .set_option(metis::option::UFactor(uf_int))
+                .set_option(metis::option::NIter(niter as i32))
+                .set_option(metis::option::Contig(true))
+                .set_option(metis::option::MinConn(true));
+            let graph = if let Some(s) = seed {
+                graph.set_option(metis::option::Seed(((s & 0x7FFF_FFFF) as i32).max(1)))
+            } else {
+                graph
+            };
+            graph.part_kway(&mut part)
+                .map_err(|e| format!("METIS n-way partition failed: {e}"))?;
+            part
+        }
+        #[cfg(not(feature = "c-ffi-engine"))]
+        {
+            use redist_metis::api::{
+                MetisPartitioner as RustNwayPartitioner,
+                MetisParams as RustNwayParams,
+                Partitioner as RustNwayTrait,
+            };
+            use redist_metis::graph::CsrGraph as RustNwayCsr;
+            let g = RustNwayCsr {
+                xadj:   xadj.iter().map(|&x| x as u32).collect(),
+                adjncy: adjncy.iter().map(|&x| x as u32).collect(),
+                ncon:   1,
+                vwgt:   vwgt.clone(),
+                adjwgt: adjwgt.clone(),
+            };
+            let uf_u32 = (uf_int as u32).clamp(1, 1000);
+            let params = RustNwayParams {
+                ufactor: uf_u32, niter: niter as u32, seed, coarsen_to: 20, tpwgts: None,
+                ..RustNwayParams::default()
+            };
+            let k = num_districts as u32;
+            let partition = RustNwayPartitioner::with_params(params, k)
+                .split(&g, k, seed)
+                .map_err(|e| format!("redist-metis n-way k={num_districts}: {e}"))?;
+            partition.assignment.iter().map(|&p| p as i32).collect()
+        }
     };
-    graph.part_kway(&mut part)
-        .map_err(|e| format!("METIS n-way partition failed: {e}"))?;
 
     // Convert 0-based METIS output to 1-based district IDs
     Ok(part.iter().enumerate().map(|(tract, &p)| (tract, p as usize + 1)).collect())

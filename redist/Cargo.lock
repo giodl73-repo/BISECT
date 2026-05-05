@@ -2632,6 +2632,7 @@ dependencies = [
  "redist-core",
  "redist-data",
  "redist-map",
+ "redist-metis",
  "redist-report",
  "reqwest",
  "serde",
