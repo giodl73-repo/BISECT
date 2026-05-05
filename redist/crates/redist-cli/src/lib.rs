@@ -1,6 +1,8 @@
 pub mod adjacency_loader;
 pub mod algo_config;
+pub mod build_cmd;
 pub mod label;
+pub mod label_cmd;
 #[cfg(test)]
 mod integration_pipeline_tests;
 pub mod aggregate;

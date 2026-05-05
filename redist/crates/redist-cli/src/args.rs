@@ -233,6 +233,16 @@ pub enum Commands {
     Tui(TuiArgs),
     /// Algorithm config management: create or validate configs/X.yml (Spec 7 §7.3)
     Config(ConfigArgs),
+    /// Build (run redistricting) for a label across one or more census years (Spec 7 Phase 2)
+    Build(crate::build_cmd::BuildCliArgs),
+    /// List all labels from the .redist registry with stage completion (Spec 7 Phase 4)
+    Ls(LsArgs),
+    /// Show detailed info for a label: years, status, resolved paths (Spec 7 Phase 4)
+    Show(ShowArgs),
+    /// Atomically rename a label: filesystem directories + registry + index.json patches (Spec 7 Phase 4)
+    Mv(MvArgs),
+    /// Traverse the SHA chain for a label and verify integrity (Spec 7 Phase 4)
+    LabelVerify(LabelVerifyArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -2450,4 +2460,76 @@ pub struct AggregateArgs {
     /// Output format: csv (default) or json
     #[arg(long, default_value = "csv")]
     pub format: String,
+}
+
+// ---------------------------------------------------------------------------
+// `redist ls` — list labels (Spec 7 Phase 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "List all labels in the .redist registry with their stage completion"
+)]
+pub struct LsArgs {
+    /// Output the raw registry as JSON instead of the human-readable table
+    #[arg(long)]
+    pub json: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist show` — show label details (Spec 7 Phase 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Show detailed info for a label: years, status, resolved paths"
+)]
+pub struct ShowArgs {
+    /// Label to inspect
+    pub label: String,
+
+    /// Output structured JSON instead of the human-readable report
+    #[arg(long)]
+    pub json: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist mv` — rename a label (Spec 7 Phase 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Atomically rename a label: moves runs/, analysis/, reports/ and updates the registry"
+)]
+pub struct MvArgs {
+    /// Source label (must exist in registry)
+    pub src: String,
+
+    /// Destination label (must be a valid label name, must not already exist unless --force)
+    pub dst: String,
+
+    /// Overwrite the destination label if it already exists
+    #[arg(long)]
+    pub force: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist label-verify` — SHA chain integrity check (Spec 7 Phase 4)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Traverse the SHA chain for a label and verify cryptographic integrity"
+)]
+pub struct LabelVerifyArgs {
+    /// Label to verify
+    pub label: String,
+
+    /// Restrict verification to a single year (default: all built years)
+    #[arg(short = 'y', long)]
+    pub year: Option<String>,
 }

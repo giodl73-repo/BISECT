@@ -16,6 +16,8 @@ use redist_cli::migrate::run_migrate;
 use redist_cli::report_cmd::run_report;
 use redist_cli::export_cmd::run_export;
 use redist_cli::import_cmd::run_import;
+use redist_cli::build_cmd::run_build;
+use redist_cli::label_cmd::{run_ls, run_show, run_mv, run_verify as run_label_verify};
 
 fn main() {
     let cli = Cli::parse();
@@ -593,6 +595,37 @@ fn main() {
                     println!("{result}");
                 }
             }
+        }
+
+        // ── redist build: label-based run orchestration (Spec 7 Phase 2) ────────
+        Commands::Build(cli_args) => {
+            let build_args = cli_args.into_build_args();
+            run_build(build_args)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist ls: list all labels (Spec 7 Phase 4) ───────────────────────
+        Commands::Ls(args) => {
+            run_ls(args.json)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist show: show label details (Spec 7 Phase 4) ─────────────────
+        Commands::Show(args) => {
+            run_show(&args.label, args.json)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist mv: atomic label rename (Spec 7 Phase 4) ──────────────────
+        Commands::Mv(args) => {
+            run_mv(&args.src, &args.dst, args.force)
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist label-verify: SHA chain integrity check (Spec 7 Phase 4) ──
+        Commands::LabelVerify(args) => {
+            run_label_verify(&args.label, args.year.as_deref())
+                .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
         // ── redist tui: interactive terminal UI ───────────────────────────────
