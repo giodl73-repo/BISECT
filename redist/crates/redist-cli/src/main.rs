@@ -18,6 +18,7 @@ use redist_cli::export_cmd::run_export;
 use redist_cli::import_cmd::run_import;
 use redist_cli::build_cmd::run_build;
 use redist_cli::label_cmd::{run_ls, run_show, run_mv, run_verify as run_label_verify};
+use redist_cli::analyze_label::{run_label_analyze, run_label_report};
 
 fn main() {
     let cli = Cli::parse();
@@ -626,6 +627,29 @@ fn main() {
         Commands::LabelVerify(args) => {
             run_label_verify(&args.label, args.year.as_deref())
                 .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist label-analyze: label-aware analysis (Spec 7 Phase 3) ──────
+        Commands::LabelAnalyze(args) => {
+            run_label_analyze(
+                &args.label,
+                &args.types,
+                args.year.as_deref(),
+                &args.states,
+                args.no_interactive,
+            )
+            .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
+        }
+
+        // ── redist label-report: label-aware reports (Spec 7 Phase 3) ────────
+        Commands::LabelReport(args) => {
+            run_label_report(
+                &args.label,
+                args.year.as_deref(),
+                &args.format,
+                args.out.as_deref(),
+            )
+            .unwrap_or_else(|e| { eprintln!("ERROR: {e}"); std::process::exit(1); });
         }
 
         // ── redist tui: interactive terminal UI ───────────────────────────────

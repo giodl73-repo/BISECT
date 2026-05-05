@@ -1,5 +1,6 @@
 pub mod adjacency_loader;
 pub mod algo_config;
+pub mod analyze_label;
 pub mod build_cmd;
 pub mod label;
 pub mod label_cmd;

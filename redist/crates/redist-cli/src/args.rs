@@ -243,6 +243,10 @@ pub enum Commands {
     Mv(MvArgs),
     /// Traverse the SHA chain for a label and verify integrity (Spec 7 Phase 4)
     LabelVerify(LabelVerifyArgs),
+    /// Run analysis for a label across one or more built years (Spec 7 Phase 3)
+    LabelAnalyze(LabelAnalyzeArgs),
+    /// Generate a report for a label across one or more analyzed years (Spec 7 Phase 3)
+    LabelReport(LabelReportArgs),
 }
 
 // ---------------------------------------------------------------------------
@@ -2532,4 +2536,62 @@ pub struct LabelVerifyArgs {
     /// Restrict verification to a single year (default: all built years)
     #[arg(short = 'y', long)]
     pub year: Option<String>,
+}
+
+// ---------------------------------------------------------------------------
+// `redist label-analyze` — label-aware analysis (Spec 7 Phase 3)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Run analysis for a label across one or more built census years (Spec 7 Phase 3)"
+)]
+pub struct LabelAnalyzeArgs {
+    /// Label to analyze (must have been built with `redist build X`)
+    pub label: String,
+
+    /// Restrict to a single census year (default: all built years)
+    #[arg(short = 'y', long, value_name = "YEAR")]
+    pub year: Option<String>,
+
+    /// Analysis types to run (e.g., summary proportionality splits).
+    /// If omitted, defaults to summary.
+    #[arg(long = "types", value_delimiter = ' ', num_args = 0..)]
+    pub types: Vec<String>,
+
+    /// Restrict to specific states by name (e.g., vermont california).
+    /// If omitted, all states found in runs/{label}/{year}/ are analyzed.
+    #[arg(long = "states", value_delimiter = ' ', num_args = 0..)]
+    pub states: Vec<String>,
+
+    /// Disable interactive confirmation prompts (for CI environments)
+    #[arg(long)]
+    pub no_interactive: bool,
+}
+
+// ---------------------------------------------------------------------------
+// `redist label-report` — label-aware report generation (Spec 7 Phase 3)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Parser)]
+#[command(
+    disable_version_flag = true,
+    about = "Generate a report for a label across one or more analyzed census years (Spec 7 Phase 3)"
+)]
+pub struct LabelReportArgs {
+    /// Label to report (must have been analyzed with `redist label-analyze X`)
+    pub label: String,
+
+    /// Restrict to a single census year (default: all analyzed years)
+    #[arg(short = 'y', long, value_name = "YEAR")]
+    pub year: Option<String>,
+
+    /// Output format: html (default) or json
+    #[arg(long, default_value = "html")]
+    pub format: String,
+
+    /// Output directory override (default: reports/{label}/{year}/)
+    #[arg(long = "out", value_name = "PATH")]
+    pub out: Option<std::path::PathBuf>,
 }
