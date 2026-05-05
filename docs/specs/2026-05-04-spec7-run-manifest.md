@@ -138,6 +138,22 @@ The **index files** (`runs/X/index.json`, `analysis/X/index.json`) record HOW IT
 WENT: state-by-state status, timestamps, version. The system writes these; the
 user reads them for diagnosis.
 
+### 2.5 Cache invalidation
+
+**Cache invalidation**: When `redist build X --year Y --force` overwrites an
+existing build, the system MUST:
+1. Delete `analysis/X/Y/` (analysis outputs are stale)
+2. Delete `reports/X/Y/` (reports are stale)
+3. Remove year Y from `analyzed` and `reported` lists in `.redist` registry
+4. Write a `runs/X/Y/STALE_ANALYSIS` sentinel file explaining why analysis was cleared
+
+This cascade prevents silent stale data. The operator is warned:
+```
+[WARNING] Overwriting build for official_proposal/2020.
+          Clearing stale analysis (2020/wisconsin/proportionality.json + 49 others).
+          Run 'redist analyze official_proposal --year 2020' to re-analyze.
+```
+
 ---
 
 ## 3. Verb Inventory
@@ -167,6 +183,33 @@ redist build --label official_proposal --config configs/statute.yml
 
 `build` writes outputs to `runs/official_proposal/` and updates `.redist`
 with the years successfully built.
+
+### 3.1a `redist import X --from FILE` — create a label from an external plan file
+
+```bash
+redist import commission_v3 --from commission_v3.csv --year 2020
+redist import minority_proposal --from minority_proposal.shp --year 2020 --format shapefile
+redist import civic_geojson --from civic_input.geojson --year 2020 --format geojson
+redist import partner_plan --from partner.rplan --year 2020 --format rplan
+```
+
+Creates `runs/X/` from an externally-produced plan file. Supported input formats:
+- `csv`: GEOID,district columns (standard state-legislative exchange format)
+- `geojson`: FeatureCollection with `district_id` property
+- `shapefile`: `.shp` + `.dbf` with GEOID and DISTRICT columns
+- `rplan`: native redist format (Spec 1)
+
+The imported run has `"algorithm": {"structure": "external", "source": FILE_SHA256}`.
+It appears in `redist ls` as a label with `built: [Y]` but `algorithm: external`.
+All `analyze`, `report`, and `compare` commands work identically on imported plans.
+
+```bash
+redist import commission_v3 --from commission_v3.csv --year 2020
+redist analyze commission_v3 --year 2020
+redist compare official_proposal commission_v3 --year 2020
+```
+
+This enables the adversarial plan review workflow used by state legislative staff.
 
 ### 3.2 `redist analyze X` — run analysis for a label
 
@@ -248,6 +291,13 @@ senate_draft2        2020            2020            2020
 vt_test              2020            —               —
 ```
 
+Machine-readable output for CI:
+
+```bash
+redist ls --json
+# {"official_proposal": {"built": ["2020","2010","2000"], "analyzed": ["2020"], "reported": []}, ...}
+```
+
 ### 3.6 `redist show X` — show details for a label
 
 ```
@@ -274,6 +324,18 @@ Paths:
   analysis/ analysis/official_proposal/
   reports/  reports/official_proposal/
 ```
+
+Machine-readable output for CI:
+
+```bash
+redist show official_proposal --json   # full index.json content + registry entry
+```
+
+**CI/CD flag**: All `redist` commands accept `--no-interactive` to disable
+confirmation prompts for use in CI/CD pipelines. `--force` skips conflict checks;
+`--no-interactive` skips confirmation prompts. These flags are orthogonal:
+- `--force` — bypass guards (allow overwrite, allow cascade delete)
+- `--no-interactive` — suppress prompts (fail on ambiguity rather than asking)
 
 ### 3.7 `redist rm X` — delete a stage
 
@@ -304,6 +366,30 @@ redist label official_proposal official_proposal_v1
 Creates registry entry `official_proposal_v1` pointing to the same run directories
 as `official_proposal`. Useful for tagging a completed run before starting a new
 build under the same label.
+
+`redist label X Y` is a registry-only alias: it does NOT rename directories or
+update index files. Use `redist mv X Y` (below) for a full rename.
+
+### 3.8a `redist mv X Y` — rename a label
+
+Renames label X to Y with full filesystem and registry consistency:
+1. Moves `runs/X/` → `runs/Y/` (filesystem rename)
+2. Updates `runs/Y/index.json`: sets `"label": "Y"`
+3. Moves `analysis/X/` → `analysis/Y/` if it exists; updates `analysis/Y/index.json`
+4. Moves `reports/X/` → `reports/Y/` if it exists
+5. Updates registry: removes X entry, adds Y entry with same stage data
+6. Errors if Y already exists in registry (use `--force` to overwrite)
+
+```bash
+redist mv senate_draft2 senate_final
+redist mv senate_draft2 senate_final --force   # overwrite if Y exists
+```
+
+Distinction:
+```
+redist label X Y  # alias only — does NOT rename directories or update index.json
+redist mv X Y     # full rename — directories + indexes + registry
+```
 
 ### 3.9 `redist plan [X]` — interactive TUI for the full pipeline
 
@@ -384,16 +470,60 @@ an alias for `redist plan` with no label specified.
 
 ### 3.10 Escape hatches for power users
 
+**`--out` on `redist build` is NOT supported.** Build always writes to `runs/X/`.
+This is intentional: allowing non-conventional paths would break the implicit
+contract that `analyze X` reads from `runs/X/`. Power users who need non-standard
+paths should use `redist mv X Y` after a build to relocate outputs while
+maintaining registry and index consistency.
+
+**`--out` on `redist report` IS supported**, since reports are terminal artifacts
+not read by any downstream command:
+
 ```bash
-# Override output directory (build writes here instead of runs/X/)
-redist build official_proposal --out /mnt/results/
+# Write report to a custom directory
+redist report official_proposal --year 2020 --out /mnt/share/reports/
 
 # Show all resolved paths without running
 redist show official_proposal
-
-# Read analysis from a non-standard location
-redist report official_proposal --analysis-dir /mnt/results/analysis/
 ```
+
+The `BuildArgs` struct (§8.6) retains the `--out` field declaration for forward
+compatibility but the build dispatcher rejects it at runtime with:
+```
+[CONFIG] build: --out is not supported on 'redist build'. Build always writes
+         to runs/{label}/. Use 'redist mv X Y' to relocate outputs after building.
+```
+
+### 3.11 `redist verify X` — traverse the SHA chain for a label
+
+```bash
+redist verify official_proposal --year 2020
+```
+
+Output (all links intact):
+```
+Config:   configs/official_proposal.yml [sha256: abc123] OK MATCH
+Build:    runs/official_proposal/2020/index.json [config_sha256: abc123] OK CHAIN OK
+Analysis: analysis/official_proposal/2020/index.json [run_sha256: def456] OK CHAIN OK
+Report:   reports/official_proposal/2020/index.json [analysis_sha256: xyz789] OK CHAIN OK
+
+Verdict: official_proposal/2020 is VERIFIED -- unbroken SHA chain from config to report.
+```
+
+Output (broken chain):
+```
+Build: runs/official_proposal/2020/index.json [config_sha256: abc123] FAIL MISMATCH
+       (stored: abc123, actual: fed321)
+Verdict: FAILED -- config may have been modified after build.
+```
+
+`redist verify` is the mechanical tool for courts, special masters, and auditors
+to confirm the algorithm was run as specified without post-hoc modification. It
+traverses the four-link chain: config file → build index → analysis index → report
+index, verifying each SHA reference.
+
+Note: `redist verify` uses ASCII-only output (`OK`/`FAIL`) to comply with the
+Windows CP1252 console policy (PP-34).
 
 ---
 
@@ -611,6 +741,14 @@ Written by `redist report` after generation completes.
   the label by convention. The registry is read only to validate that prerequisites
   are met before a command runs.
 
+**Concurrency invariant**: All mutations to `.redist` MUST acquire an advisory
+file lock on `.redist.lock` before loading the registry, and release it after the
+atomic rename. The `registry.rs` implementation uses `fs2::FileExt::lock_exclusive`
+(cross-platform) before every load-modify-save cycle. Read-only operations
+(`ls`, `show`) use `lock_shared`. This prevents the lost-update race when two
+parallel year builds both call `mark_built` — without locking, the second writer's
+rename would silently discard the first writer's mark.
+
 ### 6.3 Location and gitignore
 
 `.redist` lives at the repository root. It is git-ignored:
@@ -724,10 +862,13 @@ redist config validate configs/official_proposal.yml
 ```
 redist/crates/redist-cli/src/
   label.rs            ← label resolution: label → path convention
-  registry.rs         ← .redist read/write, atomic update, invariant enforcement
+  registry.rs         ← .redist read/write, atomic update, file locking, invariant enforcement
   build_cmd.rs        ← `redist build` dispatcher (replaces/wraps states runner)
+  import_cmd.rs       ← `redist import` — ingest external plan files into label system
+  mv_cmd.rs           ← `redist mv` — atomic rename of label (dirs + indexes + registry)
+  verify_cmd.rs       ← `redist verify` — traverse and validate SHA chain
   config_cmd.rs       ← `redist config new/validate`
-  ls_cmd.rs           ← `redist ls` and `redist show`
+  ls_cmd.rs           ← `redist ls` and `redist show` (with --json support)
   rm_cmd.rs           ← `redist rm`
 
 configs/
@@ -738,7 +879,7 @@ configs/
 
 ```
 redist/crates/redist-cli/src/
-  args.rs     ← add Build, Ls, Show, Rm, Label, ConfigNew, ConfigValidate variants
+  args.rs     ← add Build, Ls, Show, Rm, Label, Mv, Import, Verify, ConfigNew, ConfigValidate variants
   main.rs     ← dispatch new Commands variants
 ```
 
@@ -753,14 +894,20 @@ Analyze(AnalyzeArgs),       // replaces existing analyze with label-aware versio
 Report(ReportArgs),         // replaces existing report with label-aware version
 /// Compare two labels (reads analysis/A/, analysis/B/)
 Compare(CompareArgs),       // replaces existing compare with label-aware version
-/// List all labels and their stage completion
+/// List all labels and their stage completion (--json for machine-readable output)
 Ls(LsArgs),
-/// Show details for a label
+/// Show details for a label (--json for machine-readable output)
 Show(ShowArgs),
 /// Delete a stage for a label
 Rm(RmArgs),
-/// Copy a label (update registry only)
+/// Copy a label (registry alias only — does not rename directories)
 Label(LabelArgs),
+/// Rename a label atomically (directories + indexes + registry)
+Mv(MvArgs),
+/// Import an external plan file into the label system
+Import(ImportArgs),
+/// Traverse and verify the SHA chain for a label
+Verify(VerifyArgs),
 /// Config subcommand group (new, validate)
 Config(ConfigArgs),
 /// Interactive TUI for the full pipeline — label-aware frontend
@@ -807,9 +954,15 @@ pub fn report_index_path(label: &str) -> PathBuf {
 
 ### 8.5 `registry.rs` — `.redist` read/write
 
+All mutating functions MUST acquire an exclusive advisory lock on `.redist.lock`
+before loading the registry and release it after the atomic rename. Read-only
+functions acquire a shared lock. Uses `fs2::FileExt` (cross-platform).
+
 ```rust
+use fs2::FileExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::OpenOptions;
 
 #[derive(Debug, Default, Deserialize, Serialize)]
 pub struct Registry {
@@ -825,24 +978,50 @@ pub struct LabelRecord {
 }
 
 /// Load .redist from the repository root. Returns empty registry if absent.
+/// Acquires shared lock on .redist.lock for the duration of the read.
 pub fn load() -> Result<Registry, String> { ... }
 
 /// Write .redist atomically (write to .redist.tmp, rename).
+/// Caller must hold exclusive lock (acquired via with_exclusive_lock).
 pub fn save(registry: &Registry) -> Result<(), String> { ... }
 
-/// Mark a year as built for a label. Enforces invariants.
-pub fn mark_built(label: &str, year: &str) -> Result<(), String> { ... }
+/// Acquire exclusive lock, run f(registry) -> modify -> save atomically.
+/// All mutating public functions below call this internally.
+pub fn with_exclusive_lock<F>(f: F) -> Result<(), String>
+where
+    F: FnOnce(&mut Registry) -> Result<(), String>,
+{
+    let lock_file = OpenOptions::new().create(true).write(true)
+        .open(".redist.lock")?;
+    lock_file.lock_exclusive()?;
+    let mut reg = load_unlocked()?;
+    f(&mut reg)?;
+    save(&reg)?;
+    lock_file.unlock()?;
+    Ok(())
+}
 
-/// Mark a year as analyzed. Returns Err if year not in built.
-pub fn mark_analyzed(label: &str, year: &str) -> Result<(), String> { ... }
+/// Mark a year as built for a label. Acquires exclusive lock. Enforces invariants.
+pub fn mark_built(label: &str, year: &str) -> Result<(), String> {
+    with_exclusive_lock(|reg| { /* add year to built list */ })
+}
 
-/// Mark a year as reported. Returns Err if year not in analyzed.
-pub fn mark_reported(label: &str, year: &str) -> Result<(), String> { ... }
+/// Mark a year as analyzed. Acquires exclusive lock. Returns Err if year not in built.
+pub fn mark_analyzed(label: &str, year: &str) -> Result<(), String> {
+    with_exclusive_lock(|reg| { /* verify built, add to analyzed */ })
+}
+
+/// Mark a year as reported. Acquires exclusive lock. Returns Err if year not in analyzed.
+pub fn mark_reported(label: &str, year: &str) -> Result<(), String> {
+    with_exclusive_lock(|reg| { /* verify analyzed, add to reported */ })
+}
 
 /// Require that a year has been built. Used by analyze for pre-flight checks.
+/// Acquires shared lock.
 pub fn require_built(label: &str, year: &str) -> Result<(), String> { ... }
 
 /// Require that a year has been analyzed. Used by report for pre-flight checks.
+/// Acquires shared lock.
 pub fn require_analyzed(label: &str, year: &str) -> Result<(), String> { ... }
 ```
 
@@ -1092,6 +1271,22 @@ point of decision.
 | `test_dry_run_prints_all_years` | dry-run output lists all config years |
 | `test_ls_empty_registry_prints_empty_table` | no crash when `.redist` absent |
 | `test_official_proposal_config_is_valid` | `load_config("configs/official_proposal.yml")` passes |
+| `test_registry_concurrent_mark_built_no_lost_update` | two concurrent `mark_built` calls both appear in registry |
+| `test_registry_exclusive_lock_blocks_concurrent_write` | second writer waits for first to release lock |
+| `test_mv_renames_dirs_and_updates_index_label` | `mv X Y` → `runs/Y/index.json` has `"label": "Y"` |
+| `test_mv_errors_if_target_exists` | `mv X Y` where Y exists → `[CONFIG]` error |
+| `test_mv_force_overwrites_target` | `mv X Y --force` succeeds when Y exists |
+| `test_import_csv_creates_runs_dir` | `import X --from f.csv` → `runs/X/index.json` with `algorithm.structure: external` |
+| `test_import_sets_source_sha256` | imported plan records SHA of source file in `algorithm.source` |
+| `test_import_appears_in_ls_as_external` | `redist ls` shows imported label with `algorithm: external` |
+| `test_verify_unbroken_chain_prints_ok` | all SHAs match → prints `VERIFIED` |
+| `test_verify_broken_config_sha_prints_fail` | config modified after build → `FAILED` |
+| `test_verify_missing_report_reports_missing` | report not generated → `MISSING` for report link |
+| `test_ls_json_output_is_valid_json` | `redist ls --json` → parseable JSON matching registry |
+| `test_show_json_output_contains_index` | `redist show X --json` → includes `index.json` content |
+| `test_build_force_clears_stale_analysis` | `build X --force` deletes `analysis/X/Y/` and removes from registry |
+| `test_build_force_writes_stale_sentinel` | `runs/X/Y/STALE_ANALYSIS` file written on forced rebuild |
+| `test_build_out_flag_rejected` | `build X --out /tmp/` → `[CONFIG]` error |
 
 ### L2 acceptance (requires VT adjacency data)
 
@@ -1119,6 +1314,9 @@ point of decision.
 | **Spec 5 (Multi-chamber)** | `redist build X --config configs/wa_house.yml` — label and config independent |
 | **Spec 6 (Reports)** | `PlanManifest` per-state is unchanged; `reports/X/index.json` is the new run-level audit anchor |
 | **Deposition Prep** | `git_commit` in every index uses `REDIST_BUILD_COMMIT_OVERRIDE`; `DepoLogWriter` can reference index files |
+| **State Staff Interop** | `redist import X --from FILE` is the ingestion path for externally-submitted plans; integrates with `redist compare` for adversarial review |
+| **Court Submission Reports** | `redist verify X` provides the mechanical SHA-chain traversal cited in expert witness reports |
+| **Civic Bidirectional Input** | `redist import X --from FILE --format csv` is the CSV ingestion path compatible with civic ingest |
 | **B.10 (county weights)** | `algorithm.alpha_county` in config maps to `WeightSpec.alpha_county` |
 | **B.11 (ApportionRegions)** | `algorithm.structure: apportion-regions` maps to `SplitStrategy::ApportionRegions` |
 | **B.16 (convergence)** | `algorithm.search: convergence` + `convergence_threshold` maps to `SeedCompositor::ConvergenceSweep` |
@@ -1146,89 +1344,3 @@ point of decision.
 5. **Remote registry**: Should `.redist` be sharable (e.g., stored in S3 alongside
    outputs) so a team member can run `redist ls` against a shared output tree without
    running `build` locally? Deferred: local-only for v1.
-
----
-
----
-
-## Panel Reviews
-
-**Date**: 2026-05-04
-**Spec**: `2026-05-04-spec7-run-manifest.md` (Label-Based Run Management rewrite)
-**Round**: 1
-
----
-
-### Reviewer 1: Ce Zhang (ETH Zurich — Systems, ML Infrastructure)
-
-**Score**: 9/10 — The design is substantially cleaner than the previous version.
-
-Replacing path-as-API with label-as-API is the correct abstraction. The three-directory convention (`runs/`, `analysis/`, `reports/`) is fixed, predictable, and machine-verifiable. Every command that touches files can validate its inputs by checking the convention rather than trusting a user-supplied string. This is a meaningful reliability improvement over the manifest-runner approach.
-
-The registry invariants (§6.2) are well-specified. Enforcing that `analyzed` is a subset of `built` at write time — not at read time — means the invariant cannot be violated by concurrent writes, provided writes are atomic. The atomic write protocol (`.tmp` + rename) in §8.5 is correct for single-process use. For multi-process use (e.g., a CI system running two `analyze` commands concurrently), the rename is not sufficient. Add a note that `.redist` writes use advisory file locking (`flock` on Linux, `LockFile` on Windows) to serialize concurrent updates.
-
-The `test_registry_write_is_atomic` test is listed but its assertion is underspecified. "No partial write" is not a testable predicate without injecting a failure between the write and the rename. The test should simulate a kill between those steps (by wrapping the write in a closure that panics after the `.tmp` write) and verify that the pre-existing `.redist` is intact.
-
-One gap: the spec does not address the case where `runs/official_proposal/` exists on disk but `official_proposal` is not in `.redist` (e.g., the registry was deleted or the user ran `redist states` directly). `redist ls` should detect this and offer a recovery path: `[WARN] Found runs/official_proposal/ not in registry. Run: redist registry sync to import.`
-
----
-
-### Reviewer 2: Nadia Polikarpova (UC San Diego — Formal Methods, Program Synthesis)
-
-**Score**: 8.5/10 — Much stronger than the prior draft. Two schema concerns remain.
-
-The separation of config (what to do), registry (what was done), and index (how it went) is the right decomposition. The previous spec's dual-use of a single YAML file as both specification and execution state was a correctness hazard; this spec eliminates it.
-
-The config schema (§7.1) now specifies `deny_unknown_fields` behavior via the rule "unknown keys cause a parse error" — this closes the silent-misconfiguration bug I flagged previously. The required-vs-optional field rules in §7.2 are stated normatively and testable. Both are improvements.
-
-Two remaining concerns. First, the analysis index (§5.2) has `"run": "official_proposal"` — a name reference to the build label. The spec says "the path is derived from the label by convention." This is fine when the label is the same for both run and analyze. But `redist analyze X --out /mnt/custom/` (the escape hatch in §3.9) breaks the convention: the analysis is now in a non-standard location but the index still says `"run": "official_proposal"` with no path override recorded. Either the escape hatch must also write a `run_dir` field to the index, or the escape hatch should be restricted to `report` (where no downstream commands read the output directory from the index). Leaving this inconsistency makes the index schema unreliable for auditors.
-
-Second, the `BuildArgs` struct (§8.6) has a `group = "label_source"` that accepts the label as either a positional argument or `--label`. This pattern is underspecified: what happens when both are supplied? Clap's `group` makes them mutually exclusive, which is correct, but the error message will be Clap's default rather than a user-friendly `[CONFIG]` message. Add a test for this case.
-
----
-
-### Reviewer 3: Percy Liang (Stanford — Empirical ML, Reproducibility)
-
-**Score**: 9.5/10 — This is the right reproducibility primitive for redistricting work.
-
-The previous spec's `meta.git_commit` field was good but buried in the YAML execution state. This spec puts `git_commit` in every index — build, analysis, report — which means any index file is independently verifiable against the source repository. That is the correct design for a system where outputs are shared with auditors who did not run the pipeline themselves.
-
-The `config_sha256` field in the build index (§5.1) is the critical addition I would have requested. It means an auditor can take `configs/official_proposal.yml` from the git repository, hash it, and verify against the build index that the committed config was the one actually used. This closes the "was the config modified between commit and run?" gap.
-
-One improvement: the analysis index records `run_index_sha256` (the SHA of `runs/X/index.json`). But `runs/X/index.json` itself references `config_sha256`. A full audit chain is therefore: report index → analysis index → build index → config SHA → committed config. This chain should be documented explicitly in §5 as the "audit chain" so special masters know how to traverse it. Without documentation, auditors will not know to follow the chain.
-
-The `analysis_types` field in the official proposal config (§9.1) now includes `contiguity` and `splits` — a concrete improvement over the previous draft that omitted these legally significant outputs. The inclusion of both in the reference config is the right default.
-
----
-
-### Reviewer 4: Moon Duchin (Tufts — Mathematics, Redistricting Practice)
-
-**Score**: 9/10 — Practitioner workflow is now first-class.
-
-The label system is the right mental model for redistricting practitioners. In every engagement I work on, plans have names — `draft1`, `commission_proposal`, `court_submission`. The previous system required translating names into paths; this system treats names as the fundamental unit and derives everything else. The cognitive load reduction is real and significant.
-
-The error messages in §9.3 are exemplary. "You have not built year 2010. Run: redist build official_proposal --year 2010" is exactly what a practitioner needs. It is actionable, specific, and does not require reading documentation. The label-collision message showing the timestamp of the existing build is equally good.
-
-One gap: the `redist ls` output (§3.5) shows which years are in each stage but not how many states succeeded. A commission director checking in on a long run wants to know "50 states done or 47?" before looking at the full `redist show`. Suggest adding a state count column to `redist ls`, or at minimum a "partial" indicator when `succeeded < total states expected`:
-
-```
-Label                Built               Analyzed   Reported
-official_proposal    2020(50) 2010(50)   2020        —
-senate_draft2        2020(47/50 partial) —           —
-```
-
-The `redist rm` command (§3.7) correctly cascades — deleting `analyze` also deletes `report`. The cascade direction (removing a stage also removes all dependent stages) should be stated as a rule in §3.7, not just implied by the examples. Practitioners will want to know: does `redist rm official_proposal --stage build` also delete the analysis and report, or just the build outputs? The spec implies yes but does not state it.
-
----
-
-### Reviewer 5: Dana Hendricks (Wisconsin Legislative Technology Office — State GIS Director)
-
-**Score**: 8/10 — Clear improvement. Three workflow gaps from actual use.
-
-I manage redistricting data for the Wisconsin Legislature. We receive proposed plans from multiple parties — the commission, minority caucus, advocacy groups — and need to analyze each one and compare them side-by-side. The label system directly matches how we think about plans. "Commission_v3 versus minority_proposal_2" is how we talk in meetings, not "outputs/v3/2020 versus outputs/minority/2020."
-
-Three gaps from actual use. First: we often receive a plan as a shapefile or CSV from an outside party, not as a set of tract assignments produced by `redist build`. We need `redist import minority_proposal --from minority_proposal.csv --year 2020` that creates `runs/minority_proposal/` from an external file. The current spec assumes all runs are produced by `redist build`. Adding an `import` verb to the label system would make it usable for the adversarial-plan-review workflow, which is the most common redistricting scenario in state legislatures.
-
-Second: we share outputs with legal staff and commissioners who do not run the pipeline themselves. They need to browse `reports/official_proposal/` and find a dashboard they can open in a browser. The current directory structure has `reports/official_proposal/dashboard_2020.html` — good — but there is no `reports/official_proposal/index.html` that links to all years. `redist report X` should generate a top-level index page alongside the per-year dashboards.
-
-Third: the `redist rm` cascade (deleting build deletes analysis and report) is dangerous without an explicit confirmation step. Add `--dry-run` to `redist rm` so staff can preview what will be deleted before confirming. The `--force` flag that skips confirmation should require typing the label name, not just passing a flag: `redist rm official_proposal --force official_proposal`. This pattern (confirming by retyping the label) is used by Heroku and prevents the most common accidental-deletion scenario.
