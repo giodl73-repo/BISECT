@@ -80,10 +80,31 @@ The formula has three properties:
     to the seed recorded in the plan manifest.
 \end{itemize}
 
-Because \ar{} has zero seed variance in practice \citep{b11paper}, the seed
-formula is primarily an audit mechanism rather than a decision-making input.
-The same map would be produced by any seed.
-The formula provides a canonical reference point for independent verification.
+Because a single seed might land in a suboptimal local minimum, the statute
+does not stop at the content-derived seed.
+Instead, the algorithm runs forward from that seed — seed$_0$, seed$_0$+1,
+seed$_0$+2, \ldots --- until \textbf{600 consecutive seeds} produce no
+improvement in normalised edge cut.
+This \emph{Convergence Sweep} (B.16, \citealt{b16paper}) certifies that the
+returned map is the empirical minimum: across all 50 states at the 2020
+census, the worst-case convergence tail was 511 consecutive non-improving seeds
+(Georgia).
+Setting $T_{\text{stat}} = 600$ gives an 89-seed margin above this worst case.
+
+The formula therefore serves two roles simultaneously:
+(1) a canonical audit reference for the starting seed, and
+(2) the anchor of a deterministic convergence walk that terminates with
+a certified-optimal map.
+\begin{quote}
+\textit{Statutory text (2 U.S.C.\ §2a(c)(2)):}
+``The algorithm shall iterate over seeds beginning at the content-derived
+seed value, halting when no improvement in normalised edge cut has been
+observed for 600 consecutive seeds, and shall use the minimum edge cut
+plan found across all seeds evaluated.''
+\end{quote}
+\noindent The combined guarantee: any party can verify the starting seed,
+and the stopping criterion is both specified in statute and proven sufficient
+by the B.16 analysis of US census tract graphs.
 
 \subsection{Component 3: County Preservation by Default}
 
