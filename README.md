@@ -284,6 +284,18 @@ Because the algorithm minimises total edge-cut weight — and weight equals shar
 
 **No political or racial data enters the algorithm at any stage.** VRA mode uses demographic data only for edge weighting, not population balance; it is mutually exclusive with partisan-weighted mode per Callais.
 
+### Bisection rounds — Minnesota (8 districts, 3 rounds)
+
+| Round 1 (1 → 2) | Round 2 (2 → 4) | Round 3 (4 → 8) |
+| :---: | :---: | :---: |
+| ![](docs/figures/minnesota_round_1.png) | ![](docs/figures/minnesota_round_2.png) | ![](docs/figures/minnesota_round_3.png) |
+
+### Bisection rounds — Alabama (7 districts, 3 rounds)
+
+| Round 1 (1 → 2) | Round 2 (2 → 4) | Round 3 (4 → 7) |
+| :---: | :---: | :---: |
+| ![](docs/figures/alabama_round_1.png) | ![](docs/figures/alabama_round_2.png) | ![](docs/figures/alabama_round_3.png) |
+
 ## Track record
 
 The same algorithm, unchanged, on 2010 Census data: Polsby–Popper **0.320** — only 10% lower than the 2020 result, despite a decade of demographic change. Geographic structure drives the outcome.
