@@ -72,14 +72,14 @@ To recompile: `cd research && make docs`
 
 | # | Title | PDF | Status |
 |---|-------|-----|--------|
-| E.0 | Experimental Extensions Overview | [PDF](papers/E.0+experimental-overview.pdf) | 3.8/4 (R3 running) |
+| E.0 | Experimental Extensions Overview | [PDF](papers/E.0+experimental-overview.pdf) | 4.0/4 ✅ |
 | E.1 | Multi-Member Districts and Proportional Representation | [PDF](papers/E.1+multi-member-districts.pdf) | Published |
 | E.2 | Direct County Representation | [PDF](papers/E.2+county-representation.pdf) | Published |
 | E.3 | National Redistricting Without State Boundaries | [PDF](papers/E.3+national-redistricting.pdf) | Published |
 | E.4 | Partisan Similarity Districts: Algorithmic Safe Seats | [PDF](papers/E.4+partisan-similarity-districts.pdf) | Published |
 | E.5 | Partisan Fairness Through Algorithmic Districting | [PDF](papers/E.5+party-based-allocation.pdf) | Published |
 | E.6 | International Applications | [PDF](papers/E.6+international-applications.pdf) | Published |
-| E.7 | Lessons Learned | [PDF](papers/E.7+lessons-learned.pdf) | 3.8/4 (R3 running) |
+| E.7 | Lessons Learned | [PDF](papers/E.7+lessons-learned.pdf) | 4.0/4 ✅ |
 
 ---
 
