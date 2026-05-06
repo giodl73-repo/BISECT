@@ -31,6 +31,21 @@ The $\rhat$ statistic is
 Values of $\rhat < 1.1$ indicate approximate convergence; we target
 $\rhat < 1.05$ for publication-quality results.
 
+\paragraph{Scope of R-hat diagnostics.}
+R-hat diagnostics applied to scalar summary statistics (seat share,
+compactness) certify convergence of the \emph{marginal distributions}
+of those statistics across chains, not convergence of the full
+plan-space distribution.
+A chain could have $\rhat < 1.05$ on Democratic seat share while
+remaining stuck in a topologically restricted region of plan space.
+We cite \citet{autry2021multiscale} on multiscale mixing for a
+comprehensive treatment of the gap between marginal-statistic
+convergence and plan-space mixing.
+\re{}'s diagnostics are therefore best interpreted as: ``the marginal
+distributions of the reported summary statistics have converged across
+chains,'' not as a certification that the full plan-space distribution
+has been explored.
+
 For redistricting statistics, which are discrete (seat counts take
 integer values) or bounded (compactness metrics lie in $[0,1]$),
 we follow \citet{vehtari2021rank} and apply the rank-normalised $\rhat$
@@ -69,7 +84,9 @@ pools within-chain and between-chain information:
   \ess_{\text{bulk}} = \frac{CN \cdot \min(\hat{V}/B, 1)}{1 + 2\sum_{k=1}^{\hat{K}}\hat{\rho}_k^+},
 \]
 where $\hat{V} = W + B/N$ and $\hat{\rho}_k^+$ is the rank-normalised
-autocorrelation at lag $k$.
+lag-$k$ autocorrelation (computed on the rank-transformed draws as
+described in Section~\ref{sec:diagnostics} for $\rhat$;
+see \citealt{vehtari2021rank} for the full estimator).
 
 \paragraph{Target.}
 We require $\ess \geq 400$ for any summary statistic used in a legal
@@ -84,11 +101,15 @@ is the fraction of census tracts assigned to different districts:
 \[
   d_H(\sigma, \sigma') = \frac{|\{v : \sigma(v) \neq \sigma'(v)\}|}{n}.
 \]
-The lag-$k$ Hamming autocorrelation is defined as
+The lag-$k$ Hamming autocorrelation is defined using plan-to-plan
+distances, not reference-based distances:
 \[
-  \ham(k) = \mathrm{Corr}(d_H(\sigma_t, \sigma_0), d_H(\sigma_{t+k}, \sigma_0)),
+  \ham(k) = \mathrm{Corr}(d_H(\sigma_t, \sigma_{t+k}),\; d_H(\sigma_{t+1}, \sigma_{t+k+1})),
 \]
 where the correlation is taken across steps $t$.
+That is, $\ham(k)$ measures the correlation between consecutive
+plan-to-plan distances at lag $k$, not the distance from a fixed
+reference plan $\sigma_0$.
 In practice, $\hat{\rho}_1 \approx 0.87$--$0.93$ for \recom{}, with
 geometric decay: $\ham(k) \approx \hat{\rho}_1^k$.
 
@@ -100,10 +121,12 @@ thinning or a longer run; $\ham(1) < 0.90$ indicates healthy mixing.
 
 The normalized cut fraction $\phi(\sigma) = |E_\sigma| / |E|$
 (the fraction of edges crossing district boundaries) is used as a
-computationally efficient proxy for plan identity when computing
-$\ham(1)$.
-This proxy is exact in the sense that $\phi$ is the same summary
-statistic minimized by METIS and reported by the \ar{} evaluation.
+computationally efficient running diagnostic when computing $\ham(1)$.
+$\phi(\sigma)$ is not a collision-free plan identifier: two distinct
+plans can share the same cut fraction.
+However, its correlation with plan-to-plan Hamming distance makes it
+a useful chain-progress diagnostic, and it is the same summary statistic
+minimized by METIS and reported by the \ar{} evaluation.
 
 \subsection{Convergence Targets for Publication}
 

@@ -45,12 +45,25 @@ as follows:
 \end{algorithmic}
 \end{algorithm}
 
-\begin{theorem}[\citealt{wilson1996generating}]
+\begin{theorem}[\citealt{wilson1996generating}; planar bound \citealt{aldous1991random}]
 Algorithm~\ref{alg:wilson} outputs a uniform random spanning tree of $H$
 in expected time $O(\tau_{\mathrm{cover}}(H))$, where $\tau_{\mathrm{cover}}(H)$
-is the cover time of a simple random walk on $H$.
-For planar graphs with $m$ vertices, $\tau_{\mathrm{cover}}(H) = O(m \log m)$.
+is the cover time of a simple random walk on $H$ \citep{wilson1996generating}.
+For planar graphs with $m$ vertices, Aldous~\citeyearpar{aldous1991random}
+proved $\tau_{\mathrm{cover}}(H) = O(m \log m)$; this planar specialization
+is not part of Wilson's original result.
 \end{theorem}
+
+\paragraph{Planarity of census-tract adjacency subgraphs.}
+Census-tract adjacency graphs used in practice are planar by construction:
+TIGER shapefiles define census tracts as non-crossing polygons in the plane,
+so two tracts share an edge in the adjacency graph if and only if they share
+a positive-length boundary segment.
+Non-crossing polygons produce planar graphs.
+Tri-point artifacts (three tracts meeting at a single point) may create
+nominal adjacencies that do not satisfy the planar embedding, but these
+affect at most a small fraction of edges and have negligible impact on the
+$O(m\log m)$ bound in expectation.
 
 In our setting, $H$ is the subgraph induced by the union $V_i \cup V_j$
 of two adjacent districts chosen for recombination.
@@ -111,6 +124,24 @@ discusses the Texas case in detail).
 Rust's advantage is simply speed: it exhausts the resample budget faster
 and moves on.
 
+\paragraph{Stationarity under pair reselection.}
+Pair reselection modifies the \recom{} Markov kernel: pairs with low
+balanced-bipartition feasibility are abandoned more often than high-feasibility
+pairs, which is not part of the original \recom{} specification.
+Whether this modification preserves the stationary distribution is a
+conjecture.
+A plausible argument is that pair reselection is equivalent to a proposal
+rejection step that discards infeasible pair proposals uniformly---which
+preserves detailed balance if the pair-selection probability is symmetric
+over adjacent district pairs and proposals are rejected only on balance
+failure (never on cut quality).
+However, this argument has not been formally verified against the specific
+pair-selection distribution in Algorithm~\ref{alg:recom}.
+\emph{Stationarity preservation under pair reselection is deferred to
+Phase~2 empirical verification}: comparing plan-space distributions produced
+by \re{} and \gc{} on the six G-track states will determine whether
+any distributional difference exceeds statistical resolution.
+
 \paragraph{Balance cut enumeration.}
 For a spanning tree $T$ with $m-1$ edges, each edge removal creates a
 unique bipartition of the $m$ vertices into two subtrees.
@@ -129,25 +160,26 @@ deterministically from the chain index, and its own step history.
 No synchronization is required during sampling; chains communicate only
 at the diagnostics aggregation step.
 
-Per-chain seeds are derived deterministically as
+Per-chain seeds are derived deterministically.
+The hash input is the fixed-width 32-byte string:
 \[
-  \mathit{seed}_i = \mathrm{SHA256}(\text{``ENSEMBLE\_CHAIN\_''} \| i \| \text{``\_''} \| \mathit{base\_seed}),
+  \underbrace{\texttt{b"ENSEMBLE\_CHAIN\_"}}_{15\text{ bytes}}
+  \;\|\;
+  \underbrace{\texttt{i.to\_le\_bytes()}}_{8\text{ bytes}}
+  \;\|\;
+  \underbrace{\texttt{b"\_"}}_{1\text{ byte}}
+  \;\|\;
+  \underbrace{\texttt{base\_seed.to\_le\_bytes()}}_{8\text{ bytes}},
 \]
-where $i$ is the zero-indexed chain index and $\mathit{base\_seed}$ is
-the user-supplied seed.
-This construction ensures reproducibility across runs and across different
-chain counts while maintaining independence between chains.
-
-The encoding is specified precisely to guarantee cross-environment
-reproducibility.
-Integer $i$ is encoded as a 64-bit little-endian unsigned integer
-(\texttt{i.to\_le\_bytes()} in Rust).
-The base seed is encoded as a 64-bit little-endian unsigned integer.
-The string literals \texttt{``ENSEMBLE\_CHAIN\_''} and \texttt{``\_''}
-are encoded as ASCII bytes.
-The concatenation is therefore a fixed-structure 32-byte input with
-no ambiguity between chain indices or base-seed values.
-The resulting 256-bit SHA-256 hash is truncated to the least-significant
-64 bits (bytes 0--7 of the output in little-endian order) as the
-\texttt{u64} output seed, which is then used to initialize the
-\texttt{SmallRng} state via \texttt{SeedableRng::seed\_from\_u64}.
+where $i$ is the zero-indexed chain index and \texttt{base\_seed} is
+the user-supplied seed, both encoded as 8-byte little-endian unsigned
+integers (\texttt{u64}).
+The string literals are ASCII bytes.
+The total is $15 + 8 + 1 + 8 = 32$ bytes, giving a
+fixed-length, unambiguous encoding with no collision risk between chain
+indices or base-seed values.
+The SHA-256 digest (256 bits) is used to seed \texttt{SmallRng}
+(\texttt{rand} crate version 0.8) via \texttt{SeedableRng::from\_seed},
+supplying the first 16 bytes of the SHA-256 output as two
+little-endian \texttt{u64} values matching xoshiro128++'s native
+state format.

@@ -1,7 +1,10 @@
 # Revision Plan — H.2: redist-ensemble
-**Round**: 1 → 2
-**Date**: 2026-05-05
+**Round**: 2 → Accepted
+**Date revised**: 2026-05-06
 **Reviews received**: Karypis, Rodden, Duchin, Stephanopoulos, Liang
+**R2 Panel Scores**: Karypis 3/4, Rodden 3/4, Duchin 3/4, Stephanopoulos 3.5/4, Liang 3.5/4 → **avg 3.2/4 — Conditional Accept**
+**Round 2 status**: All 18 issues (R01–R18) applied. Phase 2 dependencies noted as deferred.
+PDF compiled clean: 25 pages, 0 LaTeX errors.
 
 ---
 
@@ -9,26 +12,26 @@
 
 Issues are classified by severity and deduplicated across reviewers.
 
-| ID | Reviewer(s) | Severity | Issue |
-|----|------------|----------|-------|
-| R01 | Karypis, Duchin | **CRITICAL** | Texas/CA claim misrepresents what pair reselection achieves vs. GerryChain |
-| R02 | Karypis, Duchin | **CRITICAL** | Pair reselection modifies the Markov kernel — stationarity preservation not established |
-| R03 | Karypis | **MAJOR** | Abstract conflates Wilson's cover-time bound with Aldous's planar specialization |
-| R04 | Karypis | **MAJOR** | Planarity of census-tract subgraphs not verified — $O(m \log m)$ bound depends on it |
-| R05 | Liang | **MAJOR** | SHA-256 seed encoding underspecified — integer-to-string collision risk, SmallRng truncation not stated |
-| R06 | Liang | **MAJOR** | Phase 2 benchmark commitment is not falsifiable (no hardware spec, no acceptance threshold) |
-| R07 | Rodden | **MAJOR** | R-hat convergence conflates marginal-statistic convergence with plan-space convergence |
-| R08 | Rodden | **MODERATE** | Hamming proxy ($\phi$) claim of "exactness" is wrong — two plans can share $\phi$ and differ |
-| R09 | Stephanopoulos | **MODERATE** | Legal framing conflates AEA replication improvement with court-admissibility improvement |
-| R10 | Karypis | **MODERATE** | $13\times$ overhead factor is ad hoc; sensitivity range never given |
-| R11 | Rodden | **MODERATE** | GerryChain baseline hardware/version not fully specified for replication |
-| R12 | Liang | **MODERATE** | SmallRng BigCrush claim may be incorrect (should be PractRand) |
-| R13 | Duchin | **MODERATE** | CA "highest per-step cost" claim contradicts $O((n/k)\log(n/k))$ formula |
-| R14 | Duchin | **MINOR** | Hamming autocorrelation definition uses $d_H(\sigma_t, \sigma_0)$ — nonstandard |
-| R15 | Stephanopoulos | **MINOR** | State-court case law citations missing (LWV, Harper, Harkenrider) |
-| R16 | Liang | **MINOR** | Abstract missing dagger notation on throughput estimates |
-| R17 | Rodden | **MINOR** | ESS bulk formula defines $\hat{\rho}_k^+$ without inline definition |
-| R18 | Liang | **MINOR** | Serde output schema unversioned |
+| ID | Reviewer(s) | Severity | Issue | Round 2 Status |
+|----|------------|----------|-------|----------------|
+| R01 | Karypis, Duchin | **CRITICAL** | Texas/CA claim misrepresents what pair reselection achieves vs. GerryChain | FIXED — §4.5, §5.3, §7.1 reframed; TX/CA as combinatorial, not language-specific |
+| R02 | Karypis, Duchin | **CRITICAL** | Pair reselection modifies the Markov kernel — stationarity preservation not established | FIXED — stationarity conjecture paragraph added §3.3; deferred to Phase 2 |
+| R03 | Karypis | **MAJOR** | Abstract conflates Wilson's cover-time bound with Aldous's planar specialization | FIXED — abstract and §1.2 explicitly attribute planar bound to Aldous |
+| R04 | Karypis | **MAJOR** | Planarity of census-tract subgraphs not verified — $O(m \log m)$ bound depends on it | FIXED — planarity paragraph added §3.2 (TIGER non-crossing polygons; tri-point caveat) |
+| R05 | Liang | **MAJOR** | SHA-256 seed encoding underspecified — integer-to-string collision risk, SmallRng truncation not stated | FIXED — §3.4 gives precise 32-byte encoding; §4.3 specifies SmallRng seeding from first 16 bytes |
+| R06 | Liang | **MAJOR** | Phase 2 benchmark commitment is not falsifiable (no hardware spec, no acceptance threshold) | FIXED — §5.4 specifies hardware, GC version, acceptance criterion (30K steps/sec), 95% CI |
+| R07 | Rodden | **MAJOR** | R-hat convergence conflates marginal-statistic convergence with plan-space convergence | FIXED — paragraph added §6.1; §1.1 revised to "marginal distributions of summary statistics" |
+| R08 | Rodden | **MODERATE** | Hamming proxy ($\phi$) claim of "exactness" is wrong — two plans can share $\phi$ and differ | FIXED — §6.3 removes "exact"; replaced with "computationally efficient running diagnostic" |
+| R09 | Stephanopoulos | **MODERATE** | Legal framing conflates AEA replication improvement with court-admissibility improvement | FIXED — §7.2 distinguishes AEA replication (genuine legal-adjacent) from throughput improvement |
+| R10 | Karypis | **MODERATE** | $13\times$ overhead factor is ad hoc; sensitivity range never given | FIXED — §5.2 adds overhead sensitivity table (6.5×, 13×, 26× scenarios) |
+| R11 | Rodden | **MODERATE** | GerryChain baseline hardware/version not fully specified for replication | FIXED — §5.1 adds CPU model, GC version, Python version, NumPy, starting plan, warm-up policy |
+| R12 | Liang | **MODERATE** | SmallRng BigCrush claim may be incorrect (should be PractRand) | FIXED — §4.3 replaces BigCrush with PractRand; BigCrush status flagged as unverified |
+| R13 | Duchin | **MODERATE** | CA "highest per-step cost" claim contradicts $O((n/k)\log(n/k))$ formula | FIXED — §5.3 corrects to PA having largest merged region; CA corrected; deferred to Phase 2 |
+| R14 | Duchin | **MINOR** | Hamming autocorrelation definition uses $d_H(\sigma_t, \sigma_0)$ — nonstandard | FIXED — §6.3 redefines Ham(k) as plan-to-plan $d_H(\sigma_t, \sigma_{t+k})$ correlation |
+| R15 | Stephanopoulos | **MINOR** | State-court case law citations missing (LWV, Harper, Harkenrider) | FIXED — §1.1 adds LWV v. PA (2018), Harper v. Hall (2022), Harkenrider v. Hochul (2022) |
+| R16 | Liang | **MINOR** | Abstract missing dagger notation on throughput estimates | FIXED — abstract adds $\dagger$ to 50,000 steps/sec and 2,300× speedup |
+| R17 | Rodden | **MINOR** | ESS bulk formula defines $\hat{\rho}_k^+$ without inline definition | FIXED — §6.2 adds inline definition referencing rank-normalization in §6.1 |
+| R18 | Liang | **MINOR** | Serde output schema unversioned | FIXED — §4.4 adds ensemble\_output\_version: "1.0" as versioned constant |
 
 ---
 

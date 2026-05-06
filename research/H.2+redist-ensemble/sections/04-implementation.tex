@@ -41,11 +41,15 @@ optimization.
 \subsection{Random Number Generation}
 \label{ssec:rng}
 
-Each chain uses a \texttt{SmallRng} instance from the \texttt{rand} crate,
-seeded from the SHA-256-derived per-chain seed.
+Each chain uses a \texttt{SmallRng} instance from the \texttt{rand} crate
+(version 0.8), seeded from the SHA-256-derived per-chain seed as described
+in Section~\ref{sec:algorithm}.
 \texttt{SmallRng} is a 128-bit xoshiro128++ generator: its state is small
 (16 bytes), its throughput is high ($\sim$4 billion integers per second
-on modern hardware), and it passes the BigCrush statistical test suite.
+on modern hardware), and it passes the PractRand statistical test suite
+up to large byte counts (BigCrush status for the specific xoshiro128++
+variant should be verified against \texttt{rand} crate documentation;
+we make no claim here).
 For the random walk within Wilson's algorithm, the dominant operation is
 selecting a uniformly random neighbor of the current vertex.
 We avoid modulo bias by using Lemire's fast divisor trick~\citep{lemire2019fast}
@@ -74,17 +78,24 @@ fraction, Democratic seat share (if election data is loaded)---are
 serialized to newline-delimited JSON using \texttt{serde\_json}.
 Chain-level diagnostics ($\rhat$, $\ess$, $\ham(1)$) are written at
 chain completion.
+The output schema is versioned: the constant
+\texttt{ensemble\_output\_version: "1.0"} is emitted as a header field,
+enabling downstream consumers to detect format changes.
 The output format is designed to be streamed directly into the
 \texttt{redist-report} pipeline for court-submission documents.
 
 \subsection{Texas and Bipartition Failures}
+\label{ssec:tx-impl}
 
 Texas ($n = 4{,}866$ tracts, $k = 38$ districts) presents a known
 challenge: the state's shape and high $k$ mean that a randomly merged
 pair of adjacent districts often contains a region with no balanced
 bipartition of any random spanning tree.
-\gc{} is documented to fail on Texas when run without a warmup from a
-known valid starting plan~\citep{gerrychain2021}.
+This is a combinatorial property of the Texas plan space, not a Python
+limitation.
+\gc{} without pair reselection is documented to fail on Texas from a cold
+start~\citep{gerrychain2021}; \gc{} \emph{with} pair reselection would
+also handle these cases, albeit more slowly.
 
 \re{} handles this via the pair-reselection mechanism in
 Algorithm~\ref{alg:recom}: after 10 consecutive spanning tree resample
@@ -92,25 +103,12 @@ failures for a given pair, a new adjacent pair is selected.
 In practice, for Texas, pair reselection triggers frequently during the
 first 50--100 steps from a cold start, then subsides as the chain moves
 away from the starting plan into regions of higher feasibility density.
-This behavior is not a Rust-specific limitation; it reflects the intrinsic
-geometry of the Texas plan space.
-Rust's advantage is that the 10-resample budget is exhausted in
-microseconds rather than the seconds it would take in Python, so pair
-reselection adds negligible overhead.
+\re{}'s advantage over Python \gc{} is throughput: pair reselection at
+microsecond speed (rather than second speed) reduces warm-up wall time
+without altering the algorithm's combinatorial behavior.
+The 10-resample budget is exhausted in microseconds in Rust rather than
+the seconds it would take in Python, so pair reselection adds negligible
+wall-time overhead.
 
-\paragraph{Stationarity under pair reselection.}
-Pair reselection preserves the \recom{} stationary distribution under
-mild conditions: when the pair-selection probability is symmetric and
-the pair is rejected only when no balanced cut exists (not based on the
-cut quality).
-In our implementation, pair reselection triggers only on balance failure
---- i.e., when all 10 sampled spanning trees for a given pair admit no
-balanced bipartition --- matching \gc{}'s documented behavior.
-Under this protocol, the reselection step is equivalent to a proposal
-rejection that discards infeasible pair proposals uniformly, which
-preserves detailed balance if the pair-selection distribution is
-symmetric over adjacent district pairs.
-A formal ergodicity analysis is deferred to future work; the planned
-empirical G-track replication (Section~\ref{sec:conclusion}) will compare
-ensemble distributions produced by \re{} and \gc{} to confirm that any
-distributional difference is below statistical resolution.
+The stationarity implications of pair reselection are discussed in
+Section~\ref{sec:algorithm}.

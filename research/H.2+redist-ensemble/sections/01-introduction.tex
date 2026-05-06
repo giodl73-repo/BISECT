@@ -7,6 +7,9 @@ Following \textit{Rucho v.\ Common Cause}~\citep{scotus2019rucho}, partisan
 gerrymandering claims have migrated from federal to state courts, and Markov
 chain ensemble analysis has become the principal expert-witness tool for
 showing that an enacted map is a statistical outlier.
+State courts have relied on ensemble evidence in redistricting litigation
+including \textit{League of Women Voters v.\ Pennsylvania} (2018),
+\textit{Harper v.\ Hall} (2022), and \textit{Harkenrider v.\ Hochul} (2022).
 The dominant workflow runs thousands of algorithmically drawn plans using
 the \recom{} chain~\citep{deford2021recombination}, then places the contested
 map within the resulting distribution.
@@ -33,7 +36,8 @@ proposed boundary change moves the plan toward or away from the ensemble
 median.
 Second, the computational cost discourages the thorough convergence
 diagnostics---multiple parallel chains, extended runs---that would give
-courts and litigants justified confidence in the ensemble's stationarity
+researchers and practitioners justified confidence that the marginal
+distributions of summary statistics have converged across chains
 (see~\citealt{dellaLibera2026g4}).
 
 \subsection{The Rust Solution}
@@ -48,19 +52,22 @@ within \texttt{redist build} rather than as a separate overnight job.
 
 The key algorithmic innovation is the use of Wilson's loop-erased random
 walk~\citep{lawler1980loop} to generate uniform random spanning trees.
-Wilson's algorithm runs in $O(\tau_{\mathrm{cover}})$ expected time
-\citep{wilson1996generating}, where $\tau_{\mathrm{cover}}$ is the
-cover time of the underlying random walk.
+Wilson's algorithm~\citep{wilson1996generating} runs in expected time
+$O(\tau_{\mathrm{cover}})$, where $\tau_{\mathrm{cover}}$ is the
+cover time of the underlying random walk on the subgraph.
 For planar graphs---the natural setting for census-tract adjacency
-graphs---Aldous~\citeyearpar{aldous1991random} established that
-$\tau_{\mathrm{cover}} = O(|V|\log|V|)$; the planar bound is his
-result, not Wilson's.
+graphs, which are planar by construction from non-crossing TIGER
+shapefiles---Aldous~\citeyearpar{aldous1991random} proved that
+$\tau_{\mathrm{cover}} = O(|V|\log|V|)$.
+This planar bound is Aldous's result; Wilson's original paper proves the
+UST correctness and $O(\tau_{\mathrm{cover}})$ cost but does not specialize
+to planar graphs.
 Each \recom{} step uses the spanning tree of the merged pair region
 (approximately $2n/k$ nodes, where $n$ is the total tract count and $k$
 is the number of districts), so Wilson's cost per step is
 $O((n/k)\log(n/k))$.
-Rust's compiled, zero-overhead arithmetic exploits this theoretical
-efficiency to an extent that interpreted Python cannot.
+Rust's compiled, zero-overhead arithmetic allows this theoretical
+efficiency to be realized in practice.
 
 \subsection{Pipeline Integration}
 
