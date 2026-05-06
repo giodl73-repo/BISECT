@@ -1,0 +1,129 @@
+\section{Convergence Diagnostics}
+\label{sec:diagnostics}
+
+The \re{} chain runner computes three convergence diagnostics in the
+same pass as the sampling, at zero additional per-step cost beyond
+tracking per-chain statistics.
+The diagnostic framework is described in full in~\citet{dellaLibera2026g4};
+we summarize the implementations here for completeness.
+
+\subsection{R-hat (Potential Scale Reduction Factor)}
+
+The Gelman-Rubin $\rhat$ statistic~\citep{gelman1992inference} compares
+between-chain variance to within-chain variance for a scalar summary
+statistic $\theta$ (e.g., Democratic seat count or Polsby-Popper
+compactness).
+For $C$ chains each of length $N$, let $\bar{\theta}_{c\cdot}$ denote
+the within-chain mean and $\bar{\theta}_{\cdot\cdot}$ the grand mean.
+The between-chain variance is
+\[
+  B = \frac{N}{C-1}\sum_{c=1}^C (\bar{\theta}_{c\cdot} - \bar{\theta}_{\cdot\cdot})^2,
+\]
+and the within-chain variance is
+\[
+  W = \frac{1}{C}\sum_{c=1}^C s_c^2,
+  \quad s_c^2 = \frac{1}{N-1}\sum_{t=1}^N (\theta_{ct} - \bar{\theta}_{c\cdot})^2.
+\]
+The $\rhat$ statistic is
+\[
+  \rhat = \sqrt{\frac{(N-1)/N \cdot W + B/N}{W}}.
+\]
+Values of $\rhat < 1.1$ indicate approximate convergence; we target
+$\rhat < 1.05$ for publication-quality results.
+
+For redistricting statistics, which are discrete (seat counts take
+integer values) or bounded (compactness metrics lie in $[0,1]$),
+we follow \citet{vehtari2021rank} and apply the rank-normalised $\rhat$
+variant.
+All $CN$ draws across all chains are first rank-transformed to
+approximate normality, then $\rhat$ is computed on the transformed values.
+Rank normalisation removes sensitivity to the marginal distribution shape
+and is the current best practice for MCMC diagnostics~\citep{vehtari2021rank}.
+
+\paragraph{Implementation.}
+Each chain accumulates $\bar{\theta}_{c\cdot}$ and $s_c^2$ incrementally
+using Welford's online algorithm~\citep{welford1962note}, requiring $O(1)$
+storage per chain.
+For rank normalisation, all step-level draws are buffered in a
+\texttt{Vec<f64>} and rank-sorted at chain completion.
+$\rhat$ is computed in a single pass over the $C$ chain statistics.
+
+\subsection{Effective Sample Size}
+
+The effective sample size accounts for autocorrelation within each chain.
+Using Geyer's initial monotone sequence estimator~\citep{geyer1992practical},
+the ESS for a single chain of length $N$ is
+\[
+  \ess = \frac{N}{1 + 2\sum_{k=1}^{\hat{K}} \hat{\rho}_k},
+\]
+where $\hat{\rho}_k$ is the lag-$k$ autocorrelation estimate and
+$\hat{K}$ is the cutoff where the monotone sequence estimate becomes
+non-positive.
+For redistricting chains, typical lag-1 autocorrelation is
+$\hat{\rho}_1 \approx 0.85$--$0.95$, giving
+$\ess \approx 500$--$2{,}000$ for a 10{,}000-step chain.
+
+We use the multi-chain $\ess$ formula from~\citet{vehtari2021rank}, which
+pools within-chain and between-chain information:
+\[
+  \ess_{\text{bulk}} = \frac{CN \cdot \min(\hat{V}/B, 1)}{1 + 2\sum_{k=1}^{\hat{K}}\hat{\rho}_k^+},
+\]
+where $\hat{V} = W + B/N$ and $\hat{\rho}_k^+$ is the rank-normalised
+autocorrelation at lag $k$.
+
+\paragraph{Target.}
+We require $\ess \geq 400$ for any summary statistic used in a legal
+filing.
+For a 10{,}000-step, 8-chain run at typical redistricting autocorrelation,
+the expected $\ess$ is 4{,}000--16{,}000---well above this threshold.
+
+\subsection{Hamming Autocorrelation}
+
+The Hamming distance between two redistricting plans $\sigma$ and $\sigma'$
+is the fraction of census tracts assigned to different districts:
+\[
+  d_H(\sigma, \sigma') = \frac{|\{v : \sigma(v) \neq \sigma'(v)\}|}{n}.
+\]
+The lag-$k$ Hamming autocorrelation is defined as
+\[
+  \ham(k) = \mathrm{Corr}(d_H(\sigma_t, \sigma_0), d_H(\sigma_{t+k}, \sigma_0)),
+\]
+where the correlation is taken across steps $t$.
+In practice, $\hat{\rho}_1 \approx 0.87$--$0.93$ for \recom{}, with
+geometric decay: $\ham(k) \approx \hat{\rho}_1^k$.
+
+The Hamming autocorrelation serves as a distribution-free mixing
+diagnostic: it measures how rapidly consecutive plans decorrelate in
+plan space, independent of any particular summary statistic.
+A chain with $\ham(1) > 0.98$ is mixing slowly and may require
+thinning or a longer run; $\ham(1) < 0.90$ indicates healthy mixing.
+
+The normalized cut fraction $\phi(\sigma) = |E_\sigma| / |E|$
+(the fraction of edges crossing district boundaries) is used as a
+computationally efficient proxy for plan identity when computing
+$\ham(1)$.
+This proxy is exact in the sense that $\phi$ is the same summary
+statistic minimized by METIS and reported by the \ar{} evaluation.
+
+\subsection{Convergence Targets for Publication}
+
+Table~\ref{tab:diag-targets} summarizes the diagnostic thresholds.
+The target is to achieve all three thresholds after 5{,}000 steps for
+all six G-track states.
+At \re{}'s estimated throughput of 50{,}000 steps/sec, 5{,}000 steps
+require approximately 0.1 seconds.
+
+\begin{table}[h]
+\centering
+\caption{Convergence diagnostic thresholds for \re{} publication results.}
+\label{tab:diag-targets}
+\begin{tabular}{lll}
+\toprule
+Diagnostic & Symbol & Target \\
+\midrule
+Gelman-Rubin (rank-normalised) & $\rhat$ & $< 1.05$ \\
+Effective sample size & $\ess$ & $\geq 400$ per statistic \\
+Hamming autocorrelation & $\ham(1)$ & $0.85$--$0.95$ \\
+\bottomrule
+\end{tabular}
+\end{table}

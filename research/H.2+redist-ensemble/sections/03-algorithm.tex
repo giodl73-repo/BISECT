@@ -1,0 +1,139 @@
+\section{Algorithm}
+\label{sec:algorithm}
+
+\subsection{Setup and Notation}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state with
+$n = |V|$ tracts and $|E|$ shared boundaries.
+Each vertex $v \in V$ carries a population $p(v)$.
+A \emph{$k$-partition} of $G$ is a function $\sigma: V \to \{1,\ldots,k\}$
+such that each part $V_i = \sigma^{-1}(i)$ induces a connected subgraph
+of $G$.
+A partition is \emph{population-balanced} if
+\[
+  \left|\frac{\sum_{v \in V_i} p(v)}{\bar{p}} - 1\right| \leq \varepsilon
+  \quad \forall i \in \{1,\ldots,k\},
+\]
+where $\bar{p} = \frac{1}{k}\sum_{v \in V} p(v)$ is the target district
+population and $\varepsilon = 0.005$ is the statutory tolerance.
+
+\subsection{Wilson's Loop-Erased Random Walk}
+
+\begin{definition}[Uniform Random Spanning Tree]
+A \emph{uniform random spanning tree} (UST) of a connected graph $H$
+is a spanning tree of $H$ drawn uniformly at random from the set of
+all spanning trees of $H$.
+\end{definition}
+
+Wilson's algorithm~\citep{wilson1996generating} generates a UST of $H$
+as follows:
+
+\begin{algorithm}
+\caption{Wilson's UST Algorithm}
+\label{alg:wilson}
+\begin{algorithmic}[1]
+\Require Connected graph $H = (V_H, E_H)$, arbitrary root $r \in V_H$
+\Ensure Uniform random spanning tree $T$ of $H$
+\State $T \leftarrow \{r\}$
+\While{$T \neq V_H$}
+  \State Pick any $u \in V_H \setminus T$
+  \State Perform a simple random walk from $u$ until hitting $T$, recording the path $\pi$
+  \State Erase all loops from $\pi$ to obtain the loop-erased path $\mathsf{LE}(\pi)$
+  \State Add all vertices and edges of $\mathsf{LE}(\pi)$ to $T$
+\EndWhile
+\State \Return $T$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{theorem}[\citealt{wilson1996generating}]
+Algorithm~\ref{alg:wilson} outputs a uniform random spanning tree of $H$
+in expected time $O(\tau_{\mathrm{cover}}(H))$, where $\tau_{\mathrm{cover}}(H)$
+is the cover time of a simple random walk on $H$.
+For planar graphs with $m$ vertices, $\tau_{\mathrm{cover}}(H) = O(m \log m)$.
+\end{theorem}
+
+In our setting, $H$ is the subgraph induced by the union $V_i \cup V_j$
+of two adjacent districts chosen for recombination.
+This subgraph has approximately $m = 2n/k$ vertices, giving an expected
+Wilson cost of $O((n/k)\log(n/k))$ per \recom{} step.
+
+\subsection{The ReCom Proposal}
+
+Algorithm~\ref{alg:recom} describes one step of the \recom{} chain.
+The critical design decision is the treatment of tree bipartitions:
+we enumerate \emph{all} balanced cuts of the spanning tree rather than
+sampling a single cut.
+This enumeration is necessary to replicate GerryChain's stationary
+distribution, which places weight on each spanning tree proportional
+to the number of balanced bipartitions it admits~\citep{deford2021recombination}.
+
+\begin{algorithm}
+\caption{One ReCom Step}
+\label{alg:recom}
+\begin{algorithmic}[1]
+\Require Current partition $\sigma$, population tolerance $\varepsilon$
+\Ensure Updated partition $\sigma'$
+\State $\text{resample\_count} \leftarrow 0$
+\Repeat
+  \If{$\text{resample\_count} \geq 10$}
+    \State Select a new pair $(i, j)$ uniformly from all adjacent district pairs
+    \State $\text{resample\_count} \leftarrow 0$
+  \EndIf
+  \State Select pair $(i, j)$ uniformly from all adjacent district pairs
+  \State $R \leftarrow V_i \cup V_j$ \Comment{Merged region}
+  \State $H \leftarrow G[R]$ \Comment{Induced subgraph}
+  \State $T \leftarrow \textsc{WilsonUST}(H)$ \Comment{Algorithm \ref{alg:wilson}}
+  \State $\mathcal{B} \leftarrow \{e \in T : \text{removing } e \text{ gives a balanced bipartition}\}$
+  \Comment{Enumerate all balanced cuts}
+  \State $\text{resample\_count} \leftarrow \text{resample\_count} + 1$
+\Until{$\mathcal{B} \neq \emptyset$}
+\State Sample $e^* \sim \mathrm{Uniform}(\mathcal{B})$
+\State $\{A, B\} \leftarrow$ bipartition of $T$ induced by removing $e^*$
+\State Update $\sigma'$ by assigning $V_i \leftarrow A$, $V_j \leftarrow B$
+\State \Return $\sigma'$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Failure handling.}
+When a sampled spanning tree $T$ of the merged region $R$ admits no
+balanced bipartition (i.e., $\mathcal{B} = \emptyset$), the algorithm
+resamples the entire spanning tree from scratch rather than attempting to
+repair the same tree.
+This tree-resample-on-failure policy is essential: retrying with the
+same tree would not sample a new point from the UST distribution and
+would break the stationary distribution guarantee.
+If 10 consecutive spanning tree samples for the same district pair all
+fail to yield a balanced bipartition, the pair is abandoned and a new
+adjacent pair $(i,j)$ is selected.
+This pair-reselection mechanism is not a Rust-specific workaround; the
+same failure mode occurs in Python \gc{} (Section~\ref{sec:performance}
+discusses the Texas case in detail).
+Rust's advantage is simply speed: it exhausts the resample budget faster
+and moves on.
+
+\paragraph{Balance cut enumeration.}
+For a spanning tree $T$ with $m-1$ edges, each edge removal creates a
+unique bipartition of the $m$ vertices into two subtrees.
+Each subtree's population is the sum of $p(v)$ over its vertices.
+We scan all $m-1$ edges in a single linear pass, accumulating the
+subtree population on one side via DFS, and classify each edge as
+balanced or unbalanced.
+The cost of this enumeration is $O(m)$, subdominant to the $O(m\log m)$
+Wilson cost.
+
+\subsection{Parallel Chains}
+
+Independent chains are embarrassingly parallel: each chain maintains its
+own partition state, its own random-number generator seeded
+deterministically from the chain index, and its own step history.
+No synchronization is required during sampling; chains communicate only
+at the diagnostics aggregation step.
+
+Per-chain seeds are derived deterministically as
+\[
+  \mathit{seed}_i = \mathrm{SHA256}(\text{``ENSEMBLE\_CHAIN\_''} \| i \| \text{``\_''} \| \mathit{base\_seed}),
+\]
+where $i$ is the zero-indexed chain index and $\mathit{base\_seed}$ is
+the user-supplied seed.
+This construction ensures reproducibility across runs and across different
+chain counts while maintaining independence between chains.

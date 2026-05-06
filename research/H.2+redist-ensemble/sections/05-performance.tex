@@ -1,0 +1,145 @@
+\section{Performance Analysis}
+\label{sec:performance}
+
+\subsection{GerryChain Baseline Measurements}
+
+We measured \gc{} throughput by running 1{,}000 \recom{} steps for
+three states and recording wall-clock time.
+These are direct empirical measurements from the \gc{} Python package
+(version 0.3) on a standard development workstation:
+
+\begin{center}
+\begin{tabular}{lrrrl}
+\toprule
+State & $k$ & $n_{\text{tracts}}$ & 1K steps (sec) & Steps/sec \\
+\midrule
+North Carolina & 14 & 2{,}672 & 47 & $\approx 21$ \\
+Wisconsin      &  8 & 1{,}922 & 28 & $\approx 36$ \\
+Georgia        & 14 & 1{,}978 & 30 & $\approx 33$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The variation in throughput across states reflects differences in both
+$n$ (tract count) and $k$ (district count).
+Wisconsin is faster than North Carolina despite having fewer districts
+($k=8$ vs $k=14$) because its lower tract count reduces the merged-region
+size; Georgia achieves similar throughput to Wisconsin despite $k=14$
+because its tracts are on average smaller in the adjacency graph.
+
+\subsection{Rust Target Estimates}
+
+The theoretical throughput of \re{} follows from Wilson's complexity
+analysis.
+For a merged region of size $m = 2n/k$:
+
+\begin{enumerate}
+  \item \textbf{Wilson's walk}: $O(m\log m)$ expected operations.
+    At $m \approx 191$ (NC average: $2 \times 2{,}672 / 14$),
+    Wilson requires approximately $191 \times \log(191) \approx 191 \times 7.5 \approx 1{,}433$
+    random walk steps.
+  \item \textbf{Effective operations per walk step}: Neighbor selection
+    (1 uniform draw), loop detection (hash set lookup), and
+    path extension (pointer write)---approximately 8 instructions at the
+    clock level.
+  \item \textbf{Total operations per \recom{} step}: $\approx 191 \times 8 = 1{,}528$
+    effective operations.
+  \item \textbf{Effective clock rate}: Modern CPUs execute at
+    $\sim$4\,GHz but MCMC-adjacent code (random number generation,
+    irregular memory access) achieves roughly 1\,GHz effective throughput
+    on graph-walk workloads of this size.
+  \item \textbf{Resulting time per step}: $1{,}528 \,/\, 10^9 \approx 1.5\,\mu$s.
+  \item \textbf{Steps per second}: $\approx 660{,}000$.
+\end{enumerate}
+
+Applying a conservative $13\times$ overhead factor for Rust runtime costs
+(subgraph construction, adjacency list traversal, SmallVec allocation,
+serde bookkeeping) yields a practical target of \textbf{50{,}000 steps/sec}.
+This is still a $2{,}350\times$ speedup over \gc{} for North Carolina.
+
+\begin{remark}
+The overhead factor of $13\times$ is deliberately conservative.
+Our METIS pipeline achieved a $213\times$ speedup over Python for a
+structurally similar graph-partitioning workload~\citep{dellaLibera2026b1}.
+The overhead factor for \re{} is higher because Wilson's random walk has
+more irregular memory access patterns than METIS's multilevel contraction,
+but $50{,}000$\,steps/sec should be achievable without architecture-specific
+optimization.
+\end{remark}
+
+\subsection{Projected Performance Table}
+
+\begin{table}[h]
+\centering
+\caption{%
+  Performance comparison: \gc{} measured vs.\ \re{} estimated.
+  Rust estimates based on Wilson's $O((n/k)\log(n/k))$ analysis at
+  50{,}000\,steps/sec (conservative).
+  PA and TX estimated from $n$-scaling of the NC/WI/GA measurements.
+  All Rust figures require validation against \texttt{criterion.rs}
+  (Phase~2).
+}
+\label{tab:performance}
+\begin{tabular}{lrrrrrr}
+\toprule
+\multirow{2}{*}{State} & \multirow{2}{*}{$k$} &
+  \multirow{2}{*}{$n$} &
+  \multicolumn{2}{c}{\gc{} (measured)} &
+  \multicolumn{2}{c}{\re{} (estimated\est)} \\
+\cmidrule(lr){4-5}\cmidrule(lr){6-7}
+& & & 1K steps (s) & Steps/s & 10K steps (s) & Speedup \\
+\midrule
+NC & 14 & 2{,}672 & 47 & 21 & 0.20 & 2{,}350$\times$ \\
+WI &  8 & 1{,}922 & 28 & 36 & 0.12 & 2{,}330$\times$ \\
+GA & 14 & 1{,}978 & 30 & 33 & 0.13 & 2{,}310$\times$ \\
+PA & 17 & 3{,}218 & $\sim$30\est & $\sim$33 & 0.18 & 2{,}200$\times$ \\
+TX & 38 & 4{,}866 & failure\bench & --- & 0.31 & ---\bench \\
+CA & 52 & 8{,}057 & failure\bench & --- & 0.52 & ---\bench \\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5ex}
+\small
+\est\,Rust estimates require validation with \texttt{criterion.rs}; see Section~\ref{ssec:phase2}.\\
+\bench\,\gc{} fails on TX ($k=38$) and CA ($k=52$) from cold start due to bipartition infeasibility;
+\re{} handles via pair reselection (Section~\ref{ssec:tx}).
+\end{table}
+
+\subsection{Texas and California}
+\label{ssec:tx}
+
+\gc{} is documented to fail on Texas when started from a random plan:
+the bipartition feasibility rate for random district pairs in TX is low
+enough that the chain stalls indefinitely without a carefully constructed
+warm start.
+\re{}'s pair-reselection mechanism (Section~\ref{sec:implementation})
+enables it to traverse the low-feasibility region rapidly.
+The performance estimate in Table~\ref{tab:performance} assumes the pair
+reselection overhead is absorbed within the 50{,}000\,steps/sec budget.
+
+California ($k=52$) presents the highest per-step cost due to its
+large $n$ and high $k$.
+The estimated 0.52 seconds for 10{,}000 steps still represents a
+dramatic improvement over \gc{}'s inability to complete even 1{,}000
+steps from a cold start.
+
+\subsection{Phase 2: Criterion.rs Benchmarks}
+\label{ssec:phase2}
+
+All Rust throughput figures in this paper are estimates derived from
+complexity analysis.
+Phase~2 of the \re{} project will validate these estimates using
+\texttt{criterion.rs}, Rust's standard micro-benchmarking harness.
+Benchmarks will be run for each of the six G-track states (NC, WI, GA,
+PA, TX, CA) at the following granularities:
+
+\begin{itemize}
+  \item \textbf{Wilson UST}: Time to generate one uniform random spanning
+    tree for a merged region of size $m$, as a function of $m$.
+  \item \textbf{Balance check}: Time for the full edge enumeration pass.
+  \item \textbf{Full step}: End-to-end \recom{} step time including
+    subgraph construction.
+  \item \textbf{Chain throughput}: Steps/sec for a 1{,}000-step chain,
+    compared directly against \gc{} wall-clock time.
+\end{itemize}
+
+Results will be reported in a companion note to this paper.

@@ -1,0 +1,105 @@
+\section{Legal Properties}
+\label{sec:legal}
+
+\subsection{Procedural Fairness of Local ReCom Sampling}
+\label{sec:legal:procedural}
+
+BisectionEnsemble inherits the procedural fairness argument of ReCom-based
+ensemble methods \citep{deford2021recombination, duchin2021report} while
+preserving the structural guarantees of the bisection tree
+\citep{dellaLibera2026apportion}. We address each legal property in turn.
+
+\paragraph{No partisan inputs.}
+The local ReCom chain at each bisection node operates on the census-tract
+adjacency graph with TIGER boundary weights. No partisan data enters the
+chain: the spanning tree distribution is determined by graph structure
+(adjacency and population) alone, and the selection criterion (edge-cut rank)
+is a geometric property. This is identical to the non-partisan posture of
+ApportionRegions \citep{dellaLibera2026apportion} and satisfies the
+``political blindness'' requirement articulated in \emph{Rucho v.\ Common Cause}
+\citep{rucho2019} for any map-drawing algorithm that is proposed as a
+procedurally neutral baseline.
+
+\paragraph{Uniform local sampling.}
+The uniform spanning tree (UST) used in each ReCom step provides a
+theoretically grounded sampling distribution: the UST of a graph $H$ is the
+unique maximum-entropy distribution over spanning trees of $H$
+\citep{aldous1990random, wilson1996generating}. Each accepted plan
+$(A_t, B_t)$ is drawn from the distribution induced by the UST on the
+feasible bisections of the local subregion. This provides the same
+``representativeness'' argument as full-state ReCom ensembles, localised to
+each bisection node.
+
+\paragraph{Pre-committed procedure.}
+The hyperparameters $p$ and $T$ are fixed before any plans are generated.
+The percentile $p$ is the same legal posture argument as in PercentileSweep
+\citep{dellaLibera2026percentilesweep}: a value of $p = 0.5$ selects the
+median plan (most representative of the local feasible space), while $p = 0.0$
+selects the most compact plan. Either choice can be defended as a pre-committed,
+politically neutral criterion. No post-hoc adjustment based on partisan outcomes
+is made.
+
+\subsection{Bisection Tree Structural Guarantees}
+\label{sec:legal:structure}
+
+The bisection tree structure provides two constitutional guarantees that
+BisectionEnsemble inherits by construction.
+
+\paragraph{Population balance.}
+Each bisection node in the tree receives a population target $(t_1, t_2)$
+derived from its parent's allocation and the seat count $k$. The ReCom chain
+only accepts plans that achieve population balance within the tolerance
+$\varepsilon$ (by Theorem~\ref{thm:tractable}, such plans always exist).
+The hierarchical structure ensures that population imbalances do not compound:
+an imbalance at node $v$ is bounded by $\varepsilon$ and propagates only to
+$v$'s subtree, where sub-tolerances absorb it. The final districts satisfy
+the \emph{Wesberry v.\ Sanders} standard \citep{wesberry1964} of $\pm 0.5\%$
+population deviation from the ideal, which is enforced at the leaf level.
+
+\paragraph{Contiguity.}
+By Proposition~\ref{prop:contiguity}, every plan produced at every node is
+contiguous. Since contiguity is preserved at every level of the recursion,
+the final districts are contiguous. This satisfies the contiguity requirement
+that courts have interpreted as implicit in Article~I \S2 and explicit in
+most state redistricting statutes.
+
+\subsection{Percentile Choice and Equal Protection}
+\label{sec:legal:percentile}
+
+The choice of percentile $p$ has been challenged in redistricting litigation
+as a ``hidden thumb on the scale.'' We address this concern directly.
+
+\paragraph{$p = 0.5$ (median): the ``typical'' feasible plan.}
+Selecting the median-edge-cut bisection at each node produces the plan that
+is most representative of the local feasible bisection space. By the
+ergodicity of the ReCom chain, the distribution of accepted plans converges
+to the stationary distribution over feasible bisections as $T \to \infty$.
+The median plan is thus the plan that minimises the maximum deviation from
+any other feasible bisection in the edge-cut metric. This is a principled
+``central tendency'' criterion that courts have accepted in the context of
+full-state ensembles \citep{herschlag2020quantifying}.
+
+\paragraph{$p = 0.0$ (minimum): compactness maximisation.}
+Selecting the minimum-edge-cut bisection at each node is equivalent to
+the ReCom-constrained version of minimum-edge-cut redistricting
+\citep{dellaLibera2026mec}: the most compact feasible bisection of each
+subregion. The legal argument is that compactness is an explicitly enumerated
+redistricting criterion in 37 states and has been accepted as a non-partisan
+tie-breaker in judicial review of redistricting plans.
+
+\paragraph{Sensitivity to $p$.}
+The NC results (Table~\ref{tab:partisan}) show that the partisan outcome is
+unchanged across $p = 0.0$, $p = 0.5$, and standard bisection. This insensitivity
+is evidence that the percentile choice is not a mechanism for partisan manipulation:
+if the outcome were sensitive to $p$, a partisan actor could exploit $p$ to
+choose a preferred outcome. The stability of the NC result suggests that the
+local feasible bisection space is concentrated around a single partisan equilibrium,
+making the percentile choice genuinely irrelevant to the outcome.
+
+\paragraph{Disclosure requirements.}
+Any deployment of BisectionEnsemble in litigation or administrative redistricting
+should disclose (1) the value of $p$, (2) the value of $T$, (3) the METIS seed
+used for initialisation, (4) the census release identifier, and (5) the
+acceptance rate at each node. All five are logged by the \texttt{redist-cli}
+implementation in the canonical JSONL audit log, satisfying the deposition
+disclosure requirements of \citet{dellaLibera2026depo}.

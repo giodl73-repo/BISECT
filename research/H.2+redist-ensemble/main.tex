@@ -1,0 +1,123 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros
+\newcommand{\re}{\textsc{redist-ensemble}}
+\newcommand{\gc}{\textsc{GerryChain}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+\newcommand{\ess}{\mathrm{ESS}}
+\newcommand{\ham}{\mathrm{Ham}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\bench}{$^{\ddagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{\texttt{redist-ensemble}: A High-Performance Rust Implementation}\\
+  \textbf{of ReCom for Redistricting Feasibility Analysis}\\[0.8em]
+  \normalsize\textit{H.2 --- Rust Ensemble Engine}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Markov chain ensemble analysis has become a primary tool for detecting
+partisan gerrymandering in state-court litigation following
+\textit{Rucho v.\ Common Cause} (2019).
+The dominant implementation, \gc{} (Python), achieves approximately
+21--36 steps per second for congressional-scale states
+(North Carolina: 2{,}672 tracts, $k=14$), making a 10{,}000-step
+ensemble a 5--8 minute computation.
+This throughput limits ensemble analysis to an offline, post-hoc step
+run separately from the redistricting pipeline.
+
+We present \texttt{redist-ensemble}, a Rust implementation of the
+\recom{} Markov chain using Wilson's uniform random spanning tree
+algorithm~\citep{wilson1996generating}.
+Wilson's algorithm achieves $O(|V|\log|V|)$ expected time on planar
+graphs, reducing the per-step cost from Python's interpreted execution
+to native compiled arithmetic at roughly $50{,}000$ steps per second---an
+estimated $2{,}300\times$ speedup over \gc{}.
+At this throughput, a 10{,}000-step ensemble for North Carolina completes
+in approximately 0.2 seconds, enabling ensemble analysis as an integrated
+real-time audit step within the \texttt{redist build} pipeline rather
+than an overnight computation.
+
+The implementation consists of three modules: \texttt{spanning.rs}
+(Wilson's loop-erased random walk), \texttt{recom.rs} (the \recom{}
+proposal with correct stationary-distribution balance-cut enumeration),
+and \texttt{chain.rs} (parallel runner with Rayon, per-chain SHA-256
+seeds, $\rhat$, $\ess$, and Hamming autocorrelation diagnostics).
+Benchmark validation against \texttt{criterion.rs} is planned for Phase~2.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-implementation}
+\input{sections/05-performance}
+\input{sections/06-diagnostics}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

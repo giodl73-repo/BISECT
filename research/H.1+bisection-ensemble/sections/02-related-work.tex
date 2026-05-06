@@ -1,0 +1,67 @@
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{ReCom and GerryChain.}
+\citet{deford2021recombination} introduced the Recombination (ReCom) Markov chain
+for redistricting. A ReCom step selects two adjacent districts, merges them into
+a single subgraph, computes a random spanning tree of the merged subgraph,
+and cuts the spanning tree at a random edge to produce two new districts with
+balanced populations. The chain is ergodic over the space of balanced, contiguous
+$k$-district plans (under mild conditions) and mixes efficiently for moderate $k$.
+\citet{duchin2019gerrychain} implemented ReCom as GerryChain, an open-source
+Python library that has become standard for redistricting analysis in litigation
+and academic research \citep{herschlag2020quantifying, chikina2017assessing}.
+
+The critical limitation identified in this paper---bipartition failure for large
+prime $k$---is a known but underreported problem in the GerryChain community.
+When two districts are merged and the combined subgraph has $n_{\text{merge}}$
+tracts with a target population ratio of $(k-2):2$ per district, the spanning
+tree cut must achieve a near-extreme balance. For $k=38$ (Texas), each district
+holds $1/38 \approx 2.6\%$ of the state population; after merging two adjacent
+districts the merged region holds $5.3\%$, and the cut must split this into two
+regions of $2.6\%$ each---achievable in principle but requiring extremely
+specific spanning tree structure. Rejection rates approach $1 - O(1/k)$.
+
+\paragraph{Wilson's uniform spanning tree.}
+The random spanning tree underlying ReCom is sampled via Wilson's algorithm
+\citep{wilson1996generating}, which runs a loop-erased random walk from each
+vertex and produces a perfectly uniform spanning tree in $O(n)$ expected time.
+BisectionEnsemble inherits this subroutine unchanged; the difference is that
+it applies Wilson's algorithm to a local subregion of $\approx n/k$ tracts
+rather than to the full state graph of $n$ tracts.
+
+\paragraph{PercentileSweep (H.0).}
+\citet{dellaLibera2026percentilesweep} introduced PercentileSweep, which
+generates $T$ full-state bisection plans using different METIS seeds or
+parameter settings and selects the plan at percentile $p$ of the edge-cut
+distribution. BisectionEnsemble extends this approach in two ways: (1) it
+operates at each \emph{node} of the bisection tree rather than at the root,
+and (2) it uses ReCom Markov-chain sampling rather than independent METIS
+seeds, providing better local coverage of the feasible bisection space.
+PercentileSweep is the ``outer'' method (select among full-state plans);
+BisectionEnsemble is the ``inner'' method (select the bisection cut at each
+node from a local distribution).
+
+\paragraph{BisectionTree methods (B.1, B.11).}
+The bisection tree structure underlying BisectionEnsemble was introduced in
+\citet{dellaLibera2026mec} (B.1) as a minimum-edge-cut recursive bisection
+and extended in \citet{dellaLibera2026apportion} (B.11: ApportionRegions)
+to use prime-factorization-guided $k$-way splits. BisectionEnsemble is
+compatible with both: for a power-of-two seat count (pure binary tree),
+every node is a bisection node and BisectionEnsemble applies directly. For
+non-binary factorizations (ApportionRegions), BisectionEnsemble applies
+at every node where the local split is 2-way; nodes with $p$-way splits
+for $p > 2$ use standard METIS (or can be decomposed into nested bisections).
+The GeoSection structure \citep{dellaLibera2026geosection} is also compatible:
+its geographic coherence constraints are preserved as long as the ensemble
+accepts only plans that respect geographic boundaries.
+
+\paragraph{Ensemble methods in litigation.}
+The use of redistricting ensembles as expert evidence has been accepted in
+several federal and state court proceedings \citep{herschlag2020quantifying,
+duchin2021report}. The key legal requirement is that the ensemble sampling
+method be described as a transparent, pre-committed procedure that does not
+depend on the partisan outcome of any particular plan. BisectionEnsemble
+satisfies this requirement: the percentile $p$ and step count $T$ are fixed
+before any plans are generated, and the selection criterion (rank in the
+edge-cut distribution) is a geometric property with no partisan content.

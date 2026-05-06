@@ -1,0 +1,180 @@
+\section{Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation and Setup}
+\label{sec:alg:notation}
+
+Let $G = (V, E, w)$ be the census-tract adjacency graph for a state (or
+sub-region), where $V$ is the set of census tracts, $E$ the set of
+shared-boundary edges, and $w: E \to \mathbb{R}_{>0}$ the TIGER boundary length.
+Let $\text{pop}: V \to \mathbb{Z}_{>0}$ be census population.
+Let $k \geq 2$ be the number of districts to produce.
+The bisection tree for seat count $k$ is determined by the split prescription
+of \citet{dellaLibera2026apportion}: at each node with $k'$ target districts,
+the node applies a $p'$-way split where $p' = \text{largest prime factor of } k'$
+(or $p' = 2$ for prime $k' > 3$, using floor/ceil targets).
+
+BisectionEnsemble replaces the METIS call at each bisection node (where $p' = 2$)
+with a local ReCom ensemble. It is defined by two hyperparameters:
+\begin{itemize}
+  \item $p \in [0, 1]$: the percentile of the edge-cut distribution to select.
+  \item $T \in \mathbb{Z}_{>0}$: the number of ReCom steps to run.
+\end{itemize}
+
+\subsection{The BisectionEnsemble Primitive}
+\label{sec:alg:primitive}
+
+\begin{definition}[Local bisection ensemble]
+  \label{def:be-primitive}
+  Given a subgraph $H = (V_H, E_H, w)$ with populations $\text{pop}|_{V_H}$ and
+  target district count $k' = 2$ (with population targets $t_1 = \lfloor k/2
+  \rfloor$ and $t_2 = \lceil k/2 \rceil$ as fractions of the node's total
+  population), \textup{BisectionEnsemble}$(H, p, T)$ proceeds as follows:
+  \begin{enumerate}
+    \item \textbf{Initialise}: Run METIS 2-way partitioning on $H$ with targets
+          $(t_1, t_2)$ to obtain an initial bisection $\pi_0 = (A_0, B_0)$.
+    \item \textbf{ReCom chain}: For $t = 1, \ldots, T$:
+          \begin{enumerate}
+            \item Find a random boundary edge $(u, v) \in E_H$ with
+                  $u \in A_{t-1}$, $v \in B_{t-1}$.
+            \item Form the merged subgraph $M = H[A_{t-1} \cup B_{t-1}] = H$.
+            \item Sample a spanning tree $\mathcal{T} \sim \text{UST}(M)$ via
+                  Wilson's algorithm.
+            \item Find a cut edge $e^* \in \mathcal{T}$ such that removing $e^*$
+                  produces two components $(A', B')$ with
+                  $|\text{pop}(A') - t_1 \cdot \text{pop}(H)| \leq \varepsilon$.
+            \item If no such $e^*$ exists, reject (keep $\pi_{t-1}$); else
+                  accept: $\pi_t = (A', B')$.
+          \end{enumerate}
+    \item \textbf{Collect}: Let $\Pi = \{\pi_t : \pi_t \text{ was accepted}\}$
+          with $|\Pi| = m$. For each $\pi \in \Pi$, compute the edge-cut
+          weight $\text{EC}(\pi) = \sum_{(u,v) \in \delta(\pi)} w(u,v)$.
+    \item \textbf{Select}: Sort $\Pi$ by $\text{EC}(\cdot)$. Return
+          $\pi^* = \Pi[\lfloor p \cdot m \rfloor]$ (zero-indexed).
+  \end{enumerate}
+\end{definition}
+
+\noindent\textbf{Remark on step 2(c).} In BisectionEnsemble, the full merge
+region $M$ is simply the subgraph $H$ itself (since we are splitting $H$ into
+exactly 2 parts). The spanning tree is thus sampled over the complete local
+subgraph at each step. This differs from a general $k$-way ReCom step where
+only two of the $k$ districts are merged; here, the entire node region is
+always the merge domain.
+
+\subsection{Integration with the Bisection Tree}
+\label{sec:alg:tree}
+
+Algorithm~\ref{alg:bisection-ensemble} gives the full recursive procedure.
+BisectionEnsemble replaces every 2-way METIS call in the bisection tree.
+For $p'$-way splits with $p' > 2$ (ApportionRegions nodes), standard METIS
+is used (BisectionEnsemble is not applicable to $p' > 2$ nodes since those
+are not bisections). A pure binary tree (all seat counts $k = 2^d$) applies
+BisectionEnsemble at every node.
+
+\begin{algorithm}[h]
+\caption{BisectionEnsemble redistricting}
+\label{alg:bisection-ensemble}
+\begin{algorithmic}[1]
+\Require Subgraph $H$, seat count $k$, percentile $p$, steps $T$
+\Ensure Set of $k$ district subgraphs
+\If{$k = 1$}
+  \Return $\{H\}$
+\EndIf
+\State $(p', k_1, \ldots, k_{p'}) \leftarrow \text{split}(k)$ \Comment{Per AR split prescription}
+\If{$p' = 2$} \Comment{Bisection node: use local ensemble}
+  \State $(A, B) \leftarrow \textup{BisectionEnsemble}(H, p, T)$
+\Else \Comment{$p' > 2$ node: use METIS directly}
+  \State $(R_1, \ldots, R_{p'}) \leftarrow \text{METIS}(H, p')$
+\EndIf
+\For{each sub-region $R_i$ with target $k_i$}
+  \State $D_i \leftarrow \textup{BisectionEnsemble-Redist}(R_i, k_i, p, T)$
+\EndFor
+\Return $\bigcup_i D_i$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Key Theoretical Properties}
+\label{sec:alg:theory}
+
+\begin{theorem}[Tractability]
+  \label{thm:tractable}
+  BisectionEnsemble never encounters a bipartition failure. That is, for any
+  local subgraph $H$ and any $T \geq 1$, the ReCom chain in Definition~\ref{def:be-primitive}
+  is well-defined and will produce at least one accepted plan within
+  $O(|V_H|)$ steps in expectation.
+\end{theorem}
+
+\begin{proof}
+  At each step $t$, the merge domain is $M = H$, which has a uniform spanning
+  tree over $V_H$. The population balance constraint requires finding a cut
+  edge $e^*$ such that the two components have populations within $\varepsilon$
+  of the targets $(t_1, t_2) = (1/2, 1/2)$ (for equal split). By the
+  Aldous-Broder theorem \citep{aldous1990random}, the uniform spanning tree
+  of $H$ is a connected tree on $V_H$. Removing any edge $e \in \mathcal{T}$
+  produces two connected components; as $e$ ranges over all $|V_H| - 1$ edges,
+  the components $(A_e, B_e)$ form a family of nested cuts. For any target
+  ratio $r = t_1 / (t_1 + t_2) \in (0, 1)$ and tolerance $\varepsilon > 0$,
+  the intermediate-value property of the discrete population function guarantees
+  the existence of at least one edge $e^*$ with population balance within
+  $\varepsilon$ of $r$, provided $\varepsilon \geq \max_{v \in V_H} \text{pop}(v)
+  / \text{pop}(H)$ (i.e., the tolerance is at least one tract's population share).
+  Since BisectionEnsemble uses population balance tolerance $\varepsilon \geq 0.5\%$
+  (statutory tolerance) and tracts represent $\ll 1\%$ of any node's population,
+  the acceptance condition is always satisfiable. The chain therefore accepts
+  at least one plan in finite steps.
+\end{proof}
+
+\begin{proposition}[Contiguity preservation]
+  \label{prop:contiguity}
+  Every plan returned by BisectionEnsemble is contiguous. Specifically, every
+  district subgraph produced at every tree node is a connected induced subgraph
+  of the census-tract adjacency graph $G$.
+\end{proposition}
+
+\begin{proof}
+  The spanning tree $\mathcal{T}$ of the merge domain $M = H$ is a connected tree.
+  Removing any single edge $e^*$ from $\mathcal{T}$ produces exactly two
+  connected subtrees $(A, B)$, both of which are connected. Since $A$ and $B$
+  are subgraphs of $H \subseteq G$, they are connected induced subgraphs of $G$.
+  Inductively, all sub-regions passed to recursive calls are connected, and the
+  final districts are connected.
+\end{proof}
+
+\begin{proposition}[Complexity]
+  \label{prop:complexity}
+  For a bisection tree of depth $d = O(\log k)$ and a state graph with $n$ tracts,
+  BisectionEnsemble runs in $O(T \cdot n \log n)$ total time across all tree nodes.
+\end{proposition}
+
+\begin{proof}
+  At depth $\ell$ of a binary tree, there are $2^\ell$ nodes, each managing a
+  subgraph of $\approx n / 2^\ell$ tracts. Each node runs $T$ ReCom steps.
+  Wilson's algorithm samples a uniform spanning tree in $O(|V_H|)$ expected
+  time \citep{wilson1996generating}. The cost per node is $O(T \cdot n / 2^\ell)$.
+  Summing over all $d$ levels:
+  \[
+    \sum_{\ell=0}^{d-1} 2^\ell \cdot O\!\left(\frac{Tn}{2^\ell}\right)
+    = \sum_{\ell=0}^{d-1} O(Tn)
+    = O(Tn \cdot d)
+    = O(Tn \log k).
+  \]
+  Since $n \log k \leq n \log n$, the total time is $O(T n \log n)$.
+\end{proof}
+
+\subsection{Parallelism}
+\label{sec:alg:parallel}
+
+Tree nodes at the same depth are independent: each node's ensemble depends
+only on the subgraph it inherits from its parent, which is fixed once the
+parent's bisection is chosen. This gives two natural parallelism strategies:
+\begin{itemize}
+  \item \textbf{Level-parallel}: Execute all nodes at depth $\ell$ in parallel,
+        then proceed to depth $\ell + 1$. Requires synchronisation at level
+        boundaries but achieves $2^\ell$-fold parallelism at level $\ell$.
+  \item \textbf{Asynchronous}: Begin all nodes immediately; sub-regions start
+        as soon as their parent's bisection is selected. This is a pipeline
+        over the tree depth with $d$ concurrent stages.
+\end{itemize}
+The \texttt{redist-cli} implementation uses Rayon's work-stealing thread pool,
+which naturally implements the asynchronous strategy: nodes at deeper levels
+are spawned as Rayon tasks as soon as their parent completes.

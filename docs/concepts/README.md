@@ -12,6 +12,10 @@ Conceptual guides for understanding the REDIST project. Each guide has a "Short 
 | [vra-compliance.md](vra-compliance.md) | Voting Rights Act districts, the 42% threshold, the metis-vra algorithm |
 | [census-data.md](census-data.md) | TIGER shapefiles, PL 94-171 files, GEOID format, downloading |
 | [pipeline-stages.md](pipeline-stages.md) | The five pipeline stages, how they connect, how to run individual stages |
+| [three-layer-compositor.md](three-layer-compositor.md) | The three orthogonal choices that define every run: structure, weights, search |
+| [section-algorithms.md](section-algorithms.md) | The B-series algorithm family: GeoSection, AreaSection, ApportionRegions, and more |
+| [label-pipeline.md](label-pipeline.md) | Label-based run management, directory layout, and the SHA-256 audit chain |
+| [ensemble-methods.md](ensemble-methods.md) | GerryChain ReCom evaluation, the Rust ensemble engine, and legal certificates |
 
 ## Where to go next
 

@@ -1,0 +1,92 @@
+\section{Related Work}
+\label{sec:related-work}
+
+\subsection{ConvergenceSweep (B.16)}
+
+\cs{}~\citep{b16paper} introduced the seed-walk approach to minimum-edge-cut
+redistricting.
+Starting from the content-derived seed $s_0 = \seedfmt{\texttt{census\_release\_id}
+\,\|\, \texttt{"DIA\_SEED\_V1"}} \bmod 2^{31}$, \cs{} advances one seed at
+a time, tracking the normalised edge cut $\ECnorm$ achieved by each METIS
+call.
+The sweep halts after $T$ consecutive seeds produce no improvement.
+The final plan is the one achieving the global minimum $\ECnorm$ across all
+seeds tried.
+
+B.16's central contribution is empirical certification that $T = 600$ is
+sufficient for all 50 states.
+Georgia is the hardest case: the algorithm last improves at seed $s_0 + 489$,
+then runs 511 consecutive non-improving seeds before halting.
+A threshold of $T = 500$ would fail Georgia.
+The recommended $T_{\mathrm{stat}} = 600$ provides an 89-seed margin with
+$P(\mathrm{tail} > 600) < 0.001$ under a fitted Gumbel extreme-value model.
+
+\ps{} is a direct generalisation of \cs{}.
+Where \cs{} always returns the rank-0 plan (minimum edge cut), \ps{}
+parametrises the return rank.
+The $T$-seed infrastructure is identical; only the selection rule changes.
+
+\subsection{Seed Sensitivity (B.7)}
+
+B.7~\citep{b7paper} characterised the full solution space of METIS
+redistricting through a 50-state, 10,000-seed sweep (500,000 total METIS
+calls).
+The key findings for \ps{} are:
+\begin{enumerate}
+\item The coefficient of variation of $\ECnorm$ across seeds is below 2\%
+      for 48 of 50 states.
+      Georgia and North Carolina exhibit higher variance (CV $= 4.3\%$ and
+      $3.8\%$ respectively) due to non-power-of-two district counts and
+      geographic complexity.
+\item Partisan seat-share variance across 10,000 seeds is at most 2 seats
+      for the two highest-variance states.
+      For most states, variance is zero or one seat.
+\item The DIA single-seed specification is within $2.9\% \pm 1.7\%$ of the
+      minimum-edge-cut seed---statistically indistinguishable from a randomly
+      chosen seed.
+\end{enumerate}
+
+Finding (2) is the direct precursor to H.0's insensitivity result.
+If varying the seed over 10,000 draws produces at most 2 seats of partisan
+variation, varying the rank selection percentile over the sorted distribution
+of 101 draws should produce even less variation.
+
+\subsection{GerryChain Ensemble Positions (G.1)}
+
+G.1~\citep{g1paper} placed the \ar{} + \cs{} plan within real \gc{} \recom{}
+ensembles for six states.
+The comparison metric is normalised edge-cut fraction.
+The key findings:
+\begin{itemize}
+\item Wisconsin: 0.2nd percentile of the ensemble (more compact than 99.8\%
+      of valid plans).
+\item Georgia: 0.1st percentile.
+\item Pennsylvania: 0.2nd percentile.
+\item North Carolina: 50th percentile.
+      Geographic structure constrains the feasible space so tightly that
+      the minimum-cut solution and the ensemble median are nearly identical
+      (plan cut $= 0.0973$, ensemble mean $= 0.0970$, $\Delta < 0.3\%$).
+\item Texas and California: both expected below the 5th percentile.
+\end{itemize}
+
+These positions establish the baseline for the over-optimising objection and
+motivate \ps{}'s percentile parametrisation.
+For states at the 0.1st percentile, the legal question is whether being more
+compact than 99.9\% of plans is an asset or a liability.
+\ps{} makes this a statutory choice.
+
+\subsection{Parameter Sensitivity (B.17)}
+
+B.17~\citep{b17paper} conducted a 50-state sweep over five algorithm
+parameters and found that partisan seat counts are insensitive to parameter
+tuning within a fixed algorithm family.
+The maximum variation across the full parameter range is $\Delta
+D\text{-seats} \leq 0.3$ nationally.
+The key parameter relevant to H.0 is the \cs{} threshold $T$: B.17 found
+no measurable effect on partisan outcomes for $T \in [100, 1{,}000]$.
+
+H.0 extends this result.
+If varying $T$ from 100 to 1,000 does not shift partisan outcomes, then
+varying the rank selected from within the resulting distribution should
+similarly leave partisan outcomes unchanged.
+The empirical results in Section~\ref{sec:results} confirm this.

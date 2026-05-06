@@ -1,0 +1,169 @@
+\section{Legal Posture Mapping}
+\label{sec:legal-posture}
+
+The insensitivity finding in Section~\ref{sec:results} means that the choice
+of percentile $p$ is primarily a \emph{legal and normative} choice rather
+than an empirical one.
+Different values of $p$ correspond to different legal doctrines and different
+rhetorical postures before a court.
+This section maps three postures and recommends one for statutory adoption.
+
+\subsection{Posture 1: Compactness Doctrine ($p = 0.0$)}
+
+Setting $p = 0.0$ causes \ps{} to behave as \cs{}: it returns the
+minimum-edge-cut plan across all $T$ seeds.
+This is the plan that is more compact than every other plan in the bisection
+family.
+
+The legal foundation is \karcher{}~\citep{karcher1983} and the compactness
+tradition.
+\karcher{} requires that any deviation from strict population equality be
+justified by a legitimate state objective.
+By analogy, compactness doctrine requires that any departure from maximum
+compactness be justified by a legitimate purpose.
+The $p = 0.0$ plan satisfies this standard trivially: there is no plan in
+the bisection family that is more compact.
+
+\begin{statute}
+\textbf{Compactness Posture.}
+The Districting Administrator shall produce the plan with the smallest
+normalised edge-cut fraction among the $T$-plan bisection distribution.
+This plan is the most compact consistent with population balance and
+contiguity within the \ar{} bisection family.
+No neutral party can produce a more compact plan within this family.
+\end{statute}
+
+The $p = 0.0$ posture has a powerful adversarial property.
+Under \karcher{}, any challenger must produce an alternative plan that
+is at least as compact.
+For states where the $p = 0.0$ plan sits at the 0.1--0.2nd percentile
+of the \recom{} ensemble (WI, GA, PA per G.1~\citep{g1paper}), this means
+the challenger must produce a plan more compact than 99.8\% of all valid
+plans.
+This is an extraordinarily high bar.
+
+The potential vulnerability is the over-optimising objection: the algorithm
+was specifically designed to find the extremum.
+However, this objection fails on its own terms.
+Compactness is not a zero-sum quantity: maximising compactness does not
+require minimising anything else.
+The $p = 0.0$ plan minimises boundary crossings, which directly serves the
+interest of communities that prefer not to be split across districts.
+
+\subsection{Posture 2: Representativeness Doctrine ($p = 0.5$)}
+
+Setting $p = 0.5$ causes \ps{} to return \ms{}: the plan at the median of
+the $T$-plan bisection distribution.
+This is the plan that a uniformly random seed would produce with 50\%
+probability within the bisection family.
+
+The legal foundation is a \emph{representativeness} norm: the plan should
+be typical of what a neutral party running the same algorithm would produce.
+A legislature adopting $p = 0.5$ can argue that its plan is not
+cherry-picked---it is the plan that an impartial random draw would produce
+half the time.
+
+\begin{statute}
+\textbf{Representativeness Posture.}
+The Districting Administrator shall produce the plan at the median of the
+$T$-plan bisection distribution, ranked by normalised edge-cut fraction.
+This plan is equally likely to be produced by any party running the
+algorithm with a uniformly random seed from the statutory seed space.
+\end{statute}
+
+The $p = 0.5$ posture defuses the over-optimising objection entirely: the
+plan is not an extremum, it is the median.
+However, it concedes compactness.
+For states where the bisection distribution is already tightly clustered
+(B.7 CV $< 2\%$), this concession is minimal.
+For states with higher variance (GA CV $= 4.3\%$), it may involve a
+measurable compactness reduction.
+
+Crucially, the insensitivity finding confirms that this compactness concession
+does not affect partisan outcomes.
+The $p = 0.5$ plan produces the same seat counts as the $p = 0.0$ plan.
+If the goal is partisan neutrality, both postures achieve it equally.
+
+\subsection{Posture 3: Full Ensemble Representativeness (TargetedSweep)}
+
+A third posture, \ts{}(50th, \recom{}), targets the 50th percentile of the
+full \recom{} ensemble~\citep{deford2021} rather than the bisection
+distribution.
+This posture produces the plan that is ``typical'' in the broadest sense:
+typical of all valid redistricting plans, not just those in the bisection
+family.
+
+\ts{}(50th, \recom{}) is conceptually appealing but operationally complex.
+It requires running a \gc{} \recom{} ensemble (typically 10,000+ steps per
+state~\citep{herschlag2020,fifield2020}), computing summary statistics for
+each plan, and identifying the plan at the ensemble median.
+Unlike \ps{}, it is not a deterministic function of a single statutory
+parameter---it depends on the ensemble initialisation and mixing time.
+
+\begin{statute}
+\textbf{Full Ensemble Representativeness Posture.}
+The Districting Administrator shall produce a plan at the 50th percentile
+of the \recom{} Markov-chain ensemble, run for $M$ steps from the
+content-derived initialisation.
+This plan is typical of all valid redistricting plans consistent with
+population balance and contiguity.
+\end{statute}
+
+This posture resolves the over-optimising objection most completely but
+introduces new vulnerabilities.
+The Markov chain must be shown to have mixed~\citep{deford2021}.
+The ensemble definition (which constraints are imposed, how plans are scored)
+must be specified in statute.
+And the resulting plan need not be compact: as G.1 shows, most \recom{}
+ensemble plans have higher edge cuts than the \ar{} plan, so a median
+\recom{} plan may be substantially less compact.
+
+We regard \ts{}(50th, \recom{}) as a research direction rather than an
+immediate statutory option.
+The \ps{} framework with $p \in \{0.0, 0.5\}$ covers the legally relevant
+range with far simpler implementation.
+
+\subsection{Recommendation: $p = 0.0$ for the DIA}
+
+We recommend that the \dia{} specify $p = 0.0$ (the compactness extremum)
+for three reasons.
+
+\textbf{First, legal strength.}
+The $p = 0.0$ plan is the most compact consistent with the algorithm.
+Under \karcher{}'s logic, this is the strongest possible compactness
+posture.
+Any challenger who claims the plan is too compact must explain why a less
+compact plan would better serve any legitimate redistricting objective.
+Given that compactness reduces gerrymandering opportunities and improves
+community cohesion, this is a very difficult argument to make.
+
+\textbf{Second, determinism.}
+The $p = 0.0$ plan is the global optimum of the bisection family.
+It can be certified by running all $T$ seeds and verifying that no seed
+achieves a lower $\ECnorm$.
+This certification is straightforward and does not depend on any statistical
+model.
+For $p > 0$, the result depends on the particular $T$-seed sample; for
+$p = 0.0$, it is robust to the choice of $T$ (as long as $T \geq T_{\mathrm{stat}}
+= 600$, certified in B.16~\citep{b16paper}).
+
+\textbf{Third, partisan neutrality.}
+The insensitivity finding (Section~\ref{sec:results}) confirms that
+partisan outcomes are the same at $p = 0.0$ as at any other percentile.
+The choice of $p = 0.0$ is not a partisan choice; it is a compactness
+choice with no partisan consequence.
+This neutrality is itself a legal asset: the choice cannot be characterised
+as motivated by partisan calculation.
+
+The recommendation is therefore:
+\begin{statute}
+\textbf{Statutory Recommendation.}
+The \dia{} shall specify \ps{}$(0.0, 600)$, equivalent to \cs{} with
+$T_{\mathrm{stat}} = 600$.
+The legal rationale is the compactness doctrine: the resulting plan is the
+most compact consistent with population balance and contiguity within the
+\ar{} bisection family.
+The statutory record shall state that partisan outcomes are invariant to
+the compactness percentile (H.0), so the compactness choice is not a
+partisan choice.
+\end{statute}

@@ -1,0 +1,78 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+This paper introduced \ps{}$(p, T)$, a generalisation of \cs{} that makes
+the compactness percentile an explicit statutory parameter.
+By running $T$ bisection plans and returning the plan at rank $\floor{p
+\times T}$, \ps{} allows the \dia{} to specify exactly which position in
+the compactness distribution should be selected.
+
+The central empirical finding is that partisan outcomes are largely
+insensitive to the choice of $p$.
+For six key states (NC, WI, GA, PA, TX, CA), projected Democratic seat counts
+are identical across $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$ with $T = 101$
+plans.
+The 0.5-seat bound is not violated for any state.
+This confirms that compactness is determined by geographic structure, not by
+search strategy---consistent with B.7 and B.17.
+
+\subsection{The Legal Contribution}
+
+The legal contribution of \ps{} is the separation of the \emph{algorithmic
+posture} from the \emph{partisan outcome}.
+Before \ps{}, the compactness extremum was the only option: \cs{} always
+returned the minimum-edge-cut plan.
+After \ps{}, the compactness percentile is a visible, debatable, statutory
+parameter---like the population tolerance or the county edge weight.
+
+This transparency is valuable even if the choice does not matter empirically.
+A statute that specifies $p = 0.0$ and provides the legal rationale (no
+neutral plan is more compact) is more robust to challenge than a statute
+that produces the same plan without explaining why.
+The insensitivity finding is itself part of the statutory record: the choice
+of $p$ is not a partisan choice, so any value of $p$ is equally defensible
+on neutrality grounds.
+
+\subsection{Structure Is the Legally Relevant Choice}
+
+The \ps{} framework confirms the portfolio's central thesis: algorithm
+\emph{structure} (\ar{} vs. unweighted bisection, GeoSection vs. plain
+bisection) is the legally relevant choice.
+The search percentile is not.
+A legislature that specifies a bisection algorithm has made the legally
+consequential decision.
+The percentile is a fine-tuning choice with predictable and auditable
+compactness effects and no partisan consequence.
+
+This finding strengthens the DIA's constitutional argument.
+The statute specifies an algorithm structure (\ar{} + GeoSection) and a
+compactness posture ($p = 0.0$).
+Both choices are justified on non-partisan grounds.
+The partition-space insensitivity of B.17 and the percentile insensitivity
+of H.0 together establish that no neutral party could produce a different
+partisan outcome by running any variant of the specified algorithm.
+
+\subsection{Future Work}
+
+Three open questions remain.
+
+First, does the insensitivity result hold for $T < 101$?
+With fewer plans, the distribution is less well-sampled and rank $r =
+\floor{p \times T}$ is a cruder quantile estimate.
+A sensitivity analysis over $T \in \{11, 21, 51, 101, 201\}$ would
+bound the minimum $T$ required for stable percentile selection.
+
+Second, does \ts{}(50th, \recom{}) produce the same partisan outcomes as
+\ps{}$(0.5, T)$?
+If so, the two postures are legally equivalent and the simpler \ps{}
+implementation should be preferred.
+If not, the \recom{} median lands in a genuinely different part of the plan
+space, and the legal difference between bisection-family representativeness
+and full-ensemble representativeness becomes substantive.
+
+Third, the \ps{} framework extends naturally to multi-constraint variants
+(VrASection, AreaSection).
+Whether percentile insensitivity holds when additional constraints are added
+to the bisection objective is an open empirical question.

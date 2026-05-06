@@ -1,0 +1,81 @@
+\section{Introduction}
+\label{sec:intro}
+
+Redistricting ensemble methods have emerged as a principled approach to
+evaluating and generating congressional maps. By sampling from the space of
+all legally-feasible plans, methods such as ReCom \citep{deford2021recombination}
+and GerryChain \citep{duchin2019gerrychain} provide a reference distribution
+against which any proposed map can be measured for partisan or racial bias.
+The core primitive is a \emph{recombination step}: two adjacent districts are
+merged and re-split along a random spanning tree, producing a new feasible plan
+in $O(n)$ time per step.
+
+\paragraph{The bipartition failure problem.}
+This approach works well when the number of districts $k$ is small or when
+$k$ decomposes into small factors. But many states have seat counts that are
+large primes or contain large prime factors: Texas has $k = 38 = 2 \times 19$,
+Pennsylvania has $k = 17$ (prime), New York has $k = 26 = 2 \times 13$,
+and Michigan has $k = 13$ (prime). A direct $k$-way ReCom ensemble on such
+states requires, at each step, merging two adjacent districts and re-splitting
+the merged subgraph into a \emph{balanced bipartition}---a process that relies
+on finding a spanning tree cut that achieves a target population ratio of
+$1:37$ (for Texas), $1:16$ (for Pennsylvania), or similar extreme imbalances.
+Such cuts are geometrically rare: the probability that a random spanning tree
+cut achieves a $1:(k-1)$ population balance in a geographically-clustered
+tract graph is $O(1/k)$, and for large $k$ the Markov chain's acceptance rate
+falls to near zero. In practice, GerryChain reports bipartition failures and
+stalled chains for Texas and Pennsylvania without extensive custom tuning.
+
+\paragraph{BisectionEnsemble: local 2-way ReCom at every node.}
+We propose a structural fix: instead of running a $k$-way ensemble at the top
+level, embed 2-way ensemble sampling \emph{inside} the bisection tree. The
+bisection tree (see ApportionRegions \citep{dellaLibera2026apportion} and
+GeoSection \citep{dellaLibera2026geosection}) already decomposes the redistricting
+problem into a hierarchy of 2-way cuts. At each node of this tree---which
+manages a subregion of $\approx n/\text{level}$ tracts and must split it into
+2 balanced parts---we replace the single METIS call with a $T$-step local
+ReCom chain seeded by the METIS bisection.
+
+Because every local ensemble is always 2-way, the bipartition failure problem
+is \emph{structurally impossible}: we never ask for a $1:37$ balance, only
+ever a $1:1$ balance (or near-$1:1$ for prime seat counts using the
+floor/ceil split). The bisection tree structure is fully preserved, guaranteeing
+population balance and contiguity through the same mechanisms as the original
+bisection algorithm.
+
+\paragraph{Key advantages.}
+\begin{enumerate}
+  \item \textbf{Always tractable}: No bipartition failures regardless of $k$.
+        TX ($k=38$), PA ($k=17$), NY ($k=26$) all succeed.
+  \item \textbf{Local feasibility sampling}: Each node samples the local
+        feasible space of bisections of its subregion---a much smaller and
+        geometrically coherent search space than the full plan space.
+  \item \textbf{Parallelisable}: Tree nodes at the same depth are independent;
+        each node's ensemble can run on a separate CPU core. For a balanced
+        binary tree of depth $d = \log_2 k$, level $\ell$ has $2^\ell$ nodes
+        running in parallel.
+  \item \textbf{Structure-preserving}: The bisection tree guarantees population
+        balance and contiguity at every level, regardless of which bisection cut
+        is selected by the ensemble percentile.
+\end{enumerate}
+
+\paragraph{Percentile selection and legal posture.}
+The percentile parameter $p \in [0, 1]$ selects which bisection cut to use from
+the ensemble distribution. At $p = 0.5$ (median), we select the plan at the
+median edge-cut rank---the most ``typical'' feasible bisection of the subregion.
+At $p = 0.0$ (minimum), we select the minimum edge-cut plan---the most compact
+bisection. The legal argument for percentile selection is identical to that of
+PercentileSweep \citep{dellaLibera2026percentilesweep}: the choice of $p$ is
+a transparent, pre-committed procedure that does not depend on partisan outcomes.
+
+\paragraph{Contributions.}
+\begin{enumerate}
+  \item \textbf{Algorithm}: BisectionEnsemble---a node-local 2-way ReCom
+        ensemble embedded in the bisection tree, with percentile plan selection.
+  \item \textbf{Implementation}: \texttt{SeedCompositor::BisectionEnsemble\{p, ensemble\_steps\}}
+        in \texttt{redist-cli}, using \texttt{split\_subgraph\_bisection\_ensemble()}.
+  \item \textbf{Tractability theorem}: Proof that BisectionEnsemble is always
+        tractable (no bipartition failures) for any $k$.
+  \item \textbf{Empirical evaluation}: Comparison with standard METIS bisection
+        and GerryChain on NC ($k=14$), WI ($k=8$), and TX ($k=38$).
+\end{enumerate}

@@ -1,0 +1,89 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Ensemble Bottleneck}
+
+Following \textit{Rucho v.\ Common Cause}~\citep{scotus2019rucho}, partisan
+gerrymandering claims have migrated from federal to state courts, and Markov
+chain ensemble analysis has become the principal expert-witness tool for
+showing that an enacted map is a statistical outlier.
+The dominant workflow runs thousands of algorithmically drawn plans using
+the \recom{} chain~\citep{deford2021recombination}, then places the contested
+map within the resulting distribution.
+A plan at the 99th percentile of Republican seat share is characterized as
+strong evidence of partisan intent; at the 50th percentile, it is
+indistinguishable from a random draw.
+
+The limiting factor is throughput.
+The primary open-source implementation, \gc{}~\citep{gerrychain2021},
+is written in Python.
+For North Carolina (2{,}672 census tracts, $k=14$ districts), \gc{}
+achieves approximately 21 steps per second.
+A credible 10{,}000-step ensemble therefore requires roughly 8 minutes;
+a 50{,}000-step ensemble requires 40 minutes.
+At this speed, ensemble analysis is necessarily a separate, overnight
+computation---a post-hoc audit distinct from the redistricting pipeline
+itself.
+
+This throughput ceiling creates two practical problems.
+First, ensemble analysis cannot serve as a \emph{real-time} feasibility
+check during map-drawing.
+A redistricting practitioner cannot interactively explore whether a
+proposed boundary change moves the plan toward or away from the ensemble
+median.
+Second, the computational cost discourages the thorough convergence
+diagnostics---multiple parallel chains, extended runs---that would give
+courts and litigants justified confidence in the ensemble's stationarity
+(see~\citealt{dellaLibera2026g4}).
+
+\subsection{The Rust Solution}
+
+We present \re{}, a Rust implementation of the \recom{} Markov chain
+built around Wilson's uniform random spanning tree
+algorithm~\citep{wilson1996generating}.
+The design goal is to collapse the throughput gap sufficiently that
+a 10{,}000-step ensemble for any congressional-scale state completes in
+under one second, enabling ensemble analysis to run as an integrated step
+within \texttt{redist build} rather than as a separate overnight job.
+
+The key algorithmic innovation is the use of Wilson's loop-erased random
+walk~\citep{lawler1980loop} to generate uniform random spanning trees.
+Wilson's algorithm runs in $O(\tau_{\mathrm{cover}})$ expected time, where
+$\tau_{\mathrm{cover}}$ is the cover time of the underlying random walk.
+For planar graphs---the natural setting for census-tract adjacency
+graphs---this is $O(|V|\log|V|)$~\citep{aldous1991random}.
+Each \recom{} step uses the spanning tree of the merged pair region
+(approximately $2n/k$ nodes, where $n$ is the total tract count and $k$
+is the number of districts), so Wilson's cost per step is
+$O((n/k)\log(n/k))$.
+Rust's compiled, zero-overhead arithmetic exploits this theoretical
+efficiency to an extent that interpreted Python cannot.
+
+\subsection{Pipeline Integration}
+
+The intended deployment is as the \texttt{redist ensemble} subcommand,
+integrated into the same binary as \texttt{redist state},
+\texttt{redist analyze}, and \texttt{redist map}.
+A typical invocation:
+
+\begin{verbatim}
+  redist ensemble --state NC --year 2020 --steps 10000 \
+                  --chains 8 --seed 42 --out nc_ensemble.json
+\end{verbatim}
+
+At 50{,}000 steps/sec, this completes in approximately 0.2 seconds for
+North Carolina.
+The output JSON carries $\rhat$, $\ess$, and Hamming autocorrelation
+diagnostics, enabling immediate convergence assessment without a separate
+analysis pass.
+
+\subsection{Paper Organization}
+
+Section~\ref{sec:related} reviews \recom{}, Wilson's spanning tree
+algorithm, and \gc{}.
+Section~\ref{sec:algorithm} gives the formal algorithmic description.
+Section~\ref{sec:implementation} describes the Rust implementation
+architecture.
+Section~\ref{sec:performance} presents the performance comparison.
+Section~\ref{sec:diagnostics} describes the convergence diagnostics.
+Section~\ref{sec:conclusion} concludes.

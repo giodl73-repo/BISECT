@@ -1,0 +1,272 @@
+%% H.0 — PercentileSweep: Statutory Choice of Legal Posture in Algorithmic Redistricting
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Key result: CV of normalised
+            edge cut below 2\% for 48/50 states; GA and NC exhibit higher
+            variance. Partisan seat-share variance at most 2 seats for the
+            two highest-variance states. Foundation for PercentileSweep
+            seed-walk design.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: NC 7D/7R at compactness extremum (p=0.0).
+            Zero seed variance at the bisection-tree level; residual
+            variance comes from leaf-level METIS calls. National tally:
+            223D/209R at the compactness extremum.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces ConvergenceSweep: forward seed walk from SHA-256
+            content-derived seed, halts after $T$ consecutive
+            non-improving seeds, returns global minimum edge-cut seed.
+            Empirically certifies $T=600$ for all 50 states.
+            H.0 generalises this to arbitrary percentile $p$.},
+}
+
+@misc{b17paper,
+  author = {Della-Libera, Gio},
+  title  = {How Sensitive Are Redistricting Outcomes to Algorithm
+            Parameters? A 50-State Sweep},
+  year   = {2026},
+  note   = {B.17 in Algorithmic Redistricting series.
+            Central finding: partisan seat counts are insensitive to
+            parameter tuning within a fixed algorithm family.
+            $\Delta D\text{-seats} \leq 0.3$ nationally across all
+            parameter ranges. H.0 extends this finding to the search
+            percentile: partisan outcomes are also insensitive to which
+            percentile of the bisection-plan distribution is selected.},
+}
+
+@misc{g1paper,
+  author = {Della-Libera, Gio},
+  title  = {Where Does the Algorithmic Map Fall?
+            {ApportionRegions} vs.\ {GerryChain} Ensemble for Six States},
+  year   = {2026},
+  note   = {G.1 in Algorithmic Redistricting series.
+            Key empirical result: ApportionRegions plans fall at the
+            0.1--0.7th percentile of the ReCom ensemble for most states
+            (WI at 0.2nd, GA at 0.1st, PA at 0.2nd percentile).
+            NC is the exception at the 50th percentile due to geographic
+            convergence. These positions motivate the PercentileSweep
+            legal analysis.},
+}
+
+@misc{b0paper,
+  author = {Della-Libera, Gio},
+  title  = {A Complete Algorithmic Toolbox for Congressional Redistricting:
+            Legal Requirements, Algorithm Components, and {Callais}-Compliant
+            Design for the Post-2026 Redistricting Cycle},
+  year   = {2026},
+  note   = {B.0 in Algorithmic Redistricting series. Synthesis paper.
+            Bakeoff result: algorithm structure (not parameters) is the
+            key lever for partisan outcomes. Wisconsin: 4D/4R unweighted
+            vs. 3D/5R GeoSection ($-12.8$~pp partisan gap).},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$,
+            the normalised edge-cut metric used by ConvergenceSweep and
+            PercentileSweep to rank candidate plans.},
+}
+
+%% ===================================================================
+%% LEGAL CASES
+%% ===================================================================
+
+@misc{karcher1983,
+  title  = {Karcher v.\ Daggett},
+  year   = {1983},
+  note   = {462 U.S. 725 (1983). Holds that any population deviation in
+            congressional redistricting must be justified by a legitimate
+            state objective; near-mathematical equality required.
+            The compactness doctrine flows from this standard: a plan must
+            minimise deviation from the ideal for a cognisable reason.
+            H.0 reads the compactness extremum ($p=0.0$) as satisfying this
+            standard: no neutral plan achieves lower edge cut, so there is
+            no less-deviation alternative.},
+}
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Partisan gerrymandering is a nonjusticiable
+            political question beyond the reach of federal courts under the
+            Constitution. Shifts redistricting battleground to state courts
+            and motivates algorithmic statutory solutions.},
+}
+
+@misc{wesberry1964,
+  title  = {Wesberry v.\ Sanders},
+  year   = {1964},
+  note   = {376 U.S. 1 (1964). Congressional districts must have equal
+            population ``as nearly as is practicable.'' Population balance
+            is the foundational constitutional constraint respected by
+            PercentileSweep at every percentile.},
+}
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S. \_\_\_ (2026). Disentanglement requirement: race-conscious
+            and partisan signals must be separated (p.36). Algorithmic
+            redistricting that optimises edge cut without racial inputs
+            satisfies the disentanglement requirement at any percentile.},
+}
+
+%% ===================================================================
+%% ENSEMBLE METHODS IN REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {Introduces the ReCom (recombination) Markov chain for
+             generating redistricting plan ensembles.
+             The ReCom ensemble is the baseline against which ApportionRegions
+             plans are positioned in G.1, providing the empirical foundation
+             for PercentileSweep's legal framing.},
+}
+
+@article{herschlag2020,
+  author  = {Herschlag, Gregory and Kang, Han Sung and Luo, Justin and
+             Graves, Christy Vaughn and Bangia, Sachet and Ravier, Robert
+             and Mattingly, Jonathan C.},
+  title   = {Quantifying Gerrymandering in {North Carolina}},
+  journal = {Statistics and Public Policy},
+  volume  = {7},
+  number  = {1},
+  pages   = {30--38},
+  year    = {2020},
+  doi     = {10.1080/2330443X.2020.1796400},
+  note    = {Applies ensemble analysis to North Carolina redistricting.
+             NC is the state where the ApportionRegions plan lands at the
+             50th percentile of the ReCom ensemble (G.1), demonstrating
+             geographic convergence. Herschlag et al.\ provide the
+             methodological foundation for NC ensemble comparisons.},
+}
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Imai, Kosuke and Kawahara, Jun and
+             Kenny, Christopher T.},
+  title   = {The Essential Role of Empirical Validation in Legislative
+             Redistricting Simulation},
+  journal = {Statistics and Public Policy},
+  volume  = {7},
+  number  = {1},
+  pages   = {52--68},
+  year    = {2020},
+  doi     = {10.1080/2330443X.2020.1791773},
+  note    = {Establishes the GerryChain simulation framework and the
+             importance of ensemble validation in redistricting.
+             TargetedSweep(50th, ReCom) references this framework as
+             an alternative to bisection-family percentile selection.},
+}
+
+@article{duchin2020,
+  author  = {Duchin, Moon and Tenner, Bridget Eileen},
+  title   = {Discrete Geometry for Electoral Geography},
+  journal = {arXiv},
+  year    = {2020},
+  note    = {arXiv:1808.05860. Mathematical framework for redistricting
+             as a graph-partitioning problem. The distinction between the
+             bisection-plan distribution and the ReCom-ensemble distribution
+             is analysed within this framework.},
+}
+
+%% ===================================================================
+%% ALGORITHMS AND GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Multilevel Kernighan-Lin heuristic for
+             graph partitioning. The edge-cut minimisation objective of METIS
+             is the quantity PercentileSweep ranks plans by.},
+}
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {FIPS 180-4: SHA-256 specification.
+                 The hash function used in PercentileSweep's seed
+                 derivation: $s_i = \lfloor\text{SHA-256}(\texttt{census\_id}
+                 \,\|\, i)\rfloor \bmod 2^{31}$ ensures reproducible,
+                 unpredictable seeds prior to census release.},
+}
+
+%% ===================================================================
+%% COMPACTNESS AND LEGAL DOCTRINE
+%% ===================================================================
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law \& Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+  note    = {The Polsby-Popper compactness metric ($4\pi A / P^2$) is the
+             standard measure for compactness doctrine.
+             PercentileSweep's $p=0.0$ posture maximises Polsby-Popper
+             subject to METIS optimality; $p=1.0$ minimises it.},
+}
+
+@article{altman1998,
+  author  = {Altman, Micah},
+  title   = {Modeling the Effect of Mandatory District Compactness on
+             Partisan Gerrymanders},
+  journal = {Political Geography},
+  volume  = {17},
+  number  = {8},
+  pages   = {989--1012},
+  year    = {1998},
+  doi     = {10.1016/S0962-6298(98)00018-3},
+  note    = {Early evidence that compactness constraints reduce partisan
+             manipulation. B.17 and H.0 extend this by showing that within
+             the compact-algorithm family, the specific compactness percentile
+             chosen does not shift partisan outcomes.},
+}

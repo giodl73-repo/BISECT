@@ -1,0 +1,140 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mdframed}
+
+%% SIAM-adjacent style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\ps}{\textsc{PercentileSweep}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\ms}{\textsc{MedianSweep}}
+\newcommand{\ts}{\textsc{TargetedSweep}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\gc}{\textsc{GerryChain}}
+
+%% Legal case macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+\newcommand{\wesberry}{\case{Wesberry v.\ Sanders}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\karcher}{\case{Karcher v.\ Daggett}}
+
+%% Math macros
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\seedfmt}[1]{\texttt{SHA-256(#1)}}
+\newcommand{\floor}[1]{\lfloor #1 \rfloor}
+
+%% Statute box
+\newenvironment{statute}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\pending}{$^{\ddagger}$}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{PercentileSweep: Statutory Choice of Legal Posture}\\
+  \textbf{in Algorithmic Redistricting}\\[0.4em]
+  \large Making the Compactness Percentile Explicit, Auditable, and Defensible\\[0.8em]
+  \normalsize\textit{H.0 --- Algorithm Theory / Legal Posture}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+\cs{} (B.16) finds the minimum-edge-cut plan across a forward sweep of
+$T = 600$ seeds---always returning the compactness extremum of the bisection
+family.
+Real \gc{} data (G.1) places this extremum at the 0.1--0.7th percentile of
+the \recom{} ensemble for most states, confirming that the algorithmic plan
+is more compact than 99\%+ of valid alternatives.
+North Carolina is the exception, landing at the 50th percentile due to
+geographic convergence.
+
+This paper introduces \ps{}, a generalisation that makes the compactness
+percentile an explicit statutory parameter.
+\ps{}$(p, T)$ runs $T$ bisection plans from the SHA-256 seed walk, sorts them
+by normalised edge cut, and returns the plan at rank $\floor{p \times T}$.
+Special cases include \cs{} ($p = 0.0$) and \ms{} ($p = 0.5$).
+
+The central empirical claim is that \emph{partisan outcomes are largely
+insensitive to the choice of percentile $p$}.
+For six key states---NC, WI, GA, PA, TX, CA---partisan seat counts vary by
+at most 0.5 seats across $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$ with $T = 101$
+plans, consistent with B.17's finding that structure dominates search.
+This insensitivity is not accidental: it reflects the geographic determinism
+established in B.7 and B.17.
+
+The legal contribution is a mapping from percentile to doctrine.
+Three postures emerge: $p = 0.0$ (compactness doctrine, \karcher{});
+$p = 0.5$ (representativeness doctrine); and \ts{}(50th, \recom{}) (full
+ensemble representativeness).
+We recommend $p = 0.0$ for statutory use: the plan is the most compact
+consistent with population balance and contiguity, and no neutral party
+can produce a more compact alternative.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-results}
+\input{sections/05-legal-posture}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

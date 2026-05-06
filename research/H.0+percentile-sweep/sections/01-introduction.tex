@@ -1,0 +1,84 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Over-Optimising Objection}
+
+\cs{}~\citep{b16paper} solves a genuine problem: a fixed single seed for
+the METIS heuristic may land in a local optimum, leaving a more compact map
+undiscovered.
+By sweeping $T = 600$ seeds and returning the global minimum, \cs{}
+guarantees that the plan produced is the best available within the bisection
+family.
+
+This guarantee is also a potential vulnerability.
+A sophisticated opponent could raise what we call the \emph{over-optimising
+objection}: the algorithm is specifically designed to find the most extreme
+member of its plan family.
+In the compactness dimension, this extremum sits at the 0.1--0.7th percentile
+of the full \recom{} ensemble for most states (G.1~\citep{g1paper}).
+The plan is, by construction, more compact than 99\%+ of all valid
+redistricting plans.
+No legislature drawing districts by hand would produce anything close to
+this level of compactness.
+Could this extremism itself be a form of manipulation---a gerrymander of
+compactness rather than partisanship?
+
+The over-optimising objection is legally novel.
+Traditional gerrymandering doctrine targets partisan or racial distortion.
+\rucho{}~\citep{rucho2019} forecloses federal judicial review of partisan
+claims; \wesberry{}~\citep{wesberry1964} and \karcher{}~\citep{karcher1983}
+establish the population-equality framework.
+No existing doctrine directly addresses whether maximising compactness is
+itself a legally cognisable harm.
+Nevertheless, the objection is worth anticipating.
+
+\subsection{The PercentileSweep Response}
+
+\ps{} dissolves the over-optimising objection by making the compactness
+percentile explicit.
+Instead of always returning the minimum-edge-cut plan, \ps{}$(p, T)$ returns
+the plan at percentile $p$ of the $T$-plan bisection distribution.
+The percentile $p$ is a statutory parameter, visible in the legislation,
+subject to legislative debate, and auditable by any party.
+
+This has three immediate legal advantages.
+First, the choice of percentile is \emph{transparent}: opponents and
+supporters alike can see exactly what posture the statute adopts.
+Second, the choice is \emph{principled}: each value of $p$ corresponds to
+a recognisable legal doctrine (Section~\ref{sec:legal-posture}).
+Third, the choice is \emph{auditable}: given the statutory $p$, any party
+can reproduce the plan by running the same $T$ seeds and selecting rank
+$\floor{p \times T}$.
+
+\subsection{The Insensitivity Finding}
+
+Critically, the choice of $p$ \emph{does not matter much} for partisan
+outcomes.
+Our empirical analysis across six key states (NC, WI, GA, PA, TX, CA) shows
+that partisan seat counts vary by at most 0.5 seats across the full range
+$p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$ with $T = 101$ plans.
+
+This finding extends B.17's parameter insensitivity result~\citep{b17paper}
+to the search percentile dimension.
+B.17 showed that partisan outcomes are insensitive to METIS parameters,
+convergence threshold $T$, and edge-weight settings within a fixed algorithm
+family.
+H.0 shows they are equally insensitive to which compactness level within
+the bisection family is selected.
+The underlying mechanism is the same: geographic structure, not search
+strategy, determines partisan outcomes (B.7~\citep{b7paper}).
+
+The insensitivity finding is both a scientific result and a legal asset.
+It means that the statutory choice of percentile can be made on legal and
+normative grounds without partisan consequences.
+The DIA can adopt $p = 0.0$ because it produces the most legally defensible
+compactness posture, not because it manipulates partisan outcomes.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:related-work} situates \ps{} within the B-series
+and G-series literature.
+Section~\ref{sec:algorithm} defines \ps{} formally.
+Section~\ref{sec:results} presents empirical results for six states.
+Section~\ref{sec:legal-posture} maps percentile choices to legal doctrine.
+Section~\ref{sec:conclusion} concludes with a statutory recommendation.

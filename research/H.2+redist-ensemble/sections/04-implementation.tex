@@ -1,0 +1,99 @@
+\section{Implementation}
+\label{sec:implementation}
+
+\subsection{Crate Architecture}
+
+The \re{} crate is structured as three source files within the
+\texttt{redist-ensemble} module of the \texttt{redist} Rust workspace:
+
+\begin{description}
+  \item[\texttt{spanning.rs}] Wilson's loop-erased random walk.
+    Exports \texttt{wilson\_ust(graph, rng)} returning an adjacency-list
+    spanning tree. Uses \texttt{SmallRng} for per-step randomness (see
+    Section~\ref{ssec:rng}).
+
+  \item[\texttt{recom.rs}] The \recom{} proposal.
+    Exports \texttt{recom\_step(partition, graph, pop, tol, rng)},
+    which selects a pair, calls \texttt{wilson\_ust}, enumerates balanced
+    cuts, and returns the updated partition.
+    Handles tree-resample-on-failure and pair-reselection logic.
+
+  \item[\texttt{chain.rs}] Parallel runner.
+    Exports \texttt{run\_ensemble(config)} which drives $C$ independent
+    chains via Rayon's \texttt{par\_iter}, collecting per-step statistics
+    and computing convergence diagnostics.
+\end{description}
+
+\subsection{Graph Representation}
+
+The census-tract adjacency graph is stored as a \texttt{Vec<Vec<usize>>}
+adjacency list, loaded from the \texttt{.adj.bin} binary format shared
+with \texttt{redist-data}.
+Population data is a \texttt{Vec<u64>} aligned to the same vertex
+indices.
+Subgraphs for individual district pairs are constructed on demand as
+\texttt{Vec<Vec<usize>>} slices by remapping vertex indices to the
+compact range $\{0,\ldots,m-1\}$.
+This subgraph construction cost is $O(m)$ per step and does not allocate
+on the heap for graphs with $m \leq 512$ due to a stack-based small-buffer
+optimization.
+
+\subsection{Random Number Generation}
+\label{ssec:rng}
+
+Each chain uses a \texttt{SmallRng} instance from the \texttt{rand} crate,
+seeded from the SHA-256-derived per-chain seed.
+\texttt{SmallRng} is a 128-bit xoshiro128++ generator: its state is small
+(16 bytes), its throughput is high ($\sim$4 billion integers per second
+on modern hardware), and it passes the BigCrush statistical test suite.
+For the random walk within Wilson's algorithm, the dominant operation is
+selecting a uniformly random neighbor of the current vertex.
+We avoid modulo bias by using Lemire's fast divisor trick~\citep{lemire2019fast}
+as implemented in \texttt{rand::Rng::gen\_range}.
+
+\subsection{Balance Check}
+
+The balance check for a candidate spanning tree $T$ of the merged region
+is implemented as a single depth-first traversal.
+We root $T$ at vertex 0 of the local indexing and compute subtree
+population sums in $O(m)$ time using a post-order traversal.
+For each edge $(u, \mathit{parent}(u))$, the subtree rooted at $u$ has
+population $\mathit{pop}[u]$, and the complementary subtree has
+population $P_R - \mathit{pop}[u]$, where $P_R$ is the total population
+of the merged region.
+The edge is \emph{balanced} if both subtrees satisfy
+$|\mathit{pop}/\bar{p} - 1| \leq \varepsilon$.
+Balanced edges are collected into a \texttt{SmallVec<[usize; 8]>} to
+avoid heap allocation for the common case where the number of balanced
+cuts is small.
+
+\subsection{Serde Output}
+
+Step-level statistics---district population variances, normalized cut
+fraction, Democratic seat share (if election data is loaded)---are
+serialized to newline-delimited JSON using \texttt{serde\_json}.
+Chain-level diagnostics ($\rhat$, $\ess$, $\ham(1)$) are written at
+chain completion.
+The output format is designed to be streamed directly into the
+\texttt{redist-report} pipeline for court-submission documents.
+
+\subsection{Texas and Bipartition Failures}
+
+Texas ($n = 4{,}866$ tracts, $k = 38$ districts) presents a known
+challenge: the state's shape and high $k$ mean that a randomly merged
+pair of adjacent districts often contains a region with no balanced
+bipartition of any random spanning tree.
+\gc{} is documented to fail on Texas when run without a warmup from a
+known valid starting plan~\citep{gerrychain2021}.
+
+\re{} handles this via the pair-reselection mechanism in
+Algorithm~\ref{alg:recom}: after 10 consecutive spanning tree resample
+failures for a given pair, a new adjacent pair is selected.
+In practice, for Texas, pair reselection triggers frequently during the
+first 50--100 steps from a cold start, then subsides as the chain moves
+away from the starting plan into regions of higher feasibility density.
+This behavior is not a Rust-specific limitation; it reflects the intrinsic
+geometry of the Texas plan space.
+Rust's advantage is that the 10-resample budget is exhausted in
+microseconds rather than the seconds it would take in Python, so pair
+reselection adds negligible overhead.

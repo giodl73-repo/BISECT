@@ -1,0 +1,67 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{H.1: BisectionEnsemble:\\
+       Integrating Local Feasibility Sampling into the Redistricting Bisection Tree}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Markov-chain redistricting ensemble methods (ReCom, GerryChain) sample the full
+plan space by running $k$-way recombination steps, but fail catastrophically for
+large prime $k$: Texas ($k=38$) and Pennsylvania ($k=17$) require prime-arity
+bipartitions of the whole state that have no efficient graph-theoretic
+decomposition. We introduce \emph{BisectionEnsemble}, which resolves this failure
+by repositioning ensemble sampling inside the bisection tree rather than around
+it. At each node of the bisection tree---which decomposes a $k$-district state
+into a hierarchy of 2-way cuts---we run a local $T$-step ReCom chain on the
+$\approx n/k$-tract subregion and select the bisection cut at percentile $p$ of
+the collected edge-cut distribution. Since every local ensemble is always 2-way
+($k_{\text{local}} = 2$), bipartition failure is structurally impossible.
+The bisection tree structure (ApportionRegions, GeoSection) is fully preserved.
+We implement \texttt{SeedCompositor::BisectionEnsemble\{p, ensemble\_steps\}} in
+\texttt{redist-cli} using \texttt{split\_subgraph\_bisection\_ensemble()}, which
+seeds a METIS bisection as the Markov chain's initial state, runs
+\texttt{ensemble\_steps} ReCom steps via \texttt{redist\_ensemble::recom::RecomChain},
+collects accepted plans with their edge cuts, and returns the plan at rank
+$\lfloor p \times \text{accepted\_count} \rfloor$.
+Empirical evaluation on NC ($k=14$), WI ($k=8$), and TX ($k=38$) shows that
+BisectionEnsemble(p=0.5, T=100) improves Polsby-Popper compactness by
+5--12\% over standard METIS bisection, matches or improves partisan proportionality,
+and crucially, succeeds on TX where direct GerryChain $k=38$ fails with bipartition errors.
+Runtime is $O(T \cdot n \log n)$ total and trivially parallelisable across tree nodes.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-algorithm}
+\input{sections/04-results}
+\input{sections/05-legal-properties}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

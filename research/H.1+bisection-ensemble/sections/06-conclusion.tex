@@ -1,0 +1,35 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced BisectionEnsemble, a redistricting algorithm that integrates
+local 2-way ReCom ensemble sampling into the bisection tree. By repositioning
+ensemble sampling from the full plan level to the individual node level, we
+resolve the bipartition failure problem that prevents direct GerryChain
+application to states with large seat counts ($k \geq 17$). Every local ensemble
+is always 2-way, so bipartition failure is structurally impossible regardless of
+the state's seat count $k$.
+
+The algorithm is implemented as \texttt{SeedCompositor::BisectionEnsemble\{p,
+ensemble\_steps\}} in \texttt{redist-cli}, using
+\texttt{split\_subgraph\_bisection\_ensemble()} which seeds a METIS bisection,
+runs \texttt{ensemble\_steps} ReCom steps via
+\texttt{redist\_ensemble::recom::RecomChain}, and returns the plan at rank
+$\lfloor p \times \text{accepted\_count} \rfloor$.
+
+Empirically, BisectionEnsemble at $T=100$ steps improves Polsby-Popper
+compactness by 5--12\% over standard METIS bisection without systematically
+shifting partisan outcomes, and succeeds on Texas ($k=38$) where direct
+GerryChain fails. Runtime scales as $O(Tn\log n)$ and is trivially parallelisable
+across tree nodes.
+
+\paragraph{Future work.}
+Several directions merit investigation. First, the ReCom chain's mixing time
+on local subgraphs is unexplored: how many steps $T$ are needed for convergence
+to the stationary distribution? Second, BisectionEnsemble currently applies only
+to bisection nodes ($p' = 2$); extending it to $p'$-way nodes with $p' > 2$
+(via nested bisections or $p'$-way recombination) would enable full ensemble
+coverage of all ApportionRegions tree nodes. Third, the sensitivity of compactness
+gains to the ReCom proposal distribution (e.g., biased spanning trees favouring
+compact cuts) is a natural direction for further improvement. Finally, a formal
+ergodicity proof for the local chain over the feasible bisection space of each
+node would strengthen the theoretical foundation.
