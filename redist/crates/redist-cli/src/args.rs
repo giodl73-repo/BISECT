@@ -82,6 +82,13 @@ pub enum PartitionMode {
     /// Use --w-vra to control alignment weight (default 0.40).
     #[value(name = "vra-section")]
     VraSection,
+    /// SimulatedAnnealing: METIS initial partition + SA boundary-flip refinement.
+    /// At each bisection node, starts from METIS and accepts/rejects random
+    /// boundary flips via the Boltzmann criterion (geometric cooling schedule).
+    /// Tracks best-ever EC plan and returns it.
+    /// Use --sa-steps-per-tract, --sa-t0-factor, --sa-t-final to tune.
+    #[value(name = "simulated-annealing")]
+    SimulatedAnnealing,
 }
 
 impl std::fmt::Display for PartitionMode {
@@ -98,6 +105,7 @@ impl std::fmt::Display for PartitionMode {
             Self::ProportionalSection   => write!(f, "proportional-section"),
             Self::ApportionRegions      => write!(f, "apportion-regions"),
             Self::VraSection            => write!(f, "vra-section"),
+            Self::SimulatedAnnealing    => write!(f, "simulated-annealing"),
         }
     }
 }
@@ -1169,6 +1177,16 @@ pub enum SearchMode {
     /// Compatible with all structure modes; eliminates prime-k bipartition failures (H.1).
     #[value(name = "bisection-ensemble")]
     BisectionEnsemble,
+    /// Short-Burst: run --n-bursts short ReCom chains of --burst-length steps.
+    /// Keep the chain endpoint from each burst; chain restarts from the previous endpoint.
+    /// Return plan at --percentile of endpoints sorted by EC.
+    /// burst_length=20, n_bursts=50 are good defaults for full-state k.
+    #[value(name = "short-burst")]
+    ShortBurst,
+    /// Flip boundary tracts; return plan at --percentile of all visited EC distribution.
+    /// Use --flip-steps for total proposals (default 10000).
+    #[value(name = "flip")]
+    Flip,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1358,6 +1376,18 @@ pub struct StateArgs {
     #[arg(long, default_value_t = 200)]
     pub ensemble_steps: usize,
 
+    /// ReCom steps per burst for --search short-burst. Default: 20.
+    #[arg(long, default_value_t = 20)]
+    pub burst_length: usize,
+
+    /// Number of bursts for --search short-burst. Default: 50.
+    #[arg(long, default_value_t = 50)]
+    pub n_bursts: usize,
+
+    /// Total flip proposals for --search flip. Default: 10000.
+    #[arg(long, default_value_t = 10000)]
+    pub flip_steps: usize,
+
     /// METIS backend engine.
     /// c-ffi (default): links libmetis.so/dll — battle-tested, handles all k.
     /// redist-metis: pure Rust, no C dependency — portable standalone binary.
@@ -1442,6 +1472,25 @@ pub struct StateArgs {
     /// Requires --partition-mode vra-section.
     #[arg(long, default_value_t = 0.40)]
     pub w_vra: f64,
+
+    // ── Simulated Annealing (SA) parameters ───────────────────────────────────
+
+    /// SA: steps per tract per bisection node. n_steps = sa_steps_per_tract * |subgraph|.
+    /// Default 10. Higher = more refinement, slower.
+    /// Requires --partition-mode simulated-annealing.
+    #[arg(long, default_value_t = 10)]
+    pub sa_steps_per_tract: usize,
+
+    /// SA: T_0 factor. T_0 = max(1.0, sa_t0_factor * EC(initial_metis)).
+    /// Default 0.01. Larger = more initial randomness.
+    /// Requires --partition-mode simulated-annealing.
+    #[arg(long, default_value_t = 0.01)]
+    pub sa_t0_factor: f64,
+
+    /// SA: final temperature (near-zero). Default 1e-4.
+    /// Requires --partition-mode simulated-annealing.
+    #[arg(long, default_value_t = 1e-4)]
+    pub sa_t_final: f64,
 }
 
 // ---------------------------------------------------------------------------
@@ -1547,6 +1596,18 @@ pub struct StatesArgs {
     /// Local ReCom steps per bisection node for --search bisection-ensemble. Default: 200.
     #[arg(long, default_value_t = 200)]
     pub ensemble_steps: usize,
+
+    /// ReCom steps per burst for --search short-burst. Default: 20.
+    #[arg(long, default_value_t = 20)]
+    pub burst_length: usize,
+
+    /// Number of bursts for --search short-burst. Default: 50.
+    #[arg(long, default_value_t = 50)]
+    pub n_bursts: usize,
+
+    /// Total flip proposals for --search flip. Default: 10000.
+    #[arg(long, default_value_t = 10000)]
+    pub flip_steps: usize,
 }
 
 #[cfg(test)]
@@ -2233,9 +2294,12 @@ mod tests {
     fn search_mode_all_variants() {
         use clap::ValueEnum;
         let cases: &[(&str, SearchMode)] = &[
-            ("single",      SearchMode::Single),
-            ("multi",       SearchMode::Multi),
-            ("convergence", SearchMode::Convergence),
+            ("single",             SearchMode::Single),
+            ("multi",              SearchMode::Multi),
+            ("convergence",        SearchMode::Convergence),
+            ("percentile",         SearchMode::Percentile),
+            ("bisection-ensemble", SearchMode::BisectionEnsemble),
+            ("short-burst",        SearchMode::ShortBurst),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)

@@ -452,6 +452,15 @@ fn algorithm_section_to_json(yaml: &AlgoYaml) -> serde_json::Value {
     if let Some(w) = sec.w_vra {
         map.insert("w_vra".to_string(), serde_json::json!(w));
     }
+    if let Some(bl) = sec.burst_length {
+        map.insert("burst_length".to_string(), serde_json::json!(bl));
+    }
+    if let Some(nb) = sec.n_bursts {
+        map.insert("n_bursts".to_string(), serde_json::json!(nb));
+    }
+    if let Some(pct) = sec.percentile {
+        map.insert("percentile".to_string(), serde_json::json!(pct));
+    }
     serde_json::Value::Object(map)
 }
 

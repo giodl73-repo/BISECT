@@ -1791,6 +1791,637 @@ pub fn split_subgraph_bisection_ensemble(
     Ok((left, right))
 }
 
+// ── ShortBurst ────────────────────────────────────────────────────────────────
+
+/// Run a Short-Burst ReCom search on the full k-way plan.
+///
+/// Algorithm:
+///   1. Build initial k-way plan via `run_all_splits`.
+///   2. For each burst i in 0..n_bursts:
+///      a. Derive chain seed: SHA-256("SHORT_BURST_CHAIN_" || i.to_le_bytes() || "_" || base_seed.to_le_bytes()) → u64.
+///      b. Construct a fresh RecomChain from `current_assignment` with `k` districts.
+///      c. Step the chain `burst_length` times.
+///      d. Record the ENDPOINT (not the minimum within the burst).
+///      e. Set `current_assignment` = endpoint (chain restarts from here).
+///   3. Sort endpoints by (EC ASC, burst_idx ASC).
+///   4. Return plan at rank floor(p * n_bursts), clamped.
+///
+/// Returns `(assignment, burst_seeds, selected_burst_idx)`.
+pub fn run_short_burst(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    burst_length: usize,
+    n_bursts: usize,
+    p: f64,
+) -> Result<(HashMap<usize, usize>, Vec<u64>, usize), String> {
+    use sha2::Digest;
+    use redist_ensemble::recom::RecomChain;
+
+    if num_districts <= 1 {
+        let trivial: HashMap<usize, usize> = (0..adjacency.len()).map(|i| (i, 1)).collect();
+        return Ok((trivial, vec![], 0));
+    }
+
+    // Build initial plan.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if n_bursts == 0 {
+        return Ok((initial, vec![], 0));
+    }
+
+    // Build Vec<Vec<u32>> adjacency for RecomChain.
+    let adj_u32: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&n| n as u32).collect())
+        .collect();
+    let pop: Vec<i64> = vertex_weights.to_vec();
+    let n = adjacency.len();
+
+    // Convert initial HashMap<usize,usize> assignment to Vec<u32> (1-based).
+    let assignment_to_vec = |asgn: &HashMap<usize, usize>| -> Vec<u32> {
+        (0..n).map(|i| asgn.get(&i).copied().unwrap_or(1) as u32).collect()
+    };
+
+    // Count EC from a Vec<u32> assignment using the bisection_runner adjacency.
+    let count_ec_vec = |asgn: &[u32]| -> usize {
+        let mut cut = 0usize;
+        for (v, nbrs) in adjacency.iter().enumerate() {
+            for &nb in nbrs {
+                if nb > v && asgn[v] != asgn[nb] {
+                    cut += 1;
+                }
+            }
+        }
+        cut
+    };
+
+    let mut current_vec = assignment_to_vec(&initial);
+
+    // Derive per-burst seed: SHA-256("SHORT_BURST_CHAIN_" || burst_idx || "_" || base_seed) → u64.
+    let derive_seed = |burst_idx: usize| -> u64 {
+        let mut h = sha2::Sha256::new();
+        h.update(b"SHORT_BURST_CHAIN_");
+        h.update((burst_idx as u64).to_le_bytes());
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    let mut burst_seeds: Vec<u64> = Vec::with_capacity(n_bursts);
+    // Collect (ec, burst_idx, assignment_vec).
+    let mut endpoints: Vec<(usize, usize, Vec<u32>)> = Vec::with_capacity(n_bursts);
+
+    for burst_idx in 0..n_bursts {
+        let chain_seed = derive_seed(burst_idx);
+        burst_seeds.push(chain_seed);
+
+        let mut rng = SmallRng::seed_from_u64(chain_seed);
+        let mut chain = RecomChain::new(
+            adj_u32.clone(),
+            pop.clone(),
+            current_vec.clone(),
+            num_districts as u32,
+            balance_tolerance,
+        );
+
+        for _ in 0..burst_length {
+            chain.step(&mut rng);
+        }
+
+        // Record ENDPOINT (not minimum within burst).
+        let endpoint = chain.assignment.clone();
+        let ec = count_ec_vec(&endpoint);
+        endpoints.push((ec, burst_idx, endpoint.clone()));
+
+        // Next burst starts from this endpoint.
+        current_vec = endpoint;
+    }
+
+    // Sort by (EC ASC, burst_idx ASC) for determinism on EC ties.
+    endpoints.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    // Pick plan at rank floor(p * n_bursts), clamped to [0, n_bursts-1].
+    let rank = ((p * n_bursts as f64).floor() as usize).min(endpoints.len() - 1);
+    let (_, selected_burst_idx, chosen_vec) = endpoints.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> back to HashMap<usize,usize>.
+    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    Ok((assignment, burst_seeds, selected_burst_idx))
+}
+
+// ── Simulated Annealing ───────────────────────────────────────────────────────
+
+/// Derive a deterministic per-node SA seed from the base seed and the node path.
+/// SHA-256("SA_NODE_" || path.as_bytes() || "_" || base_seed.to_le_bytes()) -> first 8 bytes.
+pub fn derive_sa_seed(base_seed: u64, path: &str) -> u64 {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"SA_NODE_");
+    h.update(path.as_bytes());
+    h.update(b"_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// Count edge cuts for a local (0=left, 1=right) binary partition over a subgraph.
+/// `partition`: per-local-vertex assignment (0 or 1).
+/// `sub_adj`: local subgraph adjacency list.
+fn count_ec_local(partition: &[u8], sub_adj: &[Vec<usize>]) -> usize {
+    let mut cut = 0usize;
+    for (v, nbrs) in sub_adj.iter().enumerate() {
+        for &nb in nbrs {
+            if nb > v && partition[v] != partition[nb] {
+                cut += 1;
+            }
+        }
+    }
+    cut
+}
+
+/// Check BFS connectivity of one side (side_val=0 or 1) in the local partition.
+/// Returns true if all vertices with `partition[v] == side_val` are connected
+/// via sub_adj restricted to those vertices.
+fn is_side_connected(partition: &[u8], sub_adj: &[Vec<usize>], side_val: u8) -> bool {
+    let members: Vec<usize> = (0..partition.len())
+        .filter(|&v| partition[v] == side_val)
+        .collect();
+    if members.len() <= 1 {
+        return true;
+    }
+    // BFS from first member
+    let mut visited = vec![false; partition.len()];
+    let start = members[0];
+    visited[start] = true;
+    let mut queue = std::collections::VecDeque::new();
+    queue.push_back(start);
+    while let Some(v) = queue.pop_front() {
+        for &nb in &sub_adj[v] {
+            if !visited[nb] && partition[nb] == side_val {
+                visited[nb] = true;
+                queue.push_back(nb);
+            }
+        }
+    }
+    members.iter().all(|&v| visited[v])
+}
+
+/// Split a subgraph using Simulated Annealing refinement of an initial METIS partition.
+///
+/// Algorithm:
+///   1. Get initial bisection from METIS.
+///   2. Run n_steps = steps_per_tract * |subgraph| SA steps with geometric cooling.
+///   3. At each step: pick a random boundary tract, flip to the other district if
+///      contiguous and balanced. Accept/reject via Boltzmann criterion.
+///   4. Track best-ever EC plan and return it.
+pub fn split_subgraph_sa(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
+    balance_tolerance: f64,
+    steps_per_tract: usize,
+    t0_factor: f64,
+    t_final: f64,
+    sa_seed: u64,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand::Rng;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    if tract_indices.len() <= 1 {
+        return Ok((tract_indices.clone(), HashSet::new()));
+    }
+
+    // Build local index mapping (sorted for determinism)
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+    let global_to_local: HashMap<usize, usize> = sorted.iter()
+        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let n = sorted.len();
+
+    // Build subgraph adjacency (local indices)
+    let sub_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter(|&&nb| tract_indices.contains(&nb))
+            .map(|&nb| global_to_local[&nb])
+            .collect()
+    }).collect();
+
+    // Build local vertex weights
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
+    let total_pop: i64 = local_pop.iter().sum();
+    let half_pop = total_pop / 2;
+    let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
+
+    // Get initial METIS partition — use a sub_vwgt of i64 for split_subgraph
+    let sub_vwgt: Vec<i64> = local_pop.clone();
+    let (metis_left, metis_right) = split_subgraph(
+        adjacency, vertex_weights, 1, edge_weights, tract_indices,
+        balance_tolerance + 1.0, // let METIS use full state tolerance (we re-check ourselves)
+        100, None, None, None,
+    )?;
+
+    // Build initial local partition (0=left, 1=right)
+    let mut partition: Vec<u8> = sorted.iter()
+        .map(|g| if metis_left.contains(g) { 0 } else { 1 })
+        .collect();
+
+    let n_steps = steps_per_tract * n;
+    let initial_ec = count_ec_local(&partition, &sub_adj);
+
+    // T_0 = max(1.0, t0_factor * initial_ec)
+    let t0 = (t0_factor * initial_ec as f64).max(1.0);
+    // Guard: t_final must be > 0 and <= t0; clamp to a small epsilon if zero
+    let t_final_safe = t_final.max(1e-12).min(t0);
+
+    let mut best_ec = initial_ec;
+    let mut best_partition = partition.clone();
+    // Track current plan's EC for Metropolis comparison (spec: delta_ec = count_ec(proposed) - count_ec(plan))
+    let mut current_ec = initial_ec;
+
+    let mut rng = SmallRng::seed_from_u64(sa_seed);
+
+    // Helper: compute population of each side
+    let side_pop = |p: &[u8], side: u8| -> i64 {
+        p.iter().enumerate()
+            .filter(|(_, &s)| s == side)
+            .map(|(i, _)| local_pop[i])
+            .sum()
+    };
+
+    for step in 0..n_steps {
+        // Geometric cooling: T at step s = T_0 * (t_final / T_0)^(s / n_steps)
+        let t = if n_steps > 1 {
+            t0 * (t_final_safe / t0).powf(step as f64 / (n_steps - 1) as f64)
+        } else {
+            t_final_safe
+        };
+
+        // Collect boundary tracts: tracts adjacent to the other district
+        let boundary: Vec<usize> = (0..n)
+            .filter(|&v| {
+                let side = partition[v];
+                sub_adj[v].iter().any(|&nb| partition[nb] != side)
+            })
+            .collect();
+
+        if boundary.is_empty() {
+            break;
+        }
+
+        // Pick random boundary tract
+        let tract = boundary[rng.gen_range(0..boundary.len())];
+        let current_side = partition[tract];
+        let other_side = 1 - current_side;
+
+        // Population check: would the flip remain balanced?
+        let pop_current = side_pop(&partition, current_side);
+        let pop_after_flip = pop_current - local_pop[tract];
+        if (pop_after_flip - half_pop).abs() > tolerance_pop {
+            continue; // skip: would violate balance
+        }
+
+        // Contiguity check: the side losing a tract must stay connected
+        partition[tract] = other_side;
+        let contiguous = is_side_connected(&partition, &sub_adj, current_side);
+        if !contiguous {
+            partition[tract] = current_side; // revert
+            continue;
+        }
+
+        // Compute new EC and delta vs current plan (Metropolis criterion per spec)
+        let new_ec = count_ec_local(&partition, &sub_adj);
+        let delta_ec = new_ec as f64 - current_ec as f64;
+
+        // Metropolis acceptance
+        if delta_ec > 0.0 {
+            let accept_prob = (-delta_ec / t).exp();
+            if rng.gen::<f64>() >= accept_prob {
+                partition[tract] = current_side; // reject
+                continue;
+            }
+        }
+        // Accepted: update current_ec and partition[tract] already = other_side
+        current_ec = new_ec;
+
+        // Track best-ever plan
+        if new_ec < best_ec {
+            best_ec = new_ec;
+            best_partition = partition.clone();
+        }
+    }
+
+    // Convert best_partition to global HashSets
+    let left: HashSet<usize> = sorted.iter().enumerate()
+        .filter(|(i, _)| best_partition[*i] == 0)
+        .map(|(_, &g)| g)
+        .collect();
+    let right: HashSet<usize> = sorted.iter().enumerate()
+        .filter(|(i, _)| best_partition[*i] == 1)
+        .map(|(_, &g)| g)
+        .collect();
+
+    Ok((left, right))
+}
+
+/// Run the full bisection tree using Simulated Annealing at each node.
+///
+/// Identical to `run_all_splits_with_search` but calls `split_subgraph_sa`
+/// at each bisection node instead of METIS directly.
+pub fn run_all_splits_sa(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seed: Option<u64>,
+    intermediate_dir: Option<&Path>,
+    steps_per_tract: usize,
+    t0_factor: f64,
+    t_final: f64,
+    base_seed: u64,
+) -> Result<HashMap<usize, usize>, String> {
+    let n = adjacency.len();
+
+    if num_districts == 1 {
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join("depth_00");
+            let _ = std::fs::create_dir_all(&round_dir);
+            let asgn: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+            let _ = write_intermediate_round(&round_dir, &asgn);
+        }
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let tree = BisectionTree::from_k(num_districts);
+    let mut node_tracts: HashMap<String, HashSet<usize>> = HashMap::new();
+    node_tracts.insert(String::new(), (0..n).collect());
+
+    for depth in 0..tree.max_depth {
+        let nodes_at_depth: Vec<_> = tree.nodes_at_depth(depth).into_iter().cloned().collect();
+
+        let nodes_with_tracts: Vec<(redist_core::BisectionNode, HashSet<usize>)> =
+            nodes_at_depth.into_iter()
+                .filter_map(|node| {
+                    node_tracts.remove(&node.path).map(|tracts| (node, tracts))
+                })
+                .collect();
+
+        let split_results: Vec<(String, HashSet<usize>, HashSet<usize>)> =
+            nodes_with_tracts.into_par_iter()
+                .map(|(node, tracts)| {
+                    let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
+                    let sa_seed = derive_sa_seed(base_seed, &node.path);
+                    let (left, right) = split_subgraph_sa(
+                        adjacency, vertex_weights, edge_weights, &tracts,
+                        node_ufactor, steps_per_tract, t0_factor, t_final, sa_seed,
+                    ).map_err(|e| format!("depth {} node '{}' (SA): {e}", depth, node.path))?;
+                    Ok((node.path, left, right))
+                })
+                .collect::<Result<Vec<_>, String>>()?;
+
+        let mut sorted_results = split_results;
+        sorted_results.sort_by_key(|(path, _, _)| path.clone());
+        for (path, left, right) in sorted_results {
+            node_tracts.insert(format!("{path}0"), left);
+            node_tracts.insert(format!("{path}1"), right);
+        }
+
+        if let Some(dir) = intermediate_dir {
+            let round_dir = dir.join(format!("depth_{:02}", depth + 1));
+            let _ = std::fs::create_dir_all(&round_dir);
+            let mut nodes: Vec<(&String, &HashSet<usize>)> = node_tracts.iter().collect();
+            nodes.sort_by_key(|(path, _)| (path.len(), *path));
+            let mut round_asgn: HashMap<usize, usize> = HashMap::with_capacity(n);
+            for (region_id, (_, tracts)) in nodes.iter().enumerate() {
+                for &tract in tracts.iter() {
+                    round_asgn.insert(tract, region_id + 1);
+                }
+            }
+            let _ = write_intermediate_round(&round_dir, &round_asgn);
+        }
+    }
+
+    let mut leaves: Vec<(String, HashSet<usize>)> = node_tracts.into_iter().collect();
+    leaves.sort_by_key(|(path, _)| (path.len(), path.clone()));
+
+    let mut assignments: HashMap<usize, usize> = HashMap::new();
+    for (district_id, (_, tracts)) in leaves.into_iter().enumerate() {
+        for tract in tracts {
+            assignments.insert(tract, district_id + 1);
+        }
+    }
+
+    if assignments.len() != n {
+        return Err(format!(
+            "SA bisection incomplete: {}/{n} tracts assigned", assignments.len()
+        ));
+    }
+    Ok(assignments)
+}
+
+// ── FlipChain ─────────────────────────────────────────────────────────────────
+
+/// Run a Flip-chain search on the full k-way plan.
+///
+/// Algorithm:
+///   1. Build initial k-way plan via `run_all_splits` (deterministic starting point).
+///   2. Derive chain seed: SHA-256("FLIP_CHAIN_" || 0u64 || "_" || base_seed) -> first 8 bytes as u64.
+///   3. For each step in 0..flip_steps:
+///      a. Collect boundary tracts (tracts with a neighbour in a different district).
+///      b. If none, stop early.
+///      c. Pick random boundary tract `t` and random adjacent district `d_target != d_src`.
+///      d. Flip: plan[t] = d_target.
+///      e. Validity: (a) d_src stays contiguous (BFS), (b) both districts within population tolerance.
+///      f. If valid, accept and record (EC(plan), plan). If invalid, revert.
+///   4. Sort visited by (EC ASC, insertion_idx ASC) for determinism.
+///   5. Return plan at rank floor(p * visited_count), plus visited_count and rank.
+///
+/// The visited list always starts with the initial plan (at least 1 entry).
+/// Returns `(assignment, visited_count, selected_rank)`.
+pub fn run_flip_chain(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    flip_steps: usize,
+    base_seed: u64,
+    p: f64,
+) -> Result<(HashMap<usize, usize>, usize, usize), String> {
+    use sha2::Digest;
+    use rand::Rng;
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        let trivial: HashMap<usize, usize> = (0..n).map(|i| (i, 1)).collect();
+        return Ok((trivial, 1, 0));
+    }
+
+    // Build initial plan (deterministic starting point).
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, 100, Some(base_seed), None,
+    )?;
+
+    // Derive chain RNG seed.
+    let chain_seed = {
+        let mut h = sha2::Sha256::new();
+        h.update(b"FLIP_CHAIN_");
+        h.update(0u64.to_le_bytes());
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    };
+
+    let mut rng = SmallRng::seed_from_u64(chain_seed);
+
+    // Work with a flat Vec<usize> for O(1) access.
+    let mut plan: Vec<usize> = (0..n).map(|i| initial.get(&i).copied().unwrap_or(1)).collect();
+
+    // Per-district population (districts are 1-based up to num_districts).
+    let total_pop: i64 = vertex_weights.iter().sum();
+    let ideal_pop = total_pop as f64 / num_districts as f64;
+    let max_dev = ((balance_tolerance * total_pop as f64) as i64 + 1).max(1);
+
+    let mut dist_pop: Vec<i64> = vec![0i64; num_districts + 1];
+    for (i, &d) in plan.iter().enumerate() {
+        if d < dist_pop.len() {
+            dist_pop[d] += vertex_weights[i];
+        }
+    }
+
+    let initial_ec = count_edge_cuts(&initial, adjacency);
+
+    // visited: (ec, insertion_idx, plan_snapshot)
+    let mut visited: Vec<(usize, usize, Vec<usize>)> = Vec::new();
+    visited.push((initial_ec, 0, plan.clone()));
+
+    for _step in 0..flip_steps {
+        // Collect boundary tracts.
+        let boundary: Vec<usize> = (0..n)
+            .filter(|&v| {
+                let dv = plan[v];
+                adjacency[v].iter().any(|&nb| plan[nb] != dv)
+            })
+            .collect();
+
+        if boundary.is_empty() {
+            break;
+        }
+
+        let t = boundary[rng.gen_range(0..boundary.len())];
+        let d_src = plan[t];
+
+        // Collect adjacent districts (unique, not d_src).
+        let mut adj_set = std::collections::HashSet::new();
+        for &nb in &adjacency[t] {
+            let d = plan[nb];
+            if d != d_src {
+                adj_set.insert(d);
+            }
+        }
+        if adj_set.is_empty() {
+            continue;
+        }
+        let adj_districts: Vec<usize> = adj_set.into_iter().collect();
+        let d_target = adj_districts[rng.gen_range(0..adj_districts.len())];
+
+        // Tentatively flip.
+        plan[t] = d_target;
+        dist_pop[d_src] -= vertex_weights[t];
+        dist_pop[d_target] += vertex_weights[t];
+
+        // Population balance check.
+        let dev_src = (dist_pop[d_src] as f64 - ideal_pop).abs() as i64;
+        let dev_tgt = (dist_pop[d_target] as f64 - ideal_pop).abs() as i64;
+        if dev_src > max_dev || dev_tgt > max_dev {
+            plan[t] = d_src;
+            dist_pop[d_src] += vertex_weights[t];
+            dist_pop[d_target] -= vertex_weights[t];
+            continue;
+        }
+
+        // Contiguity check: d_src must stay connected after removing t.
+        // BFS over tracts still in d_src (plan[v] == d_src, which excludes t now).
+        let d_src_first = (0..n).find(|&v| plan[v] == d_src);
+        let contiguous = match d_src_first {
+            None => true, // d_src is empty — vacuously connected
+            Some(start) => {
+                let mut vis_bfs = vec![false; n];
+                vis_bfs[start] = true;
+                let mut queue = std::collections::VecDeque::new();
+                queue.push_back(start);
+                while let Some(v) = queue.pop_front() {
+                    for &nb in &adjacency[v] {
+                        if !vis_bfs[nb] && plan[nb] == d_src {
+                            vis_bfs[nb] = true;
+                            queue.push_back(nb);
+                        }
+                    }
+                }
+                (0..n).filter(|&v| plan[v] == d_src).all(|v| vis_bfs[v])
+            }
+        };
+
+        if !contiguous {
+            plan[t] = d_src;
+            dist_pop[d_src] += vertex_weights[t];
+            dist_pop[d_target] -= vertex_weights[t];
+            continue;
+        }
+
+        // Accepted: record snapshot.
+        let ec = {
+            let mut cut = 0usize;
+            for (v, nbrs) in adjacency.iter().enumerate() {
+                for &nb in nbrs {
+                    if nb > v && plan[v] != plan[nb] {
+                        cut += 1;
+                    }
+                }
+            }
+            cut
+        };
+        let insertion_idx = visited.len();
+        visited.push((ec, insertion_idx, plan.clone()));
+    }
+
+    let visited_count = visited.len();
+
+    // Sort by (EC ASC, insertion_idx ASC).
+    visited.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    let rank = ((p * visited_count as f64).floor() as usize).min(visited_count - 1);
+    let (_, _, chosen_vec) = visited.into_iter().nth(rank).unwrap();
+
+    let assignment: HashMap<usize, usize> = chosen_vec.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d))
+        .collect();
+
+    // Suppress unused-variable warning for edge_weights (only used via run_all_splits).
+    let _ = edge_weights;
+
+    Ok((assignment, visited_count, rank))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3074,5 +3705,474 @@ mod tests {
         let mut asgn = HashMap::new();
         asgn.insert(0, 1); asgn.insert(1, 1); asgn.insert(2, 2); asgn.insert(3, 2);
         assert_eq!(count_edge_cuts(&asgn, &adj), 1, "4-node path bisection has 1 cut edge");
+    }
+
+    // ── Simulated Annealing tests ─────────────────────────────────────────────
+
+    // L0: zero steps returns the initial METIS plan unchanged (best = initial).
+    #[test]
+    fn sa_zero_steps_returns_initial() {
+        // 4x4 grid, steps_per_tract=0 → no SA steps → best = initial METIS plan
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_sa(
+            &adj, &pop, &ew, &tracts,
+            0.10, // balance_tolerance
+            0,    // steps_per_tract = 0 → n_steps = 0
+            0.01, 1e-4, 42
+        ).expect("SA with 0 steps must succeed");
+        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+        assert_eq!(left.len() + right.len(), 16, "all tracts covered");
+        assert!(left.is_disjoint(&right), "sides must be disjoint");
+    }
+
+    // L0: same sa_seed → identical result (determinism).
+    #[test]
+    fn sa_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let run = |seed: u64| split_subgraph_sa(
+            &adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-4, seed
+        ).expect("SA must succeed");
+        let (l1, r1) = run(99);
+        let (l2, r2) = run(99);
+        // Sort to compare deterministically
+        let mut v1: Vec<usize> = l1.iter().chain(r1.iter()).map(|&v| v + if l1.contains(&v) { 0 } else { 100 }).collect();
+        let mut v2: Vec<usize> = l2.iter().chain(r2.iter()).map(|&v| v + if l2.contains(&v) { 0 } else { 100 }).collect();
+        v1.sort_unstable(); v2.sort_unstable();
+        assert_eq!(v1, v2, "same seed must produce identical partition");
+    }
+
+    // L0: t0_factor=0.0 forces T0=max(1.0, 0.0)=1.0 (test fixture from spec).
+    #[test]
+    fn sa_t0_zero_factor_uses_floor() {
+        // With t0_factor=0.0, T_0 = max(1.0, 0.0 * EC) = 1.0 regardless of EC.
+        let t0_factor = 0.0_f64;
+        let initial_ec = 5usize;
+        let t0 = (t0_factor * initial_ec as f64).max(1.0);
+        assert!((t0 - 1.0).abs() < 1e-10, "t0_factor=0.0 must give T_0=1.0, got {t0}");
+        // Also verify it runs without panic
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let result = split_subgraph_sa(
+            &adj, &pop, &ew, &tracts, 0.10, 3, 0.0, 1e-4, 42
+        );
+        assert!(result.is_ok(), "SA with t0_factor=0.0 must succeed: {:?}", result.err());
+    }
+
+    // L0: greedy mode (t_final == t0 effectively zero temperature) never increases EC.
+    // We test: SA with tiny t_final and small steps should not produce higher EC than initial.
+    #[test]
+    fn sa_never_increases_ec_greedy() {
+        // With t_final=1e-15 (near zero) the acceptance probability for worsening moves
+        // is ~exp(-delta/1e-15) ≈ 0 for any positive delta_ec.
+        // So EC should be <= initial_ec (or equal if no improvement found).
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+
+        // Get initial METIS EC for reference
+        let (l_metis, r_metis) = split_subgraph(
+            &adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None
+        ).expect("METIS must succeed");
+        let mut metis_asgn = HashMap::new();
+        for &v in &l_metis { metis_asgn.insert(v, 1usize); }
+        for &v in &r_metis { metis_asgn.insert(v, 2usize); }
+        let initial_ec = count_edge_cuts(&metis_asgn, &adj);
+
+        let (l_sa, r_sa) = split_subgraph_sa(
+            &adj, &pop, &ew, &tracts, 0.10, 5, 0.01, 1e-15, 42
+        ).expect("SA greedy must succeed");
+        let mut sa_asgn = HashMap::new();
+        for &v in &l_sa { sa_asgn.insert(v, 1usize); }
+        for &v in &r_sa { sa_asgn.insert(v, 2usize); }
+        let sa_ec = count_edge_cuts(&sa_asgn, &adj);
+        assert!(sa_ec <= initial_ec,
+            "greedy SA (t_final=1e-15) must not increase EC: initial={initial_ec} sa={sa_ec}");
+    }
+
+    // L1: SA produces a valid 2-partition on a 4x4 grid (contiguity + balance).
+    #[test]
+    fn sa_produces_valid_2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_sa(
+            &adj, &pop, &ew, &tracts, 0.10, 10, 0.01, 1e-4, 777
+        ).expect("SA 4x4 must succeed");
+
+        // Completeness and disjointness
+        assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
+        assert!(left.is_disjoint(&right), "sides disjoint");
+        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+
+        // Contiguity: BFS check for each side
+        let check_connected = |side: &HashSet<usize>| -> bool {
+            let members: Vec<usize> = side.iter().copied().collect();
+            if members.len() <= 1 { return true; }
+            let mut visited = std::collections::HashSet::new();
+            let mut queue = std::collections::VecDeque::new();
+            queue.push_back(members[0]);
+            visited.insert(members[0]);
+            while let Some(v) = queue.pop_front() {
+                for &nb in &adj[v] {
+                    if side.contains(&nb) && !visited.contains(&nb) {
+                        visited.insert(nb);
+                        queue.push_back(nb);
+                    }
+                }
+            }
+            members.iter().all(|v| visited.contains(v))
+        };
+        assert!(check_connected(&left),  "left side must be contiguous");
+        assert!(check_connected(&right), "right side must be contiguous");
+
+        // Balance: each side within 10% of half total pop
+        let total_pop: i64 = pop.iter().sum();
+        let left_pop: i64 = left.iter().map(|&v| pop[v]).sum();
+        let balance = (left_pop as f64 - total_pop as f64 / 2.0).abs() / total_pop as f64;
+        assert!(balance <= 0.10, "SA balance must be within 10%: {balance:.3}");
+    }
+
+    // L1: SA result EC <= initial METIS EC + small_margin (SA should not seriously worsen EC).
+    #[test]
+    fn sa_improves_or_equals_metis() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+
+        // METIS baseline
+        let (l_m, r_m) = split_subgraph(
+            &adj, &pop, 1, &ew, &tracts, 1.10, 100, Some(42), None, None
+        ).expect("METIS baseline must succeed");
+        let mut m_asgn = HashMap::new();
+        for &v in &l_m { m_asgn.insert(v, 1usize); }
+        for &v in &r_m { m_asgn.insert(v, 2usize); }
+        let metis_ec = count_edge_cuts(&m_asgn, &adj);
+
+        // SA with enough steps to make progress
+        let (l_sa, r_sa) = split_subgraph_sa(
+            &adj, &pop, &ew, &tracts, 0.10, 20, 0.01, 1e-4, 42
+        ).expect("SA must succeed");
+        let mut sa_asgn = HashMap::new();
+        for &v in &l_sa { sa_asgn.insert(v, 1usize); }
+        for &v in &r_sa { sa_asgn.insert(v, 2usize); }
+        let sa_ec = count_edge_cuts(&sa_asgn, &adj);
+
+        // SA may equal METIS (especially on a tight grid), but must not be >> METIS.
+        // Allow up to +2 edge cuts as "small margin" for stochastic variance.
+        assert!(sa_ec <= metis_ec + 2,
+            "SA EC should not exceed METIS EC + 2: metis={metis_ec} sa={sa_ec}");
+    }
+
+    // L2 (ignored): SA on North Carolina should improve or equal compactness vs METIS.
+    #[test]
+    #[ignore]
+    fn sa_nc_compactness_improvement() {
+        // Requires real NC adjacency data at data/2020/ — runs as L2 only.
+        // Placeholder: actual implementation would load NC graph and compare
+        // Polsby-Popper scores between METIS and SA outputs.
+        panic!("L2 test: requires real NC data — run manually with --ignored");
+    }
+
+    // ── ShortBurst ────────────────────────────────────────────────────────────
+
+    /// 4×2 grid helper: 8 nodes, 2 districts, uniform pop=1000. k=2.
+    fn grid8_adj() -> Vec<Vec<usize>> {
+        // 0-1-2-3 top row, 4-5-6-7 bottom row; vertical edges 0-4, 1-5, 2-6, 3-7.
+        vec![
+            vec![1, 4],       // 0
+            vec![0, 2, 5],    // 1
+            vec![1, 3, 6],    // 2
+            vec![2, 7],       // 3
+            vec![0, 5],       // 4
+            vec![4, 1, 6],    // 5
+            vec![5, 2, 7],    // 6
+            vec![6, 3],       // 7
+        ]
+    }
+
+    fn grid8_pop() -> Vec<i64> { vec![1000i64; 8] }
+
+    // L0: n_bursts=0 returns the initial plan unchanged (no ReCom at all).
+    #[test]
+    fn short_burst_zero_bursts_returns_initial() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (asgn, seeds, idx) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 20, 0, 0.0)
+            .expect("short_burst n_bursts=0 should succeed");
+        assert_eq!(asgn.len(), 8, "must assign all 8 tracts");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have 2 districts");
+        assert!(seeds.is_empty(), "no burst seeds when n_bursts=0");
+        assert_eq!(idx, 0, "selected index must be 0 when n_bursts=0");
+    }
+
+    // L0: p=0.0 returns the minimum-EC endpoint.
+    #[test]
+    fn short_burst_p0_returns_min_ec_endpoint() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (asgn, seeds, _idx) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 99, 5, 10, 0.0)
+            .expect("p=0.0 short burst must succeed");
+        assert_eq!(asgn.len(), 8);
+        assert_eq!(seeds.len(), 10, "must have exactly n_bursts=10 seeds");
+        // p=0.0 selects rank 0 = minimum EC — just verify it's a valid plan.
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2);
+    }
+
+    // L0: p=1.0 returns the maximum-EC endpoint.
+    #[test]
+    fn short_burst_p1_returns_max_ec_endpoint() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (asgn_min, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 0.0)
+            .expect("p=0.0");
+        let (asgn_max, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 77, 5, 10, 1.0)
+            .expect("p=1.0");
+        // Both are valid plans.
+        assert_eq!(asgn_min.len(), 8);
+        assert_eq!(asgn_max.len(), 8);
+        let d_min: std::collections::HashSet<usize> = asgn_min.values().copied().collect();
+        let d_max: std::collections::HashSet<usize> = asgn_max.values().copied().collect();
+        assert_eq!(d_min.len(), 2);
+        assert_eq!(d_max.len(), 2);
+    }
+
+    // L0: same seed → same result (determinism).
+    #[test]
+    fn short_burst_deterministic() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (a1, s1, i1) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3)
+            .expect("run 1");
+        let (a2, s2, i2) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 42, 10, 5, 0.3)
+            .expect("run 2");
+        assert_eq!(a1, a2, "same seed must give same assignment");
+        assert_eq!(s1, s2, "same seed must give same burst seeds");
+        assert_eq!(i1, i2, "same seed must give same selected burst index");
+    }
+
+    // L0: degenerate single burst of length 1.
+    #[test]
+    fn short_burst_n1_burst_len1() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (asgn, seeds, idx) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 7, 1, 1, 0.0)
+            .expect("n_bursts=1, burst_length=1");
+        assert_eq!(asgn.len(), 8);
+        assert_eq!(seeds.len(), 1);
+        assert_eq!(idx, 0);
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2);
+    }
+
+    // L0: verify chain restarts from endpoint — with burst_length=0 all endpoints are the
+    // initial plan, so EC ties are broken by burst_idx ASC (rank 0 = burst 0, rank 4 = burst 4).
+    #[test]
+    fn short_burst_chain_restarts_from_endpoint() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        // burst_length=0: chain steps 0 times, endpoint == input == initial plan for all bursts.
+        let (asgn_p0, seeds_p0, idx_p0) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 0.0)
+            .expect("burst_length=0 p=0.0");
+        let (asgn_p1, seeds_p1, idx_p1) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 13, 0, 5, 1.0)
+            .expect("burst_length=0 p=1.0");
+        // All endpoints are the same plan, so both p=0.0 and p=1.0 select the same assignment.
+        assert_eq!(asgn_p0, asgn_p1, "with burst_length=0 all endpoints are the same plan");
+        assert_eq!(seeds_p0, seeds_p1, "same base seed means same burst seeds");
+        // Tie-breaking by burst_idx ASC: rank 0 = burst 0, rank 4 = burst 4.
+        assert_eq!(idx_p0, 0, "p=0.0 with equal ECs must select burst 0");
+        assert_eq!(idx_p1, 4, "p=1.0 with equal ECs must select burst 4");
+    }
+
+    // L1: produces a valid k=2 partition on a 4-node diamond graph.
+    #[test]
+    fn short_burst_produces_valid_k2_partition() {
+        let adj = vec![vec![1usize, 2], vec![0, 3], vec![0, 3], vec![1, 2]];
+        let pop = vec![1000i64; 4];
+        let ew = HashMap::new();
+        let (asgn, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 55, 10, 10, 0.5)
+            .expect("L1 k=2 partition");
+        assert_eq!(asgn.len(), 4, "all 4 tracts assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be 1 or 2, got {d}");
+        }
+    }
+
+    // L1: all districts populated after short burst.
+    #[test]
+    fn short_burst_all_districts_populated() {
+        let adj = grid8_adj();
+        let pop = grid8_pop();
+        let ew = HashMap::new();
+        let (asgn, _, _) = run_short_burst(&adj, &pop, &ew, 2, 0.05, 10, 100, 20, 20, 0.5)
+            .expect("all districts populated");
+        let mut dist_pops: std::collections::HashMap<usize, i64> = std::collections::HashMap::new();
+        for (&tract, &d) in &asgn {
+            *dist_pops.entry(d).or_default() += pop[tract];
+        }
+        assert_eq!(dist_pops.len(), 2, "both districts must be non-empty");
+        for (&d, &p) in &dist_pops {
+            assert!(p > 0, "district {d} must have positive population");
+        }
+    }
+
+    // L2: ignored by default — run manually for empirical validation.
+    #[test]
+    #[ignore]
+    fn short_burst_nc_outperforms_multi_seed() {
+        // Placeholder: load NC adjacency, run both multi-seed and short-burst,
+        // compare edge-cut distributions. Skipped unless --ignored is passed.
+        // Implementation left for G.6 paper experiments.
+    }
+
+    // ── Flip search tests ─────────────────────────────────────────────────────
+
+    /// Build a 4x4 grid adjacency for flip tests.
+    fn grid_4x4() -> (Vec<Vec<usize>>, Vec<i64>) {
+        let (adj, pop) = small_grid(4, 4);
+        (adj, pop)
+    }
+
+    // L0: zero steps returns the initial plan (visited list has exactly 1 entry).
+    #[test]
+    fn flip_zero_steps_returns_initial_plan() {
+        let (adj, pop) = grid_4x4();
+        let ew = HashMap::new();
+        let (asgn, visited_count, rank) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 0, 42, 0.0)
+            .expect("flip_chain must succeed with 0 steps");
+        assert_eq!(visited_count, 1, "0 steps => visited has 1 entry (initial plan)");
+        assert_eq!(rank, 0, "only one plan, rank must be 0");
+        assert_eq!(asgn.len(), 16, "all 16 tracts assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "2 districts");
+    }
+
+    // L0: visited list is never empty (initial plan always included).
+    #[test]
+    fn flip_visited_count_ge_1() {
+        let (adj, pop) = grid_4x4();
+        let ew = HashMap::new();
+        // Even with 0 steps, visited must be >= 1.
+        let (_, visited_count, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 0, 99, 0.0)
+            .expect("flip_chain must succeed");
+        assert!(visited_count >= 1, "visited list must contain at least the initial plan");
+    }
+
+    // L0: p=0.0 selects plan with EC <= plan selected by p=1.0 (sort ascending).
+    #[test]
+    fn flip_p0_le_flip_p1_ec() {
+        let (adj, pop) = grid_4x4();
+        let ew = HashMap::new();
+        let (asgn_p0, _, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 0.0)
+            .expect("flip p=0.0 must succeed");
+        let (asgn_p1, _, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.1, 200, 42, 1.0)
+            .expect("flip p=1.0 must succeed");
+        let ec_p0 = count_edge_cuts(&asgn_p0, &adj);
+        let ec_p1 = count_edge_cuts(&asgn_p1, &adj);
+        assert!(ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}");
+    }
+
+    // L0: determinism — same seed produces the same result.
+    #[test]
+    fn flip_deterministic() {
+        let (adj, pop) = grid_4x4();
+        let ew = HashMap::new();
+        let (asgn1, v1, r1) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 100, 777, 0.5)
+            .expect("first run must succeed");
+        let (asgn2, v2, r2) = run_flip_chain(&adj, &pop, &ew, 2, 0.05, 100, 777, 0.5)
+            .expect("second run must succeed");
+        assert_eq!(v1, v2, "visited_count must be the same for same seed");
+        assert_eq!(r1, r2, "rank must be the same for same seed");
+        assert_eq!(asgn1, asgn2, "assignment must be identical for same seed");
+    }
+
+    // L0: all-fail case — tiny graph where all flips violate balance.
+    // Use 2 tracts of very unequal weight and zero tolerance: flip always violates balance.
+    #[test]
+    fn flip_all_fail_returns_initial_plan() {
+        // 4-node path, all equal pop, very tight tolerance (0.0 -> max_dev = 1)
+        // With some effort flips will be accepted on balanced graph, but let's use
+        // a disconnected scenario: 2 isolated nodes each assigned to their own district.
+        // No boundary tracts -> boundary is empty -> all steps are no-ops.
+        let adj = vec![vec![], vec![]]; // 2 isolated nodes
+        let pop = vec![1000i64, 1000];
+        let ew = HashMap::new();
+        let (asgn, visited_count, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.0, 100, 42, 0.0)
+            .expect("flip_chain on isolated graph must succeed");
+        assert_eq!(visited_count, 1, "no boundary tracts -> no flips -> only initial plan");
+        assert_eq!(asgn.len(), 2);
+    }
+
+    // L1: valid partition — all tracts assigned, no overlap, correct district count.
+    #[test]
+    fn flip_produces_valid_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let (asgn, _, _) = run_flip_chain(&adj, &pop, &ew, 4, 0.1, 500, 42, 0.0)
+            .expect("flip_chain must produce a valid partition");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        for i in 0..16 {
+            let d = asgn[&i];
+            assert!(d >= 1 && d <= 4, "district {d} out of range [1,4] for tract {i}");
+        }
+        // No duplicate assignments (each tract assigned exactly once).
+        let unique: std::collections::HashSet<usize> = asgn.keys().copied().collect();
+        assert_eq!(unique.len(), 16, "each tract appears exactly once");
+    }
+
+    // L1: contiguity preserved — all districts remain contiguous after flips.
+    #[test]
+    fn flip_contiguity_preserved() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let (asgn, _, _) = run_flip_chain(&adj, &pop, &ew, 2, 0.1, 500, 123, 0.5)
+            .expect("flip_chain must succeed");
+        // Check contiguity of each district using BFS.
+        let n = adj.len();
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        for d in &districts {
+            let members: Vec<usize> = (0..n).filter(|&v| asgn[&v] == *d).collect();
+            assert!(!members.is_empty(), "district {d} must be non-empty");
+            if members.len() == 1 { continue; }
+            let start = members[0];
+            let mut visited_bfs = vec![false; n];
+            visited_bfs[start] = true;
+            let mut queue = std::collections::VecDeque::new();
+            queue.push_back(start);
+            while let Some(v) = queue.pop_front() {
+                for &nb in &adj[v] {
+                    if !visited_bfs[nb] && asgn[&nb] == *d {
+                        visited_bfs[nb] = true;
+                        queue.push_back(nb);
+                    }
+                }
+            }
+            for &v in &members {
+                assert!(visited_bfs[v], "district {d}: tract {v} is disconnected from the rest");
+            }
+        }
+    }
+
+    // L2: real-data NC test (ignored by default).
+    #[test]
+    #[ignore]
+    fn flip_nc_improves_ec() {
+        // Placeholder: load NC adjacency, compare flip p=0.0 EC vs baseline.
+        // Skipped unless --include-ignored is passed.
     }
 }

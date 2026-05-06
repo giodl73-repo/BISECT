@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -66,6 +66,15 @@ pub enum SeedCompositor {
     /// and pick the bisection at percentile `p` of the cut distribution.
     /// Always k=2 at each node — eliminates prime-k bipartition failures. (H.1)
     BisectionEnsemble { p: f64, ensemble_steps: usize },
+    /// Flip individual boundary tracts to adjacent districts, collect all visited plans,
+    /// return the plan at percentile `p` of the edge-cut distribution.
+    /// flip_steps: total flip proposals (default: 10000). p: percentile (default: 0.0).
+    Flip { flip_steps: usize, p: f64 },
+    /// Short-Burst: run `n_bursts` short ReCom chains of `burst_length` steps on the
+    /// full-state k-way assignment. Keep the chain endpoint from each burst (not the
+    /// minimum). Chain restarts from the previous burst's endpoint. Sort endpoints by
+    /// EC ASC; return the plan at rank floor(p * n_bursts). (G.6)
+    ShortBurst { burst_length: usize, n_bursts: usize, p: f64 },
 }
 
 impl SeedCompositor {
@@ -77,6 +86,8 @@ impl SeedCompositor {
             Self::Single => 1,
             Self::Percentile { seeds, .. } => *seeds,
             Self::BisectionEnsemble { ensemble_steps, .. } => *ensemble_steps,
+            Self::Flip { flip_steps, .. } => *flip_steps,
+            Self::ShortBurst { n_bursts, .. } => *n_bursts,
         }
     }
 
@@ -112,6 +123,12 @@ pub enum SplitStrategy {
     ApportionRegions,
     /// VRASection (B.14): GeoSection modified by geographic minority-VAP alignment score.
     VraSection { w_vra: f64 },
+    /// Simulated Annealing bisection: start from METIS, accept/reject boundary flips
+    /// via Boltzmann criterion. Structure layer -- replaces METIS at each bisection node.
+    /// steps_per_tract: n_steps = steps_per_tract * |subgraph| (default: 10).
+    /// t0_factor: T_0 = max(1.0, t0_factor * EC(initial)) (default: 0.01).
+    /// t_final: near-zero final temperature (default: 1e-4).
+    SimulatedAnnealing { steps_per_tract: usize, t0_factor: f64, t_final: f64 },
 }
 
 impl SplitStrategy {
@@ -126,6 +143,7 @@ impl SplitStrategy {
             Self::ProportionalSection { .. } => "proportional-section",
             Self::ApportionRegions        => "apportion-regions",
             Self::VraSection       { .. } => "vra-section",
+            Self::SimulatedAnnealing { .. } => "simulated-annealing",
         }
     }
 }
@@ -350,6 +368,18 @@ impl AlgorithmConfig {
                 metis: MetisParams { seed: None, ..metis },
                 mode_label: None,
             },
+            PM::SimulatedAnnealing => Self {
+                split: SplitStrategy::SimulatedAnnealing {
+                    steps_per_tract: args.sa_steps_per_tract,
+                    t0_factor: args.sa_t0_factor,
+                    t_final: args.sa_t_final,
+                },
+                seeds: SeedCompositor::Single,
+                weights: base_weights,
+                vertex_constraints: pop_only,
+                metis,
+                mode_label: None,
+            },
         };
 
         // ── Apply compositor layer overrides ──────────────────────────────────
@@ -399,6 +429,15 @@ impl AlgorithmConfig {
                 SeM::BisectionEnsemble  => SeedCompositor::BisectionEnsemble {
                     p: args.percentile.clamp(0.0, 1.0),
                     ensemble_steps: args.ensemble_steps,
+                },
+                SeM::Flip => SeedCompositor::Flip {
+                    flip_steps: args.flip_steps,
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::ShortBurst => SeedCompositor::ShortBurst {
+                    burst_length: args.burst_length,
+                    n_bursts: args.n_bursts,
+                    p: args.percentile.clamp(0.0, 1.0),
                 },
             };
         }
@@ -501,6 +540,18 @@ impl AlgorithmConfig {
             PM::VraSection => Self {
                 split: SplitStrategy::VraSection { w_vra: 0.40 },
                 seeds: SeedCompositor::Multi { seeds: 50 },
+                weights: WeightSpec::default(),
+                vertex_constraints: pop,
+                metis,
+                mode_label: None,
+            },
+            PM::SimulatedAnnealing => Self {
+                split: SplitStrategy::SimulatedAnnealing {
+                    steps_per_tract: 10,
+                    t0_factor: 0.01,
+                    t_final: 1e-4,
+                },
+                seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
                 metis,
@@ -1154,6 +1205,12 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
     let mut assignments = HashMap::new();
     let mut last_balance_err = String::new();
     let mut seed = base_seed;
+    // Flip-chain audit fields — set inside the Flip dispatch arm.
+    let mut flip_visited_count: Option<usize> = None;
+    let mut flip_selected_rank: Option<usize> = None;
+    // Short-Burst audit fields — set inside the ShortBurst dispatch arm.
+    let mut short_burst_burst_seeds: Option<Vec<u64>> = None;
+    let mut short_burst_selected_burst_idx: Option<usize> = None;
 
     'retry: for attempt in 0..=MAX_BALANCE_RETRIES {
         if attempt > 0 {
@@ -1332,6 +1389,18 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 cfg.state_code, pfr_balance * 100.0, result.cache_hits));
             pfr_assignments
         }
+        SplitStrategy::SimulatedAnnealing { steps_per_tract, t0_factor, t_final } => {
+            let base_seed_val = seed.unwrap_or(0);
+            status(cfg.position, &format!(
+                "{}: simulated-annealing {} steps/tract t0_factor={:.4} t_final={:.2e} into {} districts",
+                cfg.state_code, steps_per_tract, t0_factor, t_final, num_districts));
+            crate::bisection_runner::run_all_splits_sa(
+                &graph.adjacency, &vwgt, &edge_weights,
+                num_districts, balance_tolerance_frac, niter, seed,
+                Some(&intermediate_dir),
+                *steps_per_tract, *t0_factor, *t_final, base_seed_val,
+            ).map_err(|e| format!("simulated-annealing failed: {e}"))?
+        }
         _ => {
             match &cfg.algo.seeds {
                 SeedCompositor::Percentile { p, seeds } => {
@@ -1354,6 +1423,31 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         Some(&intermediate_dir),
                         Some((*p, *ensemble_steps)),
                     ).map_err(|e| format!("bisection-ensemble failed: {e}"))?
+                }
+                SeedCompositor::Flip { flip_steps, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: flip-chain p={:.2} {} steps into {} districts",
+                           cfg.state_code, p, flip_steps, num_districts));
+                    let (result, visited_count, selected_rank) = run_flip_chain(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, *flip_steps, base, *p,
+                    ).map_err(|e| format!("flip-chain failed: {e}"))?;
+                    flip_visited_count = Some(visited_count);
+                    flip_selected_rank = Some(selected_rank);
+                    result
+                }
+                SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: short-burst p={:.2} {} bursts x {} steps into {} districts",
+                           cfg.state_code, p, n_bursts, burst_length, num_districts));
+                    let (result, b_seeds, b_idx) = run_short_burst(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *burst_length, *n_bursts, *p,
+                    ).map_err(|e| format!("short-burst failed: {e}"))?;
+                    short_burst_burst_seeds = Some(b_seeds);
+                    short_burst_selected_burst_idx = Some(b_idx);
+                    result
                 }
                 _ => {
                     status(cfg.position, &format!("{}: recursive bisection into {} districts",
@@ -1526,6 +1620,57 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             source_format_fingerprint: None,
             import_compat_sha256: None,
             edge_cut: Some(edge_cut),
+            // Flip search audit fields
+            flip_search: if matches!(&cfg.algo.seeds, SeedCompositor::Flip { .. }) {
+                Some("flip".to_string())
+            } else {
+                None
+            },
+            flip_steps: if let SeedCompositor::Flip { flip_steps, .. } = &cfg.algo.seeds {
+                Some(*flip_steps)
+            } else {
+                None
+            },
+            flip_percentile: if let SeedCompositor::Flip { p, .. } = &cfg.algo.seeds {
+                Some(*p)
+            } else {
+                None
+            },
+            flip_base_seed: if matches!(&cfg.algo.seeds, SeedCompositor::Flip { .. }) {
+                Some(seed.unwrap_or(0))
+            } else {
+                None
+            },
+            flip_visited_count,
+            flip_selected_plan_rank: flip_selected_rank,
+            // Short-burst audit fields
+            short_burst_search: if matches!(&cfg.algo.seeds, SeedCompositor::ShortBurst { .. }) {
+                Some("short-burst".to_string())
+            } else {
+                None
+            },
+            burst_length: if let SeedCompositor::ShortBurst { burst_length, .. } = &cfg.algo.seeds {
+                Some(*burst_length)
+            } else {
+                None
+            },
+            n_bursts: if let SeedCompositor::ShortBurst { n_bursts, .. } = &cfg.algo.seeds {
+                Some(*n_bursts)
+            } else {
+                None
+            },
+            short_burst_percentile: if let SeedCompositor::ShortBurst { p, .. } = &cfg.algo.seeds {
+                Some(*p)
+            } else {
+                None
+            },
+            short_burst_base_seed: if matches!(&cfg.algo.seeds, SeedCompositor::ShortBurst { .. }) {
+                Some(seed.unwrap_or(0))
+            } else {
+                None
+            },
+            burst_seeds: short_burst_burst_seeds,
+            selected_burst_idx: short_burst_selected_burst_idx,
         };
         redist_report::write_manifest_atomic(&plan_root, &manifest)
             .map_err(|e| format!("manifest write failed: {e}"))?;
