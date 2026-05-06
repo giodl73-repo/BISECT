@@ -216,6 +216,16 @@ pub fn split_subgraph(
     let (xadj, adjncy) = adj_to_csr(&sub_adj);
     let adjwgt = ew_to_adjwgt(&sub_adj, ew_opt);
 
+    // Empty-graph fast path: no edges → METIS has no signal; split by sorted order.
+    // This handles isolated subgraphs (e.g. two disconnected components) without
+    // calling METIS, which may stall on empty adjacency in the pure-Rust engine.
+    if adjncy.is_empty() {
+        let half = sorted.len() / 2;
+        let left: HashSet<usize> = sorted[..half].iter().copied().collect();
+        let right: HashSet<usize> = sorted[half..].iter().copied().collect();
+        return Ok((left, right));
+    }
+
     // METIS imbalance = (1 + ufactor/1000).
     //   ufactor=1  → 0.1% tolerance
     //   ufactor=50 → 5.0% tolerance
