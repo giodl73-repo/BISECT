@@ -1,7 +1,8 @@
 # Spec: Sequential Monte Carlo for Redistricting — `redist-smc` crate
 
-**Status**: Proposed (R1 reviewed, major revisions applied)  
+**Status**: Accepted (R2 avg 3.1/4 — ready for implementation)  
 **Reviewed R1**: MERIDIAN 2.5/4, BENCHMARK 2/4, SURVEY 2/4, COVENANT 3/4 → avg 2.4/4  
+**Reviewed R2**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3.5/4 → avg 3.1/4  
 **Date**: 2026-05-07  
 **Related paper**: G.7 (SMC for calibrated redistricting ensembles)  
 **Depends on**: `redist-ensemble` (RecomChain, SpanningTree), `redist-core` (adjacency, population)  
@@ -69,8 +70,10 @@ SMC(adj, pop, k, n_particles, pop_tolerance, resample_threshold, base_seed):
   for i in 0..n_particles:
     particles[i] = assign_remaining(particles[i], k)
 
-  // Normalize final weights to sum to 1.0
-  weights = softmax(log_weights)
+  // Normalize final weights to sum to 1.0 using Kahan compensated summation.
+  // Naive summation of N f64 values accumulates O(N × ε) error; Kahan keeps
+  // the sum error bounded at O(ε) regardless of N.
+  weights = kahan_softmax(log_weights)
   return SmcResult { particles, weights, resample_count }
 ```
 
@@ -79,7 +82,7 @@ SMC(adj, pop, k, n_particles, pop_tolerance, resample_threshold, base_seed):
 At stage t, particle i has districts 1 … t−1 assigned. The unassigned tracts form a connected subgraph (this is an invariant maintained throughout; see §2.4). We propose district t by:
 
 1. Find all connected components of the unassigned subgraph. Select the **largest connected component** C (by population). Sample a **seed tract** s uniformly from all tracts in C. (Using the largest component preserves the connectivity invariant; see §2.4.)
-2. Sample a **spanning tree** T of the unassigned subgraph (restricted to the connected component containing s) via Wilson's algorithm.
+2. Sample a **spanning tree** T of C (the largest connected component identified in step 1) via Wilson's algorithm. Since s was drawn from C, the spanning tree is simply of C — no additional component restriction is needed.
 3. Find a **cut edge** e* in T such that removing e* yields one component containing exactly floor(remaining_pop / (k − t + 1)) ± pop_tolerance population. This is the balanced-cut criterion.
 4. The component containing s becomes district t. If both components satisfy the balance criterion, choose the one containing s; the other remains unassigned.
 5. The **importance weight increment** is `log_w_i += log(valid_cuts(T))`.
@@ -334,12 +337,12 @@ The `index_map` field is critical: it records exactly which pre-resample particl
 }
 ```
 
-The `file_sha256` field is the SHA-256 of all bytes in the file preceding the final metadata line (i.e., all particle records and resample records). This allows a verifier to confirm the file was not modified after generation without re-running the algorithm.
+The `file_sha256` field is the SHA-256 of all bytes in the file preceding the final metadata line (i.e., all particle records and resample records). **Line-ending encoding**: NDJSON lines are terminated with `\n` (LF, 0x0A) regardless of host platform. Implementations on Windows must normalize `\r\n` to `\n` before computing the hash. This ensures cross-platform reproducibility — a file generated on Linux and verified on Windows produces the same SHA-256.
 
 **Verification protocol** (5 steps):
 1. Verify `file_sha256` matches a fresh SHA-256 of the file body
 2. Re-derive all `particle_seed(base_seed, stage, particle_idx)` values and confirm they match (optional spot check)
-3. For each resample event, re-run `systematic_resample` with the recorded `resample_seed` and confirm `index_map` matches
+3. For each resample event, reconstruct the weight vector at that stage by replaying the proposal steps from the last resample (or from stage 0 if the first resample). The pre-resample weights are not separately recorded; the verifier must replay. Then re-run `systematic_resample` with the recorded `resample_seed` and confirm `index_map` matches
 4. Re-run `propose_district` for any particle at any stage using the recorded seeds and `index_map` to trace its pre-resample ancestors
 5. Confirm final `weights` sum to 1.0 ± 1e-6 (using Kahan summation)
 
