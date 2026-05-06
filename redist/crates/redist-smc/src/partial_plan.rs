@@ -8,7 +8,7 @@ use std::collections::VecDeque;
 ///
 /// During SMC, districts are added one at a time. After stage t, tracts are either
 /// assigned to a district in 1..=t or unassigned (None).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PartialPlan {
     /// assignment[tract] = Some(district_id 1-based) or None (unassigned)
     pub assignment: Vec<Option<u32>>,
