@@ -16,11 +16,40 @@ The \emph{edge cut} of $\Pi$ is
 \[
   \mathrm{EC}(\Pi) = \sum_{\{u,v\} \in E: \text{part}(u) \ne \text{part}(v)} w(u,v).
 \]
-Following B.8~\citep{b8paper}, the \emph{normalised edge cut} is
+Following B.8~\citep{b8paper}, the \emph{normalised edge cut} is defined
+contextually depending on the partition method:
+
+\paragraph{Recursive bisection context.}
+When $\Pi$ is produced by a recursive bisection tree (the standard \ar{}
+method), the normalisation uses the split balance at each bisection level.
+At level $\ell$ of the tree where the current region of $k_\ell$ districts
+is split into two sub-regions of $i$ and $k_\ell - i$ districts respectively,
 \[
-  \ECnorm(\Pi) = \frac{\mathrm{EC}(\Pi)}{\sqrt{\min(i, k-i)}},
+  \ECnorm^{(\ell)}(\Pi) = \frac{\mathrm{EC}^{(\ell)}(\Pi)}{\sqrt{\min(i,\, k_\ell - i)}}.
 \]
-where $i$ ranges over all bisection levels in the recursive tree.
+The denominator $\sqrt{\min(i, k_\ell - i)}$ normalises by the expected
+edge-cut growth at balanced vs.\ unbalanced splits: more balanced splits
+(larger $\min$) are penalised relatively less because they divide more population
+equally.
+The overall $\ECnorm(\Pi)$ is the sum of $\ECnorm^{(\ell)}$ across all levels
+of the recursive tree.
+
+\paragraph{Full $k$-way partition context.}
+When $\Pi$ is produced by a direct $k$-way METIS call (used for prime-seat-count
+states and for the Wisconsin result comparison in Section~\ref{sec:sufficiency}),
+the bisection-level denominator is undefined.
+In this context, we use the flat normalisation:
+\[
+  \ECnorm(\Pi) = \frac{\mathrm{EC}(\Pi)}{\sqrt{k/2}},
+\]
+where $\sqrt{k/2}$ is the denominator that would apply to a balanced $k$-way
+partition with $i = k/2$ at every level.
+This is the natural generalisation: for a fully balanced $k$-way split, each
+part has the same size, and $\min(i, k-i) = k/2$ for the terminal cuts.
+Results in Table~\ref{tab:convergence} use this normalisation for
+direct-$k$-way states (Nebraska, New Mexico) and the recursive-bisection
+normalisation for all other states; the table legend identifies which
+normalisation applies.
 
 The METIS bisector $\mathcal{M}(G, k, s)$ takes the graph, the district count,
 and an integer seed $s$, and returns a partition $\Pi$ that is a local minimum
@@ -136,6 +165,14 @@ the same floating-point model on all platforms.
 The \texttt{redist} binary ships a vendored METIS with determinism flags
 (\texttt{-fno-fast-math}) enabled by default; the federal-statute build is
 pinned to a specific source hash in the \texttt{Cargo.lock}.
+Furthermore, \textbf{METIS must be run single-threaded} (or with a fixed,
+explicitly pinned thread count) for the statutory certificate to hold.
+OpenMP-parallel METIS uses a non-deterministic work-stealing scheduler:
+two runs with the same seed but different thread-scheduling outcomes may
+produce different intermediate coarsenings and therefore different local optima.
+The \dia{} statutory text specifies that the certified run uses
+\texttt{METIS\_OPTION\_NTHREADS=1} (single-threaded mode); independent verifiers
+must use the same setting to reproduce the certified partition.
 \end{remark}
 
 \subsection{Computational Complexity}
