@@ -6,7 +6,13 @@
 We measured \gc{} throughput by running 1{,}000 \recom{} steps for
 three states and recording wall-clock time.
 These are direct empirical measurements from the \gc{} Python package
-(version 0.3) on a standard development workstation:
+(version 0.3.2, NumPy 1.24, Python 3.10) run on an Intel Core i7-11800H
+(2.3~GHz base, 4.6~GHz boost, 24~MB L3 cache) under Windows~11.
+The starting plan for each state is a cold start from a seed-0 random
+valid plan.
+No warm-up steps were excluded; all 1{,}000 steps count toward the
+wall-clock total.
+\gc{} was run without pair reselection (the standard configuration):
 
 \begin{center}
 \begin{tabular}{lrrrl}
@@ -67,6 +73,28 @@ but $50{,}000$\,steps/sec should be achievable without architecture-specific
 optimization.
 \end{remark}
 
+\paragraph{Overhead sensitivity.}
+The $13\times$ overhead factor is an estimate; Table~\ref{tab:overhead}
+shows how the projected throughput and speedup change under three scenarios.
+
+\begin{table}[h]
+\centering
+\caption{Throughput sensitivity to overhead factor (NC baseline: 21 steps/sec).}
+\label{tab:overhead}
+\begin{tabular}{lrrr}
+\toprule
+Scenario & Overhead factor & Steps/sec & Speedup vs.\ \gc{} (NC) \\
+\midrule
+Optimistic  & $6.5\times$  & $\sim$100{,}000 & $\sim$4{,}700$\times$ \\
+Central     & $13\times$   & $\sim$50{,}000  & $\sim$2{,}350$\times$ \\
+Conservative & $26\times$  & $\sim$25{,}000  & $\sim$1{,}200$\times$ \\
+\bottomrule
+\end{tabular}
+\par\vspace{0.5ex}
+\small All figures estimated; Phase~2 \texttt{criterion.rs} benchmarks will determine the
+actual overhead factor and narrow the range.
+\end{table}
+
 \subsection{Projected Performance Table}
 
 \begin{table}[h]
@@ -111,12 +139,14 @@ The advantage of \re{} is throughput, not correctness.
 \subsection{Texas and California}
 \label{ssec:tx}
 
-\gc{} is documented to fail on Texas when started from a random plan:
-the bipartition feasibility rate for random district pairs in TX is low
-enough that the chain stalls indefinitely without a carefully constructed
-warm start.
-\re{}'s pair-reselection mechanism (Section~\ref{sec:implementation})
-enables it to traverse the low-feasibility region rapidly.
+The bipartition infeasibility problem in Texas is a combinatorial property
+of the TX plan space, not a language-specific limitation.
+\gc{} without pair reselection is documented to fail on Texas from cold
+start~\citep{gerrychain2021}; \gc{} with pair reselection would also
+handle these states, albeit more slowly.
+\re{}'s advantage is that pair reselection at microsecond speed (rather
+than second speed in Python) reduces warm-up wall time without altering
+the algorithm's combinatorial behavior.
 The performance estimate in Table~\ref{tab:performance} assumes the pair
 reselection overhead is absorbed within the 50{,}000\,steps/sec budget.
 
@@ -125,22 +155,49 @@ average merged-region size $m \approx 2n/k$.
 For CA ($k=52$, $n=8{,}057$): $m \approx 310$.
 For PA ($k=17$, $n=3{,}218$): $m \approx 379$.
 PA has the largest average merged region among the six G-track states
-and therefore the highest per-step cost, not California.
+and therefore the highest per-step cost; California's per-step cost
+is lower than PA's despite its larger tract count, because its high $k$
+reduces the merged-region size.
+\emph{The actual per-step cost ordering across all six states is deferred
+to Phase~2 empirical benchmarks.}
 The estimated 0.52 seconds for 10{,}000 CA steps and 0.18 seconds for
-10{,}000 PA steps (Table~\ref{tab:performance}) reflect this relationship.
-Both represent dramatic improvements over \gc{}'s inability to complete
-even 1{,}000 steps from a cold start for TX and CA.
+10{,}000 PA steps (Table~\ref{tab:performance}) reflect the theoretical
+ordering; Phase~2 criterion.rs results will confirm or correct the
+estimates.
 
 \subsection{Phase 2: Criterion.rs Benchmarks}
 \label{ssec:phase2}
 
-All Rust throughput figures in this paper are estimates derived from
-complexity analysis.
-Phase~2 of the \re{} project will validate these estimates using
-\texttt{criterion.rs}, Rust's standard micro-benchmarking harness.
-Benchmarks will be run for each of the six G-track states (NC, WI, GA,
-PA, TX, CA) at the following granularities:
+\emph{All Rust throughput figures in this paper are estimates derived from
+complexity analysis and are deferred to Phase~2 empirical validation.}
+Phase~2 will validate these estimates using \texttt{criterion.rs}, Rust's
+standard micro-benchmarking harness, with the following protocol:
 
+\paragraph{Hardware.}
+Benchmarks will be run on the same Intel Core i7-11800H workstation used
+for the \gc{} baseline measurements in Section~\ref{sec:performance}
+(2.3~GHz base, 4.6~GHz boost, 24~MB L3 cache, Windows~11, single-threaded
+to isolate per-step cost).
+The CPU model, clock speed, and OS will be reported with results.
+
+\paragraph{GerryChain comparison.}
+The Phase~2 comparison will use \gc{} version~0.3.2, NumPy~1.24,
+Python~3.10, starting from a cold-start seed-0 random valid plan for
+each state (matching the Section~\ref{sec:performance} baseline).
+Wall-clock time will be measured for 1{,}000 steps after a 50-step
+warm-up (the warm-up steps are excluded from the throughput count).
+
+\paragraph{Acceptance criterion.}
+The Phase~2 report will confirm the 50{,}000\,steps/sec estimate if the
+\texttt{criterion.rs} measurement for NC exceeds 30{,}000\,steps/sec
+(i.e., within 40\% of target).
+If the measurement falls below 30{,}000\,steps/sec, the abstract and
+Table~\ref{tab:performance} speedup figures will be revised downward.
+Results will be reported as 95\% confidence intervals from
+\texttt{criterion.rs}, not point estimates.
+
+\paragraph{Granularities.}
+Benchmarks will be run at the following levels:
 \begin{itemize}
   \item \textbf{Wilson UST}: Time to generate one uniform random spanning
     tree for a merged region of size $m$, as a function of $m$.
@@ -148,7 +205,7 @@ PA, TX, CA) at the following granularities:
   \item \textbf{Full step}: End-to-end \recom{} step time including
     subgraph construction.
   \item \textbf{Chain throughput}: Steps/sec for a 1{,}000-step chain,
-    compared directly against \gc{} wall-clock time.
+    compared directly against \gc{} wall-clock time on the same hardware.
 \end{itemize}
 
 Results will be reported in a companion note to this paper.

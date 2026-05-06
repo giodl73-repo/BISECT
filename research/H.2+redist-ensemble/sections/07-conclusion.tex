@@ -26,33 +26,52 @@ distribution;
 (2) tree-resample-on-failure rather than same-tree retry;
 (3) pair-reselection after 10 consecutive tree failures.
 The TX and CA cold-start challenge is combinatorial, not language-specific:
-\gc{} with pair reselection also handles these states.
-\re{}'s advantage is that Rust's throughput reduces the wall time for
-the pair-reselection warm-up phase from seconds (Python) to microseconds,
-making cold-start runs practical within a pipeline budget.
+bipartition infeasibility is a property of the plan space geometry.
+\gc{} without pair reselection fails on TX/CA from cold start; \gc{}
+\emph{with} pair reselection would also handle these cases, albeit more slowly.
+\re{}'s advantage is throughput: Rust reduces the pair-reselection warm-up
+from seconds to microseconds, making cold-start runs practical within a
+pipeline budget.
 Convergence diagnostics ($\rhat$, $\ess$, $\ham(1)$) are computed
 in-pass using Welford's online algorithm and Geyer's initial monotone
 sequence estimator, adding no asymptotic overhead.
 
 \subsection{Methodological Significance}
 
-\re{} closes the final methodological gap in the G-track research series.
+\re{} delivers two distinct methodological contributions that should be
+distinguished:
+
+\paragraph{AEA replication improvement.}
 The G-track papers (G.0--G.5) establish the theoretical and empirical
 framework for placing \ar{} plans within \recom{} ensembles, but their
 computational results previously depended on a Python \gc{} installation.
 \re{} makes those results reproducible from the \texttt{redist} Rust
 binary alone, satisfying the AEA replication standard for the full
 portfolio.
+This is a genuine legal-adjacent contribution: independent reproducibility
+from a single deterministic binary strengthens the chain-of-custody argument
+for ensemble results submitted in litigation.
+
+\paragraph{Throughput improvement.}
+Longer runs, more chains, and faster convergence diagnostics benefit
+practitioners and improve internal methodology quality.
+However, throughput improvement does not alter a court's admissibility
+determination, which depends on methodological acceptance by the
+expert-witness community and peer-reviewed validation of the \recom{}
+framework---not on the length of the run.
+The distinction matters: \re{}'s throughput advantage is a contribution
+to research efficiency, not a legal claim.
 
 \subsection{Future Work}
 
 Three directions remain for Phase~2:
 
-\paragraph{Benchmark validation.}
+\paragraph{Benchmark validation (deferred to Phase~2).}
 All throughput figures in this paper are complexity-analysis estimates.
 \texttt{criterion.rs} benchmarks are required to validate the 50{,}000
 steps/sec target and characterize the overhead breakdown (subgraph
 construction, Wilson walk, balance enumeration, serde output).
+The full benchmark protocol is specified in Section~\ref{ssec:phase2}.
 
 \paragraph{Pipeline integration.}
 The \texttt{redist ensemble} subcommand should be integrated into
@@ -61,11 +80,13 @@ running 10{,}000 steps from the produced plan and reporting
 $\rhat$, $\ess$, $\ham(1)$, and the plan's percentile rank in the
 resulting ensemble distribution.
 
-\paragraph{Empirical G-track replication.}
+\paragraph{Stationarity verification and empirical G-track replication (deferred to Phase~2).}
+The stationarity of pair reselection under the \re{} Markov kernel
+is a conjecture (Section~\ref{sec:algorithm}).
 Once throughput is validated, the six G-track states (NC, WI, GA, PA,
 TX, CA) should be re-run using \re{} in place of \gc{}, and the
-resulting ensemble distributions compared against the G.1 results to
-confirm that the Rust and Python implementations produce statistically
-indistinguishable output.
+resulting ensemble distributions compared against the G.1 results.
 Agreement would certify that \re{}'s algorithmic choices correctly
-replicate \gc{}'s stationary distribution.
+replicate \gc{}'s stationary distribution and provide empirical
+evidence that pair reselection does not alter the distributional
+properties of the chain.

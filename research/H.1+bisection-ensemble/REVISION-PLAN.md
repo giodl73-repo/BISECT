@@ -1,9 +1,36 @@
-# H.1 BisectionEnsemble — Revision Plan (Round 1)
+# H.1 BisectionEnsemble — Revision Plan (Round 2)
 
 **Paper**: H.1: BisectionEnsemble: Integrating Local Feasibility Sampling into the Redistricting Bisection Tree
-**Review Round**: 1
-**Date**: 2026-05-05
+**Review Round**: 2
+**Date**: 2026-05-06
 **Reviewers**: Karypis (graph partitioning), Rodden (political geography), Duchin (GerryChain/metric geometry), Stephanopoulos (election law), Liang (reproducibility)
+
+---
+
+## Round 2 Status
+
+All Critical (C-1 through C-8) and Priority-1 Secondary (S-1, S-6) fixes have been applied.
+Priority-2 empirical fixes (C-4, C-5, S-2, S-4) are acknowledged with placeholder text
+noting deferral to Phase 2 empirical study.
+Secondary fixes S-3, S-5, S-7 were already incorporated in the Round 1 draft and confirmed.
+
+| Item | Status | Notes |
+|---|---|---|
+| C-1: Theorem 1 proof | **Applied** | Rewritten in 3 parts: discrete IVP, UST full support, geometric-rv acceptance |
+| C-2: Wilson's algorithm caveat | **Applied** | Already present in Prop 2 proof; confirmed |
+| C-3: Bipartition failure causal account | **Applied** | §4.2 corrected from 1:37 framing to geometric-constraint account |
+| C-4: GerryChain reproducibility | **Deferred (Phase 2)** | Placeholder added in §4.2 |
+| C-5: Multi-run statistics | **Deferred (Phase 2)** | Placeholder added at end of §4 |
+| C-6: Partisan data citation | **Applied** | Kuriwaki (2023) replaced with VEST (vest2020); areal weighting noted |
+| C-7: Rucho citation | **Applied** | Already corrected in §5.1; state cases cited, Rucho scoped |
+| C-8: Ergodicity claim | **Applied** | Already weakened in §5.1; confirmed |
+| S-1: METIS seed protocol | **Applied** | Already in §5.3; confirmed |
+| S-2: MultiSeedMETIS baseline | **Deferred (Phase 2)** | Placeholder added in §4 Phase 2 paragraph |
+| S-3: Reframe percentile sensitivity | **Applied** | Already in §5.1 as prospective commitment; confirmed |
+| S-4: Broader state sample | **Deferred (Phase 2)** | Placeholder added in §4 Phase 2 paragraph |
+| S-5: Qualify locality by depth | **Applied** | Already in §1; added to §3 as explicit Remark on locality |
+| S-6: m=0 edge case | **Applied** | Already in Definition 1; confirmed |
+| S-7: Ensemble distribution logging | **Applied** | Already in §5.3; confirmed |
 
 ---
 

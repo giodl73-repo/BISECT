@@ -91,21 +91,24 @@ We present \texttt{redist-ensemble}, a Rust implementation of the
 algorithm~\citep{wilson1996generating}.
 Wilson's algorithm runs in expected time equal to the cover time of
 a random walk on the subgraph; for planar graphs this is
-$O(|V|\log|V|)$~\citep{aldous1991random}, reducing the per-step cost
-from Python's interpreted execution to native compiled arithmetic at
-roughly $50{,}000$ steps per second---an estimated $2{,}300\times$
-speedup over \gc{}.
+$O(|V|\log|V|)$~\citep{aldous1991random} (the planar bound is
+Aldous's result, not Wilson's), reducing the per-step cost to native
+compiled arithmetic at roughly $50{,}000$\est\ steps per
+second---an estimated $2{,}300\times$\est\ speedup over \gc{}
+(measured without pair reselection).
 At this throughput, a 10{,}000-step ensemble for North Carolina completes
-in approximately 0.2 seconds, enabling ensemble analysis as an integrated
-real-time audit step within the \texttt{redist build} pipeline rather
-than an overnight computation.
+in approximately 0.2 seconds\est, enabling ensemble analysis as an
+integrated real-time audit step within the \texttt{redist build}
+pipeline rather than an overnight computation.
 
 The implementation consists of three modules: \texttt{spanning.rs}
 (Wilson's loop-erased random walk), \texttt{recom.rs} (the \recom{}
 proposal with correct stationary-distribution balance-cut enumeration),
 and \texttt{chain.rs} (parallel runner with Rayon, per-chain SHA-256
 seeds, $\rhat$, $\ess$, and Hamming autocorrelation diagnostics).
-Benchmark validation against \texttt{criterion.rs} is planned for Phase~2.
+Benchmark validation against \texttt{criterion.rs} is planned for Phase~2
+(\est\,all throughput and speedup figures are estimates pending
+\texttt{criterion.rs} benchmarks; see Section~\ref{ssec:phase2}).
 \end{abstract}
 
 \tableofcontents

@@ -32,7 +32,8 @@ comparison, recording success/failure and (for successful states) acceptance rat
 
 All experiments use the 2020 Census P.L.~94-171 redistricting data.
 Partisan outcomes are measured against 2020 presidential two-party precinct
-returns interpolated to census tracts \citep{Kuriwaki2023}.
+returns from the Voting and Election Science Team (VEST) Harvard Dataverse
+\citep{vest2020}, interpolated to census tracts via areal weighting.
 Polsby-Popper compactness is computed using the standard formula
 $\text{PP} = 4\pi A / P^2$ where $A$ is district area and $P$ is perimeter
 \citep{polsby1991third}.
@@ -63,15 +64,29 @@ Texas          & 38 & $<$1\% & Failure (stalled) & Success \\
 \end{table}
 
 GerryChain succeeds on NC ($k=14$) and WI ($k=8$) but stalls on TX ($k=38$)
-with an acceptance rate below 1\%. The root cause is the bipartition imbalance
-problem described in Section~\ref{sec:intro}: a 2-way recombination step in a
-$k=38$ chain requires one of the two merged districts to be re-split such that
-one component holds $1/38 \approx 2.6\%$ of the state population. The spanning
-tree cut achieving this balance is geometrically unlikely and requires
-accepting only the rare spanning tree edge that divides the merge region
-in a $1:37$ ratio. BisectionEnsemble avoids this entirely: every local ReCom
-step splits a subregion into two roughly equal halves, achieving near-50/50
-population balance.
+with an acceptance rate below 1\%. The correct causal account (described in
+Section~\ref{sec:intro}) is geometric, not a balance-ratio issue: GerryChain's
+ReCom step merges two adjacent districts and re-bipartitions the merged region
+into two equal halves. For $k=38$, the merged region contains $\approx 2/38$
+of the state population, but the critical difficulty is that the spanning tree
+of the merged region must be cut to achieve a 1:1 split within that region,
+and the geometric constraints from the 36 surrounding districts severely limit
+the set of valid spanning tree cut edges. Balanced spanning tree cuts of a
+geometrically constrained region are rare, producing near-zero acceptance.
+\emph{Note: this is not a 1:37 population ratio problem --- the 1:1 balance is
+within the merged pair, but valid cut edges are sparse due to the boundary
+geometry imposed by the surrounding districts.}
+BisectionEnsemble avoids this entirely: every local ReCom
+step splits a subregion into two roughly equal halves at a bisection node,
+and the absence of surrounding-district boundary constraints (the subregion is
+treated as an isolated local graph) makes balanced cuts abundant.
+
+\emph{Reproducibility note (Phase 2 deferred):} The GerryChain $<$1\%
+acceptance figure for TX is a single-run observation. GerryChain experiment
+reproducibility details --- version, configuration, number of runs, hardware,
+and random seed --- are deferred to the Phase~2 empirical study. Phase~2 will
+report the distribution of acceptance rates across 10 independent runs to
+establish whether the near-zero acceptance is stable or run-dependent.
 
 \subsection{Compactness Comparison}
 \label{sec:results:compactness}
@@ -184,3 +199,20 @@ tracts) run fully in parallel after the depth-1 METIS call completes.
 With 16 cores and 19 nodes, load balance is near-perfect (19/16 $\approx$ 1.2
 imbalance ratio). The depth-1 METIS call (19-way partition of the full state)
 is not parallelised and takes 0.3\,s, setting the sequential lower bound.
+
+\paragraph{Phase 2 empirical study (deferred).}
+Tables~\ref{tab:compactness}, \ref{tab:partisan}, and \ref{tab:runtime} present
+point estimates from single BisectionEnsemble runs per method per state.
+For a stochastic algorithm, single-run estimates are insufficient to characterise
+the method's distribution of outcomes. Phase~2 will extend these tables to
+multi-run statistics: mean $\pm$ standard deviation across 10 independent runs,
+each using a different CSPRNG-drawn METIS initialisation seed. In particular,
+the WI one-seat shift at $p=0.5$ (Table~\ref{tab:partisan}) should be interpreted
+as a single-run observation pending multi-run confirmation of its stability.
+A fourth baseline, MultiSeedMETIS($N=100$) --- which runs METIS 100 times with
+different seeds at each node and selects the plan at rank $\lfloor p \times 100
+\rfloor$ --- will also be included in Phase~2 to isolate the contribution of
+the ReCom chain from the contribution of multiple-initialisation sampling.
+Additionally, Phase~2 will extend the empirical evaluation to at least 5--7
+states (including strongly partisan and additional prime-$k$ states) to establish
+whether the compactness and partisan-neutrality findings generalise.

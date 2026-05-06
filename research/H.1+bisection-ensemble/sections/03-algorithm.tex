@@ -21,6 +21,16 @@ with a local ReCom ensemble. It is defined by two hyperparameters:
   \item $T \in \mathbb{Z}_{>0}$: the number of ReCom steps to run.
 \end{itemize}
 
+\noindent\textbf{Remark on locality.}
+The term ``local'' refers to the subgraph managed by a single bisection node,
+but its practical meaning depends on tree depth. At depth $\ell$, each node
+manages $\approx n/2^\ell$ tracts: the root node ($\ell=0$) manages half the
+state, while leaf nodes manage $\approx n/k$ tracts. The locality advantage
+--- the reduction in problem size relative to a full-state ensemble --- therefore
+grows with depth. At the root, the local ensemble still spans $n/2$ tracts, which
+may be a substantial fraction of the state; the full locality benefit is realised
+at the leaf level.
+
 \subsection{The BisectionEnsemble Primitive}
 \label{sec:alg:primitive}
 
@@ -109,25 +119,54 @@ BisectionEnsemble at every node.
 \end{theorem}
 
 \begin{proof}
-  \emph{Proof sketch.} The merged region has $m = n/k$ tracts on average.
-  Wilson's algorithm samples a UST in $O(m \log m)$ expected time for planar
-  subgraphs. For each UST, we enumerate all $m-1$ edges and check population
-  balance in $O(m)$. If no balanced cut exists, resample. By the intermediate
-  value theorem on the discrete cumulative population, at least one spanning
-  tree cut yields a balanced split whenever the two districts have total
-  population within the tolerance bound --- which holds by construction. Formally:
-  any spanning tree $\mathcal{T}$ of $H$ is a connected tree on $V_H$; removing
-  any single edge $e \in \mathcal{T}$ produces exactly two connected components
-  $(A_e, B_e)$. As $e$ ranges over all $|V_H|-1$ edges of $\mathcal{T}$, the
-  left-component populations $\{\text{pop}(A_e)\}$ traverse from near-zero
-  (single leaf) to near-$\text{pop}(H)$ (all but one leaf), with adjacent edges
-  in tree order differing by at most $\max_v \text{pop}(v)$. For any target
-  ratio $r \in (0,1)$ and tolerance $\varepsilon \geq \max_v \text{pop}(v) /
-  \text{pop}(H)$, a balanced cut edge $e^*$ always exists. Since tracts
-  represent $\ll 0.5\%$ of any node's population in all three experimental
-  states (NC/WI/TX), the tolerance condition is satisfied by construction.
-  After at most $O(\log(1/\delta))$ resamples, a balanced cut is found with
-  probability $\geq 1 - \delta$. $\square$
+  We establish the result in three parts.
+
+  \textbf{Part 1: Every spanning tree of $H$ contains a balanced cut edge.}
+  Let $\mathcal{T}$ be any spanning tree of $H = (V_H, E_H, w)$.
+  Root $\mathcal{T}$ at an arbitrary vertex $r$.
+  For each edge $e \in \mathcal{T}$, let $A_e \subseteq V_H$ denote the
+  component not containing $r$ when $e$ is removed, and let $B_e = V_H
+  \setminus A_e$.  As $e$ ranges over the $|V_H| - 1$ tree edges ordered by
+  a DFS traversal, $\text{pop}(A_e)$ increases from $\text{pop}(v_{\min})$
+  (a single leaf) to $\text{pop}(H) - \text{pop}(v_r)$ (all but the
+  root's component), with consecutive values differing by at most
+  $\max_{v \in V_H} \text{pop}(v)$.
+  By a discrete intermediate-value argument, there exists an edge $e^*$ such
+  that $|\text{pop}(A_{e^*}) - t_1 \cdot \text{pop}(H)| \leq \max_{v}
+  \text{pop}(v)$.
+  Since individual census tracts represent $\ll 0.5\%$ of any node's
+  population in all experimental states (NC, WI, TX), the tolerance
+  $\varepsilon$ specified in Definition~\ref{def:be-primitive} is met.
+  Hence \emph{every} spanning tree of $H$ has at least one balanced cut edge.
+
+  \textbf{Part 2: The balanced spanning tree is sampled with positive probability.}
+  Wilson's algorithm \citep{wilson1996generating} samples exactly from the
+  uniform spanning tree (UST) distribution on $H$.  The UST assigns
+  \emph{positive probability} to every spanning tree of a connected graph:
+  for any spanning tree $\mathcal{T}^*$, $\Pr[\text{UST} = \mathcal{T}^*]
+  \propto \prod_{e \in \mathcal{T}^*} w(e) > 0$ (since all edge weights are
+  positive).  Therefore, the spanning tree established in Part~1 is sampled
+  with positive probability at each ReCom step.
+
+  \textbf{Part 3: The chain accepts in finite expected steps.}
+  Because a balanced cut edge exists in every spanning tree (Part~1) and every
+  spanning tree is sampled with positive probability (Part~2), each ReCom step
+  produces a balanced bisection with probability bounded away from zero.
+  Formally, letting $q > 0$ denote the minimum acceptance probability over all
+  states of the chain, the number of steps until the first acceptance is
+  stochastically dominated by a geometric random variable with success
+  probability $q$, so the expected number of steps to first acceptance is
+  $1/q < \infty$.  The expected number of steps to accumulate $m \geq 1$
+  accepted plans is $m/q = O(|V_H|)$ under the average-case cover-time
+  assumption for the UST sampler.
+
+  \emph{Note on ``existence of acceptance'' vs.\ ``per-step acceptance
+  probability.''} Part~1 establishes that acceptance is always possible
+  (existence); Part~2--3 establish that it occurs in finite expected time
+  (positive probability). These are logically distinct: it would be possible
+  for a balanced cut to exist yet be sampled with probability zero if the
+  UST distribution were not fully supported, but the full support of UST
+  (Part~2) rules this out.
 \end{proof}
 
 \begin{proposition}[Contiguity preservation]
