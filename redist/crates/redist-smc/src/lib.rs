@@ -16,4 +16,4 @@ pub mod algorithm;
 pub mod output;
 
 pub use algorithm::{run_smc, SmcConfig, SmcError};
-pub use output::SmcResult;
+pub use output::{SmcResult, WriteConfig};
