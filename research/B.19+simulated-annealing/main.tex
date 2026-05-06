@@ -1,0 +1,112 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Simulated Annealing Bisection: Cooling the Edge-Cut Objective}\\
+  \textbf{in the Redistricting Tree}\\[0.8em]
+  \normalsize\textit{B.19 --- Algorithm Design / Structure Layer}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+We introduce \sa{} bisection, a new Structure-layer algorithm for the
+redistricting tree in which each node is solved not by a single
+\metis{} call but by a simulated annealing (SA) loop seeded from
+the \metis{} solution.
+SA accepts boundary-tract flips according to a geometric temperature
+schedule, allowing exploration of worse solutions early and converging
+to a local optimum at the end.
+The cooling schedule is scaled to the subgraph size---$n_{\mathrm{steps}}
+= \texttt{steps\_per\_tract} \times m$ at a node with $m$ tracts---so that
+leaf nodes and root nodes receive proportional computational effort.
+Crucially, the algorithm tracks the \emph{best-ever} plan seen, not
+the final state after cooling; this discards the exploration overhead
+and returns the lowest edge-cut bisection found during the run.
+
+Empirically, \sa{} with $\texttt{steps\_per\_tract} = 10$ achieves
+10--18\% Polsby-Popper improvement over baseline \metis{} bisection
+on North Carolina ($k=14$), Wisconsin ($k=8$), and Texas ($k=38$).
+This improvement lies between multi-seed \metis{} and \be{} at $T=100$,
+at a runtime cost that scales as $O(\texttt{steps\_per\_tract} \times n)$
+per node.
+\sa{} is a deterministic optimiser: it produces a single high-quality
+bisection per node rather than a distributional sample.
+We contrast it with \recom{} (Markov chain sampling) and \be{}
+(probabilistic seed search), and identify when each is preferred.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-empirical}
+\input{sections/05-sensitivity}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,163 @@
+%% G.8 -- Flip Proposals for Local Sensitivity Analysis
+%% References
+
+%% ===================================================================
+%% SELF-CITATIONS (B/G/H SERIES)
+%% ===================================================================
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factor Bisection for Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            50-state sweep; 223D/209R national headline.
+            Defines the plan-level search methods (ConvergenceSweep,
+            PercentileSweep) that \flip{} complements at the local level.},
+}
+
+@misc{g6paper,
+  author = {Della-Libera, Gio},
+  title  = {Short-Burst Optimisation for Redistricting:
+            Short Chains Beat Long Chains},
+  year   = {2026},
+  note   = {G.6 in Algorithmic Redistricting series.
+            Introduces ShortBurst as a trajectory-level search method.
+            Provides the comparison baseline for Flip vs.\ ShortBurst
+            in Section~\ref{sec:comparison}.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Node-Level Ensemble Methods for
+            Structured Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Introduces node-level ReCom chains at each bisection tree node.
+            Provides the intermediate perturbation level in the three-level
+            hierarchy introduced in Section~\ref{sec:introduction}.},
+}
+
+%% ===================================================================
+%% FLIP / LOCAL PROPOSALS IN REDISTRICTING
+%% ===================================================================
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Higgins, Michael and Imai, Kosuke
+             and Tarr, Alexander},
+  title   = {Automated Redistricting Simulation Using {Markov} Chain
+             {Monte} {Carlo}},
+  journal = {Journal of Computational and Graphical Statistics},
+  volume  = {29},
+  number  = {4},
+  pages   = {715--728},
+  year    = {2020},
+  doi     = {10.1080/10618600.2020.1739532},
+  note    = {Introduces flip-type proposals in the redistricting context.
+             The single-tract boundary flip is the simplest Metropolis
+             proposal for the redistricting state space. Section 3
+             discusses the slow mixing of flip chains relative to
+             spanning-tree-based proposals.},
+}
+
+%% ===================================================================
+%% RECOM / MCMC REDISTRICTING
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom proposal distribution. The primary chain whose global
+             exploration radius is contrasted with the local radius of
+             \flip{} in Section~\ref{sec:comparison}.},
+}
+
+%% ===================================================================
+%% SHORT-BURST
+%% ===================================================================
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, Jesse and Suwal, Bhushan},
+  title   = {Voting Rights, Markov Chains, and Optimization by Short
+             Bursts},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2011.02288. Introduces ShortBurst as a method for
+             finding near-optimal redistricting plans. The burst
+             length parameter controls the exploitation/exploration
+             tradeoff, analogous to \flip{}'s narrow local radius.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN MIXING TIME
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               The conductance bound (Chapter 7) and the bottleneck
+               argument (Chapter 7.3) underlie the slow-mixing claim
+               for \flip{} in Section~\ref{sec:formal}.},
+}
+
+@article{sinclair1992,
+  author  = {Sinclair, Alistair},
+  title   = {Improved Bounds for Mixing Rates of {Markov} Chains and
+             Multicommodity Flow},
+  journal = {Combinatorics, Probability and Computing},
+  volume  = {1},
+  number  = {4},
+  pages   = {351--370},
+  year    = {1992},
+  doi     = {10.1017/S0963548300000390},
+  note    = {Multicommodity flow method for Markov chain mixing lower
+             bounds. Establishes that local chains on combinatorial
+             structures with polynomial diameter have exponential mixing
+             times in the worst case. Supports the slow-mixing claim for
+             single-tract flip chains in Section~\ref{sec:formal}.},
+}
+
+%% ===================================================================
+%% METROPOLIS-HASTINGS
+%% ===================================================================
+
+@article{metropolis1953,
+  author  = {Metropolis, Nicholas and Rosenbluth, Arianna W. and
+             Rosenbluth, Marshall N. and Teller, Augusta H. and
+             Teller, Edward},
+  title   = {Equation of State Calculations by Fast Computing Machines},
+  journal = {The Journal of Chemical Physics},
+  volume  = {21},
+  number  = {6},
+  pages   = {1087--1092},
+  year    = {1953},
+  doi     = {10.1063/1.1699114},
+  note    = {Original Metropolis-Hastings algorithm. The \flip{} chain
+             uses a restricted Metropolis criterion: accept if and only
+             if the proposed plan satisfies contiguity and population
+             balance (a hard-constraint version rather than the
+             energy-based original).},
+}
+
+%% ===================================================================
+%% LEGAL
+%% ===================================================================
+
+@misc{rucho2019,
+  author = {{Supreme Court of the United States}},
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Shifts partisan gerrymandering claims
+            to state courts. Motivates local sensitivity analysis as a
+            tool that state courts can deploy without requiring full
+            ensemble methodology.},
+}

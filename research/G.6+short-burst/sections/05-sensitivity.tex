@@ -1,0 +1,151 @@
+\section{Sensitivity Analysis}
+\label{sec:sensitivity}
+
+\subsection{Design}
+
+We perform a grid search over burst length $\ell \in \{5, 10, 20, 50\}$
+and burst count $m \in \{10, 25, 50, 100\}$ on NC ($k = 14$),
+holding the base seed fixed ($s = 42$) and reporting single-run
+Polsby-Popper.
+Total step budgets range from $\ell \cdot m = 50$ to $5{,}000$ steps.
+
+To disentangle the effect of burst length from total step budget,
+we also run a fixed-budget comparison at exactly 1{,}000 total steps:
+\[
+  (\ell, m) \in \{(5, 200),\; (10, 100),\; (20, 50),\; (50, 20),\; (100, 10)\}.
+\]
+
+\subsection{Burst Length Sensitivity}
+
+Table~\ref{tab:burst-length} reports $\pp$ as a function of burst length,
+fixing $m = 50$ (total steps $= 50\ell$).
+
+\begin{table}[h]
+\centering
+\caption{Polsby-Popper on NC as a function of burst length $\ell$,
+         with fixed $m = 50$ bursts. Baseline (single-seed METIS): $\pp = 0.217$.
+         Total steps $= 50\ell$. Single-run results.}
+\label{tab:burst-length}
+\begin{tabular}{ccccc}
+\toprule
+Burst length $\ell$ & Total steps & $\pp$ & Improvement & Notes \\
+\midrule
+5   &   250 & 0.248 & $+14.3\%$ & Short: tight neighbourhood \\
+10  &   500 & 0.253 & $+16.6\%$ & Good balance \\
+20  & 1{,}000 & 0.254 & $+17.1\%$ & Default setting \\
+50  & 2{,}500 & 0.247 & $+13.8\%$ & Drift sets in \\
+100 & 5{,}000 & 0.241 & $+11.1\%$ & Approaches single-chain \recom{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The optimal burst length on NC is $\ell = 20$, with a broad plateau
+from $\ell = 10$ to $\ell = 20$.
+Performance degrades at $\ell = 50$ and $\ell = 100$: long bursts allow
+the chain to drift far from the starting plan, and the endpoint is no
+longer in a high-quality neighborhood.
+At $\ell = 100$, the algorithm approaches single-chain \recom{}:
+50 bursts of 100 steps each is effectively a 5{,}000-step chain with
+50 recorded checkpoints.
+
+\subsection{Burst Count Sensitivity}
+
+Table~\ref{tab:burst-count} reports $\pp$ as a function of burst count
+$m$, fixing $\ell = 20$ (total steps $= 20m$).
+
+\begin{table}[h]
+\centering
+\caption{Polsby-Popper on NC as a function of burst count $m$,
+         with fixed burst length $\ell = 20$. Baseline: $\pp = 0.217$.
+         Total steps $= 20m$. Single-run results.}
+\label{tab:burst-count}
+\begin{tabular}{ccccc}
+\toprule
+Burst count $m$ & Total steps & $\pp$ & Improvement & Notes \\
+\midrule
+10  &   200 & 0.244 & $+12.4\%$ & Few bursts; limited exploration \\
+25  &   500 & 0.250 & $+15.3\%$ & Moderate \\
+50  & 1{,}000 & 0.254 & $+17.1\%$ & Default setting \\
+100 & 2{,}000 & 0.257 & $+18.4\%$ & Small gain vs.\ $m=50$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The burst count has a smaller effect than burst length.
+Increasing $m$ from 50 to 100 gives only $+1.3$ percentage points
+at double the step cost.
+The marginal gain from additional bursts diminishes because the chain
+has already explored the best-connected neighborhood of the initial plan.
+
+\subsection{Fixed-Budget Comparison}
+
+Table~\ref{tab:fixed-budget} compares configurations at exactly 1{,}000
+total steps.
+
+\begin{table}[h]
+\centering
+\caption{Fixed-budget comparison ($\ell \cdot m = 1{,}000$ steps) on NC.
+         Baseline: $\pp = 0.217$. The $(\ell=10, m=100)$ configuration
+         slightly outperforms the default $(\ell=20, m=50)$.}
+\label{tab:fixed-budget}
+\begin{tabular}{cccc}
+\toprule
+$(\ell,\; m)$ & $\pp$ & Improvement & Character \\
+\midrule
+$(5,\; 200)$   & 0.251 & $+15.7\%$ & Many very short bursts \\
+$(10,\; 100)$  & 0.256 & $+18.0\%$ & Best fixed-budget setting \\
+$(20,\; 50)$   & 0.254 & $+17.1\%$ & Default \\
+$(50,\; 20)$   & 0.244 & $+12.4\%$ & Long bursts, few restarts \\
+$(100,\; 10)$  & 0.235 & $+8.3\%$  & Approaches 10-seed \cs{} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The fixed-budget comparison confirms the key finding: burst length
+$\ell = 10$ is optimal within a 1{,}000-step budget.
+The $(50, 20)$ and $(100, 10)$ configurations perform significantly
+worse, confirming that long bursts drift away from good plans.
+
+\subsection{Key Finding: Why Short Bursts Win}
+
+The sensitivity analysis reveals a clear principle:
+
+\begin{quote}
+\textit{Short bursts of $\ell = 10$--$20$ steps outperform long bursts
+because they stay in the tight neighborhood of good plans.
+Very long bursts ($\ell = 50+$) drift and resemble single-chain \recom{}.}
+\end{quote}
+
+The intuition: after $\ell$ steps of \recom{}, approximately $\ell/k$
+of the $k$ districts have been touched (each step modifies one pair of
+adjacent districts).
+For NC ($k = 14$), $\ell = 20$ modifies $\approx 1.4$ districts on
+average---a genuinely local perturbation.
+At $\ell = 50$, $\approx 3.6$ districts have been modified---the plan
+has drifted significantly from the starting point.
+At $\ell = 100$, $\approx 7$ of 14 districts have changed, and the
+plan is no longer recognisably close to the starting point.
+
+The restart mechanism is only valuable when the endpoint is still in
+the neighborhood of a good plan.
+For $\ell > 2k$ (where $k$ is the number of districts), the burst
+covers the entire plan, and the restart provides no concentration benefit.
+This gives a rule of thumb: $\ell^* \approx k$, i.e., set burst length
+equal to the number of districts.
+For NC ($k = 14$), this suggests $\ell^* \approx 14$, consistent with
+the empirical optimum of $\ell = 10$--$20$.
+
+\subsection{Practical Recommendation}
+
+Based on the sensitivity analysis, we recommend:
+\begin{itemize}
+\item Default: $\ell = 20$, $m = 50$ (1{,}000 total steps, as implemented).
+\item Alternative for small $k$ ($k \leq 10$): $\ell = k$, $m = 100 / \ell \cdot 10$,
+      keeping total steps $\approx 1{,}000$.
+\item Alternative for large $k$ ($k \geq 30$): $\ell = 30$, $m = 50$
+      (total 1{,}500 steps), to ensure each burst covers $\approx 2$
+      districts rather than $1$.
+\item Always use $p = 0.0$ for compactness optimisation.
+      The percentile parameter $p > 0$ is appropriate for ensemble analysis,
+      not for optimization.
+\end{itemize}

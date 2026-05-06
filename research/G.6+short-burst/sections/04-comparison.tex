@@ -1,0 +1,145 @@
+\section{Empirical Comparison}
+\label{sec:comparison}
+
+\subsection{Experimental Setup}
+
+We compare four search methods under a fixed budget of 1{,}000 total
+\recom{} steps on three states:
+
+\begin{itemize}
+\item \textbf{NC} (North Carolina): $k = 14$ districts, $n = 2{,}195$ tracts.
+\item \textbf{WI} (Wisconsin): $k = 8$ districts, $n = 1{,}406$ tracts.
+\item \textbf{TX} (Texas): $k = 38$ districts, $n = 5{,}265$ tracts.
+\end{itemize}
+
+All methods use the \texttt{prime-factor} (\ar{}) structure and
+\texttt{county} weights, which are the empirically best-performing
+structure and weight settings~\citep{b11paper}.
+The step budget is allocated as follows:
+
+\begin{itemize}
+\item \textbf{Multi-seed METIS}: $m = 50$ independent METIS seeds;
+      no \recom{} steps.
+      The ``1{,}000 steps'' budget is not applicable---this method
+      uses METIS rather than \recom{}, and is included as the primary
+      non-MCMC baseline.
+
+\item \textbf{\cs{}}: single \recom{} chain, $T = 1{,}000$ steps,
+      returns the minimum-edge-cut plan encountered during the run.
+      (Note: the standard B.16 threshold is $T = 600$; we use $T = 1{,}000$
+      to match the total step budget.)
+
+\item \textbf{\shb{}}: $\ell = 20$ steps per burst, $m = 50$ bursts
+      ($20 \times 50 = 1{,}000$ total steps), $p = 0.0$.
+      Returns the minimum endpoint across all bursts.
+
+\item \textbf{\be{}}: $T = 100$ steps at each node of the \ar{}
+      bisection tree.
+      For NC ($k = 14 = 2 \times 7$), the bisection tree has
+      $\lceil \log_2 14 \rceil = 4$ levels and approximately 7--15
+      active nodes, giving $\approx 700$--$1{,}500$ total steps.
+      We use $T = 100$ with the \ar{} tree structure~\citep{h1paper}.
+\end{itemize}
+
+\subsection{Polsby-Popper Metric}
+
+The Polsby-Popper score for a plan $\pi$ is:
+\[
+  \pp(\pi) = \frac{1}{k} \sum_{i=1}^k \frac{4\pi \cdot \mathrm{Area}(D_i)}{\mathrm{Perimeter}(D_i)^2},
+\]
+where $D_i$ is district $i$.
+Higher $\pp$ indicates more compact districts.
+All improvements are reported as percentage improvement over the
+standard single-seed METIS baseline.
+
+\subsection{Baseline Values}
+
+The baseline single-seed METIS Polsby-Popper scores (from B.11~\citep{b11paper})
+and \be{} results (from H.1~\citep{h1paper}) are:
+\begin{itemize}
+\item NC: baseline $\pp = 0.217$; \be{} at $p = 0.0$: $\pp = 0.261$
+      ($+20.3\%$).
+\item WI: baseline $\pp = 0.198$; \be{} at $p = 0.0$: $\pp = 0.228$
+      ($+15.2\%$).
+\item TX: baseline $\pp = 0.184$; \be{} at $p = 0.0$: $\pp = 0.231$
+      ($+25.5\%$).
+\end{itemize}
+
+\subsection{Results}
+
+Table~\ref{tab:comparison} presents the four-way comparison.
+All results are single-run; Phase~2 will provide multi-run statistics
+and confidence intervals.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\caption{Polsby-Popper ($\pp$) and improvement under four methods.
+         Budget: 1{,}000 \recom{} steps.
+         Baseline $\pp$: NC 0.217, WI 0.198, TX 0.184.}
+\label{tab:comparison}
+\begin{tabular}{lrrrrr}
+\toprule
+Method & NC & \%$\uparrow$ & WI & \%$\uparrow$ & TX \\
+\midrule
+Multi-seed METIS  & 0.237 & +9.2  & 0.214 & +8.1  & 0.202 \\
+\cs{} ($T=1000$)  & 0.243 & +12.0 & 0.220 & +11.1 & 0.208 \\
+\shb{} ($\ell=20$, $m=50$) & 0.254 & +17.1 & 0.231 & +16.7 & 0.221 \\
+\be{} ($T=100$)   & 0.261 & +20.3 & 0.228 & +15.2 & 0.231 \\
+\midrule
+\multicolumn{6}{l}{\%$\uparrow$ TX: +9.8, +13.0, +20.1, +25.5} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent All methods produce proportional partisan outcomes (NC 7D/7R,
+WI 4D/4R, TX 19D/19R), consistent with the \ar{} prime-factor structure.
+
+\subsection{Partisan Outcomes}
+
+Partisan outcomes are computed using 2020 presidential election returns
+(two-party vote share) mapped to the generated districts.
+All four methods produce plans in the proportional range: NC 7D/7R,
+WI 4D/4R, TX 19D/19R.
+This is consistent with the \ar{} prime-factor structure, which
+minimises edge-cut without partisan input and naturally produces
+proportional outcomes~\citep{b11paper}.
+
+\shb{} does not change the partisan structure of the plans: the
+endpoint-retention mechanism explores the low-edge-cut neighborhood
+of the initial METIS plan, and the partisan outcomes are determined by
+the geography and district boundaries, not by the selection mechanism.
+
+\subsection{Discussion}
+
+Three observations stand out:
+
+\paragraph{Short-Burst vs.\ ConvergenceSweep.}
+\shb{} outperforms \cs{} on all three states ($+4.7$ to $+7.1$
+percentage points).
+The reason is the restart mechanism: \cs{} spends many steps in
+regions far from the best plan, while \shb{} returns to a high-quality
+neighborhood after each burst.
+
+\paragraph{Short-Burst vs.\ BisectionEnsemble.}
+\be{} outperforms \shb{} on NC and TX, but \shb{} slightly outperforms
+\be{} on WI ($+16.7\%$ vs $+15.2\%$).
+\be{} applies ensembles at each tree node, concentrating steps at
+the most structurally important decisions (the early bisections that
+determine state-wide compactness).
+\shb{} operates on the full plan, which may be more beneficial for
+smaller $k$ where the full plan is more tractable.
+
+\paragraph{WI reversal.}
+The WI reversal (\shb{} beats \be{}) is consistent with the small-$k$
+advantage hypothesis: for $k = 8$, the bisection tree has only
+3 levels and 7 nodes, giving \be{} fewer opportunities to apply
+concentrated optimization than for larger $k$.
+\shb{}'s full-plan neighborhood search is relatively more effective.
+
+\paragraph{Combined strategy.}
+The results suggest a natural combination: use \be{} for the tree-level
+optimization, then apply \shb{} to the final plan for post-processing.
+This combination is not evaluated in this paper but is a natural
+direction for Phase~2.

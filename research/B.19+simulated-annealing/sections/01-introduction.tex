@@ -1,0 +1,147 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Local-Optimum Problem in METIS Bisection}
+
+The core computational primitive of the B-series redistricting platform is
+the bisection node: given a subgraph of $m$ census tracts that must be
+divided into two contiguous, population-balanced pieces, find the cut that
+minimises the weighted edge cut~\citep{b8paper, b11paper}.
+The standard solver is \metis{}, a multilevel graph partitioner that
+coarsens the graph, finds an approximate minimum bisection on the coarsened
+graph, and uncoarsens with Kernighan-Lin (KL) local refinement~\citep{karypis1998}.
+\metis{} is fast---$O(m \log m)$ per call---and produces solutions within a
+small constant factor of optimal on typical redistricting graphs.
+
+However, \metis{} is a heuristic.
+Graph minimum bisection is $\mathcal{NP}$-hard~\citep{garey1976}, and the KL
+refinement phase terminates at a local optimum that depends on the random
+seed.
+The B.7 analysis showed that for most states, seed variation has little
+practical effect on the final map, but the variation is nonzero and
+occasionally significant~\citep{b7paper}.
+The B-series response to this fragility has followed two tracks.
+
+\paragraph{Track 1: Better seed search.}
+\cs{} (B.16) sweeps forward through seeds, running \metis{} at each, and
+halts when $T=600$ consecutive seeds produce no improvement in normalised
+edge cut~\citep{b16paper}.
+\be{} (H.1) runs $T$ independent \metis{} seeds in parallel and selects
+the minimum~\citep{h1paper}.
+Both are \emph{SeedCompositor} strategies---they change how many times the
+structure-layer bisector is called, not how it works internally.
+
+\paragraph{Track 2: Better structure-layer bisection.}
+\geosec{} (B.8) replaces the flat tree with a ratio-optimal tree that
+normalises edge cut by $\sqrt{\min(i,k-i)}$~\citep{b8paper}.
+\areasec{} (B.9) adds an area-swing constraint to bias toward
+geographically compact pieces~\citep{b9paper}.
+Both change the \emph{objective} at each node while still delegating
+the solver to \metis{}.
+
+This paper introduces a third track: replace \metis{} itself at each node
+with a \textbf{simulated annealing} loop that refines the \metis{} solution
+by accepting worse proposals probabilistically, guided by a geometric
+cooling schedule.
+
+\subsection{Simulated Annealing as a Bisection Solver}
+
+Simulated Annealing (SA) is a classical meta-heuristic for combinatorial
+optimisation~\citep{kirkpatrick1983}.
+The algorithm starts at an initial solution and iteratively proposes
+small perturbations.
+Improvements are always accepted.
+Degradations are accepted with probability $\exp(-\Delta f / T)$, where
+$\Delta f > 0$ is the cost increase and $T > 0$ is a temperature parameter
+that decreases over time according to a \emph{cooling schedule}.
+At high temperature the algorithm accepts most proposals (exploration);
+as $T \to 0$ it becomes a greedy local-search descent (exploitation).
+In the limit of infinitely slow cooling, SA converges to the global
+optimum with probability one~\citep{kirkpatrick1983}.
+
+Applied to redistricting bisection, the ``solution'' is a partition of $m$
+tracts into two districts; a ``proposal'' is a boundary-tract flip
+(reassign one tract from its current district to the other, maintaining
+contiguity and balance); and the objective is the weighted edge cut $\EC$.
+The SA loop is seeded from the \metis{} solution, so it starts from a
+reasonable local optimum and refines further.
+
+Three properties of this design are critical:
+
+\begin{enumerate}
+\item \textbf{METIS initialisation.}
+  SA needs a good starting point.
+  Starting from a random partition requires prohibitively many steps.
+  Starting from \metis{}'s output means SA is refining a near-optimal
+  solution rather than discovering one from scratch.
+
+\item \textbf{Scaled step count.}
+  A root node with $m = 2{,}500$ tracts is much harder to refine than a
+  leaf node with $m = 50$ tracts.
+  Setting $n_{\mathrm{steps}} = \texttt{steps\_per\_tract} \times m$ gives
+  proportional computational effort across all tree levels.
+
+\item \textbf{Best-ever tracking.}
+  SA can increase $\EC$ during the high-temperature phase (exploration).
+  Returning the final plan discards the minimum found mid-run.
+  Tracking and returning the best-ever plan ensures exploration overhead
+  is not wasted.
+\end{enumerate}
+
+\subsection{Main Results}
+
+\paragraph{Algorithm.}
+We define \sa{} bisection (Section~\ref{sec:algorithm}) as a drop-in
+replacement for the \metis{} call at each bisection tree node.
+The algorithm has two tunable parameters:
+\texttt{steps\_per\_tract} $\in \{1,5,10,50\}$ controls runtime;
+\texttt{t0\_factor} controls the initial acceptance probability.
+A node-specific seed is derived deterministically from the global base
+seed and the node's path in the bisection tree.
+
+\paragraph{Acceptance probability analysis.}
+For the default \texttt{t0\_factor}$= 0.01$, we show (Proposition~\ref{prop:acceptance})
+that the initial acceptance probability for a $+1$ edge-cut move is
+$\exp(-1/T_0) \approx \exp(-100/\EC_0)$.
+For $\EC_0 = 100$, this is approximately $37\%$---enough to escape \metis{}'s
+local optimum.
+For $\EC_0 = 1{,}000$, $T_0 = 10$ and the acceptance probability is
+$\exp(-0.1) \approx 90\%$---appropriate for the high-EC root node.
+
+\paragraph{Empirical comparison.}
+On NC ($k=14$), WI ($k=8$), and TX ($k=38$), \sa{} with
+$\texttt{steps\_per\_tract} = 10$ achieves 10--18\% Polsby-Popper
+improvement over baseline \metis{} (Section~\ref{sec:empirical}).
+This lies between multi-seed \metis{} and \be{} at $T=100$.
+
+\paragraph{Parameter sensitivity.}
+Section~\ref{sec:sensitivity} shows that $\texttt{steps\_per\_tract} = 10$
+is the practical sweet spot: steps$= 1$ is too short to escape the local
+optimum; steps$= 50$ gives marginal further gain at $5\times$ runtime cost.
+The \texttt{t0\_factor} is less critical; values in $[0.005, 0.05]$ all
+perform similarly.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews SA theory and the redistricting
+structure-layer context.
+Section~\ref{sec:algorithm} gives the formal SA bisection algorithm with
+pseudocode, the node-seed derivation, and the acceptance probability
+proposition.
+Section~\ref{sec:empirical} presents empirical comparisons on NC, WI, and TX.
+Section~\ref{sec:sensitivity} analyzes parameter sensitivity.
+Section~\ref{sec:conclusion} situates \sa{} in the broader B-series
+algorithm landscape.
+
+\subsection{Relation to Prior Work}
+
+\sa{} is a Structure-layer algorithm, orthogonal to the SeedCompositor
+strategies (\cs{}, \be{}).
+It is related to but distinct from \recom{}~\citep{deford2021}, which is
+a Markov chain \emph{sampler} rather than an optimiser.
+\citet{battiti1999} applied SA to graph partitioning but did not consider
+the redistricting context or the METIS-initialisation design.
+\geosec{}~\citep{b8paper} and \areasec{}~\citep{b9paper} are the closest
+B-series relatives: all three modify what happens at each bisection node.
+\sa{} differs in that it changes the \emph{solver} rather than the
+\emph{objective}.

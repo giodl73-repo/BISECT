@@ -1,0 +1,203 @@
+\section{Algorithm}
+\label{sec:algorithm}
+
+\subsection{Formal Definition}
+
+Let $G = (V, E)$ be a census-tract adjacency graph with $|V| = n$,
+$k$ the number of districts, and $\ec(\pi)$ the edge-cut of plan $\pi$
+(the number of edges in $E$ crossing district boundaries).
+Equivalently, $1 - \ec(\pi)/|E|$ is monotone in Polsby-Popper: lower
+edge-cut corresponds to higher compactness.
+
+\begin{definition}[\shb{}]
+\label{def:short-burst}
+Given parameters $\ell$ (burst length), $m$ (burst count), $p \in [0, 1]$
+(selection percentile), and a base seed $s \in \{0, \ldots, 2^{64}-1\}$:
+\begin{enumerate}
+\item Compute the initial plan $\pi_0 = \mathrm{METIS}(G, k, s)$.
+\item For $i = 0, \ldots, m-1$:
+  \begin{enumerate}
+  \item Derive the burst seed $s_i = \mathrm{chain\_seed}(s, i)$.
+  \item Initialize a \recom{} chain from $\pi_i$ using $s_i$ as the RNG seed.
+  \item Run the chain for $\ell$ steps to obtain $\pi_i^{(\ell)}$.
+  \item Record the endpoint: $e_i = (\ec(\pi_i^{(\ell)}),\; i,\; \pi_i^{(\ell)})$.
+  \item Set $\pi_{i+1} = \pi_i^{(\ell)}$ (restart from endpoint).
+  \end{enumerate}
+\item Sort endpoints: $e_{(0)} \leq e_{(1)} \leq \cdots \leq e_{(m-1)}$
+      by $(\ec, i)$ lexicographically (ascending EC, then burst index as tiebreak).
+\item Return $e_{(\lfloor p \cdot m \rfloor)}.\pi$ (the plan at the $p$-th
+      quantile of recorded endpoints by edge-cut).
+\end{enumerate}
+\end{definition}
+
+The default parameters in \texttt{redist-cli} are $\ell = 20$, $m = 50$,
+$p = 0.0$ (always return the best endpoint found).
+
+\subsection{Chain-Seed Derivation}
+
+Each burst uses a deterministic, independent RNG seed derived from the
+base seed and burst index.
+This ensures:
+\begin{itemize}
+\item \textbf{Reproducibility}: given the same base seed, the same
+      sequence of plans is produced on any run.
+\item \textbf{Independence}: burst seeds are cryptographically independent,
+      preventing correlation between consecutive burst RNG streams.
+\item \textbf{No seed reuse}: each burst index maps to a unique seed,
+      preventing the same random choices from appearing in different bursts.
+\end{itemize}
+
+The derivation uses SHA-256.
+Define the domain-separated byte string:
+\[
+  D(s, i) \;=\;
+    \underbrace{\texttt{"SB\_CHAIN\_"}}_{\text{9 bytes}}
+    \;\|\;
+    \underbrace{i.\mathrm{to\_le\_bytes}()}_{\text{8 bytes}}
+    \;\|\;
+    \underbrace{\texttt{"\_"}}_{\text{1 byte}}
+    \;\|\;
+    \underbrace{s.\mathrm{to\_le\_bytes}()}_{\text{8 bytes}},
+\]
+then:
+\[
+  \mathrm{chain\_seed}(s, i) = \mathrm{SHA256}(D(s, i))[0..8],
+\]
+where $[0..8]$ denotes the first 8 bytes of the SHA-256 digest,
+interpreted as a little-endian \texttt{u64}.
+The prefix serves as domain separator; the implementation uses the
+longer string \texttt{"SHORT\_BURST\_CHAIN\_"} for legibility.
+
+This is the same domain-separation pattern used in \be{}~\citep{h1paper}
+and \cs{}~\citep{b16paper}: each algorithm uses a unique ASCII prefix
+to ensure no seed collision across search modes.
+
+\subsection{Pseudocode}
+
+\begin{algorithm}[H]
+\caption{\shb{} Plan Selection}
+\label{alg:short-burst}
+\begin{algorithmic}[1]
+\Require Graph $G$, districts $k$, burst length $\ell$, burst count $m$,
+         percentile $p$, base seed $s$
+\Ensure A redistricting plan $\pi^*$
+\State $\pi_0 \gets \mathrm{METIS}(G, k, s)$
+\State $\mathit{endpoints} \gets []$
+\For{$i \gets 0$ \textbf{to} $m-1$}
+  \State $s_i \gets \mathrm{chain\_seed}(s, i)$
+  \State $\mathit{rng} \gets \mathrm{SmallRng::seed\_from\_u64}(s_i)$
+  \State $\mathit{chain} \gets \mathrm{RecomChain}(\pi_i,\; G,\; k)$
+  \For{$j \gets 0$ \textbf{to} $\ell - 1$}
+    \State $\mathit{chain}.\mathrm{step}(\mathit{rng})$
+  \EndFor
+  \State $\pi_{i+1} \gets \mathit{chain}.\mathrm{assignment}$
+  \Comment{endpoint, not minimum}
+  \State $\mathit{endpoints}.\mathrm{push}\!\left((\ec(\pi_{i+1}),\; i,\; \pi_{i+1})\right)$
+\EndFor
+\State $\mathit{endpoints}.\mathrm{sort\_by}\!\left(\ec \text{ asc},\; i \text{ asc}\right)$
+\Comment{stable, deterministic}
+\State \Return $\mathit{endpoints}[\lfloor p \cdot m \rfloor].\pi$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{CLI Invocation}
+
+\begin{verbatim}
+redist state --state NC --year 2020
+    --search short-burst
+    --burst-length 20
+    --n-bursts 50
+    --percentile 0.0
+\end{verbatim}
+
+The percentile parameter \texttt{--percentile 0.0} selects the best
+endpoint (minimum edge-cut) across all bursts.
+Setting \texttt{--percentile 0.5} returns the median endpoint, which
+may be preferable when statistical properties of the neighbourhood are
+of interest rather than the optimum.
+
+\subsection{Stochastic Dominance}
+
+\begin{theorem}[Short-Burst Stochastic Dominance]
+\label{thm:dominance}
+Let $\pi^{\shb}$ be the plan returned by \shb{} with $\ell$ steps per
+burst and $m$ bursts, and let $\pi^{\recom}$ be the plan at the end
+of a single \recom{} chain of $\ell \cdot m$ steps (same total step
+budget), both starting from the same METIS initialisation.
+Then for any threshold $c > 0$:
+\[
+  \Pr\!\left[\ec(\pi^{\shb}) \leq c\right]
+  \;\geq\;
+  \Pr\!\left[\ec(\pi^{\recom}) \leq c\right].
+\]
+That is, \shb{} stochastically dominates single-chain \recom{} of the
+same total length for finding low-edge-cut plans.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The key observation is that after burst $i$, the chain restarts from
+$\pi_{i+1}$, which has already been selected as the best-available
+starting point for the next burst.
+By contrast, the single chain at step $i \cdot \ell$ has no such
+restart---it may be at a higher-edge-cut state than any endpoint
+recorded so far.
+
+Formally, let $\mathcal{E}_i = \min_{j \leq i} \ec(\pi_j^{(\ell)})$
+be the best edge-cut seen after $i$ bursts.
+For the single chain, let $\mathcal{E}'_T = \ec(\pi'_T)$ be the
+edge-cut at step $T = i \cdot \ell$.
+
+After $i$ bursts, the \shb{} chain is at state $\pi_{i+1}$ with
+$\ec(\pi_{i+1}) \geq \mathcal{E}_i$ (the restart is from the endpoint,
+not the best).
+However, the next burst starts from $\pi_{i+1}$, which is constrained
+to have $\ec(\pi_{i+1}) \leq \ec(\pi_i^{(\ell)}) + \Delta$ for some
+bounded drift $\Delta$ over $\ell$ steps.
+
+By induction on the number of bursts: the restart mechanism ensures
+that the chain cannot drift far from the best-found plan.
+The $p = 0.0$ selection then returns the minimum over all burst
+endpoints, which is at least as good as any single endpoint of the
+same-budget chain.
+\end{proof}
+
+\begin{remark}
+This is a heuristic dominance claim: the proof sketch above bounds the
+drift per burst but does not formally characterise the mixing time of
+the local neighbourhood.
+A formal proof would require mixing time bounds on the restriction of
+the \recom{} chain to the $\delta$-neighbourhood of a good plan---a
+technically involved argument beyond the scope of this paper.
+The empirical evidence in Section~\ref{sec:comparison} provides strong
+evidence for the dominance claim in practice.
+\end{remark}
+
+\subsection{Why Endpoint Retention is Non-Negotiable}
+
+We emphasise the correctness requirement at the heart of Short-Burst.
+
+\paragraph{Breaking the Markov property.}
+If one were to restart from the within-burst minimum rather than the
+endpoint, the resulting sequence would not be a Markov chain on $\mathcal{P}$.
+The within-burst minimum depends on the entire trajectory of the burst,
+not just the current state.
+A chain that restarts from trajectory-dependent states violates the
+Markov property: the future evolution depends on past history beyond
+the current state.
+
+\paragraph{Systematic bias.}
+Selecting the within-burst minimum introduces systematic bias: the
+selected plan is systematically lower in edge-cut than the chain's
+stationary distribution would imply.
+This is not merely a theoretical concern---it means the selected plan
+cannot be interpreted as a sample from the stationary distribution,
+and the sequence of selected plans does not approximate any well-defined
+distribution on $\mathcal{P}$.
+
+\paragraph{Correct behaviour.}
+Endpoint retention preserves both properties.
+The endpoint is a valid state of the \recom{} chain---the chain ended
+there, and the next chain starts there, maintaining the Markov property.
+The sequence of endpoints is a valid stochastic process on $\mathcal{P}$,
+and the selection of the minimum endpoint is a well-defined post-processing
+step that does not affect the validity of each individual restart.

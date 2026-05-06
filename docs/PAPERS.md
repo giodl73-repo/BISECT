@@ -63,6 +63,9 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | |
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | |
+| G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | Implemented `--search short-burst` |
+| G.7 | Sequential Monte Carlo for Calibrated Plan Sampling | — | Implementation deferred (redist-smc crate) |
+| G.8 | Flip Proposals for Local Sensitivity Analysis | [PDF](papers/G.8+flip-proposals.pdf) | Implemented `--search flip` |
 
 **Key finding (G.1, real data):** The bisection plan sits at the compactness extremum — 0.1–0.7th percentile in WI/GA/PA/CA. NC is 50th percentile: geographic constraint makes the minimum-cut plan coincide with the ensemble median.
 
@@ -83,6 +86,7 @@ Validation: does the algorithm produce robust results across resolutions, census
 | C.6 | User Study — algorithmic maps rated fairer by public | [PDF](papers/C.6+user-study.pdf) |
 | C.7 | Uncertainty Quantification — 95% CI for +22% improvement: [+15%, +29%] | [PDF](papers/C.7+uncertainty-quantification.pdf) |
 | B.18 | Multi-Reapportionment Stability — what happens when states gain/lose seats | [PDF](papers/B.18+multi-reapportionment-stability.pdf) |
+| B.19 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/B.19+simulated-annealing.pdf) | Implemented `--structure simulated-annealing` |
 
 ---
 

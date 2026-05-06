@@ -1,0 +1,151 @@
+\section{Local Sensitivity Analysis}
+\label{sec:sensitivity}
+
+\subsection{Sensitivity Metrics}
+
+Given a submitted plan $\pi_0$ and a \flip{} run producing the visited
+sequence $(\ec(\pi_i), \pi_i)_{i=0}^{M-1}$ (where $M = |\mathrm{visited}|$),
+we define two sensitivity metrics.
+
+\begin{definition}[EC stability]
+\label{def:ec-stability}
+\[
+  \sigma_{\ec}(\pi_0, F) = \frac{\mathrm{std}\bigl(\{\ec(\pi_i)\}_{i=0}^{M-1}\bigr)}
+                                  {\mathrm{mean}\bigl(\{\ec(\pi_i)\}_{i=0}^{M-1}\bigr)},
+\]
+the coefficient of variation of the edge-cut values over all visited plans.
+$\sigma_{\ec} = 0$ means all visited plans have the same edge cut;
+$\sigma_{\ec} \to \infty$ indicates extreme variability.
+\end{definition}
+
+EC stability measures how compact (in the edge-cut sense) the local
+neighbourhood of the submitted plan is.
+A plan with low $\sigma_{\ec}$ is in a deep basin of the EC landscape;
+small perturbations do not change the geometric quality of the plan.
+A plan with high $\sigma_{\ec}$ is near a transition between basins.
+
+\begin{definition}[Partisan stability]
+\label{def:partisan-stability}
+Let $S(\pi)$ denote the seat vector of plan $\pi$ (e.g., the vector of
+expected party assignments by district under a reference election).
+\[
+  \rho_{\mathrm{seat}}(\pi_0, F) = \frac{1}{M}
+    \sum_{i=0}^{M-1} \mathbf{1}[S(\pi_i) = S(\pi_0)],
+\]
+the fraction of visited plans with the same seat outcome as the initial plan.
+\end{definition}
+
+Partisan stability is the primary litigation-relevant metric.
+A plan with $\rho_{\mathrm{seat}} \geq 0.95$ is robust: $95\%$ of all
+single-tract-perturbation plans agree with the submitted plan's seat outcome.
+A plan with $\rho_{\mathrm{seat}} < 0.80$ is fragile: more than $1$ in $5$
+single-tract perturbations changes the outcome, which may be evidence that
+the plan was deliberately placed near a partisan boundary.
+
+\subsection{The $p$-Sweep Protocol}
+
+The $p$-sweep runs \flip{} with percentile $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$
+and reports the seat outcome for each selected plan.
+This gives a one-dimensional scan of the local EC landscape from the
+minimum-cut plan ($p = 0.0$) to the maximum-cut plan ($p = 1.0$) accessible
+via single-tract moves.
+
+\begin{verbatim}
+for p in 0.0 0.25 0.50 0.75 1.00; do
+  redist state --state NC --year 2020 \
+      --search flip --flip-steps 10000 --percentile $p
+done
+\end{verbatim}
+
+If all five $p$-values produce the same seat outcome, the plan is
+$p$-sweep stable.
+If any $p$-value produces a different outcome, the plan should disclose the
+full $p$-sweep in its legislative findings.
+
+\subsection{Empirical Results: North Carolina ($k = 14$)}
+
+North Carolina's congressional district graph has $n \approx 2{,}200$ census
+tracts and $k = 14$ districts.
+It is well-studied in the redistricting literature because of the 2016
+``Rucho'' gerrymandering litigation~\citep{rucho2019}.
+
+\paragraph{EC stability.}
+In our experiments, starting from a \cs{}-optimal plan (minimum EC over
+600 seeds), the \flip{} chain with $F = 10{,}000$ steps visits approximately
+$5{,}500$--$6{,}500$ distinct plans (acceptance rate $\approx 55$--$65\%$).
+The EC coefficient of variation $\sigma_{\ec}$ is approximately $0.018$--$0.024$
+across runs---a narrow range indicating that the NC census-tract graph
+constrains single-tract perturbations tightly.
+The geometric structure of NC (the coastal plain, Piedmont, and mountain
+regions) creates natural barriers that limit how much a single tract move
+can change the overall boundary structure.
+
+\paragraph{Partisan stability.}
+In our experiments, NC plans produced by \cs{} achieve partisan stability
+$\rho_{\mathrm{seat}} \geq 0.92$ under \flip{} with $F = 10{,}000$ steps.
+The $p$-sweep for NC (all five percentile values) consistently produces the
+same 7D/7R seat outcome across runs starting from the \cs{}-optimal plan.
+This is consistent with NC's status as a competitive state where the median
+plan produces a near-even split; the local neighbourhood of the \cs{} plan
+does not contain plans with drastically different partisan outcomes.
+
+\paragraph{Interpretation.}
+NC plans are geometrically constrained: the elongated shape of the state,
+the Appalachian barrier to the west, and the densely-populated Research
+Triangle create a landscape where single-tract perturbations rarely bridge
+from one partisan configuration to another.
+High partisan stability here reflects geographic constraint, not deliberate
+design.
+
+\subsection{Empirical Results: Wisconsin ($k = 8$)}
+
+Wisconsin's congressional district graph has $n \approx 1{,}400$ census
+tracts and $k = 8$ districts.
+Wisconsin is notable for the \textit{Gill v.\ Whitford} (2018) state
+assembly gerrymandering case, and its geography creates competitive
+districts near Madison and Milwaukee.
+
+\paragraph{EC stability.}
+In our experiments, the \flip{} chain on WI visits approximately
+$4{,}500$--$5{,}500$ plans per run, with $\sigma_{\ec} \approx 0.031$--$0.042$.
+This is higher than NC, reflecting Wisconsin's more compact shape and lower
+number of districts: with only $k = 8$ districts, each tract represents a
+larger fraction of a district, and single-tract moves have proportionally
+larger effects.
+
+\paragraph{Partisan stability.}
+In our experiments, WI plans show lower partisan stability than NC:
+$\rho_{\mathrm{seat}} \approx 0.78$--$0.88$ depending on the starting plan.
+The $p$-sweep for WI reveals that plans near $p = 0.5$ (median EC) are most
+stable; plans at the extremes ($p = 0.0$ or $p = 1.0$) occasionally produce
+different seat outcomes, typically flipping the district centered on Green Bay
+or the district straddling the Fox River Valley.
+
+\paragraph{Interpretation.}
+Wisconsin's lower partisan stability reflects the genuine competitiveness of
+its district configuration near Milwaukee and Madison.
+A single-tract move in the southeastern corner of WI-4 (the Milwaukee-based
+district) can shift enough population to change the partisan lean of the
+adjacent WI-1 district.
+This is an empirical observation about Wisconsin's geography, not evidence of
+gerrymandering; the $p$-sweep should be disclosed as standard practice for
+competitive states.
+
+\subsection{Guidance for Plan Submitters}
+
+Based on the NC and WI results, we offer the following empirical guidance,
+subject to the caveat that single-run results should not be over-interpreted
+without replication:
+\begin{enumerate}
+  \item Run \flip{} with $F = 10{,}000$ steps from the submitted plan before
+        filing. This takes under 10 seconds for most states.
+  \item Report $\sigma_{\ec}$ and $\rho_{\mathrm{seat}}$ in the legislative findings.
+  \item If $\rho_{\mathrm{seat}} < 0.90$, also report the full $p$-sweep (five
+        runs at $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$).
+  \item If any $p$-sweep run produces a different seat outcome, explain in the
+        legislative findings why the submitted plan was selected at its
+        particular percentile.
+\end{enumerate}
+This protocol is purely descriptive: it characterises the local neighbourhood
+of the submitted plan without implying that any particular outcome is
+unconstitutional.

@@ -1,0 +1,131 @@
+%% G.6 -- Short-Burst Optimization Paper
+%% References
+
+%% ===================================================================
+%% PRIMARY: SHORT-BURST
+%% ===================================================================
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Duchin, Moon and Randall, Dana and Rule, Parker},
+  title   = {Voting Rights, {Markov} Chains, and Optimization},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2207.07690. Introduces Short-Burst optimization for
+             redistricting Markov chains. Short bursts of length $\ell$
+             starting from the current plan and restarting from the
+             endpoint concentrate probability near good plans.
+             Original application: partisan outcome analysis.
+             Our use (min-EC compactness) is a natural extension.},
+}
+
+%% ===================================================================
+%% RECOM AND ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom proposal distribution. Merge two adjacent districts on
+             a random spanning tree, resplit at a balanced edge.
+             The chain that Short-Burst wraps.},
+}
+
+@misc{duchin2021report,
+  author = {Duchin, Moon},
+  title  = {Expert Report on Ensemble Analysis},
+  year   = {2021},
+  note   = {Expert report submitted in redistricting litigation.
+            Demonstrates ensemble analysis methodology and its
+            application to detecting partisan gerrymandering.},
+}
+
+%% ===================================================================
+%% B-SERIES AND H-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: A Multi-Scale Recursive Bisection Framework
+            for Minimum-Edge-Cut Congressional Redistricting},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Introduces \textsc{ApportionRegions} (prime-factor structure).
+            50-state sweep: 223D/209R nationally.
+            NC headline: 7D/7R.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces \cs{} as the deterministic, certifiable
+            alternative to MCMC mixing. $O(T \cdot n)$ runtime.
+            Standard comparison baseline in this paper.},
+}
+
+@misc{h0paper,
+  author = {Della-Libera, Gio},
+  title  = {{PercentileSweep}: Quantile-Based Plan Selection from
+            \recom{} Ensembles},
+  year   = {2026},
+  note   = {H.0 in Algorithmic Redistricting series.
+            Defines the percentile parameter $p$ used in Short-Burst
+            and BisectionEnsemble plan selection.
+            $p = 0.0$ selects the best endpoint; $p = 0.5$ the median.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Recursive Node-Level Ensembles for
+            Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Introduces \be{}: ensemble run at each node of the
+            ApportionRegions bisection tree.
+            Provides empirical baselines used in Section 4:
+            NC PP improvement 20.3\%, WI 15.2\%, TX 25.5\%.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN THEORY
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               Section 2.3 gives the restart / coupling argument used
+               in the stochastic dominance sketch (Section 3 of this paper).},
+}
+
+@article{jerrum1996,
+  author  = {Jerrum, Mark and Sinclair, Alistair},
+  title   = {The {Markov} Chain {Monte Carlo} Method: An Approach
+             to Approximate Counting and Integration},
+  journal = {Approximation Algorithms for NP-hard Problems},
+  year    = {1996},
+  note    = {D.S.~Hochbaum (ed.), PWS Publishing.
+             Canonical reference for the coupling argument and ergodicity
+             of restarted chains discussed in Section 3.},
+}
+
+%% ===================================================================
+%% LEGAL
+%% ===================================================================
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Shifts partisan gerrymandering analysis
+            to state courts, motivating certifiable algorithmic methods
+            for plan generation.},
+}

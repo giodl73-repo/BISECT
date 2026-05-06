@@ -1,0 +1,197 @@
+\section{Formal Properties of the Flip Chain}
+\label{sec:formal}
+
+\subsection{Algorithm Specification}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state, with
+$|V| = n$ tracts.
+A redistricting plan $\pi : V \to [k]$ is valid if every district is
+connected and population-balanced (within $\epsilon = 0.005$ of the target).
+Let $P_{\mathrm{ideal}} = \sum_{v} \mathrm{pop}(v) / k$.
+
+The deterministic seed schedule for the \flip{} chain uses the following
+derivation:
+\[
+  \mathrm{chain\_seed}(b, 0)
+  = \mathrm{SHA256}\!\left(\texttt{"FLIP\_CHAIN\_"} \,\|\, 0^{\mathrm{le64}}
+    \,\|\, \texttt{"\_"} \,\|\, b^{\mathrm{le64}}\right)[0{:}8]
+    \;\text{as } u64,
+\]
+where $b$ is the base seed, $\cdot^{\mathrm{le64}}$ denotes little-endian
+8-byte encoding, and $[0{:}8]$ takes the first 8 bytes.
+
+\begin{algorithm}
+\caption{\flip{} Chain}
+\label{alg:flip}
+\begin{algorithmic}[1]
+\Require Initial plan $\pi_0$, steps $F$, percentile $p \in [0,1]$,
+         base seed $b$
+\Ensure  Selected plan $\pi^*$
+\State $\pi \gets \pi_0$
+\State $\mathrm{visited} \gets [(\ec(\pi_0),\, \pi_0)]$
+\State $\mathrm{rng} \gets \mathrm{SmallRng::seed\_from\_u64}(\mathrm{chain\_seed}(b, 0))$
+\For{$i \gets 1$ \textbf{to} $F$}
+  \State $\mathcal{B} \gets \{v \in V : \exists\, u \in N(v),\; \pi(u) \neq \pi(v)\}$
+         \Comment{boundary tracts}
+  \If{$\mathcal{B} = \emptyset$} \textbf{break} \EndIf
+  \State $t \gets \mathrm{rng.choose}(\mathcal{B})$
+         \Comment{uniform sample from boundary tracts}
+  \State $\mathcal{D}_t \gets \{\pi(u) : u \in N(t),\; \pi(u) \neq \pi(t)\}$
+         \Comment{adjacent districts}
+  \State $d^* \gets \mathrm{rng.choose}(\mathcal{D}_t)$
+         \Comment{proposed target district}
+  \State $\pi' \gets \pi$ with $\pi'(t) \gets d^*$
+  \State $A \gets \pi^{-1}(\pi(t)) \setminus \{t\}$,\quad $B \gets \pi^{-1}(d^*) \cup \{t\}$
+  \If{$G[A]$ is connected
+     \textbf{ and } $|P(A) - P_{\mathrm{ideal}}| \leq \epsilon \cdot P_{\mathrm{ideal}}$
+     \textbf{ and } $|P(B) - P_{\mathrm{ideal}}| \leq \epsilon \cdot P_{\mathrm{ideal}}$}
+    \State $\pi \gets \pi'$
+    \State $\mathrm{visited}.\mathrm{push}((\ec(\pi),\, \pi))$
+  \EndIf
+\EndFor
+\State Sort $\mathrm{visited}$ by $\ec$ ascending
+\State \Return $\mathrm{visited}[\lfloor p \cdot |\mathrm{visited}|\rfloor]$
+\end{algorithmic}
+\end{algorithm}
+
+Three design choices in Algorithm~\ref{alg:flip} deserve comment.
+First, only the district \emph{losing} tract $t$ must be re-checked for
+contiguity; the district \emph{gaining} $t$ remains connected because $t$
+was already adjacent to it.
+Second, the population check is symmetric: both the donor district (now
+$n/k - 1$ tracts lighter) and the recipient district (now $n/k + 1$ tracts
+heavier) must satisfy the balance tolerance.
+Third, every accepted plan is stored (not just the final plan), so the
+$p$-percentile selection examines the full trajectory.
+
+\paragraph{CLI invocation.}
+\begin{verbatim}
+redist state --state NC --year 2020 \
+    --search flip --flip-steps 10000 --percentile 0.0
+\end{verbatim}
+
+\subsection{Time Complexity}
+
+\begin{proposition}[$O(1)$ amortised step cost]
+\label{prop:o1}
+Each step of \flip{} runs in $O(\deg_{\max})$ time if the boundary tract
+set $\mathcal{B}$ is maintained incrementally, and $O(n/k)$ worst-case for
+the contiguity BFS.
+\end{proposition}
+
+\begin{proof}
+The boundary tract set $\mathcal{B}$ changes by at most $1 + \deg(t)$
+elements per accepted step: tract $t$ exits $\mathcal{B}$, and its
+neighbours may enter or leave depending on whether they still border a
+different district.
+Hence $\mathcal{B}$ can be maintained in $O(\deg_{\max})$ amortised time
+per step.
+The contiguity BFS for district $A = \pi^{-1}(\pi(t)) \setminus \{t\}$
+visits at most $|A| \leq n/k$ tracts.
+In practice, for census-tract graphs with average degree $\approx 6$,
+the BFS terminates quickly because most tracts are not on the boundary
+of the district.
+\end{proof}
+
+Compare to \recom{}, which samples a random spanning tree over $A \cup B$
+(a merged district of size $\approx 2n/k$) at each step, requiring
+$O(n/k \log n/k)$ time~\citep{deford2021}.
+\flip{} is therefore $O(\log n/k)$ times cheaper per step, and in practice
+the constant factor is large enough that \flip{} runs at 10$\times$--50$\times$
+the raw throughput of \recom{}.
+
+\subsection{Acceptance Rate}
+
+\begin{proposition}[High acceptance rate]
+\label{prop:accept}
+In our experiments on census-tract graphs, the \flip{} acceptance rate
+is approximately $40$--$70\%$, substantially higher than \recom{} ($5$--$30\%$).
+\end{proposition}
+
+The intuition is straightforward: boundary tracts were selected precisely
+because they lie at the boundary of two districts, so they tend to be close
+to the average population per district.
+A single-tract move therefore rarely violates the balance constraint.
+Contiguity failure is equally rare: if tract $t$ is a boundary tract adjacent
+to district $d^*$, the district $A$ losing $t$ typically remains connected
+because $t$ was on the periphery of $A$, not a bottleneck.
+The rare failure case is when $t$ is an \emph{isthmus} of $A$---the unique
+tract connecting two parts of the district.
+
+\recom{}, by contrast, proposes merging two districts and resampling a
+spanning tree cut; finding a balanced spanning tree cut requires a precise
+population split, which fails often for large districts~\citep{deford2021}.
+
+\subsection{Slow Mixing}
+
+Despite high acceptance rates, \flip{} chains mix extremely slowly.
+
+\begin{theorem}[Slow mixing of \flip{}]
+\label{thm:slow-mix}
+Let $\pi_0$ be an initial redistricting plan with $k$ districts, each
+containing $m = n/k$ tracts on average.
+For any target plan $\pi^*$ that differs from $\pi_0$ in $\ell$ boundary
+tracts (where $\ell$ may be as large as $O(n/k)$), the expected number of
+\flip{} steps to reach $\pi^*$ from $\pi_0$ is at least $\Omega(\ell)$.
+\end{theorem}
+
+\begin{proof}
+Each \flip{} step changes exactly one tract assignment.
+If $\pi_0$ and $\pi^*$ differ in $\ell$ tracts, any path from $\pi_0$ to
+$\pi^*$ in the \flip{} transition graph must contain at least $\ell$ accepted
+steps.
+The expected number of steps (including rejections) to make $\ell$ accepted
+moves is $\ell / p_{\mathrm{acc}} = \Omega(\ell)$.
+\end{proof}
+
+\begin{remark}
+This bound is a \emph{path-length} lower bound, not a mixing time bound in the
+$L^1$ sense.
+The actual mixing time of the \flip{} chain---the number of steps to bring
+the empirical distribution close to the stationary distribution over all
+valid plans---is believed to be exponential in $n$ in the worst case, by
+analogy with the slow mixing of local Markov chains on combinatorial
+structures established in~\citet{sinclair1992}.
+However, since \flip{} is not run for ensemble sampling in our framework
+(we use it only for local sensitivity analysis starting from a fixed plan),
+the mixing time in the statistical sense is not directly relevant to our
+application.
+\end{remark}
+
+\subsection{Reachability: A Strict Subset of the Plan Space}
+\label{subsec:reachability}
+
+A fundamental limitation of \flip{} for ensemble sampling is that not all
+valid plans are reachable from a given starting plan via single-tract flips.
+
+\begin{theorem}[Reachability gap]
+\label{thm:reachability}
+Let $\Pi$ denote the set of all valid $k$-district plans of $G$.
+For any initial plan $\pi_0 \in \Pi$, the set of plans reachable from
+$\pi_0$ via \flip{} moves is a strict subset of $\Pi$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Consider a 1D path graph $G = v_1 - v_2 - \cdots - v_n$ partitioned into
+$k$ contiguous intervals.
+The only valid \flip{} moves shift a boundary between two adjacent intervals
+by one vertex.
+The plan $\pi_0$ assigning $v_1, \ldots, v_{n/2}$ to district 1 and
+$v_{n/2+1}, \ldots, v_n$ to district 2 cannot be reached from the plan
+$\pi^*$ assigning $v_1$ to district 2 and $v_2, \ldots, v_n$ to district 1
+in one step.
+In general, for planar graphs with $k \geq 3$ districts, some plans require
+simultaneous multi-tract moves to maintain contiguity---for example, when
+district boundaries intersect in a ``corridor'' configuration where the only
+path from $\pi_0$ to $\pi^*$ passes through an invalid intermediate plan
+(a disconnected district).
+Such configurations are endemic in real census-tract graphs due to the
+geographic complexity of state boundaries, rivers, and urban cores.
+\end{proof}
+
+This reachability gap is the decisive reason \flip{} cannot replace \recom{}
+for ensemble sampling.
+\recom{} merges two districts and resamples the spanning tree, which can
+produce qualitatively different district configurations in a single step.
+\flip{} cannot bridge topological obstacles that require simultaneous
+multi-tract moves.

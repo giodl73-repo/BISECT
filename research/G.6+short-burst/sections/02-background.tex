@@ -1,0 +1,108 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{ReCom}
+
+The Recombination (\recom{}) Markov chain~\citep{deford2021} is the
+standard Markov chain Monte Carlo method for redistricting.
+Given a current plan $\pi$ on census-tract graph $G = (V, E)$:
+\begin{sloppypar}
+\begin{enumerate}
+\item Select a random boundary edge $(u, v)$ with $\pi(u) \neq \pi(v)$.
+\item Merge districts $A = \pi^{-1}(\pi(u))$ and $B = \pi^{-1}(\pi(v))$
+      into the subgraph $G[A \cup B]$.
+\item Sample a random spanning tree $\mathcal{T}$ of $G[A \cup B]$.
+\item Find an edge in $\mathcal{T}$ whose removal partitions $A \cup B$
+      into two population-balanced subsets; if none exists, reject.
+\item Update $\pi$ with the new bipartition.
+\end{enumerate}
+\end{sloppypar}
+
+\recom{} is designed to have a stationary distribution approximately
+uniform over valid plans (connected, population-balanced bipartitions).
+It is the foundational chain for all methods discussed in this paper.
+
+\subsection{ConvergenceSweep}
+
+\cs{}~\citep{b16paper} runs a single \recom{} chain for $T$ steps
+and returns the best plan seen during the run.
+The parameter $T = 600$ is calibrated as the statutory stopping threshold:
+chains run beyond $T = 600$ steps show diminishing Polsby-Popper improvement
+(less than 1\% per additional 100 steps) on all 50 states.
+
+\cs{} operates with a fixed step budget and selects the minimum-edge-cut
+plan encountered during the entire run.
+Selecting the within-run minimum is appropriate for \cs{} because the
+chain is run as a single continuous trajectory---there is no restart
+mechanism, and the chain is not being used as a Markov restart point.
+
+\subsection{BisectionEnsemble}
+
+\be{}~\citep{h1paper} applies \recom{} ensembles at each node of the
+\ar{} bisection tree.
+Rather than running a single ensemble on the full state, \be{} runs
+a short ensemble ($T = 100$ steps) at each bisection node, selecting
+the best endpoint at each node.
+The node-level best plan propagates down the tree.
+
+\be{} with $p = 0.0$ (always select the best endpoint) achieves
+15--26\% Polsby-Popper improvement over single-seed METIS across
+NC, WI, and TX, and is the strongest benchmark in our comparison.
+
+\subsection{Short-Burst: Original Paper}
+
+Cannon, Duchin, Randall, and Rule~\citep{cannon2022} introduced
+Short-Burst optimization in the context of partisan outcome analysis.
+Their setting: given an enacted redistricting plan, measure its partisan
+properties by running short \recom{} chains from the enacted plan
+and examining the distribution of partisan outcomes at chain endpoints.
+
+Short bursts of length $\ell$ starting from a given plan sample the
+\emph{local neighbourhood} of that plan in plan space.
+By restarting from each endpoint rather than the initial plan, successive
+bursts explore the neighbourhood of the neighbourhood, gradually
+drifting toward better plans without the slow mixing of a long chain.
+
+\paragraph{Endpoint vs.\ minimum.}
+
+A critical design choice distinguishes Short-Burst from naive greedy
+chain-and-pick:
+Cannon et al.\ retain the \emph{endpoint} of each burst, not the
+within-burst minimum.
+
+This distinction has two consequences:
+
+\begin{enumerate}
+\item \textbf{Markov property.}
+      The endpoint of a \recom{} chain is a valid plan in $\mathcal{P}$
+      that could be the starting point of a new chain with the correct
+      Markov structure.
+      The within-burst minimum is not a valid restart point in general:
+      it was not the chain's terminal state, and the chain did not end
+      in that state---restarting from it would break the Markov property
+      and introduce path dependencies not accounted for in the stationary
+      distribution.
+
+\item \textbf{Stationarity.}
+      Selecting the minimum within each burst would systematically bias
+      the restarted chain toward lower-edge-cut plans in a way not captured
+      by the chain's stationary distribution.
+      The bias is a form of selection pressure: the chain preferentially
+      transitions to lower-cut plans not because the transition probability
+      is higher, but because the selection mechanism discards higher-cut endpoints.
+      This makes the selected sequence a biased chain, not a valid
+      Markov chain on $\mathcal{P}$.
+\end{enumerate}
+
+In our min-EC compactness setting, the same argument applies: we retain
+burst endpoints and select among them using the percentile parameter $p$~\citep{h0paper}.
+
+\paragraph{From partisan analysis to compactness optimisation.}
+
+Cannon et al.\ used Short-Burst to measure partisan sensitivity: how
+much does a plan's partisan lean vary in its local neighbourhood?
+Our use is different: we use Short-Burst as an optimization algorithm
+to find low-edge-cut plans.
+The mechanism is identical; only the objective differs.
+This is a natural extension---the endpoint-retention and restart properties
+are valuable regardless of the objective being optimized.

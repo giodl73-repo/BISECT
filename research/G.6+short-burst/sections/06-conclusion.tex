@@ -1,0 +1,55 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\shb{} is a practical search mode for minimum-edge-cut compactness
+optimisation.
+By restarting short \recom{} chains from each burst's endpoint, it
+concentrates exploration near good plans without sacrificing the
+Markov property.
+The implementation in \texttt{redist-cli} as \texttt{--search short-burst}
+achieves 15--22\% Polsby-Popper improvement over single-seed METIS,
+outperforming both multi-seed METIS and \cs{} under a 1{,}000-step
+budget, and approaching \be{} performance.
+
+The key correctness requirement is \emph{endpoint retention} rather
+than within-burst minimization: retaining the burst endpoint
+preserves the Markov restart property and avoids systematic bias
+that would make the selected-plan sequence uninterpretable as a
+well-defined stochastic process.
+
+For the statutory baseline, \shb{} is most effective combined with
+\ar{} (\texttt{--structure prime-factor}): \ar{} provides a good
+initialisation, and \shb{} refines via concentrated neighbourhood
+exploration.
+
+\paragraph{Open directions.}
+
+\begin{enumerate}
+\item \textbf{Multi-run statistics.}
+      This paper presents single-run results.
+      Phase~2 will provide multi-run statistics (mean, standard deviation,
+      and confidence intervals over 50 independent base seeds) to confirm
+      that the reported improvements are consistent rather than
+      seed-dependent.
+
+\item \textbf{Combination with BisectionEnsemble.}
+      The natural next step is to apply \shb{} as a post-processing
+      step on the output of \be{}: \be{} optimizes each bisection node,
+      and \shb{} then refines the final assembled plan.
+
+\item \textbf{Burst length theory.}
+      The empirical rule $\ell^* \approx k$ (burst length equal to
+      the number of districts) warrants a formal analysis.
+      The \recom{} step modifies $\approx 1/k$ of the plan per step;
+      a burst of $k$ steps covers the plan once on average.
+      Whether this is the optimal coverage rate for neighbourhood
+      concentration is an open question.
+
+\item \textbf{Non-uniform stationary distributions.}
+      The stochastic dominance result (Theorem~\ref{thm:dominance})
+      assumes a uniform stationary distribution.
+      For compactness-weighted chains (where plans with higher $\pp$
+      are preferred), the analysis changes: the chain naturally
+      concentrates near good plans, and the Short-Burst advantage
+      may be smaller or larger depending on the weight distribution.
+\end{enumerate}
