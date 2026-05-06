@@ -39,7 +39,7 @@ it. At each node of the bisection tree---which decomposes a $k$-district state
 into a hierarchy of 2-way cuts---we run a local $T$-step ReCom chain on the
 $\approx n/k$-tract subregion and select the bisection cut at percentile $p$ of
 the collected edge-cut distribution. Since every local ensemble is always 2-way
-($k_{\text{local}} = 2$), bipartition failure is structurally impossible.
+($k_{\text{local}} = 2$), bipartition failure at the local ReCom level is structurally impossible.
 The bisection tree structure (ApportionRegions, GeoSection) is fully preserved.
 We implement \texttt{SeedCompositor::BisectionEnsemble\{p, ensemble\_steps\}} in
 \texttt{redist-cli} using \texttt{split\_subgraph\_bisection\_ensemble()}, which

@@ -5,8 +5,8 @@
 
 \cs{}~\citep{b16paper} introduced the seed-walk approach to minimum-edge-cut
 redistricting.
-Starting from the content-derived seed $s_0 = \seedfmt{\texttt{census\_release\_id}
-\,\|\, \texttt{"DIA\_SEED\_V1"}} \bmod 2^{31}$, \cs{} advances one seed at
+Starting from the content-derived seed $s_0 = \lfloor \text{SHA-256}(\texttt{census\_release\_id}
+\,\|\, \texttt{"DIA\_SEED\_V1"}) \rfloor \bmod 2^{31}$, \cs{} advances one seed at
 a time, tracking the normalised edge cut $\ECnorm$ achieved by each METIS
 call.
 The sweep halts after $T$ consecutive seeds produce no improvement.

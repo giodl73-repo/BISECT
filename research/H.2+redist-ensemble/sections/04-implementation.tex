@@ -97,3 +97,20 @@ geometry of the Texas plan space.
 Rust's advantage is that the 10-resample budget is exhausted in
 microseconds rather than the seconds it would take in Python, so pair
 reselection adds negligible overhead.
+
+\paragraph{Stationarity under pair reselection.}
+Pair reselection preserves the \recom{} stationary distribution under
+mild conditions: when the pair-selection probability is symmetric and
+the pair is rejected only when no balanced cut exists (not based on the
+cut quality).
+In our implementation, pair reselection triggers only on balance failure
+--- i.e., when all 10 sampled spanning trees for a given pair admit no
+balanced bipartition --- matching \gc{}'s documented behavior.
+Under this protocol, the reselection step is equivalent to a proposal
+rejection that discards infeasible pair proposals uniformly, which
+preserves detailed balance if the pair-selection distribution is
+symmetric over adjacent district pairs.
+A formal ergodicity analysis is deferred to future work; the planned
+empirical G-track replication (Section~\ref{sec:conclusion}) will compare
+ensemble distributions produced by \re{} and \gc{} to confirm that any
+distributional difference is below statistical resolution.

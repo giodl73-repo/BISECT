@@ -48,10 +48,13 @@ within \texttt{redist build} rather than as a separate overnight job.
 
 The key algorithmic innovation is the use of Wilson's loop-erased random
 walk~\citep{lawler1980loop} to generate uniform random spanning trees.
-Wilson's algorithm runs in $O(\tau_{\mathrm{cover}})$ expected time, where
-$\tau_{\mathrm{cover}}$ is the cover time of the underlying random walk.
+Wilson's algorithm runs in $O(\tau_{\mathrm{cover}})$ expected time
+\citep{wilson1996generating}, where $\tau_{\mathrm{cover}}$ is the
+cover time of the underlying random walk.
 For planar graphs---the natural setting for census-tract adjacency
-graphs---this is $O(|V|\log|V|)$~\citep{aldous1991random}.
+graphs---Aldous~\citeyearpar{aldous1991random} established that
+$\tau_{\mathrm{cover}} = O(|V|\log|V|)$; the planar bound is his
+result, not Wilson's.
 Each \recom{} step uses the spanning tree of the merged pair region
 (approximately $2n/k$ nodes, where $n$ is the total tract count and $k$
 is the number of districts), so Wilson's cost per step is

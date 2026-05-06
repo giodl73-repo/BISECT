@@ -100,8 +100,12 @@ CA & 52 & 8{,}057 & failure\bench & --- & 0.52 & ---\bench \\
 \par\vspace{0.5ex}
 \small
 \est\,Rust estimates require validation with \texttt{criterion.rs}; see Section~\ref{ssec:phase2}.\\
-\bench\,\gc{} fails on TX ($k=38$) and CA ($k=52$) from cold start due to bipartition infeasibility;
-\re{} handles via pair reselection (Section~\ref{ssec:tx}).
+\bench\,\gc{} \emph{without} pair reselection fails on TX ($k=38$) and CA ($k=52$) from cold start
+due to bipartition infeasibility; \gc{} \emph{with} pair reselection and \re{} both handle these cases
+via pair reselection (Section~\ref{ssec:tx}).
+\gc{}'s bipartition failures on TX $k=38$ are combinatorial, not language-specific.
+Both GerryChain-with-pair-reselection and \re{} succeed.
+The advantage of \re{} is throughput, not correctness.
 \end{table}
 
 \subsection{Texas and California}
@@ -116,11 +120,16 @@ enables it to traverse the low-feasibility region rapidly.
 The performance estimate in Table~\ref{tab:performance} assumes the pair
 reselection overhead is absorbed within the 50{,}000\,steps/sec budget.
 
-California ($k=52$) presents the highest per-step cost due to its
-large $n$ and high $k$.
-The estimated 0.52 seconds for 10{,}000 steps still represents a
-dramatic improvement over \gc{}'s inability to complete even 1{,}000
-steps from a cold start.
+Per-step cost is $O((n/k)\log(n/k))$, so the relevant quantity is the
+average merged-region size $m \approx 2n/k$.
+For CA ($k=52$, $n=8{,}057$): $m \approx 310$.
+For PA ($k=17$, $n=3{,}218$): $m \approx 379$.
+PA has the largest average merged region among the six G-track states
+and therefore the highest per-step cost, not California.
+The estimated 0.52 seconds for 10{,}000 CA steps and 0.18 seconds for
+10{,}000 PA steps (Table~\ref{tab:performance}) reflect this relationship.
+Both represent dramatic improvements over \gc{}'s inability to complete
+even 1{,}000 steps from a cold start for TX and CA.
 
 \subsection{Phase 2: Criterion.rs Benchmarks}
 \label{ssec:phase2}

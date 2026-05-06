@@ -16,9 +16,15 @@ chain: the spanning tree distribution is determined by graph structure
 (adjacency and population) alone, and the selection criterion (edge-cut rank)
 is a geometric property. This is identical to the non-partisan posture of
 ApportionRegions \citep{dellaLibera2026apportion} and satisfies the
-``political blindness'' requirement articulated in \emph{Rucho v.\ Common Cause}
-\citep{rucho2019} for any map-drawing algorithm that is proposed as a
-procedurally neutral baseline.
+``political blindness'' standard for neutral map-drawing algorithms articulated
+in state redistricting jurisprudence. Post-\emph{Rucho v.\ Common Cause}
+\citep{rucho2019} (which held federal courts lack jurisdiction over partisan
+gerrymandering claims), partisan gerrymandering claims are litigated in state
+courts under state constitutional provisions; the operative authorities for
+algorithmic neutrality are \emph{League of Women Voters v.\ Commonwealth}
+(Pa.\ 2018), \emph{Common Cause v.\ Lewis} (N.C.\ 2019), and \emph{Harper v.\
+Hall} (N.C.\ 2022), all of which articulate procedural neutrality standards
+that BisectionEnsemble satisfies by virtue of using no partisan inputs.
 
 \paragraph{Uniform local sampling.}
 The uniform spanning tree (UST) used in each ReCom step provides a
@@ -71,13 +77,16 @@ as a ``hidden thumb on the scale.'' We address this concern directly.
 
 \paragraph{$p = 0.5$ (median): the ``typical'' feasible plan.}
 Selecting the median-edge-cut bisection at each node produces the plan that
-is most representative of the local feasible bisection space. By the
-ergodicity of the ReCom chain, the distribution of accepted plans converges
-to the stationary distribution over feasible bisections as $T \to \infty$.
-The median plan is thus the plan that minimises the maximum deviation from
-any other feasible bisection in the edge-cut metric. This is a principled
-``central tendency'' criterion that courts have accepted in the context of
-full-state ensembles \citep{herschlag2020quantifying}.
+is most representative of the local feasible bisection space. To the extent
+the local chain mixes over the feasible bisection space of each node --- a
+property whose formal proof is left to future work --- the distribution of
+accepted plans approximates the stationary distribution over feasible bisections.
+The median plan is thus an approximation to the plan that minimises the maximum
+deviation from any other feasible bisection in the edge-cut metric. This is a
+principled ``central tendency'' criterion that courts have accepted in the context
+of full-state ensembles \citep{herschlag2020quantifying}. Empirically, the
+acceptance rates observed (NC: 61\%, WI: 84\%, TX at bisection nodes: $>50\%$)
+suggest reasonable mixing at $T=100$ for these states.
 
 \paragraph{$p = 0.0$ (minimum): compactness maximisation.}
 Selecting the minimum-edge-cut bisection at each node is equivalent to
@@ -88,18 +97,34 @@ redistricting criterion in 37 states and has been accepted as a non-partisan
 tie-breaker in judicial review of redistricting plans.
 
 \paragraph{Sensitivity to $p$.}
-The NC results (Table~\ref{tab:partisan}) show that the partisan outcome is
-unchanged across $p = 0.0$, $p = 0.5$, and standard bisection. This insensitivity
-is evidence that the percentile choice is not a mechanism for partisan manipulation:
-if the outcome were sensitive to $p$, a partisan actor could exploit $p$ to
-choose a preferred outcome. The stability of the NC result suggests that the
-local feasible bisection space is concentrated around a single partisan equilibrium,
-making the percentile choice genuinely irrelevant to the outcome.
+Rather than arguing retrospectively that NC's stable result proves neutrality,
+we commit to the following prospective sensitivity-analysis protocol: for any
+state where BisectionEnsemble is deployed in litigation, run the full sweep
+$p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$ and disclose the distribution of seat
+counts across $p$ values. A result that is stable across $p$ is evidence of
+neutrality; a result that varies with $p$ must be disclosed as such. This
+commitment is more legally robust than a retrospective stability claim, because
+it applies regardless of whether the target state resembles NC. As shown in
+Table~\ref{tab:partisan}, WI exhibits a one-seat shift at $p=0.5$ relative
+to $p=0.0$; under this protocol, this variation would be disclosed and its
+geographic cause (the Rodden sorting effect, see Section~\ref{sec:results:partisan})
+identified, rather than suppressed.
+
+\paragraph{METIS seed protocol.}
+The METIS seed for each node is drawn from the system CSPRNG (cryptographically
+secure pseudorandom number generator) before any plans are computed. The seed is
+logged before the first plan is generated at each node. If the METIS seed were
+chosen after inspecting results, the ``pre-committed'' argument would break down;
+the CSPRNG-draw-before-compute protocol ensures the seed is not a post-hoc choice.
 
 \paragraph{Disclosure requirements.}
 Any deployment of BisectionEnsemble in litigation or administrative redistricting
 should disclose (1) the value of $p$, (2) the value of $T$, (3) the METIS seed
-used for initialisation, (4) the census release identifier, and (5) the
-acceptance rate at each node. All five are logged by the \texttt{redist-cli}
-implementation in the canonical JSONL audit log, satisfying the deposition
-disclosure requirements of \citet{dellaLibera2026depo}.
+used for initialisation (drawn via CSPRNG before any plans are generated),
+(4) the census release identifier, (5) the acceptance rate at each node, and
+(6) the full $p$-sweep seat distribution for the target state. Optionally, the
+full sequence of accepted plans $\Pi$ (or their edge-cut values and population
+assignments) may be preserved with the \texttt{--log-ensemble} flag, enabling
+independent verification of the percentile selection. All items are logged by
+the \texttt{redist-cli} implementation in the canonical JSONL audit log,
+satisfying the deposition disclosure requirements of \citet{dellaLibera2026depo}.

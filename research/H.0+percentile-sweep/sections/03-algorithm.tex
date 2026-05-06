@@ -57,6 +57,9 @@ The per-index seed formula $s_i = \floor{\text{SHA-256}(\texttt{census\_id}
 from other SHA-256 uses of the census identifier~\citep{sha256nist}.
 The index $i$ acts as a counter, and the modular reduction ensures
 compatibility with 32-bit METIS seed inputs.
+The SHA-256 output is truncated to the least-significant 31 bits: bytes 0--3
+of the big-endian digest are interpreted as an unsigned 32-bit integer, then
+masked to $2^{31} - 1$ (i.e., the high bit is cleared).
 
 \subsection{Relationship to ConvergenceSweep}
 

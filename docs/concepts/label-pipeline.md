@@ -92,6 +92,11 @@ provides a tamper-evident record from algorithm configuration to final report.
 The `redist label-verify` command traverses the chain automatically and reports
 the status of each link.
 
+**Provenance gap**: The SHA chain certifies that build outputs match the
+config. It does not certify that census input data is authentic — use
+`redist fetch --year 2020 --verify-downloads` and record the Census release ID
+separately for full provenance.
+
 ---
 
 ## Core verbs
@@ -141,7 +146,7 @@ Generates HTML, JSON, or PDF reports from the analysis outputs. Reads from
 `analysis/official_2020/{year}/`, writes to `reports/official_2020/{year}/`.
 
 The `--format pdf` path requires Typst; see
-`redist/docs/typst-templates/README.md` for installation. For court submissions,
+`redist/crates/redist-report/typst-templates/README.md` for installation. For court submissions,
 the PDF format produces a report that satisfies the requirements of the
 `redist-report` crate's civic gate (BD-R1).
 
@@ -303,9 +308,24 @@ redist label-verify my_plan
 
 ---
 
+## Testability
+
+The SHA chain is tested via
+`cargo test -p redist-cli --lib -- --test-threads=1`. Key invariant tests:
+
+- **Tamper detection**: modify one byte of `index.json` → assert `MISMATCH`
+- **Cascade invalidation**: rebuild a state → assert downstream stages show
+  `MISSING`
+
+These tests cover the two primary tamper scenarios relevant to legal
+proceedings: post-hoc modification and partial rebuild without chain
+re-verification.
+
+---
+
 ## Further reading
 
 - [three-layer-compositor.md](three-layer-compositor.md) — algorithm configuration
 - [section-algorithms.md](section-algorithms.md) — algorithm family reference
 - `docs/REDIST_CLI.md` — complete CLI flag reference
-- `docs/superpowers/specs/` — label pipeline design specifications
+- `docs/specs/` — label pipeline design specifications

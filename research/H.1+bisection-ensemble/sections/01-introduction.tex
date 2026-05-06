@@ -17,14 +17,14 @@ large primes or contain large prime factors: Texas has $k = 38 = 2 \times 19$,
 Pennsylvania has $k = 17$ (prime), New York has $k = 26 = 2 \times 13$,
 and Michigan has $k = 13$ (prime). A direct $k$-way ReCom ensemble on such
 states requires, at each step, merging two adjacent districts and re-splitting
-the merged subgraph into a \emph{balanced bipartition}---a process that relies
-on finding a spanning tree cut that achieves a target population ratio of
-$1:37$ (for Texas), $1:16$ (for Pennsylvania), or similar extreme imbalances.
-Such cuts are geometrically rare: the probability that a random spanning tree
-cut achieves a $1:(k-1)$ population balance in a geographically-clustered
-tract graph is $O(1/k)$, and for large $k$ the Markov chain's acceptance rate
-falls to near zero. In practice, GerryChain reports bipartition failures and
-stalled chains for Texas and Pennsylvania without extensive custom tuning.
+the merged subgraph into a balanced bipartition. The correct failure mode is
+geometric, not a balance-ratio issue: in a $k=38$ state, merging two adjacent
+districts produces a region whose spanning tree must achieve a $1:1$ balance
+\emph{within} the merged region, but the surrounding $k-2 = 36$ districts
+constrain the boundary so severely that balanced spanning tree cuts become rare.
+GerryChain \emph{without pair reselection} stalls in this regime; GerryChain
+\emph{with pair reselection} can succeed by trying different adjacent pairs
+until a balanced cut is found, at the cost of lower throughput in Python.
 
 \paragraph{BisectionEnsemble: local 2-way ReCom at every node.}
 We propose a structural fix: instead of running a $k$-way ensemble at the top
@@ -36,20 +36,26 @@ manages a subregion of $\approx n/\text{level}$ tracts and must split it into
 2 balanced parts---we replace the single METIS call with a $T$-step local
 ReCom chain seeded by the METIS bisection.
 
-Because every local ensemble is always 2-way, the bipartition failure problem
-is \emph{structurally impossible}: we never ask for a $1:37$ balance, only
-ever a $1:1$ balance (or near-$1:1$ for prime seat counts using the
-floor/ceil split). The bisection tree structure is fully preserved, guaranteeing
+Because every local ensemble is always 2-way at bisection nodes, bipartition
+failure at the local ReCom level is structurally impossible: we never ask for
+a $1:37$ balance at the full-state level, only ever a $1:1$ balance within each
+node's subregion (or near-$1:1$ for prime seat counts using the floor/ceil split).
+The bipartition failure guarantee applies to the local ReCom steps at each
+bisection node; METIS calls at $p'>2$ ApportionRegions nodes are not covered
+by this guarantee. The bisection tree structure is fully preserved, guaranteeing
 population balance and contiguity through the same mechanisms as the original
 bisection algorithm.
 
 \paragraph{Key advantages.}
 \begin{enumerate}
-  \item \textbf{Always tractable}: No bipartition failures regardless of $k$.
-        TX ($k=38$), PA ($k=17$), NY ($k=26$) all succeed.
+  \item \textbf{Always tractable at bisection nodes}: No bipartition failures
+        at the local ReCom level regardless of $k$. TX ($k=38$), PA ($k=17$),
+        NY ($k=26$) all succeed at their bisection nodes.
   \item \textbf{Local feasibility sampling}: Each node samples the local
-        feasible space of bisections of its subregion---a much smaller and
-        geometrically coherent search space than the full plan space.
+        feasible space of bisections of its subregion. At depth $\ell$, each
+        node manages $\approx n/2^\ell$ tracts; the locality advantage grows
+        with depth. The root node ($\ell=0$) manages half the state, while
+        leaf nodes manage $\approx n/k$ tracts.
   \item \textbf{Parallelisable}: Tree nodes at the same depth are independent;
         each node's ensemble can run on a separate CPU core. For a balanced
         binary tree of depth $d = \log_2 k$, level $\ell$ has $2^\ell$ nodes

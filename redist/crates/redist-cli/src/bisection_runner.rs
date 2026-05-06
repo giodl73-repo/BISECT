@@ -1651,23 +1651,29 @@ pub fn run_all_splits_percentile(
         u64::from_le_bytes(d[..8].try_into().unwrap())
     }).collect();
 
-    // Run all seeds in parallel, collect (edge_cut, assignments).
+    // Run all seeds sequentially. par_iter() would call the C METIS library from
+    // multiple threads simultaneously; METIS shares global/TLS RNG state and is
+    // not thread-safe, producing non-deterministic results under concurrent calls.
+    // The pure-Rust redist-metis engine is thread-safe, but we use sequential
+    // iteration unconditionally so both engine paths produce identical output.
     let n = adjacency.len();
-    let results: Vec<(usize, HashMap<usize, usize>)> = seeds.par_iter().map(|&seed| {
-        let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
-            num_districts, balance_tolerance, niter, Some(seed), None)
-            .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
-        let ec = count_edge_cuts(&asgn, adjacency);
-        (ec, asgn)
-    }).collect();
+    let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds.iter()
+        .enumerate()
+        .map(|(idx, &seed)| {
+            let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
+                num_districts, balance_tolerance, niter, Some(seed), None)
+                .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
+            let ec = count_edge_cuts(&asgn, adjacency);
+            (idx, ec, asgn)
+        }).collect();
 
-    // Sort by edge cut (ascending = more compact first).
+    // Sort by (edge_cut ASC, seed_index ASC) — secondary key breaks ties deterministically.
     let mut sorted = results;
-    sorted.sort_by_key(|(ec, _)| *ec);
+    sorted.sort_by(|(i1, ec1, _), (i2, ec2, _)| ec1.cmp(ec2).then(i1.cmp(i2)));
 
     // Pick plan at rank floor(p * n_seeds), clamped to [0, n_seeds-1].
     let rank = ((p * n_seeds as f64).floor() as usize).min(sorted.len() - 1);
-    Ok(sorted.into_iter().nth(rank).map(|(_, a)| a).unwrap())
+    Ok(sorted.into_iter().nth(rank).map(|(_, _, a)| a).unwrap())
 }
 
 /// Count total edge cuts in an assignment.
