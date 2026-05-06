@@ -1,7 +1,8 @@
 # Spec: Ensemble Search Algorithms — G series extensions
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, major revisions applied)  
 **Date**: 2026-05-06  
+**Reviewed**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.25/4  
 **Extends**: `redist-ensemble` crate, `SeedCompositor` three-layer compositor  
 **Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), B.19 (Simulated Annealing)
 
@@ -9,195 +10,226 @@
 
 ## Overview
 
-The `redist-ensemble` crate currently implements ReCom (Recombination). This spec adds four new ensemble/search algorithms, each accessible as a `SeedCompositor` variant and a `--search` CLI flag:
+Four new ensemble/search algorithms, each a `SeedCompositor` variant and `--search` CLI flag.  
+All are **Layer 3 (Search)** — orthogonal to structure and weights.
 
-| Algorithm | `--search` value | Paper | Crate | Status |
-|-----------|-----------------|-------|-------|--------|
-| Short-Burst | `short-burst` | G.6 | `redist-ensemble` | Proposed |
-| SMC | `smc` | G.7 | `redist-smc` (new) | Proposed |
-| Flip proposals | `flip` | G.8 | `redist-ensemble` | Proposed |
-| Simulated Annealing | `simulated-annealing` | B.19 | `redist-apportion` | Proposed |
+| Algorithm | `--search` value | Paper | Layer | `--search` flag collision |
+|-----------|-----------------|-------|-------|--------------------------|
+| Short-Burst | `short-burst` | G.6 | Search | `--burst-length` (distinct from `--ensemble-steps`) |
+| SMC | standalone only | G.7 | Standalone | not a `--search` flag — see §2 |
+| Flip | `flip` | G.8 | Search | `--flip-steps` (distinct from both above) |
+| Simulated Annealing | `simulated-annealing` | B.19 | **Structure** | `--sa-steps`, `--sa-t0`, `--sa-tf` |
 
-All four are **compositor Layer 3 (Search)** additions — orthogonal to structure and weights.
+**Flag disambiguation**: Each mode has its own step-count flag to avoid collision:
+
+| Mode | Step flag | Distinct from |
+|------|-----------|---------------|
+| `short-burst` | `--burst-length` (per burst) + `--n-bursts` | `--ensemble-steps` |
+| `bisection-ensemble` | `--ensemble-steps` (per node) | `--burst-length` |
+| `flip` | `--flip-steps` (total flip proposals) | both above |
+| `convergence` | `--seeds` (=threshold) | all above |
 
 ---
 
 ## 1. Short-Burst (G.6)
 
-**Concept**: Run many short ReCom chains of length ℓ, pick the best plan from each burst by some objective. Proven to outperform long-chain ReCom for optimization targets (Cannon, Duchin et al. 2022).
+**Concept (Cannon, Duchin et al. 2022)**: Run `n_bursts` short ReCom chains of length `burst_length`. Keep the **chain endpoint** from each burst (not the step-minimum — that would be greedy scan, not Short-Burst). Sort endpoints by objective; return the one at percentile `p`.
 
-**Algorithm**:
+The key insight: short bursts starting from a good initial plan tend to stay near good plans. The **endpoint** is kept because it represents a valid Markov chain state from which the next burst can restart; selecting the minimum within a burst would bias the sample and break the Markov property.
+
+**Corrected algorithm**:
 ```
-ShortBurst(burst_length, n_bursts, objective, p):
-  best_plans = []
+ShortBurst(burst_length, n_bursts, objective_fn, p, base_seed):
+  current_plan = initial_METIS_plan
+  burst_endpoints = []
   for burst in 0..n_bursts:
-    chain = RecomChain::new(initial=current_plan, seed=chain_seed(base, burst))
-    plans = run for burst_length steps
-    best_plans.push(plans.min_by(objective))
-  sort best_plans by objective
-  return best_plans[floor(p * n_bursts)]
+    seed_i = chain_seed(base_seed, burst)           // defined below
+    chain = RecomChain::new(initial=current_plan, seed=seed_i)
+    for _ in 0..burst_length:
+      chain.step(rng)
+    endpoint = chain.current_plan()                 // ENDPOINT, not minimum
+    burst_endpoints.push((objective_fn(endpoint), endpoint))
+    current_plan = endpoint                         // chain restarts from endpoint
+  sort burst_endpoints by objective ASC
+  return burst_endpoints[floor(p * n_bursts)].plan
+```
+
+**`chain_seed` definition**:
+```
+chain_seed(base_seed: u64, burst_idx: usize) -> u64:
+  SHA-256("SHORT_BURST_CHAIN_" || burst_idx.to_le_bytes() || "_" || base_seed.to_le_bytes())
+  → least-significant 64 bits
 ```
 
 **Compositor integration**:
 ```rust
 SeedCompositor::ShortBurst {
-    burst_length: usize,   // steps per burst (default: 20)
-    n_bursts: usize,       // number of bursts (default: 50)
-    p: f64,                // percentile of burst winners to return (default: 0.0 = minimum)
+    burst_length: usize,  // ReCom steps per burst (default: 20)
+    n_bursts: usize,      // number of bursts (default: 50)
+    p: f64,               // percentile of endpoints to return (default: 0.0 = min EC endpoint)
 }
 ```
 
 **CLI**: `--search short-burst --burst-length 20 --n-bursts 50 --percentile 0.0`
 
-**YAML**: `search: short-burst, burst_length: 20, n_bursts: 50, percentile: 0.0`
+**YAML**:
+```yaml
+algorithm:
+  structure: prime-factor
+  weights: county
+  search: short-burst
+  burst_length: 20
+  n_bursts: 50
+  percentile: 0.0
+```
 
-**Objective function**: edge cut fraction (default), or PP score if `--objective polsby-popper`
+**Audit chain**: Short-Burst adds to the build manifest:
+```json
+"search": "short-burst",
+"burst_length": 20,
+"n_bursts": 50,
+"percentile": 0.0,
+"base_seed": 12345678,
+"burst_seeds": [seed_0, seed_1, ...]   // all n_bursts seeds recorded
+```
 
-**Research question for G.6**: Does Short-Burst find lower-EC plans than ConvergenceSweep for the same total step count? Expected: yes for small maps; similar for large maps where METIS already finds the global minimum.
+**Test invariants (L0)**:
+- `n_bursts` endpoints produced, each valid k-district plan
+- `p=0.0` returns minimum-EC endpoint; `p=1.0` returns maximum-EC endpoint
+- Same `base_seed` → identical result (deterministic)
+- All endpoints have correct district count k
+- Chain restarts from previous endpoint (not from initial plan)
 
 ---
 
 ## 2. Sequential Monte Carlo / SMC (G.7)
 
-**Concept**: The R `redist` package's main algorithm (Imai, Kane, Fifield 2020). Generates a *weighted* sample of valid plans via sequential importance resampling. Produces properly calibrated posterior distributions — more statistically correct than MCMC for inference.
+**Concept** (Imai, Kane, Fifield 2020 — the R `redist` package): generates a *weighted* sample of valid plans via sequential importance resampling. More statistically correct than MCMC for inference; produces calibrated posteriors.
 
-**New crate**: `redist-smc` (separate from `redist-ensemble` because the algorithm is fundamentally different)
+**Architecture**: SMC is **not** a `SeedCompositor` variant. It is a standalone ensemble method accessed via `redist ensemble --method smc`, not via `redist state --search smc`. The reason: SMC doesn't produce a single plan — it produces a population of weighted plans. Integration into the single-plan compositor would require choosing one plan from the weighted population, which is semantically equivalent to a PercentileSweep on a weighted ensemble (deferred to a follow-on spec).
 
-**High-level API**:
-```rust
-pub fn run_smc(
-    adj: Vec<Vec<u32>>,
-    pop: Vec<i64>,
-    k: u32,
-    pop_tolerance: f64,
-    n_particles: usize,   // number of plans in the population (default: 5000)
-    resample_threshold: f64, // ESS threshold for resampling (default: 0.5)
-    base_seed: u64,
-) -> SmcResult {
-    // Returns weighted sample of k-district plans
-    // Each plan has an associated importance weight
-}
+**Seeding specification**:
+```
+SmcResult = run_smc(adj, pop, k, pop_tolerance, n_particles=5000,
+                    resample_threshold=0.5, base_seed: u64)
+
+Internal seeds:
+  particle_i_seed = chain_seed(base_seed, i)  // same formula as Short-Burst
+  resample_seed   = chain_seed(base_seed, n_particles + resample_round)
 ```
 
-**CLI**: `redist ensemble --method smc --particles 5000 --state NC`
+All internal seeds derived from `base_seed` via SHA-256. Fully reproducible given `base_seed`.
 
-**Compositor integration**: SMC is not a `SeedCompositor` variant — it's a separate ensemble method that runs as a standalone `redist ensemble --method smc` call, not as part of `redist state --search smc`. The output JSON is compatible with `EnsembleResult`.
+**CLI (standalone only)**:
+```bash
+redist ensemble --method smc --particles 5000 --state NC --year 2020
+# Produces: nc_smc_ensemble.json with weighted plan sample
+```
 
-**Research question for G.7**: Do SMC and ReCom give different percentile estimates for the bisection plan? Expected: SMC may place the plan at a higher percentile (more representative) because SMC covers the full feasible space better than ReCom chains.
+**Audit chain**: SMC results include `base_seed` and `n_particles` in the output JSON. `redist label-verify` does not verify SMC outputs (they are analysis artifacts, not plan-generation artifacts).
+
+**Test invariants**: `n_particles` plans produced with non-negative weights summing to 1; same `base_seed` → identical weights; all plans valid.
 
 ---
 
 ## 3. Flip Proposals (G.8)
 
-**Concept**: Instead of merging two districts and resplitting (ReCom), flip individual tracts from one district to an adjacent district. Simpler, faster per step, but much slower to mix across the plan space. Good for local sensitivity analysis.
+**Concept**: Flip individual boundary tracts to adjacent districts. O(1) per step (vs O(n/k log n/k) for ReCom). Faster per step, much slower to mix, good for local sensitivity analysis around an existing plan.
 
 **Algorithm**:
 ```
-FlipChain step:
-  1. Pick random boundary tract (tract adjacent to a different district)
-  2. Pick which neighbor district to flip it to
-  3. Check population balance + contiguity
-  4. Accept/reject (Metropolis-Hastings or always-accept)
+FlipChain(initial_plan, flip_steps, p, base_seed):
+  plan = initial_plan
+  visited = [(EC(plan), plan)]
+  rng = SmallRng::seed_from_u64(chain_seed(base_seed, 0))
+  for _ in 0..flip_steps:
+    tract = random boundary tract (adjacent to different district)
+    target_district = random adjacent district
+    proposed = flip(plan, tract, target_district)
+    if valid(proposed):  // population balance + contiguity
+      plan = proposed
+      visited.push((EC(plan), plan))
+  sort visited by EC ASC
+  return visited[floor(p * visited.len())]
 ```
 
 **Compositor integration**:
 ```rust
 SeedCompositor::Flip {
-    steps: usize,       // number of flip steps (default: 10000)
-    p: f64,             // percentile of visited plans to return (default: 0.0)
-    accept: FlipAccept, // AlwaysAccept | MetropolisHastings { beta: f64 }
+    flip_steps: usize,  // total flip proposals (default: 10000)
+    p: f64,             // percentile of visited plans (default: 0.0)
 }
 ```
 
-**CLI**: `--search flip --steps 10000 --percentile 0.5`
+**CLI**: `--search flip --flip-steps 10000 --percentile 0.5`
 
-**Implementation**: Add `FlipChain` struct to `redist-ensemble/src/flip.rs`. Much simpler than Wilson UST — no spanning tree required, just adjacency check.
+**Audit chain**: `flip_steps`, `percentile`, `base_seed` recorded in manifest.
 
-**Research question for G.8**: For small local adjustments, is Flip faster than ReCom? Expected: yes per step (O(1) vs O(n/k)), but many more steps needed for equivalent mixing.
+**Test invariants**: All visited plans are valid; `p=0.0` ≤ EC of `p=1.0`; deterministic with same seed.
 
 ---
 
 ## 4. Simulated Annealing (B.19)
 
-**Concept**: Start from any valid plan (e.g., from METIS), propose random moves (flip or merge-resplit), accept worse plans with decreasing probability `exp(-ΔEC / T)` where T is temperature. Unlike METIS which greedily minimises, SA can escape local optima.
+**Note**: SA is a **Structure layer** variant (replaces METIS at each bisection node), not Search. `SplitStrategy::SimulatedAnnealing`, not `SeedCompositor`.
 
-**Algorithm**:
+**Corrected cooling schedule** — scaled to subgraph size `m` (tracts in the merged region):
+
 ```
-SimulatedAnnealing(initial_plan, cooling_schedule, n_steps):
-  plan = initial_plan
-  for step in 0..n_steps:
-    T = cooling_schedule(step)
-    proposed = random_flip_or_merge_resplit(plan)
-    if valid(proposed):
-      delta_EC = EC(proposed) - EC(plan)
-      if delta_EC < 0 or random() < exp(-delta_EC / T):
-        plan = proposed
-  return plan
+T_0 = max(1.0, 0.01 * EC(initial_plan))    // proportional to initial EC
+T_final = 1e-4                              // near-zero, allows greedy at end
+n_steps = 10 * m                            // 10 steps per tract — scales with size
 ```
 
-**Cooling schedules**: Linear, exponential, step. Default: exponential with T_0=1.0, T_final=0.01.
+The initial temperature `T_0` is scaled to the initial edge cut so the acceptance probability for a typical move is ~37% at start and ~0% at end. Fixed T_0=1.0 does not scale across subgraphs with EC ranging from 5 to 5000.
 
-**Compositor integration** (Structure layer, not Search — SA replaces METIS at each bisection node):
+**Compositor integration** (Structure layer):
 ```rust
 SplitStrategy::SimulatedAnnealing {
-    n_steps: usize,           // annealing steps per split (default: 1000)
-    cooling: CoolingSchedule, // Exponential { t0, t_final } | Linear | Step
+    steps_per_tract: usize,   // n_steps = steps_per_tract * |region| (default: 10)
+    t0_factor: f64,           // T_0 = t0_factor * EC(initial) (default: 0.01)
+    t_final: f64,             // (default: 1e-4)
 }
 ```
 
-**CLI**: `--structure simulated-annealing --sa-steps 1000`
+**CLI**: `--structure simulated-annealing --sa-steps-per-tract 10 --sa-t0-factor 0.01`
 
-**Note**: SA is a structure-layer variant (replaces METIS), while the others above are search-layer variants (modify how plans are selected). This is the correct compositor separation.
+**Audit chain**: SA parameters recorded in `algorithm_params` manifest field.
 
-**Research question for B.19**: Does SA find more compact plans than METIS for the same compute budget? Expected: yes for small maps; competitive for medium; METIS wins for large maps due to the multilevel coarsening advantage.
+**Test invariants**: Final plan EC ≤ initial plan EC (SA should not increase EC on average); deterministic with same seed.
 
 ---
 
 ## Implementation priority
 
-1. **Flip** (1 week) — simplest, builds on existing `redist-ensemble` infrastructure
-2. **Short-Burst** (1 week) — builds directly on `RecomChain`
-3. **Simulated Annealing** (2 weeks) — new structure mode, needs `split_subgraph_sa()` in `bisection_runner.rs`
-4. **SMC** (1 month) — new crate, complex algorithm, high statistical value
+1. **Flip** (1 week) — simplest, pure addition to `redist-ensemble`
+2. **Short-Burst** (1 week) — builds on `RecomChain`; corrected endpoint semantics
+3. **Simulated Annealing** (2 weeks) — new structure mode, `split_subgraph_sa()` in `bisection_runner.rs`
+4. **SMC** (1 month) — new `redist-smc` crate; high value, complex
 
 ---
 
-## CLI / YAML surface (complete picture after all four)
+## Audit chain summary — all four modes
 
-```bash
-# Short-Burst: 50 bursts of 20 ReCom steps, return minimum EC plan
-redist state --state NC --search short-burst --burst-length 20 --n-bursts 50
-
-# Flip: 10K flip steps, median plan
-redist state --state NC --search flip --steps 10000 --percentile 0.5
-
-# Simulated Annealing bisection
-redist state --state NC --structure simulated-annealing --sa-steps 1000
-
-# SMC ensemble (standalone, not via redist state)
-redist ensemble --method smc --particles 5000 --state NC --steps 1
-
-# Full compositor with Short-Burst search
-redist build official_2020 --year 2020 --search short-burst --burst-length 20 --n-bursts 100
+Every mode that produces a plan must record in `runs/{label}/{year}/index.json`:
+```json
+"search_mode": "short-burst",
+"search_params": {
+  "burst_length": 20,
+  "n_bursts": 50,
+  "percentile": 0.0,
+  "base_seed": 12345678,
+  "total_steps": 1000   // burst_length * n_bursts
+},
+"search_seed_formula": "SHA-256('SHORT_BURST_CHAIN_' || i || '_' || base_seed)"
 ```
 
-YAML:
-```yaml
-algorithm:
-  structure: prime-factor       # bisection tree
-  weights: county               # edge weights
-  search: short-burst           # search strategy
-  burst_length: 20
-  n_bursts: 100
-  percentile: 0.0               # return minimum from bursts
-```
+This ensures `redist label-verify` can confirm the search parameters and seed derivation for any submitted plan.
 
 ---
 
-## Connection to existing work
+## Open questions (P2, deferred)
 
-- All new search modes inherit the `--percentile` / `--ensemble-steps` infrastructure from H.0/H.1
-- All produce `EnsembleResult`-compatible JSON for diagnostics (G.4)
-- Short-Burst answers the "which chain length is optimal?" question that B.7 raised
-- SMC provides the gold standard for ensemble comparison that G.1's GerryChain estimates approximated
-- The G series becomes: G.0 (methodology) + G.1 (ReCom) + G.2/3 (positions) + G.4 (diagnostics) + G.5 (mixing) + G.6 (Short-Burst) + G.7 (SMC) + G.8 (Flip) — a complete ensemble comparison portfolio
+- Should Short-Burst expose `--output-all-bursts` to save all endpoints for diagnostics?
+- Can SMC be integrated into the compositor as `SeedCompositor::Smc { n_particles }` by sampling one plan from the weighted population at a given percentile?
+- Should SA use parallel tempering (multiple temperature chains) for large subgraphs?
