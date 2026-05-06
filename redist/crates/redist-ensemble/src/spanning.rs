@@ -229,7 +229,111 @@ mod tests {
         let mut rng2 = SmallRng::seed_from_u64(2);
         let t1 = random_spanning_tree(&adj, &mut rng1);
         let t2 = random_spanning_tree(&adj, &mut rng2);
-        // With high probability two different seeds produce different trees.
         assert_ne!(t1.parent, t2.parent, "different seeds should produce different trees");
+    }
+
+    // ── Additional L0 coverage ────────────────────────────────────────────────
+
+    #[test]
+    fn two_node_graph_gives_single_edge_tree() {
+        let adj = vec![vec![1u32], vec![0u32]];
+        let mut rng = SmallRng::seed_from_u64(0);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        assert!(is_spanning_tree(&tree.parent, 2));
+        assert_eq!(tree.edges().count(), 1, "two-node tree has exactly 1 edge");
+    }
+
+    #[test]
+    fn triangle_graph_is_valid_tree() {
+        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let mut rng = SmallRng::seed_from_u64(5);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        assert!(is_spanning_tree(&tree.parent, 3));
+    }
+
+    #[test]
+    fn edge_count_is_n_minus_1() {
+        for n in [5, 10, 20, 50] {
+            let adj = path_graph(n);
+            let mut rng = SmallRng::seed_from_u64(n as u64);
+            let tree = random_spanning_tree(&adj, &mut rng);
+            assert_eq!(tree.edges().count(), n - 1, "tree must have n-1 edges for n={n}");
+        }
+    }
+
+    #[test]
+    fn root_has_no_parent() {
+        let adj = grid_graph(4, 4);
+        let mut rng = SmallRng::seed_from_u64(11);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        let roots: Vec<_> = tree.parent.iter().enumerate()
+            .filter(|(_, &p)| p == u32::MAX).collect();
+        assert_eq!(roots.len(), 1, "exactly one root");
+    }
+
+    #[test]
+    fn all_nodes_reachable_from_root() {
+        let adj = grid_graph(5, 5);
+        let mut rng = SmallRng::seed_from_u64(13);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        assert!(is_spanning_tree(&tree.parent, 25), "all 25 nodes reachable");
+    }
+
+    #[test]
+    fn split_components_are_nonempty_and_complementary() {
+        for seed in [1u64, 2, 3, 10, 42] {
+            let adj = grid_graph(4, 4);
+            let mut rng = SmallRng::seed_from_u64(seed);
+            let tree = random_spanning_tree(&adj, &mut rng);
+            for (a, b) in tree.edges() {
+                let (ca, cb) = tree.split_on(a, b);
+                assert!(!ca.is_empty(), "comp_a non-empty (seed={seed})");
+                assert!(!cb.is_empty(), "comp_b non-empty (seed={seed})");
+                let mut all: Vec<u32> = ca.iter().chain(cb.iter()).copied().collect();
+                all.sort_unstable();
+                let expected: Vec<u32> = (0..16).collect();
+                assert_eq!(all, expected, "split covers all 16 nodes");
+                break; // test first edge only per seed
+            }
+        }
+    }
+
+    #[test]
+    fn star_graph_always_valid() {
+        // Hub (0) connected to 5 leaves.
+        let n = 6;
+        let mut adj = vec![vec![]; n];
+        for i in 1..n { adj[0].push(i as u32); adj[i].push(0); }
+        let mut rng = SmallRng::seed_from_u64(77);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        assert!(is_spanning_tree(&tree.parent, n));
+    }
+
+    #[test]
+    fn large_path_graph_valid() {
+        let adj = path_graph(200);
+        let mut rng = SmallRng::seed_from_u64(999);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        assert!(is_spanning_tree(&tree.parent, 200));
+    }
+
+    #[test]
+    fn deterministic_with_same_seed() {
+        let adj = grid_graph(5, 5);
+        let mut rng1 = SmallRng::seed_from_u64(42);
+        let mut rng2 = SmallRng::seed_from_u64(42);
+        let t1 = random_spanning_tree(&adj, &mut rng1);
+        let t2 = random_spanning_tree(&adj, &mut rng2);
+        assert_eq!(t1.parent, t2.parent, "same seed must produce same tree");
+    }
+
+    #[test]
+    fn split_sizes_sum_to_n() {
+        let adj = grid_graph(4, 5); // 20 nodes
+        let mut rng = SmallRng::seed_from_u64(3);
+        let tree = random_spanning_tree(&adj, &mut rng);
+        let (a, b) = tree.edges().next().unwrap();
+        let (ca, cb) = tree.split_on(a, b);
+        assert_eq!(ca.len() + cb.len(), 20, "component sizes sum to n");
     }
 }

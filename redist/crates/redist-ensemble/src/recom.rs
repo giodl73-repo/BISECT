@@ -264,4 +264,143 @@ mod tests {
         assert!(!pairs.is_empty(), "grid with two districts must have adjacent pairs");
         assert!(pairs.contains(&(1, 2)), "districts 1 and 2 share a boundary");
     }
+
+    // ── Additional L0 coverage ────────────────────────────────────────────────
+
+    #[test]
+    fn single_district_no_adjacent_pairs() {
+        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let pop = vec![1000i64; 3];
+        let assignment = vec![1u32, 1, 1]; // all same district
+        let chain = RecomChain::new(adj, pop, assignment, 1, 0.05);
+        assert!(chain.adjacent_pairs().is_empty(), "no pairs when all in one district");
+    }
+
+    #[test]
+    fn step_returns_false_when_no_adjacent_pairs() {
+        let adj = vec![vec![1u32,2], vec![0,2], vec![0,1]];
+        let pop = vec![1000i64; 3];
+        let assignment = vec![1u32, 1, 1];
+        let mut chain = RecomChain::new(adj, pop, assignment, 1, 0.05);
+        let mut rng = SmallRng::seed_from_u64(0);
+        let rec = chain.step(&mut rng);
+        assert!(!rec.accepted, "cannot accept when no adjacent pairs exist");
+    }
+
+    #[test]
+    fn k3_districts_preserved_over_many_steps() {
+        // 6-node path split into 3 districts: [0,1], [2,3], [4,5]
+        let adj: Vec<Vec<u32>> = (0..6usize).map(|i| {
+            let mut nb = vec![];
+            if i > 0 { nb.push((i-1) as u32); }
+            if i < 5 { nb.push((i+1) as u32); }
+            nb
+        }).collect();
+        let pop = vec![1000i64; 6];
+        let assignment = vec![1u32, 1, 2, 2, 3, 3];
+        let mut chain = RecomChain::new(adj, pop, assignment, 3, 0.05);
+        let mut rng = SmallRng::seed_from_u64(42);
+        for _ in 0..100 {
+            chain.step(&mut rng);
+            let districts: HashSet<u32> = chain.assignment.iter().copied().collect();
+            assert_eq!(districts.len(), 3, "must always have 3 districts");
+        }
+    }
+
+    #[test]
+    fn rejected_step_leaves_assignment_unchanged() {
+        let mut chain = grid_chain();
+        let mut rng = SmallRng::seed_from_u64(0);
+        // Use zero tolerance so almost all proposals are rejected.
+        chain.pop_tolerance = 0.0;
+        let before = chain.assignment.clone();
+        for _ in 0..20 {
+            let rec = chain.step(&mut rng);
+            if !rec.accepted {
+                assert_eq!(chain.assignment, before, "rejected step must not change assignment");
+                return; // found a rejection, test passes
+            }
+        }
+        // If all 20 steps accepted with tolerance=0, assignment may have changed — that's fine,
+        // it means the graph has perfectly balanced splits and all proposals succeed.
+    }
+
+    #[test]
+    fn step_count_increments() {
+        let mut chain = grid_chain();
+        let mut rng = SmallRng::seed_from_u64(1);
+        assert_eq!(chain.steps_taken, 0);
+        chain.step(&mut rng);
+        assert_eq!(chain.steps_taken, 1);
+        chain.step(&mut rng);
+        assert_eq!(chain.steps_taken, 2);
+    }
+
+    #[test]
+    fn ideal_pop_is_total_over_k() {
+        let chain = grid_chain();
+        let expected = 8.0 * 1000.0 / 2.0; // 8 tracts × 1000 pop / k=2
+        assert!((chain.ideal_pop - expected).abs() < 1e-6);
+    }
+
+    #[test]
+    fn max_pop_deviation_zero_for_perfectly_balanced() {
+        let adj = vec![vec![1u32], vec![0]];
+        let pop = vec![1000i64, 1000];
+        let assignment = vec![1u32, 2];
+        let chain = RecomChain::new(adj, pop, assignment, 2, 0.01);
+        let dev = chain.max_pop_deviation();
+        assert!(dev < 1e-10, "perfectly balanced partition has zero deviation");
+    }
+
+    #[test]
+    fn cut_edges_count_on_two_district_grid() {
+        let chain = grid_chain();
+        // 4×2 grid, left 4 (0-3) = d1, right 4 (4-7) = d2.
+        // Boundary edges: 0-4, 1-5, 2-6, 3-7 → 4 cut edges.
+        let cut = chain.count_cut_edges();
+        assert_eq!(cut, 4, "4×2 grid has 4 cut edges at the midline");
+    }
+
+    #[test]
+    fn all_assignments_valid_after_many_steps() {
+        let mut chain = grid_chain();
+        let mut rng = SmallRng::seed_from_u64(100);
+        for _ in 0..200 {
+            chain.step(&mut rng);
+            for &d in &chain.assignment {
+                assert!(d == 1 || d == 2, "assignment must be 1 or 2, got {d}");
+            }
+        }
+    }
+
+    #[test]
+    fn pop_balance_never_exceeds_tolerance_plus_epsilon() {
+        let mut chain = grid_chain(); // tolerance = 0.05
+        let mut rng = SmallRng::seed_from_u64(77);
+        for _ in 0..100 {
+            chain.step(&mut rng);
+            let dev = chain.max_pop_deviation();
+            assert!(dev <= 0.06, "deviation {dev:.4} must not exceed tolerance+epsilon");
+        }
+    }
+
+    #[test]
+    fn adjacent_pairs_are_ordered_min_max() {
+        let chain = grid_chain();
+        for (a, b) in chain.adjacent_pairs() {
+            assert!(a < b, "pairs must be (min, max): got ({a},{b})");
+        }
+    }
+
+    #[test]
+    fn step_cut_fraction_in_range() {
+        let mut chain = grid_chain();
+        let mut rng = SmallRng::seed_from_u64(55);
+        for _ in 0..50 {
+            let rec = chain.step(&mut rng);
+            assert!(rec.cut_fraction >= 0.0 && rec.cut_fraction <= 1.0,
+                "cut_fraction {} out of range", rec.cut_fraction);
+        }
+    }
 }

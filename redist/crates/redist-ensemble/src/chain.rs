@@ -253,11 +253,163 @@ mod tests {
 
     #[test]
     fn pooled_stats_are_plausible() {
-        let adj = vec![vec![1u32,2],vec![0,3],vec![1,3],vec![2,1]];  // cycle
+        let adj = vec![vec![1u32,2],vec![0,3],vec![1,3],vec![2,1]];
         let pop = vec![1000i64;4];
         let assign = vec![1u32,1,2,2];
         let result = run_ensemble(adj, pop, assign, 2, 0.1, 100, 1, 7, "test".into());
         assert!(result.pooled_cut_mean >= 0.0 && result.pooled_cut_mean <= 1.0);
         assert!(result.pooled_cut_std >= 0.0);
+    }
+
+    // ── Additional L0 coverage ────────────────────────────────────────────────
+
+    fn small_adj() -> (Vec<Vec<u32>>, Vec<i64>, Vec<u32>) {
+        let adj = vec![vec![1u32,2], vec![0,3], vec![0,3], vec![1,2]];
+        let pop = vec![1000i64; 4];
+        let assign = vec![1u32, 1, 2, 2];
+        (adj, pop, assign)
+    }
+
+    #[test]
+    fn chain_seed_all_different_for_100_indices() {
+        let seeds: std::collections::HashSet<u64> =
+            (0..100).map(|i| chain_seed(42, i)).collect();
+        assert_eq!(seeds.len(), 100, "all 100 chain seeds must be unique");
+    }
+
+    #[test]
+    fn single_chain_gives_no_r_hat() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 20, 1, 42, "test".into());
+        assert!(result.r_hat.is_none(), "r_hat requires at least 2 chains");
+    }
+
+    #[test]
+    fn two_chains_give_r_hat() {
+        // 4×5 grid gives enough topological variety for non-trivial R-hat.
+        let mut adj: Vec<Vec<u32>> = vec![vec![]; 20];
+        for r in 0..4usize { for c in 0..5usize {
+            let v = r*5+c;
+            if c+1<5 { adj[v].push((v+1) as u32); adj[v+1].push(v as u32); }
+            if r+1<4 { adj[v].push((v+5) as u32); adj[v+5].push(v as u32); }
+        }}
+        let pop = vec![1000i64; 20];
+        let assign: Vec<u32> = (0..20).map(|i| if i < 10 { 1 } else { 2 }).collect();
+        let result = run_ensemble(adj, pop, assign, 2, 0.05, 200, 2, 42, "test".into());
+        assert!(result.r_hat.is_some());
+        // R-hat is finite and positive for mixing chains; NaN if variance is zero (degenerate).
+        let rh = result.r_hat.unwrap();
+        assert!(rh.is_nan() || (rh.is_finite() && rh > 0.0),
+            "r_hat must be positive finite or NaN (zero-variance), got {rh}");
+    }
+
+    #[test]
+    fn ess_is_positive_and_bounded_by_n_steps() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 100, 2, 1, "test".into());
+        let ess = result.ess.unwrap();
+        assert!(ess >= 1.0, "ESS must be at least 1");
+        assert!(ess <= 200.0 + 1.0, "ESS must not exceed n_steps*n_chains");
+    }
+
+    #[test]
+    fn hamming_autocorr_has_correct_length() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 200, 1, 9, "test".into());
+        assert_eq!(result.hamming_autocorr.len(), 20, "must have lag-1 through lag-20");
+    }
+
+    #[test]
+    fn hamming_autocorr_values_are_finite() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 200, 1, 9, "test".into());
+        for (i, &ac) in result.hamming_autocorr.iter().enumerate() {
+            assert!(ac.is_finite(), "autocorr at lag {} is not finite: {}", i+1, ac);
+        }
+    }
+
+    #[test]
+    fn chain_seeds_recorded_in_result() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 10, 3, 99, "test".into());
+        assert_eq!(result.chain_seeds.len(), 3);
+        // All seeds must be unique.
+        let unique: std::collections::HashSet<u64> = result.chain_seeds.iter().copied().collect();
+        assert_eq!(unique.len(), 3, "all chain seeds must be distinct");
+        // Seeds must be deterministic.
+        assert_eq!(result.chain_seeds[0], chain_seed(99, 0));
+        assert_eq!(result.chain_seeds[1], chain_seed(99, 1));
+        assert_eq!(result.chain_seeds[2], chain_seed(99, 2));
+    }
+
+    #[test]
+    fn step_numbers_are_sequential() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 20, 1, 42, "test".into());
+        for (i, rec) in result.chains[0].steps.iter().enumerate() {
+            assert_eq!(rec.step, (i + 1) as u64, "step number must be sequential");
+        }
+    }
+
+    #[test]
+    fn n_steps_and_k_match_input() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 77, 2, 5, "mystate".into());
+        assert_eq!(result.n_steps, 77);
+        assert_eq!(result.k, 2);
+        assert_eq!(result.state, "mystate");
+        assert_eq!(result.n_chains, 2);
+    }
+
+    #[test]
+    fn deterministic_with_same_base_seed() {
+        let (adj, pop, assign) = small_adj();
+        let r1 = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 2, 0.1, 30, 1, 42, "t".into());
+        let r2 = run_ensemble(adj, pop, assign, 2, 0.1, 30, 1, 42, "t".into());
+        let cuts1: Vec<f32> = r1.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
+        let cuts2: Vec<f32> = r2.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
+        assert_eq!(cuts1, cuts2, "same seed must produce identical chain");
+    }
+
+    #[test]
+    fn different_base_seeds_produce_different_chains() {
+        // 4×5 grid (20 nodes, k=2) — enough topology for seeds to diverge.
+        let mut adj: Vec<Vec<u32>> = vec![vec![]; 20];
+        for r in 0..4usize { for c in 0..5usize {
+            let v = r*5+c;
+            if c+1<5 { adj[v].push((v+1) as u32); adj[v+1].push(v as u32); }
+            if r+1<4 { adj[v].push((v+5) as u32); adj[v+5].push(v as u32); }
+        }}
+        let pop = vec![1000i64; 20];
+        let assign: Vec<u32> = (0..20).map(|i| if i < 10 { 1 } else { 2 }).collect();
+        let r1 = run_ensemble(adj.clone(), pop.clone(), assign.clone(), 2, 0.05, 100, 1, 1, "t".into());
+        let r2 = run_ensemble(adj, pop, assign, 2, 0.05, 100, 1, 2, "t".into());
+        let cuts1: Vec<f32> = r1.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
+        let cuts2: Vec<f32> = r2.chains[0].steps.iter().map(|s| s.cut_fraction).collect();
+        assert_ne!(cuts1, cuts2, "different seeds should produce different cut sequences");
+    }
+
+    #[test]
+    fn json_roundtrip_preserves_fields() {
+        let (adj, pop, assign) = small_adj();
+        let result = run_ensemble(adj, pop, assign, 2, 0.1, 10, 1, 42, "nc".into());
+        let json = serde_json::to_string(&result).expect("must serialize");
+        let back: EnsembleResult = serde_json::from_str(&json).expect("must deserialize");
+        assert_eq!(back.state, "nc");
+        assert_eq!(back.k, 2);
+        assert_eq!(back.n_steps, 10);
+        assert_eq!(back.chains[0].steps.len(), 10);
+        assert!((back.pooled_cut_mean - result.pooled_cut_mean).abs() < 1e-6);
+    }
+
+    #[test]
+    fn pooled_std_is_zero_for_constant_cut() {
+        // 2-node graph, 2 districts — only one possible partition.
+        let adj = vec![vec![1u32], vec![0u32]];
+        let pop = vec![1000i64, 1000];
+        let assign = vec![1u32, 2];
+        let result = run_ensemble(adj, pop, assign, 2, 0.01, 50, 1, 0, "t".into());
+        // cut_fraction is constant (1 edge, always cut) → std ≈ 0
+        assert!(result.pooled_cut_std < 0.01, "std should be near-zero for constant cut");
     }
 }
