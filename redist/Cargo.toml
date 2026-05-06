@@ -10,6 +10,7 @@ members = [
     "crates/redist-web",
     "crates/redist-tui",
     "crates/redist-metis",
+    "crates/redist-ensemble",
     "python/redist_py",
 ]
 resolver = "2"
@@ -26,6 +27,8 @@ metis = "0.2.2"
 
 # Algorithm / data structures
 rayon = "1.10"
+rand  = { version = "0.8", features = ["small_rng"] }
+sha2  = "0.10"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 csv = "1"
