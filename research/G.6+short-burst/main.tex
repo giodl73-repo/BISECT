@@ -69,9 +69,10 @@ We implement Short-Burst in \texttt{redist-cli} as
 \texttt{SeedCompositor::ShortBurst} and compare it to multi-seed METIS,
 \cs{}, and \be{} on NC ($k=14$), WI ($k=8$), and TX ($k=38$)
 under a fixed budget of 1{,}000 total \recom{} steps.
-\shb{} achieves Polsby-Popper improvements of 15--22\% over the
-standard single-seed METIS baseline, placing it between multi-seed
-METIS (8--12\%) and \be{} (15--26\%).
+\shb{} achieves Polsby-Popper improvements of 15--22\%
+(single-run observations; Phase~2 will provide multi-run statistics)
+over the standard single-seed METIS baseline, placing it between
+multi-seed METIS (8--12\%) and \be{} (15--26\%).
 The key correctness requirement is that each burst retains its
 \emph{endpoint}---not the within-burst minimum---to preserve the
 Markov restart property and avoid systematic bias toward lower-edge-cut

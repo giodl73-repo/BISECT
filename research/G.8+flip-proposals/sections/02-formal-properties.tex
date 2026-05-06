@@ -55,9 +55,16 @@ where $b$ is the base seed, $\cdot^{\mathrm{le64}}$ denotes little-endian
 \end{algorithm}
 
 Three design choices in Algorithm~\ref{alg:flip} deserve comment.
-First, only the district \emph{losing} tract $t$ must be re-checked for
-contiguity; the district \emph{gaining} $t$ remains connected because $t$
-was already adjacent to it.
+First, only the district \emph{losing} tract $t$ (the donor, $d_A =
+\pi^{-1}(\pi(t))$) must be re-checked for contiguity.
+Since $\pi_0$ is a valid plan, the subgraph induced by $d_A \setminus
+\{t\}$ may be disconnected if $t$ was a cut vertex of $G[d_A]$; the
+contiguity BFS checks this explicitly.
+By contrast, the district \emph{gaining} $t$ (the recipient, $d_B =
+\pi^{-1}(d^*)$) is guaranteed to remain connected: $t$ is adjacent to
+some $u \in d_B$ by the boundary-tract selection rule
+($d^* \in \mathcal{D}_t$), and $d_B$ is connected in the current plan,
+so $d_B \cup \{t\}$ is connected without any additional check.
 Second, the population check is symmetric: both the donor district (now
 $n/k - 1$ tracts lighter) and the recipient district (now $n/k + 1$ tracts
 heavier) must satisfy the balance tolerance.
@@ -69,6 +76,19 @@ $p$-percentile selection examines the full trajectory.
 redist state --state NC --year 2020 \
     --search flip --flip-steps 10000 --percentile 0.0
 \end{verbatim}
+
+\begin{remark}[Target distribution]
+\label{rem:target-dist}
+The hard-constraint \flip{} chain (accepting only proposals satisfying
+population balance and contiguity) is not reversible in general with
+respect to the uniform distribution over valid plans: the proposal
+probabilities $Q(\pi, \pi')$ and $Q(\pi', \pi)$ differ because the set
+of valid flip proposals from $\pi$ need not equal the set from $\pi'$.
+The visited sequence used for sensitivity analysis is a random walk
+trace, not an approximate sample from the stationary distribution.
+This distinguishes \flip{} from \recom{}, which is designed as a Markov
+chain sampler targeting a specific distribution~\citep{deford2021}.
+\end{remark}
 
 \subsection{Time Complexity}
 
@@ -122,18 +142,19 @@ tract connecting two parts of the district.
 spanning tree cut; finding a balanced spanning tree cut requires a precise
 population split, which fails often for large districts~\citep{deford2021}.
 
-\subsection{Slow Mixing}
+\subsection{Path-Length Lower Bound}
 
-Despite high acceptance rates, \flip{} chains mix extremely slowly.
+Despite high acceptance rates, \flip{} chains require many steps to traverse
+significant distances in plan space.
 
-\begin{theorem}[Slow mixing of \flip{}]
+\begin{proposition}[Path-length lower bound on plan-space exploration]
 \label{thm:slow-mix}
 Let $\pi_0$ be an initial redistricting plan with $k$ districts, each
 containing $m = n/k$ tracts on average.
 For any target plan $\pi^*$ that differs from $\pi_0$ in $\ell$ boundary
 tracts (where $\ell$ may be as large as $O(n/k)$), the expected number of
 \flip{} steps to reach $\pi^*$ from $\pi_0$ is at least $\Omega(\ell)$.
-\end{theorem}
+\end{proposition}
 
 \begin{proof}
 Each \flip{} step changes exactly one tract assignment.
@@ -142,20 +163,22 @@ $\pi^*$ in the \flip{} transition graph must contain at least $\ell$ accepted
 steps.
 The expected number of steps (including rejections) to make $\ell$ accepted
 moves is $\ell / p_{\mathrm{acc}} = \Omega(\ell)$.
+This is a \emph{path-length} lower bound: it bounds the minimum number of
+steps needed to reach a specific target plan, not the mixing time of the
+chain in the $L^1$ sense.
 \end{proof}
 
 \begin{remark}
-This bound is a \emph{path-length} lower bound, not a mixing time bound in the
-$L^1$ sense.
-The actual mixing time of the \flip{} chain---the number of steps to bring
-the empirical distribution close to the stationary distribution over all
-valid plans---is believed to be exponential in $n$ in the worst case, by
-analogy with the slow mixing of local Markov chains on combinatorial
-structures established in~\citet{sinclair1992}.
+The stronger claim---that the $L^1$ mixing time of the \flip{} chain is
+exponential in $n$ in the worst case---is not proved here.
+Such exponential lower bounds for local Markov chains on combinatorial
+structures are established in~\citet{sinclair1992} via conductance arguments,
+and similar behaviour is conjectured for redistricting chains on realistic
+census-tract graphs.
 However, since \flip{} is not run for ensemble sampling in our framework
 (we use it only for local sensitivity analysis starting from a fixed plan),
-the mixing time in the statistical sense is not directly relevant to our
-application.
+the $L^1$ mixing time is not directly relevant to our application; the
+path-length bound above is the operative limit on \flip{}'s exploratory reach.
 \end{remark}
 
 \subsection{Reachability: A Strict Subset of the Plan Space}
@@ -187,6 +210,27 @@ path from $\pi_0$ to $\pi^*$ passes through an invalid intermediate plan
 (a disconnected district).
 Such configurations are endemic in real census-tract graphs due to the
 geographic complexity of state boundaries, rivers, and urban cores.
+
+\medskip
+\noindent\textbf{Planar example ($k = 3$).}
+We exhibit a concrete planar instance with $k = 3$ districts.
+Consider a $3 \times 3$ grid graph with tracts labelled $0$--$8$ in
+row-major order (tract $i$ occupies row $\lfloor i/3 \rfloor$, column
+$i \bmod 3$).
+Define the initial plan $\pi_0$ as: district~1 $= \{0, 3, 6\}$ (left
+column), district~2 $= \{1, 4, 7\}$ (middle column), district~3 $=
+\{2, 5, 8\}$ (right column).
+Now consider the target plan $\pi_1$: district~1 $= \{0, 1, 3, 4\}$,
+district~2 $= \{2, 5\}$, district~3 $= \{6, 7, 8\}$.
+Moving from $\pi_0$ to $\pi_1$ requires simultaneously moving tracts~1
+and~4 from district~2 to district~1, and moving tract~3 from district~1
+to district~2.
+No single-tract flip achieves this without an invalid intermediate
+state: for example, flipping tract~4 from district~2 to district~1
+before flipping tract~1 leaves district~2 as $\{1, 7\}$, which is
+disconnected (tract~1 and tract~7 share no edge once tract~4 is
+removed).
+Therefore $\pi_1 \notin \mathcal{R}(\pi_0)$ via boundary flips.
 \end{proof}
 
 This reachability gap is the decisive reason \flip{} cannot replace \recom{}

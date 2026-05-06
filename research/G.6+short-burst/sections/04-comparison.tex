@@ -15,6 +15,13 @@ We compare four search methods under a fixed budget of 1{,}000 total
 All methods use the \texttt{prime-factor} (\ar{}) structure and
 \texttt{county} weights, which are the empirically best-performing
 structure and weight settings~\citep{b11paper}.
+All Short-Burst results in Table~\ref{tab:comparison} use base seed
+$s = 42$; METIS results use the same seed for METIS initialisation;
+\cs{} uses the content-derived seed $s_0$ per B.16~\citep{b16paper}.
+We use 2020 presidential two-party precinct returns
+(VEST Harvard Dataverse \citep{vest2020}) as the partisan metric;
+composite partisan indices would be preferable for legislative purposes
+but are not available at census-tract resolution for all three states.
 The step budget is allocated as follows:
 
 \begin{itemize}
@@ -77,18 +84,17 @@ and confidence intervals.
 \setlength{\tabcolsep}{5pt}
 \caption{Polsby-Popper ($\pp$) and improvement under four methods.
          Budget: 1{,}000 \recom{} steps.
-         Baseline $\pp$: NC 0.217, WI 0.198, TX 0.184.}
+         Baseline $\pp$: NC 0.217, WI 0.198, TX 0.184.
+         Base seed $s = 42$ for all Short-Burst runs.}
 \label{tab:comparison}
-\begin{tabular}{lrrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Method & NC & \%$\uparrow$ & WI & \%$\uparrow$ & TX \\
+Method & NC & \%$\uparrow$ & WI & \%$\uparrow$ & TX & \%$\uparrow$ \\
 \midrule
-Multi-seed METIS  & 0.237 & +9.2  & 0.214 & +8.1  & 0.202 \\
-\cs{} ($T=1000$)  & 0.243 & +12.0 & 0.220 & +11.1 & 0.208 \\
-\shb{} ($\ell=20$, $m=50$) & 0.254 & +17.1 & 0.231 & +16.7 & 0.221 \\
-\be{} ($T=100$)   & 0.261 & +20.3 & 0.228 & +15.2 & 0.231 \\
-\midrule
-\multicolumn{6}{l}{\%$\uparrow$ TX: +9.8, +13.0, +20.1, +25.5} \\
+Multi-seed METIS           & 0.237 & +9.2  & 0.214 & +8.1  & 0.202 & +9.8  \\
+\cs{} ($T=1000$)           & 0.243 & +12.0 & 0.220 & +11.1 & 0.208 & +13.0 \\
+\shb{} ($\ell=20$, $m=50$) & 0.254 & +17.1 & 0.231 & +16.7 & 0.221 & +20.1 \\
+\be{} ($T=100$)            & 0.261 & +20.3 & 0.228 & +15.2 & 0.231 & +25.5 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -108,8 +114,11 @@ proportional outcomes~\citep{b11paper}.
 
 \shb{} does not change the partisan structure of the plans: the
 endpoint-retention mechanism explores the low-edge-cut neighborhood
-of the initial METIS plan, and the partisan outcomes are determined by
-the geography and district boundaries, not by the selection mechanism.
+of the initial METIS plan.
+In these three states under prime-factor bisection structure, the
+selection mechanism does not alter partisan seat counts --- consistent
+with B.17's finding that structure dominates search, though this is an
+empirical observation on single runs, not a general theorem.
 
 \subsection{Discussion}
 

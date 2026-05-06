@@ -1,0 +1,50 @@
+\section{Legal Properties and Limitations}
+\label{sec:legal}
+
+Simulated Annealing Bisection is a \emph{structure-layer} algorithm: it
+changes how the bisection tree nodes are solved, not what the algorithm
+optimises.
+Its legal character is therefore inherited from the bisection tree structure
+of \ar{} \citep{dellaLibera2026apportion}.
+SA refines \metis{} solutions using only census-tract adjacency and
+population data; no partisan data enters the SA loop.
+
+\paragraph{Compactness under state law.}
+SA's primary contribution is compactness improvement.
+Polsby-Popper scores are recognised as one measure of compactness in
+redistricting statutes and case law.
+However, PP improvement alone is not a constitutional standard: courts apply
+multiple compactness measures and weigh compactness against other
+redistricting criteria (contiguity, equal population, community of interest
+preservation).
+A plan produced by SA should report PP alongside Reock and any
+state-mandated compactness measures.
+
+\paragraph{Post-\textit{Rucho} context.}
+Under \textit{Rucho v.\ Common Cause} (2019), federal courts have no
+jurisdiction over partisan gerrymandering claims; state courts apply state
+constitutional standards.
+SA does not alter the partisan character of the bisection tree structure and
+produces consistently proportional outcomes in our three-state evaluation
+(Table~\ref{tab:main}), consistent with B.17's finding that structure
+dominates search.
+This proportionality is a consequence of the prime-factor bisection
+geometry, not of SA itself.
+
+\paragraph{VRA considerations.}
+SA's boundary-level adjustments operate within a fixed district count $k$
+and bisection topology.
+SA does not guarantee preservation of majority-minority district
+configurations; VRA compliance must be verified separately using
+\texttt{redist analyze --types bloc-voting} after plan generation
+\citep{dellaLibera2026callais}.
+
+\paragraph{Audit chain.}
+Each SA run records the per-node seeds (Definition~\ref{def:sa-seed}),
+cooling schedule parameters ($T_0$, $T_{\mathrm{final}}$,
+\texttt{steps\_per\_tract}), the initial \metis{} \ec{}, the final
+best-ever \ec{}, and the total steps run.
+These fields satisfy the reproducibility requirements of the \dia{} seed
+formula (prefix \texttt{"DIA\_SEED\_V1"}) and enable a verifier to
+reproduce the temperature schedule and confirm that the submitted plan was
+reachable under the stated parameters.

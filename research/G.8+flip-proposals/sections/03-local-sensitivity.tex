@@ -42,6 +42,17 @@ A plan with $\rho_{\mathrm{seat}} < 0.80$ is fragile: more than $1$ in $5$
 single-tract perturbations changes the outcome, which may be evidence that
 the plan was deliberately placed near a partisan boundary.
 
+\begin{remark}[Heuristic thresholds]
+\label{rem:thresholds}
+The thresholds $\rho_{\mathrm{seat}} \geq 0.95$ (robust) and $< 0.80$
+(fragile) are heuristic calibrations based on our empirical observations
+across NC and WI; they have not been validated against legal precedent or
+a reference distribution.
+Practitioners deploying \flip{}-based stability analysis in litigation
+should report the raw $\rho_{\mathrm{seat}}$ value and allow the
+factfinder to apply an appropriate legal threshold.
+\end{remark}
+
 \subsection{The $p$-Sweep Protocol}
 
 The $p$-sweep runs \flip{} with percentile $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$
@@ -71,8 +82,9 @@ It is well-studied in the redistricting literature because of the 2016
 
 \paragraph{EC stability.}
 In our experiments, starting from a \cs{}-optimal plan (minimum EC over
-600 seeds), the \flip{} chain with $F = 10{,}000$ steps visits approximately
-$5{,}500$--$6{,}500$ distinct plans (acceptance rate $\approx 55$--$65\%$).
+600 seeds), the \flip{} chain with base seed $s = 42$ and $F = 10{,}000$
+steps visits approximately $5{,}500$--$6{,}500$ distinct plans (acceptance
+rate $\approx 55$--$65\%$).
 The EC coefficient of variation $\sigma_{\ec}$ is approximately $0.018$--$0.024$
 across runs---a narrow range indicating that the NC census-tract graph
 constrains single-tract perturbations tightly.
@@ -97,6 +109,19 @@ from one partisan configuration to another.
 High partisan stability here reflects geographic constraint, not deliberate
 design.
 
+\paragraph{Directionality of high partisan stability.}
+High $\rho_{\mathrm{seat}}$ may reflect either geographic constraint (the
+political geography does not support a different partisan outcome under small
+perturbations) or deliberate plan design (the plan was constructed to be
+locally immune to perturbation).
+These two explanations are observationally equivalent under \flip{} alone.
+To distinguish them, practitioners can compare $\rho_{\mathrm{seat}}$
+against a reference distribution from BisectionEnsemble or PercentileSweep:
+a plan that is geometrically constrained will have high $\rho_{\mathrm{seat}}$
+across \emph{all} starting plans in the ensemble, whereas a gerrymandered
+plan may have high $\rho_{\mathrm{seat}}$ only from a specific starting
+point.
+
 \subsection{Empirical Results: Wisconsin ($k = 8$)}
 
 Wisconsin's congressional district graph has $n \approx 1{,}400$ census
@@ -106,8 +131,9 @@ assembly gerrymandering case, and its geography creates competitive
 districts near Madison and Milwaukee.
 
 \paragraph{EC stability.}
-In our experiments, the \flip{} chain on WI visits approximately
-$4{,}500$--$5{,}500$ plans per run, with $\sigma_{\ec} \approx 0.031$--$0.042$.
+In our experiments, the \flip{} chain on WI with base seed $s = 42$ and
+$F = 10{,}000$ steps visits approximately $4{,}500$--$5{,}500$ plans per
+run, with $\sigma_{\ec} \approx 0.031$--$0.042$.
 This is higher than NC, reflecting Wisconsin's more compact shape and lower
 number of districts: with only $k = 8$ districts, each tract represents a
 larger fraction of a district, and single-tract moves have proportionally
@@ -140,8 +166,18 @@ without replication:
   \item Run \flip{} with $F = 10{,}000$ steps from the submitted plan before
         filing. This takes under 10 seconds for most states.
   \item Report $\sigma_{\ec}$ and $\rho_{\mathrm{seat}}$ in the legislative findings.
-  \item If $\rho_{\mathrm{seat}} < 0.90$, also report the full $p$-sweep (five
-        runs at $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$).
+  \item Interpret $\rho_{\mathrm{seat}}$ using the heuristic thresholds from
+        Remark~\ref{rem:thresholds}:
+        \begin{itemize}
+          \item If $\rho_{\mathrm{seat}} \geq 0.95$, the plan is locally robust
+                and may be submitted with the \flip{} audit record alone.
+          \item If $\rho_{\mathrm{seat}} < 0.80$, the plan is fragile; the full
+                $p$-sweep seat distribution must be disclosed in the legislative
+                findings.
+          \item If $0.80 \leq \rho_{\mathrm{seat}} < 0.95$, disclosure of
+                $\rho_{\mathrm{seat}}$ and the number of visited plans is
+                recommended.
+        \end{itemize}
   \item If any $p$-sweep run produces a different seat outcome, explain in the
         legislative findings why the submitted plan was selected at its
         particular percentile.
