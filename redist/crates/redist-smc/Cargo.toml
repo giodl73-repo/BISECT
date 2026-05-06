@@ -1,0 +1,19 @@
+[package]
+name = "redist-smc"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Sequential Monte Carlo redistricting — calibrated weighted plan sampling (G.7)"
+
+[dependencies]
+redist-ensemble = { path = "../redist-ensemble" }
+rand.workspace = true
+sha2.workspace = true
+rayon.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+# no extra dev deps needed

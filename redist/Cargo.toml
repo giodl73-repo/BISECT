@@ -11,6 +11,7 @@ members = [
     "crates/redist-tui",
     "crates/redist-metis",
     "crates/redist-ensemble",
+    "crates/redist-smc",
     "python/redist_py",
 ]
 resolver = "2"
