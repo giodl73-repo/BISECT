@@ -1,0 +1,87 @@
+\label{sec:arizona}
+
+\subsection{Background: The AIRC Structure}
+
+The Arizona Independent Redistricting Commission was established by Proposition
+106, a voter initiative adopted in 2000, following decades of legislative
+gerrymandering.  The AIRC consists of five members: two Democrats, two
+Republicans, and one independent chair selected by the other four members from
+a pool maintained by the state commission on appellate court appointments.  The
+Commission drew the 2002, 2012, and 2022 congressional maps.
+
+The U.S. Supreme Court upheld the AIRC's constitutional authority in
+\textit{Arizona State Legislature v.\ Arizona Independent Redistricting
+Commission}~\citep{airc2015}, holding that the Elections Clause's reference to
+``the Legislature'' encompasses a lawmaking body created by the People through
+the initiative process.  The AIRC is therefore a constitutionally valid
+redistricting body for federal congressional maps.
+
+Arizona's redistricting criteria, in statutory priority order, are:
+(1) population equality; (2) VRA compliance; (3) geographic compactness
+and contiguity; (4) preservation of communities of interest; and (5)
+partisan fairness.  The algorithm addresses criteria 1 and 3 directly, and
+criterion 2 through its VRASection weight; criteria 4 and 5 are the domain
+of Commission judgment.
+
+\subsection{How the AIRC Would Integrate Algorithm Output}
+
+Under the Commission pathway, algorithmic redistricting functions as a
+\emph{constraint-satisfying starting plan}.  The workflow would proceed in
+four stages:
+
+\begin{enumerate}
+  \item \textbf{Data preparation and algorithm run.}  Commission staff
+    (or a designated technical contractor) run \texttt{redist state --state AZ
+    --year 2020 --version v1} to generate a population-balanced, compact map.
+    The VRASection weight is applied to protect minority-opportunity districts
+    in the Phoenix metropolitan area.  The output is a GEOID-to-district
+    assignment file and a map visual.
+
+  \item \textbf{Criteria-compliance verification.}  Commission staff run
+    \texttt{redist analyze --state AZ --year 2020 --version v1 --types
+    compactness demographic} to generate the criteria-compliance report.
+    This report documents population balance, compactness scores, and
+    minority-population percentages for each district.
+
+  \item \textbf{Public comment period.}  The Commission publishes the
+    algorithm output as a draft plan and receives public comment, including
+    community-of-interest testimony.  The Commission retains authority to
+    adjust boundaries to address specific community-of-interest concerns
+    identified in testimony, subject to the constraint that adjustments must
+    not reduce population balance below $\pm 1\%$ or reduce compactness
+    scores below a floor.
+
+  \item \textbf{Final adoption.}  The Commission votes on the final plan.
+    If the algorithm output is adopted without adjustment, the Commission's
+    decision record documents that criteria 1--3 are satisfied by the
+    algorithm and that criteria 4--5 are satisfied by the absence of
+    challenged community separations and by the near-symmetric partisan
+    lean of competitive districts.
+\end{enumerate}
+
+\subsection{Community-of-Interest Adjustments}
+
+The most delicate question is how the Commission can exercise judgment about
+communities of interest without re-introducing political manipulation.  Two
+guardrails are essential.
+
+First, community-of-interest adjustments must be \emph{geographically
+justified}: they must unite a geographically defined community (a county,
+a Native American tribal area, an established municipality) rather than
+unite partisan voters who happen to live in dispersed locations.
+
+Second, adjustments must be documented with a \emph{specific factual finding}
+that the original algorithm output separated the identified community.
+Arizona's statute already requires this; algorithmic redistricting strengthens
+the requirement by providing a clean baseline against which adjustments are
+measured.
+
+\subsection{Legal Resilience of the Commission Pathway}
+
+The Commission pathway is legally robust for several reasons.  The AIRC's
+constitutional authority is established.  Algorithmic redistricting reduces
+the decisional surface available to commissioners, reducing opportunities
+for the kind of intentional-partisanship finding that would be required to
+sustain a challenge.  And the transparency of the algorithm's criteria---
+population equality and compactness, publicly documented---makes it difficult
+to allege hidden partisan purpose in the starting plan.

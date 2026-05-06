@@ -1,0 +1,61 @@
+%% 06-dashboards.tex — Dashboard links and how to read maps
+
+\section{Dashboards and Maps}
+
+\subsection*{The Static Dashboard}
+
+The portfolio ships with a self-contained HTML dashboard at
+\texttt{web/dashboard.html}.
+Open it in any modern browser---no server, no login, no software installation.
+The dashboard shows:
+
+\begin{itemize}
+  \item A map of every state's algorithmic districts for 2000, 2010, and 2020.
+  \item Compactness scores for each district, color-coded from compact
+        (dark green) to elongated (light yellow).
+  \item Population balance: every district is within $\pm$0.5\% of the
+        state's ideal district population.
+  \item Side-by-side comparison with enacted 2020 districts where available.
+\end{itemize}
+
+\subsection*{How to Read a Bisection Map}
+
+Each district in the map corresponds to one leaf of the bisection tree.
+Districts that were separated early in the process (at the first or second
+cut) tend to be large geographic regions: a northern half, a southern half.
+Districts separated late are more local and more finely shaped.
+
+Colors in the standard output represent the bisection \emph{round} at which
+a district was finalized:
+\begin{itemize}
+  \item Round 1 (two pieces): wide, regional districts.
+  \item Round 2 (four pieces): quadrant-level districts.
+  \item Round 3 and later: neighborhood-scale districts in high-density states.
+\end{itemize}
+
+\subsection*{What the Round-by-Round Images Show}
+
+The pipeline generates one image per round per state.
+For a state with $k$ seats, there are $\lceil \log_2 k \rceil$ rounds.
+Each image shows the current partition, with district boundaries
+darkening as more cuts are made.
+
+Reading the rounds from first to last, you see the algorithm
+``zoom in'' from large geographic halves to individual districts.
+This visualization makes it easy to verify that no round
+produced a non-contiguous piece or a population imbalance.
+
+\subsection*{Reproducing Any Figure}
+
+Every figure in the portfolio can be regenerated from the public
+Census data and the open-source \texttt{redist} CLI:
+
+\begin{verbatim}
+redist fetch --year 2020
+redist state --state NC --year 2020 --version v1
+redist map   --state NC --year 2020 --version v1
+\end{verbatim}
+
+\noindent The resulting maps and CSV data are placed in
+\texttt{outputs/v1/2020/north\_carolina/}.
+The full replication procedure is in Paper A.4.

@@ -1,0 +1,101 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\hh}{\textsc{Huntington-Hill}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\case}[1]{\textit{#1}}
+
+\title{%
+  \textbf{Redistricting Stability Across Reapportionment Cycles:}\\
+  \textbf{How Seat Changes Affect the ApportionRegions Tree}\\[0.8em]
+  \normalsize\textit{B.18 --- Algorithm Theory / Temporal Stability}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+What happens in 2030 when states gain or lose congressional seats?
+The \ar{} algorithm constructs a bisection tree whose structure is
+determined entirely by the prime factorisation of the district count $k$.
+A change in $k$ can therefore produce a dramatic change in tree
+topology---not because the algorithm has changed, but because the
+arithmetic has.
+This paper characterises the 2030 reapportionment shock using
+Census Bureau projections (TX: $38 \to 41$, CA: $52 \to 50$,
+FL: $28 \to 29$, NY: $26 \to 25$, and others), traces how
+each seat change alters the bisection tree, and simulates
+the resulting tract-level boundary movements.
+The key finding is that seat-change-induced disruption is
+\emph{less} than the disruption from a single MCMC remix step:
+the \ar{} algorithm recomputes the tree fresh from the new
+apportionment each decade, which is the intended statutory
+behavior under the \dia{}.
+Texas is the most interesting case: $38 = 2 \times 19$ (deep prime,
+two-phase tree) changes to $41$ (prime, flat tree), producing
+the largest structural change in the nation.
+California's move from $52 = 4 \times 13$ to $50 = 2 \times 5^2$
+produces a qualitatively different but similarly disruptive
+factorisation change.
+We conclude that decadal recomputation is algorithmically sound
+and politically neutral.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-projections}
+\input{sections/03-factorization}
+\input{sections/04-boundary-stability}
+\input{sections/05-gerrychain-baseline}
+\input{sections/06-statutory}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,63 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{County preservation as a legal criterion}
+
+The preservation of political subdivisions has a long history in
+redistricting law.  \emph{Reynolds v.\ Sims}~\citep{reynolds1964sims}
+acknowledged that states may consider county boundaries as a secondary
+criterion after population equality.  The National Conference of State
+Legislatures documents subdivision-preservation requirements in 34 states,
+with Iowa's constitutional provision being among the most stringent.
+
+Grofman et al.~\citep{grofman1990representation} reviewed the history of
+county preservation as a redistricting criterion, noting that courts have
+generally upheld county preservation as a valid, non-partisan criterion
+that can justify minor deviations from strict population equality.
+
+Benton~\citep{benton2002counties} documented the service-delivery role
+of counties --- as units of government responsible for health, courts,
+and elections --- as the substantive reason for preserving county
+integrity in legislative maps.
+
+\subsection{Algorithmic approaches to subdivision preservation}
+
+Altman~\citep{altman1998compactness} proposed a bicriterion optimisation
+approach that treats compactness and subdivision preservation as competing
+objectives, finding that small compactness losses can achieve large
+subdivision-preservation gains.
+
+Ricca et al.~\citep{ricca2008local} implemented tabu search with county
+preservation as a hard constraint, finding that infeasibility arises for
+approximately 15--20\% of their test instances --- consistent with our
+hard-constraint analysis.
+
+The GerryChain framework~\citep{deford2019recombination} supports optional
+county-preservation filters in the ReCom chain, but these function as
+post-hoc filters (rejecting maps that split too many counties) rather than
+as an edge-weighting signal, making them less efficient for large instances.
+
+\subsection{Edge weighting for graph partitioning}
+
+Edge weighting in graph partitioning is well-studied for non-geographic
+applications.  Karypis and Kumar~\citep{karypis1998} showed that METIS
+supports general edge weights without loss of correctness or the $O(m)$
+per-level complexity.
+
+Bozkaya et al.~\citep{bozkaya2003zone} used a form of edge weighting in
+their tabu search for political districting, penalising inter-county
+edges with a multiplier.  Their multiplier was fixed at 2.0 based on expert
+judgment; our paper provides the first systematic empirical calibration
+of this parameter.
+
+\subsection{Multi-criterion redistricting}
+
+Swamy et al.~\citep{swamy2011least} formulated redistricting as a
+least-squares multi-criterion problem.  County preservation was one of
+several criteria, but they used a hard-constraint formulation that scaled
+poorly beyond $n \approx 500$ tracts.
+
+The soft-constraint approach of this paper is related to penalty methods in
+constrained optimisation~\citep{mehrotra1998optimal}: the county-sticky
+multiplier $\alpha_c$ functions as a penalty on inter-county cuts, with
+the penalty calibrated to achieve a target constraint satisfaction rate.

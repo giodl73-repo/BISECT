@@ -1,0 +1,37 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+The G-track establishes a rigorous framework for situating the \ar{}
+algorithmic redistricting plan within the ensemble landscape.  The central
+methodological contribution is the distinction between two goals: ensemble
+methods characterise the space of reasonable plans (Goal A), while the
+\ar{} algorithm computes the canonical optimal plan within that space (Goal B).
+
+These goals are not competitors.  The ensemble distribution is the natural
+reference frame for evaluating the \ar{} plan.  If \ar{} produces a plan that
+falls at the 54th percentile of partisan outcomes and the 68th percentile of
+compactness, the ensemble has confirmed that the plan is neither a partisan
+outlier nor a geometric curiosity.  The plan can then be presented to a court
+or legislature with two certificates: it is the unique minimum-edge-cut plan
+for this state's geography and seat count, and it lies in the interior of the
+space of geographically reasonable plans.
+
+The convergence diagnostics from G.4 ($\rhat$, \ess{}, Hamming autocorrelation)
+apply to both ensemble and algorithmic validation.  The \cs{} threshold
+$T = 600$ from B.16 translates into an analogue of \ess{} for the seed
+sweep: stability across 600 consecutive non-improving seeds is evidence that
+the seed space has been adequately explored.
+
+The statutory implication is direct.  Courts seeking a remedial plan that
+does not require judicial discretion can adopt the \ar{} plan.  Ensemble
+evidence, as developed in G.1--G.3, confirms that the plan is geographically
+reasonable on the three dimensions courts have examined: compactness, partisan
+balance, and minority representation.  The plan is not perfect on any
+dimension---it is optimal on the minimum-edge-cut dimension---but it is
+defensible on all dimensions, which is what the law requires.
+
+Future work in the G-track (G.4, G.5) will develop ensemble diagnostics for
+the \recom{} chain itself and examine mixing rates as a function of state
+complexity (number of tracts, $k$, geographic compactness).  These papers
+will also provide the computational foundation for running bespoke ensembles
+where published results are unavailable.

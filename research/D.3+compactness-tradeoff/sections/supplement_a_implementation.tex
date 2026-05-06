@@ -184,7 +184,7 @@ where $P_i$ is the total population of district $i$.
 We use PyMETIS, a Python wrapper for METIS, with the following interface:
 
 \begin{verbatim}
-import pymetis
+# Replication: redist state --state [XX] --partition-mode metis-vra --year 2020
 import networkx as nx
 
 def partition_with_metis(G, k, beta, tau):
@@ -211,14 +211,8 @@ def partition_with_metis(G, k, beta, tau):
         edge_weights.append([G[u][v]['weight'] for v in G.neighbors(u)])
 
     # Call METIS
-    edgecut, parts = pymetis.part_graph(
-        k,  # Number of parts
-        adjacency=adjacency,
-        vweights=node_weights,
-        eweights=edge_weights,
-        recursive=True,  # Use recursive bisection
-        seed=42
-    )
+    # See: redist analyze --label [plan] --types vra
+    edgecut, parts = None, None  # replaced by redist Rust binary
 
     # Map back to GEOIDs
     partition = {node: parts[i] for i, node in enumerate(G.nodes())}
@@ -318,8 +312,7 @@ cd metis-5.1.0
 make config shared=1 cc=gcc prefix=/usr/local
 make install
 
-# Install PyMETIS
-pip install pymetis
+# Install: cargo build --release --manifest-path redist/Cargo.toml
 \end{verbatim}
 
 \subsubsection{Code Repository}

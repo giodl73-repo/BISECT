@@ -1,0 +1,70 @@
+\section{Redistricting as MCMC on a Graph}
+\label{sec:mcmc}
+
+\subsection{State Space}
+
+Let $G = (V, E)$ be the census-tract adjacency graph for a state, with
+$|V| = n$ tracts.
+A \emph{redistricting plan} is a surjection $\pi : V \to [k]$ such that:
+\begin{enumerate}
+\item \textbf{Population balance}: for each district $i$,
+      $|P(\pi^{-1}(i)) - P_{\rm target}| \leq \epsilon \cdot P_{\rm target}$,
+      where $P(S)$ is the total population of tracts in $S$ and
+      $\epsilon = 0.005$ (the DIA tolerance).
+\item \textbf{Contiguity}: for each district $i$, the induced subgraph
+      $G[\pi^{-1}(i)]$ is connected.
+\end{enumerate}
+
+Let $\mathcal{P}$ denote the set of valid plans.
+$|\mathcal{P}|$ is exponentially large in $n$ (lower bounded by
+$(n/k)^k$ for balanced partitions~\citep{duchindist2020}).
+
+\subsection{The ReCom Proposal Distribution}
+
+The \recom{} chain~\citep{deford2021} transitions from plan $\pi$ to
+plan $\pi'$ via:
+\begin{enumerate}
+\item Select an edge $(u, v) \in E$ such that $\pi(u) \neq \pi(v)$
+      (a \emph{boundary edge}).
+\item Let $A = \pi^{-1}(\pi(u))$ and $B = \pi^{-1}(\pi(v))$.
+\item Construct the merged subgraph $G[A \cup B]$.
+\item Sample a random spanning tree $\mathcal{T}$ of $G[A \cup B]$.
+\item Remove from $\mathcal{T}$ the unique edge $(s, t)$ such that the
+      resulting bipartition satisfies population balance.
+\item Assign $\pi'(v) = \pi(u)$ for all $v$ in one component and
+      $\pi'(v) = \pi(v)$ for the other.
+\end{enumerate}
+
+This defines a Markov chain on $\mathcal{P}$.
+For the chain to have a well-defined stationary distribution, steps that
+produce invalid plans (no balancing edge exists) are rejected; the
+chain stays at $\pi$.
+
+\subsection{Stationary Distribution}
+
+Under uniform spanning tree sampling, the \recom{} chain is designed
+to have stationary distribution approximately uniform over $\mathcal{P}$
+\citep{deford2021}.
+The approximation arises because the probability of selecting each
+boundary edge is not exactly uniform; a Metropolis correction can make
+the chain exactly reversible but at the cost of higher rejection rates.
+
+For the mixing time analysis in Section~\ref{sec:bounds}, we analyze the
+idealized lazy reversible version of \recom{} that holds with probability
+$1/2$ at each step and otherwise applies the \recom{} proposal with
+Metropolis correction.
+This chain has a well-defined spectral gap.
+
+\subsection{The Hamming Distance and Plan Space Geometry}
+
+The Hamming distance $d_{\rm Ham}(\pi, \pi') = \frac{1}{n}|\{v : \pi(v) \neq \pi'(v)\}|$
+defines a metric on $\mathcal{P}$.
+Under \recom{}, each accepted step changes $\approx n/k$ tracts, giving
+$d_{\rm Ham}(\pi_t, \pi_{t+1}) \approx 1/k$.
+The diameter of $\mathcal{P}$ under Hamming distance is at most 1
+($(k-1)/k$ in practice).
+For the chain to mix, it must travel a Hamming distance of approximately
+$1/2$ from any starting plan.
+At $1/k$ per step, this requires $\approx k/2$ steps in the best case---but
+the actual mixing time is much larger because the chain must navigate the
+complex graph structure of $\mathcal{P}$.

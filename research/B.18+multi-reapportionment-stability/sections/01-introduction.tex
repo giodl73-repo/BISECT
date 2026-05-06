@@ -1,0 +1,63 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Decadal Reapportionment Question}
+
+The \dia{} specifies that the \ar{} algorithm is run fresh after each
+decadal census, using the new \hh{} apportionment~\citep{huntington1928}
+as the district count $k$ for each state.
+This is the intended behavior: reapportionment is a constitutionally mandated
+response to population change~\citep{wesberry1964}, and the algorithm
+should reflect the new apportionment.
+
+But what actually happens when a state gains or loses seats?
+The \ar{} bisection tree is determined entirely by the prime factorisation
+of $k$ (B.11~\citep{b11paper}).
+A change in $k$ can dramatically alter the tree topology---not because the
+algorithm has changed, but because the arithmetic has.
+
+This paper characterises the 2030 reapportionment shock.
+We use Census Bureau 2030 projections~\citep{census2030proj} to identify
+which states will gain or lose seats, trace how each seat change alters
+the \ar{} bisection tree, and simulate the resulting tract-level boundary
+movements.
+
+\subsection{The Key Cases}
+
+\paragraph{Texas ($38 \to 41$).}
+$38 = 2 \times 19$ is a two-level tree (bisect to 2, each half bisects
+to 19 by recursive bisection since 19 is prime).
+$41$ is prime: the entire tree is a flat 41-way split at the root.
+This is the most dramatic factorisation change in the nation.
+We expect large boundary movement.
+
+\paragraph{California ($52 \to 50$).}
+$52 = 4 \times 13 = 2^2 \times 13$.
+$50 = 2 \times 25 = 2 \times 5^2$.
+Both are composite, but with different tree structures.
+We characterise the structural change and expected boundary movement.
+
+\paragraph{Florida ($28 \to 29$).}
+$28 = 4 \times 7 = 2^2 \times 7$.
+$29$ is prime: flat tree, major structural change.
+
+\paragraph{New York ($26 \to 25$).}
+$26 = 2 \times 13$.
+$25 = 5^2 = 5 \times 5$: balanced two-level tree.
+
+\subsection{Main Finding}
+
+The main finding: seat-change-induced boundary disruption is \emph{less}
+than the disruption from a single \recom{} MCMC remix step.
+This makes intuitive sense: the \ar{} algorithm is optimising for compactness
+within the new apportionment, which requires finding a new optimal map
+from scratch, but the geographic constraints are largely unchanged.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:projections} summarises 2030 reapportionment projections.
+Section~\ref{sec:factorization} analyses the prime factorisation changes.
+Section~\ref{sec:boundary} simulates boundary stability.
+Section~\ref{sec:gerrychain-baseline} establishes the GerryChain baseline.
+Section~\ref{sec:statutory} discusses the statutory implications.
+Section~\ref{sec:conclusion} concludes.

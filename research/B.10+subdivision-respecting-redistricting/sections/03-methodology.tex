@@ -1,0 +1,89 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{County-sticky edge weighting}
+
+\subsubsection{Formulation}
+
+Let $G = (V, E, w_V, w_E)$ be the census-tract adjacency graph from B.2,
+where $w_E(u, v)$ is the shared boundary length between tracts $u$ and $v$.
+Let $c : V \to \mathcal{C}$ map each tract to its county FIPS code.
+
+The county-sticky edge weight is:
+\[
+  w_E'(u, v) = w_E(u, v) \cdot
+  \begin{cases}
+    \alpha_c & \text{if } c(u) = c(v) \quad \text{(intra-county edge)} \\
+    1        & \text{if } c(u) \neq c(v) \quad \text{(inter-county edge)}
+  \end{cases}
+\]
+where $\alpha_c \geq 1$ is the county stickiness parameter.
+
+\paragraph{Interpretation.}
+When $\alpha_c = 1$, the weighting reduces to the B.2 boundary-length
+baseline.  When $\alpha_c > 1$, intra-county cuts are penalised relative
+to inter-county cuts: the algorithm prefers to place district boundaries
+along county lines rather than through county interiors.
+When $\alpha_c \to \infty$, the formulation approaches the hard-constraint
+limit (no intra-county cuts), which is infeasible for large counties.
+
+\subsubsection{Planarity and connectivity}
+
+The county-sticky weighting preserves all structural properties of the
+adjacency graph: planarity (edge set is unchanged), connectivity (no edges
+are removed), and the positive edge-weight requirement for METIS.
+Correctness of METIS under arbitrary positive edge weights follows from
+Karypis and Kumar~\citep{karypis1998}.
+
+\subsubsection{County split metrics}
+
+We define:
+\begin{itemize}
+  \item \emph{County splits}: the number of county-district pairs
+    $(c, d)$ such that district $d$ intersects county $c$ but is not
+    fully contained within it.  Equivalently, the number of counties
+    whose tracts are assigned to more than one district.
+  \item \emph{Multi-county districts}: the number of districts that
+    draw tracts from more than one county.
+  \item \emph{Perfect county preservation}: a district that contains
+    exactly the tracts of one or more complete counties (no partial
+    counties).
+\end{itemize}
+
+\subsection{Parameter sweep design}
+
+We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 3.0, 5.0, 10.0\}$ on all 50
+states using the 2020 Census congressional maps ($k$ given by 2020
+apportionment).  For each $(\text{state}, \alpha_c)$ pair:
+\begin{enumerate}
+  \item Build the county-sticky adjacency graph using the tract FIPS-to-county
+    mapping from TIGER/Line data~\citep{tiger-census}.
+  \item Run METIS recursive bisection with fixed seed ($s_0$, DIA formula).
+  \item Record: mean Polsby--Popper ($\overline{PP}$), county splits,
+    multi-county districts, and max population deviation.
+\end{enumerate}
+
+Total runs: $50 \text{ states} \times 6 \text{ } \alpha_c \text{ values} =
+300$ redistricting runs.
+
+\subsection{Pareto frontier analysis}
+
+We identify the Pareto frontier of (county splits, compactness loss) by
+plotting county split reduction vs.\ $\overline{PP}$ loss for each
+$\alpha_c$ value.  The ``elbow'' of the Pareto frontier identifies the
+$\alpha_c$ value beyond which further increases produce diminishing
+county-split reduction at disproportionate compactness cost.
+
+\subsection{State selection for case studies}
+
+We provide detailed case studies for:
+\begin{itemize}
+  \item \textbf{Iowa} ($k{=}4$, 99 counties): many small counties relative
+    to district count; county preservation is both achievable and
+    constitutionally required.
+  \item \textbf{Texas} ($k{=}38$, 254 counties): many counties of
+    heterogeneous size; some counties require splitting; tests the algorithm's
+    behaviour at the large-$k$ limit.
+  \item \textbf{California} ($k{=}52$, 58 counties): large counties that
+    \emph{must} be split; tests whether the algorithm avoids unnecessary splits.
+\end{itemize}

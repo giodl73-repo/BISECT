@@ -1,0 +1,46 @@
+\section{Algorithm Mapping: From Legal Criteria to Parameters}
+\label{sec:algorithm}
+
+The core algorithmic architecture is METIS recursive bisection, which partitions a geographic adjacency graph into $k$ balanced components by minimizing the total edge cut.\footnote{See \citet{karypis1998fast}; \citet{dellaLibera2026recursive}.} The algorithm receives as inputs: a graph $G = (V, E)$ where vertices are census tracts and edges connect adjacent tracts; vertex weights representing tract populations; edge weights representing the cost of cutting between adjacent tracts; and $k$, the target number of districts. It produces a partition $\{D_1, \ldots, D_k\}$ satisfying a population balance constraint $|pop(D_i) - P^*/k| \le \varepsilon \cdot P^*/k$ for all $i$, where $P^*$ is the state population and $\varepsilon$ is the tolerance parameter (typically $\varepsilon = 0.005$ for the $\pm 0.5\%$ standard).
+
+The parameterization surface is rich: edge weights can be set to encode any pairwise cost structure, the population tolerance can be tightened or relaxed, and secondary optimization objectives can be layered on top of the primary minimum-cut objective. We now show how each category of legal criterion maps to a specific parameterization.
+
+\subsection{Compactness Requirements}
+
+Compactness requirements appear in the statutes and constitutions of approximately 35 states. They range from general mandates (``districts shall be compact'') to specific metric requirements. The most common measure is the Polsby-Popper ratio,\footnote{See \citet{polsby1991third}.} defined as $PP(D) = 4\pi \cdot \text{Area}(D) / \text{Perimeter}(D)^2$, which equals 1 for a perfect circle and decreases as districts become less compact. Iowa's statute mandates maximization of this ratio; courts in Pennsylvania and North Carolina have used it as a benchmark.
+
+\textbf{Algorithm mapping:} Compactness is a consequence of, not an input to, the minimum-cut objective. Districts produced by minimum edge-cut partitioning are compact because cutting fewer edges produces districts whose boundaries follow fewer tract-to-tract interfaces, which correspond to shorter geographic perimeters. Edge-cut minimization is equivalent, in expectation, to perimeter minimization when edges are weighted by shared boundary length.
+
+The mapping is controlled by the \texttt{compactness} parameter, which scales edge weights by shared geographic boundary length. When \texttt{compactness=1.0} (maximum), edges are weighted proportionally to the length of the shared boundary between adjacent tracts, so the algorithm strongly prefers cuts that minimize total boundary length. When \texttt{compactness=0.0}, edge weights are uniform and the algorithm optimizes purely for population balance without geographic preference. Most states with compactness requirements are well-satisfied by \texttt{compactness} between 0.7 and 0.9, which produces districts with mean Polsby-Popper ratios of 0.35--0.42.
+
+\subsection{County-Preservation Requirements}
+
+Many states require minimizing the number of county splits---instances where a county is divided between two or more districts. Iowa's statute makes this a primary criterion, second only to population equality. California's commission criteria place county integrity third in priority. Washington requires minimizing county and city splits jointly.
+
+\textbf{Algorithm mapping:} County preservation maps to the \texttt{county\_weight} parameter, which increases the edge weight on edges that cross county boundaries. When \texttt{county\_weight=1.0} (default), county-crossing and within-county edges are treated identically. When \texttt{county\_weight=2.0}, the algorithm must ``pay'' twice as much to cut a county-crossing edge, strongly discouraging county splits. The effective range is 1.5 to 3.0 for states with county-preservation requirements; values above 3.0 can conflict with population balance by forcing the algorithm to accept large population deviations to avoid county splits.
+
+More precisely, if county-crossing edge $(u,v)$ has default weight $w_{uv}$, the modified weight is $w'_{uv} = w_{uv} \cdot \text{county\_weight}$, while within-county edges retain weight $w_{uv}$. This is equivalent to imposing a cost penalty on every county split.
+
+\subsection{Communities of Interest}
+
+The community-of-interest criterion appears in the constitutions and statutes of California, Arizona, Michigan, Colorado, Washington, and several other states. It requires that districts preserve communities whose residents share common social, cultural, economic, or geographic interests. The criterion is intentionally flexible---it encompasses both formal geographic communities (cities, school districts, transit districts) and informal social communities (immigrant neighborhoods, agricultural regions, university towns).
+
+\textbf{Algorithm mapping:} Communities of interest map to a custom edge-weight matrix, denoted \texttt{coi\_weights}. The matrix assigns lower weights (encouraging cutting) to edges between tracts in different communities of interest, and higher weights (discouraging cutting) to edges between tracts in the same community of interest. This inverts the usual logic: where compactness weights push the algorithm to minimize boundary length, community-of-interest weights push it to respect community integrity by making it costly to split communities.
+
+In practice, the community-of-interest weight matrix is constructed from geographic data: census-designated places, ZIP codes, school districts, and similar administrative boundaries provide a first approximation. For each pair of adjacent tracts $(u,v)$, the weight modifier $\delta_{uv}$ is set to 1 (no penalty) if $u$ and $v$ are in the same community-of-interest unit, and to a penalty factor $\delta < 1$ if they are in different units. The overall edge weight becomes $w'_{uv} = w_{uv} \cdot \delta_{uv}$.
+
+\subsection{Partisan Neutrality Requirements}
+
+The most demanding criterion, from an algorithmic perspective, is the prohibition on partisan consideration. Florida's Amendment 6 prohibits intent to favor or disfavor a political party or incumbent.\footnote{Fla. Const. art. III, \S\,20.} Arizona's commission must promote competitive elections. Michigan's commission may not ``purposefully draw district lines in favor of any political party.''\footnote{Mich. Const. art. IV, \S\,6.}
+
+\textbf{Algorithm mapping:} Partisan neutrality requirements are satisfied \textit{structurally} by the algorithmic architecture, requiring no parameter adjustment. The algorithm receives as input only census tract geometries and population counts. It has no access to voter registration data, election results, partisan composition, or incumbent addresses. It cannot satisfy a partisan objective even if one were specified, because the necessary data are not available to it.
+
+This structural incapacity is qualitatively different from a human mapmaker promising not to consider partisan data. A human mapmaker who has access to partisan data cannot prevent that knowledge from affecting their judgment; the requirement of partisan neutrality must be enforced through procedural oversight. The algorithm's partisan neutrality is architectural: no procedural oversight is needed because the data simply does not exist in the system. This satisfies the partisan neutrality requirement as a matter of design, not merely as a matter of promise.
+
+The single exception is that algorithmic maps may systematically advantage one party due to the geographic sorting of partisan voters---the urban-rural polarization documented by \citet{chen2013unintentional}. This correlation between algorithmic outputs and partisan outcomes is a property of the electorate's geographic distribution, not of the algorithm. It does not violate partisan-neutrality requirements, which prohibit intentional partisan manipulation, not all partisan correlation in outcomes.
+
+\subsection{Population Tolerance}
+
+All states must satisfy population equality at least to the \textit{Karcher v.\ Daggett} standard for congressional districts, which requires minimizing deviations unless any deviation is justified by a legitimate state objective.\footnote{\textit{Karcher v.\ Daggett}, 462 U.S. 725 (1983).} In practice, the accepted range is $\pm 1$ person for congressional districts when no legitimate state interest justifies additional deviation.
+
+\textbf{Algorithm mapping:} Population tolerance maps directly to the \texttt{population\_tolerance} parameter, which controls the balance constraint: $|pop(D_i) - P^*/k| \le \texttt{pop\_tol} \cdot P^*/k$. For congressional districts, we set \texttt{pop\_tol=0.005} (0.5\%) as a conservative default. States with specific statutory tolerances can be configured with tighter or slightly looser values. The algorithm achieves this balance through the bisection structure: at each level, the bisection target is half the available population, so accumulated errors are bounded by $O(\log k)$ times the single-level error.

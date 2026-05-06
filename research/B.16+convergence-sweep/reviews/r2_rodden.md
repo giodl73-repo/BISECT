@@ -1,0 +1,31 @@
+---
+reviewer: Jonathan Rodden
+round: 1
+score: 4
+date: 2026-05-05
+---
+
+## Summary
+
+This paper establishes T=600 as the statutory stopping criterion for the ConvergenceSweep algorithm supporting the Districting Integrity Act, based on a 50-state empirical sweep from B.7 identifying Georgia as the worst-case state with a convergence tail of 511 seeds. As a political scientist concerned with the political consequences of redistricting algorithms, I am interested in this paper primarily as a safeguard against cherry-picking in the statutory context. The paper is technically sound and its primary contribution — that T=500 is empirically insufficient and T=600 is adequate — is established convincingly.
+
+## Strengths
+
+- **The political economy of the seed-manipulation problem is correctly identified.** The cherry-picking attack — an official who can run the algorithm with multiple seeds before publication chooses the seed that maximises their party's seat count — is the correct adversarial model for a federal redistricting statute. The SHA-256 formula's temporal property (the seed is unknowable before census data release) is the right countermeasure. This is the kind of procedural safeguard that redistricting law needs and that academic redistricting proposals usually omit.
+- **The Georgia edge case is documented with the right level of specificity.** Identifying Georgia (14 districts, last improvement at seed s_0+489, tail of 511 seeds) as the specific state that breaks T=500 gives practitioners and courts a concrete reference point. If a future census produces a different Georgia-class state, the paper's framework tells practitioners what to check: identify the state with the longest observed tail in the new sweep and compare it to T=600.
+- **The distinction between T_stat=600 (statutory, all states certified) and T_prac=500 (research, 49 states, targeted re-run for Georgia) is practically useful.** This gives researchers a cheaper option for non-binding analysis while maintaining a clear bright line for legally effective map generation. The note that "values below 600 may be used for research and audit purposes but shall not be used to generate maps with legal effect" is exactly the right statutory engineering.
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **The paper does not report what the winning plan's partisan outcome is at Georgia's optimal seed (s_0+489) versus the T=500 suboptimal termination.** This is the politically salient question: is the "more compact" plan (lower EC_norm at seed 489) more or less proportional than the plan that T=500 would have accepted (the best plan seen in s_0 through s_0+500)? The paper focuses exclusively on EC_norm as the objective and does not report the seat-count outcome at the optimal vs. suboptimal seed for Georgia. For the paper to satisfy the political science audience, it must show that the seed-to-seed variation in EC_norm corresponds to meaningful variation in seat counts — otherwise the argument "T=500 might miss the globally optimal plan" is a geometric argument with no demonstrated political consequence. Add a Georgia case study showing: (a) EC_norm at the T=500 termination point, (b) EC_norm at the T=600 certified optimum, (c) D seat count at each, and (d) any difference in minority-opportunity district counts.
+- **The 50-state convergence table omits j* for all states except Georgia.** Table 1 reports j* (the last improving seed index) only for Georgia (489) and Wisconsin (1023), with "---" for all other states. But j* is the key quantity: it determines the minimum required T if we want to certify a specific state, and the relationship between j* and τ determines the characterisation of the convergence behaviour (short burst of improvement, then long plateau vs. extended gradual improvement). For the paper to be used for the 2030 census sweep, practitioners need j* for all 50 states from the 2020 data, not just the two worst cases. The complete j* column must be populated.
+- **The 89-seed margin is stated as "approximately one standard deviation of the fitted Gumbel distribution (σ̂=150)" but this is incorrect.** One standard deviation of a Gumbel distribution with σ=150 is not 150 seeds; the standard deviation of a Gumbel(μ,σ) distribution is σπ/√6 ≈ 1.28σ. For σ̂=150, the standard deviation is approximately 192 seeds, not 150. The 89-seed margin is approximately 0.46 standard deviations, not 1 standard deviation. The paper's characterisation of the margin as "approximately one standard deviation" is arithmetically incorrect and should be corrected.
+
+## P2 Items (Suggested Improvements)
+
+- **The paper should comment on the political significance of the convergence sweep's optimality claim.** The convergence sweep finds the minimum EC_norm plan — the most compact plan under the edge-cut criterion. The paper treats this as unambiguously desirable. But as B.0 establishes in the compactness-proportionality paradox, the most compact plan is often not the most proportional plan. If ConvergenceSweep certifies the "globally optimal" plan in the sense of minimum EC_norm, it is certifying the plan that most systematically creates efficient Republican geometries in states with urban Democratic cores. A brief paragraph acknowledging this tradeoff — and noting that the DIA accepts it in exchange for algorithmic determinism — would complete the paper's political economy.
+- **The convergence data should be stratified by state characteristics.** Table 1 sorts by τ (convergence tail) but does not report k (district count), n (tract count), or p* (Lorenz population concentration). Understanding which state characteristics predict longer tails — k, n, or urban concentration — would allow practitioners to identify which new states in the 2030 cycle are most likely to have long tails, allowing targeted validation.
+
+## Score: 4 / 4 — Accept
+
+The paper's central contribution — identifying T=500 as empirically insufficient and T=600 as adequate — is clearly demonstrated. The P1 items are important additions to the paper's evidentiary record (the Georgia partisan outcome and the complete j* column) and a minor arithmetic error, but they do not undermine the core finding. This paper is ready for publication after minor revision.

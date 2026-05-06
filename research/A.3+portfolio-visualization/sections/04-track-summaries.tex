@@ -1,0 +1,81 @@
+%% 04-track-summaries.tex — One paragraph per track
+
+\section{Research Track Summaries}
+
+\paragraph{Track A --- Overview and Guides (5 papers).}
+Track A contains the documents you are reading now, plus the portfolio guide,
+the synthesis metapaper, the replication package, and the policy brief.
+These papers are written for general audiences---judges, legislators, and journalists---
+and serve as entry points to the more technical tracks.
+Key finding: the entire portfolio can be summarized in five numbers
+(see Section~\ref{sec:findings}).
+
+\paragraph{Track B --- Algorithm (18 papers).}
+Track B is the technical core of the portfolio.
+It introduces recursive bisection (B.1), proves that edge-weighting
+improves compactness by 22\% (B.2), compares recursive and n-way approaches
+(B.3, B.5), studies adaptive parameter selection (B.4), and establishes
+the $O(n^{1.07})$ runtime complexity (B.6).
+Later B papers explore solution-space sensitivity (B.7), ratio-optimal
+bisection (B.8), dual population-area constraints (B.9), subdivision
+alignment (B.10), regional apportionment (B.11), proportional constraints
+(B.12), nested multi-chamber design (B.13), minority-opportunity bisection (B.14),
+cross-census stability (B.15), convergence parameters (B.16), parameter
+sensitivity (B.17), and multi-reapportionment stability (B.18).
+The track as a whole demonstrates that a single algorithm family---bisection---
+handles every redistricting scenario from a two-district state to all 435 seats.
+
+\paragraph{Track C --- Validation (9 papers).}
+Track C asks whether the results hold up.
+It analyzes sensitivity to the modifiable areal unit problem (C.1),
+validates results across three census cycles (C.2), studies temporal
+stability of district boundaries (C.3), tracks longitudinal demographic
+trends (C.4), quantifies the 62\% reduction in partisan efficiency gap (C.5),
+and investigates user interpretation, uncertainty quantification, competitive
+elections, and real-world adoption case studies (C.6--C.9).
+The headline result: algorithmic maps are not just theoretically fair---
+they are empirically fairer than enacted maps across every metric tested.
+
+\paragraph{Track D --- Legal and VRA Compliance (6 papers).}
+Track D provides the legal foundation.
+Paper D.1 establishes the 42\% minority-population threshold that determines
+where proportional majority-minority representation is geographically feasible.
+Subsequent papers compare n-way and recursive approaches under the Voting Rights
+Act (D.2), examine compactness tradeoffs (D.3), analyze legal implementation
+pathways (D.4), and apply Gingles bloc-voting methodology (D.5).
+Track D as a whole demonstrates that algorithmic redistricting not only complies
+with the VRA but in most states produces \emph{more} majority-minority districts
+than enacted plans.
+
+\paragraph{Track E --- Extensions (7 papers).}
+Track E tests the algorithm beyond standard congressional redistricting:
+multi-member districts (E.1), county-based representation (E.2), a
+national 435-district single-run approach (E.3), partisan-similarity
+clustering (E.4), party-proportional seat allocation (E.5), international
+applications (E.6), and lessons learned across all extensions (E.7).
+The track shows that recursive bisection is a general-purpose tool,
+not a solution narrowly fitted to one jurisdiction's rules.
+
+\paragraph{Track F --- State Legislatures (6 papers).}
+Track F scales the algorithm to state legislative chambers,
+which have different seat counts, different compactness requirements,
+and in many states, bicameral nesting constraints (state house districts
+must nest inside state senate districts).
+Papers F.1--F.6 cover all-50-state single chambers, bicameral nesting,
+high-seat-count chambers ($k > 100$), state-specific criteria, compactness
+comparisons between legislative and congressional districts, and
+VRA compliance at the state level.
+The key finding is that nesting is achievable algorithmically with no
+degradation in population balance or compactness.
+
+\paragraph{Track G --- Ensemble Analysis (5 papers).}
+Track G situates algorithmic maps within the universe of all possible maps.
+By generating thousands of random redistricting plans and comparing them
+to algorithmic plans, Track G provides the strongest possible evidence of
+neutrality: the algorithm produces plans that are statistically
+indistinguishable from random draws on compactness and partisan metrics,
+with better convergence diagnostics than Markov chain methods (G.4).
+Track G closes the portfolio by answering the hardest question a skeptic
+can ask: ``How do we know the algorithm didn't just accidentally pick
+a partisan outcome?''  The ensemble answer is: we don't rely on
+the accident---we show the distribution.

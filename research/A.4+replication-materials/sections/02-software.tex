@@ -1,0 +1,107 @@
+%% 02-software.tex — Complete software stack
+
+\section{Software Stack}
+\label{sec:software}
+
+\subsection*{Primary Tool: \texttt{redist} CLI}
+
+All redistricting computations in this portfolio are performed by the
+\texttt{redist} command-line tool, a Rust binary built on the METIS
+graph-partitioning library.
+The binary is the single point of truth: it handles data ingestion,
+adjacency graph construction, METIS invocation, population balancing,
+and output generation.
+
+\begin{table}[h]
+\centering
+\caption{Software dependencies and version requirements.}
+\label{tab:software}
+\begin{tabular}{@{}llll@{}}
+\toprule
+Component & Version & Role & Source \\
+\midrule
+\texttt{redist} CLI    & v0.2.0          & Pipeline orchestrator & See \S\ref{sec:install} \\
+Rust toolchain         & 1.77+           & Build tool            & \url{https://rustup.rs} \\
+METIS                  & 5.2 (vendored)  & Graph partitioner     & Bundled in repo \\
+Python                 & 3.13+           & Dashboard, research   & \url{https://python.org} \\
+GeoPandas              & 1.0+            & Shapefile I/O         & \texttt{pip install} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent METIS 5.2 is \emph{vendored} (statically compiled into the
+\texttt{redist} binary), so researchers do not need to install it separately.
+This eliminates version drift between METIS releases as a source of
+non-reproducibility.
+
+\subsection*{Installing the \texttt{redist} CLI}
+\label{sec:install}
+
+\begin{enumerate}[leftmargin=*, itemsep=4pt]
+
+  \item \textbf{Install Rust} (if not already installed):
+\begin{verbatim}
+# Linux / macOS
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Windows (PowerShell)
+winget install Rustlang.Rustup
+\end{verbatim}
+
+  \item \textbf{Clone the repository}:
+\begin{verbatim}
+git clone https://github.com/giodl73-repo/REDIST
+cd REDIST
+\end{verbatim}
+
+  \item \textbf{Build the binary}:
+\begin{verbatim}
+cargo build --release
+# Binary appears at: target/release/redist
+\end{verbatim}
+
+  \item \textbf{Add to PATH}:
+\begin{verbatim}
+# Linux / macOS
+export PATH="$PWD/target/release:$PATH"
+
+# Windows (PowerShell)
+$env:PATH += ";$PWD\target\release"
+\end{verbatim}
+
+  \item \textbf{Verify installation}:
+\begin{verbatim}
+redist --version   # Should print: redist 0.2.0
+redist doctor      # Checks all dependencies
+\end{verbatim}
+
+\end{enumerate}
+
+\subsection*{Platform Support}
+
+The \texttt{redist} binary is tested on:
+\begin{itemize}[itemsep=2pt]
+  \item Linux x86-64 (Ubuntu 22.04, Debian 12)
+  \item macOS arm64 (Apple Silicon, macOS 14+)
+  \item macOS x86-64 (Intel, macOS 13+)
+  \item Windows 10/11 x86-64 (PowerShell 7+, or Command Prompt)
+\end{itemize}
+
+\noindent All results in this portfolio were generated on Windows 11
+with an AMD Ryzen 9 processor.
+Expected runtimes on a typical modern laptop are given in
+Section~\ref{sec:testsuite}.
+
+\subsection*{One-Shot Setup: \texttt{bootstrap.sh}}
+
+For researchers who want a single command to install all dependencies,
+configure the environment, and run a smoke test:
+
+\begin{verbatim}
+./bootstrap.sh        # Linux / macOS
+bootstrap.bat         # Windows
+\end{verbatim}
+
+\noindent The bootstrap scripts install Rust (if absent), build the binary,
+check for Python 3.13+, install Python dependencies,
+and run \texttt{redist doctor} to confirm the environment is ready.

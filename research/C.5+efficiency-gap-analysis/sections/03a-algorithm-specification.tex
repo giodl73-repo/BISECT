@@ -136,8 +136,8 @@ All algorithmic specifications, METIS parameters, and input data are publicly av
 \begin{itemize}
     \item \textbf{Source code}: github.com/[repository]/redistricting-algorithms
     \item \textbf{Census data}: 2020 Census tract boundaries and populations (Census Bureau)
-    \item \textbf{METIS version}: 5.1.0 via PyMETIS 2023.1
-    \item \textbf{Computational environment}: Python 3.13, NetworkX 3.1, GeoPandas 0.13
+    \item \textbf{METIS version}: 5.1.0 via \texttt{redist} Rust binary (C METIS FFI via \texttt{metis} crate v0.2)
+    \item \textbf{Computational environment}: Rust 1.77+ (\texttt{redist} binary); post-hoc data analysis (CSV loading, plotting) uses Python 3.13 with \texttt{redist-analysis} crate (compactness, VRA, partisan metrics)
 \end{itemize}
 
 Independent researchers can replicate our algorithmic plans exactly by using identical METIS parameters and random seeds.

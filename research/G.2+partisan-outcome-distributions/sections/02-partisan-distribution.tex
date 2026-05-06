@@ -1,0 +1,77 @@
+\section{The Partisan Distribution of Ensemble Plans}
+\label{sec:bell-curve}
+
+\subsection{The Bell Curve Around Geography}
+
+The central insight of ensemble redistricting research is that, holding
+geography fixed, the distribution of partisan seat outcomes across valid plans
+is approximately bell-shaped.  The mean of this distribution is determined
+by geography: the spatial concentration of partisan voters.  The width is
+determined by the flexibility of the districting plan space: how many valid
+plans exist, and how diverse their partisan outcomes are.
+
+More formally, let $S_D(P)$ denote the number of Democratic-leaning districts
+in plan $P$ under a fixed electoral baseline.  For a \recom{} ensemble
+$\mathcal{E}$ on a state with $k$ seats:
+
+\begin{equation}
+  S_D \sim \text{approximately } \mathrm{Binomial}(k, p_{\text{geo}})
+  \text{ with underdispersion in sorted states},
+  \label{eq:partisan-dist}
+\end{equation}
+
+where $p_{\text{geo}}$ is the geographically determined probability that
+a random valid district leans Democratic.  For highly competitive states
+(Wisconsin, Pennsylvania), $p_{\text{geo}} \approx 0.50$.  For sorted
+states (Georgia), $p_{\text{geo}} \approx 0.36$.
+
+The actual standard deviation $\sigma_{S_D}$ is typically \emph{less} than
+the pure binomial prediction $\sqrt{k p_{\rm geo}(1-p_{\rm geo})}$ in sorted
+states.  For Georgia ($k=14$, $p_{\rm geo} \approx 0.36$), the binomial
+predicts $\sigma \approx 1.80$ seats, but the observed ensemble SD is
+$\sigma_{S_D} \approx 1.2$ seats---an \emph{underdispersed} distribution.
+This occurs because contiguity and population balance constraints prevent
+arbitrary rearrangement of districts in a geographically sorted state,
+narrowing the effective plan space relative to an unconstrained binomial.
+The Rodden sorting mechanism thus reduces partisan variance rather than
+increasing it.
+
+The distribution is approximately symmetric around the geographic mean for
+competitive states and skewed for sorted states.  Crucially, the distribution
+is \emph{not} centered on proportionality: in sorted states, even a perfectly
+random plan tends to produce more Republican seats than the statewide vote
+share would imply.
+
+\subsection{Width of the Distribution}
+
+The standard deviation $\sigma_{S_D}$ of the partisan seat distribution
+depends on:
+
+\begin{itemize}
+  \item $k$ (more districts $\to$ wider distribution in absolute terms, narrower
+    in relative terms);
+  \item Geographic compactness of the state (more irregular states $\to$
+    wider distribution);
+  \item Degree of partisan sorting (highly sorted states $\to$ narrower
+    distribution near the geographic mean).
+\end{itemize}
+
+Empirically, $\sigma_{S_D} \approx 1.0$--$1.5$ seats for $k = 8$--$17$
+and $\sigma_{S_D} \approx 2.0$--$3.5$ for $k = 38$--$52$.  A difference
+of two seats from the ensemble median is thus within one to two standard
+deviations for most states.
+
+\subsection{What the Distribution Does Not Show}
+
+The partisan distribution of ensemble plans does \emph{not} show:
+\begin{itemize}
+  \item The ``correct'' partisan outcome for the state;
+  \item What proportionality requires;
+  \item Whether any particular plan within the distribution is
+    constitutionally required.
+\end{itemize}
+
+It shows what outcomes are geographically plausible.  A plan at the 99th
+percentile is implausible without intent.  A plan at the 54th percentile
+is typical.  Whether typical is fair is a separate normative question,
+addressed in the context of proportionality in Section~\ref{sec:corridor}.

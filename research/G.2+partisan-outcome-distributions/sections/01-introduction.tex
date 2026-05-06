@@ -1,0 +1,56 @@
+\section{Introduction}
+\label{sec:intro}
+
+The question ``is this map partisan?'' has become central to redistricting
+litigation.  Ensemble methods provide one framework for answering it: compare
+the map to the distribution of plans consistent with geographic constraints,
+and ask whether the map falls in an extreme tail.  But this framework is
+typically applied to human-drawn maps that may have been deliberately designed
+to achieve partisan ends.  How should it be applied to an algorithmic map
+whose objective function has no partisan component?
+
+This paper addresses that question for \ar{} \citep{dellaLibera2026b11}.
+The \ar{} algorithm minimises edge cuts in the census-tract adjacency graph
+under the prime factorization of the seat count.  No electoral data enters.
+No partisan registration data enters.  No incumbency data enters.  The
+algorithm is politically blind by construction.
+
+Yet political blindness does not guarantee partisan neutrality.  An algorithm
+that minimises edge cuts will tend to produce compact, geographically cohesive
+districts.  Compact districts in states with urban-rural partisan sorting will
+tend to contain urban Democratic majorities and rural Republican majorities,
+potentially producing a Republican seat advantage even without any partisan
+intent.  This is the Rodden effect \citep{rodden2019why}: the geographic
+concentration of Democrats in cities is the root cause of the partisan gap
+between votes and seats under any compact map.
+
+The central question is therefore not whether \ar{} is partisan-blind
+(it is) but whether its outputs are partisan-neutral in the sense of
+producing outcomes within the range of what geography permits.  The ensemble
+framework provides the answer.
+
+\paragraph{Main findings.}
+\begin{enumerate}
+  \item \ar{} produces partisan outcomes within one seat of the \recom{}
+    ensemble median in five of six studied states.  The median percentile
+    across states is the 53rd percentile of Democratic seats.
+  \item Georgia is the exception: the \ar{} plan produces 5D/9R at the
+    38th percentile, reflecting strong geographic sorting, not algorithmic
+    bias.
+  \item The ``proportionality corridor'' (fraction of ensemble plans within
+    one seat of proportional) is 20--40\% for competitive states.  The
+    \ar{} plan falls inside this corridor for NC, WI, and MN (a state
+    not studied in G.1 but analysed here for the corridor metric), but
+    not for Georgia.
+  \item Among three competing algorithms studied in B.0, only \ar{} and
+    the flip-chain-optimal algorithm produce consistently median partisan
+    outcomes; the short-burst algorithm can produce extreme outcomes if
+    its objective is partisan-correlated.
+\end{enumerate}
+
+\paragraph{Organisation.}
+Section~\ref{sec:bell-curve} describes the partisan distribution of ensemble
+plans.  Section~\ref{sec:ar-position} quantifies the \ar{} plan's position.
+Section~\ref{sec:corridor} defines and computes the proportionality corridor.
+Section~\ref{sec:algorithm-choice} explains why algorithm choice determines
+partisan tail.  Section~\ref{sec:conclusion} concludes.

@@ -4,7 +4,12 @@
 \subsection{The Disentanglement Requirement}
 
 \callais{}, 608 U.S.\ \_\_\_ (2026), at p.~36, articulates the disentanglement
-requirement as follows:
+requirement as follows:\footnote{%
+  All page citations to \callais{} refer to the slip opinion as issued by the Court.
+  The final U.S.\ Reports citation and permanent page numbers will be updated when
+  the opinion is paginated in the bound volume.  The disentanglement language quoted
+  here is from the majority opinion; the slip opinion does not carry section headers
+  distinguishing majority, concurrence, or dissent by page number.}
 a redistricting process that combines race-conscious and partisan signals in
 the same objective function is constitutionally suspect because ``a court
 cannot isolate the racial motivation from the partisan motivation in evaluating
@@ -190,6 +195,26 @@ For North Carolina:
   \item VRASection: 5D, 2 MM districts (estimated, Charlotte/Raleigh isolation).
   \item Strong-inference test: satisfied.
 \end{itemize}
+
+\paragraph{Strong-inference interpretation.}
+The procedure above compares two distinct algorithm configurations (GeoSection,
+VRASection) and therefore conflates two potential sources of MM-count improvement:
+the ratio-selection mechanism (choosing a different first-level split) and the
+alignment signal ($w_\text{vra} > 0$).
+To isolate the alignment signal's causal contribution, B.14 includes an ablation
+in which VRASection is run with $w_\text{vra} = 0$, which reduces to GeoSection
+in the ratio-selection step.
+The ablation confirms that the $w_\text{vra} > 0$ alignment signal is the causal
+mechanism: at $w_\text{vra} = 0$, Alabama produces $3:4$ first-bisection and
+1 MM district (identical to GeoSection); at $w_\text{vra} = 0.40$, Alabama
+produces $2:5$ and 2 MM districts.
+To falsify the hypothesis that algorithm choice is partisan-neutral, we would
+need to find a state where all six algorithm modes produce the same partisan
+outcome.
+No such state exists in the competitive subset ($n=34$).
+The 12.8\,pp range (GeoSection vs.\ ApportionRegions in Wisconsin) is
+approximately $4\times$ the within-algorithm seed variance (CV $< 2\,\%$),
+confirming that algorithm selection, not seed choice, drives partisan outcomes.
 
 \subsection{Separation of Legal Signals: A Formal Statement}
 

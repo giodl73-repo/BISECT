@@ -1,0 +1,71 @@
+\section{Introduction}
+\label{sec:intro}
+
+Every American is more directly governed by state law than by federal law.
+State legislatures set property and income tax rates, fund public schools,
+regulate police, determine criminal sentencing, and draw the very electoral
+maps that shape future legislatures. Yet the algorithmic redistricting
+literature has devoted nearly all of its energy to the 435 U.S.\ House seats.
+State legislative chambers, which collectively contain roughly 7,400 seats
+across 99 chambers in 50 states, have received far less systematic attention.
+
+This imbalance is not accidental. Congressional redistricting is constitutionally
+uniform: one person, one vote under \emph{Wesberry v.\ Sanders} (1964), a fixed
+national total of 435, and a well-defined geography of 73,000 census tracts.
+State legislative redistricting involves the same one-person-one-vote principle
+(\emph{Reynolds v.\ Sims}, 1964), but the computational challenge is far greater:
+district counts range from $k = 20$ (Alaska Senate) to $k = 400$ (New Hampshire
+House), state-specific constitutional requirements impose varying contiguity and
+compactness standards, and census tracts are often too coarse to support
+meaningful redistricting at these district counts.
+
+The F research track introduces a systematic program for applying the
+\texttt{redist} pipeline---the minimum-edge-cut recursive bisection algorithm
+of \citet{dellaLibera2026recursive}, implemented as a production Rust binary---to
+all 50 state legislatures. This overview paper (F.0) frames the research program,
+describes the computational infrastructure, previews the empirical findings,
+and situates the F track within the broader portfolio.
+
+\paragraph{Why state legislative redistricting matters more.}
+Table~\ref{tab:chamber-scale} illustrates the stakes. Congressional gerrymandering
+receives far more media attention, but state legislative gerrymandering determines
+which party controls the body that enacts state policy, conducts criminal
+trials, funds schools, and---critically---draws congressional maps.
+In 2020, Republicans held trifectas (governorship plus both chambers) in 23 states;
+Democrats in 15. These trifectas were themselves the product of state legislative
+maps drawn after 2010 that are widely documented as among the most aggressive
+partisan gerrymanders in American history
+\citep{mcghee2014measuring, stephanopoulos2015partisan, chen2013unintentional}.
+The F track asks: what would state legislative maps look like if drawn by the
+same algorithmic principles that the B track applies to Congress?
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrl}
+\toprule
+State & Chamber & Districts ($k$) & Tracts ($n$) & $k/n$ \\
+\midrule
+New Hampshire & House   & 400 & $\approx 320$ & 1.25 \\
+California    & Assembly & 80  & $\approx 9{,}000$ & 0.009 \\
+Texas         & House   & 150 & $\approx 5{,}250$ & 0.029 \\
+Washington    & House   & 98  & $\approx 1{,}458$ & 0.067 \\
+Wyoming       & House   & 60  & $\approx 140$ & 0.43 \\
+Nebraska      & Legislature & 49 & $\approx 570$ & 0.086 \\
+Alaska        & Senate  & 20  & $\approx 200$ & 0.10 \\
+\bottomrule
+\end{tabular}
+\caption{Selected state chambers illustrating the range of district counts,
+  tract counts, and the $k/n$ ratio that governs resolution selection.
+  Values above the $0.05$ threshold (bold) require block-group resolution;
+  New Hampshire and Wyoming require block-level redistricting.}
+\label{tab:chamber-scale}
+\end{table}
+
+\paragraph{Organization.}
+Section~\ref{sec:challenges} describes the two primary computational challenges:
+the high-$k$ problem and the resolution problem. Section~\ref{sec:cli}
+introduces the \texttt{redist} CLI extensions for state legislative redistricting.
+Section~\ref{sec:overview} previews the six companion papers F.1--F.6.
+Section~\ref{sec:findings} summarises the key empirical findings.
+Section~\ref{sec:connections} situates the F track relative to the B and C tracks.
+Section~\ref{sec:conclusion} concludes.

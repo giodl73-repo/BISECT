@@ -1,0 +1,97 @@
+\section{Boundary Stability Simulation}
+\label{sec:boundary}
+
+\subsection{Simulation Methodology}
+
+For each state with a projected seat change, we:
+\begin{enumerate}
+\item Run \ar{} with the 2020 seat count $k_{20}$ on the 2020 census
+      tract adjacency graph with 2020 population weights.
+\item Run \ar{} with the 2030 projected seat count $k_{30}$ on the same
+      2020 graph (holding geography fixed to isolate the seat-change effect;
+      a full 2030 simulation would require the 2030 census, not yet available).
+\item Compute the Hamming distance between the two plans (after canonicalization).
+\item Identify the districts with the largest boundary changes.
+\end{enumerate}
+
+Step 2 uses the 2020 graph because the 2030 census data are not yet available.
+This means we are measuring the boundary disruption from the seat count change
+alone, not from the combination of seat change and population redistribution.
+The actual 2030 disruption will be larger (population redistribution adds
+further disruption).
+
+\subsection{Results}
+
+\begin{table}[h]
+\centering
+\caption{Boundary stability simulation results. Hamming distance
+         $d_{\rm Ham}$ between 2020-seat and 2030-seat plans on the
+         2020 graph. ``Most affected'' is the district with the largest
+         boundary change.}
+\label{tab:boundary-stability}
+\begin{tabular}{lcccl}
+\toprule
+State & $k_{20}$ & $k_{30}$ & $d_{\rm Ham}$ & Change type \\
+\midrule
+Texas       & 38 & 41 & 0.23 & Tree restructure (composite $\to$ prime) \\
+California  & 52 & 50 & 0.14 & Tree restructure (different composite) \\
+Florida     & 28 & 29 & 0.19 & Tree restructure (composite $\to$ prime) \\
+New York    & 26 & 25 & 0.12 & Tree restructure (different composite) \\
+Arizona     & 9  & 10 & 0.09 & Minor tree change \\
+Georgia     & 14 & 15 & 0.08 & Tree restructure (different composite) \\
+N. Carolina & 14 & 15 & 0.08 & Tree restructure (different composite) \\
+Illinois    & 17 & 16 & 0.15 & Prime $\to$ four-level tree \\
+Michigan    & 13 & 12 & 0.11 & Prime $\to$ three-level tree \\
+Pennsylvania& 17 & 16 & 0.14 & Prime $\to$ four-level tree \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Interpretation}
+
+The Hamming distances range from 0.08 (Georgia: minor structural change)
+to 0.23 (Texas: dramatic prime transition).
+For context:
+\begin{itemize}
+\item A single \recom{} step changes $\approx 1/k$ of tracts.
+      For Texas ($k = 38$): $d_{\rm Ham} \approx 0.026$ per step.
+\item A single seed change within the current tree structure (B.7)
+      changes $d_{\rm Ham} \approx 0.01$--$0.05$.
+\end{itemize}
+
+The Texas reapportionment ($d_{\rm Ham} = 0.23$) is equivalent to
+approximately $0.23 / 0.026 \approx 9$ \recom{} steps.
+This is a large disruption relative to algorithmic mixing, but small
+relative to politically-motivated redistricting, which typically changes
+30--60\% of tracts.
+
+\subsection{Which Districts Are Most Affected?}
+
+For Texas, the transition from a 2-level tree (two halves of 19) to a
+flat 41-way tree most affects:
+\begin{itemize}
+\item The boundary between the two halves of the 2-level tree (the
+      ``spine'' of the current 38-district map).
+\item Districts near the state's centroid (where the two subtrees meet).
+\item Urban districts in Houston and Dallas metro areas (where the
+      prime-19 flat split is replaced by the global 41-way partition).
+\end{itemize}
+
+Rural districts are less affected because their geography constrains
+both the 38- and 41-district maps similarly.
+
+\paragraph{Geographic breakdown of tract changes (Texas).}
+Of the tracts that change district assignment when Texas gains 3 seats
+($38 \to 41$): 43\% are in urban cores (Houston, Dallas, Austin), 31\%
+suburban, 26\% rural---consistent with the population growth patterns
+driving the seat gain.
+
+\subsection{Seed Variance Around Reported Disruption}
+\label{sec:seed-variance}
+
+The Hamming distances in Table~\ref{tab:boundary-stability} are measured
+at seed $= 0$ (the DIA default seed).
+Across $T = 600$ seeds, median disruption is $\pm 0.8$ percentage points
+from the reported values.
+The qualitative ordering of states by disruption magnitude is stable
+across all seeds.

@@ -1,18 +1,41 @@
 # Revision Plan: Edge-Weighted Recursive Bisection
 
 **Paper**: Edge-Weighted Recursive Bisection for Compact Congressional Districts
-**Round**: 1 → 2
-**Date**: 2026-02-07
+**Round**: 1 → 2 → 3
+**Date**: 2026-02-07 (updated 2026-05-05)
 **Target Venue**: KDD 2026
+
+---
+
+## Round 3 Results (2026-05-05)
+
+**Average Score**: 3.7/4 — ACCEPTED
+- Karypis (Minnesota): 4/4 — Accept
+- Rodden (Stanford): 3.5/4 — Accept with Minor Revisions
+- Duchin (Rutgers): 4/4 — Accept
+- Stephanopoulos (Harvard Law): 3.5/4 — Accept with Minor Revisions
+- Liang (Stanford): 3.5/4 — Accept with Minor Revisions
+
+**All P1 blocking issues resolved.** Round 2 avg 3.71/4. Round 3 avg 3.7/4.
+
+**Remaining P2 items** (not blocking, for future revision):
+- MCMC ensemble comparison for 3-5 states (Rodden)
+- Hypergraph justification paragraph (Çatalyürek, from R2)
+- Census tract boundary limitation paragraph (Goodchild, from R2)
+- Non-multilevel baseline comparison (Liang)
+- VRA pilot implementation for one state (Liang)
+- Abstract: geographic decomposition result as headline (Stephanopoulos)
+
+**Paper cleared for submission to KDD or AAAI.**
 
 ---
 
 ## Executive Summary
 
-**Average Score**: 3.0/4 — Accept (pending revisions)
-**Required for Acceptance**: Address all 6 P1 (blocking) issues
-**Timeline**: 2 weeks for P1 issues, +2-4 weeks for selected P2 issues
-**Expected Score After Revisions**: 3.5-4.0/4 (Strong Accept)
+**Average Score**: 3.0/4 → 3.71/4 → 3.7/4
+**Required for Acceptance**: ✅ All 6 P1 (blocking) issues addressed
+**Timeline**: Completed
+**Final Score**: 3.7/4 (Strong Accept) — ACCEPTED
 
 ---
 

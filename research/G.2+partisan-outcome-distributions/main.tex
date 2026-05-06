@@ -1,0 +1,106 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+
+%% Legal case macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Are Algorithmic Maps Partisan?}\\
+  \textbf{Situating \ar{} Within the \recom{} Ensemble}\\[0.4em]
+  \large Partisan Outcome Distributions Across Six States\\[0.8em]
+  \normalsize\textit{G.2 --- Partisan Outcome Distributions}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+The most frequently asked question about any redistricting algorithm is:
+does it systematically favor one party?  This paper answers that question
+for \ar{} by situating the algorithm's plans within the partisan outcome
+distributions of \recom{} ensembles for six states.  The main finding is
+negative: \ar{} is not systematically biased.  It produces partisan outcomes
+within one seat of the ensemble median in five of six studied states
+(NC, WI, PA, TX, CA), and its single notable deviation---Georgia at the
+38th percentile of Democratic seats---reflects the state's documented
+geographic partisan sorting, not algorithm design.  We characterise the
+``proportionality corridor'' (the fraction of ensemble plans within one seat
+of proportional) and show that \ar{} falls inside the corridor for three of
+four states where this can be assessed.  We also explain why algorithm choice
+determines which tail you land in, connecting the partisan outcome to B.0's
+bakeoff of competing redistricting algorithms.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-partisan-distribution}
+\input{sections/03-ar-position}
+\input{sections/04-proportionality-corridor}
+\input{sections/05-algorithm-choice}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

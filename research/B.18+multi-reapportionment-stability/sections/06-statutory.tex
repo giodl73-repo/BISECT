@@ -1,0 +1,91 @@
+\section{Statutory Note: Fresh Recomputation is Intended}
+\label{sec:statutory}
+
+\subsection{The DIA's Decadal Recomputation Design}
+
+The \dia{} specifies that the \ar{} algorithm is rerun from scratch
+after each decadal census:
+\begin{enumerate}
+\item The new \hh{} apportionment is computed, yielding new district
+      counts $k_s$ for each state.
+\item The \ar{} bisection tree is constructed from the new $k_s$ values.
+\item The redistricting algorithm is run with the new census data and
+      the new tree.
+\item The resulting map governs elections for the subsequent decade.
+\end{enumerate}
+
+This is \emph{intentional}: the DIA is not an incremental update system.
+It does not try to minimise the number of tracts that change district
+assignment from the previous decade.
+It generates the best available map under the current census data and
+current apportionment.
+
+\subsection{Constitutional Basis}
+
+The equal-population requirement of \textit{Wesberry v.\ Sanders}~\citep{wesberry1964}
+mandates that districts be as equal in population ``as nearly as is
+practicable.''
+Population redistributes between census cycles: Texas grew 15\% between
+2010 and 2020, while California grew 6\%.
+The 2020 maps become increasingly malapportioned as the decade progresses.
+
+The decadal fresh recomputation is the constitutional response to this
+malapportionment: it resets the maps to equal population, even at the
+cost of boundary disruption.
+This is the system as designed, not a bug.
+
+\subsection{The Stability Result is Reassurance, Not a Target}
+
+The finding that reapportionment disruption is less than MCMC mixing
+disruption ($d_{\rm Ham} \leq 0.23$ vs.\ full decorrelation at
+$d_{\rm Ham} \approx 1$) is a reassurance, not a design target.
+The DIA does not aim to minimise boundary disruption; it aims to produce
+the most compact maps consistent with the new apportionment.
+
+The stability result says: ``As a by-product of optimising for compactness,
+the \ar{} reapportionment is less disruptive than MCMC mixing.''
+This is a feature, not a constraint.
+
+\subsection{Implications for DIA Drafting}
+
+The analysis of this paper has three implications for the DIA statutory text:
+
+\begin{enumerate}
+\item \textbf{No grandfathering clause is needed.}
+      Some proposals suggest that the DIA should include a ``continuity
+      bonus'' rewarding plans that resemble the previous decade's map.
+      This paper shows that the \ar{} algorithm already produces
+      reapportionment-stable maps (by construction) without an explicit
+      continuity bonus.
+      A continuity bonus would reduce compactness without providing
+      meaningful stability gains.
+
+\item \textbf{No transition period is needed for algorithm output.}
+      The new maps are immediately valid after the reapportionment.
+      The 23\% Hamming distance for Texas (the worst case) is not a
+      crisis requiring legislative remediation.
+
+\item \textbf{The prime factorisation changes are predictable.}
+      States and administrators can pre-compute the 2030 tree structure
+      from Census Bureau projections years before the census.
+      This allows for early public comment on the expected map changes
+      before the official redistricting cycle begins.
+\end{enumerate}
+
+\subsection{A Note on the 2030 Texas Case}
+
+Texas going from $k = 38$ to $k = 41$ (prime) is the most structurally
+disruptive reapportionment in the projection set.
+A flat 41-way partition of Texas is a qualitatively different map from
+a 2-level $2 \times 19$ partition.
+The two maps will look different to voters, even if the compactness is
+similar.
+
+This is not a failure of the algorithm; it is the correct response to the
+arithmetic of apportionment.
+41 is prime; the best hierarchical bisection of 41 is a flat 41-way split.
+There is no mathematically superior alternative for $k = 41$ that would
+look more like the $k = 38$ map.
+States and legislators should understand this before lobbying for a
+$k = 40 = 2^3 \times 5$ apportionment, which would produce a four-level
+tree more similar to the current $k = 38$ map.

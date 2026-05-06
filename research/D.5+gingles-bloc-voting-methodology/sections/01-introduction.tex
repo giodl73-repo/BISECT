@@ -1,0 +1,63 @@
+\label{sec:introduction}
+
+\textit{Thornburg v.\ Gingles}~\citep{gingles1986} established three
+preconditions---commonly called ``the Gingles prongs''---that a minority
+group must satisfy to state a vote-dilution claim under Section 2 of the
+Voting Rights Act~\citep{vra1965}:
+
+\begin{enumerate}
+  \item \textbf{Prong 1 (Geographic Compactness):} The minority group must be
+    ``sufficiently large and geographically compact to constitute a majority
+    in a single-member district.''
+  \item \textbf{Prong 2 (Political Cohesion):} The minority group must be
+    ``politically cohesive.''
+  \item \textbf{Prong 3 (Majority Bloc Voting):} The majority must ``vote
+    sufficiently as a bloc to enable it \ldots\ usually to defeat the
+    minority's preferred candidate.''
+\end{enumerate}
+
+Together, the three prongs establish that a minority group can form a
+majority district (Prong 1), would use that district to elect its preferred
+candidate (Prong 2), and is currently prevented from doing so because the
+majority votes as a bloc against minority-preferred candidates (Prong 3).
+Satisfying all three prongs does not guarantee a Section 2 violation; a
+``totality of circumstances'' inquiry follows, but in practice the Gingles
+prongs are the dispositive hurdle.
+
+Litigation under Section 2 has evolved substantially since \textit{Gingles}.
+\textit{Allen v.\ Milligan}~\citep{allen2023} reaffirmed the core Gingles
+framework and rejected Alabama's invitation to replace it with a race-neutral
+comparator methodology.  \textit{Louisiana v.\ Callais}~\citep{callais2026}
+added a specific methodological requirement for Prong 3: expert witnesses must
+\emph{disentangle} racial bloc voting from partisan bloc voting using a
+regression with a partisan control variable, because post-\textit{Rucho}
+states have increasingly defended against VRA claims by arguing that observed
+racial bloc voting is actually partisan and therefore constitutionally
+permissible~\citep{rucho2019}.
+
+This paper presents a systematic quantitative methodology for satisfying all
+three Gingles prongs using the \texttt{redist} algorithmic redistricting
+system.  The methodology is designed for use in expert witness contexts.
+The contributions are:
+
+\begin{enumerate}
+  \item A principled operationalization of Prong 1 compactness using
+    VRASection's geographic alignment score (Section~2).
+  \item A regression-based Prong 2 analysis using \texttt{redist analyze
+    --types bloc-voting} with primary election data (Section~3).
+  \item A post-\textit{Callais} Prong 3 methodology using WLS+HC3+Holm
+    regression with a partisan control variable, with confidence intervals
+    from bootstrap resampling (Section~4).
+  \item A worked example using the Alabama AL-07 district from
+    \textit{Allen v.\ Milligan} (Section~5).
+  \item An expert witness checklist mapping \texttt{redist} outputs to each
+    Gingles prong (Section~7).
+\end{enumerate}
+
+The methodology is algorithm-agnostic in its Prong 2 and Prong 3
+components---the WLS+HC3+Holm regression can be applied to any district
+configuration, not just algorithmic ones.  The distinctive contribution of
+the \texttt{redist} system is Prong 1: the VRASection alignment score provides
+a principled, reproducible, and legally defensible threshold for geographic
+compactness that replaces the ad-hoc visual inspection that has historically
+dominated expert practice.

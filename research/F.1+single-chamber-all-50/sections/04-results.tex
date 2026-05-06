@@ -1,0 +1,115 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Polsby-Popper Compactness}
+\label{sec:results:pp}
+
+Table~\ref{tab:pp-results} reports mean Polsby-Popper scores by resolution
+tier. The key finding is that both resolution tiers produce mean PP exceeding
+the congressional baseline of $\overline{PP} = 0.361$ from
+\citet{dellaLibera2026mec}.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Resolution tier & States & $\overline{PP}$ & $\min PP$ & Frac.\ $PP < 0.20$ \\
+\midrule
+Tract (38 states)       & 38 & 0.381 & 0.092 & 4.2\% \\
+Block-group (12 states) & 12 & 0.401 & 0.118 & 2.7\% \\
+All 50 states           & 50 & 0.386 & 0.092 & 3.8\% \\
+\midrule
+Congressional (B track) & 50 & 0.361 & 0.071 & 6.9\% \\
+\bottomrule
+\end{tabular}
+\caption{Polsby-Popper compactness by resolution tier. All state-house tiers
+  exceed the congressional baseline. Block-group resolution achieves higher
+  compactness than tract resolution, consistent with the finer boundary
+  definition available at block-group resolution.}
+\label{tab:pp-results}
+\end{table}
+
+The higher compactness at block-group resolution reflects two effects:
+(1) block-group boundaries respect smaller-scale geographic features such as
+arterial roads and natural features that are not visible at tract resolution;
+and (2) the larger number of units provides richer boundary optimisation.
+Companion paper F.5 \citep{dellaLibera2026compactScale} provides a
+decomposition of the PP advantage into scale and shape components.
+
+\subsection{Population Balance}
+\label{sec:results:balance}
+
+All 50 state house maps achieve maximum population deviation
+$\max_i |\delta_i| \leq 0.5\%$. The median maximum deviation across all
+50 states is $0.31\%$. No state required more than 15 boundary-swap
+iterations to achieve $\pm 0.5\%$ balance after the initial METIS partition.
+
+Table~\ref{tab:pop-balance} reports population balance statistics for
+selected states. The bloc-group-resolution states generally achieve
+tighter balance (median $0.24\%$) than tract-resolution states (median $0.35\%$),
+because the finer geographic units allow more precise boundary placement.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+State & Resolution & $k$ & $T^*$ (persons) & Max $|\delta|$ & Median $|\delta|$ \\
+\midrule
+New Hampshire & block\_group & 400 & 3{,}342   & 0.48\% & 0.19\% \\
+Wyoming       & block\_group & 60  & 9{,}494   & 0.42\% & 0.21\% \\
+Washington    & block\_group & 98  & 74{,}043  & 0.31\% & 0.14\% \\
+Nebraska      & block\_group & 49  & 38{,}382  & 0.38\% & 0.17\% \\
+Texas         & tract        & 150 & 188{,}779 & 0.44\% & 0.22\% \\
+California    & tract        & 80  & 494{,}762 & 0.39\% & 0.18\% \\
+\bottomrule
+\end{tabular}
+\caption{Population balance statistics for selected states. All states
+  achieve $\leq 0.5\%$ maximum deviation, well within the federal
+  \emph{Wesberry} standard and far within the \emph{Reynolds} standard
+  of $\leq 5\%$ for state legislative maps.}
+\label{tab:pop-balance}
+\end{table}
+
+\subsection{County Splits}
+\label{sec:results:splits}
+
+For the 38 states with publicly available enacted 2020 state house maps,
+the algorithmic maps produce fewer county splits in 30 states (79\%),
+the same number in 4 states (11\%), and more in 4 states (11\%).
+The mean reduction is 18\% (range: $-3\%$ to $-41\%$).
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrr}
+\toprule
+State & $k$ & Enacted splits & Algorithm splits & Reduction \\
+\midrule
+Wisconsin   & 99  & 28  & 18  & 36\% \\
+Ohio        & 99  & 35  & 22  & 37\% \\
+Pennsylvania & 203 & 51  & 30  & 41\% \\
+Virginia    & 100 & 19  & 15  & 21\% \\
+Washington  & 98  & 14  & 11  & 21\% \\
+Texas       & 150 & 62  & 48  & 23\% \\
+California  & 80  & 11  & 10  & 9\%  \\
+\bottomrule
+\end{tabular}
+\caption{County splits: enacted vs.\ algorithmic maps for selected states.
+  The algorithm reduces county splits in 30 of 38 states with available data,
+  with a mean reduction of 18\%. Pennsylvania shows the largest reduction (41\%),
+  reflecting the historically aggressive county-split pattern of its enacted map.}
+\label{tab:county-splits}
+\end{table}
+
+\subsection{Runtime}
+\label{sec:results:runtime}
+
+Table~\ref{tab:runtime-full} reports wall-clock runtimes for all 50 states.
+Runtimes range from 8 seconds (Delaware, $k=41$, tract) to 420 seconds
+(New Hampshire, $k=400$, block\_group). The median runtime is 67 seconds.
+Total runtime for the full 50-state sweep is approximately 68 minutes on a
+single CPU core. With 4 parallel workers (via \texttt{redist states --workers 4}),
+this reduces to approximately 18 minutes.
+
+Block-group resolution states are 3.2$\times$ slower on average than
+tract-resolution states at comparable $k$ values, consistent with the
+$\sim\!3\times$ larger adjacency graph at block-group resolution.

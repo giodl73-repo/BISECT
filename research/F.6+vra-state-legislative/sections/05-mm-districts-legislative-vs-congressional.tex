@@ -1,0 +1,75 @@
+\section{Minority Opportunity Districts: State Legislative versus Congressional}
+\label{sec:comparison}
+
+Having established that VRASection achieves majority-minority districts in 4 of 5 covered states at state house scale with the same threshold and disentanglement properties as congressional scale, we now examine the comparative availability of minority opportunity districts across scales and states. The key question is whether state house redistricting provides more, fewer, or the same number of minority opportunity district opportunities as congressional redistricting, and whether these opportunities are achievable without sacrificing compactness.
+
+\subsection{Scale Advantage in Minority District Creation}
+
+State house redistricting creates more minority opportunity districts than congressional redistricting in absolute terms, for a simple reason: there are more districts. A state with a Black population of 30\% is unlikely to achieve more than one majority-Black congressional district (given 7--14 congressional seats in typical Southern states), but may achieve 30--40 majority-Black state house seats (given 100--180 state house districts).
+
+More importantly, the \textit{proportion} of minority opportunity districts achievable is also higher at state house scale, because the geographic precision of smaller districts allows the algorithm to match minority community boundaries more exactly. Consider a minority community of 60,000 persons in a state with congressional districts of 764,000 persons and state house districts of 50,000 persons. At congressional scale, the community is too small to constitute a majority and must be merged with adjacent non-minority populations, diluting its political influence. At state house scale, a district can be drawn to contain approximately 47,000 minority persons and 3,000 non-minority persons, giving the community a 94\% share---a highly effective majority-minority district.
+
+This scale advantage means that VRA compliance at state legislative scale is structurally easier than at congressional scale in states where minority communities are numerous but individually small. The five covered states analyzed here all have multiple distinct minority community concentrations; at state house scale, each concentration can potentially support its own majority-minority district, whereas at congressional scale only the largest concentrations can.
+
+\subsection{Empirical Comparison}
+
+Table~\ref{tab:mm_comparison} presents the count of majority-minority districts (minority share $\geq 50\%$) at congressional and state house scale, along with mean PP ratios for those districts, for all 13 states in our analysis set.
+
+\begin{table}[htbp]
+\centering
+\caption{Majority-minority districts: congressional vs.\ state house (2020 census, 42\% VRASection threshold).}
+\label{tab:mm_comparison}
+\begin{threeparttable}
+\small
+\begin{tabular}{lrrrrrr}
+\toprule
+ & \multicolumn{3}{c}{\textbf{Congressional}} & \multicolumn{3}{c}{\textbf{State House}} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-7}
+\textbf{State} & MM & PP (MM) & PP (non-MM) & MM & PP (MM) & PP (non-MM) \\
+\midrule
+Alabama      & 1  & 0.321 & 0.358 & 27 & 0.362 & 0.379 \\
+Arizona      & 2  & 0.344 & 0.388 & 11 & 0.388 & 0.412 \\
+California   & 12 & 0.319 & 0.348 & 28 & 0.361 & 0.378 \\
+Florida      & 5  & 0.318 & 0.349 & 22 & 0.359 & 0.383 \\
+Georgia      & 4  & 0.331 & 0.361 & 55 & 0.371 & 0.386 \\
+Illinois     & 3  & 0.328 & 0.366 & 18 & 0.369 & 0.391 \\
+Louisiana    & 1  & 0.318 & 0.345 & 33 & 0.357 & 0.373 \\
+Mississippi  & 1  & 0.338 & 0.371 & 46 & 0.378 & 0.397 \\
+New Mexico   & 1  & 0.351 & 0.390 &  9 & 0.391 & 0.418 \\
+New York     & 6  & 0.308 & 0.342 & 26 & 0.349 & 0.372 \\
+North Carolina & 2 & 0.321 & 0.358 & 27 & 0.362 & 0.382 \\
+South Carolina & 1 & 0.298 & 0.363 & 28 & 0.339 & 0.388 \\
+Texas        & 11 & 0.311 & 0.344 & 48 & 0.352 & 0.379 \\
+\midrule
+\textbf{Total} & \textbf{50} & & & \textbf{378} & & \\
+\textbf{Mean PP (MM)} & & \textbf{0.323} & & & \textbf{0.365} & \\
+\textbf{Mean PP (non-MM)} & & & \textbf{0.360} & & & \textbf{0.387} \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Notes: MM = majority-minority districts (minority population share $\geq 50\%$). PP (MM) = mean Polsby-Popper ratio of majority-minority districts. PP (non-MM) = mean Polsby-Popper ratio of remaining districts. VRASection threshold = 42\%.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{The Compactness-MM Tradeoff at State Scale}
+
+Table~\ref{tab:mm_comparison} reveals a consistent pattern: majority-minority districts are less compact than non-majority-minority districts at both congressional and state house scale (mean PP 0.323 vs.\ 0.360 for congressional; 0.365 vs.\ 0.387 for state house). This is expected: VRASection must aggregate minority-concentrated tracts that are not necessarily adjacent to each other, which can produce less compact district shapes.
+
+The critical finding, however, is that the compactness penalty for majority-minority districts is \textit{smaller} at state house scale than at congressional scale. The difference between MM and non-MM districts' PP ratios is:
+
+\begin{itemize}
+\item \textbf{Congressional scale}: $0.360 - 0.323 = 0.037$ PP units (10.3\% penalty)
+\item \textbf{State house scale}: $0.387 - 0.365 = 0.022$ PP units (5.7\% penalty)
+\end{itemize}
+
+The smaller compactness penalty at state house scale reflects the more granular boundary matching possible with smaller districts. At congressional scale, the algorithm must sometimes draw a non-compact district to aggregate a sufficient minority population from dispersed communities. At state house scale, individual minority communities are often large enough relative to the district target to support a majority-minority district without aggregating dispersed populations, producing a more compact result.
+
+In all 13 states, the majority-minority districts in the state house maps achieve higher PP ratios than the majority-minority congressional districts in the same states. This confirms that the scale advantage in minority district creation is not achieved at the cost of compactness---state house majority-minority districts are both more numerous and individually more compact than their congressional counterparts.
+
+\subsection{Implications for Section 2 Compliance}
+
+The practical implication of these findings is that Section 2 compliance is \textit{structurally easier} to achieve at state legislative scale than at congressional scale. The first \textit{Gingles} precondition---geographic compactness sufficient to support a majority-minority district---is more readily satisfied in state house redistricting because smaller districts can match the geographic extent of minority communities more exactly. States that cannot achieve compact majority-minority congressional districts (South Carolina at congressional scale) can nevertheless achieve compact majority-minority state house districts.
+
+This scale advantage means that states with relatively small, geographically dispersed minority populations may face Section 2 obligations at state legislative scale that they do not face at congressional scale. A minority population that is too dispersed to constitute a majority in a single congressional district may be concentrated enough, at the smaller state house scale, to constitute a majority in one or more state house districts, triggering the first \textit{Gingles} precondition. Algorithmic redistricting at state legislative scale should therefore incorporate VRASection as a standard component, not an optional add-on.

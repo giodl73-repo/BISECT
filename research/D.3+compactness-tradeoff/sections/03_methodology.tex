@@ -510,7 +510,7 @@ Overall complexity for a single bisection: $O(|E| + |V|\log|V|)$. For $k$ distri
 \textbf{Software Stack}:
 \begin{itemize}
     \item METIS 5.1.0 (graph partitioning) via command-line \texttt{gpmetis} executable
-    \item Python 3.13 (data processing, metric computation, workflow orchestration)
+    \item \texttt{redist} Rust binary (redistricting computation); Python 3.13 (metric computation, workflow orchestration)
     \item GeoPandas 0.14.2 (geometric operations, spatial joins)
     \item NumPy 1.26 / SciPy 1.11 (numerical computations, statistical tests)
     \item Matplotlib 3.8 / Seaborn 0.13 (visualization, Pareto frontiers)

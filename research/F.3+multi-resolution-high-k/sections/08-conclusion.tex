@@ -1,0 +1,51 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced and validated the resolution selection rule for state
+legislative redistricting: use block-group resolution when
+$k/n_{\rm tracts} > 0.05$. The rule is derived from the requirement that
+each district contain at least 20 base geographic units on average, ensuring
+population balance feasibility, compactness optimisation richness, and contiguity
+tractability.
+
+The rule is empirically validated on three state house chambers spanning the
+relevant range of $k/n$ values. For Washington's House ($k/n = 0.067$, above
+threshold), block-group resolution improves mean PP from $0.368$ to $0.398$
+and reduces maximum population deviation from $0.80\%$ to $0.40\%$.
+For Texas ($k/n = 0.028$, below threshold), the improvement is marginal
+($+0.008$ PP, $-0.06$\,pp deviation) and does not justify the $4\times$
+runtime increase. For California ($k/n = 0.009$, far below threshold),
+block-group resolution provides essentially no benefit.
+
+The resolution recommendation table (Section~\ref{sec:table}) shows that
+39 of 50 state lower chambers require block-group resolution, and 3 require
+block resolution---a much higher proportion than might be expected given that
+the congressional literature universally uses tract resolution.
+
+\paragraph{MAUP implications.}
+The MAUP analysis (Section~\ref{sec:maup}) shows that resolution choice
+is not merely a technical decision for high-$k/n$ chambers: it can shift
+partisan outcomes by $\pm 2$--$4$ seats. For algorithmically neutral
+redistricting, the resolution selection rule must be stated and applied
+consistently before any maps are drawn. The $k/n > 0.05$ rule provides
+an objective, data-driven standard that is independent of any partisan
+calculations.
+
+\paragraph{Data infrastructure.}
+The primary infrastructure requirement for the F track is the block-group
+adjacency dataset. Building this dataset for all 50 states requires:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020 --states all
+\end{verbatim}
+This is a one-time cost (approximately 4~GB, 2--4 hours) that enables all
+future state legislative redistricting analyses at appropriate resolution.
+
+\paragraph{Future work.}
+The resolution selection rule should be extended to upper chambers (state senates)
+and to bicameral nesting (F.2). Senate chambers have larger district sizes than
+house chambers, so fewer states require block-group resolution for the senate.
+The interaction between resolution selection and nesting (F.2) is a complex
+constraint: nesting requires that house and senate maps use compatible base
+units, which may require both chambers to use block-group resolution even if
+only one chamber individually requires it.

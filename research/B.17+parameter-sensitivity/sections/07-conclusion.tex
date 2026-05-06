@@ -1,0 +1,58 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We conducted a 50-state parameter sweep of five key \ar{} + \cs{}
+parameters, finding that:
+
+\begin{enumerate}
+\item \textbf{Partisan outcomes are parameter-insensitive.}
+      The maximum national partisan variation across the full parameter
+      range is $\Delta D_{\rm nat} \leq 0.3$ seats---$60\times$ smaller
+      than the algorithm-structure effect from B.0.
+\item \textbf{Compactness is sensitive to $\ufactor$.}
+      The METIS imbalance factor drives $\overline{\PP}$ variation of
+      $\pm 0.010$ (3.2\% relative change).
+      The DIA default $\ufactor = 1\%$ is the recommended statutory value.
+\item \textbf{$T$ affects only runtime.}
+      For $T \geq 200$, the \cs{} threshold has no effect on outcomes.
+      The DIA default $T = 600$ provides a certified 89-seed safety margin
+      (B.16) with negligible runtime cost.
+\item \textbf{County weight affects county integrity.}
+      $\acounty$ drives county split counts but has $\leq 0.2$-seat
+      partisan effect nationally.
+\end{enumerate}
+
+\subsection{Policy Recommendation}
+
+The DIA can safely encode the five parameters in statute at the
+recommended defaults (Table~\ref{tab:recommended-defaults}).
+No future legislature or administrator can achieve a meaningful partisan
+outcome by lobbying for parameter changes.
+The legitimate lever for partisan outcome---algorithm structure selection---was
+decided at the statutory drafting stage (B.0) and is not subject to
+administrative discretion.
+
+\subsection{Limitations}
+
+\begin{enumerate}
+\item The OAT sweep does not capture parameter interactions.
+      A full factorial design ($5^5 = 3{,}125$ runs) would be more
+      complete but computationally expensive.
+      Additive bound suggests interactions cannot change the conclusion.
+\item The partisan metric uses 2020 election data.
+      Future election outcomes may change which districts are competitive,
+      potentially affecting the partisan sensitivity of some parameters.
+\item We study only the parameters listed in Section~\ref{sec:parameters}.
+      Other implementation choices (e.g., the spanning-tree sampler in
+      \recom{}, the METIS initial partitioning method) could in principle
+      be tuned for partisan effect.
+\end{enumerate}
+
+\subsection{Future Work}
+
+A full factorial sweep of all five parameters would confirm the additive
+bound and potentially identify interaction effects.
+We leave this as future work, noting that the additive bound of 0.5 seats
+is already small enough to be policy-irrelevant.

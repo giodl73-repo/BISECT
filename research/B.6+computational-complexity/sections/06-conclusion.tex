@@ -1,0 +1,42 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We established the theoretical and empirical complexity profile of METIS
+recursive bisection for congressional redistricting.
+
+The key results are:
+
+\begin{enumerate}
+  \item \textbf{NP-hardness}: Balanced $k$-cut redistricting on planar
+    graphs is NP-hard (Theorem~\ref{thm:nphard}), by reduction from
+    Connected Planar Graph Bisection~\citep{dyer1985partitioning}.
+    This correctly accounts for the contiguity requirement of the
+    redistricting problem.  The hardness is for optimisation, not
+    feasibility: a valid partition always exists for connected graphs.
+  \item \textbf{Approximation landscape}: No formal approximation ratio
+    is known for METIS's heuristic (Proposition~\ref{prop:approx}).
+    The best known polynomial-time result ($O(\sqrt{\log n})$ via
+    ARV~\citep{arora2009expander}) applies to Sparsest Cut, not to
+    balanced connected $k$-partition.
+    Empirically, METIS is within 3\% of the best of 10,000 seeds
+    across redistricting-scale instances~\citep{b7paper}.
+  \item \textbf{Runtime}: $O(\texttt{niter} \cdot n \log k)$ with
+    $\texttt{niter} = 100$ fixed; empirically $O(n^{1.07 \pm 0.03})$
+    on $k > 1$ states across three census years, confirming near-linear
+    practical scaling.
+    Single-district states are excluded from the scaling fit.
+  \item \textbf{Space}: $O(n \log k)$, under 3\,MB for the largest
+    state (California, $n = 8{,}057$, $k = 52$) at tract resolution.
+\end{enumerate}
+
+These results provide the complexity-theoretic foundation for the DIA's
+algorithm specification.  NP-hardness establishes that exact optimisation
+is intractable, making heuristic approximation not merely acceptable but
+necessary.  The empirical 3\% gap from the best feasible seed provides
+a practical bound on solution quality for legal and policy purposes.
+
+\paragraph{Future work.}
+Open problems include: (1) a tighter approximation ratio specific to the
+redistricting graph class, (2) empirical scaling at block-level resolution
+($n \approx 8.1\mathrm{M}$), and (3) complexity analysis of the
+multi-constraint variant (VRA compliance + county preservation).

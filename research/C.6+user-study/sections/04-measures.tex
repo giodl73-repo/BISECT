@@ -1,0 +1,76 @@
+\section{Measures}
+\label{sec:measures}
+
+\subsection{Primary Outcome: Perceived Fairness}
+
+Our primary outcome is a five-item perceived fairness scale administered after each map. Respondents rated each statement on a five-point Likert scale (1 = Strongly Disagree to 5 = Strongly Agree), with higher scores indicating greater perceived fairness:
+
+\begin{enumerate}
+    \item ``These district boundaries seem fair to voters in [state].''
+    \item ``The people who drew these districts treated different communities equally.''
+    \item ``These district shapes seem reasonable and not manipulated.''
+    \item ``I would trust election results from these districts.''
+    \item ``These districts seem to reflect where people actually live.''
+\end{enumerate}
+
+Items were reverse-scored where necessary and averaged to form the scale. In a pilot sample ($n = 200$, not included in the main study), the scale achieved Cronbach's $\alpha = 0.87$, indicating strong internal consistency. Confirmatory factor analysis in the pilot confirmed unidimensionality (CFI $= 0.96$, RMSEA $= 0.06$). We use the mean of the five items as the primary outcome variable, standardized within the full analytic sample (mean $= 0$, SD $= 1$) for ease of interpretation in standardized difference units.
+
+\subsection{Secondary Outcomes}
+
+\textit{Partisan bias perception.} A single item: ``Do you think these districts were drawn to favor one political party?'' with five response options (Strongly favor Democrats / Slightly favor Democrats / Neither party / Slightly favor Republicans / Strongly favor Republicans). We code this as a three-way indicator: perceived Democratic lean, perceived Republican lean, or perceived neutrality.
+
+\textit{Process trust.} A single item: ``How much would you trust a redistricting process that produced maps like these?'' (0 = No trust at all to 100 = Complete trust). This is conceptually distinct from map-specific fairness (the primary scale) in that it asks about the process rather than the output.
+
+\textit{Willingness to accept.} A single item: ``If your state adopted this method of drawing congressional districts, would you find the results acceptable, even if they disadvantaged your party?'' (1 = Definitely would not accept to 7 = Definitely would accept). This outcome is designed to capture outcome acceptance under adversarial conditions---the strongest test of process legitimacy.
+
+\textit{Support for algorithmic redistricting.} Administered once at the end of the survey (not map-specific): ``Would you support your state using a computer algorithm to draw congressional districts, if that algorithm did not use any information about voters' political party or race?'' (1 = Strongly oppose to 5 = Strongly support). This provides a direct measure of policy support rather than perceptual fairness.
+
+\subsection{Moderator Variables}
+
+\textit{Party identification.} Measured on a standard seven-point scale (Strong Democrat = 1 to Strong Republican = 7), with a separate ``Independent'' option followed by a party-lean question. We code partisanship as: Strong Democrat (1--2), Weak Democrat/Independent-leaning Democrat (3), Pure Independent (4), Weak Republican/Independent-leaning Republican (5), Strong Republican (6--7).
+
+\textit{In-party status.} A derived variable indicating whether the respondent shares the party favored by the enacted map in the state they are viewing. For the North Carolina map (Republican-favoring enacted plan), Republicans are coded as in-party; for Maryland (Democrat-favoring enacted plan), Democrats are coded as in-party. This allows us to test whether the algorithmic advantage is larger for out-party respondents.
+
+\textit{Political knowledge.} A three-item battery: (1) which party currently has the majority in the U.S. House; (2) how many seats are in the U.S. Senate; (3) which of the following best describes gerrymandering (with four response options). Correct responses are summed (0--3); we use a high-knowledge indicator (2--3 correct) as a moderator.
+
+\textit{Education.} Coded as a four-level ordinal variable (less than high school diploma, high school diploma, some college or associate's degree, four-year degree or more).
+
+\subsection{Manipulation Checks}
+
+After the main outcome questions, we asked two manipulation-check items:
+\begin{enumerate}
+    \item ``Did you receive an explanation of how the districts in [state] were drawn?'' (Yes/No)
+    \item ``To the best of your knowledge, were the maps you saw drawn by a computer program, a commission of citizens, or state legislators?'' (Computer program / Commission of citizens / State legislators / Not sure)
+\end{enumerate}
+
+Successful manipulation was defined as correct responses on both items. Among respondents in the process-description and full-description conditions, 89.4\% correctly identified their map type, consistent with successful manipulation. Among respondents in the no-information condition, 42.1\% correctly identified their map type (above chance for a three-option question, 33.3\%), suggesting some prior knowledge about redistricting processes in the two study states; results are robust to excluding these respondents.
+
+\subsection{Balance Check}
+
+Table~\ref{tab:balance} reports pre-treatment characteristics by experimental condition. Randomization succeeded in producing balance across the six cells: no covariate differs significantly across conditions at $p < 0.05$ after Bonferroni correction. We include all pre-treatment covariates as controls in the main regression specifications, following standard practice in survey experiments to reduce variance even when balance is verified \citep{green2012field}.
+
+\begin{table}[h!]
+\centering
+\caption{Pre-Treatment Covariate Balance Across Experimental Conditions}
+\label{tab:balance}
+\begin{threeparttable}
+\begin{tabular}{lcccccc}
+\toprule
+ & \multicolumn{6}{c}{\textbf{Condition}} \\
+\cmidrule(lr){2-7}
+\textbf{Covariate} & A & B & C & D & E & F \\
+\midrule
+Age (mean years)         & 41.2 & 40.8 & 41.5 & 40.6 & 42.1 & 41.0 \\
+Female (\%)              & 51.3 & 49.8 & 50.5 & 52.1 & 50.0 & 51.7 \\
+Four-year degree+ (\%)   & 43.8 & 44.2 & 42.6 & 45.0 & 43.1 & 44.5 \\
+Democrat (\%)            & 37.5 & 36.1 & 38.2 & 37.0 & 36.9 & 38.0 \\
+Republican (\%)          & 31.3 & 32.5 & 30.9 & 31.8 & 32.1 & 31.4 \\
+High political knowledge (\%) & 48.0 & 47.3 & 49.1 & 46.8 & 48.5 & 47.9 \\
+Baseline state fairness (mean, 0--100) & 44.1 & 43.7 & 45.0 & 44.8 & 44.0 & 43.5 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small \item Note: No covariate differs significantly across conditions at $p < 0.05$ (Bonferroni-corrected). $n = 400$ per cell.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}

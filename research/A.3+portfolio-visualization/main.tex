@@ -1,0 +1,80 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1.25in]{geometry}
+\usepackage{times}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+\titleformat{\section}{\large\bfseries}{}{0em}{}[\titlerule]
+\titlespacing{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}[runin]{\bfseries}{}{0em}{}[.]
+\titlespacing{\subsection}{0pt}{10pt}{6pt}
+
+\title{\textbf{A Visual Guide to the\\Algorithmic Redistricting Research Portfolio}\\[6pt]
+\large Track A, Paper 3}
+
+\author{Giovanni Della-Libera\\
+\small\texttt{giodl@microsoft.com}}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent
+This guide introduces the algorithmic redistricting research portfolio
+to judges, journalists, legislators, and other non-technical readers.
+The portfolio contains more than forty papers organized into seven tracks (A--G)
+and demonstrates that a single algorithm---recursive graph bisection---can
+produce congressional districts that are more compact, more legally compliant,
+and less partisan than districts drawn by politicians.
+Five headline numbers summarize the empirical results.
+This document explains what the algorithm does, what the papers found,
+and how each audience can navigate the portfolio.
+\end{abstract}
+
+\vspace{6pt}
+\hrule
+\vspace{6pt}
+
+\tableofcontents
+
+\newpage
+
+\input{sections/01-overview}
+
+\input{sections/02-the-algorithm}
+
+\phantomsection
+\label{sec:findings}
+\input{sections/03-key-findings}
+
+\input{sections/04-track-summaries}
+
+\input{sections/05-how-to-use}
+
+\input{sections/06-dashboards}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

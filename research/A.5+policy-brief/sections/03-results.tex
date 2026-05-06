@@ -1,0 +1,49 @@
+%% 03-results.tex — Three bullet results
+
+\section{What the Evidence Shows}
+
+Applied to all fifty states across the 2000, 2010, and 2020 Census cycles,
+the algorithm produces the following results:
+
+\bigskip
+
+\noindent
+\begin{tabular}{@{}>{\bfseries\large}p{0.08\textwidth} p{0.86\textwidth}@{}}
++22\% &
+More compact than enacted 2020 maps, measured by the Polsby-Popper
+ratio of district area to perimeter squared, averaged across all 435 districts.
+Compact districts follow rivers and county lines rather than
+twisting through neighborhoods to sort voters.
+\textit{(Paper B.2~\cite{dellaLibera2026edgeWeighted})}\\[10pt]
+
+7D / 7R &
+North Carolina---the state that has generated more federal gerrymandering
+litigation than any other in the past decade---receives a
+seven-Democratic, seven-Republican delegation under the algorithm,
+closely matching the state's evenly divided electorate.
+No partisan data was used.
+\textit{(Paper B.11~\cite{dellaLibera2026ncRegions})}\\[10pt]
+
+15--20 min &
+Any citizen with a laptop and an internet connection can download
+the open-source \texttt{redist} tool, fetch public Census data,
+run the Vermont verification fixture, and confirm the result themselves
+in 15--20 minutes end-to-end including data download.
+Full fifty-state replication takes approximately 18 minutes for one
+census year, or two to four hours for all three census years.
+\textit{(Replication Package A.4)}\\
+\end{tabular}
+
+\bigskip
+
+\noindent Additional findings:
+the algorithm produces \textbf{more majority-minority districts}
+than enacted plans in states above the 42\% minority-population threshold
+identified in Paper D.1~\cite{dellaLibera2026vraCompliance},
+and reduces the partisan efficiency gap by \textbf{62\%} compared to
+enacted plans~\cite{dellaLibera2026efficiencyGap}---without any
+partisan fairness criterion in the algorithm specification.\footnote{%
+The algorithm produces near-zero efficiency gaps as a byproduct of geometric
+neutrality (mean $|EG|=0.04$ vs.\ $0.08$ for enacted maps).
+In some geographically sorted states a small systematic gap persists due to
+urban concentration (Paper C.5).}

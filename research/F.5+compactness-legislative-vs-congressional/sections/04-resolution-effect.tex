@@ -1,0 +1,44 @@
+\section{Effect of Resolution: Block Group versus Tract}
+\label{sec:resolution}
+
+A separate dimension of algorithmic compactness improvement is geographic resolution. Congressional and state legislative maps in this project can be drawn at either census tract resolution (approximately 4,000 persons per unit, 72,000 total units nationally) or census block group resolution (approximately 1,500 persons per unit, 239,000 total units nationally). The finer resolution of block groups allows the algorithm to trace district boundaries more precisely, following natural geographic features---rivers, ridgelines, coastlines---that tract boundaries approximate only crudely.
+
+\subsection{Mechanism of the Resolution Effect}
+
+Census tracts are defined by the Census Bureau to have boundaries that follow visible geographic features where possible, but they are constrained to contain approximately 4,000 persons. This size constraint means that a single census tract may span a river, cross a ridgeline, or straddle a county boundary in ways that create artificial district boundaries. When the algorithm draws a district boundary through a single tract, it must assign the entire tract to one district or the other; it cannot split the tract at the river or ridgeline that would produce the more compact boundary.
+
+Block groups are smaller---approximately 1,500 persons---and their boundaries more precisely follow natural features. When the algorithm draws at block group resolution, it can choose district boundaries that follow rivers and ridgelines more closely, producing districts with shorter perimeters relative to their area and therefore higher Polsby-Popper ratios.
+
+The resolution effect is essentially a rounding error in boundary placement. At tract resolution, district boundaries can be ``off'' by up to one tract width---approximately 2--5 miles in rural areas, 0.5--1 mile in urban areas. At block group resolution, the boundary error is approximately one block group width---0.5--2 miles in rural areas, 0.25--0.5 miles in urban areas. The smaller rounding error at block group resolution translates to shorter district boundaries and higher PP ratios.
+
+\subsection{Empirical Magnitude}
+
+Across all 50 states and three census years (2000/2010/2020), the mean PP improvement from tract to block group resolution is 0.013 PP units (3.4\% improvement relative to tract-resolution PP). For the 2020 census year alone the effect is somewhat larger (approximately 0.020 PP units), because 2020 block group boundaries are more precisely aligned with current geographic features. Table~\ref{tab:main_results} (column 4) reports the block group PP for each state.
+
+The resolution effect varies substantially across states. The largest improvements (above 0.025 PP units) occur in:
+\begin{itemize}
+\item \textbf{Coastal states} with irregular shorelines: Maine (+0.040), Rhode Island (+0.038), Florida (+0.033). The jagged coastline of these states imposes large perimeter penalties on district boundaries that pass through coastal tracts; block group resolution allows more precise boundary placement along the shoreline.
+\item \textbf{River-dominated states}: Louisiana (+0.034), Mississippi (+0.031). The Mississippi River and its distributaries create natural boundaries that block groups can follow but tracts cannot.
+\item \textbf{Mountain states with ridge systems}: Idaho (+0.031), Montana (+0.031). Mountain ridgelines are natural district boundaries, and block groups trace these ridges more precisely than tracts.
+\end{itemize}
+
+The smallest resolution improvements occur in:
+\begin{itemize}
+\item \textbf{Plains states with rectangular boundaries}: Iowa (+0.011), Kansas (+0.012), Nebraska (+0.013). In states with regular geographic features and rectangular tract shapes, the difference between tract and block group boundary placement is small.
+\item \textbf{Small northeastern states}: Vermont (+0.010), New Hampshire (+0.013). Despite irregular topography, these states' small geographic extent limits the absolute improvement available from finer resolution.
+\end{itemize}
+
+\subsection{Combined Effect: Small Districts at Block Group Resolution}
+
+The two effects---scale and resolution---combine multiplicatively. State house maps at block group resolution combine the benefits of many small districts (the $O(1/\sqrt{k})$ scaling advantage) with the benefits of precise boundary tracing (the $+0.013$ resolution effect, three-year average). The result is the headline finding: state house PP at block group resolution (mean 0.401) versus congressional PP at tract resolution (mean 0.361), a difference of 0.040 PP units (11\%).
+
+The decomposition of this 0.040 improvement is:
+\begin{itemize}
+\item \textbf{Scale effect} (congressional tract to state house tract): $0.388 - 0.361 = +0.027$ PP units
+\item \textbf{Resolution effect} (state house tract to state house block group): $0.401 - 0.388 = +0.013$ PP units (three-year average; somewhat smaller at state house scale because boundaries are already shorter at smaller district size, reducing the marginal benefit of finer resolution)
+\item \textbf{Total}: $+0.040$ PP units (11\% improvement)
+\end{itemize}
+
+\subsection{Computational Cost of Block Group Resolution}
+
+Block group resolution increases the size of the geographic graph from approximately 72,000 nodes nationally (tract) to approximately 239,000 nodes (block group)---a 3.3$\times$ increase. METIS's multilevel partitioning algorithm scales approximately linearly in graph size, so the block group computation takes approximately 3.3$\times$ longer than the tract computation for the same partition. In practice, the Rust implementation of the pipeline completes a single state at block group resolution in 45--90 seconds on commodity hardware, versus 15--30 seconds at tract resolution. The 3.3$\times$ computational cost premium is modest relative to the 0.013 PP unit quality improvement (three-year average).

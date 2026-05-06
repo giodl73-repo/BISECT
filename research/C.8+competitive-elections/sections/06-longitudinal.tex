@@ -1,0 +1,78 @@
+\label{sec:longitudinal}
+
+\subsection{Durability of Competitive Districts Under Vote-Share Drift}
+
+A competitive district at a given moment may not remain competitive as
+national partisan tides shift.  A district that is D+8 in a year when
+Democrats win the presidential popular vote by 3 points could become
+uncompetitive if the national environment shifts by 5 points toward
+Republicans.  We assess durability by applying uniform partisan shifts of
+$\pm 1$ through $\pm 4$ percentage points to the 2020 presidential baseline.
+
+Formally, the shifted Democratic vote share in district $i$ under shift $s$ is:
+\begin{equation}
+  D_i(s) = D_i + s, \quad s \in \{-4, -3, -2, -1, +1, +2, +3, +4\}
+\end{equation}
+We count the number of algorithmic districts that remain competitive
+($|D_i(s) - 0.5| < 0.10$) under each shift.
+
+\subsection{Results: Longitudinal Stability}
+
+Table~\ref{tab:longitudinal} presents the count of competitive algorithmic
+districts as national vote shares drift.
+
+\begin{table}[h]
+\centering
+\caption{Competitive Algorithmic Districts Under Partisan Drift}
+\label{tab:longitudinal}
+\begin{tabular}{lcc}
+\toprule
+National shift & Competitive districts & Swing districts \\
+\midrule
+$-4$ pts (R wave) & 71 & 42 \\
+$-3$ pts & 75 & 47 \\
+$-2$ pts & 79 & 51 \\
+$-1$ pt & 82 & 54 \\
+Baseline (2020) & 85 & 57 \\
+$+1$ pt (D wave) & 83 & 55 \\
+$+2$ pts & 80 & 52 \\
+$+3$ pts & 77 & 49 \\
+$+4$ pts & 73 & 44 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The count of competitive districts declines modestly under large partisan
+shifts but remains substantially higher than the enacted baseline (65) even
+under a 4-point wave in either direction.  This indicates that competitive
+algorithmic districts are not clustered just inside the 10-point threshold
+in a way that would make them sensitive to small shifts.  The distribution
+of margins within competitive algorithmic districts---median 4.1 points, with
+many at 2--3 points---creates a broad competitive core that is stable across
+moderate swings.
+
+\subsection{Durably Competitive Districts}
+
+A district is \emph{durably competitive} if it remains competitive under
+every shift from $-4$ to $+4$ points.  Under this strict criterion, 61 of
+the 85 competitive algorithmic districts (72\%) are durably competitive.
+This compares favorably with enacted maps, where only 44 of the 65 competitive
+enacted districts (68\%) are durably competitive.
+
+The 24 competitive algorithmic districts that are not durably competitive
+are clustered near the 10-point boundary---they become uncompetitive under a
+4-point shift in one direction.  These borderline cases represent districts
+where the underlying geography is somewhat homogeneous and which would require
+an unusually moderate electorate to remain contested.
+
+\subsection{Projection to Future Census Cycles}
+
+\citet{dellaLibera2026stability} shows that algorithmic district boundaries
+have strong temporal stability across census decades.  For competitive
+districts specifically, this means that a district that is competitive in the
+2020 cycle is likely to have similar geographic properties in the 2030 cycle,
+with boundary changes driven primarily by population shifts within the
+district's territory rather than by map redesign.  The durability result
+therefore extends beyond a single decade: competitive algorithmic districts
+represent durable geographic features of the electoral landscape, not
+artifacts of a specific partisan moment.

@@ -1,0 +1,129 @@
+\section{Legal Discussion}
+\label{sec:legal}
+
+\subsection{Scope of Claims}
+\label{sec:legal:scope}
+
+This paper demonstrates that dual-constrained bisection can reduce partisan
+gaps in states with favourable Lorenz geometry (Wisconsin is the clearest
+example).
+It does \textbf{not} demonstrate:
+\begin{enumerate}
+  \item that courts can order this method to be used in redistricting;
+  \item that any particular partisan outcome is constitutionally required;
+  \item that the algorithm is partisan-neutral --- it explicitly incorporates
+    a proportionality target and thus requires partisan vote data as an input;
+  \item that states with $\sigma < 0.05$ (free proportionality) are presently
+    gerrymandered; or
+  \item that B.12 at any $\eta$ is guaranteed to improve proportionality ---
+    Table~\ref{tab:tradeoff-empirical} shows that it worsens outcomes for North
+    Carolina at all tested $\eta$ values.
+\end{enumerate}
+The appropriate use of these results is to characterise the \emph{cost in
+partisan information} of achieving proportionality, and to distinguish states
+where proportionality is a geographic impossibility (expensive proportionality
+states) from states where it is feasible but unreached.
+
+\subsection{Federal Prohibition (\S104(e))}
+
+The hypothetical Districting Integrity Act \S104(e) prohibits partisan data
+as an input to federal congressional redistricting.
+B.12 is not a proposal to violate this prohibition.
+Rather, it is a mathematical analysis of what proportionality would cost if
+the prohibition were relaxed --- and a characterisation of when it costs nothing
+(free proportionality states) versus when it costs significantly.
+
+The \S104(e) prohibition is a policy choice, not a mathematical necessity.
+The choice has consequences: in expensive-proportionality states, geography-only
+algorithms produce maps where 50\,\% of voters elect 35\,\% of representatives.
+B.12 measures those consequences.
+
+\subsection{State Legislative Applications}
+
+State legislatures are not constrained by \S104(e).
+Several state constitutions require proportional representation or prohibit
+maps that unduly favour a political party \citep{lwv2018pa, harper2022nc}.
+
+For state legislative redistricting, B.12 provides a rigorous operationalisation
+of proportionality: set $\mathtt{ubvec}[1]$ to the minimum value that achieves
+proportional seat allocation, and verify the Lorenz feasibility condition is
+satisfied.
+If Lorenz feasibility fails (expensive-proportionality state), the court can
+be informed that geographic constraints make proportionality unachievable
+with single-member districts --- a fact about geography, not about intent.
+
+\subsection{The Evidentiary Role}
+
+B.12's most immediate legal contribution is evidentiary.
+For states where $\sigma$ is low (free or cheap proportionality), a court
+can assess whether a geography-only algorithm's non-proportional outcome is
+``natural'' (unavoidable given geography) or artificially produced.
+If $\sigma < 0.05$ and the algorithm still produces a $-10$\,pp gap,
+something other than geography is causing the shortfall.
+
+For states where Lorenz feasibility is violated (expensive-proportionality),
+the court has a rigorous basis for finding that proportionality is geometrically
+impossible with contiguous single-member districts, which may support a
+different remedy (e.g., multi-member districts).
+
+\subsection{\emph{Rucho v.\ Common Cause} (2019) and Algorithmic Neutrality}
+
+\emph{Rucho v.\ Common Cause}, 588 U.S. 684 (2019), held that federal courts
+cannot remedy partisan gerrymandering under the federal Constitution because
+``partisan gerrymandering claims present political questions beyond the reach
+of the federal courts.''
+B.12's analysis does not challenge this holding, but it reframes what the
+holding leaves open.
+
+\emph{Rucho} was decided on justiciability grounds, not on the merits.
+Chief Justice Roberts noted that ``[t]he courts have no license to reallocate
+political power between the two major political parties.''
+This reasoning applies directly to human redistricting decisions with
+identifiable partisan intent.
+B.12's algorithmic approach offers a different posture: an algorithm that
+takes only census population and geographic adjacency as inputs (the
+geography-only baseline) has \emph{no partisan intent} --- it cannot
+gerrymander because it lacks the necessary mental state.
+The \emph{Rucho} prohibition on judicial reallocations of political power
+presupposes that political power has been deliberately allocated;
+a purely algorithmic plan reallocates nothing.
+
+In the post-\emph{Rucho} landscape, three legal developments matter for B.12:
+
+\begin{enumerate}
+  \item \textbf{State courts}: \emph{Rucho} explicitly invited state-court
+    review under state constitutions. \emph{League of Women Voters v.\ Commonwealth
+    of Pennsylvania} (Pa. 2018) and \emph{Harper v.\ Hall} (N.C. 2022) struck
+    down maps as partisan gerrymanders under state constitutional anti-partisan
+    provisions.
+    B.12's $\sigma$ classification provides a rigorous quantitative test that
+    state courts can apply: a map drawn by a geography-only algorithm with
+    $\sigma = 0$ has no partisan signal and cannot be a partisan gerrymander.
+
+  \item \textbf{The algorithmic neutrality standard}: B.12 defines a
+    \emph{spectrum} from full algorithmic neutrality ($\sigma = 0$) to
+    full partisan optimisation.
+    The \emph{Rucho} Court observed that ``an unbiased redistricting system would
+    produce a roughly proportional result.''
+    B.12's proportionality paradox shows that this observation is geographically
+    incorrect for competitive states: an unbiased system (B.9) does \emph{not}
+    produce proportional results because of the Rodden effect.
+    This factual finding is directly relevant to state court proportionality
+    challenges: it establishes that non-proportional outcomes from neutral
+    algorithms are a geographic inevitability, not evidence of partisan intent.
+
+  \item \textbf{Procedural fairness as the justiciable claim}: B.12 supports
+    a procedural-fairness argument that \emph{Rucho} did not foreclose.
+    Even if \emph{Rucho} bars courts from mandating proportional outcomes,
+    courts retain authority to mandate fair \emph{processes}.
+    A requirement that redistricting use a publicly auditable, partisan-data-free
+    algorithm (such as B.9 or a verified $\sigma = 0$ variant of B.12) is a
+    procedural mandate, not an outcome mandate.
+    State courts in Pennsylvania and North Carolina have accepted this framing.
+\end{enumerate}
+
+B.12's central legal contribution is thus not to challenge \emph{Rucho} but to
+provide the mathematical infrastructure for the post-\emph{Rucho} state-court
+and legislative landscape: a precise, auditable definition of partisan signal
+strength that separates geographic inevitability ($\Delta$ caused by Rodden
+effect) from partisan design ($\Delta$ caused by deliberate targeting).

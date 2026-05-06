@@ -1,0 +1,38 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have presented the first systematic 50-state empirical study of algorithmically
+generated state house maps using the minimum-edge-cut recursive bisection
+algorithm. The results establish three main findings.
+
+First, the \texttt{redist} pipeline scales gracefully to the state legislative
+context. All 50 state house chambers are successfully redistricted, with
+population balance within $\pm 0.5\%$ in every state and runtimes under
+8 minutes per state at single-seed operation.
+
+Second, algorithmic state house maps are more compact than both congressional
+algorithmic maps ($\overline{PP} = 0.381$--$0.401$ vs.\ $0.361$) and enacted
+state house maps ($\overline{PP} = 0.381$ vs.\ $0.300$ for the 38-state
+comparison). This counterintuitive result is explained by scale effects (F.5):
+smaller districts have relatively shorter perimeters when drawn from compact
+sub-regions of the state, and recursive bisection naturally exploits this by
+hierarchically partitioning the state from large to small geographic scales.
+
+Third, the algorithmic maps split counties 18\% fewer times on average than
+enacted maps, consistent with the algorithm's lack of partisan incentives to
+crack geographic communities across administrative boundaries.
+
+These results position the F track as a credible algorithmic baseline for
+state legislative redistricting reform. A state redistricting commission
+seeking a compact, population-balanced, county-respecting benchmark plan
+can generate one using \texttt{redist state --chamber house --resolution block\_group}
+in under 10 minutes per state.
+
+\paragraph{Future work.}
+Immediate extensions include: partisan outcome analysis using precinct-level
+data (requires the political data analysis pipeline, out of scope here);
+VRA compliance assessment (F.6); bicameral nesting (F.2); and resolution
+refinement for the five states where block-group resolution is inadequate (F.3).
+A longer-term goal is a multi-seed ensemble analysis for the high-$k$ chambers,
+building on the ensemble methodology of the G track
+\citep{dellaLibera2026ensemble}.

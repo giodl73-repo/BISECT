@@ -1,0 +1,54 @@
+\section{2030 Reapportionment Projections}
+\label{sec:projections}
+
+\subsection{Census Bureau Projections}
+
+Based on Census Bureau population projections~\citep{census2030proj} and
+\hh{} apportionment calculations~\citep{huntington1928,balinski1982},
+we project the following seat changes for 2030:
+
+\begin{table}[h]
+\centering
+\caption{Projected 2030 congressional seat changes. Seat counts shown
+         as 2020 $\to$ 2030 (projected). ``Tree change'' indicates the
+         qualitative change in the \ar{} bisection tree.}
+\label{tab:projections}
+\begin{tabular}{lcccc}
+\toprule
+State & 2020 seats & 2030 (proj.) & Change & Tree change \\
+\midrule
+Texas & 38 & 41 & $+3$ & Dramatic (composite $\to$ prime) \\
+California & 52 & 50 & $-2$ & Structural \\
+Florida & 28 & 29 & $+1$ & Dramatic (composite $\to$ prime) \\
+New York & 26 & 25 & $-1$ & Structural \\
+Arizona & 9 & 10 & $+1$ & Minor \\
+Georgia & 14 & 15 & $+1$ & Minor \\
+North Carolina & 14 & 15 & $+1$ & Minor \\
+Illinois & 17 & 16 & $-1$ & Minor \\
+Michigan & 13 & 12 & $-1$ & Moderate \\
+Pennsylvania & 17 & 16 & $-1$ & Minor \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Role of Prime Factorization}
+
+The \ar{} bisection tree for $k$ districts is constructed as follows:
+\begin{enumerate}
+\item Find the prime factorisation $k = p_1^{a_1} \times \cdots \times p_r^{a_r}$.
+\item At each node of the tree, split by the largest prime factor.
+\item Recurse on each half until all leaves have one district.
+\end{enumerate}
+
+A change from composite $k$ to prime $k'$ fundamentally changes this tree:
+a composite $k$ has a multi-level tree, while a prime $k'$ has a flat tree
+(one root split into $k'$ leaves directly).
+This is the Texas and Florida case.
+
+\subsection{Projection Uncertainty}
+
+The 2030 seat counts are projections, not final values.
+Census Bureau population projections have uncertainty bounds of
+$\pm 1$--$2$ seats for the largest states.
+Our analysis treats the projected seat counts as exact; the structural
+conclusions are robust to small changes in the projections.

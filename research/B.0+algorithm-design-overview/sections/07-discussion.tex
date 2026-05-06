@@ -121,12 +121,17 @@ census-tract GEOID); finer levels require the B.10 Phase~2--3 implementation.
 
 \subsubsection*{Markov Chain Methods (GerryChain)}
 
-GerryChain \citep{metric2018} and related MCMC approaches generate large ensembles
-of redistricting plans and test whether an enacted map falls within the ensemble's
-distribution.
+GerryChain \citep{metric2018} and related Markov-chain Monte Carlo (MCMC) approaches
+generate large ensembles---typically thousands of independently drawn plans---and test
+whether an enacted map falls within the ensemble's distribution.
 These methods are well-suited to null-hypothesis testing (``is the enacted map
-unusual?'') but not to plan generation.
-The toolbox is complementary: it generates plans, while GerryChain tests them.
+unusual relative to the space of plans?'').
+The toolbox is complementary: it generates a single deterministic plan optimising
+a specified criterion, while GerryChain generates an MCMC ensemble of thousands of
+plans to characterise the solution space.
+A practitioner may use the two approaches together: run the toolbox to obtain the
+certified-optimal plan, then use GerryChain to verify that the plan lies in the
+interior of the ensemble (i.e., is not an outlier in any partisan or demographic dimension).
 B.15's Census Stability Score provides a deterministic stability metric that
 MCMC cannot easily compute (it would require running an ensemble for each of
 three census years).

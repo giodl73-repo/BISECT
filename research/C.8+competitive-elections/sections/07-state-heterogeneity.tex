@@ -1,0 +1,96 @@
+\label{sec:heterogeneity}
+
+\subsection{State-Level Variation}
+
+The national aggregate (20 additional competitive districts) conceals
+substantial state-level heterogeneity.  Some states gain many competitive
+districts under algorithmic maps; others gain few or even lose competitive
+districts.  Understanding this variation reveals which features of a state's
+geography and demography drive the competitiveness difference.
+
+Table~\ref{tab:state-gains} presents the states with the largest gains in
+competitive districts under algorithmic maps.
+
+\begin{table}[h]
+\centering
+\caption{States with Largest Gains in Competitive Districts (Algorithmic vs.\ Enacted)}
+\label{tab:state-gains}
+\begin{tabular}{lcccc}
+\toprule
+State & Districts & Algorithmic & Enacted & Gain \\
+\midrule
+North Carolina & 14 & 5 & 2 & +3 \\
+Texas & 38 & 10 & 6 & +4 \\
+Ohio & 15 & 5 & 2 & +3 \\
+Florida & 28 & 8 & 5 & +3 \\
+Georgia & 14 & 4 & 2 & +2 \\
+Virginia & 11 & 4 & 2 & +2 \\
+Michigan & 13 & 4 & 2 & +2 \\
+Wisconsin & 8 & 3 & 1 & +2 \\
+Pennsylvania & 17 & 5 & 3 & +2 \\
+Arizona & 9 & 3 & 2 & +1 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Characteristics of High-Gain States}
+
+States that gain the most competitive districts under algorithmic maps share
+several characteristics.
+
+\textbf{Geographic diversity.}  High-gain states tend to have a mix of
+urban cores, suburban rings, and rural areas---the geographic configuration
+that enables mapmakers to create safe seats by separating these communities.
+In North Carolina, for example, enacted maps pack Democratic-leaning urban
+areas of the Triangle and Charlotte into a small number of safe Democratic
+seats, leaving the surrounding suburban areas in safe Republican seats.
+Algorithmic maps that cross urban-suburban boundaries naturally produce
+more competitive districts.
+
+\textbf{Enacted map quality.}  States with heavily gerrymandered enacted
+maps (in either direction) show the largest gains.  Texas and Ohio, which
+received Republican-drawn maps widely criticized as partisan gerrymanders,
+show gains of 4 and 3 competitive seats respectively.  Illinois, which
+received a Democratic gerrymander, shows a gain of 2 competitive seats.
+
+\textbf{Partisan balance.}  States with near-even partisan balance in the
+presidential vote tend to show larger gains because the underlying electorate
+supports more competitive districts regardless of map design.  The algorithmic
+map captures this latent competitiveness; enacted maps may suppress it.
+
+\subsection{States with Few or No Gains}
+
+Several states show no gain or a small loss of competitive districts under
+algorithmic maps.  These tend to be:
+\begin{itemize}
+  \item \textbf{Highly partisan states:} States where the electorate is
+    overwhelmingly Democratic (Massachusetts, Maryland) or Republican
+    (Wyoming, West Virginia) leave little room for competitive districts
+    regardless of the map.
+  \item \textbf{Small-delegation states:} States with one or two congressional
+    districts rarely have the geographic range to produce a competitive
+    district; the state partisan balance determines the outcome almost
+    entirely.
+  \item \textbf{States where enacted maps are already compact:} A handful of
+    states where enacted maps use independent commissions or court-ordered
+    compactness requirements show little difference from algorithmic output.
+    California under its CRC map is the clearest example.
+\end{itemize}
+
+\subsection{The Role of Geographic Sorting}
+
+The geographic sorting of Democrats into urban cores and Republicans into
+suburban and rural areas~\citep{chen2013unintentional,rodden2019why} is the
+single largest factor limiting the number of competitive algorithmic districts.
+Even a perfectly compact map must draw district lines through the urban-suburban
+boundary, and that boundary coincides with sharp partisan gradients.  The
+algorithm produces competitive districts when it must cross that boundary to
+achieve population balance, but in states where population is already
+distributed in ways that allow purely urban or purely rural districts to achieve
+balance, competitive districts are geometrically constrained.
+
+This suggests that the gain in competitive districts from algorithmic
+redistricting is bounded: the algorithm can eliminate artificial packing and
+cracking but cannot overcome the underlying geographic separation of partisan
+voters.  The 31\% increase we document represents the recoverable competitiveness
+that gerrymandering suppresses, not the theoretical maximum.

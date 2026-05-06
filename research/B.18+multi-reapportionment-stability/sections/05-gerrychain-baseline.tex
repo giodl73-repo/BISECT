@@ -1,0 +1,86 @@
+\section{The GerryChain Baseline}
+\label{sec:gerrychain-baseline}
+
+\subsection{Comparison to MCMC Disruption}
+
+A natural baseline for ``how much disruption is large?'' is the disruption
+from a single \recom{} MCMC step, which randomises the plan by a small
+but nonzero amount.
+A full \recom{} chain of 10{,}000 steps has $d_{\rm Ham} \approx 1$ from
+its start plan (approximately decorrelated).
+
+We compare the reapportionment-induced boundary disruption to three
+baselines:
+
+\begin{table}[h]
+\centering
+\caption{Boundary disruption comparison across disruption types.
+         $d_{\rm Ham}$ is the Hamming distance from the reference plan.}
+\label{tab:disruption-comparison}
+\begin{tabular}{lcc}
+\toprule
+Disruption type & $d_{\rm Ham}$ & Relative to reapportion \\
+\midrule
+Single \recom{} step (TX, $k=38$) & $\approx 0.026$ & $0.11\times$ \\
+10 \recom{} steps (TX) & $\approx 0.22$ & $0.96\times$ \\
+TX reapportionment ($38\to41$) & 0.23 & $1.0\times$ (baseline) \\
+Seed change (worst case, GA) & 0.04 & $0.17\times$ \\
+Political redistricting (typical) & 0.35--0.55 & $1.5$--$2.4\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The Texas reapportionment disruption ($d_{\rm Ham} = 0.23$) is equivalent
+to approximately 10 \recom{} steps.
+This is larger than the typical seed-change disruption (B.7) but
+significantly smaller than political redistricting.
+
+\subsection{Interpretation}
+
+The finding that reapportionment disruption $\approx 10$ MCMC steps
+has an important implication for statistical continuity:
+
+\begin{enumerate}
+\item \textbf{Algorithmic redistricting is more stable than MCMC.}
+      A certified \recom{} ensemble (10{,}000+ steps) fully decorrelates
+      from its starting plan.
+      A reapportionment-driven redistricting changes only $\approx$23\% of
+      tracts (for the most disruptive case, TX).
+      The previous map is a useful starting point for the new map.
+\item \textbf{Algorithmic redistricting is far more stable than political redistricting.}
+      Political redistricting cycles (which change 35--55\% of tract
+      assignments in contested states) produce $1.5$--$2.4\times$ more
+      disruption than the worst algorithmic reapportionment.
+\end{enumerate}
+
+\subsection{Incumbent Protection Analysis}
+
+One concern about reapportionment is that it disrupts incumbents by
+moving them into different districts.
+The Hamming distance measure gives an upper bound on incumbent disruption:
+if $d_{\rm Ham} = 0.23$, at most 23\% of incumbents could be moved to
+a different district (in practice fewer, as district assignments change
+but incumbents can move with their home precinct).
+
+For comparison, political redistricting cycles under the current system
+often move 30--50\% of incumbents to new districts.
+The \ar{} reapportionment is less disruptive to incumbents in the worst
+case than typical political redistricting.
+
+\subsection{GerryChain Baseline Definition}
+
+The ``GerryChain baseline'' in the title of this section refers to using
+the \recom{} step size ($d_{\rm Ham} \approx 1/k$ per step) as the unit
+of measurement for boundary disruption.
+This baseline is natural because:
+\begin{enumerate}
+\item It is the smallest unit of plan change in the MCMC framework.
+\item It is computable for any state and any $k$.
+\item It provides an apples-to-apples comparison between algorithmic
+      stability and MCMC mixing.
+\end{enumerate}
+
+Under this baseline, the 2030 reapportionment for Texas is equivalent to
+approximately $0.23 / 0.026 \approx 9$ \recom{} steps.
+This is a concrete, policy-relevant characterisation: the 2030 Texas
+reapportionment is a ``9-step'' disruption in MCMC terms.

@@ -1,0 +1,48 @@
+\section{Related Work}
+\label{sec:related}
+
+Our study draws on three bodies of literature: public opinion research on redistricting and gerrymandering, procedural fairness theory, and the psychology of algorithm aversion.
+
+\subsection{Public Opinion on Redistricting}
+
+Public knowledge of and opinion about redistricting has been studied systematically for roughly two decades \citep{henderson2018,bandyopadhyay2013,clark2021}. Several consistent findings emerge. First, most Americans have low baseline knowledge of how congressional districts are drawn: surveys typically find fewer than one in three respondents can correctly identify who draws congressional district lines in their state \citep{gimpel2020,henderson2018}. Second, when provided with descriptions of gerrymandering---including images of distorted districts---majorities across partisan groups rate the practice as unfair \citep{elmendorf2019,nalder2019}. Third, public preferences for redistricting process strongly favor independent commissions over legislative control, with commission support in the 60--70\% range across multiple polls \citep{pew2017redistricting,gallup2019gerrymander}.
+
+Less studied is public opinion about \textit{algorithmic} redistricting specifically. \citet{nalder2019} found that subjects shown maps described as ``drawn by computer'' rated them as more fair than maps described as ``drawn by the legislature,'' but the study used a small convenience sample and did not vary information about the algorithmic process. \citet{henderson2018} asked respondents whether they would support computer-drawn districts and found plurality support (approximately 48\%), but did not experimentally test whether exposure to actual maps or process descriptions affects these preferences. Our study fills this gap with a pre-registered experiment at scale.
+
+The partisan asymmetry in redistricting perceptions is well-documented. Partisans evaluate maps more favorably when those maps benefit their party \citep{clark2021,bonneau2021}. This motivated hypothesis testing party as a moderator---if algorithmic maps are perceived as taking away partisan advantage, the out-party (whichever party benefits less from the current enacted map) should show larger positive responses to the algorithmic alternative. Our design tests this by focusing on enacted maps in states with known partisan gerrymanders favoring each party.
+
+Importantly, research on redistricting reform support suggests that institutional features other than partisan advantage also shape opinion. \citet{imig2022} showed that transparency and public accountability in commission processes increase support for commission-drawn maps. \citet{stephanopoulos2015} found that detailed process descriptions---explaining the criteria commissions use and how they apply them---raised fairness ratings substantially. These findings set the stage for our transparency treatment.
+
+\subsection{Procedural Fairness Theory}
+
+Procedural fairness theory, developed by \citet{thibaut1975procedural} and elaborated by \citet{tyler2006legitimacy,tyler1988authority}, holds that people's evaluations of outcomes are powerfully shaped by their assessments of the \textit{process} that produced those outcomes. Even unfavorable outcomes may be accepted as legitimate if the procedure was perceived as fair---neutral, transparent, voice-providing, and consistent. Conversely, favorable outcomes may be rejected if the procedure was seen as biased or opaque.
+
+Four procedural characteristics consistently emerge as central to legitimacy assessments \citep{leventhal1980,lind1988social}: \textit{consistency} (the same rules applied equally to all); \textit{bias suppression} (decision-makers lack self-interest in the outcome); \textit{accuracy} (decisions are based on correct information); and \textit{correctability} (errors can be challenged and revised). Algorithmic redistricting has structural advantages on the first two dimensions---algorithms are definitionally consistent, and properly designed algorithms can be made free of partisan self-interest. These properties should translate into procedural legitimacy perceptions when subjects understand the process.
+
+Applied to redistricting, \citet{gerber2018} showed that respondents in court-ordered redistricting states rated the resulting maps as more procedurally fair, despite often rating them as less favorable to their party's interests. This finding supports the prediction that process neutrality, when perceived, generates legitimacy independent of outcome. Our transparency treatment tests whether communicating process neutrality in plain language achieves the same effect in a controlled experimental setting.
+
+A limitation in applying procedural fairness theory to algorithmic contexts is that algorithms may be perceived as \textit{non-human} in ways that undercut the typical legitimacy pathway. Standard procedural fairness research involves human decision-makers; respondents may extend different standards to algorithmic procedures \citep{svensson2022algorithmic}. The voice component of procedural fairness---the belief that one had an opportunity to be heard---is structurally different when the decision-maker is code rather than a commissioner. We address this concern in the discussion.
+
+\subsection{Algorithm Aversion}
+
+A substantial literature documents \textit{algorithm aversion}: the tendency for people to distrust algorithmic judgments and prefer human judgment even when algorithms demonstrably outperform humans \citep{dietvorst2015algorithm,dietvorst2018overcoming,logg2019algorithm}. \citet{dietvorst2015algorithm} showed that subjects who watched an algorithm make errors subsequently preferred human forecasters over the algorithm, even when the algorithm's predictions were objectively more accurate. The effect appears to stem from a belief that algorithms are rigid and cannot adapt to exceptional cases---a concern that human experts, by contrast, can exercise contextual judgment.
+
+Several factors moderate algorithm aversion. \citet{logg2019algorithm} showed that algorithm aversion reverses to \textit{algorithm appreciation} when subjects are experts in the relevant domain---that is, experts trust algorithms more than novices do. \citet{dietvorst2018overcoming} found that allowing subjects to adjust algorithmic outputs substantially reduced aversion, presumably because it preserved the sense of human agency in the final outcome. \citet{castelo2019task} found that algorithm aversion is stronger for tasks perceived as requiring uniquely human capacities (e.g., social judgment) than for tasks perceived as objective computation. Redistricting, as a geographic optimization problem with mathematically specifiable criteria, may be perceived as closer to the latter category.
+
+The existing algorithm aversion literature is largely silent on political redistricting. The one domain closest to our context is algorithmic hiring and personnel decisions, where \citet{lee2018understanding} found that perceived fairness of algorithmic decisions was sharply moderated by transparency: subjects who received explanations of how hiring algorithms worked rated them as substantially more fair than subjects who received only the output. This transparency-fairness link motivates our information condition manipulation.
+
+Our study makes three contributions to the algorithm aversion literature. First, we test whether aversion appears in a politically salient domain where the relevant comparison is not algorithm-vs.-human expert but algorithm-vs.-politically-motivated legislature. Second, we test whether plain-language process descriptions reduce or eliminate any aversion that appears. Third, we test partisan moderation of aversion---whether political stakes create systematic differences in algorithm evaluations between partisan groups.
+
+\subsection{Hypotheses}
+
+Drawing on these three literatures, we pre-registered the following hypotheses:
+
+\textbf{H1} (Main effect): Respondents will rate algorithmic maps as fairer than enacted maps.
+
+\textbf{H2} (Transparency): Respondents will rate algorithmic maps no less fair than commission-drawn maps (null hypothesis of equivalence, tested via one-sided $t$-test). A plain-language description of the algorithmic process will increase perceived fairness for algorithmic and commission maps relative to the enacted baseline.
+
+\textbf{H3} (Exploratory): We explore whether partisan identification moderates fairness perceptions. Given per-subgroup sample sizes of $n \approx 130$--$150$, this analysis is underpowered to detect effects smaller than $0.36$ SD at 80\% power and should be treated as descriptive.
+
+\textbf{H4} (Algorithm vs.\ commission): Algorithmic and commission-drawn maps will not differ significantly in perceived fairness.
+
+\textbf{H5} (Process trust): Trust in the redistricting process will be higher for algorithmic than enacted maps, with transparency amplifying this effect.

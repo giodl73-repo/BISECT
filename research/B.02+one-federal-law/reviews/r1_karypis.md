@@ -1,0 +1,31 @@
+---
+reviewer: George Karypis
+round: 1
+score: 3
+date: 2026-05-05
+---
+
+## Summary
+
+This advocacy paper proposes the Districting Integrity Act, which would mandate ApportionRegions — a Huntington-Hill bisection tree implemented on METIS graph partitioning — as the exclusive federal redistricting algorithm. From a computational systems perspective, the paper makes several strong implementation claims that need verification, and the algorithm description contains underspecifications that create implementation ambiguity.
+
+## Strengths
+
+- **The prime factorisation bisection tree structure is well-motivated computationally.** The claim that ApportionRegions has "zero seed variance" because the HH bisection tree is so tightly constrained by the adjacency graph that METIS always finds the same partition is empirically testable and, if correct, is an important computational result. The distinction from GeoSection — which scans all ratios and therefore has a ratio-selection choice — is exactly the right framing for why AR is deterministic in a way that GeoSection is not.
+- **The convergence sweep integration (citing B.16) appropriately addresses the local optimum problem.** The paper correctly identifies that a fixed seed is insufficient for certification and that the ConvergenceSweep with T=600 provides the audit guarantee. Incorporating the convergence sweep into the statutory text (§2a(c)(2)) is the right design: the seed formula anchors the starting point, and the sweep certifies the endpoint. This is a coherent computational design for a legal instrument.
+- **The gcd-incompatibility fallback for prime seat counts is handled correctly.** The paper correctly identifies that states with prime k (Nebraska k=3, New Mexico k=3, and the current prime factor situations) cannot use a strict HH bisection tree, and provides a well-specified fallback: direct k-way METIS with the same edge weights, county default, and seed formula. This is a necessary concession that is handled gracefully.
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **The "zero seed variance" claim for ApportionRegions is stated as fact but is attributed to a paper (B.11) that is explicitly described as "planned, not implemented."** The paper states: "Empirically, across all 50 states, the seed-to-seed seat count variance in AR is less than 0.01 seats — effectively zero" with a footnote citing "B.11, Table 3: seat-count variance across 50 seeds per state. Maximum observed variance: 0.00 in 47 states." But B.0 (the companion paper) explicitly categorises B.11 as "planned" and its bakeoff results as `‡` (pending). If B.11's Table 3 doesn't exist yet, this citation is fabricated. The paper must either (a) confirm B.11 is complete and its Table 3 is an actual result, or (b) restate the zero-variance claim as a theoretical prediction pending empirical verification.
+- **The implementation description of the HH bisection tree (Section 5.1) is underspecified for multi-factor seat counts.** The algorithm states: "For each node in the bisection tree, run METIS k-way partitioning where k = p_i is the split factor at this level." For California (k = 52 = 4 × 13), this means a 4-way first-level split and then a 13-way split at each of the four child nodes. But METIS `METIS_PartGraphRecursive` is a bisection algorithm; 4-way and 13-way partitioning require `METIS_PartGraphKway`. The transition from recursive bisection (which GeoSection uses) to k-way partitioning (which the HH tree requires for non-binary prime factors) is algorithmically significant and is not addressed. The paper must specify: when p_i > 2, is `METIS_PartGraphKway` used? If so, what are the ubvec and tpwgts settings for a 13-way run?
+- **The ubvec tolerance is stated inconsistently.** The implementation section states `ubvec[0]=1.001` as imposing a "±0.05% deviation ceiling" for congressional districts, while the companion B.0 paper states `ubvec[0]=1.001` yields "≤0.5% maximum deviation across k parts by the triangle inequality." The ±0.05% figure in B.02 appears to confuse the per-part tolerance (1.001 means 0.1% per part, not 0.05%) with the effective maximum deviation. METIS's ubvec[0]=1.001 means each part can deviate ±0.1% from the mean, so the maximum inter-district deviation is ≤0.2%, not ±0.05%. This confusion will create problems if cited in a legal proceeding. The tolerance specification must be corrected and stated consistently across B.0 and B.02.
+
+## P2 Items (Suggested Improvements)
+
+- **The paper would benefit from a complexity comparison between the AR bisection tree and direct k-way partitioning for large states.** For Texas (k=38 = 2 × 19), the tree requires one 2-way bisection followed by two 19-way partitions. For a 19-way k-way METIS run on Texas's ~5,000-tract subgraph, the computation time is different from recursive bisection. A brief timing table (similar to B.16's Table 5) for the AR tree on large states would establish that the statutory 30-minute deadline is feasible.
+- **The factorisation-spine multi-chamber compatibility claim (Section 3.5) overstates the benefit.** The paper claims that 11 states achieve "exact nesting" (spine score 0). But exact nesting requires that every census tract falls within exactly one congressional district and one state legislative district simultaneously. For states with congressional k and state-legislative seat counts that are incompatible (e.g., California: 52 congressional, 80 assembly, 40 senate — no clean GCD factorisation), the "exact nesting" claim cannot hold for the non-trivial chamber. This should be clarified: "spine score 0" measures factorisation compatibility, not actual geometric nesting of district boundaries.
+
+## Score: 3 / 4 — Minor Revision
+
+The paper's legal argument is clear and the computational architecture is largely sound. The B.11 citation problem (P1.1) is potentially serious — if the zero-variance claim rests on unrealised empirical work, the paper's constitutional argument is weaker than stated. The METIS k-way vs. bisection underspecification (P1.2) must be resolved for the implementation section to be usable. The ubvec tolerance error (P1.3) is a numerical mistake that could cause legal problems. All three are fixable in revision.

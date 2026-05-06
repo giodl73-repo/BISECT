@@ -1,0 +1,82 @@
+\documentclass[12pt]{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{threeparttable}
+\usepackage{url}
+
+\onehalfspacing
+
+\title{From Algorithm to Map: Implementation Case Studies\\
+for Three Adoption Pathways}
+
+\author{Giovanni Della-Libera\\
+\small{Working Paper}}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Algorithmic redistricting has three realistic adoption pathways: through an
+independent commission, through ordinary statute, and through court-ordered
+remedial relief.  Each pathway places different institutional actors in the
+role of map adopter, raises different procedural questions, and invites
+different legal challenges.  This paper develops concrete case studies for
+each pathway using the \texttt{redist} algorithmic redistricting system.
+Case Study 1 examines the Arizona Independent Redistricting Commission (AIRC),
+which already employs politically balanced membership and community-of-interest
+hearings; we analyze how the commission could integrate algorithm output into
+its existing workflow while preserving its adjustment authority.  Case Study 2
+examines the California Citizens Redistricting Commission (CRC), whose
+statutory criteria include proportionality and county contiguity requirements
+that map directly onto \texttt{redist}'s VRASection and county-sticky edge
+weights.  Case Study 3 examines North Carolina post-\textit{Harper v.\ Hall},
+where the state supreme court's authority to appoint a special master and order
+a remedial map creates conditions under which algorithm output could constitute
+the remedy absent a demonstrated constitutional defect.  A practical workflow
+table identifies who runs which command, at which stage, under what oversight.
+We conclude with a candid assessment of the challenges---data preparation
+burden, public transparency requirements, and challenge processes---that any
+adopting jurisdiction will face.
+\end{abstract}
+
+\noindent\textbf{Keywords:} redistricting, independent commission, court
+remedy, special master, Arizona, California, North Carolina, implementation
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Case Study 1 --- Arizona AIRC (Commission Pathway)}
+\input{sections/02-arizona}
+
+\section{Case Study 2 --- California CRC (Statute Pathway)}
+\input{sections/03-california}
+
+\section{Case Study 3 --- North Carolina Post-\textit{Harper} (Court-Order Pathway)}
+\input{sections/04-north-carolina}
+
+\section{Practical Workflow}
+\input{sections/05-workflow}
+
+\section{Challenges and Solutions}
+\input{sections/06-challenges}
+
+\section{Conclusion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

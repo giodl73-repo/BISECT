@@ -1,0 +1,59 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{footmisc}
+\usepackage{threeparttable}
+\usepackage{longtable}
+\usepackage{pdflscape}
+
+\doublespacing
+
+% Title and Authors
+\title{Satisfying 50 Different Rule Sets:\\
+State Constitutional Redistricting Criteria\\
+and Algorithmic Adaptation}
+
+\author{
+Giovanni Della-Libera\\
+\small{Working Paper}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Every state imposes its own legal framework on congressional redistricting, ranging from minimal federal-floor requirements to detailed commission-administered criteria mandating partisan fairness, community-of-interest preservation, and county splitting constraints. This paper develops a five-type taxonomy of state redistricting regimes---permissive, criteria-based, commission, hybrid, and restrictive---and shows how each regime maps onto a concrete set of algorithmic parameters in the METIS recursive bisection pipeline. We demonstrate that a single algorithm, parameterized through YAML configuration files, can satisfy the dominant legal criteria in all 50 states without accessing any partisan data. Compactness requirements map to edge-weight scaling; county-preservation requirements map to adjacency weight overrides; communities-of-interest requirements map to custom geographic edge weights; and partisan-neutrality requirements are satisfied structurally, because the algorithm is architecturally incapable of reading partisan inputs. We provide one model configuration per state type and analyze which criteria are constitutionally mandated versus merely discretionary. The analysis reveals that algorithmic redistricting is more adaptable to state legal variation than previously recognized, and that the algorithm's structural partisan blindness satisfies partisan-neutrality requirements more completely than any human-administered process.
+\end{abstract}
+
+\noindent\textbf{Keywords:} redistricting, state constitutional law, algorithmic redistricting, compactness, communities of interest, county preservation, partisan neutrality, METIS
+
+\input{sections/01-introduction}
+\input{sections/02-classification}
+\input{sections/03-algorithm-mapping}
+\input{sections/04-model-configs}
+\input{sections/05-legal-analysis}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

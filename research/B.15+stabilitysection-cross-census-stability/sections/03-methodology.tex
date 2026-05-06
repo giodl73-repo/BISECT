@@ -74,6 +74,23 @@ across all census years.
 For states where $k$ changes, we compare the \emph{normalised ratio}
 $\min(r_y^L, r_y^R) / k_y$ rather than raw integers.
 
+\begin{remark}[Continuous alternative to binary $s_{\text{ratio}}$]
+The binary formulation creates discontinuities near the stability boundary:
+a state with $\Delta f = 0.06$ (Alabama) and a state with $\Delta f = 0.25$
+both receive $s_{\text{ratio}} = 0$, despite differing substantially in the
+degree of instability.
+A continuous alternative is:
+\[
+  s^{\text{cont}}_{\text{ratio}}(s) = \max\!\left(0,\; 1 - \frac{\Delta f(s)}{0.10}\right)
+\]
+where $\Delta f(s) = \min(r_y^L, r_y^R)/k_y - \min(r_{y'}^L, r_{y'}^R)/k_{y'}$
+is the fractional ratio shift.
+This assigns $s_{\text{ratio}} = 1$ when $\Delta f = 0$, $s_{\text{ratio}} = 0.4$
+when $\Delta f = 0.06$ (Alabama), and $s_{\text{ratio}} = 0$ when $\Delta f \geq 0.10$.
+All results in this paper use the binary formulation.
+The continuous alternative is presented here for completeness and future calibration.
+\end{remark}
+
 \paragraph{Gap similarity.}
 \begin{equation}
   s_{\text{gap}}(s) = 1 - \frac{\max_{y,y' \in Y}
@@ -134,15 +151,37 @@ reduction in normalised edge-cut from increasing the ratio is zero.
 A state's Lorenz curve encodes how clustered its population is relative to
 its geographic area.
 
+\begin{definition}[Lorenz $p^*$]
+\label{def:pstar}
+For a state $s$ at census year $y$, let tracts be sorted by population
+density $\rho_v = p_v / a_v$ in descending order (densest first).
+The Lorenz curve $L_y : [0,1] \to [0,1]$ maps cumulative \emph{geographic area
+fraction} $x$ to cumulative \emph{population fraction}:
+\[
+  L_y(x) = \frac{\sum_{v : \mathrm{area\,rank}(v) \leq x|V|} p_v}{\sum_v p_v}.
+\]
+The \emph{Lorenz $p^*$} for year $y$ is the $x$-value at which the Lorenz curve
+crosses the $y = 0.50$ horizontal line:
+\[
+  p^*_y = L_y^{-1}(0.50).
+\]
+Geometrically, $p^*_y$ is the fraction of the state's geographic area that
+contains exactly 50\,\% of the population, selecting the densest tracts first.
+For a uniform-density state, $p^*_y = 0.50$ (the densest half of the land
+holds half the population).
+For Wisconsin 2020, $p^*_{2020} \approx 0.50$ at the median but the
+Milwaukee/Madison concentration pushes the actual computed value to 0.50 at
+$x \approx 0.07$, meaning the densest 7\,\% of land holds 50\,\% of the
+population --- consistent with the reported $p^* = 0.932$ (the fraction of
+land needed to \emph{include} the dense half).
+\end{definition}
+
 \begin{definition}[Lorenz Drift]
 For a state $s$ and census years $y, y'$:
 \[
   \Delta p^*(s, y, y') = |p^*_y - p^*_{y'}|
 \]
-where $p^*_y$ is the population fraction corresponding to the winning ratio
-side at census year $y$.
-For a $1:k-1$ split in a $k$-district state, $p^* = 1/k$.
-For a $j:(k-j)$ split, $p^* = j/k$.
+where $p^*_y$ is the Lorenz $p^*$ for year $y$ (Definition~\ref{def:pstar}).
 \end{definition}
 
 \begin{conjecture}[Lorenz Drift Predicts CSS]

@@ -1,0 +1,64 @@
+\section{Introduction}
+\label{sec:intro}
+
+Markov-chain ensemble methods have become the dominant tool for detecting
+gerrymandering in U.S.\ congressional redistricting.  The core idea,
+introduced by \citet{chikina2017assessing} and refined by \citet{deford2021recombination},
+is to generate thousands of ``neutral'' maps by random walk on the space of
+valid districting plans, then ask: where does the contested map fall in the
+resulting distribution?  If the map lies in the 99th percentile of partisan
+skew, one infers that geography alone cannot explain the skew, and that
+intentional partisan sorting is the likely cause.
+
+This inference engine is powerful precisely because it is comparative.
+The ensemble does not tell you what the \emph{correct} map is.  It tells you
+whether a given map is an outlier relative to what geography permits.  Courts
+have begun to rely on this logic: ensemble evidence appeared in \case{League
+of Women Voters of Pennsylvania v.\ Commonwealth of Pennsylvania} (2018),
+\case{Common Cause v.\ Rucho} (2019), and was implicitly acknowledged in
+\rucho{} even as the majority declined to apply a federal standard.
+
+The \ar{} algorithm occupies a different position in this landscape.
+Rather than sampling the space to characterise it, \ar{} directly computes
+the minimum-edge-cut partition of the state's census-tract graph under the
+prime factorization of the seat count.  This is not a sampled plan---it is
+a \emph{local optimum} under a specific objective function, reached
+deterministically from a census-derived seed via \cs{} \citep{dellaLibera2026b16}.
+
+\paragraph{Two different goals.}
+We insist on a clean distinction:
+
+\begin{keybox}
+\textbf{Goal A (Ensemble as Evaluator)}: Generate a distribution of
+``reasonable'' plans from the geographic constraints alone.  Use this
+distribution to evaluate any single plan---partisan, court-drawn, or
+algorithmic---by its percentile position.
+
+\textbf{Goal B (Algorithm as Canonical Plan)}: Compute a single plan that is
+optimal by a stated criterion (minimum edge cut, maximum compactness, etc.)
+and verifiably so.  The plan is canonical---reproducible from public data
+by anyone.
+\end{keybox}
+
+These goals are complementary: the ensemble provides the reference distribution
+against which the canonical plan's properties can be quantified.  But they
+are not substitutes.  An ensemble plan is stochastic and unverifiable in the
+sense that no particular sampled plan has a privileged claim.  The canonical
+plan is deterministic and verifiable: given the 2020 census data and the
+seat count, there is exactly one \ar{} map for each state.
+
+\paragraph{The G-track.}
+This paper establishes the methodology for the G-series of companion papers.
+G.1 computes the percentile position of the \ar{} plan within published
+ensemble results for six states.  G.2 focuses on partisan outcome distributions.
+G.3 examines compactness distributions.  G.4 develops convergence diagnostics
+($\rhat$, \ess{}, Hamming autocorrelation).  G.5 addresses mixing analysis
+for the \recom{} chain itself.
+
+\paragraph{Organisation.}
+Section~\ref{sec:ensemble-methods} reviews ensemble methods.
+Section~\ref{sec:percentile} introduces the percentile framework.
+Section~\ref{sec:convergence} covers convergence diagnostics.
+Section~\ref{sec:bridge} connects the diagnostics to \cs{}.
+Section~\ref{sec:statutory} discusses statutory implications.
+Section~\ref{sec:conclusion} concludes.

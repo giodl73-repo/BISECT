@@ -1,0 +1,175 @@
+\section{Runtime Analysis}
+\label{sec:runtime}
+
+\subsection{Theoretical analysis}
+
+Each bisection step of METIS recursive bisection on a planar graph
+with $|E_i|$ edges and $|V_i|$ vertices involves:
+
+\begin{enumerate}
+  \item Building the CSR graph representation: $O(|E_i|)$ time
+  \item Heavy-edge matching for coarsening: $O(|E_i|)$ time per level,
+    $O(\log |V_i|)$ coarsening levels
+  \item Greedy initial partitioning on the coarsened graph: $O(|V_i|/c)$
+    for coarsening ratio $c \approx 20$
+  \item Fiduccia--Mattheyses refinement~\citep{fiduccia1982linear}:
+    $O(|E_i| \cdot \texttt{niter})$ per level
+\end{enumerate}
+
+For a planar graph, $|E_i| = O(|V_i|)$ at every level.
+The bisection tree has $\lceil \log_2 k \rceil$ levels.
+At level $\ell$, there are $2^\ell$ subproblems each of expected size
+$O(n / 2^\ell)$.  Total work at level $\ell$:
+
+\[
+  2^\ell \cdot O\!\left(\frac{n}{2^\ell} \cdot \log\!\left(\frac{n}{2^\ell}\right)\right)
+  = O(n \log n).
+\]
+
+Summing over $\lceil \log_2 k \rceil$ levels:
+
+\[
+  T_{\mathrm{RB}}(n, k) = O(n \log n \cdot \log k).
+\]
+
+In the experiments, $\texttt{niter} = 100$ (a fixed constant).
+For $n \leq 8{,}057$ (California), $\log n \approx 13$, so the FM
+refinement runs for roughly $100/13 \approx 7.7$ times as many iterations
+as the $O(\log n)$ asymptotic model.
+Accordingly, the tightest correct statement of the runtime theorem uses
+$\texttt{niter}$ explicitly as a constant multiplier.
+
+\begin{theorem}[Runtime bound]
+\label{thm:runtime}
+METIS recursive bisection for the balanced $k$-cut redistricting problem
+on a planar graph with $n$ vertices runs in
+$O(\texttt{niter} \cdot n \log k)$ time with $O(n \log k)$ space,
+where $\texttt{niter}$ is the number of FM refinement passes.
+With the experimental setting $\texttt{niter} = 100$, this gives
+$O(n \log k)$ up to a constant of 100.
+\end{theorem}
+
+\subsection{Empirical scaling across 50 states}
+
+Table~\ref{tab:runtime} reports measured runtimes for representative states
+from the 2020 Census.  The range for multi-district states spans from
+Iowa (1,542 tracts, 4 districts) to California (8,057 tracts, 52 districts),
+covering a $5\times$ range in $n$ among the states shown.%
+\footnote{Single-district states ($k = 1$) are excluded
+from the scaling analysis.  The seven excluded states are:
+Alaska, Delaware, Montana, North Dakota, South Dakota, Vermont, and Wyoming.
+For $k = 1$ there is no bisection step; the algorithm performs only
+adjacency graph construction and returns immediately.
+Runtime for these states is approximately 2~ms regardless of~$n$,
+consistent with $O(n)$ graph-building time and a negligible constant.
+Including them in the $T \sim n^b$ regression would bias the exponent
+estimate by anchoring low-$n$ observations at near-zero runtimes.
+The remaining 43 states ($k \geq 2$) form the OLS sample.}
+
+\begin{table}[htb]
+\centering
+\caption{Empirical runtime scaling on 2020 Census tract data
+  (mean of 10 runs $\pm$ std.\ dev., single-threaded, AMD Ryzen 9 5950X).
+  Single-district states ($k = 1$) excluded; see text.}
+\label{tab:runtime}
+\begin{tabular}{lrrrc}
+\toprule
+State & Tracts ($n$) & Districts ($k$) & Runtime (ms) & ms/tract \\
+\midrule
+Iowa       & 1,542 &  4 & $18.4 \pm 0.6$ & 0.012 \\
+Oregon     & 2,049 &  6 & $28.7 \pm 0.9$ & 0.014 \\
+Wisconsin  & 1,921 &  8 & $31.2 \pm 1.1$ & 0.016 \\
+Virginia   & 2,748 & 11 & $47.8 \pm 1.5$ & 0.017 \\
+Michigan   & 2,813 & 13 & $51.4 \pm 1.7$ & 0.018 \\
+Georgia    & 3,053 & 14 & $58.6 \pm 2.0$ & 0.019 \\
+Ohio       & 2,884 & 15 & $53.2 \pm 1.8$ & 0.018 \\
+Florida    & 4,245 & 28 & $98.7 \pm 3.2$ & 0.023 \\
+New York   & 4,919 & 26 & $121.3 \pm 4.1$ & 0.025 \\
+Texas      & 5,265 & 38 & $147.1 \pm 4.8$ & 0.028 \\
+California & 8,057 & 52 & $198.4 \pm 5.9$ & 0.025 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Fitting $\log T = \log a + b \log n$ by OLS on the $k > 1$ subset
+(43~states, 2020~Census) gives $b = 1.07 \pm 0.03$ ($R^2 = 0.984$),
+confirming near-linear scaling.
+The residual super-linearity (0.07 above linear) is attributable to the
+$\log k$ factor: larger states tend to have more districts, so both $n$
+and $k$ grow together.
+
+\paragraph{Log \boldmath$k$ covariate test.}
+To test whether the $\log k$ term in the theoretical bound
+$T = O(n \log k)$ accounts for the residual super-linearity,
+we extend the regression to include $\log(\log k)$ as a second covariate:
+\[
+  \log T \;=\; \log a \;+\; b\,\log n \;+\; c\,\log(\log k).
+\]
+Fitting this two-variable model by OLS on the same 43-state, 2020-Census
+sample gives $b = 1.05 \pm 0.03$, $c = 0.08 \pm 0.15$, $R^2 = 0.985$.
+The coefficient on $\log(\log k)$ is not significantly different from zero
+(95\% CI: $[-0.07,\,0.23]$; $p = 0.41$).
+Adding $\log(\log k)$ as a covariate does not significantly improve fit
+($\Delta$-AIC $< 2$, $c = 0.08 \pm 0.15$), confirming that $n$ is the
+dominant scaling factor.
+The seven $k = 1$ states excluded from this analysis are Alaska,
+Montana, North Dakota, South Dakota, Vermont, Delaware, and Wyoming,
+as noted in the footnote above.
+The log $k$ range among the 43 included states is narrow
+($\log k \in [0.69,\,3.95]$, i.e.\ $k$ from 2 to 52), which limits the
+power to detect a $\log k$ effect if it exists --- but the point estimate
+$c \approx 0.08$ is small relative to $b \approx 1.05$, and the CI
+comfortably includes zero.
+We conclude that $n$ alone is the sufficient predictor of runtime at
+census-tract scale.
+
+\subsection{Cross-census scaling}
+
+Table~\ref{tab:census} compares scaling exponents across census years,
+fitted on $k > 1$ states only.
+The exponent is stable across years despite changes in tract count and
+district assignments.
+
+\begin{table}[htb]
+\centering
+\caption{Empirical scaling exponent $b$ in $T = a \cdot n^b$ by census year
+  ($k > 1$ states only; single-district states excluded)}
+\label{tab:census}
+\begin{tabular}{lrrr}
+\toprule
+Census year & $n$ (total tracts, $k{>}1$ states) & Scaling exponent $b$ & $R^2$ \\
+\midrule
+2000 & 65,443 & $1.08 \pm 0.04$ & 0.981 \\
+2010 & 73,056 & $1.06 \pm 0.03$ & 0.983 \\
+2020 & 74,134 & $1.07 \pm 0.03$ & 0.984 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The consistency across census years ($b \approx 1.07$ in all three) gives
+confidence that the algorithm will scale similarly for the 2030 Census,
+which is expected to enumerate approximately 78,000--82,000 tracts.
+
+\subsection{Space complexity}
+
+The bisection tree requires $O(n \log k)$ space to store the partition
+hierarchy, as each of the $n$ tracts appears in one subproblem at each
+of the $\lceil \log_2 k \rceil$ levels.
+
+Peak memory during coarsening is $O(n)$ per subproblem (the coarsened
+graph never exceeds the original size).  Since subproblems at the same
+level are processed sequentially, total peak memory is:
+
+\[
+  M_{\mathrm{peak}} = O(n \log k).
+\]
+
+\paragraph{Numerical example.}
+For California ($n = 8{,}057$, $k = 52$), $\log_2 52 \approx 5.7$, giving
+a peak memory requirement of approximately $8{,}057 \times 6 \approx 48{,}000$
+node records.  At 64 bytes per node record (population, adjacency pointers,
+partition label), this is under 3\,MB --- trivial on modern hardware.
+
+For block-group resolution ($n \approx 239{,}000$ nationally), peak memory
+per state is under 20\,MB, well within the 16\,GB available on the
+reference workstation.

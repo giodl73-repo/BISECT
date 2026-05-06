@@ -1,0 +1,45 @@
+%% 02-solution.tex — The algorithmic solution
+
+\section{The Solution}
+
+\noindent\textbf{Replace the politician with an algorithm.}
+
+\medskip
+\noindent
+The algorithm works like splitting a pizza: make one cut through the
+middle of the state, dividing it into two equal-population halves.
+Cut each half in half.
+Repeat until the state has as many pieces as it has congressional seats.
+Every cut is guided by one rule---make it as short as possible---so
+districts follow natural geographic features instead of zigzagging to
+capture partisan voters.
+
+\medskip
+\noindent
+The algorithm uses U.S.\ Census population counts and tract boundary
+geometries, both of which are public data~\cite{census2020pl}.
+It never sees voter registration files, election results, or incumbents'
+home addresses.
+\textbf{It cannot gerrymander because it lacks the information
+required to do so.}
+This is not a policy choice that a future legislature could reverse;
+it is a structural property of the algorithm.
+
+\medskip
+\noindent
+The algorithm, called \textit{ApportionRegions}, is a direct extension of
+\textit{Huntington-Hill}---the mathematical method Congress already uses to
+apportion seats among states, mandated by statute since
+1941~\cite{huntingtonHill1941}.
+ApportionRegions extends the same principle from apportionment to intrastate
+district drawing; the two are related in approach but distinct in statutory
+scope.
+Extending the principle to boundary design requires one sentence of statute.
+
+\medskip
+\noindent
+Two independent verifiers running the algorithm on the same Census data
+produce byte-identical district assignments, auditable through a
+SHA-256 hash chain.
+Any citizen can verify the result in 15--20 minutes end-to-end,
+including data download.

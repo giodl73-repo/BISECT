@@ -1,0 +1,91 @@
+\label{sec:workflow}
+
+Table~\ref{tab:workflow} presents a practical workflow for all three adoption
+pathways, identifying the responsible actor, the \texttt{redist} command,
+and the oversight mechanism at each stage.
+
+\begin{table}[h]
+\centering
+\caption{Practical Workflow: Three Adoption Pathways}
+\label{tab:workflow}
+\begin{threeparttable}
+\begin{tabular}{p{2cm}p{3.5cm}p{3.5cm}p{3.5cm}}
+\toprule
+Stage & Commission (AZ/CA) & Statute & Court Order (NC) \\
+\midrule
+\textbf{Data prep} &
+Commission staff; \newline
+\texttt{redist fetch} &
+State GIS office; \newline
+\texttt{redist fetch} &
+Special master staff; \newline
+\texttt{redist fetch} \\
+\addlinespace
+\textbf{Initial run} &
+Staff run \texttt{redist state}; \newline
+Commission reviews output &
+Designated agency runs \texttt{redist state}; \newline
+Legislative committee reviews &
+Special master runs \texttt{redist state}; \newline
+Court receives report \\
+\addlinespace
+\textbf{Analysis} &
+\texttt{redist analyze} \newline compactness + demographic &
+\texttt{redist analyze} \newline all types &
+\texttt{redist analyze} \newline political + demographic \\
+\addlinespace
+\textbf{Public comment} &
+60-day public hearing period; \newline Commission adjustments logged &
+Legislative hearing; \newline Public comment period &
+14-day objection period; \newline Parties file briefs \\
+\addlinespace
+\textbf{Adjustment} &
+Commission vote on adjustments; \newline documented against algorithm baseline &
+Agency or commission adjusts; \newline legislative approval &
+Special master proposes adjustments; \newline court approves \\
+\addlinespace
+\textbf{Final adoption} &
+Commission vote &
+Legislative vote or commission order &
+Court order \\
+\addlinespace
+\textbf{Review} &
+State court (if challenged) &
+State court (if challenged) &
+Higher court (appeal) \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: \texttt{redist fetch} downloads and validates census data.
+  \texttt{redist state} runs the partitioning algorithm.
+  \texttt{redist analyze} generates criteria-compliance reports.
+  Commands follow the \texttt{redist} CLI reference~\citep{redistCliQuickstart}.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+\subsection{Key Differences Across Pathways}
+
+The three pathways differ primarily in three dimensions.
+
+\textbf{Who runs the algorithm.}  In the commission pathway, commission staff
+or a designated technical contractor runs the algorithm under the commission's
+supervision.  In the statute pathway, a designated state agency (e.g., the
+state GIS office or a redistricting board) runs the algorithm.  In the
+court-order pathway, the special master or the master's technical support team
+runs the algorithm.  In all three cases, the algorithm is run openly, with
+full documentation of inputs, parameters, and outputs.
+
+\textbf{How adjustments are made.}  Commission pathways allow the commission
+to adjust the algorithm output based on community-of-interest testimony.
+Statute pathways may delegate adjustment authority to an agency or reserve it
+to the legislature.  Court-order pathways confine adjustments to those
+supported by specific constitutional findings, and the special master's
+adjustment proposals are subject to judicial review.
+
+\textbf{What counts as a successful challenge.}  In the commission and statute
+pathways, successful challenges require showing that the commission or agency
+exceeded its authority or violated a criterion.  In the court-order pathway,
+the challenge must show a constitutional defect in the output---a higher bar
+that makes the court-order pathway the most legally stable of the three.

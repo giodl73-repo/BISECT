@@ -1,0 +1,205 @@
+%% G.4 — Ensemble Diagnostics Paper
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Key convergence data used
+            to calibrate ensemble run-length requirements.},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: zero seed variance for tree structure;
+            residual variance is at the leaf METIS level which
+            ensemble diagnostics must certify.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces ConvergenceSweep as a deterministic alternative
+            to MCMC ensemble generation.
+            $T=600$ certified by Gumbel extreme-value model.},
+}
+
+%% ===================================================================
+%% MCMC CONVERGENCE DIAGNOSTICS
+%% ===================================================================
+
+@article{gelman1992,
+  author  = {Gelman, Andrew and Rubin, Donald B.},
+  title   = {Inference from Iterative Simulation Using Multiple Sequences},
+  journal = {Statistical Science},
+  volume  = {7},
+  number  = {4},
+  pages   = {457--472},
+  year    = {1992},
+  doi     = {10.1214/ss/1177011136},
+  note    = {Original R-hat (potential scale reduction factor) paper.
+             Between-chain and within-chain variance comparison.
+             Threshold $\hat{R} < 1.1$ for approximate convergence.},
+}
+
+@article{vehtari2021,
+  author  = {Vehtari, Aki and Gelman, Andrew and Simpson, Daniel and
+             Carpenter, Bob and B{\"u}rkner, Paul-Christian},
+  title   = {Rank-Normalization, Folding, and Localization: An Improved
+             $\hat{R}$ for Assessing Convergence of {MCMC}},
+  journal = {Bayesian Analysis},
+  volume  = {16},
+  number  = {2},
+  pages   = {667--718},
+  year    = {2021},
+  doi     = {10.1214/20-BA1221},
+  note    = {Improved R-hat using rank normalization. Addresses
+             the original Gelman-Rubin estimator's sensitivity to
+             heavy-tailed distributions. Recommended for redistricting
+             compactness metrics which are bounded and skewed.},
+}
+
+@article{geyer1992,
+  author  = {Geyer, Charles J.},
+  title   = {Practical Markov Chain Monte Carlo},
+  journal = {Statistical Science},
+  volume  = {7},
+  number  = {4},
+  pages   = {473--483},
+  year    = {1992},
+  doi     = {10.1214/ss/1177011137},
+  note    = {Original effective sample size (ESS) formulation for MCMC.
+             ESS accounts for autocorrelation in the chain.
+             For redistricting chains with lag-1 Hamming correlation
+             0.85-0.95, ESS is typically 500-2000 for 10K steps.},
+}
+
+@article{brooks1998,
+  author  = {Brooks, Steve P. and Gelman, Andrew},
+  title   = {General Methods for Monitoring Convergence of Iterative Simulations},
+  journal = {Journal of Computational and Graphical Statistics},
+  volume  = {7},
+  number  = {4},
+  pages   = {434--455},
+  year    = {1998},
+  doi     = {10.1080/10618600.1998.10474787},
+  note    = {Extension and practical guidance for Gelman-Rubin diagnostics.
+             Discusses multivariate R-hat for vector-valued functions
+             such as the district-level Polsby-Popper vector.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of Markov Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom (Recombination) Markov chain proposal distribution.
+             Proposes merging two adjacent districts and re-splitting.
+             The state space and transition kernel analyzed in this paper.
+             Typical lag-1 Hamming autocorrelation 0.85-0.95 comes from
+             ReCom's local-move nature.},
+}
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Imai, Kosuke and Kawahara, Jun and
+             Kenny, Christopher T.},
+  title   = {The Essential Role of Empirical Validation in Legislative
+             Redistricting Simulation},
+  journal = {Statistics and Public Policy},
+  volume  = {7},
+  number  = {1},
+  pages   = {52--68},
+  year    = {2020},
+  doi     = {10.1080/2330443X.2020.1791773},
+  note    = {GerryChain ensemble methodology. Establishes the need for
+             empirical validation diagnostics in redistricting ensembles.
+             The reference for ensemble-based outlier analysis.},
+}
+
+@article{carter2019,
+  author  = {Carter, Daniel and Hunter, Zach and Lenz, Gregory and
+             Duchin, Moon and Levitt, Justin and Spencer, Gerry},
+  title   = {Optimal Transport and Redistricting},
+  journal = {arXiv},
+  year    = {2019},
+  note    = {arXiv:1902.00567. Distance metrics for redistricting plan
+             comparison. The Hamming distance between two plans---the
+             fraction of precincts with different district assignments---is
+             the basis for the Hamming autocorrelation diagnostic.},
+}
+
+@article{mattingly2014,
+  author  = {Mattingly, Jonathan C. and Vaughn, Christy},
+  title   = {Redistricting and the Will of the People},
+  journal = {arXiv},
+  year    = {2014},
+  note    = {arXiv:1410.8796. Early work on ensemble methods for
+             redistricting. First systematic use of MCMC for evaluating
+             whether an enacted map is an outlier.},
+}
+
+%% ===================================================================
+%% LEGAL AND STATUTORY
+%% ===================================================================
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S. \_\_\_ (2026). Certified convergence of an ensemble
+            is relevant to the disentanglement requirement of Callais p.36:
+            race and partisan signals must not conflate. A non-converged
+            ensemble produces spurious correlations.},
+}
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Partisan gerrymandering is nonjusticiable
+            in federal court. Ensemble diagnostics are deployed in state
+            court litigation.},
+}
+
+%% ===================================================================
+%% MARKOV CHAIN THEORY
+%% ===================================================================
+
+@book{levin2009,
+  author    = {Levin, David A. and Peres, Yuval and Wilmer, Elizabeth L.},
+  title     = {Markov Chains and Mixing Times},
+  publisher = {American Mathematical Society},
+  year      = {2009},
+  note      = {Standard reference for Markov chain mixing time theory.
+               Spectral gap, conductance, and coupling methods.
+               Chapter 12 discusses convergence diagnostics.},
+}
+
+@book{gelman2013,
+  author    = {Gelman, Andrew and Carlin, John B. and Stern, Hal S. and
+               Dunson, David B. and Vehtari, Aki and Rubin, Donald B.},
+  title     = {Bayesian Data Analysis},
+  edition   = {3},
+  publisher = {CRC Press},
+  year      = {2013},
+  note      = {Chapter 11 covers MCMC convergence diagnostics including
+               R-hat and ESS. Standard practitioner reference.},
+}

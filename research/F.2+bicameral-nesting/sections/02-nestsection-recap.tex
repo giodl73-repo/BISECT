@@ -1,0 +1,70 @@
+\section{NestSection: Algorithm Recap}
+\label{sec:nestsection}
+
+We briefly recap the NestSection algorithm from companion paper B.13
+\citep{dellaLibera2026nestSection}. Readers familiar with B.13 may proceed
+directly to Section~\ref{sec:analysis}.
+
+\subsection{The Spine Construction}
+\label{sec:nestsection:spine}
+
+\begin{definition}[Spine]
+  Given house count $H$ and senate count $S$ with $g = \gcd(H, S) > 1$,
+  the \emph{spine} is a $g$-way partition of the state into $g$ geographic
+  super-regions, each containing exactly $H/g$ house districts and $S/g$
+  senate districts.
+\end{definition}
+
+The spine is computed by METIS $g$-way partitioning of the state's
+census-unit graph with equal population targets (each super-region receives
+$T/(g)$ residents). Within each spine super-region:
+\begin{itemize}
+  \item The house sub-map is the $(H/g)$-way partition of the super-region.
+  \item The senate sub-map is the $(S/g)$-way partition of the same super-region.
+  \item Nesting is guaranteed: each senate district within the super-region
+    is the union of $(H/g) / (S/g) = H/S$ house districts.
+\end{itemize}
+
+This construction guarantees nesting by construction: house districts are drawn
+as leaves of the spine tree, and senate districts are drawn by grouping
+consecutive house districts within each spine super-region.
+
+\subsection{The Ratio Condition}
+\label{sec:nestsection:ratio}
+
+NestSection requires $g = \gcd(H, S) > 1$. When $g = 1$, $H$ and $S$ are
+coprime: there is no non-trivial common divisor, and the spine degenerates to
+a single region containing all districts. This does not provide any of the
+compactness benefits of spine construction, and nesting cannot be guaranteed
+by the algorithm.
+
+\begin{proposition}[Spine triviality when $g=1$]
+  If $\gcd(H, S) = 1$, the NestSection spine has $g = 1$ super-region
+  (the whole state). The house map is the $H$-way partition of the whole state
+  and the senate map is the $S$-way partition of the whole state; no nesting
+  constraint can be derived from the spine.
+\end{proposition}
+
+For $g = 1$ states, the constitutional nesting requirement (where it exists)
+cannot be satisfied by NestSection. These states require either an ad-hoc
+nesting procedure or must use a different chamber ratio.
+
+\subsection{NestSection CLI Usage}
+\label{sec:nestsection:cli}
+
+\begin{verbatim}
+# Washington: H=98, S=49, gcd=49 (ratio 2:1)
+redist state --state WA --chamber nest \
+             --house-districts 98 --senate-districts 49 \
+             --resolution block_group --year 2020
+
+# Minnesota: H=134, S=67, gcd=67 (ratio 2:1)
+redist state --state MN --chamber nest \
+             --house-districts 134 --senate-districts 67 \
+             --resolution tract --year 2020
+\end{verbatim}
+
+The \texttt{--chamber nest} flag triggers NestSection mode. The spine count
+$g = \gcd(H, S)$ is computed automatically; the spine super-regions are
+partitioned first, then each super-region is independently redistricted for
+house and senate.

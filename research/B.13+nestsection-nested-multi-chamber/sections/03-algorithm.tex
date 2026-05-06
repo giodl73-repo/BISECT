@@ -156,6 +156,10 @@ Its districts are the trunk regions.  The larger chambers are refinements of
 the trunk.  No boundary violations occur.
 
 \paragraph{Mode 2 --- Partial nesting ($0 < \sigma < 50$).}
+\emph{Mode 2 is mathematically empty}: Theorem~\ref{thm:bimodal} proves that
+no positive integer triple $(C, S, H)$ can produce a score in $(0, 50)$.
+The mode is defined here for completeness and to establish the classification
+vocabulary, but it cannot arise for any real apportionment.
 The trunk covers more than half the structural degrees of freedom of the
 smallest chamber.  The spine provides a strong geographic anchor, but the
 tail splits produce boundary zones where chambers partially overlap.
@@ -196,6 +200,22 @@ assigns floor or ceiling counts by population weight and marks boundary zones
 where a house district straddles a senate boundary.  The population fraction
 in boundary zones must not exceed $\tau_\text{pop}$.
 
+\begin{remark}[Uniformity in Mode 1 states]
+\label{rem:mode1-uniformity}
+In Mode 1 states ($g = C$, i.e.\ $\sigma = 0$), every trunk region receives
+exactly $c_i = 1$ congressional seat: since $C/g = C/C = 1$, the
+\textsc{ApportionRegions} call assigns exactly one seat to each trunk region
+without any inter-region rounding.
+Population heterogeneity across trunk regions is handled by
+\textsc{GeoSection}'s ratio-optimal bisection within each region.
+The senate seats $s_i = S/g$ and house seats $h_i = H/g$ are likewise
+integers (since $g = \gcd(C,S,H)$ divides $S$ and $H$), so
+$h_i/s_i = H/S$ is a uniform integer quotient within each trunk region.
+For Oregon ($g=6$: $H/S = 60/30 = 2$) and Alabama ($g=7$: $H/S = 105/35 = 3$),
+\textsc{NestRefine} reduces to clean recursive \textsc{GeoSection} calls
+with no boundary zones.
+\end{remark}
+
 \subsection{Trunk Size and Geographic Scale}
 
 The trunk size $g$ determines the geographic scale of the shared structure.
@@ -213,8 +233,11 @@ they start from the same census graph $G$ --- a weak form of consistency.
 
 \subsection{Complexity}
 
-Algorithm~\ref{alg:compatible_spines} runs in $O(\log(\max(C,S,H)))$ time
-(GCD computation plus factorization).  The dominant cost of
+Algorithm~\ref{alg:compatible_spines} runs in $O(\sqrt{\max(C,S,H)})$ time:
+GCD computation by Euclidean algorithm runs in $O(\log)$, but prime
+factorization by trial division runs in $O(\sqrt{n})$, and for seat counts
+$n \leq 200$ this distinction is practically irrelevant.
+The dominant cost of
 Algorithm~\ref{alg:nestsection} is the $g+3$ calls to \textsc{GeoSection},
 each of which runs in time proportional to graph-partitioning cost.  The
 total additional cost over three independent GeoSection runs is the $g$
