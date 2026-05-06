@@ -5,11 +5,11 @@
 
 \begin{definition}[\ps{}$(p, T)$]
 \label{def:percentile-sweep}
-Let $s_0 = \seedfmt{\texttt{census\_release\_id} \,\|\,
-\texttt{"DIA\_SEED\_V1"}} \bmod 2^{31}$ be the content-derived base seed.
+Let $s_0 = \lfloor \text{SHA-256}(\texttt{census\_release\_id} \,\|\,
+\texttt{"DIA\_SEED\_V1"}) \rfloor \bmod 2^{31}$ be the content-derived base seed.
 For $i = 0, 1, \ldots, T-1$, define the per-index seed:
 \[
-  s_i = \floor{\text{SHA-256}(\texttt{census\_id} \,\|\, i)} \bmod 2^{31}.
+  s_i = \lfloor \text{SHA-256}(\texttt{census\_id} \,\|\, i) \rfloor \bmod 2^{31}.
 \]
 For each seed $s_i$, run the \ar{} + METIS pipeline with $s_i$ and record
 the normalised edge cut:
