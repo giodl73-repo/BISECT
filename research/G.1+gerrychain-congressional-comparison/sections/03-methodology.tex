@@ -12,38 +12,58 @@ the current subgraph; the hierarchy continues until every leaf contains
 exactly one district.  Where $k$ is prime (Pennsylvania, $k = 17$), a
 single $k$-way partition is used.
 
-\subsection{Ensemble Comparison}
+\subsection{Ensemble Generation via GerryChain ReCom}
 
-For states with published ensemble results, we extract:
-\begin{itemize}
-  \item The empirical distribution of mean Polsby-Popper scores
-    $\bar\pp \in (0, 1)^N$;
-  \item The empirical distribution of Democratic seat counts
-    $S_D \in \{0, \ldots, k\}^N$;
-  \item The empirical distribution of minority-majority district counts
-    $\mathrm{MM} \in \{0, \ldots, k\}^N$.
-\end{itemize}
+Ensembles are generated using \gc{} \recom{} \citep{deford2021recombination}.
+\recom{} produces plans uniformly at random from the feasible space
+(population-balanced, contiguous plans).  Each run uses 1,000 steps.
+The ensemble provides an empirical distribution of the normalised edge-cut
+fraction $\EC$ for each state.
 
-The \ar{} plan's percentile on each statistic is computed via
-equation~(1) from G.0.
+\begin{definition}[Normalised edge-cut fraction]
+For a redistricting plan $\pi$ on census-tract graph $G = (V, E)$:
+\begin{equation}
+  \EC(\pi) = \frac{|\{(u,v) \in E : \pi(u) \neq \pi(v)\}|}{|E|}.
+\end{equation}
+This is the fraction of tract-adjacency edges that cross district boundaries.
+Lower $\EC$ corresponds to higher compactness: districts share fewer boundaries
+with each other.
+\end{definition}
 
-\subsection{Partisan Baseline}
+\subsection{Percentile Placement}
 
-All partisan results use the 2020 presidential vote as the electoral baseline.
-Democratic percentage by census tract is computed from the \texttt{redist}
-analysis output (the \texttt{redist analyze} command with
-\texttt{--types partisan}).  For the ensemble comparison, we use the same
-baseline as the published ensemble where possible.
+The \ar{} plan's percentile on $\EC$ is computed as:
+\begin{equation}
+  \hat\pi_{\EC} = \frac{|\{i : \EC_i < \EC_{\mathrm{AR}}\}|}{N},
+\end{equation}
+where $\EC_1, \ldots, \EC_N$ are the ensemble plan edge-cut fractions.
+A \emph{low} $\hat\pi_{\EC}$ means the \ar{} plan has lower cut than most
+ensemble plans---i.e., it is more compact.
+
+\subsection{Why Edge Cut, Not Polsby-Popper}
+
+Polsby-Popper (PP) measures the ratio of district area to perimeter squared.
+It is a geometric property of the final district shapes.  Edge cut measures
+the number of shared boundary segments between districts.  METIS minimises
+edge cut directly; the resulting plans tend to have high PP but the
+relationship is not one-to-one.  We report edge-cut percentiles because:
+\begin{enumerate}
+  \item Edge cut is the \ar{} algorithm's direct objective;
+  \item The \recom{} ensemble provides edge-cut statistics for direct comparison;
+  \item Courts can audit edge cut from the assignment file alone (no geometry
+    computation required), supporting verifiability.
+\end{enumerate}
 
 \subsection{Uncertainty Quantification}
 
-For literature-bound estimates (TX, CA), we report a 90\% confidence interval
-for the percentile position based on normal approximation to the ensemble
-distribution:
-
+For states with direct ensemble comparison (NC, WI, GA, PA), the percentile
+estimate has negligible sampling error given $N = 1{,}000$.  The standard error
+on a percentile estimate at the 0.2nd percentile is:
 \begin{equation}
-  \hat\pi \pm 1.645 \cdot \sqrt{\hat\pi(1-\hat\pi)/N}.
+  \mathrm{SE} = \sqrt{\hat\pi(1-\hat\pi)/N}
+  = \sqrt{0.002 \times 0.998 / 1000} \approx 0.0014,
 \end{equation}
+or about 0.14 percentage points---small relative to the observed values.
 
-For direct comparisons (NC, WI, GA, PA), the percentile estimate has
-negligible sampling error given $N \geq 10{,}000$.
+For Texas and California (pending), we report ``$< 5$th percentile'' as a
+design-based lower bound.
