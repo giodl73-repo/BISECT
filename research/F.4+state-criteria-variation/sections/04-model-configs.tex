@@ -1,0 +1,151 @@
+\section{Model YAML Configurations by State Type}
+\label{sec:configs}
+
+We present model YAML configuration files for one representative state from each type. These configurations are designed to satisfy the legal criteria of the representative state while remaining within the algorithmic parameter space. Each configuration is associated with the Rust \texttt{redist state} command, which accepts a \texttt{--config} flag pointing to a YAML file.
+
+\subsection{Type I Configuration: Texas (Permissive)}
+
+Texas imposes minimal criteria beyond the federal floor: population equality, contiguity, and VRA compliance for majority-minority opportunities. No compactness requirement is constitutionally mandated, and the legislature retains full discretion over the process.
+
+\begin{verbatim}
+# texas_congressional.yaml
+# Type I: Permissive
+state: TX
+year: 2020
+districts: 38
+resolution: tract
+algorithm:
+  partition_mode: recursive_bisection
+  population_tolerance: 0.005
+  compactness: 0.3          # Low: not legally required
+  county_weight: 1.0        # Default: no preservation mandate
+  coi_weights: null         # No community-of-interest criterion
+  partisan_neutral: true    # Structural: no partisan data available
+  vra_mode: auto            # Auto-detect majority-minority opportunities
+constraints:
+  contiguity: required      # Federal floor
+  population_balance: strict
+output:
+  metrics: [polsby_popper, population_deviation, county_splits]
+\end{verbatim}
+
+\subsection{Type II Configuration: Iowa (Criteria-Based)}
+
+Iowa is the paradigm case for criteria-based redistricting. The Legislative Services Bureau administers specific statutory criteria: no partisan data may be used, districts must be compact, and county splits must be minimized. Iowa's criteria closely mirror the algorithmic approach, making it the state most naturally suited to algorithmic adoption.
+
+\begin{verbatim}
+# iowa_congressional.yaml
+# Type II: Criteria-Based (Iowa LSB criteria)
+state: IA
+year: 2020
+districts: 4
+resolution: tract
+algorithm:
+  partition_mode: recursive_bisection
+  population_tolerance: 0.005
+  compactness: 0.85         # Iowa statute: maximize compactness
+  county_weight: 2.0        # Iowa statute: minimize county splits
+  coi_weights: null         # Formal communities not specified
+  partisan_neutral: true    # Iowa statute: no partisan data
+  vra_mode: auto
+constraints:
+  contiguity: required
+  population_balance: strict
+  county_splits: minimize   # Primary statutory criterion
+output:
+  metrics: [polsby_popper, county_splits, population_deviation]
+  report_county_splits: true
+\end{verbatim}
+
+\subsection{Type III Configuration: California (Commission)}
+
+California's Citizens Redistricting Commission operates under Article XXI of the California Constitution, which mandates criteria in priority order: (1) population equality, (2) VRA compliance, (3) geographical contiguity, (4) community of interest preservation, (5) geographic compactness, (6) city and county boundary respect, (7) nesting of state senate and assembly districts. Proportionality is required as a long-run objective.
+
+\begin{verbatim}
+# california_congressional.yaml
+# Type III: Commission (California CRC criteria)
+state: CA
+year: 2020
+districts: 52
+resolution: tract
+algorithm:
+  partition_mode: recursive_bisection
+  population_tolerance: 0.005
+  compactness: 0.85         # CRC criterion #5: geographic compactness
+  county_weight: 1.5        # CRC criterion #6: city/county boundaries
+  coi_weights: census_places # CRC criterion #4: communities of interest
+  partisan_neutral: true    # Structural; proportionality assessed ex post
+  vra_mode: strict          # CRC criterion #2: VRA compliance priority
+constraints:
+  contiguity: required
+  population_balance: strict
+  vra_compliance: required  # Highest-priority adjustable constraint
+output:
+  metrics: [polsby_popper, county_splits, majority_minority_districts,
+            population_deviation]
+  report_vra: true
+  report_communities: true
+\end{verbatim}
+
+\subsection{Type IV Configuration: Pennsylvania (Hybrid)}
+
+Pennsylvania's redistricting standards were established by the state supreme court in \textit{League of Women Voters v.\ Commonwealth}, which imposed criteria derived from the state constitution's free and equal elections clause: contiguity, compactness (the court's own map achieved mean Polsby-Popper of 0.47), population equality, and avoidance of county and municipality splits where possible.
+
+\begin{verbatim}
+# pennsylvania_congressional.yaml
+# Type IV: Hybrid (LWV court-imposed standards)
+state: PA
+year: 2020
+districts: 17
+resolution: tract
+algorithm:
+  partition_mode: recursive_bisection
+  population_tolerance: 0.001    # LWV standard: near-perfect equality
+  compactness: 0.90              # LWV court map: PP mean ~0.47
+  county_weight: 1.8             # LWV criterion: minimize county splits
+  coi_weights: census_places     # Municipality integrity
+  partisan_neutral: true         # Structural
+  vra_mode: auto
+constraints:
+  contiguity: required
+  population_balance: strict
+  minimum_pp: 0.35               # LWV benchmark threshold
+output:
+  metrics: [polsby_popper, county_splits, municipality_splits,
+            population_deviation]
+  report_lwv_compliance: true    # Flag districts below LWV benchmark
+\end{verbatim}
+
+\subsection{Type V Configuration: Florida (Restrictive)}
+
+Florida's Amendment 6 imposes the strictest criteria of any state in this analysis. Districts must not be drawn with intent to favor or disfavor a political party or incumbent. Additionally, Article III, Section 20 requires that districts, where feasible, utilize existing political and geographical boundaries, and be as equal in population as practicable, be compact, and where feasible be contiguous. The algorithmic approach satisfies the partisan-neutrality requirement structurally and the compactness and boundary requirements through parameter configuration.
+
+\begin{verbatim}
+# florida_congressional.yaml
+# Type V: Restrictive (Amendment 6 / Article III Sec. 20)
+state: FL
+year: 2020
+districts: 28
+resolution: tract
+algorithm:
+  partition_mode: recursive_bisection
+  population_tolerance: 0.005
+  compactness: 0.85         # Art. III Sec. 20: compact districts
+  county_weight: 1.5        # Art. III Sec. 20: existing boundaries
+  coi_weights: census_places
+  partisan_neutral: true    # Amend. 6: structural satisfaction
+  incumbent_blind: true     # Amend. 6: no incumbent address data
+  vra_mode: strict          # Section 2 compliance; Art. III Sec. 20
+constraints:
+  contiguity: required
+  population_balance: strict
+  partisan_data: forbidden  # Constitutional prohibition
+  incumbent_data: forbidden # Constitutional prohibition
+output:
+  metrics: [polsby_popper, county_splits, majority_minority_districts,
+            population_deviation]
+  certify_partisan_blind: true    # Audit trail for constitutional compliance
+  certify_incumbent_blind: true
+\end{verbatim}
+
+The Florida configuration is notable for the \texttt{certify\_partisan\_blind} and \texttt{certify\_incumbent\_blind} flags, which generate audit trail records documenting that no partisan or incumbent data was provided to the algorithm at any point during the run. This documentation is valuable for demonstrating constitutional compliance under Amendment 6 in litigation.

@@ -1,0 +1,48 @@
+\section{Introduction}
+\label{sec:intro}
+
+Forty-nine of the fifty U.S.\ states have bicameral legislatures, with a lower
+house and an upper senate chamber. Many state constitutions require or encourage
+senate districts to be composed of whole house districts---a \emph{nesting}
+requirement that ensures geographic coherence between the two chambers.
+California's constitution, for example, requires that ``each Senate district
+shall consist of two complete, contiguous Assembly districts.''
+Iowa's statute requires that senate districts shall consist of whole house
+districts wherever practicable.
+
+Nesting imposes a geometric constraint: if senate district $S_j$ must be
+composed of whole house districts, the house map must first be drawn, and the
+senate map derived from it. This creates an algorithmic dependency: the house
+map must be drawn to enable a valid senate map, not merely to optimise its
+own compactness. A house map that is individually optimal may fragment into
+senate districts that are non-compact or non-contiguous.
+
+Companion paper B.13 \citep{dellaLibera2026nestSection} introduced the
+\emph{NestSection} algorithm: given house count $H$ and senate count $S$,
+construct a geographic \emph{spine} at the level of $g = \gcd(H, S)$
+sub-regions, then subdivide each spine region into $H/g$ house districts
+and $S/g$ senate districts. NestSection guarantees that senate districts are
+exact unions of house districts while jointly optimising both chambers' compactness.
+
+This paper applies NestSection to all 49 bicameral state legislatures.
+Our contributions are:
+\begin{enumerate}
+  \item A complete catalogue of $H:S$ ratios for all 49 bicameral states,
+    classified by NestSection compatibility ($\gcd(H,S) > 1$ vs.\ $= 1$).
+  \item Application of NestSection to all 42 compatible states, producing
+    joint house-senate maps with verified nesting.
+  \item Quantification of the compactness penalty from nesting: mean $+2$--$3\%$
+    in edge-cut relative to independently optimised maps.
+  \item Measurement of the partisan effect of nesting constraints: $\leq 0.3$
+    expected seat shift across compatible states.
+  \item A classification of the 7 incompatible states ($\gcd = 1$) and
+    a discussion of constitutional alternatives.
+\end{enumerate}
+
+\paragraph{Organization.}
+Section~\ref{sec:nestsection} recaps the NestSection algorithm.
+Section~\ref{sec:analysis} performs the 50-state ratio analysis.
+Section~\ref{sec:results} reports NestSection results for the 42 compatible states.
+Section~\ref{sec:penalty} quantifies the compactness penalty.
+Section~\ref{sec:partisan} measures the partisan effect.
+Section~\ref{sec:conclusion} concludes.

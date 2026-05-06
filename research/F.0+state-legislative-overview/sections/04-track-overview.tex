@@ -1,0 +1,83 @@
+\section{The F Track: Paper Overview}
+\label{sec:overview}
+
+The F track comprises six companion papers. This section briefly previews
+each one.
+
+\subsection{F.1 --- Single-Chamber All 50 States}
+\label{sec:overview:f1}
+
+\textbf{Title}: ``Algorithmic State House Redistricting: A 50-State Empirical Study''
+
+F.1 is the primary empirical paper. It applies the \texttt{redist} pipeline
+with adaptive resolution selection (\texttt{block\_group} when
+$k/n_{\mathrm{tracts}} > 0.05$, \texttt{tract} otherwise) to all 50 state
+house chambers. The paper reports Polsby-Popper scores, population balance
+statistics, runtime measurements, and county-split counts for every state.
+Four case studies are developed in depth: Washington (98 districts),
+Texas (150), New Hampshire (400), and Nebraska's unicameral legislature (49).
+
+\subsection{F.2 --- Bicameral Nesting}
+\label{sec:overview:f2}
+
+\textbf{Title}: ``NestSection at Scale: Spine-Compatible Bicameral Redistricting for All 50 States''
+
+F.2 applies the NestSection algorithm \citep{dellaLibera2026nestSection} to
+all 49 bicameral state legislatures. NestSection constructs a geographic spine
+at the level of $\gcd(H,S)$ sub-regions from which both house and senate maps
+are derived. F.2 classifies all 50 states by the compatibility of their
+$H:S$ ratio, estimates the compactness penalty from nesting, and measures
+the partisan effect of requiring senate districts to be exact unions of
+house districts.
+
+\subsection{F.3 --- Multi-Resolution High-$k$ Chambers}
+\label{sec:overview:f3}
+
+\textbf{Title}: ``Resolution Selection for State Legislative Redistricting: When Census Tracts Are Too Coarse''
+
+F.3 is the methods paper for resolution selection. It derives the
+$k/n_{\mathrm{tracts}} > 0.05$ threshold theoretically and validates it
+empirically on three high-$k$ states (Washington, Texas, California).
+The paper quantifies the MAUP effects of resolution choice on partisan
+and compactness outcomes, and supplies a resolution recommendation table
+for all 50 states and all lower chambers.
+
+\subsection{F.4 --- State-Level Criteria Variation}
+\label{sec:overview:f4}
+
+\textbf{Title}: ``Algorithmic Redistricting Under Heterogeneous State Criteria''
+
+Many states impose explicit compactness requirements (e.g., Ohio's
+``no more splitting of political subdivisions than necessary'' standard),
+municipal-boundary preservation rules, or community-of-interest requirements
+that go beyond the federal one-person-one-vote floor.
+F.4 surveys these state-specific criteria and evaluates how the \texttt{redist}
+pipeline's objective function can be adapted to meet them.
+
+\subsection{F.5 --- Compactness: Legislative vs.\ Congressional}
+\label{sec:overview:f5}
+
+\textbf{Title}: ``Why Are State Legislative Districts More Compact? A Scale Analysis''
+
+The headline finding of F.1---that state legislative maps achieve higher
+Polsby-Popper scores than congressional maps---is counterintuitive.
+Smaller districts might be expected to be \emph{less} compact because they
+are more sensitive to local population concentrations.
+F.5 resolves this paradox by decomposing PP into a scale component (smaller
+perimeter for smaller districts) and a shape component (algorithm performance
+at different $k$ values). The analysis shows that the scale component
+dominates: PP is primarily determined by the ratio of district area to
+perimeter squared, and smaller districts have smaller perimeters relative
+to their area when drawn compactly.
+
+\subsection{F.6 --- VRA Compliance at the State Level}
+\label{sec:overview:f6}
+
+\textbf{Title}: ``Voting Rights Act Compliance in Algorithmic State Legislative Redistricting''
+
+F.6 extends the D-track VRA analysis \citep{dellaLibera2026vraCompliance}
+to state legislative chambers. State-level minority opportunity district
+requirements arise from both the federal VRA and state constitutional
+provisions (e.g., California's Fair Maps Act). F.6 applies the
+VRA-Section algorithm with edge-weighting calibrated to minority
+population concentrations at the block-group level.

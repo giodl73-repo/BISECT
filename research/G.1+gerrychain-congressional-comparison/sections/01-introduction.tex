@@ -1,0 +1,52 @@
+\section{Introduction: The Missing Comparison}
+\label{sec:intro}
+
+A redistricting algorithm that produces compact, population-balanced maps
+is useful only if we can say something about where it falls in the space
+of all reasonable maps.  Without this comparison, a court or legislature
+cannot distinguish between a map that is geographically sensible and one
+that happens to be compact while achieving an extreme partisan outcome.
+
+The ensemble literature provides exactly this comparison for human-drawn and
+court-drawn maps.  \citet{herschlag2020quantifying} showed that the enacted
+North Carolina congressional plan fell at the 99th percentile of Republican
+seat share in a \recom{} ensemble of 24,000 plans---a result central to the
+\case{Common Cause v.\ Rucho} litigation.  \citet{deford2021recombination}
+extended similar analysis to multiple states.  But neither paper compared
+algorithmic plans to their ensembles.
+
+This paper fills that gap.  We place the \ar{} plan
+\citep{dellaLibera2026b11} within published ensemble distributions for six
+states.  These six states were chosen because:
+
+\begin{enumerate}
+  \item Published ensemble results are available from \citet{herschlag2020quantifying}
+    or \citet{deford2021recombination};
+  \item The states span a range of congressional delegation sizes ($k = 8$ to
+    $k = 52$);
+  \item The states include both competitive states (Wisconsin, Pennsylvania)
+    and geographically sorted states (Georgia, Texas).
+\end{enumerate}
+
+\paragraph{Main finding.}
+The \ar{} plan falls in the $61$st--$72$nd percentile of compactness and
+near the $50$th percentile of partisan outcomes for five of six studied states.
+Georgia is the outlier, with the \ar{} plan at the $38$th percentile of
+Democratic seats, reflecting the state's strong geographic partisan sorting
+rather than any algorithmic bias.
+
+\paragraph{Legal implication.}
+A plan at the $68$th PP percentile with \emph{deterministic, verifiable
+provenance} is legally stronger than any ensemble plan, even one closer to
+the partisan median, because it eliminates one entire class of challenge:
+the challenge that the map was selected to achieve a partisan end.  When
+the map is determined by the prime factorization of the seat count and the
+METIS partition of the census graph, this challenge cannot succeed.
+
+\paragraph{Organisation.}
+Section~\ref{sec:states} describes the six states and data sources.
+Section~\ref{sec:method} details the methodology.
+Sections~\ref{sec:nc}--\ref{sec:tx-ca} present state-by-state results.
+Section~\ref{sec:summary} provides the consolidated summary table.
+Section~\ref{sec:legal} develops the legal argument.
+Section~\ref{sec:conclusion} concludes.

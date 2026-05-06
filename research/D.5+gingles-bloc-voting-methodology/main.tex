@@ -1,0 +1,92 @@
+\documentclass[12pt]{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{threeparttable}
+\usepackage{url}
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+
+\onehalfspacing
+
+\title{Quantifying VRA Section 2 Evidence with Algorithmic Redistricting:\\
+A Gingles Prong-by-Prong Methodology}
+
+\author{Giovanni Della-Libera\\
+\small{Working Paper}}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\textit{Thornburg v.\ Gingles} (1986) established three preconditions
+that a minority group must satisfy to state a vote-dilution claim under
+Section 2 of the Voting Rights Act: the minority group must be sufficiently
+large and geographically compact to constitute a majority in a
+single-member district (Prong 1); it must be politically cohesive (Prong 2);
+and the majority must vote sufficiently as a bloc to usually defeat the
+minority's preferred candidate (Prong 3).  This paper presents a
+systematic, quantitative methodology for satisfying all three prongs using
+output from the \texttt{redist} algorithmic redistricting system, grounded in
+the disentanglement requirement of \textit{Louisiana v.\ Callais} (2026).
+
+For Prong 1, we show that VRASection's geographic alignment score provides
+a principled, reproducible threshold for ``sufficiently compact,'' operationalizing
+geographic compactness as the share of a minority community captured in the
+optimal algorithmic district relative to a statewide baseline.  For Prong 2,
+we use racially polarized voting regression from \texttt{redist analyze
+--types bloc-voting} to estimate minority political cohesion as a partisan
+share in contested primaries, with bootstrap confidence intervals from the
+ensemble.  For Prong 3, we implement the post-\textit{Callais} WLS+HC3+Holm
+regression with a partisan control variable to disentangle racial from partisan
+bloc voting.  A worked example using the Alabama AL-07 district from
+\textit{Allen v.\ Milligan} (2023) illustrates the full methodology.
+We conclude with an expert witness checklist mapping \texttt{redist} command
+outputs to each Gingles prong.
+\end{abstract}
+
+\noindent\textbf{Keywords:} Voting Rights Act, Gingles preconditions, bloc
+voting, racially polarized voting, WLS regression, HC3, algorithmic
+redistricting, Callais, Allen v.\ Milligan
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Prong 1 --- Geographic Compactness of the Minority Community}
+\input{sections/02-prong1}
+
+\section{Prong 2 --- Minority Political Cohesion}
+\input{sections/03-prong2}
+
+\section{Prong 3 --- Majority Bloc Voting}
+\input{sections/04-prong3}
+
+\section{Worked Example --- Alabama AL-07 (\textit{Allen v.\ Milligan})}
+\input{sections/05-alabama}
+
+\section{Confidence Intervals for All Three Prongs}
+\input{sections/06-confidence-intervals}
+
+\section{Expert Witness Checklist}
+\input{sections/07-expert-checklist}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

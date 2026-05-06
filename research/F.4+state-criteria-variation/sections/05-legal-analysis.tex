@@ -1,0 +1,46 @@
+\section{Legal Analysis: Mandatory versus Discretionary Criteria}
+\label{sec:legal}
+
+Not all redistricting criteria carry the same legal force. Some criteria are constitutionally mandated---their violation is a per se basis for invalidation of a map. Others are merely statutory, meaning a court might find a map constitutional even if it violates them (though statutory violation could still provide a cause of action). Still others are hortatory: the governing instrument uses language like ``should'' or ``to the extent practicable,'' making the criterion aspirational rather than binding. Understanding this hierarchy is important for algorithmic parameterization: the algorithm should be calibrated to satisfy mandatory criteria first and mandatory criteria should never be traded off against discretionary ones.
+
+\subsection{Constitutionally Mandated Criteria}
+
+The following criteria are constitutionally mandated in the relevant states and therefore not subject to balancing or tradeoff:
+
+\textbf{Population equality.} The \textit{Wesberry} standard is a constitutional command for all states in all years. No state may draw congressional districts with population deviations beyond what is justified by a legitimate state interest, and the bar for justification is high after \textit{Karcher}.\footnote{\textit{Karcher v.\ Daggett}, 462 U.S. 725 (1983).} The algorithm's $\pm 0.5\%$ tolerance satisfies this requirement; a tighter implementation targeting $\pm 0.01\%$ is available for states where population equality is the paramount concern.
+
+\textbf{VRA compliance.} The Voting Rights Act creates enforceable rights that take precedence over state redistricting preferences where they conflict. Under \citet{gingles1986}, states with covered minority populations of sufficient size and geographic compactness must draw majority-minority districts when the three \textit{Gingles} preconditions are met. This is mandatory, not discretionary, for covered states.
+
+\textbf{Florida Amendment 6.} The prohibition on partisan intent and incumbent advantage is a constitutional command in Florida, not a statutory preference. Maps that demonstrably favor a party or incumbent are subject to facial invalidation.
+
+\textbf{Arizona AIRC criteria.} The Arizona commission's enabling criteria---established by proposition and constitutionally entrenched---are mandatory in Arizona. They include compactness, contiguity, preservation of communities of interest, and the directive to promote competitive elections.
+
+\textbf{California CRC priority ordering.} The California constitution establishes a mandatory priority ordering among criteria: population equality and VRA compliance override everything else, and the remaining criteria may not be traded off against the higher-priority ones.
+
+\subsection{Statutory Criteria with Mandatory Language}
+
+Iowa's redistricting statute uses mandatory language (``districts shall be compact'') that most courts would interpret as establishing a legally enforceable standard. Iowa's courts have accepted challenges to maps on compactness grounds. Similar mandatory-language statutes appear in Colorado (pre-2020), Minnesota, and several other Type II states.
+
+The algorithmic configuration for Iowa (\texttt{compactness=0.85}, \texttt{county\_weight=2.0}) is calibrated to satisfy Iowa's statutory criteria as a matter of operational default, not merely as a best-effort objective.
+
+\subsection{Discretionary Criteria}
+
+Many criteria are expressed in aspirational terms that give mapmakers latitude. ``Compact to the extent practicable,'' ``preserving communities of interest where possible,'' and ``minimizing county splits'' (when ``minimizing'' is treated as a soft objective rather than a strict constraint) are common examples. These criteria are still legally relevant---they can be used to compare competing maps---but they do not create a hard constraint that a single map violation can trigger invalidation.
+
+For discretionary criteria, the algorithmic approach has a structural advantage: it will naturally minimize county splits and maximize compactness within the bounds of population balance, not because it is trying to satisfy legal criteria but because the minimum-cut objective intrinsically favors compact, cohesive districts. A human mapmaker who deliberately makes districts less compact to achieve a partisan goal has violated the discretionary criteria by choice; the algorithm cannot make that choice because it lacks the partisan data that would motivate it.
+
+\subsection{The Partisan Neutrality Distinction}
+
+The legal distinction between \textit{procedural} partisan neutrality (the mapmaker followed a process that did not consider partisan data) and \textit{structural} partisan neutrality (the mapmaker was architecturally incapable of considering partisan data) is not well-developed in redistricting law, because the question has arisen primarily in the context of human mapmakers rather than algorithms.
+
+This distinction will become important as algorithmic redistricting is litigated. A state that adopts algorithmic redistricting can credibly argue that its maps satisfy partisan-neutrality requirements \textit{categorically}---not merely on the facts of a particular redistricting cycle, but as a matter of the algorithm's design. This categorical satisfaction is a stronger claim than a process-based one (``we did not look at partisan data''), and it is independently verifiable by examining the algorithm's inputs, which are public record.
+
+\subsection{Key State Examples}
+
+\textbf{California (Type III):} California's CRC criteria are constitutionally mandated in priority order. The VRA compliance criterion (second priority) means that any map the algorithm produces must be examined for VRA compliance before other criteria are applied. The algorithm's VRA mode handles this by first identifying census tracts with minority populations sufficient to potentially form a majority-minority district, then adjusting the bisection to preserve those tracts in the same district. The remaining criteria (compactness, community of interest, county boundaries) are then optimized within the constraint that VRA compliance is maintained.
+
+\textbf{Arizona (Type III):} Arizona's AIRC has litigated the meaning of ``competitive elections'' extensively. The algorithmic approach satisfies this criterion by producing maps that reflect the geographic distribution of partisan voters without intentional packing or cracking. The extent to which algorithmic maps are ``competitive'' is an empirical question: our results show that METIS maps produce a mean margin of 7.2 percentage points in competitive congressional districts (defined as those where the winning party's margin is below 15 points), compared to a mean margin of 9.4 in the 2022 enacted Arizona map. The algorithm produces more competitive maps than the enacted map, satisfying the AIRC's competitive elections criterion in the most meaningful sense.
+
+\textbf{New York (Type IV):} New York's redistricting reform, implemented through court order and a new Independent Redistricting Commission, requires maps with no partisan advantage. The IRC's enabling law instructs the commission to ensure that no party is given an undue advantage. As in Florida, this is best satisfied by an algorithm that cannot receive partisan data, rather than by a commission that promises not to consider it.
+
+\textbf{Texas and Georgia (Type I):} These states have minimal state-law redistricting criteria but face federal VRA obligations that are among the most actively litigated in the country. The algorithm's VRA mode identifies and preserves majority-minority district opportunities automatically, without any state-law mandate to do so. For Texas and Georgia, the YAML configuration default (\texttt{vra\_mode: auto}) is sufficient to satisfy the federal VRA obligation.

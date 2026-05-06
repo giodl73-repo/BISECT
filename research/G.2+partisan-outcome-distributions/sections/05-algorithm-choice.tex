@@ -1,0 +1,62 @@
+\section{Why Algorithm Choice Determines Which Tail You Land In}
+\label{sec:algorithm-choice}
+
+\subsection{The B.0 Bakeoff}
+
+The B.0 paper \citep{dellaLibera2026b0} compared three algorithmic approaches
+to congressional redistricting: (1) minimum edge-cut (METIS), which is the
+\ar{} algorithm; (2) adaptive bisection with compactness penalty; and
+(3) a VRA-first multi-constraint approach that targets minority district
+thresholds as a hard constraint.
+
+The three algorithms produce similar plans in competitive states with moderate
+sorting.  They diverge in sorted states and in states with concentrated
+minority populations.
+
+\subsection{Compactness Algorithms and the Republican Tail}
+
+Algorithms that optimise compactness (including \ar{}) tend to land in
+the right tail of the compactness distribution and the left tail (fewer
+Democratic seats) of the partisan seat distribution in sorted states.
+This is not a bug: it reflects the geographic reality that compact districts
+in sorted states tend to have more Republican seats.
+
+The mechanism: a compact algorithm draws boundaries that respect geographic
+clustering.  Geographic clusters in sorted states are partisan clusters.
+A compact algorithm will draw one or two large Democratic urban districts
+and many smaller Republican rural/suburban districts, regardless of the
+specific compactness objective used.
+
+\subsection{Short-Burst Algorithms and Tail Risk}
+
+Short-burst algorithms \citep{cannon2022voting} can produce extreme partisan
+outcomes if the burst objective is correlated with partisanship.  For example,
+a short-burst algorithm that maximises the number of competitive districts
+(defined as those within 5 percentage points of 50\%) will tend to produce
+plans that pack extreme partisans, which can produce outcomes at the
+1st or 99th percentile of the partisan distribution.
+
+This tail risk is a known limitation of short-burst methods.  It is absent
+from \ar{} because the METIS objective has no partisan component.
+
+\subsection{The Implication for Legal Arguments}
+
+The algorithm choice is legally significant.  An algorithm with a
+compactness objective will tend to produce Republican-leaning outcomes in
+sorted states.  This does not mean it is biased---it means it is consistent.
+The ensemble framework confirms that any \emph{compact} algorithm will
+produce similar outcomes in sorted states; the bias, if any, belongs to
+geography, not algorithm design.
+
+The legal argument is therefore:
+\begin{enumerate}
+  \item The \ar{} algorithm has no partisan objective.
+  \item Any compact algorithm produces similar outcomes in sorted states.
+  \item The ensemble confirms that \ar{} outcomes are geographically typical
+    for compact algorithms in all studied states.
+  \item Therefore, the \ar{} plan is not a product of partisan intent.
+\end{enumerate}
+
+This argument is strengthened by the B.0 bakeoff, which shows that different
+compact algorithms produce similar partisan outcomes, further confirming that
+the outcomes are geographic rather than algorithmic.

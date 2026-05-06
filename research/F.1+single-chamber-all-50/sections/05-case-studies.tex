@@ -1,0 +1,101 @@
+\section{Case Studies}
+\label{sec:cases}
+
+We develop four case studies illustrating how district count, geographic
+structure, and resolution interact to shape algorithmic map outcomes.
+
+\subsection{Washington: 98 Districts, Block-Group Resolution}
+\label{sec:cases:wa}
+
+Washington's House of Representatives has 98 districts ($k=98$) with a 2020
+population of 7{,}256{,}236, yielding an ideal district population of $T^* = 74{,}043$.
+Washington has 1{,}458 census tracts ($k/n = 0.067 > 0.05$), requiring
+block-group resolution (4{,}874 block groups).
+
+The geographic challenge in Washington is the Cascades Range, which divides the
+state into a wet, populous western region (Puget Sound metropolitan area) and a
+dry, sparse eastern region. The recursive bisection algorithm naturally partitions
+the state along this east-west divide at the first level, producing a western half
+with approximately 83 districts and an eastern half with 15 districts.
+
+\textbf{Results.} Mean PP: 0.412 (above the 50-state average of 0.401 for
+block-group resolution). Maximum population deviation: 0.31\%. County splits:
+11 (vs.\ 14 in the enacted 2021 map). Runtime: 180 seconds (block-group resolution).
+
+The high compactness reflects Washington's relatively uniform population
+distribution in the western half: Puget Sound-area districts can be drawn as
+compact near-squares around cities and suburbs without the elongated coastal
+configurations that reduce compactness in eastern and southern states.
+
+\subsection{Texas: 150 Districts, Tract Resolution}
+\label{sec:cases:tx}
+
+Texas's House of Representatives has 150 districts ($k=150$) with a 2020
+population of 29{,}317{,}186, yielding $T^* = 195{,}448$. Texas has 5{,}265
+census tracts ($k/n = 0.028$), below the threshold for block-group resolution.
+
+The geographic challenge in Texas is extreme: four major metropolitan areas
+(Houston, Dallas-Fort Worth, San Antonio, Austin) contain over 70\% of the
+population in roughly 15\% of the state's land area. The algorithm must draw
+a large number of compact urban districts in dense areas while also covering
+the vast, sparsely populated West Texas and Panhandle regions with geographically
+large but compact districts.
+
+\textbf{Results.} Mean PP: 0.374 (below the 50-state average, reflecting Texas's
+challenging urban-rural geography). Maximum population deviation: 0.44\%.
+County splits: 48 (vs.\ 62 in the enacted 2021 map). Runtime: 95 seconds.
+
+Texas illustrates a general pattern: states with extreme population concentration
+in a few metropolitan areas achieve lower average compactness because urban
+districts must be carved into compact but geometrically constrained shapes.
+The 23\% reduction in county splits (48 vs.\ 62) is consistent with the
+algorithm's preference for geographic coherence over political subdivision
+boundaries.
+
+\subsection{New Hampshire: 400 Districts, Block-Group Resolution}
+\label{sec:cases:nh}
+
+New Hampshire's House of Representatives is the largest state legislative
+chamber in the U.S.\ and one of the largest deliberative bodies in the world,
+with 400 members. With a 2020 population of 1{,}377{,}529, the ideal district
+population is $T^* = 3{,}444$---roughly the size of a small town.
+New Hampshire has only 321 census tracts, making redistricting at tract
+resolution impossible ($k/n = 1.25 > 1$). We use block-group resolution:
+New Hampshire has 698 block groups, giving a ratio of $k/n_{\rm bg} = 0.57$.
+This ratio is still above the optimal 20-units-per-district threshold, but
+block-group redistricting is feasible and produces valid non-empty districts.
+
+\textbf{Results.} Mean PP: 0.388. Maximum population deviation: 0.48\%.
+County splits: 31 (New Hampshire has 10 counties, so this represents a
+moderate level of splitting relative to the large number of districts).
+Runtime: 420 seconds.
+
+New Hampshire illustrates the hardest case for the pipeline. With $k/n_{\rm bg} = 0.57$,
+the average block group contains only $1.75$ districts---meaning many districts
+must consist of a single block group or split block groups. The pipeline handles
+this correctly via population-weighted sub-unit assignment when a block group
+is the only unit available to complete a district.
+
+\subsection{Nebraska: Unicameral Legislature, 49 Districts}
+\label{sec:cases:ne}
+
+Nebraska is the only unicameral state legislature in the U.S. The Nebraska
+Legislature has 49 members (called senators), with a 2020 population of
+1{,}961{,}504 and ideal district population $T^* = 40{,}031$.
+Nebraska has 570 census tracts ($k/n = 0.086 > 0.05$), requiring block-group
+resolution (1{,}231 block groups, $k/n_{\rm bg} = 0.040$).
+
+\textbf{Results.} Mean PP: 0.421 (highest among the block-group-resolution states).
+Maximum population deviation: 0.38\%. County splits: 8. Runtime: 165 seconds.
+
+Nebraska's high compactness reflects its geography: the state is roughly
+rectangular, population is distributed along the Platte River corridor from
+Omaha to Lincoln westward, and the Sandhills region occupies a large but very
+sparsely populated central area. The algorithm naturally groups Omaha-area
+block groups into compact eastern districts and distributes the few population
+centres of western Nebraska into geographically large but compactly bounded
+districts.
+
+Because Nebraska has no upper chamber, the NestSection algorithm (F.2) does
+not apply. This simplifies the problem relative to other states: there is
+no constraint to maintain senate-house nesting.

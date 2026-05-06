@@ -1,0 +1,100 @@
+\section{MAUP Analysis: Does Resolution Change Partisan Outcomes?}
+\label{sec:maup}
+
+The Modifiable Areal Unit Problem (MAUP) \citep{openshaw1984modifiable} refers
+to the dependence of statistical analyses on the choice of geographic unit.
+In the redistricting context, the MAUP question is: does the choice of base
+resolution (tract vs.\ block-group) affect the partisan composition of the
+resulting districts?
+
+\subsection{Framework}
+\label{sec:maup:framework}
+
+For each state and chamber, we compute the partisan outcome (Democratic seat count)
+at both tract and block-group resolution, using 2020 presidential precinct returns
+interpolated to the relevant resolution level \citep{Kuriwaki2023}.
+
+The MAUP effect is measured as:
+\[
+  \text{MAUP}(D) = D_{\rm bg} - D_{\rm tract}
+\]
+where $D_{\rm bg}$ and $D_{\rm tract}$ are the Democratic seat counts at
+block-group and tract resolution, respectively.
+
+A large $|\text{MAUP}(D)|$ indicates that resolution choice is a politically
+consequential decision, potentially as important as other redistricting choices.
+A small $|\text{MAUP}(D)|$ indicates that partisan outcomes are robust to
+resolution choice.
+
+\subsection{Results: Washington House}
+\label{sec:maup:wa}
+
+For Washington's House ($k=98$), the MAUP effect is:
+\begin{itemize}
+  \item Tract resolution: 57D/41R (Democratic seat share 58.2\%)
+  \item Block-group resolution: 59D/39R (Democratic seat share 60.2\%)
+  \item MAUP effect: $\text{MAUP}(D) = +2$ seats ($+2.0$\,pp)
+\end{itemize}
+
+A 2-seat MAUP effect out of 98 total districts is modest but non-negligible.
+The effect arises in competitive districts near the urban-rural boundary
+(the I-90 corridor and the Columbia River area), where the choice of base
+unit determines whether Democratic-leaning suburban precincts are grouped
+with the urban core or with the rural periphery.
+
+\subsection{Results: Texas House}
+\label{sec:maup:tx}
+
+For Texas ($k=150$), the MAUP effect is:
+\begin{itemize}
+  \item Tract resolution: 72D/78R
+  \item Block-group resolution: 73D/77R
+  \item MAUP effect: $\text{MAUP}(D) = +1$ seat ($+0.7$\,pp)
+\end{itemize}
+
+A 1-seat MAUP effect out of 150 districts is small. Texas's large district
+size ($T^* \approx 195,000$) means that each district contains many units at
+either resolution, making the partisan composition less sensitive to the specific
+unit boundaries.
+
+\subsection{Results: California Assembly}
+\label{sec:maup:ca}
+
+For California ($k=80$), the MAUP effect is:
+\begin{itemize}
+  \item Tract resolution: 61D/19R
+  \item Block-group resolution: 61D/19R
+  \item MAUP effect: $\text{MAUP}(D) = 0$ seats
+\end{itemize}
+
+No MAUP effect for California confirms that low-$k/n$ chambers are robust to
+resolution choice. California's strongly partisan geography means that most
+districts are safely Democratic or safely Republican regardless of where the
+boundaries fall; the few competitive districts are not affected by resolution.
+
+\subsection{Comparison with Congressional MAUP}
+\label{sec:maup:comparison}
+
+Companion paper C.1 \citep{dellaLibera2026maup} found that resolution choice
+changes congressional partisan outcomes by at most $\pm 1$ seat for a $k=52$
+state (California congressional).
+
+For state legislative redistricting, we find:
+\begin{itemize}
+  \item Low-$k/n$ chambers ($k/n < 0.02$): MAUP effect $= 0$ (no change)
+  \item Medium-$k/n$ chambers ($0.02 < k/n < 0.05$): MAUP effect $= \pm 1$ seat
+  \item High-$k/n$ chambers ($k/n > 0.05$): MAUP effect $= \pm 2$--$4$ seats
+\end{itemize}
+
+The larger MAUP effect for high-$k/n$ chambers reflects the smaller district size:
+with fewer units per district, the partisan composition of each district is more
+sensitive to which specific units are included.
+
+\paragraph{Policy implication.}
+The MAUP results suggest that for high-$k/n$ chambers, the choice of resolution
+is a substantively political decision, not merely a technical one. A partisan
+redistricting commission that chose tract resolution for a high-$k/n$ chamber
+would produce different partisan outcomes than one that chose block-group resolution.
+For algorithmic redistricting to be credibly non-partisan, the resolution selection
+rule must be stated in advance and applied consistently---which is precisely what
+the $k/n > 0.05$ rule provides.

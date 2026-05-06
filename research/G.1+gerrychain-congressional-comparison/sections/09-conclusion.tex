@@ -1,0 +1,34 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper provides the first direct comparison of the \ar{} algorithmic
+redistricting plan with published \recom{} ensemble distributions for six
+congressional states.  The results are consistent and interpretable:
+
+\begin{enumerate}
+  \item The \ar{} plan is more compact than the average valid plan in
+    every state studied, falling at the $61$st--$72$nd percentile of
+    Polsby-Popper compactness.  This reflects the METIS edge-cut
+    objective, which directly minimises the number of shared census-tract
+    boundaries across district lines.
+
+  \item The \ar{} plan produces partisan outcomes near the ensemble median
+    in 5 of 6 states (54th, 61st, 52nd, 52nd, and 55th percentiles for
+    NC, WI, PA, TX, and CA respectively).  Georgia is the exception at
+    the 38th percentile, reflecting the state's strong geographic partisan
+    sorting rather than any algorithmic bias.
+
+  \item Minority-majority district counts are consistent with ensemble
+    medians in all states with published data, confirming that the \ar{}
+    plan does not sacrifice minority representation for compactness.
+\end{enumerate}
+
+The legal implication is direct: the \ar{} plan can be presented to courts
+with two certificates.  First, it is the unique minimum-edge-cut plan for
+this state's geography and seat count, reproducible by any party from public
+data.  Second, it lies in the interior of the space of geographically
+reasonable plans on all three dimensions that courts have examined.
+
+Future work will extend this comparison to state legislative maps (F-series)
+and will compute bespoke \recom{} ensembles for Texas and California to
+replace the literature bounds used here.

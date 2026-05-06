@@ -1,0 +1,78 @@
+\label{sec:partisan-asymmetry}
+
+\subsection{Partisan Split of Competitive Algorithmic Districts}
+
+Table~\ref{tab:partisan-split} shows the partisan split of competitive
+algorithmic districts by lean classification.  Among the 85 competitive
+algorithmic districts:
+\begin{itemize}
+  \item 43 lean Democratic ($D_i \geq 0.50$, margin under 10 points).
+  \item 42 lean Republican ($D_i < 0.50$, margin under 10 points).
+  \item 17 are true toss-ups ($|D_i - 0.5| < 0.025$).
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\caption{Partisan Split of Competitive Districts}
+\label{tab:partisan-split}
+\begin{tabular}{lcc}
+\toprule
+Category & Algorithmic & Enacted \\
+\midrule
+Lean Democratic (D+1 to D+10) & 43 & 31 \\
+Lean Republican (R+1 to R+10) & 42 & 34 \\
+True toss-up ($\pm$2.5 pts) & 17 & 12 \\
+\midrule
+D/R ratio (competitive seats) & 1.024 & 0.912 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The near-unity D/R ratio (1.024) among competitive algorithmic districts
+contrasts with a 0.912 ratio under enacted maps, indicating that enacted
+plans have a modest Republican lean in their competitive-seat allocation.
+Neither ratio deviates substantially from symmetry, but algorithmic maps
+are measurably more balanced.
+
+\subsection{Engaging the Brunell Argument}
+
+\citet{brunell2008redistricting} argues that competitive districts are
+normatively inferior because they guarantee that roughly half the district's
+voters are represented by a legislator from the opposing party.  Safe seats,
+on this view, maximize constituent satisfaction by ensuring that a majority
+of each district's residents are represented by their preferred party.
+
+The argument has force but several limitations that the algorithmic context
+exposes.  First, the Brunell argument assumes that ``safe'' seats are allocated
+equally across parties.  In practice, enacted maps that eliminate competitive
+seats tend to produce safe seats unevenly: geographic efficiency gaps mean
+that packing Democratic voters into fewer, more lopsided seats generates
+more Republican seats than a symmetric allocation would
+imply~\citep{stephanopoulos2014}.  Algorithmic maps, by contrast, produce
+safe seats that reflect the underlying geographic distribution of partisans
+rather than strategic packing.
+
+Second, the Brunell argument applies equally to the minority voter in a safe
+seat.  A minority Republican voter in a safe Democratic urban district is no
+better represented than a minority Democratic voter in a safe Republican
+exurban district.  Neither the argument for competitiveness nor the argument
+for safe seats provides a fully satisfying answer to the representation of
+the political minority within a district.
+
+Third, from a dynamic perspective, competitive districts serve as the
+mechanism by which national policy preferences translate into legislative
+seat changes.  A legislature of only safe seats requires implausibly large
+national swings to change party control.  The near-symmetric 43D/42R split
+of competitive algorithmic districts indicates that algorithmic maps preserve
+the responsiveness function without systematically advantaging either party.
+
+\subsection{Are Competitive Algorithmic Districts Systematically Biased?}
+
+We test for systematic partisan bias in competitive algorithmic districts
+by comparing the expected seat share to the vote share in a statewide
+environment.  Under the 2020 presidential baseline (Biden 51.3\% nationwide),
+a map with no partisan bias would allocate roughly 51.3\% of competitive
+seats to Democrats.  Our algorithmic maps allocate 50.6\% of competitive
+seats to Democrats (43/85), a difference of 0.7 points---well within sampling
+variation.  We conclude that algorithmic competitive districts do not exhibit
+systematic partisan bias.

@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{F.0: Algorithmic State Legislative Redistricting:\\
+       A Research Program}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Congressional redistricting has attracted the bulk of algorithmic redistricting
+research, yet state legislative chambers govern far more of everyday civic
+life---education, criminal justice, taxation, and elections administration.
+We introduce the F research track, a systematic program for applying the
+\texttt{redist} recursive-bisection pipeline to all 50 state legislatures.
+The central challenges are \emph{scale} (New Hampshire's 400-member House
+requires $400$ districts from a state with only $\sim\!4{,}000$ census tracts)
+and \emph{resolution} (census tracts are too coarse for high-$k$ chambers,
+requiring a shift to block-group or block geography).
+We describe the \texttt{redist} CLI's \texttt{--chamber} and \texttt{--resolution}
+flags, develop the rule of thumb that block-group resolution is needed when
+$k / n_{\mathrm{tracts}} > 0.05$, and preview the empirical findings of
+companion papers F.1--F.6. Key results: state-house mean Polsby-Popper
+($\overline{PP} \approx 0.401$ at block-group resolution) exceeds the
+congressional baseline ($\overline{PP} \approx 0.361$); county splits are
+reduced 15--25\% relative to enacted plans; and population balance
+($\leq 0.5\%$) is achieved in all 50 states. Runtime is 3--5$\times$ slower
+than congressional per state due to resolution overhead.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-challenges}
+\input{sections/03-redist-cli}
+\input{sections/04-track-overview}
+\input{sections/05-key-findings}
+\input{sections/06-connections}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,71 @@
+\section{When Ensemble is Irreplaceable}
+\label{sec:when-ensemble}
+
+\subsection{Two Use Cases that Require Ensemble Methods}
+
+Despite the computational advantages of \cs{} for plan generation,
+there are two use cases where MCMC ensemble methods are irreplaceable:
+
+\paragraph{Use Case 1: Auditing enacted maps.}
+When an enacted map has been drawn by a legislature (or by a commission
+that may have introduced bias), the question is whether the map is an
+outlier relative to algorithmically neutral alternatives.
+\cs{} generates one plan; it cannot answer the question ``how unusual
+is this plan?''
+An ensemble of plans drawn from the neutral distribution provides the
+reference distribution needed for the outlier test.
+
+\paragraph{Use Case 2: Characterising the feasible space.}
+Researchers and courts may want to understand the range of outcomes
+achievable by neutral redistricting.
+Questions like ``what is the minimum possible number of majority-Black
+districts?'' or ``what is the typical compactness of random redistricting?''
+require sampling from the distribution, not finding one optimum.
+\cs{} addresses neither question.
+
+\subsection{The Division of Labor}
+
+We recommend the following division of labor between \cs{} and ensemble
+methods in the DIA statutory framework:
+
+\begin{enumerate}
+\item \textbf{Statutory plan generation}: \cs{} with $T = 600$.
+      One plan, deterministic, certifiably optimal, verifiable in 60 seconds.
+\item \textbf{Partisan outlier testing}: Certified \recom{} ensemble
+      with G.4 diagnostics.
+      Used to challenge enacted plans in state court under the
+      \textit{Rucho} framework.
+\item \textbf{Research and parameter calibration}: Uncertified \recom{}
+      for exploratory analysis, followed by certified runs for publication.
+\end{enumerate}
+
+\subsection{What Ensemble Methods Cannot Provide}
+
+Ensemble methods cannot provide:
+\begin{itemize}
+\item A single ``best'' plan with a certifiable quality guarantee.
+\item Determinism (without fixing a seed, which defeats the mixing purpose).
+\item A fast answer: even the minimum ensemble for NC requires 5{,}000 steps
+      and 20 minutes on consumer hardware.
+\end{itemize}
+
+These limitations are not defects; they follow from the nature of
+distributional inference.
+The appropriate response is to use the right tool for the right task,
+not to ask ensemble methods to do what \cs{} was designed for.
+
+\subsection{Hybrid Approach for Special Masters}
+
+For special masters appointed by courts to draw remedial plans, a hybrid
+approach is appropriate:
+\begin{enumerate}
+\item Generate the initial plan using \cs{} (optimal, transparent,
+      certifiable).
+\item Run a certified ensemble audit to verify that the \cs{} plan is
+      not an outlier in a partisan direction.
+\item If the \cs{} plan is an outlier (rare---expected frequency $< 1\%$
+      by B.7), adjust using a constrained bisection with modified objective.
+\end{enumerate}
+
+This hybrid approach provides both the plan-generation benefits of \cs{}
+and the distributional-verification benefits of ensemble methods.

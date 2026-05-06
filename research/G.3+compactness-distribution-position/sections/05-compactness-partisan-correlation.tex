@@ -1,0 +1,71 @@
+\section{The Compactness-Partisan Correlation Within the Ensemble}
+\label{sec:correlation}
+
+\subsection{The Rodden Effect in Ensemble Plans}
+
+\citet{rodden2019why} documented that geographic concentration of Democratic
+voters in cities creates a structural Republican advantage under compact
+districting.  This effect is visible within \recom{} ensembles: sorting
+ensemble plans by compactness reveals a correlation between higher compactness
+and fewer Democratic seats in sorted states.
+
+Let $\rho(\pp, S_D)$ denote the Pearson correlation between mean Polsby-Popper
+score and Democratic seat count across ensemble plans.  For the states studied:
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+State & $\rho(\pp, S_D)$ & Direction \\
+\midrule
+NC & $-0.18$ & Higher PP $\to$ slightly fewer D seats \\
+WI & $-0.09$ & Weak (competitive) \\
+GA & $-0.31$ & Higher PP $\to$ fewer D seats \\
+PA & $-0.11$ & Weak (competitive) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The correlation is negative in all states: more compact plans tend to produce
+fewer Democratic seats.  The effect is stronger in sorted states (Georgia)
+and weaker in competitive states (Wisconsin, Pennsylvania).
+
+\subsection{Implications for AR's Position}
+
+The \ar{} plan is at the $61$st--$72$nd percentile of compactness.  The
+negative correlation between compactness and Democratic seats implies that
+a plan at this percentile will tend to have slightly fewer Democratic seats
+than the ensemble median.
+
+For North Carolina, the correlation is $\rho = -0.18$.  A plan at the 68th
+percentile of compactness would be expected to have approximately:
+
+\begin{equation}
+  \Delta S_D \approx \rho \cdot \frac{\sigma_\pp}{\sigma_{S_D}} \cdot (0.68 - 0.50)
+  \approx (-0.18) \cdot \frac{0.031}{1.1} \cdot 0.18 \approx -0.09 \text{ seats},
+\end{equation}
+
+which rounds to zero.  The NC correlation is too weak to produce a
+measurable seat change at this percentile level.
+
+For Georgia, $\rho = -0.31$ and the effect is larger:
+
+\begin{equation}
+  \Delta S_D \approx (-0.31) \cdot \frac{0.030}{1.2} \cdot 0.15 \approx -0.12 \text{ seats},
+\end{equation}
+
+also small---but the actual observed deviation is $-1$ seat (5D vs.\ median 6D).
+This suggests that the correlation accounts for only part of the Georgia
+deviation; the remainder is attributable to the specific partition structure
+of $k = 14 = 2 \times 7$ in a highly sorted state.
+
+\subsection{Is the Correlation Causal?}
+
+The negative $\rho(\pp, S_D)$ is observational, not causal.  Compact plans
+do not cause fewer Democratic seats; rather, the same geographic property
+(urban concentration of Democrats) that makes compact plans produce Republican
+advantages also determines the correlation within the ensemble.
+
+The policy implication: one cannot avoid the Rodden effect by choosing a
+different algorithm.  Any compact algorithm applied to a sorted state will
+produce a similar correlation.  The correlation is a property of geography,
+not of the \ar{} algorithm.

@@ -1,0 +1,67 @@
+\section{Statutory Implications}
+\label{sec:statutory}
+
+\subsection{One Verifiable Plan vs.\ 10,000 Unverifiable Plans}
+
+Ensemble evidence is powerful for \emph{detection} but weak for \emph{selection}.
+A court can use an ensemble to determine that a contested plan is an outlier.
+But which plan should replace it?  The ensemble offers 10,000 candidates,
+none of which has a principled claim over the others.  A special master tasked
+with drawing a remedial map cannot simply ``pick the median ensemble plan''
+without introducing a new layer of discretion.
+
+The \ar{} plan solves this problem.  Given the census data and the seat count,
+there is exactly one \ar{} plan per state.  It is:
+
+\begin{itemize}
+  \item \textbf{Verifiable}: Anyone with access to the public census data
+    and the \texttt{redist} binary can reproduce it exactly, bit-for-bit.
+  \item \textbf{Deterministic}: No human judgment enters after the inputs
+    are fixed.
+  \item \textbf{Politically inert}: No partisan registration data, no
+    electoral history, no demographic targets beyond population equality.
+  \item \textbf{Constitutionally grounded}: The \ar{} algorithm derives
+    from Article~I~\S2 via the prime factorization of the Huntington-Hill
+    seat count \citep{dellaLibera2026b11}.
+\end{itemize}
+
+An ensemble plan cannot make the first three claims.  Even if a court selected
+the 50th-percentile plan on compactness, that plan reflects one random draw
+and would change with a different seed, a different run, or a different
+ensemble construction.
+
+\subsection{The \texorpdfstring{\rucho{}}{Rucho} Framework and Algorithmic Plans}
+
+\rucho{} held that partisan gerrymandering claims present a political question
+not cognizable in federal court.  The majority distinguished between identifying
+a gerrymander (possible) and providing a judicially manageable standard for
+remediation (not possible under the Constitution).  The dissent argued that
+ensemble evidence provides exactly such a standard.
+
+The \ar{} plan offers a different response: bypass the manageability problem
+entirely by providing a plan that requires no judicial discretion to select.
+The court does not choose among plans; it certifies the \ar{} plan as
+constitutionally required by the Huntington-Hill apportionment process.
+This argument does not depend on \rucho{} being overruled; it operates at the
+Article~I~\S2 level rather than the Equal Protection or First Amendment level.
+
+\subsection{Ensemble Evidence as Corroboration}
+
+Within the G-track framework, ensemble evidence serves as \emph{corroboration}
+for the \ar{} plan rather than as its foundation.  The argument structure is:
+
+\begin{enumerate}
+  \item The \ar{} plan is constitutionally required (B.11, B.02).
+  \item The \ar{} plan is not a partisan outlier: its partisan percentile
+    is near the ensemble median (G.1, G.2).
+  \item The \ar{} plan is compact but not an extreme outlier on compactness:
+    its compactness percentile is $65$--$75$th (G.3).
+  \item The \ar{} plan converges reproducibly: \cs{} at $T = 600$ certifies
+    optimality (B.16).
+\end{enumerate}
+
+Claims 2 and 3 are corroborative: they show that the \ar{} plan possesses
+properties independently associated with non-gerrymandered maps.  They do not
+constitute the primary legal argument.  This ordering is important: ensemble
+evidence is used to verify that the deterministic plan is reasonable, not to
+select the plan.

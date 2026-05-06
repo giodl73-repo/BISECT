@@ -1,0 +1,83 @@
+\section{Compactness Penalty from Nesting}
+\label{sec:penalty}
+
+\subsection{Measurement Design}
+\label{sec:penalty:design}
+
+To measure the compactness penalty from nesting, we compare two maps for each
+compatible state:
+\begin{itemize}
+  \item \textbf{Independent}: The house map and senate map are optimised
+    independently (two separate \texttt{redist} runs with no nesting constraint).
+  \item \textbf{NestSection}: The house and senate maps are jointly optimised
+    via NestSection (one \texttt{redist} run with \texttt{--chamber nest}).
+\end{itemize}
+
+The compactness penalty is measured as the percentage increase in total
+edge-cut weight when switching from Independent to NestSection:
+\[
+  \text{penalty} = \frac{\text{EC}_{\text{nest}} - \text{EC}_{\text{indep}}}{\text{EC}_{\text{indep}}} \times 100\%
+\]
+
+We report the penalty separately for house and senate maps, and as a
+weighted average (house penalty $\times 2/3$ + senate penalty $\times 1/3$,
+reflecting the relative district counts).
+
+\subsection{Results}
+\label{sec:penalty:results}
+
+Table~\ref{tab:compactness-penalty} reports the compactness penalty for
+selected states. The mean house penalty is $+2.1\%$ and the mean senate
+penalty is $+3.4\%$, for a weighted mean of $+2.5\%$.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+State & Ratio & House penalty & Senate penalty & Weighted \\
+\midrule
+Washington & 2:1 & 1.8\% & 2.9\% & 2.2\% \\
+Minnesota  & 2:1 & 2.0\% & 3.1\% & 2.4\% \\
+Florida    & 3:1 & 2.3\% & 4.1\% & 2.9\% \\
+Ohio       & 3:1 & 2.4\% & 3.9\% & 2.9\% \\
+Vermont    & 5:1 & 1.9\% & 5.2\% & 3.0\% \\
+Massachusetts & 4:1 & 2.1\% & 4.5\% & 2.9\% \\
+New Hampshire & 50:3 & 1.4\% & 2.2\% & 1.7\% \\
+\midrule
+Mean (42 states) & --- & 2.1\% & 3.4\% & 2.5\% \\
+\bottomrule
+\end{tabular}
+\caption{Compactness penalty (edge-cut increase) from nesting constraint.
+  Larger $H/S$ ratios incur higher senate penalties because larger senate
+  districts have more interior boundaries from house-district merging.
+  New Hampshire (50:3 ratio) has a low penalty because the 8-spine super-regions
+  are large and the within-super-region redistricting is relatively unconstrained.}
+\label{tab:compactness-penalty}
+\end{table}
+
+\subsection{Penalty Scaling with Ratio}
+\label{sec:penalty:scaling}
+
+The senate penalty scales approximately linearly with the $H/S$ ratio:
+each additional house district per senate district adds approximately $+0.8\%$
+edge-cut penalty. This is consistent with the geometric argument: each
+additional house-district boundary incorporated into a senate district
+adds perimeter without adding area.
+
+The house penalty is smaller and less sensitive to the ratio because the
+house districts themselves are not affected by senate construction once
+the spine is fixed. The house penalty reflects the constraint imposed by
+the spine: the house districts must align with the spine boundaries,
+preventing the house map from crossing super-region lines. This penalty
+is approximately $+1.5$--$2.5\%$ regardless of the $H/S$ ratio.
+
+\subsection{PP vs.\ Edge-Cut Comparison}
+\label{sec:penalty:pp}
+
+The PP penalty from nesting is smaller than the edge-cut penalty: mean
+PP reduction is $-0.008$ for house and $-0.028$ for senate (NestSection
+vs.\ independent). This asymmetry reflects the nature of the two metrics:
+PP measures the shape of individual districts, while edge-cut measures
+total boundary length. Nesting primarily increases edge-cut by eliminating
+some interior-boundary-crossing options, but the resulting district shapes
+are still compact (individual districts' shapes change little).

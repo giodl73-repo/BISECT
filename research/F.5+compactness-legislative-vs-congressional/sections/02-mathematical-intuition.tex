@@ -1,0 +1,59 @@
+\section{Mathematical Intuition: Why Smaller Districts Are More Compact}
+\label{sec:math}
+
+Before presenting empirical results, we establish the mathematical relationship between the number of districts and expected district compactness. The key insight is that for a fixed geographic area, dividing it into more pieces necessarily produces pieces with shorter boundaries relative to their area, which translates to higher Polsby-Popper ratios.
+
+\subsection{Polsby-Popper and Isoperimetric Geometry}
+
+The Polsby-Popper ratio for district $D$ is defined as:
+\begin{equation}
+  PP(D) = \frac{4\pi \cdot \text{Area}(D)}{\text{Perimeter}(D)^2}
+  \label{eq:pp}
+\end{equation}
+This ratio achieves its maximum value of 1 for a perfect circle, and decreases as districts become less circular. The ratio is scale-invariant: multiplying all linear dimensions by a constant leaves $PP$ unchanged. This makes it useful for comparing districts of different sizes.
+
+\subsection{Scaling Behavior with Number of Districts}
+
+Consider a state with total area $A$ and total boundary perimeter $B$. Suppose we divide the state into $k$ equal-area districts, each with area $A/k$. How does the perimeter of each district scale with $k$?
+
+Under idealized hexagonal packing---which minimizes total internal boundary length for a given area---each district occupies a regular hexagon with area $A/k$. A regular hexagon with area $a$ has side length $s = (2a/3\sqrt{3})^{1/2}$ and perimeter $P = 6s = 6(2a/3\sqrt{3})^{1/2}$. The Polsby-Popper ratio for a regular hexagon is:
+\begin{equation}
+  PP_{\text{hex}} = \frac{4\pi \cdot a}{P^2} = \frac{4\pi \cdot a}{36 \cdot (2a/3\sqrt{3})} = \frac{4\pi \cdot 3\sqrt{3}}{72} = \frac{\pi\sqrt{3}}{6} \approx 0.907
+  \label{eq:hexpp}
+\end{equation}
+This ratio is \textit{independent of $a$}---a regular hexagon of any size has the same PP ratio, which follows from PP's scale-invariance.
+
+The dependence on $k$ enters through the boundary structure. Each district in the hexagonal packing shares some boundary with neighboring districts (internal boundaries) and some with the state's external boundary. As $k$ increases, the internal boundaries become proportionally longer relative to the external boundary: a single district in a 4-district state shares roughly $3/4$ of its perimeter with neighbors and $1/4$ with the state boundary; a single district in a 100-district state shares roughly $6/7$ of its perimeter with neighbors and $1/7$ with the state boundary (in the hexagonal approximation, each district has at most 6 neighbors).
+
+The state's external boundary, however, is irregular---it follows geographic features rather than straight lines. This irregularity inflates the perimeter of districts near the state boundary. As $k$ increases, the fraction of districts that lie on the state boundary decreases relative to the total number of districts, so the average perimeter-inflation from boundary effects diminishes.
+
+More precisely, the number of boundary districts scales as $O(\sqrt{k})$ for a compact state (perimeter of the state scales as $O(\sqrt{A})$ and each boundary district has width $O(\sqrt{A/k})$, so approximately $O(\sqrt{k})$ districts touch the boundary). The share of boundary districts is therefore $O(\sqrt{k}/k) = O(1/\sqrt{k})$, which decreases with $k$. This gives the intuition for the $O(1/\sqrt{k})$ scaling of mean district irregularity.
+
+\subsection{Formal Statement}
+
+\begin{proposition}
+Let $\{D_1^{(k)}, \ldots, D_k^{(k)}\}$ be a minimum-edge-cut partition of a geographic area into $k$ equal-population districts. Under regularity conditions on the boundary of the geographic area, the mean Polsby-Popper ratio $\overline{PP}_k = k^{-1}\sum_i PP(D_i^{(k)})$ satisfies:
+\begin{equation}
+  \overline{PP}_k = PP_\infty - \frac{c}{\sqrt{k}} + O(k^{-1})
+  \label{eq:scaling}
+\end{equation}
+for some constant $c > 0$ depending on the irregularity of the state boundary, and some limiting value $PP_\infty$ determined by the algorithm's behavior in the interior of the state.
+\end{proposition}
+
+The regularity conditions exclude states with highly fractal boundaries (Alaska, Florida's coastline) and states with very large single geographic features (lakes, military reservations) that create discontinuities in the boundary behavior. For the 50 contiguous and non-contiguous states analyzed here, deviations from the $O(1/\sqrt{k})$ scaling law are generally small.
+
+\subsection{Empirical Implication}
+
+Equation~\eqref{eq:scaling} predicts that a state transitioning from $k_1$ congressional districts to $k_2$ state house districts (where $k_2 \gg k_1$) should see a mean PP improvement of approximately:
+\begin{equation}
+  \Delta\overline{PP} \approx c \left(\frac{1}{\sqrt{k_1}} - \frac{1}{\sqrt{k_2}}\right)
+  \label{eq:delta}
+\end{equation}
+For a typical state with 8 congressional districts and 100 state house districts, this is:
+\begin{equation}
+  \Delta\overline{PP} \approx c \left(\frac{1}{\sqrt{8}} - \frac{1}{\sqrt{100}}\right) = c \left(0.354 - 0.100\right) = 0.254c
+  \label{eq:typical}
+\end{equation}
+Fitting $c$ from the empirical data (Section~\ref{sec:empirical}) gives $c \approx 0.120$, so the predicted improvement is $0.254 \times 0.120 \approx 0.030$ PP units. The observed improvement is 0.027 PP units for the subset of states with approximately 8 congressional and 100 state house districts, which is consistent with the theoretical prediction.
+
+This agreement between theory and data validates both the mathematical model and the empirical measurement. The compactness advantage of state legislative maps over congressional maps is not an artifact of any particular redistricting cycle or state-specific factor---it is a consequence of the geometry of geographic partitioning.

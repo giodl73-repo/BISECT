@@ -1,0 +1,67 @@
+\section{The ConvergenceSweep Bridge}
+\label{sec:bridge}
+
+\subsection{Two Notions of Convergence}
+
+The term ``convergence'' is used differently in the ensemble and algorithmic
+settings.  For ensemble methods, convergence refers to the Markov chain
+approaching its stationary distribution.  For \cs{} \citep{dellaLibera2026b16},
+convergence refers to the optimisation search reaching the minimum edge-cut
+map for a given state and seat count.
+
+These are distinct phenomena, but they interact.  The key question is:
+
+\begin{keybox}
+At the threshold $T = 600$, \cs{} produces the minimum-edge-cut (\ar{}) plan.
+This plan is a \emph{specific point} in the plan space that the \recom{} chain
+also explores.  Where does this specific point fall in the \recom{} distribution?
+\end{keybox}
+
+\subsection{Characterising the Local Optimum}
+
+The \ar{} plan is a local optimum of the METIS edge-cut objective with
+respect to small perturbations.  Under \recom{} moves, the plan will not
+remain in its basin of attraction for long---a single recombination move
+typically changes $5$--$15\%$ of district assignments and can escape local
+optima.  This means the \ar{} plan is \emph{not} the typical plan in the
+\recom{} ensemble.
+
+However, the \ar{} plan's \emph{compactness} (as measured by Polsby-Popper
+score) is empirically high: B.11 shows a mean $\bar\pp \approx 0.38$--$0.45$
+across states, versus \recom{} ensemble means of $0.28$--$0.35$.  This
+places the \ar{} plan typically at the $65$th--$75$th percentile of the
+\recom{} compactness distribution---more compact than average but not extreme.
+
+\subsection{The Minimum-EC Plan in the ReCom Distribution}
+
+Let $P^*_{\EC}$ denote the minimum-edge-cut plan found by \cs{}.  The
+edge-cut objective $\EC(P)$ is negatively correlated with Polsby-Popper
+compactness (lower edge cut implies fewer shared-boundary census tracts
+across district lines, which correlates with more cohesive district shapes).
+Within the \recom{} ensemble, plans with lower $\EC$ are rarer, because
+\recom{} does not target $\EC$ minimisation.
+
+Empirically, we estimate $P^*_{\EC}$ falls at approximately the
+\begin{itemize}
+  \item $65$th--$75$th percentile of the $\bar\pp$ distribution,
+  \item $45$th--$60$th percentile of the $S_D$ (partisan seats) distribution,
+  \item $50$th--$65$th percentile of the $\mathrm{MM}$ distribution,
+\end{itemize}
+with state-specific variation characterised in G.1--G.3.  The partisan
+percentile near the median is the central finding: the \ar{} plan's
+partisanship is close to what geography determines, not to what a partisan
+mapmaker would achieve.
+
+\subsection{Diagnostic Consistency}
+
+The $T = 600$ threshold for \cs{} was certified in B.16 using empirical data
+from B.7 (50-state seed sweep).  The same data supports ensemble diagnostic
+thresholds: if the seed sweep finds no improvement after 600 seeds, the
+plan is stable under seed perturbation.  This is analogous to---but distinct
+from---an ensemble chain achieving \ess{} $> 400$.
+
+The connection is: both $T$ and \ess{} measure the robustness of a result
+to additional sampling.  A plan certified by \cs{} at $T = 600$ is
+reproducible (same plan from same census data); an ensemble certified by
+\ess{} $> 400$ is reliable (histogram shape stable under additional draws).
+These are complementary certificates for different goals.

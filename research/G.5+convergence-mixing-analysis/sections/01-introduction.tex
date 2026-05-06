@@ -1,0 +1,74 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Mixing Time Problem}
+
+Markov chain Monte Carlo (MCMC) redistricting has become a standard tool
+for detecting partisan gerrymandering.
+The inference framework is simple: draw a large ensemble of redistricting
+plans from the uniform distribution over valid plans, compute a partisan
+metric for each plan, and report where the enacted map falls in the
+distribution.
+A map in the 95th percentile for Republican advantage is likely gerrymandered.
+
+The statistical validity of this inference depends entirely on whether the
+chain has \emph{mixed}---whether the empirical distribution from the chain
+approximates the true uniform distribution over valid plans.
+If the chain has not mixed, the ensemble does not represent the uniform
+distribution; it represents the neighborhood of the starting plan.
+
+This paper asks: how long must a redistricting chain run to mix?
+We give two complementary answers: a theoretical bound from Markov chain
+spectral theory, and empirical measurements from \recom{} chains on
+actual census-tract graphs.
+
+\subsection{Main Results}
+
+\paragraph{Theoretical bound.}
+Census-tract adjacency graphs are approximately planar (they are derived
+from geographic tract boundaries).
+For random walks on planar graphs, the spectral gap satisfies
+$\sgap = \Omega(1/n^2)$~\citep{lipton1979,levin2009}, where $n$ is the
+number of vertices (tracts).
+This implies mixing time $\tmix = O(n^2 \log n)$.
+For a state with $n = 2{,}000$ tracts, the theoretical bound is
+$\tmix = O(4 \times 10^6 \log 2{,}000) \approx O(3 \times 10^7)$ steps.
+
+\paragraph{Empirical result.}
+In practice, \recom{} chains achieve $\rhat < 1.1$ (the G.4 convergence
+criterion) in 2{,}000--20{,}000 steps.
+The gap between theory ($10^7$) and practice ($10^4$) is explained by the
+concentration of the stationary distribution near high-compactness plans:
+the chain rarely needs to visit the vast low-compactness regions of state
+space, so practical mixing is much faster than the worst-case bound.
+
+\paragraph{ConvergenceSweep alternative.}
+The \cs{} algorithm~\citep{b16paper} provides a deterministic $O(T \cdot n)$
+stopping criterion for plan \emph{generation}.
+For plan \emph{evaluation} (auditing enacted maps), ensemble methods remain
+irreplaceable.
+We identify the boundary between these two regimes.
+
+\subsection{Relation to Prior Work}
+
+\citet{deford2021} introduced \recom{} and studied its stationary
+distribution theoretically, but did not provide explicit mixing time bounds.
+\citet{autry2021} studied the forest-based recombination variant and proved
+polynomial mixing for certain graph families, but the bounds are not tight
+for planar graphs.
+\citet{chikina2017} showed that some tests are valid without full mixing,
+but their conditions are hard to verify in practice.
+This paper provides the first explicit spectral-gap-based mixing time
+lower bounds for the redistricting MCMC context.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:mcmc} formally defines the \recom{} Markov chain and
+its state space.
+Section~\ref{sec:bounds} derives the $\Omega(1/n^2)$ spectral gap bound
+and the resulting mixing time.
+Section~\ref{sec:empirical} presents empirical mixing measurements for
+six states.
+Section~\ref{sec:sweep} contrasts MCMC mixing with \cs{}.
+Section~\ref{sec:when-ensemble} identifies the irreplaceable ensemble use cases.
+Section~\ref{sec:conclusion} concludes.

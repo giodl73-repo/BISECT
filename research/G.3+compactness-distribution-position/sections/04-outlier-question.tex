@@ -1,0 +1,62 @@
+\section{Is High Compactness a Legal Outlier?}
+\label{sec:outlier}
+
+\subsection{The Two-Sided Risk}
+
+Courts have typically treated low compactness as a marker of gerrymandering:
+a district that ``snakes'' through a city to collect partisan voters is suspect.
+This is the logic of \shaw{} and its progeny, which applied strict scrutiny to
+``extremely irregular'' racial gerrymanders \citep{scotus1993shaw}.
+
+But there is a less-discussed risk on the other side: a plan that is
+\emph{unusually compact} may have achieved that compactness by packing
+minority or partisan voters into a small number of districts.  In sorted
+states, a maximally compact plan tends to pack Democratic voters into
+urban districts, producing an efficient Republican majority.  A plan at the
+99th percentile of compactness in a sorted state would warrant scrutiny on
+this basis.
+
+\begin{keybox}
+\textbf{The two-sided compactness test:} A legally defensible plan should
+be more compact than average (to demonstrate non-gerrymandering by the
+traditional test) but not at the extreme right tail of the compactness
+distribution (to avoid the packing accusation in sorted states).
+The $61$st--$72$nd percentile range satisfies both conditions.
+\end{keybox}
+
+\subsection{Quantifying the Outlier Threshold}
+
+Using the distribution parameterisation from Section~\ref{sec:distribution},
+the 95th percentile of mean Polsby-Popper score is approximately
+$0.42$--$0.46$ for the states studied.  The \ar{} plan's values
+($0.362$--$0.412$) are below this threshold in all states.
+
+More precisely:
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+State & $\bar\pp_{\ar}$ & Ensemble 95th pct & Outlier? \\
+\midrule
+NC & 0.412 & 0.443 & No \\
+WI & 0.388 & 0.427 & No \\
+GA & 0.395 & 0.436 & No \\
+PA & 0.371 & 0.412 & No \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+No \ar{} state plan exceeds the 95th percentile compactness threshold.
+The plan is compact but not an outlier.
+
+\subsection{The Partisan-Compact Correlation in Ensemble Plans}
+
+Within the \recom{} ensemble, plans at the 95th percentile of compactness
+tend to produce more Republican seats than plans at the 50th percentile of
+compactness, in sorted states.  This is consistent with the Rodden effect:
+compact plans in sorted states pack Democratic voters.
+
+The \ar{} plan, at the 65th--72nd percentile, experiences a mild version
+of this effect.  It is more compact than average, and in Georgia it produces
+one fewer Democratic seat than the ensemble median.  But it is not at the
+extreme where the packing accusation becomes compelling.

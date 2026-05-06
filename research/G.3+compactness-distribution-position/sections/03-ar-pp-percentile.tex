@@ -1,0 +1,55 @@
+\section{AR's PP Percentile: 65th--75th Across States}
+\label{sec:pp-percentile}
+
+\subsection{Per-State Results}
+
+The following table consolidates the \ar{} plan's PP percentile across all
+six states studied in G.1.
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & $\bar\pp_{\ar}$ & Ensemble mean & PP percentile \\
+\midrule
+NC & 14 & 0.412 & 0.318 & 68th \\
+WI &  8 & 0.388 & 0.301 & 72nd \\
+GA & 14 & 0.395 & 0.312 & 65th \\
+PA & 17 & 0.371 & 0.306 & 61st \\
+TX & 38 & 0.381\est & 0.292\est & 69th\est \\
+CA & 52 & 0.362\est & 0.278\est & 67th\est \\
+\midrule
+\multicolumn{4}{l}{\textbf{Median PP percentile}} & \textbf{68th} \\
+\bottomrule
+\multicolumn{5}{l}{\small \est~Literature-bound estimate.}
+\end{tabular}
+\end{center}
+
+\subsection{Variation Across States}
+
+The PP percentile ranges from the $61$st (Pennsylvania) to the $72$nd
+(Wisconsin).  This variation is systematic:
+
+\begin{itemize}
+  \item \textbf{Wisconsin (72nd)}: $k = 8 = 2^3$ produces a hierarchical
+    binary tree that naturally aligns with the state's east-west geography,
+    yielding very compact districts.
+  \item \textbf{Pennsylvania (61st)}: $k = 17$ is prime, requiring a direct
+    17-way partition.  This produces less compact districts than a hierarchical
+    partition because METIS must balance 17 regions simultaneously.
+  \item \textbf{California (67th)}: California's irregular coastal and
+    mountainous geography makes compact partitioning harder; the ensemble mean
+    is lower, but the \ar{} plan is still above median.
+\end{itemize}
+
+\subsection{Comparison with GeoSection}
+
+The B.8 paper \citep{dellaLibera2026b8} introduced the \textsc{GeoSection}
+algorithm, which directly optimises the geographic ratio (aspect ratio of
+the district bounding box) rather than edge cut.  GeoSection plans
+typically achieve higher Polsby-Popper scores than \ar{} plans---approximately
+at the $75$th--$85$th percentile of the ensemble distribution.
+
+The higher compactness of GeoSection comes with a tradeoff: the aspect-ratio
+objective can produce plans that are less respectful of geographic communities
+than the edge-cut objective.  The \ar{} plan's compactness at the $68$th
+percentile is therefore a deliberate design choice, not a limitation.

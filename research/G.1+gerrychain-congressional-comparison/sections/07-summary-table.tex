@@ -1,0 +1,57 @@
+\section{Summary Table}
+\label{sec:summary}
+
+Table~\ref{tab:summary} consolidates the results across all six states.
+The central pattern: the \ar{} plan achieves compactness percentiles in the
+$61$st--$72$nd range (more compact than average, not extreme) and partisan
+percentiles in the $38$th--$61$st range (mostly near the median, with
+Georgia as the notable exception reflecting geographic sorting).
+
+\begin{table}[h]
+\centering
+\caption{Summary of \ar{} plan percentiles in published \recom{} ensembles.
+  \est~denotes direct ensemble comparison; \lit~denotes literature-bound estimate.}
+\label{tab:summary}
+\begin{tabular}{lrccccc}
+\toprule
+State & $k$ & AR seats & \multicolumn{3}{c}{AR percentile in ensemble} & Source \\
+\cmidrule(lr){4-6}
+      &     &         & PP compactness & Dem.\ seats & MM districts & \\
+\midrule
+NC & 14 & 7D/7R  & 68th \est & 54th \est & 71st \est & Herschlag 2020 \\
+WI &  8 & 4D/4R  & 72nd \est & 61st \est & 58th \est & DeFord 2021 \\
+GA & 14 & 5D/9R  & 65th \est & 38th \est & 62nd \est & DeFord 2021 \\
+PA & 17 & 8D/9R  & 61st \est & 52nd \est & 59th \est & DeFord 2021 \\
+TX & 38 & 15D/23R& 69th $\pm$5 \lit & 52nd $\pm$8 \lit & --- & Lit.\ bounds \\
+CA & 52 & 38D/14R& 67th $\pm$6 \lit & 55th $\pm$9 \lit & --- & Lit.\ bounds \\
+\midrule
+\multicolumn{2}{l}{\textbf{Median}} & --- & \textbf{68th} & \textbf{53rd} & \textbf{62nd} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Key Observations}
+
+\begin{enumerate}
+  \item \textbf{Compactness is consistently above median.} The \ar{} plan
+    is more compact than the average valid plan in every state studied.
+    This is expected: the METIS edge-cut objective directly minimises shared
+    boundary (which is closely related to compactness).
+
+  \item \textbf{Partisan outcomes are near median in 5/6 states.}
+    For NC, WI, PA, TX, and CA, the \ar{} plan produces a partisan outcome
+    within one seat of the ensemble median.  Only Georgia shows a notable
+    deviation, at the 38th percentile of Democratic seats.
+
+  \item \textbf{Georgia deviation is geographic, not algorithmic.}
+    The 38th percentile for Georgia's Democratic seat share reflects the
+    Rodden concentration effect: Democratic voters clustered in Atlanta
+    cannot efficiently win more than 5 compact districts regardless of
+    algorithm choice.  This is confirmed by the fact that most ensemble
+    plans also produce 5 or 6 Democratic seats.
+
+  \item \textbf{Minority representation is near median.}
+    The \ar{} plan preserves minority-majority districts at rates
+    consistent with the ensemble median, reflecting the geographic
+    concentration of minority populations in specific areas.
+\end{enumerate}

@@ -1,0 +1,64 @@
+\section{States Studied}
+\label{sec:states}
+
+Table~\ref{tab:states} summarises the six states, their 2020 seat counts,
+and the ensemble sources used for comparison.
+
+\begin{table}[h]
+\centering
+\caption{States studied in G.1, with delegation size and ensemble source.}
+\label{tab:states}
+\begin{tabular}{llcl}
+\toprule
+State & Abbr. & $k$ (2020) & Ensemble source \\
+\midrule
+North Carolina & NC & 14 & \citet{herschlag2020quantifying} ($N=24{,}518$) \\
+Wisconsin      & WI &  8 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
+Georgia        & GA & 14 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
+Pennsylvania   & PA & 17 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
+Texas          & TX & 38 & Literature bounds \lit \\
+California     & CA & 52 & Literature bounds \lit \\
+\bottomrule
+\multicolumn{4}{l}{\small \est~\recom{} ensemble; exact $N$ varies by state and run.
+  \lit~No published ensemble available; bounds from \citet{chikina2017assessing}.}
+\end{tabular}
+\end{table}
+
+\subsection{North Carolina ($k = 14$)}
+
+North Carolina is the canonical benchmark state for ensemble redistricting
+research.  The state has 14 congressional districts and has been at the center
+of multiple redistricting challenges.  The Herschlag ensemble uses the 2016
+precinct map as the geographic unit and the 2016 presidential vote as the
+partisan baseline.  Because the \ar{} plan uses census tracts rather than
+precincts, we project the \ar{} district assignments onto the precinct map
+for comparison.
+
+\subsection{Wisconsin ($k = 8$)}
+
+Wisconsin is a competitive state with strong urban-rural sorting.  The DeFord
+ensemble uses the 2020 census blocks.  At $k = 8$, the plan space is smaller
+than for larger states, and convergence is generally achieved faster.  The
+partisan baseline is the 2020 presidential vote.
+
+\subsection{Georgia ($k = 14$)}
+
+Georgia has 14 congressional districts and strong geographic partisan sorting:
+Democratic voters are concentrated in the Atlanta metropolitan area and the
+Black Belt, while Republican voters dominate the rest of the state.  This
+geographic structure constrains the partisan distribution of any valid plan.
+
+\subsection{Pennsylvania ($k = 17$)}
+
+Pennsylvania is notable because $k = 17$ is prime, which means the \ar{}
+plan structure differs from composite-$k$ states: there is no factorization
+tree, and the plan is a direct 17-way partition of the state graph.  This
+makes direct comparison with prime-$k$ and composite-$k$ states informative.
+
+\subsection{Texas ($k = 38$) and California ($k = 52$)}
+
+For Texas and California, no published \recom{} ensemble results are available
+at the census-tract level at the scale required.  We use literature bounds
+from \citet{chikina2017assessing} and \citet{autry2021multiscale} to derive
+approximate percentile estimates, marked with \lit{} throughout.  These estimates
+carry wider uncertainty than the direct comparisons for NC, WI, GA, and PA.

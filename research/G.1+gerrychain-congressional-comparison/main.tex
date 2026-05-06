@@ -1,0 +1,118 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\gc}{\textsc{GerryChain}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\EC}{\ensuremath{\mathrm{EC}}}
+
+%% Legal case macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\callais}{\case{Louisiana v.\ Callais}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+\newcommand{\lit}{$^{\ddagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Where Does the Algorithmic Map Fall?}\\
+  \textbf{\ar{} vs.\ \gc{} Ensemble for Six States}\\[0.4em]
+  \large A State-by-State Percentile Analysis\\[0.8em]
+  \normalsize\textit{G.1 --- GerryChain Congressional Comparison}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+The most important missing comparison in algorithmic redistricting research
+is the direct placement of a deterministic algorithmic plan within a
+published Markov-chain ensemble.  This paper provides that comparison for
+six congressional delegation states: North Carolina ($k=14$), Wisconsin
+($k=8$), Georgia ($k=14$), Pennsylvania ($k=17$), Texas ($k=38$), and
+California ($k=52$).  Using published ensemble results from
+\citet{herschlag2020quantifying} and \citet{deford2021recombination}, we
+report the percentile position of the \ar{} plan on three axes: Polsby-Popper
+compactness (PP percentile), partisan seat share, and minority-majority
+district count.  The central finding: the \ar{} plan falls at the
+$61$st--$72$nd percentile of compactness (more compact than average, not an
+extreme outlier) and near the $50$th percentile of partisan outcomes for five
+of six states.  Georgia is the notable exception, where the \ar{} plan falls
+at the $38$th percentile of Democratic seats---a moderate Republican lean
+driven by geography, not by algorithm design.  We argue that a plan at the
+$68$th PP percentile with deterministic, verifiable provenance is legally
+stronger than any ensemble plan, even one closer to the partisan median,
+because verifiability eliminates one class of challenge entirely.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-states-studied}
+\input{sections/03-methodology}
+\input{sections/04-nc}
+\input{sections/05-wi-ga-pa}
+\input{sections/06-tx-ca}
+\input{sections/07-summary-table}
+\input{sections/08-legal-argument}
+\input{sections/09-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

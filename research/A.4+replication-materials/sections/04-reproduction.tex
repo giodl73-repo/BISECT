@@ -1,0 +1,90 @@
+%% 04-reproduction.tex — Step-by-step reproduction
+
+\section{Reproducing the Results}
+\label{sec:reproduction}
+
+The following six steps reproduce every result in the portfolio from scratch,
+starting from an empty machine with internet access.
+Expected total time on modern hardware: approximately two to four hours
+for all three census years, or under thirty minutes for 2020 only.
+
+\subsection*{Step 1 --- Clone the Repository}
+
+\begin{verbatim}
+git clone https://github.com/giodl73-repo/REDIST
+cd REDIST
+git checkout v0.2.0      # Pin to the release used in the portfolio
+\end{verbatim}
+
+\subsection*{Step 2 --- Run \texttt{bootstrap.sh}}
+
+\begin{verbatim}
+./bootstrap.sh            # Linux / macOS
+bootstrap.bat             # Windows
+\end{verbatim}
+
+\noindent This installs Rust, builds the \texttt{redist} binary, installs
+Python dependencies, and runs \texttt{redist doctor} to confirm the
+environment is ready.  Expected time: 5--10 minutes.
+
+\subsection*{Step 3 --- Fetch Census Data}
+
+\begin{verbatim}
+redist fetch --year 2020      # ~40 GB, allow 30-90 min depending on connection
+redist fetch --year 2010
+redist fetch --year 2000
+\end{verbatim}
+
+\noindent All files are SHA-256 validated on download.
+Interrupted fetches resume automatically.
+
+\subsection*{Step 4 --- Build Official Plans}
+
+\begin{verbatim}
+redist run --year 2020 --version official_2020    # All 50 states, ~18 min
+redist run --year 2010 --version official_2010
+redist run --year 2000 --version official_2000
+\end{verbatim}
+
+\noindent Output districts are written to
+\texttt{outputs/official\_\{year\}/\{year\}/\{state\}/}.
+Each district file contains tract-level assignments, population totals,
+and the bisection round at which each district was finalized.
+
+\subsection*{Step 5 --- Verify Labels}
+
+\begin{verbatim}
+redist label-verify official_2020    # Checks SHA chain for 2020 run
+redist label-verify official_2010
+redist label-verify official_2000
+\end{verbatim}
+
+\noindent This command recomputes the SHA-256 of every config, input file,
+and output file, and confirms the chain matches the published values.
+If any file was modified---even by a single byte---the command reports
+which step of the chain failed.
+
+\subsection*{Step 6 --- Compare SHA Chains}
+
+The published SHA chain values for the official 2020 run are:
+
+\begin{table}[h]
+\centering
+\caption{Expected SHA-256 chain values for the official 2020 run (placeholders).}
+\label{tab:sha}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Chain step & SHA-256 (to be confirmed after first clean run) \\
+\midrule
+Config hash   & \texttt{0000000000000000000000000000000000000000000000000000000000000001} \\
+Build hash    & \texttt{0000000000000000000000000000000000000000000000000000000000000002} \\
+Analysis hash & \texttt{0000000000000000000000000000000000000000000000000000000000000003} \\
+Report hash   & \texttt{0000000000000000000000000000000000000000000000000000000000000004} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent These placeholder hashes will be replaced with confirmed values
+from the first clean run of the full pipeline.
+The \texttt{examples/vermont-2020-walkthrough/pin.sh} script pins the hashes
+for the Vermont fixture after its first run.

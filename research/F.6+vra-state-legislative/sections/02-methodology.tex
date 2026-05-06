@@ -1,0 +1,51 @@
+\section{Methodology: VRASection Applied to State House Chambers}
+\label{sec:methodology}
+
+\subsection{VRASection Algorithm}
+
+VRASection is the minority opportunity district module of the algorithmic redistricting pipeline. It operates as a post-processing step on the METIS recursive bisection algorithm: after an initial partition is computed, VRASection identifies census tracts with minority populations above a threshold and adjusts the partition to preserve those tracts within the same district, thereby creating majority-minority or minority opportunity districts where the demographic conditions support them.
+
+The algorithm proceeds in three phases:
+
+\textbf{Phase 1: Identification.} For each potential majority-minority district, VRASection identifies the set of candidate tracts whose minority population share exceeds the configuration threshold (typically 42\% for the purpose of this analysis). These tracts form a ``seed set'' that the algorithm attempts to keep in the same district.
+
+\textbf{Phase 2: Aggregation.} The algorithm expands the seed set to include adjacent tracts that raise the district's minority population share toward a majority, subject to population balance constraints. This expansion is constrained by the geographic compactness requirement: the algorithm will not add non-adjacent tracts (``island'' aggregation) even if doing so would produce a higher minority share.
+
+\textbf{Phase 3: Verification.} For each candidate majority-minority district, the algorithm verifies the three \textit{Gingles} preconditions: the minority population exceeds 50\% (for majority-minority) or 42\% (for minority opportunity), the district is geographically compact by the Polsby-Popper standard, and the minority community is presumed politically cohesive (the third precondition, involving election history, must be established through empirical analysis of actual voting data, which is outside the algorithm's scope).
+
+\subsection{State House Application}
+
+Applying VRASection to state house chambers requires two adjustments from the congressional application. First, the target population per district is much smaller: a state house district in Georgia targets approximately 57,000 persons (6.2 million persons in 180 districts), versus 764,000 persons for a congressional district. The smaller target population means that the minority population threshold applies to a smaller geographic area.
+
+Second, the number of districts is larger: VRASection must identify minority opportunity district candidates across 99--203 state house districts rather than 4--38 congressional districts. The larger number of districts increases the computational burden of the verification phase, but does not change the fundamental algorithm.
+
+\subsection{Covered States and Analysis Set}
+
+We apply VRASection to state house chambers in the five states that have faced active Section 2 litigation regarding their congressional maps and that have substantial Black or Hispanic minority populations:
+
+\begin{enumerate}
+\item \textbf{Alabama}: 105 house districts; Black population 26.8\% of state (2020)
+\item \textbf{Georgia}: 180 house districts; Black population 32.6\%, Hispanic 10.0\%
+\item \textbf{Louisiana}: 105 house districts; Black population 32.8\%
+\item \textbf{Mississippi}: 122 house districts; Black population 37.8\%
+\item \textbf{South Carolina}: 124 house districts; Black population 26.5\%
+\end{enumerate}
+
+We also apply the analysis to an additional set of eight states with substantial minority populations that may trigger Section 2 obligations at state legislative scale:
+
+\begin{enumerate}
+\item \textbf{Texas}: 150 house districts; Hispanic 39.3\%, Black 11.8\% (2020)
+\item \textbf{California}: 80 house districts; Hispanic 39.4\%, Asian 15.5\%, Black 5.8\%
+\item \textbf{New York}: 150 house districts; Hispanic 19.2\%, Black 15.9\%
+\item \textbf{Florida}: 120 house districts; Hispanic 26.5\%, Black 15.9\%
+\item \textbf{Arizona}: 60 house districts; Hispanic 31.5\%, Native American 5.3\%
+\item \textbf{New Mexico}: 70 house districts; Hispanic 48.5\%, Native American 11.0\%
+\item \textbf{Illinois}: 118 house districts; Hispanic 17.5\%, Black 14.1\%
+\item \textbf{North Carolina}: 120 house districts; Black 21.6\%, Hispanic 10.6\%
+\end{enumerate}
+
+\subsection{Empirical Design}
+
+For each state in the analysis set, we run VRASection at three minority population thresholds: 42\%, 45\%, and 50\% (true majority-minority). At each threshold, we record the number of districts meeting the threshold, the mean Polsby-Popper ratio of those districts (to verify geographic compactness), and whether the district configuration is achievable within the $\pm 0.5\%$ population balance constraint.
+
+We compare these results to the same analysis run at congressional scale for each state (applicable only to states with at least 4 congressional districts, which excludes some small states). The comparison allows us to directly evaluate whether the 42\% threshold and the VRASection methodology transfer from congressional to state house scale.

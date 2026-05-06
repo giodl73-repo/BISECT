@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{footmisc}
+\usepackage{mdframed}
+
+%% Section formatting
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Shorthand macros
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\EC}{\ensuremath{\mathrm{EC}}}
+
+%% Legal macros
+\newcommand{\case}[1]{\textit{#1}}
+\newcommand{\rucho}{\case{Rucho v.\ Common Cause}}
+\newcommand{\shaw}{\case{Shaw v.\ Reno}}
+
+%% Note markers
+\newcommand{\est}{$^{\dagger}$}
+
+%% Highlighted box
+\newenvironment{keybox}{%
+  \begin{mdframed}[linewidth=0.8pt, innerleftmargin=12pt, innerrightmargin=12pt,
+                   innertopmargin=8pt, innerbottommargin=8pt,
+                   backgroundcolor=gray!8]
+  \small\setstretch{1.3}%
+}{%
+  \end{mdframed}%
+}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Compact Without Being an Outlier:}\\
+  \textbf{Algorithmic Plans in the Ensemble Compactness Distribution}\\[0.4em]
+  \large Polsby-Popper Position, Partisan Correlation,\\
+  and Legal Defensibility\\[0.8em]
+  \normalsize\textit{G.3 --- Compactness Distribution Position}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Courts have long treated compactness as a proxy for non-gerrymandering:
+a compact plan is presumed to reflect geographic rather than political logic.
+But compactness is not neutral---in geographically sorted states, more compact
+plans tend to produce more Republican seats.  This paper situates the \ar{}
+plan in the compactness distribution of the \recom{} ensemble, finding that
+the plan occupies the $61$st--$72$nd percentile range across six states:
+more compact than average but not at the extreme.  We document the right-skewed
+shape of the \recom{} compactness distribution, explain why the \ar{} plan
+is not at the maximum (the METIS objective minimises edge cuts, not
+Polsby-Popper directly), examine the compactness-partisan correlation within
+the ensemble (higher compactness tends to favor Republicans in sorted states---
+the Rodden effect), and argue that the \ar{} plan's compactness is legally
+defensible precisely because it is not at the extreme of any distribution.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-compactness-distribution}
+\input{sections/03-ar-pp-percentile}
+\input{sections/04-outlier-question}
+\input{sections/05-compactness-partisan-correlation}
+\input{sections/06-legal-defensibility}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

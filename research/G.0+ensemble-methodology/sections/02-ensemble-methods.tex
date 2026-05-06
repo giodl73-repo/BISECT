@@ -1,0 +1,109 @@
+\section{Ensemble Methods Overview}
+\label{sec:ensemble-methods}
+
+We review the three principal methods used to generate redistricting
+ensembles, focusing on their outputs, limitations, and what each method
+is suited to establish.
+
+\subsection{GerryChain and the Flip Chain}
+
+\gc{} \citep{gerrychain2021} implements a Markov chain on the space of
+valid $k$-district plans for a given state graph.  The basic transition
+is a \emph{flip}: a randomly chosen boundary node is reassigned to an
+adjacent district, provided the resulting plan remains connected and within
+population tolerance.  The chain is run for millions of steps; at each step
+(or at a thinned subset of steps) the current plan is recorded.
+
+\paragraph{Outputs.} The flip chain produces a sample from the
+\emph{stationary distribution} of valid plans.  If run long enough and
+sampled frequently enough, the histogram of any statistic (partisan seats,
+Polsby-Popper score, minority district count) approximates the true
+geometric distribution of that statistic over all valid plans.
+
+\paragraph{Limitations.}
+\begin{itemize}
+  \item \textbf{Mixing time.} The flip chain mixes slowly on large state
+    graphs (e.g., Texas at $k=38$).  Published ensemble sizes of 10,000
+    to 1,000,000 plans may not achieve stationarity.
+  \item \textbf{Locality bias.} Flips are local moves.  The chain may
+    not explore topologically distinct map families within feasible runtime.
+  \item \textbf{No canonical plan.} Any sampled plan is one draw from the
+    distribution.  No plan in the ensemble has a privileged status.
+\end{itemize}
+
+\subsection{ReCom (Recombination)}
+
+\recom{} \citep{deford2021recombination} replaces the flip transition with
+a \emph{recombination} move: two adjacent districts are merged, then the
+merged region is re-partitioned by a random spanning tree cut.  This
+produces much larger structural changes per step.
+
+\paragraph{Outputs.} \recom{} generates plans with different properties
+than the flip chain.  In particular, \recom{} tends to produce more
+``wiggly'' district boundaries, while the flip chain tends toward more
+blocky shapes.  Both are valid samples from their respective stationary
+distributions, but these distributions are not identical.
+
+\paragraph{Limitations.}
+\begin{itemize}
+  \item \textbf{Non-reversibility.} Standard \recom{} is not reversible
+    with respect to a known target distribution.  The stationary
+    distribution is implicit.
+  \item \textbf{Compactness underweighting.} The random spanning tree cut
+    does not weight for compactness, so \recom{} ensembles often contain
+    plans less compact than what a human mapmaker would draw.
+  \item \textbf{Different distribution from flip chain.} Results from
+    \recom{} and flip-chain ensembles cannot be directly compared without
+    calibration.
+\end{itemize}
+
+The \citet{autry2021multiscale} Metropolized Multiscale Forest \recom{}
+partially addresses the non-reversibility issue by applying a
+Metropolis-Hastings correction, but at substantial computational cost.
+
+\subsection{Short-Burst Methods}
+
+Short bursts \citep{cannon2022voting} are a variant of \recom{} designed
+specifically to optimise a target objective.  The chain is run for a
+short fixed number of steps (a ``burst''), the best plan in the burst is
+kept, and the process repeats.  Short bursts can hill-climb toward extreme
+plans (e.g., maximum minority-district count) while remaining within the
+convex hull of valid plans.
+
+\paragraph{Outputs.} Short-burst ensembles are not samples from the
+geographic distribution.  They are samples from the optimum-seeking
+distribution around a specific objective.  They are useful for establishing
+what is \emph{achievable} under the geographic constraints, not what is
+\emph{typical}.
+
+\paragraph{Limitations.}
+\begin{itemize}
+  \item Not a characterisation of the full plan space.
+  \item Results depend strongly on the objective function and burst length.
+  \item Cannot be used to place a plan in the ``neutral'' distribution.
+\end{itemize}
+
+\subsection{What Each Method Establishes}
+
+Table~\ref{tab:method-comparison} summarises the three methods.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of ensemble methods and their evidentiary uses.}
+\label{tab:method-comparison}
+\begin{tabular}{lccc}
+\toprule
+Method & Stationary dist.\ known & Compactness weight & Best evidentiary use \\
+\midrule
+Flip chain       & Implicit (uniform) & None & Outlier detection \\
+\recom{}         & Implicit           & None & Partisan distribution \\
+Short-burst      & None (optimiser)   & None & Feasibility bounds \\
+\ar{} (this work)& N/A (deterministic)& METIS edge cut & Canonical plan \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The \ar{} plan does not belong to any of these categories: it is not a
+sample, but the output of a deterministic optimisation.  The G-track papers
+use the \recom{} ensemble as the reference distribution and locate the
+\ar{} plan within it.

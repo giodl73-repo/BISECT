@@ -1,0 +1,87 @@
+\section{The ConvergenceSweep Alternative}
+\label{sec:sweep}
+
+\subsection{Algorithm and Stopping Criterion}
+
+The \cs{} algorithm~\citep{b16paper} is a deterministic forward sweep
+over seeds: starting at $s_0 = \mathrm{SHA\text{-}256}(\texttt{census\_release\_id}
+\,\|\, \texttt{"DIA\_SEED\_V1"}) \bmod 2^{31}$,
+it evaluates each seed in order and halts when $T = 600$ consecutive
+seeds produce no improvement in normalised edge cut
+$\mathrm{EC}_{\rm norm} = \mathrm{EC} / \sqrt{\min(i, k-i)}$.
+
+The runtime is:
+\[
+  O(T \cdot k \cdot m_{\rm METIS}(n, k)),
+\]
+where $m_{\rm METIS}(n,k) = O(n \log n)$ is the METIS runtime for one
+partitioning call.
+For $T = 600$, $k \leq 52$, $n \leq 8{,}000$, this is under $10^8$
+operations---well within 60 seconds on a 2024-generation machine.
+
+\subsection{ConvergenceSweep vs.\ MCMC: Conceptual Comparison}
+
+\begin{table}[h]
+\centering
+\caption{Conceptual comparison of \cs{} and certified \recom{} ensemble.}
+\label{tab:comparison}
+\begin{tabular}{lcc}
+\toprule
+Property & \cs{} & Certified \recom{} \\
+\midrule
+Output & One optimal plan & Distribution over plans \\
+Determinism & Yes & Only with fixed seed \\
+Certified stopping & Yes ($T=600$) & Yes (G.4 diagnostics) \\
+Runtime (TX) & $<$60 sec & $\approx$100 min \\
+Runtime (CA) & $<$60 sec & $\approx$300 min \\
+Theory basis & Gumbel tail model & Spectral gap \\
+Task & Plan generation & Plan evaluation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Complexity Comparison}
+
+Let us compare the asymptotic complexity of the two approaches for
+producing a certifiably good redistricting plan:
+
+\paragraph{\cs{}.}
+$O(T \cdot k \cdot n \log n)$ with $T = 600$ (constant).
+For the hardest state (CA, $k = 52$, $n = 8{,}057$):
+$600 \times 52 \times 8{,}057 \times \log(8{,}057) \approx 1.8 \times 10^9$ operations.
+Wall time: $<$60 seconds.
+
+\paragraph{Certified \recom{} for plan generation.}
+If one wanted to use \recom{} to generate the ``most typical'' plan
+(the mode of the distribution), one would need to:
+(1) run the chain for $\hat{t}_{\rm mix}$ steps to reach stationarity,
+(2) draw $\ess$ independent samples,
+(3) select the sample with the minimum edge cut.
+For CA: $50{,}000 \times (8{,}057 \times \log(8{,}057)) \approx 6 \times 10^9$ operations
+just for mixing, plus sampling overhead.
+Wall time: $\approx$300 minutes.
+
+\paragraph{Conclusion.}
+For plan generation, \cs{} is $O(T/(n_{\rm min} \cdot k))$ faster than
+certified \recom{}---approximately $300\times$ faster for California.
+The stopping certificate ($T = 600$ consecutive non-improving seeds) is
+more transparent than an MCMC convergence argument.
+
+\subsection{Epistemic Comparison}
+
+The Gumbel tail model underlying $T = 600$ makes an explicit probabilistic
+claim: $P(\text{tail} > 600) < 0.001$ for all states (B.16 Section 3).
+This claim is falsifiable: given the 50-state sweep data from B.7, the
+Gumbel fit can be checked against the empirical distribution of tails.
+
+The MCMC mixing claim makes a weaker statement: $\rhat < 1.1$ at step
+$\hat{t}_{\rm mix}$.
+This is a necessary condition for approximate convergence but not a
+sufficient condition for total-variation convergence.
+The spectral gap bound $\Omega(1/n^2)$ gives the theoretical worst case,
+which is far from the empirical mixing time.
+
+Neither approach is ``more rigorous'' in an absolute sense; they formalize
+different aspects of the stopping-criterion problem.
+\cs{} is appropriate for deterministic plan generation; ensemble sampling
+with G.4 diagnostics is appropriate for distributional inference.

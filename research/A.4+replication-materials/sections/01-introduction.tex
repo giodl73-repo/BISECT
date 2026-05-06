@@ -1,0 +1,57 @@
+%% 01-introduction.tex — Why reproducibility matters
+
+\section{Introduction}
+
+Congressional redistricting is one of the few governmental acts that directly
+determines who represents whom in Congress for the next decade.
+When a research program proposes an algorithmic alternative to human map-drawing,
+the burden of proof is correspondingly high: every claim must be independently
+verifiable, every result must be exactly reproducible, and every design decision
+must be documented so that critics can challenge it and courts can audit it.
+
+This reproducibility package fulfills that obligation.
+It provides complete instructions, open-source code, public data sources,
+and cryptographic audit trails so that any researcher---or any judge's
+technical expert---can reproduce every result in the portfolio from scratch.
+
+\subsection*{Why Redistricting Reproducibility Is Different}
+
+Standard academic reproducibility asks: given the same code and data,
+do you get the same numbers?
+Redistricting reproducibility asks something stronger: given independent
+implementations of the same algorithm applied to Census Bureau data,
+do you get byte-identical district assignments on the same hardware architecture?
+
+The answer, for this portfolio, is yes---and this package explains how
+to verify it.
+The \texttt{redist label-verify} command (Section~\ref{sec:verification})
+checks the SHA-256 fingerprint of every input file, every parameter setting,
+and every output district assignment, linking them into a tamper-evident chain.
+
+\subsection*{The SHA-256 Audit Chain}
+
+Every result in this portfolio is traceable through a four-step cryptographic chain:
+
+\begin{enumerate}[leftmargin=*, itemsep=4pt]
+  \item \textbf{Config hash}: the exact parameter values used
+        (population tolerance, METIS seed, edge-weight scaling factor).
+  \item \textbf{Build hash}: the SHA-256 of every input Census file,
+        confirming no data was altered.
+  \item \textbf{Analysis hash}: the SHA-256 of the district assignment output,
+        confirming the algorithm ran identically.
+  \item \textbf{Report hash}: the SHA-256 of summary statistics and maps,
+        confirming downstream analysis was not modified.
+\end{enumerate}
+
+\noindent The chain is described in detail in Section~\ref{sec:verification}
+and implemented in the \texttt{redist-cli} Rust crate~\cite{dellaLibera2026recursive}.
+
+\subsection*{AEA Compliance}
+
+This package follows the American Economic Association's Data and Code
+Availability Policy~\cite{aeaDataPolicy}, which requires:
+(1) all data publicly available or provided,
+(2) all code posted in a replication archive,
+(3) a README describing the steps to reproduce each result,
+and (4) expected runtimes on the reference hardware.
+Each of these requirements is addressed in the sections below.

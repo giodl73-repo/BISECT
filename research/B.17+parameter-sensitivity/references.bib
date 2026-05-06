@@ -1,0 +1,157 @@
+%% B.17 — Parameter Sensitivity: 50-State Sweep
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b0paper,
+  author = {Della-Libera, Gio},
+  title  = {A Complete Algorithmic Toolbox for Congressional Redistricting:
+            Legal Requirements, Algorithm Components, and {Callais}-Compliant
+            Design for the Post-2026 Redistricting Cycle},
+  year   = {2026},
+  note   = {B.0 in Algorithmic Redistricting series. Synthesis paper.
+            Bakeoff result: algorithm structure (not parameters) is the
+            key lever for partisan outcomes. B.17 provides direct
+            empirical confirmation.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep providing the baseline parameter
+            settings against which the B.17 sweep is conducted.},
+}
+
+@misc{b10paper,
+  author = {Della-Libera, Gio},
+  title  = {{SubdivisionSection}: Subdivision-Respecting Redistricting
+            with Hierarchical County Constraints},
+  year   = {2026},
+  note   = {B.10 in Algorithmic Redistricting series.
+            Introduces $\alpha_{\rm county}$ as the county edge-weight
+            parameter studied in B.17.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces $T$ (sweep threshold) as a parameter.
+            B.17 confirms that $T \in [100, 1{,}000]$ does not affect
+            partisan outcomes.},
+}
+
+%% ===================================================================
+%% METIS PARAMETERS AND GRAPH PARTITIONING
+%% ===================================================================
+
+@techreport{karypis2013manual,
+  author      = {Karypis, George},
+  title       = {{METIS}: A Software Package for Partitioning Unstructured
+                Graphs, Partitioning Meshes, and Computing Fill-Reducing
+                Orderings of Sparse Matrices, Version 5.1},
+  institution = {University of Minnesota},
+  year        = {2013},
+  url         = {http://glaros.dtc.umn.edu/gkhome/metis/metis/download},
+  note        = {METIS user manual. Documents the \texttt{ufactor}
+                 (imbalance factor) and \texttt{ncuts} parameters.
+                 The \texttt{ufactor} range $[0.1\%, 5\%]$ is the
+                 primary compactness-sensitivity driver in B.17.},
+}
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Documents sensitivity of multilevel
+             KL to initial partitioning parameters.},
+}
+
+%% ===================================================================
+%% PARAMETER SENSITIVITY ANALYSIS
+%% ===================================================================
+
+@article{saltelli2004,
+  author  = {Saltelli, Andrea and Tarantola, Stefano and Campolongo,
+             Francesca and Ratto, Marco},
+  title   = {Sensitivity Analysis in Practice: A Guide to Assessing
+             Scientific Models},
+  publisher = {John Wiley},
+  year    = {2004},
+  note    = {Standard reference for parameter sensitivity analysis.
+             The one-at-a-time sweep methodology used in B.17 follows
+             the elementary effects (Morris) approach from Chapter 3.},
+}
+
+@article{morris1991,
+  author  = {Morris, Max D.},
+  title   = {Factorial Sampling Plans for Preliminary Computational
+             Experiments},
+  journal = {Technometrics},
+  volume  = {33},
+  number  = {2},
+  pages   = {161--174},
+  year    = {1991},
+  doi     = {10.1080/00401706.1991.10484804},
+  note    = {Morris elementary effects method for parameter sensitivity.
+             Motivates the one-parameter-at-a-time sweep design.},
+}
+
+%% ===================================================================
+%% REDISTRICTING BACKGROUND
+%% ===================================================================
+
+@article{altman1998,
+  author  = {Altman, Micah},
+  title   = {Modeling the Effect of Mandatory District Compactness on
+             Partisan Gerrymanders},
+  journal = {Political Geography},
+  volume  = {17},
+  number  = {8},
+  pages   = {989--1012},
+  year    = {1998},
+  doi     = {10.1016/S0962-6298(98)00018-3},
+  note    = {Early evidence that compactness constraints reduce (but do not
+             eliminate) partisan manipulation. B.17 confirms that parameter
+             tuning within a compact algorithm is ineffective for
+             partisan manipulation.},
+}
+
+@article{polsby1991,
+  author  = {Polsby, Daniel D. and Popper, Robert D.},
+  title   = {The Third Criterion: Compactness as a Procedural Safeguard
+             Against Partisan Gerrymandering},
+  journal = {Yale Law \& Policy Review},
+  volume  = {9},
+  number  = {2},
+  pages   = {301--353},
+  year    = {1991},
+  note    = {The Polsby-Popper compactness metric used as the primary
+             compactness outcome variable in the B.17 sweep.},
+}
+
+%% ===================================================================
+%% LEGAL
+%% ===================================================================
+
+@misc{callais2026,
+  title  = {Louisiana v.\ {Callais}},
+  year   = {2026},
+  note   = {608 U.S. \_\_\_ (2026). Disentanglement requirement motivates
+            VRA weight parameter $w_{\rm vra}$ sensitivity analysis:
+            B.17 shows that VRA boost weight does not affect partisan
+            outcomes when varied within its design range.},
+}

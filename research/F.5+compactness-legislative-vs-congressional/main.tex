@@ -1,0 +1,60 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\newtheorem{proposition}{Proposition}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{footmisc}
+\usepackage{threeparttable}
+\usepackage{longtable}
+
+\doublespacing
+
+% Title and Authors
+\title{Compactness at State Scale:\\
+Algorithmic State Legislative Districts\\
+Outperform Congressional}
+
+\author{
+Giovanni Della-Libera\\
+\small{Working Paper}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Compactness is a cardinal redistricting criterion, but prior algorithmic redistricting research has focused almost exclusively on congressional districts, which number 435 across 50 states. We extend the analysis to state legislative districts---4,967 house seats and 1,972 senate seats across 50 states---and document a systematic compactness advantage at smaller geographic scale. The mathematical intuition is direct: for a fixed-area state, mean district perimeter scales as $O(1/\sqrt{k})$ when $k$ districts are drawn, so mean Polsby-Popper ratio improves as $k$ increases, all else equal. Empirically, algorithmic state house maps (tract resolution) achieve a mean Polsby-Popper ratio of 0.388 versus 0.361 for congressional maps---a 7.5\% improvement. At block group resolution, the state house advantage widens to 11\%: mean PP of 0.401 versus 0.361. The resolution effect itself contributes approximately 0.020 PP units, consistent with the finer boundary tracing that block groups enable. We also compare algorithmic state house maps to enacted state legislative maps across the 35 states where enacted maps are publicly available in GIS format, finding that algorithmic maps outperform enacted maps by a mean of 0.062 PP units (17\% improvement), with the largest gains in states where the enacted map is identified by courts or analysts as gerrymandered. These results establish that algorithmic redistricting's compactness advantage is most pronounced at the state legislative scale.
+\end{abstract}
+
+\noindent\textbf{Keywords:} compactness, Polsby-Popper, state legislative redistricting, congressional redistricting, METIS, block group resolution, gerrymandering
+
+\input{sections/01-introduction}
+\input{sections/02-mathematical-intuition}
+\input{sections/03-empirical-comparison}
+\input{sections/04-resolution-effect}
+\input{sections/05-improvement-over-enacted}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

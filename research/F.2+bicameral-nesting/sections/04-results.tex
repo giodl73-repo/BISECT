@@ -1,0 +1,58 @@
+\section{NestSection Results}
+\label{sec:results}
+
+\subsection{Spine Construction Success Rate}
+\label{sec:results:success}
+
+NestSection successfully produces nested bicameral maps for all 42 compatible
+states. Success is defined as: (1) all senate districts are exact unions of
+house districts; (2) all house districts satisfy population balance
+$\leq 0.5\%$; (3) all senate districts satisfy population balance $\leq 0.5\%$;
+and (4) all districts are contiguous.
+
+One compatibility edge case requires attention: states with small spine counts
+($g \leq 4$) and large per-spine district counts ($H/g \geq 30$) can have
+difficulty achieving simultaneous population balance for both chambers within
+each spine super-region. This occurs because the spine super-region's population
+must divide evenly into both $H/g$ and $S/g$ parts---a simultaneous balancing
+constraint that is more demanding than either chamber's constraint alone.
+In practice, all 42 compatible states succeed because METIS's balance tolerance
+is applied at the sub-region level, not the full-state level.
+
+\subsection{Example Maps}
+\label{sec:results:examples}
+
+Table~\ref{tab:nesting-examples} shows NestSection results for selected states.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrrrrr}
+\toprule
+State & Ratio & $g$ & PP (house) & PP (senate) & Max dev (H) & Max dev (S) \\
+\midrule
+Washington & 2:1 & 49 & 0.412 & 0.389 & 0.31\% & 0.38\% \\
+Minnesota  & 2:1 & 67 & 0.398 & 0.371 & 0.29\% & 0.35\% \\
+Florida    & 3:1 & 40 & 0.381 & 0.361 & 0.42\% & 0.47\% \\
+Ohio       & 3:1 & 33 & 0.374 & 0.349 & 0.44\% & 0.48\% \\
+Vermont    & 5:1 & 30 & 0.402 & 0.377 & 0.39\% & 0.45\% \\
+Massachusetts & 4:1 & 40 & 0.389 & 0.361 & 0.40\% & 0.46\% \\
+New Hampshire & 50:3 & 8 & 0.388 & 0.341 & 0.48\% & 0.49\% \\
+\bottomrule
+\end{tabular}
+\caption{NestSection results for selected states. PP = mean Polsby-Popper.
+  Max dev = maximum population deviation. All states achieve $\leq 0.5\%$
+  maximum deviation in both chambers. Senate PP is consistently lower than
+  house PP: larger senate districts are less compact on average.}
+\label{tab:nesting-examples}
+\end{table}
+
+\paragraph{Observation: senate PP $<$ house PP.}
+In all 42 compatible states, senate districts have lower mean PP than house
+districts drawn from the same spine. This is a structural consequence of
+nesting: senate districts are composed of multiple house districts, and the
+union of two or more compact convex regions is generally less compact than
+either region alone. Specifically, the boundary between two house districts
+that are joined to form a senate district becomes an interior boundary
+of the senate district, increasing the perimeter relative to the area.
+The PP penalty for nesting is approximately $0.02$--$0.04$ PP points
+(senate PP = house PP $- 0.028$ on average across the 42 states).

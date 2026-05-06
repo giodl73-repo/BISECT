@@ -1,0 +1,110 @@
+%% 06-test-suite.tex — Test suite and Vermont walkthrough
+
+\section{Test Suite and Vermont Walkthrough}
+\label{sec:testsuite}
+
+\subsection*{Quick Health Check: \texttt{redist doctor}}
+
+Before running any full-scale replication, confirm the environment is
+correctly configured:
+
+\begin{verbatim}
+redist doctor                        # General environment check
+redist doctor --check-tutorial-data  # Verify Vermont fixture data
+\end{verbatim}
+
+\noindent The \texttt{doctor} command checks:
+\begin{itemize}[itemsep=2pt]
+  \item Rust version ($\geq$ 1.77)
+  \item METIS availability (vendored, always passes)
+  \item Python 3.13+ (for dashboard generation)
+  \item Census data cache status
+  \item Vermont walkthrough fixture integrity
+\end{itemize}
+
+\subsection*{Vermont 2020 Canonical Walkthrough}
+
+Vermont is the smallest state with a single congressional district,
+making it the fastest test case.
+However, the walkthrough fixture is artificially expanded to
+\textit{simulate} a multi-district state for testing purposes,
+using Vermont's tract data with a synthetic two-seat configuration.
+
+\begin{verbatim}
+# Run the walkthrough (< 2 minutes on any modern laptop)
+redist state --state VT --year 2020 --version walkthrough
+
+# Verify the output matches the fixture
+redist label-verify walkthrough
+
+# Browse the output
+ls outputs/walkthrough/2020/vermont/
+\end{verbatim}
+
+\noindent Expected outputs for the Vermont walkthrough:
+
+\begin{table}[h]
+\centering
+\caption{Expected Vermont walkthrough outputs (placeholder hashes).}
+\label{tab:vt}
+\begin{tabular}{@{}lll@{}}
+\toprule
+File & Description & SHA-256 (placeholder) \\
+\midrule
+\texttt{districts.csv}   & Tract-to-district assignments & \texttt{abcdef01...} \\
+\texttt{summary.csv}     & Compactness, population stats & \texttt{23456789...} \\
+\texttt{map\_round1.svg} & Bisection round 1 map         & \texttt{fedcba98...} \\
+\texttt{map\_final.svg}  & Final district map            & \texttt{76543210...} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent These hashes are pinned by \texttt{examples/vermont-2020-walkthrough/pin.sh}
+after the first clean run~\cite{vermont2020walkthrough}.
+
+\subsection*{Full Test Suite}
+
+The repository includes over 1,100 automated tests:
+
+\begin{verbatim}
+cargo test --workspace          # All Rust unit and integration tests
+pytest tests/unit/ -v           # Python unit tests
+pytest tests/integration/ -v    # Integration tests (require pipeline outputs)
+\end{verbatim}
+
+\noindent Expected test counts and runtimes:
+
+\begin{table}[h]
+\centering
+\caption{Test suite summary.}
+\label{tab:tests}
+\begin{tabular}{@{}llrr@{}}
+\toprule
+Suite & Language & Tests & Typical runtime \\
+\midrule
+Rust unit tests       & Rust   & $\sim$900 & $<$30 s \\
+Python unit tests     & Python & $\sim$200 & $<$60 s \\
+Integration tests     & Python & $\sim$50  & 2--5 min (requires data) \\
+\midrule
+\textbf{Total}        &        & $\sim$1150 & $<$8 min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection*{Expected Runtimes for Full Replication}
+
+\begin{table}[h]
+\centering
+\caption{Expected runtimes on reference hardware (AMD Ryzen 9, 32 GB RAM).}
+\label{tab:runtimes}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Task & States & Time \\
+\midrule
+Vermont only (test)        & 1  & 30 s -- 2 min \\
+Single large state (CA)    & 1  & 3--6 min \\
+All 50 states, 2020        & 50 & $\sim$18 min \\
+All 50 states, 3 years     & 150 & 2--4 h \\
+\bottomrule
+\end{tabular}
+\end{table}

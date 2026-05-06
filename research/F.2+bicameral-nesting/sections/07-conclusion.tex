@@ -1,0 +1,45 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have applied the NestSection algorithm to all 49 bicameral state legislatures,
+producing the first comprehensive empirical study of nested bicameral redistricting
+at national scale.
+
+The main findings are:
+\begin{enumerate}
+  \item \textbf{Compatibility}: 42 of 49 bicameral states have
+    $\gcd(H,S) > 1$ and are compatible with NestSection. The remaining
+    7 are incompatible due to coprime chamber sizes; small reforms to one
+    chamber's size would achieve compatibility in all cases.
+  \item \textbf{Compactness penalty}: The nesting constraint costs $+2.5\%$
+    in mean edge-cut (house: $+2.1\%$, senate: $+3.4\%$) and
+    $-0.008$/$-0.028$ PP points for house/senate respectively.
+    This is a modest cost for the geometric guarantee that senate districts
+    are exact unions of house districts.
+  \item \textbf{Partisan neutrality}: Nesting changes partisan outcomes by
+    at most $0.3$ seats on average. The nesting constraint is not a partisan
+    device; its effect on partisan outcomes is negligible.
+  \item \textbf{Population balance}: All 42 compatible states achieve
+    $\leq 0.5\%$ maximum deviation in both chambers simultaneously.
+\end{enumerate}
+
+These findings position NestSection as a practical tool for state redistricting
+commissions in the 42 compatible states. The algorithm is implemented in the
+\texttt{redist} Rust binary via \texttt{redist state --chamber nest} and
+runs in under 10 minutes per state at block-group resolution.
+
+\paragraph{Constitutional implications.}
+In states with constitutional or statutory nesting requirements, NestSection
+provides a computationally efficient mechanism for satisfying those requirements
+while optimising compactness. Our results suggest that the legal requirement
+to nest senate districts within house districts does not materially compromise
+either compactness or partisan fairness---the two primary substantive concerns
+in state legislative redistricting litigation.
+
+\paragraph{Future work.}
+The next step is to apply NestSection to the 7 incompatible states using
+ad-hoc nesting procedures and to compare outcomes. A complementary analysis
+would examine multi-level nesting: states where county legislative districts
+must nest within state legislative districts, which nest within congressional
+districts. This three-level nesting problem requires a multi-spine variant of
+NestSection that is the subject of ongoing research.

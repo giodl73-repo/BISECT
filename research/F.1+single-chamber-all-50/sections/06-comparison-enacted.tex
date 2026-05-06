@@ -1,0 +1,73 @@
+\section{Comparison to Enacted Maps}
+\label{sec:comparison}
+
+We compare algorithmic maps to enacted 2020-cycle state house maps for the
+38 states that had enacted their new maps by the time of this analysis.
+The comparison focuses on three metrics: compactness (Polsby-Popper),
+population balance, and county splits.
+
+\subsection{Compactness Comparison}
+\label{sec:comparison:compactness}
+
+The algorithmic maps are more compact (higher mean PP) than enacted maps in
+34 of 38 states (89\%). The mean advantage is $+0.081$ PP points
+(algorithmic $\overline{PP} = 0.381$ vs.\ enacted $\overline{PP} = 0.300$
+for the same 38 states).
+
+The four states where enacted maps are more compact than algorithmic maps
+(Vermont, Hawaii, Alaska, and Wyoming) are all small, geographically compact
+states where the enacted maps are essentially forced to be compact by the
+state's shape and population distribution. In these states, the enacted
+map and the algorithmic map are nearly identical, and the small PP differences
+are within the noise of the metric.
+
+\subsection{Population Balance Comparison}
+\label{sec:comparison:balance}
+
+All 50 algorithmic maps achieve $\leq 0.5\%$ maximum deviation. Of the
+38 enacted maps, 26 (68\%) achieve $\leq 0.5\%$; 12 (32\%) have maximum
+deviations in the $0.5$--$5.0\%$ range permitted by \emph{Reynolds v.\ Sims}.
+No enacted map exceeds $5\%$.
+
+The algorithmic maps are thus more population-balanced than enacted maps
+by a statistically significant margin: a paired t-test of maximum deviations
+gives $t = 3.8$, $p < 0.001$.
+
+\subsection{County Splits Comparison}
+\label{sec:comparison:splits}
+
+As reported in Section~\ref{sec:results:splits}, the algorithmic maps split
+counties fewer times than enacted maps in 30 of 38 states (79\%).
+The mean reduction of 18\% is statistically significant ($t = 4.2$, $p < 0.001$).
+
+The magnitude of the reduction varies dramatically across states.
+States with historically aggressive gerrymandering (Pennsylvania, Wisconsin,
+Ohio, North Carolina) show the largest reductions (30--41\%), while states
+with citizen redistricting commissions (California, Colorado, Michigan) show
+smaller reductions (5--12\%). This pattern is consistent with the hypothesis
+that enacted maps in gerrymander-prone states deliberately crack communities
+across county lines, and that the algorithmic maps---which have no partisan
+inputs---avoid such cracking.
+
+\subsection{National Summary}
+\label{sec:comparison:summary}
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Metric & Algorithmic & Enacted \\
+\midrule
+Mean PP (38 states) & 0.381 & 0.300 \\
+States more compact than enacted & 34/38 & --- \\
+Max population deviation $\leq 0.5\%$ & 50/50 & 26/38 \\
+Mean county splits & 22.4 & 27.4 \\
+States with fewer splits than enacted & 30/38 & --- \\
+\bottomrule
+\end{tabular}
+\caption{Aggregate comparison of algorithmic vs.\ enacted state house maps
+  (38 states with available enacted 2020-cycle maps). The algorithmic maps
+  are more compact, more population-balanced, and split fewer counties in
+  the large majority of states.}
+\label{tab:comparison-summary}
+\end{table}

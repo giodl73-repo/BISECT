@@ -1,0 +1,87 @@
+\label{sec:results}
+
+\subsection{National Count of Competitive Districts}
+
+Table~\ref{tab:competitive-national} presents the key finding.  Algorithmic
+maps produce 85 competitive districts (margin under 10 points in the two-party
+presidential vote) compared with 65 under enacted plans---a 31\% increase.
+Among the competitive districts, 57 are swing districts (margin under 5
+points) under algorithmic maps versus 38 under enacted maps.
+
+\begin{table}[h]
+\centering
+\caption{Competitive Districts: Algorithmic vs.\ Enacted Maps, 2020}
+\label{tab:competitive-national}
+\begin{threeparttable}
+\begin{tabular}{lcc}
+\toprule
+Measure & Algorithmic & Enacted \\
+\midrule
+Competitive districts ($<$10 pt margin) & 85 & 65 \\
+Swing districts ($<$5 pt margin) & 57 & 38 \\
+Safe Democratic ($>$10 pt D margin) & 189 & 208 \\
+Safe Republican ($>$10 pt R margin) & 161 & 162 \\
+\midrule
+Total districts & 435 & 435 \\
+\midrule
+Competitive share & 19.5\% & 14.9\% \\
+Swing share & 13.1\% & 8.7\% \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: Margins computed from 2020 presidential two-party vote share
+  reaggregated to district boundaries.  Safe districts defined as those with
+  a two-party presidential margin exceeding 10 percentage points.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+The increase in competitive districts (from 65 to 85) comes primarily from
+a reduction in safe Democratic seats, which fall from 208 to 189.  Safe
+Republican seats are nearly unchanged (162 to 161).  This asymmetry reflects
+the geographic efficiency advantage enjoyed by Republicans in a single-member
+district system: Democratic voters are concentrated in urban cores, producing
+safe Democratic seats regardless of the map-drawing method.  Algorithmic maps
+partially offset this by drawing more geographically diverse districts that
+mix urban and suburban tracts, but the geographic sorting effect identified
+by \citet{chen2013unintentional} and \citet{rodden2019why} is not eliminated.
+
+\subsection{Competitive Districts Are Genuinely Contested}
+
+The 85 competitive algorithmic districts are not artifacts of the vote-share
+definition.  Examined individually:
+\begin{itemize}
+  \item 72 of the 85 (85\%) have presidential margins under 8 points.
+  \item 57 of the 85 (67\%) have margins under 5 points.
+  \item The median margin among competitive algorithmic districts is 4.1
+    percentage points.
+\end{itemize}
+
+By comparison, among the 65 enacted competitive districts:
+\begin{itemize}
+  \item 49 of the 65 (75\%) have margins under 8 points.
+  \item 38 of the 65 (58\%) have margins under 5 points.
+  \item The median margin among competitive enacted districts is 5.3
+    percentage points.
+\end{itemize}
+
+Algorithmic competitive districts are on average \emph{more} competitive
+within the competitive window, not merely more numerous.
+
+\subsection{The Byproduct Character of Competitiveness}
+
+A critical qualification is in order.  The algorithm does not target
+competitiveness; it targets population equality and compactness.  The
+increase in competitive districts is a byproduct of geometric neutrality,
+not a design feature.  Indeed, competitiveness is a criterion that a neutral
+algorithm \emph{cannot} target without accessing partisan data---the very
+information the algorithm is designed to ignore.
+
+This point has legal significance.  An algorithm that targeted competitiveness
+would necessarily access voter registration or election data, raising the same
+concerns about partisan manipulation (inverted) that motivated algorithmic
+redistricting in the first place.  The appropriate characterization of the
+finding is: \emph{compactness optimization produces more competitive districts
+than partisan optimization does, because partisan optimizers eliminate
+competitive races by design}.

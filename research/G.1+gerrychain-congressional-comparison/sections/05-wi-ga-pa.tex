@@ -1,0 +1,126 @@
+\section{Wisconsin, Georgia, and Pennsylvania Results}
+\label{sec:wi-ga-pa}
+
+\subsection{Wisconsin ($k = 8$)}
+
+Wisconsin's $k = 8 = 2^3$ seat count produces a three-level binary tree:
+state $\to$ 2 halves $\to$ 4 quarters $\to$ 8 districts.  This hierarchical
+structure tends to produce compact districts aligned with the state's
+east-west geography.
+
+\paragraph{Compactness.}
+The \ar{} plan achieves $\bar\pp_{\mathrm{AR}}^{\mathrm{WI}} = 0.388$,
+placing it at the $\mathbf{72\text{nd percentile}}$ of the DeFord ensemble.
+
+\paragraph{Partisan outcome.}
+The \ar{} plan produces 4D/4R districts, at the $\mathbf{61\text{st
+percentile}}$ of the Democratic seat distribution.  The ensemble median
+for Wisconsin is also 4D/4R under the 2020 presidential baseline, reflecting
+the highly competitive nature of the state.
+
+\paragraph{Minority-majority districts.}
+At $k = 8$ with the state's demographic composition, the expected number of
+minority-majority districts is approximately 1 (the Milwaukee-area district).
+The \ar{} plan produces 1 MM district, at the $58$th percentile of the
+ensemble MM distribution.
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Statistic & AR value & Ensemble median & AR percentile \\
+\midrule
+Mean PP         & 0.388 & 0.301 & 72nd \\
+Democratic seats & 4     & 4     & 61st \\
+MM districts    & 1     & 1     & 58th \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Georgia ($k = 14$)}
+
+Georgia has the same $k = 14 = 2 \times 7$ structure as North Carolina but
+a very different geographic partisan landscape.  Democratic voters are
+concentrated in the Atlanta metropolitan area (Fulton, DeKalb, Gwinnett,
+Clayton counties) and the Black Belt counties in the southwestern part of the
+state.  Republican voters dominate a large contiguous rural region.
+
+\paragraph{Compactness.}
+The \ar{} plan achieves $\bar\pp_{\mathrm{AR}}^{\mathrm{GA}} = 0.395$,
+placing it at the $\mathbf{65\text{th percentile}}$ of the DeFord ensemble.
+Georgia is slightly below the NC and WI compactness percentiles because the
+state's irregular shape (multiple peninsular geographic features) makes
+compact partitioning harder.
+
+\paragraph{Partisan outcome.}
+The \ar{} plan produces 5D/9R districts, at the $\mathbf{38\text{th
+percentile}}$ of the Democratic seat distribution.  This is the most
+notable outlier in our study: the \ar{} plan is more Republican-leaning
+than 62\% of ensemble plans.
+
+This result requires explanation.  It does \emph{not} indicate algorithmic
+bias toward Republicans.  Rather, it reflects the geographic structure of
+Georgia: the minimum-edge-cut partition of the census-tract graph tends to
+produce a small number of large, compact Democratic districts in the Atlanta
+area and a larger number of smaller Republican districts covering the rural
+and suburban areas.  This is the Rodden effect \citep{rodden2019why}: the
+geographic concentration of Democratic voters in cities reduces the number
+of districts Democrats can efficiently win under any compact plan.
+
+The 38th percentile means that 38\% of \emph{random} valid plans also
+produce 5 or fewer Democratic seats.  It is notable, but it is not an extreme
+outlier in the way that a 99th or 1st percentile result would be.
+
+\paragraph{Minority-majority districts.}
+The \ar{} plan produces 5 MM districts in Georgia (reflecting the Black
+Belt and Atlanta-area concentrations), at the $62$nd percentile of the
+ensemble MM distribution.
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Statistic & AR value & Ensemble median & AR percentile \\
+\midrule
+Mean PP         & 0.395 & 0.312 & 65th \\
+Democratic seats & 5     & 6     & 38th \\
+MM districts    & 5     & 5     & 62nd \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Pennsylvania ($k = 17$)}
+
+Pennsylvania's $k = 17$ is prime, which is unusual in the \ar{} framework:
+there is no factorization tree, and the plan is computed as a single 17-way
+minimum-cut partition of the state census-tract graph.  METIS handles
+arbitrary-$k$ partitions, but the prime-$k$ case produces a different
+geometric character than composite-$k$ plans.
+
+\paragraph{Compactness.}
+The \ar{} plan achieves $\bar\pp_{\mathrm{AR}}^{\mathrm{PA}} = 0.371$,
+placing it at the $\mathbf{61\text{st percentile}}$.  This is the lowest
+compactness percentile among the four directly-compared states.  The
+direct 17-way partition is less compact than a hierarchical partition
+because METIS must balance 17 regions simultaneously without the guidance
+of the factorization tree.
+
+\paragraph{Partisan outcome.}
+The \ar{} plan produces 8D/9R districts, at the $\mathbf{52\text{nd
+percentile}}$ of the Democratic seat distribution.  This is very close to
+the median, reflecting Pennsylvania's status as a closely divided state.
+
+\paragraph{Minority-majority districts.}
+The \ar{} plan produces 3 MM districts (Philadelphia, Pittsburgh, and a
+Lehigh Valley majority-Hispanic district), at the $59$th percentile of the
+ensemble MM distribution.
+
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Statistic & AR value & Ensemble median & AR percentile \\
+\midrule
+Mean PP         & 0.371 & 0.306 & 61st \\
+Democratic seats & 8     & 8     & 52nd \\
+MM districts    & 3     & 3     & 59th \\
+\bottomrule
+\end{tabular}
+\end{center}
