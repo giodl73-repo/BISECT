@@ -140,13 +140,13 @@ The portfolio advances three research frontiers: (1) computational political sci
 
 \section*{Code, Data, and Replication}
 
-\textbf{Replication materials} include Python 3.13+ scripts, METIS bindings (via \texttt{pymetis}), and sample datasets for Vermont and Delaware (smallest states, $\sim$2 minute runtime on commodity hardware). Full 50-state redistricting requires $\sim$40GB census data (U.S. Census Bureau redistricting files for 2000/2010/2020) and 2-4 hours computation on a modern workstation (4-core CPU, 16GB RAM).
+\textbf{Replication materials} include the \texttt{redist} Rust CLI (redist-metis crate) and sample datasets for Vermont and Delaware (smallest states, $\sim$2 minute runtime on commodity hardware). Full 50-state redistricting requires $\sim$40GB census data (U.S. Census Bureau redistricting files for 2000/2010/2020) and $\sim$18 minutes parallel for all 50 states (\texttt{redist states --workers 8}). Binary available at \url{https://github.com/giodl73-repo/REDIST}.
 
 \textbf{Census data sources}: U.S. Census Bureau redistricting files (PL 94-171), TIGER/Line shapefiles for geographic boundaries, American Community Survey (ACS) for demographic data.
 
 \textbf{METIS library}: \url{http://glaros.dtc.umn.edu/gkhome/metis/metis/overview}
 
-\textbf{Contact}: giovanni.deluca@example.com
+\textbf{Contact}: giodl@microsoft.com
 
 \section*{Citation Guide}
 
