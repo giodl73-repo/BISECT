@@ -89,10 +89,12 @@ run separately from the redistricting pipeline.
 We present \texttt{redist-ensemble}, a Rust implementation of the
 \recom{} Markov chain using Wilson's uniform random spanning tree
 algorithm~\citep{wilson1996generating}.
-Wilson's algorithm achieves $O(|V|\log|V|)$ expected time on planar
-graphs, reducing the per-step cost from Python's interpreted execution
-to native compiled arithmetic at roughly $50{,}000$ steps per second---an
-estimated $2{,}300\times$ speedup over \gc{}.
+Wilson's algorithm runs in expected time equal to the cover time of
+a random walk on the subgraph; for planar graphs this is
+$O(|V|\log|V|)$~\citep{aldous1991random}, reducing the per-step cost
+from Python's interpreted execution to native compiled arithmetic at
+roughly $50{,}000$ steps per second---an estimated $2{,}300\times$
+speedup over \gc{}.
 At this throughput, a 10{,}000-step ensemble for North Carolina completes
 in approximately 0.2 seconds, enabling ensemble analysis as an integrated
 real-time audit step within the \texttt{redist build} pipeline rather

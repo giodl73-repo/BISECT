@@ -137,3 +137,17 @@ where $i$ is the zero-indexed chain index and $\mathit{base\_seed}$ is
 the user-supplied seed.
 This construction ensures reproducibility across runs and across different
 chain counts while maintaining independence between chains.
+
+The encoding is specified precisely to guarantee cross-environment
+reproducibility.
+Integer $i$ is encoded as a 64-bit little-endian unsigned integer
+(\texttt{i.to\_le\_bytes()} in Rust).
+The base seed is encoded as a 64-bit little-endian unsigned integer.
+The string literals \texttt{``ENSEMBLE\_CHAIN\_''} and \texttt{``\_''}
+are encoded as ASCII bytes.
+The concatenation is therefore a fixed-structure 32-byte input with
+no ambiguity between chain indices or base-seed values.
+The resulting 256-bit SHA-256 hash is truncated to the least-significant
+64 bits (bytes 0--7 of the output in little-endian order) as the
+\texttt{u64} output seed, which is then used to initialize the
+\texttt{SmallRng} state via \texttt{SeedableRng::seed\_from\_u64}.

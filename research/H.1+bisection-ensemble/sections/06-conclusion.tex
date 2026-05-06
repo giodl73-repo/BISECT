@@ -5,9 +5,11 @@ We have introduced BisectionEnsemble, a redistricting algorithm that integrates
 local 2-way ReCom ensemble sampling into the bisection tree. By repositioning
 ensemble sampling from the full plan level to the individual node level, we
 resolve the bipartition failure problem that prevents direct GerryChain
-application to states with large seat counts ($k \geq 17$). Every local ensemble
-is always 2-way, so bipartition failure is structurally impossible regardless of
-the state's seat count $k$.
+(without pair reselection) from operating on states with large seat counts
+($k \geq 17$). Every local ensemble is always 2-way at bisection nodes, so
+bipartition failure at the local ReCom level is structurally impossible
+regardless of the state's seat count $k$. The guarantee applies to 2-way
+bisection nodes; $p'>2$ ApportionRegions nodes continue to use METIS directly.
 
 The algorithm is implemented as \texttt{SeedCompositor::BisectionEnsemble\{p,
 ensemble\_steps\}} in \texttt{redist-cli}, using

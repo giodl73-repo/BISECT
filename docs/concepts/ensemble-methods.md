@@ -32,7 +32,9 @@ extremum, and the ensemble confirms this.
 ## GerryChain / ReCom (the evaluator)
 
 GerryChain implements the ReCom (Recombination) Markov chain, which samples
-valid redistricting plans approximately uniformly at random. Unlike `redist`,
+valid redistricting plans approximately uniformly at random over contiguous
+population-balanced plans (exact stationarity requires ergodicity, which holds
+for connected graphs with sufficient plan diversity). Unlike `redist`,
 it does not optimise for any objective: each step is a random local move that
 preserves population balance and contiguity.
 
@@ -75,7 +77,7 @@ stationary distribution as GerryChain (Python) but achieves much higher
 throughput through Rust's zero-cost abstractions and efficient memory layout.
 
 **Estimated throughput**: ~50,000 steps per second for NC-scale graphs
-(estimated 2,300x speedup over Python GerryChain). This makes 1 million-step
+(estimated; measured benchmarks in H.2). This makes 1 million-step
 ensembles practical in minutes rather than days.
 
 ### Wilson's algorithm for uniform spanning trees
@@ -165,8 +167,8 @@ and N is the number of steps per chain.
 
 | R-hat value | Interpretation |
 |---|---|
-| R-hat < 1.1 | Converged. Chains are sampling from the same distribution. |
-| 1.1 <= R-hat < 1.2 | Marginal. Run longer chains or more chains. |
+| R-hat < 1.05 | Converged. Chains are sampling from the same distribution. |
+| 1.05 <= R-hat < 1.2 | Marginal. Run longer chains or more chains. |
 | R-hat >= 1.2 | Not converged. Chains may be exploring different regions of the feasible space. |
 
 The R-hat implementation in `redist-analysis::ensemble_diagnostics` follows
@@ -191,8 +193,8 @@ rule to avoid estimating noise in the autocorrelation tail.
 | ESS value | Interpretation |
 |---|---|
 | ESS >= 1000 | Reliable inference. Summary statistics are stable. |
-| 400 <= ESS < 1000 | Adequate for descriptive statistics; marginal for tail inference. |
-| ESS < 400 | Run longer chains. Tail percentiles (0.1st, 99.9th) are unreliable. |
+| 100 <= ESS < 1000 | Adequate for descriptive statistics; marginal for tail inference. |
+| ESS < 100 | Run longer chains. Tail percentiles (0.1st, 99.9th) are unreliable. |
 
 For North Carolina at GerryChain speed (21 steps/sec), achieving ESS = 1,000
 typically requires approximately 3,000-5,000 total steps across 4 chains
@@ -237,6 +239,9 @@ The certificate reads:
 > approximately 99.8-99.9% of ensemble plans. Any party claiming the plan
 > is non-compact must identify a more compact alternative. Such an alternative
 > will be found in fewer than 2 in 1,000 random draws from the feasible space.
+
+These percentile estimates come from 1,000-step chains; 95% confidence
+intervals are ±3–5 percentile points.
 
 This certificate is **legally stronger than a median certificate**. A plan at
 the 50th percentile could be replaced by thousands of alternatives. A plan at

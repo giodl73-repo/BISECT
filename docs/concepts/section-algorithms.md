@@ -15,8 +15,10 @@ The search algorithms (B.16, H.0-H.1) vary how the seed space is explored.
 
 ```
 B-series
-├── Foundations (B.1-B.7)         — standard bisection, correctness, complexity
+├── Foundations (B.1-B.7)           — standard bisection, correctness, complexity
 ├── Structure algorithms (B.8-B.15) — varied tree topology or METIS constraints
+│   └── (excludes County-Sticky B.10 — see Weights layer below)
+├── Weights layer (B.10)            — edge weight modifications to standard bisection
 └── Search algorithms (B.16, H.0-H.1) — seed exploration strategies
 ```
 
@@ -91,10 +93,10 @@ After selecting the ratio at level 1, subsequent levels use standard bisection.
 Each subregion independently selects its own natural ratio.
 
 **NC result**: North Carolina (k=14=7x2) produces a 5D/9R outcome that is
-stable across seeds. The first-level ratio scan selects the 7:7 split. The
-5D/9R outcome reflects North Carolina's geographic sorting of Democratic
-voters along the I-85 corridor and Republican voters in the rural Piedmont and
-mountains.
+stable across seeds (CV < 2% across T=10,000 seeds (B.7)). The first-level
+ratio scan selects the 7:7 split. The 5D/9R outcome reflects North Carolina's
+geographic sorting of Democratic voters along the I-85 corridor and Republican
+voters in the rural Piedmont and mountains.
 
 ---
 
@@ -129,22 +131,6 @@ area balance infeasible at strict tolerances.
 
 ---
 
-### County-Sticky (B.10)
-
-**CLI**: `structure: standard-bisect` + `weights: county` + `alpha_county: 3.0`
-
-County-Sticky is not a structure algorithm — it is a weights-layer algorithm
-composed with standard bisection. Intra-county edges (both endpoints in the
-same county) receive a 3.0x weight multiplier. METIS becomes reluctant to cut
-within counties.
-
-**Results**: 34% fewer county splits compared to geographic-weight baseline,
-at a 3% mean Polsby-Popper cost. For states with strong county-based political
-geography (Georgia, Texas, North Carolina), county integrity preservation is
-a meaningful legal claim.
-
----
-
 ### ApportionRegions (B.11)
 
 **CLI**: `--partition-mode apportion-regions` / `structure: prime-factor`
@@ -176,9 +162,11 @@ decennial reapportionments when the prime factorisation is stable.
 divides North Carolina between its Democratic-leaning eastern districts and
 Republican-leaning western districts.
 
-**National 2020 result**: 223D/209R across all 50 states. This is the
-compactness extremum: no redistricting algorithm can produce more compact
-districts while satisfying population balance and contiguity.
+**National 2020 result**: 223D/209R across all 50 states. Among all plans
+tested in the GerryChain ensemble for WI, GA, PA (1,000 steps each), the
+bisection plan falls in the 0.1–0.2th percentile for edge cut — more compact
+than 99.8%+ of sampled valid plans. NC is at the 50th percentile due to
+geographic convergence.
 
 ---
 
@@ -244,6 +232,12 @@ of the proposed split (Gingles Prong 1: geographic compactness of minority
 population). Higher w_vra increases the influence of minority alignment; w_vra
 = 0 reduces to standard GeoSection.
 
+**Alignment score definition**: The alignment score quantifies geographic
+concentration of minority population in the split region, computed as the
+fraction of minority VAP in the more-concentrated half divided by the minority
+VAP fraction statewide. A score above 1.0 means the minority population is
+more concentrated in one half of the split than it is statewide.
+
 The algorithm uses spatial minority-VAP distribution from demographics CSVs.
 No partisan data enters the algorithm. This maintains the Callais
 disentanglement requirement: partisan and racial considerations cannot be
@@ -260,6 +254,24 @@ Given maps for 2000, 2010, and 2020, it measures how many census tracts change
 district assignment across decennial reapportionments. The factorisation-tree
 reuse property of ApportionRegions predicts stable district assignments in
 states where the seat count's largest prime factor does not change.
+
+---
+
+## Weights layer (B.10)
+
+### County-Sticky (B.10)
+
+**CLI**: `structure: standard-bisect` + `weights: county` + `alpha_county: 3.0`
+
+County-Sticky is not a structure algorithm — it is a weights-layer algorithm
+composed with standard bisection. Intra-county edges (both endpoints in the
+same county) receive a 3.0x weight multiplier. METIS becomes reluctant to cut
+within counties.
+
+**Results**: 34% fewer county splits compared to geographic-weight baseline,
+at a 3% mean Polsby-Popper cost. For states with strong county-based political
+geography (Georgia, Texas, North Carolina), county integrity preservation is
+a meaningful legal claim.
 
 ---
 

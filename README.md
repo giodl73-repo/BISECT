@@ -42,7 +42,7 @@ It's also **transparent**. You can watch each round in the dashboard and see exa
 | State legislative staff | [docs/quickstart/quickstart-state-staff.md](docs/quickstart/quickstart-state-staff.md) | 5 min/iteration |
 | Civic advocacy group | [docs/quickstart/quickstart-civic-advocate.md](docs/quickstart/quickstart-civic-advocate.md) | 15–30 min |
 
-**[→ All 34 research papers with PDFs](docs/PAPERS.md)**
+**[→ All 66 research papers with PDFs](docs/PAPERS.md)**
 
 First time? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Windows) — ≤ 10 minutes from `git clone` to first run.
 
@@ -139,7 +139,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 
 ## Research papers
 
-34 papers across five tracks. All PDFs are pre-built.
+66 papers across eight tracks. All PDFs are pre-built.
 **[→ Full index at docs/PAPERS.md](docs/PAPERS.md)**
 
 ### Track A — Synthesis
@@ -170,6 +170,10 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | [B.14](docs/papers/B.14+vrasection-minority-opportunity-bisection.pdf) | VRASection: minority alignment, post-Callais disentanglement |
 | [B.15](docs/papers/B.15+stabilitysection-cross-census-stability.pdf) | StabilitySection: tree stability 2000–2020 |
 | [B.16](docs/papers/B.16+convergence-sweep.pdf) | ConvergenceSweep: T=600 sufficient, statutory seed formula |
+| [B.17](docs/papers/B.17+parameter-sensitivity.pdf) | Parameter sensitivity: partisanship insensitive to tuning |
+| [H.0](docs/papers/H.0+percentile-sweep.pdf) | PercentileSweep — statutory choice of legal posture |
+| [H.1](docs/papers/H.1+bisection-ensemble.pdf) | BisectionEnsemble — local ReCom at each bisection node |
+| [H.2](docs/papers/H.2+redist-ensemble.pdf) | redist-ensemble — Rust ReCom at 2500× speed |
 
 ### Track C — Validation
 | | |
@@ -282,7 +286,7 @@ docs/quickstart/    # Persona-specific quickstart guides
 ## Documentation
 
 - **[`docs/REDIST_CLI.md`](docs/REDIST_CLI.md)** — complete CLI reference
-- **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 34 research papers with PDFs
+- **[`docs/PAPERS.md`](docs/PAPERS.md)** — all 66 research papers with PDFs
 - **[`docs/legal/`](docs/legal/)** — model statute, fairness doctrine
 - **[`docs/quickstart/`](docs/quickstart/)** — persona guides
 - **[`docs/CHANGELOG.md`](docs/CHANGELOG.md)** — version history

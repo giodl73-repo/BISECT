@@ -51,6 +51,10 @@ with a local ReCom ensemble. It is defined by two hyperparameters:
           weight $\text{EC}(\pi) = \sum_{(u,v) \in \delta(\pi)} w(u,v)$.
     \item \textbf{Select}: Sort $\Pi$ by $\text{EC}(\cdot)$. Return
           $\pi^* = \Pi[\lfloor p \cdot m \rfloor]$ (zero-indexed).
+          If $m = 0$ (no plans accepted within $T$ steps), return the METIS
+          initialization $\pi_0$ as a fallback. By Theorem~\ref{thm:tractable},
+          $m = 0$ has probability zero in the limit; this fallback applies only
+          for small $T$ where the chain may not yet have encountered a balanced cut.
   \end{enumerate}
 \end{definition}
 
@@ -105,23 +109,25 @@ BisectionEnsemble at every node.
 \end{theorem}
 
 \begin{proof}
-  At each step $t$, the merge domain is $M = H$, which has a uniform spanning
-  tree over $V_H$. The population balance constraint requires finding a cut
-  edge $e^*$ such that the two components have populations within $\varepsilon$
-  of the targets $(t_1, t_2) = (1/2, 1/2)$ (for equal split). By the
-  Aldous-Broder theorem \citep{aldous1990random}, the uniform spanning tree
-  of $H$ is a connected tree on $V_H$. Removing any edge $e \in \mathcal{T}$
-  produces two connected components; as $e$ ranges over all $|V_H| - 1$ edges,
-  the components $(A_e, B_e)$ form a family of nested cuts. For any target
-  ratio $r = t_1 / (t_1 + t_2) \in (0, 1)$ and tolerance $\varepsilon > 0$,
-  the intermediate-value property of the discrete population function guarantees
-  the existence of at least one edge $e^*$ with population balance within
-  $\varepsilon$ of $r$, provided $\varepsilon \geq \max_{v \in V_H} \text{pop}(v)
-  / \text{pop}(H)$ (i.e., the tolerance is at least one tract's population share).
-  Since BisectionEnsemble uses population balance tolerance $\varepsilon \geq 0.5\%$
-  (statutory tolerance) and tracts represent $\ll 1\%$ of any node's population,
-  the acceptance condition is always satisfiable. The chain therefore accepts
-  at least one plan in finite steps.
+  \emph{Proof sketch.} The merged region has $m = n/k$ tracts on average.
+  Wilson's algorithm samples a UST in $O(m \log m)$ expected time for planar
+  subgraphs. For each UST, we enumerate all $m-1$ edges and check population
+  balance in $O(m)$. If no balanced cut exists, resample. By the intermediate
+  value theorem on the discrete cumulative population, at least one spanning
+  tree cut yields a balanced split whenever the two districts have total
+  population within the tolerance bound --- which holds by construction. Formally:
+  any spanning tree $\mathcal{T}$ of $H$ is a connected tree on $V_H$; removing
+  any single edge $e \in \mathcal{T}$ produces exactly two connected components
+  $(A_e, B_e)$. As $e$ ranges over all $|V_H|-1$ edges of $\mathcal{T}$, the
+  left-component populations $\{\text{pop}(A_e)\}$ traverse from near-zero
+  (single leaf) to near-$\text{pop}(H)$ (all but one leaf), with adjacent edges
+  in tree order differing by at most $\max_v \text{pop}(v)$. For any target
+  ratio $r \in (0,1)$ and tolerance $\varepsilon \geq \max_v \text{pop}(v) /
+  \text{pop}(H)$, a balanced cut edge $e^*$ always exists. Since tracts
+  represent $\ll 0.5\%$ of any node's population in all three experimental
+  states (NC/WI/TX), the tolerance condition is satisfied by construction.
+  After at most $O(\log(1/\delta))$ resamples, a balanced cut is found with
+  probability $\geq 1 - \delta$. $\square$
 \end{proof}
 
 \begin{proposition}[Contiguity preservation]
@@ -150,7 +156,11 @@ BisectionEnsemble at every node.
   At depth $\ell$ of a binary tree, there are $2^\ell$ nodes, each managing a
   subgraph of $\approx n / 2^\ell$ tracts. Each node runs $T$ ReCom steps.
   Wilson's algorithm samples a uniform spanning tree in $O(|V_H|)$ expected
-  time \citep{wilson1996generating}. The cost per node is $O(T \cdot n / 2^\ell)$.
+  time for graphs with good expansion properties (e.g., constant spectral gap)
+  \citep{wilson1996generating}. For near-path-like subgraphs (rural regions),
+  worst-case expected time is $O(|V_H|^2)$; the bound $O(|V_H|)$ should be
+  interpreted as an average-case statement over typical redistricting subgraphs.
+  The cost per node is $O(T \cdot n / 2^\ell)$ under the average-case assumption.
   Summing over all $d$ levels:
   \[
     \sum_{\ell=0}^{d-1} 2^\ell \cdot O\!\left(\frac{Tn}{2^\ell}\right)

@@ -44,7 +44,11 @@ parts each node splits into, and in what order.
 The `prime-factor` structure is the geographic completion of the Huntington-Hill
 apportionment: just as Huntington-Hill determines how many seats each state
 gets by prime factorisation, `prime-factor` determines the shape of the
-bisection tree by the same factorisation.
+bisection tree by the same factorisation (see paper B.11 for the formal
+derivation).
+
+**Note**: `--partition-mode` (legacy flag) and `structure:` YAML key use
+different value namespaces. Use `--structure` for the Layer 1 compositor.
 
 ---
 
@@ -59,7 +63,7 @@ means geographically.
 | `geographic` | Edge weight = shared boundary length in metres (TIGER). Minimises perimeter. Default. |
 | `county` | Multiplies intra-county edges by 3.0. Discourages cuts that cross county lines. 34% fewer county splits at 3% compactness cost. Paper B.10. |
 | `unweighted` | All edge weights = 1. Pure population balance, no geometric signal. Used as a research baseline. |
-| `vra-aligned` | Minority-to-minority tract edges are boosted: edges where both tracts are at least 40% minority receive 5-10x weight, tapered by the statewide minority fraction. No partisan data. |
+| `vra-aligned` | Minority-to-minority tract edges are boosted: edges where both tracts are at least 40% minority receive 3× to 10× weight (floor: 3.0, computed as max(3.0, 10.0 × (1 − 0.7 × minority_fraction))), tapered by the statewide minority fraction. No partisan data. |
 | `proportional` | ncon=2 vertex weights [population, D_votes]. Bisections are constrained to target both population and partisan vote balance simultaneously. Paper B.12. |
 
 The `geographic` weight is the default for all production runs. It is the only
@@ -83,7 +87,7 @@ minima. The search layer determines how that seed space is explored.
 |---|---|
 | `single` | One call with the SHA-256 content-derived seed. Fully deterministic. Used for statutory certification. |
 | `multi` | T seeds, each producing a candidate plan. Returns the plan with minimum normalised edge cut. |
-| `convergence` | Walks seeds starting from the content-derived seed. Stops after T consecutive seeds produce no improvement. T=600 is the statutory stopping criterion from B.16. |
+| `convergence` | Walks seeds starting from the content-derived seed. Stops after T consecutive seeds produce no improvement. T=600 is the proposed Districting Integrity Act stopping criterion (T=600, see B.02, B.16). |
 | `percentile` | T seeds. Returns the plan at rank floor(p * T) in the sorted edge-cut distribution, not the minimum. Used by H.0 (PercentileSweep) to sample from the distribution of near-optimal plans. |
 | `bisection-ensemble` | At each bisection node, runs a local ReCom chain of T steps and selects the bisection at percentile p. Combines METIS topology with ReCom sampling. Paper H.1. |
 

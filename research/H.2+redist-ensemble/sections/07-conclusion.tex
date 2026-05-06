@@ -24,8 +24,12 @@ distinguish \re{} from a naive Rust port:
 (1) full balanced-cut enumeration to match GerryChain's stationary
 distribution;
 (2) tree-resample-on-failure rather than same-tree retry;
-(3) pair-reselection after 10 consecutive tree failures, enabling
-TX and CA runs that Python GerryChain cannot complete from cold start.
+(3) pair-reselection after 10 consecutive tree failures.
+The TX and CA cold-start challenge is combinatorial, not language-specific:
+\gc{} with pair reselection also handles these states.
+\re{}'s advantage is that Rust's throughput reduces the wall time for
+the pair-reselection warm-up phase from seconds (Python) to microseconds,
+making cold-start runs practical within a pipeline budget.
 Convergence diagnostics ($\rhat$, $\ess$, $\ham(1)$) are computed
 in-pass using Welford's online algorithm and Geyer's initial monotone
 sequence estimator, adding no asymptotic overhead.

@@ -1,8 +1,8 @@
 # Research Papers
 
-63 papers. PDFs open directly from the links below. LaTeX sources in [`research/`](../research/).
+66 papers across eight tracks (A–H). PDFs open directly from the links below. LaTeX sources in [`research/`](../research/).
 
-Papers are organised by the question they answer. Each paper's series code (A–G) is shown for cross-reference. To recompile: `cd research && make docs`
+Papers are organised by the question they answer. Each paper's series code (A–H) is shown for cross-reference. To recompile: `cd research && make docs`
 
 ---
 
@@ -48,8 +48,6 @@ The "search" layer. Once you have a structure, how do you select among valid pla
 |------|-------|-----|
 | B.16 | ConvergenceSweep — T=600 statutory seed formula | [PDF](papers/B.16+convergence-sweep.pdf) |
 | B.17 | Parameter Sensitivity — partisanship insensitive to tuning | [PDF](papers/B.17+parameter-sensitivity.pdf) |
-
-*Coming: PercentileSweep (target any percentile), BisectionEnsemble (local ReCom at each node)*
 
 ---
 
@@ -162,6 +160,16 @@ Synthesis, guides, and practitioner materials.
 | A.3 | Portfolio Visualization — visual guide for non-technical audiences | [PDF](papers/A.3+portfolio-visualization.pdf) |
 | A.4 | Replication Materials — AEA-compliant reproducibility package | [PDF](papers/A.4+replication-materials.pdf) |
 | A.5 | Policy Brief — 4 pages for legislative staff and commissioners | [PDF](papers/A.5+policy-brief.pdf) |
+
+---
+
+## Track H — Ensemble Search Strategies (3 papers, panel reviews in progress)
+
+| Code | Title | PDF | Status |
+|------|-------|-----|--------|
+| H.0 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/H.0+percentile-sweep.pdf) | R2 in progress |
+| H.1 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/H.1+bisection-ensemble.pdf) | R2 in progress |
+| H.2 | redist-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+redist-ensemble.pdf) | R2 in progress |
 
 ---
 
