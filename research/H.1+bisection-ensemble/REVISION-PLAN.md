@@ -1,8 +1,9 @@
-# H.1 BisectionEnsemble — Revision Plan (Round 2)
+# H.1 BisectionEnsemble — Revision Plan (Round 2 → Accepted)
 
 **Paper**: H.1: BisectionEnsemble: Integrating Local Feasibility Sampling into the Redistricting Bisection Tree
-**Review Round**: 2
+**Review Round**: 2 (final)
 **Date**: 2026-05-06
+**R2 Panel Scores**: Karypis 3/4, Rodden 3/4, Duchin 3/4, Stephanopoulos 3/4, Liang 3/4 → **avg 3.0/4 — Conditional Accept**
 **Reviewers**: Karypis (graph partitioning), Rodden (political geography), Duchin (GerryChain/metric geometry), Stephanopoulos (election law), Liang (reproducibility)
 
 ---

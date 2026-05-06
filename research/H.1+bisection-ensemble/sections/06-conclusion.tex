@@ -24,6 +24,23 @@ shifting partisan outcomes, and succeeds on Texas ($k=38$) where direct
 GerryChain fails. Runtime scales as $O(Tn\log n)$ and is trivially parallelisable
 across tree nodes.
 
+\paragraph{Scope and limitations.}
+BisectionEnsemble is presented here as an algorithmic contribution with partisan
+neutrality properties. It does not address the Voting Rights Act (Section~2)
+dimension of redistricting: the algorithm has no minority-community-preservation
+objective, and a BisectionEnsemble plan must be evaluated for VRA compliance
+separately, using tools such as \texttt{redist analyze --types bloc-voting}
+\citep{dellaLibera2026callais}. Practitioners deploying BisectionEnsemble in
+jurisdictions with majority-minority district requirements should verify VRA
+compliance of the final plan as a post-processing step.
+
+\paragraph{Reproducibility.}
+The \texttt{redist-cli} implementation used in the experiments is available
+in the project repository. Exact replication requires the 2020 Census
+P.L.~94-171 redistricting data and the VEST 2020 presidential precinct returns
+\citep{vest2020}. Phase~2 will provide a complete replication archive including
+per-run seeds, intermediate outputs, and criterion.rs benchmark results.
+
 \paragraph{Future work.}
 Several directions merit investigation. First, the ReCom chain's mixing time
 on local subgraphs is unexplored: how many steps $T$ are needed for convergence

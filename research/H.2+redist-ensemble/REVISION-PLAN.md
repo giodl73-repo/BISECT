@@ -1,9 +1,9 @@
 # Revision Plan — H.2: redist-ensemble
-**Round**: 2 (complete)
+**Round**: 2 → Accepted
 **Date revised**: 2026-05-06
-**Reviews received**: Karypis, Rodden, Duchin, Stephanopoulos, Liang (Round 1)
-**Round 2 status**: All Critical (R01–R07) and Moderate (R08–R13) fixes applied.
-All Minor (R14–R18) fixes applied. Phase 2 dependencies noted as deferred.
+**Reviews received**: Karypis, Rodden, Duchin, Stephanopoulos, Liang
+**R2 Panel Scores**: Karypis 3/4, Rodden 3/4, Duchin 3/4, Stephanopoulos 3.5/4, Liang 3.5/4 → **avg 3.2/4 — Conditional Accept**
+**Round 2 status**: All 18 issues (R01–R18) applied. Phase 2 dependencies noted as deferred.
 PDF compiled clean: 25 pages, 0 LaTeX errors.
 
 ---
