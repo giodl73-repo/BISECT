@@ -1,0 +1,131 @@
+\section{Background}
+\label{sec:background}
+
+\subsection{Simulated Annealing}
+
+Simulated Annealing was introduced by \citet{kirkpatrick1983} as a
+probabilistic meta-heuristic for combinatorial optimisation, drawing an
+analogy with the physical process of slowly cooling a material to reach
+a low-energy crystalline state.
+The algorithm belongs to the class of \emph{local search} methods: it
+maintains a single current solution and perturbs it iteratively.
+Unlike greedy local search, SA can accept cost-increasing moves, preventing
+premature convergence to poor local optima.
+
+\paragraph{Convergence theory.}
+If the cooling schedule satisfies $T(t) \ge C / \log(t+2)$ for a
+sufficiently large constant $C$ (the ``logarithmic schedule''), SA converges
+to a global optimum with probability one~\citep{kirkpatrick1983}.
+The logarithmic schedule is impractically slow for large instances.
+In practice, geometric schedules---$T(t) = T_0 \cdot r^t$ for some
+$r \in (0,1)$---are used.
+These converge faster but provide only local-optimum guarantees.
+For redistricting bisection, where \metis{} already supplies a good
+starting point, local-optimum improvement over a good initial solution
+is the operational target.
+
+\paragraph{Geometric cooling.}
+The geometric schedule decreases temperature by a fixed multiplicative
+factor at each step:
+\[
+  T(\mathrm{step}) = T_0 \times \left(\frac{T_{\mathrm{final}}}{T_0}\right)^{\mathrm{step}/n_{\mathrm{steps}}}.
+\]
+This is equivalent to $T_0 \cdot r^{\mathrm{step}}$ with
+$r = (T_{\mathrm{final}}/T_0)^{1/n_{\mathrm{steps}}}$.
+The schedule spends proportional time at each multiplicative temperature
+band, which is natural when the cost landscape has features at many scales.
+Linear schedules ($T(t) = T_0 - c \cdot t$) spend proportionally more
+time at high temperatures, which may be appropriate for large flat landscapes
+but is wasteful for redistricting subgraphs where the \metis{} solution is
+already near-optimal.
+
+\subsection{Graph Partitioning and METIS}
+
+The redistricting bisection problem is a variant of graph minimum bisection:
+given $G = (V, E, w)$ with $|V| = m$ tracts, find a partition
+$(S, V \setminus S)$ with $|S| \approx m/2$ (balanced) that minimises the
+weighted edge cut $\EC(S) = \sum_{\{u,v\} \in E: u \in S, v \notin S} w(u,v)$.
+The population-balance constraint replaces vertex-count balance, but the
+structure is analogous.
+
+\metis{} solves this via multilevel coarsening and KL refinement~\citep{karypis1998}.
+Coarsening contracts the graph to a small fraction of its original size by
+merging adjacent vertices.
+The minimum bisection of the coarsened graph is found by a fast heuristic.
+Uncoarsening projects the solution back to the original graph level by level,
+applying KL local refinement at each level to improve the solution.
+The KL phase swaps boundary vertices between the two parts, accepting swaps
+that decrease $\EC$ and stopping when no improving swap exists.
+This local-optimum condition is the source of seed sensitivity: a different
+coarsening (controlled by the random seed) may reach a different local minimum.
+
+\paragraph{METIS as SA initialisation.}
+SA refinement applied \emph{after} \metis{} is computationally sensible
+because:
+(1) \metis{} provides a feasible, population-balanced, contiguous bisection
+    as a warm start;
+(2) the \metis{} solution is already near-optimal, so SA needs only fine
+    boundary adjustments rather than large structural changes;
+(3) \metis{}'s own KL phase exhausts improvements achievable by single-vertex
+    swaps with strict acceptance; SA's probabilistic acceptance opens up
+    escapes from those local optima.
+
+\subsection{Structure-Layer Algorithms in the B-Series}
+
+The B-series redistricting platform uses a three-layer compositor:
+\emph{Structure} (how the bisection tree is built and each node solved),
+\emph{WeightsOverride} (what edge weights signal), and
+\emph{SeedCompositor} (how many seeds are tried and how the best is selected).
+\sa{} is a Structure-layer algorithm.
+
+\paragraph{Existing structure-layer algorithms.}
+\geosec{}~\citep{b8paper} constructs the bisection tree optimally with
+respect to a ratio objective $\EC/\sqrt{\min(i,k-i)}$, choosing at each level
+the split ratio that minimises normalised edge cut.
+\areasec{}~\citep{b9paper} adds an area-swing constraint that biases the
+geometry of the two pieces.
+\ar{}~\citep{b11paper} derives the tree structure from the prime factorisation
+of the district count $k$, linking the bisection tree to the Huntington-Hill
+apportionment.
+All three change \emph{what METIS is optimising} or \emph{how the tree is
+structured}, but still delegate the actual bisection solving to a single
+\metis{} call per node.
+
+\sa{} differs: it keeps the tree structure (standard or prime-factor, as
+configured) and changes the \emph{solver} at each node from a single
+\metis{} call to an SA loop seeded by \metis{}.
+
+\paragraph{Orthogonality.}
+Because \sa{} is a Structure-layer solver, it composes cleanly with
+SeedCompositor strategies.
+Running \be{} with $T=50$ seeds, each of which uses \sa{} bisection, would
+use $T$ independent SA runs on each node and select the best-EC result.
+The empirical results in Section~\ref{sec:empirical} use a single seed with
+SA, to isolate the effect of SA refinement from the effect of multi-seed
+search.
+
+\subsection{Distinction from ReCom and Short-Burst}
+
+\recom{} is a Markov chain redistricting sampler~\citep{deford2021}.
+It proposes plan changes by merging two adjacent districts and re-splitting
+them via a spanning tree, accepting all contiguous, balanced proposals.
+\recom{}'s goal is to sample from the distribution over valid plans---not
+to find the plan with minimum edge cut.
+\sa{} is an \emph{optimiser}: it seeks the minimum-$\EC$ bisection at each
+tree node and returns a single answer.
+
+Short-burst methods~\citep{cannon2022} run short \recom{} chains from the
+current plan, select the best endpoint, and repeat.
+This is a different form of optimisation within the Markov chain framework.
+\sa{} bisection is structurally simpler: no spanning-tree resampling, no
+chain memory, just boundary-tract flips with probabilistic acceptance within
+a single bisection node.
+
+The key practical distinction:
+\begin{itemize}
+\item Use \sa{} (or \be{}) when the goal is a \emph{single best plan}---
+  the minimum-edge-cut redistricting for publication or statutory use.
+\item Use \recom{} (or ensemble methods) when the goal is
+  \emph{distributional coverage}---characterising the space of valid plans
+  or auditing an enacted map against the ensemble.
+\end{itemize}

@@ -1,0 +1,234 @@
+%% B.19 --- Simulated Annealing Bisection
+%% References
+
+%% ===================================================================
+%% B-SERIES AND H-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Key result: $+56\,\%$ Polsby-Popper improvement over unweighted.
+            Geographic boundary-length edge weights used as the default
+            configuration in the empirical experiments of B.19.},
+}
+
+@misc{b6paper,
+  author = {Della-Libera, Gio},
+  title  = {Computational Complexity of Minimum-Edge-Cut Congressional
+            Redistricting},
+  year   = {2026},
+  note   = {B.6 in Algorithmic Redistricting series.
+            Establishes $\mathcal{NP}$-hardness of graph minimum bisection
+            in the redistricting context. Provides the complexity-theoretic
+            motivation for heuristic solvers such as \textsc{Metis} and SA.},
+}
+
+@misc{b7paper,
+  author = {Della-Libera, Gio},
+  title  = {The Solution Space of Minimum-Edge-Cut Redistricting:
+            Seed Sensitivity and Partisan Variance},
+  year   = {2026},
+  note   = {B.7 in Algorithmic Redistricting series.
+            50-state 1{,}500-seed sweep. Provides the seed-sensitivity
+            baseline and the partisan-outcome variance data used throughout
+            B.19. Statewide swing model used for D/R seat projections.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            Introduces the \textsc{GeoSection} structure-layer algorithm
+            and the normalised edge-cut metric
+            $\mathrm{EC}_\text{norm} = \mathrm{EC}/\sqrt{\min(i,k-i)}$.
+            Empirical PP baselines (NC 0.217, WI 0.198, TX 0.184) used
+            as the METIS-only baseline in B.19 Table 1.},
+}
+
+@misc{b9paper,
+  author = {Della-Libera, Gio},
+  title  = {{AreaSection}: Geographic Area-Swing Bisection for
+            Compact Congressional Districts},
+  year   = {2026},
+  note   = {B.9 in Algorithmic Redistricting series.
+            Introduces \textsc{AreaSection} as a structure-layer variant
+            that adds area-swing constraints. Related to B.19 as a
+            concurrent approach to improving per-node bisection quality
+            via objective modification (vs.\ SA's solver modification).},
+}
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: zero seed variance --- bisection tree structure
+            is determined by the prime factorisation of $k$.
+            SA bisection can compose with the ApportionRegions tree
+            structure; this is identified as future work in B.19.},
+}
+
+@misc{b16paper,
+  author = {Della-Libera, Gio},
+  title  = {{ConvergenceSweep}: $T = 600$ as the Statutory Stopping
+            Criterion for Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {B.16 in Algorithmic Redistricting series.
+            Introduces \textsc{ConvergenceSweep} as the SeedCompositor
+            strategy. SA bisection is orthogonal to ConvergenceSweep:
+            each CS seed can use an SA bisector. B.19 Table 1 uses CS
+            as the multi-seed quality upper bound.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Parallel Seed Search for
+            Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series.
+            Introduces \textsc{BisectionEnsemble} with $T$ parallel seeds.
+            H.1 provides the 50-state PP baselines (NC 0.217, WI 0.198,
+            TX 0.184) and the BE($T=100$) quality benchmark used in
+            B.19 Table 1. SA bisection is positioned between single-seed
+            METIS and BE($T=100$).},
+}
+
+%% ===================================================================
+%% SIMULATED ANNEALING
+%% ===================================================================
+
+@article{kirkpatrick1983,
+  author  = {Kirkpatrick, Scott and Gelatt, C. Daniel and Vecchi, Mario P.},
+  title   = {Optimization by Simulated Annealing},
+  journal = {Science},
+  volume  = {220},
+  number  = {4598},
+  pages   = {671--680},
+  year    = {1983},
+  doi     = {10.1126/science.220.4598.671},
+  note    = {Foundational SA paper. Introduces the temperature schedule,
+             acceptance criterion $\exp(-\Delta f / T)$, and the analogy
+             with physical annealing. Proves convergence to global optimum
+             under logarithmic cooling. The geometric cooling schedule used
+             in B.19 is a practical approximation of this theoretical ideal.},
+}
+
+@article{battiti1999,
+  author  = {Battiti, Roberto and Bertossi, Alan A.},
+  title   = {Simulated Annealing and Tabu Search for Graph Partitioning},
+  journal = {Computers and Operations Research},
+  volume  = {26},
+  number  = {4},
+  pages   = {375--395},
+  year    = {1999},
+  doi     = {10.1016/S0305-0548(98)00074-6},
+  note    = {SA applied to graph partitioning. Compares SA, tabu search,
+             and hybrid approaches. Nearest prior work to B.19's application
+             of SA to redistricting bisection nodes. B.19 differs by using
+             METIS initialisation (warm start) and the redistricting
+             contiguity-balance feasibility constraint.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Establishes $O(m \log n)$ complexity
+             of multilevel Kernighan-Lin partitioning. Describes the
+             local-optimum structure that SA refinement targets.
+             METIS is the warm-start initialiser for B.19 SA bisection.},
+}
+
+@article{kernighan1970,
+  author  = {Kernighan, Brian W. and Lin, Shen},
+  title   = {An Efficient Heuristic Procedure for Partitioning Graphs},
+  journal = {Bell System Technical Journal},
+  volume  = {49},
+  number  = {2},
+  pages   = {291--307},
+  year    = {1970},
+  doi     = {10.1002/j.1538-7305.1970.tb01770.x},
+  note    = {Original KL partitioning algorithm. The local-optimum structure
+             of KL (stops when no improving swap exists) is the starting
+             point that SA refinement extends via probabilistic acceptance.},
+}
+
+@article{garey1976,
+  author  = {Garey, Michael R. and Johnson, David S. and Stockmeyer, Larry},
+  title   = {Some Simplified NP-Complete Graph Problems},
+  journal = {Theoretical Computer Science},
+  volume  = {1},
+  number  = {3},
+  pages   = {237--267},
+  year    = {1976},
+  doi     = {10.1016/0304-3975(76)90059-1},
+  note    = {Establishes NP-hardness of graph minimum bisection.
+             Motivates heuristic approaches (METIS, SA) and explains why
+             convergence certification (B.16) is necessary.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE METHODS
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of {Markov} Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom Markov chain redistricting sampler. The primary ensemble
+             method contrasted with SA bisection in B.19. Key distinction:
+             ReCom is a distributional sampler; SA is a single-plan
+             deterministic optimiser. Both explore boundary flips but for
+             different purposes.},
+}
+
+@article{cannon2022,
+  author  = {Cannon, Sarah and Goldbloom-Helzner, Ari and Gupta, Varun
+             and Matthews, Jon and Suwal, Bhushan},
+  title   = {Spanning Tree Methods for Sampling Graph Partitions},
+  journal = {arXiv},
+  year    = {2022},
+  note    = {arXiv:2210.01401. Introduces short-burst methods: run short
+             ReCom chains from the current plan, select the best endpoint,
+             and repeat. Related to SA as an optimisation-within-chain
+             approach, but structurally different (chain memory,
+             spanning-tree proposals, no temperature schedule).},
+}
+
+%% ===================================================================
+%% CRYPTOGRAPHY
+%% ===================================================================
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {SHA-256 specification used in the B.19 node-seed derivation
+                 (Definition~1). The domain-separation prefix
+                 \texttt{"SA\_NODE\_"} ensures independence from other
+                 SHA-256 applications in the platform.},
+}

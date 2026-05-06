@@ -1,0 +1,100 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+The \flip{} proposal is the simplest valid redistricting perturbation: move
+one boundary tract from its current district to an adjacent district, accept
+if the result is contiguous and population-balanced.
+Its properties follow directly from this simplicity:
+
+\paragraph{Fast.}
+Each step runs in $O(\deg)$ amortised time with incremental boundary set
+maintenance.
+Ten thousand steps take under 3 seconds for any state in our implementation.
+
+\paragraph{High acceptance.}
+Boundary tracts are near-balanced by selection; contiguity failure is rare.
+Acceptance rates of $40$--$70\%$ are typical, giving $4{,}000$--$7{,}000$
+distinct visited plans per $10{,}000$-step run.
+
+\paragraph{Locally confined.}
+Each \flip{} step changes exactly one tract.
+The chain cannot tunnel through topological obstacles (Theorem~\ref{thm:reachability}),
+so it characterises only the local neighbourhood of the starting plan.
+This is a feature for sensitivity analysis and a bug for ensemble sampling.
+
+\paragraph{Slow mixing.}
+Moving from any starting plan to a fundamentally different plan requires
+$O(\text{district size})$ accepted steps at minimum (Theorem~\ref{thm:slow-mix}).
+In practice, the chain does not mix in $10{,}000$ steps for any real-world
+state; it traces a random walk in the local neighbourhood.
+
+\subsection{Usage Guidelines}
+
+The \flip{} chain should be used as follows in the redistricting workflow:
+
+\begin{enumerate}
+  \item \textbf{After plan generation.} Generate the plan using \cs{} (or
+        another global search method). Do not use \flip{} to generate the
+        plan; use it only to certify the generated plan.
+  \item \textbf{Run the $p$-sweep.} Execute five \flip{} runs at
+        $p \in \{0.0, 0.25, 0.5, 0.75, 1.0\}$.
+        Record $\rho_{\mathrm{seat}}$ for each.
+  \item \textbf{Disclose the results.} Report \texttt{visited\_count},
+        \texttt{selected\_plan\_rank}, $\sigma_{\ec}$, and
+        $\rho_{\mathrm{seat}}$ in the legislative findings.
+        If any $p$-value produces a different seat outcome, explain the
+        choice of percentile.
+  \item \textbf{Store the manifest.} Record \texttt{base\_seed},
+        \texttt{chain\_seed\_0}, \texttt{visited\_count}, and
+        \texttt{selected\_plan\_rank} for verifier reproduction.
+\end{enumerate}
+
+\subsection{Open Questions}
+
+\begin{enumerate}
+  \item \textbf{Optimal step count.} Is $F = 10{,}000$ steps sufficient to
+        characterise the local neighbourhood for all states?
+        For large states ($n > 5{,}000$) or states with high district counts
+        ($k > 20$), a larger $F$ may be warranted.
+        A stopping criterion based on the saturation of the visited-plan count
+        would provide a principled answer.
+
+  \item \textbf{Weighting the acceptance.} The current \flip{} implementation
+        uses a hard-constraint acceptance criterion (accept if contiguous and
+        balanced, reject otherwise).
+        A soft Metropolis criterion that penalises large EC changes could
+        concentrate the chain near the starting plan's EC level, making the
+        $p$-sweep more informative about plan quality.
+
+  \item \textbf{Multi-tract flip.} Allowing simultaneous moves of $r > 1$
+        adjacent boundary tracts would bridge topological obstacles and
+        expand the reachable plan set, at the cost of $O(r!)$ more proposals
+        per step.
+        This generalisation would interpolate between \flip{} ($r = 1$)
+        and \recom{} ($r \approx n/k$).
+
+  \item \textbf{Formal partisan stability bounds.} Given a census-tract graph
+        with known geometry (e.g., compact convex districts), can we derive
+        a lower bound on $\rho_{\mathrm{seat}}$ under \flip{}?
+        Such a bound would let courts distinguish geometric constraint
+        (high stability for topological reasons) from deliberate placement
+        (artificially high stability due to gerrymandering).
+\end{enumerate}
+
+\subsection{Relation to the Full Toolkit}
+
+The redistricting toolkit is now complete at three perturbation levels.
+Table~\ref{tab:comparison} (Section~\ref{sec:comparison}) summarises when
+to use each method.
+The standard workflow is:
+\begin{center}
+  \cs{} (generate) $\to$ \flip{} (certify) $\to$ \be{} (structure audit)
+  $\to$ ensemble (global audit).
+\end{center}
+Each step adds a different type of evidence.
+\flip{} occupies an essential niche: it is the only method that directly
+characterises the plan's local neighbourhood at the tract level, and it is
+the only method fast enough to run interactively (under 10 seconds) during
+the plan-drafting process.

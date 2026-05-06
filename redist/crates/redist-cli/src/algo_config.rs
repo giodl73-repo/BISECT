@@ -69,7 +69,7 @@ pub struct AlgorithmSection {
     pub alpha_county: Option<f64>,
 
     /// Layer 3: seed search strategy.
-    /// Values: single | multi | convergence
+    /// Values: single | multi | convergence | short-burst
     pub search: Option<String>,
 
     /// Consecutive non-improving seeds before stopping (B.7/B.16).
@@ -78,6 +78,15 @@ pub struct AlgorithmSection {
 
     /// Fixed seed count for search == "multi".
     pub seeds: Option<usize>,
+
+    /// ReCom steps per burst for search == "short-burst". Default: 20.
+    pub burst_length: Option<usize>,
+
+    /// Number of bursts for search == "short-burst". Default: 50.
+    pub n_bursts: Option<usize>,
+
+    /// Percentile for search == "short-burst" (0.0–1.0). Default: 0.0 (minimum EC).
+    pub percentile: Option<f64>,
 
     /// Population balance tolerance (percent). Congressional standard: 0.5.
     pub balance_tolerance: Option<f64>,
@@ -229,10 +238,16 @@ impl AlgoYaml {
                 })?;
                 SeedCompositor::ConvergenceSweep { threshold }
             }
+            "short-burst" => {
+                let burst_length = sec.burst_length.unwrap_or(20);
+                let n_bursts = sec.n_bursts.unwrap_or(50);
+                let p = sec.percentile.unwrap_or(0.0).clamp(0.0, 1.0);
+                SeedCompositor::ShortBurst { burst_length, n_bursts, p }
+            }
             other => {
                 return Err(format!(
                     "[CONFIG] config: unknown search '{}'. \
-                     Valid values: single | multi | convergence",
+                     Valid values: single | multi | convergence | short-burst",
                     other
                 ));
             }
@@ -327,6 +342,9 @@ pub fn write_template_config(
         search: search.map(|s| s.to_string()),
         convergence_threshold,
         seeds,
+        burst_length: None,
+        n_bursts: None,
+        percentile: None,
         balance_tolerance,
         area_swing: None,
         w_vra: None,
@@ -457,6 +475,12 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         }
         crate::runner::SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
             format!("bisection-ensemble (p={p:.2}, steps={ensemble_steps})")
+        }
+        crate::runner::SeedCompositor::Flip { flip_steps, p } => {
+            format!("flip (p={p:.2}, steps={flip_steps})")
+        }
+        crate::runner::SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
+            format!("short-burst (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
     };
 

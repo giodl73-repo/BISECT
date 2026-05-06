@@ -1,0 +1,87 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Problem: METIS Finds Good but Not Optimal Plans}
+
+METIS multilevel graph partitioning~\citep{b11paper} produces redistricting
+plans with low edge-cut in $O(n \log n)$ time.
+For a state with $n \approx 2{,}000$ census tracts and $k$ districts,
+a single METIS run typically achieves Polsby-Popper compactness at the
+70th--80th percentile of the feasible plan distribution.
+But METIS is a local optimizer: it terminates at a local minimum of the
+edge-cut objective, and different random seeds reach different local minima.
+
+Multi-seed METIS (the \texttt{--search multi} mode) runs $m$ independent
+METIS seeds and returns the best plan.
+With $m = 50$ seeds, multi-seed METIS achieves 8--12\% Polsby-Popper
+improvement over single-seed.
+But the improvement saturates quickly: seeds are independent and explore
+different basins rather than the neighborhood of any one good plan.
+
+Long \recom{} chains (e.g., the \cs{} algorithm with $T = 600$ steps)
+achieve stronger mixing and can escape local minima~\citep{b16paper}.
+However, a single long chain explores broadly, spending many steps
+in regions of plan space far from the best-found plan.
+The chain cannot ``remember'' and return to the best plan it visited.
+
+\subsection{Short-Burst: Concentrated Neighborhood Exploration}
+
+Short-Burst optimization~\citep{cannon2022} addresses this problem directly.
+The key idea is to decompose the total step budget into a sequence of
+\emph{short bursts}---each burst is a short \recom{} chain that starts
+from the \emph{endpoint} of the previous burst.
+After each burst, the endpoint is recorded and becomes the starting point
+for the next burst.
+The final plan is selected from the recorded endpoints by a percentile
+criterion.
+
+The restart mechanism means the chain never drifts far from the best-found
+plan: each burst explores a small neighborhood, and the best neighborhood
+endpoint becomes the new center for the next exploration.
+This concentrates probability near low-edge-cut regions of plan space
+without sacrificing the Markov property.
+
+Cannon et al.~\citep{cannon2022} introduced Short-Burst in the context
+of partisan outcome analysis---using short chains to measure partisan
+sensitivity of redistricting plans.
+Our use of Short-Burst for minimum-edge-cut compactness optimisation is
+a natural extension: we apply the same restart mechanism to the
+Polsby-Popper objective rather than a partisan metric.
+
+\subsection{Main Contributions}
+
+This paper makes three contributions:
+
+\begin{enumerate}
+\item \textbf{Implementation.}
+      We implement \shb{} in \texttt{redist-cli}.
+      The search mode is \texttt{--search short-burst};
+      the Rust type is \texttt{SeedCompositor::ShortBurst}.
+      Per-burst seeds are derived by SHA-256 from the base seed
+      and burst index, ensuring reproducibility across runs.
+
+\item \textbf{Empirical comparison.}
+      We compare \shb{} to multi-seed METIS, \cs{}, and \be{}
+      on NC ($k=14$), WI ($k=8$), and TX ($k=38$) under a fixed budget
+      of 1{,}000 total \recom{} steps.
+      \shb{} achieves 15--22\% Polsby-Popper improvement, placing it
+      between multi-seed METIS and \be{}.
+
+\item \textbf{Sensitivity analysis.}
+      We characterise how burst length $\ell$ and burst count $m$ interact.
+      Burst length is the critical parameter: short bursts ($\ell = 5$--$20$)
+      outperform long bursts ($\ell = 50+$), which drift and approach
+      single-chain \recom{} in behaviour.
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:background} reviews \recom{}, \cs{}, \be{}, and the
+original Short-Burst paper.
+Section~\ref{sec:algorithm} gives the formal algorithm and the chain-seed
+derivation.
+Section~\ref{sec:comparison} presents the four-way comparison on NC, WI,
+and TX.
+Section~\ref{sec:sensitivity} gives the burst-length and burst-count
+sensitivity analysis.
+Section~\ref{sec:conclusion} concludes.

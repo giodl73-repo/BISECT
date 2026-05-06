@@ -1,0 +1,71 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced \sa{} bisection, a Structure-layer algorithm that replaces
+the single \metis{} call at each bisection tree node with a simulated
+annealing refinement loop.
+The key design decisions---\metis{} initialisation, geometric cooling scaled
+to the subgraph size, and best-ever plan tracking---combine to give a
+practical optimiser that achieves 10--18\% Polsby-Popper improvement over
+baseline \metis{} at approximately $12\times$ the runtime cost.
+
+\paragraph{Position in the B-series algorithm landscape.}
+\sa{} is a Structure-layer optimiser, analogous to \geosec{} and \areasec{}
+but targeting the solver rather than the objective or tree structure.
+It is orthogonal to SeedCompositor strategies (\cs{}, \be{}) and can be
+composed with them.
+The empirical quality ordering is:
+\[
+  \text{METIS} \;<\; \text{SA(steps=10)} \;<\; \text{SA(steps=50)}
+  \;<\; \text{BE}(T=100),
+\]
+with runtimes following the same order.
+For practitioners, this ordering suggests a practical decision rule:
+\begin{itemize}
+\item \textbf{Fastest}: baseline \metis{} (4 s for NC).
+\item \textbf{Single-pass best}: SA(steps=10) (52 s for NC), recommended for
+  publication-quality single-plan generation.
+\item \textbf{Maximum quality, moderate cost}: \be{}($T=100$) (420 s for NC).
+\item \textbf{Maximum quality, high cost}: \cs{} or \be{} + SA (hours).
+\end{itemize}
+
+\paragraph{Optimiser vs.\ sampler.}
+SA is a deterministic optimiser: it returns the best single bisection found
+in $n_{\mathrm{steps}}$ steps from a fixed seed.
+\recom{} is a Markov chain sampler: it generates a distribution over valid
+plans.
+These tools answer different questions.
+Use \sa{} (or \be{}) when the question is ``what is the best achievable
+redistricting plan under this objective?''
+Use \recom{} (or ensemble methods) when the question is ``what does the
+space of valid redistricting plans look like, and where does the enacted
+map fall?''
+
+\paragraph{Implementation.}
+\sa{} bisection is implemented in the \texttt{redist} binary under
+\texttt{--structure simulated-annealing}.
+The SA parameters are exposed as \texttt{--sa-steps-per-tract} (default 10)
+and \texttt{--sa-t0-factor} (default 0.01).
+The YAML configuration format supports:
+\begin{verbatim}
+algorithm:
+  structure: simulated-annealing
+  sa_steps_per_tract: 10
+  sa_t0_factor: 0.01
+\end{verbatim}
+
+\paragraph{Open questions.}
+Several extensions are straightforward to implement and are left for future work:
+(1) combining SA bisection with the \ar{} prime-factor tree structure (B.11),
+    which links the bisection tree to the Huntington-Hill apportionment and
+    may create larger, harder subgraphs at prime-split nodes where SA has
+    more room to improve;
+(2) a VRA-aware SA objective that incorporates minority population constraints
+    directly into the acceptance criterion, rather than treating VRA as a
+    post-hoc filter;
+(3) parallel SA: running SA independently on multiple cores and selecting the
+    best result is equivalent to \be{} with SA bisectors, and could be
+    explored as a first-class configuration option.
+
+These extensions inherit the clean three-layer compositor design of the
+existing platform and require no structural changes to the codebase.

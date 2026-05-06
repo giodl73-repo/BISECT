@@ -1,0 +1,104 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Three Levels of Redistricting Perturbation}
+
+Modern algorithmic redistricting operates across a hierarchy of perturbation
+scales.
+Each level explores a different radius of the plan space, incurs a different
+computational cost, and serves a different analytical purpose.
+
+\paragraph{Level 1: Plan-level (global) perturbation.}
+Each invocation of the METIS partitioner with a different random seed produces
+an independent redistricting plan.
+These plans are unrelated in the graph-partition sense; there is no continuous
+path between them in the space of valid plans.
+\cs{}~\citep{b11paper} runs $T = 600$ independent seeds and selects the
+minimum-edge-cut plan; \textsc{PercentileSweep} selects the plan at a given
+percentile of the edge-cut distribution.
+Cost: $O(T \cdot n \log n / k)$ per state.
+Exploration radius: global (the full feasible plan space is sampled, subject
+to the METIS prior).
+
+\paragraph{Level 2: Node-level (intermediate) perturbation.}
+\be{}~\citep{h1paper} runs short \recom{} chains at each node of the
+bisection tree.
+These chains explore the neighbourhood of a fixed hierarchical decomposition,
+resampling sub-district assignments while holding the higher levels fixed.
+Cost: $O(\text{nodes} \times \text{chain steps} \times n/k)$.
+Exploration radius: moderate (the hierarchical structure constrains reachable
+plans, but within each node the local plan space is sampled).
+
+\paragraph{Level 3: Tract-level (local) perturbation.}
+The \flip{} chain moves a single boundary tract from its current district to
+an adjacent district at each step.
+This is the coarsest grain at which a valid redistricting plan can be perturbed
+while remaining a connected-district plan.
+Cost: $O(1)$ per step (one adjacency query, one contiguity check).
+Exploration radius: local (the chain is confined to the neighbourhood of
+the initial plan; see Section~\ref{sec:formal}).
+
+This paper studies Level 3 in depth.
+We argue that \flip{} is unsuitable for ensemble sampling of the full plan
+space---the mixing time is far too large---but is the right tool for
+\emph{local sensitivity analysis}: given a submitted plan, how stable are
+its partisan outcomes under single-tract perturbations?
+
+\subsection{Why Local Sensitivity Analysis Matters}
+
+A redistricting plan submitted to a court or legislature is not a point
+estimate; it is a political act.
+Opponents will seek the nearest plan that produces a different partisan
+outcome---and if such a plan exists within a single tract move, the submitted
+plan is arguably unstable.
+
+Local sensitivity analysis under \flip{} provides a principled quantification
+of this instability:
+\begin{enumerate}
+  \item Run a \flip{} chain from the submitted plan.
+  \item Record all visited plans and their partisan seat outcomes.
+  \item Report the \emph{partisan stability} --- the fraction of visited plans
+        with the same seat outcome as the submitted plan.
+\end{enumerate}
+A plan with partisan stability $\geq 95\%$ is robust to single-tract
+perturbations; a plan with stability $< 80\%$ lies near a partisan boundary
+in the plan space, which is potential evidence of intentional placement.
+
+\subsection{Main Contributions}
+
+\begin{enumerate}
+  \item \textbf{Algorithm.} We give the complete specification of \flip{} as
+        implemented in \texttt{redist-cli} (\texttt{SeedCompositor::Flip}),
+        including the deterministic seed schedule and the acceptance criterion
+        (Section~\ref{sec:formal}).
+
+  \item \textbf{Formal properties.} We prove that (a) each step runs in $O(1)$
+        time excluding the contiguity BFS (which is $O(n/k)$ in the worst case
+        but $O(\deg)$ on average), (b) the acceptance rate is high ($\approx
+        40$--$70\%$), (c) the chain mixes slowly (exponential mixing time in
+        the worst case), and (d) not all valid plans are reachable from a
+        given start via \flip{} moves (Section~\ref{sec:formal}).
+
+  \item \textbf{Sensitivity metrics.} We define EC stability and partisan
+        stability, and demonstrate their behaviour on North Carolina
+        ($k = 14$) and Wisconsin ($k = 8$) (Section~\ref{sec:sensitivity}).
+
+  \item \textbf{Comparison.} We provide a unified comparison of \flip{},
+        \sburst{}, \be{}, and \cs{} across cost, acceptance rate, exploration
+        radius, and use case (Section~\ref{sec:comparison}).
+
+  \item \textbf{Audit chain.} We describe the manifest record for \flip{}
+        runs and show that recording \texttt{visited\_count} and
+        \texttt{selected\_plan\_rank} provides a reproducibility guarantee
+        stronger than seed-only recording (Section~\ref{sec:audit}).
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:formal} defines the \flip{} algorithm formally and derives
+its complexity and mixing properties.
+Section~\ref{sec:sensitivity} introduces the sensitivity metrics and reports
+empirical results for NC and WI.
+Section~\ref{sec:comparison} compares \flip{} with ReCom-based methods.
+Section~\ref{sec:audit} describes the audit chain and reproducibility protocol.
+Section~\ref{sec:conclusion} concludes with usage guidelines.

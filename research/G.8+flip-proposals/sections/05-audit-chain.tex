@@ -1,0 +1,96 @@
+\section{The Flip Audit Chain}
+\label{sec:audit}
+
+\subsection{Manifest Record}
+
+Every \flip{} run writes the following fields to the plan manifest (the
+JSON audit record that accompanies the submitted plan):
+
+\begin{verbatim}
+{
+  "search": "flip",
+  "base_seed": <u64>,
+  "flip_steps": 10000,
+  "percentile": 0.0,
+  "visited_count": <usize>,
+  "selected_plan_rank": <usize>,
+  "chain_seed_0": <u64>
+}
+\end{verbatim}
+
+Here \texttt{visited\_count} is $|\mathrm{visited}|$ (the number of distinct
+plans stored, equal to 1 plus the number of accepted steps), and
+\texttt{selected\_plan\_rank} is $\lfloor p \cdot |\mathrm{visited}| \rfloor$
+(the 0-indexed position of the selected plan in the EC-sorted visited list).
+The \texttt{chain\_seed\_0} field records the derived seed for deterministic
+reproduction.
+
+\subsection{Verification Protocol}
+
+A verifier who wishes to confirm that the submitted plan is the correct
+output of the stated \flip{} run proceeds as follows:
+
+\begin{enumerate}
+  \item Re-run the \flip{} chain with the recorded \texttt{base\_seed},
+        \texttt{flip\_steps}, and \texttt{percentile} on the same census-tract
+        graph and starting plan (which must also be recorded in the manifest).
+  \item Confirm that the re-run's \texttt{visited\_count} matches the manifest.
+        A mismatch indicates either a different starting plan or a different
+        adjacency graph was used.
+  \item Retrieve the plan at index \texttt{selected\_plan\_rank} in the
+        EC-sorted visited list.
+  \item Compare this plan's district assignment hash to the submitted plan's
+        hash.
+        A match confirms the submitted plan is the correct \flip{} output.
+\end{enumerate}
+
+This protocol is stronger than seed-only recording in two ways.
+First, it confirms not just that the chain was run from a given seed, but
+that the specific plan selected (by $p$-percentile) matches.
+If an operator tried to substitute a different plan at the same percentile,
+the hash comparison would fail.
+Second, \texttt{visited\_count} provides an independent check on the chain's
+execution: if the acceptance rate differs substantially from the expected
+$50$--$65\%$ range (implying fewer or more than $5{,}000$--$6{,}500$ accepted
+steps out of $10{,}000$), the verifier is alerted to investigate whether
+the tract adjacency graph or population data differs from the reference.
+
+\subsection{Why Seed-Only Recording Is Insufficient}
+
+Consider the following attack: an operator runs the \flip{} chain, observes
+that the plan at $p = 0.5$ produces a favourable partisan outcome, and
+reports $p = 0.5$ in the manifest.
+Later, they claim they actually ran the chain with $p = 0.0$ and got the same
+plan ``by coincidence.''
+Without \texttt{selected\_plan\_rank}, the verifier cannot distinguish these
+scenarios: both produce the same seed, and the seed alone does not determine
+which percentile was selected.
+
+With \texttt{selected\_plan\_rank} recorded, the verifier re-runs the chain,
+inspects the plan at rank $\lfloor 0.0 \times |\mathrm{visited}| \rfloor = 0$
+(the minimum EC plan), and compares it to the submitted plan.
+If they differ, the reported percentile was wrong.
+This closes the manipulation window.
+
+\subsection{Integration with the SHA-256 Audit Chain}
+
+The \texttt{chain\_seed\_0} field is derived deterministically from the
+\texttt{base\_seed} via the SHA-256 schedule:
+\[
+  \texttt{chain\_seed\_0} = \mathrm{SHA256}\!\left(
+    \texttt{"FLIP\_CHAIN\_"} \,\|\, 0^{\mathrm{le64}} \,\|\,
+    \texttt{"\_"} \,\|\, \texttt{base\_seed}^{\mathrm{le64}}
+  \right)[0{:}8].
+\]
+Recording \texttt{chain\_seed\_0} explicitly lets the verifier confirm the
+seed derivation without re-implementing the SHA-256 schedule; they can simply
+check that \texttt{chain\_seed\_0} matches the expected derivation from
+\texttt{base\_seed}.
+
+The \texttt{base\_seed} itself is part of the broader plan manifest SHA-256
+chain~\citep{b11paper}, which links the \flip{} run to the plan selection
+decision (which METIS seed produced the starting plan), the data fetch
+(which census-year shapefile was used), and the adjacency graph (which
+boundary-sharing rules were applied).
+This end-to-end chain makes it impossible to selectively manipulate any single
+step without breaking the chain.

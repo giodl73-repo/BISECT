@@ -1,0 +1,248 @@
+\section{The Simulated Annealing Bisection Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation and Subgraph Setup}
+
+Let $G_v = (V_v, E_v, w_v)$ denote the subgraph at bisection tree node $v$,
+where $V_v$ is the set of census tracts assigned to the subtree rooted at $v$,
+$E_v \subseteq E$ is the induced edge set, and $w_v$ inherits weights from the
+parent graph.
+Let $m = |V_v|$ be the number of tracts.
+Let $p_i$ denote the population of tract $i \in V_v$, and let
+$P_v = \sum_{i \in V_v} p_i$ be the total subgraph population.
+Let $k_v \ge 2$ denote the number of districts to be formed in the subtree
+rooted at $v$; \sa{} divides this into a bisection $(k_L, k_R)$ with
+$k_L + k_R = k_v$.
+
+A \emph{bisection} at node $v$ is a partition $(S, V_v \setminus S)$ of the
+tracts into two non-empty, contiguous groups satisfying the population-balance
+constraint:
+\[
+  \left|\sum_{i \in S} p_i - \frac{k_L}{k_v} P_v \right|
+  \;\le\;
+  \delta \cdot \frac{P_v}{k_v},
+\]
+where $\delta = 0.005$ (the $\pm 0.5\%$ federal tolerance).
+The \emph{edge cut} of a bisection $(S, V_v \setminus S)$ is
+\[
+  \EC(S) = \sum_{\substack{\{u,v\} \in E_v \\ u \in S,\; v \notin S}} w(u,v).
+\]
+
+\subsection{Node-Seed Derivation}
+
+SA requires a per-node random seed to ensure reproducibility.
+The seed must be deterministic given the global base seed and the node's
+position in the bisection tree, and must differ across nodes so that
+sibling nodes explore different parts of the boundary-flip space.
+
+\begin{definition}[SA Node Seed]
+\label{def:sa-seed}
+Let $\mathtt{base\_seed}$ be the unsigned 64-bit integer global seed, and let
+$\mathtt{node\_path}$ be the string representation of the path from the root
+to node $v$ (e.g., \texttt{"0/1/0"} for the left-right-left child of the root).
+The \emph{SA node seed} is
+\[
+  s_v = \mathrm{first8}\bigl(
+    \mathrm{SHA\text{-}256}(
+      \texttt{"SA\_NODE\_"} \;\|\; \mathtt{node\_path}
+      \;\|\; \texttt{"\_"} \;\|\; \mathrm{le8}(\mathtt{base\_seed})
+    )
+  \bigr),
+\]
+where $\mathrm{le8}(x)$ encodes $x$ as 8 little-endian bytes and
+$\mathrm{first8}(h)$ reads the first 8 bytes of hash $h$ as a little-endian
+unsigned 64-bit integer.
+\end{definition}
+
+The domain-separation prefix \texttt{"SA\_NODE\_"} ensures that the SA seed
+differs from any other SHA-256 application of the base seed in the platform
+(e.g., the DIA seed formula uses \texttt{"DIA\_SEED\_V1"}).
+The node path string makes sibling seeds independent even for the same base
+seed.
+
+\subsection{Cooling Schedule Parameters}
+
+\begin{definition}[Initial Temperature]
+\label{def:t0}
+Let $\EC_0 = \EC(\Pi_{\mathrm{init}})$ be the edge cut of the \metis{}
+initialisation.
+The \emph{initial temperature} is
+\[
+  T_0 = \max\!\bigl(1.0,\; \mathtt{t0\_factor} \times \EC_0\bigr),
+\]
+where $\mathtt{t0\_factor} \in (0,1)$ is a hyperparameter with default $0.01$.
+The maximum with $1.0$ handles the degenerate case $\EC_0 = 0$
+(a perfectly connected subgraph that requires no cut) and the test-fixture
+case $\mathtt{t0\_factor} = 0$ (forces $T_0 = 1.0$ for regression testing).
+\end{definition}
+
+\begin{definition}[Step Count and Final Temperature]
+\label{def:steps}
+The \emph{step count} is $n_{\mathrm{steps}} = \mathtt{steps\_per\_tract} \times m$,
+where $m = |V_v|$.
+The \emph{final temperature} is $T_{\mathrm{final}} = 10^{-4}$ (fixed).
+\end{definition}
+
+The geometric temperature at step $t \in \{0, 1, \ldots, n_{\mathrm{steps}}-1\}$ is
+\[
+  T(t) = T_0 \times \left(\frac{T_{\mathrm{final}}}{T_0}\right)^{t / n_{\mathrm{steps}}}.
+\]
+At $t = 0$, $T = T_0$; at $t = n_{\mathrm{steps}}$, $T$ would reach $T_{\mathrm{final}}$.
+The ratio $T_0 / T_{\mathrm{final}}$ spans approximately $10^2$ to $10^5$ for
+typical subgraphs, giving a rich exploration-to-exploitation transition.
+
+\subsection{Acceptance Probability Analysis}
+
+\begin{proposition}[Initial Acceptance Probability]
+\label{prop:acceptance}
+Under the default parameters ($\mathtt{t0\_factor} = 0.01$,
+$T_{\mathrm{final}} = 10^{-4}$), the probability of accepting a
+$+1$ edge-cut move at the \emph{first} SA step is
+\[
+  P(\text{accept}\; \Delta\EC = +1,\; t=0)
+  = \exp\!\left(\frac{-1}{T_0}\right)
+  = \exp\!\left(\frac{-1}{\max(1,\; 0.01 \times \EC_0)}\right).
+\]
+For representative subgraph sizes:
+\begin{enumerate}
+\item $\EC_0 = 100$ (small leaf node): $T_0 = 1.0$, acceptance $= e^{-1} \approx 37\%$.
+\item $\EC_0 = 500$ (mid-tree node): $T_0 = 5.0$, acceptance $= e^{-0.2} \approx 82\%$.
+\item $\EC_0 = 1{,}000$ (root-level node): $T_0 = 10.0$, acceptance $= e^{-0.1} \approx 90\%$.
+\end{enumerate}
+In all cases, the initial temperature permits meaningful exploration beyond
+the \metis{} local optimum.
+\end{proposition}
+
+\begin{proof}
+Substituting $\Delta\EC = 1$ and $T = T_0$ into the Metropolis acceptance
+criterion $\exp(-\Delta\EC / T)$ gives the formula directly.
+\end{proof}
+
+\begin{remark}
+The scaling $T_0 \propto \EC_0$ is the key design choice.
+A fixed $T_0$ independent of $\EC_0$ would under-explore large-EC nodes
+(high acceptance needed but $T_0$ too small) and over-explore small-EC
+leaf nodes (excessive acceptance of bad moves).
+Proportional scaling ensures that the initial acceptance probability for a
+unit edge-cut move is a universal constant $e^{-1/(\mathtt{t0\_factor} \times \EC_0)} \cdot e^0$,
+independent of subgraph size, as long as $\EC_0 \ge 1/\mathtt{t0\_factor}$.
+For small subgraphs where $\EC_0 < 100$ (with the default $\mathtt{t0\_factor} = 0.01$),
+the floor $\max(1, \cdot)$ in Definition~\ref{def:t0} activates, ensuring
+$T_0 \ge 1$ even at nearly-trivial leaf nodes.
+\end{remark}
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:sa} gives the complete \sa{} bisection procedure.
+
+\begin{algorithm}[t]
+\caption{\sa{}-\textsc{Bisect}($G_v$, $k_L$, $k_R$, $\mathtt{base\_seed}$,
+  $\mathtt{node\_path}$, $\mathtt{steps\_per\_tract}$, $\mathtt{t0\_factor}$)}
+\label{alg:sa}
+\begin{algorithmic}[1]
+\State $m \gets |V_v|$
+\State $s_v \gets \mathrm{SA\text{-}Node\text{-}Seed}(\mathtt{base\_seed},
+       \mathtt{node\_path})$ \Comment{Definition~\ref{def:sa-seed}}
+\State $\Pi_{\mathrm{init}} \gets \metis\text{-}\mathrm{Bisect}(G_v, k_L, k_R, s_v)$
+       \Comment{warm start}
+\State $\EC_0 \gets \EC(\Pi_{\mathrm{init}})$
+\State $T_0 \gets \max(1.0,\; \mathtt{t0\_factor} \times \EC_0)$
+\State $n_{\mathrm{steps}} \gets \mathtt{steps\_per\_tract} \times m$
+\State $T_{\mathrm{final}} \gets 10^{-4}$
+\State $\mathrm{plan} \gets \Pi_{\mathrm{init}}$
+\State $\mathrm{best} \gets (\EC_0,\; \Pi_{\mathrm{init}})$
+\Comment{(edge-cut, plan) pair}
+\State $\mathrm{rng} \gets \mathrm{SmallRng::seed\_from\_u64}(s_v)$
+\For{$t = 0$ \textbf{to} $n_{\mathrm{steps}} - 1$}
+  \State $T \gets T_0 \times (T_{\mathrm{final}} / T_0)^{t / n_{\mathrm{steps}}}$
+         \Comment{geometric cooling}
+  \State $(\mathtt{tract},\, \mathtt{target}) \gets
+         \mathrm{RandomBoundaryTractAndAdjacentDistrict}(\mathrm{plan}, \mathrm{rng})$
+  \State $\mathrm{proposed} \gets \mathrm{Flip}(\mathrm{plan},\;
+         \mathtt{tract},\; \mathtt{target})$
+  \If{$\mathrm{Contiguous}(\mathrm{proposed})$ \textbf{and}
+      $\mathrm{Balanced}(\mathrm{proposed})$}
+    \State $\Delta\EC \gets \EC(\mathrm{proposed}) - \EC(\mathrm{plan})$
+    \If{$\Delta\EC \le 0$ \textbf{or}
+        $\mathrm{rng.gen::<f64>()} < \exp(-\Delta\EC / T)$}
+      \State $\mathrm{plan} \gets \mathrm{proposed}$
+      \If{$\EC(\mathrm{plan}) < \mathrm{best}.0$}
+        \State $\mathrm{best} \gets (\EC(\mathrm{plan}),\; \mathrm{plan}.\mathrm{clone}())$
+      \EndIf
+    \EndIf
+  \EndIf
+\EndFor
+\State $\Pi^* \gets \mathrm{best}.1$
+\State \textbf{return} $(\mathrm{Left}(\Pi^*),\; \mathrm{Right}(\Pi^*))$
+\Comment{as (left\_set, right\_set)}
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Contiguity and balance checks.}
+The contiguity check at line~13 verifies that both pieces remain connected
+after the proposed flip.
+This is implemented via a BFS from an interior tract in each piece.
+The balance check verifies that the population of each piece satisfies the
+$\pm\delta$ tolerance relative to the target allocation $(k_L / k_v) P_v$.
+Proposals failing either check are simply rejected (not counted as a step).
+In practice, the fraction of rejected proposals is small ($<5\%$) at
+boundary tracts, because interior tracts are never proposed (only boundary
+tracts can improve the edge cut) and boundary flips to the larger piece
+are more likely to maintain contiguity.
+
+\paragraph{Best-ever tracking.}
+Lines~19--21 maintain the best-ever plan seen during the run.
+This is critical: during the high-temperature phase, SA may accept moves
+that worsen $\EC$ significantly, exploring the local neighbourhood.
+Without best-ever tracking, those excursions would be wasted.
+The final plan (after cooling to $T_{\mathrm{final}}$) is a local optimum
+under greedy descent but may be worse than the best plan seen mid-run.
+The best-ever plan captures both the exploration benefit (finding new
+starting points for descent) and the exploitation benefit (greedy descent
+from those points as temperature drops).
+
+\subsection{CLI Invocation and Implementation}
+
+\sa{} bisection is exposed via the \texttt{--structure simulated-annealing}
+flag in the \texttt{redist} binary.
+The full invocation for North Carolina is:
+
+\begin{verbatim}
+redist state --state NC --year 2020 \
+  --structure simulated-annealing \
+  --sa-steps-per-tract 10 \
+  --sa-t0-factor 0.01
+\end{verbatim}
+
+The two SA parameters (\texttt{--sa-steps-per-tract}, \texttt{--sa-t0-factor})
+are passed through the three-layer compositor's Structure configuration.
+When combined with \texttt{--search convergence --convergence-threshold 600},
+the SeedCompositor runs \cs{} over SA bisections---each seed tries a full
+SA refinement, and the best across all seeds is returned.
+
+\subsection{Computational Complexity}
+
+\begin{proposition}[Runtime Complexity]
+\label{prop:runtime}
+\sa{} bisection at a node with $m$ tracts requires:
+\begin{itemize}
+\item One \metis{} call: $O(m \log m)$.
+\item $n_{\mathrm{steps}} = \mathtt{steps\_per\_tract} \times m$ SA steps,
+  each involving a boundary-tract flip proposal, a contiguity BFS
+  ($O(m)$ worst-case), and an edge-cut delta computation ($O(\deg(\mathtt{tract}))$).
+\item Total: $O(\mathtt{steps\_per\_tract} \times m^2)$ for contiguity checks,
+  which dominates.
+\end{itemize}
+For a tree with $k-1$ internal nodes averaging $m/\log k$ tracts per node,
+the total SA cost per plan is $O(\mathtt{steps\_per\_tract} \times m^2 / \log k)$.
+\end{proposition}
+
+\begin{remark}
+The $O(m^2)$ per-node cost appears steep, but in practice the contiguity BFS
+terminates early (after visiting a connected component of typical size $O(\sqrt{m})$
+for planar tract graphs), and the inner loop constant is small (single
+integer comparisons).
+Empirical runtimes in Section~\ref{sec:empirical} show that \sa{} with
+$\mathtt{steps\_per\_tract} = 10$ is approximately $12\times$ slower than a
+single \metis{} call per node, which remains practical for all 50 states.
+\end{remark}

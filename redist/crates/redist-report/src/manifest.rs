@@ -118,6 +118,49 @@ pub struct PlanManifest {
     /// research without re-running the algorithm.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub edge_cut: Option<f64>,
+
+    // ── Flip search audit fields ──────────────────────────────────────────────
+    /// Search mode string when Flip was used (value: "flip").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_search: Option<String>,
+    /// Total flip proposals attempted (flip_steps parameter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_steps: Option<usize>,
+    /// Percentile used to select from the visited plan distribution.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_percentile: Option<f64>,
+    /// Base seed used for the flip chain RNG.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_base_seed: Option<u64>,
+    /// Number of plans in the visited list (initial plan + accepted flips).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_visited_count: Option<usize>,
+    /// Rank of the selected plan within the sorted visited list.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flip_selected_plan_rank: Option<usize>,
+
+    // ── Short-Burst search audit fields ──────────────────────────────────────
+    /// Search mode string when ShortBurst was used (value: "short-burst").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short_burst_search: Option<String>,
+    /// ReCom steps per burst (burst_length parameter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burst_length: Option<usize>,
+    /// Number of bursts run (n_bursts parameter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub n_bursts: Option<usize>,
+    /// Percentile used to select from burst endpoints (p parameter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short_burst_percentile: Option<f64>,
+    /// Base seed used for deriving per-burst chain seeds.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short_burst_base_seed: Option<u64>,
+    /// Per-burst chain seeds derived from the base seed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub burst_seeds: Option<Vec<u64>>,
+    /// Burst index of the selected endpoint (0-based).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub selected_burst_idx: Option<usize>,
 }
 
 fn default_seats_per_district() -> usize { 1 }

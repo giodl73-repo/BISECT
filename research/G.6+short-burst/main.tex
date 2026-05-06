@@ -1,0 +1,97 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\shb}{\textsc{ShortBurst}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+\newcommand{\ec}{\mathrm{EC}}
+\newcommand{\pp}{\mathrm{PP}}
+\newcommand{\tmix}{\ensuremath{t_{\mathrm{mix}}}}
+\newcommand{\sgap}{\ensuremath{\lambda_{\mathrm{gap}}}}
+
+\title{%
+  \textbf{Short-Burst Optimization for Minimum-Edge-Cut Redistricting}\\[0.8em]
+  \normalsize\textit{G.6 --- Ensemble Methods / Algorithm Comparison}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Short-Burst optimization~\citep{cannon2022} applies sequences of short
+\recom{} chains---each restarting from the \emph{endpoint} of the
+previous burst---to concentrate exploration near low-edge-cut plans
+while preserving the Markov property.
+We implement Short-Burst in \texttt{redist-cli} as
+\texttt{SeedCompositor::ShortBurst} and compare it to multi-seed METIS,
+\cs{}, and \be{} on NC ($k=14$), WI ($k=8$), and TX ($k=38$)
+under a fixed budget of 1{,}000 total \recom{} steps.
+\shb{} achieves Polsby-Popper improvements of 15--22\% over the
+standard single-seed METIS baseline, placing it between multi-seed
+METIS (8--12\%) and \be{} (15--26\%).
+The key correctness requirement is that each burst retains its
+\emph{endpoint}---not the within-burst minimum---to preserve the
+Markov restart property and avoid systematic bias toward lower-edge-cut
+plans in a way incompatible with the stationary distribution.
+Sensitivity analysis on NC shows that burst length governs performance
+more strongly than burst count: bursts of 5--20 steps outperform
+bursts of 50+ steps, which drift and resemble single-chain \recom{}.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-background}
+\input{sections/03-algorithm}
+\input{sections/04-comparison}
+\input{sections/05-sensitivity}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
