@@ -1,8 +1,9 @@
 # Spec: Ensemble Search Algorithms — G series extensions
 
-**Status**: Proposed (R1 reviewed, major revisions applied)  
+**Status**: Proposed (R2 reviewed, targeted revisions applied)  
 **Date**: 2026-05-06  
-**Reviewed**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.25/4  
+**Reviewed R1**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.25/4  
+**Reviewed R2**: MERIDIAN 4/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.75/4  
 **Extends**: `redist-ensemble` crate, `SeedCompositor` three-layer compositor  
 **Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), B.19 (Simulated Annealing)
 
@@ -19,6 +20,16 @@ All are **Layer 3 (Search)** — orthogonal to structure and weights.
 | SMC | standalone only | G.7 | Standalone | not a `--search` flag — see §2 |
 | Flip | `flip` | G.8 | Search | `--flip-steps` (distinct from both above) |
 | Simulated Annealing | `simulated-annealing` | B.19 | **Structure** | `--sa-steps`, `--sa-t0`, `--sa-tf` |
+
+**Parameter scaling guidance** (for state staff and practitioners):
+
+| State size | Example states | burst_length | n_bursts | flip_steps |
+|-----------|---------------|-------------|---------|-----------|
+| Small (k≤5) | VT, WY, ND, AK | 10 | 20 | 2,000 |
+| Medium (k=8–14) | WI, NC, MN | 20 | 50 | 10,000 |
+| Large (k=20–38) | TX, FL, CA | 30 | 100 | 50,000 |
+
+Runtime estimate on a standard 8-core workstation: medium-state Short-Burst at defaults (~30s); large-state at scaled params (~5min). SA runtime scales automatically with `steps_per_tract × |subgraph|` and stays under 2min for any state at the default `steps_per_tract=10`.
 
 **Flag disambiguation**: Each mode has its own step-count flag to avoid collision:
 
@@ -90,15 +101,21 @@ algorithm:
 "n_bursts": 50,
 "percentile": 0.0,
 "base_seed": 12345678,
-"burst_seeds": [seed_0, seed_1, ...]   // all n_bursts seeds recorded
+"burst_seeds": [seed_0, seed_1, ...],   // all n_bursts seeds recorded
+"selected_burst_idx": 12               // index of the burst whose endpoint was returned
 ```
+The `selected_burst_idx` allows independent verification: a verifier can re-derive all burst seeds, re-run all bursts, and confirm that the plan at the recorded index matches the submitted plan.
+
+**Chain-seed version-lock**: The prefix `"SHORT_BURST_CHAIN_"` embeds algorithm identity. Any change to burst semantics (e.g. keeping something other than the endpoint) must change this prefix. Old and new manifests are distinguishable; silent seed compatibility across algorithm versions is prevented.
 
 **Test invariants (L0)**:
 - `n_bursts` endpoints produced, each valid k-district plan
-- `p=0.0` returns minimum-EC endpoint; `p=1.0` returns maximum-EC endpoint
-- Same `base_seed` → identical result (deterministic)
+- `p=0.0` returns endpoint with the minimum EC among all bursts; `p=1.0` returns endpoint with maximum EC (sort is ascending, so rank 0 = min, rank n_bursts-1 = max — tests both ends to catch inverted sort)
+- Same `base_seed` → identical `selected_burst_idx` and plan (deterministic)
 - All endpoints have correct district count k
 - Chain restarts from previous endpoint (not from initial plan)
+- `n_bursts=1, burst_length=1`: degenerate case succeeds and returns the single endpoint
+- `n_bursts=1, burst_length=0`: returns the initial plan unchanged (zero steps)
 
 ---
 
@@ -126,9 +143,11 @@ redist ensemble --method smc --particles 5000 --state NC --year 2020
 # Produces: nc_smc_ensemble.json with weighted plan sample
 ```
 
-**Audit chain**: SMC results include `base_seed` and `n_particles` in the output JSON. `redist label-verify` does not verify SMC outputs (they are analysis artifacts, not plan-generation artifacts).
+**Audit chain**: SMC results include `base_seed` and `n_particles` in the output JSON. `redist label-verify` does not verify SMC outputs.
 
-**Test invariants**: `n_particles` plans produced with non-negative weights summing to 1; same `base_seed` → identical weights; all plans valid.
+**Why SMC is excluded from label-verify**: SMC produces a *weighted ensemble*, not a single plan. `label-verify` verifies a specific plan against the parameters that generated it. SMC has no "selected plan" — a user must make a separate selection decision (e.g., using `PercentileSweep` on the SMC output). The selection step would need its own provenance chain. Until a `SeedCompositor::SmcPercentile` variant is specified (deferred), the SMC output is an analysis artifact from which a user-chosen plan may be extracted. Any plan submitted from an SMC ensemble must record the selection method and index as a separate manifest entry; SMC itself is not a plan-submission workflow.
+
+**Test invariants**: `n_particles` plans produced with non-negative weights summing to 1.0 ± 1e-9 (floating-point tolerance); same `base_seed` → identical weights; all plans valid (contiguous, population-balanced).
 
 ---
 
@@ -163,9 +182,26 @@ SeedCompositor::Flip {
 
 **CLI**: `--search flip --flip-steps 10000 --percentile 0.5`
 
-**Audit chain**: `flip_steps`, `percentile`, `base_seed` recorded in manifest.
+**Failure path**: If all `flip_steps` proposals fail contiguity or balance, the chain returns the initial plan (the `visited` list always contains at least the initial plan, so the return is always non-empty).
 
-**Test invariants**: All visited plans are valid; `p=0.0` ≤ EC of `p=1.0`; deterministic with same seed.
+**Audit chain**: manifest records:
+```json
+"search": "flip",
+"flip_steps": 10000,
+"percentile": 0.5,
+"base_seed": 12345678,
+"visited_count": 3821,       // number of accepted plans in visited list
+"selected_plan_rank": 1910   // floor(0.5 * 3821) — the index returned
+```
+The `selected_plan_rank` enables verification: re-run with same seed, confirm visited list has same length, confirm rank matches.
+
+**Test invariants**:
+- All visited plans are valid (contiguous, population-balanced)
+- `p=0.0` EC ≤ `p=1.0` EC (ascending sort — tests both to catch inverted sort)
+- Deterministic: same seed → same `visited_count` and same `selected_plan_rank`
+- All-fail case: if every proposal fails, `visited_count=1` (initial plan only), result is the initial plan
+- `flip_steps=0`: `visited_count=1`, returns initial plan
+- SMC weight normalization: weights sum to 1.0 ± 1e-9 (floating-point tolerance required)
 
 ---
 
@@ -194,9 +230,24 @@ SplitStrategy::SimulatedAnnealing {
 
 **CLI**: `--structure simulated-annealing --sa-steps-per-tract 10 --sa-t0-factor 0.01`
 
-**Audit chain**: SA parameters recorded in `algorithm_params` manifest field.
+**Audit chain**: SA parameters recorded in `algorithm_params` manifest field with named fields:
+```json
+"structure": "simulated-annealing",
+"sa_t0_factor": 0.01,
+"sa_t_final": 1e-4,
+"sa_steps_per_tract": 10,
+"sa_initial_ec": 147,      // EC of the initial plan passed to SA
+"sa_t0_actual": 1.47,      // max(1.0, 0.01 * 147)
+"sa_n_steps": 830,         // 10 * 83 tracts in this subgraph
+"sa_seed": 99123456        // seed used for acceptance-probability RNG
+```
+All fields named and typed so a verifier can independently reproduce the temperature schedule.
 
-**Test invariants**: Final plan EC ≤ initial plan EC (SA should not increase EC on average); deterministic with same seed.
+**Test invariants**:
+- Deterministic: fixed seed, known synthetic subgraph, known initial EC → fixed final EC (not "on average" — one specific deterministic run with known inputs)
+- Fixed-seed regression: `SA(4×4 grid, seed=42, T0=1.0, Tf=1e-4, n_steps=160)` → recorded final EC value (check this exact value in CI to catch cooling schedule bugs)
+- Final plan is contiguous and population-balanced
+- All acceptance decisions use SA seed, not base_seed (isolated RNG)
 
 ---
 
