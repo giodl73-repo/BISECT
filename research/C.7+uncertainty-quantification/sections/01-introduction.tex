@@ -1,0 +1,126 @@
+% Section 1: Introduction (~1,500 words)
+
+\subsection{The Problem with Point Estimates}
+
+A redistricting algorithm generates precise numerical outputs: a
+Polsby-Popper score of $0.361$, an efficiency gap of $-3.2\%$, a
+minority VAP percentage of $51.7\%$ for a particular district. These
+numbers appear authoritative. In expert witness testimony, legislative
+hearings, or court filings, they carry the weight of algorithmic
+objectivity. But what do they actually mean?
+
+A compactness score of $0.361$ is only meaningful in context. If the
+algorithm were run with a different random seed, would the score be
+$0.347$ or $0.374$? If the Census Bureau had enumerated the population
+slightly differently (as it inevitably does, given sampling and coverage
+errors), would the district boundaries be different enough to change the
+score by $0.010$ or $0.001$? If the underlying geographic units were
+defined at block-group rather than tract resolution, would the score
+change by $0.020$ or $0.003$?
+
+These are not hypothetical concerns. The Districting Integrity Act
+(DIA) \citep{b02paper} requires that algorithmic outputs be certified
+as robust to ``documented sources of variation.'' Courts evaluating
+algorithmic redistricting claims need to know whether observed
+differences between algorithmic and enacted plans exceed the margin of
+uncertainty. Expert witnesses who report $+22\%$ compactness improvement
+without a confidence interval cannot be cross-examined on whether the
+true improvement might be $+5\%$ or $+40\%$.
+
+This paper provides systematic uncertainty quantification for the
+METIS recursive bisection redistricting pipeline \citep{b1paper}.
+We identify, characterize, and propagate three sources of uncertainty:
+
+\begin{enumerate}
+  \item \textbf{Algorithmic seed variance}: METIS uses a random seed
+    to initialize its partitioning heuristic; different seeds can
+    produce different partitions.
+
+  \item \textbf{Census sampling uncertainty}: The PL 94-171
+    redistricting data file \citep{pl94171} is based on a near-complete
+    enumeration, but coverage errors and differential undercount create
+    uncertainty in district populations.
+
+  \item \textbf{Shapefile resolution measurement error}: The geographic
+    boundaries used to construct the adjacency graph are derived from
+    TIGER/Line shapefiles \citep{tiger-census}, which approximate true
+    boundaries at a finite resolution. Different resolutions produce
+    different perimeter and area measurements, and therefore different
+    compactness scores.
+\end{enumerate}
+
+\subsection{Why UQ Matters for Litigation}
+
+The post-\textit{Rucho} landscape of redistricting litigation places
+algorithmic redistricting plans in a distinctive legal role: as
+\emph{baseline comparators} \citep{rucho2019}. State courts, following
+the reasoning of \textit{LWV v.\ Pennsylvania} \citep{lwv2018} and
+\textit{Harper v.\ Hall} \citep{harper2022}, have increasingly accepted
+algorithmic plans as evidence that enacted plans could have been drawn
+less unfairly. When an expert witness testifies that ``the enacted plan
+has an efficiency gap of $+7.5\%$ while the algorithmic baseline is
+$-3.2\%$, a difference of $10.7$ percentage points,'' opposing counsel
+will ask: \textit{what is the margin of error on that difference?}
+
+Without UQ, the answer is ``I don't know.'' With UQ, the answer is
+``The 95\% CI for the difference is $[8.1, 13.3]$ percentage points,
+so the direction and approximate magnitude are robust to all documented
+sources of variation.'' The latter answer is both scientifically honest
+and legally more compelling.
+
+\subsection{Overview of UQ Methods Used}
+
+We employ three statistical methods, matched to the nature of each
+uncertainty source:
+
+\textbf{Bootstrap confidence intervals} \citep{efron1993introduction}
+for seed variance and partisan metrics. We treat each of the 10,000
+seed realizations from B.7 \citep{b7paper} as a bootstrap sample,
+enabling direct empirical estimation of the sampling distribution of
+any metric without distributional assumptions.
+
+\textbf{Delta method} \citep{ver2012numerical} for census sampling
+uncertainty. When the input quantities (population counts) have known
+or estimable standard errors, the delta method propagates those errors
+to derived quantities (deviation from ideal district population) using
+first-order Taylor expansion. This is computationally efficient and
+exact for smooth, differentiable metrics like deviation from ideal.
+
+\textbf{Sensitivity analysis} for resolution measurement error.
+Since resolution is not a random variable (it is an analytic choice),
+we quantify measurement error by comparing metric values across the
+three resolutions tested in C.1 \citep{dellalibera2026c1}, treating
+the block-level results as the ``truth'' and computing signed error
+for tract- and block-group-level measurements.
+
+\subsection{Key Contributions}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item A complete CI table for Polsby-Popper compactness, covering
+    all three uncertainty sources, for all 50 states at 2020 Census.
+
+  \item Bootstrap CIs for efficiency gap, mean-median difference, and
+    partisan bias at 50\% vote share for 15 competitive states.
+
+  \item Delta method CIs for district population deviation from ideal,
+    propagating PL 94-171 census undercount estimates from
+    \citet{brown2018demographic} and \citet{daponte2021census}.
+
+  \item A synthesized CI for the headline ``$+22\%$ compactness
+    improvement'' that accounts for all three sources simultaneously
+    using variance decomposition.
+\end{enumerate}
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:seed} characterizes METIS seed variance using the
+B.7 dataset. Section~\ref{sec:census} derives delta method CIs for
+population deviation using published census undercount estimates.
+Section~\ref{sec:pp} characterizes PP measurement error from resolution
+choice. Section~\ref{sec:partisan} presents bootstrap CIs for partisan
+fairness metrics. Section~\ref{sec:vra} addresses uncertainty in
+minority VAP estimates. Section~\ref{sec:synthesis} constructs the
+joint CI for the $+22\%$ compactness improvement. Section~\ref{sec:conclusion}
+concludes with practical guidance for expert witnesses.

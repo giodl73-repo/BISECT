@@ -1,11 +1,8 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{lmodern}\usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
-\usepackage{booktabs}
-\usepackage{hyperref}
-\usepackage{natbib}
-\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,graphicx,hyperref,natbib,microtype}
 
 \title{\textbf{Subdivision-Respecting Redistricting:\\
 County-Sticky Edge Weights}\\[0.4em]
@@ -19,108 +16,34 @@ County-Sticky Edge Weights}\\[0.4em]
 \begin{abstract}
 Most state constitutions require congressional maps to ``preserve political
 subdivisions'' --- counties and municipalities --- as a secondary criterion
-after equal population.  Existing algorithmic approaches either ignore this
-requirement or impose hard constraints that degrade compactness.
-We introduce \emph{county-sticky} edge weighting: edges between census tracts
-within the same county receive a multiplier $\alpha_c \geq 1$, making
-intra-county cuts more expensive without prohibiting them.
-On all 50 states, $\alpha_c = 3.0$ reduces county splits by $34\%$ relative
-to the baseline (B.2) while maintaining $97\%$ of the compactness improvement.
-This soft-constraint approach is the weight mode exposed as
-\texttt{--weights-override county} in the \texttt{redist} CLI.
+after equal population.
+Hard-constraint approaches (forbidden inter-county edges) are infeasible
+for large counties; ignoring counties produces unnecessary splits.
+We introduce \emph{county-sticky} edge weighting: intra-county edges
+receive a multiplier $\alpha_c \geq 1$, making county-interior cuts more
+expensive without prohibiting them.
+We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 5.0, 10.0\}$ on all 50
+states and find a sharp Pareto-frontier elbow at $\alpha_c = 3.0$:
+county splits fall by $34\%$ (487~$\to$~323) and multi-county districts
+fall by $37\%$ (312~$\to$~198), at a compactness cost of only $3\%$
+($\overline{PP}$: 0.361~$\to$~0.350) --- well within the $+22\%$ compactness
+improvement the baseline achieves over enacted maps.
+Iowa ($k{=}4$): splits drop from 12 to 3, nearly preserving the traditional
+four-region geography.
+Texas ($k{=}38$): splits drop from 89 to 61 (28 avoidable splits eliminated).
+This soft-constraint approach is implemented as
+\texttt{--weights-override county} in the \texttt{redist} CLI and is the
+DIA default for states with constitutional subdivision-preservation requirements.
 \end{abstract}
 
-\section{Introduction}
-
-State constitutional redistricting criteria typically list criteria in priority
-order: (1) equal population, (2) VRA compliance, (3) contiguity, (4)
-compactness, (5) preservation of political subdivisions.
-Items (1)--(4) are addressed by the baseline algorithm (B.2).
-Item (5) --- county preservation --- requires explicit treatment.
-
-Two naive approaches fail:
-\emph{Hard constraints} (forbidden edges across county boundaries) make large
-counties unpartitionable when $k > $ county count, breaking contiguity.
-\emph{No treatment} (ignore counties) produces maps that split counties
-unnecessarily, violating state constitutional requirements.
-
-We propose a middle path: \emph{county-sticky weights}.
-
-\section{County-Sticky Weighting}
-
-\subsection{Formulation}
-
-Let $c(v)$ denote the county of tract $v$.  For each edge $(u, v) \in E$,
-define the county-sticky weight:
-\[
-  w_E'(u, v) = w_E(u, v) \cdot
-  \begin{cases}
-    \alpha_c & \text{if } c(u) = c(v) \\
-    1 & \text{otherwise}
-  \end{cases}
-\]
-where $w_E(u, v)$ is the shared boundary length (B.2 baseline) and
-$\alpha_c \geq 1$ is the county stickiness parameter.
-
-Higher $\alpha_c$ penalises intra-county cuts more, preserving county
-integrity at the cost of compactness.
-
-\subsection{Parameter selection}
-
-We sweep $\alpha_c \in \{1.5, 2.0, 3.0, 5.0, 10.0\}$ on all 50 states.
-The Pareto frontier of (county splits, compactness) shows a sharp elbow
-at $\alpha_c = 3.0$: further increases reduce county splits by $< 5\%$ while
-compactness falls by $> 8\%$.
-
-\section{Results}
-
-\begin{table}[h]
-\centering
-\caption{County preservation vs compactness ($\alpha_c = 3.0$, 2020 Census)}
-\begin{tabular}{lrrrr}
-\toprule
-Metric & Baseline (B.2) & County-Sticky & Change \\
-\midrule
-Mean Polsby--Popper & 0.361 & 0.350 & $-3.0\%$ \\
-County splits & 487 & 323 & $-34\%$ \\
-Multi-county districts & 312 & 198 & $-37\%$ \\
-Max deviation from ideal pop. & 0.41\% & 0.44\% & $+0.03$pp \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-County preservation improves substantially while compactness falls only 3\%
---- well within the margin of improvement over enacted maps (+22\% vs B.2
-baseline).
-
-\subsection{State-level highlights}
-
-Iowa ($k{=}4$, 99 counties): county splits drop from 12 to 3.
-The four-district map nearly respects the traditional four-region Iowa
-geography (northwest, northeast, southwest, southeast).
-
-Texas ($k{=}38$, 254 counties): county splits drop from 89 to 61.
-The 15 largest counties still require splitting ($\geq 4$ districts each),
-but medium counties are now largely preserved.
-
-\section{Connection to the Districting Integrity Act}
-
-The DIA's algorithm specification uses county-sticky weights
-($\alpha_c = 3.0$) as a default, satisfying state constitutional
-subdivision-preservation requirements without hard constraints.
-The parameter $\alpha_c$ is published in the TIGER adjacency graph
-metadata, making the weighting fully reproducible.
-
-\section{Conclusion}
-
-County-sticky edge weights with $\alpha_c = 3.0$ reduce county splits by 34\%
-at a compactness cost of 3\%, satisfying state constitutional
-subdivision-preservation criteria without sacrificing the core compactness
-gains of edge-weighted bisection.
-This approach is implemented as \texttt{--weights-override county} in the
-\texttt{redist} CLI.
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

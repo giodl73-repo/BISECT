@@ -1,0 +1,93 @@
+\section{Introduction}
+\label{sec:intro}
+
+The 2019 \emph{Rucho v.\ Common Cause} decision removed federal courts from
+the business of adjudicating partisan gerrymandering, returning the question
+entirely to state legislatures, state courts, and, occasionally, independent
+commissions \citep{rucho2019}.  The immediate practical effect was to widen
+the scope for strategic map drawing in states without independent redistricting
+commissions; the longer-term intellectual effect has been to sharpen the
+question of whether partisan distortion is a property of how maps are drawn or
+a property of the single-member district system itself.
+
+A growing empirical literature supports the latter view.  \citet{rodden2019why}
+documents that the geographic sorting of Democratic voters into dense urban
+cores produces systematic Republican over-representation even when maps are
+drawn with no partisan intent whatsoever --- an observation subsequently
+confirmed by \citet{chen2013unintentional} and extended to the block-group
+resolution by the present research program.  If sorting is the cause and
+single-member districts are the mechanism, then algorithmic redistricting can
+at best neutralize the drawing process without eliminating the structural
+outcome.  This observation motivates the research agenda documented in Track E:
+a systematic examination of what representation would look like under six
+alternative architectures.
+
+\subsection{Why Explore Alternatives?}
+
+Our motivation is analytical rather than advocacy.  Each alternative system
+illuminates something different about the baseline.  Multi-member districts
+(E.1) reveal the geographic-sorting gap by partially escaping it.  County
+representation (E.2) reveals the cost of county-preservation requirements
+imposed by many state constitutions.  National redistricting (E.3) quantifies
+the compactness cost of federalism.  Partisan-similarity clustering (E.4)
+demonstrates that algorithmic gerrymandering is technically feasible and that
+the reform consensus against it rests on normative rather than technical
+grounds.  Partisan-fairness seat allocation (E.5) shows what full
+proportionality would require geometrically.  International applications (E.6)
+test whether findings from US census geography generalize to parliamentary
+systems with different boundary structures.
+
+Together these six experiments constitute a controlled exploration of the
+algorithmic redistricting design space.  By holding the core algorithm
+(edge-weighted recursive bisection via METIS) constant and varying the
+objective function and structural constraints, we can isolate the causal
+contribution of each design dimension to observed outcomes.
+
+\subsection{The Post-Rucho Policy Environment}
+
+The proportionality debate has intensified on multiple fronts since 2019.
+\emph{Moore v.\ Harper} (2023) rejected the independent-state-legislature
+theory and confirmed that state courts may review redistricting under state
+constitutional law \citep{moore2023}, creating new litigation venues but not
+new substantive standards.  The \emph{Voting Rights Act} challenge in
+\emph{Allen v.\ Milligan} (2023) preserved the Section 2 compactness and
+majority-minority district framework \citep{allen2023}.  Louisiana
+\emph{v.\ Callais} (2025) further sharpened the VRA compactness requirement
+at the sub-district level.  None of these decisions addresses the structural
+underrepresentation arising from geographic sorting; they regulate the process
+of drawing districts within the single-member paradigm.
+
+Reform proposals outside litigation have ranged from the \emph{Fair
+Representation Act} (multi-member districts with ranked-choice voting) to
+various state-level proportional allocation schemes.  None has been enacted at
+the federal level.  The principal obstacle is not political will alone but
+the genuine trade-offs that any alternative system must navigate: a proposal
+that maximizes proportionality at the cost of compactness faces one class of
+objections; a proposal that preserves counties at the cost of population
+equality faces another.  Mapping these trade-offs rigorously is the
+contribution of this paper.
+
+\subsection{The Six Systems and This Paper's Scope}
+
+We evaluate six systems in detail in companion papers E.1--E.6.  This synthesis
+paper (E.0) provides:
+\begin{enumerate}
+  \item Concise descriptions of each system and its core design choice
+        (Section~\ref{sec:systems}).
+  \item A comparative Pareto analysis across four dimensions using a
+        standardized 1--3 scoring rubric (Section~\ref{sec:tradeoffs}).
+  \item An analysis of how the Rodden geographic-sorting constraint operates
+        differently across system types (Section~\ref{sec:constraints}).
+  \item A constitutional taxonomy distinguishing which alternatives are
+        immediately available from which require amendment
+        (Section~\ref{sec:constitutional}).
+  \item A conclusion arguing that algorithmic single-member redistricting
+        (the DIA) is the Pareto-optimal choice within current constitutional
+        constraints (Section~\ref{sec:conclusion}).
+\end{enumerate}
+
+Our scoring framework is deliberately conservative: we report Polsby--Popper
+compactness means from 50-state sweep outputs, proportionality deviation from
+statewide vote shares, majority-minority district counts against VRA benchmarks,
+and county-preservation rates from census TIGER data.  All figures are derived
+from the pipeline documented in \citet{dellaLibera2026mec}.

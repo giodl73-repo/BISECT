@@ -1,0 +1,91 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary of Findings}
+
+This paper has analyzed six alternative representation systems against a common
+framework of four trade-off dimensions (compactness, proportionality, minority
+representation, county preservation) and identified the constitutional
+availability of each.  The principal findings are:
+
+\begin{enumerate}
+  \item \textbf{No system dominates the baseline on all four dimensions.}
+        Every alternative system that improves on the DIA baseline on one
+        dimension degrades performance on at least one other.  The
+        compactness--proportionality Pareto frontier is steep (approximately
+        0.015 PP per percentage point of proportionality gained), meaning that
+        even modest proportionality improvements require accepting substantially
+        non-compact maps.
+
+  \item \textbf{The Rodden sorting constraint applies to all single-member
+        geographic systems.}  Changing the drawing algorithm, the objective
+        function, or the jurisdictional boundaries (within single-member,
+        geographic constraints) does not escape the fundamental problem that
+        Democratic voters are geographically concentrated in ways that produce
+        wasted votes under any compact district structure.
+
+  \item \textbf{Multi-member districts partially escape sorting.}
+        Three-member districts reduce the sorting-driven seat gap by
+        approximately 40\%; five-member districts reduce it by approximately
+        65\%.  This is the only mechanism available within single-election,
+        geographically-bounded representation that materially improves both
+        proportionality and minority representation simultaneously.
+
+  \item \textbf{Constitutional availability constrains the reform menu.}
+        National redistricting requires constitutional amendment and is
+        therefore not a realistic near-term option.  Multi-member districts
+        require only federal statute.  County representation in its strict
+        form requires constitutional amendment.  Partisan-fairness seat
+        allocation is available by federal statute under Article~I, \S4.
+
+\end{enumerate}
+
+\subsection{The DIA as Best Available Single-Member Option}
+
+Given these findings, the District-Independent Algorithm --- algorithmic
+single-member redistricting using edge-weighted recursive bisection without
+partisan data --- achieves the best available balance of compactness, VRA
+compliance, constitutional availability, and geographic stability among the
+six systems examined, for systems that are:
+(a) immediately available without federal legislation or constitutional amendment,
+(b) compliant with all existing legal requirements (population equality,
+contiguity, VRA), and
+(c) resistant to partisan manipulation.
+
+Among the six systems examined, no alternative outperforms the DIA on all four
+dimensions within the same constitutional and statutory constraints.  This is
+not a claim of Pareto optimality for all possible systems, but of
+non-dominance within the examined portfolio.  Multi-member districts (E.1)
+weakly dominate the DIA on proportionality and minority representation but
+sacrifice compactness and require federal legislation to repeal 2~U.S.C.~\S2c.
+This is not an argument against electoral reform; it is an argument that the
+type of reform that would materially change representation outcomes
+(multi-member districts) requires legislative action of a qualitatively
+different kind than algorithmic adoption of a better drawing method.
+
+\subsection{Implications for the Reform Debate}
+
+The post-\emph{Rucho} reform debate has largely focused on independent
+redistricting commissions as a remedy for partisan gerrymandering.  Our
+analysis suggests a more fundamental framing: commissions adopting algorithmic
+methods can eliminate drawing-process distortions, but cannot eliminate
+structural distortions arising from geographic sorting.  If proportional
+outcomes are the goal, the reform required is multi-member districts, not
+better commissions.
+
+This distinction is important for how reform advocates prioritize their
+efforts.  Independent commissions with algorithmic methods are achievable
+state-by-state through ballot initiative and are defensible against legal
+challenge.  Multi-member districts require federal legislation and face
+substantial political obstacles.  Both are legitimate reform goals; they are
+not substitutes.
+
+\subsection{Track E Papers}
+
+The companion papers in Track~E develop each alternative system in full:
+\citet{dellaLibera2026e1} (multi-member districts), \citet{dellaLibera2026e2}
+(county representation), \citet{dellaLibera2026e3} (national redistricting),
+\citet{dellaLibera2026e4} (partisan similarity), \citet{dellaLibera2026e5}
+(partisan-fairness allocation), and \citet{dellaLibera2026e6} (international
+applications).  The synthesis of lessons learned across all six experiments
+is provided in \citet{dellaLibera2026e7} (lessons learned).

@@ -1,0 +1,97 @@
+\section{Lesson 1: Geography Is Destiny for Single-Member Districts}
+\label{sec:lesson1}
+
+The single most important finding from the E-track research program is also
+its most sobering: for any system that uses geographically compact single-member
+districts, Democratic underrepresentation relative to national vote share is a
+structural inevitability, not a drawing artifact.  This lesson is established
+most directly by Papers E.4 and E.5, which approach the sorting problem from
+opposite directions.
+
+\subsection{The Rodden Mechanism}
+
+\citet{rodden2019why} identifies the mechanism precisely.  Democratic voters
+are geographically concentrated in dense urban cores in ways that produce
+``wasted votes'' under winner-take-all single-member elections.  A district
+centered on central Detroit, Philadelphia, or San Francisco will vote 85--15
+Democratic regardless of how its boundaries are drawn; the 85\% who vote
+Democratic ``waste'' their votes in the sense that the district would have
+produced a Democratic representative with 51\% of the vote, and the additional
+34 percentage points of Democratic margin are electorally inert.  Republican
+voters, by contrast, are spread across suburban and rural geographies where
+their margins are more modest --- close enough to win, but not so large as
+to generate systematic waste.
+
+The result is that in a system with perfect population equality, Democratic
+voters systematically produce fewer Democratic seats per Democratic vote than
+Republican voters produce Republican seats.  \citet{chen2013unintentional}
+showed that this effect is large enough to produce Republican seat majorities
+in many states even when district lines are drawn by nonpartisan algorithms
+with no partisan intent.  Our 50-state algorithmic sweep confirms this finding
+with more recent data and higher geographic resolution \citep{dellaLibera2026mec}.
+
+\subsection{Evidence from E.4: Partisan-Similarity Clustering}
+
+Paper E.4 provides the sharpest demonstration that sorting is a structural
+rather than drawing artifact \citep{dellaLibera2026e4}.  By varying the
+partisan-similarity edge weight from zero (pure compactness, the baseline) to
+a maximum that drives all partisan-similar tracts into the same district,
+E.4 shows that the aggregate seat--vote relationship remains almost unchanged.
+
+Specifically, when we weight tract adjacencies by partisan similarity and
+optimize for partisan homogeneity within districts, the resulting maps have
+95\% safe seats (versus 52\% in the baseline) and a much wider distribution
+of partisan margins.  But the mean seat shares for both parties are nearly
+identical to the baseline: the algorithm has changed which seats each party
+wins safely and which it wins narrowly, but it has not changed how many seats
+each party wins in expectation.  The seat bonus for Republicans --- the gap
+between Republican seat share and Republican vote share --- is $+4.2$
+percentage points in the baseline and $+4.0$ percentage points in the
+partisan-similarity extreme, a difference of 0.2~pp that is not statistically
+distinguishable from zero ($p = 0.41$).
+
+This null result for partisan redistribution within a single-member geographic
+system is the most direct evidence that sorting, not drawing, is the
+operative constraint.
+
+\subsection{Evidence from E.5: Partisan-Fairness Allocation}
+
+Paper E.5 approaches the same problem from the other direction: instead of
+asking what happens when we optimize for partisan homogeneity, it asks what
+the algorithm must do to achieve proportionality \citep{dellaLibera2026e5}.
+The answer is that it must draw a specific class of non-compact districts ---
+those that crack urban Democratic concentrations into multiple surrounding
+suburban districts, reducing the margin wasted in each.
+
+The quantity and severity of these non-compact districts is a direct measure
+of the geometric cost of escaping sorting.  In states with severe Democratic
+urban concentration (Illinois, New York, Pennsylvania, Michigan), achieving
+proportionality requires districts that would fail any reasonable compactness
+threshold.  In states with more evenly distributed partisanship (Iowa,
+Wisconsin, Arizona), the compactness cost of proportionality is modest.
+
+This cross-state variation in the geographic cost of proportionality is itself
+informative.  It implies that state-by-state adoption of proportionality
+standards would have uneven effects: states with less sorting would achieve
+proportionality at low compactness cost, while states with high urban
+concentration would face a much steeper trade-off.  A national proportionality
+standard would thus impose differential burdens on different states.
+
+\subsection{The Implication: Drawing Methods Are Not the Remedy}
+
+The combined evidence from E.4 and E.5 establishes that improving the drawing
+method --- whether by algorithmic means, independent commission, or court
+supervision --- cannot eliminate the seat--vote gap arising from geographic
+sorting.  The gap exists at the map level, not the drawing-process level.
+Courts that focus on drawing \emph{process} (whether legislators had partisan
+intent) rather than drawing \emph{outcomes} (whether the resulting map is
+proportional) are, by this analysis, addressing the wrong question for the
+wrong reason.
+
+This finding does not imply that drawing-process reforms are without value.
+Algorithmic redistricting and independent commissions do eliminate the
+\emph{additional} seat bias that partisan gerrymanders layer on top of the
+structural sorting bias.  In some states, that additional bias is large
+(North Carolina, Ohio, Wisconsin in the 2010s) and its elimination is
+consequential.  But in states where the structural sorting bias already
+dominates, no process reform changes outcomes materially.

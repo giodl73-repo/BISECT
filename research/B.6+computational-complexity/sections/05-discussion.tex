@@ -1,0 +1,76 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Implications of NP-hardness for the DIA}
+
+Theorem~\ref{thm:nphard} establishes that no polynomial-time algorithm
+can guarantee an optimal redistricting map unless P = NP.
+P = NP is universally believed to be false among theoretical computer
+scientists; making the NP-hardness result effectively unconditional for
+all practical purposes.
+This has two important implications for the Districting Integrity Act.
+
+First, the DIA's use of a heuristic (METIS) is not a design weakness but
+a theoretical necessity: any algorithm that claimed to find the optimal
+compact map would be implicitly claiming to solve an NP-hard problem.
+Second, legal challenges that argue the DIA should use the ``most compact''
+possible algorithm are misdirected: finding the globally most compact map
+is computationally intractable.
+
+It is important to note that Theorem~\ref{thm:nphard} concerns the
+\emph{optimisation} problem (finding the minimum-cut partition), not
+feasibility (finding any valid partition).
+A valid partition always exists for any connected graph with $k \leq n$:
+any spanning tree can be cut into $k$ connected subtrees.
+NP-hardness means that selecting the \emph{best} partition is
+computationally intractable --- not that redistricting is impossible.
+
+\subsection{Approximation quality in practice}
+
+Proposition~\ref{prop:approx} establishes that no known polynomial-time
+algorithm achieves better than $O(\log n)$ approximation for balanced
+$k$-partition in general; the best known SDP-based algorithm
+(ARV~\citep{arora2009expander}) achieves $O(\sqrt{\log n})$ for Sparsest
+Cut.  No formal approximation ratio is claimed for METIS's heuristic.
+
+Empirically, B.7~\citep{b7paper} shows that the DIA seed is within 3\%
+of the best partition found across 10,000 independent seeds.
+This empirical gap is not the same as the theoretical approximation ratio
+relative to the true optimum (which is unknown); the reference point is
+the best of 10,000 seeds, not a provably optimal solution.
+The empirical 3\% gap should be interpreted as evidence of practical
+solution quality, not as a formal bound.
+Legal challenges should note that the worst-case guarantee from complexity
+theory is much weaker than the empirical performance: METIS
+systematically finds solutions close to the best feasible result found
+by exhaustive seed search at the redistricting scale.
+
+\subsection{Comparison to alternative algorithms}
+
+Markov chain approaches~\citep{fifield2020} can sample from the solution
+space and find near-optimal maps, but their convergence time is
+exponential in the worst case.  IP-based approaches~\citep{mehrotra1998optimal}
+can find exact solutions for small instances ($n \leq 500$) but do not
+scale to census-tract graphs.
+
+The METIS runtime of $O(n^{1.07})$ is the best available among algorithms
+that produce legally compliant (contiguous, population-balanced) maps at
+census-tract scale.  The next fastest alternatives (simulated annealing,
+genetic algorithms) are $O(n^{1.5})$ or worse on the same problem class.
+
+\subsection{Limitations}
+
+The NP-hardness reduction in Theorem~\ref{thm:nphard} holds for the
+optimisation version (find a partition with minimum edge cut subject to
+connectivity and population balance).
+The decision version (does a partition with edge cut $\leq C$ exist?)
+is co-NP-hard by standard argument.
+No formal approximation ratio for METIS recursive bisection is established
+here; tighter bounds specific to the redistricting graph class (sparse
+planar graphs with bounded diameter and integer population weights) remain
+an open problem.
+
+The empirical scaling ($b = 1.07$, $k > 1$ states) is fit on the 50-state
+sample and may not generalise to block-level resolution
+($n \approx 8.1\mathrm{M}$ nationally), which has not been tested at
+full scale.

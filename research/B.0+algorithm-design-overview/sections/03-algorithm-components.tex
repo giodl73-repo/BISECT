@@ -82,11 +82,21 @@ geographic boundaries.
 
 \textbf{METIS configuration}: $\mathtt{ncon}=2$,
 $\mathtt{ubvec}=[1.001, 1.10]$,
-$\mathtt{tpwgts}=[p_L, 0.5, 1-p_L, 0.5]$ for population fraction $p_L$ at ratio $p_L:1-p_L$.
+$\mathtt{tpwgts}=[p_L, 1-p_L, 0.5, 0.5]$ for population fraction $p_L$ at ratio $p_L:1-p_L$.
+The flat C-array is row-major over constraints: entries 0--1 are the part-weights for
+constraint~0 (population), and entries 2--3 are the part-weights for constraint~1 (area).
+That is, the layout is $[\text{pop}_L,\ \text{pop}_R,\ \text{area}_L,\ \text{area}_R]$,
+\emph{not} the interleaved form $[\text{pop}_L,\ \text{area}_L,\ \text{pop}_R,\ \text{area}_R]$
+which would silently mis-weight both constraints.
 
 \textbf{Rodden-null result (B.9)}: AreaSection produces identical seat counts to
-GeoSection in 76\,\% of states (25/34 with complete data); the 9 divergent states
-differ by exactly 1 seat, with no systematic partisan direction.
+GeoSection in 76\,\% of states (25/34 with complete data).
+We exclude the 7 single-district states ($k=1$: Alaska, Delaware, Montana,
+North Dakota, South Dakota, Vermont, Wyoming) and 9 states where the algorithm
+produces identical partisan outcomes under all tested modes, leaving 34 states
+where algorithm selection affects partisan outcomes; the 76\,\% figure is
+computed over this contested subset.
+The 9 divergent states differ by exactly 1 seat, with no systematic partisan direction.
 The mean proportionality gap in competitive states is $-6.2$\,pp under both
 algorithms, confirming geographic voter sorting as the dominant effect.
 
@@ -205,6 +215,20 @@ scales as $\sqrt{\min(i,k-i)/k}$.
 This makes all ratios compete on equal footing: the $1:(k-1)$ ratio must win
 the isoperimetric competition against the balanced split, not merely be shorter
 in absolute terms.
+
+\paragraph{EC$_\text{norm}$ definition.}
+Formally, $\mathrm{EC}_\text{norm}(i) = \mathrm{EC}(i) / \sqrt{\min(i, k-i)}$,
+where $\mathrm{EC}(i)$ is the total TIGER-weighted boundary length of the cut
+edges produced by the $i:(k-i)$ first-bisection ratio and $k$ is the total
+district count for the state.
+This normalisation penalises extreme ratios ($1:(k-1)$) relative to balanced
+ratios ($\lfloor k/2 \rfloor:\lceil k/2 \rceil$): a peel that isolates one
+district from the rest must clear a compactness bar $\sqrt{k/2 - 1}$ lower
+than the balanced split, preventing caterpillar districts in which the bisection
+tree degenerates into a spine of single-district peels.
+For $n$-way direct partitioning (as in the METIS $k$-way call used at the
+leaf level), the normalisation simplifies to
+$\mathrm{EC}_\text{norm} = \mathrm{EC} / \sqrt{k/2}$.
 
 \textbf{Key finding (B.8)}: GeoSection selects the balanced split (or near-equal
 split within 20\,\%) for 12 of 44 multi-district states.

@@ -1,12 +1,8 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
 \usepackage{lmodern}\usepackage[T1]{fontenc}
-\usepackage{amsmath,amssymb}
-\usepackage{booktabs}
-\usepackage{graphicx}
-\usepackage{hyperref}
-\usepackage{natbib}
-\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs,graphicx,hyperref,natbib,microtype}
 
 \title{\textbf{Solution Space and Seed Sensitivity\\in METIS Redistricting}\\[0.4em]
 \large B.7 --- Algorithm Track}
@@ -17,112 +13,34 @@
 \maketitle
 
 \begin{abstract}
-The Districting Integrity Act specifies a single deterministic seed for
-the METIS partitioner.  But does a single seed produce the
-\emph{minimum} edge-cut redistricting map?  We characterise the solution
-space of METIS recursive bisection by sweeping $10{,}000$ seeds per state
-across all 50 states.  We find that seed sensitivity is low: the coefficient
-of variation of the normalised edge cut across seeds is below 2\% for 48 of
-50 states.  Georgia and North Carolina exhibit higher variance ($\sim$4\%)
-due to geographic complexity.  The minimum-edge-cut seed is within 5\% of the
-median for all states.  These results motivate the ConvergenceSweep approach
-(B.16) and certify $T = 600$ as the statutory threshold.
+The Districting Integrity Act (DIA) specifies a single deterministic seed
+for the METIS partitioner, derived from the census release identifier via
+SHA-256.  We characterise the solution space of METIS recursive bisection
+by sweeping 10,000 seeds per state across all 50 states (500 thousand total
+METIS calls on 2020 Census congressional maps).
+Seed sensitivity is low: the coefficient of variation of the normalised
+edge cut across seeds is below 2\% for 48 of 50 states.
+Georgia ($k{=}14$, CV $= 4.3\%$) and North Carolina ($k{=}14$, CV $= 3.8\%$)
+exhibit higher variance due to their non-power-of-two district count and
+geographic complexity.
+The DIA seed is within $2.9\% \pm 1.7\%$ of the minimum-edge-cut seed ---
+statistically indistinguishable from a randomly chosen seed.
+Partisan seat-share variance across 10,000 seeds is at most 2 seats for
+the two states with highest seed variance (Wisconsin and North Carolina),
+far below the 12.8 percentage-point gap between algorithm families
+reported in B.0.
+These results certify the DIA's single-seed specification as legally
+defensible and motivate the $T = 600$ ConvergenceSweep threshold (B.16).
 \end{abstract}
 
-\section{Introduction}
-
-METIS is a heuristic; different random seeds produce different partitions.
-For a statute that mandates a single deterministic map, two questions arise:
-(1) How much does the seed affect partition quality?
-(2) Is a single seed sufficient, or does the statute need to specify a search
-procedure?
-
-This paper answers both questions empirically.
-B.16 builds on these results to certify the ConvergenceSweep threshold
-$T = 600$.
-
-\section{Solution Space Characterisation}
-
-\subsection{Experimental design}
-
-For each of the 50 states, we ran METIS recursive bisection with
-edge-weighted congressional maps (B.2 configuration) under 10{,}000 seeds
-drawn via the SHA-256 chain described in B.16.
-We recorded the normalised edge cut $\mathrm{EC}_{\mathrm{norm}}$ for each
-seed.
-
-\subsection{Variance across seeds}
-
-\begin{table}[h]
-\centering
-\caption{Seed sensitivity by state category (2020 Census)}
-\begin{tabular}{lrrr}
-\toprule
-Category & States & Mean CV & Max CV \\
-\midrule
-Single-district ($k=1$) & 7 & 0.0\% & 0.0\% \\
-Small ($k \leq 5$) & 12 & 0.6\% & 1.2\% \\
-Medium ($6 \leq k \leq 15$) & 20 & 1.4\% & 3.1\% \\
-Large ($k > 15$) & 11 & 2.1\% & 4.3\% \\
-\bottomrule
-\end{tabular}
-\label{tab:cv}
-\end{table}
-
-Coefficient of variation (CV) of $\mathrm{EC}_{\mathrm{norm}}$ across seeds
-is below 2\% for 48 states (Table~\ref{tab:cv}).
-Georgia ($k{=}14$, CV $= 4.3\%$) and North Carolina ($k{=}14$, CV $= 3.8\%$)
-are outliers driven by geographic complexity and equal district counts.
-
-\subsection{Gap to global minimum}
-
-We define the \emph{approximation gap} as
-$(\mathrm{EC}_{\mathrm{median}} - \mathrm{EC}_{\mathrm{min}}) / \mathrm{EC}_{\mathrm{min}}$.
-Across all 50 states, the approximation gap for the median seed is
-$3.1\% \pm 1.8\%$.  For the DIA seed (SHA-256 chain, $i{=}0$), the gap is
-$2.9\% \pm 1.7\%$ --- statistically indistinguishable from the median.
-
-\subsection{$\varepsilon$-ball size}
-
-The $\varepsilon$-ball of near-minimum-cut plans (within 5\% of the minimum)
-contains $83\% \pm 12\%$ of all seeds tested, confirming that the solution
-space is not dominated by a single basin of attraction.
-
-\section{Partisan Implications}
-
-We compute the Democratic seat share for each of the 10{,}000 seeds for
-Wisconsin ($k{=}8$) and North Carolina ($k{=}14$), the two states with highest
-seed variance.
-
-For Wisconsin, seat share ranges from 3D/5R to 5D/3R across seeds
-(mean: 3.7D/4.3R, SD: 0.4 seats).
-For North Carolina, the range is 5D/9R to 7D/7R (mean: 5.6D/8.4R, SD: 0.5).
-
-These ranges are narrow relative to the partisan outcome difference between
-algorithm families (B.0 bakeoff: up to 12pp between GeoSection and
-ApportionRegions), confirming that \emph{algorithm selection dominates seed
-selection} as a determinant of partisan outcomes.
-
-\section{Implications for the Districting Integrity Act}
-
-The low seed sensitivity ($< 2\%$ CV for 96\% of states) means the DIA's
-single-seed specification is defensible: the chosen map is within
-$\sim$3\% of optimal, and the seed itself drives less partisan variance than
-which algorithm is selected.
-
-For the two high-variance states (GA, NC), the ConvergenceSweep procedure
-(B.16) provides additional assurance by certifying convergence to a local
-minimum within $T = 600$ non-improving seeds.
-
-\section{Conclusion}
-
-METIS seed sensitivity for redistricting is low: the solution space is
-well-connected, the approximation gap to the global minimum is under 5\%
-for all tested seeds, and partisan outcomes vary by less than one seat
-across the seed distribution.  These results certify the DIA's deterministic
-seed formula and motivate the $T = 600$ ConvergenceSweep threshold.
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-results}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
 
 \bibliographystyle{plainnat}
-\bibliography{../references}
+\bibliography{references}
 
 \end{document}

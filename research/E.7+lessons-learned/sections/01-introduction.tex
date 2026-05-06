@@ -1,0 +1,112 @@
+\section{Introduction: The Meta-Question}
+\label{sec:intro}
+
+What do we learn about representation design by implementing six alternative
+systems and comparing them algorithmically?  This is the meta-question that
+animates the E-track research program and that this paper addresses as its
+capstone.
+
+The six papers in Track~E --- multi-member districts \citep{dellaLibera2026e1},
+county representation \citep{dellaLibera2026e2}, national redistricting
+\citep{dellaLibera2026e3}, partisan-similarity clustering
+\citep{dellaLibera2026e4}, partisan-fairness allocation \citep{dellaLibera2026e5},
+and international applications \citep{dellaLibera2026e6} --- each ask a
+local question: what happens to compactness, proportionality, minority
+representation, or county preservation when we change this one design dimension?
+The synthesis paper E.0 \citep{dellaLibera2026e0} organizes these local
+questions into a comparative Pareto analysis.  This paper asks the deeper
+question: what general principles about representation system design do we
+extract from the systematic comparison?
+
+Our framing is borrowed from engineering design theory, where the concept of
+the \emph{design space} refers to the full set of possible configurations of a
+system, and the \emph{Pareto frontier} refers to the set of configurations
+from which no improvement on one dimension is possible without degrading
+another \citep{simon1996sciences}.  We argue that redistricting is a design
+problem in exactly this sense: there is a well-defined space of possible
+representation systems, a small number of key performance dimensions, and a
+set of constraint surfaces that bound the achievable region.  The E-track
+experiments are controlled explorations of this space.
+
+\subsection{Why Algorithmic Comparison Enables Design Learning}
+
+The conventional approach to comparing representation systems is political
+science field research: examine real-world systems (US single-member districts,
+German mixed-member proportional, Irish STV, etc.) and compare outcomes.
+This approach has fundamental limitations.  Real-world systems differ on
+multiple dimensions simultaneously --- electoral formula, district size, ballot
+structure, candidate selection, campaign finance --- making it impossible to
+isolate the effect of any single design choice.  They also differ in their
+historical, institutional, and demographic contexts, introducing confounds
+that threaten causal inference \citep{lijphart1999patterns}.
+
+The algorithmic approach overcomes these limitations by holding the algorithm
+constant and varying design dimensions one at a time.  We use the same
+edge-weighted recursive bisection procedure \citep{karypis1998fast,
+dellaLibera2026mec} for all six experiments.  The algorithm accepts the same
+census geography inputs in all cases; what changes is the objective function
+(single-member versus multi-member), the jurisdictional constraints (state-based
+versus national), the edge-weighting scheme (geographic versus partisan), and
+the seat-allocation mechanism (proportional versus winner-take-all).  This
+controlled variation means that differences in outcomes can be attributed to
+design choices rather than to confounding contextual factors.
+
+A second advantage is counterfactual reachability.  Some alternatives ---
+national redistricting, strict county representation --- are constitutionally
+unavailable in the US but can be implemented computationally.  The resulting
+maps are not real redistricting proposals; they are measurement instruments
+that answer the question ``how much does the constitutional constraint cost us
+in this dimension?''  Manual redistricting cannot answer this question because
+it cannot produce the counterfactual; algorithmic redistricting can.
+
+\subsection{The Five Lessons}
+
+We organize our findings into five design lessons, each addressing a specific
+dimension of the design space:
+
+\begin{description}
+  \item[Lesson~1 (Section~\ref{sec:lesson1})] \textbf{Geography is destiny for
+       single-member districts.}  The Rodden sorting gap \citep{rodden2019why}
+       is not a drawing artifact; it is a structural consequence of where
+       Democratic voters live.  No single-member geographic drawing method
+       eliminates it.
+
+  \item[Lesson~2 (Section~\ref{sec:lesson2})] \textbf{Multi-member districts
+       partially but not fully escape geographic sorting.}  Larger districts
+       average over more geographic heterogeneity, reducing the wasted-vote
+       problem by 40\% (three-member) to 65\% (five-member), but the residual
+       gap from extreme urban concentration persists.
+
+  \item[Lesson~3 (Section~\ref{sec:lesson3})] \textbf{Eliminating districts
+       entirely trades proportionality for local accountability.}  County
+       representation is more proportional in competitive states but less
+       responsive to population change and institutionally unfamiliar as a
+       voting mechanism.
+
+  \item[Lesson~4 (Section~\ref{sec:lesson4})] \textbf{Crossing state lines
+       produces geographically compact but politically fragmented districts.}
+       The national map gains 12\% compactness but loses 40\% of whole-county
+       preservation and eliminates state-based representation entirely.
+
+  \item[Lesson~5 (Section~\ref{sec:lesson5})] \textbf{The compactness--%
+       proportionality Pareto frontier is steep.}  Gaining 1~pp of
+       proportionality costs approximately 0.015 PP units.  No system escapes
+       this trade-off within a geographic single-election framework.
+\end{description}
+
+\subsection{Scope and Method}
+
+All quantitative results in this paper are derived from the redistricting
+pipeline described in \citet{dellaLibera2026mec}, applied to 2020 Census
+geography for all 50 states and 435 congressional districts.  Political data
+(vote shares, efficiency gap, partisan bias) are computed from the 2016--2022
+average of US House election results, following the methodology in
+\citet{stephanopoulos2015partisan}.  County preservation rates are computed
+from Census TIGER 2020 boundary files.  Where results differ from the
+companion papers E.1--E.6 (due to data vintage or parameter differences),
+we note this explicitly.
+
+The paper targets the audience of \emph{Annual Review of Political Science}:
+scholars familiar with redistricting debates and electoral system theory who
+seek a synthesizing analysis rather than the primary experimental findings.
+Readers seeking methodological detail should consult the companion papers.

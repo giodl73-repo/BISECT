@@ -1,0 +1,37 @@
+paper: partisan-proportional-bisection
+title: "The Proportionality Compromise: Dual-Constrained Bisection for Partisan-Fair Redistricting"
+venue: "Political Analysis"
+stage: recheck
+round: 2
+series: B
+series_number: 12
+content_mode: full
+writing_completed: true
+reviewers: [Karypis, Rodden, Duchin, Stephanopoulos, Liang]
+reviews:
+  Karypis:        {score: 3.4, file: reviews/r1_karypis_r2.md}
+  Rodden:         {score: 3.1, file: reviews/r2_rodden_r2.md}
+  Duchin:         {score: 3.2, file: reviews/r3_duchin_r2.md}
+  Stephanopoulos: {score: 3.3, file: reviews/r4_stephanopoulos_r2.md}
+  Liang:          {score: 3.0, file: reviews/r5_liang_r2.md}
+avg_score: 3.20
+round1_avg: 2.90
+round1_reviews:
+  Duchin:        {score: 3.0, file: reviews/REVIEW-moon-duchin.md}
+  Rodden:        {score: 3.0, file: reviews/REVIEW-jonathan-rodden.md}
+  Karypis:       {score: 3.0, file: reviews/REVIEW-george-karypis.md}
+  Stephanopoulos:{score: 3.0, file: reviews/REVIEW-nicholas-stephanopoulos.md}
+  Liang:         {score: 2.5, file: reviews/REVIEW-percy-liang.md}
+history:
+  - stage: draft
+    date: "2026-05-03"
+    note: "Paper initialized. Core formula derived: tpwgts=[k_D/k, 1-k_R/(2dk), k_R/k, k_R/(2dk)] for ncon=2 [pop, D_votes] bisection achieving exact partisan proportionality."
+  - stage: draft
+    date: "2026-05-03"
+    note: "Proportionality paradox discovered: all competitive states have sigma<0.05. Tradeoff invariance theorem: B.12 cannot improve competitive-state gaps by more than C*sigma. 16-page PDF compiled clean."
+  - stage: panel
+    date: "2026-05-03"
+    note: "Round 1: 5 reviews, avg 2.9/4. Common P1: empirical validation (C*sigma bound), formal gap metric definition, EG distinction, METIS parameter reporting."
+  - stage: recheck
+    date: "2026-05-05"
+    note: "Round 2: avg 3.20/4.0 (+0.30). Resolved: 6-state x 3-eta empirical table (§5.1), Definition 2.1 (proportionality gap), Appendix A (50-state sigma table), Rucho v. Common Cause engagement (§7.4 expanded), C(G)-as-state-specific clarification in Corollary 4.1. PDF compiled clean (21 pages). Paper in accept territory. Remaining: Theorem 2 scope, MAUP sensitivity, Nevada explanation, 'What This Paper Does Not Show' disclaimer."

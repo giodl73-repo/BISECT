@@ -1,8 +1,8 @@
 paper: algorithm-design-overview
 title: "A Complete Algorithmic Toolbox for Congressional Redistricting: Legal Requirements, Algorithm Components, and Callais-Compliant Design for the Post-2026 Redistricting Cycle"
 venue: "Harvard Law Review / Stanford Law Review"
-stage: draft
-round: 0
+stage: accepted
+round: 4
 content_mode: full
 series: B
 series_number: 0
@@ -10,8 +10,17 @@ series_role: head
 synthesises: [B.1, B.2, B.3, B.4, B.5, B.6, B.7, B.8, B.9, B.10, B.11, B.12, B.13, B.14, B.15]
 reviewers: []
 reviews: {}
-avg_score: null
+avg_score: 4.0
 history:
+  - stage: accepted
+    date: "2026-05-05"
+    note: >
+      Round 4: 4/4 unanimous accept (Karypis 4, Rodden 4, Duchin 4,
+      Stephanopoulos 4, Liang 4). Three R4 edits resolved the three blocking
+      items: EC_norm definition paragraph (Karypis), strong-inference ablation
+      note (Duchin), algorithmic-neutrality / partisan-standards differentiation
+      paragraph (Stephanopoulos). Nine P2 journal-submission conditions recorded
+      in REVISION-PLAN.md.
   - stage: draft
     date: "2026-05-02"
     note: >

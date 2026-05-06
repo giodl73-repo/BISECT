@@ -1,0 +1,84 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why $\alpha_c = 3.0$ is the right default}
+
+The Pareto-frontier elbow at $\alpha_c = 3.0$ reflects a structural property
+of the redistricting problem.  An intra-county edge in a well-drawn map
+appears when the district boundary runs through a county interior --- a
+configuration that the algorithm will avoid only if the cost of doing so
+(measured in edge-cut increase) is exceeded by the stickiness penalty.
+
+At $\alpha_c = 3.0$, the penalty is large enough to discourage unnecessary
+intra-county cuts (those where an equally compact map could follow the
+county line) but small enough to permit necessary cuts (those where
+population balance requires crossing county lines).
+
+The crossover between necessary and unnecessary cuts occurs at approximately
+$\alpha_c = 3.0$ in our data, which can be understood geometrically: a
+typical avoidable county split adds an edge cut equal to the county boundary
+shared-length.  A stickiness multiplier of 3.0 makes this cut 3x more
+expensive, which exceeds the 2.0--2.5x compactness benefit of the alternative
+configuration in the vast majority of cases.
+
+\subsection{Connection to legal requirements}
+
+State constitutional provisions requiring ``preservation of political
+subdivisions to the extent possible'' do not specify a quantitative
+standard.  Courts have generally upheld maps with modest county-split
+rates as satisfying this criterion, provided that splits are justified
+by population-equality requirements~\citep{pildes2004democracy}.
+
+The county-sticky approach provides a principled operationalisation of
+``to the extent possible'': the algorithm preserves counties when doing so
+does not compromise population balance or contiguity.
+The DIA's specification of $\alpha_c = 3.0$ as the default implements
+this principle algorithmically.
+
+\paragraph{Constitutional criterion hierarchy.}
+Some state constitutions require redistricting criteria to be applied
+in strict priority order, with population equality paramount and
+subdivision preservation secondary.
+County-sticky edge weighting implements subdivision preservation as a
+\emph{soft secondary criterion}: the population balance constraint
+($\delta_{\max} \leq 0.5\%$) is enforced as a hard METIS parameter
+(\texttt{ufactor = 5}), and county stickiness operates only within
+the feasible region defined by that constraint.
+This is consistent with the ``to the extent possible'' language in state
+constitutional provisions, which is inherently bicriterion: subdivision
+preservation is maximised subject to the overriding population-equality
+requirement.
+
+\paragraph{Partisan neutrality.}
+County split reduction has no systematic partisan effect.
+Comparing Democratic seat shares at $\alpha_c = 1.0$ (baseline) and
+$\alpha_c = 3.0$ (county-sticky) across the 43 non-trivial states yields
+a mean absolute seat difference of $|\Delta\text{seats}| = 0.3$.
+This confirms that county preservation is geographically, not politically,
+determined: the algorithm eliminates avoidable splits wherever they occur,
+without regard to which party benefits from a given county boundary.
+
+\paragraph{Transparency.}
+The parameter $\alpha_c$ is published in the TIGER adjacency graph metadata,
+making the weighting fully reproducible and auditable.  Any party can
+independently verify that the county-sticky weights were applied correctly
+by recomputing the adjacency graph with $\alpha_c = 3.0$.
+
+\subsection{Limitations and open questions}
+
+This study evaluates county-sticky weights only at census-tract resolution.
+At block-group or block resolution, the geometry of county boundaries may
+be captured more precisely, potentially changing the Pareto frontier.
+
+The $\alpha_c$ sweep uses a fixed seed ($s_0$) per state.  Seed sensitivity
+at $\alpha_c = 3.0$ has not been separately characterised; it is possible
+that high-variance states (GA, NC from B.7) exhibit higher variance under
+county-sticky weights.
+
+Municipal boundaries (cities and towns) are not addressed in this paper.
+Many state constitutions list both county and municipal preservation
+as subdivision criteria.  Extending the county-sticky approach to
+municipalities would require a two-level weight hierarchy:
+$\alpha_c$ for county boundaries and $\alpha_m$ for municipal boundaries
+within counties.  Preliminary experiments suggest $\alpha_m \approx 1.5$
+is appropriate, but a systematic sweep remains to be done.

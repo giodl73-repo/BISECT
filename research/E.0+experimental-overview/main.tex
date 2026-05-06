@@ -1,0 +1,61 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+
+\title{E.0: Alternative Representation Systems for\\
+       Congressional Redistricting: A Design Space Analysis}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The post-\emph{Rucho} era has removed federal judicial oversight of partisan
+gerrymandering, intensifying debates about how congressional districts should be
+drawn and whether the single-member district paradigm itself is the source of
+American representation pathologies.  We provide a systematic design-space
+analysis of six alternative representation systems: multi-member districts
+(E.1), county-based representation (E.2), national redistricting without state
+lines (E.3), partisan-similarity clustering (E.4), partisan-fairness seat
+allocation (E.5), and international applications of algorithmic methods (E.6).
+Each system is evaluated on four dimensions --- compactness, proportionality,
+minority representation, and community preservation --- using a common
+Pareto-scoring framework.  We show that the compactness--proportionality
+tension is the binding constraint across all single-member architectures, that
+multi-member districts partially but not fully escape geographic sorting, and
+that the only constitutionally available escape from systematic
+underrepresentation is structural reform to multi-member elections.  The
+District-Independent Algorithm (DIA), which draws compact single-member
+districts algorithmically, achieves the best available balance of compactness,
+VRA compliance, constitutional availability, and geographic stability among the
+six systems evaluated.  Multi-member districts weakly dominate the DIA on
+proportionality and minority representation but require federal legislation and
+sacrifice compactness; no system evaluated here Pareto-dominates the DIA on all
+four dimensions within the same constitutional and statutory constraints.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-systems}
+\input{sections/03-tradeoffs}
+\input{sections/04-constraints}
+\input{sections/05-constitutional}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

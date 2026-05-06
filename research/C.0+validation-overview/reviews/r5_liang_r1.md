@@ -1,0 +1,31 @@
+---
+reviewer: Percy Liang
+round: 1
+score: 3
+date: 2026-05-05
+---
+
+## Summary
+
+C.0 synthesises a multi-paper validation program into four properties and a DIA compliance mapping. As a statistical validation framework, the paper has several strengths: it distinguishes between different sources of variance (geographic vs. temporal), uses the slice-based framework to control for confounds, and reports multiple independent metrics for partisan fairness. However, the paper has significant statistical gaps that undermine its claims as a validation document. The bootstrap CI discussion is deferred to C.7, but several of the headline numbers in C.0 are presented without uncertainty quantification, creating an inconsistency: the paper argues that CIs are essential for DIA compliance (implicitly) but does not report them for its own headline claims. The variance decomposition ($3.2\times$) is also reported in a way that obscures important statistical issues about the interpretability of the ratio.
+
+## Strengths
+
+- **The variance decomposition design (geographic vs. temporal) is statistically principled.** The use of 250 state-slice time series (50 states $\times$ 5 slices) to decompose variance into geographic and temporal components is a sound within-subjects design for isolating the effect of interest. Reporting stability across slice counts K $\in$ {3, 5, 7} (Table 1) as a sensitivity check is exemplary practice. This is the paper's strongest statistical contribution.
+- **The within-slice cross-census correlation (r = 0.73) is a more interpretable stability measure than variance alone.** Reporting the Pearson r between 2000 and 2020 district-level PP scores within slices provides an intuitive measure of how much the algorithm's outputs change between census cycles, anchored in familiar correlation units. The IQR [0.64, 0.81] and the identification of outliers (12/250 slices with r < 0.5, all in high-growth regions) is good statistical practice.
+- **The five-metric convergence for partisan fairness (r > 0.89 across metrics) addresses the metric-selection concern.** Using five independent partisan metrics and demonstrating that their conclusions agree (cross-metric correlations $> 0.89$) partially addresses the legitimate concern that any single metric is selection-sensitive. This is precisely the kind of robustness check that distinguishes a validated result from a convenient one.
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **The headline number ($\sigma^2_\text{geo} = 3.2 \times \sigma^2_\text{temp}$) lacks a standard error and hypothesis test.** The paper reports this ratio without a confidence interval or significance test. The ratio is computed from 250 state-slice observations (50 states $\times$ 5 slices), which is sufficient for estimation, but the uncertainty in the ratio itself is unreported. A bootstrap confidence interval for the ratio (or an F-test for the equality of the two variances, which would test whether the ratio is significantly different from 1) is needed before this figure can be cited as established fact rather than a point estimate. This is especially important because the paper uses this ratio as an anchor for its temporal stability claim.
+- **The national PP trend (0.412 to 0.441 over 20 years) is attributed to "input geometry improvements" without evidence for this attribution.** Section 3.3 states that the $\Delta PP = +0.029$ improvement over 20 years "reflects refinements in tract boundary alignment with natural geographic features, not changes in the algorithm." This is a causal claim for which no evidence is provided. It is plausible but not demonstrated. The algorithm parameters are held constant, so the change must come from the inputs, but the specific input change is not characterised. The paper should either (a) provide evidence that Census Bureau tract boundary methodology improved between 2000 and 2020 (e.g., cite Census Bureau documentation of boundary refinement methodology), or (b) acknowledge that the source of the trend is unidentified and could include geographic population redistribution (which would not be a "refinement").
+- **The IoU = 71% boundary stability figure (Section 4.2) is a median without a distributional description.** The paper reports that "median within-slice cross-decade IoU is 0.71 (IQR: [0.63, 0.79])." But for boundary stability claims, the tail behaviour is more important than the median: the courts care about whether any districts show very low IoU (extreme instability), not whether the typical district is stable. The paper should report (a) the fraction of districts with IoU below some threshold (e.g., 0.5) and (b) whether the five Southern test states (C.3's sample of AL, GA, LA, MS, NC) are representative of the full distribution. The full 50-state IoU distribution should be reported in at least summary form.
+
+## P2 Items (Suggestions)
+
+- **Coordinate with C.7 to ensure the CI framework in C.7 covers all headline numbers in C.0.** C.0 reports many point estimates (PP = 0.441, EG = 0.04, r = 0.73, etc.) that have corresponding CIs in C.7. A cross-reference table --- "for CI on each headline statistic in C.0, see Table X in C.7" --- would make the two papers function as a coherent unit rather than as independent documents.
+- **The claimed geometric variance decomposition would be strengthened by a multilevel model.** The current approach (k-means slices + within-slice variance) is a reasonable approximation to a hierarchical variance decomposition. A proper multilevel model (PP ~ census year + (1 | state/slice)) would provide a more statistically rigorous decomposition and would yield model-based standard errors for the geographic vs. temporal variance components. This is optional but would substantially strengthen the statistical claim.
+
+## Score: 3 — Minor Revision
+
+The variance decomposition design is sound and the multi-metric convergence approach is exemplary. The three P1 items identify genuine statistical gaps: the unquantified uncertainty in the key ratio, the unsubstantiated attribution of the temporal trend, and the incomplete distributional reporting for boundary stability. These are all fixable with additional analysis of existing data.

@@ -39,34 +39,40 @@ The denominator $\sqrt{\min(i,k-i)}$ is the \emph{isoperimetric correction}.
 The isoperimetric correction is the key innovation of GeoSection.
 We motivate it formally.
 
-\begin{lemma}[Isoperimetric scaling]
+\begin{remark}[Motivating heuristic: isoperimetric scaling]
 \label{lem:isoperimetric}
-For a uniformly populated convex planar region of total boundary length $L$,
+For a disk-shaped uniformly populated region of total boundary length $L$,
 the minimum-boundary-length cut separating fraction $f \in (0,1)$ of the
-population satisfies:
+population satisfies approximately:
 \[
   \mathrm{EC}_{\min}(f) \approx L \cdot \sqrt{\min(f, 1-f)}.
 \]
-\end{lemma}
-
-\begin{proof}[Proof sketch]
-By the isoperimetric inequality for convex bodies, the minimum-perimeter enclosure
-of area fraction $f$ of a convex region has perimeter proportional to $\sqrt{f}$
-for small $f$ (a disk of area $f \cdot A$).
-For $f$ near $1/2$, the optimal cut approaches a straight line across the
-region's minor axis, with length proportional to $\sqrt{\min(f, 1-f)}$ by
-similar scaling.
-The approximation holds in the census tract setting when population density
-is approximately uniform within the state.
-\end{proof}
+This is a \emph{motivating heuristic}, not a theorem.
+For $f$ small, enclosing fraction $f$ of a disk's area requires a circle of
+perimeter $\propto \sqrt{f}$, giving the $\sqrt{f}$ scaling.
+For $f$ near $1/2$, the optimal cut for a disk approaches a chord of length
+roughly proportional to $\sqrt{1-f}$, consistent with the same formula.
+For general convex regions --- especially non-circular shapes like US states ---
+the scaling is approximate.
+For elongated states (e.g., California), the cut length near $f = 1/2$ scales
+linearly with the minor axis width, not as $\sqrt{f}$.
+The normalisation $\mathrm{EC}/\sqrt{\min(i,k-i)}$ remains a principled
+correction even when the approximation is not tight: it reduces the structural
+advantage that small-$f$ splits enjoy over large-$f$ splits purely because
+their boundaries are intrinsically shorter.
+We use METIS-reported actual edge-cuts (not approximated minimums), so the
+normalised comparison is between real boundary lengths, with the heuristic
+correction applied uniformly.
+\end{remark}
 
 \begin{remark}
-Lemma~\ref{lem:isoperimetric} is an approximation, not an exact result.
+The isoperimetric correction $\sqrt{\min(i,k-i)}$ is a principled but approximate
+normalisation (see Remark~\ref{lem:isoperimetric}).
 Real states have highly non-uniform population density.
-The isoperimetric correction remains meaningful in the non-uniform case:
-$\sqrt{\min(i,k-i)}$ lower-bounds the expected edge-cut scaling for
-a $i:(k-i)$ split in any convex region, so dividing by it makes the
-normalised metric more conservative (harder to win) for small-$i$ splits.
+The correction remains meaningful in the non-uniform case:
+$\sqrt{\min(i,k-i)}$ reduces the structural advantage of small-$i$ splits by
+partially correcting for the fact that smaller-fraction boundaries are intrinsically
+shorter regardless of compactness.
 The correction's purpose is to prevent $1:(k-1)$ from winning by default;
 it does not guarantee that the winner is the globally optimal ratio in
 any formal sense.

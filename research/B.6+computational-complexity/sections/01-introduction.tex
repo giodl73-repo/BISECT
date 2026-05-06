@@ -1,0 +1,67 @@
+\section{Introduction}
+\label{sec:intro}
+
+Congressional redistricting requires partitioning a weighted planar graph
+into $k$ connected, population-balanced parts while minimising total edge
+cut (shared boundary perimeter).
+The algorithmic literature has long recognised that this problem is NP-hard
+in general~\citep{garey1979computers,garey1976simplified}, motivating the
+use of heuristic partitioners such as METIS~\citep{karypis1998}.
+However, the precise complexity status of the \emph{redistricting variant}
+--- with its planarity constraint, population-balance requirement, and
+boundary-length edge weights --- has not been rigorously established.
+
+Moreover, the empirical scaling behaviour of METIS recursive bisection on
+real census-tract graphs across three decades of census data has not been
+characterised.  For the Districting Integrity Act (DIA) to be legally
+defensible, practitioners and courts need to know: (1) is the optimisation
+problem NP-hard even for the planar case? (2) what approximation guarantee
+does METIS offer? (3) does the algorithm scale to large states and future
+Census enumerations?
+
+\subsection*{Contributions}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item We establish NP-hardness of the balanced $k$-cut redistricting
+    problem on planar graphs by reduction from Connected Planar Graph
+    Bisection~\citep{dyer1985partitioning}, correctly accounting for the
+    contiguity (connectivity) requirement of the redistricting problem.
+  \item We clarify the approximation-theoretic landscape: no formal
+    approximation ratio is known for METIS's heuristic; the best
+    polynomial-time bound ($O(\sqrt{\log n})$ via ARV~\citep{arora2009expander})
+    applies to Sparsest Cut, not to balanced connected $k$-partition.
+    We characterise METIS's empirical quality instead.
+  \item We provide a runtime analysis: $O(\texttt{niter} \cdot n \log k)$
+    time with $O(n \log k)$ space ($\texttt{niter} = 100$ in experiments).
+  \item We fit the empirical scaling law $T = a \cdot n^b$ to $k > 1$
+    states across three census years, finding $b = 1.07 \pm 0.03$
+    (near-linear); single-district states are excluded from the fit.
+\end{enumerate}
+
+\subsection*{Why complexity matters for redistricting law}
+
+The DIA's algorithm specification needs a complexity-theoretic foundation
+for two reasons.  First, if the redistricting problem were polynomial-time
+solvable, the DIA would be obligated to specify an exact algorithm rather
+than a heuristic.  Our NP-hardness result shows that no such exact
+algorithm can exist unless P = NP (a hypothesis universally believed to
+be false, making the result effectively unconditional in practice).
+Second, while no formal approximation guarantee is established for METIS's
+heuristic, the empirical characterisation in Section~\ref{sec:runtime}
+shows that METIS consistently finds solutions within 3\% of the best
+available partition~\citep{b7paper}, providing strong practical evidence
+for legal challenges alleging systematic suboptimality.
+Importantly, the hardness result concerns the \emph{optimisation} problem;
+a valid redistricting plan always exists and can be found efficiently ---
+only finding the \emph{optimal} one is intractable.
+
+\subsection*{Paper structure}
+
+Section~\ref{sec:formulation} formally defines the redistricting problem,
+establishes NP-hardness, and characterises the approximation landscape.
+Section~\ref{sec:runtime} analyses runtime complexity, empirical scaling,
+and space requirements.
+Section~\ref{sec:discussion} discusses implications for the DIA.
+Section~\ref{sec:conclusion} concludes.

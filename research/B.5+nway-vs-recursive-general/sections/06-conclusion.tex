@@ -1,0 +1,35 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We evaluated recursive bisection (RB) vs.\ direct n-way partitioning
+across 450 chamber-year combinations (congressional, state senate, and
+state house, across 50 states and 3 census years) at two geographic
+resolutions, focusing primary statistical inference on the 50 independent
+congressional chambers from the 2020 Census.
+
+The key findings are:
+
+\begin{enumerate}
+  \item \textbf{RB wins on compactness across all chamber types.}
+    The advantage is $+0.003$--$+0.004$ mean Polsby--Popper, statistically
+    significant ($p < 0.001$) and consistent from $k = 2$ through $k = 400$.
+  \item \textbf{N-way is faster only at large $k$.}
+    For $k > 80$ (large state house chambers), n-way is 18--34\% faster,
+    but the absolute difference is under 200\,ms --- negligible in practice.
+  \item \textbf{Prime $k$ narrows the RB advantage.}
+    The asymmetric bisection tree for prime $k$ loses $\sim$40\% of the
+    compactness advantage.  A simple FM post-processing step recovers $\sim$60\%
+    of the loss.
+  \item \textbf{Block-group resolution does not change the conclusion.}
+    The RB advantage scales consistently to $3\times$ larger graphs.
+\end{enumerate}
+
+These results generalise the equivalence finding of B.3 and B.4 and
+provide the empirical basis for the DIA's choice of recursive bisection
+as the canonical partitioning strategy for all chamber types.
+
+\paragraph{Future work.}
+An open question is whether the RB vs.\ n-way tradeoff changes under
+the additional constraints of VRA compliance (B.14) or county-sticky
+weights (B.10).  Preliminary results suggest the advantage persists, but
+a systematic multi-constraint evaluation remains to be done.

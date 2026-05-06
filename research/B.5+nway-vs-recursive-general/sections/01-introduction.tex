@@ -1,0 +1,68 @@
+\section{Introduction}
+\label{sec:intro}
+
+Congressional redistricting requires partitioning a state's census-tract
+adjacency graph into $k$ contiguous, population-balanced districts.
+Two algorithmic strategies dominate the graph-partitioning literature:
+\emph{n-way} (or direct $k$-way) partitioning, which optimises all $k$ parts
+simultaneously, and \emph{recursive bisection} (RB), which divides the graph
+into two halves and recurses until $k$ leaves are reached.
+Both strategies are implemented in METIS~\citep{karypis1998}, the
+state-of-the-art multilevel graph partitioner, and both have been applied to
+redistricting problems in the algorithmic literature~\citep{mehrotra1998optimal,fifield2020automated}.
+
+The redistricting literature has characterised these two families primarily
+for congressional chambers, where the district count $k$ is typically small
+(1--52).  But redistricting practitioners face a far broader range of
+configurations: state legislative chambers run from $k = 20$ (Nevada Senate)
+to $k = 400$ (New Hampshire House), and the choice of partitioning strategy
+may matter more at large $k$ where n-way partitioning's global optimisation
+can be expected to shine.
+
+Prior work in this portfolio (B.3, B.4) established that RB and n-way
+yield statistically equivalent compactness for congressional-scale maps
+under edge weighting.  However, those results were limited to a single
+chamber type and a single geographic resolution (census tracts, $\sim$74{,}000
+units nationally).  A practitioner implementing the Districting Integrity
+Act (DIA) for multiple chamber types must know whether RB's compactness
+advantage holds across state house and senate chambers, and whether the
+runtime cost changes the answer at higher $k$.
+
+\subsection*{Contributions}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item We evaluate RB vs.\ n-way across three chamber types
+    (congressional, state senate, state house) covering 435 congressional
+    districts, 99 senate chambers, and 193 house chambers from the 2020
+    Census, at both tract and block-group resolution.
+  \item We show that RB's compactness advantage ($+0.003$--$+0.004$ mean
+    Polsby--Popper) is consistent across all chamber types and persists at
+    large $k$.
+  \item We quantify the runtime crossover: n-way is 18--34\% faster only for
+    state house chambers with $k > 80$, but the absolute difference is under
+    200\,ms per state on a 16-core workstation.
+  \item We identify the conditions under which RB's advantage narrows ---
+    prime $k$ values that force asymmetric bisection trees --- and propose a
+    practical mitigation.
+\end{enumerate}
+
+\subsection*{Paper structure}
+
+Section~\ref{sec:related} reviews prior work on graph partitioning for
+redistricting.  Section~\ref{sec:methodology} describes the experimental
+design.  Section~\ref{sec:results} presents results by chamber type.
+Section~\ref{sec:discussion} interprets the findings and connects them to
+the DIA.  Section~\ref{sec:conclusion} concludes.
+
+\subsection*{Why this comparison matters}
+
+Algorithm selection is not politically neutral.  B.0 demonstrated a 12.8
+percentage-point partisan gap between the unweighted baseline and GeoSection
+for Wisconsin's 8 congressional districts.  If RB and n-way produced
+systematically different partisan outcomes across chamber types, the DIA's
+algorithm specification would face a legal challenge: choosing RB over n-way
+would constitute an implicit partisan choice.  This paper shows that the
+compactness difference between RB and n-way is small enough (and symmetric
+in direction) that the choice is defensible on purely algorithmic grounds.

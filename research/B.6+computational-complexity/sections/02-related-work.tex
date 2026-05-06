@@ -1,0 +1,79 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Complexity of graph partitioning}
+
+The minimum bisection problem --- partition a graph into two equal-weight
+parts minimising the edge cut --- is NP-hard for general graphs
+\citep{garey1976simplified}.
+Garey, Johnson, and Stockmeyer~\citep{garey1976simplified} showed that
+minimum bisection remains NP-hard even for degree-3 planar graphs via
+reduction from 3-SAT.
+Their reduction, however, does not impose connectivity on the two parts,
+and hence does not directly cover the redistricting variant, which
+requires each district to induce a connected subgraph.
+
+Dyer and Frieze~\citep{dyer1985partitioning} proved that the problem of
+partitioning a graph into $k$ \emph{connected} subgraphs of prescribed
+sizes is NP-complete in general, and remains NP-complete for planar
+graphs.
+This is the result we use to anchor Theorem~\ref{thm:nphard}: the
+redistricting problem requires connected parts by definition, so the
+connected-partition variant is the correct source for the reduction.
+
+The balanced $k$-partition problem (generalising bisection to $k$ parts,
+without the connectivity requirement) is also
+NP-hard~\citep{andreev2006balanced}, and the minimum edge-cost $k$-cut
+problem is NP-hard for $k \geq 3$ even without balance
+constraints~\citep{goldschmidt1994polynomial}.
+The connectivity requirement of the redistricting problem is at least as
+hard as the unconstrained case, since any algorithm for the unconstrained
+problem that happened to produce connected parts would solve the
+constrained problem.
+
+\subsection{Approximation algorithms}
+
+For general graphs, the best known approximation ratio for minimum bisection
+is $O(\log n)$~\citep{andreev2006balanced}.
+For planar graphs, the Arora-Rao-Vazirani (ARV)
+framework~\citep{arora2009expander} achieves $O(\sqrt{\log n})$
+approximation for Sparsest Cut via a semidefinite programming (SDP)
+relaxation.
+This bound applies to Sparsest Cut, not directly to Balanced $k$-Cut
+with contiguity; extending it to balanced connected $k$-partition
+with formal guarantees remains an open problem.
+
+METIS~\citep{karypis1998} achieves near-optimal results empirically on
+benchmark graphs but provides no formal approximation guarantee for
+balanced connected partition beyond the planar separator
+bound~\citep{lipton1979separator}.
+The best known polynomial-time algorithm achieves no better than
+$O(\log n)$ approximation for balanced $k$-partition in general; no
+known algorithm achieves a tighter formal bound for the connected
+variant.
+KaHyPar~\citep{kahypar2017} provides stronger guarantees on hypergraph
+instances but is not designed for planar adjacency graphs.
+
+\subsection{Complexity of redistricting}
+
+Discrete geometry approaches to redistricting~\citep{duchindist2020}
+have characterised the solution space via Markov chains rather than
+complexity theory.  Fifield et al.~\citep{fifield2020} proved mixing
+bounds for redistricting Markov chains, showing that the solution space
+is well-connected --- a result consistent with our seed sensitivity
+analysis (B.7).
+
+Computational redistricting has been characterised as an
+optimisation problem by Mehrotra et al.~\citep{mehrotra1998optimal}.
+Neither work provides complexity results for the minimum edge-cut variant.
+
+\subsection{Runtime analysis of METIS}
+
+Karypis and Kumar~\citep{karypis1998} proved $O(m \log n)$ runtime per
+level for their multilevel scheme, where $m = |E|$ and $n = |V|$.
+For planar graphs, $m = O(n)$ (by Euler's formula for planar graphs),
+giving $O(n \log n)$ per bisection and $O(n \log k \log n)$ overall for
+$\lceil \log_2 k \rceil$ levels of bisection.
+Empirical scaling on non-planar graphs has been characterised for scientific
+computing workloads~\citep{karypis1999multilevel}, but not for census
+tract graphs with population-balance constraints.

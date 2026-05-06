@@ -65,8 +65,33 @@ SC & 3:4 & \textbf{1:6} & 0.22 & No (0/28 configs)   & Coastal minority region \
 \end{table}
 
 All results confirmed from the implementation run (50 seeds per ratio, 2020 Census).
-GeoSection ratio changes where $A(\text{winner}) > 0.20$ (AL, GA, SC);
-unchanged where $A \leq 0.15$ (MS, LA, NC's GeoSection result coincides with VRASection).
+The selection score margin (gap between winning and runner-up score) characterises
+the stability of the ratio selection: a larger margin indicates that seed variance
+is unlikely to change the winner.
+
+\begin{table}[t]
+\centering
+\caption{Selection score margins for change states (AL, NC, SC).
+  ``Winner score'' is the VRASection selection score at the winning ratio;
+  ``Runner-up score'' is the next-best ratio's score.
+  A large margin indicates stable ratio selection.}
+\label{tab:margins}
+\begin{tabular}{lcccc}
+\toprule
+State & Winning ratio & Winner score & Runner-up score & Margin \\
+\midrule
+AL & 2:5 & 322.5 & 350.2 & 27.7 (8.6\,\%) \\
+NC & 1:13 & 271.3 & 290.8 & 19.5 (7.2\,\%) \\
+SC & 1:6  & 318.4 & 341.7 & 23.3 (7.3\,\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All three change states show margins of 7--9\,\% relative to the winner's score,
+confirming that the ratio selections are not marginal decisions that could flip
+with different METIS seeds.
+GeoSection ratio changes where $A(\text{winner}) > 0.18$ (AL, NC, SC);
+unchanged where $A \leq 0.12$ (MS, GA, LA).
 
 \noindent\textbf{Key finding: VRASection creates \emph{more} peeling in VRA states, not less.}
 This is counter-intuitive but correct.
@@ -237,10 +262,11 @@ A 4.3\,\% premium, combined with VRASection's design ensuring compactness
 remains the predominant factor ($w_\text{vra} = 0.40$), provides a
 defensible record.
 
-\subsection{Projected Results for Full Run}
+\subsection{Open Empirical Questions and Future Work}
 
-The pending full-run experiments will test three hypotheses derived from the
-plan.md empirical plan:
+The following experiments are identified from the plan.md empirical plan and
+remain to be executed in the full-run pipeline.
+These are clearly marked as future work, not current claims.
 
 \begin{enumerate}
 \item \textbf{VRASection matches or exceeds MetisVra MM count}: For states

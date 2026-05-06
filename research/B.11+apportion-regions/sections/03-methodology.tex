@@ -1,0 +1,229 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Notation}
+\label{sec:notation}
+
+Let $G = (V, E, w)$ be the census-tract adjacency graph for a state, where
+$V$ is the set of census tracts, $E$ is the set of shared-boundary edges, and
+$w: E \to \mathbb{R}_{>0}$ assigns each edge the TIGER boundary length between
+adjacent tracts. Let $\text{pop}: V \to \mathbb{Z}_{>0}$ be the 2020 census
+population of each tract. Let $n$ be the state's apportioned congressional seat
+count.
+
+\subsection{The Split Prescription}
+\label{sec:factorization}
+
+At each level of the AR tree, a region with $k$ target districts is split
+according to the following rule with threshold $\kappa = 3$:
+
+\begin{definition}[Split prescription]
+  \label{def:split}
+  For $k \geq 1$, $\text{split}(k)$ is:
+  \begin{enumerate}
+    \item \textbf{Direct} ($k \leq \kappa$): split into $k$ equal parts
+          (sub-regions each with target~1).
+    \item \textbf{Uniform-composite} ($k > \kappa$, $k$ composite): let $p$ be
+          the \emph{largest} prime factor of $k$. Split into $p$ equal parts,
+          each with target $k/p$.
+    \item \textbf{Binary fallback} ($k > \kappa$, $k$ prime): split into 2 parts
+          with population targets $\lfloor k/2 \rfloor$ and $\lceil k/2 \rceil$.
+  \end{enumerate}
+\end{definition}
+
+Examples: $\text{split}(8) = (2, \text{sub}=4)$; $\text{split}(9) = (3, \text{sub}=3)$;
+$\text{split}(17) = (2, \text{sub}=(8,9))$; $\text{split}(34) = (17, \text{sub}=2)$;
+$\text{split}(51) = (17, \text{sub}=3)$.
+
+\paragraph{Why largest prime first?} The reuse property requires that two seat
+counts $n$ and $n'$ sharing a common factor $p$ produce the same top-level
+$p$-way partition. With largest-prime-first, $n=34=2\times 17$ and
+$n'=51=3\times 17$ both prescribe a 17-way primary split, sharing the same
+17-district top-level partition of any given state. Smallest-prime-first would
+instead bisect the state first (different halves for $n=34$ vs.\ thirds for
+$n'=51$), destroying reuse.
+
+\paragraph{Why binary fallback for large primes?} A direct $k$-way METIS
+cut for large prime $k$ (e.g.\ $k=17$) is computationally feasible but
+produces no reuse with neighbouring seat counts and is harder to balance than
+iterated bisections. The binary fallback $17 \to (8, 9)$ naturally decomposes
+into the highly-reused sub-trees $k=8=2^3$ (three binary levels) and $k=9=3^2$
+(two ternary levels).
+
+\subsection{The AR Algorithm}
+\label{sec:pfr}
+
+\begin{definition}[ApportionRegions]
+  Given graph $G$ and seat count $n$, the AR map $M_n(G)$ is constructed by
+  the recursive procedure $\text{AR}(G, n)$:
+  \begin{enumerate}
+    \item If $n = 1$: return $\{G\}$ (one district = whole region).
+    \item Compute $\text{split}(n) = (p, k_1, \ldots, k_p)$ where $p$ is the
+          number of parts and $k_i$ is the target district count for part $i$
+          (Definition~\ref{def:split}).
+    \item Partition $G$ into $p$ sub-regions $R_1, \ldots, R_p$ with target
+          population fractions $k_i / n$ each, minimising edge-cut weight.
+    \item For each $i$: recursively compute $\text{AR}(R_i, k_i)$.
+    \item Return the union of all recursive results.
+  \end{enumerate}
+\end{definition}
+
+The $p$-way partition in step~3 is computed by METIS~5.x (version with
+\texttt{part\_kway} for $p > 2$, \texttt{part\_recursive} for $p = 2$) using
+population vertex weights and TIGER boundary-length edge weights. For the
+uniform case ($k_1 = \cdots = k_p = n/p$) METIS uses equal target fractions;
+for the binary fallback case ($k_1 = \lfloor n/2 \rfloor$, $k_2 = \lceil n/2
+\rceil$) it uses proportional target fractions $k_1/n$ and $k_2/n$.
+
+\paragraph{Determinism assumption.}
+METIS~5.x's multilevel $k$-way partitioning is deterministic given a fixed
+random seed and fixed input graph (adjacency structure, vertex weights, edge
+weights). We rely on this property throughout: when we say two seat counts
+``share the same partition,'' we mean the assignment of census tracts to
+districts is byte-identical, conditional on the same METIS seed at that level.
+Our implementation sets the per-level seed as a deterministic function of the
+global content-derived seed and the tree depth, ensuring full reproducibility.
+
+\subsection{The Reuse Property}
+\label{sec:reuse}
+
+\begin{definition}[Canonical $p$-partition of $G$]
+  Fix a census-tract graph $G$ and a positive integer $p \leq |V(G)|$. The
+  \emph{canonical $p$-partition} $\Pi_p(G, \sigma)$ is the output of METIS
+  $k$-way partitioning on $G$ with $k = p$, equal population target fractions,
+  and METIS seed $\sigma$. By the determinism assumption, $\Pi_p(G, \sigma)$ is
+  a function of $(G, p, \sigma)$ alone.
+\end{definition}
+
+\begin{theorem}[Reuse]
+  \label{thm:reuse}
+  Let $n$ and $n'$ be composite integers with the same largest prime factor $p$:
+  $n = p \cdot m$, $n' = p \cdot m'$, with $p > \text{lpf}(m)$ and
+  $p > \text{lpf}(m')$ (where $\text{lpf}$ denotes the largest prime factor).
+  Let $\sigma$ be any METIS seed and $G$ any census-tract graph. Then
+  $\text{AR}(G, n, \sigma)$ and $\text{AR}(G, n', \sigma)$ begin with the
+  same top-level partition $\Pi_p(G, \sigma_0)$, where $\sigma_0$ is the
+  depth-0 seed derived from $\sigma$.
+\end{theorem}
+
+\begin{proof}
+  Since $p = \text{lpf}(n) = \text{lpf}(n')$, Definition~\ref{def:split}
+  case~(2) applies to both. At depth~0, both algorithms call METIS with
+  inputs $(G, p, \sigma_0)$ and equal target fractions $1/p$. By the
+  determinism assumption, both calls return $\Pi_p(G, \sigma_0)$
+  identically. The sub-regions $R_1, \ldots, R_p$ are therefore identical
+  for both seat counts; the two algorithms diverge only in the sub-district
+  counts $(k_i = m)$ vs.\ $(k_i' = m')$ passed to the recursive calls.
+  \qed
+\end{proof}
+
+\begin{corollary}
+  $\text{AR}(G, 34, \sigma)$ and $\text{AR}(G, 51, \sigma)$ begin with
+  $\Pi_{17}(G, \sigma_0)$: the same 17-district partition of $G$.
+  After the shared first level, $k=34$ bisects each region while
+  $k=51$ trisects each region. The partition cache in \texttt{PfrCompositor}
+  is a direct implementation of this theorem: a cache hit on
+  $(\text{hash}(G), 17, \sigma_0)$ serves both computations.
+\end{corollary}
+
+\paragraph{Partition cache correctness.}
+The cache key $(\text{hash}(G), p, \sigma_0)$ uses a content-derived hash
+of the census-tract graph (adjacency list + population vector). This is
+content-addressed, not identifier-addressed: two subgraphs with identical
+adjacency and population produce the same cache key regardless of their
+position in the factorization tree. Across decennial reapportionments,
+the hash changes with the census data, so the cache correctly invalidates
+stale entries.
+
+\paragraph{Formal status of the binary fallback.}
+For prime $k > \kappa$ (threshold $\kappa = 3$), the split prescription uses
+a 2-way METIS call with asymmetric population targets $\lfloor k/2 \rfloor$
+and $\lceil k/2 \rceil$ rather than a direct $k$-way call. We label this
+\emph{AR-binary}. AR-binary is formally distinct from direct-$k$-METIS:
+the two partitions are outputs of different METIS invocations and may produce
+different assignments. However, both are computed from the same inputs and
+seed, so the Reuse Theorem still applies: two seat counts $n, n'$ sharing the
+same large prime $p$ both call 2-way METIS with targets $(\lfloor p/2 \rfloor,
+\lceil p/2 \rceil)$ on the same whole-state graph, returning the same binary
+split regardless of whether $p$ was intended as a ``$p$-way cut.'' The reuse
+theorem holds for AR-binary under the same determinism assumption.
+
+A variant \emph{AR-direct} that uses direct $k$-way METIS for all prime $k$
+is fully equivalent to AR-binary in our implementation: METIS~5.x's
+\texttt{part\_kway} handles $k = 17$ directly (single call, 0.1\% tolerance).
+We defer a systematic comparison of AR-binary vs.\ AR-direct to future work.
+
+\subsection{Factorization Tree Structure}
+\label{sec:tree}
+
+The factorization tree $T_n$ for a state has:
+\begin{itemize}
+  \item \textbf{Root}: the whole state.
+  \item \textbf{Level $\ell$ nodes}: regions produced by applying $q_1, \ldots,
+        q_\ell$ to the root. Each level-$\ell$ node has $q_\ell$ children.
+  \item \textbf{Leaves}: the $n$ districts.
+  \item \textbf{Depth}: $\Omega(n)$ (number of prime factors with multiplicity).
+\end{itemize}
+
+For $n = 2^k$ (e.g., Wisconsin: $n = 8 = 2^3$), the tree is a complete binary
+tree of depth~$k$ --- exactly the recursive bisection algorithm of
+\citet{dellaLibera2026mec}.
+
+For $n$ prime (e.g., Pennsylvania: $n = 17$), the tree has depth~1: a single
+$n$-way cut of the whole state. No reuse is possible across different prime seat
+counts.
+
+\subsection{Handling Reapportionment}
+\label{sec:reapportionment}
+
+When $n$ changes to $n' = n \pm 1$ after a decennial census, the required
+recomputation depends on the first position where $F(n)$ and $F(n')$ differ.
+
+\begin{proposition}[Recomputation depth]
+  Let $F(n) = [q_1, \ldots, q_d]$ and $F(n') = [q_1', \ldots, q_{d'}']$.
+  Let $k^* = \min\{k : q_k \neq q_k'\}$ (or $k^* = 1$ if $q_1 \neq q_1'$).
+  Then AR reuses levels $1, \ldots, k^*-1$ and recomputes levels
+  $k^*, \ldots, \max(d, d')$.
+\end{proposition}
+
+The worst case is $k^* = 1$: the largest prime factor changes, requiring a
+full top-level recomputation. This occurs for the $51 \to 52$ transition:
+$51 = 3 \times 17$ (largest prime 17) vs.\ $52 = 4 \times 13$ (largest prime 13).
+No geographic sub-region is shared between the two maps.
+
+\subsection{AR-Smooth: Minimising Reapportionment Disruption}
+\label{sec:smooth}
+
+When the prime factorization changes structurally, AR-smooth finds the
+largest common prefix of $F(n)$ and $F(n')$ and reuses it, completing the
+remaining levels from the best available cached splits. Specifically, for
+$n \to n+1$:
+\begin{enumerate}
+  \item Find the longest common prefix of $F(n)$ and $F(n+1)$.
+  \item Reuse those levels' cached splits.
+  \item Re-solve only the subtrees that changed.
+\end{enumerate}
+This minimises the number of census tracts that change district assignment
+across reapportionments.
+
+\subsection{Reproducibility}
+\label{sec:methodology:reproducibility}
+
+All AR runs in this paper use METIS~5.2 (vendored via the \texttt{redist-metis}
+crate v0.2, statically linked).
+METIS parameters: \texttt{ufactor}=5 (0.5\,\% per-part population balance
+tolerance); \texttt{niter}=100 refinement iterations; \texttt{ncuts}=1
+(single cut attempt per invocation, determinism enforced by fixed seed).
+The global seed for each state is derived as:
+\[
+  \sigma_{\text{global}} = \mathrm{SHA\text{-}256}(\texttt{census\_release\_id}
+    \mathbin{\|} \texttt{"DIA\_SEED\_V1"} \mathbin{\|} 0) \bmod 2^{31}
+\]
+where \texttt{census\_release\_id} is the Census Bureau's formal identifier for
+the 2020 Redistricting Data release (P.L.~94-171, release date 2021-08-12).
+Per-level seeds are derived deterministically from $\sigma_{\text{global}}$ and
+the tree depth (bitwise rotation), ensuring full reproducibility without manual
+seed specification.
+The complete source code and build manifest (Rust workspace lockfile, METIS
+vendored source, and pipeline configuration) are available at the project
+repository.

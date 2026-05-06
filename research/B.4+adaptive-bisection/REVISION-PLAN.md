@@ -1,10 +1,34 @@
 # Revision Plan: Adaptive Bisection Paper
 
 **Paper**: Edge-Weighting Makes Method Selection Irrelevant
-**Date**: 2026-02-08 (Updated after completion)
-**Round**: 1 → 2
-**Review Scores**: 3.0/4 average → **Expected 4.0/4 after revisions**
-**Status**: ✅ **ALL REVISIONS COMPLETE** - Ready for Round 2 review
+**Date**: 2026-02-08 (Updated 2026-05-05)
+**Round**: 1 → 2 → 3
+**Review Scores**: 3.0/4 → 3.6/4 (R2) → 3.7/4 (R3)
+**Status**: ✅ ACCEPTED — Round 3 avg 3.7/4 ≥ 3.5, all P1s addressed
+
+## Round 3 Results (2026-05-05)
+
+**Average Score**: 3.7/4 — ACCEPTED
+- Karypis (Minnesota): 4/4 — Accept
+- Rodden (Stanford): 3.5/4 — Accept with Minor Revisions
+- Duchin (Rutgers): 4/4 — Accept
+- Stephanopoulos (Harvard Law): 3.5/4 — Accept with Minor Revisions
+- Liang (Stanford): 3.5/4 — Accept with Minor Revisions
+
+**All P1 and P2 blocking issues resolved.** Paper cleared for submission to SIAM SISC or INFORMS Journal on Computing.
+
+**Remaining P2 items** (not blocking):
+- Adversary model scope qualification in Gaming Resistance (Stephanopoulos, Dwork)
+- Efficiency gap for five test states (Stephanopoulos)
+- α policy recommendation paragraph for redistricting commissions (Stephanopoulos)
+- Abstract scope limitation for 5-state evaluation (Liang)
+- α recommendation precision: "near-equivalence at α=5, exact at α≥50, recommended α≥20" (Liang)
+- Failure mode characterization (Liang)
+- Partisan outcome analysis for test states (Rodden)
+- Low-I state pilot (Nevada, Arizona) as boundary cases (Rodden)
+- Enacted plan version clarification (Duchin)
+
+---
 
 ---
 

@@ -56,11 +56,18 @@ All population results use 2020 Census P.L.\ 94-171 redistricting data.
 Table~\ref{tab:bakeoff-wi} through Table~\ref{tab:bakeoff-al} report the
 bakeoff results for Wisconsin, North Carolina, Georgia, and Alabama respectively.
 
-Values marked $\dagger$ are estimates based on B-series empirical data and
-the theoretical relationships established in B.8--B.15.
-Values marked $\ddagger$ require pending B.11 (ApportionRegions) and B.12
-(ProportionalSection) implementations to be confirmed empirically.
-Values without superscript are confirmed from B.8--B.15 experimental runs.
+\paragraph{Value provenance.}
+Values without superscript are \emph{confirmed empirical results} from B.8--B.15
+experimental runs on 2020 Census tract data.
+Values marked \est{} ($\dagger$) are \emph{estimates} derived from:
+(a) the theoretical relationship between edge-cut and proportionality gap established
+in B.8--B.9, (b) interpolation from confirmed values in adjacent configurations,
+or (c) model-derived predictions; each estimate carries an implicit uncertainty of
+approximately $\pm 1$ seat and $\pm 3$\,pp for the proportionality gap.
+Values marked \pendinging{} ($\ddagger$) are \emph{pending}: they require the B.11
+(ApportionRegions) or B.12 (ProportionalSection) implementations to run; they should
+not be cited as empirical results in litigation or policy contexts until the relevant
+paper's experimental runs are complete.
 
 \begin{table}[h]
 \centering
@@ -80,9 +87,9 @@ Values without superscript are confirmed from B.8--B.15 experimental runs.
 3. Geo+AreaSection & 622 & 0.48\,\% & 3 & $-12.8$ & 0 & $3:5$ & 9\est \\
 4. County+GeoSection & 297 & 0.48\,\% & 3\est & $-12.8$\est & 0 & $3:5$ & 6\est \\
 5. Geo+VRASection & 265\est & 0.49\,\% & 3\est & $-12.8$\est & 0 & $1:7$\est & 10\est \\
-6. Geo+ApportionRegions & 95\pend & 0.48\,\% & 3\pend & $-12.8$\pend & 0 & $1:7$\pend & 10\pend \\
+6. Geo+ApportionRegions & 95\pending & 0.48\,\% & 3\pending & $-12.8$\pending & 0 & $1:7$\pending & 10\pending \\
 7. County+AreaSection & 912 & 0.49\,\% & 3\est & $-12.8$\est & 0 & $4:4$ & 5\est \\
-8. Geo+NestSection & 295\pend & 0.48\,\% & 3\pend & $-12.8$\pend & 0 & $4:4$\pend & 9\pend \\
+8. Geo+NestSection & 295\pending & 0.48\,\% & 3\pending & $-12.8$\pending & 0 & $4:4$\pending & 9\pending \\
 \midrule
 \multicolumn{8}{l}{\textbf{Key finding}: Config.~1 (unweighted) gives \textbf{4D/4R ($-0.3$\,pp)} --- most proportional.} \\
 \multicolumn{8}{l}{All compactness-optimised configs (2--8) give 3D/5R ($-12.8$\,pp): Milwaukee peel concentrates Dem voters.} \\
@@ -107,9 +114,9 @@ Values without superscript are confirmed from B.8--B.15 experimental runs.
 3. Geo+AreaSection & 284 & 0.49\,\% & 6 & $-6.5$ & 1 & $6:8$ & 15\est \\
 4. County+GeoSection & 255 & 0.48\,\% & 6\est & $-6.5$\est & 1 & $6:8$ & 11\est \\
 5. Geo+VRASection & 240\est & 0.49\,\% & 5\est & $-13.6$\est & 2 & $1:13$\est & 16\est \\
-6. Geo+ApportionRegions & 225\pend & 0.48\,\% & 6\pend & $-6.5$\pend & 1 & $7:7$\pend & 16\pend \\
+6. Geo+ApportionRegions & 225\pending & 0.48\,\% & 6\pending & $-6.5$\pending & 1 & $7:7$\pending & 16\pending \\
 7. County+AreaSection & 299 & 0.49\,\% & 6\est & $-6.5$\est & 1 & $6:8$ & 10\est \\
-8. Geo+NestSection & 230\pend & 0.48\,\% & 6\pend & $-6.5$\pend & 1 & $6:8$\pend & 15\pend \\
+8. Geo+NestSection & 230\pending & 0.48\,\% & 6\pending & $-6.5$\pending & 1 & $6:8$\pending & 15\pending \\
 \midrule
 \multicolumn{8}{l}{\textbf{Key finding}: Config.~2 (Geo+GeoSection) gives \textbf{7D/7R ($+0.7$\,pp)} --- near-proportional.} \\
 \multicolumn{8}{l}{Charlotte/Raleigh peel (6:8 ratio) naturally produces near-equal partisan split in NC.} \\
@@ -135,9 +142,9 @@ Values without superscript are confirmed from B.8--B.15 experimental runs.
 3. Geo+AreaSection & 483 & 0.49\,\% & 5 & $-14.4$ & 1 & $3:11$ & 17\est \\
 4. County+GeoSection & 127 & 0.48\,\% & 6\est & $-7.3$\est & 1 & $1:13$ & 13\est \\
 5. Geo+VRASection & 120\est & 0.49\,\% & 5\est & $-14.4$\est & 3\est & $1:13$\est & 18\est \\
-6. Geo+ApportionRegions & 105\pend & 0.48\,\% & 6\pend & $-7.3$\pend & 2\pend & $7:7$\pend & 18\pend \\
+6. Geo+ApportionRegions & 105\pending & 0.48\,\% & 6\pending & $-7.3$\pending & 2\pending & $7:7$\pending & 18\pending \\
 7. County+AreaSection & 648 & 0.49\,\% & 5\est & $-14.4$\est & 1 & $3:11$ & 12\est \\
-8. Geo+NestSection & 110\pend & 0.48\,\% & 6\pend & $-7.3$\pend & 2\pend & $7:7$\pend & 17\pend \\
+8. Geo+NestSection & 110\pending & 0.48\,\% & 6\pending & $-7.3$\pending & 2\pending & $7:7$\pending & 17\pending \\
 \midrule
 \multicolumn{8}{l}{\textbf{Key finding}: AreaSection/County+AreaSection \textit{reduce} D seats (5 vs 6) and worsen gap ($-14.4$ vs $-7.3$\,pp).} \\
 \multicolumn{8}{l}{Geographic balance disperses Atlanta's Dem voters; GeoSection's 1:13 Atlanta peel is better for proportionality.} \\
@@ -163,9 +170,9 @@ Values without superscript are confirmed from B.8--B.15 experimental runs.
 3. Geo+AreaSection & 534 & 0.48\,\% & 0 & $-37.1$ & 1 & $3:4$ & 6\est \\
 4. County+GeoSection & 570 & 0.47\,\% & 0\est & $-37.1$\est & 1 & $3:4$ & 5\est \\
 5. Geo+VRASection & 420\est & 0.49\,\% & 1\est & $-22.8$\est & \textbf{2} & $1:6$ & 7\est \\
-6. Geo+ApportionRegions & 1730\pend & 0.47\,\% & 0\pend & $-37.1$\pend & 1\pend & $1:6$\pend & 7\pend \\
+6. Geo+ApportionRegions & 1730\pending & 0.47\,\% & 0\pending & $-37.1$\pending & 1\pending & $1:6$\pending & 7\pending \\
 7. County+AreaSection & 1870\est & 0.48\,\% & 0\est & $-37.1$\est & 1\est & $3:4$\est & 4\est \\
-8. Geo+NestSection & 1740\pend & 0.47\,\% & 0\pend & $-37.1$\pend & 1\pend & $3:4$\pend & 6\pend \\
+8. Geo+NestSection & 1740\pending & 0.47\,\% & 0\pending & $-37.1$\pending & 1\pending & $3:4$\pending & 6\pending \\
 \midrule
 \multicolumn{8}{l}{\textit{Note}: VRASection (config.~5) is the only configuration achieving 2 MM districts as required by Allen v.\ Milligan.} \\
 \multicolumn{8}{l}{\textit{Note}: VRASection $2:5$ result confirmed empirically (B.14); 2 MM at 55.2\,\% and 52.8\,\% Black VAP.} \\
@@ -212,6 +219,27 @@ algorithm does not drive partisan outcomes.
 Geographic voter sorting---Democratic voters concentrated in cities,
 Republican voters dispersed in suburbs and rural areas---explains the systematic
 Republican over-representation in competitive states.
+
+\paragraph{Algorithmic neutrality and outcome neutrality.}
+Algorithm neutrality means no partisan data enters the algorithm --- it does not
+mean partisan outcomes are identical across algorithms.
+The bakeoff demonstrates that even partisan-data-free algorithms produce
+systematically different partisan outcomes depending on their bisection tree
+structure.
+This is the core finding for judicial review: once the algorithm is fixed by
+statute, the partisan outcome is determined by geography alone, not by human
+choice.
+Courts evaluating algorithmic maps under state partisan-neutrality standards
+(Pennsylvania's ``free and equal'' elections clause; North Carolina's
+\textit{Harper v.\ Hall} proportionality doctrine; New York's
+\textit{Harkenrider v.\ Hochul} efficiency-gap standard) should therefore
+evaluate the \emph{choice of algorithm} as the locus of potential bias, not
+the individual map produced by a given algorithm run.
+A process-based standard (PA, NC) is satisfied if no partisan data entered
+the algorithm selection; an outcome-based standard (NY) further requires
+demonstrating that no feasible algorithm produces a substantially more
+proportional result.
+The bakeoff provides the counterfactual evidence for both inquiries.
 
 \subsubsection*{Pattern 2: VRASection is the Only Tool for Allen v.\ Milligan Compliance}
 
@@ -285,10 +313,10 @@ across all four states.
 3. Geo+AreaSection & $-0.8$\est & $+4.4$\est & 0\est & $-1.3$\est \\
 4. County+GeoSection & $+3.9$\est & $0$\est & 0 & $-4.8$\est \\
 5. Geo+VRASection & $+3.1$\est & $+0.7$\est & $+1.0$\est & 0 \\
-6. Geo+ApportionRegions & $+0.2$\pend & $0$\pend & $+0.3$\pend & 0\pend \\
+6. Geo+ApportionRegions & $+0.2$\pending & $0$\pending & $+0.3$\pending & 0\pending \\
 7. County+AreaSection & $+6.1$\est & $+1.1$\est & 0\est & $-5.5$\est \\
-8. Geo+NestSection & $+0.5$\pend & $0$\pend & $+0.3$\pend & $-1.0$\pend \\
+8. Geo+NestSection & $+0.5$\pending & $0$\pending & $+0.3$\pending & $-1.0$\pending \\
 \bottomrule
-\multicolumn{5}{l}{\est\ = estimated from B-series models; \pend\ = pending B.11/B.12 implementation.}
+\multicolumn{5}{l}{\est\ = estimated from B-series models; \pending\ = pending B.11/B.12 implementation.}
 \end{tabular}
 \end{table}

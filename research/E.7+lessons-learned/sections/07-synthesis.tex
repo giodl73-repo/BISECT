@@ -1,0 +1,137 @@
+\section{Synthesis: Design Principles for Geographic Representation Systems}
+\label{sec:synthesis}
+
+The five lessons from the E-track experiments support a set of design principles
+that apply beyond the specific systems studied.  This section synthesizes those
+principles and derives their implications for the constraint hierarchy that
+governs single-member district drawing.
+
+\subsection{The Three Design Tensions}
+
+The E-track experiments make visible three fundamental tensions in geographic
+representation system design that are present in all systems but visible only
+when systems are compared systematically:
+
+\subparagraph{Tension 1: Compactness versus Proportionality.}
+The most pervasive tension is between geographic compactness and partisan
+proportionality.  Lesson~5 quantifies this tension at the Pareto frontier:
+0.015 PP per pp of proportionality gained.  Lesson~1 explains its cause:
+geographic sorting makes Democrats geographically inefficient in single-member
+winner-take-all systems.  Lesson~2 establishes that multi-member districts
+partially but not fully relieve this tension by averaging over more geographic
+heterogeneity.
+
+This tension is not merely a feature of the US context.  \citet{rodden2019why}
+documents analogous sorting patterns in the UK, Canada, and Australia.
+Paper E.6 finds the same proportionality--compactness exchange in all four
+Westminster-system countries studied, confirming that the tension is a property
+of the geographic sorting--winner-take-all combination, not of US partisan
+geography specifically.
+
+\subparagraph{Tension 2: Community Preservation versus Compactness.}
+Lesson~3 and Lesson~4 both surface a second tension: the desire to preserve
+pre-existing political communities (counties, states) conflicts with geometric
+compactness optimization.  State boundaries cost 12\% PP (Lesson~4);
+county preservation at the 85\% level costs 18\% PP (from the E.2 results
+\citep{dellaLibera2026e2}).  These costs are independent: preserving both
+counties and states costs approximately 28\% PP relative to unconstrained
+national optimization.
+
+The community-preservation tension is normatively distinct from the
+compactness--proportionality tension.  Proportionality is contested as a
+redistricting goal (courts have declined to constitutionalize it); community
+preservation is widely accepted as a legitimate goal (most state redistricting
+statutes list it as a criterion).  This means that community-preservation
+costs are costs that the political system has implicitly agreed to pay, whereas
+compactness--proportionality trade-offs are costs that are being debated.
+
+\subparagraph{Tension 3: Structural Design versus Drawing Optimization.}
+The deepest tension is not between two objectives on the Pareto frontier but
+between two different levels of reform.  Lessons~1 and 2 together establish
+that within any single-member geographic system, drawing optimization
+(algorithmic redistricting, independent commissions, court supervision) can
+eliminate process-level distortions but cannot eliminate structure-level
+distortions arising from geographic sorting.  Structural reform --- multi-member
+districts --- is required to materially change the seat--vote relationship.
+
+This tension implies that the redistricting reform debate has been conducted
+partly at the wrong level.  The bulk of litigation, legislative effort, and
+research attention has focused on drawing-process reform.  The structural reform
+that would actually change the seat--vote relationship (multi-member districts)
+has received far less policy attention and far less empirical evaluation.
+The E-track experiments are intended partly to correct this imbalance by
+providing rigorous comparative evidence on what structural reform achieves.
+
+\subsection{The Optimal Constraint Hierarchy for Single-Member Systems}
+
+Given these three tensions, what is the optimal constraint hierarchy for
+single-member district drawing?  We argue that the current practice ---
+population equality first, contiguity second, compactness third, with
+community preservation as a secondary criterion --- is optimal for the following
+reasons.
+
+\emph{Population equality first} is constitutionally mandated (\emph{Wesberry}
+\citep{wesberry1964}) and electorally foundational.  No other criterion can
+justify systematic population inequality.
+
+\emph{Contiguity second} follows from population equality: a non-contiguous
+district is geometrically incoherent as a representation unit and creates
+representational obligations that the representative cannot fulfill for
+constituents with no geographic connection to the district's main body.
+
+\emph{Compactness third} follows from contiguity: given population equality
+and contiguity, the shape of the district is the primary remaining degree of
+freedom.  Compactness optimization within this constraint yields the districts
+most resistant to partisan manipulation \citep{polsby1991third} and most
+geographically coherent as communities of representation.
+
+\emph{Community preservation as secondary criterion} reflects the lesson that
+community preservation is valuable but costs compactness.  Treating it as a
+hard constraint (preserve all counties) is too expensive; treating it as a
+soft criterion (preserve counties where doing so does not substantially reduce
+compactness) is the right balance.
+
+The key design lesson for single-member systems is that adding proportionality
+as a criterion at any level of the hierarchy is inappropriate: it substitutes
+a structural problem (geographic sorting) for a drawing problem, and attempts
+to solve the structural problem through drawing will produce maps that are less
+compact than what the geography permits without achieving the proportionality
+goal reliably.
+
+\subsection{The Case for Multi-Member Districts as Structural Reform}
+
+The synthesis of the five lessons points consistently toward multi-member
+districts as the only mechanism within a geographic, single-election
+representation system that can materially improve both proportionality and
+minority representation without sacrificing the constitutional advantages of
+district-based representation (geographic coherence, constituent-representative
+accountability, local focus).
+
+The advantages of multi-member districts over single-member alternatives are:
+\begin{enumerate}
+  \item \textbf{Partial sorting escape}: 40\% gap reduction (three-member) to
+        65\% gap reduction (five-member), compared to 0\% for any single-member
+        drawing method (Lessons~1 and 2).
+  \item \textbf{Minority representation improvement}: +18\% majority-minority
+        seats without requiring geographic concentration (Lesson~2).
+  \item \textbf{Constitutional availability}: Requires only federal statute
+        to repeal the 2~U.S.C.~\S2c single-member mandate (E.0
+        constitutional taxonomy).
+  \item \textbf{Compactness compatibility}: Three-member districts achieve
+        most of the proportionality gain at a compactness cost (22\% PP
+        reduction) that is large but not catastrophic --- far smaller than the
+        34\%--56\% cost of five-member or pure-proportionality systems.
+\end{enumerate}
+
+The disadvantages --- ballot complexity, weaker local ties, incumbent advantage
+in large districts --- are real but are normative objections rather than
+empirical disqualifiers.  The ballot-complexity objection is partially addressed
+by ranked-choice voting experience in STV systems (Ireland, Australia), where
+voter error rates are modest and declining \citep{farrell2011electoral}.
+
+We do not advocate for multi-member districts as a policy position.  We observe
+that the E-track research program, taken as a whole, provides a stronger
+empirical foundation for the structural case for multi-member districts than
+previously existed, and that this evidence should inform reform debates even
+if normative judgments about ballot complexity and local accountability ultimately
+determine the political outcome.

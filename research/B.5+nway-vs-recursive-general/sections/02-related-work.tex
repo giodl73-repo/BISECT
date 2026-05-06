@@ -1,0 +1,62 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Graph partitioning algorithms}
+
+The METIS multilevel scheme~\citep{karypis1998} introduced coarsening,
+initial partitioning, and uncoarsening with Fiduccia--Mattheyses (FM)
+refinement.
+Both recursive bisection and direct $k$-way use a single multilevel
+coarsening-uncoarsening pass: the graph is coarsened to approximately
+$k \cdot c$ nodes (with $c \approx 20$), partitioned, and then
+uncoarsened with FM refinement in a single pass.
+The critical difference is that recursive bisection applies this
+single-pass multilevel scheme once per bisection node---$O(\log k)$ times
+in total across the bisection tree---while direct $k$-way applies it once
+for the full $k$-way problem.
+The direct $k$-way variant therefore avoids the overhead of re-coarsening
+at each bisection level, and typically runs faster for large
+$k$~\citep{karypis1999multilevel}.
+
+SCOTCH~\citep{pellegrini2008scotch} and KaHyPar~\citep{kahypar2017} also
+implement both strategies; the relative quality rankings are broadly
+consistent with METIS results, with RB generally producing lower edge cuts
+on planar graphs due to better exploitation of separator structure.
+
+Sanders and Schulz~\citep{sanders2013think} showed that local search after
+both RB and k-way partitioning can close the quality gap, but that RB
+provides a better starting point for planar graphs.
+
+\subsection{Redistricting as graph partitioning}
+
+The graph-partitioning formulation of redistricting originates with
+Garfinkel and Nemhauser~\citep{garfinkel1970optimal}, who posed it as an
+integer program.  Mehrotra et al.~\citep{mehrotra1998optimal} developed an
+optimisation heuristic; Bozkaya et al.~\citep{bozkaya2003zone} applied tabu
+search; Bação et al.~\citep{bacao2005applying} used genetic algorithms.
+None of these works evaluated the RB vs.\ n-way tradeoff explicitly.
+
+Markov chain Monte Carlo approaches~\citep{deford2019recombination,fifield2020automated}
+sidestep the RB/n-way dichotomy by using recombination moves, but scale
+poorly beyond $k \sim 20$.  Altman and McDonald~\citep{altman2005contiguity}
+showed that contiguity constraints (enforced naturally by both RB and k-way
+on connected graphs) have measurable effects on electoral competition.
+
+\subsection{Compactness measures}
+
+Polsby and Popper~\citep{polsby1991third} introduced the isoperimetric
+compactness ratio $\mathrm{PP} = 4\pi A / P^2$, where $A$ is area and
+$P$ is perimeter.  Reock~\citep{reock1961measuring} proposed a minimum
+bounding circle ratio.  We use PP as the primary metric because it directly
+corresponds to the edge-cut objective on boundary-length-weighted graphs
+(B.2): minimising total boundary perimeter is equivalent to minimising
+total edge weight for shared-boundary edge weights.
+
+\subsection{Prior work in this portfolio}
+
+B.3 established that for single-objective congressional maps (unweighted),
+RB and n-way are statistically equivalent.  B.4 extended this to
+edge-weighted formulations and found a small but consistent compactness
+advantage for RB.  The present paper generalises both results to arbitrary
+chamber types, provides a runtime characterisation across the full $k$
+range, and identifies the prime-$k$ edge case.

@@ -1,0 +1,161 @@
+% Section 3: Census Sampling Uncertainty (~1,600 words)
+
+\subsection{The Nature of PL 94-171 Uncertainty}
+
+The redistricting algorithm uses PL 94-171 population data \citep{pl94171}
+as input. PL 94-171 is the Census Bureau's official redistricting data
+file, released approximately 18 months after Census Day. It is based on
+a complete enumeration attempt---not a survey sample---but ``complete''
+is aspirational. The Census Bureau's own Coverage Measurement program
+documents systematic undercounting and differential coverage rates by
+race, ethnicity, and urbanicity \citep{brown2018demographic,
+daponte2021census}.
+
+For redistricting purposes, two aspects of census uncertainty matter:
+
+\textbf{Overall undercount rate} affects the denominator used to compute
+the ideal district population: $P^* = P_\text{total} / k_s$, where
+$k_s$ is the number of districts apportioned to state $s$.
+If $P_\text{total}$ is underestimated by $\epsilon\%$, the ideal
+district size is underestimated by $\epsilon\%$, and the population
+balance requirement is calibrated to a slightly wrong target.
+
+\textbf{Differential undercount} by geography affects which tracts
+appear to satisfy the population balance constraint. Tracts in
+communities with high differential undercount (typically minority,
+urban, and young-adult-heavy communities) will appear smaller than they
+truly are, potentially affecting how the algorithm groups them.
+
+\subsection{Published Undercount Estimates}
+
+The Census Bureau's 2020 Post-Enumeration Survey (PES)
+\citep{uscensusbureau2022net} estimated net coverage errors by state
+and demographic group. Key findings:
+\begin{itemize}
+  \item National net undercount: $-0.24\%$ (undercount of total
+    population by approximately 749,000 people)
+  \item Range by state: $-1.1\%$ (Texas, estimated undercount)
+    to $+0.8\%$ (Hawaii, estimated overcount)
+  \item Differential undercount by race: Black ($-3.3\%$), Hispanic
+    ($-4.99\%$), American Indian on reservations ($-5.64\%$) relative
+    to non-Hispanic White ($+1.64\%$ overcount)
+\end{itemize}
+
+These estimates have their own sampling uncertainty, reported as 90\%
+CIs by the Census Bureau. For the national figure: $-0.24\%$
+(90\% CI: $[-0.56\%, +0.08\%]$). For Texas: $-1.1\%$
+(90\% CI: $[-1.7\%, -0.5\%]$).
+
+\subsection{Delta Method for Population Deviation}
+
+The population deviation of a district from ideal is:
+\begin{equation}
+  \delta_i = \frac{P_i - P^*}{P^*},
+  \quad P^* = \frac{P_\text{state}}{k_s}
+\end{equation}
+where $P_i$ is the population of district $i$ and $P^* $ is the
+ideal district population. The redistricting algorithm requires
+$|\delta_i| \leq 0.005$ (the $\pm 0.5\%$ constitutional standard).
+
+Suppose the true population $P_i^{\text{true}} = P_i (1 + \epsilon_i)$
+where $\epsilon_i$ is the local coverage error rate. Then the true
+deviation from ideal is:
+\begin{equation}
+  \delta_i^{\text{true}}
+    = \frac{P_i(1+\epsilon_i) - P^*(1+\bar\epsilon)}{P^*(1+\bar\epsilon)}
+    \approx \delta_i + (\epsilon_i - \bar\epsilon) + O(\epsilon^2)
+\end{equation}
+where $\bar\epsilon = \sum_i P_i \epsilon_i / P_\text{state}$ is the
+state-level mean coverage error rate.
+
+By the delta method, the variance of $\delta_i^{\text{true}} - \delta_i$
+is approximately:
+\begin{equation}
+  \text{Var}(\delta_i^{\text{true}} - \delta_i)
+    \approx \text{Var}(\epsilon_i - \bar\epsilon)
+    = \sigma^2_\epsilon (1 - 2 w_i)
+\end{equation}
+where $w_i = P_i / P_\text{state}$ is the district's share of state
+population and $\sigma^2_\epsilon$ is the between-tract variance
+of coverage errors.
+
+\subsection{Empirical Calibration}
+
+We calibrate $\sigma^2_\epsilon$ using the Census Bureau's
+tract-level undercount estimates from the 2020 PES experimental
+microdata \citep{uscensusbureau2022net}. Across all tracts, the
+estimated SD of tract-level coverage error rates is
+$\sigma_\epsilon \approx 0.015$ ($1.5\%$).
+
+For a typical congressional district ($P_i / P_\text{state} \approx 1/k_s$),
+the delta method gives:
+\begin{equation}
+  \text{SE}(\delta_i^{\text{true}} - \delta_i)
+    \approx \sigma_\epsilon \sqrt{1 - 2/k_s}
+    \approx 0.015 \text{ for large } k_s.
+\end{equation}
+
+The 95\% CI for the true deviation, given an observed deviation $\delta_i$,
+is therefore approximately:
+\begin{equation}
+  \delta_i \pm 1.96 \times 0.015 = \delta_i \pm 0.029.
+\end{equation}
+
+This is a wide interval---wider than the $\pm 0.5\%$ constitutional
+tolerance. However, this reflects \emph{uncertainty about the true
+population}, not about whether the algorithm satisfies the constitutional
+standard given the official census data. The algorithm's target is the
+official population, and its deviation is measured against that target.
+Census uncertainty is relevant for interpreting whether population
+balance in the official data implies population balance in reality.
+
+\subsection{Implications for the $\pm 0.5\%$ Standard}
+
+The practical implication is:
+
+\begin{proposition}
+A district that satisfies $|\delta_i| \leq 0.005$ using official
+PL 94-171 data may have a true population deviation up to
+$|\delta_i^{\text{true}}| \approx 0.034$ due to differential
+census undercount, with 95\% probability.
+\end{proposition}
+
+This does not invalidate algorithmic redistricting; no redistricting
+method (algorithmic or legislative) can achieve true population equality
+when the census itself has coverage errors. What it does mean is that
+claims of ``equal population districts'' are legally precise (equal
+as measured by official data) but not literally exact.
+
+For the purposes of UQ reporting, we recommend:
+\begin{itemize}
+  \item Report population deviation as: $|\delta_i| \leq 0.005$
+    (per official 2020 Census PL 94-171 data; true deviation may
+    differ by up to $\pm 0.029$ at 95\% confidence due to census
+    coverage uncertainty).
+
+  \item In states with documented high undercount (Texas, Florida,
+    Georgia) use state-specific undercount estimates from the 2020 PES
+    to bound coverage error more precisely.
+
+  \item Note that differential undercount ($-3.3\%$ for Black populations,
+    $-4.99\%$ for Hispanic) may mean majority-minority districts are
+    actually larger than recorded, potentially benefiting VRA compliance
+    in practice.
+\end{itemize}
+
+\subsection{Impact on Ideal District Size}
+
+The ideal district size for the 2020 apportionment is:
+$P^* = 331,449,281 / 435 = 761,952$ persons (official).
+The 90\% CI for the true total U.S. population, using the national
+PES estimate $(-0.24\%, 90\%\text{ CI: }[-0.56\%, +0.08\%])$, is
+$[331,449,281 \times (1 - 0.0056),\ 331,449,281 \times (1 + 0.0008)]
+= [329,595,000,\ 332,714,000]$.
+This translates to ideal district sizes in the range $[757,000,\ 764,000]$---
+a variation of $\pm 3,500$ persons ($\pm 0.46\%$) in the target.
+
+For states near the congressional apportionment margin (where a small
+population change would change the number of districts), this uncertainty
+matters. Texas ($k=38$) and Montana ($k=2$ per the 2020 cycle) were
+close calls; the PES CI on national population is too wide to rule out
+different apportionments under alternative census methodologies.
