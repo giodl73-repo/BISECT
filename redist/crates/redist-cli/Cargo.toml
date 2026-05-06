@@ -14,6 +14,8 @@ path = "src/main.rs"
 redist-core      = { path = "../redist-core" }
 redist-data      = { path = "../redist-data" }
 redist-metis     = { path = "../redist-metis" }
+redist-ensemble  = { path = "../redist-ensemble" }
+rand.workspace = true
 # default-features = false: c-ffi inclusion is controlled by our own feature below.
 redist-apportion = { path = "../redist-apportion", default-features = false }
 redist-analysis  = { path = "../redist-analysis" }

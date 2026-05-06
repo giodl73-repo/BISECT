@@ -257,9 +257,11 @@ fn main() {
                         use redist_cli::args::SearchMode as SeM;
                         let n = args.seeds.unwrap_or(args.geosection_seeds.max(50));
                         cfg.algo.seeds = match search {
-                            SeM::Single      => SeedCompositor::Single,
-                            SeM::Multi       => SeedCompositor::Multi { seeds: n },
-                            SeM::Convergence => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+                            SeM::Single             => SeedCompositor::Single,
+                            SeM::Multi              => SeedCompositor::Multi { seeds: n },
+                            SeM::Convergence        => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+                            SeM::Percentile         => SeedCompositor::Percentile { p: args.percentile.clamp(0.0, 1.0), seeds: n },
+                            SeM::BisectionEnsemble  => SeedCompositor::BisectionEnsemble { p: args.percentile.clamp(0.0, 1.0), ensemble_steps: args.ensemble_steps },
                         };
                     }
                     cfg

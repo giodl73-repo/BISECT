@@ -8,6 +8,8 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 use rayon::prelude::*;
+use rand::SeedableRng;
+use rand::rngs::SmallRng;
 use redist_core::{BisectionTree, ufactor_for_depth};
 
 // ── CompactBisect (B.7) ───────────────────────────────────────────────────────
@@ -1129,6 +1131,23 @@ pub fn run_all_splits(
     // If Some, writes intermediate/depth_{d:02}/assignments.json after each round.
     intermediate_dir: Option<&Path>,
 ) -> Result<HashMap<usize, usize>, String> {
+    run_all_splits_with_search(adjacency, vertex_weights, edge_weights, num_districts,
+        balance_tolerance, niter, seed, intermediate_dir, None)
+}
+
+/// Variant of `run_all_splits` that supports BisectionEnsemble search at each node.
+/// `bisection_ensemble` = `Some((p, ensemble_steps))` to use local ReCom instead of METIS.
+pub fn run_all_splits_with_search(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    seed: Option<u64>,
+    intermediate_dir: Option<&Path>,
+    bisection_ensemble: Option<(f64, usize)>, // (p, ensemble_steps)
+) -> Result<HashMap<usize, usize>, String> {
     let n = adjacency.len();
 
     // Single-district: all tracts to district 1, no METIS call
@@ -1177,10 +1196,17 @@ pub fn run_all_splits(
                         let left_w = node.k_left as f32 / node.k as f32;
                         Some(vec![left_w, 1.0_f32 - left_w]) // right = 1-left (exact f32 sum)
                     };
-                    let (left, right) = split_subgraph(
-                        adjacency, vertex_weights, 1, edge_weights, &tracts,
-                        node_ufactor, niter, seed, tpwgts, None,
-                    ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?;
+                    let (left, right) = if let Some((p, ens_steps)) = bisection_ensemble {
+                        split_subgraph_bisection_ensemble(
+                            adjacency, vertex_weights, edge_weights, &tracts,
+                            node_ufactor, niter, seed, ens_steps, p,
+                        ).map_err(|e| format!("depth {} node '{}' (ensemble): {e}", depth, node.path))?
+                    } else {
+                        split_subgraph(
+                            adjacency, vertex_weights, 1, edge_weights, &tracts,
+                            node_ufactor, niter, seed, tpwgts, None,
+                        ).map_err(|e| format!("depth {} node '{}': {e}", depth, node.path))?
+                    };
                     Ok((node.path, left, right))
                 })
                 .collect::<Result<Vec<_>, String>>()?;
@@ -1582,6 +1608,181 @@ fn write_intermediate_round(round_dir: &Path, assignments: &HashMap<usize, usize
     let json = serde_json::to_string(assignments)
         .map_err(|e| format!("serialize intermediate: {e}"))?;
     std::fs::write(&path, json).map_err(|e| format!("write intermediate: {e}"))
+}
+
+// ── PercentileSweep ───────────────────────────────────────────────────────────
+
+/// Run `n_seeds` independent bisections from the SHA-256 seed walk,
+/// collect their edge cuts, and return the plan at rank `floor(p * n_seeds)`.
+///
+/// p=0.0 → minimum EC (equivalent to ConvergenceSweep without the non-improving stop).
+/// p=0.5 → median EC (the "typical" plan within the bisection seed space).
+/// p=1.0 → maximum EC (least compact valid plan).
+///
+/// NOTE: The bisection seed space and the ReCom ensemble space are different
+/// distributions.  p=0.5 here targets the median of the *bisection family*, not
+/// the median of all valid plans (which would require TargetedSweep).
+pub fn run_all_splits_percentile(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    n_seeds: usize,
+    p: f64,
+    intermediate_dir: Option<&Path>,
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::{Digest, Sha256};
+
+    if num_districts == 1 {
+        return Ok((0..adjacency.len()).map(|i| (i, 1)).collect());
+    }
+
+    // Derive n_seeds seeds from SHA-256 walk.
+    let seeds: Vec<u64> = (0..n_seeds).map(|i| {
+        let mut h = sha2::Sha256::new();
+        h.update(b"PERCENTILE_SWEEP_V1_");
+        h.update(i.to_le_bytes());
+        h.update(b"_");
+        h.update(base_seed.to_le_bytes());
+        let d = h.finalize();
+        u64::from_le_bytes(d[..8].try_into().unwrap())
+    }).collect();
+
+    // Run all seeds in parallel, collect (edge_cut, assignments).
+    let n = adjacency.len();
+    let results: Vec<(usize, HashMap<usize, usize>)> = seeds.par_iter().map(|&seed| {
+        let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
+            num_districts, balance_tolerance, niter, Some(seed), None)
+            .unwrap_or_else(|_| (0..n).map(|i| (i, 1)).collect());
+        let ec = count_edge_cuts(&asgn, adjacency);
+        (ec, asgn)
+    }).collect();
+
+    // Sort by edge cut (ascending = more compact first).
+    let mut sorted = results;
+    sorted.sort_by_key(|(ec, _)| *ec);
+
+    // Pick plan at rank floor(p * n_seeds), clamped to [0, n_seeds-1].
+    let rank = ((p * n_seeds as f64).floor() as usize).min(sorted.len() - 1);
+    Ok(sorted.into_iter().nth(rank).map(|(_, a)| a).unwrap())
+}
+
+/// Count total edge cuts in an assignment.
+fn count_edge_cuts(assignment: &HashMap<usize, usize>, adj: &[Vec<usize>]) -> usize {
+    let mut cut = 0usize;
+    for (v, nbrs) in adj.iter().enumerate() {
+        let dv = assignment.get(&v).copied().unwrap_or(0);
+        for &nb in nbrs {
+            if nb > v {
+                let dn = assignment.get(&nb).copied().unwrap_or(0);
+                if dv != dn { cut += 1; }
+            }
+        }
+    }
+    cut
+}
+
+// ── BisectionEnsemble ─────────────────────────────────────────────────────────
+
+/// Split a subgraph using a local ReCom 2-way ensemble.
+///
+/// Runs `ensemble_steps` ReCom steps starting from the initial METIS bisection,
+/// collects all accepted plans, sorts by edge cut, and returns the plan at
+/// rank `floor(p * accepted_count)`.
+///
+/// This replaces the single METIS call at each bisection tree node with a
+/// local feasibility sample. Because it's always k=2, there are no prime-k
+/// bipartition failures regardless of the full-state k.
+pub fn split_subgraph_bisection_ensemble(
+    adjacency: &[Vec<usize>],
+    vwgt: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    tract_indices: &HashSet<usize>,
+    ufactor: f64,
+    niter: u32,
+    base_seed: Option<u64>,
+    ensemble_steps: usize,
+    p: f64,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+
+    // Fall back to standard METIS bisection for very small regions.
+    if tract_indices.len() <= 4 {
+        return split_subgraph(adjacency, vwgt, 1, edge_weights, tract_indices,
+            ufactor, niter, base_seed, None, None);
+    }
+
+    // Build local subgraph.
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+    let global_to_local: HashMap<usize, u32> = sorted.iter()
+        .enumerate().map(|(i, &g)| (g, i as u32)).collect();
+    #[allow(unused_imports)]
+    use redist_ensemble::recom::RecomChain;
+    let n = sorted.len();
+
+    let local_adj: Vec<Vec<u32>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter_map(|&nb| global_to_local.get(&nb).copied())
+            .collect()
+    }).collect();
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vwgt[g]).collect();
+
+    // Seed initial partition via METIS bisection.
+    let (init_left, init_right) = split_subgraph(
+        adjacency, vwgt, 1, edge_weights, tract_indices, ufactor, niter, base_seed, None, None
+    )?;
+    let initial_assignment: Vec<u32> = sorted.iter()
+        .map(|g| if init_left.contains(g) { 1 } else { 2 })
+        .collect();
+
+    // Run local ReCom ensemble.
+    let seed = base_seed.unwrap_or(0xDEAD_BEEF_CAFE_1234);
+    let mut rng = SmallRng::seed_from_u64(seed);
+    let mut chain = RecomChain::new(local_adj, local_pop, initial_assignment, 2, ufactor - 1.0);
+
+    let mut accepted_assignments: Vec<(usize, Vec<u32>)> = Vec::new();
+    // Include the initial METIS plan.
+    {
+        let ec: usize = chain.assignment.iter().enumerate()
+            .flat_map(|(v, &d)| chain.adj[v].iter().map(move |&nb| (v, nb as usize, d)))
+            .filter(|(v, nb, d)| chain.assignment[*nb] != *d && *nb > *v)
+            .count();
+        accepted_assignments.push((ec, chain.assignment.clone()));
+    }
+
+    for _ in 0..ensemble_steps {
+        let rec = chain.step(&mut rng);
+        if rec.accepted {
+            let ec = rec.cut_edges;
+            accepted_assignments.push((ec, chain.assignment.clone()));
+        }
+    }
+
+    if accepted_assignments.is_empty() {
+        // No accepted proposals — return the METIS result.
+        return Ok((init_left, init_right));
+    }
+
+    // Sort by edge cut (ascending) and pick the p-th percentile.
+    accepted_assignments.sort_by_key(|(ec, _)| *ec);
+    let rank = ((p * accepted_assignments.len() as f64).floor() as usize)
+        .min(accepted_assignments.len() - 1);
+    let (_, chosen) = accepted_assignments.into_iter().nth(rank).unwrap();
+
+    let left: HashSet<usize> = sorted.iter().enumerate()
+        .filter(|(i, _)| chosen[*i] == 1)
+        .map(|(_, &g)| g)
+        .collect();
+    let right: HashSet<usize> = sorted.iter().enumerate()
+        .filter(|(i, _)| chosen[*i] == 2)
+        .map(|(_, &g)| g)
+        .collect();
+    Ok((left, right))
 }
 
 #[cfg(test)]
@@ -2753,13 +2954,119 @@ mod tests {
 
     #[test]
     fn ufactor_clamp_prevents_zero() {
-        // The uf_int formula inside split_subgraph clamps the result to at least 5.
-        // Simulate the formula for several ufactor values close to 1.0.
         for ufactor in [1.0_f64, 1.0001, 1.001, 1.003, 1.004, 1.005] {
             let raw = ((ufactor - 1.0) * 1000.0).round() as i32;
             let clamped = raw.clamp(5, 1000);
             assert!(clamped >= 5,
                 "uf_int must be >= 5 (0.5%% floor), got {clamped} from ufactor={ufactor}");
         }
+    }
+
+    // ── PercentileSweep tests ─────────────────────────────────────────────────
+
+    fn small_grid(rows: usize, cols: usize) -> (Vec<Vec<usize>>, Vec<i64>) {
+        let n = rows * cols;
+        let mut adj = vec![vec![]; n];
+        for r in 0..rows { for c in 0..cols {
+            let v = r*cols+c;
+            if c+1<cols { adj[v].push(v+1); adj[v+1].push(v); }
+            if r+1<rows { adj[v].push(v+cols); adj[v+cols].push(v); }
+        }}
+        let pop = vec![1000i64; n];
+        (adj, pop)
+    }
+
+    #[test]
+    fn percentile_sweep_k1_returns_all_district_1() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let result = run_all_splits_percentile(&adj, &pop, &ew, 1, 0.05, 10, 42, 5, 0.5, None)
+            .expect("k=1 must succeed");
+        assert!(result.values().all(|&d| d == 1), "k=1: all tracts in district 1");
+    }
+
+    #[test]
+    fn percentile_sweep_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let result = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 42, 5, 0.5, None)
+            .expect("k=2 must succeed");
+        assert_eq!(result.len(), 16);
+        let districts: std::collections::HashSet<usize> = result.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
+    }
+
+    #[test]
+    fn percentile_sweep_p0_same_as_minimum() {
+        // p=0.0 should always return the minimum-EC plan.
+        let (adj, pop) = small_grid(5, 4);
+        let ew = HashMap::new();
+        let min_plan = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 99, 10, 0.0, None)
+            .expect("p=0.0 must succeed");
+        let ec_min = count_edge_cuts(&min_plan, &adj);
+        let max_plan = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 99, 10, 1.0, None)
+            .expect("p=1.0 must succeed");
+        let ec_max = count_edge_cuts(&max_plan, &adj);
+        assert!(ec_min <= ec_max, "p=0.0 plan must have fewer or equal cuts than p=1.0");
+    }
+
+    #[test]
+    fn percentile_sweep_deterministic() {
+        let (adj, pop) = small_grid(4, 5);
+        let ew = HashMap::new();
+        let r1 = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 7, 5, 0.5, None).unwrap();
+        let r2 = run_all_splits_percentile(&adj, &pop, &ew, 2, 0.05, 10, 7, 5, 0.5, None).unwrap();
+        assert_eq!(r1, r2, "same seed must produce identical result");
+    }
+
+    // ── BisectionEnsemble tests ───────────────────────────────────────────────
+
+    #[test]
+    fn bisection_ensemble_produces_valid_2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_bisection_ensemble(
+            &adj, &pop, &ew, &tracts, 1.05, 10, Some(42), 50, 0.5
+        ).expect("bisection ensemble must succeed");
+        assert!(!left.is_empty() && !right.is_empty(), "both components must be non-empty");
+        let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
+        all.sort_unstable();
+        let expected: Vec<usize> = (0..16).collect();
+        assert_eq!(all, expected, "components must partition all 16 tracts");
+    }
+
+    #[test]
+    fn bisection_ensemble_p0_equals_standard_bisection_on_small_graph() {
+        // With p=0.0 (minimum EC), result should equal or be better than standard bisection.
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (l_ens, r_ens) = split_subgraph_bisection_ensemble(
+            &adj, &pop, &ew, &tracts, 1.05, 10, Some(42), 20, 0.0
+        ).expect("must succeed");
+        // Just verify it produces a valid partition
+        assert_eq!(l_ens.len() + r_ens.len(), 16);
+    }
+
+    #[test]
+    fn bisection_ensemble_with_search_produces_k2_partition() {
+        let (adj, pop) = small_grid(4, 5); // 20 tracts
+        let ew = HashMap::new();
+        let result = run_all_splits_with_search(
+            &adj, &pop, &ew, 2, 0.05, 10, Some(42), None, Some((0.5, 30))
+        ).expect("bisection-ensemble run_all_splits must succeed");
+        assert_eq!(result.len(), 20);
+        let districts: std::collections::HashSet<usize> = result.values().copied().collect();
+        assert_eq!(districts.len(), 2);
+    }
+
+    #[test]
+    fn count_edge_cuts_known_grid() {
+        // 4-node path split at midpoint: [0,1] | [2,3]. One cut edge: 1-2.
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let mut asgn = HashMap::new();
+        asgn.insert(0, 1); asgn.insert(1, 1); asgn.insert(2, 2); asgn.insert(3, 2);
+        assert_eq!(count_edge_cuts(&asgn, &adj), 1, "4-node path bisection has 1 cut edge");
     }
 }

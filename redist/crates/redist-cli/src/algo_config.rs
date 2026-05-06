@@ -452,6 +452,12 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::ConvergenceSweep { threshold } => {
             format!("convergence (threshold={threshold})")
         }
+        crate::runner::SeedCompositor::Percentile { p, seeds } => {
+            format!("percentile (p={p:.2}, seeds={seeds})")
+        }
+        crate::runner::SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
+            format!("bisection-ensemble (p={p:.2}, steps={ensemble_steps})")
+        }
     };
 
     let years = yaml.resolved_years().join(", ");

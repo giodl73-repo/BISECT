@@ -1159,6 +1159,16 @@ pub enum SearchMode {
     /// Certifies convergence per B.7. The seed-buster for the federal statute.
     #[value(name = "convergence")]
     Convergence,
+    /// Run --seeds T plans, sort by edge cut, return plan at rank floor(--percentile * T).
+    /// p=0.0 → minimum (like convergence), p=0.5 → median, p=1.0 → maximum.
+    /// Enables statutory choice of legal posture (H.0).
+    #[value(name = "percentile")]
+    Percentile,
+    /// At each bisection node run a local --ensemble-steps-step 2-way ReCom ensemble,
+    /// pick the bisection at --percentile of the cut distribution.
+    /// Compatible with all structure modes; eliminates prime-k bipartition failures (H.1).
+    #[value(name = "bisection-ensemble")]
+    BisectionEnsemble,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1338,6 +1348,15 @@ pub struct StateArgs {
     /// Stops when this many consecutive seeds produce no EC improvement.
     #[arg(long, default_value_t = 500)]
     pub convergence_threshold: u32,
+
+    /// Target percentile for --search percentile or bisection-ensemble (0.0–1.0).
+    /// 0.0 = minimum EC (like convergence), 0.5 = median, 1.0 = maximum. Default: 0.5.
+    #[arg(long, default_value_t = 0.5)]
+    pub percentile: f64,
+
+    /// Local ReCom steps per bisection node for --search bisection-ensemble. Default: 200.
+    #[arg(long, default_value_t = 200)]
+    pub ensemble_steps: usize,
 
     /// METIS backend engine.
     /// c-ffi (default): links libmetis.so/dll — battle-tested, handles all k.
@@ -1520,6 +1539,14 @@ pub struct StatesArgs {
     /// Convergence threshold for --search convergence (default: 600).
     #[arg(long, default_value_t = 600)]
     pub convergence_threshold: u32,
+
+    /// Target percentile for --search percentile or bisection-ensemble (0.0–1.0). Default: 0.5.
+    #[arg(long, default_value_t = 0.5)]
+    pub percentile: f64,
+
+    /// Local ReCom steps per bisection node for --search bisection-ensemble. Default: 200.
+    #[arg(long, default_value_t = 200)]
+    pub ensemble_steps: usize,
 }
 
 #[cfg(test)]

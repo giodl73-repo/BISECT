@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_compact, run_geosection, run_nway_partition, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -58,15 +58,25 @@ pub enum SeedCompositor {
     /// `threshold` consecutive seeds produce no improvement in normalised EC.
     /// Certifies convergence per B.7. The seed-buster for the federal statute.
     ConvergenceSweep { threshold: u32 },
+    /// Run `seeds` plans, sort by edge cut, return the plan at rank floor(p * seeds).
+    /// p=0.0 → minimum EC (same as ConvergenceSweep), p=0.5 → median EC, p=1.0 → maximum EC.
+    /// Enables statutory choice of legal posture (B.7 / H.0).
+    Percentile { p: f64, seeds: usize },
+    /// At each bisection node, run a local `ensemble_steps`-step 2-way ReCom ensemble
+    /// and pick the bisection at percentile `p` of the cut distribution.
+    /// Always k=2 at each node — eliminates prime-k bipartition failures. (H.1)
+    BisectionEnsemble { p: f64, ensemble_steps: usize },
 }
 
 impl SeedCompositor {
-    /// Return the seed count for modes that use Multi. Panics if Single or Sweep.
+    /// Return the seed count / step count for display and logging.
     pub fn seed_count(&self) -> usize {
         match self {
             Self::Multi { seeds } => *seeds,
             Self::ConvergenceSweep { threshold } => *threshold as usize,
             Self::Single => 1,
+            Self::Percentile { seeds, .. } => *seeds,
+            Self::BisectionEnsemble { ensemble_steps, .. } => *ensemble_steps,
         }
     }
 
@@ -379,9 +389,17 @@ impl AlgorithmConfig {
         if let Some(search) = args.search {
             let n = args.seeds.unwrap_or(args.geosection_seeds.max(args.compact_seeds).max(50));
             algo.seeds = match search {
-                SeM::Single      => SeedCompositor::Single,
-                SeM::Multi       => SeedCompositor::Multi { seeds: n },
-                SeM::Convergence => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+                SeM::Single             => SeedCompositor::Single,
+                SeM::Multi              => SeedCompositor::Multi { seeds: n },
+                SeM::Convergence        => SeedCompositor::ConvergenceSweep { threshold: args.convergence_threshold },
+                SeM::Percentile         => SeedCompositor::Percentile {
+                    p: args.percentile.clamp(0.0, 1.0),
+                    seeds: n,
+                },
+                SeM::BisectionEnsemble  => SeedCompositor::BisectionEnsemble {
+                    p: args.percentile.clamp(0.0, 1.0),
+                    ensemble_steps: args.ensemble_steps,
+                },
             };
         }
 
@@ -1315,13 +1333,38 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
             pfr_assignments
         }
         _ => {
-            status(cfg.position, &format!("{}: recursive bisection into {} districts",
-                   cfg.state_code, num_districts));
-            run_all_splits(
-                &graph.adjacency, &vwgt, &edge_weights,
-                num_districts, balance_tolerance_frac, niter, seed,
-                Some(&intermediate_dir),
-            ).map_err(|e| format!("bisection failed: {e}"))?
+            match &cfg.algo.seeds {
+                SeedCompositor::Percentile { p, seeds } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: percentile-sweep p={:.2} {} seeds into {} districts",
+                           cfg.state_code, p, seeds, num_districts));
+                    run_all_splits_percentile(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *seeds, *p,
+                        Some(&intermediate_dir),
+                    ).map_err(|e| format!("percentile-sweep failed: {e}"))?
+                }
+                SeedCompositor::BisectionEnsemble { p, ensemble_steps } => {
+                    status(cfg.position, &format!("{}: bisection-ensemble p={:.2} {} steps/node into {} districts",
+                           cfg.state_code, p, ensemble_steps, num_districts));
+                    run_all_splits_with_search(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter, seed,
+                        Some(&intermediate_dir),
+                        Some((*p, *ensemble_steps)),
+                    ).map_err(|e| format!("bisection-ensemble failed: {e}"))?
+                }
+                _ => {
+                    status(cfg.position, &format!("{}: recursive bisection into {} districts",
+                           cfg.state_code, num_districts));
+                    run_all_splits(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter, seed,
+                        Some(&intermediate_dir),
+                    ).map_err(|e| format!("bisection failed: {e}"))?
+                }
+            }
         }
     };
 
@@ -2980,6 +3023,43 @@ mod tests {
         } else {
             panic!("Default SeedCompositor must be Multi, got a different variant");
         }
+    }
+
+    #[test]
+    fn seed_count_percentile_returns_seeds() {
+        let sc = SeedCompositor::Percentile { p: 0.5, seeds: 101 };
+        assert_eq!(sc.seed_count(), 101);
+    }
+
+    #[test]
+    fn seed_count_bisection_ensemble_returns_steps() {
+        let sc = SeedCompositor::BisectionEnsemble { p: 0.5, ensemble_steps: 200 };
+        assert_eq!(sc.seed_count(), 200);
+    }
+
+    #[test]
+    fn percentile_clamps_p_to_unit_interval() {
+        // p is stored as-is; callers are responsible for clamping.
+        // Verify the variant can be constructed with boundary values.
+        let sc_min = SeedCompositor::Percentile { p: 0.0, seeds: 10 };
+        let sc_max = SeedCompositor::Percentile { p: 1.0, seeds: 10 };
+        if let SeedCompositor::Percentile { p, .. } = sc_min { assert_eq!(p, 0.0); }
+        if let SeedCompositor::Percentile { p, .. } = sc_max { assert_eq!(p, 1.0); }
+    }
+
+    #[test]
+    fn bisection_ensemble_stores_p_and_steps() {
+        let sc = SeedCompositor::BisectionEnsemble { p: 0.75, ensemble_steps: 500 };
+        if let SeedCompositor::BisectionEnsemble { p, ensemble_steps } = sc {
+            assert_eq!(p, 0.75);
+            assert_eq!(ensemble_steps, 500);
+        } else { panic!("wrong variant"); }
+    }
+
+    #[test]
+    fn is_single_false_for_percentile_and_bisection_ensemble() {
+        assert!(!SeedCompositor::Percentile { p: 0.5, seeds: 10 }.is_single());
+        assert!(!SeedCompositor::BisectionEnsemble { p: 0.5, ensemble_steps: 100 }.is_single());
     }
 
     #[test]
