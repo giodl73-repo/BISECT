@@ -1,7 +1,9 @@
 # REVISION PLAN — C.8: Competitive Elections
 **Round 1 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
-**Average:** 3.0/4
-**Status:** Conditional accept (minor revisions needed to solidify the main empirical claim)
+**Round 2 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
+**Round 1 Average:** 3.0/4
+**Round 2 Average:** 3.0/4
+**Status:** ACCEPTED — avg 3.0/4, all P1 items resolved, ensemble uncertainty [81,90] validates headline claim
 
 ## Critical Issues (Must Fix Before R2)
 
@@ -38,7 +40,7 @@ The partisan symmetry claim relies on the 43D/42R competitive-seat split, which 
 - Add *Davis v. Bandemer* to the legal background on competitive districts (Stephanopoulos)
 - Add population-density correlation analysis to explain the urban-rural safe-seat asymmetry (Rodden)
 
-## Target R2 Score
+## R2 Outcome
 
-This paper is already at 3.0/4 average. With C1 (ensemble uncertainty) and M1 (stratified enacted-map comparison), the paper should reach 3.3-3.5/4.
-The paper is on a clear path to 3.5/4 without requiring major structural changes.
+All C1-C2 and M1-M4 items addressed. Ensemble analysis [81,90] range reported; causal language softened; stratified enacted-map comparison (partisan legislature 58 vs. commission 76 vs. algorithmic 85) added; efficiency gap near zero reported; forward citation resolved.
+Average held at 3.0/4 — ACCEPTED.

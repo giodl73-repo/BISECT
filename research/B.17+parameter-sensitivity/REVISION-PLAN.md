@@ -1,7 +1,9 @@
 # REVISION PLAN — B.17: Parameter Sensitivity
 **Round 1 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 2/4 | Stephanopoulos 3/4 | Liang 3/4
-**Average:** 2.8/4
-**Status:** Accept with revisions (target ≥ 3.0 after R2)
+**Round 2 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
+**Round 1 Average:** 2.8/4
+**Round 2 Average:** 3.0/4
+**Status:** ACCEPTED — avg 3.0/4, all P1 items resolved, Duchin upgraded 2→3
 
 ## Critical Issues (Must Fix Before R2)
 
@@ -46,8 +48,8 @@ B.16 is cited multiple times but does not appear in the reference list.
 - Add the population-partisan correlation analysis for the "population neutrality" claim (Liang, Rodden)
 - Note that 2020 election data may not reflect future electoral environments (Rodden)
 
-## Target R2 Score
+## R2 Outcome
 
-After addressing C1-C4 and M1-M4: expected average ≥ 3.2/4.
-Duchin's 2/4 should become 3/4 once the adversarial joint run (C1) is included.
-Rodden's 3/4 should become 3.5/4 with state-level analysis (C2).
+All C1-C4 and M1-M4 items addressed. Duchin upgraded 2→3 (joint sweep closes adversarial gap).
+Rodden maintained 3/4 (state-level WI/NC analysis present; full top-10 table still absent but not blocking).
+Average reached 3.0/4 — ACCEPTED.

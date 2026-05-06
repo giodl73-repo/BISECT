@@ -1,8 +1,8 @@
 # REVISION PLAN — F.2: NestSection at Scale: Spine-Compatible Bicameral Redistricting for All 50 States
-**Round**: R1 → R2
+**Round**: R1 → R2 → R2 Complete
 **Date**: 2026-05-05
 
-## Score Summary
+## R1 Score Summary
 
 | Reviewer | Score | Recommendation |
 |----------|-------|----------------|
@@ -12,6 +12,19 @@
 | Stephanopoulos | 3/4 | Accept with revisions |
 | Liang | 3/4 | Accept with revisions |
 | **Mean** | **2.8/4** | |
+
+## R2 Score Summary
+
+| Reviewer | Score | Recommendation |
+|----------|-------|----------------|
+| Karypis | 3/4 | Accept with minor revisions |
+| Rodden | 3/4 | Accept with minor revisions |
+| Duchin | 3/4 | Accept with minor revisions |
+| Stephanopoulos | 4/4 | Accept |
+| Liang | 3/4 | Accept with minor revisions |
+| **Mean** | **3.2/4** | |
+
+## R2 Status: TARGET MET (3.2 ≥ 3.0)
 
 ## Critical Issues (Must Fix Before Resubmission)
 

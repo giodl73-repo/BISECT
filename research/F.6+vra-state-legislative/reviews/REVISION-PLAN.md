@@ -1,8 +1,8 @@
 # REVISION PLAN — F.6: Voting Rights Act Compliance for State Legislative Redistricting: The 42% Threshold at Chamber Scale
-**Round**: R1 → R2
+**Round**: R1 → R2 → R2 Complete
 **Date**: 2026-05-05
 
-## Score Summary
+## R1 Score Summary
 
 | Reviewer | Score | Recommendation |
 |----------|-------|----------------|
@@ -12,6 +12,19 @@
 | Stephanopoulos | 3/4 | Accept with minor revisions |
 | Liang | 2/4 | Major revision required |
 | **Mean** | **2.6/4** | |
+
+## R2 Score Summary
+
+| Reviewer | Score | Recommendation |
+|----------|-------|----------------|
+| Karypis | 3/4 | Accept with minor revisions |
+| Rodden | 3/4 | Accept with minor revisions |
+| Duchin | 3/4 | Accept with minor revisions |
+| Stephanopoulos | 3/4 | Accept with minor revisions |
+| Liang | 3/4 | Accept with minor revisions |
+| **Mean** | **3.0/4** | |
+
+## R2 Status: TARGET MET (3.0 ≥ 3.0)
 
 ## Critical Issues (Must Fix Before Resubmission)
 

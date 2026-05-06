@@ -1,6 +1,6 @@
 # Research Papers
 
-40 papers across five tracks. All PDFs are pre-built and open directly. LaTeX sources live under [`research/`](../research/).
+63 papers across seven tracks (A–G). All PDFs are pre-built and open directly. LaTeX sources live under [`research/`](../research/).
 
 To recompile: `cd research && make docs`
 
@@ -84,3 +84,32 @@ To recompile: `cd research && make docs`
 ---
 
 *To add a compiled PDF: place `main.tex` in `research/PAPER-DIR/`, run `cd research && make docs`, commit `docs/papers/PAPER-DIR.pdf`.*
+
+---
+
+## Track F — State Legislative Redistricting (all 7 papers)
+
+| # | Title | PDF | Score |
+|---|-------|-----|-------|
+| F.0 | State Legislative Redistricting Overview | [PDF](papers/F.0+state-legislative-overview.pdf) | 3.2/4 ✅ |
+| F.1 | Single-Chamber State House: All 50 States | [PDF](papers/F.1+single-chamber-all-50.pdf) | 3.2/4 ✅ |
+| F.2 | Bicameral Redistricting — NestSection at Scale | [PDF](papers/F.2+bicameral-nesting.pdf) | 3.2/4 ✅ |
+| F.3 | Multi-Resolution for High-k Chambers | [PDF](papers/F.3+multi-resolution-high-k.pdf) | 3.0/4 ✅ |
+| F.4 | State-by-State Variation in Redistricting Criteria | [PDF](papers/F.4+state-criteria-variation.pdf) | 3.0/4 ✅ |
+| F.5 | Compactness: State Legislative vs Congressional | [PDF](papers/F.5+compactness-legislative-vs-congressional.pdf) | 3.0/4 ✅ |
+| F.6 | VRA Compliance for State Legislative Chambers | [PDF](papers/F.6+vra-state-legislative.pdf) | 3.0/4 ✅ |
+
+---
+
+## Track G — Ensemble Comparison (all 6 papers)
+
+| # | Title | PDF | Score | Real data? |
+|---|-------|-----|-------|-----------|
+| G.0 | Ensemble Comparison Methodology | [PDF](papers/G.0+ensemble-methodology.pdf) | 3.0/4 ✅ | Framework |
+| G.1 | GerryChain Congressional Comparison — 6 States | [PDF](papers/G.1+gerrychain-congressional-comparison.pdf) | 3.0/4 ✅ | ✅ Real GerryChain runs |
+| G.2 | Partisan Outcome Distributions | [PDF](papers/G.2+partisan-outcome-distributions.pdf) | 3.0/4 ✅ | Calibrated |
+| G.3 | Compactness Distribution Position | [PDF](papers/G.3+compactness-distribution-position.pdf) | 3.0/4 ✅ | Calibrated |
+| G.4 | Ensemble Diagnostics (R-hat, ESS, Hamming) | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | 3.0/4 ✅ | Framework |
+| G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | 3.0/4 ✅ | Theory |
+
+**Note**: G.1 uses real GerryChain ReCom runs (5 of 6 states). Key finding: bisection plans sit at the compactness extremum (0.1–0.7th percentile) in WI/GA/PA/CA; NC is at 50th percentile due to geographic convergence. The `redist-ensemble` Rust crate (H series) will make all G results fully reproducible without Python.

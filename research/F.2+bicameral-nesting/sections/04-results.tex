@@ -4,7 +4,7 @@
 \subsection{Spine Construction Success Rate}
 \label{sec:results:success}
 
-NestSection successfully produces nested bicameral maps for all 42 compatible
+NestSection successfully produces nested bicameral maps for all 41 compatible
 states. Success is defined as: (1) all senate districts are exact unions of
 house districts; (2) all house districts satisfy population balance
 $\leq 0.5\%$; (3) all senate districts satisfy population balance $\leq 0.5\%$;
@@ -16,7 +16,7 @@ difficulty achieving simultaneous population balance for both chambers within
 each spine super-region. This occurs because the spine super-region's population
 must divide evenly into both $H/g$ and $S/g$ parts---a simultaneous balancing
 constraint that is more demanding than either chamber's constraint alone.
-In practice, all 42 compatible states succeed because METIS's balance tolerance
+In practice, all 41 compatible states succeed because METIS's balance tolerance
 is applied at the sub-region level, not the full-state level.
 
 \subsection{Example Maps}
@@ -47,7 +47,7 @@ New Hampshire & 50:3 & 8 & 0.388 & 0.341 & 0.48\% & 0.49\% \\
 \end{table}
 
 \paragraph{Observation: senate PP $<$ house PP.}
-In all 42 compatible states, senate districts have lower mean PP than house
+In all 41 compatible states, senate districts have lower mean PP than house
 districts drawn from the same spine. This is a structural consequence of
 nesting: senate districts are composed of multiple house districts, and the
 union of two or more compact convex regions is generally less compact than

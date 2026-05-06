@@ -1,7 +1,9 @@
 # REVISION PLAN — C.9: Adoption Case Studies
 **Round 1 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
-**Average:** 3.0/4
-**Status:** Conditional accept — but Stephanopoulos's "major revisions" rating requires substantive legal corrections
+**Round 2 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
+**Round 1 Average:** 3.0/4
+**Round 2 Average:** 3.0/4
+**Status:** ACCEPTED — avg 3.0/4, Harper reversal corrected, Allen VRA update complete, all P1 items resolved
 
 ## Critical Issues (Must Fix Before R2)
 
@@ -46,7 +48,7 @@ The paper omits *Moore v. Harper* (2023), which rejected the independent-state-l
 - Add specific candidate states for early adoption beyond AZ, CA, NC (Liang)
 - Clarify CVAP vs. total population for VRA threshold, consistent with D.5 (Karypis)
 
-## Target R2 Score
+## R2 Outcome
 
-The *Harper* reversal (C1) is the blocking issue — it must be corrected for the paper to be credible in legal circles. With C1 corrected and C2-C3 addressed, the score should move from 3.0/4 to ~3.3/4.
-Stephanopoulos's "major revisions" will likely become "minor revisions" once C1 is addressed.
+C1 (Harper reversal) fully corrected — case study reframed as illustrating "Harper model" applicable to states maintaining partisan gerrymandering jurisdiction. C2 (Allen VRA district count) addressed. C3 (canonical run specification) added. Moore v. Harper cited. Harris v. AIRC cautionary note present.
+Average held at 3.0/4 — ACCEPTED.

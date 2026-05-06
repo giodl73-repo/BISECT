@@ -7,10 +7,11 @@ at national scale.
 
 The main findings are:
 \begin{enumerate}
-  \item \textbf{Compatibility}: 42 of 49 bicameral states have
+  \item \textbf{Compatibility}: 41 of 49 bicameral states have
     $\gcd(H,S) > 1$ and are compatible with NestSection. The remaining
-    7 are incompatible due to coprime chamber sizes; small reforms to one
-    chamber's size would achieve compatibility in all cases.
+    8 are incompatible due to coprime chamber sizes; changing one
+    chamber's size (a constitutional amendment in most cases) would achieve
+    compatibility.
   \item \textbf{Compactness penalty}: The nesting constraint costs $+2.5\%$
     in mean edge-cut (house: $+2.1\%$, senate: $+3.4\%$) and
     $-0.008$/$-0.028$ PP points for house/senate respectively.
@@ -19,12 +20,12 @@ The main findings are:
   \item \textbf{Partisan neutrality}: Nesting changes partisan outcomes by
     at most $0.3$ seats on average. The nesting constraint is not a partisan
     device; its effect on partisan outcomes is negligible.
-  \item \textbf{Population balance}: All 42 compatible states achieve
+  \item \textbf{Population balance}: All 41 compatible states achieve
     $\leq 0.5\%$ maximum deviation in both chambers simultaneously.
 \end{enumerate}
 
 These findings position NestSection as a practical tool for state redistricting
-commissions in the 42 compatible states. The algorithm is implemented in the
+commissions in the 41 compatible states. The algorithm is implemented in the
 \texttt{redist} Rust binary via \texttt{redist state --chamber nest} and
 runs in under 10 minutes per state at block-group resolution.
 
@@ -37,7 +38,7 @@ either compactness or partisan fairness---the two primary substantive concerns
 in state legislative redistricting litigation.
 
 \paragraph{Future work.}
-The next step is to apply NestSection to the 7 incompatible states using
+The next step is to apply NestSection to the 8 incompatible states using
 ad-hoc nesting procedures and to compare outcomes. A complementary analysis
 would examine multi-level nesting: states where county legislative districts
 must nest within state legislative districts, which nest within congressional

@@ -73,7 +73,8 @@ pub struct EnsembleResult {
     n_steps: u64,
     n_chains: usize,
     chains: Vec<Vec<StepRecord>>,
-    r_hat: Option<f64>,         // Gelman-Rubin, requires n_chains >= 2
+    chain_seeds: Vec<u64>,      // Per-chain seed; chain i uses SHA-256("ENSEMBLE_CHAIN_" || i || "_" || base_seed)
+    r_hat: Option<f64>,         // Gelman-Rubin (continuous stats only; see footnote), requires n_chains >= 2
     ess: Option<f64>,           // Effective sample size
     hamming_autocorr: Vec<f64>, // Lag-1 to lag-20 autocorrelation
 }
@@ -85,7 +86,9 @@ The key primitive is sampling a **uniformly random spanning tree** (UST) of a co
 
 ```rust
 fn random_spanning_tree(graph: &SubGraph, rng: &mut SmallRng) -> Vec<(u32, u32)> {
-    // Wilson's algorithm: O(|E|) expected time
+    // Wilson's algorithm: O(cover time) expected; O(|V| log |V|) expected for planar graphs
+    // (Wilson 1996, Theorem 1.1). For redistricting graphs (planar, ~n/k nodes per region),
+    // this is O((n/k) log(n/k)) per bisection step.
     let n = graph.n_vertices();
     let mut in_tree = vec![false; n];
     let mut parent = vec![u32::MAX; n];
@@ -146,27 +149,36 @@ impl RecomChain {
         // 4. Build subgraph of the region
         let sub = SubGraph::induced(&self.graph, &region);
         
-        // 5. Sample random spanning tree
-        let tree = random_spanning_tree(&sub, &mut self.rng);
-        
-        // 6. For each tree edge, try removing it and check balance
-        //    Pick one at random, retry up to 50 times if unbalanced
-        for _ in 0..50 {
-            let cut_edge = tree[self.rng.gen_range(0..tree.len())];
-            let (comp_a, comp_b) = split_on_edge(&sub, &tree, cut_edge);
+        // 5–6. Attempt up to 10 full spanning tree resamples.
+        //    For each tree, check ALL edges for balance and accept the first balanced cut.
+        //    If no balanced cut exists in this tree, resample the ENTIRE spanning tree.
+        //    If all 10 tree resamples fail, reject the proposal and pick a new district pair.
+        for _ in 0..10 {
+            let tree = random_spanning_tree(&sub, &mut self.rng);
             
-            let pop_a: i64 = comp_a.iter().map(|&v| self.graph.pop(v) as i64).sum();
-            let pop_b: i64 = comp_b.iter().map(|&v| self.graph.pop(v) as i64).sum();
-            let ideal = (pop_a + pop_b) as f64 / 2.0;
+            // Enumerate all tree edges, find all balanced cuts
+            let mut balanced_cuts: Vec<(u32, u32)> = Vec::new();
+            for &cut_edge in &tree {
+                let (comp_a, comp_b) = split_on_edge(&sub, &tree, cut_edge);
+                let pop_a: i64 = comp_a.iter().map(|&v| self.graph.pop(v) as i64).sum();
+                let pop_b: i64 = comp_b.iter().map(|&v| self.graph.pop(v) as i64).sum();
+                let ideal = (pop_a + pop_b) as f64 / 2.0;
+                if (pop_a as f64 - ideal).abs() / ideal <= self.pop_tolerance {
+                    balanced_cuts.push(cut_edge);
+                }
+            }
             
-            if (pop_a as f64 - ideal).abs() / ideal <= self.pop_tolerance {
-                // Accept: update assignment
+            if !balanced_cuts.is_empty() {
+                // Pick uniformly among balanced cuts (matches GerryChain's stationary distribution)
+                let cut_edge = balanced_cuts[self.rng.gen_range(0..balanced_cuts.len())];
+                let (comp_a, comp_b) = split_on_edge(&sub, &tree, cut_edge);
                 for &v in &comp_a { self.assignment[v as usize] = d_i; }
                 for &v in &comp_b { self.assignment[v as usize] = d_j; }
                 return true;
             }
+            // No balanced cut in this tree — resample the ENTIRE spanning tree
         }
-        false // Proposal rejected after 50 balance attempts
+        false // Proposal rejected after 10 full tree resamples
     }
 }
 ```
@@ -186,34 +198,71 @@ redist ensemble --states NC WI GA PA TX CA --steps 10000 --chains 4 \
 
 # Compute diagnostics on an existing ensemble
 redist ensemble-diagnostics --input nc_ensemble.json
+
+# Audit an enacted plan: compute its percentile in the ensemble
+redist ensemble --state NC --year 2020 --steps 10000 --chains 4 \
+  --compare-plan runs/official_2020/2020/north_carolina/final_assignments.json \
+  --output nc_ensemble.json
 ```
+
+The `--compare-plan` flag loads a specific plan (by path to a `final_assignments.json`) and computes its edge-cut fraction and percentile position within the ensemble. This is the correct workflow for auditing enacted maps. The default (no `--compare-plan`) audits the `redist build` plan for the same state/year/version.
 
 Output JSON format:
 ```json
 {
   "state": "NC", "k": 14, "n_steps": 10000, "n_chains": 4,
+  "base_seed": 12345678,
+  "chain_seeds": [3735928559, 14983423, 9182736450, 7654321098],
   "pooled_cut_fraction": { "mean": 0.0970, "std": 0.0059, "p5": 0.0875, "p95": 0.1065 },
   "plan_cut_fraction": 0.0973,
   "plan_percentile": 49.8,
   "r_hat": 1.003,
   "ess": 4821,
-  "hamming_autocorr": [0.12, 0.04, 0.02, ...]
+  "hamming_autocorr": [0.12, 0.04, 0.02, 0.01, 0.01, 0.00, 0.00, 0.00, 0.00, 0.00,
+                        0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00]
 }
 ```
 
+**Seed specification**: `--seed <u64>` sets the base seed (if omitted, drawn from OS entropy and printed to stderr). Chain i uses seed `SHA-256("ENSEMBLE_CHAIN_" || i || "_" || base_seed)`, truncated to 64 bits. All `chain_seeds` are recorded in the JSON output for full reproducibility.
+
 ---
 
-## Performance targets
+## 5.1 The Compactness Extremum and Ensemble Position
 
-| State | k | Tracts | GerryChain 1K steps | Rust target 10K steps |
+METIS minimises edge cuts by design. As a result, bisection plans produced by `redist build` are expected to sit at the **low end** of the ReCom cut-fraction distribution — i.e., more compact than most valid plans that ReCom samples.
+
+Empirical results from the G-series:
+
+| State | METIS plan percentile in ReCom ensemble |
+|-------|-----------------------------------------|
+| NC | ~50th (geographic convergence: both methods find similarly compact plans) |
+| WI | ~0.2th |
+| GA | ~0.1th |
+| PA | ~0.2th |
+
+**Interpretation**: The METIS plan is not a "typical" valid plan — it is a compactness optimum. The ReCom ensemble characterises the full feasible space, and the METIS plan sits at the compact extreme for most states. NC is the exception: geographic constraint (the Appalachians + coastal plain divide) dominates, so METIS and ReCom converge on similar cuts.
+
+**Important distinction**: Sitting at the 0.1th percentile of the *cut-fraction* distribution does not imply partisan bias. It implies the METIS plan is more compact than 99.9% of valid plans. Whether partisan outcomes also sit at an extreme requires a separate analysis (D-seats percentile, efficiency gap) that is not provided by this crate.
+
+**PercentileSweep as the solution**: The `2026-05-06-percentile-sweep.md` spec addresses this by enabling the algorithm to target any percentile of the ensemble — including the 50th — rather than always producing the compactness extremum. This provides the legislature or commission with an explicit, auditable choice of legal posture.
+
+---
+
+## Performance estimates (unvalidated)
+
+> These estimates are extrapolated from GerryChain performance. Actual Rust benchmarks will be measured in Phase 2 using criterion.rs on identical hardware.
+
+| State | k | Tracts | GerryChain 1K steps | Rust estimate 10K steps |
 |-------|---|--------|--------------------|-----------------------|
 | NC | 14 | 2,672 | ~47s | ~0.1s |
 | WI | 8 | 1,542 | ~28s | ~0.05s |
 | GA | 14 | 1,931 | ~30s | ~0.08s |
 | PA | 17 | 3,236 | ~30s | ~0.1s |
-| TX | 38 | 5,265 | ~90s (bipart failures) | ~0.5s |
+| TX | 38 | 5,265 | ~90s | ~0.5s |
 | CA | 52 | 8,057 | ~120s | ~0.8s |
 | **All 6** | | | **~6 min/1K steps** | **~2s/10K steps** |
+
+**Note on TX bipartition failures**: Bipartition failures for prime k (PA k=17, TX k=38) are a combinatorial property of the graph: some region subgraphs have no balanced spanning tree cut. Both GerryChain and the Rust implementation will encounter these; the Rust implementation handles them faster but cannot eliminate them. For TX k=38, pair reselection (try a different adjacent district pair) is the correct mitigation, not tree resampling.
 
 ---
 
@@ -257,3 +306,9 @@ Adding Rust ReCom closes the last methodological gap in the portfolio:
 - G.1 becomes **fully reproducible** via `redist` (no Python/GerryChain dependency)
 - G.4 diagnostics become trivially fast (10K-step ensembles for R-hat convergence)
 - The DIA statutory argument gains a new leg: the algorithm is not only deterministic and verifiable, but its position in the feasible space is also certifiable by the same tool that generated it
+
+---
+
+## Footnotes
+
+**[1] R-hat for discrete statistics**: Standard Gelman-Rubin R-hat is defined for continuous parameters. For discrete redistricting statistics (cut edge count, seat counts), use rank-normalised R-hat (Vehtari et al. 2021) or treat the cut fraction as approximately continuous given its near-Gaussian distribution in large ensembles. R-hat computation in this crate is restricted to continuous statistics (`cut_fraction`, `pop_deviation`). For discrete statistics (seat counts, contiguity indicators), use TV distance between chain marginals or the rank-normalised variant.

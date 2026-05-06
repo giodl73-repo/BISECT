@@ -124,12 +124,82 @@ B.17 shows partisanship is insensitive to parameter tuning. PercentileSweep sugg
 
 ---
 
+## Bisection-Level Ensemble Integration
+
+### The key insight
+
+PercentileSweep (above) sorts T independent bisection plans by edge cut and picks rank ⌊p·T⌋. But this operates at the level of the **full k-way plan**. A more powerful approach applies the percentile choice at **each node of the bisection tree** — every bisection step is a k=2 problem, and at each step we can run a local T-step ReCom ensemble and pick the cut at the target percentile.
+
+```
+BisectionEnsemble(p, T):
+  at each bisection node (region of ~n/level tracts):
+    1. Run T steps of 2-way ReCom on the region subgraph
+    2. Collect T plans with their edge cuts EC_1, ..., EC_T
+    3. Pick plan at rank floor(p * T)
+    4. Recurse on each half
+```
+
+### Integration with the compositor layers
+
+BisectionEnsemble is a **search strategy** that plugs into the existing three-layer compositor:
+
+- **Structure layer**: ApportionRegions / GeoSection / standard-bisect — determines WHICH nodes exist in the bisection tree and their population targets.
+- **Search layer**: BisectionEnsemble(p, T) — at each node, runs a local 2-way ReCom ensemble and picks the cut at percentile p. This replaces the single METIS call per node.
+- **Weights layer**: edge weights (county, geographic, uniform) are still applied to the subgraph at each level before running the local ensemble.
+
+### CLI
+
+```bash
+redist state --state NC --structure prime-factor \
+  --search bisection-ensemble \
+  --percentile 0.50 \
+  --ensemble-steps 500
+```
+
+### YAML config
+
+```yaml
+algorithm:
+  structure: prime-factor
+  search: bisection-ensemble
+  percentile: 0.50
+  ensemble_steps: 500
+```
+
+### Key advantages over full k-way ReCom
+
+1. **Tractable for large k**: Each local ensemble is k=2, so even TX (k=38) decomposes into a sequence of 2-way problems. No TX bipartition failures — at each bisection node we are splitting a subregion into 2 parts, not searching for a balanced k=38 partition directly.
+2. **Structure preserved**: The bisection tree from ApportionRegions or GeoSection is preserved. The structure layer determines WHICH populations are grouped together; the search layer determines HOW each bisection cut is chosen.
+3. **Consistent percentile**: The percentile choice is applied at every level of the tree, not just the top level. A 50th-percentile choice produces a plan that is at the 50th percentile of the local ReCom distribution at every bisection step.
+4. **Parallelisable**: Bisection nodes at the same level are independent — each local ensemble can run on a separate thread. The tree structure provides natural parallelism.
+5. **No calibration required**: Unlike TargetedSweep, BisectionEnsemble does not require a separate calibration run against a global ReCom ensemble. The percentile is applied locally at each node.
+
+### Relationship to PercentileSweep and TargetedSweep
+
+| Strategy | Percentile applied at | Calibration needed | TX handling |
+|----------|----------------------|--------------------|-------------|
+| PercentileSweep | Full k-way plan level | No | METIS (failures possible) |
+| TargetedSweep | Full k-way plan level | Yes (global ReCom) | METIS (failures possible) |
+| BisectionEnsemble | Each bisection node (k=2) | No | Local 2-way ReCom (no failures) |
+
+BisectionEnsemble is the strongest integration of the two specs: it combines the legal-posture knob from PercentileSweep with the sound statistical foundations of the ReCom ensemble crate.
+
+---
+
 ## Implementation plan
 
 ### Phase 1 — PercentileSweep (1-2 days, builds on B.16)
 - [ ] Add `--search percentile --percentile P --seeds T` to CLI args
 - [ ] In runner.rs: run T seeds via SHA-256 chain, collect EC values, sort, pick rank ⌊P·T⌋
 - [ ] Add `SeedCompositor::Percentile { p: f64, seeds: usize }` variant
+
+### Phase 1.5 — BisectionEnsemble (1 week, requires redist-ensemble)
+- [ ] Add `--search bisection-ensemble --percentile P --ensemble-steps T` to CLI args
+- [ ] In runner.rs: at each bisection node, call `redist-ensemble` for 2-way ReCom with T steps
+- [ ] Collect T cut records per node, sort by edge cut, return plan at rank ⌊P·T⌋
+- [ ] Add `SeedCompositor::BisectionEnsemble { p: f64, steps: usize }` variant
+- [ ] Parallel execution: use Rayon to run independent bisection nodes concurrently
+- [ ] Integration tests: NC prime-factor + bisection-ensemble at p=0.0, 0.5, 1.0
 
 ### Phase 2 — TargetedSweep (1 week, requires redist-ensemble)
 - [ ] Add calibration step: read `ensemble.json` output to get EC_target(p)
@@ -138,6 +208,7 @@ B.17 shows partisanship is insensitive to parameter tuning. PercentileSweep sugg
 
 ### Phase 3 — Research (ongoing)
 - [ ] Run PercentileSweep for all 50 states at p=0.0, 0.25, 0.50, 0.75 — compare partisan outcomes
+- [ ] Run BisectionEnsemble for all 50 states at p=0.0, 0.25, 0.50, 0.75 — compare partisan outcomes
 - [ ] Write H.0 paper: confirm partisan insensitivity to percentile choice
 - [ ] Update G.2/G.3 with bisection-space partisan/compactness correlation
 

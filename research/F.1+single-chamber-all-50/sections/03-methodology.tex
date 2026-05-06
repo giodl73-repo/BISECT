@@ -80,6 +80,23 @@ This generates approximately 800~MB of \texttt{.adj.bin} adjacency files.
 The script is the standard adjacency builder from the F.3 data pipeline;
 F.1 depends on it as a prerequisite.
 
+\paragraph{Reproducibility note on block-group resolution.}
+Block-group adjacency data must be built separately for states where
+$k/n_{\mathrm{tracts}} > 0.05$ (see companion paper F.3 for the derivation
+of this threshold). This includes the 12 states listed in
+Table~\ref{tab:resolution-assignment} above (NH, WY, VT, SD, ND, AK, MT,
+NE, WA, ID, ME, WV), as well as a broader set of states with high-$k$
+chambers or dense tract geographies where block-group resolution may be
+warranted: WA, TX, CA, NY, FL, IL, PA, OH, GA, NC, MI, NJ, VA, AZ, MA,
+TN, IN, MO, MD, WI, CO, MN, SC, AL, LA, KY, OR, OK, CT, IA, MS, AR, KS.
+For the full national block-group adjacency build, run:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020
+\end{verbatim}
+(omitting \texttt{--states} builds adjacency for all 50 states; approximately
+4~GB of storage required).
+
 \subsection{Compactness Metrics}
 \label{sec:methodology:metrics}
 

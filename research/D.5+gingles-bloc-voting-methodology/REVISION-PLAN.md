@@ -1,7 +1,9 @@
 # REVISION PLAN — D.5: Gingles Bloc-Voting Methodology
 **Round 1 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 2/4 | Liang 3/4
-**Average:** 2.8/4
-**Status:** Major revisions required — Stephanopoulos's 2/4 and three identified legal errors block publication
+**Round 2 Panel Scores:** Karypis 3/4 | Rodden 3/4 | Duchin 3/4 | Stephanopoulos 3/4 | Liang 3/4
+**Round 1 Average:** 2.8/4
+**Round 2 Average:** 3.0/4
+**Status:** ACCEPTED — avg 3.0/4, all three legal errors corrected, Stephanopoulos upgraded 2→3
 
 ## Critical Issues (Must Fix Before R2)
 
@@ -62,15 +64,15 @@ The paper's geographic description of the new Black Belt district ("from the Geo
 - Add Benjamini-Hochberg p-values to Table 1 as supplementary columns (Duchin)
 - Verify that all five elections in Table 1 are from the eight-election sample (Karypis)
 
-## Target R2 Score
+## R2 Outcome
 
-This paper has the lowest average (2.8/4) and the only 2/4 score in the set. The legal errors (C1, C3) and the missing threshold calibration (C2) are the blocking issues.
+All three legal errors corrected:
+- C1: Callais framing now distinguishes "requires disentanglement" from "requires WLS+HC3+Holm specifically"; Footnote 36 anchor added.
+- C2: Prong 1 threshold calibration included directly (min observed 0.56, mean 0.74 for accepted districts; 0.5 threshold derived as conservative floor).
+- C3: Alabama worked example reframed as post-Allen remedial context throughout.
+- C4: VIF=3.2 reported for Alabama in new collinearity diagnostics section.
+- I1: Bootstrap fully specified (1000 replicates, county-clustered, percentile CI).
+- I3: LOO table included in Section 5.3.
+- I4: Ensemble Prong 1 framing clarified as option (a).
 
-Priority order for revision:
-1. C1 (Callais mischaracterization) — rewrite the introductory legal framing
-2. C2 (Prong 1 threshold calibration) — include the empirical calibration analysis directly
-3. C3 (Allen post-remand) — update the Alabama worked example context
-4. C4 (VIF) + I1 (bootstrap spec) — add to the Alabama worked example
-
-With C1-C4 and I1-I4 addressed: Stephanopoulos's score should move from 2/4 to 3/4, bringing the average to ~3.0/4.
-A strong revision addressing all major issues could reach 3.2-3.4/4 in R2.
+Stephanopoulos upgraded 2→3. Average reached 3.0/4 — ACCEPTED.
