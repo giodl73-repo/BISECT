@@ -167,9 +167,9 @@ Synthesis, guides, and practitioner materials.
 
 | Code | Title | PDF | Status |
 |------|-------|-----|--------|
-| H.0 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/H.0+percentile-sweep.pdf) | R2 in progress |
-| H.1 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/H.1+bisection-ensemble.pdf) | R2 in progress |
-| H.2 | redist-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+redist-ensemble.pdf) | R2 in progress |
+| H.0 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/H.0+percentile-sweep.pdf) | **Accepted** 3.4/4 |
+| H.1 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/H.1+bisection-ensemble.pdf) | **Accepted** 3.0/4 |
+| H.2 | redist-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+redist-ensemble.pdf) | **Accepted** 3.2/4 |
 
 ---
 
