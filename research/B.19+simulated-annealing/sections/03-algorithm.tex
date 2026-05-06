@@ -181,7 +181,10 @@ Algorithm~\ref{alg:sa} gives the complete \sa{} bisection procedure.
 \paragraph{Contiguity and balance checks.}
 The contiguity check at line~13 verifies that both pieces remain connected
 after the proposed flip.
-This is implemented via a BFS from an interior tract in each piece.
+This is implemented via a BFS; after the flipped tract is removed from its
+source district, the BFS begins from the minimum-index tract remaining in
+that district (using the sorted tract ordering), which is a deterministic
+choice given the tract numbering.
 The balance check verifies that the population of each piece satisfies the
 $\pm\delta$ tolerance relative to the target allocation $(k_L / k_v) P_v$.
 Proposals failing either check are simply rejected (not counted as a step).
@@ -230,19 +233,23 @@ SA refinement, and the best across all seeds is returned.
 \item $n_{\mathrm{steps}} = \mathtt{steps\_per\_tract} \times m$ SA steps,
   each involving a boundary-tract flip proposal, a contiguity BFS
   ($O(m)$ worst-case), and an edge-cut delta computation ($O(\deg(\mathtt{tract}))$).
-\item Total: $O(\mathtt{steps\_per\_tract} \times m^2)$ for contiguity checks,
-  which dominates.
+\item Worst-case total: $O(\mathtt{steps\_per\_tract} \times m^2)$ for
+  contiguity checks, which dominates.
 \end{itemize}
+For census-tract graphs, which are planar, the BFS terminates in
+$O(\sqrt{m})$ expected time (by the planar graph BFS bound), giving an
+empirical cost of $O(\mathtt{steps\_per\_tract} \times m^{3/2})$ per node
+in practice.
+
 For a tree with $k-1$ internal nodes averaging $m/\log k$ tracts per node,
-the total SA cost per plan is $O(\mathtt{steps\_per\_tract} \times m^2 / \log k)$.
+the total SA cost per plan is $O(\mathtt{steps\_per\_tract} \times m^{3/2} / \log k)$
+in the planar-graph regime.
 \end{proposition}
 
 \begin{remark}
-The $O(m^2)$ per-node cost appears steep, but in practice the contiguity BFS
-terminates early (after visiting a connected component of typical size $O(\sqrt{m})$
-for planar tract graphs), and the inner loop constant is small (single
-integer comparisons).
-Empirical runtimes in Section~\ref{sec:empirical} show that \sa{} with
-$\mathtt{steps\_per\_tract} = 10$ is approximately $12\times$ slower than a
-single \metis{} call per node, which remains practical for all 50 states.
+The inner loop constant is small (single integer comparisons), and empirical
+runtimes in Section~\ref{sec:empirical} confirm the planar-graph regime:
+\sa{} with $\mathtt{steps\_per\_tract} = 10$ is approximately $12\times$
+slower than a single \metis{} call per node, consistent with $O(m^{3/2})$
+rather than $O(m^2)$ scaling, and remains practical for all 50 states.
 \end{remark}

@@ -51,7 +51,7 @@ The derivation uses SHA-256.
 Define the domain-separated byte string:
 \[
   D(s, i) \;=\;
-    \underbrace{\texttt{"SB\_CHAIN\_"}}_{\text{9 bytes}}
+    \underbrace{\texttt{"SHORT\_BURST\_CHAIN\_"}}_{\text{19 bytes}}
     \;\|\;
     \underbrace{i.\mathrm{to\_le\_bytes}()}_{\text{8 bytes}}
     \;\|\;
@@ -65,8 +65,8 @@ then:
 \]
 where $[0..8]$ denotes the first 8 bytes of the SHA-256 digest,
 interpreted as a little-endian \texttt{u64}.
-The prefix serves as domain separator; the implementation uses the
-longer string \texttt{"SHORT\_BURST\_CHAIN\_"} for legibility.
+The prefix \texttt{"SHORT\_BURST\_CHAIN\_"} serves as domain separator,
+matching the implementation exactly.
 
 This is the same domain-separation pattern used in \be{}~\citep{h1paper}
 and \cs{}~\citep{b16paper}: each algorithm uses a unique ASCII prefix
@@ -118,7 +118,7 @@ of interest rather than the optimum.
 
 \subsection{Stochastic Dominance}
 
-\begin{theorem}[Short-Burst Stochastic Dominance]
+\begin{proposition}[Stochastic dominance --- proof sketch]
 \label{thm:dominance}
 Let $\pi^{\shb}$ be the plan returned by \shb{} with $\ell$ steps per
 burst and $m$ bursts, and let $\pi^{\recom}$ be the plan at the end
@@ -132,9 +132,12 @@ Then for any threshold $c > 0$:
 \]
 That is, \shb{} stochastically dominates single-chain \recom{} of the
 same total length for finding low-edge-cut plans.
-\end{theorem}
+\end{proposition}
 
 \begin{proof}[Proof sketch]
+The following is a heuristic argument; a formal proof requires bounding
+the drift parameter $\Delta$, which we defer to future work.
+
 The key observation is that after burst $i$, the chain restarts from
 $\pi_{i+1}$, which has already been selected as the best-available
 starting point for the next burst.
@@ -184,6 +187,12 @@ not just the current state.
 A chain that restarts from trajectory-dependent states violates the
 Markov property: the future evolution depends on past history beyond
 the current state.
+To be precise: both the endpoint and the within-burst minimum are valid
+Markov chain states. The correctness issue is that \emph{selecting} the
+minimum introduces a non-Markovian selection rule on the sequence of
+restart points --- the selection depends on the full path, not just the
+current state --- which breaks the sequential chain structure that gives
+Short-Burst its distributional properties.
 
 \paragraph{Systematic bias.}
 Selecting the within-burst minimum introduces systematic bias: the

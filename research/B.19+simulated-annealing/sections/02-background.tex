@@ -13,9 +13,10 @@ Unlike greedy local search, SA can accept cost-increasing moves, preventing
 premature convergence to poor local optima.
 
 \paragraph{Convergence theory.}
-If the cooling schedule satisfies $T(t) \ge C / \log(t+2)$ for a
-sufficiently large constant $C$ (the ``logarithmic schedule''), SA converges
-to a global optimum with probability one~\citep{kirkpatrick1983}.
+Under a logarithmic cooling schedule $T(t) = c / \log(1+t)$ for sufficiently
+large $c$, SA converges to a global optimum with probability
+one~\citep{hajek1988}; Kirkpatrick et al.\ \citeyear{kirkpatrick1983}
+demonstrated this empirically for combinatorial optimisation.
 The logarithmic schedule is impractically slow for large instances.
 In practice, geometric schedules---$T(t) = T_0 \cdot r^t$ for some
 $r \in (0,1)$---are used.

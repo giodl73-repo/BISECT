@@ -108,15 +108,14 @@ steps is lower once the immediate neighbourhood of the \metis{} local
 optimum has been explored.
 
 \paragraph{Partisan outcomes.}
-The D/R seat counts are identical across all four algorithms for all three
-states.
-This is consistent with the B.8 finding that seat counts are determined
-primarily by the geographic distribution of partisan voters and the
-bisection tree structure, not by fine-grained boundary adjustments at the
-margin~\citep{b8paper}.
-SA's improvement in compactness does not shift seats because the seat
-boundaries are set by the same bisection tree; SA only adjusts which tracts
-fall on each side of each cut.
+In our single-seed experiments across NC, WI, and TX, SA produces the same
+partisan seat counts as standard \metis{} bisection (Table~\ref{tab:main}).
+This is consistent with B.17's finding that structure dominates search; the
+bisection tree geometry, not the per-node solver, is the primary determinant
+of partisan outcomes~\citep{b8paper}.
+However, three single-seed observations are not sufficient to establish the
+invariance claim in general.
+Multi-seed verification across additional states is deferred to Phase~2.
 
 \paragraph{Edge cut vs.\ Polsby-Popper.}
 EC and PP are correlated but not identical.
@@ -144,7 +143,10 @@ The NC baseline PP$= 0.217$ used in Table~\ref{tab:main} matches the H.1
 Our SA(steps=10) result PP$= 0.248$ represents a 14.3\% improvement, which
 places SA bisection between the H.1 ``multi-seed'' result (10--12\%)
 and the \be{}($T=100$) result (22--25\%).
-This ordering makes intuitive sense: \be{} benefits from both the best
-single-seed selection \emph{and} the SA refinement would apply to each of
-those seeds; SA(steps=10) on a single seed captures the refinement benefit
-without the multi-seed selection benefit.
+This ordering makes intuitive sense: \be{} benefits from the best
+single-seed selection across $T=100$ parallel seeds, whereas SA(steps=10)
+on a single seed captures the per-node refinement benefit without the
+multi-seed selection benefit.
+A natural extension---running \be{} with SA as the per-step refinement---is
+left to future work; we hypothesise it would combine the distributional
+benefits of ensemble sampling with SA's local refinement.
