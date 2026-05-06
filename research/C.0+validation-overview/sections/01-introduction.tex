@@ -1,0 +1,107 @@
+% Section 1: Introduction (~1,200 words)
+
+\subsection{Why Validation Matters for Algorithmic Redistricting}
+
+Congressional redistricting shapes the composition of the U.S. House of
+Representatives for an entire decade. The stakes---who governs, whose
+preferences are amplified, whose communities are intact---are high enough
+that every methodological choice requires rigorous justification.
+Algorithmic approaches to redistricting promise to replace the backroom
+negotiations and partisan calculations of legislative map-drawing with
+reproducible, transparent, geometric optimization. But a promise of
+transparency is not the same as a demonstration of robustness.
+
+Consider what could go wrong even for a technically sound algorithm.
+A redistricting method that works well with 2020 Census tracts might
+produce different results with 2010 or 2000 tract boundaries, which
+differ in their shapes and sizes due to decennial boundary revisions.
+It might produce very different districts depending on whether it uses
+census blocks ($\sim$100 residents each), block groups ($\sim$1,200),
+or tracts ($\sim$4,000)---a concern known in geographic information
+science as the Modifiable Areal Unit Problem
+\citep{openshaw1984modifiable}. The algorithm might behave well for
+states with a long political history of non-partisan redistricting but
+fail to generalize to states with extreme demographic concentration.
+And even if none of these spatial or temporal failures occur, the
+algorithm might---unintentionally---produce plans that systematically
+favor one party over another, not through any defect in the code but
+through the interaction of geometric optimization with political
+geography \citep{chen2013unintentional}.
+
+Validation is the discipline that answers these questions empirically
+rather than by assertion. A validated algorithm is one that has been
+tested against multiple failure modes and found robust. The C-track
+(C.1 through C.5) of the Algorithmic Redistricting Research Portfolio
+constitutes exactly such a validation program.
+
+\subsection{The Five Validation Dimensions}
+
+The C-track organizes validation along five dimensions, each addressed
+by a dedicated empirical paper:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Spatial robustness (C.1).} Does the algorithm produce
+    consistent results when the spatial building blocks change? We test
+    this by running the full redistricting pipeline at three resolutions:
+    census tracts (baseline; $\approx$74,000 units nationally), block
+    groups ($\approx$239,000 units), and census blocks ($\approx$8.1M
+    units)---a 130$\times$ range in unit count
+    \citep{dellalibera2026c1}.
+
+  \item \textbf{Cross-census consistency (C.2).} Does the algorithm
+    behave consistently across the three available census years
+    (2000, 2010, 2020), even though tract boundaries, population
+    distributions, and apportionment change between decades?
+    C.2 introduces a slice-based validation framework that controls
+    for geographic confounds \citep{dellalibera2026c2}.
+
+  \item \textbf{Temporal stability (C.3).} When the same algorithm is
+    applied to successive census years for the same state, how much do
+    the resulting district boundaries change? Geographic stability---
+    not just metric stability---is a legal and practical requirement
+    \citep{dellalibera2026c3}.
+
+  \item \textbf{Longitudinal analysis (C.4).} Over twenty years of
+    census cycles, is the gap between algorithmic and enacted plans
+    shrinking as redistricting reform spreads? C.4 places the algorithm
+    in historical context, showing that the algorithmic approach becomes
+    increasingly competitive as reform-era enacted maps improve
+    \citep{dellalibera2026c4}.
+
+  \item \textbf{Partisan fairness (C.5).} A neutral algorithm should
+    produce plans with near-zero efficiency gap as a byproduct of
+    geometric optimization alone. C.5 documents that algorithmic plans
+    achieve a mean $|EG| = 0.04$, compared to $0.08$ for enacted maps,
+    and does so without ever accessing partisan data
+    \citep{dellalibera2026c5}.
+\end{enumerate}
+
+\subsection{The DIA Reproducibility Standard}
+
+The Districting Integrity Act (DIA)\footnote{The Districting Integrity
+Act is a model statute proposed in B.02 of this research portfolio
+\citep{b02paper}; it has not been enacted by any legislature and is not
+a binding legal requirement. References throughout this paper to DIA
+``requirements'' describe the standards the model statute would impose
+if adopted.} specifies that a legally defensible redistricting algorithm
+must satisfy three reproducibility requirements: (R1) deterministic output from a
+specified seed, (R2) invariance to input data perturbations within
+defined tolerance bounds, and (R3) documented behavior across the
+full range of geographies and census years for which the algorithm
+is used. The C-track papers collectively provide the empirical
+evidence for (R2) and (R3). B.7 \citep{b7paper} addresses (R1) by
+characterizing seed sensitivity across 10,000 seeds per state.
+
+\subsection{Paper Structure}
+
+The remainder of this paper proceeds as follows.
+Section~\ref{sec:spatial} summarizes C.1's MAUP findings.
+Section~\ref{sec:cross-census} summarizes C.2's cross-census
+validation framework and results.
+Section~\ref{sec:temporal} synthesizes the temporal stability
+findings from C.3 and the longitudinal trends from C.4.
+Section~\ref{sec:partisan} presents the partisan fairness validation
+from C.5.
+Section~\ref{sec:synthesis} articulates the four properties that the
+C-track collectively validates and connects them to DIA requirements.
+Section~\ref{sec:conclusion} concludes.

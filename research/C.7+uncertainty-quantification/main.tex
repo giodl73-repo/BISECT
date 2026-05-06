@@ -1,0 +1,100 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+% Theorem environments
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+
+% Title
+\title{\textbf{Statistical Uncertainty in Algorithmic Redistricting:\\
+Confidence Intervals for Compactness, Partisan Fairness,\\
+and VRA Compliance}\\[0.4em]
+\large C.7 --- Validation Track: Uncertainty Quantification}
+
+\author{Gio Della-Libera \\ \textit{Apportionment Research Group}}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Point estimates of redistricting performance metrics---Polsby-Popper
+compactness, efficiency gap, minority VAP percentages---are insufficient
+for legal and policy use without accompanying confidence intervals (CIs).
+This paper provides the first systematic uncertainty quantification (UQ)
+for algorithmic congressional redistricting, propagating three sources
+of uncertainty through the METIS recursive bisection pipeline: (1)~METIS
+random seed variance, (2)~PL 94-171 census sampling uncertainty, and
+(3)~shapefile resolution measurement error. For each source and metric,
+we derive analytically tractable CIs where possible and bootstrap CIs
+otherwise. Key results: METIS seed variance contributes CV $<$ 2\% to
+Polsby-Popper for 96\% of states (48/50), yielding bootstrap
+bootstrap CIs of $[0.351, 0.370]$ at 95\% for the national mean PP
+(point estimate 0.361). Census undercount uncertainty (0.3--1.1\%
+by state) propagates to $\pm 0.002$ on district population deviation
+via the delta method. Resolution-induced measurement error for PP is
+$\Delta PP < 0.005$ mean across a 130$\times$ unit-count range. The
+$+22\%$ compactness improvement over enacted plans is robust: accounting
+for all three uncertainty sources yields a 95\% CI of $[+15\%, +29\%]$.
+Efficiency gap CIs derived from 50-state bootstrap are reported for all
+competitive states. These CIs are designed for direct use in expert
+witness reports and legislative testimony.
+\end{abstract}
+
+\noindent\textbf{Keywords:} uncertainty quantification, confidence intervals,
+redistricting, bootstrap, delta method, efficiency gap, Polsby-Popper,
+VRA, census undercount
+
+\newpage
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{METIS Seed Variance}
+\label{sec:seed}
+\input{sections/02-seed-variance}
+
+\section{Census Sampling Uncertainty}
+\label{sec:census}
+\input{sections/03-census-sampling}
+
+\section{Polsby-Popper Measurement Error}
+\label{sec:pp}
+\input{sections/04-polsby-popper}
+
+\section{Partisan Fairness Metric Uncertainty}
+\label{sec:partisan}
+\input{sections/05-partisan-metrics}
+
+\section{VRA Metric Uncertainty}
+\label{sec:vra}
+\input{sections/06-vra-metrics}
+
+\section{Synthesis: The $+22\%$ Compactness Improvement Is Robust}
+\label{sec:synthesis}
+\input{sections/07-synthesis}
+
+\section{Conclusion}
+\label{sec:conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

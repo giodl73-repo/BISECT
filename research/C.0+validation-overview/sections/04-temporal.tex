@@ -1,0 +1,136 @@
+% Section 4: Temporal Stability — Summary of C.3 and C.4 (~1,100 words)
+
+\paragraph{Stability concepts defined.}
+We distinguish two stability concepts throughout this section.
+(1)~\textbf{Metric stability}: the mean PP score varies less than $0.010$
+across census years for a given state --- a property of the score
+distribution. (2)~\textbf{Boundary stability}: the Jaccard similarity
+(Intersection over Union, IoU) between district assignments across census
+years is $\geq 0.70$ --- a property of the geographic shapes themselves.
+C.3 measures metric stability; C.4 measures boundary stability. Both are
+necessary for temporal validation: a plan that produces similar PP scores
+but places radically different tracts in each district provides no
+continuity benefit for voters or incumbents, while a plan whose boundaries
+change little but whose compactness drifts substantially may not satisfy
+DIA's longitudinal certification standard.
+
+\subsection{Two Distinct Notions of Temporal Stability}
+
+The word ``stability'' covers two different empirical questions in
+redistricting research, both important but analytically distinct.
+
+\textbf{Decadal boundary stability (C.3)} asks: when the algorithm is
+applied to two successive census years for the same state, how similar
+are the resulting district boundaries? Stability in this sense matters
+for voters (who may have to learn new districts), incumbents (whose
+electoral bases change), and courts (which have expressed preference
+for continuity in redistricting challenges). It is a property of the
+algorithm's behavior across \emph{time}, holding the state fixed.
+
+\textbf{Historical performance convergence (C.4)} asks: is the gap
+between algorithmic plans and enacted plans shrinking over time, as
+redistricting reform spreads and enacted maps improve? This is a
+property of the algorithm's \emph{relative} performance compared to
+a changing benchmark.
+
+Papers C.3 \citep{dellalibera2026c3} and C.4 \citep{dellalibera2026c4}
+address these questions respectively.
+
+\subsection{C.3: Geographic Clustering Stability Across Censuses}
+
+C.3 conducts a systematic comparison of recursive bisection versus
+n-way partitioning methods for maintaining district continuity across
+the 2010--2020 decade. Five southern states with significant minority
+populations were selected as the test set: Alabama, Georgia, Louisiana,
+Mississippi, and North Carolina. Both algorithms were run on 2010 and
+2020 census data (20 total redistricting runs), and decadal stability
+was measured using Intersection over Union (IoU) between matched
+districts across the two years.
+
+The key finding is that \textbf{recursive bisection provides measurably
+better temporal stability}: mean population disruption is $71.6\%$
+for recursive bisection versus $72.4\%$ for n-way partitioning, a
+statistically significant $0.8$ percentage-point advantage ($p < 0.05$,
+paired $t$-test). The advantage appears in 4 of 5 test states.
+
+For a state with 5 million residents, this $0.8$ pp advantage translates
+to approximately 40,000 fewer people reassigned to different districts
+across the decade---a modest but consistent benefit. The mechanism is
+intuitive: hierarchical bisection preserves coarse-level geographic
+divisions (north vs.\ south half of a state) that direct $k$-way
+optimization may not respect, because the coarse structure is embedded
+in the bisection tree.
+
+\subsection{C.3: Within-Slice Temporal Correlation}
+
+The C.2 slice framework applied to C.3's data yields median within-slice
+cross-decade IoU of $0.71$ (IQR: $[0.63, 0.79]$). This means that
+districts drawn for 2010 and 2020 share on average 71\% of their
+geographic area within any given geographic slice. The overlap is higher
+in rural slices ($0.78$) and lower in high-growth urban slices ($0.61$),
+consistent with the intuition that rapidly growing metropolitan areas
+force larger boundary revisions.
+
+District stability is not a goal the algorithm explicitly optimizes---
+METIS maximizes edge-cut quality for the current census year without
+memory of previous years. The 71\% IoU is therefore a \emph{structural}
+consequence of geographic stability: places that are geographically
+coherent in 2010 tend to remain so in 2020, guiding the algorithm to
+similar partitions.
+
+\subsection{C.4: Longitudinal Convergence of Algorithmic and Enacted Plans}
+
+Paper C.4 \citep{dellalibera2026c4} takes a twenty-year view, examining
+compactness trajectories for both algorithmic and enacted plans from
+the 2000 through the 2020 redistricting cycles. Three census cycles
+provide three data points per state---enough to estimate trend
+directions, though not to fit complex models.
+
+\subsubsection{Algorithmic plan compactness is stable}
+
+For the algorithmic plans, national mean Polsby-Popper is $0.412$
+(2000), $0.428$ (2010), and $0.441$ (2020). The improvement of
+$\Delta PP = +0.029$ over twenty years reflects refinements in input
+data quality, not algorithmic changes. Coefficient of variation across
+years is $3.5\%$---small relative to cross-state variation ($14.2\%$).
+Algorithm behavior is \textbf{temporally stable}.
+
+\subsubsection{Enacted plan compactness is improving, narrowing the gap}
+
+For enacted plans, the mean Polsby-Popper improved from $0.298$ (2000)
+to $0.316$ (2010) to $0.331$ (2020)---a $\Delta PP = +0.033$ gain
+over twenty years. This improvement reflects the spread of redistricting
+reform commissions, court interventions striking down egregiously
+non-compact plans (Pennsylvania 2018, North Carolina 2019), and
+improvements in mapping software that make moderately compact plans
+easier to draw.
+
+The gap between algorithmic and enacted plan compactness therefore
+\textbf{narrowed} from $0.412 - 0.298 = 0.114$ (2000) to
+$0.441 - 0.331 = 0.110$ (2020). The algorithmic advantage persists
+but decreases by $0.004$ per cycle. Extrapolating (with the caveat
+that two trend points do not make a reliable forecast), the gap would
+close around 2060 if reform continues at the current pace---well beyond
+the planning horizon for current policy debates.
+
+\subsubsection{Geographic clustering stability over twenty years}
+
+A central finding of C.4 is that geographic clustering of district
+characteristics is \emph{stable} across the three census cycles. Using
+hierarchical clustering of state-level PP scores, C.4 identifies four
+stable clusters: (1) compact inland states (PP $>$ 0.50); (2) moderate
+coastal states (PP 0.40--0.50); (3) complex metropolitan states
+(PP 0.35--0.40); and (4) irregular geographic states (PP $<$ 0.35).
+Cluster membership changes for only 3 of 50 states across the
+2000--2020 period, confirming that geographic characteristics dominate
+algorithm performance in a stable, predictable manner.
+
+\subsection{Implications for Decadal Planning}
+
+The combined findings of C.3 and C.4 support a specific policy
+conclusion: states that adopt recursive bisection in 2020 should expect
+(a) moderately easier 2030 transitions, due to the $0.8$ pp structural
+stability advantage; (b) stable algorithmic compactness performance
+across the decade; and (c) a persistent but narrowing gap relative to
+reform-era enacted plans. These properties make the algorithm suitable
+for long-term planning contexts, not just single-census deployment.

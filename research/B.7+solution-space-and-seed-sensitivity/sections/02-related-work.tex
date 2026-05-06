@@ -1,0 +1,62 @@
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Solution space characterisation in redistricting}
+
+The redistricting literature has characterised solution spaces primarily
+through Markov chain Monte Carlo (MCMC) ensemble methods.
+DeFord, Duchin, and Solomon~\citep{deford2019recombination} introduced
+ReCom, a recombination Markov chain that generates large ensembles of
+valid redistricting plans.  Their work demonstrated that the space of
+compact, balanced plans is large and well-connected, a finding consistent
+with our seed sweep results.
+
+Fifield et al.~\citep{fifield2020} proved mixing bounds for redistricting
+Markov chains, establishing that the solution space can be traversed
+efficiently from any starting point.  Their empirical results on small
+states ($k \leq 8$) showed that partisan outcomes vary substantially
+across the solution space --- but this variation is driven by geographic
+segregation, not by optimisation objective choices.
+
+Autry et al.~\citep{autry2020} developed the multi-scale merger framework,
+showing that ensemble diversity is highest for moderate $k$ values and
+geographically complex states --- consistent with our finding that
+GA ($k{=}14$) and NC ($k{=}14$) exhibit the highest seed variance.
+
+\subsection{Sensitivity analysis for graph partitioning}
+
+The graph partitioning literature has not systematically studied seed
+sensitivity for METIS, though it is well known that METIS results vary
+across seeds~\citep{karypis1998}.
+Sanders and Schulz~\citep{sanders2013think} showed that running multiple
+seeds and taking the best result improves quality by 2--5\% on benchmark
+graphs.  Our sweep of 10,000 seeds per state characterises the full
+distribution rather than just the minimum.
+
+Pellegrini's SCOTCH partitioner~\citep{pellegrini2008scotch} uses a
+different random number generator and shows similar seed sensitivity
+profiles on planar graphs, suggesting that seed sensitivity is a property
+of the problem class rather than the specific implementation.
+
+\subsection{Partisan implications of redistricting algorithms}
+
+Chen and Rodden~\citep{chen2013unintentional} showed that geographic
+sorting of partisan preferences produces systematic partisan asymmetry
+even in ``neutral'' algorithms.  This geographic effect dominates
+seed-level variance in our results.
+
+Stephanopoulos and McGhee~\citep{stephanopoulos2015partisan} introduced
+the efficiency gap as a measure of partisan asymmetry.  We do not use
+the efficiency gap directly, but our seat-share variance results are
+related: states with high efficiency gap sensitivity tend to have high
+seed variance.
+
+\subsection{Hash-based seed generation}
+
+The DIA's SHA-256 seed formula provides unpredictability (no party can
+know the seed before the census release) and reproducibility (the seed
+can be independently verified from public data).  Cryptographic hash
+functions in randomised algorithm seeding have been studied by Bernstein
+and Lange~\citep{bernstein2019}, who showed that domain separation
+(the \texttt{DIA\_SEED\_V1} version string) is necessary to prevent
+cross-application seed correlation.

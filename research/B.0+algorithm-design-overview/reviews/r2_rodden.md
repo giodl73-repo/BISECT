@@ -1,0 +1,31 @@
+---
+reviewer: Jonathan Rodden
+round: 1
+score: 4
+date: 2026-05-05
+---
+
+## Summary
+
+This paper synthesises a multi-paper algorithmic redistricting programme into a unified toolbox and validates it against four competitive states, with the central empirical claim that geographic voter sorting — not algorithm choice — drives partisan outcomes across all configurations. As the person whose research on geographic sorting the paper invokes throughout, I find the core empirical finding well-supported and the Rodden-null test a legitimate and well-specified operationalisation of what I have been arguing.
+
+## Strengths
+
+- **The Rodden-null test is correctly specified and the Wisconsin result is real.** The finding that AreaSection and GeoSection produce identical seat counts in 76% of states and differ by at most 1 seat in the remainder is exactly the kind of evidence I have been asking algorithmic redistricting researchers to generate. The Wisconsin result — 4D/4R under unweighted bisection, 3D/5R under GeoSection, with the difference attributable entirely to Milwaukee metro geographic structure — is a clear, concrete illustration of geographic sorting that will be useful for practitioners and courts alike. The paper correctly attributes this to the caterpillar pathology (sequential urban peeling) rather than to algorithmic bias.
+- **The compactness-proportionality paradox (Pattern 0) is a genuine empirical finding that consolidates scattered observations in the literature.** The observation that the most compact algorithm (GeoSection, minimising boundary length) is not the most proportional is not novel in isolation, but the systematic demonstration across four states with different demographic profiles — Wisconsin (competitive), North Carolina (competitive with VRA exposure), Georgia (majority-minority opportunity), Alabama (Allen v. Milligan) — establishes it as a robust cross-state pattern. This will be cited frequently.
+- **The discussion of AreaSection's effect on partisan outcomes is analytically sound.** The mechanism — area balance prevents urban peeling, which prevents the creation of maximally efficient Republican geometries in suburban rings, which reduces the proportionality gap — is the correct causal chain. The paper is appropriately careful not to overstate this as a proportionality tool; the observed gap reduction (NC: -13.6pp to -6.3pp, GA: -14.4pp to -7.2pp in estimated results) is a reduction, not elimination, of the geographic sorting effect.
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **The Rodden-null test sample size is insufficient for the claim being made.** The paper states "AreaSection produces identical seat counts to GeoSection in 76% of states (25/34 with complete data)." The 34-state denominator is never explained — why 34 and not 50? The missing 16 states are not characterised. If they are systematically different (e.g., states with fewer than 4 districts, states where both algorithms trivially produce the same outcome because seat count is 1 or 2), the 76% figure is not a meaningful measure of the Rodden-null result. A complete 50-state table with the denominator justified, or at minimum a clear explanation of why 16 states are excluded, is required.
+- **The geographic sorting claim ("geographic voter sorting is the dominant driver") is stated as a general finding but tested on only four handpicked states.** The four bakeoff states — Wisconsin, North Carolina, Georgia, Alabama — are all cases where geographic sorting is known to produce Republican over-representation. The paper does not include any states where geographic sorting produces Democratic over-representation (Massachusetts, Maryland, Connecticut, where Democratic voters are not the urban minority). Without those cases, the claim that geographic sorting is the dominant driver in all configurations cannot be supported. The paper should either (a) include such counterexamples explicitly, (b) cite the B-series evidence across all 44 states, or (c) narrow the claim to "in the studied configurations, geographic sorting dominates in states with concentrated urban Democratic cores."
+- **The mean proportionality gap of -7pp in competitive states (cited in Limitations, L1) is stated without a source table.** The text says "all configurations show a mean proportionality gap of -7pp in the eight competitive states studied across B.8–B.9." Eight states are never identified, and the mean is not derived from the bakeoff tables in this paper (which cover four states). A footnote with the eight states and their per-configuration gap values, or a reference to the specific tables in B.8–B.9, is required.
+
+## P2 Items (Suggested Improvements)
+
+- **The "Lorenz p* natural population fraction" should be defined more carefully.** The notation `p* = L(0.5)` appears in the Notation section and is used throughout, but the Lorenz curve L here is not the standard income Lorenz curve — it is a population-density Lorenz curve where tracts are ordered by population density. This distinction matters: in states with geographically compact but densely populated cities (New York, Massachusetts), L(0.5) can be very different from 0.5, and understanding this is important for interpreting AreaSection results. A two-sentence definition with an example would prevent misinterpretation.
+- **The paper would benefit from a figure showing the bisection tree structure for at least one state (North Carolina or Wisconsin) under GeoSection vs. AreaSection.** The current presentation relies entirely on tables of scalar metrics. A diagram showing how the first-level split determines the district cluster structure — and how AreaSection changes that structure relative to GeoSection — would make the caterpillar vs. balanced-tree argument intuitive rather than abstract.
+
+## Score: 4 / 4 — Accept
+
+The paper's central empirical claims about geographic sorting are well-supported and important. The P1 items are substantive gaps in the evidentiary chain, but they do not undermine the core findings — they underspecify them. The authors clearly have the data to address all three P1 items; they simply need to include it. On revision, this is publication-ready for a general political science or public law audience.

@@ -1,0 +1,63 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{B.11: ApportionRegions:\\
+       Redistricting as the Geographic Completion of Huntington-Hill}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The U.S. Constitution allocates congressional seats to states via the
+Huntington-Hill apportionment method (Article~I, \S2), but treats the drawing
+of district boundaries as a separate ``Manner of election'' question (Article~I,
+\S4). We propose collapsing this distinction. Given that a state receives $n$
+seats, we construct its congressional map by factoring $n$ into primes and
+applying those factors hierarchically as $k$-way geographic partitions of the
+state's census-tract graph. The resulting \emph{ApportionRegions}
+(AR) algorithm has two inputs: the prime factorization of the seat count
+(arithmetic) and the minimum-cut partition of the geographic graph (TIGER
+adjacency). All prime-$p$ splits of a given state are computed once and reused
+across every seat count sharing that prime factor. When $n$ changes after
+reapportionment, only the levels of the factorization tree affected by the new
+prime structure require recomputation. The map is uniquely determined by
+census data and number theory --- no political inputs, no discretionary choices
+once the census data and seat count are fixed. We prove that AR is constitutional under Article~I~\S2 directly,
+evaluate the algorithm on all 50 states, and characterize the striking
+discontinuities that occur when consecutive seat counts have disjoint prime
+factorizations (e.g., California's 51\,=\,3\,$\times$\,17 and
+52\,=\,$2^2\times 13$ maps share no structural elements).
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-methodology}
+\input{sections/04-evaluation}
+\input{sections/05-discussion}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

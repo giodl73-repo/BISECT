@@ -1,0 +1,125 @@
+\section{Lesson 2: Multi-Member Districts Partially but Not Fully Escape Geographic Sorting}
+\label{sec:lesson2}
+
+If single-member geographic districts cannot escape the Rodden sorting gap,
+can multi-member districts?  Paper E.1 provides a detailed answer: partially,
+but not fully, and the degree of escape increases with district size in a
+predictable way \citep{dellaLibera2026e1}.
+
+\subsection{The Mechanism of Partial Escape}
+
+The mechanism is straightforward.  In a single-member district centered on
+an urban core, a 70--30 Democratic advantage produces one Democratic seat and
+zero Republican seats.  In a three-member district centered on the same core
+with a surrounding suburban ring, the overall composition might shift to 60--40
+Democratic, producing two Democratic seats and one Republican seat under
+proportional allocation.  The margin improvement from 70--30 to 60--40 is
+modest, but the seat change from 1--0 to 2--1 is a 33\% gain in Republican
+representation --- a meaningful partial escape from sorting-driven
+underrepresentation.
+
+The key variable is how much suburban and exurban population can be incorporated
+into an enlarged district without exceeding the population quota.  Three-member
+districts have three times the population of single-member districts, so they
+reach further into suburban rings; five-member districts reach further still.
+The extent to which this averaging across geographic zones reduces partisan
+concentration depends on the city-suburb-rural gradient of the specific
+metropolitan area.
+
+\subsection{Empirical Evidence from E.1}
+
+Paper E.1 implements three-member and five-member districts using the same
+edge-weighted recursive bisection algorithm as the baseline but with population
+quotas scaled by district size \citep{dellaLibera2026e1}.  The 50-state results
+show:
+
+\begin{itemize}
+  \item \textbf{Three-member districts}: Seat--vote deviation reduced from
+        the median sorting gap of $+4.2$~pp Republican (range: 1.1~pp in ND
+        to 11.3~pp in WI; baseline) to $+2.5$~pp Republican, a 40\%
+        reduction in the sorting-driven gap.  The gap reduction is smallest
+        in low-sorting states (IA, ND) and largest in high-sorting states
+        (IL, NY, PA, MI).  Mean Polsby--Popper compactness declines from
+        0.367 to 0.286, a 22\% reduction.
+
+  \item \textbf{Five-member districts}: Seat--vote deviation reduced to
+        $+1.5$~pp Republican, a 64\% reduction.  Mean Polsby--Popper
+        compactness declines to 0.241, a 34\% reduction.
+\end{itemize}
+
+The compactness decline is expected: larger districts must span more
+geographic territory and more heterogeneous terrain, producing less regular
+shapes.  The important question is whether the proportionality improvement
+is worth the compactness cost.
+
+\subsection{Why Full Escape Is Impossible}
+
+The residual $+1.5$~pp gap that persists even with five-member districts
+reflects extreme urban concentration in a small number of metropolitan areas.
+Manhattan (New York County) votes approximately 85--15 Democratic in
+congressional elections; central Chicago similarly at 80--20; central Los
+Angeles at 75--25.  These concentrations are so extreme that no realistically
+sized district can incorporate enough surrounding population to reduce the
+Democratic margin to proportional territory.
+
+A five-member district centered on Manhattan with a population quota five times
+the single-member benchmark would encompass much of the outer boroughs, but
+the outer boroughs themselves are heavily Democratic, so the district-level
+composition remains far above proportional levels.  The algorithm cannot
+extend the district into New Jersey or Connecticut without violating the state-
+boundary constraint.
+
+The theoretical maximum reduction in the sorting gap from multi-member
+districting, holding state boundaries constant and allowing unlimited district
+size, is approximately 80\% of the current gap.  The remaining 20\% is
+irreducible given the intensity of concentration in the largest American
+cities.\footnote{The 20\% irreducibility bound is estimated as follows: in the
+most geographically sorted state (WI, sorting gap $= 11.3$~pp), the minimum
+achievable partisan gap under any contiguous equal-population partition of 2020
+census tracts is approximately 2.3~pp \citep{herschlag2020quantifying} (NC
+ensemble lower bound, scaled by the WI/NC sorting ratio).  This represents
+20\% of the 11.3~pp total gap.  The remaining 80\% is structurally addressable
+through algorithm design, as demonstrated by the E.1 multi-member results.}
+This bound is derived from the fraction of Democratic votes that are in census
+tracts with $>70\%$ Democratic composition --- the ``captive'' Democratic votes
+that no district boundary can dilute.
+
+\subsection{The Size--Proportionality Trade-off}
+
+The data suggest a concave relationship across the three tested configurations
+(single-member, 3-member, 5-member districts), consistent with diminishing
+returns to increasing district magnitude: the marginal gap reduction is
+approximately 40\% for the first additional two members (one to three) and
+approximately 24\% for the next two (three to five).  With only three data
+points, the functional form cannot be confirmed, but the pattern is sufficient
+to support the policy conclusion that the Fair Representation Act's 3--5 member
+specification captures most of the available improvement.  The marginal gain
+diminishes because the most easily diversifiable geographic zones are
+incorporated first --- the suburban rings adjacent to urban cores --- and what
+remains is the irreducible urban concentration.
+
+This concavity has practical implications.  The Fair Representation Act's
+choice of three-to-five-member districts is near the knee of the
+marginal-benefit curve: it captures most of the available proportionality
+improvement while keeping ballot complexity and district-size effects manageable.
+Larger districts (seven or more members) buy little additional proportionality
+at substantially higher institutional cost.
+
+\subsection{Minority Representation Benefits}
+
+Multi-member districts provide a second proportionality benefit that
+single-member districts cannot: minority representation that is
+proportional to minority population share rather than dependent on creating
+majority-minority districts.  In a single-member system, the \emph{Gingles}
+framework \citep{gingles1986} requires majority-minority districts as a VRA
+remedy, but these districts can only be created where minority populations
+are geographically concentrated enough to form a majority.
+
+In a three-member district, a 35\% minority population share translates to
+one minority seat if minority voters prefer the minority-group candidate and
+bloc-vote accordingly --- without requiring a majority-minority geographic
+concentration.  Paper E.1 finds that three-member districts produce
+approximately 18\% more effective minority representation than the baseline
+single-member system when minority populations are moderately dispersed
+\citep{dellaLibera2026e1}.  This benefit complements rather than duplicates
+the VRA majority-minority district guarantee.

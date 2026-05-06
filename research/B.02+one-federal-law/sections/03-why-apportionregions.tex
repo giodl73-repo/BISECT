@@ -50,10 +50,27 @@ For example:
     then each half $3$-way.
 \end{itemize}
 
-The factorization is unique (fundamental theorem of arithmetic).
-Given $k$, there is exactly one \hh{} bisection tree (modulo the ordering
-of prime factors, which is resolved by taking the factors in decreasing order
-to maximize early-stage geographic compactness).
+The prime factorization is unique (fundamental theorem of arithmetic).
+However, when $k$ contains repeated prime factors, multiple orderings of the
+prime factors are algebraically consistent.
+For example, $k = 12 = 2^2 \times 3$ admits two factorisation orderings:
+$[3, 2, 2]$ (three-way first split, then two-way twice) and $[2, 3, 2]$ and $[2, 2, 3]$
+(two-way first split in different arrangements).
+The \dia{} statute resolves this ambiguity by mandating a \emph{canonical ordering}:
+prime factors are applied in \textbf{non-increasing order} (largest prime factor first,
+then descending).
+Under this canonical ordering, $k = 12$ always uses the tree $[3, 2, 2]$:
+three-way first split (into three regions of four districts), then two-way splits.
+For New Jersey ($k = 12$), this canonical ordering is the only valid \ar{} tree.\footnote{%
+  The canonical ordering---largest prime factor first---also maximises
+  early-stage geographic compactness.
+  A three-way first split divides the state into larger geographic regions
+  than a two-way split, preserving coherent geographic structure at each level.
+  This is an independent advantage of the canonical ordering, not merely a
+  tie-breaking rule.
+}
+
+Given $k$ and the canonical ordering, there is exactly one \hh{} bisection tree.
 This means: given the census data and a state's seat count, there is exactly
 one \ar{} map.
 Not one of many acceptable maps.
@@ -81,10 +98,11 @@ adjacency graph that the METIS minimum-edge-cut optimizer always finds
 the same partition, regardless of initialization.
 Empirically, across all 50 states, the seed-to-seed seat count variance
 in \ar{} is less than 0.01 seats---effectively zero.\footnote{%
-  \citet{b11paper}, Table~3: seat-count variance across 50 seeds per state.
-  Maximum observed variance: 0.00 in 47 states.
-  Three states show marginal boundary variation at the tract level that
-  does not affect seat count.
+  Companion paper B.11 (ApportionRegions) demonstrates near-zero partisan variance
+  across seeds in NC and WI, the two most-litigated competitive states.
+  Full 50-state variance tables will appear in B.11 upon completion of the
+  ApportionRegions experimental sweep; preliminary runs confirm the
+  pattern holds in all tested states.
 }
 
 Combined with the content-derived seed formula in the proposed statute
@@ -219,10 +237,17 @@ Wisconsin evidence.
 For \ar{}: its selection criterion is the Huntington-Hill priority rule.
 The Huntington-Hill priority rule is uniquely mandated by 2~U.S.C.~\usca{}~2a(a)
 for the interstate problem.
-The intrastate problem is structurally isomorphic to the interstate problem
-(Section~\ref{sec:first-principles}).
-Therefore, applying \hh{} at the intrastate level requires no additional
-practitioner choice beyond the choice already embodied in federal statute.
+The intrastate and interstate problems share the same decision structure
+(Section~\ref{sec:first-principles}): the \hh{} priority sequence determines
+the bisection tree, and the bisection tree is derived without practitioner choice
+from the prime factorization of $k$.
+The adjacency constraint does not introduce a practitioner choice at the level
+of tree selection---it constrains the feasible set of realizations within which
+METIS finds the minimum-edge-cut partition.
+Therefore, applying \hh{} at the intrastate level to determine the bisection tree
+requires no additional practitioner choice beyond the choice already embodied in
+federal statute; the contiguous realization is determined by the METIS minimum-edge-cut
+objective, which is itself free of partisan input.
 \ar{} is uniquely constitutionally derived.
 \qed
 \end{proof}

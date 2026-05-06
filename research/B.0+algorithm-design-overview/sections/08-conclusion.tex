@@ -89,12 +89,14 @@ Four extensions are needed to complete the toolbox:
 With these extensions, the toolbox will provide a complete, auditable,
 legally-grounded algorithmic framework for the 2031 redistricting cycle.
 
-\paragraph{Availability.}
+\paragraph{Data Availability.}
 The \texttt{redist} Rust binary implementing GeoSection, VRASection,
 AreaSection, NestSection, and StabilitySection is available as open-source
-software.
-The B-series papers, plan manifests from the 50-state runs, and TIGER adjacency
-graphs are available at the project repository.
+software at \url{https://github.com/apportionment-research/redist}.
+All redistricting outputs, adjacency graphs, and analysis scripts are available
+at the same repository.
+Pre-computed adjacency files for all 50 states are available as GitHub Release assets,
+with SHA-256 hashes recorded in the plan manifests.
 All parameters are documented in \texttt{docs/REDIST\_CLI.md}.
 All results in this paper are reproducible from the stated parameters and the
 SHA-256-verified adjacency graphs.

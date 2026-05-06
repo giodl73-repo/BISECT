@@ -1,0 +1,102 @@
+% Section 8: Conclusion (~700 words)
+
+\subsection{Summary of Findings}
+
+This paper has provided the first systematic uncertainty quantification
+for algorithmic congressional redistricting. We characterized three
+sources of uncertainty and derived 95\% confidence intervals for the
+major performance metrics of METIS recursive bisection redistricting.
+
+The key quantitative findings are:
+
+\textbf{METIS seed variance} contributes CV $< 2\%$ to Polsby-Popper
+for 96\% of states (48/50). The bootstrap 95\% CI for the national
+mean PP is $[0.351, 0.370]$ (point estimate $0.361$, width $0.019$).
+Partisan seat-share uncertainty from seeds is at most $\pm 1$ seat
+for the two highest-variance states (Georgia, North Carolina), an
+upper bound that is small relative to interstate variation.
+
+\textbf{Census sampling uncertainty} contributes $\pm 0.002$ to
+district population deviation at 95\% confidence, via the delta
+method propagating PL 94-171 coverage error estimates. This does
+not affect the validity of algorithmic population balance---it
+quantifies the uncertainty of the census itself. Differential
+undercount means minority VAP fractions are underestimated by
+$\sim 1.6\%$ (Black) and $\sim 2.6\%$ (Hispanic), making the
+majority-minority district count of 137 a \emph{conservative}
+lower bound on the true count.
+
+\textbf{Shapefile resolution measurement error} contributes
+$\Delta PP < 0.005$ (mean $0.003$) across the 130$\times$ resolution
+range tested in C.1. The bias direction is conservative: tract-level
+PP slightly underestimates block-level PP.
+
+\textbf{The $+22\%$ compactness improvement} is the headline finding
+that algorithmic plans outperform enacted plans. The 95\% CI for this
+improvement, accounting for all three uncertainty sources, is
+$[+15\%, +29\%]$ for the relative improvement and $[0.044, 0.088]$
+for the absolute $\Delta PP$. The improvement is positive under all
+scenarios, including the worst-case lower bound.
+
+\textbf{Efficiency gap CIs} for all 15 competitive states confirm
+that the direction of algorithmic partisan lean (modest Democratic
+advantage, mean $-3.0\%$) is robust to seed variance and electoral
+uncertainty. The joint 95\% CI for the 15-state mean EG is
+$[-4.9\%, -1.1\%]$, entirely negative. The enacted vs.\ algorithmic
+gap ($\sim 8.3$ pp) is far larger than any CI width.
+
+\subsection{Practical Recommendations}
+
+Based on this UQ analysis, we make four practical recommendations
+for researchers and expert witnesses:
+
+\begin{enumerate}
+  \item \textbf{Always report CIs.} Point estimates of PP, EG, and
+    minority VAP without CIs are incomplete. Use the CIs from
+    Table~\ref{tab:pp-seed-ci}, Table~\ref{tab:eg-seed-ci}, and
+    the synthesis table (Table~\ref{tab:robustness}).
+
+  \item \textbf{Distinguish sources.} Seed CI and electoral CI have
+    different legal interpretations. Seed CI reflects algorithm
+    implementation choice (controllable); electoral CI reflects
+    turnout variation (uncontrollable). Courts may weight these
+    differently.
+
+  \item \textbf{Conservative census adjustments.} Report majority-minority
+    district counts from official data, noting that true counts are
+    likely higher due to differential undercount. Do not adjust
+    upward without citing the specific PES estimates used.
+
+  \item \textbf{State-specific CIs for high-variance states.} Use the
+    state-specific CIs from Table~\ref{tab:pp-seed-ci} rather than
+    the national mean CI for testimony about Georgia, North Carolina,
+    or Wisconsin, which have higher seed variance than other states.
+\end{enumerate}
+
+\subsection{Limitations}
+
+Two limitations of this UQ analysis should be acknowledged.
+
+First, the bootstrap CIs from B.7 assume that 10,000 seeds constitute
+an adequate sample of the seed distribution. For 43/50 non-trivial
+states, convergence occurs before seed 600 (B.7, B.16), so the 10,000
+sample is highly sufficient. For the three high-variance states
+(GA, NC, WI) where the last improvement seed exceeds 600, the tails
+of the distribution are less well-sampled.
+
+Second, the electoral uncertainty estimation uses only three elections
+(2016, 2018, 2020), all from a single redistricting cycle. True
+electoral uncertainty across a full decade (ten elections: 2022, 2024,
+2026, 2028, 2030) would be somewhat larger. The 2030 Census will
+provide the opportunity to re-estimate these quantities with a more
+complete electoral record.
+
+\subsection{Concluding Remarks}
+
+Uncertainty quantification is not a concession of weakness; it is a
+demonstration of rigor. An expert witness who knows the 95\% CI for
+their headline claim and can explain how it was computed is more
+credible---not less---than one who offers only a point estimate.
+The analysis in this paper provides the methodological foundation
+for reporting algorithmic redistricting results with the epistemic
+honesty appropriate for legal proceedings and public policy.

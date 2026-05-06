@@ -55,6 +55,97 @@ imposed equal splits on principle'' but ``geography chose the ratio.''
 For states where geography genuinely warrants a peel, the peel is confirmed.
 For states where it does not (NC), a genuine bisection is selected.
 
+\subsection{Separating Legal and Partisan Claims}
+
+GeoSection makes two distinct and separable claims that should not be conflated.
+
+\textbf{(a) Legal/geometric claim.}
+The natural ratio is determined by geography alone: any party can independently
+compute $\mathrm{EC}(i:k-i)/\sqrt{\min(i,k-i)}$ from public TIGER and census data.
+This auditability is a legal merit regardless of whether the ratio selection changes
+any partisan outcome.
+GeoSection's selection of $6:8$ for North Carolina is defensible on geometric grounds
+independent of the 5\,D/9\,R seat count.
+
+\textbf{(b) Partisan claim.}
+GeoSection changes the bisection tree structure.
+In 6 of 44 states, this changes the seat count by $+1\,D$; in 1 state (Pennsylvania),
+it changes by $-1\,D$.
+In 38 states the seat count is unchanged.
+The partisan claim is weak: GeoSection is not a proportionality fix.
+Its primary legal merit is procedural (claim (a)), not partisan.
+
+\paragraph{Pennsylvania: why MEC outperforms GeoSection.}
+Pennsylvania is the one state where the MEC baseline produces a better Democratic
+outcome than GeoSection.
+GeoSection confirms the $1:16$ Philadelphia peel: Philadelphia's compact
+130\,km boundary wins the isoperimetric comparison against any near-equal split.
+Under MEC, the standard $8:9$ first-level bisection places several southeast
+Pennsylvania suburban tracts (Delaware County, Chester County outer ring) in
+the western bisection half.
+These tracts lean Democratic ($\sim 54$--58\,\% D) and, when grouped with
+western Pennsylvania's Pittsburgh-area districts, create one additional
+lean-Democratic district in southwestern Pennsylvania.
+Under GeoSection's $1:16$ confirmed peel, the Philadelphia subgraph (left half,
+1 district) contains only Philadelphia proper; the Delaware County and Chester
+County suburban tracts are placed in the 16-district right half where, after
+recursive bisection, they are split between Republican-leaning rural districts
+and a single Philadelphia suburb district that leans Republican at the margin
+($\sim 51$\,\% R).
+The net effect: the MEC suburban tract placement produces one additional
+D-leaning district that GeoSection's confirmed peel does not.
+
+This finding is not evidence of algorithmic bias.
+It reflects the \emph{geographic sensitivity} of the suburban ring:
+Chester and Delaware County's Democratic lean is marginal enough that
+their placement within the bisection tree determines whether they tip
+a district toward D or R.
+The confirmed caterpillar does not create a better Republican outcome by design;
+it creates a different geographic grouping that, for Pennsylvania's specific
+partisan geography, happens to favour Republicans by one seat.
+
+\paragraph{Confirmed caterpillar states (IL, PA): proportionality comparison.}
+Illinois and Pennsylvania both receive GeoSection natural ratios of $1:16$,
+confirmed by the isoperimetric normalisation.
+The relevant question is whether this confirmed asymmetric structure produces
+different proportionality outcomes than states where GeoSection fires the
+normalisation shift.
+
+\begin{table}[h]
+\centering
+\caption{Proportionality gap comparison: confirmed caterpillar vs.\ normalisation-shifted.}
+\label{tab:caterpillar-comparison}
+\begin{tabular}{llrrrrr}
+\toprule
+State & Category & $k$ & D vote & GEO D & MEC D & Gap (pp) \\
+\midrule
+\multicolumn{7}{l}{\textit{Confirmed caterpillar ($1:k-1$ wins normalisation)}} \\
+IL & Confirmed & 17 & 58.7\,\% & 12 & 11 & $-5.5$ \\
+PA & Confirmed & 17 & 50.6\,\% & 7  & 8  & $-9.1$ \\
+\midrule
+\multicolumn{7}{l}{\textit{Normalisation-shifted (equal split wins)}} \\
+NC & Shifted & 14 & 49.3\,\% & 5  & 5  & $-13.6$ \\
+WI & Shifted & 8  & 50.3\,\% & 3  & 2  & $-12.8$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The confirmed caterpillar states (IL, PA) do not show systematically worse
+proportionality than the normalisation-shifted states (NC, WI).
+Illinois, with the most extreme caterpillar ($1:16$), shows the smallest
+gap ($-5.5$\,pp) because Chicago is genuinely one of the most Democratic cities
+in the US and its isolation in a single district does not create excessive
+ring-district waste.
+Pennsylvania's $-9.1$\,pp gap reflects suburban Philadelphia's swing status,
+not caterpillar structure per se.
+
+The key normative implication: the legal distinction between a
+\emph{confirmed} peel and a \emph{prevented} caterpillar does not produce
+systematically different partisan outcomes.
+GeoSection's isoperimetric confirmation changes the legal \emph{justification}
+for a peel (``geography chose this ratio'') but not the partisan geography
+that determines seat outcomes.
+
 \subsection{Relationship to AreaSection (B.9)}
 
 GeoSection and AreaSection (B.9) address the same caterpillar pathology but

@@ -1,0 +1,41 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+County preservation is a constitutionally required criterion in 34 state
+redistricting frameworks.  Existing algorithmic approaches either ignore it
+(producing unnecessary splits) or impose hard constraints (producing
+infeasible instances).  We introduced county-sticky edge weighting as a
+practical middle path.
+
+The key findings are:
+
+\begin{enumerate}
+  \item \textbf{$\alpha_c = 3.0$ is Pareto-optimal}: The sweep of
+    $\alpha_c \in \{1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 5.0, 10.0\}$, including
+    finer grid points around the elbow, robustly identifies $\alpha_c = 3.0$
+    as the Pareto-frontier elbow.  Beyond $\alpha_c = 3.5$, the county-split
+    reduction per unit of compactness cost drops by more than $4\times$.
+  \item \textbf{Substantial split reduction}: At $\alpha_c = 3.0$,
+    county splits fall by 34\% (487 $\to$ 323) and multi-county districts
+    fall by 37\% (312 $\to$ 198) nationally.
+  \item \textbf{Minimal compactness cost}: The mean Polsby--Popper score
+    falls by only 3.0\% (0.361 $\to$ 0.350), leaving county-sticky maps
+    well above the compactness of enacted congressional maps.
+  \item \textbf{Population balance preserved}: Maximum population deviation
+    increases by only 0.03 percentage points (well within the 0.5\%
+    constitutional requirement).
+  \item \textbf{State-level benefits scale with avoidable splits}: States
+    with low district-to-county ratios (Iowa) see the largest reductions;
+    large-population states (California) see minimal reduction because most
+    splits are unavoidable.
+\end{enumerate}
+
+County-sticky weighting is implemented as \texttt{--weights-override county}
+in the \texttt{redist} CLI and specified as the DIA default for states with
+constitutional subdivision-preservation requirements.
+
+\paragraph{Future work.}
+Extensions include: (1) block-group resolution evaluation, (2) municipal
+boundary preservation via a two-level hierarchy, (3) seed sensitivity
+analysis under county-sticky weights, and (4) VRA-constrained county
+preservation for majority-minority county clusters.

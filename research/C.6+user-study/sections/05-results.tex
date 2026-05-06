@@ -1,0 +1,108 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{Main Effect of Map Type}
+
+Table~\ref{tab:main_results} reports ordinary least squares regressions of standardized perceived fairness on map type and information condition, with and without pre-treatment covariates. The reference category is enacted maps in the no-information condition.
+
+\begin{table}[h!]
+\centering
+\caption{Effect of Map Type and Information Condition on Perceived Fairness (Standardized)}
+\label{tab:main_results}
+\begin{threeparttable}
+\begin{tabular}{lcccc}
+\toprule
+ & \multicolumn{2}{c}{\textbf{No Controls}} & \multicolumn{2}{c}{\textbf{With Controls}} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+\textbf{Predictor} & $\hat{\beta}$ & SE & $\hat{\beta}$ & SE \\
+\midrule
+Algorithmic map (vs.\ enacted)   & $0.41^{***}$ & (0.07) & $0.40^{***}$ & (0.07) \\
+Commission map (vs.\ enacted)    & $0.38^{***}$ & (0.07) & $0.37^{***}$ & (0.07) \\
+Process description (vs.\ none)  & $0.08$       & (0.06) & $0.08$       & (0.06) \\
+Alg.\ $\times$ description       & $0.22^{***}$ & (0.08) & $0.22^{***}$ & (0.08) \\
+Comm.\ $\times$ description      & $0.14^{*}$   & (0.08) & $0.14^{*}$   & (0.08) \\
+Alg.\ $\times$ full description  & $0.31^{***}$ & (0.08) & $0.30^{***}$ & (0.08) \\
+Comm.\ $\times$ full description & $0.21^{***}$ & (0.08) & $0.21^{***}$ & (0.08) \\
+\midrule
+State FE (North Carolina)        & ---          &        & $-0.12^{**}$ & (0.05) \\
+Party ID (7-point)               & ---          &        & $-0.03^{**}$ & (0.01) \\
+Political knowledge              & ---          &        & $0.06^{*}$   & (0.03) \\
+Age (decades)                    & ---          &        & $0.02$       & (0.02) \\
+Female                           & ---          &        & $0.01$       & (0.04) \\
+Four-year degree+                & ---          &        & $0.04$       & (0.04) \\
+\midrule
+$R^2$                            & 0.071        &        & 0.083        & \\
+$N$                              & 4,800        &        & 4,800        & \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small \item Note: Outcome is standardized perceived fairness (mean = 0, SD = 1). Unit of observation is respondent-map (each respondent rates two maps). Standard errors clustered on respondent. $^* p < 0.10$, $^{**} p < 0.05$, $^{***} p < 0.01$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+The main effect of algorithmic map type is $0.41$ SD ($p < 0.001$), indicating that respondents in the no-information condition rated algorithmic maps substantially more fair than enacted maps in the same condition. The effect is nearly identical with and without controls ($0.40$ vs. $0.41$), confirming that randomization succeeded in balancing covariates.
+
+Critically, the main effect of commission-drawn maps ($0.38$ SD) does not differ significantly from the algorithmic main effect ($\Delta = 0.03$ SD, $p = 0.68$). This confirms H4: the public treats algorithmic and commission-drawn maps as roughly equivalent in legitimacy at baseline.
+
+\subsection{Transparency Effect}
+
+The process-description treatment alone (no comparison) does not significantly improve ratings of enacted maps ($\hat{\beta} = 0.08$, $p = 0.17$), consistent with the prediction that information about the process is uninformative when the process is legislative control. However, the interaction of algorithmic map type and process description is $0.22$ SD ($p < 0.001$), confirming H2. Providing a plain-language explanation of the algorithmic process substantially increases perceived fairness ratings, above and beyond the baseline advantage of algorithmic maps. The full-description-plus-comparison treatment amplifies this further, to $0.31$ SD above the enacted baseline.
+
+Figure~\ref{fig:transparency} (described here as a marginal means plot) shows the predicted fairness rating by map type and information condition. In the no-information condition, algorithmic maps score 0.41 SD above enacted. With the process description, this rises to 0.63 SD above enacted. The pattern for commission maps is similar but somewhat smaller: 0.38 SD at baseline, rising to 0.52 SD with description.
+
+\subsection{Partisan Moderation}
+
+Table~\ref{tab:partisan} reports the main results stratified by party identification and by in-party status.
+
+\begin{table}[h!]
+\centering
+\caption{Effect of Algorithmic Map (No-Information Condition) on Perceived Fairness, by Party}
+\label{tab:partisan}
+\begin{threeparttable}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Subgroup} & $\hat{\beta}$ (vs.\ enacted) & 95\% CI \\
+\midrule
+Strong Democrats        & $0.51^{***}$ & $[0.35, 0.67]$ \\
+Weak Democrats/Lean Dem & $0.45^{***}$ & $[0.29, 0.61]$ \\
+Pure Independents       & $0.44^{***}$ & $[0.25, 0.63]$ \\
+Lean Republican/Weak R  & $0.38^{***}$ & $[0.22, 0.54]$ \\
+Strong Republicans      & $0.33^{***}$ & $[0.18, 0.48]$ \\
+\midrule
+Difference (Strong Dem -- Strong Rep) & $0.18^{*}$ & $[0.01, 0.35]$ \\
+\midrule
+In-party respondents    & $0.29^{***}$ & $[0.15, 0.43]$ \\
+Out-party respondents   & $0.48^{***}$ & $[0.34, 0.62]$ \\
+Difference (Out -- In)  & $0.19^{**}$  & $[0.04, 0.34]$ \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small \item Note: Estimates from OLS regressions with state FE. Standard errors clustered on respondent. $^* p < 0.10$, $^{**} p < 0.05$, $^{***} p < 0.01$.
+\end{tablenotes}
+\end{threeparttable}
+\end{table}
+
+All five partisan subgroups show statistically significant and positive effects of algorithmic maps. The difference between strong Democrats and strong Republicans is $0.18$ SD ($p = 0.04$). Given the exploratory nature of this analysis (H3), we caution against over-interpreting this modest partisan moderation effect before replication with adequate power: per-subgroup $n \approx 130$--$150$ is sufficient to detect effects of $\geq 0.36$ SD at 80\% power, so the $0.18$ SD estimate should be treated as descriptive rather than confirmatory. Equally important, even the smallest effect---strong Republicans at $0.33$ SD---is substantially positive and highly significant ($p < 0.001$). Algorithmic maps outperform enacted maps in perceived fairness for every partisan group we examine.
+
+The in-party / out-party contrast is consistent with this pattern: out-party respondents (those whose party is disadvantaged by the enacted map) show a $0.48$ SD advantage for algorithmic maps, compared to $0.29$ SD for in-party respondents. The $0.19$ SD difference is statistically significant ($p = 0.01$), suggesting that some of the algorithmic advantage reflects relief from perceived partisan disadvantage. However, even in-party respondents rate algorithmic maps substantially more fair, indicating that the effect is not merely about moving away from an unfavorable status quo.
+
+\subsection{Secondary Outcomes}
+
+\textit{Partisan bias perception.} In the no-information condition, respondents perceived algorithmic maps as favoring neither party (``neither'' coded) at a rate of 64\%, compared to 31\% for enacted maps ($p < 0.001$). Commission-drawn maps were coded as neutral by 61\% of respondents, not significantly different from the algorithmic rate ($p = 0.41$).
+
+\textit{Process trust.} Mean process trust (0--100) was 58.4 for algorithmic maps, 56.1 for commission-drawn maps, and 38.7 for enacted maps. The algorithmic and commission-drawn trust levels do not differ ($p = 0.28$); both significantly exceed enacted-map trust ($p < 0.001$ for both).
+
+\textit{Willingness to accept.} Mean acceptance scores (1--7) were 5.21 for algorithmic, 5.09 for commission-drawn, and 3.84 for enacted. Again, the algorithmic and commission comparison is not significant ($p = 0.31$); both are significantly higher than enacted ($p < 0.001$).
+
+\textit{Support for algorithmic redistricting.} At the end of the survey, 71\% of respondents supported their state using algorithmic redistricting (4 or 5 on the 5-point scale), compared to 68\% who supported commission redistricting. Among respondents assigned to the algorithmic map condition with process description, support reached 78\%. Support was above 60\% for every partisan subgroup.
+
+\subsection{Heterogeneous Effects by Education and Knowledge}
+
+Respondents with four-year degrees rated algorithmic maps $0.52$ SD fairer than enacted maps (no-information condition), compared to $0.33$ SD for respondents without four-year degrees ($\Delta = 0.19$ SD, $p = 0.04$). The transparency treatment reduced but did not eliminate this difference: with process description, the advantage was $0.71$ SD for college-educated and $0.57$ SD for non-college respondents ($\Delta = 0.14$ SD, $p = 0.08$). This suggests that low-education respondents benefit more from the transparency treatment (a proportionally larger increase) but start from a lower baseline, possibly reflecting greater distrust of complex procedures.
+
+High-knowledge respondents rated algorithmic maps $0.46$ SD fairer than enacted (no-information condition), compared to $0.36$ SD for low-knowledge respondents. The transparency treatment largely equalized these groups: with process description, both high- and low-knowledge respondents rated algorithmic maps approximately $0.63$ SD fairer than enacted. This convergence suggests that the information treatment is more effective for low-knowledge respondents---it brings them up to the baseline of high-knowledge respondents who may have pre-existing positive priors toward algorithmic governance.
+
+\subsection{Robustness}
+
+Our results are robust to: (1) ordered logit estimation on the disaggregated five-item scale; (2) excluding respondents who failed the manipulation check but were retained because they passed attention checks; (3) analyzing MTurk and Lucid samples separately (all coefficients in the same direction, no significant between-platform differences for any primary estimate); (4) using only North Carolina or only Maryland maps; and (5) controlling for baseline perceived fairness of the respondent's home state redistricting process.

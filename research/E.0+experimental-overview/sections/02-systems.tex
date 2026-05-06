@@ -1,0 +1,149 @@
+\section{The Six Alternative Systems}
+\label{sec:systems}
+
+This section provides a brief description of each experimental system,
+its core design departure from the single-member baseline, and the primary
+paper where it is developed in full.
+
+\subsection{E.1 --- Multi-Member Districts}
+
+Multi-member districts (MMDs) replace 435 single-member districts with
+approximately 145 three-member or 87 five-member districts.  Within each
+district, seats are allocated proportionally to party vote share via
+single transferable vote (STV) or party-list mechanisms.  A three-member
+district with a 60--40 partisan split awards two seats to the majority party
+and one to the minority; a five-member district with the same split awards
+three to two.
+
+The algorithmic implementation applies the same edge-weighted recursive
+bisection used in the baseline \citep{dellaLibera2026dia}, but targets
+$\lfloor 435/k \rfloor$ districts for member-size $k \in \{3, 5\}$.  Each
+district must satisfy the population constraint that its total population
+equals $k$ times the single-district quota.
+
+MMDs are the only system in our portfolio with demonstrated empirical adoption
+at scale: Australia uses three- to seven-member Senate divisions; Ireland uses
+three- to five-member Dail constituencies; the UK used two-member districts
+until 1950 \citep{farrell2011electoral}.  The Fair Representation Act, introduced
+in multiple Congresses, would establish three- to five-member US House districts.
+
+The primary trade-off is that larger districts reduce geographic coherence
+(each representative is accountable to a more heterogeneous constituency) and
+increase ballot complexity substantially.
+
+\subsection{E.2 --- County-Based Representation}
+
+County representation treats the 3,143 US counties and county-equivalents as
+the atomic unit of representation, allocating House seats via the same
+Huntington--Hill method used for state apportionment
+\citep{balinski2001fair,huntington1921methods}.  Counties too small to
+receive a whole seat receive fractional voting weight in Congress; counties
+large enough to receive multiple seats elect multiple at-large representatives.
+
+This system eliminates redistricting entirely: county boundaries are fixed by
+state statute, not subject to manipulation by partisan legislatures.  It also
+eliminates the compactness--proportionality tension within states, since seats
+are allocated mechanically by population.
+
+The principal trade-off is that fractional voting is constitutionally and
+institutionally unfamiliar: the House has operated on one-member one-vote
+principles since its founding.  A second objection is that county populations
+vary by a factor of nearly 20,000 (Los Angeles County at 10 million versus
+Loving County, Texas at approximately 64), creating extreme disparities in
+the size of constituencies represented by whole-seat members.
+
+\subsection{E.3 --- National Redistricting Without State Lines}
+
+National redistricting treats the entire contiguous United States as a single
+graph of approximately 73,000 census tracts and partitions it into 435
+districts without regard to state boundaries.  Hawaii and Alaska are processed
+as separate two- and one-district states respectively due to non-contiguity
+with the continental geography.
+
+The constitutional barrier is explicit: Article~I, \S2 provides that
+``Representatives shall be apportioned among the several States.''  National
+redistricting is therefore not a reform but a counterfactual --- a measurement
+of the compactness cost imposed by federalism.  If state-based apportionment
+forces districts to respect state lines, how much compactness do we sacrifice?
+Paper E.3 finds approximately a 12\% improvement in mean Polsby--Popper when
+state constraints are removed \citep{dellaLibera2026e3}.
+
+The experiment also reveals that a substantial minority of current districts
+cross no naturally compact boundaries: the state constraint is non-binding for
+roughly 60\% of districts, which would fall entirely within one state under
+national optimization anyway.  The cost is concentrated in the 40\% of
+districts that currently end at awkward state borders.
+
+\subsection{E.4 --- Partisan-Similarity Clustering}
+
+The partisan-similarity system inverts the standard reform objective.  Instead
+of creating competitive districts, it assigns high edge weights to tract pairs
+with similar partisan composition, causing the METIS minimum-cut algorithm to
+cluster partisan-similar tracts into the same district.  The result is a map
+with a high proportion of algorithmically safe seats --- districts where the
+majority-party margin is wide and stable.
+
+This design is deliberately controversial.  The reform consensus holds that
+competitive districts improve democratic accountability, forcing representatives
+to be responsive to swing voters rather than to primary electorates
+\citep{masket2015no}.  Partisan-similarity clustering produces the structural
+opposite: near-guaranteed outcomes, primary dominance, and no electoral pressure
+toward moderation.
+
+We implement it because it demonstrates two important points.  First, extreme
+partisan sorting is technically achievable through transparent algorithmic
+means, not just through opaque legislative back-room dealing.  Second, if one
+believes that safe seats allow legislators to focus on governance rather than
+perpetual campaigning, then partisan-similarity clustering is the fair
+algorithmic implementation of that preference --- and it can be contrasted with
+the partisan gerrymander, which creates safe seats for one party at the expense
+of the other.  Our implementation is symmetric: both parties receive their
+algorithmically fair share of safe seats.
+
+\subsection{E.5 --- Partisan-Fairness Seat Allocation}
+
+The partisan-fairness system begins with the national two-party vote share and
+constructs a map in which the number of seats won by each party exactly matches
+its national vote share.  If Democrats receive 53\% of the national House vote,
+they are guaranteed 230 seats; Republicans are guaranteed 205.  The algorithm
+then draws compact districts subject to this seat-count constraint.
+
+Achieving exact proportionality in a geographic system is technically demanding.
+Paper E.5 shows that it requires the algorithm to accept non-compact districts
+in geographically unfavorable states --- states where the natural sorting of
+partisan voters makes proportionality geometrically expensive.  In practice,
+the efficiency gap \citep{stephanopoulos2015partisan} provides a continuous
+measure of how far a given map departs from proportionality, and E.5 optimizes
+directly against that gap.
+
+The system is constitutionally available: Congress can mandate proportionality
+standards in state redistricting under Article~I, \S4, and the efficiency-gap
+standard has been proposed as a statutory criterion.  The primary objection is
+judicial: the Supreme Court has declined to recognize partisan symmetry as
+a constitutional requirement \citep{rucho2019}, and a congressional mandate
+may face separation-of-powers challenges.
+
+\subsection{E.6 --- International Applications}
+
+The sixth experiment applies the edge-weighted recursive bisection algorithm to
+four Westminster-system countries: the United Kingdom, Canada, Australia, and
+New Zealand.  These countries share the single-member district architecture
+with the US but differ in boundary commission structure, redistricting frequency,
+and geographic scale.
+
+Paper E.6 finds that the algorithm transfers cleanly to each country's census
+geography, producing maps with higher Polsby--Popper scores than the current
+commission-drawn boundaries in all four cases.  The improvement ranges from
+9\% in New Zealand (which already uses an independent commission with explicit
+compactness criteria) to 21\% in Australia (where redistribution criteria
+prioritize community-of-interest factors over geometric compactness)
+\citep{dellaLibera2026e6}.
+
+The international experiment serves two purposes in this synthesis.  First, it
+confirms that the compactness improvements documented for the US are not
+artifacts of US census geography but reflect a general property of
+minimum-cut partitioning relative to commission heuristics.  Second, it
+provides a comparative benchmark: the US, with no compactness criterion in
+federal statute and redistricting controlled by state legislatures, starts from
+a lower baseline than commission-based systems yet benefits more from
+algorithmic optimization.

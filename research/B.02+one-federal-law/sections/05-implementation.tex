@@ -238,12 +238,26 @@ single redistricting run.
 The \dia{} implements this as a hard computational gate---the
 \texttt{callais\_preflight}---that enforces mutual exclusion at the CLI level.
 
+\paragraph{Scope of the mutex.}
+\callais{} p.~36 holds that race and party cannot be co-optimized in the
+\emph{same METIS objective}: a redistricting process that combines
+VRASection (minority geographic alignment score) and partisan-weighted bisection
+in a single run is constitutionally suspect because a reviewing court cannot
+isolate the racial motivation from the partisan motivation.
+Consistent with this holding, the \dia{} prohibits combining VRASection and
+ProportionalSection in a single computational run.
+It does not prohibit the sequential, independent comparison of a VRASection
+map against a ProportionalSection map---such comparison is the \callais{}
+strong-inference test itself, and is expressly contemplated by the majority
+opinion as the correct analytical framework for identifying when political goals
+could have been achieved with better minority outcomes.
+
 If VRASection is activated (VRA overlay applies), ProportionalSection is
-automatically disabled.
+automatically disabled for that run.
 If ProportionalSection is activated (a state petitions for a proportionality
-adjustment), VRASection is automatically disabled.
-The two modes are mutually exclusive and the gate is enforced by the
-\texttt{redist} binary at runtime: attempting to configure both will cause
+adjustment), VRASection is automatically disabled for that run.
+The two modes are mutually exclusive within a single run and the gate is enforced
+by the \texttt{redist} binary at runtime: attempting to configure both will cause
 the run to fail with a \texttt{[CONFIG]} error message referencing the
 \callais{} disentanglement requirement.
 

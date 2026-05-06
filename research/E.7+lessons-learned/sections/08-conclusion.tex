@@ -1,0 +1,111 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+The six experiments in Track~E constitute the most systematic algorithmic
+exploration of the congressional representation design space to date.  By
+holding the core algorithm constant and varying design dimensions in controlled
+ways, the experiments produce comparable, quantifiable evidence about the
+costs and benefits of structural alternatives to single-member geographic
+districting.
+
+The five lessons we derive from this evidence are:
+
+\begin{enumerate}
+  \item \textbf{Geography is destiny for single-member districts.}
+        The Rodden sorting gap is not a drawing artifact.  No single-member
+        geographic drawing method --- algorithmic, commission-based, or
+        judicially supervised --- eliminates systematic underrepresentation
+        of Democrats relative to national vote share.  The cause is where
+        Democratic voters live, not how district boundaries are drawn.
+
+  \item \textbf{Multi-member districts partially but not fully escape sorting.}
+        Three-member districts reduce the gap by 40\%; five-member by 65\%.
+        The residual gap reflects extreme urban concentration that no
+        realistic district size can dilute given state-boundary constraints.
+        Multi-member districts also improve minority representation by 18\%
+        without requiring geographic concentration.
+
+  \item \textbf{Eliminating districts trades proportionality for local
+        accountability.}  County representation improves proportionality in
+        competitive states but introduces fractional voting, reduces
+        constituent-representative bonds, and is constitutionally unavailable
+        in its strict form without amendment.
+
+  \item \textbf{Crossing state lines produces compact but fragmented districts.}
+        National redistricting gains 12\% mean Polsby--Popper but loses 40\%
+        of county preservation and creates 87 cross-state districts that
+        fragment state-based political accountability.  The federalism cost
+        is real but modest; the representation fragmentation cost is harder
+        to quantify but significant.
+
+  \item \textbf{The compactness--proportionality frontier is steep.}
+        Gaining 1~pp of proportionality costs 0.015 PP units.  Achieving
+        near-perfect proportionality requires maps no more compact than
+        the commission-drawn maps that algorithmic redistricting is
+        intended to improve.  No feasible single-election geographic system
+        escapes this trade-off.
+\end{enumerate}
+
+These lessons support a clear design hierarchy.  For single-member systems
+operating within current constitutional constraints, the optimal constraint
+ordering is population equality, contiguity, and compactness --- with
+community preservation as a soft secondary criterion.  Proportionality should
+not be added as a drawing criterion within single-member systems because it
+addresses a structural problem through a drawing instrument and produces
+inferior results on both compactness and proportionality relative to structural
+reform.
+
+The structural reform that the evidence most clearly supports is multi-member
+districts with proportional allocation via ranked-choice voting.  This reform
+is constitutionally available without amendment, produces material improvement
+in both proportionality and minority representation, and is the only mechanism
+within a geographic representation system that partially escapes the Rodden
+sorting constraint.  Its costs --- ballot complexity, weaker local ties ---
+are real but normative rather than empirical, and the E-track evidence provides
+the empirical foundation on which normative debates should proceed.
+
+\subsection{Limitations and Future Research}
+
+This paper draws on simulated algorithmic outcomes rather than actual electoral
+results.  The vote shares used to compute proportionality deviations are
+historical averages; future elections may differ.  The geographic data are from
+the 2020 Census; demographic and residential sorting patterns will change over
+time.  The sorting-gap estimates are derived from House election results and
+may not generalize to other office levels.
+
+Future research should examine hybrid systems --- multi-member districts in
+urban areas combined with single-member districts in rural areas --- which are
+not included in the E-track experiments.  Such hybrid systems might achieve
+a better proportionality--compactness balance than either pure multi-member
+or pure single-member systems, since they concentrate the multi-member
+mechanism where it provides the most benefit (urban sorting concentrations)
+while preserving the local-accountability advantages of single-member districts
+where they are most valued (rural and small-town constituencies).
+
+The international evidence (E.6) suggests that algorithmic redistricting
+provides compactness improvements in all Westminster-system countries studied.
+Future research should extend this analysis to mixed-member proportional
+systems (Germany, New Zealand) and proportional representation systems (Nordic
+countries) to test whether any of the lessons derived from the single-member
+US context apply in fundamentally different electoral architectures.
+
+\subsection{Coda: The Value of Algorithmic Counterfactuals}
+
+The E-track research program demonstrates that algorithmic implementation of
+constitutionally unavailable systems (national redistricting) and politically
+controversial systems (partisan-similarity clustering) has significant
+analytical value even when the systems cannot be adopted.  The ability to
+implement and measure the outcomes of counterfactual systems is a uniquely
+algorithmic contribution to the representation design literature.  Manual
+redistricting cannot implement national redistricting (it is unconstitutional),
+cannot implement strict partisan-fairness allocation (it is legally prohibited),
+and cannot implement county representation at scale (it has never been attempted
+in the US context).  Algorithmic redistricting can implement all of these as
+measurement instruments, producing quantitative evidence about what we pay for
+the constitutional and institutional choices we have made.
+
+The lesson for political science methodology is that algorithmic implementation
+of counterfactual institutions is a powerful tool for causal inference about
+representation system design.  The lesson for redistricting reform is that the
+evidence thus produced should inform the normative debates that determine which
+institutional choices we make going forward.

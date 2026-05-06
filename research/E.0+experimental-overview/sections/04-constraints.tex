@@ -1,0 +1,104 @@
+\section{The Rodden Sorting Constraint}
+\label{sec:constraints}
+
+\subsection{Geographic Sorting as a Structural Binding Constraint}
+
+The most important single finding from the E-track experiments is that the
+Rodden geographic-sorting constraint \citep{rodden2019why} operates differently
+across system types and is the binding constraint that separates systems into
+two fundamentally different classes.
+
+The sorting constraint arises from the empirical fact that Democratic voters are
+geographically concentrated in urban cores at densities substantially higher than
+Republican voters anywhere.  \citet{chen2013unintentional} show that this
+concentration produces Republican seat bonuses under any compact single-member
+district drawing, algorithmic or otherwise.  \citet{rodden2019why} quantifies
+the mechanism: Democrats' geographic inefficiency (many votes wasted in
+landslide urban wins) translates to proportional underrepresentation even
+under neutral drawing procedures.
+
+The implications for system design depend critically on whether the system
+requires geographic districts:
+
+\begin{enumerate}
+  \item \textbf{Single-member geographic systems} (Baseline DIA, E.3, E.4, E.5):
+        The sorting constraint applies fully.  Proportional outcomes are
+        geometrically infeasible because drawing compact districts in areas with
+        dense Democratic concentrations necessarily produces landslide Democratic
+        wins that waste votes.
+
+  \item \textbf{Multi-member geographic systems} (E.1):
+        The sorting constraint applies partially.  Larger districts contain more
+        geographic diversity, reducing the wasted-vote problem.  The degree of
+        escape depends on district size: three-member districts reduce the
+        sorting gap by approximately 40\%; five-member districts reduce it by
+        approximately 65\% \citep{dellaLibera2026e1}.  Neither fully escapes
+        sorting because urban cores remain more Democratic than any realistically
+        sized district can accommodate proportionally.
+
+  \item \textbf{Non-geographic systems} (E.2 county, E.5 party-based):
+        The sorting constraint does not apply in the same form, because seats
+        are allocated by formula rather than drawn geographically.  E.2 replaces
+        the sorting problem with a county-size inequality problem: large
+        multi-member counties (LA County, Cook County) elect at-large
+        representatives who face effectively proportional elections, while small
+        single-seat rural counties have winner-take-all outcomes.
+
+\end{enumerate}
+
+\subsection{How Single-Member Systems Are Affected}
+
+All single-member systems --- including the algorithmic baseline --- are subject
+to the sorting constraint in essentially the same form.  The key result from E.3
+is instructive: even when state boundaries are removed and the algorithm
+optimizes compactness globally, the proportionality outcome does not improve
+significantly.  This is because the sorting constraint is not a consequence of
+state boundaries or drawing-method idiosyncrasies --- it is a consequence of
+where Democratic voters live relative to Republican voters \citep{rodden2019why}.
+
+Similarly, E.4 (partisan-similarity clustering) demonstrates that changing the
+edge-weighting scheme can change the \emph{distribution} of partisan margins
+--- creating more lopsided districts --- but cannot change the aggregate
+seat-vote relationship when total seat counts are fixed by population.
+
+E.5 (partisan-fairness allocation) is the most direct confrontation with the
+sorting constraint.  To achieve proportionality, the algorithm must draw
+certain urban districts as geographic outliers --- non-compact, elongated, or
+fragmented --- in order to reduce the Democratic wasted-vote surplus.  The
+resulting maps are technically compliant with population equality and
+contiguity requirements but would fail any serious compactness criterion.
+
+\subsection{How Multi-Member Systems Partially Escape}
+
+The partial escape of multi-member districts from the sorting constraint is
+the central empirical finding of E.1.  The mechanism is district-size
+averaging: a three-member district centered on an urban core will have a
+population that includes suburban rings as well as the urban center, reducing
+the Democrat-concentration effect that drives wasted votes.
+
+The 40\% gap reduction for three-member districts and 65\% reduction for
+five-member districts are derived from simulations across all 50 states in
+which we compare the seat-vote deviation for single-member, three-member, and
+five-member district configurations holding the geographic algorithm constant
+\citep{dellaLibera2026e1}.  The residual gap --- the 35\% and 60\% of sorting
+that remains even with five-member districts --- reflects the fact that some
+urban concentrations are so extreme (Manhattan, central Chicago, central Los
+Angeles) that no realistic district boundary can make them proportional.
+
+\subsection{County Systems and the Sorting Bypass}
+
+County-based representation (E.2) eliminates sorting in competitive states but
+reintroduces it in a different form in highly urbanized states.  A county like
+New York County (Manhattan) would receive approximately 2.3 House seats under
+Huntington--Hill allocation and would elect those seats at-large by county vote
+share.  Since Manhattan votes approximately 85--15 Democratic, the at-large
+outcome would be 2 Democratic seats and 0.3 of a Republican seat (rounded to 0
+in any whole-seat implementation).  This is more proportional than a single-
+member district (which would produce 1--0 outcomes) but still not perfectly
+proportional.
+
+The deeper issue is that county boundaries do not respect partisan geography
+any more than census-tract boundaries do.  They do, however, eliminate the
+\emph{drawing} step that allows partisan manipulation, trading the gerrymandering
+risk for the fixed-boundary risk that county demographics may themselves be
+unrepresentative.

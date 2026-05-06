@@ -1,0 +1,71 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Seed sweep design}
+
+For each of the 50 states, we ran METIS recursive bisection (version 5.1.0,
+C FFI interface) with the B.2 edge-weighted congressional configuration:
+\begin{itemize}
+  \item Edge weights: shared boundary lengths (metres)
+  \item Balance tolerance: $\varepsilon = 0.005$ (0.5\%)
+  \item \texttt{ufactor = 5}, \texttt{niter = 100}, \texttt{ncuts = 5}
+  \item 10,000 seeds per state, for 500,000 total METIS calls
+\end{itemize}
+
+Seeds are generated via the SHA-256 chain described in B.16:
+$s_i = \mathrm{SHA256}(s_{i-1} \,||\, \mathrm{BE32}(i))$, where
+$s_0 = \mathrm{SHA256}(\mathtt{census\_release\_id} \,||\, \mathtt{DIA\_SEED\_V1})$
+and $\mathrm{BE32}(i)$ is the big-endian 4-byte encoding of $i$.
+This chain is deterministic, unpredictable before the census release, and
+publicly verifiable from the census release identifier.
+
+The 10,000-seed sweep per state required approximately 72 CPU-hours on
+a 16-core workstation (parallelised by state), producing 50 datasets of
+10,000 records each.
+
+\subsection{Primary outcome: normalised edge cut}
+
+We define the normalised edge cut as:
+\[
+  \mathrm{EC}_{\mathrm{norm}} = \frac{\mathrm{EC}}{\sqrt{\min(|P_1|, |P_2|)}}
+\]
+where $\mathrm{EC}$ is the total edge cut at the first (top-level) bisection
+and the denominator follows the GeoSection normalisation (B.8).
+For multi-level bisection, we report the sum of normalised cuts across all
+bisection levels.
+
+\subsection{Seed sensitivity metrics}
+
+\paragraph{Coefficient of variation (CV).}
+For each state, CV is the standard deviation of $\mathrm{EC}_{\mathrm{norm}}$
+across seeds divided by the mean:
+$\mathrm{CV} = \sigma(\mathrm{EC}_{\mathrm{norm}}) / \mu(\mathrm{EC}_{\mathrm{norm}})$.
+
+\paragraph{Approximation gap.}
+The approximation gap of a seed $i$ is:
+$g_i = (\mathrm{EC}_{\mathrm{norm},i} - \mathrm{EC}_{\mathrm{norm},\min}) / \mathrm{EC}_{\mathrm{norm},\min}$.
+We report the median approximation gap $\bar{g}$ and the approximation
+gap of the DIA seed ($i = 0$): $g_0$.
+
+\paragraph{$\varepsilon$-ball size.}
+The $\varepsilon$-ball (for $\varepsilon = 5\%$) is the fraction of seeds
+with $g_i \leq 0.05$.
+
+\subsection{Partisan outcome measurement}
+
+For each of the 10,000 seeds, we compute the implied Democratic seat share
+using 2020 presidential election results at the tract level.
+Following B.0, a district is assigned to the party with majority vote share.
+We report seat-share mean, standard deviation, and range across seeds.
+
+\subsection{State categorisation}
+
+We classify states into four categories by district count $k$:
+\begin{itemize}
+  \item \emph{Single-district} ($k = 1$): 7 states (AK, DE, MT, ND, SD, VT, WY)
+  \item \emph{Small} ($k \leq 5$): 12 states
+  \item \emph{Medium} ($6 \leq k \leq 15$): 20 states
+  \item \emph{Large} ($k > 15$): 11 states
+\end{itemize}
+Single-district states trivially have CV $= 0$ (the trivial partition is
+the only valid one) and are excluded from partisan analysis.

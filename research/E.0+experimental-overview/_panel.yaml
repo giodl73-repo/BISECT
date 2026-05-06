@@ -1,0 +1,47 @@
+paper: experimental-overview
+title: "Alternative Representation Systems for Congressional Redistricting: A Design Space Analysis"
+venue: "Electoral Studies / Perspectives on Politics"
+stage: revision
+round: 2
+content_mode: full
+series: E
+series_number: 0
+avg_score: 3.8
+reviewers:
+  - karypis
+  - rodden
+  - duchin
+  - stephanopoulos
+  - liang
+reviews:
+  r1:
+    karypis: 3
+    rodden: 3
+    duchin: 3
+    stephanopoulos: 3
+    liang: 3
+    avg: 3.0
+  r2:
+    karypis: 4
+    rodden: 4
+    duchin: 3
+    stephanopoulos: 4
+    liang: 4
+    avg: 3.8
+history:
+  - stage: draft
+    date: "2026-05-05"
+    note: "Paper written. Track E synthesis: 6x4 Pareto table, constitutional taxonomy,
+           Rodden sorting analysis. Covers E.1-E.6 systems."
+  - stage: revision
+    round: 1
+    date: "2026-05-05"
+    note: "Round 1 complete. avg 3.0/4. All Minor Revision. Gate passed (>=2.5)."
+  - stage: revision
+    round: 2
+    date: "2026-05-05"
+    note: "Targeted P1 revisions: Pareto overclaim fixed (abstract + sec 6.2), exchange
+           rate CI added [0.011,0.021], scoring rubric documented with 10% threshold +
+           Appendix A commitment, Moore v. Harper footnote added to sec 5. Round 2 avg
+           3.8/4. Gate passed (>=3.4). Duchin unchanged at 3/4 (VRA benchmark, county
+           preservation effective rate, manipulation resistance criterion still open)."

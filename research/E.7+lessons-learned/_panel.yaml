@@ -1,0 +1,51 @@
+paper: lessons-learned
+title: "Six Systems, One Constraint: Design Lessons from Algorithmic Alternative Representation"
+venue: "Annual Review of Political Science"
+stage: revision
+round: 2
+content_mode: full
+series: E
+series_number: 7
+avg_score: 3.8
+reviewers:
+  - karypis
+  - rodden
+  - duchin
+  - stephanopoulos
+  - liang
+reviews:
+  r1:
+    karypis: 3
+    rodden: 3
+    duchin: 3
+    stephanopoulos: 3
+    liang: 3
+    avg: 3.0
+  r2:
+    karypis: 4
+    rodden: 4
+    duchin: 3
+    stephanopoulos: 4
+    liang: 4
+    avg: 3.8
+history:
+  - stage: draft
+    date: "2026-05-05"
+    note: "Paper written. Five lessons: geography is destiny, MMDs partially escape sorting,
+           county representation trades proportionality for accountability, crossing state lines
+           produces compact but fragmented districts, Pareto frontier is steep (0.015 PP/pp).
+           Synthesis + design principles section. Target: Annual Review of Political Science."
+  - stage: revision
+    round: 1
+    date: "2026-05-05"
+    note: "Round 1 complete. avg 3.0/4. All Minor Revision. Gate passed (>=2.5)."
+  - stage: revision
+    round: 2
+    date: "2026-05-05"
+    note: "Targeted P1 revisions: exchange rate 0.015 vs 0.019 resolved (within-system vs
+           cross-system distinction), concavity claim qualified ('data suggest' from 3 data
+           points), sorting gap range added (1.1pp ND to 11.3pp WI), algorithm artifact
+           verified (B.1 vs B.2 exchange rates 0.016 vs 0.015, indistinguishable). Round 2
+           avg 3.8/4. Gate passed (>=3.4). Duchin unchanged at 3/4 (PP sensitivity, fractional
+           voting theory, lessons conflation still open). 20% irreducibility bound still
+           undocumented — single remaining P1 item."

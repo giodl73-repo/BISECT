@@ -1,0 +1,31 @@
+---
+reviewer: George Karypis
+round: 1
+score: 3
+date: 2026-05-05
+---
+
+## Summary
+
+C.7 provides the first systematic uncertainty quantification for algorithmic redistricting, propagating three sources of uncertainty (METIS seed variance, PL 94-171 census sampling, and shapefile resolution measurement error) through the pipeline. The paper's empirical core is strong: the bootstrap CI framework reusing the B.7 10,000-seed dataset is efficient and well-designed, and the synthesis of three uncertainty sources into a joint CI for the +22% compactness improvement is the paper's most significant contribution. From a graph-partitioning perspective, the treatment of seed variance is the most technically relevant section, and it is generally sound. However, the paper has two technical issues: the bootstrap CI derivation makes an exchangeability assumption that is not argued, and the joint variance decomposition treats the three uncertainty sources as independent when this is not obvious.
+
+## Strengths
+
+- **Reusing the B.7 10,000-seed dataset for bootstrap CIs is methodologically efficient.** Rather than running a new seed sweep, C.7 treats the existing B.7 realizations as bootstrap samples. This is valid under the exchangeability assumption (which should be stated explicitly), and it converts a fixed dataset into a CI-generating apparatus without additional computation. The approach is generalizable to any metric that can be computed from the partition output.
+- **The variance decomposition structure (Table: robustness under six uncertainty assumptions) is an excellent summary tool.** Table in Section 7.4 reporting the +22% improvement under six different uncertainty assumptions --- seed only, resolution only, census only, seed+resolution, all three --- is exactly the right format for legal proceedings where opposing counsel will selectively cite the most conservative scenario. Showing that the direction is positive under all scenarios preempts this strategy.
+- **The Proposition on Proposition 1 (bootstrap validity under exchangeability) is the right level of formalism for this audience.** Including a formal proposition for the bootstrap CI (Section 2.3) signals that the statistical claims are grounded in theory, not just reported as outputs. The statement is appropriately hedged ("under the assumption that seed realizations are exchangeable draws").
+
+## Weaknesses / P1 Items (Required Fixes)
+
+- **The exchangeability assumption for METIS seed realizations is stated but not argued.** The bootstrap CI for PP requires that the 10,000 seed realizations are exchangeable draws from the seed distribution. But METIS seed realizations are not exchangeable in general: the seed is not a nuisance parameter but a design choice (the SHA-256-derived DIA seed is a specific fixed value, not a draw from a distribution). The bootstrap CI as presented estimates the CI for the expected PP of a uniformly random seed, which is not the same as the CI for the DIA seed's output. For legal proceedings, the relevant CI is for the DIA seed specifically, not for the average over all possible seeds. The paper should clarify: (a) what probability statement the bootstrap CI is making, (b) whether the DIA seed's output is inside the CI (which the paper implies but does not confirm), and (c) whether the CI should be interpreted as a measurement uncertainty (what would happen if the DIA seed were different?) or a sampling uncertainty (what is the typical behavior across all seeds?).
+- **The independence assumption in the joint variance decomposition is unargued.** Section 7.2 computes the joint standard error as $\sigma_\text{algo} = \sqrt{\sigma^2_\text{seed} + \sigma^2_\text{resolution} + \sigma^2_\text{census}}$, asserting that "these three sources are approximately independent (different mechanisms)." Independence of mechanisms does not imply independence of the resulting metric variations. Seed variance and resolution variance are both modulated by the geographic complexity of the state's boundaries (Nevada shows high sensitivity on both dimensions). If seed variance and resolution variance are positively correlated across states, the joint standard error underestimates the true uncertainty. A brief empirical check (correlate the per-state seed CV with the per-state $\Delta PP$ resolution sensitivity) would validate or refute the independence assumption.
+- **The abstract contains an inconsistency in reporting the +22% CI.** The abstract states: "The +22% compactness improvement over enacted plans is robust: accounting for all three uncertainty sources yields a 95% CI of [+18%, +26%]." But Section 7.4 (Table: robustness) reports the "all three sources" CI as [+15%, +29%], and the [+18%, +26%] figure is described as applying to "seed and resolution components" only. The abstract's CI is inconsistent with the body's analysis. This inconsistency would be noted by opposing counsel and should be corrected.
+
+## P2 Items (Suggestions)
+
+- **Report the DIA seed's rank percentile alongside the approximation gap.** Section 2.4 reports that the DIA seed's approximation gap (2.9% ± 1.7%) is statistically indistinguishable from the median seed gap (3.1% ± 1.8%). But the rank percentile of the DIA seed among 10,000 seeds per state would directly answer whether the DIA seed systematically tends toward better or worse outcomes. This was also raised as a P1 item in B.7; reporting it here would satisfy that gap as well.
+- **Provide the complete 50-state bootstrap CI table for PP in an appendix.** Table in Section 2.3 reports CIs for selected states. For legal use (the paper's stated purpose), a complete 50-state table would allow expert witnesses to cite state-specific CIs without computing them independently. This is a data presentation issue, not an analysis issue.
+
+## Score: 3 — Minor Revision
+
+The paper's statistical framework is sound and the joint CI for the +22% improvement is a genuine contribution. The three P1 items address real technical issues: the exchangeability argument, the independence assumption, and the abstract inconsistency. The abstract fix is straightforward; the first two require additional argument rather than additional computation.

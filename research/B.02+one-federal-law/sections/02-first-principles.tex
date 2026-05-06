@@ -213,15 +213,24 @@ a district whose tracts are not connected is constitutionally suspect.\footnote{
   would be permissible.
 }
 
-The adjacency constraint does not change the problem's structure; it changes
-the feasible set.
-The Huntington-Hill priority rule---assign the next unit to the district
-with the highest priority value---still applies.
-In the intrastate case, the ``unit'' being assigned is a census tract,
-and the adjacency graph of the state constrains which tracts can be
-assigned together.
-This is what \ar{} implements: a graph-partitioning realization of the
-Huntington-Hill priority rule on the state's TIGER/Line adjacency graph.
+\paragraph{The isomorphism and its limits.}
+The adjacency constraint distinguishes the intrastate problem in an important respect:
+the interstate apportionment problem assigns seats to states (which are fixed, pre-existing
+entities), while the intrastate redistricting problem must find contiguous regions
+(which are not fixed---they must be constructed from the adjacency graph).
+The Huntington-Hill priority rule, when extended to the intrastate setting, therefore
+applies to the \emph{bisection tree structure}---determining the sequence and proportions
+of recursive splits---rather than to the identification of specific census tracts for
+each region.
+The isomorphism is in the decision procedure (priority sequence $\to$ factorization $\to$ tree),
+not in the feasible set (states vs.\ contiguous connected subgraphs).
+Formally, \ar{} applies the \hh{} priority rule to choose how to partition the state at each
+level of the bisection tree, and delegates to METIS the task of finding the minimum-edge-cut
+connected subgraph partition consistent with that choice.
+This division of labor---\hh{} for the tree structure, METIS for the contiguous realization---is
+what makes the intrastate extension computable.
+The result is a doctrinal extension grounded in the same equal-proportions principle,
+applied at the next level down in the apportionment hierarchy.
 
 \subsection{The Logical Step: If HH Is Right at Level~$n$, It Is Right at Level~$n+1$}
 

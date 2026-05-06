@@ -1,0 +1,53 @@
+\documentclass[12pt]{article}
+
+% Packages
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{threeparttable}
+
+\doublespacing
+
+% Title and Authors
+\title{Public Perceptions of Algorithmic vs.\ Human-Drawn Congressional Districts:\\
+A Survey Experiment}
+
+\author{
+Giovanni Della-Libera\\
+\small{Working Paper}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Gerrymandering is widely condemned by the American public, yet political reform remains slow. Algorithmic redistricting---computer-drawn district maps that use no partisan data---offers a structural alternative, but public acceptance depends on perceived legitimacy. We conducted a pre-registered survey experiment ($N = 2{,}400$) using a 2$\times$3 between-subjects design crossing map type (algorithmic, commission-drawn, or enacted) with information condition (none, process description, or both). Respondents rated algorithmic maps $0.41$ standard deviations fairer than enacted maps ($p < 0.001$). Providing a plain-language description of the algorithm raised perceived fairness by an additional $0.22$ SD ($p < 0.001$). Partisan moderation was smaller than anticipated: Democrats rated algorithmic maps $0.18$ SD higher than Republicans, a statistically significant but substantively modest gap ($p = 0.04$). Critically, no significant difference emerged between algorithmic and commission-drawn maps. We find no evidence of algorithm aversion in this domain; to the contrary, transparency about algorithmic process functions as a legitimacy-enhancing treatment. These results suggest that public support for algorithmic redistricting is achievable across partisan lines when process descriptions accompany map presentation.
+\end{abstract}
+
+\noindent\textbf{Keywords:} redistricting, gerrymandering, survey experiment, algorithm aversion, procedural fairness, public opinion
+
+\input{sections/01-introduction}
+\input{sections/02-related-work}
+\input{sections/03-design}
+\input{sections/04-measures}
+\input{sections/05-results}
+\input{sections/06-discussion}
+\input{sections/07-conclusion}
+
+\bibliographystyle{apsr}
+\bibliography{references}
+
+\end{document}

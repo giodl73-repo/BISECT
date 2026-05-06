@@ -1,0 +1,94 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Data and geographic configurations}
+
+We use 2020 Census TIGER/Line shapefiles~\citep{tiger-census} at two
+resolutions: census tracts ($n \approx 74{,}000$ nationally) and block
+groups ($n \approx 239{,}000$).
+Adjacency graphs are built by detecting shared tract boundaries with a
+minimum shared-length threshold of 50 metres, following the procedure of
+B.2.  Edge weights are shared boundary lengths in metres.
+
+\paragraph{Congressional chambers.}
+The 2020 apportionment yields 435 districts across 50 states, with $k$
+ranging from 1 (7 states: AK, DE, MT, ND, SD, VT, WY) to 52 (California).
+
+\paragraph{State senate chambers.}
+We test all 49 unicameral-or-senate chambers (Nebraska is excluded as
+unicameral with staggered terms that do not map to equal-population
+districts).  District counts range from 20 (Nevada) to 67 (Georgia).
+
+\paragraph{State house chambers.}
+All 50 state house chambers are included, with $k$ ranging from 40
+(Alaska) to 400 (New Hampshire).  This range is where n-way partitioning
+might be expected to have a larger runtime advantage.
+
+\subsection{Algorithm configurations}
+
+Both strategies use the same METIS library (version 5.1.0, C FFI interface)
+with identical hyperparameters:
+
+\begin{itemize}
+  \item \texttt{ufactor = 5} (maximum population imbalance: 0.5\%)
+  \item \texttt{niter = 100} (FM refinement iterations)
+  \item \texttt{ncuts = 5} (number of initial partitions)
+  \item \texttt{seed = 42} (for reproducibility; B.7 shows seed sensitivity
+    is low)
+\end{itemize}
+
+\paragraph{Recursive bisection (RB).} Uses METIS \texttt{PTYPE\_RB} with
+target population tolerance split between levels.
+For non-power-of-two $k$, we use an asymmetric bisection tree:
+at each level, one child receives $\lfloor k/2 \rfloor$ districts and
+the other $\lceil k/2 \rceil$.
+For prime $k$ (e.g.\ PA $k{=}17$, NV $k{=}41$), this means unequal
+sub-problems at every level.
+
+\paragraph{N-way (direct k-way).} Uses METIS \texttt{PTYPE\_KWAY}, which
+performs multilevel coarsening to approximately $k \cdot c$ nodes (with
+$c \approx 20$) and then uses greedy k-way initial partitioning followed
+by FM refinement.
+
+\subsection{Metrics}
+
+\paragraph{Compactness.}
+We compute the Polsby--Popper score for each district using the
+GeoPandas~\citep{geopandas}/Shapely~\citep{shapely} geometry pipeline:
+$\mathrm{PP}_i = 4\pi A_i / P_i^2$,
+where $A_i$ is the area and $P_i$ the perimeter of district $i$.
+The chamber mean $\overline{PP}$ is the primary outcome variable.
+
+\paragraph{Runtime.}
+Wall-clock time is measured on a 16-core AMD Ryzen 9 5950X workstation
+(single-threaded METIS), averaged over 10 independent runs.
+We report both raw runtime (ms) and runtime per tract (ms/tract) for
+comparability across states.
+
+\paragraph{Population balance.}
+Maximum absolute deviation from the ideal population per district,
+expressed as a fraction of the ideal: $\delta_{\max} = \max_i |w(P_i) - W/k| / (W/k)$.
+Both strategies are constrained to $\delta_{\max} \leq 0.5\%$.
+
+\subsection{Statistical testing}
+
+State senate and state house chambers for the same state share the same
+underlying census geography, so treating both as independent observations
+in a joint test would violate the independence assumption.
+To avoid this, we restrict the primary statistical test to
+\textbf{congressional chambers only} ($n = 50$ states), which are
+genuinely independent across states.
+
+A paired $t$-test compares RB vs.\ n-way for congressional chambers,
+pairing by state.  The null hypothesis is zero mean difference in
+$\overline{PP}$.  We report the two-sided $p$-value; no correction is
+applied because only one primary comparison is made.
+
+State senate and state house results are reported descriptively
+(Tables~\ref{tab:pp-chamber} and~\ref{tab:runtime}) to show that the
+congressional finding generalises, but formal inference is drawn only
+from the independent congressional sample.
+
+Effect size is Cohen's $d$ computed on the congressional paired differences.
+A difference is considered practically significant if $d > 0.2$ (small
+effect) and statistically significant at $\alpha = 0.05$.

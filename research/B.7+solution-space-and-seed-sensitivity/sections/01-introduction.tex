@@ -1,0 +1,65 @@
+\section{Introduction}
+\label{sec:intro}
+
+The Districting Integrity Act (DIA) specifies a single deterministic
+random seed for the METIS partitioner, derived from the census release
+identifier via SHA-256: $s_0 = \mathrm{SHA256}(\mathtt{census\_release\_id}
+\,||\, \mathtt{DIA\_SEED\_V1})$.
+This design choice raises a fundamental question: \emph{does the specific
+seed matter?}
+
+METIS is a heuristic algorithm; different seeds produce different
+partitions via their effect on the initial coarsening and FM refinement
+steps~\citep{karypis1998}.  If seed sensitivity is high --- meaning small
+changes in the seed produce large changes in the partition quality or
+partisan outcomes --- then a single-seed specification would be legally
+problematic: the party that controls the seed (through control of census
+timing or versioning) would hold an outsized influence over the map.
+
+Conversely, if seed sensitivity is low --- meaning the solution space
+is well-connected and the DIA seed lands near the global minimum ---
+then the single-seed specification is defensible on two grounds:
+(1) the chosen map is near-optimal in compactness, and (2) alternative
+seeds produce similar partisan outcomes.
+
+\subsection*{Contributions}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item We characterise the solution space of METIS recursive bisection
+    by sweeping 10,000 seeds per state across all 50 states (500 thousand
+    total METIS calls), measuring normalised edge cut and partisan outcomes
+    for each seed.
+  \item We compute the coefficient of variation (CV) of the normalised
+    edge cut across seeds by state category (single-district, small, medium,
+    large), finding CV $< 2\%$ for 48 of 50 states.
+  \item We establish that the DIA seed is within $2.9\% \pm 1.7\%$ of the
+    minimum-edge-cut seed across all states, statistically indistinguishable
+    from a randomly chosen seed.
+  \item We measure partisan variance across seeds for Wisconsin ($k{=}8$)
+    and North Carolina ($k{=}14$), the two highest-variance states, finding
+    that seed selection drives less partisan variance than algorithm selection
+    (B.0: 12.8pp gap between algorithm families).
+\end{enumerate}
+
+\subsection*{Connection to ConvergenceSweep}
+
+These results motivate the ConvergenceSweep procedure (B.16), which
+certifies convergence to a local minimum by running additional seeds
+until $T = 600$ consecutive seeds produce no improvement.
+The empirical data in this paper --- specifically, the per-state
+empirical CDF of the last-improvement seed index --- justifies the
+$T = 600$ threshold: 47 of 50 states show their last improvement
+before seed index 600, and the three exceptions (GA, NC, WI) are
+handled by the extended $T = 1{,}200$ sweep.
+
+\subsection*{Paper structure}
+
+Section~\ref{sec:related} reviews prior work on solution space
+characterisation for redistricting.
+Section~\ref{sec:methodology} describes the sweep design and metrics.
+Section~\ref{sec:results} presents results by state category and
+partisan implications.
+Section~\ref{sec:discussion} interprets the findings for the DIA.
+Section~\ref{sec:conclusion} concludes.

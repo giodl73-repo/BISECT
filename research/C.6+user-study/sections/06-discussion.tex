@@ -1,0 +1,44 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Algorithm Aversion Does Not Appear in This Domain}
+
+The most striking finding of this study is what we do \textit{not} find: no evidence of algorithm aversion. Respondents in the no-information condition did not penalize algorithmic maps relative to enacted maps---they rated them substantially more fair. This result stands in contrast to experimental findings from hiring, forecasting, and medical diagnosis contexts, where \citet{dietvorst2015algorithm} and subsequent researchers have found reliable penalties for algorithmic judgment. What accounts for the divergence?
+
+We propose three complementary explanations. First, the comparison set matters. In the canonical algorithm aversion literature, the comparison is between algorithms and human \textit{experts}: medical professionals, financial advisors, hiring managers. In redistricting, the comparison is between an algorithm and a politically motivated legislature whose gerrymandering has been extensively covered in news media and condemned by courts. When the human alternative is an expert, the algorithm's rigidity is a liability; when the human alternative is a politician with self-interest in the outcome, the algorithm's rigidity becomes an asset. Respondents may intuit this structure even without explicit information.
+
+Second, the task domain matters. \citet{castelo2019task} showed that algorithm aversion is strongest for tasks requiring social judgment and weakest for tasks perceived as computational or mathematical. Congressional district drawing, while politically consequential, is widely understood as involving geographic calculations that algorithms should be well-suited to perform. Respondents may have stronger prior beliefs that algorithms can competently draw districts than that algorithms can competently evaluate job candidates or predict patient outcomes.
+
+Third, and most optimistically, there may be no algorithm aversion to overcome in redistricting because respondents have no pre-existing attachment to human line-drawing as a procedurally important feature of the redistricting process. The value of human decision-making in redistricting is not self-evident the way the value of human expertise in medicine or personnel decisions might be. If redistricting is viewed as a technical optimization problem rather than a deliberative process requiring human judgment, algorithm aversion has no natural anchor.
+
+\subsection{Transparency as Legitimacy}
+
+The transparency treatment worked as predicted. A 90-word plain-language description of the algorithmic process raised perceived fairness by $0.22$ SD and the full description-plus-comparison treatment raised it by $0.31$ SD. These effects are large in the context of survey experiments on redistricting opinion \citep{bonneau2021,elmendorf2019}, where information treatments typically move opinion by $0.05$--$0.15$ SD.
+
+This finding has a clear practical implication: \textit{how algorithmic redistricting is communicated matters as much as its technical properties}. The redistricting experts who design these systems have strong incentives to emphasize technical sophistication---the optimization problem is genuinely complex and the algorithm involves graph-theoretic machinery that requires technical training to understand. But our results suggest this is the wrong communication strategy. Plain-language descriptions that emphasize what the algorithm \textit{cannot do} (access partisan data) and what it \textit{guarantees} (reproducibility, equal treatment of all geographic units) are more effective at generating public trust than technical expositions.
+
+This transparency result aligns with \citet{lee2018understanding}'s findings from algorithmic hiring and extends them to a political context. It is consistent with procedural fairness theory \citep{tyler2006legitimacy}: knowing that a neutral, consistent, and bias-suppressed procedure was used increases the legitimacy of the outcome, independent of whether the outcome is favorable. The redistricting domain may actually be unusually receptive to transparency effects because citizens already distrust the human alternative so strongly---any demonstration that a different process lacks the self-interest properties of legislative gerrymandering should be welcome.
+
+\subsection{Partisan Symmetry Is Near-Complete}
+
+Partisan heterogeneity in algorithm evaluations is smaller than we anticipated. The $0.18$ SD difference between strong Democrats and strong Republicans is statistically significant but substantively modest and in the expected direction. More importantly, strong Republicans' $0.33$ SD positive evaluation of algorithmic maps---relative to enacted maps---is not substantively different from zero in the sense of dismissiveness; it represents a meaningful positive endorsement.
+
+Why are Republicans not more skeptical? One possible explanation is that, in our design, respondents viewed maps from both a Republican-gerrymandered state (North Carolina) and a Democratic-gerrymandered state (Maryland). Republicans who saw the Maryland map experienced the algorithmic alternative as leveling a playing field tilted against them; Democrats experienced the North Carolina map the same way. In this two-state design, both parties have reasons to view the algorithmic alternative positively---it removes partisan distortion regardless of which party is disadvantaged.
+
+A more structural explanation is that partisan differences in redistricting opinion may be larger among political elites than among ordinary voters \citep{doherty2017}. Elite politicians who directly benefit from gerrymandering have strong reasons to oppose algorithmic reform; ordinary Republican voters who do not draw maps themselves may have weaker attachment to the legislative process that typically produces Republican gerrymanders. Our survey experiment captures ordinary citizens' views, not elite views, which may explain the relative symmetry.
+
+\subsection{Algorithmic Equals Commission in Public Perception}
+
+The finding that algorithmic and commission-drawn maps are perceived as equivalently fair has important implications for the reform debate. Independent redistricting commissions have been the primary vehicle for redistricting reform over the past two decades, receiving significant organizational and financial investment from reform advocates. If commissions and algorithms are perceived as equivalently legitimate by the public, then algorithmic redistricting faces no legitimacy barrier that commissions have already overcome.
+
+This equivalence also suggests that the public may not distinguish sharply between different types of process reform---what matters is that the process is \textit{not} legislative control, not the specific institutional form of the alternative. Both commissions and algorithms communicate the message that professional or automated systems, rather than self-interested politicians, drew the lines. That message appears to be sufficient to generate public trust.
+
+\subsection{Limitations}
+
+Several limitations bound our conclusions. First, the study uses a hypothetical evaluation paradigm: respondents rate maps for two states in a survey context without any personal stakes in the outcome. Real voters who live in the affected districts for a decade may form different judgments than survey respondents who examine maps for minutes. The gap between stated approval and actual acceptance may be large.
+
+Second, our treatment describes an algorithmic process and shows maps drawn by that process, but respondents cannot verify the claimed correspondence between process and outcome. In the real world, advocates of algorithmic redistricting will face skepticism about whether the algorithm truly does what it claims---whether it really does not incorporate partisan data, whether it can be manipulated through parameter choices. Our results apply to scenarios where process descriptions are believed, not to scenarios of adversarial information environments.
+
+Third, two states do not capture the full variation in redistricting contexts across fifty states and multiple redistricting cycles. Respondents in states with severe long-running gerrymanders may show larger effects; respondents in states with recent commission reforms may show smaller effects. Future research should test whether our findings generalize across states and whether they persist when respondents know they personally live in the districts in question.
+
+Fourth, we cannot rule out experimenter demand effects: respondents who learn they are in a study about redistricting may infer that the researchers favor algorithmic maps and respond accordingly. Pre-registration and double-blind protocols reduce but cannot eliminate this concern.

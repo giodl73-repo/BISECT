@@ -1,0 +1,65 @@
+paper: apportion-regions
+title: "ApportionRegions: Redistricting as the Geographic Completion of Huntington-Hill"
+venue: "Political Analysis / Journal of Computational Social Science"
+stage: recheck
+round: 3
+content_mode: full
+series: B
+series_number: 11
+avg_score: 3.14
+round1_avg: 2.72
+round2_avg: 2.90
+reviewers: [Karypis, Rodden, Duchin, Stephanopoulos, Liang]
+reviews:
+  Karypis:        {score: 3.3, file: reviews/r1_karypis_r3.md}
+  Rodden:         {score: 3.2, file: reviews/r2_rodden_r3.md}
+  Duchin:         {score: 3.0, file: reviews/r3_duchin_r3.md}
+  Stephanopoulos: {score: 3.2, file: reviews/r4_stephanopoulos_r3.md}
+  Liang:          {score: 3.0, file: reviews/r5_liang_r3.md}
+round2_reviews:
+  R-50: {score: 3.0, file: reviews/REVIEW-R2-jeffrey-ullman.md}
+  R-1:  {score: 2.8, file: reviews/REVIEW-R2-percy-liang.md}
+  R-37: {score: 3.1, file: reviews/REVIEW-R2-nadia-polikarpova.md}
+  R-9:  {score: 2.9, file: reviews/REVIEW-R2-joseph-gonzalez.md}
+  R-6:  {score: 2.7, file: reviews/REVIEW-R2-matei-zaharia.md}
+round1_reviews:
+  R-50: {score: 2.5, file: reviews/REVIEW-jeffrey-ullman.md}
+  R-1:  {score: 2.5, file: reviews/REVIEW-percy-liang.md}
+  R-37: {score: 2.8, file: reviews/REVIEW-nadia-polikarpova.md}
+  R-9:  {score: 3.0, file: reviews/REVIEW-joseph-gonzalez.md}
+  R-6:  {score: 2.8, file: reviews/REVIEW-matei-zaharia.md}
+p1_items:
+  - id: P1-A
+    desc: "Seed sensitivity — run >=10 seeds for all 50 states, report D/R distribution per state"
+    status: open
+  - id: P1-B
+    desc: "Formally state and prove Reuse Theorem: METIS determinism condition, definition of same partition, proof sketch"
+    status: open
+  - id: P1-C
+    desc: "Formally characterize binary fallback: define recursion uniquely, or implement direct k-way METIS, or restrict formal claims"
+    status: open
+  - id: P1-D
+    desc: "Report NC and GA results at 0.5% balance tolerance (statutory standard)"
+    status: open
+  - id: P1-E
+    desc: "Add GerryChain or ReCom comparison as additional redistricting baseline"
+    status: open
+history:
+  - stage: draft
+    date: "2026-05-02"
+    note: "Paper initialized."
+  - stage: panel
+    date: "2026-05-02"
+    note: "Round 1: 5 reviews, avg 2.72/4. Reviewers: Ullman, Liang, Polikarpova, Gonzalez, Zaharia."
+  - stage: synthesis
+    date: "2026-05-02"
+    note: "Synthesis complete. NC/GA finding universally praised. Critical: seed sensitivity (P1-A) and binary fallback formalization (P1-C)."
+  - stage: revision
+    date: "2026-05-02"
+    note: "5 P1 items identified. P1-A is critical path to recheck."
+  - stage: recheck
+    date: "2026-05-02"
+    note: "Round 2: avg 2.90/4.0 (+0.18). Zero-variance finding (480 seeds, all 50 states) resolved P1-A. P1-B/C resolved formally. P1-D (balance) and P1-E (GerryChain) remain open but acceptable for this stage."
+  - stage: recheck
+    date: "2026-05-05"
+    note: "Round 3: avg 3.14/4.0 (+0.24). P1-D resolved: boundary-swap rebalancing algorithm added (NC 23 swaps → 0.48%, GA 31 swaps → 0.47%, partisan outcome unchanged). P1-E resolved: GerryChain comparison subsection added. Panel: Karypis/Rodden/Duchin/Stephanopoulos/Liang. Paper in clear accept territory. Remaining: METIS parameter reporting, zero-DOF reframing, citation fixes."

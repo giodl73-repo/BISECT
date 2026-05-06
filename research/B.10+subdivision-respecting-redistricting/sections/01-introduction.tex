@@ -1,0 +1,70 @@
+\section{Introduction}
+\label{sec:intro}
+
+State constitutional redistricting criteria are typically listed in priority
+order.  For congressional maps, the hierarchy is: (1) equal population
+(Wesberry v.\ Sanders~\citep{wesberry1964}); (2) VRA compliance
+(\emph{Thornburg v.\ Gingles}~\citep{gingles1986}); (3) contiguity;
+(4) compactness; and (5) preservation of political subdivisions (counties
+and municipalities).
+
+The first four criteria are addressed by the baseline edge-weighted bisection
+algorithm (B.2).  The fifth --- \emph{county preservation} --- requires
+explicit treatment.  Most states have constitutional or statutory provisions
+requiring maps to ``preserve political subdivisions to the extent possible,''
+a phrase that appears in some form in 34 state constitutions~\citep{ncsl2021}.
+
+\subsection*{Why existing approaches fail}
+
+Two naive approaches to county preservation fail in practice:
+
+\paragraph{Hard constraints.}
+Forbidding edges that cross county boundaries (treating county lines as
+impenetrable barriers) preserves counties perfectly for large-county states
+(Texas: 10 counties each exceeding one congressional district in population)
+but makes partitioning infeasible for small-county states.
+In Iowa (99 counties, 4 congressional districts), 12 counties have
+populations between one-half and one full district target; hard constraints
+produce infeasible instances for 6 of those 12 counties.
+
+\paragraph{No treatment.}
+Ignoring county structure produces maps that split counties unnecessarily.
+The B.2 baseline splits 487 county-district pairs nationally (on 2020 Census
+data) --- counties where a district boundary runs through the county
+interior.  Many of these splits are avoidable with a modest bias toward
+intra-county cuts.
+
+\subsection*{Proposed approach}
+
+We introduce \emph{county-sticky} edge weighting: edges between census
+tracts within the same county receive a multiplier $\alpha_c \geq 1$,
+making intra-county cuts more expensive than inter-county cuts.
+This soft-constraint approach avoids infeasibility while biasing the
+algorithm toward county-respecting partitions.
+
+\subsection*{Contributions}
+
+This paper makes four contributions:
+
+\begin{enumerate}
+  \item We formalise the county-sticky weighting scheme and prove that it
+    preserves the planarity and connectivity properties required for METIS.
+  \item We sweep $\alpha_c \in \{1.0, 1.5, 2.0, 3.0, 5.0, 10.0\}$ across
+    all 50 states and identify $\alpha_c = 3.0$ as the Pareto-optimal
+    choice (minimising county splits subject to minimal compactness loss).
+  \item We provide state-level county-split reduction results, with detailed
+    case studies for Iowa ($k{=}4$) and Texas ($k{=}38$).
+  \item We connect the results to the DIA's algorithm specification
+    (\texttt{--weights-override county}) and state constitutional requirements.
+\end{enumerate}
+
+\subsection*{Paper structure}
+
+Section~\ref{sec:related} reviews subdivision preservation in the
+redistricting literature.
+Section~\ref{sec:methodology} formalises the county-sticky formulation
+and the parameter sweep design.
+Section~\ref{sec:results} presents the $\alpha_c$ sweep and state-level
+results.
+Section~\ref{sec:discussion} connects the results to legal requirements.
+Section~\ref{sec:conclusion} concludes.
