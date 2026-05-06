@@ -1,0 +1,48 @@
+\section{Introduction}
+\label{sec:intro}
+
+The United States Congress consists of 435 House members distributed among
+50 states. State legislatures collectively contain approximately 7,400 seats
+in 99 chambers---roughly 17$\times$ as many elected positions, drawing maps
+for districts that are 17$\times$ smaller and correspondingly more sensitive
+to local geography. Despite this greater scale and civic significance, state
+legislative redistricting has received far less systematic attention from the
+algorithmic redistricting community.
+
+This paper presents the first comprehensive 50-state empirical study of
+algorithmically generated state house maps. We apply the minimum-edge-cut
+recursive bisection algorithm implemented in the \texttt{redist} Rust binary
+\citep{dellaLibera2026recursive} to all 50 lower legislative chambers,
+adapting the resolution (census tract vs.\ block group) based on the
+$k/n_{\mathrm{tracts}} > 0.05$ threshold derived in companion paper F.3
+\citep{dellaLibera2026stateLegResolution}.
+
+\paragraph{Main contributions.}
+\begin{enumerate}
+  \item A 50-state database of algorithmically generated state house maps
+    at the 2020 census cycle, freely available for replication.
+  \item Systematic compactness measurement showing $\overline{PP} = 0.401$
+    at block-group resolution---exceeding the congressional baseline of
+    $\overline{PP} = 0.361$ from \citet{dellaLibera2026mec}.
+  \item Population balance within $\pm 0.5\%$ for all 50 states, achieved
+    despite the \emph{Reynolds v.\ Sims} standard requiring only $\pm 5\%$.
+  \item County-split analysis showing 15--25\% fewer splits than enacted maps
+    for the 38 states with available enacted 2020 state house maps.
+  \item Four case studies (WA, TX, NH, NE) examining how district count,
+    geography, and resolution interact to shape algorithmic map outcomes.
+\end{enumerate}
+
+\paragraph{Scope.}
+This paper covers lower chambers (state houses and assemblies) only.
+Upper chambers (state senates) and the bicameral nesting problem are
+addressed in companion paper F.2 \citep{dellaLibera2026bicameral}.
+VRA compliance in state legislative redistricting is addressed in F.6
+\citep{dellaLibera2026vraStateLeg}.
+
+\paragraph{Organization.}
+Section~\ref{sec:related} reviews the state legislative redistricting
+literature. Section~\ref{sec:methodology} describes the methodology.
+Section~\ref{sec:results} presents results. Section~\ref{sec:cases}
+develops four case studies. Section~\ref{sec:comparison} compares to
+enacted maps. Section~\ref{sec:limitations} discusses limitations.
+Section~\ref{sec:conclusion} concludes.

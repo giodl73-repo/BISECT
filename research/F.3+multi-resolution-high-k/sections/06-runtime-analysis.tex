@@ -1,0 +1,76 @@
+\section{Runtime Analysis}
+\label{sec:runtime}
+
+\subsection{Theoretical Scaling}
+\label{sec:runtime:theory}
+
+The \texttt{redist} pipeline's runtime is dominated by the METIS $k$-way
+partitioning step. METIS's multilevel scheme runs in $O(n \log n)$ time
+for a graph with $n$ vertices \citep{karypis1998fast}. Moving from tract
+($n_T$) to block-group ($n_{BG}$) resolution multiplies the vertex count
+by approximately:
+\[
+  r = \frac{n_{BG}}{n_T} = \frac{220{,}000}{73{,}000} \approx 3.0.
+\]
+The theoretical runtime ratio is $r \log(r \cdot n_T) / \log(n_T) \approx 3.0$
+for large $n_T$, consistent with the observed $\approx 3$--$4\times$ factor.
+
+For the block-to-block-group ratio:
+\[
+  r' = \frac{n_{\rm block}}{n_{BG}} = \frac{8{,}100{,}000}{220{,}000} \approx 36.8,
+\]
+giving a theoretical block-to-block-group runtime ratio of $\sim\!40\times$.
+Block-level redistricting for a large state would take hours per state, making
+it practical only for small states (NH, WY, VT) where $n_{\rm block}$ is small.
+
+\subsection{Observed Runtimes by State}
+\label{sec:runtime:observed}
+
+Table~\ref{tab:runtime-comparison} shows observed runtimes for the three
+focal states at both resolutions.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrrrr}
+\toprule
+State & $k$ & $n_T$ & $n_{BG}$ & Tract (s) & Block-group (s) & Ratio \\
+\midrule
+Washington & 98  & 1{,}458  & 4{,}874   & 45  & 180  & 4.0$\times$ \\
+Texas      & 150 & 5{,}265  & 15{,}811  & 95  & 380  & 4.0$\times$ \\
+California & 80  & 8{,}997  & 25{,}914  & 140 & 520  & 3.7$\times$ \\
+\bottomrule
+\end{tabular}
+\caption{Observed runtimes: tract vs.\ block-group resolution (single seed,
+  single CPU core). The block-group/tract runtime ratio is approximately
+  3.7--4.0$\times$ for all three states, consistent with the $\sim\!3\times$
+  vertex count ratio and $O(n \log n)$ METIS scaling.}
+\label{tab:runtime-comparison}
+\end{table}
+
+\subsection{Total Pipeline Runtime: All 50 States}
+\label{sec:runtime:total}
+
+For the F.1 50-state house sweep with adaptive resolution selection
+(block-group for 12 states, tract for 38 states), the total single-core runtime is
+approximately 68 minutes (mean 82 seconds per state). With 4 parallel workers,
+this reduces to approximately 18 minutes.
+
+The congressional pipeline runtime for comparison (50 states, tract resolution)
+is approximately 22 minutes single-core. The state legislative pipeline is
+$\sim\!3\times$ slower due to the block-group resolution states and the
+generally larger $k$ values.
+
+\subsection{Scaling to Block Resolution}
+\label{sec:runtime:block}
+
+For the five states requiring block resolution (NH, WY, VT, SD, ND), estimated
+block-resolution runtimes are:
+\begin{itemize}
+  \item New Hampshire: $\sim\!4{,}100$ seconds ($\sim\!68$ minutes) at block
+    resolution ($n_{\rm block} \approx 36{,}000$).
+  \item Wyoming: $\sim\!800$ seconds at block resolution
+    ($n_{\rm block} \approx 12{,}500$).
+\end{itemize}
+These runtimes are feasible for a one-time run but prohibitive for multi-seed
+sensitivity analysis. The F.1 paper uses block-group resolution for these states
+as a practical compromise, noting the limitation.

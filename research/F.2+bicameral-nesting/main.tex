@@ -1,0 +1,62 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}[proposition]
+\newtheorem{lemma}{Lemma}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{F.2: NestSection at Scale:\\
+       Spine-Compatible Bicameral Redistricting for All 50 States}
+
+\author{Gio Della-Libera}
+
+\date{Draft --- \today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Most U.S.\ state legislatures are bicameral, with house and senate chambers
+whose district counts stand in a fixed constitutional ratio. The NestSection
+algorithm \citep{dellaLibera2026nestSection} exploits this ratio by constructing
+a \emph{spine}---a common geographic hierarchy at the level of
+$\gcd(H,S)$ sub-regions---from which both house and senate maps are derived
+by further subdivision. We apply NestSection to all 49 bicameral state
+legislatures, classifying each by whether its $H:S$ ratio supports a
+non-trivial spine ($\gcd(H,S) > 1$). We find that 41 of 49 bicameral states support a compatible ratio; the remaining 8 have
+$\gcd(H,S) = 1$ (e.g., Maine: $S=35$, $H=151$; Delaware: $S=21$, $H=41$) and require independent
+maps. For compatible states, NestSection incurs a compactness penalty of
+$+2$--$3\%$ in mean edge-cut relative to independent redistricting, while
+achieving exact nesting of senate districts as unions of house districts.
+Partisan outcomes are rarely altered by nesting constraints: the expected
+shift is $\leq 0.3$ seats across all compatible states at the 2020 cycle.
+We discuss constitutional requirements for nesting, the geometry of spine
+design, and practical implementation via the \texttt{redist --chamber}
+flag.
+\end{abstract}
+
+\input{sections/01-introduction}
+\input{sections/02-nestsection-recap}
+\input{sections/03-50-state-analysis}
+\input{sections/04-results}
+\input{sections/05-compactness-penalty}
+\input{sections/06-partisan-implications}
+\input{sections/07-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

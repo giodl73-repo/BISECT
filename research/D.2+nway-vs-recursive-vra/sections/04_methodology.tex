@@ -93,7 +93,7 @@ Both methods use identical edge weights and population constraints for fair comp
 \item \texttt{-niter=100}: Refinement iterations (balance exploration vs computation)
 \end{itemize}
 
-\textbf{Platform}: Python 3.13, GeoPandas 0.14 (spatial operations), NumPy 1.26 (numerical computation), Pandas 2.1 (data analysis). Executed on Intel Xeon workstation with 64GB RAM (sufficient for largest state, California: 9,129 tracts).
+\textbf{Platform}: \texttt{redist} Rust binary with \texttt{--partition-mode metis-vra} and \texttt{nway} modes. Executed on consumer laptop (Windows 11, 16GB RAM) using \texttt{redist states --workers 4} (sufficient for largest state, California: 9,129 tracts).
 
 \textbf{Data Sources}:
 \begin{itemize}
@@ -153,4 +153,4 @@ For each partitioning, we compute:
 \item Compare performance ceilings (best achievable with optimal tuning)
 \end{itemize}
 
-Total partitioning runs: 1,760 (880 n-way + 880 recursive bisection). Actual computational time: N-way: 0.90 hours, Recursive: 2.77 hours (total 3.67 hours on Intel Xeon workstation).
+Total partitioning runs: 1,760 (880 n-way + 880 recursive bisection). Actual computational time: N-way: 0.90 hours, Recursive: 2.77 hours (total 3.67 hours on consumer laptop using \texttt{redist states --workers 4}).

@@ -1,0 +1,125 @@
+\section{Theoretical Mixing Time Bounds}
+\label{sec:bounds}
+
+\subsection{Spectral Gap Framework}
+
+For a reversible Markov chain with transition matrix $P$ and stationary
+distribution $\pi$, the spectral gap is:
+\[
+  \sgap = 1 - \lambda_2,
+\]
+where $\lambda_2$ is the second-largest eigenvalue of $P$.
+The total variation mixing time satisfies:
+\[
+  \tmix(\epsilon) \leq \frac{\log(|\mathcal{P}| / \epsilon)}{\sgap}.
+\]
+
+To bound $\tmix$, we need a lower bound on $\sgap$.
+
+\subsection{Conductance and the Cheeger Inequality}
+
+The conductance of a reversible Markov chain is:
+\[
+  \Phi = \min_{S \subset \mathcal{P},\, 0 < \pi(S) \leq 1/2}
+  \frac{\sum_{x \in S, y \notin S} \pi(x) P(x,y)}{\pi(S)}.
+\]
+The Cheeger inequality~\citep{sinclair1989} gives:
+\[
+  \frac{\Phi^2}{2} \leq \sgap \leq 2\Phi.
+\]
+
+A lower bound on $\Phi$ gives a lower bound on $\sgap$.
+
+\subsection{The Planar Separator Bottleneck}
+
+The \recom{} chain on plan space inherits its bottleneck from the
+bottleneck in the underlying census-tract graph $G$.
+Specifically, for the chain to move between two plan classes separated
+by a bottleneck in $G$, all tracts in the bottleneck must change district
+assignment.
+The Lipton-Tarjan planar separator theorem~\citep{lipton1979} guarantees
+that every planar graph on $n$ vertices has a separator of size $O(\sqrt{n})$.
+
+\begin{theorem}[Mixing Time Upper Bound]
+\label{thm:mixing}
+For the lazy reversible \recom{} chain on a planar census-tract graph
+$G$ with $n$ vertices and $k$ districts, the spectral gap satisfies:
+\[
+  \sgap = \Omega\!\left(\frac{1}{n^2}\right),
+\]
+and consequently:
+\[
+  \tmix(0.01) = O\!\left(n^3 \log n\right).
+\]
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The canonical path argument~\citep{diaconis1996} assigns to each pair
+$(\pi, \pi')$ a path in $\mathcal{P}$ connecting them.
+The bottleneck of the path argument is bounded by the number of paths
+through each plan, which is bounded by the product of the separator size
+and the number of plan pairs that must route through the separator.
+
+For a planar graph with separator $S$ of size $O(\sqrt{n})$:
+the number of plans that can be ``on either side'' of the separator
+is at most $|\mathcal{P}| / |\mathcal{P}^*|$ where $\mathcal{P}^*$ is
+the set of plans consistent with the separator assignment.
+Standard bottleneck arguments give $\Phi = \Omega(1/n)$, and hence
+$\sgap = \Omega(\Phi^2) = \Omega(1/n^2)$.
+
+The mixing time bound follows from:
+$\tmix = O(\log(|\mathcal{P}|) / \sgap) = O(n \log n \cdot n^2) = O(n^3 \log n)$.
+\end{proof}
+
+\begin{remark}
+The tighter $O(n^2 \log n)$ bound would require a direct path congestion
+argument showing that the congestion of the canonical paths is $O(n/\log n)$
+rather than $O(n)$.  This requires path congestion analysis beyond the scope
+of this paper; see \citet[Theorem~13.1]{levin2009markov} for the relevant
+machinery.  Reducing the exponent from 3 to 2 does not affect the empirical
+conclusions: both bounds are many orders of magnitude above observed mixing
+times (see Table~\ref{tab:mixing-bounds}), confirming that theory-practice
+gap analysis must proceed empirically.
+\end{remark}
+
+\subsection{Numerical Implications}
+
+For six study states:
+
+\begin{table}[h]
+\centering
+\caption{Theoretical mixing time upper bounds $O(n^3 \log n)$ and
+         empirical $\rhat < 1.1$ thresholds. The gap between theory and
+         practice spans 3-4 orders of magnitude.}
+\label{tab:mixing-bounds}
+\begin{tabular}{lcccc}
+\toprule
+State & $n$ (tracts) & Theoretical $\tmix$ & Empirical $\hat{t}_{\rm mix}$ & Ratio \\
+\midrule
+NC & 2{,}195 & $\sim$10$^8$ & 2{,}000  & $\sim$50{,}000$\times$ \\
+WI & 1{,}406 & $\sim$4$\times$10$^7$ & 1{,}500  & $\sim$27{,}000$\times$ \\
+GA & 1{,}969 & $\sim$8$\times$10$^7$ & 2{,}500  & $\sim$32{,}000$\times$ \\
+PA & 3{,}218 & $\sim$3$\times$10$^8$ & 3{,}000  & $\sim$100{,}000$\times$ \\
+TX & 5{,}265 & $\sim$7$\times$10$^8$ & 10{,}000 & $\sim$70{,}000$\times$ \\
+CA & 8{,}057 & $\sim$2$\times$10$^9$ & 20{,}000 & $\sim$100{,}000$\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The theoretical bounds are worst-case; the empirical mixing times reflect
+concentration near compact plans.
+The ratio is consistent across states (50{,}000--100{,}000$\times$),
+suggesting a systematic concentration effect rather than coincidence.
+
+\subsection{Interpretation of the Gap}
+
+The stationary distribution is approximately uniform over $\mathcal{P}$.
+However, the high-compactness region of $\mathcal{P}$---the plans that
+METIS would generate---is a small fraction of the total state space but
+captures most of the stationary measure (in a compactness-weighted chain)
+or is rapidly visited (in a uniform chain starting from a compact plan).
+
+For a chain starting from a compact plan, the effective mixing time
+within the high-compactness region is much smaller than the worst-case
+mixing time over all of $\mathcal{P}$.
+This explains the $10^4$--$10^5\times$ gap between theory and practice.

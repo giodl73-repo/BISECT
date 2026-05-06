@@ -1,0 +1,83 @@
+\documentclass[12pt]{article}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{setspace}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{threeparttable}
+
+\onehalfspacing
+
+\title{Do Algorithmic Districts Produce Competitive Elections?\\
+Evidence from All 50 States}
+
+\author{Giovanni Della-Libera\\
+\small{Working Paper}}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+A central argument for algorithmic redistricting is that geometrically neutral
+maps produce more competitive congressional elections than politically drawn
+ones.  We test this claim by applying 2020 presidential vote returns to
+algorithmically generated and enacted congressional districts across all
+50 states.  Using a margin-of-victory threshold of 10 percentage points in the
+two-party presidential vote as the definition of a competitive district
+(and 5 points for \emph{swing} districts), we find that algorithmic maps
+produce approximately 85 competitive districts compared with 65 under enacted
+plans---a 31\% increase.  Among competitive algorithmic districts, the partisan
+split is 43 Democratic-leaning to 42 Republican-leaning, indicating near
+symmetry.  Crucially, this competitiveness is a \emph{byproduct} of geometric
+neutrality, not a design target: the algorithm optimizes population equality
+and compactness while blind to election data.  We further show that
+competitive algorithmic districts remain competitive under plausible national
+vote-share swings of up to 4 percentage points, suggesting durability beyond
+a single election cycle.  State heterogeneity is substantial: states that gain
+the most competitive districts under algorithmic maps tend to be geographically
+diverse swing states where enacted maps concentrate partisans into safe seats.
+These findings support the democratic-responsiveness argument for algorithmic
+redistricting without overstating the algorithm's role.
+\end{abstract}
+
+\noindent\textbf{Keywords:} redistricting, electoral competition, algorithmic
+maps, competitive districts, partisan symmetry, swing districts
+
+\section{Introduction}
+\input{sections/01-introduction}
+
+\section{Defining Competition}
+\input{sections/02-defining-competition}
+
+\section{Methodology}
+\input{sections/03-methodology}
+
+\section{Results: Competitive Districts---Algorithmic vs.\ Enacted}
+\input{sections/04-results}
+
+\section{Partisan Asymmetry Among Competitive Districts}
+\input{sections/05-partisan-asymmetry}
+
+\section{Longitudinal Projection}
+\input{sections/06-longitudinal}
+
+\section{State Heterogeneity}
+\input{sections/07-state-heterogeneity}
+
+\section{Conclusion}
+\input{sections/08-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

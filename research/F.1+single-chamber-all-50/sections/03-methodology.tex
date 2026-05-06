@@ -1,0 +1,126 @@
+\section{Methodology}
+\label{sec:methodology}
+
+\subsection{Algorithm}
+\label{sec:methodology:algorithm}
+
+We apply the minimum-edge-cut recursive bisection algorithm of
+\citet{dellaLibera2026recursive} via the \texttt{redist} Rust binary.
+The algorithm partitions a state's census-unit adjacency graph
+$G = (V, E, w)$ into $k$ balanced parts minimising total edge-cut weight,
+where edge weights $w(e)$ are the TIGER boundary lengths between adjacent units.
+Recursive bisection proceeds by repeatedly halving the current partition
+until $k$ districts are obtained; for non-power-of-2 values of $k$, the
+algorithm uses the nearest-power-of-2 strategy of \citet{dellaLibera2026nwayRecursive}.
+
+The implementation uses METIS~5.x \citep{karypis1998fast} with
+\texttt{ufactor}=5 (0.5\% per-part imbalance target) and a fixed
+random seed for reproducibility. All 50-state results use seed~42
+as the primary seed, with 5-seed sensitivity checks for selected states.
+
+\subsection{Resolution Selection}
+\label{sec:methodology:resolution}
+
+We apply the resolution selection rule derived in companion paper F.3
+\citep{dellaLibera2026stateLegResolution}:
+\begin{itemize}
+  \item \textbf{Block-group resolution} (\texttt{--resolution block\_group})
+    when $k / n_{\mathrm{tracts}} > 0.05$, where $n_{\mathrm{tracts}}$ is
+    the 2020 census tract count for the state.
+  \item \textbf{Tract resolution} (\texttt{--resolution tract}) otherwise.
+\end{itemize}
+
+Table~\ref{tab:resolution-assignment} shows the resolution assignment for
+all 50 states. Of the 50 lower chambers, 12 require block-group resolution.
+Five states (NH, WY, VT, SD, and ND) have $k/n > 0.5$ and in principle
+require block-level redistricting; for this paper we use block-group
+resolution for these states and flag the limitation.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+State & Chamber & $k$ & $n_{\rm tracts}$ & $k/n$ & Resolution \\
+\midrule
+New Hampshire & House & 400 & 321 & 1.25 & block\_group \\
+Wyoming       & House & 60  & 139 & 0.43 & block\_group \\
+Vermont       & House & 150 & 186 & 0.81 & block\_group \\
+South Dakota  & House & 70  & 183 & 0.38 & block\_group \\
+North Dakota  & House & 94  & 205 & 0.46 & block\_group \\
+Alaska        & House & 40  & 175 & 0.23 & block\_group \\
+Montana       & House & 100 & 278 & 0.36 & block\_group \\
+Nebraska      & Legislature & 49 & 570 & 0.086 & block\_group \\
+Washington    & House & 98  & 1{,}458 & 0.067 & block\_group \\
+Idaho         & House & 70  & 298 & 0.23 & block\_group \\
+Maine         & House & 151 & 358 & 0.42 & block\_group \\
+West Virginia & House & 100 & 484 & 0.21 & block\_group \\
+\midrule
+California    & Assembly & 80  & 8{,}997 & 0.009 & tract \\
+Texas         & House & 150 & 5{,}265 & 0.028 & tract \\
+Florida       & House & 120 & 4{,}245 & 0.028 & tract \\
+New York      & Assembly & 150 & 4{,}919 & 0.030 & tract \\
+(36 other states) & House & --- & --- & $<0.05$ & tract \\
+\bottomrule
+\end{tabular}
+\caption{Resolution assignment for selected states. States with
+  $k/n_{\rm tracts} > 0.05$ use block-group resolution (12 states total);
+  the remainder use tract resolution.}
+\label{tab:resolution-assignment}
+\end{table}
+
+\paragraph{Data prerequisites.}
+Block-group adjacency data for the 12 block-group-resolution states must
+be built before running the pipeline:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020 \
+  --states NH WY VT SD ND AK MT NE WA ID ME WV
+\end{verbatim}
+This generates approximately 800~MB of \texttt{.adj.bin} adjacency files.
+The script is the standard adjacency builder from the F.3 data pipeline;
+F.1 depends on it as a prerequisite.
+
+\paragraph{Reproducibility note on block-group resolution.}
+Block-group adjacency data must be built separately for states where
+$k/n_{\mathrm{tracts}} > 0.05$ (see companion paper F.3 for the derivation
+of this threshold). This includes the 12 states listed in
+Table~\ref{tab:resolution-assignment} above (NH, WY, VT, SD, ND, AK, MT,
+NE, WA, ID, ME, WV), as well as a broader set of states with high-$k$
+chambers or dense tract geographies where block-group resolution may be
+warranted: WA, TX, CA, NY, FL, IL, PA, OH, GA, NC, MI, NJ, VA, AZ, MA,
+TN, IN, MO, MD, WI, CO, MN, SC, AL, LA, KY, OR, OK, CT, IA, MS, AR, KS.
+For the full national block-group adjacency build, run:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020
+\end{verbatim}
+(omitting \texttt{--states} builds adjacency for all 50 states; approximately
+4~GB of storage required).
+
+\subsection{Compactness Metrics}
+\label{sec:methodology:metrics}
+
+We report Polsby-Popper compactness \citep{polsby1991third}:
+\[
+  PP_i = \frac{4\pi A_i}{P_i^2}
+\]
+where $A_i$ is the area of district $i$ and $P_i$ is its perimeter.
+Values range from 0 (maximally non-compact) to 1 (perfectly circular).
+We report mean PP ($\overline{PP}$), minimum PP ($\min PP$), and the
+fraction of districts with $PP < 0.20$ (the ``non-compact'' threshold
+used in several state legal standards).
+
+\subsection{Population Balance}
+\label{sec:methodology:balance}
+
+Ideal district population for a state with total population $T$ and $k$ seats
+is $T^* = T/k$. Population deviation for district $i$ is
+$\delta_i = (T_i - T^*)/T^*$. We report maximum absolute deviation
+$\max_i |\delta_i|$ and the fraction of districts within $\pm 0.5\%$.
+
+\subsection{County Splits}
+\label{sec:methodology:splits}
+
+A county split occurs when a county's census units are assigned to more
+than one district. We count the number of county splits for each state's
+algorithmic map and compare to the enacted 2020 state house map where available.

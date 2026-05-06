@@ -1,0 +1,53 @@
+\label{sec:introduction}
+
+Algorithmic redistricting is not merely a theoretical alternative to
+political map-drawing.  It is a system that can be operationalized---run
+by identified actors, subject to identified oversight procedures, and
+producing outputs that enter an identified legal process.  Abstracting
+away from implementation, as much of the literature does, leaves open the
+critical question of whether algorithmic redistricting is politically and
+institutionally feasible.
+
+This paper answers that question by developing concrete case studies for
+three adoption pathways.
+
+\textbf{The Commission Pathway} (Case Study 1 --- Arizona AIRC) is the path
+of least resistance where an independent redistricting commission already
+exists.  The commission could treat the algorithm's output as a starting
+plan that satisfies mathematical criteria, then apply its community-of-interest
+adjustment authority to refine boundaries before public adoption.
+
+\textbf{The Statute Pathway} (Case Study 2 --- California CRC) involves
+legislative or commission action in a state that has already adopted
+multi-criterion redistricting criteria.  California's criteria---population
+equality, VRA compliance, county contiguity, compactness, and
+proportionality---map closely onto the \texttt{redist} system's weights and
+constraints.  A California-style adoption would require demonstrating that
+each criterion is satisfied algorithmically, a task the paper shows is
+tractable.
+
+\textbf{The Court-Order Pathway} (Case Study 3 --- North Carolina
+post-\textit{Harper}) is available where state courts have found
+constitutional violations in enacted maps.  The court-order pathway places
+the algorithm at the center of the remedial process: a special master
+appointed by the court runs \texttt{redist}, the output becomes the
+remedial map, and the burden shifts to the challenger to demonstrate a
+constitutional defect in the output.
+
+These three pathways are not mutually exclusive.  A state might adopt
+statutory criteria that require algorithmic verification, or a court might
+order a commission to use an algorithm.  But treating them as distinct
+ideal types allows us to identify the institutional requirements, oversight
+structures, and legal challenges specific to each.
+
+The paper is organized as follows.  Sections~2--4 develop the three case
+studies in detail.  Section~5 provides a practical workflow table that
+identifies, at each stage of the redistricting process, who runs which
+command, when, under what oversight, and with what review opportunity.
+Section~6 addresses challenges common to all three pathways: data preparation,
+public transparency, and the challenge process.  Section~7 concludes.
+
+Throughout, we use the \texttt{redist} system~\citep{dellaLibera2026recursive}
+as the reference implementation.  The commands cited in the workflow table
+are drawn from the \texttt{redist} CLI reference~\citep{redistCliQuickstart}.
+The legal analysis draws on~\citet{dellaLibera2026legal}.

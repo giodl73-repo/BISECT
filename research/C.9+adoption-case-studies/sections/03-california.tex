@@ -1,0 +1,89 @@
+\label{sec:california}
+
+\subsection{Background: The California CRC and Its Criteria}
+
+California's Citizens Redistricting Commission was established by Proposition
+11 (2008), extended to congressional redistricting by Proposition 20 (2010).
+Unlike the AIRC's five-member structure, the CRC has 14 members: five
+registered Democrats, five registered Republicans, and four members registered
+with neither major party.
+
+California's redistricting criteria, in statutory priority order, are:
+(1) population equality (one person, one vote); (2) VRA compliance; (3) geographic
+contiguity; (4) minimization of city and county splits; (5) geographic
+compactness; and (6) preservation of communities of interest.  California
+does not include partisan fairness as a statutory criterion, distinguishing it
+from Arizona.
+
+\subsection{Algorithmic Satisfaction of California's Criteria}
+
+The \texttt{redist} system's weight parameters map onto California's criteria
+in a natural way.
+
+\textbf{Criterion 1 (population equality)} is enforced directly: the
+algorithm requires population balance within $\pm 0.5\%$ of the
+equal-population target, stricter than the legal requirement for congressional
+districts.
+
+\textbf{Criterion 2 (VRA compliance)} is addressed through VRASection, which
+increases the edge weight on adjacency edges connecting tracts with high
+minority-population fractions, encouraging the algorithm to keep minority
+communities together.  \citet{dellaLibera2026vra} demonstrates that VRASection
+produces more majority-minority districts than the compactness-only baseline.
+
+\textbf{Criterion 3 (geographic contiguity)} is an invariant enforced by the
+algorithm's adjacency-graph construction: only geographically contiguous
+tracts are considered adjacent, so every output district is contiguous by
+construction.
+
+\textbf{Criterion 4 (minimization of city and county splits)} corresponds to
+the county-sticky edge weight in the \texttt{redist} system.  Increasing the
+weight on county-boundary adjacency edges penalizes splits.  The county-sticky
+weight can be calibrated to California's specific county structure, with
+larger counties (Los Angeles, San Diego) receiving higher weights to reflect
+their larger legislative significance.
+
+\textbf{Criterion 5 (geographic compactness)} is the algorithm's primary
+objective through METIS edge-cut minimization.  Polsby-Popper and Reock
+compactness scores for California algorithmic districts exceed the CRC's
+enacted map on average.
+
+\textbf{Criterion 6 (preservation of communities of interest)} is addressed
+through the Commission's adjustment authority, as described for the AIRC in
+Section~2.
+
+\subsection{The Proportionality Consideration}
+
+California's criteria do not include partisan proportionality as a statutory
+criterion, but CRC commissioners have historically considered proportionality
+as a non-binding guideline when evaluating competing plans.  Algorithmic maps
+for California tend to produce partisan outcomes close to the statewide
+Democratic vote share (approximately 63\% in 2020 presidential results)
+because they optimize geometry rather than partisan outcomes.
+
+The relevant question is whether the CRC would find an algorithmic starting
+plan adequate.  Given that the algorithm satisfies criteria 1--5 quantifiably
+and reproducibly, and given that criterion 6 is reserved for Commission
+judgment, the CRC would be in the same position as the AIRC: using the
+algorithm output as a constrained starting plan and applying community-of-interest
+adjustments where evidence supports them.
+
+\subsection{VRASection and California's Minority Communities}
+
+California has substantial Latino, Asian American, and Black populations that
+generate VRA obligations.  The Los Angeles Basin contains multiple majority-Latino
+census tracts; the San Francisco Bay Area contains significant Asian American
+communities.
+
+VRASection addresses these concentrations by applying enhanced edge weights
+that reflect minority population fractions.  The specific threshold for VRA
+protection can be set to reflect the CVAP (Citizen Voting Age Population)
+percentages required by VRA analysis rather than the total population.
+\citet{dellaLibera2026vra} and \citet{dellaLibera2026threshold} develop the
+calibration methodology.
+
+Under California's criteria ordering, VRA compliance ranks second (after
+population equality), so the VRASection weight is applied before the
+county-sticky weight in the algorithm's optimization.  This ensures that
+minority-opportunity districts are preserved even where county preservation
+would require splitting them.

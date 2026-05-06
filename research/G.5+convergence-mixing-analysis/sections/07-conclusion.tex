@@ -1,0 +1,71 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+We have established theoretical and empirical mixing time bounds for
+redistricting Markov chains on planar census-tract graphs.
+
+\paragraph{Theoretical.}
+For the lazy reversible \recom{} chain on a planar graph with $n$ tracts,
+the spectral gap satisfies $\sgap = \Omega(1/n^2)$, implying
+$\tmix = O(n^2 \log n)$.
+For California ($n = 8{,}057$), this bound is approximately $10^9$ steps.
+
+\paragraph{Empirical.}
+In practice, \recom{} achieves $\rhat < 1.1$ (the G.4 convergence
+criterion) in 2{,}000--20{,}000 steps, three to four orders of magnitude
+faster than the theoretical bound.
+The practical mixing time scales approximately as $400k$ (steps per
+district), not $O(n^2)$.
+
+\paragraph{ConvergenceSweep.}
+The \cs{} algorithm provides a deterministic $O(T \cdot n)$ stopping
+criterion that is $\approx 300\times$ faster than certified ensemble
+sampling for California.
+For plan generation under the DIA statute, \cs{} is unambiguously
+preferable.
+
+\paragraph{Division of labor.}
+Ensemble methods are irreplaceable for auditing enacted maps and
+characterising the feasible plan space.
+\cs{} is irreplaceable for generating the statutory plan.
+These are complementary roles that should coexist in the DIA framework.
+
+\subsection{Open Problems}
+
+\begin{enumerate}
+\item \textbf{Tight mixing time bounds.}
+      The $O(n^2 \log n)$ bound is unlikely to be tight; the empirical
+      $O(k)$ scaling suggests the true mixing time may be polynomial in
+      $k$ rather than $n$.
+      A formal proof of this conjecture remains open.
+
+\item \textbf{Non-reversible chains.}
+      The spectral gap bound applies to reversible chains.
+      The original \recom{} proposal (without Metropolis correction) is
+      not reversible, and its mixing time analysis requires different tools.
+
+\item \textbf{Concentration bounds.}
+      Formalising the observation that high-compactness plans dominate
+      the stationary distribution (explaining the theory-practice gap)
+      would require tail bounds on the Polsby-Popper distribution under
+      the uniform measure over $\mathcal{P}$.
+
+\item \textbf{Multi-chain convergence.}
+      The G.4 diagnostics use $m = 10$ chains.
+      The optimal number of chains for efficiency under a fixed step
+      budget is an open question.
+\end{enumerate}
+
+\subsection{Implications for Redistricting Practice}
+
+The practical upshot of this paper is simple: for states with $k \leq 20$,
+run at least 10{,}000 ensemble steps and certify with G.4 diagnostics.
+For $k > 20$, run at least $500k$ steps.
+Always report $\rhat$, $\ess$, and $\ham(1)$.
+
+For statutory plan generation, use \cs{}.
+The MCMC mixing time question is not relevant to plan generation; it
+is relevant only to ensemble-based audit methods.
+Courts and legislatures should understand this distinction clearly.

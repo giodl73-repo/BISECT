@@ -1,0 +1,110 @@
+\section{Empirical Comparison}
+\label{sec:comparison}
+
+We compare tract and block-group resolution redistricting for three state
+house chambers that span the range of the $k/n$ ratio:
+Washington ($k/n = 0.067$, just above threshold), Texas ($k/n = 0.028$,
+just below threshold), and California ($k/n = 0.009$, far below threshold).
+
+\subsection{Washington House: $k=98$, $n_{\rm tracts}=1{,}458$, $k/n = 0.067$}
+\label{sec:comparison:wa}
+
+Washington's House sits just above the $0.05$ threshold, making it an
+ideal test case for the resolution selection rule.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Metric & Tract ($n=1{,}458$) & Block-group ($n=4{,}874$) & Difference \\
+\midrule
+Mean PP       & 0.368 & 0.398 & $+0.030$ \\
+Min PP        & 0.121 & 0.143 & $+0.022$ \\
+Max pop.\ dev & 0.80\% & 0.40\% & $-0.40$\,pp \\
+Units/district & 14.9 & 49.7 & $+34.8$ \\
+County splits & 14 & 11 & $-3$ \\
+Runtime (s)   & 45 & 180 & $+135$ \\
+\bottomrule
+\end{tabular}
+\caption{Washington House: tract vs.\ block-group resolution. Block-group
+  resolution gives mean PP = 0.398 vs.\ 0.368 at tract (+8.2\%), maximum
+  deviation 0.40\% vs.\ 0.80\%, and 3 fewer county splits.
+  Runtime increases 4$\times$. The improvements confirm that block-group
+  resolution is the correct choice for $k/n = 0.067 > 0.05$.}
+\label{tab:wa-comparison}
+\end{table}
+
+The PP improvement of $+0.030$ (8.2\%) is substantial and confirms the
+resolution selection rule: at $k/n = 0.067$, tract resolution is inadequate
+and block-group resolution produces meaningfully better maps.
+
+The maximum population deviation improvement from $0.80\%$ to $0.40\%$ is
+particularly important. At tract resolution, the minimum achievable deviation
+is constrained by the tract-to-district population ratio: with $14.9$ tracts
+per district, even optimal tract assignment cannot achieve $0.5\%$ balance,
+and the pipeline achieves $0.80\%$ after 15 boundary-swap iterations.
+At block-group resolution (49.7 units per district), $0.40\%$ balance is
+readily achievable in 8 iterations.
+
+\subsection{Texas House: $k=150$, $n_{\rm tracts}=5{,}265$, $k/n = 0.028$}
+\label{sec:comparison:tx}
+
+Texas's House sits below the $0.05$ threshold, making it a test case where
+the rule predicts tract resolution should suffice.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Metric & Tract ($n=5{,}265$) & Block-group ($n=15{,}811$) & Difference \\
+\midrule
+Mean PP       & 0.374 & 0.382 & $+0.008$ \\
+Min PP        & 0.098 & 0.104 & $+0.006$ \\
+Max pop.\ dev & 0.44\% & 0.38\% & $-0.06$\,pp \\
+Units/district & 35.1 & 105.4 & $+70.3$ \\
+County splits & 49 & 48 & $-1$ \\
+Runtime (s)   & 95 & 380 & $+285$ \\
+\bottomrule
+\end{tabular}
+\caption{Texas House: tract vs.\ block-group resolution. Block-group resolution
+  gives marginal improvement in PP (+2.1\%) and population deviation (-0.06\,pp),
+  at $4\times$ the runtime. The small improvement confirms that tract resolution
+  is adequate for $k/n = 0.028 < 0.05$.}
+\label{tab:tx-comparison}
+\end{table}
+
+For Texas, the PP improvement at block-group resolution is only $+0.008$ (2.1\%)---
+small enough that it does not justify the $4\times$ runtime increase.
+The maximum deviation improvement of $0.06$\,pp is negligible for practical purposes.
+This confirms the rule: at $k/n = 0.028$, tract resolution is adequate.
+
+\subsection{California Assembly: $k=80$, $n_{\rm tracts}=8{,}997$, $k/n = 0.009$}
+\label{sec:comparison:ca}
+
+California's Assembly is a low-$k/n$ chamber where tract resolution should
+be clearly adequate.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrrrr}
+\toprule
+Metric & Tract ($n=8{,}997$) & Block-group ($n=25{,}914$) & Difference \\
+\midrule
+Mean PP       & 0.391 & 0.393 & $+0.002$ \\
+Min PP        & 0.112 & 0.113 & $+0.001$ \\
+Max pop.\ dev & 0.39\% & 0.37\% & $-0.02$\,pp \\
+Units/district & 112.5 & 323.9 & $+211.4$ \\
+County splits & 10 & 10 & $0$ \\
+Runtime (s)   & 140 & 520 & $+380$ \\
+\bottomrule
+\end{tabular}
+\caption{California Assembly: tract vs.\ block-group resolution. Differences
+  are negligible ($+0.002$ PP, $-0.02$\,pp deviation). Tract resolution is
+  clearly adequate for $k/n = 0.009 \ll 0.05$. Block-group resolution provides
+  no meaningful benefit at $3.7\times$ the runtime.}
+\label{tab:ca-comparison}
+\end{table}
+
+For California, the PP improvement at block-group resolution is effectively
+zero ($+0.002$), confirming that tract resolution is more than adequate for
+low-$k/n$ chambers. The $3.7\times$ runtime increase provides no benefit.

@@ -222,7 +222,7 @@ South Carolina & 3 & 1         & 52.6\% \\
 
 \textbf{Partitioner}: METIS 5.1.0 (\texttt{gpmetis}) with flags \texttt{-contig} (enforce contiguity), \texttt{-minconn} (minimize subdomain connectivity), \texttt{-niter=100} (refinement iterations).
 
-\textbf{Platform}: Python 3.13 with GeoPandas for spatial operations, NumPy for weight calculations.
+\textbf{Platform}: \texttt{redist} Rust binary with \texttt{--partition-mode metis-vra} (vra-aligned edge weights).
 
 \textbf{Analysis}: Count MM districts with $\geq 50\%$ minority population. Report maximum minority concentration achieved and number of districts meeting threshold. For edge-weighted approach, additionally measure edge cut (unweighted and weighted) to assess compactness tradeoff.
 

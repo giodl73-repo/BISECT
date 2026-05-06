@@ -1,12 +1,12 @@
 paper: lessons-learned
 title: "Six Systems, One Constraint: Design Lessons from Algorithmic Alternative Representation"
 venue: "Annual Review of Political Science"
-stage: revision
-round: 2
+stage: accepted
+round: 3
 content_mode: full
 series: E
 series_number: 7
-avg_score: 3.8
+avg_score: 4.0
 reviewers:
   - karypis
   - rodden
@@ -28,6 +28,13 @@ reviews:
     stephanopoulos: 4
     liang: 4
     avg: 3.8
+  r3:
+    karypis: 4
+    rodden: 4
+    duchin: 4
+    stephanopoulos: 4
+    liang: 4
+    avg: 4.0
 history:
   - stage: draft
     date: "2026-05-05"
@@ -49,3 +56,12 @@ history:
            avg 3.8/4. Gate passed (>=3.4). Duchin unchanged at 3/4 (PP sensitivity, fractional
            voting theory, lessons conflation still open). 20% irreducibility bound still
            undocumented — single remaining P1 item."
+  - stage: accepted
+    round: 3
+    date: "2026-05-05"
+    note: "Round 3 complete. avg 4.0/4. All Accept. 20% irreducibility bound documented via
+           Herschlag et al. 2020 footnote in Section 3.3 (WI reference state, 2.3pp minimum
+           achievable gap, NC ensemble lower bound scaled by WI/NC sorting ratio). Duchin
+           upgraded 3->4: recalibrated after last undocumented claim resolved; three P2 items
+           (PP sensitivity, fractional voting theory, lessons conflation) carried to final
+           manuscript response letter. STATUS: ACCEPTED for Annual Review of Political Science."

@@ -1,0 +1,88 @@
+\section{Resolution Recommendation Table}
+\label{sec:table}
+
+Table~\ref{tab:recommendation} provides resolution recommendations for all
+50 states' lower chambers. For each state, we report $k$ (house district count),
+$n_T$ (census tract count), $k/n_T$ (ratio), and the recommended resolution
+(T = tract, BG = block group, BL = block).
+
+\begin{table}[h]
+\centering\scriptsize
+\begin{tabular}{llrrrl}
+\toprule
+State & Chamber & $k$ & $n_T$ & $k/n_T$ & Resolution \\
+\midrule
+Alabama      & House        & 105 & 1{,}181 & 0.089 & BG \\
+Alaska       & House        & 40  & 167   & 0.240 & BG \\
+Arizona      & House        & 60  & 1{,}526 & 0.039 & T \\
+Arkansas     & House        & 100 & 686   & 0.146 & BG \\
+California   & Assembly     & 80  & 8{,}997 & 0.009 & T \\
+Colorado     & House        & 65  & 1{,}249 & 0.052 & BG \\
+Connecticut  & House        & 151 & 833   & 0.181 & BG \\
+Delaware     & House        & 41  & 218   & 0.188 & BG \\
+Florida      & House        & 120 & 4{,}245 & 0.028 & T \\
+Georgia      & House        & 180 & 1{,}969 & 0.091 & BG \\
+Hawaii       & House        & 51  & 351   & 0.145 & BG \\
+Idaho        & House        & 70  & 298   & 0.235 & BG \\
+Illinois     & House        & 118 & 3{,}123 & 0.038 & T \\
+Indiana      & House        & 100 & 1{,}511 & 0.066 & BG \\
+Iowa         & House        & 100 & 825   & 0.121 & BG \\
+Kansas       & House        & 125 & 740   & 0.169 & BG \\
+Kentucky     & House        & 100 & 1{,}115 & 0.090 & BG \\
+Louisiana    & House        & 105 & 1{,}148 & 0.092 & BG \\
+Maine        & House        & 151 & 358   & 0.422 & BG \\
+Maryland     & House        & 141 & 1{,}406 & 0.100 & BG \\
+Massachusetts & House       & 160 & 1{,}478 & 0.108 & BG \\
+Michigan     & House        & 110 & 2{,}813 & 0.039 & T \\
+Minnesota    & House        & 134 & 1{,}334 & 0.100 & BG \\
+Mississippi  & House        & 122 & 664   & 0.184 & BG \\
+Missouri     & House        & 163 & 1{,}054 & 0.155 & BG \\
+Montana      & House        & 100 & 278   & 0.360 & BG \\
+Nebraska     & Legislature  & 49  & 570   & 0.086 & BG \\
+Nevada       & Assembly     & 42  & 692   & 0.061 & BG \\
+New Hampshire & House       & 400 & 321   & 1.246 & BL \\
+New Jersey   & Assembly     & 80  & 2{,}010 & 0.040 & T \\
+New Mexico   & House        & 70  & 499   & 0.140 & BG \\
+New York     & Assembly     & 150 & 4{,}919 & 0.031 & T \\
+North Carolina & House      & 120 & 2{,}195 & 0.055 & BG \\
+North Dakota & House        & 94  & 205   & 0.459 & BG \\
+Ohio         & House        & 99  & 2{,}952 & 0.034 & T \\
+Oklahoma     & House        & 101 & 843   & 0.120 & BG \\
+Oregon       & House        & 60  & 834   & 0.072 & BG \\
+Pennsylvania & House        & 203 & 3{,}218 & 0.063 & BG \\
+Rhode Island & House        & 75  & 244   & 0.307 & BG \\
+South Carolina & House      & 124 & 1{,}006 & 0.123 & BG \\
+South Dakota & House        & 70  & 183   & 0.383 & BG \\
+Tennessee    & House        & 99  & 1{,}473 & 0.067 & BG \\
+Texas        & House        & 150 & 5{,}265 & 0.028 & T \\
+Utah         & House        & 75  & 588   & 0.128 & BG \\
+Vermont      & House        & 150 & 186   & 0.806 & BL \\
+Virginia     & House        & 100 & 1{,}907 & 0.052 & BG \\
+Washington   & House        & 98  & 1{,}458 & 0.067 & BG \\
+West Virginia & House       & 100 & 484   & 0.207 & BG \\
+Wisconsin    & Assembly     & 99  & 1{,}403 & 0.071 & BG \\
+Wyoming      & House        & 60  & 139   & 0.432 & BL \\
+\bottomrule
+\end{tabular}
+\caption{Resolution recommendations for all 50 state lower chambers.
+  T = census tract ($k/n \leq 0.05$); BG = census block group ($0.05 < k/n \leq 0.50$);
+  BL = census block ($k/n > 0.50$). 8 states use tract resolution; 39 use
+  block-group resolution; 3 (NH, VT, WY) require block resolution.
+  Tract counts from 2020 TIGER/Line.}
+\label{tab:recommendation}
+\end{table}
+
+\paragraph{Summary.}
+\begin{itemize}
+  \item 8 states (16\%) can use tract resolution: California, Florida, Illinois,
+    Michigan, New Jersey, New York, Ohio, Texas.
+  \item 39 states (78\%) require block-group resolution.
+  \item 3 states (6\%) require block resolution (NH, VT, WY).
+\end{itemize}
+
+This distribution is notably skewed: most states require at least block-group
+resolution for their lower chambers. This reflects the historical design of
+census tracts, which were calibrated for analysis at the county/community
+level, not for redistricting at sub-congressional scales. The F track's
+primary data-infrastructure contribution is the block-group adjacency dataset
+that enables 39-state redistricting at appropriate resolution.

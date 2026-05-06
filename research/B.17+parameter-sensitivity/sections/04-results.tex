@@ -1,0 +1,160 @@
+\section{Results}
+\label{sec:results}
+
+\subsection{METIS Imbalance Factor ($\ufactor$)}
+
+\begin{table}[h]
+\centering
+\caption{Effect of $\ufactor$ on partisan and compactness outcomes.
+         $\Delta D$ is the change from the baseline run.
+         $\Delta \overline{\PP}$ is the change in mean Polsby-Popper.}
+\label{tab:ufactor-results}
+\begin{tabular}{ccccc}
+\toprule
+$\ufactor$ & $D_{\rm nat}$ & $\Delta D$ & $\overline{\PP}$ & $\Delta\overline{\PP}$ \\
+\midrule
+0.1\% & 211.2 & $+0.2$ & 0.318 & $+0.009$ \\
+0.5\% & 211.1 & $+0.1$ & 0.314 & $+0.005$ \\
+1.0\% (default) & 211.0 & 0.0 & 0.309 & 0.0 \\
+2.0\% & 210.9 & $-0.1$ & 0.305 & $-0.004$ \\
+5.0\% & 210.8 & $-0.2$ & 0.299 & $-0.010$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Partisan}: The full range of $\ufactor$ from 0.1\% to 5\% shifts
+$D_{\rm nat}$ by only 0.4 seats nationally---below the level of statistical
+noise ($\sigma \approx 0.8$ from B.7 seed variance).
+\textbf{Compactness}: $\overline{\PP}$ varies by $\pm 0.010$ around the
+baseline, a 3.2\% relative change.
+Tighter imbalance (lower $\ufactor$) produces slightly more compact districts.
+
+\subsection{County Edge Weight ($\acounty$)}
+
+\begin{table}[h]
+\centering
+\caption{Effect of $\acounty$ on partisan and county-split outcomes.}
+\label{tab:acounty-results}
+\begin{tabular}{cccc}
+\toprule
+$\acounty$ & $D_{\rm nat}$ & $\Delta D$ & County splits $C$ \\
+\midrule
+1.0  & 211.1 & $+0.1$ & 312 \\
+2.0  & 211.0 & 0.0    & 287 \\
+3.0 (default) & 211.0 & 0.0 & 271 \\
+5.0  & 210.9 & $-0.1$ & 248 \\
+10.0 & 210.9 & $-0.1$ & 201 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+County edge weight has a strong effect on county integrity (splits decrease
+from 312 at $\acounty = 1$ to 201 at $\acounty = 10$) with negligible
+partisan effect ($\Delta D \leq 0.2$ nationally).
+
+\subsection{ConvergenceSweep Threshold ($T$)}
+
+\begin{table}[h]
+\centering
+\caption{Effect of $T$ on outcomes and runtime.}
+\label{tab:T-results}
+\begin{tabular}{cccc}
+\toprule
+$T$ & $D_{\rm nat}$ & $\Delta D$ & Wall time (50 states) \\
+\midrule
+100  & 211.1 & $+0.1$ & 14 min \\
+200  & 211.0 & 0.0    & 22 min \\
+400  & 211.0 & 0.0    & 38 min \\
+600 (default) & 211.0 & 0.0 & 54 min \\
+1000 & 211.0 & 0.0    & 88 min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+$T = 100$ produces a slightly higher $D_{\rm nat}$ (0.1 seats) because
+it occasionally misses the Georgia global minimum (B.16 tail = 511).
+For $T \geq 200$, outcomes are identical across all 50 states.
+Runtime scales linearly in $T$.
+
+\subsection{Area Swing ($\aswing$)}
+
+\begin{table}[h]
+\centering
+\caption{Effect of $\aswing$ on partisan and compactness outcomes.}
+\label{tab:aswing-results}
+\begin{tabular}{cccc}
+\toprule
+$\aswing$ & $D_{\rm nat}$ & $\Delta D$ & $\overline{\PP}$ \\
+\midrule
+1.05 & 211.1 & $+0.1$ & 0.311 \\
+1.07 & 211.1 & $+0.1$ & 0.310 \\
+1.10 (default) & 211.0 & 0.0 & 0.309 \\
+1.15 & 210.9 & $-0.1$ & 0.308 \\
+1.20 & 210.9 & $-0.1$ & 0.307 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{VRA Boost Weight ($\wvra$)}
+
+\begin{table}[h]
+\centering
+\caption{Effect of $\wvra$ on partisan and compactness outcomes.}
+\label{tab:wvra-results}
+\begin{tabular}{cccc}
+\toprule
+$\wvra$ & $D_{\rm nat}$ & $\Delta D$ & $\overline{\PP}$ \\
+\midrule
+0.2 & 211.1 & $+0.1$ & 0.311 \\
+0.3 & 211.0 &  0.0   & 0.310 \\
+0.4 (default) & 211.0 & 0.0 & 0.309 \\
+0.5 & 211.0 &  0.0   & 0.308 \\
+0.6 & 210.9 & $-0.1$ & 0.306 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Higher VRA boost slightly reduces compactness (as expected: minority
+communities are protected at some compactness cost) with negligible
+partisan effect.
+
+\subsection{Joint Parameter Sweep ($\ufactor \times \acounty$)}
+\label{sec:joint-sweep}
+
+To test whether interactions between parameters amplify partisan effects
+beyond the single-parameter bounds, we ran a full factorial sweep of
+$\ufactor \times \acounty$ (3 levels $\times$ 4 levels = 12 combinations)
+for Wisconsin and North Carolina, the two states with the most contested
+partisan outcomes in prior papers.
+
+\begin{table}[h]
+\centering
+\caption{Joint factorial sweep: $D$-seat deviation from baseline for
+         Wisconsin (WI) and North Carolina (NC) across all 12 $\ufactor
+         \times \acounty$ combinations.  Maximum deviation shown.}
+\label{tab:joint-sweep}
+\begin{tabular}{cccc}
+\toprule
+$\ufactor$ & $\acounty$ & $\Delta D$ (WI) & $\Delta D$ (NC) \\
+\midrule
+0.5\% & 1.0  & $+0.3$ & $+0.2$ \\
+0.5\% & 3.0  & $+0.2$ & $+0.1$ \\
+0.5\% & 5.0  & $+0.2$ & $+0.1$ \\
+0.5\% & 10.0 & $+0.1$ & $+0.1$ \\
+1.0\% & 1.0  & $+0.1$ & $+0.1$ \\
+1.0\% & 3.0  & $0.0$  & $0.0$  \\
+1.0\% & 5.0  & $-0.1$ & $0.0$  \\
+1.0\% & 10.0 & $-0.1$ & $-0.1$ \\
+2.0\% & 1.0  & $0.0$  & $+0.1$ \\
+2.0\% & 3.0  & $-0.1$ & $-0.1$ \\
+2.0\% & 5.0  & $-0.2$ & $-0.2$ \\
+2.0\% & 10.0 & $-0.4$ & $-0.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Maximum partisan deviation in the joint sweep: $\Delta D$-seats $\leq 0.4$
+(WI) and $\leq 0.3$ (NC).
+The interaction effect does not amplify beyond the single-parameter
+bounds; the worst-case cell ($\ufactor = 2.0\%$, $\acounty = 10$) is
+consistent with the additive upper bound from Section~\ref{sec:key-finding}.

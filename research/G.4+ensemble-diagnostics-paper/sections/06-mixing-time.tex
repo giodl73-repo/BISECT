@@ -1,0 +1,73 @@
+\section{Mixing Time Estimates}
+\label{sec:mixing-time}
+
+\subsection{Definition}
+
+The \emph{total variation mixing time} of a Markov chain with transition
+kernel $P$ is:
+\[
+  \tmix(\epsilon) = \min\left\{ t \geq 0 :
+  \max_{x \in \Omega} \| P^t(x, \cdot) - \pi \|_{\mathrm{TV}} \leq \epsilon \right\},
+\]
+where $\|\mu - \nu\|_{\mathrm{TV}} = \frac{1}{2}\sum_x |\mu(x) - \nu(x)|$
+is the total variation distance.
+For practical purposes, $\epsilon = 0.01$ is a reasonable target.
+
+\subsection{From R-hat to Mixing Time}
+
+$\rhat < 1.1$ is a necessary but not sufficient condition for convergence
+in total variation.
+A rule of thumb from \citet{gelman2013} is that $\rhat < 1.1$ corresponds
+roughly to $\| P^t(x, \cdot) - \pi \|_{\mathrm{TV}} < 0.1$ for the
+scalar function $f$.
+Full total-variation mixing at $\epsilon = 0.01$ may require several times
+more steps.
+
+For planning purposes, we use the $\rhat < 1.1$ criterion as a proxy for
+mixing time, recognising that it provides a lower bound on the steps needed
+for rigorous total-variation convergence.
+
+\subsection{Empirical Estimates}
+
+From Table~\ref{tab:mixing-times}, mixing time estimates for the six states
+under the $\rhat < 1.1$ proxy are:
+
+\begin{table}[h]
+\centering
+\caption{Estimated mixing time $\hat{t}_{\rm mix}$ (steps to $\rhat < 1.1$
+         for Polsby-Popper) and steps per second for a 2024-generation
+         workstation.}
+\label{tab:mixing-time-est}
+\begin{tabular}{lccc}
+\toprule
+State & $\hat{t}_{\rm mix}$ & Steps/sec & Wall time \\
+\midrule
+NC & 2{,}000 & 4.2 & $\approx$8 min \\
+WI & 1{,}500 & 7.1 & $\approx$4 min \\
+GA & 2{,}500 & 4.2 & $\approx$10 min \\
+PA & 3{,}000 & 3.5 & $\approx$14 min \\
+TX &10{,}000 & 1.6 & $\approx$104 min \\
+CA &20{,}000 & 1.1 & $\approx$303 min \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+For Texas and California, a single certified ensemble run exceeds two hours.
+Parallel chains on a multi-core machine are essential.
+
+\subsection{Comparison to Statutory Threshold}
+
+The \cs{} algorithm with $T = 600$ typically completes in under 60 seconds
+for any state (B.16 timing data).
+A \recom{} ensemble certified to $\rhat < 1.1$ requires 4 minutes (WI) to
+5 hours (CA) to collect sufficient samples.
+
+This comparison illuminates the purpose of each method:
+\begin{itemize}
+\item \cs{} is appropriate for plan \emph{generation}: it produces one
+      optimal plan quickly and deterministically.
+\item Ensemble sampling is appropriate for plan \emph{evaluation}: it
+      characterises the space of valid plans and can locate outliers.
+\end{itemize}
+
+The two methods are complementary, not competing.

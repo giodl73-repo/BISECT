@@ -1,0 +1,151 @@
+%% B.18 — Multi-Reapportionment Stability Paper
+%% References
+
+%% ===================================================================
+%% B-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{b11paper,
+  author = {Della-Libera, Gio},
+  title  = {{ApportionRegions}: Prime-Factorisation Bisection Trees
+            Linked to {Huntington-Hill} Apportionment},
+  year   = {2026},
+  note   = {B.11 in Algorithmic Redistricting series.
+            Key result: zero seed variance for tree structure.
+            Tree topology is fully determined by the prime factorisation
+            of $k$. B.18 extends this by asking what happens to the
+            tree when $k$ changes at reapportionment.},
+}
+
+@misc{b15paper,
+  author = {Della-Libera, Gio},
+  title  = {{StabilitySection}: Cross-Census Stability of
+            {GeoSection}-Optimal Redistricting Maps},
+  year   = {2026},
+  note   = {B.15 in Algorithmic Redistricting series.
+            67\,\% of states stable across 2000/2010/2020.
+            Iowa: canonical unstable state ($\Delta f = 0.31$).
+            B.18 extends the stability analysis to seat-count changes.},
+}
+
+%% ===================================================================
+%% CENSUS BUREAU PROJECTIONS
+%% ===================================================================
+
+@techreport{census2030proj,
+  author      = {{U.S. Census Bureau}},
+  title       = {Projected Congressional Apportionment: 2030 Projections},
+  institution = {U.S. Census Bureau, Population Division},
+  year        = {2025},
+  note        = {Working projections for 2030 apportionment.
+                 TX: $38 \to 41$; CA: $52 \to 50$; FL: $28 \to 29$;
+                 NY: $26 \to 25$. Subject to revision pending final
+                 2030 census enumeration.},
+}
+
+@techreport{census2020apportionment,
+  author      = {{U.S. Census Bureau}},
+  title       = {2020 Census Apportionment Results},
+  institution = {U.S. Census Bureau},
+  year        = {2021},
+  url         = {https://www.census.gov/data/tables/2020/dec/2020-apportionment-data.html},
+  note        = {Final 2020 apportionment. Baseline $k$ values used to
+                 compute current bisection trees in B.18.},
+}
+
+%% ===================================================================
+%% HUNTINGTON-HILL APPORTIONMENT
+%% ===================================================================
+
+@article{huntington1928,
+  author  = {Huntington, Edward V.},
+  title   = {The Apportionment of Representatives in Congress},
+  journal = {Transactions of the American Mathematical Society},
+  volume  = {30},
+  number  = {1},
+  pages   = {85--110},
+  year    = {1928},
+  doi     = {10.2307/1989268},
+  note    = {Original Huntington-Hill equal proportions method.
+             The method of equal proportions is the basis for the
+             \hh{} apportionment used in \ar{}.},
+}
+
+@article{balinski1982,
+  author  = {Balinski, Michel L. and Young, H. Peyton},
+  title   = {Fair Representation: Meeting the Ideal of One Man, One Vote},
+  journal = {Yale University Press},
+  year    = {1982},
+  note    = {Comprehensive treatment of apportionment methods.
+             Chapter 4 covers Huntington-Hill and its properties.
+             Seat allocation stability under population change.},
+}
+
+%% ===================================================================
+%% NUMBER THEORY / PRIME FACTORIZATION
+%% ===================================================================
+
+@book{hardy2008,
+  author    = {Hardy, G.H. and Wright, E.M.},
+  title     = {An Introduction to the Theory of Numbers},
+  edition   = {6},
+  publisher = {Oxford University Press},
+  year      = {2008},
+  note      = {Standard reference for number theory. The fundamental
+               theorem of arithmetic (Chapter 1) is the basis for the
+               prime factorisation tree structure of \ar{}.
+               Chapter 22 discusses the density of primes, relevant to
+               how often large district counts are prime.},
+}
+
+%% ===================================================================
+%% REDISTRICTING ENSEMBLE (GERRYCHAIN BASELINE)
+%% ===================================================================
+
+@article{deford2021,
+  author  = {DeFord, Daryl and Duchin, Moon and Solomon, Justin},
+  title   = {Recombination: A Family of Markov Chains for Redistricting},
+  journal = {Harvard Data Science Review},
+  volume  = {3},
+  number  = {1},
+  year    = {2021},
+  doi     = {10.1162/99608f92.eb30390f},
+  note    = {ReCom chain used to establish the GerryChain baseline:
+             seat-change disruption from reapportionment is less than
+             the disruption from a single MCMC remix step.},
+}
+
+@article{fifield2020,
+  author  = {Fifield, Benjamin and Imai, Kosuke and Kawahara, Jun and
+             Kenny, Christopher T.},
+  title   = {The Essential Role of Empirical Validation in Legislative
+             Redistricting Simulation},
+  journal = {Statistics and Public Policy},
+  volume  = {7},
+  number  = {1},
+  pages   = {52--68},
+  year    = {2020},
+  doi     = {10.1080/2330443X.2020.1791773},
+  note    = {GerryChain ensemble methodology used to establish the
+             comparison baseline for boundary disruption.},
+}
+
+%% ===================================================================
+%% LEGAL
+%% ===================================================================
+
+@misc{wesberry1964,
+  title  = {Wesberry v.\ Sanders},
+  year   = {1964},
+  note   = {376 U.S. 1 (1964). Equal population requirement.
+            Motivates the decadal fresh recomputation of the \ar{} tree
+            from the new apportionment --- the intended DIA behavior.},
+}
+
+@misc{rucho2019,
+  title  = {Rucho v.\ Common Cause},
+  year   = {2019},
+  note   = {588 U.S. 684 (2019). Redistricting remains a political
+            process. The DIA's decadal recomputation is more stable
+            than any political redistricting process.},
+}

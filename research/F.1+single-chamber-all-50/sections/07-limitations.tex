@@ -1,0 +1,43 @@
+\section{Limitations}
+\label{sec:limitations}
+
+\paragraph{Block-group resolution ceiling.}
+For the five states with $k/n_{\rm bg} > 0.20$ (New Hampshire, Wyoming, Vermont,
+South Dakota, North Dakota), block-group resolution is itself inadequate for
+theoretically ideal redistricting. Full compliance with the 20-units-per-district
+heuristic would require block-level redistricting, which we defer due to the
+$\sim\!40$~GB data requirement and $\sim\!10\times$ longer runtimes. Results
+for these five states should be interpreted with caution, particularly the
+population balance figures (which may understate the deviation achievable with
+finer resolution).
+
+\paragraph{Single-seed results.}
+All 50-state results use seed~42. Companion paper B.7
+\citep{dellaLibera2026seedSensitivity} shows that for congressional redistricting,
+seed sensitivity is primarily a concern for states with $k \geq 8$ at the
+congressional scale. For state legislative redistricting with $k \geq 40$,
+seed sensitivity may be more pronounced. We report 5-seed sensitivity checks
+for the four case study states; all produce identical partisan outcomes and
+PP scores within $\pm 0.005$.
+
+\paragraph{No political data.}
+As with all \texttt{redist} pipeline outputs, the state house maps in this
+paper use no political data: no precinct-level election returns, no partisan
+registration figures, no racial data. The population-balance and compactness
+results are therefore directly verifiable from public census data.
+Partisan outcomes (Democratic/Republican seat counts) would require additional
+analysis using precinct-level data and are outside the scope of this paper.
+
+\paragraph{VRA compliance not assessed.}
+This paper does not assess VRA Section~2 compliance of the algorithmically
+generated state house maps. Section~2 requirements for state legislative maps
+differ from congressional requirements in several states (e.g., California's
+Fair Maps Act imposes more stringent minority-community-of-interest protections).
+VRA compliance is addressed in companion paper F.6
+\citep{dellaLibera2026vraStateLeg}.
+
+\paragraph{Comparison data availability.}
+Enacted 2020-cycle state house maps were available for 38 states at the time
+of analysis. 12 states had not yet finalized their maps or did not release
+machine-readable shapefiles. Results for these 12 states (county-splits
+comparison only) will be updated as data becomes available.

@@ -1,0 +1,55 @@
+\section{Introduction}
+\label{sec:intro}
+
+Compactness has been a criterion in redistricting law since at least the
+late 19th century.  Courts, legislatures, and redistricting commissions
+routinely cite compactness as a marker of a non-gerrymandered map.  The
+intuition: a compact district is one that ``looks like'' a geographic region,
+not a political construction.  A district that winds around cities to include
+partisan voters while excluding others is, by inspection, not compact.
+
+But compactness is more ambiguous than this intuition suggests.  First,
+there are many measures of compactness---Polsby-Popper \citep{polsby1991third},
+Reock \citep{reock1961note}, convex hull ratio, length-width ratio---and they
+do not always agree.  Second, compactness is not neutral in sorted states:
+more compact plans tend to produce more Republican seats, because Democratic
+voters are geographically concentrated in cities \citep{rodden2019why}.
+Third, an extremely compact plan can be a form of ``packing'': concentrating
+Democratic voters in a small number of very compact urban districts to
+maximise the number of Republican districts.
+
+The \ar{} algorithm \citep{dellaLibera2026b11} optimises the METIS edge-cut
+objective, which is correlated with but not identical to Polsby-Popper
+compactness.  The algorithm does not directly maximise compactness; it
+minimises the number of cross-district census-tract boundaries.  The resulting
+plans are compact but not maximally compact.
+
+\paragraph{Main questions.}
+\begin{enumerate}
+  \item Where does the \ar{} plan fall in the \recom{} ensemble's compactness
+    distribution?
+  \item Is the \ar{} plan an outlier in the legal sense?
+  \item How does compactness correlate with partisan outcome within the ensemble,
+    and what does this imply for the \ar{} plan's legal defensibility?
+\end{enumerate}
+
+\paragraph{Main findings.}
+\begin{enumerate}
+  \item The \ar{} plan falls at the $61$st--$72$nd percentile of mean
+    Polsby-Popper score across six states.  It is more compact than average
+    but not maximally compact.
+  \item The \ar{} plan is not an outlier in the legal sense: it is not at
+    the 95th percentile or above on any compactness measure.
+  \item Within the \recom{} ensemble, higher compactness tends to correlate
+    with more Republican seats in sorted states (the Rodden effect).  The
+    \ar{} plan's compactness is therefore consistent with---but does not
+    cause---its moderate Republican lean in sorted states.
+\end{enumerate}
+
+\paragraph{Organisation.}
+Section~\ref{sec:distribution} characterises the \recom{} compactness
+distribution.  Section~\ref{sec:pp-percentile} reports the \ar{} plan's
+PP percentile.  Section~\ref{sec:outlier} addresses the outlier question.
+Section~\ref{sec:correlation} examines the compactness-partisan correlation.
+Section~\ref{sec:legal} develops the legal defensibility argument.
+Section~\ref{sec:conclusion} concludes.

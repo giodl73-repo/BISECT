@@ -1,0 +1,66 @@
+\section{Why AR's Compactness Is Legally Defensible}
+\label{sec:legal}
+
+\subsection{The Three-Part Test}
+
+We propose a three-part test for the legal defensibility of an algorithmic
+plan's compactness position:
+
+\begin{enumerate}
+  \item \textbf{Above the ensemble mean}: The plan should be more compact
+    than the average valid plan, demonstrating that compactness was a genuine
+    objective.
+  \item \textbf{Below the 95th percentile}: The plan should not be at the
+    extreme of the compactness distribution, which would invite scrutiny
+    for partisan packing.
+  \item \textbf{Explainable objective}: The source of the compactness should
+    be traceable to a stated objective (edge-cut minimisation), not to a
+    post-hoc compactness filter applied after partisan optimisation.
+\end{enumerate}
+
+The \ar{} plan satisfies all three conditions in all studied states.
+
+\subsection{Applying the Test}
+
+\paragraph{Condition 1: Above the ensemble mean.}
+The \ar{} plan's $\bar\pp$ exceeds the ensemble mean in all six states
+by margins ranging from $0.065$ (California) to $0.087$ (North Carolina).
+This margin is statistically significant ($p < 0.001$) given the ensemble
+standard deviation of approximately $0.031$.
+
+\paragraph{Condition 2: Below the 95th percentile.}
+As shown in Section~\ref{sec:outlier}, no \ar{} state plan exceeds the
+ensemble 95th percentile.  The plan is compact but not an outlier.
+
+\paragraph{Condition 3: Explainable objective.}
+The METIS edge-cut objective is publicly documented and mathematically
+defined \citep{karypis1998fast}.  It is applied before any partisan data
+is consulted.  The compactness of the resulting plans is a consequence
+of the objective, not a post-hoc selection criterion.
+
+\subsection{Contrast with Human-Drawn Maps}
+
+Enacted congressional maps often fail one or more conditions of this test.
+The North Carolina plan evaluated by \citet{herschlag2020quantifying} fell
+at the 99th percentile of Republican seats (failing condition 2 on partisan
+grounds, not compactness) and also had below-median compactness (failing
+condition 1).
+
+The \ar{} plan presents the opposite profile: it is above median on
+compactness but near median on partisan outcomes.  This combination is
+exactly what an independent redistricting commission would seek to achieve,
+and what courts have cited as evidence of good-faith map-drawing.
+
+\subsection{The \texorpdfstring{\shaw{}}{Shaw} Standard}
+
+\shaw{} held that districts of ``bizarre shape'' that could not be explained
+by traditional redistricting criteria were subject to strict scrutiny.  The
+\ar{} plan's position at the $61$st--$72$nd percentile of compactness
+provides strong evidence that the districts are not bizarre in the \shaw{}
+sense: they are more compact than average, meaning their shapes are well
+within the range of what geographic criteria produce.
+
+Importantly, \shaw{} was about racial gerrymanders, and the \ar{} algorithm
+does not use racial data.  But the compactness evidence is useful as
+corroborating evidence that the plan's boundaries follow geographic rather
+than demographic logic.

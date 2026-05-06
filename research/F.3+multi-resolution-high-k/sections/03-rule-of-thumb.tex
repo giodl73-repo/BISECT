@@ -1,0 +1,78 @@
+\section{Rule of Thumb Derivation}
+\label{sec:rule}
+
+\subsection{The 20-Units-per-District Heuristic}
+\label{sec:rule:heuristic}
+
+The resolution selection rule is:
+\[
+  \text{Use block-group resolution if and only if } \frac{k}{n_{\rm tracts}} > 0.05.
+\]
+Equivalently: use tract resolution only if each district contains at least
+$n_{\rm tracts}/k \geq 20$ tracts on average.
+
+The threshold of 20 units per district is motivated by three considerations.
+
+\paragraph{Population balance feasibility.}
+For a census tract with median population 4,084 and a district with ideal
+population $T^* = T/k$, the finest achievable population deviation using
+whole-tract assignment is approximately:
+\[
+  \delta_{\min} \approx \frac{\text{median tract population}}{T^*}
+  = \frac{4{,}084}{T/k}.
+\]
+For $\delta_{\min} \leq 0.5\%$, we need:
+\[
+  \frac{4{,}084}{T/k} \leq 0.005 \implies T/k \geq 816{,}800.
+\]
+This would restrict tract-resolution redistricting to states with ideal district
+populations above $\sim\!800,000$---essentially only states with 1--2 congressional
+seats. For state legislative redistricting, tract resolution is inadequate
+for \emph{any} state using the balance criterion alone.
+
+However, this calculation is too pessimistic. In practice, the pipeline
+uses a post-processing boundary-swap algorithm that can fine-tune district
+boundaries by reassigning individual tracts. The effective minimum deviation
+depends on the variance of tract populations, not just the maximum. The 0.5\%
+constraint is consistently achievable when each district contains $\geq 20$
+tracts, because the central limit theorem ensures that the sum of 20 random
+tract populations has small variance relative to its mean.
+
+\paragraph{Compactness optimisation richness.}
+The number of distinct district configurations for a district containing
+$m$ tracts grows as $O(n^m / k^m)$ under a random graph model. For $m \geq 20$,
+the number of configurations is large enough that the METIS edge-cut minimisation
+can meaningfully distinguish good from bad boundaries. For $m < 10$,
+the algorithm has few configurations to choose among, and the output is
+nearly independent of the objective function---compactness is determined
+by geography rather than optimisation.
+
+\paragraph{Empirical calibration.}
+Companion paper C.1 \citep{dellaLibera2026maup} found that congressional
+redistricting at tract resolution (where the typical district contains
+$\sim\!100$ tracts) gives PP scores approximately equal to block-group resolution.
+Our empirical results (Section~\ref{sec:comparison}) show that PP scores begin
+to diverge between tract and block-group resolution when $k/n > 0.05$
+($n/k < 20$), with the block-group score being higher. Below $k/n = 0.02$
+($n/k > 50$), the two resolutions give essentially identical PP scores.
+
+\subsection{Practical Application}
+\label{sec:rule:application}
+
+To apply the rule for a given state and chamber:
+\begin{enumerate}
+  \item Look up $n_{\rm tracts}$ from the 2020 Census TIGER/Line tract shapefile
+    for the state.
+  \item Compute $k/n_{\rm tracts}$ for the target chamber.
+  \item If $k/n_{\rm tracts} > 0.05$, use \texttt{--resolution block\_group}.
+    If $k/n_{\rm tracts} > 0.50$, consider \texttt{--resolution block}.
+  \item Otherwise, use \texttt{--resolution tract} (default).
+\end{enumerate}
+
+The \texttt{redist} pipeline automates this check when
+\texttt{--resolution auto} is specified:
+\begin{verbatim}
+redist state --state WA --chamber house --resolution auto --year 2020
+\end{verbatim}
+The auto-selection reads the state's tract count from the configuration file
+and applies the $k/n > 0.05$ rule.

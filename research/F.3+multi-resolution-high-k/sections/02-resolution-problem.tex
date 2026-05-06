@@ -1,0 +1,62 @@
+\section{The Resolution Problem}
+\label{sec:problem}
+
+\subsection{Geographic Resolution Levels}
+\label{sec:problem:levels}
+
+The U.S.\ Census Bureau publishes population data at multiple geographic
+resolution levels, in increasing order of granularity:
+\begin{itemize}
+  \item \textbf{Census tracts}: $\sim\!73,000$ nationally (2020), mean population
+    4,084, range 1,200--8,000. Standard unit for congressional redistricting.
+  \item \textbf{Census block groups}: $\sim\!220,000$ nationally (2020),
+    mean population 1,360, range 600--3,000. Intermediate unit; used for
+    state legislative redistricting in high-$k$ states (this paper).
+  \item \textbf{Census blocks}: $\sim\!8,100,000$ nationally (2020), mean
+    population 39, range 0--16,000. Finest unit; used for VRA compliance
+    analysis and extreme high-$k$ cases (NH, WY).
+\end{itemize}
+
+Each resolution level has a corresponding \texttt{TIGER/Line} shapefile and
+a P.L.~94-171 redistricting data file. The \texttt{redist} pipeline supports
+all three levels via the \texttt{--resolution} flag.
+
+\subsection{When Tract Resolution Fails}
+\label{sec:problem:failure}
+
+Let $k$ be the number of districts and $n$ be the number of base geographic
+units. Redistricting requires $k \leq n$ (at least one unit per district).
+When $k > n$, redistricting at that resolution is infeasible.
+
+Even when $k \leq n$, redistricting quality degrades when $k/n$ is large.
+The key quantity is the average number of units per district, $n/k$.
+When $n/k$ is small:
+\begin{itemize}
+  \item Population balance is harder to achieve: with $n/k$ units per district,
+    the finest achievable population deviation is approximately
+    $\max_i \text{pop}(u_i) / T^*$ where $\text{pop}(u_i)$ is the population
+    of the most populous unit. For census tracts with maximum population 8,000
+    and ideal district size $T^* = 3,444$ (NH House), this gives a minimum
+    deviation of $>100\%$---balance is impossible even with perfect placement.
+  \item Compactness optimisation is less effective: the boundary between two
+    districts can only follow unit boundaries. With few units per district,
+    there are few possible boundary configurations, and the minimum-edge-cut
+    objective has little room to improve over a naive random assignment.
+  \item Contiguity is harder to guarantee: with $n/k \approx 1$, many districts
+    consist of a single unit. Adding a second unit to the district may create
+    a non-contiguous configuration if the added unit is not adjacent to the
+    single-unit district's base.
+\end{itemize}
+
+\subsection{Formal Statement}
+\label{sec:problem:formal}
+
+\begin{definition}[Resolution adequacy]
+  A redistricting problem $(k, n, G)$ is \emph{resolution-adequate} if
+  $k/n \leq \theta$ for a threshold $\theta \in (0,1)$. The problem is
+  \emph{resolution-inadequate} if $k/n > \theta$.
+\end{definition}
+
+We derive $\theta = 0.05$ (20 units per district) in Section~\ref{sec:rule}.
+Resolution-inadequate problems require upgrading to a finer resolution level
+before redistricting.

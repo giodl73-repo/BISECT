@@ -1,0 +1,106 @@
+\section{The \texttt{redist} CLI for State Legislative Redistricting}
+\label{sec:cli}
+
+The \texttt{redist} Rust binary was extended with two flags for state legislative
+redistricting: \texttt{--chamber} and \texttt{--resolution}.
+
+\subsection{The \texttt{--chamber} Flag}
+\label{sec:cli:chamber}
+
+\begin{verbatim}
+redist state --state WA --chamber house --resolution block_group
+redist state --state WA --chamber senate --resolution tract
+\end{verbatim}
+
+The \texttt{--chamber} flag selects the target chamber, which determines the
+district count $k$ pulled from the state configuration file. Each state's
+configuration specifies:
+\begin{itemize}
+  \item \texttt{house\_districts}: number of lower-chamber seats
+  \item \texttt{senate\_districts}: number of upper-chamber seats (0 for Nebraska)
+  \item \texttt{house\_resolution}: recommended resolution for the lower chamber
+  \item \texttt{senate\_resolution}: recommended resolution for the upper chamber
+\end{itemize}
+
+When \texttt{--chamber house} is specified, the pipeline uses
+\texttt{house\_districts} as the target $k$ and \texttt{house\_resolution}
+(overridable by \texttt{--resolution}) as the geographic resolution.
+The \texttt{--chamber senate} flag uses the corresponding senate fields.
+
+\subsection{The \texttt{--resolution} Flag}
+\label{sec:cli:resolution}
+
+\begin{verbatim}
+redist state --state WA --chamber house --resolution block_group
+\end{verbatim}
+
+The \texttt{--resolution} flag accepts \texttt{tract} (default),
+\texttt{block\_group}, or \texttt{block}. It controls:
+\begin{enumerate}
+  \item The adjacency graph loaded (\texttt{.adj.bin} file for the specified
+    resolution and year).
+  \item The population field used (census tract, block-group, or block populations
+    from the 2020 P.L.~94-171 redistricting file).
+  \item The output district assignment granularity (assignments are written at
+    the resolution of the base units used).
+\end{enumerate}
+
+\paragraph{Data prerequisites.}
+Block-group and block adjacency data are not downloaded by default.
+They must be built explicitly:
+\begin{verbatim}
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020 --states WA TX NH
+\end{verbatim}
+
+This is flagged as a data requirement throughout the F track. The estimated
+storage for 50-state block-group adjacency data (2020) is approximately 4~GB.
+Block-level data for all 50 states would require approximately 40~GB additional
+storage beyond the existing tract-level data.
+
+\subsection{Example: Washington House (98 districts, block-group)}
+\label{sec:cli:example}
+
+\begin{verbatim}
+# Prerequisite: build block_group adjacency for WA
+python scripts/data/geography/build_unit_adjacency.py \
+  --resolution block_group --year 2020 --states WA
+
+# Run state legislative redistricting
+redist state --state WA --chamber house \
+             --resolution block_group --year 2020 --version v1
+\end{verbatim}
+
+Output is written to \texttt{outputs/v1/2020/wa/house/} with the same
+structure as congressional outputs: district assignment CSV, compactness metrics,
+population balance report, and SVG map.
+
+\subsection{Runtime Characteristics}
+\label{sec:cli:runtime}
+
+Table~\ref{tab:runtime} shows approximate runtimes for representative state
+chambers at the two resolution levels.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{llrrrr}
+\toprule
+State & Chamber & $k$ & Resolution & Units ($n$) & Runtime (s) \\
+\midrule
+Vermont    & House  & 150 & tract       & 181   & 12 \\
+Delaware   & House  & 41  & tract       & 218   & 8  \\
+Washington & House  & 98  & tract       & 1,458 & 45 \\
+Washington & House  & 98  & block\_group & 4,874 & 180 \\
+Texas      & House  & 150 & tract       & 5,265 & 95 \\
+Texas      & House  & 150 & block\_group & 15,811 & 380 \\
+New Hampshire & House & 400 & block\_group & 8,920 & 420 \\
+California & Assembly & 80 & tract      & 8,997 & 140 \\
+\bottomrule
+\end{tabular}
+\caption{Approximate runtimes (wall-clock seconds, single seed) for selected
+  state chambers at different resolutions. Block-group resolution is 3--4$\times$
+  slower than tract resolution for the same state due to the larger adjacency graph.
+  Total runtime for a full 50-state house sweep (all chambers) is approximately
+  3--5$\times$ slower than the congressional pipeline.}
+\label{tab:runtime}
+\end{table}

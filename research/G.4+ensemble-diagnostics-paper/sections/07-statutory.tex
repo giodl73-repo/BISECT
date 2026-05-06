@@ -1,0 +1,88 @@
+\section{The Statutory Argument}
+\label{sec:statutory}
+
+\subsection{Two Tasks, Two Methods}
+
+The redistricting enterprise involves two distinct computational tasks:
+
+\begin{enumerate}
+\item \textbf{Plan generation}: produce the map that will govern elections
+      for the next decade.
+\item \textbf{Plan evaluation}: determine whether an enacted map is a
+      partisan outlier relative to the space of algorithmically neutral plans.
+\end{enumerate}
+
+These tasks have different requirements and different optimal methods.
+
+\paragraph{Plan generation.}
+For a statutory plan, the overriding requirements are:
+(a) determinism (the same inputs always yield the same output);
+(b) optimality (the plan minimises the objective function);
+(c) transparency (any party can verify the computation in hours, not days).
+The \cs{} algorithm satisfies all three.
+It requires no chain convergence certification; the stopping criterion
+($T = 600$ consecutive non-improving seeds) is a finite, checkable computation.
+MCMC plan generation fails (a) without fixing a random seed, fails (b)
+without convergence proof, and fails (c) for large states.
+
+\paragraph{Plan evaluation.}
+For auditing an enacted map---whether drawn algorithmically or by a
+legislature---the requirements are:
+(a) an unbiased sample from the uniform distribution over valid plans;
+(b) sufficient sample size for reliable quantile estimates;
+(c) transparent stopping rules backed by convergence diagnostics.
+\recom{} ensemble sampling with certified convergence satisfies all three.
+\cs{} is not applicable here; it generates one plan, not a sample.
+
+\subsection{Certified Convergence as an Evidentiary Standard}
+
+Drawing on the diagnostic thresholds developed in Sections~\ref{sec:rhat}--\ref{sec:mixing-time},
+we propose the following minimum standards for an ensemble to be admitted
+as expert evidence in redistricting litigation:
+
+\begin{enumerate}
+\item $\rhat < 1.1$ for both PP and $D$-seats across $m \geq 5$ parallel chains.
+\item $\ess > 500$ for PP and $\ess > 300$ for $D$-seats.
+\item $\ham(1) < 0.95$.
+\item Chain length $\geq$ the state-specific minimum in Table~\ref{tab:mixing-times}.
+\end{enumerate}
+
+Condition (3) is a sanity check on the proposal distribution; if
+$\ham(1) \geq 0.95$, the chain is moving too slowly to be a useful
+diagnostic tool.
+
+\subsection{Why 10{,}000 Steps is the Practical Minimum}
+
+From Table~\ref{tab:diagnostics}, $\ess > 500$ requires at minimum
+10{,}000 steps for all six study states.
+$\rhat < 1.1$ is achieved at 10{,}000 steps for four of six states;
+Texas and California require more.
+
+We therefore recommend 10{,}000 steps as the minimum for states with
+$k \leq 20$, with the step count scaling as $500 k$ for $k > 20$.
+Under this formula:
+\[
+  n_{\rm min}(k) = \begin{cases} 10{,}000 & k \leq 20 \\ 500k & k > 20. \end{cases}
+\]
+
+For Texas ($k = 38$): $n_{\rm min} = 19{,}000$.
+For California ($k = 52$): $n_{\rm min} = 26{,}000$.
+These are consistent with Table~\ref{tab:mixing-times}.
+
+\subsection{ConvergenceSweep is Cheaper and More Transparent}
+
+For the specific task of generating the DIA statutory map,
+the \cs{} algorithm (B.16) is unambiguously preferable:
+\begin{itemize}
+\item Runtime: $O(T \cdot n)$ with $T = 600$ and $n$ the number of tracts.
+      For Texas: $\approx 600 \times 8{,}000 = 4.8M$ METIS calls.
+      In practice, \cs{} completes in under 60 seconds for any state.
+\item Certification: the stopping criterion is a finite inequality check,
+      not an asymptotic convergence argument.
+\item Auditability: the sequence of seeds, the objective values, and the
+      final map are all deterministic given the census release identifier.
+\end{itemize}
+
+Ensemble sampling requires hours of computation and a convergence
+certificate based on asymptotic theory.
+For plan generation, \cs{} is both cheaper and more transparent.

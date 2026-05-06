@@ -1,0 +1,98 @@
+\section{Implementation in \texttt{redist analyze}}
+\label{sec:implementation}
+
+\subsection{Command-Line Interface}
+
+The three diagnostics described in this paper are implemented in the
+\texttt{redist-analysis} crate of the \texttt{redist} Rust binary.
+The command syntax is:
+
+\begin{verbatim}
+  redist analyze --types ensemble-diagnostics \
+                 --state NC \
+                 --year 2020 \
+                 --chains 10 \
+                 --steps 10000
+\end{verbatim}
+
+The command:
+\begin{enumerate}
+\item Loads the census tract adjacency graph for the specified state and year.
+\item Generates $m = $ \texttt{--chains} random start plans via spanning-tree bisection.
+\item Runs $n = $ \texttt{--steps} steps of \recom{} per chain.
+\item Computes $\rhat$, $\ess$, and $\ham(1)$ at checkpoints.
+\item Reports pass/fail against the thresholds from Section~\ref{sec:statutory}.
+\end{enumerate}
+
+\subsection{Output Format}
+
+The output is a JSON file with the following structure:
+
+\begin{verbatim}
+{
+  "state": "NC",
+  "year": 2020,
+  "k": 14,
+  "chains": 10,
+  "steps": 10000,
+  "diagnostics": {
+    "rhat_pp": 1.02,
+    "rhat_seats": 1.03,
+    "ess_pp": 769,
+    "ess_seats": 1538,
+    "hamming_lag1": 0.87
+  },
+  "thresholds": {
+    "rhat_max": 1.1,
+    "ess_min": 500,
+    "hamming_max": 0.95
+  },
+  "verdict": "PASS"
+}
+\end{verbatim}
+
+A \texttt{PASS} verdict indicates that the ensemble meets the evidentiary
+standards of Section~\ref{sec:statutory} and is suitable for use in
+redistricting litigation.
+
+\subsection{Implementation Details}
+
+\paragraph{ReCom proposal.}
+The \recom{} step selects two adjacent districts uniformly at random,
+merges their tract sets, generates a random spanning tree of the merged
+subgraph, and bisects the spanning tree at its centroid edge subject to
+population balance.
+The implementation uses the \texttt{redist-core} spanning-tree sampler.
+
+\paragraph{R-hat computation.}
+Each chain's PP time series is stored in a ring buffer.
+$\rhat$ is computed from the last half of each chain (disarding the
+burn-in), following the recommendation of \citet{vehtari2021}.
+
+\paragraph{ESS computation.}
+$\ess$ uses the initial monotone sequence estimator of \citet{geyer1992}
+to truncate the autocorrelation sum before it becomes noisy.
+
+\paragraph{Hamming autocorrelation.}
+The Hungarian algorithm for label canonicalization is $O(k^3)$ per plan
+pair. For large $k$ we use the greedy approximation (sort districts by
+centroid proximity), which is accurate to within 1\% for nearly-converged
+chains.
+
+\subsection{Relation to Ensemble Diagnostics Crate}
+
+The diagnostics are exposed through the \texttt{ensemble\_diagnostics}
+module in \texttt{redist-analysis}:
+
+\begin{verbatim}
+  redist_analysis::ensemble_diagnostics::{
+      rhat,          // Gelman-Rubin R-hat
+      ess,           // Effective sample size
+      hamming_lag1,  // Lag-1 Hamming autocorrelation
+      diagnose,      // Run all three and return verdict
+  }
+\end{verbatim}
+
+The module has 21 unit tests covering boundary cases (all chains identical,
+all chains diverged, single-chain degenerate input) and is part of the
+standard \texttt{cargo test} suite.

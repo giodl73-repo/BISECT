@@ -1,0 +1,82 @@
+\section{States Studied}
+\label{sec:states}
+
+Table~\ref{tab:states} summarises the six states, their 2020 seat counts,
+and the ensemble sources used for comparison.
+
+\begin{table}[h]
+\centering
+\caption{States studied in G.1, with delegation size and ensemble source.}
+\label{tab:states}
+\begin{tabular}{llcl}
+\toprule
+State & Abbr. & $k$ (2020) & Ensemble source \\
+\midrule
+North Carolina & NC & 14 & \gc{} \recom{}, 1,000 steps (this paper) \\
+Wisconsin      & WI &  8 & \gc{} \recom{}, 1,000 steps (this paper) \\
+Georgia        & GA & 14 & \gc{} \recom{}, 1,000 steps (this paper) \\
+Pennsylvania   & PA & 17 & \gc{} \recom{}, 1,000 steps (this paper) \\
+Texas          & TX & 38 & Running --- placeholder $< 5$th percentile \lit \\
+California     & CA & 52 & Running --- placeholder $< 5$th percentile \lit \\
+\bottomrule
+\multicolumn{4}{l}{\small \lit~Pending; placeholder based on algorithm design expectations.}
+\end{tabular}
+\end{table}
+
+\subsection{Methodological note: ReCom samples uniformly; AR minimises}
+
+\gc{} \recom{} samples redistricting plans \emph{uniformly at random} from
+the feasible space (population balance + contiguity constraints).  The \ar{}
+algorithm, by contrast, \emph{minimises edge cut}.  Therefore the \ar{} plan
+is expected to fall at the low end of the cut-fraction distribution---
+corresponding to the high end of compactness.  The 0.1--0.2nd percentile
+results for Wisconsin, Georgia, and Pennsylvania confirm the algorithm is
+functioning as designed: it finds the most compact feasible plans, not typical
+ones.
+
+This is a feature, not a coincidence.  Ensemble comparison for a
+minimum-cut algorithm should produce low cut percentiles.  If it did not,
+that would indicate a failure of the optimiser.  North Carolina's 50th
+percentile is the informative exception: it reflects a tightly constrained
+geography where the minimum-cut solution and the ensemble median converge.
+
+\subsection{North Carolina ($k = 14$)}
+
+North Carolina is the canonical benchmark state for ensemble redistricting
+research.  The state has 14 congressional districts ($14 = 2 \times 7$) and
+has been at the center of multiple redistricting challenges.  NC's geography
+(coastal plain, piedmont, mountains) produces a moderately constrained
+ensemble where compact plans converge toward similar cut fractions.
+
+\subsection{Wisconsin ($k = 8$)}
+
+Wisconsin is a competitive state with strong urban-rural sorting.  At
+$k = 8 = 2^3$, the plan space is smaller than for larger states.  The three-level
+binary factorisation (state $\to$ 2 halves $\to$ 4 quarters $\to$ 8 districts)
+aligns well with Wisconsin's east-west geography, enabling aggressive
+edge-cut minimisation.
+
+\subsection{Georgia ($k = 14$)}
+
+Georgia has 14 congressional districts and strong geographic partisan sorting:
+Democratic voters are concentrated in the Atlanta metropolitan area and the
+Black Belt.  This geographic structure means the minimum-cut partition produces
+a small number of large, compact Democratic districts in Atlanta and a larger
+number of smaller Republican districts covering the rural areas---a distribution
+with very low edge cut relative to the ensemble.
+
+\subsection{Pennsylvania ($k = 17$)}
+
+Pennsylvania's $k = 17$ is prime, which means a direct 17-way partition of the
+state graph rather than a hierarchical factorisation.  Despite losing the
+hierarchy advantage, the \ar{} plan achieves 0.2nd percentile compactness,
+confirming that METIS edge-cut optimisation is effective even for prime-$k$
+states.
+
+\subsection{Texas ($k = 38$) and California ($k = 52$)}
+
+\recom{} ensembles for Texas and California are currently running.  Based on
+the pattern across WI, GA, and PA---and the theoretical expectation that the
+minimum-cut algorithm finds near-extremal solutions---we expect both states to
+fall below the 5th percentile.  Results will replace this placeholder when
+the runs complete.

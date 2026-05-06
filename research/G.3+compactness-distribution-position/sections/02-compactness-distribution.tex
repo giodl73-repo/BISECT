@@ -1,0 +1,70 @@
+\section{The Compactness Distribution of ReCom Ensembles}
+\label{sec:distribution}
+
+\subsection{Right-Skewed Shape}
+
+The compactness distribution of \recom{} ensembles is typically right-skewed:
+most plans cluster at moderate compactness values, with a long right tail of
+unusually compact plans and a shorter left tail of very non-compact plans.
+
+This shape arises from the recombination move structure.  A \recom{} step
+merges two adjacent districts and redraws the boundary using a random spanning
+tree cut.  Random spanning tree cuts tend to produce boundaries with many
+turns and jags, which reduces Polsby-Popper compactness.  Plans with
+high compactness require specific boundary choices that the random process
+rarely achieves.  Hence, the distribution has a mode well below the maximum
+possible compactness.
+
+Formally, if $X \sim F_{\pp}$ is the mean Polsby-Popper score across the
+ensemble, we observe empirically:
+
+\begin{equation}
+  \mathrm{Skewness}(F_{\pp}) \approx +0.3 \text{ to } +0.7
+  \quad\text{(positive, right-skewed)}
+  \label{eq:skew}
+\end{equation}
+
+for the six states studied.  The skewness is higher for geographically
+irregular states (Pennsylvania, California) and lower for more regular states
+(Wisconsin).
+
+\subsection{Typical Values}
+
+Typical mean Polsby-Popper values in \recom{} ensembles are:
+
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+State & $k$ & Ensemble mean & Ensemble 75th pct & Ensemble max \\
+\midrule
+NC & 14 & 0.318 & 0.355 & $\approx 0.52$ \\
+WI &  8 & 0.301 & 0.342 & $\approx 0.49$ \\
+GA & 14 & 0.312 & 0.348 & $\approx 0.51$ \\
+PA & 17 & 0.306 & 0.341 & $\approx 0.48$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The \ar{} plan falls between the 75th percentile and the ensemble maximum
+for all states: it is more compact than the average \recom{} plan but
+well below the maximum.
+
+\subsection{Why the Maximum Is Not Achieved}
+
+The \recom{} ensemble maximum (plans with $\bar\pp \approx 0.49$--$0.52$)
+represents extremely compact plans that exist mathematically but rarely appear
+in the chain.  These plans typically have districts that align with
+major geographic features (rivers, mountain ranges) and avoid coastal
+meanders and complex inland topographies.
+
+The \ar{} plan does not target Polsby-Popper directly.  It targets
+METIS edge cut, which is related to but not identical to Polsby-Popper.
+A district with minimum edge cut will have few cross-district census-tract
+adjacencies, which correlates with a smooth boundary, which correlates with
+high Polsby-Popper.  But the correlation is not perfect: some minimum-edge-cut
+plans have irregular boundaries that happen to avoid many cross-boundary
+adjacencies due to the geographic structure of the tract network.
+
+This distinction explains why the \ar{} plan is at the $61$st--$72$nd
+percentile rather than the 99th percentile: it is compact, but not
+maximally compact in the Polsby-Popper sense.

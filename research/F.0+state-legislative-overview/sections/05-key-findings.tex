@@ -1,0 +1,85 @@
+\section{Key Findings Preview}
+\label{sec:findings}
+
+We preview here the main empirical findings of the F track. Full supporting
+tables and case studies appear in the companion papers.
+
+\subsection{Compactness Exceeds Congressional Baseline}
+\label{sec:findings:compactness}
+
+The most striking finding of F.1 is that algorithmically generated state
+house maps are \emph{more compact} than their congressional counterparts by
+the Polsby-Popper measure. Table~\ref{tab:pp-comparison} summarises the result.
+
+\begin{table}[h]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Setting & Resolution & Mean PP \\
+\midrule
+Congressional (B track) & tract & 0.361 \\
+State house, tract resolution & tract & 0.381 \\
+State house, block-group resolution & block\_group & 0.401 \\
+\bottomrule
+\end{tabular}
+\caption{Mean Polsby-Popper scores across settings. State house redistricting
+  systematically achieves higher compactness than congressional redistricting.
+  The gap is explained by scale effects (F.5): smaller districts have smaller
+  perimeters relative to their area.}
+\label{tab:pp-comparison}
+\end{table}
+
+As F.5 shows, this is primarily a scale effect. Polsby-Popper is defined as
+$PP = 4\pi A / P^2$. For a fixed-shape district, scaling down by factor $s$
+preserves $PP$ exactly ($A \to s^2 A$, $P \to s P$). However, in practice
+smaller districts have \emph{relatively shorter} perimeters because they
+can be carved from compact sub-regions of the state rather than spanning
+the entire state geography. The recursive bisection algorithm exploits this:
+each level of the hierarchy optimises the boundary of a sub-region, and
+smaller sub-regions have fewer constraints from state-boundary artefacts.
+
+\subsection{Population Balance Within $\pm 0.5\%$ in All 50 States}
+\label{sec:findings:balance}
+
+All 50 state house maps achieve population balance within $\pm 0.5\%$ of
+the ideal district population. This is the standard applied to congressional
+redistricting under \emph{Wesberry v.\ Sanders} (1964). State legislative
+plans are governed by the less stringent standard of \emph{Reynolds v.\ Sims}
+(1964), which requires ``substantial equality'' rather than precise equality;
+courts have generally accepted deviations up to $\pm 5\%$ for state legislative
+plans \citep{karcher1983karcher}. The \texttt{redist} pipeline achieves a
+tighter standard than legally required, confirming that the algorithm's
+population-balance constraints are conservative.
+
+\subsection{County Splits Reduced 15--25\%}
+\label{sec:findings:splits}
+
+Across the 38 states for which enacted 2020 state house maps are available
+for comparison, the algorithmic maps split counties 15--25\% fewer times
+on average. This reflects the algorithm's implicit preference for geographic
+compactness: county boundaries are often natural geographic divides, and
+the edge-cut minimisation objective tends to respect them without an
+explicit constraint.
+
+\subsection{Runtime: 3--5$\times$ Slower Than Congressional}
+\label{sec:findings:runtime}
+
+The full 50-state state-house sweep requires approximately 3--5$\times$ the
+wall-clock time of the congressional pipeline run at comparable resolution.
+The primary contributor is the resolution upgrade required for high-$k$ chambers:
+block-group adjacency graphs are $\sim\!3\times$ larger than tract graphs.
+For tract-resolution states (the majority), per-state runtimes are similar to
+congressional times. For block-group-resolution states, runtimes are 3--4$\times$
+longer per state.
+
+\subsection{Nesting Success Rate: 41/49 Bicameral States}
+\label{sec:findings:nesting}
+
+Of the 50 states, 49 are bicameral (Nebraska is unicameral). Of the 49 bicameral
+states, NestSection finds a compatible spine---$\gcd(H,S) > 1$---for 41 states.
+The 8 incompatible states have $\gcd(H,S) = 1$, meaning house and senate district
+counts are coprime. Examples include Maine ($H=151$, $S=35$, $\gcd=1$) and
+Delaware ($H=41$, $S=21$, $\gcd=1$).
+The compactness penalty for compatible nesting is $+2$--$3\%$ in mean edge-cut
+relative to independently optimised maps. Partisan outcomes shift by at most
+$0.3$ seats on average.

@@ -1,0 +1,91 @@
+\section{Convergence Diagnostics}
+\label{sec:convergence}
+
+Before using an ensemble for inference, one must verify that the Markov chain
+has approximately converged to its stationary distribution.  We review three
+diagnostics used in the G-track and developed in detail in G.4.
+
+\subsection{Gelman-Rubin \texorpdfstring{$\rhat$}{R-hat}}
+
+The \citet{gelman1992inference} potential scale reduction factor is computed
+from $m \geq 2$ independent chains of length $n$.  Let $\bar{\psi}_{j\cdot}$
+be the within-chain mean and $\bar{\psi}_{\cdot\cdot}$ the grand mean of
+statistic $\psi$:
+
+\begin{align}
+  B &= \frac{n}{m-1} \sum_{j=1}^{m}(\bar{\psi}_{j\cdot} - \bar{\psi}_{\cdot\cdot})^2
+      \quad \text{(between-chain variance)} \\
+  W &= \frac{1}{m}\sum_{j=1}^{m} s_j^2
+      \quad \text{(within-chain variance)} \\
+  \hat{V} &= \frac{n-1}{n} W + \frac{m+1}{mn} B \\
+  \rhat &= \sqrt{\hat{V}/W}.
+\end{align}
+
+A value $\rhat < 1.1$ is conventionally accepted as indicating convergence
+for redistricting's discrete integer outcomes.\footnote{Vehtari et al.\ (2021)
+recommend $\rhat < 1.01$ for continuous parameters; 1.1 is the appropriate
+threshold for the discrete seat-count and plan-assignment statistics used
+here.}
+For redistricting ensembles, we compute $\rhat$ over partisan seats and
+Polsby-Popper means.
+
+\subsection{Effective Sample Size (ESS)}
+
+The effective sample size corrects for autocorrelation within a chain.  For
+a chain of length $N$ with autocorrelation $\rho_t$ at lag $t$:
+
+\begin{equation}
+  \ess = \frac{N}{1 + 2\sum_{t=1}^{\infty} \rho_t}.
+  \label{eq:ess}
+\end{equation}
+
+An \ess{} of at least 400 per statistic is required for reliable 95\%
+interval estimates.  \recom{} ensembles typically achieve higher \ess{} than
+flip-chain ensembles of the same length, because the recombination move
+decorrelates faster.
+
+\subsection{Hamming Autocorrelation}
+
+District-level statistics like seat share depend on which tracts belong to
+which district, not just on continuous quantities.  The \emph{Hamming
+distance} between two plans $P$ and $P'$ is:
+
+\begin{equation}
+  d_H(P, P') = \frac{1}{n} \#\{i : \text{district}(t_i, P) \neq
+               \text{district}(t_i, P')\},
+  \label{eq:hamming}
+\end{equation}
+
+where $t_i$ ranges over census tracts and we match districts by population
+overlap.  The \emph{Hamming autocorrelation} at lag $\ell$ is:
+
+\begin{equation}
+  \rho_H(\ell) = \frac{\mathrm{Cov}[d_H(P_t, P_{\text{ref}}),
+                  d_H(P_{t+\ell}, P_{\text{ref}})]}
+                 {\mathrm{Var}[d_H(P_t, P_{\text{ref}})]},
+  \label{eq:hamming-autocorr}
+\end{equation}
+
+where $P_{\text{ref}}$ is a fixed reference plan.  Rapid decay of
+$\rho_H(\ell)$ to zero indicates that the chain is exploring the plan space
+efficiently.  G.4 reports Hamming autocorrelation plots for all six states.
+
+\subsection{Diagnostic Standards for the G-Track}
+
+The following standards apply across all G-track papers:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Diagnostic & Threshold & Consequence of failure \\
+\midrule
+$\rhat$ & $< 1.1$ & Results flagged as preliminary \\
+\ess    & $> 400$  & Wider uncertainty intervals used \\
+$\rho_H(10)$ & $< 0.10$ & Chain considered mixed \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+For published ensembles (Herschlag 2020, DeFord 2021) we reproduce the
+authors' reported convergence diagnostics.  Where these are unavailable,
+we apply conservative uncertainty adjustments to reported percentiles.

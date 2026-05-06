@@ -1,0 +1,89 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[top=1.25in, bottom=1.25in, left=1.5in, right=1.5in]{geometry}
+\usepackage{times}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{mdframed}
+\usepackage{array}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+% Prominent section headings for quick scanning
+\titleformat{\section}{\Large\bfseries}{}{0em}{}[\vspace{2pt}\titlerule\vspace{4pt}]
+\titlespacing{\section}{0pt}{20pt}{8pt}
+\titleformat{\paragraph}[runin]{\bfseries}{}{0em}{}[.]
+\titlespacing{\paragraph}{0pt}{10pt}{6pt}
+
+% Pull-quote box
+\newmdenv[
+  linewidth=1.5pt,
+  linecolor=black!40,
+  backgroundcolor=gray!8,
+  skipabove=12pt,
+  skipbelow=12pt,
+  innerleftmargin=14pt,
+  innerrightmargin=14pt,
+  innertopmargin=10pt,
+  innerbottommargin=10pt
+]{pullquote}
+
+\title{%
+  {\Large\textsc{Policy Brief}}\\[8pt]
+  \textbf{Ending Gerrymandering:\\A One-Algorithm Solution}\\[6pt]
+  \large Track A, Paper 5
+}
+
+\author{Giovanni Della-Libera\\
+\small\texttt{giodl@microsoft.com}}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{pullquote}
+\textbf{Bottom line.}
+A mathematical algorithm applied to public Census data---with no
+political input of any kind---produces congressional districts that are
+22\% more compact, closely proportional in partisan representation,
+and independently verifiable by any citizen in under ten minutes.
+One sentence of federal statute can make gerrymandering structurally
+impossible.
+\end{pullquote}
+
+\vspace{4pt}
+
+\input{sections/01-problem}
+
+\input{sections/02-solution}
+
+\input{sections/03-results}
+
+\input{sections/04-adoption}
+
+\input{sections/05-contact}
+
+\vspace{16pt}
+\hrule
+\vspace{8pt}
+{\small
+\bibliographystyle{plain}
+\bibliography{references}
+}
+
+\end{document}

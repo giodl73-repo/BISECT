@@ -1,0 +1,49 @@
+\label{sec:conclusion}
+
+Algorithmic redistricting is implementable through three distinct pathways:
+commission adoption, statutory enactment, and court-ordered remedy.  Each
+pathway places different institutional actors in the role of map adopter, but
+all three share a common structure: the algorithm produces a starting plan
+that satisfies quantifiable mathematical criteria, and human oversight bodies
+apply judgment to the residual questions (communities of interest, VRA
+specifics) that the algorithm cannot resolve without partisan data.
+
+The Arizona case study illustrates that the commission pathway is legally
+established and operationally feasible.  The AIRC's constitutional authority
+is confirmed; its five-member bipartisan structure provides built-in balance;
+and its existing community-of-interest hearing process can absorb the algorithm
+output as a constrained starting plan without fundamental change to the
+commission's role.
+
+The California case study illustrates that the statute pathway is feasible
+where a state's redistricting criteria map cleanly onto the algorithm's weight
+parameters.  California's criteria---population equality, VRA compliance, county
+contiguity, compactness, communities of interest---correspond to documented
+features of the \texttt{redist} system.  The primary implementation challenge
+is calibrating the county-sticky weight to California's specific county
+structure, which varies enormously in size from Los Angeles County to
+Alpine County.
+
+The North Carolina case study illustrates that the court-order pathway is the
+most legally stable of the three, because it places the burden of demonstrating
+constitutional defect on challengers rather than defenders.  The special master
+structure is well-established in federal redistricting practice and available
+to state courts.  The algorithm's inability to access partisan data eliminates
+the most common basis for constitutional challenge---partisan intent---leaving
+challengers with the more demanding task of demonstrating constitutional
+violation through effects alone.
+
+Common to all three pathways is the need for data preparation, public
+transparency, and a structured challenge process.  These challenges are
+real but tractable.  The \texttt{redist} system's documented inputs, reproducible
+outputs, and quantitative criteria-compliance reports address transparency and
+challenge-process concerns directly.  Data preparation, while time-consuming
+for large states, is a one-time cost that supports subsequent redistricting
+cycles.
+
+Adoption of algorithmic redistricting at scale would likely follow the pattern
+of any significant institutional reform: early adopters in states with
+independent commissions or active state-court supervision, followed by
+broader uptake as the early cases establish legal precedent and operational
+best practices.  The three pathways analyzed here provide the institutional
+templates for that process.

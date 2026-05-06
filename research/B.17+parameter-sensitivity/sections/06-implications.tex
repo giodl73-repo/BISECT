@@ -1,0 +1,81 @@
+\section{Implications for the Districting Integrity Act}
+\label{sec:implications}
+
+\subsection{Fixed Parameters in Statute are Safe}
+
+The central policy conclusion of this paper is that fixing parameters in
+the DIA statute is safe for partisan neutrality.
+A future legislature could not improve its partisan position by lobbying
+for a parameter change, because no parameter change within the studied
+range produces a partisan effect exceeding 0.3 seats nationally.
+
+This is a significant finding for the legislative drafting process.
+Parameter choices that seemed politically contentious---should $\acounty$
+be 3 or 5?---turn out to be inconsequential for partisan outcomes.
+The legislature can choose any reasonable value without creating a
+partisan controversy.
+
+\subsection{Recommended Statutory Defaults}
+
+Based on the sweep results, we recommend the following statutory defaults:
+
+\begin{table}[h]
+\centering
+\caption{Recommended DIA statutory default parameters with justification.}
+\label{tab:recommended-defaults}
+\begin{tabular}{lcc}
+\toprule
+Parameter & Recommended value & Justification \\
+\midrule
+$\ufactor$ & 1.0\% & Balances compactness and runtime \\
+$\acounty$ & 3.0 & Respects counties without overriding compactness \\
+$T$ & 600 & B.16 certified sufficient; runtime $<$60 sec/state \\
+$\aswing$ & 1.10 & B.9 regime boundary; best compactness \\
+$\wvra$ & 0.4 & Moderate VRA boost; consistent with B.14 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Compactness Argument for Small $\ufactor$}
+
+The one parameter with a meaningful compactness effect is $\ufactor$.
+Tighter balance ($\ufactor = 0.1\%$) produces $\overline{\PP} = 0.318$
+vs.\ $\overline{\PP} = 0.299$ at $\ufactor = 5\%$.
+Since the DIA's primary objective is compactness (minimum edge cut), the
+statute should prefer smaller $\ufactor$ values.
+
+However, very small $\ufactor$ (e.g., $0.1\%$) can cause METIS to fail
+to find any valid partition (insufficient population flexibility), requiring
+fallback strategies.
+The recommended $\ufactor = 1\%$ is the smallest value that consistently
+succeeds across all 50 states.
+
+\subsection{Response to the ``Parameter Manipulation'' Challenge}
+
+Any challenger who argues that the chosen parameters favor one party must
+show a parameter combination that:
+(1) is within the design space (all five parameters within their statutory ranges),
+(2) produces a partisan shift exceeding the baseline seed variance ($\sigma \approx 0.8$ seats nationally from B.7), and
+(3) is not already addressed by the statutory default values.
+
+No such combination exists within the ranges studied.
+The challenger's only viable argument is that the \emph{algorithm structure}
+itself (e.g., the choice of GeoSection over unweighted bisection) is partisan.
+This is the argument addressed in B.0, which found that algorithm structure
+does affect partisanship---but that the DIA's chosen algorithm (GeoSection
+with the default parameters) is as neutral as any algorithmic alternative.
+
+\subsection{Separability of Compactness and Partisan Effects}
+
+A striking feature of the results is the near-complete separability of
+compactness sensitivity from partisan sensitivity:
+\begin{itemize}
+\item $\ufactor$ affects compactness strongly, partisanship weakly.
+\item $T$ affects neither compactness nor partisanship (for $T \geq 200$).
+\item $\acounty$ affects county integrity strongly, partisanship weakly.
+\end{itemize}
+
+This separability is theoretically expected: compactness is a geometric
+property that can be optimized within a geographically defined partition,
+while partisan outcomes depend on the geographic distribution of partisan
+voters, which is not under algorithmic control.
