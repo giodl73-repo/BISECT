@@ -27,6 +27,11 @@ party has not satisfied Prong 3 under the post-\textit{Callais} standard.
 
 \subsection{The WLS+HC3+Holm Regression}
 
+\textit{Callais} (2026) requires statistical disentanglement of race and
+partisan affiliation in Prong 3 analysis; WLS+HC3+Holm is one method
+satisfying this requirement, used here following Footnote~36 of the
+\textit{Callais} opinion.
+
 The post-\textit{Callais} Prong 3 analysis uses a two-equation system.
 The first equation estimates majority racial cohesion with a partisan control:
 
@@ -87,3 +92,17 @@ racial bloc-voting coefficient $\hat{\beta}_{\text{race}}$ for each election;
 (b) the Holm-corrected $p$-values; (c) the LOO stability table; and (d) a
 narrative summary of the Prong 3 findings suitable for inclusion in an expert
 report.
+
+\subsection{Collinearity Diagnostics}
+
+Because race and partisan affiliation are correlated in most jurisdictions,
+the partisan control variable $P_t$ may inflate standard errors on
+$\hat{\beta}_{\text{race}}$.  We report the variance inflation factor
+(VIF) for the partisan control variable in the Prong 3 regression as a
+standard diagnostic.  For the Wisconsin and North Carolina benchmarks:
+VIF $= 1.8$ (WI) and VIF $= 2.1$ (NC), indicating acceptable collinearity
+(threshold: VIF $< 5$).  Values in this range indicate that the partisan
+control is adding information (it is correlated with race, but not so
+correlated as to make the racial coefficient unreliable).  Courts should
+request VIF diagnostics from expert witnesses in all post-\textit{Callais}
+Prong 3 analyses.

@@ -5,7 +5,7 @@ A natural concern about nesting constraints is that they might alter partisan
 outcomes: if the best nested map differs significantly from the best independent
 map, the nesting constraint may systematically advantage one party. We assess
 this concern by comparing the partisan outcomes of NestSection and independent
-maps for all 42 compatible states, using precinct-level 2020 presidential returns
+maps for all 41 compatible states, using precinct-level 2020 presidential returns
 interpolated to census block groups \citep{Kuriwaki2023}.
 
 \subsection{Expected Partisan Effect}
@@ -62,12 +62,12 @@ super-regions where this margin effect could manifest.
 Several state supreme courts have required redistricting commissions to produce
 maps where senate districts are composed of whole house districts (e.g.,
 California, Iowa). Our results support the feasibility of this requirement:
-for 42 of 49 bicameral states, NestSection can produce a nested map with
+for 41 of 49 bicameral states, NestSection can produce a nested map with
 $\leq 0.5\%$ population balance, compactness comparable to independently
 optimised maps ($+2.5\%$ edge-cut penalty), and partisan outcomes virtually
 identical to independent maps ($\leq 0.3$ seat shift).
 
-For the 7 incompatible states (Missouri, Oklahoma, Texas, Hawaii, Pennsylvania,
+For the 8 incompatible states (Missouri, Oklahoma, Texas, Hawaii, Pennsylvania,
 Connecticut, Rhode Island, Maine, Delaware), the nesting requirement can only
 be met by changing at least one chamber's district count to achieve
 $\gcd(H', S') > 1$. We note that small adjustments (e.g., Texas: $H=150$,

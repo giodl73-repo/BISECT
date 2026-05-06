@@ -40,7 +40,7 @@ assignment.
 The Lipton-Tarjan planar separator theorem~\citep{lipton1979} guarantees
 that every planar graph on $n$ vertices has a separator of size $O(\sqrt{n})$.
 
-\begin{theorem}[Mixing Time Lower Bound]
+\begin{theorem}[Mixing Time Upper Bound]
 \label{thm:mixing}
 For the lazy reversible \recom{} chain on a planar census-tract graph
 $G$ with $n$ vertices and $k$ districts, the spectral gap satisfies:
@@ -49,7 +49,7 @@ $G$ with $n$ vertices and $k$ districts, the spectral gap satisfies:
 \]
 and consequently:
 \[
-  \tmix(0.01) = O\!\left(n^2 \log n\right).
+  \tmix(0.01) = O\!\left(n^3 \log n\right).
 \]
 \end{theorem}
 
@@ -68,10 +68,19 @@ Standard bottleneck arguments give $\Phi = \Omega(1/n)$, and hence
 $\sgap = \Omega(\Phi^2) = \Omega(1/n^2)$.
 
 The mixing time bound follows from:
-$\tmix = O(\log(|\mathcal{P}|) / \sgap) = O(n \log n \cdot n^2) = O(n^3 \log n)$,
-which is tightened to $O(n^2 \log n)$ using the path congestion bound
-directly.
+$\tmix = O(\log(|\mathcal{P}|) / \sgap) = O(n \log n \cdot n^2) = O(n^3 \log n)$.
 \end{proof}
+
+\begin{remark}
+The tighter $O(n^2 \log n)$ bound would require a direct path congestion
+argument showing that the congestion of the canonical paths is $O(n/\log n)$
+rather than $O(n)$.  This requires path congestion analysis beyond the scope
+of this paper; see \citet[Theorem~13.1]{levin2009markov} for the relevant
+machinery.  Reducing the exponent from 3 to 2 does not affect the empirical
+conclusions: both bounds are many orders of magnitude above observed mixing
+times (see Table~\ref{tab:mixing-bounds}), confirming that theory-practice
+gap analysis must proceed empirically.
+\end{remark}
 
 \subsection{Numerical Implications}
 
@@ -79,7 +88,7 @@ For six study states:
 
 \begin{table}[h]
 \centering
-\caption{Theoretical mixing time upper bounds $O(n^2 \log n)$ and
+\caption{Theoretical mixing time upper bounds $O(n^3 \log n)$ and
          empirical $\rhat < 1.1$ thresholds. The gap between theory and
          practice spans 3-4 orders of magnitude.}
 \label{tab:mixing-bounds}

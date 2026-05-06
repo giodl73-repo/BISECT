@@ -16,11 +16,11 @@ North Carolina & NC & 14 & \citet{herschlag2020quantifying} ($N=24{,}518$) \\
 Wisconsin      & WI &  8 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
 Georgia        & GA & 14 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
 Pennsylvania   & PA & 17 & \citet{deford2021recombination} ($N=50{,}000$) \est \\
-Texas          & TX & 38 & Literature bounds \lit \\
-California     & CA & 52 & Literature bounds \lit \\
+Texas          & TX & 38 & Bounds from \citet{autry2021multiscale} \lit \\
+California     & CA & 52 & Author estimate (methodology in Section~\ref{sec:method}) \lit \\
 \bottomrule
 \multicolumn{4}{l}{\small \est~\recom{} ensemble; exact $N$ varies by state and run.
-  \lit~No published ensemble available; bounds from \citet{chikina2017assessing}.}
+  \lit~Bounds from published literature (TX) or author estimate (CA); see text.}
 \end{tabular}
 \end{table}
 
@@ -58,7 +58,12 @@ makes direct comparison with prime-$k$ and composite-$k$ states informative.
 \subsection{Texas ($k = 38$) and California ($k = 52$)}
 
 For Texas and California, no published \recom{} ensemble results are available
-at the census-tract level at the scale required.  We use literature bounds
-from \citet{chikina2017assessing} and \citet{autry2021multiscale} to derive
-approximate percentile estimates, marked with \lit{} throughout.  These estimates
-carry wider uncertainty than the direct comparisons for NC, WI, GA, and PA.
+at the census-tract level at the scale required.  For Texas, we use the
+compactness bounds from \citet{autry2021multiscale} to derive approximate
+percentile estimates.  For California, we provide author estimates based on
+the binomial model with $p_{\rm geo}$ calibrated to the state's geographic
+partisan structure; these are marked \lit{} throughout and carry wider
+uncertainty than the direct comparisons for NC, WI, GA, and PA.
+Using published ensemble statistics from \citet{herschlag2020quantifying}
+(NC) and \citet{deford2021recombination} methodology (other states);
+state-specific ensemble parameters are calibrated to published figures.

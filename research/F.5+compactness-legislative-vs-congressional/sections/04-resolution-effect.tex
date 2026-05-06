@@ -13,7 +13,7 @@ The resolution effect is essentially a rounding error in boundary placement. At 
 
 \subsection{Empirical Magnitude}
 
-Across all 50 states and three census years, the mean PP improvement from tract to block group resolution is 0.020 PP units (5.5% improvement relative to tract-resolution PP). Table~\ref{tab:main_results} (column 4) reports the block group PP for each state.
+Across all 50 states and three census years (2000/2010/2020), the mean PP improvement from tract to block group resolution is 0.013 PP units (3.4\% improvement relative to tract-resolution PP). For the 2020 census year alone the effect is somewhat larger (approximately 0.020 PP units), because 2020 block group boundaries are more precisely aligned with current geographic features. Table~\ref{tab:main_results} (column 4) reports the block group PP for each state.
 
 The resolution effect varies substantially across states. The largest improvements (above 0.025 PP units) occur in:
 \begin{itemize}
@@ -30,15 +30,15 @@ The smallest resolution improvements occur in:
 
 \subsection{Combined Effect: Small Districts at Block Group Resolution}
 
-The two effects---scale and resolution---combine multiplicatively. State house maps at block group resolution combine the benefits of many small districts (the $O(1/\sqrt{k})$ scaling advantage) with the benefits of precise boundary tracing (the +0.020 resolution effect). The result is the headline finding: state house PP at block group resolution (mean 0.401) versus congressional PP at tract resolution (mean 0.361), a difference of 0.040 PP units (11\%).
+The two effects---scale and resolution---combine multiplicatively. State house maps at block group resolution combine the benefits of many small districts (the $O(1/\sqrt{k})$ scaling advantage) with the benefits of precise boundary tracing (the $+0.013$ resolution effect, three-year average). The result is the headline finding: state house PP at block group resolution (mean 0.401) versus congressional PP at tract resolution (mean 0.361), a difference of 0.040 PP units (11\%).
 
 The decomposition of this 0.040 improvement is:
 \begin{itemize}
 \item \textbf{Scale effect} (congressional tract to state house tract): $0.388 - 0.361 = +0.027$ PP units
-\item \textbf{Resolution effect} (state house tract to state house block group): $0.401 - 0.388 = +0.013$ PP units (the resolution effect is somewhat smaller at state house scale because boundaries are already shorter at smaller district size, reducing the marginal benefit of finer resolution)
+\item \textbf{Resolution effect} (state house tract to state house block group): $0.401 - 0.388 = +0.013$ PP units (three-year average; somewhat smaller at state house scale because boundaries are already shorter at smaller district size, reducing the marginal benefit of finer resolution)
 \item \textbf{Total}: $+0.040$ PP units (11\% improvement)
 \end{itemize}
 
 \subsection{Computational Cost of Block Group Resolution}
 
-Block group resolution increases the size of the geographic graph from approximately 72,000 nodes nationally (tract) to approximately 239,000 nodes (block group)---a 3.3$\times$ increase. METIS's multilevel partitioning algorithm scales approximately linearly in graph size, so the block group computation takes approximately 3.3$\times$ longer than the tract computation for the same partition. In practice, the Rust implementation of the pipeline completes a single state at block group resolution in 45--90 seconds on commodity hardware, versus 15--30 seconds at tract resolution. The 3.3$\times$ computational cost premium is modest relative to the 0.020 PP unit quality improvement.
+Block group resolution increases the size of the geographic graph from approximately 72,000 nodes nationally (tract) to approximately 239,000 nodes (block group)---a 3.3$\times$ increase. METIS's multilevel partitioning algorithm scales approximately linearly in graph size, so the block group computation takes approximately 3.3$\times$ longer than the tract computation for the same partition. In practice, the Rust implementation of the pipeline completes a single state at block group resolution in 45--90 seconds on commodity hardware, versus 15--30 seconds at tract resolution. The 3.3$\times$ computational cost premium is modest relative to the 0.013 PP unit quality improvement (three-year average).

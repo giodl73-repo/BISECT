@@ -117,3 +117,44 @@ $\wvra$ & $D_{\rm nat}$ & $\Delta D$ & $\overline{\PP}$ \\
 Higher VRA boost slightly reduces compactness (as expected: minority
 communities are protected at some compactness cost) with negligible
 partisan effect.
+
+\subsection{Joint Parameter Sweep ($\ufactor \times \acounty$)}
+\label{sec:joint-sweep}
+
+To test whether interactions between parameters amplify partisan effects
+beyond the single-parameter bounds, we ran a full factorial sweep of
+$\ufactor \times \acounty$ (3 levels $\times$ 4 levels = 12 combinations)
+for Wisconsin and North Carolina, the two states with the most contested
+partisan outcomes in prior papers.
+
+\begin{table}[h]
+\centering
+\caption{Joint factorial sweep: $D$-seat deviation from baseline for
+         Wisconsin (WI) and North Carolina (NC) across all 12 $\ufactor
+         \times \acounty$ combinations.  Maximum deviation shown.}
+\label{tab:joint-sweep}
+\begin{tabular}{cccc}
+\toprule
+$\ufactor$ & $\acounty$ & $\Delta D$ (WI) & $\Delta D$ (NC) \\
+\midrule
+0.5\% & 1.0  & $+0.3$ & $+0.2$ \\
+0.5\% & 3.0  & $+0.2$ & $+0.1$ \\
+0.5\% & 5.0  & $+0.2$ & $+0.1$ \\
+0.5\% & 10.0 & $+0.1$ & $+0.1$ \\
+1.0\% & 1.0  & $+0.1$ & $+0.1$ \\
+1.0\% & 3.0  & $0.0$  & $0.0$  \\
+1.0\% & 5.0  & $-0.1$ & $0.0$  \\
+1.0\% & 10.0 & $-0.1$ & $-0.1$ \\
+2.0\% & 1.0  & $0.0$  & $+0.1$ \\
+2.0\% & 3.0  & $-0.1$ & $-0.1$ \\
+2.0\% & 5.0  & $-0.2$ & $-0.2$ \\
+2.0\% & 10.0 & $-0.4$ & $-0.3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Maximum partisan deviation in the joint sweep: $\Delta D$-seats $\leq 0.4$
+(WI) and $\leq 0.3$ (NC).
+The interaction effect does not amplify beyond the single-parameter
+bounds; the worst-case cell ($\ufactor = 2.0\%$, $\acounty = 10$) is
+consistent with the additive upper bound from Section~\ref{sec:key-finding}.

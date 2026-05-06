@@ -31,6 +31,11 @@ plus the one baseline setting, for 26 total pipeline runs.
 Each run is a full 50-state sweep using the \texttt{redist states}
 command.
 
+\paragraph{Limitation of OAT design.}
+One-at-a-time design cannot detect multiplicative interactions between
+parameters; the joint sweep described in Section~\ref{sec:joint-sweep}
+addresses this limitation.
+
 \subsection{Outcome Metrics}
 
 For each pipeline run, we record:

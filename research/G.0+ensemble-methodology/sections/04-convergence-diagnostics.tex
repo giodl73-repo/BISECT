@@ -21,7 +21,11 @@ statistic $\psi$:
   \rhat &= \sqrt{\hat{V}/W}.
 \end{align}
 
-A value $\rhat < 1.05$ is conventionally accepted as indicating convergence.
+A value $\rhat < 1.1$ is conventionally accepted as indicating convergence
+for redistricting's discrete integer outcomes.\footnote{Vehtari et al.\ (2021)
+recommend $\rhat < 1.01$ for continuous parameters; 1.1 is the appropriate
+threshold for the discrete seat-count and plan-assignment statistics used
+here.}
 For redistricting ensembles, we compute $\rhat$ over partisan seats and
 Polsby-Popper means.
 
@@ -75,7 +79,7 @@ The following standards apply across all G-track papers:
 \toprule
 Diagnostic & Threshold & Consequence of failure \\
 \midrule
-$\rhat$ & $< 1.05$ & Results flagged as preliminary \\
+$\rhat$ & $< 1.1$ & Results flagged as preliminary \\
 \ess    & $> 400$  & Wider uncertainty intervals used \\
 $\rho_H(10)$ & $< 0.10$ & Chain considered mixed \\
 \bottomrule

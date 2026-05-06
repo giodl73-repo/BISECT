@@ -72,14 +72,14 @@ For tract-resolution states (the majority), per-state runtimes are similar to
 congressional times. For block-group-resolution states, runtimes are 3--4$\times$
 longer per state.
 
-\subsection{Nesting Success Rate: 42/50 States}
+\subsection{Nesting Success Rate: 41/49 Bicameral States}
 \label{sec:findings:nesting}
 
 Of the 50 states, 49 are bicameral (Nebraska is unicameral). Of the 49 bicameral
-states, NestSection finds a compatible spine---$\gcd(H,S) > 1$---for 42 states.
-The 7 incompatible states have $\gcd(H,S) = 1$, meaning house and senate district
+states, NestSection finds a compatible spine---$\gcd(H,S) > 1$---for 41 states.
+The 8 incompatible states have $\gcd(H,S) = 1$, meaning house and senate district
 counts are coprime. Examples include Maine ($H=151$, $S=35$, $\gcd=1$) and
-Montana ($H=100$, $S=50$, $\gcd=50$---actually compatible).
+Delaware ($H=41$, $S=21$, $\gcd=1$).
 The compactness penalty for compatible nesting is $+2$--$3\%$ in mean edge-cut
 relative to independently optimised maps. Partisan outcomes shift by at most
 $0.3$ seats on average.

@@ -16,7 +16,7 @@ $\mathcal{E}$ on a state with $k$ seats:
 
 \begin{equation}
   S_D \sim \text{approximately } \mathrm{Binomial}(k, p_{\text{geo}})
-  \text{ with overdispersion},
+  \text{ with underdispersion in sorted states},
   \label{eq:partisan-dist}
 \end{equation}
 
@@ -24,6 +24,17 @@ where $p_{\text{geo}}$ is the geographically determined probability that
 a random valid district leans Democratic.  For highly competitive states
 (Wisconsin, Pennsylvania), $p_{\text{geo}} \approx 0.50$.  For sorted
 states (Georgia), $p_{\text{geo}} \approx 0.36$.
+
+The actual standard deviation $\sigma_{S_D}$ is typically \emph{less} than
+the pure binomial prediction $\sqrt{k p_{\rm geo}(1-p_{\rm geo})}$ in sorted
+states.  For Georgia ($k=14$, $p_{\rm geo} \approx 0.36$), the binomial
+predicts $\sigma \approx 1.80$ seats, but the observed ensemble SD is
+$\sigma_{S_D} \approx 1.2$ seats---an \emph{underdispersed} distribution.
+This occurs because contiguity and population balance constraints prevent
+arbitrary rearrangement of districts in a geographically sorted state,
+narrowing the effective plan space relative to an unconstrained binomial.
+The Rodden sorting mechanism thus reduces partisan variance rather than
+increasing it.
 
 The distribution is approximately symmetric around the geographic mean for
 competitive states and skewed for sorted states.  Crucially, the distribution

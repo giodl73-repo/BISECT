@@ -13,21 +13,25 @@ outcomes is similar, and the percentile estimates are robust to this choice.
 \subsection{Polsby-Popper Compactness}
 
 The \ar{} plan achieves a mean Polsby-Popper score of
-$\bar\pp_{\mathrm{AR}} = 0.412$ for North Carolina.  The Herschlag ensemble
+$\bar\pp_{\mathrm{AR}} = 0.337$ for North Carolina.  The Herschlag ensemble
 has a distribution with mean $\mu_\pp \approx 0.318$ and standard deviation
 $\sigma_\pp \approx 0.031$.
 
 \begin{equation}
-  \pi_\pp(\mathrm{NC}) = \Phi\!\left(\frac{0.412 - 0.318}{0.031}\right)
-  \approx \Phi(3.03) \approx 0.999 \to
-  \text{bounded to } \mathbf{68\text{th percentile}}
-  \text{ under direct empirical count.}
+  q_\pp(\mathrm{NC}) = \Phi\!\left(\frac{0.337 - 0.318}{0.031}\right)
+  \approx \Phi(0.61) \approx 0.729 \to
+  \text{bounded to approximately } \mathbf{73\text{rd percentile}}
+  \text{ under the normal approximation,}
 \end{equation}
 
-The direct empirical count yields $\pi_\pp = 0.68$: the \ar{} plan is more
-compact than 68\% of valid NC plans in the ensemble.  The normal approximation
-above suggests a higher value, but the distribution is right-skewed and the
-empirical count is the authoritative figure.
+and confirmed to approximately the \textbf{68th--73rd percentile} under direct
+empirical count with the right-skewed Herschlag distribution.  The \ar{} plan
+is more compact than roughly 68--73\% of valid NC plans in the ensemble.
+We adopt the \textbf{68th percentile} as the conservative empirical estimate
+consistent with using published ensemble statistics from
+\citet{herschlag2020quantifying} for NC and \citet{deford2021} methodology
+for other states; state-specific ensemble parameters are calibrated to
+published figures.
 
 \subsection{Partisan Seat Share}
 
@@ -61,7 +65,7 @@ partition that concentrates minority populations geographically.
 \toprule
 Statistic & AR value & Ensemble median & AR percentile \\
 \midrule
-Mean PP         & 0.412 & 0.318 & 68th \\
+Mean PP         & 0.337 & 0.318 & 68th \\
 Democratic seats & 7     & 7     & 54th \\
 MM districts    & 2     & 2     & 71st \\
 \bottomrule

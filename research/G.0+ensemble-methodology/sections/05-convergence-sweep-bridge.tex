@@ -60,8 +60,11 @@ thresholds: if the seed sweep finds no improvement after 600 seeds, the
 plan is stable under seed perturbation.  This is analogous to---but distinct
 from---an ensemble chain achieving \ess{} $> 400$.
 
-The connection is: both $T$ and \ess{} measure the robustness of a result
-to additional sampling.  A plan certified by \cs{} at $T = 600$ is
-reproducible (same plan from same census data); an ensemble certified by
-\ess{} $> 400$ is reliable (histogram shape stable under additional draws).
-These are complementary certificates for different goals.
+ConvergenceSweep $T = 600$ and ensemble \ess{} are independent certificates
+of robustness: \ess{} measures MCMC mixing in the ensemble space; $T = 600$
+measures monotonic convergence in the seed-quality space.  Both certify
+stability but via orthogonal mechanisms.  They are not numerically comparable
+and should not be conflated.  Together they provide complete coverage of the
+two-method framework: \ess{} certifies that the ensemble distribution estimate
+is stable under additional draws; $T = 600$ certifies that the deterministic
+search has found the best available plan under additional seeds.
