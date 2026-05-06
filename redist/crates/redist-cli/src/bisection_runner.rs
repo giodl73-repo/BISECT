@@ -1651,10 +1651,13 @@ pub fn run_all_splits_percentile(
         u64::from_le_bytes(d[..8].try_into().unwrap())
     }).collect();
 
-    // Run all seeds in parallel, collect (seed_index, edge_cut, assignments).
-    // We carry the seed index so that ties in edge cut are broken deterministically.
+    // Run all seeds sequentially. par_iter() would call the C METIS library from
+    // multiple threads simultaneously; METIS shares global/TLS RNG state and is
+    // not thread-safe, producing non-deterministic results under concurrent calls.
+    // The pure-Rust redist-metis engine is thread-safe, but we use sequential
+    // iteration unconditionally so both engine paths produce identical output.
     let n = adjacency.len();
-    let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds.par_iter()
+    let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds.iter()
         .enumerate()
         .map(|(idx, &seed)| {
             let asgn = run_all_splits(adjacency, vertex_weights, edge_weights,
