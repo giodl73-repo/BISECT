@@ -1,9 +1,10 @@
 # Spec: Ensemble Search Algorithms — G series extensions
 
-**Status**: Proposed (R2 reviewed, targeted revisions applied)  
+**Status**: Accepted (R3 avg 3.25/4 — ready for implementation)  
 **Date**: 2026-05-06  
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.25/4  
 **Reviewed R2**: MERIDIAN 4/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.75/4  
+**Reviewed R3**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
 **Extends**: `redist-ensemble` crate, `SeedCompositor` three-layer compositor  
 **Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), B.19 (Simulated Annealing)
 
@@ -101,12 +102,12 @@ algorithm:
 "n_bursts": 50,
 "percentile": 0.0,
 "base_seed": 12345678,
-"burst_seeds": [seed_0, seed_1, ...],   // all n_bursts seeds recorded
-"selected_burst_idx": 12               // index of the burst whose endpoint was returned
+"burst_seeds": [3829471029, 2049182736, ...],   // actual derived u64 values, not symbolic
+"selected_burst_idx": 12                         // index of the burst whose endpoint was returned
 ```
-The `selected_burst_idx` allows independent verification: a verifier can re-derive all burst seeds, re-run all bursts, and confirm that the plan at the recorded index matches the submitted plan.
+The `burst_seeds` must record the *actual 64-bit values* derived from `chain_seed`, not symbolic names. An auditor who knows `base_seed` can re-derive all seeds using the SHA-256 formula and verify the values match without running the code. The `selected_burst_idx` allows verification that the plan at that index was used.
 
-**Chain-seed version-lock**: The prefix `"SHORT_BURST_CHAIN_"` embeds algorithm identity. Any change to burst semantics (e.g. keeping something other than the endpoint) must change this prefix. Old and new manifests are distinguishable; silent seed compatibility across algorithm versions is prevented.
+**Chain-seed version-lock**: The prefix `"SHORT_BURST_CHAIN_"` embeds algorithm identity. Any change to burst semantics (e.g. keeping something other than the endpoint) must change this prefix. Old and new manifests are distinguishable; silent seed compatibility across algorithm versions is prevented. **Enforcement**: a test asserts that the prefix constant in source equals `"SHORT_BURST_CHAIN_"` and that `chain_seed(0, 0)` equals a hard-coded expected value — this test will fail if the prefix or formula is silently changed without updating the version string.
 
 **Test invariants (L0)**:
 - `n_bursts` endpoints produced, each valid k-district plan
@@ -193,7 +194,7 @@ SeedCompositor::Flip {
 "visited_count": 3821,       // number of accepted plans in visited list
 "selected_plan_rank": 1910   // floor(0.5 * 3821) — the index returned
 ```
-The `selected_plan_rank` enables verification: re-run with same seed, confirm visited list has same length, confirm rank matches.
+The `selected_plan_rank` enables verification: re-run with same seed, confirm `visited_count` matches, confirm the plan at `floor(percentile * visited_count)` matches the submitted plan. Plans in the visited list are sorted by edge-cut (ascending); `selected_plan_rank` is an index into that sorted list.
 
 **Test invariants**:
 - All visited plans are valid (contiguous, population-balanced)
@@ -245,7 +246,7 @@ All fields named and typed so a verifier can independently reproduce the tempera
 
 **Test invariants**:
 - Deterministic: fixed seed, known synthetic subgraph, known initial EC → fixed final EC (not "on average" — one specific deterministic run with known inputs)
-- Fixed-seed regression: `SA(4×4 grid, seed=42, T0=1.0, Tf=1e-4, n_steps=160)` → recorded final EC value (check this exact value in CI to catch cooling schedule bugs)
+- Fixed-seed regression: `SA(4×4 grid, seed=42, t0_factor=0.0 (forces T0=1.0 regardless of initial EC), Tf=1e-4, steps_per_tract=10, n_steps=160)`. The `t0_factor=0.0` fixture isolates the temperature schedule from the initial EC, making the test independent of the initial partition quality. The expected final EC value is recorded in the test file when first run; CI then asserts equality to that constant (deterministic schedule → deterministic outcome given fixed seed).
 - Final plan is contiguous and population-balanced
 - All acceptance decisions use SA seed, not base_seed (isolated RNG)
 
