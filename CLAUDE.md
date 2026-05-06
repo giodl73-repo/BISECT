@@ -1,198 +1,98 @@
-# Claude AI Guide - Congressional Redistricting
+# Claude AI Guide — Redistricting Platform
 
-**Updated**: 2026-04-29
+**Updated**: 2026-05-06
 
-## Project Context
-Congressional redistricting via METIS recursive bisection → 435 districts, 50 states, 3 census years (2000/2010/2020). Purely algorithmic (no gerrymandering). Goal: compact + population-balanced districts.
+## What this is
 
-**Stack**: Rust (`redist` CLI — primary, ~213× faster) + Python 3.13+ (dashboard, research, data download only) | METIS, GeoPandas, Matplotlib | **Data**: Census tracts (~40GB) | **Output**: Maps/CSVs (~20GB/run)
+Congressional and state legislative redistricting via METIS recursive bisection. 50 states, 435 districts, 3 census years. Purely algorithmic. Production tool is the `redist` Rust binary (~213× faster than the archived Python pipeline).
 
-## Critical Files
+## Key directories
 
-**Core Algorithm** (Rust — production):
-- `redist/crates/redist-core/` - bisection, edge-weighting, METIS file I/O, FIPS, population balance
-- `redist/crates/redist-data/` - TIGER reading, adjacency build, .adj.bin serialization
-
-**Pipeline** (Rust binary — production, post-cutover 2026-04-29):
-- `redist run` - full pipeline orchestrator (replaces `run_complete_redistricting.py`)
-- `redist state --state <CODE>` - single-state pipeline (replaces `run_state_redistricting.py` and `process_single_state.py`)
-- `redist states --year <YEAR>` - parallel multi-state runner
-- `redist run -s nation` - national post-processing only (replaces `process_nation.py`)
-
-**Python pipeline (archived under `archive/python-pipeline-final/` per Plan 02 — sealed reference, not maintained):**
-- The Python orchestrator scripts that previously lived in `scripts/pipeline/` are forensic reference only.
-- See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
-
-**Config**: `scripts/config_{2000,2010,2020}.py` - State district counts
-
-**Analysis**: `scripts/{political,demographic,compactness}/` - Metrics
-
-**Progress**: `scripts/utils/{progress_coordinator,terminal_utils}.py` - Hierarchical display
-
-**Web**: `web/dashboard.html`, `scripts/web/generate_dashboard.py` - Static dashboard
-
-**Rust CLI** (`~213× faster than Python`):
-- `redist/crates/redist-cli/` - Binary source (`redist state`, `redist states`, `redist run`, `redist fetch`, `redist analyze`, `redist map`)
-- `redist/crates/redist-map/` - Native map rendering crate (SVG→PNG via resvg, Liberation Sans embedded)
-- `redist/crates/redist-analysis/` - Analytics crate (demographic, political, urban, compactness, summary)
-- `docs/REDIST_CLI.md` - Full CLI reference (commands, flags, env vars)
-- `scripts/data/generate_adj_bin.py` - Convert pkl adjacency files to fast `.adj.bin` format
-
-**Entry**: `redist` binary (primary, invoked by `run` and `runtest` doskey aliases since 2026-04-29 cutover), `setup_env.bat` (sets aliases + checks `redist` is on PATH), `scripts/web/deploy_docs.py` (dashboard)
-
-## Structure
 ```
-redist/               # Rust workspace — production code
-  crates/             # 8 crates: redist-{core,data,analysis,cli,map,report,tui,web}
-  python/redist_py/   # PyO3 bridge (used by research scripts, not production)
-src/apportionment/    # Python library — visualization helpers + huntington_hill (partition/, data/, visualization/maps.py archived)
-scripts/              # Python executables — dashboard generation, data download, research, figures
-                      # (pipeline orchestrators archived under archive/python-pipeline-final/)
-archive/              # Forensic-only: archive/python-pipeline-final/ holds the last working Python pipeline
-data/{year}/          # Raw census data (redistricting/, tiger/tracts/, tiger/blocks/, demographics/, elections/)
-outputs/data/{year}/  # Processed data (units/, adjacency/, places/, elections/, demographics/)
-web/                  # dashboard.html, master_dashboard.html
-artifacts/            # papers/, presentations/, guides/ (LaTeX)
-context/              # AI context (enhancements/, archive/, patterns, architecture)
-docs/                 # Human docs — REDIST_CLI.md is canonical CLI reference
-tests/                # unit/, integration/, e2e/, acceptance/ — pytest tests/ -v
+redist/crates/          # Rust workspace (redist-cli, redist-core, redist-data, redist-analysis,
+                        #   redist-map, redist-report, redist-apportion, redist-metis, redist-ensemble)
+docs/                   # Human-facing docs (REDIST_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
+docs/papers/            # 63+ compiled PDFs (committed)
+research/               # LaTeX sources for all papers (A–H series)
+scripts/                # Python: data download, elections, dashboard generation only
+configs/                # YAML plan configs (configs/{label}.yml)
+runs/ analysis/ reports/ # Build outputs (gitignored)
+data/{year}/            # Raw census data (gitignored, ~55GB)
+archive/python-pipeline-final/  # Sealed forensic reference — do not touch
 ```
 
-## Git Rules
-⚠️ **NEVER commit**: `data/`, `outputs/`, `*.{png,jpg,pdf}` (except docs/) - See `.gitignore`
-
-## Skills (31 total)
-**Common**: `/enhancement-{plan,implement}`, `/run-{redistricting,tests}`, `/debug-{tests,pipeline}`
-**See**: [context/SKILLS.md](context/SKILLS.md)
-
-## Coding Patterns
-
-### STATUS Protocol (Progress Reporting)
-```python
-pos = int(os.environ.get('TQDM_POSITION', '-1'))
-if pos >= 0: print(f"STATUS:{pos}:{msg}", flush=True)
-```
-
-### Conventions
-- **State names**: lowercase_underscores (`california`, `new_york`)
-- **Paths**: Use `Path` objects, not strings
-- **Imports**: `from apportionment.partition...`, `from scripts.config_2020...`
-- **Windows**: ⚠️ ASCII ONLY (`[OK]`/`[FAIL]`/`->`) - NO Unicode (✓✗→•) → crashes CP1252
-
-**See**: [context/CODING_PATTERNS.md](context/CODING_PATTERNS.md) for full patterns
-
-## Common Commands
+## Core commands
 
 ```bash
-# Pipeline (production - outputs/v1/{year}/)
-run -v v1                                             # Multi-year parallel (2-4h) - doskey alias
-run -y 2020 -v v1                                     # Single year (~1h)
-run -y 2020 -v v1 -st CA TX NY                        # Specific states only
-run -v v1 -s nation                                   # National only (fast)
+# Build a plan (reads configs/{label}.yml)
+redist build <label> --year 2020 --workers 8
 
-# Test/debug runs (outputs/dev/{version}_{year}/)
-runtest -y 2020 -v test                               # Test run - doskey alias
-runtest -y 2020 -v test -st VT                        # Test single state
-run -p -v test                                        # Dry run (print-only)
-run -v v1 -d                                          # Debug mode (progress delays)
+# Analysis + report + verify SHA chain
+redist label-analyze <label> --year 2020 --types all
+redist label-report  <label> --year 2020 --format html json
+redist label-verify  <label> --year 2020
 
-# Downloads (separate from pipeline - manual control)
-python scripts/data/download_orchestrator.py --stages redistricting demographics --year 2020 --check-only  # Check cache
-python scripts/data/download_orchestrator.py --stages redistricting --year 2020 --workers 4  # Download missing data
-python scripts/data/download_orchestrator.py --type demographics --year 2020 --states VT DE  # Test with small states
+# List / inspect
+redist ls
+redist show <label>
 
-# Short flags (Rust `redist run`):
-#   -h=help, -y=year, -v=version, -s=stages, -w=workers, -r=reset,
-#   -p=print-only, -d=debug, -e=election-year, -m=partition-mode
-# Long forms (use these for clarity): --help --year --version --stages --states --workers --dpi
-#                                     --run-type --partition-mode --election-year
-# Note: `--states` (plural) takes a list and has NO short flag in Rust.
+# Single state (for development)
+redist state --state VT --year 2020 --version v_test
 
-# Dashboard
-python scripts/web/generate_master_dashboard.py
-python scripts/web/deploy_docs.py --version V3 --year 2020 --out dashboard_2020.html
-
-# Tests
-pytest tests/unit/ -v      # Unit tests (~1000)
-pytest tests/integration/  # Integration tests (require pipeline outputs)
+# Fetch census data
+redist fetch --year 2020 --workers 8
 ```
 
-**See**: [context/QUICK_REFERENCE.md](context/QUICK_REFERENCE.md) for troubleshooting
+## Three-layer compositor
 
-## Enhancement Workflow (6 phases)
-1. **Research**: Review docs/archives/dependencies
-2. **Planning**: Create spec (context/enhancements/active/), identify tests needed
-3. **Implementation**: TodoWrite, follow patterns, **write tests as you code** (TDD)
-4. **Testing**: Automated tests (unit/integration/e2e/dashboard) → print-only → small state → multi-year
-5. **Documentation**: Update ALL affected docs (mandatory)
-6. **Completion**: Git commit, archive notes
+Every run is defined by three flags:
 
-**CRITICAL**: Add tests for EVERY enhancement (unit/integration/e2e/dashboard) - use decision tree in workflow doc.
+| Flag | Controls | Key values |
+|------|----------|-----------|
+| `--structure` | Bisection tree shape | `standard-bisect`, `prime-factor` (ApportionRegions), `ratio-optimal` (GeoSection), `ratio-optimal-area`, `ratio-optimal-vra`, `nway` |
+| `--weights-override` | METIS edge/vertex signal | `geographic` (default), `county`, `unweighted`, `vra-aligned`, `proportional` |
+| `--search` | Seed selection strategy | `single`, `multi`, `convergence` (T=600 default), `percentile`, `bisection-ensemble` |
 
-**See**: [context/ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md)
-
-## Test Requirements (MANDATORY)
+YAML config example:
+```yaml
+name: official_2020
+algorithm:
+  structure: prime-factor
+  weights: county
+  search: convergence
+  convergence_threshold: 600
+  balance_tolerance: 0.5
+workers: 8
+years: ["2020", "2010", "2000"]
 ```
-Add function/class?     → unit tests (tests/unit/)
-Multi-component logic?  → integration tests (tests/integration/)
-Pipeline workflow?      → e2e tests (tests/e2e/)
-Visualization/dashboard?→ dashboard tests (tests/e2e/)
+
+## METIS engines
+
+- `--metis-engine c-ffi` — default, bundled C METIS (requires C compiler at build time)
+- `--metis-engine redist-metis` — pure Rust, no C dependency (portable binary)
+- `cargo build --no-default-features` — builds the portable pure-Rust binary
+
+## Git rules
+
+- ⚠️ NEVER commit: `data/`, `outputs/`, `*.{png,jpg,pdf}` (except `docs/`)
+- Windows: ASCII only in console output — NO Unicode (CP1252 crashes)
+- State names in code: `lowercase_underscores` (`north_carolina`, not `NC`)
+
+## Testing
+
+```bash
+cargo test -p redist-cli --lib -- --test-threads=1  # inline unit tests (CWD-sensitive)
+cargo test -p redist-ensemble                        # 61 tests: L0/L1/L2
+pytest tests/unit/ -v                               # Python unit tests
 ```
-**Quality**: >80% unit coverage, reliable (no flaky tests), multi-year support
 
-## Performance
-- Multi-year parallel (12 workers): 2-4h (3 census years)
-- Single year (4 workers): ~1h
-- Subsequent runs w/ `.states_complete`: Minutes (national only)
-- Single state (VT/DE): 30s-2min
-- Dashboard: ~5s
+Add tests for every new feature: L0 (inline unit), L1 (integration, synthetic data), L2 (real data, `#[ignore]`).
 
-## Algorithm Constraints
-- Population: ±0.5% of target
-- Contiguity: All districts connected
-- Compactness: METIS edge-cut minimization
-- No political/racial data
+## Key docs
 
-## Recent Changes
-- **2026-04-30**: **Researcher Toolkit — partial landing (eighth roadmap plan; final plan)** — `redist-analysis::ensemble_diagnostics` (R-hat / ESS / Hamming autocorrelation, S-03; 21 tests); `notebooks/` 5-stub scaffolding with runtime-budget metadata + kernel-state attestation header (B-06); `scripts/research/paper_mode_template/REPRODUCE.sh` AEA-compliant replication-script template (D-05). Deferred: GerryChain integration (Tasks 3/4/6), `--paper-mode` flag wiring (Task 8.1), `validate-ensemble` CLI (Task 5).
-- **2026-04-30**: **Fairness Doctrine v1** — `docs/legal/FAIRNESS_DOCTRINE.md` is the project's citable artifact for state-court partisan-gerrymandering litigation post-Rucho. Articulates the procedural-fairness claim, names case law (PA *LWV*, NC *Harper*, NY *Harkenrider*, Allen v. Milligan, Callais), §6 lists 9 things the project does NOT claim. Companion to the just-shipped ensemble_diagnostics math.
-- **2026-04-30**: **Deposition Prep — partial landing (seventh roadmap plan)** — `data/whitelist_dependencies.json` + `docs/parameters/whitelist-dependencies.md` (S-01 DAG); `redist-cli::depo` library module with whitelist-validated `parse_param_kv`, deterministic `overrides_hash`, canonical JSON serializer, `whatif-manifest v1` struct, `DepoLogWriter` (canonical JSONL + `prev_sha256` hash chain + atomic sidecar manifest + state recovery on reopen + `close()` final SHA), `verify_log_file` (single-byte tamper + seq-skip detection); `REDIST_BUILD_COMMIT_OVERRIDE` build-time env (B-07). 28 new L0 tests; 1187 total workspace tests pass. Deferred: CLI dispatch (ships with daemon), IPC abstraction, daemon scaffolding, p99 benchmark, deposition-checklist notebook.
-- **2026-04-30**: **Civic Bidirectional Input — partial landing (sixth roadmap plan)** — `redist civic` subcommand group with ingest + conflict detection + list/show. BOM-tolerant CSV reader (PP-27), GEOID leading-zero detection (PP-28), parsed-IP URL validator (PP-29), B-08 race-conflict threshold semantics. 46 new L0 tests; 1159 total workspace tests pass. Deferred: URL snapshot (PP-30), Sheets template, hermetic LA fixture, candidate-race CLI integration with the existing `redist-analysis::race_of_candidate` parser.
-- **2026-04-30**: **Plan Comparison & Narrative — partial landing (fifth roadmap plan)** — `redist-report::{moe, comparison, narrative, narrative_manifest}` modules. MoE suppression with monotone + non-monotone rules (S-04). Direct-Rust narrative renderer with [DRAFT] gate, civic-counter-proposal framing, threshold disclosure, close-call flagging, MoE integration; all 4 value-correctness anchors green. narrative-manifest v1 schema with plan manifest SHAs (COVENANT C-3) + parallel-test-safe build_narrative_manifest_with_clock(). 45 new L0 tests; 0 regressions across 1113-test workspace. CLI dispatch wiring deferred — `redist compare --format narrative` exits with [CONFIG] pointer to the implementation modules.
-- **2026-04-30**: **State Staff Interop — partial landing (fourth roadmap plan)** — `PlanDirGuard` atomic-import infrastructure (PP-22), `callais_preflight` BOUNDARY gate at analyze + import gates (refuses VRA + partisan markers in same manifest), canonical-form round-trip equality helpers (spec §6), `redist import --as-civic-counter-proposal --submitted-by` flag (COMMONS). PlanManifest extended with submission_type / submitted_by / source_tool / import_compat_sha256 fields. 21 new L0 tests; 0 regressions across 1068-test workspace sweep.
-- **2026-04-30**: **Court Submission Reports — partial landing (third roadmap plan)** — manifests.md + citation-strings.md followup-docs landed (M-03, D-06). CLI flag surface for `redist report --format pdf` wired (`--expert-name`, `--jurisdiction`, `--citation-style`, `--allow-non-strict-civic`, `--draft`, etc.). `redist-report::civic_gate` BD-R1 gating with 10 L0 tests. Typst + verapdf version pins in `redist-report/typst-templates/`. Typst execution path scaffolded but not active until Typst is installed (see `redist-report/typst-templates/README.md` for the next-session pickup).
-- **2026-04-30**: **Callais Evidence Layer landed (second roadmap plan)** — `redist analyze --types bloc-voting` runs the disentangled WLS+HC3+Holm+cluster-bootstrap regression per Callais p.36. New crates `redist_analysis::bloc_voting`, `race_of_candidate`, `bloc_voting_writer`. Closed race vocabulary, BD-R2 reconciled attestation_doc_format union (pdf|docx|md|txt|png|jpg|jpeg|tif|tiff), SHA-256 chain on every attestation doc, joint-family Holm including LOO variants (S-02). 43 new tests. See `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md` and `docs/file-formats/race-of-candidate.md`.
-- **2026-04-30**: **Onboarding plan landed** — `bootstrap.sh` / `bootstrap.bat` (one-shot setup); `docs/quickstart/quickstart-{special-master,researcher,callais-expert,state-staff,civic-advocate}.md` (5 personas); `examples/vermont-2020-walkthrough/` (canonical fixture, structural — `pin.sh` populates SHAs after first clean run); `redist doctor --check-tutorial-data` (drift detection); `docs/error-conventions.md` (categorized `[INPUT]/[CONFIG]/[NETWORK]/[INTERNAL]` prefixes + PP-34 ASCII-only-on-Windows console policy). See `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`.
-- **2026-04-30**: **8 capability specs + plans v2.1.1** — full spec set for the five-star roadmap (Onboarding, Callais, Court Reports, State Staff Interop, Plan Comparison, Civic Bidirectional, Deposition Prep, Researcher Toolkit). Two rounds of role review: 9 roles on specs (SCALE BLOCK lifted), 5 roles on plans. v2.1.1 patches resolved BD-R2 attestation_doc_format mismatch + 4 P1 cross-plan consistency issues. See `docs/superpowers/specs/2026-04-30-roadmap-five-star.md` and `docs/superpowers/specs/2026-04-30-v21-tracking.md`.
-- **2026-04-29**: **Python pipeline archived** — pipeline orchestrators (`run_complete_redistricting.py`, `run_states_parallel.py`, `process_nation.py`, `process_single_state.py`, `run_state_redistricting.py`) and the Python algorithm library (`src/apportionment/partition/`, `src/apportionment/data/`, `src/apportionment/visualization/maps.py`) moved to `archive/python-pipeline-final/`. Validation harness (`compare_rust_vs_python.py`, `validate_rust_vs_python.py`) and one-time bridge (`generate_adj_bin.py`) deleted. `redist-web` stub documented as reserved.
-- **2026-04-29**: **Entry-point cutover** — `run` and `runtest` doskey aliases now invoke `redist` Rust binary directly. See `docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md`.
-- **2026-04-29**: **Pitfalls PP-15, PP-16, PP-17 added** — entry-point PATH preflight, rollback dependency tracking, structural sensitive-asset blocking. See `design/pitfalls/pitfalls-pipeline.md`.
-- **2026-04-29**: **Louisiana v. Callais** ruling integrated — partisan edge-weighting plan (Plan 03) drafted, gated on cutover + cleanup completion.
-- **2026-02-08**: MAUP Sensitivity Analysis (Paper 11) - Phase 2 complete: Built adjacency graphs for all 50 states at block group (239K units) and block (8.1M units) resolutions, validated multi-resolution infrastructure with 10-state subset (30 successful runs), confirmed algorithm scalability across 130× unit count range
-- **2026-02-08**: Multi-resolution redistricting infrastructure - Added resolution parameter to pipeline scripts, created `run_multi_resolution_validation.py`, updated path utilities with backward compatibility for tract naming
-- **2026-04-24**: Removed Wave 9 FastAPI/React app (api/, backend/, frontend/) — replaced by static dashboard + planned Rust CLI port
-- **2026-01-18**: Resolution-independent restructuring - `units/` directory, `tiger/tracts/` + `tiger/blocks/` structure
-- **2026-01-18**: Script renames - `download_tiger_units.py`, `merge_units_with_geometries.py` (resolution-aware)
-- **2026-01-18**: Download orchestrator (Enhancement 48) - Parallel downloads, cache checking, 4-8x faster
-- **2026-01-18**: Centralized download config - STATE_FIPS, CENSUS_CONFIGS single source (75 unit tests)
-- **2026-01-18**: Stage-aware downloads - Check cache, skip existing data, download only what's missing
-- **2026-01-18**: Census data processing (Enhancement 47) - Parse/merge/adjacency pipeline integrated
-- **2026-01-18**: Path reorganization - `data/{year}/` and `outputs/data/{year}/` structure
-
-**See**: [docs/CHANGELOG.md](docs/CHANGELOG.md)
-
-## Common Pitfalls
-1. ⚠️ Don't commit data/outputs
-2. Config imports: `from scripts.config_2020 import...`
-3. Progress bars: Use STATUS protocol in child processes
-4. State names: lowercase_underscores
-5. Unicode: NEVER in console (Windows CP1252)
-6. **Tests: Add systematically for EVERY enhancement** (not ad-hoc)
-7. **Error logs**: Check `outputs/{version}/{year}/error.log` for failures
-
-## Documentation
-**Start**: [CLAUDE.md](CLAUDE.md) (this), [README.md](README.md)
-**System**: [ARCHITECTURE.md](context/ARCHITECTURE.md), [RECURSIVE_BISECTION.md](docs/RECURSIVE_BISECTION.md)
-**Dev**: [CODING_PATTERNS.md](context/CODING_PATTERNS.md), [ENHANCEMENT_WORKFLOW.md](context/ENHANCEMENT_WORKFLOW.md), [CONTRIBUTING.md](docs/CONTRIBUTING.md)
-**Ref**: [QUICK_REFERENCE.md](context/QUICK_REFERENCE.md), [SKILLS.md](context/SKILLS.md), [DATA_FORMATS.md](context/DATA_FORMATS.md), [TESTING.md](context/TESTING.md)
-**History**: [CHANGELOG.md](docs/CHANGELOG.md), [enhancements/INDEX.md](context/enhancements/INDEX.md), [archive/](context/archive/)
+- `docs/REDIST_CLI.md` — complete CLI reference
+- `docs/PAPERS.md` — all 63+ papers with PDFs, organised by question
+- `docs/concepts/` — algorithm guides (three-layer compositor, section algorithms, label pipeline, ensemble methods)
+- `docs/quickstart/` — persona guides (special master, researcher, state staff, algorithm explorer, federal statute)
+- `docs/legal/` — model federal statute, fairness doctrine
+- `README.md` — public-facing overview
