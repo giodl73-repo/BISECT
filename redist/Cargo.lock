@@ -2636,6 +2636,7 @@ dependencies = [
  "redist-map",
  "redist-metis",
  "redist-report",
+ "redist-smc",
  "reqwest",
  "serde",
  "serde_json",
@@ -2739,6 +2740,19 @@ dependencies = [
  "sha2",
  "tempfile",
  "tera",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "redist-smc"
+version = "0.1.0"
+dependencies = [
+ "rand 0.8.6",
+ "rayon",
+ "redist-ensemble",
+ "serde",
+ "serde_json",
+ "sha2",
  "thiserror 2.0.18",
 ]
 
