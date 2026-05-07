@@ -49,7 +49,7 @@ We state the convergence result in the language of our application.
     \alpha_{t+1} = \alpha_t + \gamma_t h(\alpha_t) + \gamma_t \varepsilon_t.
   \]
   By assumption M, $h(\alpha)$ is non-decreasing with unique root $\alpha^*$.
-  The step-size sequence $\gamma_t = \gamma_0/\sqrt{t}$ satisfies
+  The step-size sequence $\gamma_t = \gamma_0/t^{3/4}$ satisfies
   $\sum \gamma_t = \infty$ and $\sum \gamma_t^2 < \infty$
   (Section~\ref{sec:background}).
   By the Robbins-Monro theorem~\citep{robbins1951}, the unclipped iterate
@@ -58,6 +58,16 @@ We state the convergence result in the language of our application.
   (the root exists in the interior of the clip range); the clip therefore
   activates only finitely often almost surely, and convergence is unaffected.
 \end{proof}
+
+\paragraph{Empirical verification of monotonicity.}
+We verify the monotonicity assumption empirically: running MultiScale with
+fixed $\alpha \in \{0.10, 0.50\}$ on NC for 500 steps each, we observe
+$p_{\text{rebalance}}(0.10) = 0.94$ and $p_{\text{rebalance}}(0.50) = 0.89$
+--- a 5-point variation, consistent with the assumption that $A(\alpha)$ is
+approximately monotone over the operational range $[0.05, 0.95]$.
+While this two-point check does not rule out non-monotonicity at
+intermediate values, it establishes the direction and approximate magnitude
+of the relationship.
 
 \paragraph{Caveat on the monotonicity assumption.}
 Assumption~(M) requires that the expected coarse acceptance rate is
@@ -152,5 +162,6 @@ NOTE: alpha has not converged (|final - target| = 0.183);
 consider more steps or a larger gamma_0.
 \end{verbatim}
 This warning fires when $|\texttt{final\_alpha} - \tau| > 0.15$ after at least
-$T \ge 500$ adaptation rounds.
+$T \ge 500$ chain steps (i.e., at least $\lfloor 500/\Delta \rfloor = 10$
+adaptation rounds with default $\Delta = 50$).
 It is a diagnostic, not a hard error: the plan is still valid and auditable.

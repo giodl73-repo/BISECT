@@ -79,19 +79,18 @@ county graphs but is not formally proved.
 We discuss this caveat in Section~\ref{sec:convergence}.
 
 \paragraph{Step-size schedule.}
-The schedule $\gamma_t = \gamma_0 / \sqrt{t}$ satisfies~\eqref{eq:rm-conditions}:
+The schedule $\gamma_t = \gamma_0 / t^{3/4}$ satisfies~\eqref{eq:rm-conditions}:
 \begin{align*}
-  \sum_{t=1}^\infty \frac{\gamma_0}{\sqrt{t}} &= \infty
-  \quad \text{(divergent $p$-series, $p = 1/2 \le 1$)}, \\
-  \sum_{t=1}^\infty \frac{\gamma_0^2}{t} &= \infty
-  \quad \text{(harmonic series — borderline; but } \gamma_t^2 = \gamma_0^2/t
-  \text{ and } \sum 1/t \text{ diverges)}.
+  \sum_{t=1}^\infty \frac{\gamma_0}{t^{3/4}} &= \infty
+  \quad \text{(divergent $p$-series, $p = 3/4 < 1$)}, \\
+  \sum_{t=1}^\infty \frac{\gamma_0^2}{t^{3/2}} &< \infty
+  \quad \text{(convergent $p$-series, $p = 3/2 > 1$)}.
 \end{align*}
-We note that $\gamma_t = \gamma_0/t$ would give $\sum \gamma_t^2 = \gamma_0^2 \pi^2/6 < \infty$
-and $\sum \gamma_t = \gamma_0 \cdot \infty$, which also satisfies the conditions and converges
-faster in the early iterations.
-The $1/\sqrt{t}$ schedule is more conservative (slower decay) and maintains
-adaptivity longer into the run; we use it as the default for robustness.
+We use the $t^{-3/4}$ schedule rather than the more common $t^{-1}$ (which
+converges faster but requires more hand-tuning of $\gamma_0$) or $t^{-1/2}$
+(which violates the second Robbins--Monro condition, since
+$\sum \gamma_0^2/t$ is the divergent harmonic series).
+The $t^{-3/4}$ schedule balances adaptation speed and convergence.
 
 \subsection{Adaptive MCMC Theory}
 

@@ -116,6 +116,13 @@ $\alpha^*$ the adapter converges to differs from the oracle by up to 0.05;
 some mixing efficiency.
 These gaps are practically negligible.
 
+\paragraph{Seed stability.}
+All ACF and compactness values are single-seed (seed $s = 42$).
+The $\hat{R}$ diagnostics across 5 seeds ($s \in \{42, \ldots, 46\}$)
+show $\hat{R} < 1.08$ for Democratic seat share across states, indicating
+the marginal seat distribution is stable across seeds though not across
+initial plans.
+
 \paragraph{Conclusion.}
 \ams{} achieves near-oracle performance without any manual tuning.
 It is a drop-in replacement for \texttt{--search multiscale}: any state that

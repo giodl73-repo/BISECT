@@ -1,10 +1,11 @@
 # Spec: BFS Region-Growing — Greedy Geographic District Construction
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS  
 **Related paper**: B.23  
-**Implementation**: `redist-cli/src/bisection_runner.rs` (no new crate)
+**Implementation**: `redist-cli/src/bisection_runner.rs` (no new crate)  
+**Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.5/4
 
 ---
 
@@ -13,6 +14,8 @@
 BFS Region-Growing is the simplest possible redistricting algorithm: seed one tract per district, then repeatedly assign each unassigned tract to the adjacent district with the greatest population deficit. This "greedy packer" fills space by proximity to seeds, producing contiguous districts by construction.
 
 Unlike METIS (optimizes edge cut globally) or CVD (minimizes geographic distance), BFS Growth optimizes nothing — it is a fast, deterministic baseline that shows what "pure geographic proximity with population balance" looks like. Runtime: O(n log n) per bisection node. No MCMC, no spanning trees, no iterations.
+
+BFS-based initial partitioning is used internally by METIS as the coarsening warm-start (Karypis & Kumar 1998 §4); BFS Growth elevates this to a standalone algorithm for comparison and baseline use.
 
 BFS Growth is useful as:
 
@@ -168,7 +171,7 @@ Every run appends to `runs/{label}/{year}/index.json`:
 "final_pp_mean": 0.198
 ```
 
-`rebalance_succeeded` records whether the post-hoc rebalance converged within `balance_post_iters`. If false, the plan may slightly violate `balance_tolerance`. An auditor who knows `base_seed` can re-derive `bfs_seed`, replay seed selection and BFS assignment, and verify the submitted plan.
+`rebalance_succeeded` records whether the post-hoc rebalance converged within `balance_post_iters`. If false, the plan may slightly violate `balance_tolerance`, but all districts still contain at least 1 tract and no district population exceeds `2 × ideal_pop` (the worst-case single coarse-step imbalance). An auditor who knows `base_seed` can re-derive `bfs_seed`, replay seed selection and BFS assignment, and verify the submitted plan.
 
 ---
 
@@ -184,6 +187,7 @@ Every run appends to `runs/{label}/{year}/index.json`:
 - Seeds are distinct — no duplicate seed tracts
 - Seeds are maximally spread: min pairwise BFS distance among seeds >= n/k (approximately)
 - `bfs_seed` prefix constant in source equals `"BFS_SEED_"` exactly; hard-coded expected value for `bfs_seed(0)` asserted
+- `rebalance_failed_plan_still_bounded`: construct a graph where rebalance fails (e.g., highly constrained topology with `balance_post_iters=0`); assert all districts non-empty and no district exceeds `2 × ideal_pop`
 
 ### L1 (integration, synthetic data)
 
@@ -203,4 +207,13 @@ Every run appends to `runs/{label}/{year}/index.json`:
 
 1. Should seed selection use population-weighted sampling instead of geographic spread for high-density states (NYC, LA)?
 2. Can BFS Growth be used as warm-start for MCMC chains? (Yes — better than pure METIS for Forest ReCom.)
-3. Should the priority function use population deficit or a composite (deficit + geographic distance from seed)?
+
+## 9. Design decisions
+
+**Priority function** (formerly Q3): The deficit-only priority function `|ideal_pop - current_pop[district]|` is intentionally simple. In high-density states (NY, CA, IL), seed quality matters more than the growth priority function; Phase 2 will evaluate a composite `w_deficit * deficit + w_dist * distance_to_seed` priority. For now, deficit-only is the stable default.
+
+---
+
+## References
+
+- `karypis1998`: Karypis, G., & Kumar, V. (1998). "A fast and high quality multilevel scheme for partitioning irregular graphs." SIAM Journal on Scientific Computing 20(1), 359–392.

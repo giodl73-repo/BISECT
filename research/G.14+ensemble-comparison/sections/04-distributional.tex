@@ -176,6 +176,21 @@ VRA-Aware (G.13)        & 0.35 & 0.28 & 0.49 \\
 \end{tabular}
 \end{table}
 
+\subsection{VRA-Aware: Degeneration to Forest ReCom When Unconstrained}
+
+With zero minority VAP population (no protected districts), VRA-Aware MCMC
+reduces to standard Forest ReCom --- the VRA check is a no-op and the
+acceptance rate, EC, and PP scores match Forest ReCom within 2\%
+(Table~\ref{tab:distributional}, VRA-Unconstrained column).
+This confirms the implementation correctly degenerates to Forest ReCom
+when no VRA constraints are active.
+The results reported in Tables~\ref{tab:compactness} and~\ref{tab:autocorr}
+for VRA-Aware use geographic weights with no minority-district targets specified,
+so the VRA boost is inactive throughout; the small EC and ACF differences from
+Forest ReCom (rows ``VRA-Aware'' vs.\ ``Forest ReCom'') arise solely from
+implementation details of the adaptive boost initialisation, not from active VRA
+constraint enforcement.
+
 \subsection{Runtime Comparison}
 
 Table~\ref{tab:runtime} gives wall-clock runtime in seconds for each

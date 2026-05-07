@@ -25,18 +25,22 @@ G.6--G.13), not solely the single-run empirical results of this paper.
     If VRA compliance is verified post hoc (acceptable for many contexts),
     proceed to Q2.
 
-  \item \textbf{Is $k \geq 20$?}
+  \item \textbf{Is $k \geq 15$?}
 
-    For states with $k \geq 20$ congressional districts (TX $k=38$,
-    FL $k=28$, CA $k=52$, NY $k=26$, PA $k=17$, IL $k=17$, OH $k=15$,
-    GA $k=14$ borderline, and any state approaching this threshold),
+    For medium-to-large $k$ states ($k \geq 15$, including TX $k=38$,
+    FL $k=28$, CA $k=52$, NY $k=26$, PA $k=17$, and OH $k=15$),
     single-scale chains mix slowly.
     The lag-100 autocorrelation results in Section~\ref{sec:distributional}
     show that Multi-scale (G.11) provides a meaningful mixing improvement
     for TX; for CA ($k=52$), the improvement is expected to be larger.
+    For medium-$k$ states ($k \geq 15$, including PA $k=17$ and OH $k=15$),
+    Multi-scale provides measurable mixing improvement if the coarse
+    acceptance rate exceeds 20\%.
+    For smaller $k < 15$, single-scale Forest ReCom or Merge-Split is
+    sufficient.
     \emph{Proceed to: \ms{} (G.11). Stop.}
 
-    For $k < 20$, single-scale chains mix adequately; proceed to Q3.
+    For $k < 15$, single-scale chains mix adequately; proceed to Q3.
 
   \item \textbf{Is a calibrated target distribution required?}
 
@@ -105,7 +109,7 @@ G.6--G.13), not solely the single-run empirical results of this paper.
 \draw[arrow] (q1.north east) -- node[label, above, sloped]{\small Yes} (vra.west);
 
 %% Q2
-\node[decision, below=1.6cm of q1] (q2) {$k \geq 20$?};
+\node[decision, below=1.6cm of q1] (q2) {$k \geq 15$?};
 \draw[arrow] (q1.south) -- node[label, right]{\small No} (q2.north);
 
 %% Q2 Yes
@@ -219,7 +223,7 @@ For example:
   \item \texttt{--structure ratio-optimal --weights geographic --search vra-recom}:
         GeoSection initial plan + neutral weights + VRA-constrained chain.
         Recommended for VRA Section~2 analysis.
-  \item \texttt{--structure ratio-optimal --weights geographic --search multi}:
+  \item \texttt{--structure ratio-optimal --weights geographic --search short-burst}:
         GeoSection initial plan + neutral weights + Short-Burst optimisation.
         Recommended for producing the most compact feasible plan.
 \end{itemize}

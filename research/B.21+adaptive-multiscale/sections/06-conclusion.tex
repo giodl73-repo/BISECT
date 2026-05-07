@@ -6,7 +6,7 @@ algorithm that wraps \ms{} (G.11) with a Robbins-Monro adaptation loop that
 automatically tunes the coarse-move probability $\alpha$.
 The algorithm is simple: every $\Delta = 50$ steps, observe the recent coarse
 acceptance rate, compare to the target $\tau = 0.30$, and update $\alpha$ by
-$\gamma_t = \gamma_0/\sqrt{t}$.
+$\gamma_t = \gamma_0/t^{3/4}$.
 No other aspect of the chain changes.
 
 \paragraph{Key findings.}
@@ -48,6 +48,15 @@ For practitioners, the recommendation is straightforward:
     have strong prior knowledge that $X$ is the correct $\alpha$ for this
     specific state, or for reproducibility of a specific historical run.
 \end{itemize}
+
+\paragraph{Distributional footprint and partisan seat stability.}
+The distributional footprint of \ams{} --- the space of plans it visits ---
+depends on the converged $\alpha^*$, which is state-specific.
+States where \ams{} converges to higher $\alpha$ (more coarse moves) visit
+a broader spatial range of plans; this does not introduce partisan bias since
+coarse moves are geographically symmetric, but practitioners should run the
+full $p$-sweep (as recommended for all ensemble methods) to characterise
+seat outcome sensitivity.
 
 \paragraph{Audit and reproducibility.}
 The alpha trace, $\gamma_0$, initial alpha, and final alpha are all recorded

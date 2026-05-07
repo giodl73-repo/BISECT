@@ -15,14 +15,16 @@ updating $\alpha$ by the Robbins-Monro rule.
 
 Three design choices distinguish \ams{} from a naive adaptive wrapper:
 
-\paragraph{Choice 1: $\gamma_0/\sqrt{t}$ step-size schedule.}
-As established in Section~\ref{sec:background}, this schedule satisfies the
-Robbins-Monro convergence conditions.
-The $1/\sqrt{t}$ decay is slower than the $1/t$ alternative, preserving
-adaptivity into the mid-run phase.
+\paragraph{Choice 1: $\gamma_0/t^{3/4}$ step-size schedule.}
+As established in Section~\ref{sec:background}, this schedule satisfies both
+Robbins-Monro convergence conditions ($\sum \gamma_t = \infty$ and $\sum
+\gamma_t^2 < \infty$).
+The $t^{-3/4}$ decay is slower than the $t^{-1}$ alternative, preserving
+adaptivity into the mid-run phase, while avoiding the second-condition
+violation of the $t^{-1/2}$ schedule.
 For $T = 5{,}000$ steps and $\Delta = 50$, there are $t_{\max} = 100$
 adaptation rounds; the step sizes range from $\gamma_0 = 0.10$ (first round)
-to $\gamma_0/\sqrt{100} = 0.01$ (last round).
+to $\gamma_0/100^{3/4} \approx 0.0032$ (last round).
 The final perturbations are small but nonzero, allowing the alpha to track
 slow non-stationarity.
 
@@ -87,7 +89,8 @@ Algorithm~\ref{alg:ams} gives the complete \ams{} procedure.
   \If{$\text{step} \bmod \Delta = 0$}
     \State $t \gets \text{step} / \Delta$
     \Comment{adaptation round index}
-    \State $\gamma_t \gets \gamma_0 / \sqrt{t}$
+    \State $\gamma_t \gets \gamma_0 / t^{3/4}$
+    \Comment{implements \texttt{gamma\_0 / t.powf(0.75)}}
     \State $r \gets \text{mean}(\mathrm{window})$
     \Comment{observed coarse acceptance rate}
     \State $\alpha \gets \text{clip}\!\bigl(\alpha + \gamma_t(r - \tau),\; 0.05,\; 0.95\bigr)$

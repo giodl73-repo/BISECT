@@ -1,10 +1,11 @@
 # Spec: Centroidal Voronoi Districts — Geometric District Construction via Iterative Seed Placement
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS at each bisection node  
 **Related paper**: B.22  
-**New crate**: Not needed — pure geometry, implemented in `redist-cli/src/bisection_runner.rs`
+**New crate**: Not needed — pure geometry, implemented in `redist-cli/src/bisection_runner.rs`  
+**Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4
 
 ---
 
@@ -13,6 +14,8 @@
 All existing structure-layer algorithms (METIS, SA, GeoSection, AreaSection) operate on graph topology — adjacency, edge cuts. Centroidal Voronoi Districts (CVD) operates on **geography**: it places k district seeds at population-weighted centroid locations and assigns each tract to its nearest seed by geographic distance. This produces geometrically compact, roughly circular districts — a fundamentally different compactness profile from edge-cut minimization.
 
 CVD is the "packer" algorithm: it fills geographic space greedily by proximity, independent of political boundaries or demographic composition. It provides a natural baseline: "what does the most geometrically natural partition look like?"
+
+CVD is the discrete redistricting analogue of Lloyd's algorithm (Lloyd 1982) for optimal quantization, later analyzed for general metric spaces by Du, Faber & Gunzburger (1999). The convergence properties carry over to discrete weighted graphs under mild regularity conditions.
 
 CVD is fast: O(n × k × n_iter) where n_iter ≈ 20 typically suffices for convergence. No spanning trees, no MCMC, no randomness (deterministic given seed initialization). It parallelises perfectly across bisection nodes.
 
@@ -121,6 +124,8 @@ CentroidalVoronoi(tract_coords, tract_pop, tract_adj, k, n_iter, metric, seed_in
 
 **Graph-distance centroid (Phase 1)**: The "centroid" of a district in graph space is the tract minimizing the sum of BFS hop counts to all other tracts in the district — the graph-distance medoid. Computing the exact medoid is O(n^2) per district per iteration; in practice, approximate via the tract minimizing mean distance to a random sample of 50 tracts in the district (O(50n) per iteration, adequate for convergence).
 
+**Note**: for bisection nodes with fewer than 50 tracts, the sample-50 medoid approximation degenerates to a full enumeration (correct). For nodes with 50+ tracts, the approximation error is bounded; for nodes with fewer than k nodes (degenerate after deep bisection), fall back to assigning each tract its own district.
+
 **Contiguity note**: Voronoi assignment does not guarantee contiguous districts for non-convex geographies. The rebalance step (Step 3) uses BFS to detect and repair disconnected components, consistent with existing `run_multiscale` behavior.
 
 ---
@@ -206,11 +211,12 @@ Every run appends to `runs/{label}/{year}/index.json`:
 "base_seed": 12345678,
 "cvd_seed": 987654321,
 "iterations_to_convergence": 14,
+"convergence_warning": false,
 "final_ec": 2847,
 "final_pp_mean": 0.241
 ```
 
-`iterations_to_convergence` records how many iterations were needed before seeds stabilized. If `iterations_to_convergence == n_iter`, the algorithm did not converge within the budget; this is a warning condition (not an error) and should be flagged in the report.
+`iterations_to_convergence` records how many iterations were needed before seeds stabilized. If `iterations_to_convergence == n_iter`, the algorithm did not converge within the budget; this is a warning condition (not an error) and should be flagged in the report. `convergence_warning` is set to `true` when `iterations_to_convergence == n_iter`. If `convergence_warning: true`, the plan may be sub-optimal but is still valid. Re-run with `--cvd-iters` increased.
 
 `cvd_seed` is the derived seed used for all random initialization; an auditor who knows `base_seed` can recompute `cvd_seed = SHA-256("CVD_INIT_" || base_seed:u64le)` and verify determinism. `final_ec` and `final_pp_mean` (mean Polsby-Popper across k districts) characterize the output compactness.
 
@@ -229,6 +235,7 @@ Every run appends to `runs/{label}/{year}/index.json`:
 - Convergence stability: after convergence, no tract would reduce its district's population imbalance by moving to an adjacent district's seed (local stability under rebalance)
 - `n_iter=0`: returns the initial Voronoi assignment with 0 iterations (no crash, valid assignment)
 - k=1: degenerate case — all tracts assigned to district 0, 1 iteration, no panic
+- Non-convergence warning: with `n_iter=1` on a non-trivially-partitionable graph (e.g., 4x4 grid k=4), `iterations_to_convergence == 1 == n_iter` triggers `convergence_warning: true` in the manifest
 
 ### L1 (integration, synthetic data)
 
@@ -257,3 +264,10 @@ Every run appends to `runs/{label}/{year}/index.json`:
 4. **Graph-distance medoid approximation**: The Phase 1 centroid update uses a sampled medoid (50 random tracts per district). Evaluate whether this approximation is sufficient for convergence or whether exact medoid (Floyd-Warshall per subgraph) is needed for small subgraphs (k=2, n<50).
 
 5. **Interaction with search layer**: CVD is a structure-layer algorithm; search-layer strategies (convergence, percentile, bisection-ensemble) operate on the output of the structure layer. No changes to the search layer are anticipated, but verify that `BisectionEnsemble` over CVD subproblems behaves correctly when `iterations_to_convergence` varies across ensemble members.
+
+---
+
+## References
+
+- `lloyd1982`: Lloyd, S.P. (1982). "Least squares quantization in PCM." IEEE Transactions on Information Theory 28(2), 129–137.
+- `du1999`: Du, Q., Faber, V., & Gunzburger, M. (1999). "Centroidal Voronoi tessellations: Applications and algorithms." SIAM Review 41(4), 637–676.
