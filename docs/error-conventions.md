@@ -69,12 +69,12 @@ Concrete rules:
 
 This rule is enforced by:
 
-1. CI grep over `redist-cli/src/**/*.rs` for non-ASCII bytes in `println!`/`eprintln!` literals (not yet automated; see Onboarding plan Task 6.4).
+1. CI grep over `bisect-cli/src/**/*.rs` for non-ASCII bytes in `println!`/`eprintln!` literals (not yet automated; see Onboarding plan Task 6.4).
 2. The Onboarding L2 acceptance test asserts `all(c in string.printable for c in stdout)` on the Vermont walkthrough output (v2.1.1 tracking item 211-P3.1).
 
 ## Migration plan
 
-The full error audit (every `unwrap()`, `expect()`, and bare `?` in `redist-cli/src/`) is incremental work. The current state:
+The full error audit (every `unwrap()`, `expect()`, and bare `?` in `bisect-cli/src/`) is incremental work. The current state:
 
 - New code (post-2026-04-30) uses categorized prefixes by default
 - Existing user-facing error paths are migrated as they're touched in unrelated work

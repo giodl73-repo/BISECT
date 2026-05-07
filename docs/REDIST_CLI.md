@@ -4,7 +4,7 @@ The `redist` binary is a Rust rewrite of the Python redistricting pipeline. It i
 ~200× faster than the Python equivalent and has no Python runtime dependency for
 the core redistricting work.
 
-**Built from**: `redist/crates/redist-cli/`
+**Built from**: `redist/crates/bisect-cli/`
 
 ---
 
@@ -40,7 +40,7 @@ bisect fetch --states VT --year 2020
 bisect state --state VT --year 2020 --version V3
 
 # Run all 50 states (8 workers, ~15 seconds with .adj.bin files)
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 ```
 
 ---
@@ -103,12 +103,12 @@ bisect state --state TX --year 2020 --version V3 --reset
 
 ---
 
-### `redist states` — All states in parallel
+### `bisect states` — All states in parallel
 
 Runs all 50 states (or a subset) using Rayon for parallelism.
 
 ```
-redist states --year <YEAR> --version <VERSION> --output-dir <DIR> [OPTIONS]
+bisect states --year <YEAR> --version <VERSION> --output-dir <DIR> [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -129,20 +129,20 @@ redist states --year <YEAR> --version <VERSION> --output-dir <DIR> [OPTIONS]
 
 ```bash
 # All 50 states, 8 workers (~15 seconds with .adj.bin files)
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 # Small states only (fast validation)
-redist states --year 2020 --version V3 --output-dir outputs/V3 \
+bisect states --year 2020 --version V3 --output-dir outputs/V3 \
   --states VT DE AK WY
 
 # Resume interrupted run (skips completed states automatically)
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 # Force re-run of all states
-redist states --year 2020 --version V3 --output-dir outputs/V3 --reprocess
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --reprocess
 ```
 
-**Resume behavior**: `redist states` checks for `final_assignments.json` before
+**Resume behavior**: `bisect states` checks for `final_assignments.json` before
 running each state. States with existing outputs are skipped. Use `--reprocess`
 to override.
 
@@ -190,7 +190,7 @@ Downloads TIGER shapefiles and PL 94-171 redistricting data from Census.gov, and
 optionally pulls pre-built adjacency files from GitHub Releases.
 
 ```
-redist fetch [OPTIONS]
+bisect fetch [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -335,7 +335,7 @@ redist aggregate --version V3 --types all --csv
 redist aggregate --version V3 --types demographic
 
 # After running all 50 states + analyze:
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 # (then for each state: bisect analyze --state XX --types all)
 redist aggregate --version V3 --types all --csv
 ```
@@ -551,12 +551,12 @@ Use this when independently verifying that a court-submitted plan was produced b
 The Researcher Toolkit plan is partial. Today (2026-04-30):
 
 **Shipped:**
-- **`redist-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for the three load-bearing convergence diagnostics — Gelman-Rubin R-hat across ≥4 chains, Effective Sample Size (Geyer 1992 initial monotone sequence) on summary statistics, Hamming-distance autocorrelation on the partition trajectory with integrated `tau_int`. JSON-shape structs mirror the spec's `rhat.json` / `ess.json` / `hamming_autocorr.json`. 21 L0 tests.
+- **`bisect-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for the three load-bearing convergence diagnostics — Gelman-Rubin R-hat across ≥4 chains, Effective Sample Size (Geyer 1992 initial monotone sequence) on summary statistics, Hamming-distance autocorrelation on the partition trajectory with integrated `tau_int`. JSON-shape structs mirror the spec's `rhat.json` / `ess.json` / `hamming_autocorr.json`. 21 L0 tests.
 - **`notebooks/`** (Task 1): 5 notebook stubs (`01_quickstart`, `02_parameter_sweep`, `03_callais_evidence`, `04_gerrychain_interop`, `05_mcmc_ensemble`) with cell-1 metadata declaring `runtime_budget_secs` (60 / 120 / 300 / 120 / 1800), cell-2 kernel-state attestation header against compatible RANGES (Task 2 / B-06: `redist_py >=0.4,<0.5`, `gerrychain >=0.3.2,<0.4`), and final-cell completion sentinel. Notebook bodies are TODO; scaffolding + conventions shipped.
 - **`scripts/research/paper_mode_template/REPRODUCE.sh`** (Task 8 / D-05): AEA-compliant replication-script template with platform check (target `linux-x86_64-glibc-2.35`), Cargo.lock + rust-toolchain.toml + requirements.lock SHA verification, locked cargo build, output-checksum verification via jq, cross-platform reviewer note (use WSL / Docker `ubuntu:22.04`).
-- **`bisect analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `redist_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `redist-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
+- **`bisect analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `redist_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `bisect-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
 
-- **`redist research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `redist-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
+- **`redist research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `bisect-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
 
 **Deferred (next session pickup):**
 - **Notebook BODY content** — beyond cell-1 metadata + cell-2 attestation; depends on the `redist_py` PyO3 binding stabilizing.
@@ -571,7 +571,7 @@ The Researcher Toolkit plan is partial. Today (2026-04-30):
 
 The Deposition Prep plan is partial. Today (2026-04-30):
 
-**Shipped (`redist-cli/src/depo.rs` + `data/whitelist_dependencies.json` + `docs/parameters/whitelist-dependencies.md`):**
+**Shipped (`bisect-cli/src/depo.rs` + `data/whitelist_dependencies.json` + `docs/parameters/whitelist-dependencies.md`):**
 - **Whitelist DAG (S-01)**: 8 parameters with explicit invalidation edges + narrative guardrails + warning rules. Markdown spec + machine-readable JSON; CI gate (when wired) will assert agreement.
 - **`whitelist_deps()`** + **`lookup_param()`** + **`whitelist_compat_sha256()`**: parses the embedded JSON; the SHA goes into every `whatif-manifest v1` output so a future reader knows which compat ranges were active.
 - **`parse_param_kv()`**: validates `--param KEY=VALUE` against the whitelist. Float/range/enum validation; error messages list allowed params + point at the doc.
@@ -595,7 +595,7 @@ The Deposition Prep plan is partial. Today (2026-04-30):
 
 The Civic Bidirectional Input plan is partial. Today (2026-04-30):
 
-**Shipped (`redist-cli/src/civic.rs`):**
+**Shipped (`bisect-cli/src/civic.rs`):**
 - `redist civic` subcommand group with five subcommands: `ingest`, `add-candidate-race`, `list`, `show`, `conflicts`. Wired into `main.rs::Commands::Civic`.
 - `civic-coi v1` `CivicManifest` schema (matches `docs/file-formats/manifests.md` §3.8).
 - **BOM-tolerant CSV reader + canonicalization** (Task 2 / PP-27 / DATUM): UTF-8 BOM stripped silently; UTF-16 rejected with documented remediation; LF line endings + sorted by `(geoid, comment_id)` + GEOIDs always quoted + `# civic-coi-csv v1` schema header line. Re-running the canonicalizer on the same input produces byte-identical output.
@@ -621,16 +621,16 @@ The Civic Bidirectional Input plan is partial. Today (2026-04-30):
 The Plan Comparison & Narrative plan is partial. Today (2026-04-30):
 
 **Shipped (data layer + renderer + manifest writer + CLI dispatch):**
-- `redist-report::moe` (S-04 / Task 4): margin-of-error suppression with two metric monotonicities. Monotone (Dem seats, mean PP, population): suppression fires when sign of (a-b) flips inside CI overlap. Non-monotone (MM count): suppression fires when CIs overlap; per-district indeterminacy when BVAP CI straddles 50%. Canonical text constant (`"within margin of error; see numerical table."`). 13 L0 tests.
-- `redist-report::comparison` (Task 2): `ComparisonReport` + `PlanSide` + `DiffSummary` data structures with both `from_loaded()` constructor AND from-disk assembler (`load_plan_side_from_dir`, `diff_from_assignments`). Flexible serde_json::Value parsing handles multiple JSON shapes (per_district_dem_share array vs nested districts; mean_polsby_popper field vs computed mean from districts). `AssembleError` is a `thiserror`-derived enum with `[INPUT]`-prefixed messages.
-- `redist-report::narrative` (Tasks 3+5): direct-Rust narrative renderer. Civic-friendly framing first, `[DRAFT]` gate per paragraph, `--approved-by` sign-off, civic-counter-proposal framing label, threshold disclosure, close-call flagging, MoE suppression integration. ASCII-only output (PP-34). 16 L0 tests including all 4 value-correctness anchors.
-- `redist-report::narrative_manifest` (M-04 + PP-31 + COVENANT C-3 / Task 9): `narrative-manifest v1` schema with plan SHAs (NOT just labels), template SHA, threshold values, MoE inputs, approved_by + approved_at, civic-counter-proposal attribution, baseline plan reference. Reproducible via `build_narrative_manifest_with_clock()` (env-free, parallel-test-safe). BTreeMap canonical key ordering. 13 L0 tests.
+- `bisect-report::moe` (S-04 / Task 4): margin-of-error suppression with two metric monotonicities. Monotone (Dem seats, mean PP, population): suppression fires when sign of (a-b) flips inside CI overlap. Non-monotone (MM count): suppression fires when CIs overlap; per-district indeterminacy when BVAP CI straddles 50%. Canonical text constant (`"within margin of error; see numerical table."`). 13 L0 tests.
+- `bisect-report::comparison` (Task 2): `ComparisonReport` + `PlanSide` + `DiffSummary` data structures with both `from_loaded()` constructor AND from-disk assembler (`load_plan_side_from_dir`, `diff_from_assignments`). Flexible serde_json::Value parsing handles multiple JSON shapes (per_district_dem_share array vs nested districts; mean_polsby_popper field vs computed mean from districts). `AssembleError` is a `thiserror`-derived enum with `[INPUT]`-prefixed messages.
+- `bisect-report::narrative` (Tasks 3+5): direct-Rust narrative renderer. Civic-friendly framing first, `[DRAFT]` gate per paragraph, `--approved-by` sign-off, civic-counter-proposal framing label, threshold disclosure, close-call flagging, MoE suppression integration. ASCII-only output (PP-34). 16 L0 tests including all 4 value-correctness anchors.
+- `bisect-report::narrative_manifest` (M-04 + PP-31 + COVENANT C-3 / Task 9): `narrative-manifest v1` schema with plan SHAs (NOT just labels), template SHA, threshold values, MoE inputs, approved_by + approved_at, civic-counter-proposal attribution, baseline plan reference. Reproducible via `build_narrative_manifest_with_clock()` (env-free, parallel-test-safe). BTreeMap canonical key ordering. 13 L0 tests.
 - **CLI dispatch (Task 11)**: `redist compare --format narrative` and `--format both` write `narrative.md` + `narrative_manifest.json` end-to-end. `--format both` also prints the legacy table to stdout. Output dir defaults to `outputs/{version}/comparisons/{plan_a}_vs_{plan_b}/` and is overridable via `--report-dir`. `template_sha256` records the SHA of the embedded `narrative.rs` source (the renderer IS the template). `SOURCE_DATE_EPOCH` propagates to `approved_at` for byte-stable manifests. 4 L1 integration tests in `compare_narrative_l1.rs` cover DRAFT-mode default, approved-mode prefix removal, `--format both` dual-output, and `--enacted`-only rejection.
 - **HTML side-by-side (Task 7)**: `redist compare --format html` writes `comparison.html` alongside the narrative + manifest. Self-contained HTML5 with embedded CSS — no external resources. Layout: civic-counter-proposal banner when applicable, DRAFT/APPROVED badge header, side-by-side metrics table (Districts, Dem-leaning seats, MM count, mean Polsby-Popper, total population with thousands separators), diff scope, inline narrative as paragraphs, chain-of-custody footer with plan-A/plan-B/template SHAs + reproducibility command. All user-controlled fields escaped via `escape_html()`. Print stylesheet preserves color on paper. 16 module unit tests + 1 L1 integration test.
 - `redist compare --leaning-threshold` / `--close-call-band` / `--approved-by` / `--report-dir` CLI flags wired into `args.rs`.
 
 **Deferred (next pickup):**
-- Diff PNG visualization (Task 6): requires extending `redist-map` with a diff-renderer (third map, color-coded by destination district).
+- Diff PNG visualization (Task 6): requires extending `bisect-map` with a diff-renderer (third map, color-coded by destination district).
 - Civic summary card PNG with watermark (Task 8 / BD-N3): 1200×675 social-media share preview with diagonal watermark on civic-counter-proposal plans.
 - `--comments-label` overlay (Task 10): consumes `redist civic ingest` outputs; depends on Civic Bidirectional plan shipping first.
 - Tera-based override-template path (`--narrative-template <PATH>`).
@@ -642,9 +642,9 @@ The Plan Comparison & Narrative plan is partial. Today (2026-04-30):
 The State Staff Interop plan is partial. Today (2026-04-30):
 
 **Shipped:**
-- `redist-report::manifest::PlanDirGuard` (PP-22): atomic-import infrastructure. Builds plans into `{label}.tmp/`, renames to `{label}/` on `commit()`, deletes tmp on drop without commit. Refuses to overwrite without `force=true` (label-collision check). 6 L0 tests covering commit/drop/collision/force/stale-cleanup/mid-run-race.
-- `redist-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `bisect analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `redist import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
-- `redist-report::canonical` (spec §6 round-trip equality): `canonicalize_assignments()` re-numbers districts by ascending min-GEOID; `diff_assignments()` returns a structured `AssignmentDiff`; `assert_canonical_equal()` returns `[INPUT]`-categorized error with the offending GEOIDs. 10 L0 tests including label-permutation collapse, three-way permutation, distinguishes-different-partitions.
+- `bisect-report::manifest::PlanDirGuard` (PP-22): atomic-import infrastructure. Builds plans into `{label}.tmp/`, renames to `{label}/` on `commit()`, deletes tmp on drop without commit. Refuses to overwrite without `force=true` (label-collision check). 6 L0 tests covering commit/drop/collision/force/stale-cleanup/mid-run-race.
+- `bisect-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `bisect analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `redist import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
+- `bisect-report::canonical` (spec §6 round-trip equality): `canonicalize_assignments()` re-numbers districts by ascending min-GEOID; `diff_assignments()` returns a structured `AssignmentDiff`; `assert_canonical_equal()` returns `[INPUT]`-categorized error with the offending GEOIDs. 10 L0 tests including label-permutation collapse, three-way permutation, distinguishes-different-partitions.
 - `redist import --as-civic-counter-proposal --submitted-by "<org>"` (Task 7, COMMONS): tags the imported plan's manifest with `submission_type = "civic_counter_proposal"`. `--submitted-by` required. `--submitted-at` defaults to import time. Downstream comparison reports surface the civic framing instead of treating it as authoritative.
 - `PlanManifest` extended with: `submission_type` (default `"authoritative"`), `submitted_by`, `submitted_at`, `source_tool`, `source_tool_version`, `source_format_fingerprint`, `import_compat_sha256`. All optional / serde-default for backward compat with legacy manifests.
 
@@ -662,9 +662,9 @@ The Court Submission Reports plan is partially implemented. Today (2026-04-30):
 - `docs/file-formats/manifests.md` — canonical manifest field inventory + naming + path-portability + cross-manifest hash-link convention.
 - `docs/file-formats/citation-strings.md` — Bluebook / APA / Chicago templates per source class with worked examples.
 - `redist report --format pdf` CLI surface flags: `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, `--expert-config`, `--allow-non-strict-civic`, `--draft`. (Wired into `args.rs`; the legacy HTML→PDF path doesn't consume them yet.)
-- `redist-report::civic_gate` (BD-R1): when court-mode render detects civic inputs ingested under non-strict validation (`--validate {lenient,advisory}`), refuses unless `--allow-non-strict-civic` is set. 10 L0 tests cover all paths.
-- `redist/crates/redist-report/typst-templates/.typst-version` (`0.12.0`) and `.verapdf-version` (`1.26.2`) version pins.
-- `redist/crates/redist-report/typst-templates/README.md` documents the integration path the next session will execute.
+- `bisect-report::civic_gate` (BD-R1): when court-mode render detects civic inputs ingested under non-strict validation (`--validate {lenient,advisory}`), refuses unless `--allow-non-strict-civic` is set. 10 L0 tests cover all paths.
+- `redist/crates/bisect-report/typst-templates/.typst-version` (`0.12.0`) and `.verapdf-version` (`1.26.2`) version pins.
+- `redist/crates/bisect-report/typst-templates/README.md` documents the integration path the next session will execute.
 
 **Deferred (requires Typst + verapdf installed in dev + CI):**
 - The actual Typst document templates (`expert_report.typ` + per-section partials).
@@ -696,7 +696,7 @@ For every analyzed candidate × variant (primary baseline + 3 robustness baselin
 ### CLI surface
 
 ```bash
-redist analyze \
+bisect analyze \
     --label la_2020_callais --year 2020 --version v1 \
     --types bloc-voting \
     --candidate-race-csv data/elections/race_of_candidate/la_2020_dem_primary.csv \
@@ -729,7 +729,7 @@ Optional flags:
 
 Written to the plan's `analysis/` directory:
 
-- `bloc_voting.json` — schema `bloc-voting v1`, validates against `redist-analysis/schemas/bloc_voting.schema.json`. Top-level fields: `analyzer`, `state`, `year`, `election`, `party`, `method`, `ecology`, `candidates[]` (one per analyzed candidate, with `regression`, `robustness_check`, `ecology_caveat`, `draft_interpretation`), `race_of_candidate_provenance` (sha256 chain), `_family_detail[]` (per-variant breakdown when robustness/LOO variants are present), `provenance` (build commit, rustc).
+- `bloc_voting.json` — schema `bloc-voting v1`, validates against `bisect-analysis/schemas/bloc_voting.schema.json`. Top-level fields: `analyzer`, `state`, `year`, `election`, `party`, `method`, `ecology`, `candidates[]` (one per analyzed candidate, with `regression`, `robustness_check`, `ecology_caveat`, `draft_interpretation`), `race_of_candidate_provenance` (sha256 chain), `_family_detail[]` (per-variant breakdown when robustness/LOO variants are present), `provenance` (build commit, rustc).
 - `bloc_voting_summary.md` — plain-English `[DRAFT — expert witness should rewrite]` summary including verbatim ecology caveat, robustness table, and curator attestation summary.
 - `analysis/bloc_voting/race_of_candidate.csv` — staged copy of the input CSV (Task 5; reproducibility-zip will pick it up).
 - `analysis/bloc_voting/attestations/<sha256>.<ext>` — every unique attestation document, content-addressed.
@@ -749,7 +749,7 @@ Every SCALE-block-lifting receipt is enforced by a named L0 test:
 - `test_b02_anchor3_vif_above_5_sets_underpowered_flag` — collinearity catches the underpowered case.
 - `test_b02_anchor4_independently_verified_false_injects_caveat` — un-verified annotations cannot ship without the caveat.
 
-See `redist/crates/redist-analysis/src/bloc_voting.rs` and `bloc_voting_writer.rs`, plus `docs/file-formats/race-of-candidate.md` for the curator-attestation chain.
+See `redist/crates/bisect-analysis/src/bloc_voting.rs` and `bloc_voting_writer.rs`, plus `docs/file-formats/race-of-candidate.md` for the curator-attestation chain.
 
 ---
 

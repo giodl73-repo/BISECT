@@ -90,7 +90,7 @@ redist report --label wa_house_draft1 --audit-only --out reports/audit.json
 - Full `PlanManifest` reproduced verbatim
 - SHA-256 hashes of all input files
 - Command line used to generate this plan
-- Verification instructions: "To reproduce, run: `redist state ...`"
+- Verification instructions: "To reproduce, run: `bisect state ...`"
 
 ### 10. Maps
 - Final district map (all districts)
@@ -224,10 +224,10 @@ This is machine-generated from `PlanManifest` — no human writes it.
 
 ## Implementation
 
-### New crate: `redist-report`
+### New crate: `bisect-report`
 
 ```
-redist/crates/redist-report/
+redist/crates/bisect-report/
   src/
     lib.rs
     report.rs        ← Report struct, section assembly
@@ -246,7 +246,7 @@ tera = "1"           # template engine
 printpdf = "0.7"     # pure Rust PDF
 sha2 = "0.10"        # SHA-256 for file hashing
 geojson = "0.24"     # GeoJSON parsing/generation
-shapefile = "0.6"    # already a dependency in redist-data
+shapefile = "0.6"    # already a dependency in bisect-data
 ```
 
 ---

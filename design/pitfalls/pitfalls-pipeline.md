@@ -60,7 +60,7 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 
 **Structural solution:** Never use a short command name for a language runtime in a compiled binary. Accept the executable path via an environment variable (`REDIST_PYTHON`, `REDIST_NODE`) that the caller must set explicitly. Document this requirement in the binary's `--help` output.
 
-**Status:** SOLVED for Python subprocess calls in redist-cli
+**Status:** SOLVED for Python subprocess calls in bisect-cli
 **Proved by:** REDIST_PYTHON env var used in adjacency_loader.rs and runner.rs; acceptance tests set it to sys.executable
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — fixtures pass REDIST_PYTHON=sys.executable
 
@@ -76,7 +76,7 @@ Structural vulnerabilities in multi-script pipeline chains. The root pattern: a 
 
 **Structural solution:** Separate read paths from write paths explicitly. Output data goes to `--output-dir`. Input data (adjacency graphs, TIGER files, demographics) is looked up from `outputs/{version}/` or a separate `--data-dir` parameter that defaults to the version root. The two paths are always independent.
 
-**Status:** SOLVED in redist-cli runner.rs
+**Status:** SOLVED in bisect-cli runner.rs
 **Proved by:** Adjacency path uses `outputs/{version}/data/` independently of output_dir
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance` — tmp dir as output-dir, V3 as adjacency source
 
@@ -183,7 +183,7 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Structural solution:** Place embedded assets in the same directory as the source file that includes them (`src/font_embed.ttf` next to `src/renderer.rs`), not in a sibling directory. Alternatively, use `concat!(env!("CARGO_MANIFEST_DIR"), "/assets/file")` inside a `build.rs` to generate an absolute path.
 
 **Status:** SOLVED
-**Proved by:** Font file moved to `redist/crates/redist-map/src/font_embed.ttf` — `include_bytes!("font_embed.ttf")` works from any workspace build context
+**Proved by:** Font file moved to `redist/crates/bisect-map/src/font_embed.ttf` — `include_bytes!("font_embed.ttf")` works from any workspace build context
 **Test:** `cargo build --release --manifest-path redist/Cargo.toml` succeeds
 
 ## PP-12: WKB decode API surface mismatch across geospatial crate ecosystem
@@ -198,7 +198,7 @@ if !["2020", "2010", "2000"].contains(&year) {
 
 **Status:** SOLVED
 **Proved by:** `dissolve.rs::wkb_to_geometry()` uses `geozero::wkb::FromWkb` — all WKB tests pass including MultiPolygon island tract case
-**Test:** `redist-map::dissolve::tests::test_wkb_decode_known_unit_square`, `test_wkb_multipolygon_does_not_panic`
+**Test:** `bisect-map::dissolve::tests::test_wkb_decode_known_unit_square`, `test_wkb_multipolygon_does_not_panic`
 
 ## PP-13: Integer parameter truncation at subprocess boundary
 
@@ -212,7 +212,7 @@ if !["2020", "2010", "2000"].contains(&year) {
 
 **Status:** SOLVED
 **Proved by:** gpmetis receives `-ufactor=50` (integer) instead of `-ufactor=1.0500` (float that atoi truncates to 1). FL 120HD now passes balance check.
-**Test:** `redist-cli::bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression`, `test_ufactor_integer_conversion_5_pct`
+**Test:** `bisect-cli::bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression`, `test_ufactor_integer_conversion_5_pct`
 
 ---
 
@@ -227,8 +227,8 @@ if !["2020", "2010", "2000"].contains(&year) {
 **Structural solution:** Introduce `PlanContext` — a typed wrapper that loads all plan metadata exclusively from `{plan_dir}/manifest.json`. All Class B commands (analyze, report, compare, verify, map) must construct a `PlanContext` at entry and use only its methods. Prohibit `load_all_states()` and `LocationRegistry` calls for plan-level metadata in Class B commands. Enforce via code review: any PR touching a Class B command that adds a `load_all_states()` call is a bug.
 
 **Status:** SOLVED
-**Proved by:** `redist-cli::plan_context::PlanContext::from_label()` loads manifest directly. `analyze.rs` uses PlanContext for `num_districts`. WA house 98D: `analyze` now produces summary with 98 districts, balance_valid=true, max_deviation=0%.
-**Test:** `redist-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10`
+**Proved by:** `bisect-cli::plan_context::PlanContext::from_label()` loads manifest directly. `analyze.rs` uses PlanContext for `num_districts`. WA house 98D: `analyze` now produces summary with 98 districts, balance_valid=true, max_deviation=0%.
+**Test:** `bisect-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10`
 
 ---
 

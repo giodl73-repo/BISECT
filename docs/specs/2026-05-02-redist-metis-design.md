@@ -1,8 +1,8 @@
-# redist-metis: Pure Rust METIS Port
+# bisect-metis: Pure Rust METIS Port
 **Date:** 2026-05-02
 **Status:** Design approved — pending implementation plan
 **Replaces:** `metis = { version = "0.2", features = ["vendored"] }` (C FFI)
-**New crate:** `redist/crates/redist-metis/`
+**New crate:** `redist/crates/bisect-metis/`
 
 ## Why this exists
 
@@ -12,7 +12,7 @@ safety guarantees, has platform-specific floating-point behavior, and cannot be
 audited end-to-end for legal purposes. Every call into METIS crosses an `unsafe`
 FFI boundary — Rust's safety guarantees stop there.
 
-`redist-metis` is a faithful pure-Rust port of the same algorithm. Nothing about
+`bisect-metis` is a faithful pure-Rust port of the same algorithm. Nothing about
 the algorithm changes. The multilevel paradigm, the FM refinement, the population
 balance constraint, the contiguity enforcement — all identical to C METIS. What
 changes is how it is built: pure Rust, formally verified, bit-reproducible across
@@ -65,24 +65,24 @@ In a deposition:
 ### Workspace integration
 
 ```
-redist-core          (pure Rust, unchanged)
+bisect-core          (pure Rust, unchanged)
     ↑
-redist-metis         (NEW — pure Rust METIS port, no FFI)
+bisect-metis         (NEW — pure Rust METIS port, no FFI)
     ↑
-redist-apportion     (drops C metis dep, gains redist-metis)
+bisect-apportion     (drops C metis dep, gains bisect-metis)
     ↑
-redist-cli           (unchanged)
+bisect-cli           (unchanged)
 ```
 
-`redist-apportion/Cargo.toml`: replace `metis = { version = "0.2", features = ["vendored"] }`
-with `redist-metis = { path = "../redist-metis" }`.
+`bisect-apportion/Cargo.toml`: replace `metis = { version = "0.2", features = ["vendored"] }`
+with `bisect-metis = { path = "../bisect-metis" }`.
 
 Workspace `Cargo.toml`: remove the `metis` workspace dependency.
 
 ### Crate layout
 
 ```
-crates/redist-metis/
+crates/bisect-metis/
   ALGORITHM.md           mathematical spec (court/academic audience)
   Cargo.toml
   src/
@@ -129,7 +129,7 @@ crates/redist-metis/
 ### `CsrGraph`
 
 The single graph representation throughout the crate. Replaces `SubGraph` in
-`redist-apportion`. Same memory layout as C METIS's internal representation.
+`bisect-apportion`. Same memory layout as C METIS's internal representation.
 
 ```rust
 pub struct CsrGraph {
@@ -265,7 +265,7 @@ pub trait Refiner: Send + Sync {
 
 ### Public API trait
 
-Replaces `redist-apportion::split::Partitioner`. The graph type changes from
+Replaces `bisect-apportion::split::Partitioner`. The graph type changes from
 `&SubGraph` to `&CsrGraph` — `PfrCompositor` call sites each need a one-line
 `CsrGraph::from(subgraph)` conversion. No logic changes.
 
@@ -294,7 +294,7 @@ pub struct RustMetisPartitioner<C, I, R> {
     params:    MetisParams,  // ufactor, niter, seed, coarsen_to
 }
 
-// Standard METIS configuration — what redist-apportion uses
+// Standard METIS configuration — what bisect-apportion uses
 pub type MetisPartitioner = RustMetisPartitioner<
     SortedHeavyEdgeMatch,
     GrowBisect,
@@ -511,7 +511,7 @@ largest part, which is at most `n`.
 
 ### Budget
 
-`redist-metis` must stay within **20% of C METIS wall-clock time** on the
+`bisect-metis` must stay within **20% of C METIS wall-clock time** on the
 reference workload. The reference workload is:
 
 | State | Year | k | Tract count | Mode |
@@ -546,7 +546,7 @@ Three levels, one algorithm:
 
 | Level | Location | Audience |
 |-------|----------|----------|
-| Mathematical spec | `crates/redist-metis/ALGORITHM.md` | Court experts, academics |
+| Mathematical spec | `crates/bisect-metis/ALGORITHM.md` | Court experts, academics |
 | Implementation spec | Rustdoc on every public item | Rust developers |
 | Formal spec | Prusti `#[ensures]` annotations | Formal verifiers, CI |
 
@@ -586,17 +586,17 @@ The mathematical spec covers the following sections, in this order:
 
 Sub-specs (one per phase, each written before implementation of that phase):
 
-- `2026-05-02-redist-metis-graph.md` — CsrGraph + CoarseMap contracts
-- `2026-05-02-redist-metis-coarsen.md` — HEM/SHEM/MinDegree
-- `2026-05-02-redist-metis-init.md` — GrowBisect/Random/MultiConstraint
-- `2026-05-02-redist-metis-refine.md` — FM + GainTable + BoundarySet
-- `2026-05-02-redist-metis-multilevel.md` — hierarchy + typestate pipeline
-- `2026-05-02-redist-metis-verify.md` — Kani harnesses + Prusti contracts
-- `2026-05-02-redist-metis-migration.md` — shadow mode cutover + C dep removal
+- `2026-05-02-bisect-metis-graph.md` — CsrGraph + CoarseMap contracts
+- `2026-05-02-bisect-metis-coarsen.md` — HEM/SHEM/MinDegree
+- `2026-05-02-bisect-metis-init.md` — GrowBisect/Random/MultiConstraint
+- `2026-05-02-bisect-metis-refine.md` — FM + GainTable + BoundarySet
+- `2026-05-02-bisect-metis-multilevel.md` — hierarchy + typestate pipeline
+- `2026-05-02-bisect-metis-verify.md` — Kani harnesses + Prusti contracts
+- `2026-05-02-bisect-metis-migration.md` — shadow mode cutover + C dep removal
 
 ## Migration path
 
-1. **Shadow mode**: `cfg(feature = "shadow-metis")` in `redist-apportion` runs
+1. **Shadow mode**: `cfg(feature = "shadow-metis")` in `bisect-apportion` runs
    both C `MetisPartitioner` and `RustMetisPartitioner` on every split, logs
    diffs in cut quality and balance. No behavioral change for users. The C dep
    is retained only during this phase.
@@ -635,7 +635,7 @@ Sub-specs (one per phase, each written before implementation of that phase):
    validates quality parity, not correctness. C METIS is itself an unverified binary
    and cannot serve as a legal correctness baseline.
 4. **Cutover**: remove `cfg` flag, `MetisPartitioner` becomes the Rust type alias.
-5. **C dep removal**: remove `metis` from `redist-apportion/Cargo.toml` and
+5. **C dep removal**: remove `metis` from `bisect-apportion/Cargo.toml` and
    workspace `Cargo.toml`. No C compiler required to build the project.
 
 ## Open questions

@@ -4,7 +4,7 @@
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS  
 **Related paper**: B.23  
-**Implementation**: `redist-cli/src/bisection_runner.rs` (no new crate)  
+**Implementation**: `bisect-cli/src/bisection_runner.rs` (no new crate)  
 **Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.5/4
 
 ---

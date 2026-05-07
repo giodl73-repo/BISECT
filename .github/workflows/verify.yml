@@ -38,7 +38,7 @@ jobs:
           workspaces: .
           key: kani
 
-      - name: Run Kani harnesses (redist-apportion)
+      - name: Run Kani harnesses (bisect-apportion)
         run: cargo kani -p bisect-apportion --no-default-features
         working-directory: .
 
@@ -74,7 +74,7 @@ jobs:
           workspaces: .
           key: prusti
 
-      - name: Run Prusti (redist-apportion)
+      - name: Run Prusti (bisect-apportion)
         if: env.PRUSTI_AVAILABLE == 'true'
         run: cargo prusti -p bisect-apportion --no-default-features
         working-directory: .

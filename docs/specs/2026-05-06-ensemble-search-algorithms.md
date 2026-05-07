@@ -5,7 +5,7 @@
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.25/4  
 **Reviewed R2**: MERIDIAN 4/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 2/4 → avg 2.75/4  
 **Reviewed R3**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
-**Extends**: `redist-ensemble` crate, `SeedCompositor` three-layer compositor  
+**Extends**: `bisect-ensemble` crate, `SeedCompositor` three-layer compositor  
 **Related papers**: G.6 (Short-Burst), G.7 (SMC), G.8 (Flip), B.19 (Simulated Annealing)
 
 ---
@@ -254,10 +254,10 @@ All fields named and typed so a verifier can independently reproduce the tempera
 
 ## Implementation priority
 
-1. **Flip** (1 week) — simplest, pure addition to `redist-ensemble`
+1. **Flip** (1 week) — simplest, pure addition to `bisect-ensemble`
 2. **Short-Burst** (1 week) — builds on `RecomChain`; corrected endpoint semantics
 3. **Simulated Annealing** (2 weeks) — new structure mode, `split_subgraph_sa()` in `bisection_runner.rs`
-4. **SMC** (1 month) — new `redist-smc` crate; high value, complex
+4. **SMC** (1 month) — new `bisect-smc` crate; high value, complex
 
 ---
 

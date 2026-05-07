@@ -1,4 +1,4 @@
-# Revision Plan — `redist-ensemble` ReCom Crate Spec
+# Revision Plan — `bisect-ensemble` ReCom Crate Spec
 **Spec**: `docs/specs/2026-05-06-recom-ensemble-crate.md`
 **Round**: 1
 **Date**: 2026-05-06
@@ -98,7 +98,7 @@ Specify which variant is implemented and justify the choice relative to DeFord-D
 
 ### H. R-hat applicability to discrete statistics (raised by: Duchin, Liang)
 
-**Problem**: Standard Gelman-Rubin R-hat is not valid for discrete redistricting statistics (seat counts, district labels). The spec applies R-hat to `cut_fraction` (continuous — acceptable) but the diagnostic module from `redist-analysis` may be applied to other statistics.
+**Problem**: Standard Gelman-Rubin R-hat is not valid for discrete redistricting statistics (seat counts, district labels). The spec applies R-hat to `cut_fraction` (continuous — acceptable) but the diagnostic module from `bisect-analysis` may be applied to other statistics.
 
 **Required fix**: Restrict the R-hat computation to continuous statistics (cut-fraction, pop-deviation). For any discrete statistic (seat counts, district-level partisan outcomes), specify that rank-normalised R-hat (Vehtari et al. 2021) is used, or document that R-hat is not computed for discrete statistics and an alternative convergence check (e.g., TV distance between chain marginals) is used instead.
 

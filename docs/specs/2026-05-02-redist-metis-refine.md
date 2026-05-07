@@ -1,4 +1,4 @@
-# redist-metis FM Refinement Sub-Spec
+# bisect-metis FM Refinement Sub-Spec
 **Date:** 2026-05-02
 **Phase:** 4 of 8
 **Implements:** `src/refine/` — GainTable, BoundarySet, FmState, FiducciaMattheyses, GreedyKWay

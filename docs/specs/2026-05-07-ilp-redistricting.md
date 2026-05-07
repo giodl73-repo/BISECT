@@ -5,7 +5,7 @@
 **Layer**: Structure (SplitStrategy) — alternative to METIS for small instances  
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 3/4, SURVEY 2/4, COVENANT 3/4 → avg 2.5/4  
 **Related paper**: B.24  
-**New crate**: `redist-ilp` (Rust ILP formulation; output MPS format for external solver)
+**New crate**: `bisect-ilp` (Rust ILP formulation; output MPS format for external solver)
 
 ---
 
@@ -94,10 +94,10 @@ The solver interface is abstracted behind a `Solver` trait so that new backends 
 
 ## 3. Architecture
 
-**New crate**: `redist-ilp`
+**New crate**: `bisect-ilp`
 
 ```
-redist-ilp/
+bisect-ilp/
   src/
     lib.rs
     formulation.rs    // build ILP formulation as LP/MPS file

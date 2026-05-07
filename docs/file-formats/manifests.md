@@ -14,16 +14,16 @@ If you're adding a new manifest type, land a one-task edit to §1 in the same co
 
 | Manifest | Schema version | Owner crate / module | Plan reference |
 |---|---|---|---|
-| `PlanManifest` (`manifest.json` in every plan dir) | (legacy, no `schema_version` field) | `redist-report::manifest` | Pre-existing; documented here for reference |
-| `narrative_manifest.json` | `narrative-manifest v1` | `redist-report::narrative_manifest` (when shipped) | Plan Comparison plan Task 9 |
-| `what_if/.../manifest.json` | `whatif-manifest v1` | `redist-cli::depo::recompute` (when shipped) | Deposition Prep plan Task 2.6 |
-| `deposition_log_{date}.manifest.json` | `depo-log v1` | `redist-cli::depo::log` (when shipped) | Deposition Prep plan Task 5.4 |
-| `civic_inputs/.../manifest.json` | `civic-coi v1` | `redist-cli::civic::manifest` (when shipped) | Civic Bidirectional plan Task 1.3 |
-| `examples/{tutorial}-walkthrough/checksums.json` | `tutorial-checksums v1` | `redist-cli::doctor` reads it | Onboarding plan Task 1.3 (shipped 2026-04-30) |
-| `import_compat.json` (compile-time embedded) | `import-compat v1` | `redist-report::import_compat` (when shipped) | State Staff Interop plan Task 5.1 |
-| `bloc_voting.json` `race_of_candidate_provenance` block | `race-of-candidate v1` | `redist-analysis::race_of_candidate` (shipped 2026-04-30) | Callais Evidence Layer plan Task 4 |
-| `bloc_voting.json` (top-level) | `bloc-voting v1` | `redist-analysis::bloc_voting_writer` (shipped 2026-04-30) | Callais Evidence Layer plan Task 6 |
-| `reproducibility_package_manifest.json` | `repro-package v1` | `redist-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
+| `PlanManifest` (`manifest.json` in every plan dir) | (legacy, no `schema_version` field) | `bisect-report::manifest` | Pre-existing; documented here for reference |
+| `narrative_manifest.json` | `narrative-manifest v1` | `bisect-report::narrative_manifest` (when shipped) | Plan Comparison plan Task 9 |
+| `what_if/.../manifest.json` | `whatif-manifest v1` | `bisect-cli::depo::recompute` (when shipped) | Deposition Prep plan Task 2.6 |
+| `deposition_log_{date}.manifest.json` | `depo-log v1` | `bisect-cli::depo::log` (when shipped) | Deposition Prep plan Task 5.4 |
+| `civic_inputs/.../manifest.json` | `civic-coi v1` | `bisect-cli::civic::manifest` (when shipped) | Civic Bidirectional plan Task 1.3 |
+| `examples/{tutorial}-walkthrough/checksums.json` | `tutorial-checksums v1` | `bisect-cli::doctor` reads it | Onboarding plan Task 1.3 (shipped 2026-04-30) |
+| `import_compat.json` (compile-time embedded) | `import-compat v1` | `bisect-report::import_compat` (when shipped) | State Staff Interop plan Task 5.1 |
+| `bloc_voting.json` `race_of_candidate_provenance` block | `race-of-candidate v1` | `bisect-analysis::race_of_candidate` (shipped 2026-04-30) | Callais Evidence Layer plan Task 4 |
+| `bloc_voting.json` (top-level) | `bloc-voting v1` | `bisect-analysis::bloc_voting_writer` (shipped 2026-04-30) | Callais Evidence Layer plan Task 6 |
+| `reproducibility_package_manifest.json` | `repro-package v1` | `bisect-report::repro_zip` (when shipped) | Court Submission Reports plan Task 6 |
 
 **Adding a new manifest type:** edit this table, add a `## §3.X — <kind> v<n>` subsection at the bottom enumerating fields beyond the canonical set, and reference both from the spec/plan that owns it.
 
@@ -36,7 +36,7 @@ Every manifest type MUST carry the following fields. Per-manifest extensions are
 | Field | Type | Required when | Definition |
 |---|---|---|---|
 | `schema_version` | string (`"<kind> v<n>"`) | always | Schema-version string; readers MUST refuse unknown schemas. |
-| `redist_version` | string | always | The semver version of the `redist` binary that produced the manifest (e.g., `"0.1.0"`). Comes from `redist-cli::provenance::Provenance::current()`. |
+| `redist_version` | string | always | The semver version of the `redist` binary that produced the manifest (e.g., `"0.1.0"`). Comes from `bisect-cli::provenance::Provenance::current()`. |
 | `redist_build_commit` | string (full 40-char SHA, may suffix `-dirty`) | always | The git SHA at build time (or `"unknown"` for builds outside a git checkout). |
 | `redist_build_commit_short` | string (7-12 char prefix of `redist_build_commit`) | when space-constrained (e.g., narrative manifest header, summary card footer) | Convenience short SHA. |
 | `rustc_version` | string | always | Output of `rustc --version` at build time. |
@@ -52,7 +52,7 @@ This section enumerates fields BEYOND the canonical set in §2. Read this when i
 
 ### 3.1 `PlanManifest` (legacy, no `schema_version` field)
 
-Source: `redist-report::manifest::PlanManifest`. Pre-existing; predates this convention document.
+Source: `bisect-report::manifest::PlanManifest`. Pre-existing; predates this convention document.
 
 Required fields beyond §2:
 
@@ -100,7 +100,7 @@ Required fields beyond §2:
 
 ### 3.3 `race-of-candidate v1` (Callais Evidence Layer; shipped 2026-04-30)
 
-Source: `redist-analysis::race_of_candidate::RaceOfCandidateProvenance`, embedded as `race_of_candidate_provenance` in `bloc_voting.json`.
+Source: `bisect-analysis::race_of_candidate::RaceOfCandidateProvenance`, embedded as `race_of_candidate_provenance` in `bloc_voting.json`.
 
 Required fields beyond §2 (note: this manifest is embedded, not standalone, so the §2 canonical set is provided by the parent `bloc_voting.json`):
 
@@ -116,7 +116,7 @@ See `docs/file-formats/race-of-candidate.md` for the full schema + curator-attes
 
 ### 3.4 `bloc-voting v1` (Callais Evidence Layer; shipped 2026-04-30)
 
-Source: `redist-analysis::bloc_voting_writer::BlocVotingJson`. JSON Schema at `redist/crates/redist-analysis/schemas/bloc_voting.schema.json`.
+Source: `bisect-analysis::bloc_voting_writer::BlocVotingJson`. JSON Schema at `redist/crates/bisect-analysis/schemas/bloc_voting.schema.json`.
 
 Required fields beyond §2:
 
@@ -211,7 +211,7 @@ Every manifest type carries `schema_version: "<kind> v<n>"`. Migration is **addi
 
 Readers MUST refuse unknown major schema versions with an actionable error (per `docs/error-conventions.md` `[INPUT]` category).
 
-The `tutorial-checksums v1` reader in `redist-cli::doctor` is the reference implementation.
+The `tutorial-checksums v1` reader in `bisect-cli::doctor` is the reference implementation.
 
 ---
 

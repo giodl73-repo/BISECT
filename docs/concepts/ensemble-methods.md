@@ -69,9 +69,9 @@ a run takes approximately 50 seconds. For 10,000 steps: approximately 8 minutes.
 
 ---
 
-## `redist-ensemble` — the Rust ReCom engine (H.2)
+## `bisect-ensemble` — the Rust ReCom engine (H.2)
 
-`redist-ensemble` is a native Rust implementation of the ReCom algorithm,
+`bisect-ensemble` is a native Rust implementation of the ReCom algorithm,
 designed for high-throughput ensemble generation. It implements the same
 stationary distribution as GerryChain (Python) but achieves much higher
 throughput through Rust's zero-cost abstractions and efficient memory layout.
@@ -83,7 +83,7 @@ ensembles practical in minutes rather than days.
 ### Wilson's algorithm for uniform spanning trees
 
 The critical primitive in ReCom is sampling a uniform random spanning tree
-(UST) of a subgraph. `redist-ensemble` uses Wilson's loop-erased random walk
+(UST) of a subgraph. `bisect-ensemble` uses Wilson's loop-erased random walk
 algorithm (Wilson 1996):
 
 1. Start with a root vertex in the tree.
@@ -101,7 +101,7 @@ the cost per step is O((n/k) log(n/k)).
 
 ### Correct balance cut enumeration
 
-A critical design decision in `redist-ensemble` is enumerating **all** balanced
+A critical design decision in `bisect-ensemble` is enumerating **all** balanced
 cuts of each spanning tree, not just sampling one. This replicates GerryChain's
 stationary distribution exactly.
 
@@ -171,7 +171,7 @@ and N is the number of steps per chain.
 | 1.05 <= R-hat < 1.2 | Marginal. Run longer chains or more chains. |
 | R-hat >= 1.2 | Not converged. Chains may be exploring different regions of the feasible space. |
 
-The R-hat implementation in `redist-analysis::ensemble_diagnostics` follows
+The R-hat implementation in `bisect-analysis::ensemble_diagnostics` follows
 Gelman and Rubin (1992) with the split-chain correction. Chains are split in
 half before computing R-hat to detect trends within chains.
 
@@ -198,7 +198,7 @@ rule to avoid estimating noise in the autocorrelation tail.
 
 For North Carolina at GerryChain speed (21 steps/sec), achieving ESS = 1,000
 typically requires approximately 3,000-5,000 total steps across 4 chains
-(750-1,250 per chain). With `redist-ensemble` at 50,000 steps/sec, the
+(750-1,250 per chain). With `bisect-ensemble` at 50,000 steps/sec, the
 same ESS is achieved in under a second.
 
 ### Hamming autocorrelation
@@ -284,6 +284,6 @@ median, the plan is what geography produces regardless of method.
 - [section-algorithms.md](section-algorithms.md) — the B-series algorithms being evaluated
 - [three-layer-compositor.md](three-layer-compositor.md) — how to configure ensemble runs
 - Paper G.1: *GerryChain Congressional Comparison*
-- Paper H.2: *redist-ensemble — Rust ReCom Engine*
+- Paper H.2: *bisect-ensemble — Rust ReCom Engine*
 - Paper G.4: *Ensemble Diagnostics*
-- `redist-analysis::ensemble_diagnostics` — R-hat, ESS, Hamming implementation
+- `bisect-analysis::ensemble_diagnostics` — R-hat, ESS, Hamming implementation

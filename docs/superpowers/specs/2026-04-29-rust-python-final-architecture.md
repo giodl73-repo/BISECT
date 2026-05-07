@@ -14,13 +14,13 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 
 | Component | Status |
 |---|---|
-| Rust algorithm kernel (redist-core) | ✅ Complete |
-| Rust data layer (redist-data) | ✅ Complete |
-| Rust analysis (redist-analysis) | ✅ Complete |
+| Rust algorithm kernel (bisect-core) | ✅ Complete |
+| Rust data layer (bisect-data) | ✅ Complete |
+| Rust analysis (bisect-analysis) | ✅ Complete |
 | Rust CLI subcommands | ✅ Complete (`state`, `states`, `run`, `fetch`, `analyze`, `map`, `doctor`, `tui`) |
-| Native map rendering (redist-map) | ✅ Complete (3 stubs: #62-#64) |
-| HTML reports (redist-report) | ✅ Complete |
-| Interactive TUI (redist-tui) | ✅ Complete (v1) |
+| Native map rendering (bisect-map) | ✅ Complete (3 stubs: #62-#64) |
+| HTML reports (bisect-report) | ✅ Complete |
+| Interactive TUI (bisect-tui) | ✅ Complete (v1) |
 | Performance benchmark (see §Performance) | ✅ Validated (1 run; reproduction recipe pending) |
 | Migration parity record artifact | ⏭️ Skipped — no users to migrate |
 | Permanent acceptance tests for `redist` invariants | ✅ `tests/acceptance/test_redist_invariants.py` (Plan 01) |
@@ -31,7 +31,7 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 | Partisan edge-weighting (Plan 03) | ✅ Module + CLI wiring + format spec; producer + e2e deferred |
 | File-format specs (`adj-bin`, `final-assignments`, `partisan-shares`) | ✅ Written under `docs/file-formats/` |
 | Reproducible-build pin (`redist/rust-toolchain.toml`) | ✅ Pinned to 1.95.0 |
-| `redist-web` crate | ⚠️ Stub — kept as documented placeholder |
+| `bisect-web` crate | ⚠️ Stub — kept as documented placeholder |
 
 ## Steady-State Surface
 
@@ -39,14 +39,14 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 
 | Crate | Responsibility |
 |---|---|
-| `redist-core` | Graph, Partition, BisectionTree, edge-weighting (VRA, partisan), METIS file I/O, FIPS, population balance |
-| `redist-data` | TIGER reading, adjacency build, island bridging, .adj.bin serialization |
-| `redist-analysis` | Compactness, VRA, demographic, political, partisan metrics, urban analysis, comparison |
-| `redist-cli` | All production subcommands |
-| `redist-map` | SVG → PNG rendering with insets, projections, color schemes, embedded fonts |
-| `redist-report` | HTML reports, plan manifests, audit, export, rplan roundtrip |
-| `redist-tui` | Interactive ratatui frontend |
-| `redist-web` | Documented stub crate; future Rust dashboard work would land here |
+| `bisect-core` | Graph, Partition, BisectionTree, edge-weighting (VRA, partisan), METIS file I/O, FIPS, population balance |
+| `bisect-data` | TIGER reading, adjacency build, island bridging, .adj.bin serialization |
+| `bisect-analysis` | Compactness, VRA, demographic, political, partisan metrics, urban analysis, comparison |
+| `bisect-cli` | All production subcommands |
+| `bisect-map` | SVG → PNG rendering with insets, projections, color schemes, embedded fonts |
+| `bisect-report` | HTML reports, plan manifests, audit, export, rplan roundtrip |
+| `bisect-tui` | Interactive ratatui frontend |
+| `bisect-web` | Documented stub crate; future Rust dashboard work would land here |
 | `redist_py` | PyO3 bridge — retained for research scripts and validation harness |
 
 ### Python retained, scoped narrowly
@@ -62,13 +62,13 @@ Phases 0-5 of the migration are complete (per `design/rust-port/migration-log.md
 
 ### Maps: zero Python in the production path
 
-This is definitive. `redist-map` is feature-complete. All matplotlib/cartopy code paths are dead — `src/apportionment/visualization/maps.py` is not imported by any active pipeline orchestrator. The only Python visualization that survives is `scripts/figures/` for LaTeX paper figures, which is **not** part of the production redistricting pipeline. After cutover, `import matplotlib` does not appear anywhere a `redist` invocation touches.
+This is definitive. `bisect-map` is feature-complete. All matplotlib/cartopy code paths are dead — `src/apportionment/visualization/maps.py` is not imported by any active pipeline orchestrator. The only Python visualization that survives is `scripts/figures/` for LaTeX paper figures, which is **not** part of the production redistricting pipeline. After cutover, `import matplotlib` does not appear anywhere a `redist` invocation touches.
 
 The three remaining map stubs (#62 choropleth real geometry, #63 rounds rendering, #64 splits) are tracked as Rust issues, not Python fallbacks.
 
 ### Algorithm: zero parallel implementations in active code
 
-After cutover, `redist-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`redist_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
+After cutover, `bisect-core` is the only implementation of the bisection algorithm in the active code paths. The Python `RecursiveBisection` class is **archived, not deleted** (see §Python Algorithm Preservation). PyO3 bindings (`redist_py.build_vra_edge_weights`, etc.) remain so research scripts can call the Rust algorithm from Python without re-implementing it.
 
 ## Provenance and Reproducibility
 
@@ -147,7 +147,7 @@ The "~213×" number is currently one run. Before the spec or any paper cites it 
 | `final_assignments.json` | JSON | **Canonical** | Object: `{geoid: district_id}`. GEOIDs are 11-character TIGER strings with leading zeros. |
 | `final_assignments.pkl` | Python pickle | **Deprecated legacy** | Written by the old Python pipeline. No active reader after Plan 02. Existing files remain readable from `archive/python-pipeline-final/` for forensic purposes only. |
 | `*.adj.bin` | RADJ binary | **Canonical** | Adjacency graph with vertex weights. Spec at `docs/file-formats/adj-bin.md` (REQUIRED, not yet written). |
-| `vra_analysis.json` | JSON | **Canonical** | Atomic write with assignments. Schema in redist-cli output module. |
+| `vra_analysis.json` | JSON | **Canonical** | Atomic write with assignments. Schema in bisect-cli output module. |
 | `district_summary.csv` | CSV | **Canonical** | Per-district metrics. Header documented in REDIST_CLI.md. |
 
 ### Required new docs
@@ -214,7 +214,7 @@ scripts/data/generate_adj_bin.py               # one-time bridge, conversion com
 ### Keep
 
 ```
-redist/crates/redist-web/                      # documented stub; reserve namespace for future
+redist/crates/bisect-web/                      # documented stub; reserve namespace for future
 ```
 
 ## Verification Gates
@@ -253,7 +253,7 @@ Run in CI on every PR.
 - `docs/REDIST_CLI.md` — CLI reference (canonical)
 - `docs/REPRODUCIBLE_BUILD.md` (new, required) — toolchain pin + build recipe
 - `docs/file-formats/` (new, required) — `.adj.bin`, `final_assignments.json`, manifest schemas
-- `docs/superpowers/specs/2026-04-28-redist-cli-architecture.md` — CLI internal architecture
+- `docs/superpowers/specs/2026-04-28-bisect-cli-architecture.md` — CLI internal architecture
 - `docs/superpowers/plans/2026-04-29-entry-point-cutover.md` — Plan 01
 - `docs/superpowers/plans/2026-04-29-python-deletion.md` — Plan 02
 - `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md` — Plan 03
@@ -265,7 +265,7 @@ Incorporates findings from 7-role review (2026-04-29):
 - **MERIDIAN, COVENANT:** Python algorithm preserved via `archive/` rather than deleted
 - **DATUM:** "~213× faster" claim flagged as needing reproducible benchmark protocol
 - **SURVEY, COVENANT:** binary provenance embedding required in outputs; `redist doctor --verify-manifest` subcommand specified
-- **SURVEY:** redist-web stub kept rather than deleted (documented placeholder)
+- **SURVEY:** bisect-web stub kept rather than deleted (documented placeholder)
 - **LEDGER:** canonical assignment file is JSON; `.pkl` deprecated; `.adj.bin` formal spec required; external-tool compatibility matrix required
 - **TRENCH:** new pitfalls PP-15, PP-16, PP-17 added to design/pitfalls/pitfalls-pipeline.md
 - **MERIDIAN:** parity gates now have numerical bounds (PP ±3%, Reock ±5%); contiguity required as hard gate

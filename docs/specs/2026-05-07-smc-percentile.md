@@ -3,7 +3,7 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)
 **Date**: 2026-05-07
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.25/4
-**Extends**: `SeedCompositor` (new `SmcPercentile` variant); depends on `redist-smc` crate
+**Extends**: `SeedCompositor` (new `SmcPercentile` variant); depends on `bisect-smc` crate
 **Related**: G.7 (SMC paper), docs/specs/2026-05-07-smc-redistricting.md (SMC spec)
 
 ---

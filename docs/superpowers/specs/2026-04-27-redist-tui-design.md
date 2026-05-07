@@ -64,12 +64,12 @@ Six personas were interviewed across 10 questions. Design decisions trace direct
 
 ## Architecture
 
-### New crate: `redist-tui`
+### New crate: `bisect-tui`
 
-Binary crate at `redist/crates/redist-tui/`. Added to the workspace. Zero changes to `redist-cli` or its 792 tests. `redist-cli` gains a `tui` subcommand that execs `redist-tui`.
+Binary crate at `redist/crates/bisect-tui/`. Added to the workspace. Zero changes to `bisect-cli` or its 792 tests. `bisect-cli` gains a `tui` subcommand that execs `bisect-tui`.
 
 ```
-redist-tui/src/
+bisect-tui/src/
 ├── main.rs          — terminal setup, event loop, screen router
 ├── app.rs           — App state (current screen, selected plan, session)
 ├── screens/
@@ -86,10 +86,10 @@ redist-tui/src/
 ### Dependency stack
 
 ```
-redist-tui
+bisect-tui
   ├── ratatui + crossterm   — terminal event loop, layout, key events, widgets
-  ├── redist-cli (lib)      — LocationRegistry, chamber_district_count, policy
-  ├── redist-report (lib)   — PlanManifest, RPLAN reading
+  ├── bisect-cli (lib)      — LocationRegistry, chamber_district_count, policy
+  ├── bisect-report (lib)   — PlanManifest, RPLAN reading
   └── serde_json            — reading analysis JSON files
 ```
 
@@ -97,7 +97,7 @@ ratatui's built-in widgets cover all metric display needs: `Gauge` and `LineGaug
 
 ### Key invariant
 
-`redist-tui` reads output files directly (`final_assignments.json`, `analysis/*.json`, `manifest.json`) for the browser, compare, and verify screens. Only the Run screen spawns a subprocess, piping `STATUS:` output back to drive the live progress view.
+`bisect-tui` reads output files directly (`final_assignments.json`, `analysis/*.json`, `manifest.json`) for the browser, compare, and verify screens. Only the Run screen spawns a subprocess, piping `STATUS:` output back to drive the live progress view.
 
 ### Session persistence
 

@@ -118,13 +118,13 @@ Changes:
 - Analysis: read `plan_resolution` from manifest; handle `bg` and `county` units alongside `tract`
 - Reporting: use `unit_type` from manifest for human-readable labels
 
-Crates affected: `redist-cli`, `redist-report`, `redist-analysis`
+Crates affected: `bisect-cli`, `bisect-report`, `bisect-analysis`
 
 ### Phase 2: County-level coarsening (Option B — no extra data)
 
 **Scope**: build county adjacency in-memory from tract GEOIDs.
 
-New function in `redist-cli/src/adjacency_loader.rs`:
+New function in `bisect-cli/src/adjacency_loader.rs`:
 ```rust
 pub fn build_county_coarsening(
     tract_geoids: &HashMap<usize, String>,

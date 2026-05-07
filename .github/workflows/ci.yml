@@ -35,7 +35,7 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install metis
 
-      # All crates except redist-cli run in parallel (no CWD issue).
+      # All crates except bisect-cli run in parallel (no CWD issue).
       - name: Test bisect-core
         run: cargo test -p bisect-core --lib --tests
         working-directory: .
@@ -60,7 +60,7 @@ jobs:
         run: cargo test -p bisect-report --lib --tests
         working-directory: .
 
-      # redist-cli runs last with --test-threads=1: set_current_dir() is
+      # bisect-cli runs last with --test-threads=1: set_current_dir() is
       # process-global; parallel tests race on CWD → ENOENT.
       - name: Test bisect-cli (c-ffi engine, serialised)
         run: cargo test -p bisect-cli --lib --tests -- --test-threads=1
@@ -77,7 +77,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
     env:
-      # Tell redist-apportion tests to use the pure-Rust engine.
+      # Tell bisect-apportion tests to use the pure-Rust engine.
       REDIST_METIS_ENGINE: metis-core
     steps:
       - uses: actions/checkout@v4
@@ -103,8 +103,8 @@ jobs:
         working-directory: .
 
       # --no-default-features disables c-ffi on all crates:
-      # redist-apportion skips the metis crate entirely (pure-Rust paths only).
-      # redist-cli uses the metis-core fallback in bisection_runner.rs for
+      # bisect-apportion skips the metis crate entirely (pure-Rust paths only).
+      # bisect-cli uses the metis-core fallback in bisection_runner.rs for
       # all bisect/nway paths; AreaSection returns a clear [CONFIG] error.
 
       - name: Test bisect-apportion (metis-core engine — no C dep)
@@ -137,17 +137,17 @@ jobs:
             artifact: redist-linux
             bins: |
               redist/target/release/redist
-              redist/target/release/redist-tui
+              redist/target/release/bisect-tui
           - os: windows-latest
             artifact: redist-windows
             bins: |
               redist/target/release/redist.exe
-              redist/target/release/redist-tui.exe
+              redist/target/release/bisect-tui.exe
           - os: macos-latest
             artifact: redist-macos
             bins: |
               redist/target/release/redist
-              redist/target/release/redist-tui
+              redist/target/release/bisect-tui
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -164,7 +164,7 @@ jobs:
         run: brew install metis
 
       - name: Build release binaries
-        run: cargo build --release -p bisect-cli -p redist-tui
+        run: cargo build --release -p bisect-cli -p bisect-tui
         working-directory: .
 
       - name: Upload binaries
@@ -188,9 +188,9 @@ jobs:
         with:
           files: |
             redist-linux/redist
-            redist-linux/redist-tui
+            redist-linux/bisect-tui
             redist-windows/redist.exe
-            redist-windows/redist-tui.exe
+            redist-windows/bisect-tui.exe
             redist-macos/redist
-            redist-macos/redist-tui
+            redist-macos/bisect-tui
           generate_release_notes: true

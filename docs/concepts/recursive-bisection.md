@@ -51,7 +51,7 @@ Two METIS backends are available:
 | Engine | How to select | Use case |
 |--------|---------------|----------|
 | `c-ffi` (default) | no flag needed | Production runs; uses the system-installed METIS C library via FFI. Fastest. |
-| `redist-metis` | `--engine redist-metis` | Portable builds where the C library is not available; pure-Rust reimplementation. Identical outputs, ~15% slower. |
+| `bisect-metis` | `--engine bisect-metis` | Portable builds where the C library is not available; pure-Rust reimplementation. Identical outputs, ~15% slower. |
 
 The engine is recorded in `runs/<label>/index.json` alongside the config hash, so the audit chain captures which backend was used.
 
@@ -81,7 +81,7 @@ Before METIS runs, the build config is resolved through three layers:
 Pass the structure mode via the config YAML or the `--structure` flag:
 
 ```bash
-redist build my_plan --structure geo-section
+bisect build my_plan --structure geo-section
 ```
 
 **Weights** control what METIS minimizes. The default edge weight is the shared boundary length in meters, which drives compactness. The `weights_override` config key can scale or replace this:
@@ -128,13 +128,13 @@ bisect state --state NC --year 2020 --version v1
 ### Run all 50 states
 
 ```bash
-redist states --year 2020
+bisect states --year 2020
 ```
 
 ### Run via a named plan config
 
 ```bash
-redist build nc_2020 --workers 8
+bisect build nc_2020 --workers 8
 ```
 
 Named plans record the config hash in `runs/<label>/index.json`, enabling SHA-256 chain verification. Use named plans for any results intended for publication or court submission.
@@ -142,9 +142,9 @@ Named plans record the config hash in `runs/<label>/index.json`, enabling SHA-25
 ### Run with a non-default structure mode
 
 ```bash
-redist build nc_2020 --structure geo-section
-redist build nc_2020 --structure area-section
-redist build nc_2020 --structure apportion-regions
+bisect build nc_2020 --structure geo-section
+bisect build nc_2020 --structure area-section
+bisect build nc_2020 --structure apportion-regions
 ```
 
 ### Check a state's bisection tree

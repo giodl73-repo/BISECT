@@ -16,7 +16,7 @@ The `redist` recursive-bisection algorithm is **procedurally neutral by construc
 
 ### 1.1 Input minimality
 
-The core bisection (`redist/crates/redist-core/src/bisection.rs`) sees ONLY:
+The core bisection (`redist/crates/bisect-core/src/bisection.rs`) sees ONLY:
 
 - The tract adjacency graph (pairs of tracts that share a non-trivial border)
 - Per-tract total population (or VAP/CVAP when the operator opts into a population-source change)
@@ -32,7 +32,7 @@ It does NOT see:
 
 A reader can confirm this by inspecting the function signature. There is nothing for the algorithm to be biased toward because the data structure does not contain partisan or racial information.
 
-**Caveat:** when an operator runs `bisect state --partition-mode partisan-weighted` (Plan 03, Callais 2026), the algorithm DOES consume per-tract Democratic vote shares. This is opt-in only, NOT the default, and is documented in `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md`. The Callais p.36 mutex (enforced at three CLI gates per `redist-report::manifest::callais_preflight`) prevents combining partisan-weighted mode with VRA-aware mode in the same run.
+**Caveat:** when an operator runs `bisect state --partition-mode partisan-weighted` (Plan 03, Callais 2026), the algorithm DOES consume per-tract Democratic vote shares. This is opt-in only, NOT the default, and is documented in `docs/superpowers/plans/2026-04-29-partisan-bisection-weighting.md`. The Callais p.36 mutex (enforced at three CLI gates per `bisect-report::manifest::callais_preflight`) prevents combining partisan-weighted mode with VRA-aware mode in the same run.
 
 ### 1.2 Geometric objective, not political
 
@@ -62,18 +62,18 @@ This is the chain-of-custody Daubert demands (*Daubert v. Merrell Dow Pharmaceut
 
 The bisection accepts additional constraints — VRA-awareness (`partition-mode metis-vra`), county integrity, contiguity, chamber nesting — that tighten the feasible region but do NOT introduce partisan signals. The constraint code is in:
 
-- `redist/crates/redist-core/src/vra.rs` — VRA-aware edge weighting (race-conscious, but partisan-blind)
-- `redist/crates/redist-analysis/src/contiguity.rs` — contiguity check
-- `redist/crates/redist-analysis/src/splits.rs` — county/municipal split analysis
-- `redist/crates/redist-analysis/src/nesting.rs` — chamber nesting validation
+- `redist/crates/bisect-core/src/vra.rs` — VRA-aware edge weighting (race-conscious, but partisan-blind)
+- `redist/crates/bisect-analysis/src/contiguity.rs` — contiguity check
+- `redist/crates/bisect-analysis/src/splits.rs` — county/municipal split analysis
+- `redist/crates/bisect-analysis/src/nesting.rs` — chamber nesting validation
 
-**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `redist import` and `bisect analyze` via `redist-report::manifest::callais_preflight`). The downstream consequence: a "neutral" baseline produced by this tool for a state-court partisan gerrymandering challenge is provably free of race-conscious signals.
+**The Callais p.36 mutex matters here.** A single run of `bisect state` cannot enable BOTH race-conscious mode AND partisan-weighted mode. The mutex is enforced at three places (`bisect state` runtime per `runner::validate_partisan_config`; `redist import` and `bisect analyze` via `bisect-report::manifest::callais_preflight`). The downstream consequence: a "neutral" baseline produced by this tool for a state-court partisan gerrymandering challenge is provably free of race-conscious signals.
 
 ### 1.5 Falsifiability via ensemble + convergence diagnostics
 
 A single bisection produces ONE plan. Many plans satisfy the constraints; the project does not claim its single output is "the most fair." What the project claims is that **an ensemble of N partisan-blind plans bounds what neutral output looks like**. The enacted plan's percentile rank in that distribution is the falsifiability test.
 
-The just-shipped `redist-analysis::ensemble_diagnostics` module provides the convergence diagnostics a court can use to verify the ensemble was sufficient:
+The just-shipped `bisect-analysis::ensemble_diagnostics` module provides the convergence diagnostics a court can use to verify the ensemble was sufficient:
 
 - **Gelman-Rubin R-hat** across ≥4 parallel chains (must be < 1.05 for the ensemble to be considered converged; threshold from standard Bayesian practice)
 - **Effective Sample Size (ESS)** on summary statistics (efficiency gap, mean-median, MM count) — flag if ESS < 100 (indicates excessive autocorrelation)
@@ -255,7 +255,7 @@ cargo build --release --locked
 # If [FAIL]: the published plan was NOT produced by this commit.
 
 # 4. Re-run the bisection with the manifest's parameters.
-./target/release/redist state \
+./target/release/bisect state \
     --state <manifest.state_code> \
     --year <manifest.year> \
     --seed <manifest.seed> \
@@ -332,6 +332,6 @@ The doctrine's credibility rests on §6 being complete. If you are reading this 
 - `docs/error-conventions.md` — the categorized error model used in CLI output
 - `docs/REDIST_CLI.md` — the user-facing CLI reference with the §"What courts can verify today" surface
 - `docs/superpowers/specs/2026-04-30-roadmap-five-star.md` — the persona-driven capability roadmap
-- `redist/crates/redist-analysis/src/ensemble_diagnostics.rs` — R-hat, ESS, Hamming autocorrelation implementations
-- `redist/crates/redist-analysis/src/bloc_voting.rs` — WLS+HC3+Holm+cluster-bootstrap (Callais Evidence)
-- `redist/crates/redist-report/src/manifest.rs::callais_preflight` — the post-Callais p.36 mutex enforcement
+- `redist/crates/bisect-analysis/src/ensemble_diagnostics.rs` — R-hat, ESS, Hamming autocorrelation implementations
+- `redist/crates/bisect-analysis/src/bloc_voting.rs` — WLS+HC3+Holm+cluster-bootstrap (Callais Evidence)
+- `redist/crates/bisect-report/src/manifest.rs::callais_preflight` — the post-Callais p.36 mutex enforcement

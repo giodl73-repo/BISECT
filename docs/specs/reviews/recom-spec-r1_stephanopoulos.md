@@ -1,6 +1,6 @@
 ---
 reviewer: Nicholas Stephanopoulos
-spec: redist-ensemble ReCom crate
+spec: bisect-ensemble ReCom crate
 round: 1
 score: 3
 date: 2026-05-06

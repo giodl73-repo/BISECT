@@ -65,11 +65,11 @@ The v2.1 patch reframes attestation from a single-version pin (which causes fals
 
 ## Task 3: GerryChain handshake — `redist research check-compat`
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/research.rs` (new), `redist/crates/redist-cli/src/main.rs`, `scripts/research/check_compat.py`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/research.rs` (new), `redist/crates/bisect-cli/src/main.rs`, `scripts/research/check_compat.py`
 
 The handshake is the user-visible "is my environment OK?" command. It runs an actual round-trip against the user's installed GerryChain rather than just version-string matching.
 
-- [ ] **3.1** Add a `Research` subcommand group to `args.rs` (`Subcommand::Research(ResearchArgs)`) with subcommands `check-compat` and `validate-ensemble` (Task 5). The dispatch lives in `redist-cli/src/research.rs`.
+- [ ] **3.1** Add a `Research` subcommand group to `args.rs` (`Subcommand::Research(ResearchArgs)`) with subcommands `check-compat` and `validate-ensemble` (Task 5). The dispatch lives in `bisect-cli/src/research.rs`.
 - [ ] **3.2** `research.rs::run_check_compat()` shells out to `python -m scripts.research.check_compat` (the Python script holds the GerryChain logic; the CLI is the user-facing wrapper). On `python` not found, exit with `[CONFIG]` category error per `error-conventions.md`.
 - [ ] **3.3** `scripts/research/check_compat.py` performs: (a) version match against the pinned range; (b) round-trip on a synthetic 10-node graph (`gerrychain.Partition` -> `redist_py` -> `gerrychain.Partition`) asserting assignment equality; (c) prints PASS/FAIL with diff. Exit code 0 on PASS, 1 on FAIL.
 - [ ] **3.4** L0 unit test in `tests/research/test_check_compat.py`: synthetic graph + monkeypatched gerrychain stub asserts the round-trip path; full pass + deliberately-tampered intermediate (assignment mutated) asserts FAIL.
@@ -96,7 +96,7 @@ The round-trip is the technical guarantee that lets us claim interop. Property t
 
 ## Task 5: `redist research validate-ensemble` (renamed M-02)
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/research.rs`, `scripts/research/validate_ensemble.py`, `tests/research/test_validate_ensemble.py`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/research.rs`, `scripts/research/validate_ensemble.py`, `tests/research/test_validate_ensemble.py`
 
 The renamed command (formerly `validate-against-ensemble`) compares one plan against an ensemble of N random plans and reports per-metric percentile + plain-English flag.
 
@@ -155,7 +155,7 @@ S-03 is the rigor-hardening for the "is this ensemble actually mixed?" question.
 
 ## Task 8: `bisect analyze --paper-mode` AEA REPRODUCE.sh with target-platform pinning (D-05)
 
-**Files:** `redist/crates/redist-cli/src/args.rs` (add `paper_mode: bool` to `AnalyzeArgs`), `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/paper_mode.rs` (new), `scripts/research/paper_mode_template/{REPRODUCE.sh,README.md.tmpl,CITATION.bib.tmpl}`, `tests/research/test_paper_mode.py`
+**Files:** `redist/crates/bisect-cli/src/args.rs` (add `paper_mode: bool` to `AnalyzeArgs`), `redist/crates/bisect-cli/src/analyze.rs`, `redist/crates/bisect-cli/src/paper_mode.rs` (new), `scripts/research/paper_mode_template/{REPRODUCE.sh,README.md.tmpl,CITATION.bib.tmpl}`, `tests/research/test_paper_mode.py`
 
 D-05 escalates the package from "soft pin" to AEA-compliant: declare *target* platform (Linux x86_64 glibc 2.35), pin Cargo.lock SHA + rust-toolchain.toml SHA, ship a `requirements.lock` produced by uv or pip-tools.
 

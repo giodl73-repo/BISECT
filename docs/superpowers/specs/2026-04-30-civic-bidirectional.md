@@ -137,7 +137,7 @@ This is more conservative than "majority vote among submitters" and matches Daub
 ### Public-comment-period report templating
 
 Reuses the Court Submission Reports infrastructure with a different Typst template:
-- `redist-report/templates/comment-period.typ`
+- `bisect-report/templates/comment-period.typ`
 - Same data sources, different presentation
 - No expert-witness signature block; the comment-period report is a community document, not an evidentiary one
 

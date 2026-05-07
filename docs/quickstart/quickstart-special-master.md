@@ -104,7 +104,7 @@ A plan with low compactness percentile AND extreme partisan percentile (e.g., 3r
 
 - Reproducibility deep-dive: `redist doctor --verify-manifest --help`
 - Compactness, VRA, partisan metrics docs: `docs/REDIST_CLI.md`
-- Court-formatted PDF (Typst, PDF/A-2b): `redist report --format pdf` (requires Typst; see `redist-report/typst-templates/README.md`)
+- Court-formatted PDF (Typst, PDF/A-2b): `redist report --format pdf` (requires Typst; see `bisect-report/typst-templates/README.md`)
 - If the plan's `manifest.json` references civic inputs validated as `lenient` or `advisory`, the report tooling will refuse to embed them in court mode without an explicit `--allow-non-strict-civic` flag (see `docs/superpowers/specs/2026-04-30-civic-bidirectional.md`)
 
 ## Neutrality stance

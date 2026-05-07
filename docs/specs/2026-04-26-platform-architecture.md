@@ -12,13 +12,13 @@ redist/ (Cargo workspace)
 │
 ├── crates/
 │   │
-│   ├── redist-core/              UNCHANGED — algorithm kernel
+│   ├── bisect-core/              UNCHANGED — algorithm kernel
 │   │   ├── bisection.rs          BisectionTree, split scheduling
 │   │   ├── vra.rs                adaptive boost formula (single truth)
 │   │   ├── partition.rs          Partition, assert_balanced()
 │   │   └── metis_format.rs       METIS .graph writer/parser
 │   │
-│   ├── redist-data/              EXTENDED — two new modules
+│   ├── bisect-data/              EXTENDED — two new modules
 │   │   ├── tiger.rs              TIGER .shp reader → WKB output
 │   │   ├── adjacency.rs          R-tree candidate detection + Rayon intersection
 │   │   ├── bridge.rs             Union-Find island bridging
@@ -29,7 +29,7 @@ redist/ (Cargo workspace)
 │   │   └── geography.rs          NEW (Spec 3) place-tract relationship
 │   │                             files (Census geographic relationship files)
 │   │
-│   ├── redist-analysis/          EXTENDED — five new analyzer modules
+│   ├── bisect-analysis/          EXTENDED — five new analyzer modules
 │   │   ├── analyzer.rs           Analyzer trait + AnalyzerContext + AnalyzerType
 │   │   ├── demographic.rs        race/ethnicity per district (total pop basis)
 │   │   ├── political.rs          partisan aggregation, is_uncontested
@@ -46,7 +46,7 @@ redist/ (Cargo workspace)
 │   │   └── comparison.rs         NEW (Spec 2) Jaccard similarity, metric
 │   │                             comparison between two plans
 │   │
-│   ├── redist-map/               UNCHANGED — native Rust SVG→PNG rendering
+│   ├── bisect-map/               UNCHANGED — native Rust SVG→PNG rendering
 │   │   ├── projection.rs         equirectangular + InsetProjection (AK/HI)
 │   │   ├── dissolve.rs           WKB decode + geo::BooleanOps union
 │   │   ├── colorscheme.rs        categorical + choropleth schemes
@@ -54,7 +54,7 @@ redist/ (Cargo workspace)
 │   │   ├── renderer.rs           SVG assembly + resvg PNG + Liberation Sans
 │   │   └── rounds.rs             BisectionTree lineage tracking
 │   │
-│   ├── redist-report/            NEW CRATE (Specs 0, 2, 6)
+│   ├── bisect-report/            NEW CRATE (Specs 0, 2, 6)
 │   │   ├── rplan.rs              RPLAN v0.1 reader/writer/validator
 │   │   │                         — the open redistricting plan interchange format
 │   │   ├── report.rs             report assembly — collects all analysis outputs
@@ -67,7 +67,7 @@ redist/ (Cargo workspace)
 │   │   └── audit.rs              chain-of-custody, SHA-256, verification
 │   │                             command generation
 │   │
-│   ├── redist-cli/               EXTENDED — four new modules + extended args
+│   ├── bisect-cli/               EXTENDED — four new modules + extended args
 │   │   ├── args.rs               +AnalyzeArgs (contiguity/splits/partisan)
 │   │   │                         +StateArgs (--districts, --chamber, --label,
 │   │   │                           --population-source, --balance-tolerance)
@@ -90,7 +90,7 @@ redist/ (Cargo workspace)
 │   │   ├── map_cmd.rs            state + national maps (existing)
 │   │   └── aggregate.rs          national rollup (existing)
 │   │
-│   └── redist-web/               STUB — dashboard HTML (Python still used)
+│   └── bisect-web/               STUB — dashboard HTML (Python still used)
 │
 └── python/
     └── redist_py/                PyO3 bindings (unchanged)
@@ -105,7 +105,7 @@ Two trees coexist — legacy (unlabeled) and labeled (new):
 ```
 outputs/{version}/{year}/
 │
-├── states/{state_name}/          LEGACY — unlabeled redist state runs
+├── states/{state_name}/          LEGACY — unlabeled bisect state runs
 │   ├── data/
 │   │   ├── final_assignments.json
 │   │   └── vra_analysis.json
@@ -171,7 +171,7 @@ outputs/{version}/{year}/
 
 ```
 # Core redistricting (extended Spec 1)
-redist state   --state WA --year 2020 --version WA_Plans
+bisect state   --state WA --year 2020 --version WA_Plans
                --districts 98          override district count
                --chamber house         congressional|house|senate|custom
                --label wa_house_v1     named plan (uses plans/ tree)
@@ -179,7 +179,7 @@ redist state   --state WA --year 2020 --version WA_Plans
                --balance-tolerance 5.0 pct (default: chamber-aware)
                --seed 42               reproducible
 
-redist states  --year 2020 --version WA_Plans --workers 8
+bisect states  --year 2020 --version WA_Plans --workers 8
 redist run     --year all --version RustV3 --workers 12
 
 # Multi-chamber suite (Spec 5)
@@ -223,9 +223,9 @@ redist report    --label wa_house_v1 --year 2020 --version WA_Plans
 redist report    --suite wa_commission_v1 --format html
 
 # Data download (extended)
-redist fetch     --type enacted --year 2020 --states WA
-redist fetch     --type geography --year 2020 --states WA
-redist fetch     --type elections --year 2020 --states WA
+bisect fetch     --type enacted --year 2020 --states WA
+bisect fetch     --type geography --year 2020 --states WA
+bisect fetch     --type elections --year 2020 --states WA
 ```
 
 ---
@@ -248,27 +248,27 @@ Examples: balance only=1, contiguity only=2, both=3, nesting only=4, balance+nes
 
 ```
 Phase A (foundation):
-  redist-report/rplan.rs        RPLAN reader/writer/validator (Spec 0)
-  redist-cli/manifest.rs        PlanManifest + SHA-256 (Spec 1)
-  redist-cli args extension     --districts --chamber --label --population-source (Spec 1)
+  bisect-report/rplan.rs        RPLAN reader/writer/validator (Spec 0)
+  bisect-cli/manifest.rs        PlanManifest + SHA-256 (Spec 1)
+  bisect-cli args extension     --districts --chamber --label --population-source (Spec 1)
 
 Phase B (analytics — parallel):
-  redist-analysis/contiguity.rs    (Spec 3)
-  redist-analysis/splits.rs        (Spec 3)
-  redist-analysis/partisan.rs      (Spec 4)
-  redist-analysis/comparison.rs    (Spec 2)
-  redist-data/enacted.rs           (Spec 2)
-  redist-data/geography.rs         (Spec 3)
+  bisect-analysis/contiguity.rs    (Spec 3)
+  bisect-analysis/splits.rs        (Spec 3)
+  bisect-analysis/partisan.rs      (Spec 4)
+  bisect-analysis/comparison.rs    (Spec 2)
+  bisect-data/enacted.rs           (Spec 2)
+  bisect-data/geography.rs         (Spec 3)
 
 Phase C (multi-chamber):
-  redist-cli/nesting.rs         build_chamber_adjacency + validate_nesting (Spec 5)
-  redist-cli/suite.rs           redist suite command (Spec 5)
-  redist-cli/compare.rs         redist compare command (Spec 2)
+  bisect-cli/nesting.rs         build_chamber_adjacency + validate_nesting (Spec 5)
+  bisect-cli/suite.rs           redist suite command (Spec 5)
+  bisect-cli/compare.rs         redist compare command (Spec 2)
 
 Phase D (reports — last, depends on all):
-  redist-report/export.rs       GeoJSON/shapefile/GerryChain (Spec 6)
-  redist-report/import.rs       PIP tract assignment (Spec 6)
-  redist-report/audit.rs        chain-of-custody (Spec 6)
-  redist-report/html.rs         tera HTML templates (Spec 6)
-  redist-report/report.rs       full report assembly (Spec 6)
+  bisect-report/export.rs       GeoJSON/shapefile/GerryChain (Spec 6)
+  bisect-report/import.rs       PIP tract assignment (Spec 6)
+  bisect-report/audit.rs        chain-of-custody (Spec 6)
+  bisect-report/html.rs         tera HTML templates (Spec 6)
+  bisect-report/report.rs       full report assembly (Spec 6)
 ```

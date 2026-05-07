@@ -148,7 +148,7 @@ SMC already produces a weighted sample from the uniform distribution over plans.
 |------|-----------|
 | #161 MKA implement | LoadedGraph.tract_centroids (#150 ✓), albers_project() (#150 ✓) |
 | #162 MKA-AreaSection | AreaSection (B.9 ✓), MKA direction output (#161) |
-| #165 Pareto crate | redist-smc/bisect-smc (#157 ✓), Flip chain (G.8 ✓) |
+| #165 Pareto crate | bisect-smc/bisect-smc (#157 ✓), Flip chain (G.8 ✓) |
 | B.25 paper (#163) | #161 ✓, #162 ✓ |
 | B.26 paper (#166) | #165 ✓ |
 

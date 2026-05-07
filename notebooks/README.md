@@ -94,13 +94,13 @@ Per `docs/superpowers/plans/2026-04-30-researcher-toolkit.md`:
 - **`redist research validate-ensemble` CLI** (Task 5, M-02 rename) — percentile-rank computation against an ensemble.
 - **`scripts/research/mcmc_ensemble.py`** (Task 6) — GerryChain wrapper that generates the N-chain ensemble.
 - **Notebook execution in CI** (Task 1.5) — `.github/workflows/notebooks.yml` with the runtime-budget enforcement.
-- **`redist analyze --paper-mode`** wiring (Task 8) — the AEA replication package emitter; the REPRODUCE.sh template is shipped at `scripts/research/paper_mode_template/REPRODUCE.sh`.
+- **`bisect analyze --paper-mode`** wiring (Task 8) — the AEA replication package emitter; the REPRODUCE.sh template is shipped at `scripts/research/paper_mode_template/REPRODUCE.sh`.
 
-The diagnostics math the notebooks consume (`redist-analysis::ensemble_diagnostics`) IS shipped today — see the just-landed R-hat / ESS / Hamming-autocorrelation module.
+The diagnostics math the notebooks consume (`bisect-analysis::ensemble_diagnostics`) IS shipped today — see the just-landed R-hat / ESS / Hamming-autocorrelation module.
 
 ## See also
 
 - `docs/superpowers/plans/2026-04-30-researcher-toolkit.md` — the full plan
 - `docs/legal/FAIRNESS_DOCTRINE.md` §1.5 + §3 — how the diagnostics serve the post-Rucho state-court strategy
-- `redist-analysis::ensemble_diagnostics` — R-hat, ESS, Hamming autocorrelation
+- `bisect-analysis::ensemble_diagnostics` — R-hat, ESS, Hamming autocorrelation
 - `scripts/research/paper_mode_template/` — the AEA REPRODUCE.sh template (shipped)

@@ -8,8 +8,8 @@
 **Goal:** Ship `redist report --format pdf` producing a PDF/A-2b court-ready expert-witness document driven by Typst, validated by `verapdf`, accompanied by a deterministic reproducibility-package zip whose every embedded path, citation, and provenance field is auditable. Court-mode output refuses to embed civic inputs ingested under non-strict validation unless an explicit override flag is set.
 
 **Depends on:**
-- Existing `redist-report` HTML pipeline (`redist/crates/redist-report/`) and `report_cmd.rs` dispatch in `redist-cli`.
-- `redist-cli/src/provenance.rs` for build commit + rustc version.
+- Existing `bisect-report` HTML pipeline (`redist/crates/bisect-report/`) and `report_cmd.rs` dispatch in `bisect-cli`.
+- `bisect-cli/src/provenance.rs` for build commit + rustc version.
 - `redist doctor --verify-manifest` (already shipped) for the rebuild-instructions block.
 - Onboarding plan (`docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`) — references `bootstrap.sh`/`bootstrap.bat` from the rebuild block; does not need to ship first.
 - Callais Evidence Layer plan — provides bloc-voting JSON inputs and race-of-candidate CSV; the PDF template renders those when present, but tolerates absence.
@@ -34,7 +34,7 @@
 ## Pre-Conditions
 
 - Existing HTML report path (`redist report --format html`) generates a clean `Report` struct via `redist_report::assemble_report` covering the analysis JSONs the PDF template will pull from.
-- `redist-cli/src/report_cmd.rs::try_generate_pdf` exists today as a wkhtmltopdf/pandoc fallback. This plan replaces it with a Typst-driven path that runs by default; the legacy HTML-to-PDF code is removed.
+- `bisect-cli/src/report_cmd.rs::try_generate_pdf` exists today as a wkhtmltopdf/pandoc fallback. This plan replaces it with a Typst-driven path that runs by default; the legacy HTML-to-PDF code is removed.
 - `redist doctor --verify-manifest` is callable from a script and exits 0 when manifest entries hash-match.
 - Typst `>= 0.12` is available on developer machines (PDF/A export landed in 0.12); CI runners install a pinned version per task 3.
 - `verapdf` (Java-based PDF/A validator) is installable; CI installs the pinned `verapdf-greenfield` release. Local dev fall-back: spec exit message names the install URL (consistent with the current pandoc/wkhtmltopdf hint pattern).
@@ -47,7 +47,7 @@
 
 This doc must land before any of Task 5+ runs because the Typst template, the citation generator, and the reproducibility appendix all reference its field inventory and date semantics.
 
-- [ ] **1.1** Inventory every manifest emitted today, **v2.1.1 P1 expanded**: `PlanManifest` (`redist-report::manifest`); deposition log sidecar (`deposition_log_{date}.manifest.json` from Deposition Prep plan); `narrative_manifest.json` (Plan Comparison plan, schema-version `narrative-manifest v1`); `what_if/.../manifest.json` (`whatif-manifest v1`, Deposition Prep plan); `reproducibility_package_manifest.json` (this plan); **`civic-coi v1` `CivicManifest`** (Civic Bidirectional plan); **`tutorial-checksums v1`** (Onboarding plan `examples/vermont-walkthrough/checksums.json`); **`import-compat v1`** (State Staff Interop plan, embedded SHA recorded in `PlanManifest.import_compat_sha256`); **`race_of_candidate_provenance v1`** (Callais plan). Each downstream plan that adds a new manifest type MUST land a one-task edit extending this inventory in the same release.
+- [ ] **1.1** Inventory every manifest emitted today, **v2.1.1 P1 expanded**: `PlanManifest` (`bisect-report::manifest`); deposition log sidecar (`deposition_log_{date}.manifest.json` from Deposition Prep plan); `narrative_manifest.json` (Plan Comparison plan, schema-version `narrative-manifest v1`); `what_if/.../manifest.json` (`whatif-manifest v1`, Deposition Prep plan); `reproducibility_package_manifest.json` (this plan); **`civic-coi v1` `CivicManifest`** (Civic Bidirectional plan); **`tutorial-checksums v1`** (Onboarding plan `examples/vermont-walkthrough/checksums.json`); **`import-compat v1`** (State Staff Interop plan, embedded SHA recorded in `PlanManifest.import_compat_sha256`); **`race_of_candidate_provenance v1`** (Callais plan). Each downstream plan that adds a new manifest type MUST land a one-task edit extending this inventory in the same release.
 - [ ] **1.2** Document each field's type, required/optional, and exact derivation. **v2.1.1 P1**: also enumerate the **canonical required field set** that every manifest type MUST carry (`schema_version: "<kind> v<n>"`, `sha256`, `fetched_at` ISO-8601 UTC, `source_url`, `build_commit` long-form SHA, `redist_version`, `rustc_version`). Per-manifest-type extensions are additive.
 
   **Build-commit naming reconciliation (v2.1.1 P1)**: settle drift across plans. The canonical names are:
@@ -82,10 +82,10 @@ This doc must land before any of Task 5+ runs because the Typst template, the ci
 
 ## Task 3: Pin Typst and add it to the build/CI surface
 
-**Files:** `redist/rust-toolchain.toml` (no change), `docs/REPRODUCIBLE_BUILD.md`, `.github/workflows/*.yml`, `redist/crates/redist-report/typst-templates/.typst-version` (new)
+**Files:** `redist/rust-toolchain.toml` (no change), `docs/REPRODUCIBLE_BUILD.md`, `.github/workflows/*.yml`, `redist/crates/bisect-report/typst-templates/.typst-version` (new)
 
-- [ ] **3.1** Pin Typst to a specific minor (e.g., `0.12.x`); record the pin in `redist/crates/redist-report/typst-templates/.typst-version` (single-line file, parsed by the wrapper at runtime to assert).
-- [ ] **3.2** Pin `verapdf` to a specific release; record similarly under `redist/crates/redist-report/typst-templates/.verapdf-version`.
+- [ ] **3.1** Pin Typst to a specific minor (e.g., `0.12.x`); record the pin in `redist/crates/bisect-report/typst-templates/.typst-version` (single-line file, parsed by the wrapper at runtime to assert).
+- [ ] **3.2** Pin `verapdf` to a specific release; record similarly under `redist/crates/bisect-report/typst-templates/.verapdf-version`.
 - [ ] **3.3** CI install steps: install Typst (curl release tarball; verify SHA-256), install Java + verapdf zip; cache both. Document the install commands in `docs/REPRODUCIBLE_BUILD.md` under a new "External tooling for PDF reports" section.
 - [ ] **3.4** `redist report --format pdf` preflight: at startup, exec `typst --version` and `verapdf --version`, parse, and assert against the pinned strings. On mismatch, fail with `[CONFIG]` actionable error naming the expected version and install URL — do not silently produce a non-court-ready PDF.
 
@@ -93,16 +93,16 @@ This doc must land before any of Task 5+ runs because the Typst template, the ci
 
 ---
 
-## Task 4: Carve out `redist-report` Typst module + remove legacy HTML-to-PDF fallback
+## Task 4: Carve out `bisect-report` Typst module + remove legacy HTML-to-PDF fallback
 
-**Files:** `redist/crates/redist-report/Cargo.toml`, `redist/crates/redist-report/src/lib.rs`, `redist/crates/redist-report/src/typst_render.rs` (new), `redist/crates/redist-report/typst-templates/` (new directory tree), `redist/crates/redist-cli/src/report_cmd.rs`
+**Files:** `redist/crates/bisect-report/Cargo.toml`, `redist/crates/bisect-report/src/lib.rs`, `redist/crates/bisect-report/src/typst_render.rs` (new), `redist/crates/bisect-report/typst-templates/` (new directory tree), `redist/crates/bisect-cli/src/report_cmd.rs`
 
-- [ ] **4.1** Add a `typst_render` module to `redist-report` with the surface: `render_pdf(report: &Report, ctx: &PdfRenderContext) -> Result<PdfRenderArtifacts>`. `PdfRenderContext` carries expert config (name, credentials, affiliation, jurisdiction, citation_style, draft flag, allow_non_strict_civic flag). `PdfRenderArtifacts` carries the produced `.pdf` bytes, the rendered `.typ` source, the captured Typst stderr, and the verapdf JSON output.
+- [ ] **4.1** Add a `typst_render` module to `bisect-report` with the surface: `render_pdf(report: &Report, ctx: &PdfRenderContext) -> Result<PdfRenderArtifacts>`. `PdfRenderContext` carries expert config (name, credentials, affiliation, jurisdiction, citation_style, draft flag, allow_non_strict_civic flag). `PdfRenderArtifacts` carries the produced `.pdf` bytes, the rendered `.typ` source, the captured Typst stderr, and the verapdf JSON output.
 - [ ] **4.2** Delete `report_cmd::try_generate_pdf` and the wkhtmltopdf/pandoc fallback. `report_cmd.rs` for the PDF format now calls into `redist_report::typst_render::render_pdf` directly.
 - [ ] **4.3** Wire `--draft` flag through `args::ReportArgs` to the render context; `--draft` skips the verapdf gate and stamps a "DRAFT — NOT COURT-ADMISSIBLE" watermark in the Typst template. Document that draft PDFs do not record `pdfa_validated: true` in the package manifest.
 - [ ] **4.4** Add new CLI flags from the spec: `--expert-name`, `--expert-credentials`, `--expert-affiliation`, `--case-caption-file`, `--jurisdiction`, `--citation-style`, plus the new `--allow-non-strict-civic` (BD-R1, see Task 8). Allow loading from `expert.toml` if `--expert-config <path>` is set; CLI flags override file values. **v2.1.1 P1 (M-01 alias)**: `--plan-label` accepted as clap alias for `--label` (`#[arg(long, alias = "plan-label")]`) so workflows mixing `redist report --plan-label X` with `redist depo eval --plan-label X` are not flag-mismatched.
-- [ ] **4.5** Author the directory `redist/crates/redist-report/typst-templates/` with: `expert_report.typ` (the document), `_cover.typ`, `_methodology.typ`, `_results.typ`, `_qualifications.typ`, `_conflicts.typ`, `_prior_testimony.typ`, `_daubert.typ`, `_reproducibility.typ`, `_signature.typ`, `_citations.typ`, `_assets/` (logos, fonts as needed). Each section is a separate file imported by `expert_report.typ` so per-section L0 unit tests can render them in isolation.
-- [ ] **4.6** Pass values into Typst by writing a single `inputs.json` next to the `.typ` source, then invoking `typst compile --input data=inputs.json`. The `inputs.json` schema is defined in `redist-report/src/typst_render.rs` (a serde struct) and asserted against the template's expected keys via the Task 9 L0 tests.
+- [ ] **4.5** Author the directory `redist/crates/bisect-report/typst-templates/` with: `expert_report.typ` (the document), `_cover.typ`, `_methodology.typ`, `_results.typ`, `_qualifications.typ`, `_conflicts.typ`, `_prior_testimony.typ`, `_daubert.typ`, `_reproducibility.typ`, `_signature.typ`, `_citations.typ`, `_assets/` (logos, fonts as needed). Each section is a separate file imported by `expert_report.typ` so per-section L0 unit tests can render them in isolation.
+- [ ] **4.6** Pass values into Typst by writing a single `inputs.json` next to the `.typ` source, then invoking `typst compile --input data=inputs.json`. The `inputs.json` schema is defined in `bisect-report/src/typst_render.rs` (a serde struct) and asserted against the template's expected keys via the Task 9 L0 tests.
 
 **Exit:** `redist report --format pdf --label vt_test` produces `vt_test_report.pdf` plus a `vt_test_report.typ` sidecar via Typst; legacy wkhtmltopdf/pandoc paths are gone.
 
@@ -110,7 +110,7 @@ This doc must land before any of Task 5+ runs because the Typst template, the ci
 
 ## Task 5: Per-section template authoring — required content
 
-**Files:** `redist/crates/redist-report/typst-templates/_*.typ`
+**Files:** `redist/crates/bisect-report/typst-templates/_*.typ`
 
 Section assembly follows the spec's expanded list (cover, exec summary, methodology, results, qualifications, conflicts, prior testimony, Daubert self-assessment, reproducibility appendix, signature, citations).
 
@@ -132,7 +132,7 @@ Section assembly follows the spec's expanded list (cover, exec summary, methodol
 
 ## Task 6: Reproducibility appendix + sidecar zip (D-04 deterministic build)
 
-**Files:** `redist/crates/redist-report/src/typst_render.rs`, `redist/crates/redist-report/src/repro_zip.rs` (new), `redist/crates/redist-report/typst-templates/_reproducibility.typ`
+**Files:** `redist/crates/bisect-report/src/typst_render.rs`, `redist/crates/bisect-report/src/repro_zip.rs` (new), `redist/crates/bisect-report/typst-templates/_reproducibility.typ`
 
 - [ ] **6.1** Build the reproducibility-package zip with deterministic byte output:
   - Set `SOURCE_DATE_EPOCH` from the manifest `created_at` (Unix seconds).
@@ -150,7 +150,7 @@ Section assembly follows the spec's expanded list (cover, exec summary, methodol
 
 ## Task 7: PDF/A-2b validation + Typst stderr surfacing (PP-32)
 
-**Files:** `redist/crates/redist-report/src/typst_render.rs`, `redist/crates/redist-report/src/verapdf.rs` (new)
+**Files:** `redist/crates/bisect-report/src/typst_render.rs`, `redist/crates/bisect-report/src/verapdf.rs` (new)
 
 - [ ] **7.1** After Typst compile, capture its `stderr`. **PP-32**: any non-empty stderr — even a "warning" — fails the render unless `--draft` is set. The captured stderr is recorded verbatim in the package manifest's new `typst_stderr` field (always present; empty string on clean render).
 - [ ] **7.2** Run `verapdf --format json --flavour 2b <pdf>` as a subprocess; parse the JSON; gate on `passedRules == totalRules`. On failure, emit `[VERAPDF]` error category with the exact rule IDs that failed (e.g., "PDF/A-2b rule 6.1.13: fonts must be embedded") and refuse to write the package zip — the caller gets a non-zero exit and the directory is left without a `.pdf` so partial outputs can't be submitted by mistake.
@@ -164,7 +164,7 @@ Section assembly follows the spec's expanded list (cover, exec summary, methodol
 
 ## Task 8: Civic-input gating — `--allow-non-strict-civic` (BD-R1)
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/report_cmd.rs`, `redist/crates/redist-report/src/typst_render.rs`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/report_cmd.rs`, `redist/crates/bisect-report/src/typst_render.rs`
 
 - [ ] **8.1** When assembling the Report, scan civic-input provenance fields (per Civic Bidirectional spec, every civic input has a `validation_level: "strict" | "lenient" | "advisory"`). If any input present in the analysis chain is `lenient` or `advisory`, refuse to render the PDF unless `--allow-non-strict-civic` is set, with `[BOUNDARY]` error message naming the offending file path(s) and validation level.
 - [ ] **8.2** When `--allow-non-strict-civic` is set: render proceeds, BUT the package manifest records `non_strict_civic_inputs: [{"path": ..., "validation_level": "lenient"}]`, AND a Typst-rendered cover-page banner reads "This report includes civic inputs validated under non-strict mode. See Reproducibility Appendix §X." The Reproducibility Appendix gets a corresponding subsection enumerating the inputs and their validation levels.
@@ -176,7 +176,7 @@ Section assembly follows the spec's expanded list (cover, exec summary, methodol
 
 ## Task 9: Tests — value-correctness + verapdf gate (B-01 P0, B-10)
 
-**Files:** `redist/crates/redist-report/tests/`, `tests/acceptance/test_court_report_*.py`
+**Files:** `redist/crates/bisect-report/tests/`, `tests/acceptance/test_court_report_*.py`
 
 - [ ] **9.1** **L0 — template rendering with synthetic data.** Per-section unit test that renders each `_*.typ` partial in isolation against a deterministic `inputs.json` fixture; assert exit 0, no NaN/null leak (grep the `.typ` output for the literals `NaN`, `null`, `<<`, `MISSING`).
 - [ ] **9.2** **L1 — full PDF generation pipeline (Vermont).** Renders the Vermont walkthrough Report end-to-end against pinned fixture JSONs; asserts the PDF exists, parses, and contains all 11 section headings via Typst's `--root` outline export OR a `pdftotext`-based extraction.
@@ -186,15 +186,15 @@ Section assembly follows the spec's expanded list (cover, exec summary, methodol
   - The exact Polsby-Popper mean from the compactness fixture.
   - The build-commit short SHA in the provenance block.
   - The package zip's SHA-256 (last 12 hex chars, since the full hash wraps).
-  Hand-computed numbers are committed under `redist/crates/redist-report/tests/fixtures/court_report/expected_values.toml` so the assertions read the expected from disk, keeping the tests easy to re-pin when fixtures change.
+  Hand-computed numbers are committed under `redist/crates/bisect-report/tests/fixtures/court_report/expected_values.toml` so the assertions read the expected from disk, keeping the tests easy to re-pin when fixtures change.
 - [ ] **9.4** **B-10 — section-header presence + ordering.** Replace the spec's draft "page count is reasonable" L2 assertion. Extract the document outline (Typst writes a PDF outline; verapdf-greenfield can also dump it). Assert the exact ordered list of headings: Cover, Executive Summary, Methodology (with "Data sources and contributors" first child), Results, Expert Qualifications, Conflicts of Interest, Prior Testimony, Daubert Self-Assessment, Reproducibility Appendix, Signature, Citations. Also assert that "Data sources and contributors" appears strictly before any algorithmic-methodology subheading (CM-02 above-the-fold).
 - [ ] **9.5** **B-01 P0b — deliberately-malformed Typst output fails verapdf.** Negative test: a fixture template `tests/fixtures/court_report/_broken.typ` references an unembedded font OR removes `pdf-version: "PDF/A-2b"` from the document set; render via `redist report --format pdf`; assert exit non-zero, assert `[VERAPDF]` category, assert the failed rule ID is in stderr, assert no `.pdf` was written to the output dir (Task 7.2 invariant).
 - [ ] **9.6** **L0 — Typst stderr fail-on-warning (PP-32).** Fixture template that emits a Typst warning (e.g., overflowing box); assert render fails without `--draft`, succeeds with `--draft` and records the stderr in the package manifest.
 - [ ] **9.7** **L0 — civic gating (BD-R1).** Two synthetic Report fixtures (one strict-only civic, one with one lenient civic); assert render fails without `--allow-non-strict-civic` on the latter; succeeds with it, banner present, manifest annotation present.
-- [ ] **9.8** **L1 — determinism (D-04).** Already specified at 6.7; lives in `redist-report/tests/`.
+- [ ] **9.8** **L1 — determinism (D-04).** Already specified at 6.7; lives in `bisect-report/tests/`.
 - [ ] **9.9** **L2 — slow acceptance, default-skipped.** Pytest under `tests/acceptance/test_court_report_louisiana.py` marked `slow + network` running the LA Callais fixture once Callais Evidence Layer plan ships; asserts section ordering + verapdf pass + value-correctness for at least one Callais bloc-voting coefficient.
 
-**Exit:** `cargo test -p redist-report` and the new pytest acceptance file are green; B-01 negative test demonstrably catches the broken-Typst case; B-10 ordering assertion is firm.
+**Exit:** `cargo test -p bisect-report` and the new pytest acceptance file are green; B-01 negative test demonstrably catches the broken-Typst case; B-10 ordering assertion is firm.
 
 ---
 

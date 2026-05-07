@@ -1,6 +1,6 @@
 # Prusti Verification
 
-Deductive verification of redist-metis postconditions using Prusti 0.2.x.
+Deductive verification of bisect-metis postconditions using Prusti 0.2.x.
 
 ## Three legal postconditions
 
@@ -35,4 +35,4 @@ These are legally archivable proof objects suitable for expert testimony (not ju
 
 - Task 19: Prusti postconditions (pending)
 
-See redist-metis-verify.md for full specification.
+See bisect-metis-verify.md for full specification.

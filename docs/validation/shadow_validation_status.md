@@ -3,13 +3,13 @@
 **Status**: Wired and ready — feature flag active, compilation verified.
 
 **Date**: 2026-05-02  
-**Branch**: `feature/redist-metis-rust-port`  
+**Branch**: `feature/bisect-metis-rust-port`  
 **Task**: #28 (in_progress) — Run 50-state × 3-year shadow validation
 
 ## Readiness Summary
 
 ### Shadow Mode: Feature-Complete
-- **Location**: `redist/crates/redist-apportion/src/split.rs` (lines 237-250, 290-303)
+- **Location**: `redist/crates/bisect-apportion/src/split.rs` (lines 237-250, 290-303)
 - **Design**: Rust METIS partitions normally; C METIS runs as quality oracle in parallel
 - **Comparison**: Logs to stderr if Rust edge cut exceeds C cut by >20%
 - **Format**: `[shadow-metis] k={k}: Rust cut {rust_cut} > C cut {c_cut} ({%} over)`
@@ -19,8 +19,8 @@
 
 ### Compilation Status: Clean
 ```
-redist-apportion (default features with shadow-metis):  PASS
-redist-apportion (--no-default-features):              PASS
+bisect-apportion (default features with shadow-metis):  PASS
+bisect-apportion (--no-default-features):              PASS
 ```
 No regressions. Feature flag toggles C METIS at compile time via Cargo.toml dependency:
 ```toml
@@ -33,7 +33,7 @@ default = ["shadow-metis"]   # keep C dep during validation phase
 - **Adjacency graphs**: Present at `outputs/data/2020/adjacency/` (built 2026-02-08)
 - **Unit data**: Present at `outputs/data/2020/units/`
 - **Entry point**: `redist` binary not present in PATH; `run` alias not configured in environment
-  - Workaround: Build via `cargo build -p redist-cli` in `redist/` directory
+  - Workaround: Build via `cargo build -p bisect-cli` in `redist/` directory
   - Impact: Cannot run full validation in current environment; documented below
 
 ## Blockers
@@ -47,7 +47,7 @@ The user's environment does not have:
 
 **Resolution for Next Session**:
 1. Run `C:\src\apportionment\setup_env.bat` to configure `run`/`runtest` aliases
-2. Ensure `cargo build -p redist-cli --release` has been run and binary is accessible
+2. Ensure `cargo build -p bisect-cli --release` has been run and binary is accessible
 3. Execute: `run -y 2020 -v shadow_test -st VT 2>&1 | tail -20` to test on Vermont
 4. For full sweep: `run -y 2020 -v shadow_test 2>&1 | tee shadow_validation_2020.log`
 
@@ -107,7 +107,7 @@ run -y 2020 -v shadow_test
    ```powershell
    C:\src\apportionment\setup_env.bat
    cd C:\src\apportionment\redist
-   cargo build -p redist-cli --release
+   cargo build -p bisect-cli --release
    ```
 
 2. **Run Vermont Validation**:
@@ -133,8 +133,8 @@ run -y 2020 -v shadow_test
 
 ## References
 
-- **Shadow Mode Implementation**: `redist/crates/redist-apportion/src/split.rs` (lines 88-307)
-- **Feature Flag**: `redist/crates/redist-apportion/Cargo.toml` (lines 17-19)
+- **Shadow Mode Implementation**: `redist/crates/bisect-apportion/src/split.rs` (lines 88-307)
+- **Feature Flag**: `redist/crates/bisect-apportion/Cargo.toml` (lines 17-19)
 - **Validation Task**: Task #28 (in_progress)
 - **Cutover Task**: Task #29 (pending) — Remove C metis dep
 - **Task #21**: Validation gate + cutover

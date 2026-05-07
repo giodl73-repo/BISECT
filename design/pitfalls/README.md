@@ -51,12 +51,12 @@ A bug that led to a pitfall discovery is noted in the pitfall, but the pitfall i
 | PP-09 | In-memory download buffer OOM for variable-size files | **SOLVED** | fetch.rs::download_and_extract_zip (streaming) |
 | PP-10 | Silent state omission on invalid year parameter | **SOLVED** | runner.rs::load_all_states year allowlist |
 | PP-11 | Compile-time asset path resolution mismatch in workspace builds | **SOLVED** | include_bytes! next to source file |
-| PP-12 | WKB decode API surface mismatch across geospatial crate ecosystem | **SOLVED** | redist-map::dissolve::tests |
-| DP-04 | Stale test assertion after format version upgrade | **SOLVED** | redist-data::serialize::tests::test_magic_header |
+| PP-12 | WKB decode API surface mismatch across geospatial crate ecosystem | **SOLVED** | bisect-map::dissolve::tests |
+| DP-04 | Stale test assertion after format version upgrade | **SOLVED** | bisect-data::serialize::tests::test_magic_header |
 | PP-13 | Integer parameter truncation at subprocess boundary | **SOLVED** | bisection_runner::tests::test_ufactor_wasnt_silently_truncated_regression |
 | AP-07 | Per-depth tolerance in recursive bisection causes compounding balance error | **SOLVED** | bisection_runner::tests::test_per_node_ufactor_formula |
 | AP-08 | Granularity floor constraint in geographic unit-based partitioning | **MITIGATED** | validate_state_legislative.py |
-| PP-14 | Metadata Resolution Split — dual sources for plan parameters | **SOLVED** | redist-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10 |
+| PP-14 | Metadata Resolution Split — dual sources for plan parameters | **SOLVED** | bisect-cli::integration_pipeline_tests::test_plan_context_wa_house_98_not_congressional_10 |
 | PP-15 | Entry-point switching without PATH pre-flight check | **SOLVED** | setup_env.bat preflight (Plan 01 Task 3.2) |
 | PP-16 | Incremental deletion commits create brittle rollback dependencies | **SOLVED** | Plan 02 Rollback section (procedural artifact) |
 | PP-17 | Sensitive-asset commit prevention via manual reminder, not structural | **SOLVED** | pre-commit hook rejecting *.pdf staging (Plan 03 Task 1.4) |

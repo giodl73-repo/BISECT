@@ -71,7 +71,7 @@ The full specification (with parameters) lives in the parameter table maintained
 
 Other candidates that fail writeability:
 
-- **Markov-chain Monte Carlo ensembles** (the GerryChain method): the output is a *distribution* over plans, not a single plan. A statute would need to additionally specify how to pick one plan from the distribution, which reintroduces discretion. Compare R-hat / ESS / Hamming autocorrelation thresholds in `redist-analysis::ensemble_diagnostics` — useful for *evaluating* whether a sample is converged, useless for picking a single answer.
+- **Markov-chain Monte Carlo ensembles** (the GerryChain method): the output is a *distribution* over plans, not a single plan. A statute would need to additionally specify how to pick one plan from the distribution, which reintroduces discretion. Compare R-hat / ESS / Hamming autocorrelation thresholds in `bisect-analysis::ensemble_diagnostics` — useful for *evaluating* whether a sample is converged, useless for picking a single answer.
 - **Optimization with multi-objective weights**: any choice of weights between objectives (compactness vs. minority-opportunity vs. partisan-fairness) is a value judgment. Specifying the weights in statute means the statute is making the judgment.
 - **Heuristics with stochastic steps**: any algorithm whose output depends on a random seed produces different maps with different seeds. A statute could fix the seed (this bill does), but only deterministic algorithms can be byte-verified afterward.
 
@@ -81,7 +81,7 @@ Recursive bisection on tract-adjacency graphs runs in seconds-to-minutes per sta
 
 The reference implementation (this project, `redist`) has been validated against:
 
-- All 50 states' 2020 congressional districts (`redist states --year 2020`)
+- All 50 states' 2020 congressional districts (`bisect states --year 2020`)
 - Multi-chamber suites for 12 states (`redist suite`)
 - Multiple census years (2000, 2010, 2020)
 - Block-group resolution for high-district-count states (CA 52D, TX 38D)
@@ -151,7 +151,7 @@ By 2026, this project (`redist`) has:
 - Civic-input pipeline with URL snapshotting (`redist civic ingest --snapshot-urls`).
 - Court-submission report scaffolding (`redist report --format pdf`).
 - Plan-comparison narrative generator with provenance manifest (`redist compare --format html`).
-- Ensemble diagnostics for convergence claims (`redist-analysis::ensemble_diagnostics`).
+- Ensemble diagnostics for convergence claims (`bisect-analysis::ensemble_diagnostics`).
 - Bloc-voting analysis for VRA § 2 (`bisect analyze --types bloc-voting`).
 - Atomic plan import with Callais p.36 mutex (`PlanDirGuard` + `callais_preflight`).
 

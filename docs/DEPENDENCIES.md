@@ -90,7 +90,7 @@ bisect fetch --year 2020 --release                   # + adjacency files from Gi
 python scripts/data/generate_adj_bin.py --year 2020  # Convert to fast native format
 
 bisect state --state VT --year 2020 --version V3     # Single state smoke test
-redist states --year 2020 --version V3 \
+bisect states --year 2020 --version V3 \
   --output-dir outputs/V3 --workers 8                # All 50 states
 ```
 
@@ -177,7 +177,7 @@ except ImportError:
 ## PyO3 Bindings (Rust ↔ Python, Developers Only)
 
 Required only if you are modifying the `redist_py` Python bindings or working on
-the `redist-core`/`redist-data` crates.
+the `bisect-core`/`bisect-data` crates.
 
 ```bash
 pip install maturin
@@ -221,7 +221,7 @@ $env:CENSUS_API_KEY = "your_key_here"
 : Upgrade: `conda update -c conda-forge geopandas`.
 
 **`MemoryError` during large state processing**
-: Process states with fewer workers: `redist states --workers 2`.
+: Process states with fewer workers: `bisect states --workers 2`.
 
 ---
 

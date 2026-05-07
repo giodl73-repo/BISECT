@@ -14,7 +14,7 @@ Properties of the bisection algorithm and compactness metrics that ensure mathem
 
 **Enforcement:** `if assignments.len() != n { return Err("bisection incomplete") }` at end of run_all_splits. The test_run_all_splits_two_districts test checks disjointness explicitly.
 
-**Test:** `redist/crates/redist-cli/src/bisection_runner.rs::test_run_all_splits_two_districts` (checks d1.is_disjoint(&d2) and d1.len()+d2.len()==4)
+**Test:** `redist/crates/bisect-cli/src/bisection_runner.rs::test_run_all_splits_two_districts` (checks d1.is_disjoint(&d2) and d1.len()+d2.len()==4)
 
 **Status:** ENFORCED
 
@@ -46,7 +46,7 @@ Properties of the bisection algorithm and compactness metrics that ensure mathem
 
 **Enforcement:** `sort_by_key(|(path, _)| (path.len(), path.clone()))` in run_all_splits.
 
-**Test:** `redist/crates/redist-cli/src/bisection_runner.rs::test_leaf_sort_bfs_order` (verifies ["0","1","00","01"] not ["0","00","01","1"])
+**Test:** `redist/crates/bisect-cli/src/bisection_runner.rs::test_leaf_sort_bfs_order` (verifies ["0","1","00","01"] not ["0","00","01","1"])
 
 **Status:** ENFORCED
 
@@ -62,7 +62,7 @@ Properties of the bisection algorithm and compactness metrics that ensure mathem
 
 **Enforcement:** assert at split_subgraph entry: `(left_frac + right_frac - 1.0).abs() < 1e-6`. For n-way (future): assert sum of all partition weights ≈ 1.0 before writing tpwgts file.
 
-**Test:** `redist/crates/redist-cli/src/bisection_runner.rs::test_invariant_target_weights_sum_to_one_2way` — verifies all BisectionTree nodes for k=2,3,4,7,8,14,52
+**Test:** `redist/crates/bisect-cli/src/bisection_runner.rs::test_invariant_target_weights_sum_to_one_2way` — verifies all BisectionTree nodes for k=2,3,4,7,8,14,52
 
 **Status:** ENFORCED for 2-way bisection; OPEN for n-way (not yet implemented)
 
@@ -79,6 +79,6 @@ Properties of the bisection algorithm and compactness metrics that ensure mathem
 **Enforcement:** `polygon_perimeter` function returns `polygon.exterior().euclidean_length()` only; holes excluded explicitly.
 
 **Test:** `tests/unit/test_rust_compactness.py::TestPolsbyPopper::test_square_pp_is_pi_over_4` (square PP must exactly equal π/4 = 0.7854; wrong perimeter gives different value)
-`redist/crates/redist-analysis/src/compactness.rs::test_perimeter_excludes_holes`
+`redist/crates/bisect-analysis/src/compactness.rs::test_perimeter_excludes_holes`
 
 **Status:** ENFORCED

@@ -15,7 +15,7 @@ Properties of the CLI interface and inter-process communication protocol.
 **Enforcement:** status() in status.rs auto-sanitizes non-ASCII via ascii_safe() before printing. In debug builds, additional check was added.
 
 **Test:** `tests/unit/test_rust_cli.py::TestStatusProtocol::test_no_unicode_in_help_output`
-`redist/crates/redist-cli/src/status.rs::test_status_sanitizes_non_ascii_not_panic`
+`redist/crates/bisect-cli/src/status.rs::test_status_sanitizes_non_ascii_not_panic`
 
 **Status:** ENFORCED
 
@@ -39,7 +39,7 @@ Properties of the CLI interface and inter-process communication protocol.
 
 ## IP-03: REDIST_PYTHON used for all Python subprocess calls
 
-**Invariant:** Every subprocess call to a Python interpreter in redist-cli must use the REDIST_PYTHON environment variable as the command, falling back to 'py' (Windows) or 'python3' (Unix). The bare 'python' command is prohibited.
+**Invariant:** Every subprocess call to a Python interpreter in bisect-cli must use the REDIST_PYTHON environment variable as the command, falling back to 'py' (Windows) or 'python3' (Unix). The bare 'python' command is prohibited.
 
 **Why it must hold:** Compiled binaries resolve command names against their own PATH, which differs from the user's shell environment. `python` may resolve to a system Python without the required packages (numpy, pickle). REDIST_PYTHON lets the caller specify the exact interpreter.
 
@@ -55,11 +55,11 @@ Properties of the CLI interface and inter-process communication protocol.
 
 ## IP-04: CWD must equal project root when using relative manifest paths
 
-**Invariant:** When `redist fetch` or `redist state` is run, the working directory must be the project root (the directory containing `data/`, `outputs/`, and `redist/`). All manifest paths (`local_data_dir: "data"`, `local_outputs_dir: "outputs"`) are relative to CWD.
+**Invariant:** When `bisect fetch` or `bisect state` is run, the working directory must be the project root (the directory containing `data/`, `outputs/`, and `redist/`). All manifest paths (`local_data_dir: "data"`, `local_outputs_dir: "outputs"`) are relative to CWD.
 
 **Why it must hold:** The manifest stores paths as relative strings to avoid hardcoding user-specific absolute paths. If the binary is launched from a different directory (e.g., `/home/user` instead of `/home/user/apportionment`), all data lookups and writes go to the wrong location. Done-marker checks fail; downloads appear missing even after fetching.
 
-**When it can be violated:** Running `redist fetch` from a different directory than the project root. Calling the binary via a wrapper script that changes CWD. Containerised deployments where CWD is `/` or `/app`.
+**When it can be violated:** Running `bisect fetch` from a different directory than the project root. Calling the binary via a wrapper script that changes CWD. Containerised deployments where CWD is `/` or `/app`.
 
 **Enforcement:** Document in `--help` output. Future: support absolute paths in manifest via `REDIST_DATA_DIR` and `REDIST_OUTPUTS_DIR` env vars.
 

@@ -10,7 +10,7 @@ This document is the explicit dependency graph for the eight parameters exposed 
 - **Which guardrails fire** (some parameter values block headline-significance language)
 - **Which warnings surface** (some combinations are statistically anti-conservative)
 
-The machine-readable counterpart is at `redist/crates/redist-cli/whitelist_dependencies.json` (compile-time embedded; the repo's top-level `/data/` is gitignored for raw Census downloads). The CI test asserts that the markdown table below and the JSON file declare the same parameter set with the same defaults; drift is impossible-to-merge.
+The machine-readable counterpart is at `redist/crates/bisect-cli/whitelist_dependencies.json` (compile-time embedded; the repo's top-level `/data/` is gitignored for raw Census downloads). The CI test asserts that the markdown table below and the JSON file declare the same parameter set with the same defaults; drift is impossible-to-merge.
 
 If you're adding a new whitelist parameter: edit the table below AND the JSON in the same commit. CI will reject the PR if they disagree.
 
@@ -22,12 +22,12 @@ If you're adding a new whitelist parameter: edit the table below AND the JSON in
 |---|---|---|---|---|---|---|---|
 | `leaning_threshold` | 0.55 | float | [0.0, 1.0] | `close_call_band_flags`, `mm_count`, partisan-narrative classifications | — | — | Plan Comparison plan |
 | `close_call_band` | 0.02 | float | [0.0, 0.10] | `close_call_band_flags` only (does NOT invalidate `mm_count`) | — | — | Plan Comparison plan |
-| `vra_min_bvap` | 0.50 | float | [0.30, 0.70] | `mm_count`, VRA analyzer outputs | — | — | redist-analysis::vra_analysis |
-| `bloc_p_value_method` | `holm` | enum | `holm`, `bonferroni`, `none` | Holm correction values | `none` blocks "statistically significant" wording in narrative | — | redist-analysis::bloc_voting |
-| `bloc_robust_se_type` | `hc3` | enum | `hc3`, `hc1` | HC3/HC1 standard errors | — | `hc1` AND `n_clusters < 30`: anti-conservative; HC3 recommended (Long & Ervin 2000) | redist-analysis::bloc_voting |
-| `bloc_cluster_unit` | `county` | enum | `county`, `tract` | Cluster bootstrap CI **AND** Holm correction (different cluster unit changes the test count, which redefines the family) | — | — | redist-analysis::bloc_voting |
-| `compactness_metric` | `pp` | enum | `pp`, `reock`, `convex_hull` | Compactness analyzer outputs only; no cross-analyzer fan-out | — | — | redist-analysis::compactness |
-| `partisan_efficiency_threshold` | 0.07 | float | [0.0, 0.20] | Partisan analyzer outputs only | — | — | redist-analysis::partisan |
+| `vra_min_bvap` | 0.50 | float | [0.30, 0.70] | `mm_count`, VRA analyzer outputs | — | — | bisect-analysis::vra_analysis |
+| `bloc_p_value_method` | `holm` | enum | `holm`, `bonferroni`, `none` | Holm correction values | `none` blocks "statistically significant" wording in narrative | — | bisect-analysis::bloc_voting |
+| `bloc_robust_se_type` | `hc3` | enum | `hc3`, `hc1` | HC3/HC1 standard errors | — | `hc1` AND `n_clusters < 30`: anti-conservative; HC3 recommended (Long & Ervin 2000) | bisect-analysis::bloc_voting |
+| `bloc_cluster_unit` | `county` | enum | `county`, `tract` | Cluster bootstrap CI **AND** Holm correction (different cluster unit changes the test count, which redefines the family) | — | — | bisect-analysis::bloc_voting |
+| `compactness_metric` | `pp` | enum | `pp`, `reock`, `convex_hull` | Compactness analyzer outputs only; no cross-analyzer fan-out | — | — | bisect-analysis::compactness |
+| `partisan_efficiency_threshold` | 0.07 | float | [0.0, 0.20] | Partisan analyzer outputs only | — | — | bisect-analysis::partisan |
 
 ---
 
@@ -86,8 +86,8 @@ The "fair" / "unfair" partisan classification is a single-analyzer concern.
 Per the table:
 
 1. **`bloc_p_value_method=none`** triggers the narrative-significance block at:
-   - `redist-analysis::bloc_voting_writer::render_summary_md` (when shipped)
-   - `redist-report::narrative::render_narrative` (Plan Comparison narrative consumer)
+   - `bisect-analysis::bloc_voting_writer::render_summary_md` (when shipped)
+   - `bisect-report::narrative::render_narrative` (Plan Comparison narrative consumer)
    - The depo recompute output's `draft_interpretation` field
 
 2. **`bloc_robust_se_type=hc1` AND `n_clusters < 30`** triggers a one-line stderr warning at:
@@ -103,6 +103,6 @@ These guardrails are not auto-enforced today (the bloc-voting analyzer doesn't y
 - Spec: `docs/superpowers/specs/2026-04-30-deposition-prep.md`
 - Plan: `docs/superpowers/plans/2026-04-30-deposition-prep.md` Task 1
 - Tracking: `docs/superpowers/specs/2026-04-30-v21-tracking.md` S-01
-- Bloc voting parameter consumers: `redist-analysis::bloc_voting`
-- Plan Comparison narrative consumer: `redist-report::narrative`
+- Bloc voting parameter consumers: `bisect-analysis::bloc_voting`
+- Plan Comparison narrative consumer: `bisect-report::narrative`
 - Long & Ervin (2000): "Using Heteroscedasticity Consistent Standard Errors in the Linear Regression Model"

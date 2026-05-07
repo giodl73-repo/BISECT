@@ -79,7 +79,7 @@ For each district:
 ### Implementation
 
 ```rust
-// redist-analysis/src/contiguity.rs
+// bisect-analysis/src/contiguity.rs
 pub fn check_contiguity(
     assignments: &HashMap<String, usize>,   // GEOID → district
     adjacency: &[Vec<usize>],              // tract adjacency graph
@@ -155,7 +155,7 @@ County and municipal boundaries need to be matched to census tracts. Two sources
 ### Implementation
 
 ```rust
-// redist-analysis/src/splits.rs
+// bisect-analysis/src/splits.rs
 
 /// Parse county FIPS from 11-char Census tract GEOID.
 /// "530330001001" → "53033" (state 53, county 033)

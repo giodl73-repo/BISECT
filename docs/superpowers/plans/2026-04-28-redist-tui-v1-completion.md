@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Close the 3 remaining gaps before redist-tui v1 is complete: elapsed timer bug, compare screen stub, and session pre-fill for Doctor screen.
+**Goal:** Close the 3 remaining gaps before bisect-tui v1 is complete: elapsed timer bug, compare screen stub, and session pre-fill for Doctor screen.
 
-**Architecture:** Pure ratatui, single binary `redist-tui`. All changes in `redist/crates/redist-tui/src/`. See spec: `docs/superpowers/specs/2026-04-27-redist-tui-design.md`.
+**Architecture:** Pure ratatui, single binary `bisect-tui`. All changes in `redist/crates/bisect-tui/src/`. See spec: `docs/superpowers/specs/2026-04-27-bisect-tui-design.md`.
 
-**Tech Stack:** ratatui 0.28, crossterm 0.28, redist-cli (lib) for PlanContext and analysis loading.
+**Tech Stack:** ratatui 0.28, crossterm 0.28, bisect-cli (lib) for PlanContext and analysis loading.
 
 ---
 
@@ -65,7 +65,7 @@ if let Some(started) = run_state.run_started_at {
 
 - [ ] **Step 1.5: Verify the fix compiles**
 ```bash
-cargo build -p redist-tui 2>&1 | grep "^error" | head -5
+cargo build -p bisect-tui 2>&1 | grep "^error" | head -5
 ```
 Expected: no errors.
 
@@ -86,7 +86,7 @@ fn test_run_progress_elapsed_from_instant() {
 
 - [ ] **Step 1.7: Commit**
 ```bash
-git add redist/crates/redist-tui/src/
+git add redist/crates/bisect-tui/src/
 git commit -m "fix(tui): elapsed timer uses wall clock not saturating_add(0)"
 ```
 
@@ -371,7 +371,7 @@ fn test_load_mean_pp_returns_none_when_no_file() {
 
 - [ ] **Step 2.7: Commit**
 ```bash
-git add redist/crates/redist-tui/src/
+git add redist/crates/bisect-tui/src/
 git commit -m "feat(tui): compare screen — Jaccard gauge, metrics table, plan metrics loading"
 ```
 
@@ -441,7 +441,7 @@ fn test_doctor_screen_empty_location_shows_prompt() {
 
 - [ ] **Step 3.6: Commit**
 ```bash
-git add redist/crates/redist-tui/src/
+git add redist/crates/bisect-tui/src/
 git commit -m "feat(tui): doctor screen location is now editable — type to change"
 ```
 
@@ -492,7 +492,7 @@ Expected: all pass. Target: 911 + ~8 new = ~919 tests.
 
 - [ ] **Step 4.3: Final commit + push**
 ```bash
-git add redist/crates/redist-tui/src/
+git add redist/crates/bisect-tui/src/
 git commit -m "feat(tui): v1 complete — timer fix, compare screen, doctor input"
 git push origin master:main
 ```

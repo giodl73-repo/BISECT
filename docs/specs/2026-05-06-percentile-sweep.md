@@ -2,7 +2,7 @@
 
 **Status**: Proposed  
 **Date**: 2026-05-06  
-**Depends on**: B.16 (ConvergenceSweep), redist-ensemble (ReCom crate, parallel spec)  
+**Depends on**: B.16 (ConvergenceSweep), bisect-ensemble (ReCom crate, parallel spec)  
 **Motivation**: ConvergenceSweep finds the minimum-edge-cut plan (compactness extremum, 0.1–0.7th percentile of ReCom ensemble for most states). PercentileSweep generalises this to target any percentile — enabling statutory choice of legal posture.
 
 ---
@@ -61,7 +61,7 @@ To genuinely target the ReCom ensemble's p-th percentile:
 
 ```
 Calibration (one-time per state):
-  EC_target(p) = p-th percentile of ReCom ensemble (from redist-ensemble)
+  EC_target(p) = p-th percentile of ReCom ensemble (from bisect-ensemble)
 
 TargetedSweep(p, T):
   plans = [bisect(seed_i) for i in 0..T]
@@ -80,7 +80,7 @@ bisect state --state WI --search percentile --percentile 0.50 --seeds 101
 
 # TargetedSweep: calibrated to ReCom 50th percentile
 bisect state --state WI --search targeted \
-  --target-ec 0.0866 \        # from redist-ensemble calibration
+  --target-ec 0.0866 \        # from bisect-ensemble calibration
   --seeds 200
 
 # The full workflow:
@@ -193,15 +193,15 @@ BisectionEnsemble is the strongest integration of the two specs: it combines the
 - [ ] In runner.rs: run T seeds via SHA-256 chain, collect EC values, sort, pick rank ⌊P·T⌋
 - [ ] Add `SeedCompositor::Percentile { p: f64, seeds: usize }` variant
 
-### Phase 1.5 — BisectionEnsemble (1 week, requires redist-ensemble)
+### Phase 1.5 — BisectionEnsemble (1 week, requires bisect-ensemble)
 - [ ] Add `--search bisection-ensemble --percentile P --ensemble-steps T` to CLI args
-- [ ] In runner.rs: at each bisection node, call `redist-ensemble` for 2-way ReCom with T steps
+- [ ] In runner.rs: at each bisection node, call `bisect-ensemble` for 2-way ReCom with T steps
 - [ ] Collect T cut records per node, sort by edge cut, return plan at rank ⌊P·T⌋
 - [ ] Add `SeedCompositor::BisectionEnsemble { p: f64, steps: usize }` variant
 - [ ] Parallel execution: use Rayon to run independent bisection nodes concurrently
 - [ ] Integration tests: NC prime-factor + bisection-ensemble at p=0.0, 0.5, 1.0
 
-### Phase 2 — TargetedSweep (1 week, requires redist-ensemble)
+### Phase 2 — TargetedSweep (1 week, requires bisect-ensemble)
 - [ ] Add calibration step: read `ensemble.json` output to get EC_target(p)
 - [ ] Add `SeedCompositor::Targeted { ec_target: f64, seeds: usize }` variant
 - [ ] CLI: `bisect state --search targeted --calibration ensemble.json --percentile 0.50`

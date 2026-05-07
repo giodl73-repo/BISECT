@@ -15,7 +15,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 **Enforcement:** `is_mm = pct_minority > mm_threshold` in vra_analysis.rs. Test verifies that exactly 50% is NOT MM.
 
 **Test:** `tests/unit/test_rust_compactness.py::TestVraAnalysis::test_threshold_exclusive_at_50pct`
-`redist/crates/redist-analysis/src/vra_analysis.rs::test_threshold_boundary_exclusive`
+`redist/crates/bisect-analysis/src/vra_analysis.rs::test_threshold_boundary_exclusive`
 
 **Status:** ENFORCED
 
@@ -25,7 +25,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 
 **Invariant:** The VRA edge weight factor α must equal `max(3.0, 10.0 * (1.0 - 0.7 * f_minority))` where f_minority is the fraction of tracts at or above the 40% threshold. This formula may not be changed without updating paper D.0.
 
-**Why it must hold:** This is the single authoritative implementation (redist-core/src/vra.rs). Both the Python pipeline and the Rust CLI call this function. Any divergence produces different redistricting results across pipeline modes.
+**Why it must hold:** This is the single authoritative implementation (bisect-core/src/vra.rs). Both the Python pipeline and the Rust CLI call this function. Any divergence produces different redistricting results across pipeline modes.
 
 **When it can be violated:** Changing the formula in vra.rs without updating the Python pipeline call; changing the formula in the Python pipeline without deleting it (Phase 1a deleted the Python copy).
 
@@ -74,7 +74,7 @@ Properties of the Voting Rights Act compliance implementation that must be maint
 
 ## VA-05: VRA formula is single authoritative implementation
 
-**Invariant:** The adaptive boost formula exists in exactly one place: `redist-core/src/vra.rs::build_vra_edge_weights`. No other file contains an implementation of this formula.
+**Invariant:** The adaptive boost formula exists in exactly one place: `bisect-core/src/vra.rs::build_vra_edge_weights`. No other file contains an implementation of this formula.
 
 **Why it must hold:** Two implementations drift. The Phase 1a deletion of lines 226-260 from run_state_redistricting.py enforces this. Any future duplication creates a drift risk where one implementation gets updated and the other doesn't.
 

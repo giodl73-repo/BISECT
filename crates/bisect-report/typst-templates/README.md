@@ -31,7 +31,7 @@ The Court Submission Reports plan has 10 tasks; this scaffolding covers Tasks 3 
 
 1. Install Typst 0.12.0 locally (`curl -fsSL https://typst.community/typst.sh | sh -s -- -y` or platform package manager)
 2. Install verapdf 1.26.2 (`brew install verapdf` or download from https://verapdf.org/software/)
-3. Author each `_*.typ` partial against the per-section L0 tests in `redist-report/tests/typst_render/`
+3. Author each `_*.typ` partial against the per-section L0 tests in `bisect-report/tests/typst_render/`
 4. Wire CI install steps in `.github/workflows/{pr,nightly,release}.yml` per the roadmap CI strategy
 5. Land the determinism contract (D-04: `SOURCE_DATE_EPOCH`, sorted-name tar+gzip with fixed mtime, zeroed PDF metadata)
 6. Land the verapdf gate (PP-32: refuse to write `.pdf` when verapdf rejects the bytes)

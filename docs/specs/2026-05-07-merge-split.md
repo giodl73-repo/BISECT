@@ -3,9 +3,9 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4  
 **Date**: 2026-05-07  
-**Extends**: `redist-ensemble` crate (new `merge_split.rs` module)  
+**Extends**: `bisect-ensemble` crate (new `merge_split.rs` module)  
 **Related paper**: G.10  
-**Depends on**: `redist-ensemble::spanning` (Wilson's UST), `redist-ensemble::recom` (pair selection)
+**Depends on**: `bisect-ensemble::spanning` (Wilson's UST), `bisect-ensemble::recom` (pair selection)
 
 ---
 
@@ -139,7 +139,7 @@ reverse_seed(base_seed, step, chain_idx) =
 
 ## 3. Rust struct and API
 
-**`MergeSplitChain` struct** (`redist-ensemble/src/merge_split.rs`):
+**`MergeSplitChain` struct** (`bisect-ensemble/src/merge_split.rs`):
 
 ```rust
 pub struct MergeSplitChain {

@@ -50,13 +50,13 @@ geoid	dem_share
 
 ## Validation rules
 
-The loader (`redist-cli/src/partisan_shares.rs::load_partisan_shares_map`) enforces:
+The loader (`bisect-cli/src/partisan_shares.rs::load_partisan_shares_map`) enforces:
 1. Each line splits into ≥ 2 tab-separated fields
 2. Column 2 parses as `f64`
 3. The parsed value is in `[0.0, 1.0]`
 4. GEOIDs shorter than 11 characters are left-padded with `0`
 
-A tract not present in the TSV gets `dem_share = 0.5` (swing) when aligned to the adjacency vertex order. Swing tracts do not trigger the partisan boost (per the algorithm in `redist-core::partisan_weights`).
+A tract not present in the TSV gets `dem_share = 0.5` (swing) when aligned to the adjacency vertex order. Swing tracts do not trigger the partisan boost (per the algorithm in `bisect-core::partisan_weights`).
 
 ## Where it goes
 

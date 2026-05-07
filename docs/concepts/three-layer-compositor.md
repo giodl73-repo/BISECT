@@ -151,7 +151,7 @@ algorithm:
   w_vra: 0.40                    # VRA alignment weight for ratio-optimal-vra (default: 0.40)
 
   # METIS backend
-  engine: c-ffi                  # c-ffi (default) | redist-metis | gpmetis
+  engine: c-ffi                  # c-ffi (default) | bisect-metis | gpmetis
 
 # Pipeline metadata
 workers: 6                       # parallel workers per census year (default: 4)
@@ -168,7 +168,7 @@ analysis_types:
 
 ```bash
 # Run with explicit layer flags (overrides config values for one-off runs)
-redist build official_proposal --year 2020
+bisect build official_proposal --year 2020
 
 # Multi-seed search: 50 seeds, return minimum
 bisect state --state NC --year 2020 --label nc_multi \
@@ -194,7 +194,7 @@ are available:
 | Value | Description |
 |---|---|
 | `c-ffi` | Links `libmetis` via C FFI. Vendored inside the Rust workspace, statically linked. Battle-tested; supports all k values. Default for all production runs. |
-| `redist-metis` | Pure Rust reimplementation of METIS. No C dependency; portable standalone binary. Suitable for environments where C toolchains are unavailable. |
+| `bisect-metis` | Pure Rust reimplementation of METIS. No C dependency; portable standalone binary. Suitable for environments where C toolchains are unavailable. |
 | `gpmetis` | External `gpmetis` subprocess (reserved; not yet implemented). Allows using system-installed METIS for independent verification. |
 
 The `c-ffi` engine is the statutory engine: its source hash is pinned in

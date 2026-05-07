@@ -1,4 +1,4 @@
-# redist-metis Coarsening Sub-Spec
+# bisect-metis Coarsening Sub-Spec
 **Date:** 2026-05-02
 **Phase:** 2 of 8
 **Implements:** `src/coarsen/` — HEM, SHEM, MinDegreeMatch

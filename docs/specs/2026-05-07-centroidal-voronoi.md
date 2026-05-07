@@ -4,7 +4,7 @@
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — replaces METIS at each bisection node  
 **Related paper**: B.22  
-**New crate**: Not needed — pure geometry, implemented in `redist-cli/src/bisection_runner.rs`  
+**New crate**: Not needed — pure geometry, implemented in `bisect-cli/src/bisection_runner.rs`  
 **Reviewed R1**: MERIDIAN 4/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4
 
 ---
@@ -132,7 +132,7 @@ CentroidalVoronoi(tract_coords, tract_pop, tract_adj, k, n_iter, metric, seed_in
 
 ## 4. Rust struct and API
 
-**Location**: `redist-cli/src/bisection_runner.rs` (no new crate needed)
+**Location**: `bisect-cli/src/bisection_runner.rs` (no new crate needed)
 
 ```rust
 pub struct CentroidalVoronoiConfig {
@@ -259,7 +259,7 @@ Every run appends to `runs/{label}/{year}/index.json`:
 
 2. **Contiguity guarantee**: Voronoi regions can be disconnected for non-convex state geometries. Contiguity must be enforced as a post-processing step within the rebalance routine via BFS component detection. The current spec delegates this to the existing `run_multiscale` rebalance; verify this is sufficient for all 50 states.
 
-3. **Alaska and Hawaii projection**: Phase 2 geographic CVD should use EPSG:5070 Albers Equal Area Conic for Alaska and Hawaii to avoid distortion from raw (lon, lat) Euclidean distance. Confirm projection constants match those used in `redist-map` for consistency.
+3. **Alaska and Hawaii projection**: Phase 2 geographic CVD should use EPSG:5070 Albers Equal Area Conic for Alaska and Hawaii to avoid distortion from raw (lon, lat) Euclidean distance. Confirm projection constants match those used in `bisect-map` for consistency.
 
 4. **Graph-distance medoid approximation**: The Phase 1 centroid update uses a sampled medoid (50 random tracts per district). Evaluate whether this approximation is sufficient for convergence or whether exact medoid (Floyd-Warshall per subgraph) is needed for small subgraphs (k=2, n<50).
 

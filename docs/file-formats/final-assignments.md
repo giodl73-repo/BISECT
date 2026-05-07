@@ -1,7 +1,7 @@
 # `final_assignments.json` Format
 
 **Status:** Canonical (2026-04-29)
-**Producer:** `redist-cli::output::write_state_outputs`
+**Producer:** `bisect-cli::output::write_state_outputs`
 **Consumer:** dashboard generators, `bisect analyze`, `redist export`, post-processing scripts, court submissions
 
 The canonical per-state output of a `bisect state` run. Maps each tract (or block group / block, depending on `--resolution`) to a district number.

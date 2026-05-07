@@ -1,7 +1,7 @@
-# redist-metis: Mathematical Specification
+# bisect-metis: Mathematical Specification
 
 **Document type**: Court-facing algorithm specification
-**Version**: 1.0 — redist-metis v1
+**Version**: 1.0 — bisect-metis v1
 **Date**: 2026-05-02
 **Audience**: Redistricting experts, court-appointed special masters, and technical
 reviewers who can read mathematics but are not expected to read Rust source code.
@@ -531,7 +531,7 @@ level 0 operates on the original graph G_0 and produces the output partition.
 ## 8. Output Invariants
 
 The following three properties are the legally-cited correctness guarantees of
-redist-metis v1. They are stated as theorems with proof sketches and are implemented
+bisect-metis v1. They are stated as theorems with proof sketches and are implemented
 as Prusti postconditions on the `Partitioner::split()` entry point.
 
 ### Theorem 1: Full Coverage
@@ -589,7 +589,7 @@ California at 52 seats), making rounding error negligible relative to ε.
 ## 9. Determinism
 
 **Claim.** For the same input (G, k) and seed, `split(G, k, Some(seed))` produces
-identical output on all conforming platforms and across all builds of redist-metis.
+identical output on all conforming platforms and across all builds of bisect-metis.
 
 **Basis of the claim.**
 
@@ -620,7 +620,7 @@ of the continuous integration suite and will fail if any code change alters the 
 
 ## 10. Limitations
 
-The following properties are NOT guaranteed by redist-metis v1. They are documented
+The following properties are NOT guaranteed by bisect-metis v1. They are documented
 here explicitly to avoid misinterpretation in expert testimony or court filings.
 
 **1. Global optimality.** The minimum edge cut partition is NP-hard to compute in
@@ -633,7 +633,7 @@ partitions. There is no canonical "correct" partition for a given (G, k); any
 partition satisfying the balance constraint is a valid redistricting plan. The
 choice of seed affects which valid plan is produced, not whether the output is valid.
 
-**3. Numerical match to the C METIS library.** redist-metis is an independent Rust
+**3. Numerical match to the C METIS library.** bisect-metis is an independent Rust
 implementation of the multilevel FM algorithm. It does not reproduce the exact vertex
 numbering, part assignments, or edge-cut values of the METIS 5.x C library for the
 same input. This is by design: the Rust implementation uses GrowKway (not recursive
@@ -662,7 +662,7 @@ contiguity of districts. Connected components are promoted by the graph structur
 (the input graph contains only adjacency edges between physically contiguous tracts),
 and the BFS-based initial partitioner tends to produce contiguous parts. However,
 contiguity is not verified by the algorithm and is not a formal postcondition of v1.
-Contiguity checking is the responsibility of the caller (redist-core validates
+Contiguity checking is the responsibility of the caller (bisect-core validates
 contiguity as a separate post-processing step).
 
 ---

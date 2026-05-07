@@ -7,15 +7,15 @@
 **Specs:** Spec 2 (Plan Comparison), Spec 3 (Constraint Analysis) + R3 board amendments
 
 **Architecture:**
-- `redist-analysis/src/comparison.rs` — `compare_plans()`, `PlanComparison`, Jaccard computation
-- `redist-analysis/src/contiguity.rs` — `check_contiguity()`, BFS component detection
-- `redist-analysis/src/splits.rs` — `analyze_county_splits()`, `analyze_municipal_splits()`, GEOID parsing
-- `redist-analysis/src/split_standards.rs` — per-state constitutional split standard lookup table
-- `redist-data/src/enacted.rs` — `assign_tracts_to_enacted()`, nearest-polygon fallback
-- `redist-cli/src/compare.rs` — `redist compare` dispatcher
-- `redist-cli/src/fetch.rs` — extend with `--type enacted`, `--type geography`
-- `redist-cli/src/analyze.rs` — extend with `contiguity`, `splits` analyzer types
-- `redist-cli/src/exit_codes.rs` — composable bitfield exit codes
+- `bisect-analysis/src/comparison.rs` — `compare_plans()`, `PlanComparison`, Jaccard computation
+- `bisect-analysis/src/contiguity.rs` — `check_contiguity()`, BFS component detection
+- `bisect-analysis/src/splits.rs` — `analyze_county_splits()`, `analyze_municipal_splits()`, GEOID parsing
+- `bisect-analysis/src/split_standards.rs` — per-state constitutional split standard lookup table
+- `bisect-data/src/enacted.rs` — `assign_tracts_to_enacted()`, nearest-polygon fallback
+- `bisect-cli/src/compare.rs` — `redist compare` dispatcher
+- `bisect-cli/src/fetch.rs` — extend with `--type enacted`, `--type geography`
+- `bisect-cli/src/analyze.rs` — extend with `contiguity`, `splits` analyzer types
+- `bisect-cli/src/exit_codes.rs` — composable bitfield exit codes
 
 **Dependencies:** Spec 1 (`PlanManifest`, `plans/{label}/` paths), `geo` crate `Contains` algorithm (already a dependency)
 
@@ -25,19 +25,19 @@
 
 | File | Action |
 |------|--------|
-| `redist/crates/redist-analysis/src/comparison.rs` | **Create** — Jaccard, population, compactness comparison |
-| `redist/crates/redist-analysis/src/contiguity.rs` | **Create** — BFS per-district contiguity check |
-| `redist/crates/redist-analysis/src/splits.rs` | **Create** — county + municipal split analysis |
-| `redist/crates/redist-analysis/src/split_standards.rs` | **Create** — per-state constitutional lookup table |
-| `redist/crates/redist-analysis/src/exit_codes.rs` | **Create** — composable bitfield exit codes |
-| `redist/crates/redist-analysis/src/lib.rs` | **Modify** — expose new modules |
-| `redist/crates/redist-data/src/enacted.rs` | **Create** — enacted shapefile download + tract assignment |
-| `redist/crates/redist-data/src/lib.rs` | **Modify** — expose enacted module |
-| `redist/crates/redist-cli/src/compare.rs` | **Create** — `redist compare` dispatcher + output formatting |
-| `redist/crates/redist-cli/src/analyze.rs` | **Modify** — add `contiguity`, `splits` to analyzer dispatch |
-| `redist/crates/redist-cli/src/fetch.rs` | **Modify** — add `enacted`, `geography` fetch types |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** — `CompareArgs`, extend `AnalyzeArgs`, extend `FetchArgs` |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** — wire `Commands::Compare`; update analyze + fetch dispatch |
+| `redist/crates/bisect-analysis/src/comparison.rs` | **Create** — Jaccard, population, compactness comparison |
+| `redist/crates/bisect-analysis/src/contiguity.rs` | **Create** — BFS per-district contiguity check |
+| `redist/crates/bisect-analysis/src/splits.rs` | **Create** — county + municipal split analysis |
+| `redist/crates/bisect-analysis/src/split_standards.rs` | **Create** — per-state constitutional lookup table |
+| `redist/crates/bisect-analysis/src/exit_codes.rs` | **Create** — composable bitfield exit codes |
+| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
+| `redist/crates/bisect-data/src/enacted.rs` | **Create** — enacted shapefile download + tract assignment |
+| `redist/crates/bisect-data/src/lib.rs` | **Modify** — expose enacted module |
+| `redist/crates/bisect-cli/src/compare.rs` | **Create** — `redist compare` dispatcher + output formatting |
+| `redist/crates/bisect-cli/src/analyze.rs` | **Modify** — add `contiguity`, `splits` to analyzer dispatch |
+| `redist/crates/bisect-cli/src/fetch.rs` | **Modify** — add `enacted`, `geography` fetch types |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `CompareArgs`, extend `AnalyzeArgs`, extend `FetchArgs` |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Compare`; update analyze + fetch dispatch |
 | `tests/unit/test_comparison.py` | **Create** — L0 comparison tests |
 | `tests/unit/test_contiguity.py` | **Create** — L0 contiguity tests |
 | `tests/unit/test_splits.py` | **Create** — L0 splits tests |
@@ -47,12 +47,12 @@
 
 ## Task 1: Jaccard similarity + `PlanComparison` struct
 
-**Files:** `redist/crates/redist-analysis/src/comparison.rs`
+**Files:** `redist/crates/bisect-analysis/src/comparison.rs`
 
 - [ ] **L0: Write failing Jaccard tests (from Spec 2 + Scenario 3)**
 
 ```rust
-// redist-analysis/src/comparison.rs tests
+// bisect-analysis/src/comparison.rs tests
 
 #[test]
 fn test_jaccard_identical_plans() {
@@ -138,7 +138,7 @@ fn test_comparison_output_contains_disclaimer() {
 - [ ] **Implement `PlanComparison`, `compare_plans()`, `jaccard()`, `format_comparison_table()`**
 
 ```rust
-// redist-analysis/src/comparison.rs
+// bisect-analysis/src/comparison.rs
 
 pub struct PlanComparison {
     pub plan_a: PlanSummary,
@@ -181,12 +181,12 @@ pub fn format_comparison_csv(comparison: &PlanComparison) -> String { ... }
 
 ## Task 2: Enacted tract assignment — centroid PIP with nearest-polygon fallback
 
-**Files:** `redist/crates/redist-data/src/enacted.rs`
+**Files:** `redist/crates/bisect-data/src/enacted.rs`
 
 - [ ] **L0: Write failing enacted assignment tests**
 
 ```rust
-// redist-data/src/enacted.rs tests
+// bisect-data/src/enacted.rs tests
 
 #[test]
 fn test_tract_centroid_in_polygon_correct_district() {
@@ -257,7 +257,7 @@ fn test_assign_tracts_errors_if_coverage_incomplete() {
 - [ ] **Implement `assign_tracts_to_enacted()` and `assign_single_centroid()`**
 
 ```rust
-// redist-data/src/enacted.rs
+// bisect-data/src/enacted.rs
 
 use geo::algorithm::Contains;
 use geo::algorithm::EuclideanDistance;
@@ -322,12 +322,12 @@ pub fn assign_single_centroid(
 
 ## Task 3: Contiguity analysis — BFS per-district
 
-**Files:** `redist/crates/redist-analysis/src/contiguity.rs`
+**Files:** `redist/crates/bisect-analysis/src/contiguity.rs`
 
 - [ ] **L0: Write failing contiguity tests (from Spec 3 + Scenario 4)**
 
 ```rust
-// redist-analysis/src/contiguity.rs tests
+// bisect-analysis/src/contiguity.rs tests
 
 #[test]
 fn test_contiguity_connected_graph() {
@@ -408,7 +408,7 @@ fn test_contiguity_single_tract_district_is_contiguous() {
 - [ ] **Implement `check_contiguity()`, `bfs_component_count()`, `ContiguityResult`**
 
 ```rust
-// redist-analysis/src/contiguity.rs
+// bisect-analysis/src/contiguity.rs
 
 pub struct ContiguityResult {
     pub all_contiguous: bool,
@@ -452,12 +452,12 @@ pub fn bfs_component_count(
 
 ## Task 4: County + municipal split analysis
 
-**Files:** `redist/crates/redist-analysis/src/splits.rs`, `redist/crates/redist-analysis/src/split_standards.rs`
+**Files:** `redist/crates/bisect-analysis/src/splits.rs`, `redist/crates/bisect-analysis/src/split_standards.rs`
 
 - [ ] **L0: Write failing split tests (from Spec 3)**
 
 ```rust
-// redist-analysis/src/splits.rs tests
+// bisect-analysis/src/splits.rs tests
 
 #[test]
 fn test_county_fips_from_geoid_king_county() {
@@ -561,7 +561,7 @@ fn test_municipal_data_absent_returns_unavailable() {
 - [ ] **Implement `analyze_county_splits()`, `analyze_municipal_splits()`, `county_fips_from_geoid()`**
 
 ```rust
-// redist-analysis/src/splits.rs
+// bisect-analysis/src/splits.rs
 
 /// Parse county FIPS from 11-char Census tract GEOID.
 /// "530330001001" → "53033" (state 53, county 033)
@@ -620,12 +620,12 @@ pub fn analyze_municipal_splits(
 
 ## Task 5: Per-state split standards lookup table
 
-**Files:** `redist/crates/redist-analysis/src/split_standards.rs`
+**Files:** `redist/crates/bisect-analysis/src/split_standards.rs`
 
 - [ ] **L0: Write failing split standard tests (from Scenario 1)**
 
 ```rust
-// redist-analysis/src/split_standards.rs tests
+// bisect-analysis/src/split_standards.rs tests
 
 #[test]
 fn test_wa_splits_has_legal_standard_field() {
@@ -681,7 +681,7 @@ fn test_standard_always_includes_disclaimer() {
 - [ ] **Implement `get_split_standard()` with built-in table**
 
 ```rust
-// redist-analysis/src/split_standards.rs
+// bisect-analysis/src/split_standards.rs
 
 pub struct SplitStandard {
     pub state_code: String,
@@ -735,12 +735,12 @@ pub fn get_split_standard(state_code: &str) -> Option<SplitStandard> {
 
 ## Task 6: Composable bitfield exit codes
 
-**Files:** `redist/crates/redist-analysis/src/exit_codes.rs`, `redist/crates/redist-cli/src/analyze.rs`
+**Files:** `redist/crates/bisect-analysis/src/exit_codes.rs`, `redist/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **L0: Write failing exit code tests (from Scenario 4)**
 
 ```rust
-// redist-analysis/src/exit_codes.rs tests
+// bisect-analysis/src/exit_codes.rs tests
 
 #[test]
 fn test_no_violations_exit_0() {
@@ -819,7 +819,7 @@ fn test_allow_imbalance_suppresses_bit0() {
 - [ ] **Implement `compute_exit_code()` and `compute_exit_code_with_flags()`**
 
 ```rust
-// redist-analysis/src/exit_codes.rs
+// bisect-analysis/src/exit_codes.rs
 
 pub const BIT_BALANCE: u8     = 0b0001;  // 1
 pub const BIT_CONTIGUITY: u8  = 0b0010;  // 2
@@ -862,7 +862,7 @@ pub fn compute_exit_code_with_flags(
 
 ## Task 7: `bisect fetch --type enacted` and `--type geography`
 
-**Files:** `redist/crates/redist-cli/src/fetch.rs`, `redist/crates/redist-cli/src/args.rs`
+**Files:** `redist/crates/bisect-cli/src/fetch.rs`, `redist/crates/bisect-cli/src/args.rs`
 
 - [ ] **L0: Write failing fetch type tests**
 
@@ -914,7 +914,7 @@ fn test_enacted_fetch_args_parsed() {
 
 ## Task 8: `redist compare` command
 
-**Files:** `redist/crates/redist-cli/src/compare.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/compare.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing compare CLI tests**
 
@@ -1005,7 +1005,7 @@ pub enum CompareFormat { Table, Json, Csv }
 
 ## Task 9: Wire `contiguity` and `splits` into `bisect analyze`
 
-**Files:** `redist/crates/redist-cli/src/analyze.rs`
+**Files:** `redist/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **L0: Write failing analyze dispatch tests**
 
@@ -1060,7 +1060,7 @@ fn test_allow_noncontiguous_flag_parsed() {
 - [ ] **Apply bitfield exit code from Task 6** when returning from analyze
 - [ ] **Check missing municipal data requirement** for the state (via split_standards lookup); exit code 8 if required but absent
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(cli): contiguity + splits analyzer types in redist analyze, --allow-noncontiguous flag"`
+- [ ] **Commit:** `git commit -m "feat(cli): contiguity + splits analyzer types in bisect analyze, --allow-noncontiguous flag"`
 
 ---
 

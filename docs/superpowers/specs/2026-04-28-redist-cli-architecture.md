@@ -130,7 +130,7 @@ All output paths are relative to `{output_base}/{version}/`:
 
 ### Class A: Plan-creating commands
 Resolve metadata from args + registry. Write manifest.json.
-- `bisect state`, `redist states`, `redist run`, `redist suite draw`, `redist import`, `redist migrate`
+- `bisect state`, `bisect states`, `redist run`, `redist suite draw`, `redist import`, `redist migrate`
 
 **Obligation:** Write a complete, correct `manifest.json` before writing any other outputs.
 
@@ -194,6 +194,6 @@ fn test_analyze_reads_num_districts_from_plan_manifest() {
 ## What This Spec Does NOT Address
 
 - The internal implementation of each analyzer (compactness, contiguity, etc.)
-- The redist-tui screen layouts (covered in 2026-04-27-redist-tui-design.md)
-- The RPLAN format (covered in redist-report crate)
-- The adjacency binary format (covered in redist-data crate)
+- The bisect-tui screen layouts (covered in 2026-04-27-bisect-tui-design.md)
+- The RPLAN format (covered in bisect-report crate)
+- The adjacency binary format (covered in bisect-data crate)

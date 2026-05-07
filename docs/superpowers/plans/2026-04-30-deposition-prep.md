@@ -7,7 +7,7 @@
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
 **Goal:** Ship a `redist deposition-server` long-running daemon plus a `redist depo` family of subcommands that lets a §2 expert or special master answer parametric "what-if" questions in 1-2 seconds during a deposition, with a tamper-evident audit trail and provenance binding back to the original report.
 
-**Depends on:** spec v2.1 approval. `redist-analysis` crate (existing). Plan Comparison plan must define `narrative_manifest.json` shape first; the deposition `manifest.json` matches its provenance fields. No hard code dependency on the Callais Evidence Layer plan, but several whitelist parameters (`bloc_p_value_method`, `bloc_robust_se_type`, `bloc_cluster_unit`) only become semantically meaningful once Callais lands.
+**Depends on:** spec v2.1 approval. `bisect-analysis` crate (existing). Plan Comparison plan must define `narrative_manifest.json` shape first; the deposition `manifest.json` matches its provenance fields. No hard code dependency on the Callais Evidence Layer plan, but several whitelist parameters (`bloc_p_value_method`, `bloc_robust_se_type`, `bloc_cluster_unit`) only become semantically meaningful once Callais lands.
 **Blocks:** none. Researcher Toolkit is the only later spec.
 
 **v2.1 items addressed by this plan:**
@@ -26,9 +26,9 @@
 ## Pre-Conditions
 
 - `bisect analyze --label LABEL` runs end-to-end on the Vermont walkthrough fixture (delivered by Onboarding plan).
-- `redist-analysis` exposes the seven analyzer surfaces (`PartisanAnalyzer`, `PoliticalAnalyzer`, `DemographicAnalyzer`, `UrbanAnalyzer`, `SummaryAnalyzer`, `analyze_mm_districts`, `compactness::all_metrics`) with stable signatures (already true at HEAD).
-- `redist/crates/redist-cli/src/provenance.rs` exposes `BUILD_COMMIT` and `Provenance::current()` (already true).
-- `redist/crates/redist-cli/build.rs` populates `REDIST_BUILD_COMMIT` from `git rev-parse HEAD` (already true). This plan extends the build script to honor an env-var override.
+- `bisect-analysis` exposes the seven analyzer surfaces (`PartisanAnalyzer`, `PoliticalAnalyzer`, `DemographicAnalyzer`, `UrbanAnalyzer`, `SummaryAnalyzer`, `analyze_mm_districts`, `compactness::all_metrics`) with stable signatures (already true at HEAD).
+- `redist/crates/bisect-cli/src/provenance.rs` exposes `BUILD_COMMIT` and `Provenance::current()` (already true).
+- `redist/crates/bisect-cli/build.rs` populates `REDIST_BUILD_COMMIT` from `git rev-parse HEAD` (already true). This plan extends the build script to honor an env-var override.
 - `sha2`, `hex`, `chrono`, `tokio`, `mio` are all transitively available in `Cargo.lock`; no new top-level dependencies expected except `interprocess` (or feature-gated `tokio::net::UnixListener` + `tokio::net::windows::named_pipe`).
 
 ---
@@ -66,11 +66,11 @@ This doc is the source-of-truth DAG for which whitelist tweaks invalidate which 
 
 ## Task 2: One-shot `redist depo recompute` subcommand
 
-**Files:** `redist/crates/redist-cli/src/depo/mod.rs` (new module), `redist/crates/redist-cli/src/depo/recompute.rs` (new), `redist/crates/redist-cli/src/depo/whitelist.rs` (new), `redist/crates/redist-cli/src/args.rs` (extend), `redist/crates/redist-cli/src/main.rs` (wire), `redist/crates/redist-cli/src/lib.rs` (re-export)
+**Files:** `redist/crates/bisect-cli/src/depo/mod.rs` (new module), `redist/crates/bisect-cli/src/depo/recompute.rs` (new), `redist/crates/bisect-cli/src/depo/whitelist.rs` (new), `redist/crates/bisect-cli/src/args.rs` (extend), `redist/crates/bisect-cli/src/main.rs` (wire), `redist/crates/bisect-cli/src/lib.rs` (re-export)
 
 The one-shot subcommand is the simplest implementation surface. It re-runs the analyze layer once, with overrides, against an existing plan — no daemon, no IPC. This is also the implementation that the daemon thread pool will call internally for each `eval` request.
 
-- [ ] **2.1** Create the `depo` module skeleton: `mod.rs` exports `run_recompute`, `run_eval` (placeholder), `run_sweep`, `run_log`, `run_verify_log`, `run_stop`. Re-exported via `redist-cli/src/lib.rs`.
+- [ ] **2.1** Create the `depo` module skeleton: `mod.rs` exports `run_recompute`, `run_eval` (placeholder), `run_sweep`, `run_log`, `run_verify_log`, `run_stop`. Re-exported via `bisect-cli/src/lib.rs`.
 - [ ] **2.2** `whitelist.rs` parses `data/whitelist_dependencies.json` at startup (lazy, `OnceLock`). Expose: `parse_param_kv(s: &str) -> Result<(String, ParamValue), WhitelistError>`, `validate(name: &str, val: &ParamValue) -> Result<(), WhitelistError>`, `dependencies_of(name: &str) -> &[Dependency]`. The error type's Display string is the exact "parameter not in whitelist" message asserted by the L0 test in spec §Tests.
 - [ ] **2.3** Implement `DepoRecomputeArgs` in `args.rs` with: `--plan-label LABEL`, `--year YYYY` (default 2020), `--version` (default v1), `--output-base` (default outputs), `--param KEY=VALUE` (repeatable, `Vec<String>`), `--types {all,partisan,vra,bloc-voting,compactness}` (repeatable), `--format {json,narrative,both}`, `--note STRING`, `--enforce-build-commit` (bool flag), `--whitelist-config PATH` (optional override JSON merged on top of `data/whitelist_dependencies.json`).
 - [ ] **2.4** Wire the subcommand into `Commands` enum: `Depo(DepoArgs)` where `DepoArgs` has its own `subcommand` (`recompute|eval|sweep|log|verify-log|stop`). The variant for the one-shot is `DepoSubcommand::Recompute(DepoRecomputeArgs)`.
@@ -96,7 +96,7 @@ The one-shot subcommand is the simplest implementation surface. It re-runs the a
     "note": "..." | null
   }
   ```
-- [ ] **2.7** L0 tests in `redist/crates/redist-cli/tests/depo_recompute.rs`:
+- [ ] **2.7** L0 tests in `redist/crates/bisect-cli/tests/depo_recompute.rs`:
   - `whitelist_rejects_unknown_param`: invoke with `--param arbitrary_key=value`; assert exit non-zero + the exact error message from spec.
   - `whitelist_accepts_known_param`: `--param leaning_threshold=0.53` succeeds against a synthetic 10-tract plan fixture.
   - `output_dir_path_is_deterministic`: same overrides + same timestamp -> same param_hash -> same dir.
@@ -109,7 +109,7 @@ The one-shot subcommand is the simplest implementation surface. It re-runs the a
 
 ## Task 3: IPC abstraction layer (PP-26)
 
-**Files:** `redist/crates/redist-cli/src/depo/ipc.rs` (new), `redist/crates/redist-cli/Cargo.toml` (add dependency)
+**Files:** `redist/crates/bisect-cli/src/depo/ipc.rs` (new), `redist/crates/bisect-cli/Cargo.toml` (add dependency)
 
 Pick one of two implementation paths. Recommended path: **add `interprocess = "2"`** (single crate, exposes both Unix domain sockets and Windows named pipes behind a unified `LocalSocketStream` API and works without async). Fallback: feature-gated `cfg(unix)` / `cfg(windows)` impls using `std::os::unix::net::UnixListener` and `windows-sys` named-pipe bindings. Decision criterion: pick `interprocess` unless its blocking-only API forces awkward shutdown plumbing.
 
@@ -129,7 +129,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 4: Daemon scaffolding — `redist deposition-server`
 
-**Files:** `redist/crates/redist-cli/src/depo/server.rs` (new), `redist/crates/redist-cli/src/depo/protocol.rs` (new), `redist/crates/redist-cli/src/depo/state.rs` (new — in-memory plan state)
+**Files:** `redist/crates/bisect-cli/src/depo/server.rs` (new), `redist/crates/bisect-cli/src/depo/protocol.rs` (new), `redist/crates/bisect-cli/src/depo/state.rs` (new — in-memory plan state)
 
 - [ ] **4.1** `protocol.rs` defines the wire protocol: 4-byte big-endian length prefix + UTF-8 JSON body. Request enum tags: `ping`, `eval`, `stop`, `status`. Response: `{status: "ok"|"error", ...}`. Strict size cap on incoming messages (1 MiB) to defend against accidental flooding from a runaway client.
 - [ ] **4.2** `state.rs` owns the warm in-memory plan: tract assignments, adjacency graph, attribute tables, JIT-warmed analyzer caches. Loaded once at daemon start via a `PlanContext` + `Arc<LoadedPlan>`. Subsequent `eval` requests clone the `Arc`, apply overrides, and run analyzers without re-reading disk.
@@ -152,7 +152,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 5: Two-phase shutdown + canonical JSONL log + hash chain (PP-24, C-01)
 
-**Files:** `redist/crates/redist-cli/src/depo/log.rs` (new), `redist/crates/redist-cli/src/depo/canonical.rs` (new — canonical JSON helpers)
+**Files:** `redist/crates/bisect-cli/src/depo/log.rs` (new), `redist/crates/bisect-cli/src/depo/canonical.rs` (new — canonical JSON helpers)
 
 - [ ] **5.1** `canonical.rs::to_canonical_json(value: &serde_json::Value) -> String`: keys sorted lexicographically; floats via `ryu`; integers as `i64`; ISO-8601 timestamps with `Z`; no trailing whitespace; one JSON value, no newline. Asserted by an L0 round-trip test against a hand-crafted golden string.
 - [ ] **5.2** `log.rs::DepositionLogWriter`: opens (creates if missing) `deposition_log_{date}.jsonl` using O_APPEND on Unix and `FILE_APPEND_DATA` on Windows. Single writer thread fed by an `mpsc::Sender<LogEntry>` so concurrent eval workers don't interleave; the writer thread fsyncs after every entry (durability for evidentiary integrity outweighs throughput; we are at single-digit-Hz anyway).
@@ -181,7 +181,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 6: Client subcommands — `eval`, `sweep`, `log`, `verify-log`, `stop`
 
-**Files:** `redist/crates/redist-cli/src/depo/client.rs` (new), `redist/crates/redist-cli/src/depo/{eval,sweep,log,verify_log,stop}.rs` (new)
+**Files:** `redist/crates/bisect-cli/src/depo/client.rs` (new), `redist/crates/bisect-cli/src/depo/{eval,sweep,log,verify_log,stop}.rs` (new)
 
 - [ ] **6.1** `client.rs::DepoClient::connect(mode: &IpcMode) -> io::Result<DepoClient>` and `send(&mut self, req: Request) -> io::Result<Response>`. Connection is short-lived (open-send-receive-close) so the daemon never accumulates idle clients; sub-second overhead is negligible compared to analyzer cost.
 - [ ] **6.2** `eval.rs::run_eval(args: DepoEvalArgs)`: parse `--param`, `--types`, `--note`; resolve `IpcMode` the same way the daemon did (use the `--socket`/`--pipe-name` discovery rules); send `{"op":"eval", ...}`; print response. If no daemon answers, the error is "no daemon found at `<path>`; start one with `redist deposition-server --plan-label LABEL`".
@@ -197,7 +197,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 7: Provenance binding + `--enforce-build-commit` default-on under `--case-mode` (BD-N2)
 
-**Files:** `redist/crates/redist-cli/src/depo/provenance.rs` (new — depo-specific), `redist/crates/redist-cli/src/depo/server.rs` (extend)
+**Files:** `redist/crates/bisect-cli/src/depo/provenance.rs` (new — depo-specific), `redist/crates/bisect-cli/src/depo/server.rs` (extend)
 
 - [ ] **7.1** At daemon start, read the parent plan's `manifest.json` -> capture `binary_build_commit_at_plan_time`. Compare with `provenance::BUILD_COMMIT`. If different, log a WARNING line with both values + the actionable hint ("the report you generated was on commit X; you are running on commit Y. Rebuild from commit X with `git checkout X && cargo build --release` to match.").
 - [ ] **7.2** `--enforce-build-commit` flag: when the warning above would fire, error out instead. Daemon refuses to start; exit code 2.
@@ -212,12 +212,12 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 8: `REDIST_BUILD_COMMIT` env override for tests (B-07)
 
-**Files:** `redist/crates/redist-cli/build.rs` (extend), `docs/error-conventions.md` (one-line addition)
+**Files:** `redist/crates/bisect-cli/build.rs` (extend), `docs/error-conventions.md` (one-line addition)
 
 - [ ] **8.1** Extend `build.rs` to honor an optional env var: if `REDIST_BUILD_COMMIT_OVERRIDE` is set at build time, use its value instead of `git rev-parse HEAD`. This is the **build-time override** for reproducible-build pinning.
 - [ ] **8.2** Separately, expose a **runtime override** for tests: `provenance::current_for_test()` (cfg-gated to `#[cfg(test)]` + a public escape hatch behind `cfg(feature = "test-provenance-override")`) reads `REDIST_BUILD_COMMIT` from the env at runtime and substitutes for `BUILD_COMMIT`. The L0 tests in Task 7 use this. **Production binaries do not consult the runtime override** — the feature is off in release builds.
 - [ ] **8.3** Document both overrides in `docs/error-conventions.md` (under a new "Build provenance overrides" subsection): when each is appropriate (build-time = reproducible packaging; runtime = automated tests), and the explicit warning that the runtime override is feature-gated for a reason.
-- [ ] **8.4** L0 unit test in `redist/crates/redist-cli/tests/build_commit_override.rs`: build with `REDIST_BUILD_COMMIT_OVERRIDE=deadbeef0000`, assert `provenance::BUILD_COMMIT == "deadbeef0000"`. Runtime override test sets `REDIST_BUILD_COMMIT=cafef00d0000` before invoking the daemon and asserts the daemon's logged commit matches.
+- [ ] **8.4** L0 unit test in `redist/crates/bisect-cli/tests/build_commit_override.rs`: build with `REDIST_BUILD_COMMIT_OVERRIDE=deadbeef0000`, assert `provenance::BUILD_COMMIT == "deadbeef0000"`. Runtime override test sets `REDIST_BUILD_COMMIT=cafef00d0000` before invoking the daemon and asserts the daemon's logged commit matches.
 
 **Exit:** Tests can spoof either build-time or runtime build commits without polluting release binaries.
 
@@ -225,7 +225,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Task 9: p99 benchmark methodology (B-03)
 
-**Files:** `redist/crates/redist-cli/benches/depo_p99.rs` (new — Criterion benchmark), `.github/workflows/pr.yml` (extend), `.github/workflows/nightly.yml` (extend), `docs/superpowers/specs/2026-04-30-roadmap-five-star.md` (already documents the runner class — confirm it; do NOT modify)
+**Files:** `redist/crates/bisect-cli/benches/depo_p99.rs` (new — Criterion benchmark), `.github/workflows/pr.yml` (extend), `.github/workflows/nightly.yml` (extend), `docs/superpowers/specs/2026-04-30-roadmap-five-star.md` (already documents the runner class — confirm it; do NOT modify)
 
 - [ ] **9.1** Criterion benchmark with **N=5 discarded warm-up evals** (explicit per B-03) followed by N=50 measured evals. The benchmark prints p50/p95/p99 plus the full histogram so a regression on the tail is visible, not just the mean.
 - [ ] **9.2** Two named runs:
@@ -263,7 +263,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 - [ ] **11.1** **M-05**: edit the persona table in `docs/superpowers/specs/2026-04-30-roadmap-five-star.md`. The "§2 plaintiff's expert post-Callais" row's "What's missing" cell currently lists evidence layer items only. Append: "fast iterative re-analysis at trial (`redist depo`)". This is a pure doc edit; no other roadmap text changes.
 - [ ] **11.2** Add a `redist depo` section to `docs/REDIST_CLI.md` covering all six subcommands with example invocations and expected output snippets. Include the platform-flag note (Unix `--socket`, Windows `--pipe-name`). Document `--case-mode` and the build-commit gate.
 - [ ] **11.3** Add to `docs/file-formats/manifests.md` (written first by the Court Reports plan): a `whatif-manifest v1` row listing every field from Task 2.6.
-- [ ] **11.4** **M-04**: confirm `override_path_relative` in the depo manifest is relative to repo root (not absolute); add an explicit assertion test under `redist/crates/redist-cli/tests/depo_path_portable.rs`.
+- [ ] **11.4** **M-04**: confirm `override_path_relative` in the depo manifest is relative to repo root (not absolute); add an explicit assertion test under `redist/crates/bisect-cli/tests/depo_path_portable.rs`.
 - [ ] **11.5** `CLAUDE.md` "Recent Changes" entry; `docs/CHANGELOG.md` entry. CLAUDE.md "Common Commands" gets a "Deposition prep" subsection.
 
 **Exit:** A first-time visitor can find the daemon docs in 60 seconds; the roadmap persona table reflects the new capability.

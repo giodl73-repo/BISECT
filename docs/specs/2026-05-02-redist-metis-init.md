@@ -1,4 +1,4 @@
-# redist-metis Initial Partition Sub-Spec
+# bisect-metis Initial Partition Sub-Spec
 **Date:** 2026-05-02
 **Phase:** 3 of 8
 **Implements:** `src/init/` — GrowBisect, GrowKway, RandomBisect, MultiConstraintInit

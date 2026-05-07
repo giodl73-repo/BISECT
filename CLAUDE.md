@@ -9,8 +9,8 @@ Congressional and state legislative redistricting via METIS recursive bisection.
 ## Key directories
 
 ```
-redist/crates/          # Rust workspace (redist-cli, redist-core, redist-data, redist-analysis,
-                        #   redist-map, redist-report, redist-apportion, redist-metis, redist-ensemble)
+crates/              # Rust workspace (bisect-cli, bisect-core, bisect-data, bisect-analysis,
+                        #   bisect-map, bisect-report, bisect-apportion, bisect-metis, bisect-ensemble)
 docs/                   # Human-facing docs (REDIST_CLI.md, PAPERS.md, concepts/, quickstart/, legal/)
 docs/papers/            # 63+ compiled PDFs (committed)
 research/               # LaTeX sources for all papers (A–H series)
@@ -25,7 +25,7 @@ archive/python-pipeline-final/  # Sealed forensic reference — do not touch
 
 ```bash
 # Build a plan (reads configs/{label}.yml)
-redist build <label> --year 2020 --workers 8
+bisect build <label> --year 2020 --workers 8
 
 # Analysis + report + verify SHA chain
 bisect label-analyze <label> --year 2020 --types all
@@ -33,8 +33,8 @@ bisect label-report  <label> --year 2020 --format html json
 bisect label-verify  <label> --year 2020
 
 # List / inspect
-redist ls
-redist show <label>
+bisect ls
+bisect show <label>
 
 # Single state (for development)
 bisect state --state VT --year 2020 --version v_test
@@ -69,7 +69,7 @@ years: ["2020", "2010", "2000"]
 ## METIS engines
 
 - `--metis-engine c-ffi` — default, bundled C METIS (requires C compiler at build time)
-- `--metis-engine redist-metis` — pure Rust, no C dependency (portable binary)
+- `--metis-engine bisect-metis` — pure Rust, no C dependency (portable binary)
 - `cargo build --no-default-features` — builds the portable pure-Rust binary
 
 ## Git rules
@@ -81,8 +81,8 @@ years: ["2020", "2010", "2000"]
 ## Testing
 
 ```bash
-cargo test -p redist-cli --lib -- --test-threads=1  # inline unit tests (CWD-sensitive)
-cargo test -p redist-ensemble                        # 61 tests: L0/L1/L2
+cargo test -p bisect-cli --lib -- --test-threads=1  # inline unit tests (CWD-sensitive)
+cargo test -p bisect-ensemble                        # 61 tests: L0/L1/L2
 pytest tests/unit/ -v                               # Python unit tests
 ```
 

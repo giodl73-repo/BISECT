@@ -10,7 +10,7 @@
 **Depends on:**
 - Onboarding plan landed (`bootstrap.sh` so the LA walkthrough is reachable from a clean machine)
 - Existing `partisan_shares.rs` TSV loader (read-only reuse)
-- Existing `bootstrap_ci` machinery in `redist-analysis::partisan` (read-only reuse; new cluster bootstrap is a sibling, not a replacement)
+- Existing `bootstrap_ci` machinery in `bisect-analysis::partisan` (read-only reuse; new cluster bootstrap is a sibling, not a replacement)
 - Election data registry at `scripts/data/elections/sources.json` (OpenElections fetcher already implemented; per-state schema mapping is a per-run input, not blocking)
 
 **Blocks:**
@@ -26,15 +26,15 @@
 
 ## Pre-Conditions
 
-- `bisect analyze --types <T>` dispatcher exists in `redist/crates/redist-cli/src/analyze.rs` and accepts new variants by extending the `AnalyzerType` enum in `redist/crates/redist-analysis/src/analyzer.rs`. No new dispatcher is needed.
-- `redist-analysis` already depends on `csv`, `serde`, `serde_json`, `rand`. We will add a `linreg`-style WLS implementation in-tree (no external regression crate); SVD/Cholesky via `nalgebra` (already used elsewhere) is acceptable, but a from-scratch normal-equations solver for `p ≤ 5` predictors is sufficient and avoids adding a new dependency unless one is already present.
+- `bisect analyze --types <T>` dispatcher exists in `redist/crates/bisect-cli/src/analyze.rs` and accepts new variants by extending the `AnalyzerType` enum in `redist/crates/bisect-analysis/src/analyzer.rs`. No new dispatcher is needed.
+- `bisect-analysis` already depends on `csv`, `serde`, `serde_json`, `rand`. We will add a `linreg`-style WLS implementation in-tree (no external regression crate); SVD/Cholesky via `nalgebra` (already used elsewhere) is acceptable, but a from-scratch normal-equations solver for `p ≤ 5` predictors is sufficient and avoids adding a new dependency unless one is already present.
 - The Callais p.36 mutex (VRA + partisan-weighting cannot both be on) lives in `runner.rs` and is **not** affected by this plan: bloc-voting analysis is post-hoc on a finished plan, not a redistricting mode.
 
 ---
 
 ## Task 1: New `bloc_voting` module — types, WLS+HC3 core, Holm
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs` (new), `redist/crates/redist-analysis/src/lib.rs`
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs` (new), `redist/crates/bisect-analysis/src/lib.rs`
 
 This task lands the regression engine without any I/O or CLI surface.
 
@@ -46,13 +46,13 @@ This task lands the regression engine without any I/O or CLI surface.
 - [ ] **1.6** L0 unit tests for each: synthetic 100-row dataset where (a) WLS recovers known β=0.61 within ±0.02 (B-02 anchor 1); (b) HC3 SE within ±10% of bootstrap-derived SE; (c) VIF for two collinear predictors > 5.0 sets the flag (B-02 anchor 3); (d) Holm result on a hand-computed 5-test family matches by-hand math; (e) Holm dominates raw on a 30-test family (B-02 anchor 2 — at least one raw-significant test is no longer significant after correction, demonstrating the dominance relation `p_holm ≥ p_raw` holds elementwise).
 - [ ] **1.7** Re-export from `lib.rs`: `pub use bloc_voting::{fit_wls, hc3_stderr, compute_vif, holm_bonferroni, RegressionFit, Coef, Precinct, BlocVotingError};`.
 
-**Exit:** `cargo test -p redist-analysis bloc_voting::tests` green; all four B-02 L0 anchors named and asserted by name in `#[test]` function names (e.g. `test_b02_anchor1_ols_coefficient_within_002`).
+**Exit:** `cargo test -p bisect-analysis bloc_voting::tests` green; all four B-02 L0 anchors named and asserted by name in `#[test]` function names (e.g. `test_b02_anchor1_ols_coefficient_within_002`).
 
 ---
 
 ## Task 2: Cluster bootstrap by county
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs`
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs`
 
 The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spatial structure; SCALE blocker fix mandates resampling at the county level.
 
@@ -68,7 +68,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 3: Disentanglement orchestration + robustness check + Holm family with leave-one-out (S-02)
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs`
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs`
 
 - [ ] **3.1** Implement `run_bloc_voting(inputs: BlocVotingInputs) -> BlocVotingResult` that, per analyzed candidate:
   1. Computes precinct-level `pct_black` (or `pct_minority` per `--minority-group`), `pct_dem_baseline`, `candidate_share`, total votes
@@ -92,7 +92,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 4: Race-of-candidate file format, parser, and provenance struct (BD-R2)
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs`, `docs/file-formats/race-of-candidate.md` (new)
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs`, `docs/file-formats/race-of-candidate.md` (new)
 
 - [ ] **4.1** Implement CSV parser for the v2 schema: required columns `candidate_name, party, race, curator, curator_credentials, curator_attestation_date, source, independently_verified` plus the v2.1 BD-R2 additions: `attestation_doc_path` (relative path to the attestation document inside the reproducibility zip), `attestation_doc_format` (one of the BD-R2 reconciled union: `pdf|docx|md|txt|png|jpg|jpeg|tif|tiff` — see Task 4.6 for the curator-narrative vs civic-attestation rationale), `attestation_doc_sha256` (computed at import; fail if file missing).
 - [ ] **4.2** Schema validation: `race ∈ {Black, white, Hispanic, Asian, Native, other}` case-sensitive — any other value is a hard `[INPUT]` error per `docs/error-conventions.md` conventions. `curator` and `curator_attestation_date` non-empty. `independently_verified` parses to bool.
@@ -122,7 +122,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 5: Reproducibility-zip inclusion contract for the race-of-candidate bundle
 
-**Files:** `redist/crates/redist-cli/src/bloc_voting_cmd.rs` (new), `redist/crates/redist-cli/src/report_cmd.rs` (small edit at the bundling site)
+**Files:** `redist/crates/bisect-cli/src/bloc_voting_cmd.rs` (new), `redist/crates/bisect-cli/src/report_cmd.rs` (small edit at the bundling site)
 
 - [ ] **5.1** When the bloc-voting analyzer runs, copy two artifacts into the plan's `analysis/bloc_voting/` directory:
   - The race-of-candidate CSV at the path it was read from (preserving filename, recording `source_sha256`)
@@ -138,7 +138,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 6: Output JSON schema, narrative summary, and `bloc_voting.json` writer
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs`, `redist/crates/redist-cli/src/bloc_voting_cmd.rs`, `redist/crates/redist-analysis/schemas/bloc_voting.schema.json` (new)
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs`, `redist/crates/bisect-cli/src/bloc_voting_cmd.rs`, `redist/crates/bisect-analysis/schemas/bloc_voting.schema.json` (new)
 
 - [ ] **6.1** Implement `serde::Serialize` on the result struct producing exactly the spec §"`bloc_voting.json` schema" shape, including:
   - top-level `analyzer: "bloc-voting"`, `available`, `state`, `year`, `election`, `party`, `method`
@@ -146,7 +146,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
   - `regression` block with `model`, `specification` (the literal string `"WLS weighted by precinct vote count; HC3 robust SE; cluster-bootstrap by county B=10000"`), `candidate`, `diagnostics` (the three flags), `coefficients` (intercept + per-predictor with `estimate`, `stderr_hc3`, `ci_95_cluster`, `standardized_beta`), `n_precincts`, `n_clusters`, `r_squared`, `p_values` (raw + Holm for each predictor), `robustness_check`, `ecology_caveat` (verbatim from spec line 110), `draft_interpretation`
   - `race_of_candidate_provenance` block with the BD-R2 additions
   - `provenance` block matching other analyzers (build commit, rustc, args)
-- [ ] **6.2** Write the JSON Schema file at `redist-analysis/schemas/bloc_voting.schema.json` that the writer's output must validate against. Include the schema path in `provenance.schema_path`.
+- [ ] **6.2** Write the JSON Schema file at `bisect-analysis/schemas/bloc_voting.schema.json` that the writer's output must validate against. Include the schema path in `provenance.schema_path`.
 - [ ] **6.3** Implement `write_bloc_voting_summary(result, path)` producing `bloc_voting_summary.md` with:
   - Plain-English `[DRAFT — expert witness should rewrite]` block (verbatim spec line 110 template, with values filled in)
   - Diagnostics table (VIF, cluster-vs-naive divergence, n_clusters)
@@ -161,7 +161,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 7: CLI surface — `bisect analyze --types bloc-voting` + flags
 
-**Files:** `redist/crates/redist-analysis/src/analyzer.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/bloc_voting_cmd.rs`
+**Files:** `redist/crates/bisect-analysis/src/analyzer.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/analyze.rs`, `redist/crates/bisect-cli/src/bloc_voting_cmd.rs`
 
 - [ ] **7.1** Add `BlocVoting` to `AnalyzerType` enum (do **not** add to `all_concrete()` — like `Compactness` and `Partisan`, this is opt-in via `--types bloc-voting`). Wire `name() => "bloc-voting"`.
 - [ ] **7.2** Extend `AnalyzeArgs` in `args.rs` with the spec's CLI surface:
@@ -180,7 +180,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 - [ ] **7.3** In `analyze.rs::run_analyze`, add the `AnalyzerType::BlocVoting` match arm. Delegates to `bloc_voting_cmd::run_bloc_voting_cmd(...)` which: loads precincts (via OpenElections per `sources.json` registry — `fetcher: null` rows surface a `[INPUT]` error directing the user to the registry doc), loads tract demographics (existing `data/{year}/demographics/{state}_demographics_{year}.csv`), loads partisan baseline (reuse `partisan_shares.rs` for the TSV path), loads the race-of-candidate CSV, computes precinct-level `pct_minority` via tract→precinct overlay (existing pipeline), runs the orchestrator, writes JSON + summary, runs Task 5's reproducibility-zip staging.
 - [ ] **7.4** Help text (`bisect analyze --help`) lists `bloc-voting` with a one-line description and a `See: docs/file-formats/race-of-candidate.md` pointer.
 - [ ] **7.5** Help text states explicitly that `--types bloc-voting --stdout` is permitted (single-type rule; consistent with `analyze.rs` line 228 invariant).
-- [ ] **7.6** L1 integration test in `redist-cli/src/integration_pipeline_tests.rs`: end-to-end on a 100-precinct synthetic fixture under `tests/fixtures/bloc_voting_synthetic/`, asserting JSON exit 0 and B-02 anchor 1 (coefficient within ±0.02 of ground truth).
+- [ ] **7.6** L1 integration test in `bisect-cli/src/integration_pipeline_tests.rs`: end-to-end on a 100-precinct synthetic fixture under `tests/fixtures/bloc_voting_synthetic/`, asserting JSON exit 0 and B-02 anchor 1 (coefficient within ±0.02 of ground truth).
 
 **Exit:** `bisect analyze --label la_2020 --types bloc-voting --candidate-race-csv data/elections/race_of_candidate/2020-presidential-primary.csv --party DEM` runs to completion on the synthetic L1 fixture.
 
@@ -188,7 +188,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ## Task 8: Tests — explicitly named L0 anchors, L1, L2
 
-**Files:** `redist/crates/redist-analysis/src/bloc_voting.rs` (`#[cfg(test)] mod tests`), `redist/crates/redist-cli/tests/bloc_voting_l1.rs` (new), `tests/acceptance/test_bloc_voting_louisiana.py` (new)
+**Files:** `redist/crates/bisect-analysis/src/bloc_voting.rs` (`#[cfg(test)] mod tests`), `redist/crates/bisect-cli/tests/bloc_voting_l1.rs` (new), `tests/acceptance/test_bloc_voting_louisiana.py` (new)
 
 The four B-02 anchors must be present as named tests; they are the SCALE-block-lifting receipts.
 
@@ -200,7 +200,7 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
 - [ ] **8.6** L2 acceptance test `tests/acceptance/test_bloc_voting_louisiana.py`, marked `@pytest.mark.network @pytest.mark.slow` — clones OpenElections-LA, runs the 2020 Democratic presidential primary analysis, asserts: exit code 0; n_precincts > 3000; `regression.specification` contains the literal "cluster-bootstrap by county"; reproducibility zip contains the race-of-candidate CSV. Wired into nightly CI per the roadmap CI strategy.
 - [ ] **8.7** Cluster-bootstrap correctness test from Task 2.5 also lives here under `test_cluster_bootstrap_widens_ci_under_within_county_correlation`.
 
-**Exit:** `cargo test -p redist-analysis bloc_voting` and `cargo test -p redist-cli bloc_voting_l1` green; nightly CI green on the L2 test.
+**Exit:** `cargo test -p bisect-analysis bloc_voting` and `cargo test -p bisect-cli bloc_voting_l1` green; nightly CI green on the L2 test.
 
 ---
 
@@ -223,7 +223,7 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
 
 ## Definition of Done
 
-- `cargo test -p redist-analysis bloc_voting` green; all four B-02 L0 anchors named exactly per Task 8 (`test_b02_anchor{1,2,3,4}_*`)
+- `cargo test -p bisect-analysis bloc_voting` green; all four B-02 L0 anchors named exactly per Task 8 (`test_b02_anchor{1,2,3,4}_*`)
 - `bisect analyze --types bloc-voting --candidate-race-csv <PATH>` runs end-to-end on the LA 2020 fixture in nightly CI
 - `bloc_voting.json` validates against `schemas/bloc_voting.schema.json` and contains: `regression.specification` matching the spec's exact string; `regression.diagnostics` populated (VIF + flag + ci-divergence flag); `regression.p_values` containing both raw and Holm-corrected entries for every predictor
 - `bloc_voting_summary.md` reads as defensible §2 testimony, prefixed with the `[DRAFT — expert witness should rewrite]` marker, and includes the `ecology_caveat` verbatim

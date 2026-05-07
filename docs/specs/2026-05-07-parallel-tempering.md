@@ -3,9 +3,9 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
-**Extends**: `redist-ensemble` crate (new `parallel_tempering.rs`)  
+**Extends**: `bisect-ensemble` crate (new `parallel_tempering.rs`)  
 **Related paper**: B.20  
-**Depends on**: `redist-ensemble::forest_recom` (ForestRecomChain), `redist-ensemble::recom` (RecomChain)
+**Depends on**: `bisect-ensemble::forest_recom` (ForestRecomChain), `bisect-ensemble::recom` (RecomChain)
 
 ---
 
@@ -127,7 +127,7 @@ The four prefixes `"PT_REPLICA_"`, `"PT_SWAP_"`, `"PT_FWD_"`, `"PT_REV_"` are al
 
 ## 4. Rust struct and API
 
-**`ParallelTemperingChain` struct** (`redist-ensemble/src/parallel_tempering.rs`):
+**`ParallelTemperingChain` struct** (`bisect-ensemble/src/parallel_tempering.rs`):
 
 ```rust
 pub struct ParallelTemperingChain {

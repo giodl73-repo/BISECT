@@ -100,7 +100,7 @@ Structural vulnerabilities in the core redistricting algorithm. Each describes a
 
 **Status:** SOLVED
 **Proved by:** FL 120HD now passes 10% balance check after fix (was failing at 16.1% deviation)
-**Test:** `redist-cli::bisection_runner::tests::test_per_node_ufactor_formula`, `test_run_all_splits_tight_balance_10pct`
+**Test:** `bisect-cli::bisection_runner::tests::test_per_node_ufactor_formula`, `test_run_all_splits_tight_balance_10pct`
 
 ---
 

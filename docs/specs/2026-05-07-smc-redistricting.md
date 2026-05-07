@@ -1,11 +1,11 @@
-# Spec: Sequential Monte Carlo for Redistricting — `redist-smc` crate
+# Spec: Sequential Monte Carlo for Redistricting — `bisect-smc` crate
 
 **Status**: Accepted (R2 avg 3.1/4 — ready for implementation)  
 **Reviewed R1**: MERIDIAN 2.5/4, BENCHMARK 2/4, SURVEY 2/4, COVENANT 3/4 → avg 2.4/4  
 **Reviewed R2**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3.5/4 → avg 3.1/4  
 **Date**: 2026-05-07  
 **Related paper**: G.7 (SMC for calibrated redistricting ensembles)  
-**Depends on**: `redist-ensemble` (RecomChain, SpanningTree), `redist-core` (adjacency, population)  
+**Depends on**: `bisect-ensemble` (RecomChain, SpanningTree), `bisect-core` (adjacency, population)  
 **Implements**: `bisect ensemble --method smc`
 
 ---
@@ -164,12 +164,12 @@ Systematic resampling has lower variance than multinomial resampling and is O(N)
 
 ---
 
-## 3. New crate: `redist-smc`
+## 3. New crate: `bisect-smc`
 
-SMC is complex enough to warrant its own crate, separate from `redist-ensemble`.
+SMC is complex enough to warrant its own crate, separate from `bisect-ensemble`.
 
 ```
-redist/crates/redist-smc/
+redist/crates/bisect-smc/
   src/
     lib.rs              // pub use
     algorithm.rs        // run_smc() top-level
@@ -283,7 +283,7 @@ Large states require more particles because ESS degrades faster at each stage. F
 SMC produces N weighted plans, not one plan. It cannot be integrated into the single-plan compositor without a selection step. Two deferred options:
 
 1. `SeedCompositor::SmcPercentile { n_particles, p }` — run SMC, then return the plan at the p-th percentile of the weighted EC distribution. This treats SMC as a search method.
-2. `redist ensemble analyze` — compute distributional statistics over the weighted SMC ensemble (fraction of plans satisfying property X, weighted mean EC, etc.).
+2. `bisect ensemble analyze` — compute distributional statistics over the weighted SMC ensemble (fraction of plans satisfying property X, weighted mean EC, etc.).
 
 Both are Phase 2. For now, SMC is analysis-only.
 
@@ -385,7 +385,7 @@ The `file_sha256` field is the SHA-256 of all bytes in the file preceding the fi
 
 ## 8. Implementation plan
 
-### Phase 1 (this spec): `redist-smc` crate skeleton
+### Phase 1 (this spec): `bisect-smc` crate skeleton
 
 1. **Week 1**: `PartialPlan`, `seeds.rs`, L0 tests for seeding and ESS
 2. **Week 2**: `proposal.rs` — spanning tree growth + balanced cut + weight increment
@@ -395,9 +395,9 @@ The `file_sha256` field is the SHA-256 of all bytes in the file preceding the fi
 
 ### Phase 2 (follow-on spec): `SeedCompositor::SmcPercentile`
 
-Once `redist-smc` is stable, a follow-on spec will define:
+Once `bisect-smc` is stable, a follow-on spec will define:
 - `SeedCompositor::SmcPercentile { n_particles, p }` — run SMC, select plan at percentile p of weighted EC distribution
-- `redist ensemble analyze` — weighted statistics over SMC ensemble
+- `bisect ensemble analyze` — weighted statistics over SMC ensemble
 - Validation against R `redist::redist_smc()` output for NC, WI
 
 ### Known risks

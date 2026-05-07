@@ -60,7 +60,7 @@ The walkthrough is the load-bearing artifact: every quickstart links to it, the 
 
 ## Task 2: Implement `redist doctor --check-tutorial-data`
 
-**Files:** `redist/crates/redist-cli/src/doctor.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/doctor.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **2.1** Extend `redist doctor` with the `--check-tutorial-data` flag accepting an optional `--tutorial <NAME>` (default: `vermont-2020`).
 - [ ] **2.2** The command reads `examples/{tutorial}-walkthrough/checksums.json`, hashes each pinned input + expected output that exists locally, reports per-row PASS/FAIL/MISSING, exits 0 only if all PASS.
@@ -120,9 +120,9 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 
 ## Task 6: Error-message audit + `docs/error-conventions.md`
 
-**Files:** `docs/error-conventions.md`, `redist/crates/redist-cli/src/**/*.rs`
+**Files:** `docs/error-conventions.md`, `redist/crates/bisect-cli/src/**/*.rs`
 
-- [ ] **6.1** Walk every `unwrap()`, `expect()`, and bare `?` in `redist-cli/src/`. For each user-facing path (top-of-main return paths, CLI argument parsing, file I/O on user-supplied paths), replace stack-trace exits with `[INPUT]` / `[CONFIG]` / `[INTERNAL]` / `[NETWORK]` categorized errors that include an actionable hint.
+- [ ] **6.1** Walk every `unwrap()`, `expect()`, and bare `?` in `bisect-cli/src/`. For each user-facing path (top-of-main return paths, CLI argument parsing, file I/O on user-supplied paths), replace stack-trace exits with `[INPUT]` / `[CONFIG]` / `[INTERNAL]` / `[NETWORK]` categorized errors that include an actionable hint.
 - [ ] **6.2** Document the four categories in `docs/error-conventions.md`: when each is appropriate, what an actionable hint looks like, examples per category.
 - [ ] **6.3** **PP-34**: add the line "All CLI stdout/stderr is ASCII-only on Windows; Unicode is permitted in file outputs only" to `error-conventions.md` with a one-paragraph rationale (CP1252 console crash; real Unicode `→` bug history).
 - [ ] **6.4** L0 unit tests for at least 5 representative error paths: assert the category prefix + actionable hint string.

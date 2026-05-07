@@ -7,7 +7,7 @@
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
 **Goal:** Make the redist CLI a first-class backend for Districtr, Dave's Redistricting App (DRA), and QGIS, so a state legislative staffer's loop is "draw in Districtr → `redist import` → `bisect analyze` → `redist report` → iterate," with a parallel civic-bypass entry point for community-submitted counter-proposals.
 
-**Depends on:** `redist-report` import infrastructure (`import_geojson_plan`, `import_gerrychain_to_assignments`), the existing partial `redist import --format districtr` shell, `write_manifest_atomic` already in `redist-report::manifest`, and the Callais p.36 mutex centralised in `runner.rs::validate_partisan_config`.
+**Depends on:** `bisect-report` import infrastructure (`import_geojson_plan`, `import_gerrychain_to_assignments`), the existing partial `redist import --format districtr` shell, `write_manifest_atomic` already in `bisect-report::manifest`, and the Callais p.36 mutex centralised in `runner.rs::validate_partisan_config`.
 **Blocks:** quickstart-state-staff.md (Onboarding plan Task 5.4 cross-references the artifacts delivered here); Plan Comparison and Civic Bidirectional pipelines need civic-bypass-tagged plans to flow through.
 
 **v2.1 items addressed by this plan:**
@@ -20,16 +20,16 @@
 
 ## Pre-Conditions
 
-- `redist-cli` builds clean from `cargo build --release --locked` on Windows + Linux.
-- `redist-report::manifest` exposes `write_manifest_atomic` and `check_incomplete_plan` (already in tree).
-- `redist-core::validate_partisan_config` (in `runner.rs`) enforces the Callais p.36 mutex at the `bisect state` gate; this plan extends the same guard to `redist import` and `bisect analyze`.
+- `bisect-cli` builds clean from `cargo build --release --locked` on Windows + Linux.
+- `bisect-report::manifest` exposes `write_manifest_atomic` and `check_incomplete_plan` (already in tree).
+- `bisect-core::validate_partisan_config` (in `runner.rs`) enforces the Callais p.36 mutex at the `bisect state` gate; this plan extends the same guard to `redist import` and `bisect analyze`.
 - A small synthetic Vermont-shape adjacency + tract-centroid fixture exists for L0/L1 tests (already used by Onboarding plan Task 1; reuse, do not duplicate).
 
 ---
 
 ## Task 1: Atomic-import infrastructure (PP-22, spec §7)
 
-**Files:** `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-report/src/manifest.rs` (extend), `redist/crates/redist-cli/src/io_utils.rs`
+**Files:** `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-report/src/manifest.rs` (extend), `redist/crates/bisect-cli/src/io_utils.rs`
 
 The current `run_import` writes `final_assignments.json` directly into `plan_dir`, then writes `manifest.json` via `write_manifest_atomic`. A failure between those two writes leaves a half-imported plan visible to subsequent commands. Tasks 2–4 add new formats; doing them on the current foundation would multiply that race surface. Atomicity must come first.
 
@@ -45,7 +45,7 @@ The current `run_import` writes `final_assignments.json` directly into `plan_dir
 
 ## Task 2: Districtr import + export (spec §1, §2)
 
-**Files:** `redist/crates/redist-report/src/districtr.rs` (new), `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-cli/src/export_cmd.rs`
+**Files:** `redist/crates/bisect-report/src/districtr.rs` (new), `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-cli/src/export_cmd.rs`
 
 - [ ] **2.1** Add `ExportFormat::Districtr` and accept `"districtr"` in `ImportArgs::format`. Document the new variant in `args.rs` doc strings.
 - [ ] **2.2** Implement `parse_districtr_plan(json: &str) -> Result<DistrictrPlan>` covering Districtr's three assignment shapes: tract-level (`assignment` keyed by `GEOID`), block-level (`assignment` keyed by `BLOCKID`), precinct-level (`assignment` keyed by precinct ID). Auto-detect by inspecting the first key length (tract=11, block=15, otherwise precinct).
@@ -65,7 +65,7 @@ The current `run_import` writes `final_assignments.json` directly into `plan_dir
 
 ## Task 3: DRA import + export (spec §3)
 
-**Files:** `redist/crates/redist-report/src/dra.rs` (new), `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-cli/src/export_cmd.rs`
+**Files:** `redist/crates/bisect-report/src/dra.rs` (new), `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-cli/src/export_cmd.rs`
 
 The existing `import_assignments_from_dra_csv` in `import_cmd.rs` already handles the GEOID-first, DISTRICT-first, and headerless variants. This task formalises it as a named format, adds export, and wires schema-version fingerprinting (Task 5).
 
@@ -81,11 +81,11 @@ The existing `import_assignments_from_dra_csv` in `import_cmd.rs` already handle
 
 ## Task 4: Shapefile + GeoJSON import + export (spec §4)
 
-**Files:** `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-cli/src/export_cmd.rs`, `redist/crates/redist-report/src/shapefile.rs` (new)
+**Files:** `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-cli/src/export_cmd.rs`, `redist/crates/bisect-report/src/shapefile.rs` (new)
 
 Today, `.shp`/`.shx`/`.dbf`/`.zip` extensions hit the `is_shapefile_extension` guard with an `ogr2ogr` guidance error. The spec requires native shapefile-with-`district`-column import + export so QGIS works as an external test client.
 
-- [ ] **4.1** Add the `shapefile` crate dependency to `redist-report/Cargo.toml` (read-only — DBF + SHP). No GDAL link.
+- [ ] **4.1** Add the `shapefile` crate dependency to `bisect-report/Cargo.toml` (read-only — DBF + SHP). No GDAL link.
 - [ ] **4.2** Implement `parse_shapefile_assignments(shp_path: &Path) -> Result<HashMap<GEOID, district>>`: open the `.shp`+`.dbf` pair, read each record's `GEOID` (or `GEOID20`/`GEOID10` fallback) and `district` attribute, return the assignment map. Reject if either column is missing with a `[INPUT]` error naming the missing column.
 - [ ] **4.3** Implement `export_shapefile_assignments` as **out of scope for v1** — emit the existing ogr2ogr guidance for the export side, but make it specific: "redist does not write shapefiles natively; use `redist export --format geojson` then `ogr2ogr -f \"ESRI Shapefile\" out.shp out.geojson`." Rationale: writing valid shapefiles requires geometry, which `redist export` doesn't always have (see `warn_if_null_geometry`); GeoJSON-then-ogr2ogr is the supported path. Document this trade-off in `docs/file-formats/state-staff-interop.md` (Task 9).
 - [ ] **4.4** Remove the `is_shapefile_extension` early-bail for `.shp` and `.shx` only when `--format shapefile` is explicit; preserve the guidance error when the extension is encountered without an explicit format flag (avoids surprising users who pass a `.zip` they expected us to extract). `.zip` keeps the existing guidance unconditionally.
@@ -99,11 +99,11 @@ Today, `.shp`/`.shx`/`.dbf`/`.zip` extensions hit the `is_shapefile_extension` g
 
 ## Task 5: Schema-version handshake + `import_compat.json` (spec §8, PP-33, C-05)
 
-**Files:** `redist/crates/redist-cli/src/import_compat.json` (new), `redist/crates/redist-report/src/import_compat.rs` (new), `redist/crates/redist-cli/src/import_cmd.rs`
+**Files:** `redist/crates/bisect-cli/src/import_compat.json` (new), `redist/crates/bisect-report/src/import_compat.rs` (new), `redist/crates/bisect-cli/src/import_cmd.rs`
 
 The handshake is what keeps state staff from silently feeding us a Districtr build whose JSON shape we've never tested against. PP-33 surfaces the trap: a single schema-version string can collide across forks; we need a multi-attribute fingerprint. C-05 wants the manifest to record the SHA-256 of the version-pin file itself so a court can verify which compat ranges were active at import time.
 
-- [ ] **5.1** Author `redist/crates/redist-cli/src/import_compat.json` with this schema:
+- [ ] **5.1** Author `redist/crates/bisect-cli/src/import_compat.json` with this schema:
     ```json
     {
       "schema_version": "import-compat v1",
@@ -141,7 +141,7 @@ The handshake is what keeps state staff from silently feeding us a Districtr bui
 
 ## Task 6: Callais p.36 mutex preflight at import + analyze (spec §9)
 
-**Files:** `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/runner.rs` (extract preflight)
+**Files:** `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-cli/src/analyze.rs`, `redist/crates/bisect-cli/src/runner.rs` (extract preflight)
 
 The mutex is enforced at `bisect state` via `validate_partisan_config(cfg)`. State staff who import a plan from Districtr never touch `bisect state` — so they can skip the guard. This task fires the same check at every entry point that consumes a plan.
 
@@ -158,7 +158,7 @@ The mutex is enforced at `bisect state` via `validate_partisan_config(cfg)`. Sta
 
 ## Task 7: Civic-bypass `--as-civic-counter-proposal` flag (spec §10, COMMONS)
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-report/src/manifest.rs`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/import_cmd.rs`, `redist/crates/bisect-report/src/manifest.rs`
 
 State staff is the authoritative-mapping path; civic groups need a parallel entry that doesn't pretend to be authoritative but also isn't second-class for downstream analysis.
 
@@ -176,7 +176,7 @@ State staff is the authoritative-mapping path; civic groups need a parallel entr
 
 ## Task 8: Round-trip property tests with canonical-form equality (spec §6)
 
-**Files:** `redist/crates/redist-report/src/canonical.rs` (new), `redist/crates/redist-cli/src/import_cmd.rs::tests`, `redist/crates/redist-report/src/districtr.rs::tests`, `redist/crates/redist-report/src/dra.rs::tests`, `tests/fixtures/districtr/` (new — B-05)
+**Files:** `redist/crates/bisect-report/src/canonical.rs` (new), `redist/crates/bisect-cli/src/import_cmd.rs::tests`, `redist/crates/bisect-report/src/districtr.rs::tests`, `redist/crates/bisect-report/src/dra.rs::tests`, `tests/fixtures/districtr/` (new — B-05)
 
 Spec §6 fixes the equality definition: `T(redist(T(P))) == P` after district-label canonicalisation (re-number districts in increasing order of their lowest-GEOID member). This task delivers (a) the canonicalisation function, (b) a property-test harness, (c) the hermetic Districtr fixture (B-05).
 

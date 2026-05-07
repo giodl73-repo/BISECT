@@ -20,7 +20,7 @@ The `bisect label-verify` command is the core testable assertion in this guide, 
 
 **Missing label registry validation tests**: The guide states that `redist config` will "reject a config with a mismatched name." This is a specific, testable invariant. BENCHMARK expects to find a unit test that creates a config file with a mismatched `name:` field and asserts the validator returns an error. If this test does not exist, the validation is undiscovered debt: any code change that removes or bypasses the check will not be caught by CI.
 
-**`bisect ls` output format**: The guide shows an exact example of `bisect ls` tabular output with column headers `LABEL CONFIG BUILD ANALYSIS REPORTS`. This is a specific expected output format. If the output format changes — column order, spacing, added columns — any documentation consumer (scripts that parse this output, court staff following the guide's workflow) will silently break. A snapshot test for `redist ls --format` output would catch format regressions.
+**`bisect ls` output format**: The guide shows an exact example of `bisect ls` tabular output with column headers `LABEL CONFIG BUILD ANALYSIS REPORTS`. This is a specific expected output format. If the output format changes — column order, spacing, added columns — any documentation consumer (scripts that parse this output, court staff following the guide's workflow) will silently break. A snapshot test for `bisect ls --format` output would catch format regressions.
 
 ---
 

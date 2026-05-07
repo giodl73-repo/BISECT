@@ -3,7 +3,7 @@
 **Updated:** 2026-04-30 (v2 — incorporates 6-role consensus on AEA replication standards + ensemble diagnostics)
 **Status:** Revised; pending re-review
 **Closes gap for:** academic researcher (★★★★→★★★★★)
-**Depends on:** existing redist_py PyO3 bindings + redist-cli + redist-analysis
+**Depends on:** existing redist_py PyO3 bindings + bisect-cli + bisect-analysis
 **Estimated effort:** 3-5 days (v2: notebook attestation + GerryChain handshake)
 
 ## Why this exists
@@ -29,7 +29,7 @@ Other tools (GerryChain, MGGG-states, OpenPrecincts) target this audience first.
    - `05_mcmc_ensemble.ipynb` — generate an ensemble of plans, compare to a target plan
 
 2. **MCMC ensemble support** — Either:
-   - **(a)** A Rust-native MCMC implementation in `redist-core` (recombination-based, like ReCom) producing `N` random plans
+   - **(a)** A Rust-native MCMC implementation in `bisect-core` (recombination-based, like ReCom) producing `N` random plans
    - **(b)** A Python wrapper that calls GerryChain for the MCMC step and uses redist for analysis
    
    Spec recommendation: **(b) first, then (a) later**. Faster delivery, validates against the field standard, lets us focus on what redist does best (analysis).
@@ -86,7 +86,7 @@ import redist_py
 def generate_ensemble(state, year, n_steps=10000, seed=42):
     """Generate a GerryChain ensemble, return list of plan labels."""
     # ... use GerryChain to generate plans
-    # ... call redist analyze on each via PyO3
+    # ... call bisect analyze on each via PyO3
 
 def validate_against_ensemble(plan_label, ensemble_dir):
     """Compare a single plan to the ensemble; return percentile ranks."""

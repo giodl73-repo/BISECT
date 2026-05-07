@@ -15,7 +15,7 @@ The Python pipeline works. The Rust port targets three specific pain points:
 
 2. **Deployment portability.** The current pipeline requires Python 3.13, METIS binary, GeoPandas, and a complex dependency chain. A single `redist` binary makes court-submission reproducibility straightforward.
 
-3. **Algorithm ground truth.** The adaptive boost formula (`max(3.0, 10.0*(1-0.7*f))`) currently lives only in `run_state_redistricting.py`. Moving it to `redist-core` makes it a single authoritative implementation shared by the Python pipeline (via PyO3) and the Rust CLI — eliminating the paper/code drift that the D-track review found.
+3. **Algorithm ground truth.** The adaptive boost formula (`max(3.0, 10.0*(1-0.7*f))`) currently lives only in `run_state_redistricting.py`. Moving it to `bisect-core` makes it a single authoritative implementation shared by the Python pipeline (via PyO3) and the Rust CLI — eliminating the paper/code drift that the D-track review found.
 
 Note: METIS startup latency is *not* a primary pain point. Each `gpmetis` subprocess is fast; 50-state parallelism already limits wall time to the slowest state. Phase 5 (native METIS) is optional.
 
@@ -29,31 +29,31 @@ PyO3 bindings mean the Python pipeline continues working throughout the migratio
 redist/                          # Cargo workspace root
 ├── Cargo.toml
 ├── crates/
-│   ├── redist-core/             # Algorithm kernel (no I/O)
-│   ├── redist-data/             # Census data loading and adjacency
-│   ├── redist-cli/              # Binary: `redist` command
-│   ├── redist-analysis/         # Compactness, demographics, partisan metrics
-│   └── redist-web/              # Static dashboard generation
+│   ├── bisect-core/             # Algorithm kernel (no I/O)
+│   ├── bisect-data/             # Census data loading and adjacency
+│   ├── bisect-cli/              # Binary: `redist` command
+│   ├── bisect-analysis/         # Compactness, demographics, partisan metrics
+│   └── bisect-web/              # Static dashboard generation
 └── python/
-    └── redist_py/               # PyO3 bindings (wraps redist-core)
+    └── redist_py/               # PyO3 bindings (wraps bisect-core)
 ```
 
 ### Crate responsibilities
 
 | Crate | Python equivalent | I/O | Key types |
 |---|---|---|---|
-| `redist-core` | `src/apportionment/partition/` | None | `Graph`, `Partition`, `EdgeWeights`, `BisectionTree` |
-| `redist-data` | `src/apportionment/data/` + TIGER shapefiles | Read-only | `TractGraph`, `Demographics`, `Adjacency` |
-| `redist-cli` | `scripts/pipeline/run_*.py` | Full | `RedistArgs`, `PipelineConfig` |
-| `redist-analysis` | `scripts/pipeline/analyze_*.py` + compactness/ | Read/Write | `CompactnessReport`, `VraAnalysis` |
-| `redist-web` | `scripts/web/` | Write | `DashboardBuilder` |
+| `bisect-core` | `src/apportionment/partition/` | None | `Graph`, `Partition`, `EdgeWeights`, `BisectionTree` |
+| `bisect-data` | `src/apportionment/data/` + TIGER shapefiles | Read-only | `TractGraph`, `Demographics`, `Adjacency` |
+| `bisect-cli` | `scripts/pipeline/run_*.py` | Full | `RedistArgs`, `PipelineConfig` |
+| `bisect-analysis` | `scripts/pipeline/analyze_*.py` + compactness/ | Read/Write | `CompactnessReport`, `VraAnalysis` |
+| `bisect-web` | `scripts/web/` | Write | `DashboardBuilder` |
 
 ### PyO3 Binding Rules
 
 1. **No Python objects cross the boundary except dicts and numpy arrays.** No GeoPandas DataFrames, no Shapely geometries — convert to plain types before calling Rust.
-2. **Rust functions are pure for computation; `redist-cli` owns I/O.** PyO3-callable functions have no file I/O side effects. File writes happen in the CLI binary or in Python, never through PyO3.
+2. **Rust functions are pure for computation; `bisect-cli` owns I/O.** PyO3-callable functions have no file I/O side effects. File writes happen in the CLI binary or in Python, never through PyO3.
 3. **Error propagation via `PyErr`.** All Rust errors convert to typed Python exceptions with messages matching current Python error strings.
-4. **VRA analysis written by `redist-cli`, not PyO3.** To achieve atomicity (see Migration Invariants), the CLI writes both `final_assignments` and `vra_analysis.json` together. PyO3 returns computation results; the binary handles the atomic write.
+4. **VRA analysis written by `bisect-cli`, not PyO3.** To achieve atomicity (see Migration Invariants), the CLI writes both `final_assignments` and `vra_analysis.json` together. PyO3 returns computation results; the binary handles the atomic write.
 
 ---
 
@@ -63,7 +63,7 @@ redist/                          # Cargo workspace root
 **Goal**: Cargo workspace boots, PyO3 bindings compile, a new test verifies graph round-trip.
 
 - [ ] `cargo init` workspace with 5 crate stubs
-- [ ] `redist-core`: `Graph` struct (CSR adjacency list + vertex weights), `Partition` struct (tract→district map), round-trip serialize to/from Python dict
+- [ ] `bisect-core`: `Graph` struct (CSR adjacency list + vertex weights), `Partition` struct (tract→district map), round-trip serialize to/from Python dict
 - [ ] `redist_py`: PyO3 module exposing `Graph.from_csr()` and `Partition.to_dict()`
 - [ ] **Write new test** `tests/unit/test_rust_graph.py`: construct `redist_py.Graph` from a known 5-vertex CSR dict, assert `n_vertices()==5`, `n_edges()==correct`. This is the Phase 0 exit criterion test.
 - [ ] CI: add `rust-tests` job to `.github/workflows/` (see CI section below)
@@ -75,13 +75,13 @@ redist/                          # Cargo workspace root
 ---
 
 ### Phase 1 — Core Algorithm in Rust (3 weeks)
-**Goal**: `redist-core` contains edge-weight construction and bisection tree logic. Python calls it via PyO3. METIS still invoked as subprocess.
+**Goal**: `bisect-core` contains edge-weight construction and bisection tree logic. Python calls it via PyO3. METIS still invoked as subprocess.
 
 #### 1a. Edge weight construction
 Port the VRA edge weight loop from `run_state_redistricting.py:226-260` to Rust. The full loop — not just the scalar formula — is required:
 
 ```rust
-// redist-core/src/vra.rs
+// bisect-core/src/vra.rs
 pub fn build_vra_edge_weights(
     edges: &[(usize, usize)],
     minority_fracs: &[f64],   // per-tract fractions; len == n_vertices
@@ -100,7 +100,7 @@ pub fn build_vra_edge_weights(
 }
 ```
 
-Once this function exists in `redist-core`, **delete** `run_state_redistricting.py:226-260` and replace with `redist_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
+Once this function exists in `bisect-core`, **delete** `run_state_redistricting.py:226-260` and replace with `redist_py.build_vra_edge_weights(...)`. The formula then lives in exactly one place.
 
 #### 1b. Bisection tree
 Port `RecursiveBisection` tree-building logic. Important: the current Python implementation is **level-parallel** — it processes all nodes at a given depth simultaneously via `ProcessPoolExecutor`. The Rust port must also be level-parallel, not depth-first recursive. Use Rayon for parallel splits at each level. A depth-first port would differ in split order and produce different (not just slower) results.
@@ -109,7 +109,7 @@ Port `RecursiveBisection` tree-building logic. Important: the current Python imp
 Port `metis_wrapper.py` to Rust: construct the METIS `.graph` file, invoke `gpmetis` subprocess, parse `.part` output. Note: the current primary path uses `pymetis` (a Python library), which does **not** pass `-contig` or `-minconn` flags. The subprocess `gpmetis` path does. The Rust wrapper uses the subprocess path. This is a **behavioral change**: Rust will use `-contig` by default while the Python/pymetis path does not. Document this explicitly.
 
 #### 1d. Population balance checker
-Add `Partition::assert_balanced(vertex_weights, n_districts, tolerance)` to `redist-core`. Call it only on **final** leaf partitions (not intermediate bisection nodes, which use their own tighter `ufactor` tolerance). Called from both PyO3 (when Python pipeline finalizes a state) and from `redist-cli` (Phase 3).
+Add `Partition::assert_balanced(vertex_weights, n_districts, tolerance)` to `bisect-core`. Call it only on **final** leaf partitions (not intermediate bisection nodes, which use their own tighter `ufactor` tolerance). Called from both PyO3 (when Python pipeline finalizes a state) and from `bisect-cli` (Phase 3).
 
 **Exit criterion**: 
 - `pytest tests/unit/` passes with `REDIST_NO_RUST` unset (Rust formula called)
@@ -119,7 +119,7 @@ Add `Partition::assert_balanced(vertex_weights, n_districts, tolerance)` to `red
 ---
 
 ### Phase 2 — Data Layer in Rust (2 weeks)
-**Goal**: `redist-data` replaces GeoPandas for adjacency computation. The bottleneck is parallelizing per-edge intersection calls, not replacing the STR-tree spatial index (libpysal already uses one).
+**Goal**: `bisect-data` replaces GeoPandas for adjacency computation. The bottleneck is parallelizing per-edge intersection calls, not replacing the STR-tree spatial index (libpysal already uses one).
 
 #### 2a. TIGER shapefile reader
 Read TIGER/Line `.shp` or GeoParquet using the `shapefile` crate (pure Rust, no GDAL dependency). Output: array of WKB-encoded polygons + GEOID strings.
@@ -176,10 +176,10 @@ Rust CLI writes:
 ---
 
 ### Phase 4 — Analysis and Dashboard (2 weeks)
-**Goal**: `redist analyze` and `redist dashboard` work from the binary.
+**Goal**: `bisect analyze` and `redist dashboard` work from the binary.
 
 #### 4a. Compactness metrics
-Port Polsby-Popper and Reock to `redist-analysis`. **Critical requirement**: district polygons must be projected to an equal-area CRS (EPSG:5070 Albers Equal Area for CONUS, EPSG:3338 for Alaska, EPSG:6364 for Hawaii) before computing area/perimeter. The `geo` crate computes planar area from coordinate values — WGS84 degrees give area in square degrees, not square meters. Polsby-Popper is meaningless without projected coordinates.
+Port Polsby-Popper and Reock to `bisect-analysis`. **Critical requirement**: district polygons must be projected to an equal-area CRS (EPSG:5070 Albers Equal Area for CONUS, EPSG:3338 for Alaska, EPSG:6364 for Hawaii) before computing area/perimeter. The `geo` crate computes planar area from coordinate values — WGS84 degrees give area in square degrees, not square meters. Polsby-Popper is meaningless without projected coordinates.
 
 Implementation: accept projected WKB as input to the compactness function. The caller (CLI or Python) projects before calling.
 
@@ -187,10 +187,10 @@ Implementation: accept projected WKB as input to the compactness function. The c
 `tests/unit/test_rust_compactness.py` — compute Polsby-Popper for a known projected polygon (e.g., unit square in meters) in both Python and Rust; assert values match within 1e-6.
 
 #### 4b. VRA analysis (atomic write)
-Port `vra_utils.py:analyze_mm_districts()` to Rust in `redist-analysis`. The `redist-cli` binary writes both `final_assignments` and `vra_analysis.json` inside a single function:
+Port `vra_utils.py:analyze_mm_districts()` to Rust in `bisect-analysis`. The `bisect-cli` binary writes both `final_assignments` and `vra_analysis.json` inside a single function:
 
 ```rust
-// redist-cli: write both outputs atomically
+// bisect-cli: write both outputs atomically
 fn write_state_outputs(state_dir: &Path, partition: &Partition, vra: &VraAnalysis) -> Result<()> {
     let tmp_assignments = state_dir.join("data/.final_assignments.tmp.pkl");
     let tmp_vra = state_dir.join("data/.vra_analysis.tmp.json");
@@ -206,9 +206,9 @@ fn write_state_outputs(state_dir: &Path, partition: &Partition, vra: &VraAnalysi
 This eliminates the `vra_mode` premature-clear class of bugs: analysis and partition are computed together and written atomically. Partial-write state (one file but not the other) is detected on restart by the presence of `.tmp.*` files.
 
 #### 4c. Static dashboard
-Port `scripts/web/deploy_docs.py` to `redist-web`.
+Port `scripts/web/deploy_docs.py` to `bisect-web`.
 
-**Exit criterion**: `redist analyze --state AL --version V4` produces `vra_analysis.json` with `mm_count==2`. `redist dashboard --version V4 --year 2020` matches current `docs/dashboard_vra.html` visually.
+**Exit criterion**: `bisect analyze --state AL --version V4` produces `vra_analysis.json` with `mm_count==2`. `redist dashboard --version V4 --year 2020` matches current `docs/dashboard_vra.html` visually.
 
 ---
 
@@ -254,11 +254,11 @@ rust-tests:
 
 ## Migration Invariants (BOUNDARY role)
 
-1. **Population balance**: Every **final** partition (leaf nodes only, not intermediate bisections) asserts ±0.5% before output. Enforced in `redist-core::Partition::assert_balanced()`. Intermediate bisection nodes use their own `ufactor` tolerance.
+1. **Population balance**: Every **final** partition (leaf nodes only, not intermediate bisections) asserts ±0.5% before output. Enforced in `bisect-core::Partition::assert_balanced()`. Intermediate bisection nodes use their own `ufactor` tolerance.
 
-2. **VRA analysis atomicity**: `final_assignments` and `vra_analysis.json` are written via rename from temp files in `redist-cli::write_state_outputs()`. Partial-write states are detectable and restartable. This is only enforceable from the CLI binary — not through PyO3 (Python controls I/O when calling via bindings).
+2. **VRA analysis atomicity**: `final_assignments` and `vra_analysis.json` are written via rename from temp files in `bisect-cli::write_state_outputs()`. Partial-write states are detectable and restartable. This is only enforceable from the CLI binary — not through PyO3 (Python controls I/O when calling via bindings).
 
-3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `redist-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `redist_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
+3. **Formula ground truth**: After Phase 1a, the adaptive boost formula exists only in `bisect-core/src/vra.rs`. `run_state_redistricting.py:226-260` is deleted. Both Python (via `redist_py.build_vra_edge_weights`) and the CLI use the same implementation. Any future change to the formula requires one edit in one place.
 
 4. **No silent fallback**: When `REDIST_NO_RUST` is unset and `redist_py` is not compiled, the Python pipeline raises `ImportError` immediately. Set `REDIST_NO_RUST=1` to use pure-Python path (slower, same results).
 

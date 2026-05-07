@@ -12,7 +12,7 @@
 
 The three CI/CD gaps I flagged in Round 1 are all closed:
 
-**P1-1 resolved (--json).** `redist ls --json` and `redist show X --json` are now specified. The JSON shape for `ls` matches the registry format directly, which is the right choice — CI scripts can `jq .official_proposal.built` without any translation layer. The `show --json` promise ("full index.json content + registry entry") is slightly underspecified in the schema — it says what is included but does not show the exact top-level envelope. I accept this as a P2 for implementation to clarify.
+**P1-1 resolved (--json).** `bisect ls --json` and `bisect show X --json` are now specified. The JSON shape for `ls` matches the registry format directly, which is the right choice — CI scripts can `jq .official_proposal.built` without any translation layer. The `show --json` promise ("full index.json content + registry entry") is slightly underspecified in the schema — it says what is included but does not show the exact top-level envelope. I accept this as a P2 for implementation to clarify.
 
 **P1-2 resolved (--no-interactive).** The orthogonality note in §3.6 is exactly right: `--force` skips guards, `--no-interactive` skips prompts. These are genuinely different failure modes and deserved separate flags. The Terraform `--auto-approve` analogy holds here.
 
@@ -20,7 +20,7 @@ The three CI/CD gaps I flagged in Round 1 are all closed:
 
 My former P2 (config search path) is still deferred in §12. That is fine — the note in §12 makes the intention explicit enough for implementors.
 
-**Remaining P2**: The `--json` envelope shape for `redist show X --json` should specify whether the output is `{"registry": {...}, "index": {...}}` or a flat merge. The spec says "full index.json content + registry entry" but does not show the structure. This is a P2 because CI scripts will need to know the exact key names to parse. Recommend adding a one-line example JSON in §3.6 alongside the existing `--json` note.
+**Remaining P2**: The `--json` envelope shape for `bisect show X --json` should specify whether the output is `{"registry": {...}, "index": {...}}` or a flat merge. The spec says "full index.json content + registry entry" but does not show the structure. This is a P2 because CI scripts will need to know the exact key names to parse. Recommend adding a one-line example JSON in §3.6 alongside the existing `--json` note.
 
 ---
 
@@ -33,7 +33,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 
 **P1 (concurrent registry writes) resolved.** The `with_exclusive_lock` wrapper in §8.5 is the right abstraction. All three mutating functions (`mark_built`, `mark_analyzed`, `mark_reported`) are documented as calling it internally. The `fs2::FileExt` cross-platform note is important — this crate works identically on Linux and Windows, which matters given the Windows CP1252 deployment environment. The new L0 tests (`test_registry_concurrent_mark_built_no_lost_update`, `test_registry_exclusive_lock_blocks_concurrent_write`) are the right tests, though "blocks concurrent write" is tricky to test without real threads; the implementation should use `std::thread::spawn` with a barrier to verify the lock actually serializes.
 
-**Residual P2**: The label reserved-names validation (labels must not equal `runs`, `analysis`, `reports`, `configs`) is still absent from §7.2. I flagged this in Round 1 as P2 and it remains unaddressed. The invariant should be stated in §7.2 and enforced at registry write time. Without it, `redist build runs --config ...` will silently create `runs/runs/` — confusing but not caught. Add one rule and one L0 test.
+**Residual P2**: The label reserved-names validation (labels must not equal `runs`, `analysis`, `reports`, `configs`) is still absent from §7.2. I flagged this in Round 1 as P2 and it remains unaddressed. The invariant should be stated in §7.2 and enforced at registry write time. Without it, `bisect build runs --config ...` will silently create `runs/runs/` — confusing but not caught. Add one rule and one L0 test.
 
 ---
 
@@ -74,7 +74,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 
 **P1 (import verb) resolved.** `redist import commission_v3 --from commission_v3.csv --year 2020` is exactly the command my team needs. The CSV format matches the GEOID,district format we exchange with commission GIS staff. The Shapefile format covers submissions from outside consultants. The fact that imported plans are first-class labels — appearing in `bisect ls`, analyzable with `bisect analyze`, comparable with `redist compare` — means our existing workflow works without modification once a plan is imported. The `algorithm: external` marker is important for documentation: it makes clear in any audit trail that this plan was not produced by the redistricting algorithm.
 
-**P1 (enacted map path) — partially addressed.** §3.4 still mentions `redist compare official_proposal --enacted --year 2020` without defining how enacted maps are stored or retrieved. The `redist import` verb provides the mechanism (import the enacted map as a label named `enacted_2020`), but the `--enacted` shorthand flag is still unexplained. I accept this as a P2: either define a reserved label naming convention for enacted maps (`enacted/{year}`) and a `redist fetch-enacted --year 2020` command, or remove the `--enacted` shorthand from §3.4 and require explicit comparison against an imported enacted label. Either resolution is acceptable.
+**P1 (enacted map path) — partially addressed.** §3.4 still mentions `redist compare official_proposal --enacted --year 2020` without defining how enacted maps are stored or retrieved. The `redist import` verb provides the mechanism (import the enacted map as a label named `enacted_2020`), but the `--enacted` shorthand flag is still unexplained. I accept this as a P2: either define a reserved label naming convention for enacted maps (`enacted/{year}`) and a `bisect fetch-enacted --year 2020` command, or remove the `--enacted` shorthand from §3.4 and require explicit comparison against an imported enacted label. Either resolution is acceptable.
 
 **My former P2 (top-level report index page)** remains unaddressed. `redist report X` still produces per-year dashboards but no `reports/X/index.html`. Legal staff and commissioners who receive a ZIP of the reports directory need a landing page. This is a concrete workflow gap for non-technical stakeholders. P2 for the report generator implementation.
 
@@ -118,7 +118,7 @@ All seven P1 items from Round 1 are resolved. The panel's remaining concerns are
 **Top P2 items for the implementation backlog (ordered by impact):**
 1. `bisect ls` partial-build indicator (`2020(47/50)`) — Duchin, Hendricks
 2. `--force` confirm-by-retyping on `redist rm` — Hendricks
-3. `redist show --json` envelope schema (exact key names) — Hashimoto
+3. `bisect show --json` envelope schema (exact key names) — Hashimoto
 4. Audit chain "Verification Procedure" subsection in §5/§9 — Rodden
 5. Reserved label names validation (`runs`, `analysis`, etc.) in §7.2 — Polikarpova
 6. `--enacted` shorthand definition or removal in §3.4 — Hendricks

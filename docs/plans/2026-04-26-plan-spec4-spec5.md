@@ -7,12 +7,12 @@
 **Specs:** Spec 4 (Partisan Metrics) + Spec 5 (Multi-Chamber/Nested Plans), board amendments through R3.
 
 **Architecture:**
-- `redist-analysis` crate: new `partisan.rs` module implementing the `Analyzer` trait
-- `redist-cli`: `AnalyzeArgs` gains `--election-file`; new `Suite` subcommand tree with `draw`, `validate`, `add-plan`
-- `redist-suite` logic lives in `redist-cli/src/suite.rs` (no separate crate needed at this scale)
-- Nesting adjacency and validation live in `redist-analysis/src/nesting.rs`
+- `bisect-analysis` crate: new `partisan.rs` module implementing the `Analyzer` trait
+- `bisect-cli`: `AnalyzeArgs` gains `--election-file`; new `Suite` subcommand tree with `draw`, `validate`, `add-plan`
+- `redist-suite` logic lives in `bisect-cli/src/suite.rs` (no separate crate needed at this scale)
+- Nesting adjacency and validation live in `bisect-analysis/src/nesting.rs`
 
-**Tech Stack:** Rust, `serde_json`, `csv` crate, `rand` (deterministic bootstrap), existing `redist-analysis` `Analyzer` trait
+**Tech Stack:** Rust, `serde_json`, `csv` crate, `rand` (deterministic bootstrap), existing `bisect-analysis` `Analyzer` trait
 
 **Scenarios covered:** Scenario 4 (nesting violation detection), Scenario 5 (small-chamber partisan metrics)
 
@@ -22,13 +22,13 @@
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `redist/crates/redist-analysis/src/partisan.rs` | **Create** | `PartisanAnalyzer`: EG, MM, PB, bootstrap CI |
-| `redist/crates/redist-analysis/src/nesting.rs` | **Create** | `build_chamber_adjacency`, `validate_nesting`, `NestingValidation` |
-| `redist/crates/redist-analysis/src/lib.rs` | **Modify** | expose `partisan`, `nesting` modules |
-| `redist/crates/redist-cli/src/partisan.rs` | **Create** | `run_partisan()` — load election CSV, dispatch analyzer, write JSON |
-| `redist/crates/redist-cli/src/suite.rs` | **Create** | `run_suite()` — draw chambers in sequence, enforce nesting hard-fail |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** | `AnalyzeArgs` + `--election-file`; `SuiteArgs` subcommand tree |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** | wire `Commands::Suite` |
+| `redist/crates/bisect-analysis/src/partisan.rs` | **Create** | `PartisanAnalyzer`: EG, MM, PB, bootstrap CI |
+| `redist/crates/bisect-analysis/src/nesting.rs` | **Create** | `build_chamber_adjacency`, `validate_nesting`, `NestingValidation` |
+| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** | expose `partisan`, `nesting` modules |
+| `redist/crates/bisect-cli/src/partisan.rs` | **Create** | `run_partisan()` — load election CSV, dispatch analyzer, write JSON |
+| `redist/crates/bisect-cli/src/suite.rs` | **Create** | `run_suite()` — draw chambers in sequence, enforce nesting hard-fail |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs` + `--election-file`; `SuiteArgs` subcommand tree |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Suite` |
 | `tests/unit/test_partisan.rs` | **Create** | L0 partisan metric + bootstrap tests |
 | `tests/unit/test_nesting.rs` | **Create** | L0 chamber adjacency + nesting validation tests |
 | `tests/acceptance/test_partisan_acceptance.py` | **Create** | L2 acceptance: WA partisan JSON, VT single-district, missing election |
@@ -157,7 +157,7 @@ Combinations are ORed: balance + nesting = 1 | 4 = 5.
 
 ## Task 1: Partisan metric functions
 
-**Files:** `redist/crates/redist-analysis/src/partisan.rs`
+**Files:** `redist/crates/bisect-analysis/src/partisan.rs`
 
 - [ ] **L0: Write failing metric tests**
 
@@ -265,7 +265,7 @@ fn test_direction_rep_when_negative_eg() {
 - [ ] **Implement `partisan.rs`**
 
 ```rust
-// redist/crates/redist-analysis/src/partisan.rs
+// redist/crates/bisect-analysis/src/partisan.rs
 
 use serde::Serialize;
 use rand::{SeedableRng, rngs::SmallRng};
@@ -454,7 +454,7 @@ pub fn compute_partisan_metrics(
 
 ## Task 2: Election CSV loader + analyzer dispatch
 
-**Files:** `redist/crates/redist-cli/src/partisan.rs`, `redist/crates/redist-cli/src/args.rs`
+**Files:** `redist/crates/bisect-cli/src/partisan.rs`, `redist/crates/bisect-cli/src/args.rs`
 
 - [ ] **L0: Write failing loader tests**
 
@@ -513,7 +513,7 @@ fn test_aggregate_to_districts_correct_sum() {
 
 ## Task 3: `AnalyzerType::Partisan` wired into analyze dispatcher
 
-**Files:** `redist/crates/redist-analysis/src/analyzer.rs`, `redist/crates/redist-cli/src/analyze.rs`
+**Files:** `redist/crates/bisect-analysis/src/analyzer.rs`, `redist/crates/bisect-cli/src/analyze.rs`
 
 - [ ] **Add `Partisan` variant to `AnalyzerType` enum**
 - [ ] **Wire in `analyze.rs`:** when `types` includes `partisan`, call `run_partisan()`
@@ -536,7 +536,7 @@ fn test_analyze_partisan_type_dispatches_correctly() {
 
 ## Task 4: Chamber adjacency graph
 
-**Files:** `redist/crates/redist-analysis/src/nesting.rs`
+**Files:** `redist/crates/bisect-analysis/src/nesting.rs`
 
 - [ ] **L0: Write failing adjacency tests** (from Spec 5 + Scenario 4)
 
@@ -604,7 +604,7 @@ fn test_build_chamber_adjacency_primary_component_only() {
 - [ ] **Implement `build_chamber_adjacency()`**
 
 ```rust
-// redist/crates/redist-analysis/src/nesting.rs
+// redist/crates/bisect-analysis/src/nesting.rs
 
 use std::collections::{HashMap, HashSet, VecDeque};
 use serde::Serialize;
@@ -635,7 +635,7 @@ pub fn build_chamber_adjacency(
 
 ## Task 5: Nesting validation
 
-**Files:** `redist/crates/redist-analysis/src/nesting.rs` (continued)
+**Files:** `redist/crates/bisect-analysis/src/nesting.rs` (continued)
 
 - [ ] **L0: Write failing validation tests** (from Spec 5 L0 + Scenario 4)
 
@@ -766,7 +766,7 @@ pub fn compute_exit_code(
 
 ## Task 6: `redist suite` CLI — draw subcommand
 
-**Files:** `redist/crates/redist-cli/src/suite.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/suite.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing suite-draw tests**
 
@@ -842,7 +842,7 @@ fn test_suite_manifest_records_nesting_mode() {
 
 ## Task 7: `redist suite validate` subcommand + suite export
 
-**Files:** `redist/crates/redist-cli/src/suite.rs` (continued)
+**Files:** `redist/crates/bisect-cli/src/suite.rs` (continued)
 
 - [ ] **L0: Write failing validate + export tests**
 
@@ -1016,7 +1016,7 @@ def test_suite_validate_exit_5_on_nesting_violation():
 ## Cargo.toml additions
 
 ```toml
-# redist/crates/redist-analysis/Cargo.toml
+# redist/crates/bisect-analysis/Cargo.toml
 [dependencies]
 rand = { version = "0.8", features = ["small_rng"] }
 # ... existing deps

@@ -7,7 +7,7 @@
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
 **Goal:** Extend `redist compare` from a numerical Jaccard/population/compactness diff into a publication-ready storytelling layer: side-by-side HTML, a tract-level diff map, civic-friendly narrative paragraphs guarded by a `[DRAFT]` gate and `--approved-by` sign-off, a watermarked summary-card PNG, a `--comments-label` overlay, and a fully provenanced `narrative_manifest.json` that supports byte-identical re-render.
 
-**Depends on:** existing `redist compare` (analysis crate), `redist-map` SVG→PNG via resvg, `redist-report` Tera infrastructure, Civic Bidirectional schema (consumer side only — schema is owned by `2026-04-30-civic-bidirectional.md` §1).
+**Depends on:** existing `redist compare` (analysis crate), `bisect-map` SVG→PNG via resvg, `bisect-report` Tera infrastructure, Civic Bidirectional schema (consumer side only — schema is owned by `2026-04-30-civic-bidirectional.md` §1).
 **Blocks:** civic advocacy quickstart end-state (★★→★★★★★); special-master and state-staff narrative consumption.
 
 **v2.1 items addressed by this plan:**
@@ -22,8 +22,8 @@
 ## Pre-Conditions
 
 - `redist compare --plan-a A --plan-b B` already produces `PlanComparison` (Jaccard/population/compactness/splits) via `redist_analysis::compare_plans`
-- `redist-report` already vendors `tera = "1"`; this plan reuses Tera (no new template-engine dependency)
-- `redist-map` exposes `build_svg`, `svg_to_png`, `default_font_db`, `canvas_size_from_dpi`
+- `bisect-report` already vendors `tera = "1"`; this plan reuses Tera (no new template-engine dependency)
+- `bisect-map` exposes `build_svg`, `svg_to_png`, `default_font_db`, `canvas_size_from_dpi`
 - Civic Bidirectional spec defines the canonical CSV schema `geoid,comment_id,label,source,source_url,confidence,submitted_at` (this plan consumes only)
 - `SOURCE_DATE_EPOCH` and `REDIST_BUILD_COMMIT_SHORT` envs are honored project-wide (BENCHMARK P1 patch in spec)
 - `PlanContext::from_label` resolves manifest SHAs for both plans (used for COVENANT C-3 pinning)
@@ -32,7 +32,7 @@
 
 ## Task 1: Extend `CompareArgs` for HTML/narrative surface
 
-**Files:** `redist/crates/redist-cli/src/args.rs`
+**Files:** `redist/crates/bisect-cli/src/args.rs`
 
 Today's `CompareArgs` only supports table/json/csv. Extend without breaking the existing surface.
 
@@ -48,33 +48,33 @@ Today's `CompareArgs` only supports table/json/csv. Extend without breaking the 
 - [ ] **1.3** Validation: in `run_compare`, reject `--plan-b` + `--baseline` simultaneously; reject `--approved-by ""` (empty string).
 - [ ] **1.4** Unit tests in `args.rs` for every new flag: presence, defaults, mutual exclusion, value parsing.
 
-**Exit:** `cargo test -p redist-cli args::tests` green; `redist compare --help` shows the new surface.
+**Exit:** `cargo test -p bisect-cli args::tests` green; `redist compare --help` shows the new surface.
 
 ---
 
 ## Task 2: Comparison report assembler crate module
 
-**Files:** `redist/crates/redist-report/src/comparison.rs` (new), `redist/crates/redist-report/src/lib.rs`
+**Files:** `redist/crates/bisect-report/src/comparison.rs` (new), `redist/crates/bisect-report/src/lib.rs`
 
-Mirror the existing `report.rs` / `html.rs` split. Keep narrative generation in `redist-report` (the one crate that already depends on Tera) so `redist-cli` stays thin.
+Mirror the existing `report.rs` / `html.rs` split. Keep narrative generation in `bisect-report` (the one crate that already depends on Tera) so `bisect-cli` stays thin.
 
 - [ ] **2.1** Define `ComparisonReport` struct: `plan_a: PlanSide`, `plan_b: PlanSide`, `baseline: Option<PlanSide>`, `diff: DiffSummary`, `comments: Option<CommentsOverlay>`, `narrative: NarrativeBlock`, `manifest: NarrativeManifest`, `generated_at`, `redist_build_commit_short`. Each `PlanSide` has `label`, `manifest_sha256`, `partisan`, `vra`, `compactness`, `population`, plus `submission_type: Option<String>` (passthrough from plan manifest for civic-counter-proposal detection).
 - [ ] **2.2** `assemble_comparison(ctx: &ComparisonContext) -> anyhow::Result<ComparisonReport>` — pulls analysis JSONs (`partisan.json`, `vra_analysis.json`, `compactness.json`, `summary.json`) for both plans using the same `load_analysis_json` helper that `compare.rs` already uses. Compute manifest SHA-256 by hashing the bytes of each plan's `manifest.json` (COVENANT C-3 pinning).
 - [ ] **2.3** `DiffSummary` computes `tracts_changed`, `population_changed`, `districts_with_changes`, `tract_destinations: HashMap<String, (usize, usize)>` (GEOID → (district_in_a, district_in_b)). Population sourced from per-tract population in the existing adjacency/tract data path; reuse `redist_data` accessors.
-- [ ] **2.4** Re-export from `redist-report/src/lib.rs`.
+- [ ] **2.4** Re-export from `bisect-report/src/lib.rs`.
 
-**Exit:** `cargo build -p redist-report` clean; module compiles; no narrative content yet.
+**Exit:** `cargo build -p bisect-report` clean; module compiles; no narrative content yet.
 
 ---
 
 ## Task 3: Narrative template engine + civic-friendly framing
 
 **Files:**
-- `redist/crates/redist-report/templates/comparison-narrative.j2.md` (new)
-- `redist/crates/redist-report/templates/comparison-side-by-side.j2.html` (new)
-- `redist/crates/redist-report/src/narrative.rs` (new)
+- `redist/crates/bisect-report/templates/comparison-narrative.j2.md` (new)
+- `redist/crates/bisect-report/templates/comparison-side-by-side.j2.html` (new)
+- `redist/crates/bisect-report/src/narrative.rs` (new)
 
-Use **Tera** (already a workspace dep — see `redist-report/Cargo.toml`). Do NOT pull in `minijinja` or any Python.
+Use **Tera** (already a workspace dep — see `bisect-report/Cargo.toml`). Do NOT pull in `minijinja` or any Python.
 
 - [ ] **3.1** `comparison-narrative.j2.md` lays out paragraphs in this fixed order (COMMONS — civic-friendly framing first):
   1. **Civic-counter-proposal framing** (rendered only when `plan_a.submission_type == "civic_counter_proposal"` or same for B): one-sentence label "Plan B is a civic counter-proposal submitted by {{ plan_b.submitted_by }} on {{ plan_b.submitted_at }}; it is not the state's official map."
@@ -94,7 +94,7 @@ Use **Tera** (already a workspace dep — see `redist-report/Cargo.toml`). Do NO
 
 ## Task 4: Margin-of-error suppression (S-04 — direction change for non-monotone metrics)
 
-**Files:** `redist/crates/redist-report/src/narrative.rs`, `redist/crates/redist-report/src/moe.rs` (new)
+**Files:** `redist/crates/bisect-report/src/narrative.rs`, `redist/crates/bisect-report/src/moe.rs` (new)
 
 Spec §"Margin-of-error suppression" requires that when a directional claim flips within the metric's CI, the auto-text is replaced with "within margin of error; see numerical table." S-04 demands a formal "direction change" definition for non-monotone metrics like MM count.
 
@@ -111,7 +111,7 @@ Spec §"Margin-of-error suppression" requires that when a directional claim flip
 
 ## Task 5: `[DRAFT]` gate + `--approved-by` sign-off
 
-**Files:** `redist/crates/redist-report/src/narrative.rs`, `redist/crates/redist-cli/src/compare.rs`
+**Files:** `redist/crates/bisect-report/src/narrative.rs`, `redist/crates/bisect-cli/src/compare.rs`
 
 - [ ] **5.1** When `approved_by: None` is passed to `render_narrative`, every paragraph (each rendered via a Tera macro `{% macro para(text) %}...{% endmacro %}`) is prefixed with `[DRAFT — review before publication] `. When `approved_by: Some("Jane Q. Citizen")`, the prefix is omitted.
 - [ ] **5.2** The signed name flows into `NarrativeManifest.approved_by`; manifest also records `approved_at` (ISO-8601 UTC of generation time, but pinned via `SOURCE_DATE_EPOCH` for reproducibility — see Task 9).
@@ -124,7 +124,7 @@ Spec §"Margin-of-error suppression" requires that when a directional claim flip
 
 ## Task 6: Diff visualization (third map)
 
-**Files:** `redist/crates/redist-map/src/diff_map.rs` (new), `redist/crates/redist-map/src/lib.rs`
+**Files:** `redist/crates/bisect-map/src/diff_map.rs` (new), `redist/crates/bisect-map/src/lib.rs`
 
 The third map shows only tracts that moved between the two plans, color-coded by destination district.
 
@@ -139,7 +139,7 @@ The third map shows only tracts that moved between the two plans, color-coded by
 
 ## Task 7: HTML side-by-side renderer
 
-**Files:** `redist/crates/redist-report/templates/comparison-side-by-side.j2.html`, `redist/crates/redist-report/src/comparison_html.rs` (new)
+**Files:** `redist/crates/bisect-report/templates/comparison-side-by-side.j2.html`, `redist/crates/bisect-report/src/comparison_html.rs` (new)
 
 - [ ] **7.1** Self-contained HTML (no CDN, no external HTTP) — inherit the constraint from existing `report.html.j2`. Maps embedded as base64 data URIs.
 - [ ] **7.2** Layout: title bar; two-column map row (Plan A left, Plan B right) with unified legend; full-width diff map row; per-district table (D1 Plan A | D1 Plan B | Δ for each numerical metric); aggregate change summary; narrative section (Markdown→HTML rendered server-side via `pulldown-cmark`); audit trail footer linking the manifest SHA.
@@ -153,7 +153,7 @@ The third map shows only tracts that moved between the two plans, color-coded by
 
 ## Task 8: Civic-facing summary card PNG + watermark (BD-N3)
 
-**Files:** `redist/crates/redist-map/src/summary_card.rs` (new)
+**Files:** `redist/crates/bisect-map/src/summary_card.rs` (new)
 
 A 1200×675 PNG suited to social-media share previews.
 
@@ -168,7 +168,7 @@ A 1200×675 PNG suited to social-media share previews.
 
 ## Task 9: `narrative_manifest.json` producer with SOURCE_DATE_EPOCH pinning + relative paths (M-04, PP-31, COVENANT C-3)
 
-**Files:** `redist/crates/redist-report/src/narrative_manifest.rs` (new), `redist/crates/redist-report/src/lib.rs`
+**Files:** `redist/crates/bisect-report/src/narrative_manifest.rs` (new), `redist/crates/bisect-report/src/lib.rs`
 
 This is the audit trail spec §7 demands. Every field must be reproducible.
 
@@ -211,7 +211,7 @@ This is the audit trail spec §7 demands. Every field must be reproducible.
 
 ## Task 10: `--comments-label` overlay (Civic Bidirectional consumer side)
 
-**Files:** `redist/crates/redist-report/src/comments_overlay.rs` (new)
+**Files:** `redist/crates/bisect-report/src/comments_overlay.rs` (new)
 
 - [ ] **10.1** Load comments by label from `outputs/{version}/civic/{comments_label}/comments.normalized.csv` (canonical output of `redist civic ingest` per Civic Bidirectional spec §1). Schema is owned by `docs/file-formats/civic-coi-csv.md` (Civic Bidirectional plan Task 1.5 — early-deliverable per v2.1.1 P1 patch); this plan reads it by reference, does NOT redefine it. Required columns: `geoid, comment_id, label, source, source_url, confidence, submitted_at`. If Civic Bidirectional plan Task 1.5 has not landed when this task is implemented, BLOCK on it — do not inline a duplicate schema definition.
 - [ ] **10.2** For each `comment_id`, group its tracts; for each plan, classify the community as `kept_whole` or `split_across <list of districts>`.
@@ -226,7 +226,7 @@ This is the audit trail spec §7 demands. Every field must be reproducible.
 
 ## Task 11: Wire `redist compare --format html|narrative|both` end-to-end
 
-**Files:** `redist/crates/redist-cli/src/compare.rs`
+**Files:** `redist/crates/bisect-cli/src/compare.rs`
 
 - [ ] **11.1** When `format` is `Html`, `Narrative`, or `Both`, dispatch to `redist_report::assemble_comparison` + the renderers. Otherwise keep the existing `Table`/`Json`/`Csv` path untouched.
 - [ ] **11.2** Output directory layout matches spec §"Outputs":
@@ -249,7 +249,7 @@ This is the audit trail spec §7 demands. Every field must be reproducible.
 
 ## Task 12: Reproducibility CI gate — byte-identical re-render
 
-**Files:** `redist/tests/reproducibility/test_narrative_byte_identical.rs` (new), `redist/crates/redist-report/tests/byte_identical.rs` (new)
+**Files:** `redist/tests/reproducibility/test_narrative_byte_identical.rs` (new), `redist/crates/bisect-report/tests/byte_identical.rs` (new)
 
 - [ ] **12.1** Test fixture: small synthetic two-plan dataset under `redist/tests/fixtures/comparison_repro/` (~10 tracts, hand-computed expected values).
 - [ ] **12.2** Invoke `redist compare --plan-a ... --plan-b ... --format both --approved-by "Test"` twice with `SOURCE_DATE_EPOCH=1700000000` and `REDIST_BUILD_COMMIT_SHORT=abcd1234`; assert `narrative.md` and `narrative_manifest.json` are byte-identical between the two runs.
@@ -262,7 +262,7 @@ This is the audit trail spec §7 demands. Every field must be reproducible.
 
 ## Task 13: Value-correctness tests (BENCHMARK)
 
-**Files:** `redist/crates/redist-report/tests/narrative_value_correctness.rs` (new)
+**Files:** `redist/crates/bisect-report/tests/narrative_value_correctness.rs` (new)
 
 Per spec line 121, value-correctness is the most load-bearing gate: catches off-by-one threshold errors and template-variable mis-binding.
 
@@ -280,7 +280,7 @@ Per spec line 121, value-correctness is the most load-bearing gate: catches off-
 
 ## Task 14: Civic-counter-proposal end-to-end test (BD-N3 closure)
 
-**Files:** `redist/crates/redist-report/tests/counter_proposal.rs` (new)
+**Files:** `redist/crates/bisect-report/tests/counter_proposal.rs` (new)
 
 - [ ] **14.1** Construct a synthetic Plan B whose `manifest.json` has `"submission_type": "civic_counter_proposal"`, `"submitted_by": "Eastside Neighborhood Association"`, `"submitted_at": "2026-04-15T12:00:00Z"`.
 - [ ] **14.2** Run full `redist compare --format both`. Assert:

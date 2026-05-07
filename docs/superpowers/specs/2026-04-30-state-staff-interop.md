@@ -62,7 +62,7 @@ The staffer never sees Rust, Python, or our internal data formats. They get fast
    - DRA exports embed a column-set fingerprint in their CSV header
    - On import, we record the upstream tool name + version + schema fingerprint in the import manifest
    - We pin a tested-against version range per format; out-of-range raises a warning naming the supported range
-   - The pinned ranges live in `redist-cli/src/import_compat.json` so they're a one-line bump
+   - The pinned ranges live in `bisect-cli/src/import_compat.json` so they're a one-line bump
 
 9. **Callais p.36 mutex preflight (v2 — BOUNDARY)** — every `redist import` (and every subsequent `bisect analyze`) checks the plan's manifest for both VRA-aware bisection markers and partisan-weighted bisection markers. If both appear, the command exits with the Callais p.36 disentanglement error before any analysis runs. State-staff workflows are the highest-volume entry point for this footgun; we catch it here.
 

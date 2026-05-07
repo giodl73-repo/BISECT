@@ -1,9 +1,9 @@
-# `redist analyze --paper-mode` Template Pack
+# `bisect analyze --paper-mode` Template Pack
 
-**Status:** scaffolding shipped 2026-04-30; the `redist analyze --paper-mode` flag wiring is the next-session pickup.
+**Status:** scaffolding shipped 2026-04-30; the `bisect analyze --paper-mode` flag wiring is the next-session pickup.
 **Spec:** Researcher Toolkit plan Task 8 (D-05).
 
-This directory holds the template files that `redist analyze --paper-mode` (when shipped) renders into each AEA-compliant replication package.
+This directory holds the template files that `bisect analyze --paper-mode` (when shipped) renders into each AEA-compliant replication package.
 
 ## What ships in this directory
 
@@ -14,7 +14,7 @@ This directory holds the template files that `redist analyze --paper-mode` (when
 | `README.md.tmpl` | Per-package README template (rendered into each replication package) | TODO |
 | `CITATION.bib.tmpl` | BibTeX citation template per `docs/file-formats/citation-strings.md` | TODO |
 
-## What `redist analyze --paper-mode` (when shipped) will produce
+## What `bisect analyze --paper-mode` (when shipped) will produce
 
 Per Researcher Toolkit plan Task 8.2:
 
@@ -44,10 +44,10 @@ The renderer substitutes the following placeholders in `REPRODUCE.sh`:
 | `{{RUST_TOOLCHAIN_SHA256}}` | `sha256sum redist/rust-toolchain.toml` if present |
 | `{{REQUIREMENTS_LOCK_SHA256}}` | `sha256sum requirements.lock` if present |
 | `{{TARGET_PLATFORM}}` | `linux-x86_64-glibc-2.35` (D-05 explicit pin) |
-| `{{ANALYZE_INVOCATION}}` | The exact `redist analyze ...` command line that produced this run |
+| `{{ANALYZE_INVOCATION}}` | The exact `bisect analyze ...` command line that produced this run |
 | `{{EXPECTED_OUTPUTS_JSON}}` | Path to `expected_outputs.sha256.json` (relative to package root) |
 
-The renderer is not yet implemented; its module shape lives in `redist-cli::paper_mode` (when added).
+The renderer is not yet implemented; its module shape lives in `bisect-cli::paper_mode` (when added).
 
 ## Why D-05 pins Linux x86_64 glibc 2.35
 
@@ -57,7 +57,7 @@ For reviewers on macOS or Windows: the recommended workflow is `docker run --rm 
 
 ## What's deferred
 
-- The renderer itself (`redist-cli::paper_mode::emit_replication_package`).
+- The renderer itself (`bisect-cli::paper_mode::emit_replication_package`).
 - The `--paper-mode` flag wiring on `AnalyzeArgs` (Task 8.1).
 - L0 acceptance test that runs `bash REPRODUCE.sh` from a clean Ubuntu 22.04 container and verifies headline numbers byte-identically (Task 8.4).
 - Conformance-lint against `social-science-data-editors/template-readme` (Task 8.5).

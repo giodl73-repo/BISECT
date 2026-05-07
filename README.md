@@ -1,6 +1,6 @@
-# redist — Algorithmic Redistricting
+# bisect — Algorithmic Redistricting
 
-`redist` draws congressional and state-legislative districts that are compact, population-balanced, reproducible to the byte, and derivable from first principles — for any chamber, any state, any census year.
+`bisect` draws congressional and state-legislative districts that are compact, population-balanced, reproducible to the byte, and derivable from first principles — for any chamber, any state, any census year.
 
 ## How it works
 
@@ -52,13 +52,13 @@ First time? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Wi
 
 ```bash
 # Build the binary
-cargo build --release --manifest-path redist/Cargo.toml
+cargo build --release
 
 # Download 2020 census data
 bisect fetch --year 2020
 
 # Draw all 50 congressional maps (~15 seconds)
-redist build official_2020 --year 2020 --workers 8
+bisect build official_2020 --year 2020 --workers 8
 
 # Analyze: compactness, VRA, partisan lean, splits
 bisect label-analyze official_2020 --year 2020 --types all
@@ -76,7 +76,7 @@ bisect label-report official_2020 --year 2020 --format html json
 ```bash
 bisect state --state WA --districts 98 --chamber house    # 98-seat state house
 bisect state --state WA --chamber congressional           # congressional (from config)
-redist states --year 2020 --workers 8                     # all 50 states in parallel
+bisect states --year 2020 --workers 8                     # all 50 states in parallel
 ```
 
 **Analyse plans** — compactness, VRA compliance, partisan lean, county splits, contiguity:
@@ -117,7 +117,7 @@ bisect label-report official_2020 --year 2020 --format html json pdf
 
 North Carolina ($k=14=7\times 2$): ApportionRegions gives **7D/7R** vs. standard bisection 5D/9R — structure, not criterion, drives partisan outcomes.
 
-**[View all dashboards →](https://giodl73-repo.github.io/REDIST/)** — 2020, 2010, VRA results, round-by-round bisection maps.
+**[View all dashboards →](https://giodl73-repo.github.io/BISECT/)** — 2020, 2010, VRA results, round-by-round bisection maps.
 
 ---
 
@@ -173,7 +173,7 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 | [B.17](docs/papers/B.17+parameter-sensitivity.pdf) | Parameter sensitivity: partisanship insensitive to tuning |
 | [H.0](docs/papers/H.0+percentile-sweep.pdf) | PercentileSweep — statutory choice of legal posture |
 | [H.1](docs/papers/H.1+bisection-ensemble.pdf) | BisectionEnsemble — local ReCom at each bisection node |
-| [H.2](docs/papers/H.2+redist-ensemble.pdf) | redist-ensemble — Rust ReCom at 2500× speed |
+| [H.2](docs/papers/H.2+bisect-ensemble.pdf) | bisect-ensemble — Rust ReCom at 2500× speed |
 
 ### Track C — Validation
 | | |
@@ -211,13 +211,13 @@ Drafts: [`docs/legal/`](docs/legal/) — bill text, policy memo, one-pager, and 
 Plans are referenced by **labels** (short names like `official_2020`) that resolve to all paths by convention. Every stage writes a SHA-256 that chains to the previous stage: **config → build → analysis → report**.
 
 ```bash
-redist build <label>              # draw districts
+bisect build <label>              # draw districts
 bisect label-analyze <label>      # run metrics
 bisect label-report  <label>      # generate report
 bisect label-verify  <label>      # verify SHA chain
-redist ls                         # list all plans
-redist show <label>               # plan details
-redist mv <old> <new>             # rename
+bisect ls                         # list all plans
+bisect show <label>               # plan details
+bisect mv <old> <new>             # rename
 bisect label-compare <a> <b>      # side-by-side diff
 ```
 
@@ -240,14 +240,14 @@ Every run is defined by four orthogonal choices:
 
 | Layer | Flag | Options |
 |-------|------|---------|
-| **Engine** | `--metis-engine` | `c-ffi` (default), `redist-metis` (portable, no C), `gpmetis` (planned) |
+| **Engine** | `--metis-engine` | `c-ffi` (default), `bisect-metis` (portable, no C), `gpmetis` (planned) |
 | **Structure** | `--structure` | `standard-bisect`, `prime-factor`, `ratio-optimal`, `ratio-optimal-area`, `ratio-optimal-vra`, `nway`, `compact-polsby` |
 | **Weights** | `--weights-override` | `geographic` (default), `county`, `unweighted`, `vra-aligned`, `proportional` |
 | **Search** | `--search` | `single` (deterministic), `multi` (N seeds), `convergence` (walk until T non-improving) |
 
 **Engine note:** the default engine depends on how the binary was compiled.
 `cargo build` → `c-ffi` (bundled C, fast, handles all k).
-`cargo build --no-default-features` → `redist-metis` (pure Rust, portable, no C toolchain needed).
+`cargo build --no-default-features` → `bisect-metis` (pure Rust, portable, no C toolchain needed).
 
 See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for the complete flag reference.
 
@@ -266,14 +266,14 @@ bisect fetch --year 2020 --release       # pre-built adjacency files (requires g
 ## Project structure
 
 ```
-redist/crates/
-  redist-cli/       # All commands (build, state, fetch, analyze, map, …)
-  redist-apportion/ # ApportionRegions compositor, METIS engine dispatch
-  redist-core/      # Bisection, edge-weighting, FIPS, population balance
-  redist-data/      # TIGER reading, adjacency, .adj.bin serialization
-  redist-analysis/  # Compactness, VRA, political, demographic, bloc-voting
-  redist-map/       # SVG→PNG map rendering
-  redist-metis/     # Pure-Rust METIS (portable engine)
+crates/
+  bisect-cli/       # All commands (build, state, fetch, analyze, map, …)
+  bisect-apportion/ # ApportionRegions compositor, METIS engine dispatch
+  bisect-core/      # Bisection, edge-weighting, FIPS, population balance
+  bisect-data/      # TIGER reading, adjacency, .adj.bin serialization
+  bisect-analysis/  # Compactness, VRA, political, demographic, bloc-voting
+  bisect-map/       # SVG→PNG map rendering
+  bisect-metis/     # Pure-Rust METIS (portable engine)
 configs/            # YAML plan configs
 docs/papers/        # 100+ compiled PDFs (committed)
 research/tracks/    # LaTeX sources organised by series:

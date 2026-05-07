@@ -2,14 +2,14 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `bisect state`/`redist states`/`redist run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `redist-report` crate handles RPLAN read/write/validate. `redist validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `redist migrate --state X --label Y` copies legacy plans into the new tree.
+**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `bisect state`/`bisect states`/`redist run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `bisect-report` crate handles RPLAN read/write/validate. `redist validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `redist migrate --state X --label Y` copies legacy plans into the new tree.
 
 **Specs:** Spec 0 (RPLAN Format), Spec 1 (Custom Parameters) + R3 board amendments
 
 **Architecture:**
-- New `redist-report` crate: `rplan.rs` (read/write/validate), `manifest.rs` (PlanManifest)
-- Updated `redist-core` crate: `StateConfig` additions, `assert_balanced()` with tolerance param
-- Updated `redist-cli`: `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance`, `--force` flags; `Commands::Validate`, `Commands::Migrate`
+- New `bisect-report` crate: `rplan.rs` (read/write/validate), `manifest.rs` (PlanManifest)
+- Updated `bisect-core` crate: `StateConfig` additions, `assert_balanced()` with tolerance param
+- Updated `bisect-cli`: `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance`, `--force` flags; `Commands::Validate`, `Commands::Migrate`
 
 ---
 
@@ -17,34 +17,34 @@
 
 | File | Action |
 |------|--------|
-| `redist/crates/redist-report/Cargo.toml` | **Create** — new crate |
-| `redist/crates/redist-report/src/lib.rs` | **Create** — public API |
-| `redist/crates/redist-report/src/rplan.rs` | **Create** — RPLAN reader/writer/validator |
-| `redist/crates/redist-report/src/manifest.rs` | **Create** — PlanManifest struct + SHA-256 hashing |
-| `redist/crates/redist-core/src/config.rs` | **Modify** — add `StateConfig` fields: `num_districts_override`, `chamber`, `label`, `population_source`, `balance_tolerance`, `write_manifest`, `force` |
-| `redist/crates/redist-core/src/balance.rs` | **Modify** — `assert_balanced(tolerance: f64)` accepts param |
-| `redist/crates/redist-core/src/population.rs` | **Create** — `PopulationSource` enum + VAP/CVAP CSV loading |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** — add new flags to `StateArgs`; add `ValidateArgs`, `MigrateArgs` |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** — wire `Commands::Validate`, `Commands::Migrate`; pass new flags through |
-| `redist/crates/redist-cli/src/validate.rs` | **Create** — `redist validate` dispatcher |
-| `redist/crates/redist-cli/src/migrate.rs` | **Create** — `redist migrate` dispatcher |
-| `redist/crates/redist-cli/src/paths.rs` | **Modify** — `plan_dir(label)` alongside `state_dir(state)` |
-| `redist/Cargo.toml` | **Modify** — add `redist-report` to workspace |
+| `redist/crates/bisect-report/Cargo.toml` | **Create** — new crate |
+| `redist/crates/bisect-report/src/lib.rs` | **Create** — public API |
+| `redist/crates/bisect-report/src/rplan.rs` | **Create** — RPLAN reader/writer/validator |
+| `redist/crates/bisect-report/src/manifest.rs` | **Create** — PlanManifest struct + SHA-256 hashing |
+| `redist/crates/bisect-core/src/config.rs` | **Modify** — add `StateConfig` fields: `num_districts_override`, `chamber`, `label`, `population_source`, `balance_tolerance`, `write_manifest`, `force` |
+| `redist/crates/bisect-core/src/balance.rs` | **Modify** — `assert_balanced(tolerance: f64)` accepts param |
+| `redist/crates/bisect-core/src/population.rs` | **Create** — `PopulationSource` enum + VAP/CVAP CSV loading |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** — add new flags to `StateArgs`; add `ValidateArgs`, `MigrateArgs` |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Validate`, `Commands::Migrate`; pass new flags through |
+| `redist/crates/bisect-cli/src/validate.rs` | **Create** — `redist validate` dispatcher |
+| `redist/crates/bisect-cli/src/migrate.rs` | **Create** — `redist migrate` dispatcher |
+| `redist/crates/bisect-cli/src/paths.rs` | **Modify** — `plan_dir(label)` alongside `state_dir(state)` |
+| `redist/Cargo.toml` | **Modify** — add `bisect-report` to workspace |
 | `tests/unit/test_rplan.py` | **Create** — L0 Python-accessible RPLAN tests |
 | `tests/unit/test_manifest.py` | **Create** — L0 manifest / SHA-256 tests |
 | `tests/acceptance/test_spec0_spec1_acceptance.py` | **Create** — L2 acceptance tests |
 
 ---
 
-## Task 1: `redist-report` crate scaffold + RPLAN writer
+## Task 1: `bisect-report` crate scaffold + RPLAN writer
 
-**Files:** `redist/crates/redist-report/Cargo.toml`, `src/lib.rs`, `src/rplan.rs`
+**Files:** `redist/crates/bisect-report/Cargo.toml`, `src/lib.rs`, `src/rplan.rs`
 
 - [ ] **Create `Cargo.toml`**
 
 ```toml
 [package]
-name = "redist-report"
+name = "bisect-report"
 version = "0.1.0"
 edition = "2021"
 
@@ -184,7 +184,7 @@ pub fn validate_district_range(value: usize, district: usize, num_districts: usi
 
 ## Task 2: RPLAN validator — schema + coverage
 
-**Files:** `redist/crates/redist-report/src/rplan.rs` (continued)
+**Files:** `redist/crates/bisect-report/src/rplan.rs` (continued)
 
 - [ ] **L0: Write failing validator tests**
 
@@ -274,7 +274,7 @@ pub fn validate_rplan_str(json: &str) -> Result<ValidationResult, RplanError> {
 
 ## Task 3: `PlanManifest` with SHA-256 audit chain
 
-**Files:** `redist/crates/redist-report/src/manifest.rs`
+**Files:** `redist/crates/bisect-report/src/manifest.rs`
 
 - [ ] **L0: Write failing manifest tests**
 
@@ -374,7 +374,7 @@ pub fn default_label(state_name: &str, chamber: &str, year: &str) -> String { ..
 
 ## Task 4: Chamber-aware balance tolerance + `StateConfig` additions
 
-**Files:** `redist/crates/redist-core/src/config.rs`, `redist/crates/redist-core/src/balance.rs`, `redist/crates/redist-core/src/population.rs`
+**Files:** `redist/crates/bisect-core/src/config.rs`, `redist/crates/bisect-core/src/balance.rs`, `redist/crates/bisect-core/src/population.rs`
 
 - [ ] **L0: Write failing StateConfig and balance tests**
 
@@ -499,7 +499,7 @@ pub enum PopulationSource { #[default] Total, Vap, Cvap }
 
 ## Task 5: Label collision check + `plans/{label}/` path resolution
 
-**Files:** `redist/crates/redist-cli/src/paths.rs`, `redist/crates/redist-report/src/manifest.rs`
+**Files:** `redist/crates/bisect-cli/src/paths.rs`, `redist/crates/bisect-report/src/manifest.rs`
 
 - [ ] **L0: Write failing collision and path tests (from Scenario 6)**
 
@@ -591,7 +591,7 @@ pub fn state_output_dir(base: &Path, state_name: &str) -> PathBuf {
 
 ## Task 6: `redist validate` command
 
-**Files:** `redist/crates/redist-cli/src/validate.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/validate.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing validate CLI tests**
 
@@ -657,9 +657,9 @@ pub struct ValidateArgs {
 
 ---
 
-## Task 7: New CLI flags on `bisect state`/`redist states`/`redist run`
+## Task 7: New CLI flags on `bisect state`/`bisect states`/`redist run`
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing flag-parsing tests**
 
@@ -747,7 +747,7 @@ pub struct StateArgs {
 
 ## Task 8: RPLAN writer integration + manifest writing after plan output
 
-**Files:** `redist/crates/redist-cli/src/main.rs` (output path), `redist/crates/redist-report/src/rplan.rs`
+**Files:** `redist/crates/bisect-cli/src/main.rs` (output path), `redist/crates/bisect-report/src/rplan.rs`
 
 - [ ] **L0: Write failing integration tests**
 
@@ -804,7 +804,7 @@ fn test_manifest_sha256_is_deterministic() {
 
 ## Task 9: `redist migrate` command
 
-**Files:** `redist/crates/redist-cli/src/migrate.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
+**Files:** `redist/crates/bisect-cli/src/migrate.rs`, `redist/crates/bisect-cli/src/args.rs`, `redist/crates/bisect-cli/src/main.rs`
 
 - [ ] **L0: Write failing migrate tests**
 
@@ -1143,10 +1143,10 @@ fn test_label_force_flag_allows_overwrite() {
 
 ## Execution Order
 
-1. Task 1 — `redist-report` crate + RPLAN writer (no deps)
+1. Task 1 — `bisect-report` crate + RPLAN writer (no deps)
 2. Task 2 — RPLAN validator (depends on Task 1)
 3. Task 3 — `PlanManifest` + SHA-256 (no deps outside report crate)
-4. Task 4 — `StateConfig` additions + balance/population (redist-core)
+4. Task 4 — `StateConfig` additions + balance/population (bisect-core)
 5. Task 5 — Label collision + paths (depends on Tasks 3+4)
 6. Task 6 — `redist validate` command (depends on Tasks 1+2)
 7. Task 7 — New CLI flags (depends on Task 4)

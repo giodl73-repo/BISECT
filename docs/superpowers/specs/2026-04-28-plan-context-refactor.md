@@ -1,7 +1,7 @@
 # PlanContext Refactor Spec
 **Date:** 2026-04-28  
 **Status:** Approved for implementation planning  
-**Depends on:** 2026-04-28-redist-cli-architecture.md
+**Depends on:** 2026-04-28-bisect-cli-architecture.md
 
 ---
 
@@ -16,9 +16,9 @@ Introduce `PlanContext` as the single source of truth for per-plan metadata in a
 ## Scope
 
 ### In scope
-- New `PlanContext` struct in `redist-cli/src/plan_context.rs`
+- New `PlanContext` struct in `bisect-cli/src/plan_context.rs`
 - Update `analyze.rs` to use `PlanContext` (highest priority — just fixed the bug here)
-- Update `report_cmd.rs` to use `PlanContext` (already has `ReportContext` in redist-report — consolidate)
+- Update `report_cmd.rs` to use `PlanContext` (already has `ReportContext` in bisect-report — consolidate)
 - Update `compare.rs` to use `PlanContext` for plan metadata
 - Update `verify.rs` to use `PlanContext`
 - Update `map_cmd.rs` to use `PlanContext` (currently hardcodes "V3" paths)
@@ -27,13 +27,13 @@ Introduce `PlanContext` as the single source of truth for per-plan metadata in a
 ### Out of scope
 - `StateConfig` field count reduction (separate refactor, lower priority)
 - Output path centralization (follow-on task)
-- `redist states` / `redist run` bulk commands (Class A, not affected)
+- `bisect states` / `redist run` bulk commands (Class A, not affected)
 
 ---
 
 ## The New Type
 
-### `PlanContext` in `redist-cli/src/plan_context.rs`
+### `PlanContext` in `bisect-cli/src/plan_context.rs`
 
 ```rust
 use std::path::{Path, PathBuf};
@@ -192,9 +192,9 @@ Remove: `use crate::runner::load_all_states;` from analyze.rs imports.
 
 **Before:** builds `ReportContext` from `PlanManifest` (already does this right)
 
-**After:** replace with `PlanContext::from_label()` and pass to `assemble_report()`. The `ReportContext` type in `redist-report` should accept a `PlanContext` or be consolidated with it.
+**After:** replace with `PlanContext::from_label()` and pass to `assemble_report()`. The `ReportContext` type in `bisect-report` should accept a `PlanContext` or be consolidated with it.
 
-Note: `redist-report::ReportContext` already does what `PlanContext` does — the two should be merged or `PlanContext` should delegate to `ReportContext`. Simplest: make `PlanContext` wrap `ReportContext` or vice versa.
+Note: `bisect-report::ReportContext` already does what `PlanContext` does — the two should be merged or `PlanContext` should delegate to `ReportContext`. Simplest: make `PlanContext` wrap `ReportContext` or vice versa.
 
 ### `compare.rs`
 

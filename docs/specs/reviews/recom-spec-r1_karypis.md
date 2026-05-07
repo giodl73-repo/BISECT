@@ -1,6 +1,6 @@
 ---
 reviewer: George Karypis
-spec: redist-ensemble ReCom crate
+spec: bisect-ensemble ReCom crate
 round: 1
 score: 3
 date: 2026-05-06
@@ -11,7 +11,7 @@ The spec proposes a Rust implementation of the ReCom MCMC sampler using Wilson's
 
 ## Strengths
 - The use of Wilson's algorithm is the right choice: it produces a *uniformly* random spanning tree, which is the theoretical requirement for ReCom's correct measure-theoretic properties. Aldous-Broder also produces USTs but Wilson's is faster in practice for sparse graphs.
-- The CSR graph reuse from `redist-metis` is sound engineering — adjacency structure is already built and validated, and reusing it avoids a redundant representation. The induced subgraph construction for the merge region is the correct framing.
+- The CSR graph reuse from `bisect-metis` is sound engineering — adjacency structure is already built and validated, and reusing it avoids a redundant representation. The induced subgraph construction for the merge region is the correct framing.
 - The performance table is structured in a way that makes the 2,500x claim falsifiable: specific states, tract counts, and step counts are given. This is the right kind of target specification.
 
 ## P1 — Required changes

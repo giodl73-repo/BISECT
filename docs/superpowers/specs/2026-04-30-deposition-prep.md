@@ -2,7 +2,7 @@
 **Date:** 2026-04-30
 **Status:** Proposed; pending review (NEW spec from SURVEY 9-role review)
 **Closes gap for:** §2 expert at deposition / trial, special master under cross-examination
-**Depends on:** Callais Evidence Layer, Court Submission Reports, existing redist-cli analyze surface
+**Depends on:** Callais Evidence Layer, Court Submission Reports, existing bisect-cli analyze surface
 **Estimated effort:** 3-4 days
 
 ## Why this exists

@@ -19,7 +19,7 @@ The Rust CLI already runs full 50-state in 18s vs ~55min Python (per `design/rus
 
 ## Task 1: Audit `redist run` flag parity (semantics, not just presence)
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `scripts/pipeline/run_complete_redistricting.py`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `scripts/pipeline/run_complete_redistricting.py`
 
 The Rust CLI's flag surface is a self-described mirror of the Python argparse surface (per the `MERIDIAN invariant` comment in `args.rs`). Verify before cutover.
 
@@ -130,7 +130,7 @@ If the deprecation notice (Task 0) needs to extend, simply update the cutover da
 
 ## Flag-Surface Diff (Task 1 result, 2026-04-29)
 
-Comparison of `scripts/pipeline/run_complete_redistricting.py` argparse vs `redist/crates/redist-cli/src/args.rs::RunArgs`.
+Comparison of `scripts/pipeline/run_complete_redistricting.py` argparse vs `redist/crates/bisect-cli/src/args.rs::RunArgs`.
 
 | Flag | Python | Rust | Semantics match | Notes |
 |---|---|---|---|---|

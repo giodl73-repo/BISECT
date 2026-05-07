@@ -64,7 +64,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | |
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | **Accepted** 3.0/4 — `--search short-burst` |
-| G.7 | Sequential Monte Carlo for Calibrated Redistricting Ensembles | [PDF](papers/G.7+smc-redistricting.pdf) | First draft — `redist-smc` crate implemented |
+| G.7 | Sequential Monte Carlo for Calibrated Redistricting Ensembles | [PDF](papers/G.7+smc-redistricting.pdf) | First draft — `bisect-smc` crate implemented |
 | G.8 | Flip Proposals for Local Sensitivity Analysis | [PDF](papers/G.8+flip-proposals.pdf) | **Accepted** 3.4/4 — `--search flip` |
 | G.9 | Forest ReCom: Reversible Recombination via Spanning Forest Sampling | [PDF](papers/G.9+forest-recom.pdf) | **Accepted** 3.4/4 — `--search forest-recom` |
 | G.10 | Merge-Split MCMC: Explicit Reversibility via Two-Tree Acceptance Ratio | [PDF](papers/G.10+merge-split.pdf) | **Accepted** 3.2/4 — `--search merge-split` |
@@ -185,7 +185,7 @@ Synthesis, guides, and practitioner materials.
 |------|-------|-----|--------|
 | H.0 | PercentileSweep — Statutory Choice of Legal Posture | [PDF](papers/H.0+percentile-sweep.pdf) | **Accepted** 3.4/4 |
 | H.1 | BisectionEnsemble — Local ReCom at Each Bisection Node | [PDF](papers/H.1+bisection-ensemble.pdf) | **Accepted** 3.0/4 |
-| H.2 | redist-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+redist-ensemble.pdf) | **Accepted** 3.2/4 |
+| H.2 | bisect-ensemble — Rust ReCom at 2500× Speed | [PDF](papers/H.2+bisect-ensemble.pdf) | **Accepted** 3.2/4 |
 | H.3 | Resolution-Aware Redistricting — Geographic Granularity as a First-Class Parameter | [PDF](papers/H.3+resolution-aware.pdf) | **Accepted** 3.8/4 |
 
 ---

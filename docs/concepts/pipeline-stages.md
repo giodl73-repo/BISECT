@@ -22,7 +22,7 @@ Four stages run in sequence: build → analyze → report → verify. Each stage
 
 ## Stage 1: Build
 
-**Command**: `redist build <label>`
+**Command**: `bisect build <label>`
 
 Reads `configs/<label>.yml`, which defines the structure mode, edge weights, search parameters, and population tolerance for the named plan. Runs METIS recursive bisection for all 50 states (or a subset specified with `--states`) and writes results to `runs/<label>/<year>/<state>/`.
 
@@ -37,19 +37,19 @@ On completion, a SHA-256 hash of the config file is recorded in `runs/<label>/in
 **Resumability**: `bisect build` skips states that already have a valid `final_assignments.json`. Re-run a specific state without disturbing others:
 
 ```bash
-redist build my_plan --states NC
+bisect build my_plan --states NC
 ```
 
 Force a complete rebuild of all states:
 
 ```bash
-redist build my_plan --force
+bisect build my_plan --force
 ```
 
 **Parallel execution**: By default, `bisect build` runs all states concurrently using Rayon. Set `--workers` to limit parallelism:
 
 ```bash
-redist build my_plan --workers 8
+bisect build my_plan --workers 8
 ```
 
 California (~8,000 tracts, 52 districts) is the longest-running state (3–8 minutes). Wyoming (~130 tracts, 1 district) completes in seconds.
@@ -131,7 +131,7 @@ Available formats:
 | `json` | Machine-readable summary | Downstream tooling, CI assertions |
 | `pdf` | Static typeset document | Court submission, public record |
 
-The PDF format requires Typst to be installed; see `redist-report/typst-templates/README.md` for setup. The HTML format is always available.
+The PDF format requires Typst to be installed; see `bisect-report/typst-templates/README.md` for setup. The HTML format is always available.
 
 ```bash
 # Generate all formats
@@ -200,7 +200,7 @@ This design means:
 
 ```bash
 # Full pipeline for a named plan, all stages
-redist build nc_2020 --workers 8
+bisect build nc_2020 --workers 8
 bisect label-analyze nc_2020 --types all
 bisect label-report nc_2020 --format html json pdf
 bisect label-verify nc_2020

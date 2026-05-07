@@ -1,8 +1,8 @@
-# redist-metis Implementation Plan
+# bisect-metis Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `redist-metis` — a pure Rust METIS graph partitioning library with formal verification, replacing the C FFI dependency in `redist-apportion`.
+**Goal:** Implement `bisect-metis` — a pure Rust METIS graph partitioning library with formal verification, replacing the C FFI dependency in `bisect-apportion`.
 
 **Architecture:** Eight sequential phases: scaffold → coarsening → initial partition → FM refinement → multilevel orchestration → Kani safety proofs → Prusti postconditions → shadow migration. Each phase has a sub-spec written before code. TDD throughout: write failing test, implement, pass, commit.
 
@@ -18,7 +18,7 @@
 ## File map
 
 ```
-redist/crates/redist-metis/
+redist/crates/bisect-metis/
   ALGORITHM.md
   Cargo.toml
   src/
@@ -94,7 +94,7 @@ jobs:
     continue-on-error: true   # advisory on PR; blocking enforced at release tag
     steps:
       - uses: viperproject/prusti-action@v1
-      - run: cargo prusti -p redist-metis
+      - run: cargo prusti -p bisect-metis
 ```
 
 **CI policy (SURVEY)**:
@@ -113,21 +113,21 @@ git commit -m "ci: add Kani + Prusti verify jobs — separate from PR test suite
 
 ## Phase 1 — Scaffold + Foundation
 
-**Checkpoint**: `cargo test -p redist-metis` passes. All traits compile. `CsrGraph::is_valid()` fully tested (L0).
+**Checkpoint**: `cargo test -p bisect-metis` passes. All traits compile. `CsrGraph::is_valid()` fully tested (L0).
 
 ---
 
 ### Task 1: Create crate + Cargo.toml
 
 **Files:**
-- Create: `redist/crates/redist-metis/Cargo.toml`
+- Create: `redist/crates/bisect-metis/Cargo.toml`
 - Modify: `redist/Cargo.toml`
 
 - [ ] **Step 1: Create Cargo.toml**
 
 ```toml
 [package]
-name = "redist-metis"
+name = "bisect-metis"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -150,7 +150,7 @@ harness = false
 
 - [ ] **Step 2: Add to workspace**
 
-In `redist/Cargo.toml`, add `"crates/redist-metis"` to the `members` array.
+In `redist/Cargo.toml`, add `"crates/bisect-metis"` to the `members` array.
 
 - [ ] **Step 3: Create `src/lib.rs` stub**
 
@@ -171,7 +171,7 @@ pub use api::{Partitioner, MetisPartitioner, MetisParams};
 - [ ] **Step 4: Verify it compiles**
 
 ```
-cargo check -p redist-metis
+cargo check -p bisect-metis
 ```
 Expected: errors about missing modules (normal — stubs come next).
 
@@ -268,7 +268,7 @@ mod tests {
 - [ ] **Step 2: Run tests — confirm they fail**
 
 ```
-cargo test -p redist-metis graph
+cargo test -p bisect-metis graph
 ```
 Expected: compile error (types not defined yet).
 
@@ -355,15 +355,15 @@ pub enum PartitionError {
 - [ ] **Step 5: Run tests — all pass**
 
 ```
-cargo test -p redist-metis graph
+cargo test -p bisect-metis graph
 ```
 Expected: 8 tests pass.
 
 - [ ] **Step 6: Commit**
 
 ```
-git add redist/crates/redist-metis/ redist/Cargo.toml
-git commit -m "feat(redist-metis): scaffold — CsrGraph, Partition, CoarseMap, PartitionError"
+git add redist/crates/bisect-metis/ redist/Cargo.toml
+git commit -m "feat(bisect-metis): scaffold — CsrGraph, Partition, CoarseMap, PartitionError"
 ```
 
 ---
@@ -493,14 +493,14 @@ pub struct RustMetisPartitioner<C, I, R> {
 - [ ] **Step 3: Run tests**
 
 ```
-cargo test -p redist-metis api
+cargo test -p bisect-metis api
 ```
 Expected: `mock_traits_compile` passes.
 
 - [ ] **Step 4: Commit**
 
 ```
-git commit -m "feat(redist-metis): core traits — Coarsener, InitialPartitioner, Refiner, Partitioner"
+git commit -m "feat(bisect-metis): core traits — Coarsener, InitialPartitioner, Refiner, Partitioner"
 ```
 
 ---
@@ -511,10 +511,10 @@ git commit -m "feat(redist-metis): core traits — Coarsener, InitialPartitioner
 
 ---
 
-### Task 4: Sub-spec `redist-metis-coarsen.md`
+### Task 4: Sub-spec `bisect-metis-coarsen.md`
 
 **Files:**
-- Create: `docs/specs/2026-05-02-redist-metis-coarsen.md`
+- Create: `docs/specs/2026-05-02-bisect-metis-coarsen.md`
 
 - [ ] **Step 1: Write the sub-spec** (covers HEM, SHEM, MinDegree pseudocode, invariants, test strategy)
 
@@ -527,7 +527,7 @@ Key contracts to document:
 - [ ] **Step 2: Commit sub-spec**
 
 ```
-git commit -m "docs: redist-metis coarsening sub-spec"
+git commit -m "docs: bisect-metis coarsening sub-spec"
 ```
 
 ---
@@ -602,7 +602,7 @@ mod tests {
 - [ ] **Step 2: Run — expect compile fail**
 
 ```
-cargo test -p redist-metis coarsen::hem
+cargo test -p bisect-metis coarsen::hem
 ```
 
 - [ ] **Step 3: Implement `HeavyEdgeMatch`**
@@ -752,14 +752,14 @@ fn coarsen_weighted_stays_weighted() {
 - [ ] **Step 5: Run tests**
 
 ```
-cargo test -p redist-metis coarsen::hem
+cargo test -p bisect-metis coarsen::hem
 ```
 Expected: 7 tests pass.
 
 - [ ] **Step 6: Commit**
 
 ```
-git commit -m "feat(redist-metis): HeavyEdgeMatch coarsener with L0 tests"
+git commit -m "feat(bisect-metis): HeavyEdgeMatch coarsener with L0 tests"
 ```
 
 ---
@@ -875,14 +875,14 @@ fn shem_coarsen(g: &CsrGraph) -> (CsrGraph, CoarseMap) {
 - [ ] **Step 3: Run tests**
 
 ```
-cargo test -p redist-metis coarsen::shem
+cargo test -p bisect-metis coarsen::shem
 ```
 Expected: 2 tests pass.
 
 - [ ] **Step 4: Commit**
 
 ```
-git commit -m "feat(redist-metis): SortedHeavyEdgeMatch — O(n+m) bucket sort coarsener"
+git commit -m "feat(bisect-metis): SortedHeavyEdgeMatch — O(n+m) bucket sort coarsener"
 ```
 
 ---
@@ -976,15 +976,15 @@ fn coarsening_terminates_path255() {
 - [ ] **Step 4: Run all coarsening tests**
 
 ```
-cargo test -p redist-metis coarsen
-cargo test -p redist-metis --test contracts coarsening
+cargo test -p bisect-metis coarsen
+cargo test -p bisect-metis --test contracts coarsening
 ```
 Expected: all pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): MinDegreeMatch + L1 coarsening termination test"
+git commit -m "feat(bisect-metis): MinDegreeMatch + L1 coarsening termination test"
 ```
 
 ---
@@ -998,7 +998,7 @@ git commit -m "feat(redist-metis): MinDegreeMatch + L1 coarsening termination te
 ### Task 8: Sub-spec + `GrowBisect`
 
 **Files:**
-- Create: `docs/specs/2026-05-02-redist-metis-init.md`
+- Create: `docs/specs/2026-05-02-bisect-metis-init.md`
 - Create: `src/init/grow.rs`
 
 - [ ] **Step 1: Write sub-spec** — document GrowBisect pseudocode, GrowKway pseudocode, seed selection strategy, balance check
@@ -1143,14 +1143,14 @@ impl InitialPartitioner for GrowKway {
 - [ ] **Step 5: Run tests**
 
 ```
-cargo test -p redist-metis init::grow
+cargo test -p bisect-metis init::grow
 ```
 Expected: 2 tests pass.
 
 - [ ] **Step 6: Commit**
 
 ```
-git commit -m "feat(redist-metis): GrowBisect + GrowKway initial partitioners"
+git commit -m "feat(bisect-metis): GrowBisect + GrowKway initial partitioners"
 ```
 
 ---
@@ -1223,14 +1223,14 @@ impl InitialPartitioner for MultiConstraintInit {
 - [ ] **Step 4: Run all init tests**
 
 ```
-cargo test -p redist-metis init
+cargo test -p bisect-metis init
 ```
 Expected: 4 tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): RandomBisect + MultiConstraintInit"
+git commit -m "feat(bisect-metis): RandomBisect + MultiConstraintInit"
 ```
 
 ---
@@ -1244,7 +1244,7 @@ git commit -m "feat(redist-metis): RandomBisect + MultiConstraintInit"
 ### Task 10: Sub-spec + `GainTable`
 
 **Files:**
-- Create: `docs/specs/2026-05-02-redist-metis-refine.md`
+- Create: `docs/specs/2026-05-02-bisect-metis-refine.md`
 - Create: `src/refine/gain.rs`
 
 - [ ] **Step 1: Write sub-spec** — FM pseudocode, gain definition, bucket sort with offset, rollback strategy, FM pass budget
@@ -1364,14 +1364,14 @@ impl GainTable {
 - [ ] **Step 4: Run tests**
 
 ```
-cargo test -p redist-metis refine::gain
+cargo test -p bisect-metis refine::gain
 ```
 Expected: 4 tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): GainTable with offset bucket sort + L0 tests"
+git commit -m "feat(bisect-metis): GainTable with offset bucket sort + L0 tests"
 ```
 
 ---
@@ -1520,14 +1520,14 @@ pub fn compute_gain(g: &CsrGraph, assignment: &[u32], v: usize) -> i32 {
 - [ ] **Step 4: Run tests**
 
 ```
-cargo test -p redist-metis refine::boundary
+cargo test -p bisect-metis refine::boundary
 ```
 Expected: 1 test passes.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): BoundarySet + FmState with checkpoint/restore"
+git commit -m "feat(bisect-metis): BoundarySet + FmState with checkpoint/restore"
 ```
 
 ---
@@ -1699,14 +1699,14 @@ fn fm_preserves_population_balance() {
 - [ ] **Step 5: Run all refinement tests**
 
 ```
-cargo test -p redist-metis refine
+cargo test -p bisect-metis refine
 ```
 Expected: tests including FM oracle and balance pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): FiducciaMattheyses FM refinement + GreedyKWay with L0 oracle tests"
+git commit -m "feat(bisect-metis): FiducciaMattheyses FM refinement + GreedyKWay with L0 oracle tests"
 ```
 
 ---
@@ -1720,7 +1720,7 @@ git commit -m "feat(redist-metis): FiducciaMattheyses FM refinement + GreedyKWay
 ### Task 13: Sub-spec + `CoarseningHierarchy`
 
 **Files:**
-- Create: `docs/specs/2026-05-02-redist-metis-multilevel.md`
+- Create: `docs/specs/2026-05-02-bisect-metis-multilevel.md`
 - Create: `src/multilevel/hierarchy.rs`
 
 - [ ] **Step 1: Write sub-spec** — hierarchy arena, projection algorithm, MAX_LEVELS=50 error
@@ -1802,14 +1802,14 @@ impl CoarseningHierarchy {
 - [ ] **Step 4: Run tests**
 
 ```
-cargo test -p redist-metis multilevel::hierarchy
+cargo test -p bisect-metis multilevel::hierarchy
 ```
 Expected: 2 tests pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "feat(redist-metis): CoarseningHierarchy arena with MAX_LEVELS=50 error"
+git commit -m "feat(bisect-metis): CoarseningHierarchy arena with MAX_LEVELS=50 error"
 ```
 
 ---
@@ -2039,14 +2039,14 @@ impl MetisPartitioner {
 - [ ] **Step 5: Run full pipeline tests + correctness oracle**
 
 ```
-cargo test -p redist-metis
+cargo test -p bisect-metis
 ```
 Expected: all tests pass.
 
 - [ ] **Step 6: Commit**
 
 ```
-git commit -m "feat(redist-metis): Pipeline typestate + RustMetisPartitioner + MetisPartitioner alias"
+git commit -m "feat(bisect-metis): Pipeline typestate + RustMetisPartitioner + MetisPartitioner alias"
 ```
 
 ---
@@ -2152,9 +2152,9 @@ fn generate_golden() {
 - [ ] **Step 3: Generate the golden file**
 
 ```
-cargo test -p redist-metis generate_golden -- --ignored
+cargo test -p bisect-metis generate_golden -- --ignored
 git add tests/golden/vt_seed42.json
-git commit -m "test(redist-metis): add golden RNG determinism pin (rand_pcg 0.3, seed=42)"
+git commit -m "test(bisect-metis): add golden RNG determinism pin (rand_pcg 0.3, seed=42)"
 ```
 
 - [ ] **Step 4: Add the pinned golden test** (normal, non-ignored)
@@ -2210,14 +2210,14 @@ proptest! {
 - [ ] **Step 4: Run all tests**
 
 ```
-cargo test -p redist-metis
+cargo test -p bisect-metis
 ```
 Expected: oracle (5 tests), golden (1), proptest (multiple iterations) all pass.
 
 - [ ] **Step 5: Commit**
 
 ```
-git commit -m "test(redist-metis): correctness oracle, golden RNG pin, proptest invariants"
+git commit -m "test(bisect-metis): correctness oracle, golden RNG pin, proptest invariants"
 ```
 
 ---
@@ -2231,7 +2231,7 @@ git commit -m "test(redist-metis): correctness oracle, golden RNG pin, proptest 
 ### Task 16: Sub-spec + Kani setup
 
 **Files:**
-- Create: `docs/specs/2026-05-02-redist-metis-verify.md`
+- Create: `docs/specs/2026-05-02-bisect-metis-verify.md`
 - Modify: `Cargo.toml` (add kani dependency under dev)
 - Create: `verify/kani/BOUNDS.md`
 - Create: `verify/kani/UNSAFE.md`
@@ -2260,7 +2260,7 @@ Add feature: `[features] kani = ["dep:kani"]`
 - [ ] **Step 4: Commit**
 
 ```
-git commit -m "docs(redist-metis): verify sub-spec, BOUNDS.md, UNSAFE.md"
+git commit -m "docs(bisect-metis): verify sub-spec, BOUNDS.md, UNSAFE.md"
 ```
 
 ---
@@ -2318,7 +2318,7 @@ Expected: VERIFICATION SUCCESSFUL.
 - [ ] **Step 3: Commit**
 
 ```
-git commit -m "verify(redist-metis): Kani harnesses for CsrGraph + SHEM coarsening"
+git commit -m "verify(bisect-metis): Kani harnesses for CsrGraph + SHEM coarsening"
 ```
 
 ---
@@ -2375,7 +2375,7 @@ Expected: VERIFICATION SUCCESSFUL.
 - [ ] **Step 4: Commit + update BOUNDS.md**
 
 ```
-git commit -m "verify(redist-metis): Kani harnesses for FM refinement + GainTable"
+git commit -m "verify(bisect-metis): Kani harnesses for FM refinement + GainTable"
 ```
 
 ---
@@ -2414,7 +2414,7 @@ pub fn split(...) -> Result<Partition, PartitionError> { ... }
 - [ ] **Step 3: Run Prusti**
 
 ```
-cargo prusti -- -p redist-metis
+cargo prusti -- -p bisect-metis
 ```
 Expected: postconditions verified. If any function cannot be verified, add to `GAPS.md`.
 
@@ -2422,30 +2422,30 @@ Expected: postconditions verified. If any function cannot be verified, add to `G
 
 ```
 git add verify/prusti/artifacts/ verify/prusti/GAPS.md
-git commit -m "verify(redist-metis): Prusti postconditions — coverage, valid IDs, balance"
+git commit -m "verify(bisect-metis): Prusti postconditions — coverage, valid IDs, balance"
 ```
 
 ---
 
 ## Phase 8 — Shadow Mode + Migration
 
-**Checkpoint**: 50-state × 3-year shadow run passes quality gate. C dep removed from `redist-apportion`.
+**Checkpoint**: 50-state × 3-year shadow run passes quality gate. C dep removed from `bisect-apportion`.
 
 ---
 
 ### Task 20: Shadow mode feature flag
 
 **Files:**
-- Modify: `redist/crates/redist-apportion/Cargo.toml`
-- Modify: `redist/crates/redist-apportion/src/split.rs`
+- Modify: `redist/crates/bisect-apportion/Cargo.toml`
+- Modify: `redist/crates/bisect-apportion/src/split.rs`
 
-- [ ] **Step 1: Add `redist-metis` dep + shadow feature**
+- [ ] **Step 1: Add `bisect-metis` dep + shadow feature**
 
 ```toml
-# redist-apportion/Cargo.toml
+# bisect-apportion/Cargo.toml
 [dependencies]
 metis       = { version = "0.2", features = ["vendored"], optional = true }
-redist-metis = { path = "../redist-metis" }
+bisect-metis = { path = "../bisect-metis" }
 
 [features]
 shadow-metis = ["dep:metis"]
@@ -2481,7 +2481,7 @@ impl Partitioner for MetisPartitioner {
 - [ ] **Step 3: L2 shadow test — VT smoke test**
 
 ```rust
-// tests/shadow.rs (in redist-apportion)
+// tests/shadow.rs (in bisect-apportion)
 #[test]
 #[cfg(feature = "shadow-metis")]
 fn shadow_vt_2020_k1() {
@@ -2493,7 +2493,7 @@ fn shadow_vt_2020_k1() {
 - [ ] **Step 4: Commit**
 
 ```
-git commit -m "feat(redist-apportion): shadow-metis feature flag — parallel C + Rust validation"
+git commit -m "feat(bisect-apportion): shadow-metis feature flag — parallel C + Rust validation"
 ```
 
 ---
@@ -2502,7 +2502,7 @@ git commit -m "feat(redist-apportion): shadow-metis feature flag — parallel C 
 
 **Files:**
 - Create: `scripts/validate_shadow_gate.py`
-- Modify: `redist/crates/redist-apportion/Cargo.toml`
+- Modify: `redist/crates/bisect-apportion/Cargo.toml`
 
 - [ ] **Step 1: Run 50-state shadow validation**
 
@@ -2535,7 +2535,7 @@ default = []  # Rust-only by default
 - [ ] **Step 3: Remove C dep entirely**
 
 ```toml
-# Remove from redist-apportion/Cargo.toml:
+# Remove from bisect-apportion/Cargo.toml:
 # metis = { ... }
 # shadow-metis = [...]
 ```
@@ -2548,15 +2548,15 @@ Remove from workspace `Cargo.toml`:
 - [ ] **Step 4: Verify clean build with no C compiler**
 
 ```
-cargo build -p redist-metis -p redist-apportion -p redist-cli
+cargo build -p bisect-metis -p bisect-apportion -p bisect-cli
 ```
 Expected: builds with no C compilation step.
 
 - [ ] **Step 5: Run full test suite**
 
 ```
-cargo test -p redist-metis
-cargo test -p redist-apportion
+cargo test -p bisect-metis
+cargo test -p bisect-apportion
 pytest tests/unit/ -v
 ```
 Expected: all pass.
@@ -2564,7 +2564,7 @@ Expected: all pass.
 - [ ] **Step 6: Final commit**
 
 ```
-git commit -m "feat: remove C METIS dep — redist-metis is now the sole graph partitioner
+git commit -m "feat: remove C METIS dep — bisect-metis is now the sole graph partitioner
 
 No C compiler required to build. Shadow mode validation passed:
 Rust cut quality within 20% of C METIS on all 50 states × 3 census years.
@@ -2577,7 +2577,7 @@ Prusti postconditions verified. Kani harnesses all pass."
 
 | Phase | Gate |
 |-------|------|
-| 1 — Scaffold | `cargo test -p redist-metis` passes; all traits compile |
+| 1 — Scaffold | `cargo test -p bisect-metis` passes; all traits compile |
 | 2 — Coarsening | L0 + L1 coarsening tests; path-255 terminates < 50 levels |
 | 3 — Init partition | L0 oracle: k=1 trivial, path bisect, grid 4×4 |
 | 4 — FM refinement | FM does not increase cut on any oracle graph; dumbbell = 1 |
@@ -2588,7 +2588,7 @@ Prusti postconditions verified. Kani harnesses all pass."
 
 ---
 
-**Plan complete and saved to `docs/plans/2026-05-02-redist-metis.md`.**
+**Plan complete and saved to `docs/plans/2026-05-02-bisect-metis.md`.**
 
 Two execution options:
 

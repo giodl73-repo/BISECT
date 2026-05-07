@@ -67,7 +67,7 @@ All three conditions need empirical grounding. This paper provides it.
 For each: run 1000 seeds, record `proportionality_gap_pp`, efficiency gap, seat allocation. Plot distribution.
 
 ### Phase 2: 50-state seed sweep (N = 100 seeds per state)
-- Run `redist state` for all 50 states × 100 seeds
+- Run `bisect state` for all 50 states × 100 seeds
 - For each state: compute mean, SD, IQR of `proportionality_gap_pp` across seeds
 - Identify states with high variance (the "seed-sensitive" states) vs. low variance
 
@@ -106,7 +106,7 @@ If H4 holds, the federal statute's reproducibility argument is strengthened: our
 
 ## Data Requirements
 
-- `redist state` run for all 50 states × 1000 seeds (Phase 1 deep dive) + 50 × 100 (Phase 2 sweep)
+- `bisect state` run for all 50 states × 1000 seeds (Phase 1 deep dive) + 50 × 100 (Phase 2 sweep)
 - `proportionality.json` output from each run (Task 1 infrastructure already built)
 - Adjacency graphs for all 50 states (already built, in `outputs/data/`)
 - `presidential_by_tract.csv` for 48 states (AK + HI missing; note as limitation)
@@ -135,4 +135,4 @@ This makes the seed:
 - `docs/legal/PARTISAN_OPTIONS.md` — proportionality as the cross-cutting metric
 - `research/C.7+uncertainty-quantification/` — compactness uncertainty (companion paper)
 - `research/E.4+partisan-similarity-districts/` — partisan edge-weighting (contrast case)
-- `redist/crates/redist-analysis/src/proportionality.rs` — the metric this paper measures
+- `redist/crates/bisect-analysis/src/proportionality.rs` — the metric this paper measures

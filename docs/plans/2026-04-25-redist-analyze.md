@@ -4,9 +4,9 @@
 
 **Goal:** Add `bisect analyze` and `redist map` subcommands to the CLI, with an extension model that makes adding new analyzers a one-file addition.
 
-**Architecture:** An `Analyzer` trait in `redist-analysis` defines the contract. Each analyzer is a self-contained module implementing the trait. The CLI dispatcher loads final assignments + data files then runs requested analyzers, writing results to `{state}/analysis/{type}.json`. Maps stay Python — `redist map` is a thin subprocess shim around the existing `visualize_*.py` scripts.
+**Architecture:** An `Analyzer` trait in `bisect-analysis` defines the contract. Each analyzer is a self-contained module implementing the trait. The CLI dispatcher loads final assignments + data files then runs requested analyzers, writing results to `{state}/analysis/{type}.json`. Maps stay Python — `redist map` is a thin subprocess shim around the existing `visualize_*.py` scripts.
 
-**Tech Stack:** Rust, serde_json, csv crate, `redist-analysis` crate, Python subprocess (maps only)
+**Tech Stack:** Rust, serde_json, csv crate, `bisect-analysis` crate, Python subprocess (maps only)
 
 ---
 
@@ -28,16 +28,16 @@ Maps (`redist map`): subprocess calls to `scripts/pipeline/visualize_*.py` — n
 
 | File | Action | Responsibility |
 |------|--------|----------------|
-| `redist/crates/redist-analysis/src/analyzer.rs` | **Create** | `Analyzer` trait + `AnalyzerType` enum |
-| `redist/crates/redist-analysis/src/demographic.rs` | **Create** | demographic analysis |
-| `redist/crates/redist-analysis/src/political.rs` | **Create** | political (partisan) analysis |
-| `redist/crates/redist-analysis/src/urban.rs` | **Create** | largest city per district |
-| `redist/crates/redist-analysis/src/summary.rs` | **Create** | rolled-up district_summary.json |
-| `redist/crates/redist-analysis/src/lib.rs` | **Modify** | expose new modules |
-| `redist/crates/redist-cli/src/analyze.rs` | **Create** | `run_analyze()` dispatcher |
-| `redist/crates/redist-cli/src/map.rs` | **Create** | `run_map()` Python subprocess shim |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** | `AnalyzeArgs`, `MapArgs` added to `Commands` |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** | wire `Commands::Analyze` and `Commands::Map` |
+| `redist/crates/bisect-analysis/src/analyzer.rs` | **Create** | `Analyzer` trait + `AnalyzerType` enum |
+| `redist/crates/bisect-analysis/src/demographic.rs` | **Create** | demographic analysis |
+| `redist/crates/bisect-analysis/src/political.rs` | **Create** | political (partisan) analysis |
+| `redist/crates/bisect-analysis/src/urban.rs` | **Create** | largest city per district |
+| `redist/crates/bisect-analysis/src/summary.rs` | **Create** | rolled-up district_summary.json |
+| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** | expose new modules |
+| `redist/crates/bisect-cli/src/analyze.rs` | **Create** | `run_analyze()` dispatcher |
+| `redist/crates/bisect-cli/src/map.rs` | **Create** | `run_map()` Python subprocess shim |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** | `AnalyzeArgs`, `MapArgs` added to `Commands` |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** | wire `Commands::Analyze` and `Commands::Map` |
 | `tests/acceptance/test_analyze_acceptance.py` | **Create** | end-to-end acceptance tests |
 
 ---
@@ -76,12 +76,12 @@ Each JSON file has a `districts` array + top-level metadata:
 
 ## Task 1: `Analyzer` trait and `AnalyzerType` enum
 
-**Files:** Create `redist/crates/redist-analysis/src/analyzer.rs`
+**Files:** Create `redist/crates/bisect-analysis/src/analyzer.rs`
 
 - [ ] **Write the trait and enum**
 
 ```rust
-// redist-analysis/src/analyzer.rs
+// bisect-analysis/src/analyzer.rs
 use std::path::Path;
 
 /// Context passed to every analyzer — the common inputs.
@@ -142,7 +142,7 @@ fn test_analyzer_type_all_variants() {
 }
 ```
 
-- [ ] **Run:** `cargo test -p redist-analysis test_analyzer_type_all_variants` — expect PASS
+- [ ] **Run:** `cargo test -p bisect-analysis test_analyzer_type_all_variants` — expect PASS
 
 - [ ] **Commit:** `git commit -m "feat(analysis): Analyzer trait + AnalyzerType enum"`
 
@@ -150,7 +150,7 @@ fn test_analyzer_type_all_variants() {
 
 ## Task 2: Demographic analyzer
 
-**Files:** Create `redist/crates/redist-analysis/src/demographic.rs`
+**Files:** Create `redist/crates/bisect-analysis/src/demographic.rs`
 
 Input: `data/{year}/demographics/{state_name}_demographics_{year}.csv`
 Columns: `GEOID,state,county,tract,total_pop,male,female,white_non_hispanic,black_non_hispanic,asian_non_hispanic,hispanic,other`
@@ -158,7 +158,7 @@ Columns: `GEOID,state,county,tract,total_pop,male,female,white_non_hispanic,blac
 - [ ] **Write failing test first**
 
 ```rust
-// redist-analysis/src/demographic.rs (tests module)
+// bisect-analysis/src/demographic.rs (tests module)
 #[test]
 fn test_demographic_aggregation() {
     // Two tracts, both in district 1
@@ -278,7 +278,7 @@ impl Analyzer for DemographicAnalyzer {
 
 ## Task 3: Political analyzer
 
-**Files:** Create `redist/crates/redist-analysis/src/political.rs`
+**Files:** Create `redist/crates/bisect-analysis/src/political.rs`
 
 Input: `data/{year}/elections/presidential_by_tract.csv`
 Columns: `geoid,dem_votes,rep_votes,lib_votes,grn_votes,oth_votes`
@@ -349,7 +349,7 @@ pub struct PoliticalDistrict {
 
 ## Task 4: Urban analyzer (largest city per district)
 
-**Files:** Create `redist/crates/redist-analysis/src/urban.rs`
+**Files:** Create `redist/crates/bisect-analysis/src/urban.rs`
 
 Input: `outputs/{version}/data/{year}/units/{state_code_lower}_units_{year}.parquet` — has `GEOID` and `place_name` columns.
 
@@ -401,7 +401,7 @@ pub struct CityEntry {
 
 ## Task 5: Summary analyzer
 
-**Files:** Create `redist/crates/redist-analysis/src/summary.rs`
+**Files:** Create `redist/crates/bisect-analysis/src/summary.rs`
 
 Rolls up demographic + political + compactness + urban into one `district_summary.json` that mirrors what the Python pipeline writes to `district_summary.csv`.
 
@@ -435,7 +435,7 @@ fn test_summary_merge() {
 
 ## Task 6: `bisect analyze` CLI subcommand
 
-**Files:** Create `redist/crates/redist-cli/src/analyze.rs`, modify `args.rs` and `main.rs`
+**Files:** Create `redist/crates/bisect-cli/src/analyze.rs`, modify `args.rs` and `main.rs`
 
 - [ ] **Add `AnalyzeArgs` to `args.rs`**
 
@@ -467,7 +467,7 @@ pub struct AnalyzeArgs {
 - [ ] **Write `analyze.rs` dispatcher**
 
 ```rust
-// redist-cli/src/analyze.rs
+// bisect-cli/src/analyze.rs
 pub fn run_analyze(args: &AnalyzeArgs) -> anyhow::Result<()> {
     // 1. Load final_assignments.json
     let assignments_path = /* outputs/{version}/{year}/{state}/final_assignments.json */;
@@ -512,7 +512,7 @@ fn write_json<T: serde::Serialize>(path: &Path, value: T) -> anyhow::Result<()> 
 }
 ```
 
-Note on compactness: the existing `redist-analysis` `all_metrics()` takes WKB geometry per district. The geometry comes from TIGER shapefiles and requires dissolving tract polygons. For now, compactness via `bisect analyze` calls a Python shim to dissolve + export WKB, then calls `all_metrics()`. Add `// TODO: native geometry dissolve once redist-data has tract WKB` comment.
+Note on compactness: the existing `bisect-analysis` `all_metrics()` takes WKB geometry per district. The geometry comes from TIGER shapefiles and requires dissolving tract polygons. For now, compactness via `bisect analyze` calls a Python shim to dissolve + export WKB, then calls `all_metrics()`. Add `// TODO: native geometry dissolve once bisect-data has tract WKB` comment.
 
 - [ ] **Wire into `main.rs`**
 
@@ -525,13 +525,13 @@ Commands::Analyze(args) => {
 
 - [ ] **Run:** `bisect analyze --state VT --year 2020 --version V3 --types demographic political` against existing VT outputs — expect JSON written to `outputs/V3/2020/vermont/analysis/`
 
-- [ ] **Commit:** `git commit -m "feat(cli): redist analyze subcommand"`
+- [ ] **Commit:** `git commit -m "feat(cli): bisect analyze subcommand"`
 
 ---
 
 ## Task 7: `redist map` — Python subprocess shim
 
-**Files:** Create `redist/crates/redist-cli/src/map.rs`, add `MapArgs` to `args.rs`
+**Files:** Create `redist/crates/bisect-cli/src/map.rs`, add `MapArgs` to `args.rs`
 
 `redist map` is a thin wrapper that calls the existing Python visualization scripts as subprocesses. It does not render any geometry in Rust.
 
@@ -573,7 +573,7 @@ pub enum MapType {
 - [ ] **Implement `map.rs`**
 
 ```rust
-// redist-cli/src/map.rs
+// bisect-cli/src/map.rs
 pub fn run_map(args: &MapArgs) -> anyhow::Result<()> {
     let python = std::env::var("REDIST_PYTHON").unwrap_or_else(|_| "python".to_string());
     let types = resolve_map_types(&args.types);
@@ -680,7 +680,7 @@ class TestAnalyzeAcceptance(unittest.TestCase):
 
 - [ ] **Run:** `pytest tests/acceptance/test_analyze_acceptance.py -v` — expect PASS for demographic + political (urban + compactness can be skipped initially if data not present)
 
-- [ ] **Commit:** `git commit -m "test: redist analyze acceptance tests"`
+- [ ] **Commit:** `git commit -m "test: bisect analyze acceptance tests"`
 
 ---
 
@@ -688,7 +688,7 @@ class TestAnalyzeAcceptance(unittest.TestCase):
 
 To add a new analyzer (e.g., `maup` for MAUP sensitivity):
 
-1. Create `redist/crates/redist-analysis/src/maup.rs` implementing `Analyzer`
+1. Create `redist/crates/bisect-analysis/src/maup.rs` implementing `Analyzer`
 2. Add `Maup` variant to `AnalyzerType` in `analyzer.rs`
 3. Add one match arm in `analyze.rs` dispatcher
 4. Add to `lib.rs` exports
@@ -699,7 +699,7 @@ No changes to `main.rs`, no changes to `args.rs` (clap picks up new enum variant
 
 ## Notes
 
-**Compactness geometry problem:** Computing PP/Reock requires dissolving tract polygons into district polygons. This needs the tract geometries (WKB), which currently aren't stored separately — they're inside TIGER shapefiles. Short-term: call Python to dissolve and write a `district_geometries.wkb` file, then call `all_metrics()` in Rust. Long-term: `redist-data` reads TIGER natively (Phase 2 complete for adjacency; geometry export is a small addition).
+**Compactness geometry problem:** Computing PP/Reock requires dissolving tract polygons into district polygons. This needs the tract geometries (WKB), which currently aren't stored separately — they're inside TIGER shapefiles. Short-term: call Python to dissolve and write a `district_geometries.wkb` file, then call `all_metrics()` in Rust. Long-term: `bisect-data` reads TIGER natively (Phase 2 complete for adjacency; geometry export is a small addition).
 
 **Political data availability:** `presidential_by_tract.csv` exists for 2020 (`data/2020/elections/presidential_by_tract.csv`). For 2010 and 2000, election data at tract level may not exist — `PoliticalAnalyzer::run()` should return an empty result with a warning rather than failing.
 

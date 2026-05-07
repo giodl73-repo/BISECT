@@ -50,7 +50,7 @@ if str(_project_root) not in sys.path:
 
 **Structural solution:** Resolve all identifier representations to their canonical form before they are used in paths. Store both representations in the configuration struct (StateConfig has both `state_code` and `state_name`). Use `state_name` exclusively for filesystem paths and `state_code` exclusively for METIS inputs and adjacency file lookup. Document which representation each field uses.
 
-**Status:** SOLVED in redist-cli runner.rs
+**Status:** SOLVED in bisect-cli runner.rs
 **Proved by:** State directory uses cfg.state_name ('vermont'), adjacency lookup uses state_code.lower() ('vt_adjacency_2020.pkl')
 **Test:** `tests/acceptance/test_pipeline_acceptance.py::TestRustCLIAcceptance::test_vt_rust_final_assignments_exists` — verifies output at states/vermont/data/
 
@@ -66,4 +66,4 @@ if str(_project_root) not in sys.path:
 
 **Status:** SOLVED
 **Proved by:** `serialize.rs::test_magic_header` updated to assert `version == FORMAT_VERSION` (2u32) not `1u32`
-**Test:** `redist-data::serialize::tests::test_magic_header`
+**Test:** `bisect-data::serialize::tests::test_magic_header`

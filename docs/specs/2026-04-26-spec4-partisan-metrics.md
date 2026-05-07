@@ -167,7 +167,7 @@ This is the same GeoJSON export from Spec 2's interoperability section.
 
 ## Implementation
 
-### `redist-analysis/src/partisan.rs`
+### `bisect-analysis/src/partisan.rs`
 
 ```rust
 pub struct PartisanMetrics {

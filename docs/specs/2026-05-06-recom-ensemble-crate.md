@@ -1,4 +1,4 @@
-# Spec: `redist-ensemble` — Rust ReCom Feasibility Sampler
+# Spec: `bisect-ensemble` — Rust ReCom Feasibility Sampler
 
 **Status**: Proposed  
 **Date**: 2026-05-06  
@@ -30,16 +30,16 @@
 
 ## Proposed architecture
 
-### New crate: `redist-ensemble`
+### New crate: `bisect-ensemble`
 
 ```
-redist/crates/redist-ensemble/
+redist/crates/bisect-ensemble/
   src/
     lib.rs         — public API
     recom.rs       — ReCom proposal: spanning tree sampling + partition update
     spanning.rs    — Wilson's algorithm for uniform random spanning trees
     chain.rs       — Markov chain runner (serial and parallel)
-    diagnostics.rs — R-hat, ESS, Hamming autocorrelation (from redist-analysis)
+    diagnostics.rs — R-hat, ESS, Hamming autocorrelation (from bisect-analysis)
     updaters.rs    — Metrics computed per step: cut_edges, pop_balance, partisan
   Cargo.toml
 ```
@@ -49,7 +49,7 @@ redist/crates/redist-ensemble/
 ```rust
 /// One full Markov chain run.
 pub struct RecomChain {
-    graph: CsrGraph,            // from redist-core
+    graph: CsrGraph,            // from bisect-core
     assignment: Vec<u32>,       // tract index → district id (1-based)
     k: u32,
     pop_tolerance: f64,         // ε: max deviation from ideal (e.g. 0.01 = 1%)
@@ -197,7 +197,7 @@ bisect ensemble --states NC WI GA PA TX CA --steps 10000 --chains 4 \
   --output-dir research/G.1+gerrychain-congressional-comparison/data/
 
 # Compute diagnostics on an existing ensemble
-redist ensemble-diagnostics --input nc_ensemble.json
+bisect ensemble-diagnostics --input nc_ensemble.json
 
 # Audit an enacted plan: compute its percentile in the ensemble
 bisect ensemble --state NC --year 2020 --steps 10000 --chains 4 \
@@ -275,13 +275,13 @@ Empirical results from the G-series:
 - [ ] Unit tests: spanning tree is a valid tree; partition stays contiguous and balanced
 
 ### Phase 2 — CLI + Output (3 days)
-- [ ] `bisect ensemble` command in `redist-cli/src/args.rs`
+- [ ] `bisect ensemble` command in `bisect-cli/src/args.rs`
 - [ ] JSON output format
 - [ ] Parallel chains (Rayon): each chain on its own thread
 
 ### Phase 3 — Diagnostics (3 days)
 - [ ] `diagnostics.rs`: R-hat, ESS, Hamming autocorrelation
-- [ ] `redist ensemble-diagnostics` command
+- [ ] `bisect ensemble-diagnostics` command
 - [ ] G.4 paper numbers become reproducible via `redist`
 
 ### Phase 4 — G-series paper update (1 day)
@@ -293,8 +293,8 @@ Empirical results from the G-series:
 
 ## Connection to existing work
 
-- `redist-metis` already has `CsrGraph` — reuse directly
-- `redist-analysis::ensemble_diagnostics` already has R-hat, ESS, Hamming — import these
+- `bisect-metis` already has `CsrGraph` — reuse directly
+- `bisect-analysis::ensemble_diagnostics` already has R-hat, ESS, Hamming — import these
 - The `bisect build` → `bisect ensemble` pipeline: build the plan first, then characterise its position in the ensemble space
 - `bisect label-verify` + ensemble: the SHA chain certifies the plan; the ensemble certifies the plan's position in the feasible space
 

@@ -14,7 +14,7 @@
 Every `redist` command today requires the user to manage paths explicitly:
 
 ```bash
-redist states --year 2020 --output-dir outputs/official_proposal/2020 \
+bisect states --year 2020 --output-dir outputs/official_proposal/2020 \
   --partition-mode apportion-regions --weights-override county \
   --alpha-county 2.0 --search convergence --convergence-threshold 600
 
@@ -69,12 +69,12 @@ the correct directory through fixed convention. There are no path arguments in
 normal use.
 
 ```bash
-redist build   official_proposal --config configs/statute.yml --year 2020
-redist analyze official_proposal --types proportionality splits
+bisect build   official_proposal --config configs/statute.yml --year 2020
+bisect analyze official_proposal --types proportionality splits
 redist report  official_proposal
 redist compare official_proposal senate_draft2 --year 2020
-redist ls
-redist show    official_proposal
+bisect ls
+bisect show    official_proposal
 ```
 
 ### 2.1 Convention-based directory resolution
@@ -140,7 +140,7 @@ user reads them for diagnosis.
 
 ### 2.5 Cache invalidation
 
-**Cache invalidation**: When `redist build X --year Y --force` overwrites an
+**Cache invalidation**: When `bisect build X --year Y --force` overwrites an
 existing build, the system MUST:
 1. Delete `analysis/X/Y/` (analysis outputs are stale)
 2. Delete `reports/X/Y/` (reports are stale)
@@ -151,31 +151,31 @@ This cascade prevents silent stale data. The operator is warned:
 ```
 [WARNING] Overwriting build for official_proposal/2020.
           Clearing stale analysis (2020/wisconsin/proportionality.json + 49 others).
-          Run 'redist analyze official_proposal --year 2020' to re-analyze.
+          Run 'bisect analyze official_proposal --year 2020' to re-analyze.
 ```
 
 ---
 
 ## 3. Verb Inventory
 
-### 3.1 `redist build X` — run redistricting for a label
+### 3.1 `bisect build X` — run redistricting for a label
 
 ```bash
 # Full build (all years in config)
-redist build official_proposal --config configs/statute.yml
+bisect build official_proposal --config configs/statute.yml
 
 # Single year
-redist build official_proposal --config configs/statute.yml --year 2020
+bisect build official_proposal --config configs/statute.yml --year 2020
 
 # Subset of states
-redist build official_proposal --config configs/statute.yml --year 2020 \
+bisect build official_proposal --config configs/statute.yml --year 2020 \
   --states VT DE
 
 # Override worker count
-redist build official_proposal --config configs/statute.yml --workers 4
+bisect build official_proposal --config configs/statute.yml --workers 4
 
 # Dry run — print what would run without executing
-redist build official_proposal --config configs/statute.yml --dry-run
+bisect build official_proposal --config configs/statute.yml --dry-run
 
 # Use explicit label flag (equivalent to first positional argument)
 bisect build --label official_proposal --config configs/statute.yml
@@ -205,26 +205,26 @@ All `analyze`, `report`, and `compare` commands work identically on imported pla
 
 ```bash
 redist import commission_v3 --from commission_v3.csv --year 2020
-redist analyze commission_v3 --year 2020
+bisect analyze commission_v3 --year 2020
 redist compare official_proposal commission_v3 --year 2020
 ```
 
 This enables the adversarial plan review workflow used by state legislative staff.
 
-### 3.2 `redist analyze X` — run analysis for a label
+### 3.2 `bisect analyze X` — run analysis for a label
 
 ```bash
 # All analysis types (default)
-redist analyze official_proposal
+bisect analyze official_proposal
 
 # Specific types only
-redist analyze official_proposal --types proportionality splits
+bisect analyze official_proposal --types proportionality splits
 
 # Single year
-redist analyze official_proposal --types proportionality --year 2020
+bisect analyze official_proposal --types proportionality --year 2020
 
 # Subset of states
-redist analyze official_proposal --types compactness --year 2020 --states CA TX NY
+bisect analyze official_proposal --types compactness --year 2020 --states CA TX NY
 ```
 
 `analyze` reads from `runs/official_proposal/` and writes to
@@ -234,7 +234,7 @@ least one built year. If `--year Y` is requested but `Y` is not in `.redist`
 
 ```
 [CONFIG] analyze: 'official_proposal' has not been built for year 2010.
-Run: redist build official_proposal --year 2010
+Run: bisect build official_proposal --year 2010
 ```
 
 ### 3.3 `redist report X` — generate reports for a label
@@ -283,7 +283,7 @@ in `.redist` with the requested year analyzed.
 ### 3.5 `bisect ls` — list all labels and their stage completion
 
 ```
-$ redist ls
+$ bisect ls
 
 Label                Built           Analyzed        Reported
 official_proposal    2020 2010 2000  2020            —
@@ -294,14 +294,14 @@ vt_test              2020            —               —
 Machine-readable output for CI:
 
 ```bash
-redist ls --json
+bisect ls --json
 # {"official_proposal": {"built": ["2020","2010","2000"], "analyzed": ["2020"], "reported": []}, ...}
 ```
 
-### 3.6 `redist show X` — show details for a label
+### 3.6 `bisect show X` — show details for a label
 
 ```
-$ redist show official_proposal
+$ bisect show official_proposal
 
 Label:     official_proposal
 Config:    configs/statute.yml
@@ -328,7 +328,7 @@ Paths:
 Machine-readable output for CI:
 
 ```bash
-redist show official_proposal --json   # full index.json content + registry entry
+bisect show official_proposal --json   # full index.json content + registry entry
 ```
 
 **CI/CD flag**: All `redist` commands accept `--no-interactive` to disable
@@ -360,7 +360,7 @@ unless `--force` is set.
 
 ```bash
 # Point label Y at the same runs as X (does not copy files — updates registry)
-redist label official_proposal official_proposal_v1
+bisect label official_proposal official_proposal_v1
 ```
 
 Creates registry entry `official_proposal_v1` pointing to the same run directories
@@ -387,7 +387,7 @@ redist mv senate_draft2 senate_final --force   # overwrite if Y exists
 
 Distinction:
 ```
-redist label X Y  # alias only — does NOT rename directories or update index.json
+bisect label X Y  # alias only — does NOT rename directories or update index.json
 redist mv X Y     # full rename — directories + indexes + registry
 ```
 
@@ -455,7 +455,7 @@ Interactive three-layer compositor wizard:
 ```
 
 Pressing `[s]` writes the selected configuration to `configs/official_proposal.yml`.
-The user then runs `redist build official_proposal` (or presses `[b]` from the
+The user then runs `bisect build official_proposal` (or presses `[b]` from the
 label screen) to execute.
 
 The configure screen is the interactive frontend for the three-layer compositor —
@@ -463,7 +463,7 @@ it exposes the full `--structure` / `--weights-override` / `--search` flags
 through menus rather than CLI flags, making the algorithm choices visible and
 explorable without memorising flag names.
 
-**Implementation note:** `redist plan` calls the existing `redist-tui` binary
+**Implementation note:** `redist plan` calls the existing `bisect-tui` binary
 (already in the workspace) with a new `--label` flag. The TUI crate handles
 terminal rendering; `redist plan` is a thin dispatcher. This makes `redist tui`
 an alias for `redist plan` with no label specified.
@@ -484,13 +484,13 @@ not read by any downstream command:
 redist report official_proposal --year 2020 --out /mnt/share/reports/
 
 # Show all resolved paths without running
-redist show official_proposal
+bisect show official_proposal
 ```
 
 The `BuildArgs` struct (§8.6) retains the `--out` field declaration for forward
 compatibility but the build dispatcher rejects it at runtime with:
 ```
-[CONFIG] build: --out is not supported on 'redist build'. Build always writes
+[CONFIG] build: --out is not supported on 'bisect build'. Build always writes
          to runs/{label}/. Use 'redist mv X Y' to relocate outputs after building.
 ```
 
@@ -860,7 +860,7 @@ redist config validate configs/official_proposal.yml
 ### 8.1 New files
 
 ```
-redist/crates/redist-cli/src/
+redist/crates/bisect-cli/src/
   label.rs            ← label resolution: label → path convention
   registry.rs         ← .redist read/write, atomic update, file locking, invariant enforcement
   build_cmd.rs        ← `bisect build` dispatcher (replaces/wraps states runner)
@@ -878,7 +878,7 @@ configs/
 ### 8.2 Modified files
 
 ```
-redist/crates/redist-cli/src/
+redist/crates/bisect-cli/src/
   args.rs     ← add Build, Ls, Show, Rm, Label, Mv, Import, Verify, ConfigNew, ConfigValidate variants
   main.rs     ← dispatch new Commands variants
 ```
@@ -1069,18 +1069,18 @@ pub struct BuildArgs {
 
 ### 8.7 Migration from existing commands
 
-The existing `bisect state`, `redist states`, and `redist run` commands are
+The existing `bisect state`, `bisect states`, and `redist run` commands are
 **unchanged**. No deprecations are introduced in this spec. Label-based commands
 are new top-level verbs that call the same internal runner functions:
 
 | Label command | Delegates to |
 |---------------|-------------|
-| `redist build X` | `runner::run_states_parallel()` with resolved output dir |
-| `redist analyze X` | existing analyze pipeline with resolved input/output dirs |
+| `bisect build X` | `runner::run_states_parallel()` with resolved output dir |
+| `bisect analyze X` | existing analyze pipeline with resolved input/output dirs |
 | `redist report X` | existing report pipeline with resolved paths |
 | `redist compare A B` | existing compare with resolved analysis dirs |
 
-The resolved output directory for `build` follows the same tree that `redist states`
+The resolved output directory for `build` follows the same tree that `bisect states`
 produces: `runs/{label}/{year}/states/{state_name}/`. This means build outputs are
 immediately consumable by the existing per-state tooling.
 
@@ -1137,32 +1137,32 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 
 ```bash
 # Step 1: Smoke test with Vermont before committing to a full run
-redist build official_proposal --config configs/official_proposal.yml \
+bisect build official_proposal --config configs/official_proposal.yml \
   --year 2020 --states VT --dry-run
 
 # Step 2: Build all 50 states, all three years (~2–4h)
-redist build official_proposal --config configs/official_proposal.yml
+bisect build official_proposal --config configs/official_proposal.yml
 
 # Step 3: Check what was built
-redist ls
+bisect ls
 # official_proposal    2020 2010 2000    —    —
 
 # Step 4: Run analysis for 2020
-redist analyze official_proposal --year 2020
+bisect analyze official_proposal --year 2020
 
 # Step 5: Generate report
 redist report official_proposal --year 2020 --format html
 
 # Step 6: Inspect status
-redist show official_proposal
+bisect show official_proposal
 # Label:     official_proposal
 # Built:     2020 2010 2000
 # Analyzed:  2020
 # Reported:  2020
 
 # Step 7: Compare against an alternative plan
-redist build senate_draft2 --config configs/senate_draft2.yml --year 2020
-redist analyze senate_draft2 --year 2020
+bisect build senate_draft2 --config configs/senate_draft2.yml --year 2020
+bisect analyze senate_draft2 --year 2020
 redist compare official_proposal senate_draft2 --year 2020 \
   --metrics compactness splits proportionality
 ```
@@ -1171,21 +1171,21 @@ redist compare official_proposal senate_draft2 --year 2020 \
 
 ```bash
 # Attempt to analyze before building
-$ redist analyze official_proposal --year 2010
+$ bisect analyze official_proposal --year 2010
 [CONFIG] analyze: 'official_proposal' has not been built for year 2010.
-Run: redist build official_proposal --year 2010
+Run: bisect build official_proposal --year 2010
 
 # Attempt to report before analyzing
 $ redist report official_proposal --year 2000
 [CONFIG] report: 'official_proposal' has not been analyzed for year 2000.
-Run: redist analyze official_proposal --year 2000
+Run: bisect analyze official_proposal --year 2000
 
 # Config name mismatch
-$ redist build senate_draft2 --config configs/official_proposal.yml
+$ bisect build senate_draft2 --config configs/official_proposal.yml
 [CONFIG] build: config name 'official_proposal' does not match label 'senate_draft2'.
 
 # Label collision without --force
-$ redist build official_proposal --config configs/official_proposal.yml --year 2020
+$ bisect build official_proposal --config configs/official_proposal.yml --year 2020
 [CONFIG] build: 'official_proposal' year 2020 already exists (built 2026-05-04T18:30Z).
 Use --force to overwrite.
 ```
@@ -1202,8 +1202,8 @@ redist plan official_proposal
 This opens the TUI showing current build/analyze/report status.
 From inside the TUI:
 - Press `[c]` → opens the three-layer compositor wizard to view or modify `configs/official_proposal.yml`
-- Press `[b]` for year 2010 → runs `redist build official_proposal --year 2010` in the background
-- Press `[a]` for year 2020 → runs `redist analyze official_proposal --year 2020`
+- Press `[b]` for year 2010 → runs `bisect build official_proposal --year 2010` in the background
+- Press `[a]` for year 2020 → runs `bisect analyze official_proposal --year 2020`
 - Press `[r]` for year 2020 → runs `redist report official_proposal --year 2020`
 - Navigate state table → drill into per-state metrics and maps
 
@@ -1282,8 +1282,8 @@ point of decision.
 | `test_verify_unbroken_chain_prints_ok` | all SHAs match → prints `VERIFIED` |
 | `test_verify_broken_config_sha_prints_fail` | config modified after build → `FAILED` |
 | `test_verify_missing_report_reports_missing` | report not generated → `MISSING` for report link |
-| `test_ls_json_output_is_valid_json` | `redist ls --json` → parseable JSON matching registry |
-| `test_show_json_output_contains_index` | `redist show X --json` → includes `index.json` content |
+| `test_ls_json_output_is_valid_json` | `bisect ls --json` → parseable JSON matching registry |
+| `test_show_json_output_contains_index` | `bisect show X --json` → includes `index.json` content |
 | `test_build_force_clears_stale_analysis` | `build X --force` deletes `analysis/X/Y/` and removes from registry |
 | `test_build_force_writes_stale_sentinel` | `runs/X/Y/STALE_ANALYSIS` file written on forced rebuild |
 | `test_build_out_flag_rejected` | `build X --out /tmp/` → `[CONFIG]` error |
@@ -1297,7 +1297,7 @@ point of decision.
 | `test_analyze_vt_2020_produces_analysis_index` | `analysis/vt_test/index.json` written |
 | `test_analyze_updates_registry_analyzed_list` | `.redist` updated after analyze |
 | `test_report_vt_2020_produces_dashboard` | `reports/vt_test/dashboard_2020.html` exists |
-| `test_show_vt_test_displays_correct_paths` | `redist show vt_test` output matches actual paths |
+| `test_show_vt_test_displays_correct_paths` | `bisect show vt_test` output matches actual paths |
 | `test_rm_stage_report_deletes_reports_dir` | `reports/vt_test/` removed, `.redist` updated |
 | `test_compare_two_labels_produces_output` | `redist compare A B` exits 0 with metric table |
 
@@ -1311,7 +1311,7 @@ point of decision.
 | **Spec 2 (Plan Comparison)** | `redist compare A B` is the label-aware replacement for `redist compare --plan-a --plan-b` |
 | **Spec 3 (Constraint Analysis)** | Analysis types in config file map to `--types` flag |
 | **Spec 4 (Partisan Metrics)** | `political` in `analysis_types` triggers partisan analysis |
-| **Spec 5 (Multi-chamber)** | `redist build X --config configs/wa_house.yml` — label and config independent |
+| **Spec 5 (Multi-chamber)** | `bisect build X --config configs/wa_house.yml` — label and config independent |
 | **Spec 6 (Reports)** | `PlanManifest` per-state is unchanged; `reports/X/index.json` is the new run-level audit anchor |
 | **Deposition Prep** | `git_commit` in every index uses `REDIST_BUILD_COMMIT_OVERRIDE`; `DepoLogWriter` can reference index files |
 | **State Staff Interop** | `redist import X --from FILE` is the ingestion path for externally-submitted plans; integrates with `redist compare` for adversarial review |
@@ -1328,7 +1328,7 @@ point of decision.
 1. **Per-year worker overrides**: Should `workers` be specifiable per year in the
    config? Deferred: flat `workers` is sufficient for v1.
 
-2. **Global config search path**: Should `redist build X` search for `configs/X.yml`
+2. **Global config search path**: Should `bisect build X` search for `configs/X.yml`
    automatically, making `--config` optional? Deferred: explicit `--config` is safer
    for v1; auto-discovery can be added when the pattern proves stable.
 

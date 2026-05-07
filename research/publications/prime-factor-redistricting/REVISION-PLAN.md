@@ -21,6 +21,6 @@ Stage: draft (not yet reviewed)
 - [ ] Add any legal scholarship on Art. I §2 vs §4 scope
 
 ### Implementation
-- [ ] Add prime factorization dispatch to redist-cli runner.rs
+- [ ] Add prime factorization dispatch to bisect-cli runner.rs
 - [ ] Add k-way METIS call path (already in library, needs CLI wiring)
 - [ ] Script: scripts/b11_pfr_sweep.ps1

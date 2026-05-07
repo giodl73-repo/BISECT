@@ -1,6 +1,6 @@
 # Kani Harness Suite
 
-Formal verification of redist-metis using Kani bounded model checker (Kani 0.55+).
+Formal verification of bisect-metis using Kani bounded model checker (Kani 0.55+).
 
 ## Directory structure
 
@@ -32,4 +32,4 @@ cargo +nightly kani --visualize
 - Task 17: Graph + coarsen harnesses (pending)
 - Task 18: Refine + multilevel harnesses (pending)
 
-See redist-metis-verify.md for full specification.
+See bisect-metis-verify.md for full specification.

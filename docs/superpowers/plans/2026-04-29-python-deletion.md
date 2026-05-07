@@ -60,7 +60,7 @@ scripts/utils/status_protocol.py
 scripts/utils/terminal_utils.py
 ```
 
-These are replaced by `redist run` / `bisect state` / `redist states` but retain forensic value. **Move via `git mv`, do not delete.**
+These are replaced by `redist run` / `bisect state` / `bisect states` but retain forensic value. **Move via `git mv`, do not delete.**
 
 - [ ] **2.1** Confirm Plan 01 has been live for the full soak-time signal (≥ 5 days, ≥ 10 runs, ≥ 3 flag combinations). Document the soak data in this plan's appendix.
 - [ ] **2.2** Create `archive/python-pipeline-final/` directory.
@@ -88,7 +88,7 @@ src/apportionment/data/              # whole directory → archive/python-pipeli
 src/apportionment/visualization/maps.py → archive/python-pipeline-final/src/apportionment/visualization/maps.py
 ```
 
-`src/apportionment/partition/recursive_bisection.py` and `metis_wrapper.py` duplicate `redist-core`. `src/apportionment/data/adjacency.py` and siblings duplicate `redist-data`. `visualization/maps.py` is dead matplotlib code. All have forensic value as the historical implementation.
+`src/apportionment/partition/recursive_bisection.py` and `metis_wrapper.py` duplicate `bisect-core`. `src/apportionment/data/adjacency.py` and siblings duplicate `bisect-data`. `visualization/maps.py` is dead matplotlib code. All have forensic value as the historical implementation.
 
 **Strict deletion gate (replaces v1's "pytest tests/ green"):**
 
@@ -107,9 +107,9 @@ src/apportionment/visualization/maps.py → archive/python-pipeline-final/src/ap
 - [ ] **3.4** Re-run grep step 3.1. Required exit: ZERO hits anywhere except `archive/`.
 - [ ] **3.5** `git mv` the directories/file into `archive/python-pipeline-final/src/apportionment/...`.
 - [ ] **3.6** Run `pytest tests/`. Green.
-- [ ] **3.7** Commit: "Archive Python algorithm library — replaced by redist-core via PyO3 (Plan 02 Task 3)".
+- [ ] **3.7** Commit: "Archive Python algorithm library — replaced by bisect-core via PyO3 (Plan 02 Task 3)".
 
-**Exit:** No parallel implementations in the active tree. `redist-core` is the only bisection. Research scripts and tests that need the algorithm call it via `redist_py`.
+**Exit:** No parallel implementations in the active tree. `bisect-core` is the only bisection. Research scripts and tests that need the algorithm call it via `redist_py`.
 
 ---
 
@@ -176,13 +176,13 @@ This script converted legacy pkl adjacency files to .adj.bin format. All 50 stat
 
 ---
 
-## Task 7: Keep `redist-web` as documented stub (REVERSED in v2)
+## Task 7: Keep `bisect-web` as documented stub (REVERSED in v2)
 
 Per SURVEY review v1: empty crate stubs signal "this namespace is reserved for future work" and prevent naive re-creation. Replace deletion with documentation.
 
-- [ ] **7.1** Edit `redist/crates/redist-web/src/lib.rs`. Replace `// redist-web — stub` with a short comment block:
+- [ ] **7.1** Edit `redist/crates/bisect-web/src/lib.rs`. Replace `// bisect-web — stub` with a short comment block:
    ```rust
-   //! redist-web — RESERVED for future Rust dashboard work.
+   //! bisect-web — RESERVED for future Rust dashboard work.
    //!
    //! Currently empty. Dashboard generation is performed by Python
    //! (scripts/web/generate_dashboard.py, Jinja2). If/when a Rust
@@ -190,7 +190,7 @@ Per SURVEY review v1: empty crate stubs signal "this namespace is reserved for f
    //!
    //! See spec: docs/superpowers/specs/2026-04-29-rust-python-final-architecture.md
    ```
-- [ ] **7.2** Commit: "Document redist-web as reserved stub (Plan 02 Task 7)".
+- [ ] **7.2** Commit: "Document bisect-web as reserved stub (Plan 02 Task 7)".
 
 **Exit:** Crate kept. Future readers know its status.
 

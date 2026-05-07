@@ -3,7 +3,7 @@
 **Updated:** 2026-04-30 (v2 — incorporates SURVEY/COVENANT/DATUM/BOUNDARY/TRENCH revisions)
 **Status:** Revised; pending re-review
 **Closes gap for:** special master, §2 expert, civic advocacy
-**Depends on:** existing redist-report HTML output + Callais Evidence Layer (for §2 cases)
+**Depends on:** existing bisect-report HTML output + Callais Evidence Layer (for §2 cases)
 **Estimated effort:** 4-5 days (v2: PDF/A + expert conventions)
 
 ## Why this exists

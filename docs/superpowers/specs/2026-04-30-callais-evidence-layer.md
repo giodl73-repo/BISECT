@@ -3,7 +3,7 @@
 **Updated:** 2026-04-30 (v2 — incorporates SCALE BLOCK + BOUNDARY/MERIDIAN/DATUM/COVENANT/TRENCH revisions)
 **Status:** Revised; pending re-review
 **Closes gap for:** §2 plaintiff's expert post-Callais (★★★→★★★★★), academic researcher
-**Depends on:** existing partisan-shares producer + redist-analysis::bootstrap_ci
+**Depends on:** existing partisan-shares producer + bisect-analysis::bootstrap_ci
 **Estimated effort:** 7-9 days (v2: more rigor)
 
 ## Why this exists

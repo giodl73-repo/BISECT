@@ -58,7 +58,7 @@ It is **not** appropriate to re-pin to silence a `[FAIL]` from a real bug. Inves
 - Onboarding plan: `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md`
 - L2 acceptance test: `tests/acceptance/test_walkthrough_vermont.py`
 - Doctor command: `redist doctor --check-tutorial-data --help`
-- Schema source of truth: `redist/crates/redist-cli/src/doctor.rs::TutorialChecksums`
+- Schema source of truth: `redist/crates/bisect-cli/src/doctor.rs::TutorialChecksums`
 
 ## Tract count
 

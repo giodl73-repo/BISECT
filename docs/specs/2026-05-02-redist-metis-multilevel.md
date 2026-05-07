@@ -1,4 +1,4 @@
-# redist-metis Multilevel Orchestration Sub-Spec
+# bisect-metis Multilevel Orchestration Sub-Spec
 **Date:** 2026-05-02
 **Phase:** 5 of 8
 **Implements:** `src/multilevel/` — CoarseningHierarchy, Pipeline<S> typestate

@@ -45,7 +45,7 @@ The official configuration reads from `configs/official_proposal.yml`, which set
 
 ```bash
 # Run the DIA default for all 50 states, 2020 census
-redist build official_2020 --year 2020
+bisect build official_2020 --year 2020
 ```
 
 This is equivalent to:

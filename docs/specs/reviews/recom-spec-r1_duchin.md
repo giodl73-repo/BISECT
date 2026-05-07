@@ -1,6 +1,6 @@
 ---
 reviewer: Moon Duchin
-spec: redist-ensemble ReCom crate
+spec: bisect-ensemble ReCom crate
 round: 1
 score: 2
 date: 2026-05-06
@@ -12,7 +12,7 @@ The spec describes a plausible Rust ReCom implementation but contains a fundamen
 ## Strengths
 - The choice of Wilson's loop-erased random walk over Aldous-Broder is correct. For redistricting graphs (sparse, planar-like, ~1,000–10,000 nodes), Wilson's algorithm consistently runs faster in practice because the cover time of planar graphs is lower than the O(n^2) worst case.
 - The Hamming autocorrelation diagnostic is well-chosen for redistricting Markov chains. Because ReCom makes large moves (entire pairs of districts are reassigned), the autocorrelation structure is different from single-flip chains, and Hamming distance between successive assignments is the right statistic to track.
-- The integration with the existing `redist-analysis::ensemble_diagnostics` R-hat and ESS implementation avoids re-implementing diagnostics and ensures the G.4 numbers remain reproducible from the same code.
+- The integration with the existing `bisect-analysis::ensemble_diagnostics` R-hat and ESS implementation avoids re-implementing diagnostics and ensures the G.4 numbers remain reproducible from the same code.
 
 ## P1 — Required changes
 

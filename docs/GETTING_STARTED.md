@@ -106,13 +106,13 @@ bisect fetch --year 2020 --release
 python scripts/data/generate_adj_bin.py --year 2020
 
 # Run all 50 states in parallel
-redist states --year 2020 --version V3 \
+bisect states --year 2020 --version V3 \
   --output-dir outputs/V3 --workers 8
 ```
 
 **Expected output**:
 ```
-[redist states] 50 states (8 workers)
+[bisect states] 50 states (8 workers)
 [OK] 50/50 states complete
 ```
 
@@ -212,15 +212,15 @@ between minority-heavy tracts, encouraging majority-minority districts.
 
 ## Resume Interrupted Runs
 
-`redist states` and `redist run` skip states that already have `final_assignments.json`.
+`bisect states` and `redist run` skip states that already have `final_assignments.json`.
 If a run is interrupted, just re-run the same command — completed states are skipped.
 
 ```bash
 # Resume where you left off
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 # Force re-run of all states
-redist states --year 2020 --version V3 --output-dir outputs/V3 --reprocess
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --reprocess
 ```
 
 ---

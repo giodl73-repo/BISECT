@@ -5,12 +5,12 @@
 **Goal:** Close the last two Python-only gaps in the pipeline. `redist aggregate` merges all 50 state analysis JSONs into national datasets (replacing `create_us_aggregate.py`). `redist map --scope national` renders the full 435-district national map with Alaska and Hawaii insets (replacing `visualize_national_districts.py` and the national choropleth scripts).
 
 **Architecture:**
-- New `Commands::Aggregate` in `redist-cli` — walks `outputs/{version}/states/*/analysis/` and merges
-- `InsetProjection` in `redist-map/src/projection.rs` — continental + AK inset + HI inset in one canvas
+- New `Commands::Aggregate` in `bisect-cli` — walks `outputs/{version}/states/*/analysis/` and merges
+- `InsetProjection` in `bisect-map/src/projection.rs` — continental + AK inset + HI inset in one canvas
 - Extended `MapArgs` with `--scope state|national` flag
-- National map renderer in `redist-cli/src/map_cmd.rs` that loads all state geometries and dispatches to `InsetProjection`
+- National map renderer in `bisect-cli/src/map_cmd.rs` that loads all state geometries and dispatches to `InsetProjection`
 
-**Tech Stack:** Rust, existing `redist-map` + `redist-analysis` + `redist-cli` crates; `serde_json`, `csv` crate
+**Tech Stack:** Rust, existing `bisect-map` + `bisect-analysis` + `bisect-cli` crates; `serde_json`, `csv` crate
 
 ---
 
@@ -25,7 +25,7 @@
 | `visualize_district_demographics.py --scope national` | `redist map --scope national --types demographic` | Task 4 |
 | `visualize_compactness.py --scope national` | `redist map --scope national --types compactness` | Task 4 |
 
-Dashboard generation (`process_nation.py` task 7) stays Python — `redist-web` is future work.
+Dashboard generation (`process_nation.py` task 7) stays Python — `bisect-web` is future work.
 
 ---
 
@@ -60,19 +60,19 @@ The continental US fits a standard equirectangular bbox. Alaska and Hawaii are p
 
 | File | Action |
 |------|--------|
-| `redist/crates/redist-map/src/projection.rs` | **Modify** — add `InsetProjection` struct |
-| `redist/crates/redist-cli/src/aggregate.rs` | **Create** — `run_aggregate()` dispatcher |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** — `AggregateArgs`, `--scope` flag on `MapArgs` |
-| `redist/crates/redist-cli/src/lib.rs` | **Modify** — expose `aggregate` module |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** — wire `Commands::Aggregate` |
-| `redist/crates/redist-cli/src/map_cmd.rs` | **Modify** — national map rendering path |
+| `redist/crates/bisect-map/src/projection.rs` | **Modify** — add `InsetProjection` struct |
+| `redist/crates/bisect-cli/src/aggregate.rs` | **Create** — `run_aggregate()` dispatcher |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `AggregateArgs`, `--scope` flag on `MapArgs` |
+| `redist/crates/bisect-cli/src/lib.rs` | **Modify** — expose `aggregate` module |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire `Commands::Aggregate` |
+| `redist/crates/bisect-cli/src/map_cmd.rs` | **Modify** — national map rendering path |
 | `redist/tests/acceptance/test_aggregate_national.py` | **Create** — L2 acceptance tests |
 
 ---
 
 ## Task 1: `InsetProjection` for national maps
 
-**Files:** `redist/crates/redist-map/src/projection.rs`
+**Files:** `redist/crates/bisect-map/src/projection.rs`
 
 - [ ] **Write failing L0 tests**
 
@@ -195,7 +195,7 @@ impl InsetProjection {
 }
 ```
 
-- [ ] **Expose from `redist-map/src/lib.rs`**:
+- [ ] **Expose from `bisect-map/src/lib.rs`**:
 ```rust
 pub use projection::{Projection, InsetProjection};
 ```
@@ -208,7 +208,7 @@ pub use projection::{Projection, InsetProjection};
 
 ## Task 2: `redist aggregate` subcommand
 
-**Files:** `redist/crates/redist-cli/src/aggregate.rs`, `args.rs`, `lib.rs`, `main.rs`
+**Files:** `redist/crates/bisect-cli/src/aggregate.rs`, `args.rs`, `lib.rs`, `main.rs`
 
 Walks `outputs/{version}/states/*/analysis/` for all present states, merges all per-type JSONs into national datasets.
 
@@ -403,7 +403,7 @@ fn test_csv_export_demographic_headers() {
 
 ## Task 4: `redist map --scope national`
 
-**Files:** `redist/crates/redist-cli/src/args.rs`, `map_cmd.rs`
+**Files:** `redist/crates/bisect-cli/src/args.rs`, `map_cmd.rs`
 
 - [ ] **Add `--scope` flag to `MapArgs`**
 
@@ -535,7 +535,7 @@ fn run_national_map(args: &MapArgs, font_db: &FontDb) -> anyhow::Result<()> {
 
 ```python
 class TestAggregateAcceptance(unittest.TestCase):
-    """Requires VT + AL outputs (at minimum) from redist state + redist analyze."""
+    """Requires VT + AL outputs (at minimum) from bisect state + bisect analyze."""
 
     @classmethod
     def setUpClass(cls):
@@ -653,7 +653,7 @@ class TestNationalMapAcceptance(unittest.TestCase):
 
 ```bash
 # Step 1: Run all 50 states
-redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
+bisect states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 # Step 2: Run all analytics for all states
 for state in AL AK AZ ...; do

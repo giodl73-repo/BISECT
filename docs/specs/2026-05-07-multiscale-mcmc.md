@@ -4,9 +4,9 @@
 **Reviewed R1**: MERIDIAN 2/4, BENCHMARK 2/4, SURVEY 2/4, COVENANT 2/4 → avg 2.0/4  
 **Reviewed R2**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 3/4 → avg 3.0/4  
 **Date**: 2026-05-07  
-**New crate**: `redist-multiscale`  
+**New crate**: `bisect-multiscale`  
 **Related paper**: G.11  
-**Depends on**: `redist-ensemble` (RecomChain), `redist-data` (multi-resolution adjacency)
+**Depends on**: `bisect-ensemble` (RecomChain), `bisect-data` (multi-resolution adjacency)
 
 ---
 
@@ -64,17 +64,17 @@ A coarse move that reassigns a block group (containing many tracts) is equivalen
 
 ## Architecture
 
-**New crate `redist-multiscale`** (not an extension of `redist-ensemble`):
+**New crate `bisect-multiscale`** (not an extension of `bisect-ensemble`):
 
-- Requires multi-resolution adjacency data loading (two pkl files per state), which depends on `redist-data` patterns not currently in `redist-ensemble`
-- `redist-multiscale` wraps two `redist-ensemble::recom::RecomChain` instances (one fine, one coarse) and coordinates moves between them
+- Requires multi-resolution adjacency data loading (two pkl files per state), which depends on `bisect-data` patterns not currently in `bisect-ensemble`
+- `bisect-multiscale` wraps two `bisect-ensemble::recom::RecomChain` instances (one fine, one coarse) and coordinates moves between them
 - Exposes `MultiScaleChain` as the public API; the CLI creates it via `SeedCompositor::MultiScale`
 
 **Dependency graph**:
 ```
-redist-multiscale
-├── redist-ensemble (RecomChain, recom::step)
-└── redist-data     (adjacency loading, pkl deserialization)
+bisect-multiscale
+├── bisect-ensemble (RecomChain, recom::step)
+└── bisect-data     (adjacency loading, pkl deserialization)
 ```
 
 ---
@@ -295,6 +295,6 @@ This ensures `bisect label-verify` can confirm the search parameters and seed de
 1. **Three levels**: should the spec support three levels (tract + block-group + county) or fix at two? Defer to Phase 2; this spec covers two-level only.
 2. **Coarse balance tolerance**: should coarse balance tolerance be the same as fine or looser? Looser (2×) is recommended since coarse moves are corrected by the projection step; this is the default but not enforced.
 3. **Coarse adjacency data availability**: block-group adjacency files must exist (`bisect fetch --resolution block_group`). The CLI must check and error with an actionable message if missing (see §Compositor integration).
-4. **Projection rebalancing**: when a coarse move violates fine-level balance, boundary swaps are needed. This spec defers to the same boundary-swap logic in `split_subgraph`. The exact implementation is left to the `redist-multiscale` crate author; the invariant (fine-level balance after every coarse step) is testable regardless of implementation.
+4. **Projection rebalancing**: when a coarse move violates fine-level balance, boundary swaps are needed. This spec defers to the same boundary-swap logic in `split_subgraph`. The exact implementation is left to the `bisect-multiscale` crate author; the invariant (fine-level balance after every coarse step) is testable regardless of implementation.
 5. **`--output-all-steps`**: should the CLI support writing all visited plans to disk for diagnostics? Deferred — large output for T=2000 steps.
 6. **SMC integration**: could the multi-scale chain serve as the proposal kernel for SMC? Deferred to G.12 or later.

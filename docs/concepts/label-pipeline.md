@@ -104,9 +104,9 @@ separately for full provenance.
 ### `bisect build`
 
 ```bash
-redist build official_2020
-redist build official_2020 --year 2020
-redist build official_2020 --year 2020 --states NC TX GA
+bisect build official_2020
+bisect build official_2020 --year 2020
+bisect build official_2020 --year 2020 --states NC TX GA
 ```
 
 Draws districts according to `configs/official_2020.yml`. Writes
@@ -146,9 +146,9 @@ Generates HTML, JSON, or PDF reports from the analysis outputs. Reads from
 `analysis/official_2020/{year}/`, writes to `reports/official_2020/{year}/`.
 
 The `--format pdf` path requires Typst; see
-`redist/crates/redist-report/typst-templates/README.md` for installation. For court submissions,
+`redist/crates/bisect-report/typst-templates/README.md` for installation. For court submissions,
 the PDF format produces a report that satisfies the requirements of the
-`redist-report` crate's civic gate (BD-R1).
+`bisect-report` crate's civic gate (BD-R1).
 
 ### `bisect label-verify`
 
@@ -177,8 +177,8 @@ before the plan is used in a legal proceeding.
 ### `bisect ls`
 
 ```bash
-redist ls
-redist ls --year 2020
+bisect ls
+bisect ls --year 2020
 ```
 
 Lists all labels registered in `.redist`, with a one-line status summary
@@ -195,8 +195,8 @@ b11_pilot           OK      12/50 states  -             -
 ### `bisect show`
 
 ```bash
-redist show official_2020
-redist show official_2020 --year 2020
+bisect show official_2020
+bisect show official_2020 --year 2020
 ```
 
 Detailed status for one label. Shows the config algorithm parameters, resolved
@@ -294,7 +294,7 @@ redist config create my_plan --structure ratio-optimal --weights geographic \
   --search convergence --convergence-threshold 600
 
 # 2. Build for all years
-redist build my_plan
+bisect build my_plan
 
 # 3. Analyze
 bisect label-analyze my_plan --types compactness,splits,summary
@@ -311,7 +311,7 @@ bisect label-verify my_plan
 ## Testability
 
 The SHA chain is tested via
-`cargo test -p redist-cli --lib -- --test-threads=1`. Key invariant tests:
+`cargo test -p bisect-cli --lib -- --test-threads=1`. Key invariant tests:
 
 - **Tamper detection**: modify one byte of `index.json` → assert `MISMATCH`
 - **Cascade invalidation**: rebuild a state → assert downstream stages show

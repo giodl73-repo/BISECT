@@ -1,4 +1,4 @@
-# redist-metis Verification Sub-Spec
+# bisect-metis Verification Sub-Spec
 **Date:** 2026-05-02
 **Phase:** 6 of 8
 **Implements:** `verify/kani/` and `verify/prusti/`
@@ -52,7 +52,7 @@ Prusti generates Viper `.vpr` files committed to `verify/prusti/artifacts/` — 
 
 ## UNSAFE inventory
 
-The redist-metis crate contains **zero unsafe blocks**. All array access and arithmetic is verified through safe Rust bounds checks and Kani formal verification harnesses. See `verify/kani/UNSAFE.md` for inventory (empty).
+The bisect-metis crate contains **zero unsafe blocks**. All array access and arithmetic is verified through safe Rust bounds checks and Kani formal verification harnesses. See `verify/kani/UNSAFE.md` for inventory (empty).
 
 ## CI gate
 
@@ -72,4 +72,4 @@ On main/release tags:
 - `verify/kani/BOUNDS.md` — Justification for bound choices per harness
 - `verify/kani/UNSAFE.md` — Inventory of unsafe blocks (currently empty)
 - `verify/prusti/GAPS.md` — Functions that cannot be verified (currently empty)
-- `redist/crates/redist-metis/src/` — All code; zero unsafe
+- `redist/crates/bisect-metis/src/` — All code; zero unsafe

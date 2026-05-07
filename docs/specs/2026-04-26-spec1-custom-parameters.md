@@ -65,7 +65,7 @@ Written alongside every plan. Provides full audit chain of custody.
 
 ## New CLI Flags
 
-### `bisect state` / `redist states` / `redist run`
+### `bisect state` / `bisect states` / `redist run`
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -104,7 +104,7 @@ bisect state --state WA --year 2020 --version WA_Plans \
   --chamber congressional --label wa_congress_audit
 
 # All 50 states, custom balance tolerance
-redist states --year 2020 --version WA_Plans \
+bisect states --year 2020 --version WA_Plans \
   --output-dir outputs/WA_Plans --balance-tolerance 2.0
 
 # Using citizen VAP instead of total population
@@ -154,7 +154,7 @@ After `write_state_outputs()` succeeds, compute SHA-256 of adjacency and TIGER f
 
 ### Balance tolerance
 
-`assert_balanced()` in `redist-core` currently uses hardcoded 0.005. Change to accept `tolerance: f64` parameter. CLI passes `cfg.balance_tolerance`.
+`assert_balanced()` in `bisect-core` currently uses hardcoded 0.005. Change to accept `tolerance: f64` parameter. CLI passes `cfg.balance_tolerance`.
 
 ---
 

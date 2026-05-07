@@ -2,12 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `bisect analyze` produces per-district JSON for all metrics. `redist map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `redist-map` is a new crate with an extension model matching `redist-analysis`.
+**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `bisect analyze` produces per-district JSON for all metrics. `redist map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `bisect-map` is a new crate with an extension model matching `bisect-analysis`.
 
 **Architecture:**
-- New `redist-map` crate: geometry dissolve → projection → SVG → PNG pipeline
-- Updated `redist-analysis` crate: `Analyzer` trait + demographic / political / urban / summary modules
-- Updated `redist-cli`: `analyze` and `map` subcommands, both fully dispatched in Rust
+- New `bisect-map` crate: geometry dissolve → projection → SVG → PNG pipeline
+- Updated `bisect-analysis` crate: `Analyzer` trait + demographic / political / urban / summary modules
+- Updated `bisect-cli`: `analyze` and `map` subcommands, both fully dispatched in Rust
 
 **Tech Stack:** `geo` (dissolve, centroid), `polylabel` (visual center), `geo-svg` (path strings), `resvg` + `tiny-skia` (SVG→PNG), `fontdb` (embedded font), `csv` crate, `serde_json`
 
@@ -77,41 +77,41 @@ This works in resvg's full SVG spec support.
 
 | File | Action |
 |------|--------|
-| `redist/crates/redist-map/Cargo.toml` | **Create** |
-| `redist/crates/redist-map/src/lib.rs` | **Create** |
-| `redist/crates/redist-map/src/dissolve.rs` | **Create** — union tract polygons into district polygons |
-| `redist/crates/redist-map/src/projection.rs` | **Create** — WGS84 bbox → SVG pixel coordinates |
-| `redist/crates/redist-map/src/colorscheme.rs` | **Create** — categorical + choropleth palettes |
-| `redist/crates/redist-map/src/labeler.rs` | **Create** — adaptive font size, fit check, halo SVG |
-| `redist/crates/redist-map/src/renderer.rs` | **Create** — SVG assembly + resvg PNG output |
-| `redist/crates/redist-map/src/map_type.rs` | **Create** — `MapSpec` trait + all map type implementations |
-| `redist/crates/redist-map/src/rounds.rs` | **Create** — bisection round progression maps |
-| `redist/crates/redist-map/assets/LiberationSans-Regular.ttf` | **Add** — embedded open font |
-| `redist/crates/redist-analysis/src/analyzer.rs` | **Create** — `Analyzer` trait + `AnalyzerType` enum |
-| `redist/crates/redist-analysis/src/demographic.rs` | **Create** |
-| `redist/crates/redist-analysis/src/political.rs` | **Create** |
-| `redist/crates/redist-analysis/src/urban.rs` | **Create** |
-| `redist/crates/redist-analysis/src/summary.rs` | **Create** |
-| `redist/crates/redist-analysis/src/lib.rs` | **Modify** — expose new modules |
-| `redist/crates/redist-cli/src/analyze.rs` | **Create** — dispatcher |
-| `redist/crates/redist-cli/src/map_cmd.rs` | **Create** — `redist map` dispatcher |
-| `redist/crates/redist-cli/src/args.rs` | **Modify** — `AnalyzeArgs`, `MapArgs` |
-| `redist/crates/redist-cli/src/main.rs` | **Modify** — wire Commands |
-| `redist/Cargo.toml` | **Modify** — add `redist-map` to workspace |
+| `redist/crates/bisect-map/Cargo.toml` | **Create** |
+| `redist/crates/bisect-map/src/lib.rs` | **Create** |
+| `redist/crates/bisect-map/src/dissolve.rs` | **Create** — union tract polygons into district polygons |
+| `redist/crates/bisect-map/src/projection.rs` | **Create** — WGS84 bbox → SVG pixel coordinates |
+| `redist/crates/bisect-map/src/colorscheme.rs` | **Create** — categorical + choropleth palettes |
+| `redist/crates/bisect-map/src/labeler.rs` | **Create** — adaptive font size, fit check, halo SVG |
+| `redist/crates/bisect-map/src/renderer.rs` | **Create** — SVG assembly + resvg PNG output |
+| `redist/crates/bisect-map/src/map_type.rs` | **Create** — `MapSpec` trait + all map type implementations |
+| `redist/crates/bisect-map/src/rounds.rs` | **Create** — bisection round progression maps |
+| `redist/crates/bisect-map/assets/LiberationSans-Regular.ttf` | **Add** — embedded open font |
+| `redist/crates/bisect-analysis/src/analyzer.rs` | **Create** — `Analyzer` trait + `AnalyzerType` enum |
+| `redist/crates/bisect-analysis/src/demographic.rs` | **Create** |
+| `redist/crates/bisect-analysis/src/political.rs` | **Create** |
+| `redist/crates/bisect-analysis/src/urban.rs` | **Create** |
+| `redist/crates/bisect-analysis/src/summary.rs` | **Create** |
+| `redist/crates/bisect-analysis/src/lib.rs` | **Modify** — expose new modules |
+| `redist/crates/bisect-cli/src/analyze.rs` | **Create** — dispatcher |
+| `redist/crates/bisect-cli/src/map_cmd.rs` | **Create** — `redist map` dispatcher |
+| `redist/crates/bisect-cli/src/args.rs` | **Modify** — `AnalyzeArgs`, `MapArgs` |
+| `redist/crates/bisect-cli/src/main.rs` | **Modify** — wire Commands |
+| `redist/Cargo.toml` | **Modify** — add `bisect-map` to workspace |
 | `tests/unit/test_map_engine.py` | **Create** — L0/L1 PyO3-accessible tests |
 | `tests/acceptance/test_analyze_map_acceptance.py` | **Create** — L2 end-to-end |
 
 ---
 
-## Task 1: `redist-map` crate scaffold + projection
+## Task 1: `bisect-map` crate scaffold + projection
 
-**Files:** `redist/crates/redist-map/Cargo.toml`, `src/lib.rs`, `src/projection.rs`
+**Files:** `redist/crates/bisect-map/Cargo.toml`, `src/lib.rs`, `src/projection.rs`
 
 - [ ] **Create `Cargo.toml`**
 
 ```toml
 [package]
-name = "redist-map"
+name = "bisect-map"
 version = "0.1.0"
 edition = "2021"
 
@@ -543,7 +543,7 @@ pub fn group_dissolve(
 
 **Files:** `src/renderer.rs`, `assets/LiberationSans-Regular.ttf`
 
-- [ ] **Download Liberation Sans Regular** (OFL licensed, ~70KB) and save to `redist/crates/redist-map/assets/LiberationSans-Regular.ttf`
+- [ ] **Download Liberation Sans Regular** (OFL licensed, ~70KB) and save to `redist/crates/bisect-map/assets/LiberationSans-Regular.ttf`
 
 - [ ] **L0: Write failing renderer tests**
 
@@ -696,7 +696,7 @@ pub fn render_round_maps(
 
 ## Task 7: Analytics — `Analyzer` trait + all four modules
 
-**Files:** `redist-analysis/src/analyzer.rs`, `demographic.rs`, `political.rs`, `urban.rs`, `summary.rs`
+**Files:** `bisect-analysis/src/analyzer.rs`, `demographic.rs`, `political.rs`, `urban.rs`, `summary.rs`
 
 - [ ] **L0 tests — `analyzer.rs`**
 
@@ -818,7 +818,7 @@ fn test_summary_partial_inputs_dont_panic() {
 
 ## Task 8: `bisect analyze` + `redist map` CLI wiring
 
-**Files:** `redist-cli/src/analyze.rs`, `map_cmd.rs`, `args.rs`, `main.rs`
+**Files:** `bisect-cli/src/analyze.rs`, `map_cmd.rs`, `args.rs`, `main.rs`
 
 - [ ] **Add `Commands::Analyze` and `Commands::Map` to `args.rs`** (see plan header for struct definitions)
 
@@ -850,7 +850,7 @@ fn test_map_types_parse() {
 - [ ] **Implement `map_cmd.rs` dispatcher** — loads tract geometries from TIGER, loads assignments, dissolves, projects, renders, writes PNGs
 - [ ] **Wire into `main.rs`**
 - [ ] **Run:** `cargo build --release` — expect success
-- [ ] **Commit:** `git commit -m "feat(cli): redist analyze + redist map subcommands wired"`
+- [ ] **Commit:** `git commit -m "feat(cli): bisect analyze + redist map subcommands wired"`
 
 ---
 
@@ -964,7 +964,7 @@ class TestMapAcceptance(unittest.TestCase):
 ```
 
 - [ ] **Run:** `pytest tests/acceptance/test_analyze_map_acceptance.py -v` — expect PASS
-- [ ] **Commit:** `git commit -m "test(acceptance): redist analyze + redist map L2 tests"`
+- [ ] **Commit:** `git commit -m "test(acceptance): bisect analyze + redist map L2 tests"`
 
 ---
 
@@ -972,9 +972,9 @@ class TestMapAcceptance(unittest.TestCase):
 
 To add `maup` (MAUP sensitivity) analyzer:
 
-1. Create `redist-analysis/src/maup.rs` implementing `Analyzer` trait
+1. Create `bisect-analysis/src/maup.rs` implementing `Analyzer` trait
 2. Add `Maup` variant to `AnalyzerType` enum in `analyzer.rs`  
-3. Add one match arm in `redist-cli/src/analyze.rs` dispatcher
+3. Add one match arm in `bisect-cli/src/analyze.rs` dispatcher
 4. Expose in `lib.rs`
 
 **3 files, zero changes to `main.rs` or `args.rs`** (clap picks up new enum variant automatically).
@@ -985,9 +985,9 @@ To add `maup` (MAUP sensitivity) analyzer:
 
 To add a `compactness` choropleth map:
 
-1. Implement `render_compactness_map()` in `redist-map/src/map_type.rs`
+1. Implement `render_compactness_map()` in `bisect-map/src/map_type.rs`
 2. Add `Compactness` variant to `MapType` enum in `args.rs`
-3. Add one match arm in `redist-cli/src/map_cmd.rs`
+3. Add one match arm in `bisect-cli/src/map_cmd.rs`
 
 **3 files** — same pattern as analyzers.
 
@@ -1050,7 +1050,7 @@ fn test_wkb_round_trip_preserves_area() {
 `Projection::from_bbox` is equirectangular (display only, not equal-area). Add comment to `projection.rs`:
 ```rust
 /// Display projection only — NOT equal-area. Do not use projected coordinates
-/// to compute area, perimeter, or compactness metrics. Use redist-analysis::compactness
+/// to compute area, perimeter, or compactness metrics. Use bisect-analysis::compactness
 /// for all metric computation (which operates on WGS84 before projection).
 ```
 Add to `compactness.json` metadata output: `"crs_note": "PP/Reock computed on WGS84 coords; WGS84-based scores systematically compress east-west-elongated districts"`. The `test_aspect_ratio_preserved` test gets a comment clarifying it tests visual centering only.

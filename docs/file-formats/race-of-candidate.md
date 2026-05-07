@@ -2,7 +2,7 @@
 
 **Schema version:** `race-of-candidate v1`
 **Status:** Implemented (Callais Evidence Layer Task 4)
-**Owner:** `redist/crates/redist-analysis/src/race_of_candidate.rs`
+**Owner:** `redist/crates/bisect-analysis/src/race_of_candidate.rs`
 **Spec:** `docs/superpowers/specs/2026-04-30-callais-evidence-layer.md`
 **Plan:** `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md` Task 4
 
@@ -95,8 +95,8 @@ Before signing your bloc-voting analysis as evidence:
 
 ## Cross-references
 
-- Implementation: `redist/crates/redist-analysis/src/race_of_candidate.rs`
-- JSON Schema: `redist/crates/redist-analysis/schemas/bloc_voting.schema.json` (`race_of_candidate_provenance` block)
+- Implementation: `redist/crates/bisect-analysis/src/race_of_candidate.rs`
+- JSON Schema: `redist/crates/bisect-analysis/schemas/bloc_voting.schema.json` (`race_of_candidate_provenance` block)
 - Callais legal grounding: `docs/legal/CALLAIS_REFERENCE.md`
 - Callais Evidence Layer plan: `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md`
 - Civic Bidirectional input plan (matched edit BD-R2): `docs/superpowers/plans/2026-04-30-civic-bidirectional.md`

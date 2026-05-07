@@ -222,4 +222,4 @@ For state-court litigation under state-constitutional standards (PA *LWV*, NC *H
 - `FAIRNESS_DOCTRINE.md` — state-court companion strategy
 - `research/E.4+partisan-similarity-districts/plan.md` — E.4 paper plan
 - `research/E.5+party-based-allocation/main.tex` — E.5 paper draft
-- `redist-analysis/src/proportionality.rs` — the metric's implementation
+- `bisect-analysis/src/proportionality.rs` — the metric's implementation

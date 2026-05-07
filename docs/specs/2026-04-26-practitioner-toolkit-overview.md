@@ -148,10 +148,10 @@ redist compare --plan-a wa_commission_v1_house --plan-b wa_dra_alternative
 
 | Crate | Spec | Description |
 |-------|------|-------------|
-| (extends `redist-analysis`) | 1, 3, 4 | New analyzer modules: contiguity, splits, partisan |
-| (extends `redist-cli`) | 1, 2, 5 | New subcommands: suite, compare |
+| (extends `bisect-analysis`) | 1, 3, 4 | New analyzer modules: contiguity, splits, partisan |
+| (extends `bisect-cli`) | 1, 2, 5 | New subcommands: suite, compare |
 | `redist-compare` | 2 | Plan comparison logic |
-| `redist-report` | 6 | Report generation, export, import |
+| `bisect-report` | 6 | Report generation, export, import |
 
 ---
 

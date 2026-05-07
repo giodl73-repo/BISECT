@@ -15,7 +15,7 @@
 | GitHub repo | `giodl73-repo/REDIST` | `giodl73-repo/bisect` (new) |
 | Old repo | stays | README forward to new repo |
 | Internal crates | `redist-*` | Phase 1: keep; Phase 2: `bisect-*` |
-| CLI commands | `redist state ...` | `bisect state ...` |
+| CLI commands | `bisect state ...` | `bisect state ...` |
 
 ---
 
@@ -25,7 +25,7 @@
 
 ### 1.1 Rename CLI binary
 
-In `redist/crates/redist-cli/Cargo.toml`:
+In `redist/crates/bisect-cli/Cargo.toml`:
 ```toml
 [[bin]]
 name = "bisect"          # was: redist
@@ -72,7 +72,7 @@ Archive the old repo (GitHub Settings → Archive this repository).
 ### 1.6 Phase 1 verification
 
 ```bash
-cargo build -p redist-cli
+cargo build -p bisect-cli
 ./target/debug/bisect --version   # must work
 ./target/debug/bisect state --state VT --year 2020  # smoke test
 ```
@@ -87,19 +87,19 @@ cargo build -p redist-cli
 
 | Old | New |
 |-----|-----|
-| `redist-cli` | `bisect-cli` |
-| `redist-core` | `bisect-core` |
-| `redist-data` | `bisect-data` |
-| `redist-apportion` | `bisect-apportion` |
-| `redist-metis` | `bisect-metis` |
-| `redist-ensemble` | `bisect-ensemble` |
-| `redist-smc` | `bisect-smc` |
-| `redist-ilp` | `bisect-ilp` |
-| `redist-multiscale` | `bisect-multiscale` |
+| `bisect-cli` | `bisect-cli` |
+| `bisect-core` | `bisect-core` |
+| `bisect-data` | `bisect-data` |
+| `bisect-apportion` | `bisect-apportion` |
+| `bisect-metis` | `bisect-metis` |
+| `bisect-ensemble` | `bisect-ensemble` |
+| `bisect-smc` | `bisect-smc` |
+| `bisect-ilp` | `bisect-ilp` |
+| `bisect-multiscale` | `bisect-multiscale` |
 | `redist-pareto` (planned) | `bisect-pareto` |
-| `redist-analysis` | `bisect-analysis` |
-| `redist-map` | `bisect-map` |
-| `redist-report` | `bisect-report` |
+| `bisect-analysis` | `bisect-analysis` |
+| `bisect-map` | `bisect-map` |
+| `bisect-report` | `bisect-report` |
 
 ### 2.2 Code changes
 

@@ -3,9 +3,9 @@
 **Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.25/4  
-**Extends**: `redist-ensemble` crate (new `vra_recom.rs`)  
+**Extends**: `bisect-ensemble` crate (new `vra_recom.rs`)  
 **Related paper**: G.13  
-**Depends on**: `redist-ensemble::forest_recom` (ForestRecomChain)
+**Depends on**: `bisect-ensemble::forest_recom` (ForestRecomChain)
 
 ---
 
@@ -96,7 +96,7 @@ The chain uses the same seed derivation as ForestRecomChain so that VRA-aware an
 
 ## 3. Rust struct and API
 
-**`VraRecomChain` struct** (`redist-ensemble/src/vra_recom.rs`):
+**`VraRecomChain` struct** (`bisect-ensemble/src/vra_recom.rs`):
 
 ```rust
 pub struct VraRecomChain {

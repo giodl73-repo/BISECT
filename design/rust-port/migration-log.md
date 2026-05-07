@@ -21,7 +21,7 @@ serialization. All data modules in Rust, exposed via PyO3.
 - `serialize.rs`: RADJ binary format with magic header and validation
 
 ## Phase 3 — Complete (2026-04-25)
-Full CLI binary. `redist state VT` and `redist state AL --partition-mode metis-vra`
+Full CLI binary. `bisect state VT` and `bisect state AL --partition-mode metis-vra`
 both pass end-to-end acceptance tests. Python subprocess calls eliminated.
 
 ### Phase 3 key implementation fixes (bugs found, not in plan):
@@ -54,7 +54,7 @@ Notes:
 - AL VRA uses n-way partition (single gpmetis call) instead of 7 recursive 2-way calls
 - Main remaining overhead: adjacency pkl loading via Python shim (Phase 2 target: native .adj.bin)
 
-### `redist fetch` (Phase 3d bonus):
+### `bisect fetch` (Phase 3d bonus):
 - `manifest.json` embedded in binary: 50 states, TIGER + PL 94-171 URLs
 - `reqwest::blocking` for HTTP downloads (no Python subprocess)
 - `zip` crate for extraction
@@ -63,14 +63,14 @@ Notes:
 - TIGER fixture files committed: VT (1 district, 193 tracts) + RI (2 districts, 250 tracts)
 
 ## Phase 4 — Complete (2026-04-25)
-Compactness metrics (PP, Reock, CHR) and VRA analysis in `redist-analysis` crate.
+Compactness metrics (PP, Reock, CHR) and VRA analysis in `bisect-analysis` crate.
 Exposed via PyO3. Role review caught: MM threshold `>` not `>=` (VA-01 invariant),
 perimeter excludes holes, deterministic FP aggregation, array length validation.
 
 ## Phase 5 — Complete (2026-04-25)
-`redist analyze` + `redist map` — analytics extension model + native Rust map rendering.
+`bisect analyze` + `redist map` — analytics extension model + native Rust map rendering.
 
-### New crate: `redist-map`
+### New crate: `bisect-map`
 - `projection.rs`: WGS84 bbox → SVG pixel coords (equirectangular, display only)
 - `dissolve.rs`: WKB decode via `geozero::FromWkb` (Polygon + MultiPolygon island tracts) + `geo::BooleanOps::union`
 - `colorscheme.rs`: 12-color categorical + political/demographic/compactness choropleth + greedy graph coloring
@@ -78,7 +78,7 @@ perimeter excludes holes, deterministic FP aggregation, array length validation.
 - `renderer.rs`: SVG → `resvg` → PNG + embedded Liberation Sans (SIL OFL)
 - `rounds.rs`: `BisectionTree` lineage tracking
 
-### New modules in `redist-analysis`
+### New modules in `bisect-analysis`
 - `analyzer.rs`: `Analyzer` trait + `AnalyzerContext` (with `num_districts`) + `AnalyzerType` enum
 - `demographic.rs`: CSV column validation, is_majority_minority, pop_basis metadata
 - `political.rs`: partisan aggregation, is_uncontested, Unavailable for missing years
@@ -86,10 +86,10 @@ perimeter excludes holes, deterministic FP aggregation, array length validation.
 - `summary.rs`: `ideal_pop`, `pop_deviation_pct`, `pop_balance_ok`; exit code 2 on failure
 
 ### New CLI subcommands
-- `redist analyze` — dispatches typed analyzers, atomic JSON write, exits 2 on balance failure
-- `redist map` — PNG rendering via `redist-map` crate
+- `bisect analyze` — dispatches typed analyzers, atomic JSON write, exits 2 on balance failure
+- `redist map` — PNG rendering via `bisect-map` crate
 
-### Shared geometry helper: `redist-cli/src/geometry.rs`
+### Shared geometry helper: `bisect-cli/src/geometry.rs`
 `load_district_geometries()` — TIGER → WKB decode → `group_dissolve` → `HashMap<district_id, MultiPolygon>`.
 Used by both `map_cmd.rs` and compactness analyzer.
 
@@ -101,9 +101,9 @@ exit code 2 on imbalance, pop_basis metadata, WGS84 display-projection note.
 
 ### Still pending (Phase 5 stubs)
 - Choropleth maps with real geometry + analysis data (#62)
-- `redist analyze --types compactness` (#63)
+- `bisect analyze --types compactness` (#63)
 - `redist map --types rounds` real bisection rendering (#64)
-- `redist-web` crate (dashboard generation) remains stub
+- `bisect-web` crate (dashboard generation) remains stub
 
 ## Phase 6 (native METIS, optional)
 Not needed — METIS subprocess is already ms-scale. Skip.

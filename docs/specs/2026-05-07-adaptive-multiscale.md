@@ -3,9 +3,9 @@
 **Status**: Proposed (R1 reviewed, P0+P1 fixes applied)  
 **Date**: 2026-05-07  
 **Reviewed R1**: MERIDIAN 3/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 3/4 → avg 2.75/4  
-**Extends**: `redist-multiscale` crate (extends MultiScaleChain)  
+**Extends**: `bisect-multiscale` crate (extends MultiScaleChain)  
 **Related paper**: B.21  
-**Depends on**: `redist-multiscale` (MultiScaleChain, HierarchyLevel)
+**Depends on**: `bisect-multiscale` (MultiScaleChain, HierarchyLevel)
 
 ---
 

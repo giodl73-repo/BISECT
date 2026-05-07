@@ -166,9 +166,9 @@ COUNTY SPLITS
 
 ## Implementation
 
-### New crate: `redist-compare` (in `redist-analysis`)
+### New crate: `redist-compare` (in `bisect-analysis`)
 
-Module `redist-analysis/src/comparison.rs`:
+Module `bisect-analysis/src/comparison.rs`:
 
 ```rust
 pub struct PlanComparison {
@@ -198,7 +198,7 @@ fn jaccard(set_a: &HashSet<String>, set_b: &HashSet<String>) -> f64 {
 
 ### Enacted assignment conversion
 
-`redist-data/src/enacted.rs`:
+`bisect-data/src/enacted.rs`:
 ```rust
 pub fn assign_tracts_to_enacted(
     tract_centroids: &[geo_types::Point<f64>],  // from TIGER
