@@ -105,7 +105,7 @@ The merged main has `redist-core/src/population.rs` and `fips.rs` — modules I 
 
 The existing `redist/crates/redist-cli/src/partisan.rs` handles partisan analysis (post-hoc). It needs to gain a new path: when invoked with constraint inputs, it produces a partition that respects them.
 
-- [ ] **4.1** Add a CLI flag: `redist state --partition-mode partisan-weighted` activates the new path. Mode enum entries are mutually exclusive in the type system — `partisan-weighted` and `metis-vra` (existing VRA mode) cannot both be active. The compiler enforces this; no runtime check needed.
+- [ ] **4.1** Add a CLI flag: `bisect state --partition-mode partisan-weighted` activates the new path. Mode enum entries are mutually exclusive in the type system — `partisan-weighted` and `metis-vra` (existing VRA mode) cannot both be active. The compiler enforces this; no runtime check needed.
 - [ ] **4.2** Define the input format: per-tract D-share TSV per the spec's File Formats section. Header: `geoid<tab>dem_share`. GEOIDs are 11-character TIGER strings with leading zeros. dem_share is float in [0.0, 1.0].
 - [ ] **4.3** The partisan-share producer lives in Rust (`redist-data/src/partisan_shares.rs`) — see Task 5.
 - [ ] **4.4** Wire `build_partisan_weights` call into the runner: load shares, call the function, pass resulting edge weights into the existing METIS-edge-weighting code path that VRA mode uses.
@@ -140,7 +140,7 @@ Produces per-tract Democratic vote share by joining precinct-level election resu
 
 **Per DATUM review:** "more preserved" is a vague qualifier. Replace with measurable thresholds.
 
-- [ ] **6.1** Run `redist state --state VT --year 2020 --partition-mode partisan-weighted --partisan-shares outputs/data/2020/partisan/vt/dem_shares.tsv`.
+- [ ] **6.1** Run `bisect state --state VT --year 2020 --partition-mode partisan-weighted --partisan-shares outputs/data/2020/partisan/vt/dem_shares.tsv`.
 - [ ] **6.2** Verify the output is a valid partition: population balance ≤ 0.5%, contiguity, correct district count.
 - [ ] **6.3** **Per MERIDIAN review:** Verify population balance is enforced at every bisection-tree level, not just final districts. Add a test that walks the BisectionTree and asserts each intermediate node respects its local ufactor tolerance.
 - [ ] **6.4** Compute partisan-cluster preservation metric: define as the sum, over all districts, of `|dem_share_district - dem_share_state| × population_district`. Higher = more concentrated partisan distribution = clusters preserved.

@@ -12,7 +12,7 @@ The spec proposes a capable technical tool but does not adequately address the l
 ## Strengths
 - The framing of ensemble analysis as an auditing tool ("does the enacted plan fall in the middle of the distribution?") is legally sound and consistent with how expert witnesses have deployed GerryChain in *League of Women Voters v. PA* and subsequent cases. Presenting METIS-generated plans against a random baseline is a well-accepted methodology.
 - The JSON output includes `plan_percentile` alongside the pooled distribution statistics. This is exactly the format that translates to a litigation exhibit: "the enacted plan falls at the Xth percentile of compact, population-balanced maps." Expert reports built on this output will have a clear, auditable data trail.
-- The SHA-chain integration (via `redist label-verify`) creates a tamper-evident record of the plan's provenance that can survive discovery. Courts in *Rucho* and its progeny have not required this level of cryptographic integrity, but having it is a significant defensive asset.
+- The SHA-chain integration (via `bisect label-verify`) creates a tamper-evident record of the plan's provenance that can survive discovery. Courts in *Rucho* and its progeny have not required this level of cryptographic integrity, but having it is a significant defensive asset.
 
 ## P1 — Required changes
 

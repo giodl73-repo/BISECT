@@ -16,17 +16,17 @@ The project supports four distinct partisan-input postures:
 
 | # | Posture | Partisan data used? | Output | Where it applies |
 |---|---|---|---|---|
-| 1 | **Partisan-blind baseline** | No — algorithm sees only tract adjacency + population | One canonical map per state | Federal congressional districts under the Model Bill; default mode of `redist state` |
+| 1 | **Partisan-blind baseline** | No — algorithm sees only tract adjacency + population | One canonical map per state | Federal congressional districts under the Model Bill; default mode of `bisect state` |
 | 2 | **Partisan-balanced** (Plan 03) | Yes — as a constraint to hit a target partisan ratio | One canonical map per state, partisan-target-respecting | State legislative districts where state law allows; *Callais*-disentangled state-court evidence |
 | 3 | **Partisan-similarity** (E.4) | Yes — as edge-weights clustering like-minded voters | Knob: α from 1× (≈ baseline) to 100× (extreme clustering) | Research; thought experiment; potentially state legislative districts in states preferring "safe seats" reform |
 | 4 | **Party-overlapping** (E.5) | Yes — D'Hondt allocates seats, each party draws its own overlapping districts | One canonical map per party per state, all overlapping | Research / proposal; would require federal statutory changes to single-member-district rule (2 U.S.C. § 2c) |
 
 The project's implementation status differs across these four:
 
-- **(1) is fully shipped.** `redist state --partition-mode unweighted` (or `edge-weighted`, the default) and `metis-vra` for VRA-aware variants.
-- **(2) is fully shipped.** `redist state --partition-mode partisan-weighted --partisan-shares <FILE>`. Mutually exclusive with `metis-vra` per Callais p.36 disentanglement. Enforced at the binary's CLI surface and at the import / analyze gates (`callais_preflight`).
+- **(1) is fully shipped.** `bisect state --partition-mode unweighted` (or `edge-weighted`, the default) and `metis-vra` for VRA-aware variants.
+- **(2) is fully shipped.** `bisect state --partition-mode partisan-weighted --partisan-shares <FILE>`. Mutually exclusive with `metis-vra` per Callais p.36 disentanglement. Enforced at the binary's CLI surface and at the import / analyze gates (`callais_preflight`).
 - **(3) is partial.** The paper plan is detailed (`research/E.4+partisan-similarity-districts/plan.md`); the partisan-weighted-bisection mode (#2) is the closest existing primitive but it weights by partisan TARGET not by SIMILARITY between adjacent tracts. A new partition mode (`partisan-similarity`) is the missing piece. **§ 5 below describes the pilot.**
-- **(4) is partial.** Paper E.5 has full intro + draft sections; implementation as a separate runner exists in research code, not in the production `redist state` binary.
+- **(4) is partial.** Paper E.5 has full intro + draft sections; implementation as a separate runner exists in research code, not in the production `bisect state` binary.
 
 ---
 
@@ -115,9 +115,9 @@ The first three measure *bias*: at a fixed vote share, does the map favor one pa
 ### How to compute it
 
 ```bash
-redist analyze --label vt_2020 --year 2020 --version v1 --types proportionality
+bisect analyze --label vt_2020 --year 2020 --version v1 --types proportionality
 # or as part of a full run:
-redist analyze --label vt_2020 --year 2020 --version v1 --types all
+bisect analyze --label vt_2020 --year 2020 --version v1 --types all
 ```
 
 Output: `analysis/proportionality.json`:
@@ -190,7 +190,7 @@ This is mechanically distinct from the shipped partisan-weighted mode (#2), whic
 ## 7. What this commit ships vs. defers
 
 **Ships now:**
-- Proportionality analyzer (`redist analyze --types proportionality`), with 10 unit tests and serialization to `analysis/proportionality.json`.
+- Proportionality analyzer (`bisect analyze --types proportionality`), with 10 unit tests and serialization to `analysis/proportionality.json`.
 - This document (`PARTISAN_OPTIONS.md`).
 - Confirmation that configurations (1) and (2) work end-to-end against the proportionality lens.
 

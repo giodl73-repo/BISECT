@@ -85,11 +85,11 @@ gpmetis --help | head -1
 ### 5. Download data and run
 
 ```bash
-redist fetch --year 2020                              # Download census data
-redist fetch --year 2020 --release                   # + adjacency files from GitHub Releases
+bisect fetch --year 2020                              # Download census data
+bisect fetch --year 2020 --release                   # + adjacency files from GitHub Releases
 python scripts/data/generate_adj_bin.py --year 2020  # Convert to fast native format
 
-redist state --state VT --year 2020 --version V3     # Single state smoke test
+bisect state --state VT --year 2020 --version V3     # Single state smoke test
 redist states --year 2020 --version V3 \
   --output-dir outputs/V3 --workers 8                # All 50 states
 ```
@@ -192,7 +192,7 @@ python -c "import redist_py; print('PyO3 bindings OK')"
 ## Census API Key (Optional)
 
 Required only for downloading demographics data via the Census API.
-`redist fetch` handles TIGER and PL 94-171 data without an API key.
+`bisect fetch` handles TIGER and PL 94-171 data without an API key.
 
 ```bash
 # Get key: https://api.census.gov/data/key_signup.html

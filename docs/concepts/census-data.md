@@ -2,7 +2,7 @@
 
 ## Short version
 
-We use three Census data sources: TIGER/Line shapefiles (tract geometries), PL 94-171 redistricting files (population counts), and ACS demographics (race/ethnicity). All data lives in `data/{year}/`. The `redist fetch` command downloads everything directly from Census Bureau servers, with an option to pull pre-built adjacency files from GitHub Releases.
+We use three Census data sources: TIGER/Line shapefiles (tract geometries), PL 94-171 redistricting files (population counts), and ACS demographics (race/ethnicity). All data lives in `data/{year}/`. The `bisect fetch` command downloads everything directly from Census Bureau servers, with an option to pull pre-built adjacency files from GitHub Releases.
 
 ---
 
@@ -48,7 +48,7 @@ After the data stage completes, cleaned files land in `outputs/data/{year}/`:
 | 2010 | PL 94-171 (2010) | TIGER 2010 | Cross-census validation |
 | 2000 | PL 94-171 (2000) | TIGER 2000 | Historical baseline |
 
-The 2000 data has a different directory structure (`data/2000/tracts/`, `data/2000/population/`) because the Census Bureau changed their file format between cycles. The `redist fetch` command handles these differences automatically.
+The 2000 data has a different directory structure (`data/2000/tracts/`, `data/2000/population/`) because the Census Bureau changed their file format between cycles. The `bisect fetch` command handles these differences automatically.
 
 ## How to get the data
 
@@ -57,7 +57,7 @@ The 2000 data has a different directory structure (`data/2000/tracts/`, `data/20
 If you only need to run redistricting — and do not need to regenerate adjacency from raw geometry — download pre-built `.adj.bin` files from GitHub Releases. This skips the multi-hour geometry processing step entirely:
 
 ```bash
-redist fetch --year 2020 --release
+bisect fetch --year 2020 --release
 ```
 
 The `--release` flag pulls adjacency files from the project's GitHub Releases page. These are deterministically generated from the same TIGER source and are suitable for all pipeline stages including chain verification.
@@ -68,10 +68,10 @@ To reproduce the full pipeline from raw Census files, or to work with a year not
 
 ```bash
 # Check what is missing without downloading
-redist fetch --year 2020 --check-only
+bisect fetch --year 2020 --check-only
 
 # Download missing data with 8 parallel workers
-redist fetch --year 2020 --workers 8
+bisect fetch --year 2020 --workers 8
 ```
 
 The fetch command is cache-aware: it skips files that already exist on disk. A fresh 2020 download takes 1–2 hours on a decent connection. Subsequent runs are near-instant.
@@ -79,7 +79,7 @@ The fetch command is cache-aware: it skips files that already exist on disk. A f
 To download a specific year alongside demographics:
 
 ```bash
-redist fetch --year 2020 --workers 8
+bisect fetch --year 2020 --workers 8
 ```
 
 Both TIGER shapefiles and PL 94-171 redistricting files are fetched in the same invocation. The `--workers` flag controls the number of parallel HTTP connections.
@@ -89,7 +89,7 @@ Both TIGER shapefiles and PL 94-171 redistricting files are fetched in the same 
 For testing with small states before a full run:
 
 ```bash
-redist fetch --year 2020 --states VT DE --workers 4
+bisect fetch --year 2020 --states VT DE --workers 4
 ```
 
 ## GEOID format
@@ -107,4 +107,4 @@ GEOIDs are the join key between geometry (TIGER) and population (PL 94-171). Lea
 
 - `docs/CENSUS_DATA_PROCESSING.md` — detailed processing walkthrough
 - `docs/DATA_DICTIONARY.md` — all column definitions
-- `redist fetch --help` — full CLI reference for the fetch command
+- `bisect fetch --help` — full CLI reference for the fetch command

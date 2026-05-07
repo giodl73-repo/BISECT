@@ -30,7 +30,7 @@
 
 3. **Re-run the analysis** the submitting party performed:
    ```bash
-   redist analyze --label submitted_plan_label --types all
+   bisect analyze --label submitted_plan_label --types all
    ```
    Expected: `analysis/{summary,compactness,partisan,vra_analysis,splits}.json` written. If the submitting party included these files, compare your output to theirs (`diff` on the JSONs).
 
@@ -62,11 +62,11 @@ The three layers are independent: changing the search mode does not change the s
 
 ## Ensemble verification: confirming the plan is at the compact extremum
 
-Use `redist ensemble --compare-plan` to verify that a submitted plan is at or near the compact extremum of the feasible space, not an outlier with a manufactured shape.
+Use `bisect ensemble --compare-plan` to verify that a submitted plan is at or near the compact extremum of the feasible space, not an outlier with a manufactured shape.
 
 ```bash
 # Step 1: Generate a reference ensemble for the state
-redist ensemble --state NC --year 2020 \
+bisect ensemble --state NC --year 2020 \
     --steps 5000 --chains 4 \
     --label nc_reference_ensemble
 

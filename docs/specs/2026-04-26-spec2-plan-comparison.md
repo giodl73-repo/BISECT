@@ -58,12 +58,12 @@ redist compare \
 
 ---
 
-## Enacted district download: `redist fetch --type enacted`
+## Enacted district download: `bisect fetch --type enacted`
 
-Extends `redist fetch` to download currently enacted district shapefiles from the Census Bureau's TIGER/Line congressional district files.
+Extends `bisect fetch` to download currently enacted district shapefiles from the Census Bureau's TIGER/Line congressional district files.
 
 ```bash
-redist fetch --type enacted --year 2020 --states WA
+bisect fetch --type enacted --year 2020 --states WA
 # Downloads: data/2020/enacted/{state}_congressional_2020.shp (or legislative)
 # Also: data/2020/enacted/{state}_house_2020.shp
 #        data/2020/enacted/{state}_senate_2020.shp (where available)

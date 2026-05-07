@@ -17,7 +17,7 @@
 
 2. **Run a single plan** to confirm the pipeline works on your state of interest:
    ```bash
-   redist state --state VT --year 2020 --label vt_baseline --seed 42
+   bisect state --state VT --year 2020 --label vt_baseline --seed 42
    ```
    Expected: `outputs/v1/2020/plans/vt_baseline/{manifest.json, final_assignments.json, ...}` and exit 0 in under a minute for VT.
 
@@ -42,7 +42,7 @@ The `--percentile` flag controls the METIS solution selected at each bisection s
 ```bash
 # Sweep percentile from 0.0 (most compact) to 0.9 (most exploratory) for NC
 for P in 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9; do
-    redist state --state NC --year 2020 \
+    bisect state --state NC --year 2020 \
         --partition-mode apportion-regions \
         --percentile $P \
         --seed 42 \
@@ -72,11 +72,11 @@ redist sweep --state NC --year 2020 \
 
 ## Section: Ensemble diagnostics — characterising the feasible space
 
-Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `redist ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `redist research validate-ensemble`.
+Before reporting a plan's partisan composition as a finding, use the ensemble command to characterise where that plan sits in the feasible space. The `bisect ensemble` command generates multiple independent MCMC chains, computes Gelman-Rubin R-hat and ESS, and produces the `diagnostics/` artifact directory required by `redist research validate-ensemble`.
 
 ```bash
 # Generate a 4-chain ensemble for NC (5000 steps each)
-redist ensemble --state NC --year 2020 \
+bisect ensemble --state NC --year 2020 \
     --steps 5000 --chains 4 \
     --label nc_ensemble_2020
 ```
@@ -113,7 +113,7 @@ Output: `target_plan_percentiles.json` — where the target plan ranks on effici
 
 ```bash
 # BisectionEnsemble for NC: 200 independent bisection runs at percentile 0.5
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --search bisection-ensemble \
     --percentile 0.5 \
     --ensemble-steps 200 \
@@ -128,7 +128,7 @@ What this does:
 
 **When to use BisectionEnsemble vs MCMC ensemble:**
 - BisectionEnsemble is better when you want the compact tail of the distribution (plans near minimum edge-cut). It samples the _algorithmic_ solution space, not the _geometric_ feasible space.
-- MCMC ensemble (`redist ensemble`) samples the full feasible space uniformly. Use it for percentile analysis and court-facing validate-ensemble reports.
+- MCMC ensemble (`bisect ensemble`) samples the full feasible space uniformly. Use it for percentile analysis and court-facing validate-ensemble reports.
 - For a paper, run both and show that the BisectionEnsemble tail overlaps with the low-percentile MCMC plans. That corroborates the algorithmic claim.
 
 ```bash
@@ -151,8 +151,8 @@ redist aggregate --year 2020 --version v1 --states NC \
 
 - Sweep tuning: `redist sweep --help` (metric choices, parallelism)
 - Ensemble diagnostics reference: `docs/research/ensemble-diagnostics.md`
-- Reproducibility for publication: `redist analyze --paper-mode` (AEA-compliant replication package)
-- Statistical rigour on bloc voting: `redist analyze --types bloc-voting` (Callais Evidence Layer)
+- Reproducibility for publication: `bisect analyze --paper-mode` (AEA-compliant replication package)
+- Statistical rigour on bloc voting: `bisect analyze --types bloc-voting` (Callais Evidence Layer)
 - GerryChain interop: `redist research check-compat` then notebook `04_gerrychain_interop.ipynb`
 
 ## Performance notes

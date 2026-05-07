@@ -69,7 +69,7 @@ Expected output: `outputs/official_2020/2020/{state}/final_assignments.json` for
 The SHA chain in `manifest.json` proves that the output matches the inputs byte-for-byte. Run:
 
 ```bash
-redist label-verify official_2020 --year 2020
+bisect label-verify official_2020 --year 2020
 ```
 
 This re-hashes every input file (TIGER shapefiles, PL 94-171 data) and compares against the SHA-256 values recorded in `manifest.json` at run time. A passing result means:

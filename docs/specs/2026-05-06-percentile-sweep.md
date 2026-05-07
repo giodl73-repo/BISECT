@@ -76,18 +76,18 @@ TargetedSweep(p, T):
 
 ```bash
 # MedianSweep: 101 seeds, pick median EC plan
-redist state --state WI --search percentile --percentile 0.50 --seeds 101
+bisect state --state WI --search percentile --percentile 0.50 --seeds 101
 
 # TargetedSweep: calibrated to ReCom 50th percentile
-redist state --state WI --search targeted \
+bisect state --state WI --search targeted \
   --target-ec 0.0866 \        # from redist-ensemble calibration
   --seeds 200
 
 # The full workflow:
-redist ensemble --state WI --steps 5000 --chains 4 \
+bisect ensemble --state WI --steps 5000 --chains 4 \
   --output wi_calibration.json   # Step 1: calibrate
 
-redist state --state WI --search targeted \
+bisect state --state WI --search targeted \
   --calibration wi_calibration.json \
   --percentile 0.50 \
   --seeds 200                    # Step 2: targeted plan
@@ -150,7 +150,7 @@ BisectionEnsemble is a **search strategy** that plugs into the existing three-la
 ### CLI
 
 ```bash
-redist state --state NC --structure prime-factor \
+bisect state --state NC --structure prime-factor \
   --search bisection-ensemble \
   --percentile 0.50 \
   --ensemble-steps 500
@@ -204,7 +204,7 @@ BisectionEnsemble is the strongest integration of the two specs: it combines the
 ### Phase 2 — TargetedSweep (1 week, requires redist-ensemble)
 - [ ] Add calibration step: read `ensemble.json` output to get EC_target(p)
 - [ ] Add `SeedCompositor::Targeted { ec_target: f64, seeds: usize }` variant
-- [ ] CLI: `redist state --search targeted --calibration ensemble.json --percentile 0.50`
+- [ ] CLI: `bisect state --search targeted --calibration ensemble.json --percentile 0.50`
 
 ### Phase 3 — Research (ongoing)
 - [ ] Run PercentileSweep for all 50 states at p=0.0, 0.25, 0.50, 0.75 — compare partisan outcomes

@@ -1,8 +1,8 @@
-# `redist analyze` + `redist map` — Full E2E Native Rust Plan
+# `bisect analyze` + `redist map` — Full E2E Native Rust Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `redist analyze` produces per-district JSON for all metrics. `redist map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `redist-map` is a new crate with an extension model matching `redist-analysis`.
+**Goal:** Full end-to-end analytics and map rendering in Rust. Zero Python subprocesses. `bisect analyze` produces per-district JSON for all metrics. `redist map` renders publication-quality PNG district maps with adaptive labels, coloring, and highlighting. `redist-map` is a new crate with an extension model matching `redist-analysis`.
 
 **Architecture:**
 - New `redist-map` crate: geometry dissolve → projection → SVG → PNG pipeline
@@ -816,7 +816,7 @@ fn test_summary_partial_inputs_dont_panic() {
 
 ---
 
-## Task 8: `redist analyze` + `redist map` CLI wiring
+## Task 8: `bisect analyze` + `redist map` CLI wiring
 
 **Files:** `redist-cli/src/analyze.rs`, `map_cmd.rs`, `args.rs`, `main.rs`
 
@@ -1011,9 +1011,9 @@ All must be addressed before or during implementation. CRITICAL items block hand
 
 ### CRITICAL amendments (must resolve before implementation)
 
-**BOUNDARY-01: Add population balance validation to `redist analyze` output**
+**BOUNDARY-01: Add population balance validation to `bisect analyze` output**
 
-`redist analyze --types demographic` must emit a constitutional validity signal. Add to `SummaryDistrict`:
+`bisect analyze --types demographic` must emit a constitutional validity signal. Add to `SummaryDistrict`:
 ```rust
 pub ideal_pop: i64,
 pub pop_deviation_pct: f64,
@@ -1223,7 +1223,7 @@ let pop_deviation_pct = (d.total_pop - ideal_pop).abs() as f64 / ideal_pop as f6
 
 The amendment says stderr warning + `population_balance_valid: false` in JSON but exit 0. For court-submission use, a constitutionally invalid map must not exit 0 silently.
 
-Fix: `redist analyze` exits with code 2 when `population_balance_valid == false`. Add `--allow-imbalance` flag to `AnalyzeArgs` that suppresses the non-zero exit (for research/experimental runs). Add to L2 test suite:
+Fix: `bisect analyze` exits with code 2 when `population_balance_valid == false`. Add `--allow-imbalance` flag to `AnalyzeArgs` that suppresses the non-zero exit (for research/experimental runs). Add to L2 test suite:
 ```python
 def test_analyze_exits_2_on_balance_failure(self):
     # Construct synthetic assignments that violate ±0.5% — then analyze

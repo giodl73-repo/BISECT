@@ -249,7 +249,7 @@ The `redist` binary is the reference implementation for RPLAN:
 
 ```bash
 # Generate a plan and write as RPLAN
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house --label wa_house_draft1 \
   --output-format rplan
 
@@ -275,7 +275,7 @@ redist import --file external_plan.rplan \
 
 **[WARD]**: RPLAN carries `chamber` and `population_source` in metadata so consuming tools know which legal standards apply when analyzing the plan. These fields inform Spec 3's state-specific split analysis.
 
-**[BOUNDARY]**: RPLAN does not encode VRA compliance, partisan fairness, or any legal determination — it is a neutral data format. Legal analysis is the domain of the `redist analyze` subcommands that consume RPLAN files.
+**[BOUNDARY]**: RPLAN does not encode VRA compliance, partisan fairness, or any legal determination — it is a neutral data format. Legal analysis is the domain of the `bisect analyze` subcommands that consume RPLAN files.
 
 ---
 
@@ -301,4 +301,4 @@ Fix: Add to Spec 1's implementation section. `redist validate` dispatches to `re
 
 **[LEDGER] CRITICAL — Define path convention migration**
 `plans/{label}/` tree (Spec 1) vs legacy `states/{state_name}/` tree (existing CLI). These coexist but are never reconciled.
-Fix: Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `redist analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. Document this in the overview spec.
+Fix: Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `bisect analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. Document this in the overview spec.

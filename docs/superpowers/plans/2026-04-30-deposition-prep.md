@@ -25,7 +25,7 @@
 
 ## Pre-Conditions
 
-- `redist analyze --label LABEL` runs end-to-end on the Vermont walkthrough fixture (delivered by Onboarding plan).
+- `bisect analyze --label LABEL` runs end-to-end on the Vermont walkthrough fixture (delivered by Onboarding plan).
 - `redist-analysis` exposes the seven analyzer surfaces (`PartisanAnalyzer`, `PoliticalAnalyzer`, `DemographicAnalyzer`, `UrbanAnalyzer`, `SummaryAnalyzer`, `analyze_mm_districts`, `compactness::all_metrics`) with stable signatures (already true at HEAD).
 - `redist/crates/redist-cli/src/provenance.rs` exposes `BUILD_COMMIT` and `Provenance::current()` (already true).
 - `redist/crates/redist-cli/build.rs` populates `REDIST_BUILD_COMMIT` from `git rev-parse HEAD` (already true). This plan extends the build script to honor an env-var override.
@@ -305,7 +305,7 @@ Pick one of two implementation paths. Recommended path: **add `interprocess = "2
 
 ## Out of Scope
 
-- Re-running the bisection itself (different plan = `redist state`, not deposition).
+- Re-running the bisection itself (different plan = `bisect state`, not deposition).
 - Live courtroom display (handled by State Staff Interop / Districtr loop).
 - Multi-user shared depo server (single-expert model is the realistic mode).
 - Audio transcription of depositions into parameter changes.

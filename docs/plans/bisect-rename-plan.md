@@ -118,9 +118,9 @@ find redist/ -name "*.rs" -o -name "*.toml" | xargs sed -i 's/redist_cli/bisect_
 ### 2.3 Spec and documentation updates
 
 All accepted specs reference CLI flags — update:
-- `redist state --state NC` → `bisect state --state NC`
-- `redist ensemble --method smc` → `bisect ensemble --method smc`
-- `redist fetch --year 2020` → `bisect fetch --year 2020`
+- `bisect state --state NC` → `bisect state --state NC`
+- `bisect ensemble --method smc` → `bisect ensemble --method smc`
+- `bisect fetch --year 2020` → `bisect fetch --year 2020`
 - All docs/specs/*.md files
 - All research paper LaTeX (CLI examples in algorithm sections)
 

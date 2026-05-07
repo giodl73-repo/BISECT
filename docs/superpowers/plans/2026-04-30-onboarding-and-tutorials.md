@@ -21,7 +21,7 @@
 ## Pre-Conditions
 
 - `redist` binary builds clean on Windows + Linux from `cargo build --release --locked`
-- Census 2020 TIGER data for VT is fetchable via existing `redist fetch` infrastructure
+- Census 2020 TIGER data for VT is fetchable via existing `bisect fetch` infrastructure
 - Fekrazad DOI 10.7910/DVN/Z8TSH3 is reachable (verified by network-marked integration tests)
 - `redist doctor` exists and supports `--verify-manifest`; this plan extends it with `--check-tutorial-data`
 
@@ -81,7 +81,7 @@ The script implements the spec's §"Bootstrap script structure" with the v2.1 PP
 - [ ] **3.2** PATH preflight (PP-18): after `cargo build`, verify `target/release/redist` exists at the expected path BEFORE adding to PATH. After PATH update, verify `which redist` finds it. If not, exit non-zero with a clear "build succeeded but binary not at expected path" message.
 - [ ] **3.3** Optional Python wheel build via maturin: gated by `--with-python` flag. After build, verify `python -c "import redist_py"` succeeds before claiming success.
 - [ ] **3.4** Optional Dataverse API key prompt: gated by `--with-api-key` flag. PP-19 requires validating the key with one Dataverse round-trip BEFORE writing to `~/.config/redist/credentials.toml`. On validation failure, do NOT write the key; print the actionable error from Dataverse.
-- [ ] **3.5** Run smoke test (Task 1's `run.sh` is the canonical smoke; bootstrap.sh runs an abbreviated version: `redist state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke` and asserts the tract count).
+- [ ] **3.5** Run smoke test (Task 1's `run.sh` is the canonical smoke; bootstrap.sh runs an abbreviated version: `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke` and asserts the tract count).
 - [ ] **3.6** Print final summary: time elapsed, what was installed, what to try next.
 
 **Exit:** On a clean Ubuntu 22.04 container, `bash bootstrap.sh` completes in ≤ 10 minutes wall-clock and the smoke test passes.
@@ -109,7 +109,7 @@ Each follows the spec's template (Who you are / What you'll have / Time / Steps 
 - [ ] **5.1** `quickstart-special-master.md` — verify a submitted plan against its manifest using `redist doctor --verify-manifest`. Use the Vermont walkthrough's output as the example plan.
 - [ ] **5.2** `quickstart-researcher.md` — run a parameter sweep + analyze. Cross-references the (future) Researcher Toolkit notebooks but ships a CLI-only path.
 - [ ] **5.3** `quickstart-callais-expert.md` — full §2 evidence kit; explicitly framed as advanced; references the Louisiana walkthrough fixture.
-- [ ] **5.4** `quickstart-state-staff.md` — Districtr → `redist import` → `redist analyze` → `redist report` round trip.
+- [ ] **5.4** `quickstart-state-staff.md` — Districtr → `redist import` → `bisect analyze` → `redist report` round trip.
 - [ ] **5.5** `quickstart-civic-advocate.md` — produce a comparison narrative for the public.
   - **CM-01**: include explicit guidance on obtaining the state's official plan when not Districtr-published — shapefile path (`redist import --format shapefile`), GeoJSON path, and "if all you have is a PDF, here's how to ask the state for a machine-readable export" template language.
 - [ ] **5.6** Each quickstart manually walked end-to-end on a clean machine; record actual wall-clock time at the top.

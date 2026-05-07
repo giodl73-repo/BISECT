@@ -41,7 +41,7 @@ To get byte-identical builds, either:
 - Build in a clean container with a fixed source path (e.g., `/build`) and `SOURCE_DATE_EPOCH=0` set
 - Strip non-determinism after build with `strip` + `--remap-path-prefix` flags
 
-For most court purposes, **functional equivalence** is sufficient: two binaries produced from the same source + lockfile produce identical outputs for identical inputs. Verify by running `redist state --state VT --year 2020` from each binary and comparing `final_assignments.json` byte-for-byte (METIS is deterministic given the same edge weights and seed; the Rust kernel is deterministic given the same input).
+For most court purposes, **functional equivalence** is sufficient: two binaries produced from the same source + lockfile produce identical outputs for identical inputs. Verify by running `bisect state --state VT --year 2020` from each binary and comparing `final_assignments.json` byte-for-byte (METIS is deterministic given the same edge weights and seed; the Rust kernel is deterministic given the same input).
 
 ### Verifying a published release
 
@@ -53,7 +53,7 @@ git checkout v0.X.Y
 cd redist && cargo build --release --locked
 
 # 2. Run the binary on a known input
-./target/release/redist state --state VT --year 2020 --output-dir /tmp/verify
+./target/release/bisect state --state VT --year 2020 --output-dir /tmp/verify
 
 # 3. Compare to a reference output (if published) or to the official release binary
 diff /tmp/verify/v1/states/vermont/data/final_assignments.json \

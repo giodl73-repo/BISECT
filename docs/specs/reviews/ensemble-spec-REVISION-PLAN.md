@@ -43,7 +43,7 @@ Items raised by at least one reviewer as required before approval. Items raised 
 
 ### C. Audit chain integration absent for all four modes (raised by: COVENANT)
 
-**Problem**: None of the four new modes documents what fields they contribute to the `redist label-verify` audit record. The existing audit chain records seed chain, build commit hash, and plan manifest SHA-256. The new modes add new parameters (burst_length, n_bursts, n_particles, cooling schedule, beta) and new derived values (burst-endpoint EC values, particle weights) that must be in the manifest for the audit to be verifiable.
+**Problem**: None of the four new modes documents what fields they contribute to the `bisect label-verify` audit record. The existing audit chain records seed chain, build commit hash, and plan manifest SHA-256. The new modes add new parameters (burst_length, n_bursts, n_particles, cooling schedule, beta) and new derived values (burst-endpoint EC values, particle weights) that must be in the manifest for the audit to be verifiable.
 
 **Required fix**: Add a subsection to each mode specification listing the fields added to the audit manifest:
 - Short-Burst: `base_seed`, `burst_length`, `n_bursts`, `p`, `burst_ec_values: [f64]`, `selected_rank: usize`
@@ -93,7 +93,7 @@ Items raised by at least one reviewer as required before approval. Items raised 
 
 **Problem**: The selected plan's rank within the burst-endpoint distribution cannot be independently verified without re-running all bursts. The audit chain requires the burst EC values to be in the output.
 
-**Required fix**: Add `burst_ec_values: Vec<f64>` and `selected_burst_rank: usize` to the Short-Burst section of `EnsembleResult` JSON. This allows `redist label-verify` to recompute the selection without re-running the chains.
+**Required fix**: Add `burst_ec_values: Vec<f64>` and `selected_burst_rank: usize` to the Short-Burst section of `EnsembleResult` JSON. This allows `bisect label-verify` to recompute the selection without re-running the chains.
 
 ---
 
@@ -101,7 +101,7 @@ Items raised by at least one reviewer as required before approval. Items raised 
 
 - **SA restart strategy** (MERIDIAN): Document restart-to-best-known as a tuning option for the cooling schedule.
 - **Mode selection guidance** (SURVEY): Add a decision table covering optimisation target, compute budget, legal defensibility, and connection to ConvergenceSweep/PercentileSweep for each mode.
-- **SMC `--steps 1` clarification** (SURVEY): The CLI example `redist ensemble --method smc --particles 5000 --state NC --steps 1` is confusing — clarify what `--steps` means in an SMC context (resampling rounds? output plans?).
+- **SMC `--steps 1` clarification** (SURVEY): The CLI example `bisect ensemble --method smc --particles 5000 --state NC --steps 1` is confusing — clarify what `--steps` means in an SMC context (resampling rounds? output plans?).
 - **Runtime estimates** (SURVEY): Add a runtime table analogous to the ReCom spec's performance table for each mode at VT/NC/TX tract counts.
 - **`--output-all-bursts` debug flag** (BENCHMARK): Add a debug mode that writes all burst-endpoint plans to a sidecar JSON for L0 test inspection.
 - **Minimum test graph specification** (BENCHMARK): Specify a 9-tract 3-district grid as the canonical L0 test fixture for Flip and SA, consistent with the level of detail in the PercentileSweep spec.

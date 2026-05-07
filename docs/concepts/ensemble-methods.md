@@ -131,16 +131,16 @@ occurs:
 
 ```bash
 # Single-chain ensemble, 10,000 steps
-redist ensemble --state NC --year 2020 --steps 10000
+bisect ensemble --state NC --year 2020 --steps 10000
 
 # Four independent chains (for convergence diagnostics)
-redist ensemble --state NC --year 2020 --steps 10000 --chains 4
+bisect ensemble --state NC --year 2020 --steps 10000 --chains 4
 
 # Save all accepted plans to a directory
-redist ensemble --state NC --year 2020 --steps 10000 --out-dir /tmp/nc_ensemble
+bisect ensemble --state NC --year 2020 --steps 10000 --out-dir /tmp/nc_ensemble
 
 # Compare a specific plan against an ensemble
-redist ensemble --state NC --year 2020 --steps 10000 \
+bisect ensemble --state NC --year 2020 --steps 10000 \
   --compare-plan runs/official_2020/2020/north_carolina/final_assignments.json
 ```
 

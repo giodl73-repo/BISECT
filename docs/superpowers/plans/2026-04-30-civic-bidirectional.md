@@ -31,7 +31,7 @@
 - `redist import --as-civic-counter-proposal` is wired (State Staff Interop plan)
 - `redist compare --comments-label <LABEL>` is wired (Plan Comparison plan)
 - Callais Evidence Layer plan has landed `race_of_candidate_provenance.json` v1 schema and the parallel-curator-runs path (we extend it; we do not introduce it)
-- Census tract-set lookup for `(year, state)` is reachable from `redist-data` (used by `redist fetch` today)
+- Census tract-set lookup for `(year, state)` is reachable from `redist-data` (used by `bisect fetch` today)
 
 ---
 
@@ -112,7 +112,7 @@ The COI CSV reader is the single chokepoint for civic input. Every byte that flo
 
 The spec calls leading-zero loss "the single most common Excel error." This task implements the detector that names it explicitly.
 
-- [ ] **3.1** Build a `valid_geoids: HashSet<String>` for `(year, state)` by reusing the existing TIGER tract reader at `redist-data/src/tiger.rs` — the same source of record `redist fetch` uses today. Falls back to a checked-in tract list under `redist-data/data/tracts/{year}/{state}.txt` if TIGER files are unavailable in the current environment (deterministic CI path).
+- [ ] **3.1** Build a `valid_geoids: HashSet<String>` for `(year, state)` by reusing the existing TIGER tract reader at `redist-data/src/tiger.rs` — the same source of record `bisect fetch` uses today. Falls back to a checked-in tract list under `redist-data/data/tracts/{year}/{state}.txt` if TIGER files are unavailable in the current environment (deterministic CI path).
 - [ ] **3.2** Per-row GEOID checks, in order:
   - **Length 11 + numeric + present in `valid_geoids`** → PASS
   - **Length 9 or 10, numeric**: emit the specific PP-28 message: `[INPUT] Row {N} GEOID '{geoid}' is {len} digits; tract GEOIDs are 11 digits. Excel/Sheets stripped a leading zero. Re-export the GEOID column with column-format = Text. See docs/civic/HOWTO.md#leading-zero.`
@@ -124,7 +124,7 @@ The spec calls leading-zero loss "the single most common Excel error." This task
   - Contiguity: warn-only — for each `comment_id`, load the adjacency graph (existing `adjacency_loader.rs`) and report whether the GEOIDs form a connected sub-graph. Non-contiguous COIs are legitimate (the spec says so); we surface, never block.
 - [ ] **3.5** L0 tests: synthetic CSV with one 10-digit GEOID asserts the PP-28 error literal naming the leading-zero remediation; synthetic CSV with a typo'd 11-digit GEOID asserts the "not found in tract set" message; synthetic CSV where COI-A has tracts `{A,B}` and COI-B has tract `{B}` triggers the cross-COI duplicate error in strict and a warning in lenient.
 
-**Exit:** Excel's leading-zero pitfall is detected and named in plain English; tract-set membership uses the same source `redist fetch` does.
+**Exit:** Excel's leading-zero pitfall is detected and named in plain English; tract-set membership uses the same source `bisect fetch` does.
 
 ---
 

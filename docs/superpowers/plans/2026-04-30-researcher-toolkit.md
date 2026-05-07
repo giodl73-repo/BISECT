@@ -7,7 +7,7 @@
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
 **Goal:** Package the existing redist engine for academic researchers: 5 Jupyter notebooks against the `redist_py` PyO3 wheel, an MCMC ensemble wrapper around GerryChain, an AEA-compliant `--paper-mode` replication-package emitter, and convergence diagnostics that meet field-standard rigor (R-hat across ≥4 chains, ESS on summary statistics, partition-distance autocorrelation).
 
-**Depends on:** spec v2.1 approval; existing `redist_py` PyO3 wheel (built via `maturin` from `redist/python/redist_py/`); existing `redist export --format gerrychain` and `redist import --format gerrychain` (already shipped). No blocking code dependencies; the new CLI lives under a new `redist research` subcommand group and a new `--paper-mode` flag on `redist analyze`.
+**Depends on:** spec v2.1 approval; existing `redist_py` PyO3 wheel (built via `maturin` from `redist/python/redist_py/`); existing `redist export --format gerrychain` and `redist import --format gerrychain` (already shipped). No blocking code dependencies; the new CLI lives under a new `redist research` subcommand group and a new `--paper-mode` flag on `bisect analyze`.
 **Blocks:** none directly. The Researcher Toolkit is the last persona on the roadmap, so subsequent work is maintenance-mode.
 
 **v2.1 items addressed by this plan:**
@@ -26,7 +26,7 @@
 - `redist export --format gerrychain` produces valid GerryChain v2.3 JSON (already in `export_cmd.rs`)
 - `redist import --format gerrychain` round-trips assignments (already in `import_cmd.rs`)
 - A working Python 3.11+ environment with `gerrychain>=0.3.2,<0.4` installable via `requirements.lock`
-- `redist analyze` exists and accepts `--label` for plan-scoped analysis (confirmed in `args.rs`)
+- `bisect analyze` exists and accepts `--label` for plan-scoped analysis (confirmed in `args.rs`)
 
 ---
 
@@ -153,7 +153,7 @@ S-03 is the rigor-hardening for the "is this ensemble actually mixed?" question.
 
 ---
 
-## Task 8: `redist analyze --paper-mode` AEA REPRODUCE.sh with target-platform pinning (D-05)
+## Task 8: `bisect analyze --paper-mode` AEA REPRODUCE.sh with target-platform pinning (D-05)
 
 **Files:** `redist/crates/redist-cli/src/args.rs` (add `paper_mode: bool` to `AnalyzeArgs`), `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/paper_mode.rs` (new), `scripts/research/paper_mode_template/{REPRODUCE.sh,README.md.tmpl,CITATION.bib.tmpl}`, `tests/research/test_paper_mode.py`
 
@@ -171,11 +171,11 @@ D-05 escalates the package from "soft pin" to AEA-compliant: declare *target* pl
   - `CITATION.bib` / `CITATION.apa.txt` / `CITATION.chicago.txt` populated from `CITATION.bib.tmpl` with the user's plan label + commit SHA.
   - `REPRODUCE.sh` from `paper_mode_template/REPRODUCE.sh`. The script: (a) verifies platform == target_platform via `uname -m` + `ldd --version`, exits with actionable cross-platform note on mismatch; (b) `cargo build --release --locked` against the pinned `Cargo.lock`; (c) `pip install -r requirements.lock`; (d) re-runs the analyze invocation; (e) hashes outputs and diffs against `expected_outputs.sha256.json`; exits 0 only on byte-identical match.
 - [ ] **8.3** `--paper-mode` for ensembles: cross-references Task 7's diagnostics directory; the README's "Convergence diagnostics" section is auto-populated from `diagnostics/rhat.json`, `ess.json`, `hamming_autocorr.json` (S-03 cross-link).
-- [ ] **8.4** L0 paper-mode acceptance test: `redist analyze --label synthetic_vt --paper-mode` produces a `REPRODUCE.sh` whose execution from a clean Python venv reproduces the analyze headline numbers byte-identically (per spec DoD).
+- [ ] **8.4** L0 paper-mode acceptance test: `bisect analyze --label synthetic_vt --paper-mode` produces a `REPRODUCE.sh` whose execution from a clean Python venv reproduces the analyze headline numbers byte-identically (per spec DoD).
 - [ ] **8.5** Conformance: lint the emitted README against `social-science-data-editors/template-readme` schema (where applicable; pin the linter version in `requirements.lock`).
 - [ ] **8.6** Document the cross-platform contract in `docs/research/paper-mode.md`: REPRODUCE.sh is *target-pinned* to Linux x86_64 glibc 2.35, runs on macOS/Windows under WSL with a documented workaround. Reviewers on other platforms get an actionable note, not a cryptic checksum diff.
 
-**Exit:** `redist analyze --paper-mode` produces an AEA-spec package; `bash REPRODUCE.sh` from a clean Ubuntu 22.04 container reproduces headline numbers byte-identically in ≤30 minutes on a 4-core laptop (per spec DoD).
+**Exit:** `bisect analyze --paper-mode` produces an AEA-spec package; `bash REPRODUCE.sh` from a clean Ubuntu 22.04 container reproduces headline numbers byte-identically in ≤30 minutes on a 4-core laptop (per spec DoD).
 
 ---
 
@@ -203,7 +203,7 @@ B-09 reframes the v2 spec's ensemble-diagnostic tests as *implementation-correct
 - [ ] **10.2** `docs/research/paper-mode.md` — the AEA contract: target-platform pin, the three required SHA fields (Cargo.lock, rust-toolchain.toml, requirements.lock), the REPRODUCE.sh contract, the cross-platform note for non-Linux reviewers (D-05 cross-reference).
 - [ ] **10.3** `docs/research/ensemble-diagnostics.md` — the convergence-diagnostic contract: ≥4 chains, R-hat <1.05 threshold, ESS-on-summary-statistics rationale, Hamming-autocorrelation tau_int interpretation. Documents the refuse-to-cite policy (S-03 cross-reference).
 - [ ] **10.4** `docs/research/gerrychain-interop.md` — already cited from Task 4.4; documents the GEOID-mapping rule and the round-trip property.
-- [ ] **10.5** `docs/REDIST_CLI.md` — add `redist research check-compat`, `redist research validate-ensemble`, `redist analyze --paper-mode` to the command reference.
+- [ ] **10.5** `docs/REDIST_CLI.md` — add `redist research check-compat`, `redist research validate-ensemble`, `bisect analyze --paper-mode` to the command reference.
 - [ ] **10.6** `docs/CHANGELOG.md` entry.
 - [ ] **10.7** `CLAUDE.md` "Recent Changes" section gets a researcher-toolkit entry pointing at `docs/research/toolkit-overview.md`.
 
@@ -220,7 +220,7 @@ B-09 reframes the v2 spec's ensemble-diagnostic tests as *implementation-correct
 - `redist research validate-ensemble` (renamed from `validate-against-ensemble`, M-02) produces percentile output within 0.5 pp of hand-computed truth and refuses ensembles missing diagnostics
 - `scripts/research/mcmc_ensemble.py` generates ≥4-chain GerryChain ensembles into the spec's directory layout
 - Diagnostics emit `rhat.json`, `ess.json` (with `computed_on=summary_statistic`), `burn_in.json`, `acceptance_rates.csv`, `hamming_autocorr.json`, `trace.png` (S-03)
-- `redist analyze --paper-mode` produces an AEA-compliant package with `target_platform=linux-x86_64-glibc-2.35`, `cargo_lock_sha256`, `rust_toolchain_sha256`, and `requirements.lock` (D-05)
+- `bisect analyze --paper-mode` produces an AEA-compliant package with `target_platform=linux-x86_64-glibc-2.35`, `cargo_lock_sha256`, `rust_toolchain_sha256`, and `requirements.lock` (D-05)
 - `bash REPRODUCE.sh` from clean Ubuntu 22.04 reproduces headline numbers byte-identically in ≤30 minutes on a 4-core laptop
 - PR pipeline runs implementation-correctness diagnostic tests in <30s; nightly runs N≥10000 statistical-anchor test (B-09)
 - `docs/research/{toolkit-overview,paper-mode,ensemble-diagnostics,gerrychain-interop}.md` exist and lint-clean

@@ -15,7 +15,7 @@ The honest move: ship clean import/export so staff use Districtr (or DRA, or QGI
 A staffer's workflow becomes:
 1. Draw the map in Districtr, save as JSON
 2. `redist import --format districtr <PATH> --label senate_proposal_v3`
-3. `redist analyze --label senate_proposal_v3 --types all`
+3. `bisect analyze --label senate_proposal_v3 --types all`
 4. `redist report --label senate_proposal_v3 --format pdf`
 5. Iterate in Districtr; repeat
 
@@ -64,7 +64,7 @@ The staffer never sees Rust, Python, or our internal data formats. They get fast
    - We pin a tested-against version range per format; out-of-range raises a warning naming the supported range
    - The pinned ranges live in `redist-cli/src/import_compat.json` so they're a one-line bump
 
-9. **Callais p.36 mutex preflight (v2 — BOUNDARY)** — every `redist import` (and every subsequent `redist analyze`) checks the plan's manifest for both VRA-aware bisection markers and partisan-weighted bisection markers. If both appear, the command exits with the Callais p.36 disentanglement error before any analysis runs. State-staff workflows are the highest-volume entry point for this footgun; we catch it here.
+9. **Callais p.36 mutex preflight (v2 — BOUNDARY)** — every `redist import` (and every subsequent `bisect analyze`) checks the plan's manifest for both VRA-aware bisection markers and partisan-weighted bisection markers. If both appear, the command exits with the Callais p.36 disentanglement error before any analysis runs. State-staff workflows are the highest-volume entry point for this footgun; we catch it here.
 
 10. **Civic-group bypass path (v2 — COMMONS)** — `redist import --as-civic-counter-proposal` flag tags the import manifest with `submission_type=civic_counter_proposal` and:
     - Skips the "is this from an authoritative state mapping tool" warning

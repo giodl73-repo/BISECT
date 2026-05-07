@@ -19,7 +19,7 @@ Additionally:
 4. **Declination** — geometric measure of vote/seat relationship asymmetry (Warrington, 2018)
 5. **Responsiveness** — how much seat share changes per unit of vote share near 50%
 
-These are already surfaced in the dashboard. This spec makes them first-class `redist analyze` outputs with proper statistical confidence intervals.
+These are already surfaced in the dashboard. This spec makes them first-class `bisect analyze` outputs with proper statistical confidence intervals.
 
 ---
 
@@ -28,7 +28,7 @@ These are already surfaced in the dashboard. This spec makes them first-class `r
 Extends Spec 1's analyzer extension model:
 
 ```bash
-redist analyze --state WA --year 2020 --version WA_Plans \
+bisect analyze --state WA --year 2020 --version WA_Plans \
   --label wa_house_draft1 --types partisan
 ```
 
@@ -83,7 +83,7 @@ State legislative election results by precinct → needs to be disaggregated to 
 Allows practitioners to supply their own election data:
 
 ```bash
-redist analyze --state WA --types partisan \
+bisect analyze --state WA --types partisan \
   --election-file data/custom/wa_2022_governor_by_tract.csv
 ```
 
@@ -153,7 +153,7 @@ Fractional votes are allowed (precinct-to-tract interpolation produces them).
 
 [PlanScore](https://planscore.org) is the leading public redistricting fairness tool. It accepts GeoJSON district plans via API and returns efficiency gap + other metrics.
 
-**Integration**: `redist analyze --types partisan --also-submit-to planscore` option (future). For v1, we produce a GeoJSON export compatible with PlanScore's input format:
+**Integration**: `bisect analyze --types partisan --also-submit-to planscore` option (future). For v1, we produce a GeoJSON export compatible with PlanScore's input format:
 
 ```bash
 redist export --label wa_house_draft1 --format geojson \
@@ -280,12 +280,12 @@ Fix: When `--election-file` is not specified and presidential data is used for a
 
 **[SURVEY] CONCERN — Finding 6: Election data dependency must be explicit**
 Partisan analysis has a hard dependency on a local data file that is NOT part of the RPLAN format. This dependency is invisible to tools that receive an RPLAN for analysis.
-Fix: Add explicit note in this spec and in the partisan analyzer output: "Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `redist fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine."
+Fix: Add explicit note in this spec and in the partisan analyzer output: "Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `bisect fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine."
 If the election file is absent, `partisan.json` must include:
 ```json
 {
   "available": false,
-  "unavailable_reason": "Election data not found. Run: redist fetch --type elections --year 2020",
+  "unavailable_reason": "Election data not found. Run: bisect fetch --type elections --year 2020",
   "required_file": "data/2020/elections/presidential_by_tract.csv"
 }
 ```
@@ -296,4 +296,4 @@ Do not silently produce metrics with missing data.
 ## R3 Board Review Amendments (2026-04-26)
 
 **[SURVEY] CONCERN — Election data dependency not explicit**
-Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv` but this is never stated as a prerequisite. Fix: Add to the "Requires" section: "Requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `redist fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine. When unavailable, `partisan.json` has `available: false` and `unavailable_reason: 'election data not found'`."
+Partisan analysis requires `data/{year}/elections/presidential_by_tract.csv` but this is never stated as a prerequisite. Fix: Add to the "Requires" section: "Requires `data/{year}/elections/presidential_by_tract.csv`. Obtain via `bisect fetch --type elections --year {year}`. RPLAN format does not carry election data; this dependency is local to the analysis machine. When unavailable, `partisan.json` has `available: false` and `unavailable_reason: 'election data not found'`."

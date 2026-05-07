@@ -65,7 +65,7 @@ Written alongside every plan. Provides full audit chain of custody.
 
 ## New CLI Flags
 
-### `redist state` / `redist states` / `redist run`
+### `bisect state` / `redist states` / `redist run`
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -90,17 +90,17 @@ If `vap` or `cvap` is requested but the data column is absent, `redist` exits wi
 
 ```bash
 # Washington house — 98 districts
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house --label wa_house_draft1 \
   --balance-tolerance 5.0 --seed 42
 
 # Washington senate — 49 districts
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 49 --chamber senate --label wa_senate_draft1 \
   --balance-tolerance 5.0 --seed 42
 
 # Congressional (for audit comparison, using official config count)
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --chamber congressional --label wa_congress_audit
 
 # All 50 states, custom balance tolerance
@@ -108,7 +108,7 @@ redist states --year 2020 --version WA_Plans \
   --output-dir outputs/WA_Plans --balance-tolerance 2.0
 
 # Using citizen VAP instead of total population
-redist state --state WA --year 2020 --version WA_CVAP \
+bisect state --state WA --year 2020 --version WA_CVAP \
   --districts 98 --chamber house --population-source cvap
 ```
 
@@ -167,7 +167,7 @@ After `write_state_outputs()` succeeds, compute SHA-256 of adjacency and TIGER f
 - `test_label_default_generation` — no label + WA house 2020 → `washington_house_2020`
 
 ### L2 acceptance
-- `test_wa_house_98_districts_produces_manifest` — `redist state --state WA --districts 98 --chamber house` → manifest.json with `num_districts: 98`, `chamber: "house"`
+- `test_wa_house_98_districts_produces_manifest` — `bisect state --state WA --districts 98 --chamber house` → manifest.json with `num_districts: 98`, `chamber: "house"`
 - `test_seed_produces_reproducible_assignments` — same seed twice → identical `final_assignments.json`
 - `test_balance_tolerance_in_manifest` — manifest records the tolerance used
 - `test_population_source_in_manifest` — manifest records population_source
@@ -228,7 +228,7 @@ Implementation note: Check for `manifest.json` existence before beginning any co
 Recording `"adjacency_file": "outputs/V3/data/2020/adjacency/..."` embeds a local path that is meaningless to an external auditor. Fix: `adjacency_file` in PlanManifest records filename + SHA-256 only (not full path). Add `tiger_source_url` field pointing to the Census.gov download URL for the source shapefile, enabling independent verification from Census-published data.
 
 **[TRENCH] CONCERN — Label collision overwrites silently**
-Running `redist state --state WA --chamber house` twice uses the same default label and overwrites the first plan's manifest without warning. Fix: At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero: "ERROR: Plan 'washington_house_2020' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." `--force` skips this check.
+Running `bisect state --state WA --chamber house` twice uses the same default label and overwrites the first plan's manifest without warning. Fix: At plan directory creation, if `manifest.json` already exists and `--force` is not set, exit non-zero: "ERROR: Plan 'washington_house_2020' already exists (created {timestamp}). Use --force to overwrite or choose a different --label." `--force` skips this check.
 
 **[SURVEY] — Commands::Validate wiring**
 Add `Validate(ValidateArgs)` to the Commands enum. `ValidateArgs` takes `--file <PATH>` and optional `--strict`. Validation dispatches to `redist_report::validate_rplan()`.

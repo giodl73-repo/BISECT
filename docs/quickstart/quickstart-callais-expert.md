@@ -20,7 +20,7 @@
 
 2. **Fetch Louisiana election data** via the registry:
    ```bash
-   redist fetch --type elections --states LA --year 2020 --source openelections
+   bisect fetch --type elections --states LA --year 2020 --source openelections
    ```
    See `scripts/data/elections/sources.json` for which state-year combinations have automated fetchers vs. require manual download.
 
@@ -33,15 +33,15 @@
 
 4. **Run a Louisiana plan** with the partisan-weighted bisection mode:
    ```bash
-   redist state --state LA --year 2020 --label la_2020_callais \
+   bisect state --state LA --year 2020 --label la_2020_callais \
        --partition-mode partisan-weighted \
        --partisan-shares data/elections/dem_shares/LA_2020.tsv
    ```
-   The Callais p.36 mutex enforces that VRA-aware bisection and partisan-weighted bisection are mutually exclusive in the same run — `redist state` will refuse a configuration that turns both on.
+   The Callais p.36 mutex enforces that VRA-aware bisection and partisan-weighted bisection are mutually exclusive in the same run — `bisect state` will refuse a configuration that turns both on.
 
 5. **Run the bloc-voting analysis** (Callais Evidence Layer — when implemented):
    ```bash
-   redist analyze --label la_2020_callais --types bloc-voting \
+   bisect analyze --label la_2020_callais --types bloc-voting \
        --candidate-race-csv data/elections/race_of_candidate/2020-presidential-primary.csv \
        --party DEM --election presidential-primary
    ```
@@ -73,7 +73,7 @@
 - Callais legal grounding: `docs/legal/CALLAIS_REFERENCE.md`
 - Race-of-candidate provenance protocol: `docs/file-formats/race-of-candidate.md` (when shipped)
 - Deposition prep: `redist depo` (Deposition Prep plan — fast iterative re-analysis daemon)
-- AEA-compliant replication package for paper publication: `redist analyze --paper-mode`
+- AEA-compliant replication package for paper publication: `bisect analyze --paper-mode`
 
 ## Daubert warnings
 

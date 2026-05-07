@@ -156,14 +156,14 @@ outputs/{version}/{year}/
 
 | File | Produced by | Consumed by |
 |------|-------------|-------------|
-| `analysis/demographic.json` | `redist analyze --types demographic` | Spec 6 report §5 |
-| `analysis/political.json` | `redist analyze --types political` | Spec 2 comparison, Spec 6 §5 |
-| `analysis/compactness.json` | `redist analyze --types compactness` | Spec 6 §6 |
-| `analysis/contiguity.json` | `redist analyze --types contiguity` | Spec 5 nesting, Spec 6 §3 |
-| `analysis/splits.json` | `redist analyze --types splits` | Spec 2 comparison, Spec 6 §3 |
-| `analysis/partisan.json` | `redist analyze --types partisan` | Spec 2 comparison, Spec 6 §4 |
-| `analysis/urban.json` | `redist analyze --types urban` | Spec 6 §5 |
-| `analysis/summary.json` | `redist analyze --types summary` | Spec 6 §1 |
+| `analysis/demographic.json` | `bisect analyze --types demographic` | Spec 6 report §5 |
+| `analysis/political.json` | `bisect analyze --types political` | Spec 2 comparison, Spec 6 §5 |
+| `analysis/compactness.json` | `bisect analyze --types compactness` | Spec 6 §6 |
+| `analysis/contiguity.json` | `bisect analyze --types contiguity` | Spec 5 nesting, Spec 6 §3 |
+| `analysis/splits.json` | `bisect analyze --types splits` | Spec 2 comparison, Spec 6 §3 |
+| `analysis/partisan.json` | `bisect analyze --types partisan` | Spec 2 comparison, Spec 6 §4 |
+| `analysis/urban.json` | `bisect analyze --types urban` | Spec 6 §5 |
+| `analysis/summary.json` | `bisect analyze --types summary` | Spec 6 §1 |
 
 ---
 
@@ -197,7 +197,7 @@ redist compare --plan-a wa_house_v1 --plan-b wa_house_v2
                --format table         table|json|csv
 
 # Analytics (Specs 1, 3, 4 — extended)
-redist analyze --state WA --year 2020 --version WA_Plans
+bisect analyze --state WA --year 2020 --version WA_Plans
                --label wa_house_v1    OR --state WA (legacy path)
                --types all            +contiguity +splits +partisan
                --election-file data/custom/wa_election.csv

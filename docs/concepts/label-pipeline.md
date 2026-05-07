@@ -89,19 +89,19 @@ If any file is modified after the fact — a common concern in election
 litigation — the hash comparison fails at the corresponding stage. The chain
 provides a tamper-evident record from algorithm configuration to final report.
 
-The `redist label-verify` command traverses the chain automatically and reports
+The `bisect label-verify` command traverses the chain automatically and reports
 the status of each link.
 
 **Provenance gap**: The SHA chain certifies that build outputs match the
 config. It does not certify that census input data is authentic — use
-`redist fetch --year 2020 --verify-downloads` and record the Census release ID
+`bisect fetch --year 2020 --verify-downloads` and record the Census release ID
 separately for full provenance.
 
 ---
 
 ## Core verbs
 
-### `redist build`
+### `bisect build`
 
 ```bash
 redist build official_2020
@@ -117,11 +117,11 @@ Draws districts according to `configs/official_2020.yml`. Writes
 If `--states` is not specified, all 50 states are built in parallel using the
 worker count from the config.
 
-### `redist label-analyze`
+### `bisect label-analyze`
 
 ```bash
-redist label-analyze official_2020
-redist label-analyze official_2020 --year 2020 --types compactness,splits
+bisect label-analyze official_2020
+bisect label-analyze official_2020 --year 2020 --types compactness,splits
 ```
 
 Runs the specified analysis types on all built states for the label. Reads
@@ -134,12 +134,12 @@ Available analysis types: `demographic`, `political`, `compactness`,
 Each analysis output file embeds the SHA-256 of the `final_assignments.json`
 it was computed from. This is the assignments link in the audit chain.
 
-### `redist label-report`
+### `bisect label-report`
 
 ```bash
-redist label-report official_2020
-redist label-report official_2020 --format html
-redist label-report official_2020 --format pdf --expert-name "Jane Smith"
+bisect label-report official_2020
+bisect label-report official_2020 --format html
+bisect label-report official_2020 --format pdf --expert-name "Jane Smith"
 ```
 
 Generates HTML, JSON, or PDF reports from the analysis outputs. Reads from
@@ -150,11 +150,11 @@ The `--format pdf` path requires Typst; see
 the PDF format produces a report that satisfies the requirements of the
 `redist-report` crate's civic gate (BD-R1).
 
-### `redist label-verify`
+### `bisect label-verify`
 
 ```bash
-redist label-verify official_2020
-redist label-verify official_2020 --year 2020
+bisect label-verify official_2020
+bisect label-verify official_2020 --year 2020
 ```
 
 Traverses the SHA-256 chain for the label. For each state and year, checks:
@@ -174,7 +174,7 @@ Reports one of three statuses per link:
 Any `MISMATCH` result is a tamper-evidence failure and should be investigated
 before the plan is used in a legal proceeding.
 
-### `redist ls`
+### `bisect ls`
 
 ```bash
 redist ls
@@ -192,7 +192,7 @@ nc_areasection      OK      1/1 states    1/1 states    -
 b11_pilot           OK      12/50 states  -             -
 ```
 
-### `redist show`
+### `bisect show`
 
 ```bash
 redist show official_2020
@@ -218,10 +218,10 @@ Atomically renames a label. Updates:
 This is an atomic operation with rollback: if any step fails, the rename
 is reversed.
 
-### `redist label-import`
+### `bisect label-import`
 
 ```bash
-redist label-import nc_enacted --from nc_2022_enacted.csv --year 2020 \
+bisect label-import nc_enacted --from nc_2022_enacted.csv --year 2020 \
   --format csv --submitted-by "NC Legislature"
 ```
 
@@ -234,11 +234,11 @@ The import command runs the same contiguity and population-balance checks
 as the build command. A plan that fails contiguity or violates the 0.5%
 population tolerance will be rejected at import time.
 
-### `redist label-compare`
+### `bisect label-compare`
 
 ```bash
-redist label-compare official_2020 nc_enacted --year 2020
-redist label-compare official_2020 nc_enacted --year 2020 --json
+bisect label-compare official_2020 nc_enacted --year 2020
+bisect label-compare official_2020 nc_enacted --year 2020 --json
 ```
 
 Side-by-side diff of two label-based plans. Compares:
@@ -297,13 +297,13 @@ redist config create my_plan --structure ratio-optimal --weights geographic \
 redist build my_plan
 
 # 3. Analyze
-redist label-analyze my_plan --types compactness,splits,summary
+bisect label-analyze my_plan --types compactness,splits,summary
 
 # 4. Generate reports
-redist label-report my_plan --format html
+bisect label-report my_plan --format html
 
 # 5. Verify the audit chain
-redist label-verify my_plan
+bisect label-verify my_plan
 ```
 
 ---

@@ -78,14 +78,14 @@ cd apportionment
 cargo build --release --manifest-path redist/Cargo.toml
 
 # Step 3: Download Vermont census data
-redist fetch --states VT --year 2020
+bisect fetch --states VT --year 2020
 
 # Step 4: Download pre-built adjacency files (requires gh auth login)
-redist fetch --states VT --year 2020 --release
+bisect fetch --states VT --year 2020 --release
 python scripts/data/generate_adj_bin.py --year 2020 --states VT
 
 # Step 5: Run Vermont redistricting
-redist state --state VT --year 2020 --version V3
+bisect state --state VT --year 2020 --version V3
 ```
 
 **Expected output** (under `outputs/V3/2020/vermont/`):
@@ -101,8 +101,8 @@ Files created:
 
 ```bash
 # Download all 2020 data (run once)
-redist fetch --year 2020
-redist fetch --year 2020 --release
+bisect fetch --year 2020
+bisect fetch --year 2020 --release
 python scripts/data/generate_adj_bin.py --year 2020
 
 # Run all 50 states in parallel
@@ -120,8 +120,8 @@ redist states --year 2020 --version V3 \
 
 ```bash
 # Download data for all years
-redist fetch --year all
-redist fetch --year all --release
+bisect fetch --year all
+bisect fetch --year all --release
 python scripts/data/generate_adj_bin.py --year 2020
 python scripts/data/generate_adj_bin.py --year 2010
 python scripts/data/generate_adj_bin.py --year 2000
@@ -202,7 +202,7 @@ python scripts/web/deploy_docs.py --version V3 --year 2020 --out docs/dashboard_
 For states where the Voting Rights Act applies, use `--partition-mode metis-vra`:
 
 ```bash
-redist state --state AL --year 2020 --version V3 --partition-mode metis-vra
+bisect state --state AL --year 2020 --version V3 --partition-mode metis-vra
 ```
 
 VRA mode uses demographic data (`data/{year}/demographics/`) to boost edge weights
@@ -266,14 +266,14 @@ python scripts/pipeline/run_complete_redistricting.py --version v1
 : Build the binary first: `cargo build --release --manifest-path redist/Cargo.toml`
 
 **`ERROR: adjacency file not found`**
-: Download adjacency files with `redist fetch --year 2020 --release`, then convert:
+: Download adjacency files with `bisect fetch --year 2020 --release`, then convert:
   `python scripts/data/generate_adj_bin.py --year 2020`
 
 **`WARNING: falling back to pkl shim`**
 : The `.adj.bin` file is missing for this state. Run `generate_adj_bin.py` to fix.
   The pkl shim still works — this is a warning, not an error.
 
-**`redist fetch --release` fails (requires gh)**
+**`bisect fetch --release` fails (requires gh)**
 : Install and authenticate: `gh auth login`. Or skip `--release` and build adjacency
   from TIGER data with the Python scripts.
 

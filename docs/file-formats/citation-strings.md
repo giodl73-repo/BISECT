@@ -4,7 +4,7 @@
 **Owner:** Court Submission Reports plan Task 2 (docs/superpowers/plans/2026-04-30-court-submission-reports.md)
 **v2.1 tracking:** D-06
 
-This is the source of truth for the exact citation strings emitted by `redist report --format pdf` and (when the Researcher Toolkit plan ships) `redist analyze --paper-mode`. Every source class has Bluebook, APA, and Chicago templates with worked examples; the `--citation-style` flag selects between them.
+This is the source of truth for the exact citation strings emitted by `redist report --format pdf` and (when the Researcher Toolkit plan ships) `bisect analyze --paper-mode`. Every source class has Bluebook, APA, and Chicago templates with worked examples; the `--citation-style` flag selects between them.
 
 If you're authoring a new source class (e.g., a new election-data registry entry, a new attestation-document type), add a `## §X — <source class>` subsection with all three template variants and a worked example.
 
@@ -16,7 +16,7 @@ Selection rules, in order:
 
 1. Explicit `--citation-style {bluebook|apa|chicago}` overrides everything.
 2. `redist report --format pdf --jurisdiction <COURT>` → defaults to `bluebook` (any U.S. federal or state court). Bluebook is the conservative legal-citation default.
-3. `redist analyze --paper-mode` → defaults to `apa`. APA is the dominant format in social-science journals.
+3. `bisect analyze --paper-mode` → defaults to `apa`. APA is the dominant format in social-science journals.
 4. `redist civic ingest` and the comment-period report → defaults to `chicago`. Chicago author-date is the default for community-document citation; not court, not paper.
 5. Without any of the above, Bluebook is the conservative fallback (mismatching style in court is harder to defend than mismatching in a press release).
 
@@ -189,7 +189,7 @@ This is required: Daubert exposure if the dataset's documented limitations are n
 
 Citation strings written to files (PDF, Markdown, HTML) MAY use Unicode (em-dashes, smart quotes, etc.) — the consumer reads UTF-8.
 
-Citation strings emitted to stdout/stderr (e.g., `redist analyze --paper-mode --stdout`) MUST be ASCII-only on Windows per PP-34. The renderer normalizes em-dashes to `--` and smart quotes to ASCII quotes when writing to a TTY.
+Citation strings emitted to stdout/stderr (e.g., `bisect analyze --paper-mode --stdout`) MUST be ASCII-only on Windows per PP-34. The renderer normalizes em-dashes to `--` and smart quotes to ASCII quotes when writing to a TTY.
 
 This is enforced by the same convention as `docs/error-conventions.md` §"Windows console policy".
 

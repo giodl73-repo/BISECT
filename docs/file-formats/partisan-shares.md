@@ -1,7 +1,7 @@
 # Partisan Shares TSV Format
 
 **Status:** v1 (2026-04-29)
-**Consumed by:** `redist state --partition-mode partisan-weighted --partisan-shares <PATH>`
+**Consumed by:** `bisect state --partition-mode partisan-weighted --partisan-shares <PATH>`
 **Producer:** any tool that joins precinct election results to TIGER tracts (see "Producing the file" below).
 
 ## Encoding

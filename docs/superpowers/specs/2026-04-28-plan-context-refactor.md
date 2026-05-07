@@ -81,7 +81,7 @@ impl PlanContext {
             };
 
             let hint = if available.is_empty() {
-                "Run 'redist state --label ...' to create a plan first.".to_string()
+                "Run 'bisect state --label ...' to create a plan first.".to_string()
             } else {
                 format!("Available plans: {}", available.join(", "))
             };
@@ -100,7 +100,7 @@ impl PlanContext {
         } else {
             anyhow::bail!(
                 "Plan '{}' exists but has no manifest.json — the plan may be corrupt.\n\
-                 Delete the directory and re-run: redist state --label {}",
+                 Delete the directory and re-run: bisect state --label {}",
                 label,
                 label
             );

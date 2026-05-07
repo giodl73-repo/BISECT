@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `run_single_state` in `redist-cli` so `redist state --state AL --year 2020` runs a full redistricting cycle end-to-end using Rust code (no Python subprocess), producing outputs identical to the Python pipeline.
+**Goal:** Implement `run_single_state` in `redist-cli` so `bisect state --state AL --year 2020` runs a full redistricting cycle end-to-end using Rust code (no Python subprocess), producing outputs identical to the Python pipeline.
 
 **Architecture:** The function loads the adjacency `.pkl` via a Rust pickle reader shim (or via a small Python subprocess call for the pkl load — see Task 1), runs METIS via the existing Rust subprocess wrapper (`metis_format::write_metis_graph` + `gpmetis`), applies `RecursiveBisection`-equivalent logic using `BisectionTree` for split scheduling, checks balance via `Partition::assert_balanced`, and writes outputs atomically via `output::write_state_outputs`. VRA mode additionally calls `build_vra_edge_weights` and `analyze_mm_districts`.
 
@@ -42,7 +42,7 @@ The Python pipeline (`run_state_redistricting.py`) does this sequence for each s
 | `redist/crates/redist-cli/src/lib.rs` | **Modify** | Expose new modules |
 | `redist/crates/redist-cli/src/main.rs` | **Modify** | Wire `Commands::State` to actual runner |
 | `redist/crates/redist-cli/Cargo.toml` | **Modify** | Add `redist-analysis` dependency |
-| `tests/acceptance/test_pipeline_acceptance.py` | **Modify** | Add `TestRustCLIAcceptance` class using `redist state` binary |
+| `tests/acceptance/test_pipeline_acceptance.py` | **Modify** | Add `TestRustCLIAcceptance` class using `bisect state` binary |
 
 ---
 
@@ -50,7 +50,7 @@ The Python pipeline (`run_state_redistricting.py`) does this sequence for each s
 
 The adjacency graphs are stored as Python pickle files. Rust cannot natively read pickle. Two options:
 
-- **Option A (chosen):** Small Python subprocess shim — `redist state` invokes `python -c "import pickle,json,sys; d=pickle.load(open(sys.argv[1],'rb')); ..."` to convert pkl → JSON on the fly, then Rust reads JSON. Fast enough (pkl load is ms-scale). Keeps Rust from depending on a pickle parser crate.
+- **Option A (chosen):** Small Python subprocess shim — `bisect state` invokes `python -c "import pickle,json,sys; d=pickle.load(open(sys.argv[1],'rb')); ..."` to convert pkl → JSON on the fly, then Rust reads JSON. Fast enough (pkl load is ms-scale). Keeps Rust from depending on a pickle parser crate.
 - **Option B (future):** Convert all pkls to `.adj.bin` using the existing `convert_adj_bin_to_pkl.py` in reverse (already exists as `adjacency_to_bin`/`adjacency_from_bin`). Requires pre-conversion step; more involved.
 
 Option A is implemented here. Option B is straightforward once the full pipeline writes `.adj.bin` natively.
@@ -935,7 +935,7 @@ git commit -m "Phase 3d Task 5: implement run_single_state and wire main.rs"
 
 ---
 
-## Task 6: End-to-end test: `redist state --state VT`
+## Task 6: End-to-end test: `bisect state --state VT`
 
 **Files:**
 - Modify: `tests/acceptance/test_pipeline_acceptance.py`
@@ -952,7 +952,7 @@ REDIST_BIN = Path('redist/target/release/redist.exe'
 @pytest.mark.skipif(not REDIST_BIN.exists(), reason='redist binary not built')
 @pytest.mark.skipif(not adjacency_exists('VT'), reason='VT adjacency not found')
 class TestRustCLIAcceptance:
-    """Verify `redist state` produces correct output via the Rust binary."""
+    """Verify `bisect state` produces correct output via the Rust binary."""
 
     @pytest.fixture(scope='class')
     def vt_rust_output(self, tmp_dir):
@@ -1063,7 +1063,7 @@ git commit -m "Phase 3d Task 6: end-to-end acceptance tests for Rust CLI"
 $env:PATH += ";$env:USERPROFILE\.cargo\bin"
 hyperfine --warmup 1 --runs 3 \
   'python scripts/pipeline/run_state_redistricting.py --state VT --year 2020 --version V3 --position 999' \
-  'redist/target/release/redist state --state VT --year 2020 --version V3 --position 999'
+  'redist/target/release/bisect state --state VT --year 2020 --version V3 --position 999'
 ```
 
 Record output in `design/rust-port/migration-log.md`.
@@ -1118,7 +1118,7 @@ git commit -m "Phase 3d: record benchmarks and update migration log"
 - ✓ Single-district shortcut (Task 4 + Task 5)
 - ✓ Acceptance tests for VT and AL (Task 6)
 - ✓ Benchmark recording (Task 7)
-- ✓ `redist state` CLI route wired (Task 5)
+- ✓ `bisect state` CLI route wired (Task 5)
 
 **Placeholder scan:** No TBD, TODO, "similar to", or "add appropriate" phrases present. All code blocks are complete.
 
@@ -1467,8 +1467,8 @@ Record output.
 
 ```bash
 hyperfine --warmup 1 --runs 3 \
-  'redist/target/release/redist state --state VT --year 2020 --version V3 --position 999' \
-  'redist/target/release/redist state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
+  'redist/target/release/bisect state --state VT --year 2020 --version V3 --position 999' \
+  'redist/target/release/bisect state --state AL --year 2020 --version V4 --partition-mode metis-vra --position 999'
 ```
 
 - [ ] **Step 3: Update migration-log.md**
@@ -1512,7 +1512,7 @@ git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
 
 ---
 
-## Task 12: Data download integration — `redist fetch`
+## Task 12: Data download integration — `bisect fetch`
 
 **Files:**
 - Create: `redist/crates/redist-cli/src/fetch.rs`
@@ -1524,7 +1524,7 @@ git commit -m "Phase 3d Task 11: record benchmarks and close migration log"
 
 ### What it does
 
-A user who installs `redist` can run `redist fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
+A user who installs `redist` can run `bisect fetch` to download all required data before running redistricting. The fetch command knows where every piece of data lives because a **manifest** is bundled with the binary.
 
 Three manifest sources (checked in priority order):
 
@@ -1590,11 +1590,11 @@ Options:
 
 ### Incremental fetch — only what's missing
 
-**IMPORTANT**: `redist fetch` is **incremental by default**. It checks each target file before downloading and skips files that already exist. This means:
+**IMPORTANT**: `bisect fetch` is **incremental by default**. It checks each target file before downloading and skips files that already exist. This means:
 
-- `redist fetch --states AL` downloads ONLY Alabama's data (TIGER shapefile, demographics, adjacency). Fast and cheap — typically <10s.
-- `redist fetch --states AL --force` re-downloads Alabama even if present.
-- `redist fetch` (no --states) downloads all 50 states, skipping already-present files.
+- `bisect fetch --states AL` downloads ONLY Alabama's data (TIGER shapefile, demographics, adjacency). Fast and cheap — typically <10s.
+- `bisect fetch --states AL --force` re-downloads Alabama even if present.
+- `bisect fetch` (no --states) downloads all 50 states, skipping already-present files.
 
 Each file gets a `.done` marker file after successful download. Before downloading, the fetch command checks: if `{target_path}.done` exists AND the file size matches the manifest's expected size, skip.
 
@@ -1606,15 +1606,15 @@ Shared files: only downloaded once regardless of --states filter.
 **Target: Alabama VRA redistricting in <30s from a clean machine.**
 
 ```bash
-time (redist fetch --states AL --year 2020 && \
-      redist state --state AL --year 2020 --version V4 \
+time (bisect fetch --states AL --year 2020 && \
+      bisect state --state AL --year 2020 --version V4 \
                    --partition-mode metis-vra --seed 42)
 ```
 
 Expected breakdown:
 | Step | Target |
 |---|---|
-| `redist fetch --states AL` | <10s (TIGER ~1MB + demographics ~200KB + adjacency pkl ~1MB) |
+| `bisect fetch --states AL` | <10s (TIGER ~1MB + demographics ~200KB + adjacency pkl ~1MB) |
 | Adjacency load (pkl shim) | <1s |
 | Demographics load | <0.1s |
 | VRA edge weight build | <0.5s |
@@ -1654,17 +1654,17 @@ pub fn load_manifest(override_path: Option<&str>) -> Result<Manifest, String> {
 }
 ```
 
-- [ ] **Step 3: Implement `redist fetch --check-only`**
+- [ ] **Step 3: Implement `bisect fetch --check-only`**
 
 Print what would be downloaded without downloading anything. This is the first testable state.
 
-Test: `redist fetch --check-only --year 2020 --states VT` should print the list of files to download without making any network calls.
+Test: `bisect fetch --check-only --year 2020 --states VT` should print the list of files to download without making any network calls.
 
 - [ ] **Step 4: Implement local-manifest path resolution**
 
 When local_overrides are present, resolve paths and verify they exist.
 
-Test: create a `manifest.json` pointing to existing local adjacency data; `redist fetch --check-only` should report all files as "available locally".
+Test: create a `manifest.json` pointing to existing local adjacency data; `bisect fetch --check-only` should report all files as "available locally".
 
 - [ ] **Step 5: Implement census.gov downloads (TIGER + redistricting)**
 
@@ -1696,7 +1696,7 @@ def test_fetch_check_only_lists_files():
 
 A new user installs `redist` and can run:
 ```bash
-redist fetch --year 2020               # downloads all data
+bisect fetch --year 2020               # downloads all data
 redist states --year 2020 --version V3 # runs all 50 states
 ```
 

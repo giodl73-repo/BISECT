@@ -18,7 +18,7 @@ redist states --year 2020 --output-dir outputs/official_proposal/2020 \
   --partition-mode apportion-regions --weights-override county \
   --alpha-county 2.0 --search convergence --convergence-threshold 600
 
-redist analyze --version official_proposal --year 2020 --types proportionality splits
+bisect analyze --version official_proposal --year 2020 --types proportionality splits
 
 redist report --version official_proposal --year 2020 \
   --out outputs/official_proposal/reports/
@@ -178,7 +178,7 @@ redist build official_proposal --config configs/statute.yml --workers 4
 redist build official_proposal --config configs/statute.yml --dry-run
 
 # Use explicit label flag (equivalent to first positional argument)
-redist build --label official_proposal --config configs/statute.yml
+bisect build --label official_proposal --config configs/statute.yml
 ```
 
 `build` writes outputs to `runs/official_proposal/` and updates `.redist`
@@ -200,7 +200,7 @@ Creates `runs/X/` from an externally-produced plan file. Supported input formats
 - `rplan`: native redist format (Spec 1)
 
 The imported run has `"algorithm": {"structure": "external", "source": FILE_SHA256}`.
-It appears in `redist ls` as a label with `built: [Y]` but `algorithm: external`.
+It appears in `bisect ls` as a label with `built: [Y]` but `algorithm: external`.
 All `analyze`, `report`, and `compare` commands work identically on imported plans.
 
 ```bash
@@ -280,7 +280,7 @@ redist compare official_proposal --enacted --year 2020
 `compare` reads from `analysis/A/` and `analysis/B/`. Both labels must appear
 in `.redist` with the requested year analyzed.
 
-### 3.5 `redist ls` — list all labels and their stage completion
+### 3.5 `bisect ls` — list all labels and their stage completion
 
 ```
 $ redist ls
@@ -356,7 +356,7 @@ redist rm official_proposal --stage build --year 2010
 `rm` updates `.redist` to reflect the deleted stages. Prompts for confirmation
 unless `--force` is set.
 
-### 3.8 `redist label X Y` — copy a label
+### 3.8 `bisect label X Y` — copy a label
 
 ```bash
 # Point label Y at the same runs as X (does not copy files — updates registry)
@@ -367,7 +367,7 @@ Creates registry entry `official_proposal_v1` pointing to the same run directori
 as `official_proposal`. Useful for tagging a completed run before starting a new
 build under the same label.
 
-`redist label X Y` is a registry-only alias: it does NOT rename directories or
+`bisect label X Y` is a registry-only alias: it does NOT rename directories or
 update index files. Use `redist mv X Y` (below) for a full rename.
 
 ### 3.8a `redist mv X Y` — rename a label
@@ -470,7 +470,7 @@ an alias for `redist plan` with no label specified.
 
 ### 3.10 Escape hatches for power users
 
-**`--out` on `redist build` is NOT supported.** Build always writes to `runs/X/`.
+**`--out` on `bisect build` is NOT supported.** Build always writes to `runs/X/`.
 This is intentional: allowing non-conventional paths would break the implicit
 contract that `analyze X` reads from `runs/X/`. Power users who need non-standard
 paths should use `redist mv X Y` after a build to relocate outputs while
@@ -517,12 +517,12 @@ Build: runs/official_proposal/2020/index.json [config_sha256: abc123] FAIL MISMA
 Verdict: FAILED -- config may have been modified after build.
 ```
 
-`redist verify` is the mechanical tool for courts, special masters, and auditors
+`bisect verify` is the mechanical tool for courts, special masters, and auditors
 to confirm the algorithm was run as specified without post-hoc modification. It
 traverses the four-link chain: config file → build index → analysis index → report
 index, verifying each SHA reference.
 
-Note: `redist verify` uses ASCII-only output (`OK`/`FAIL`) to comply with the
+Note: `bisect verify` uses ASCII-only output (`OK`/`FAIL`) to comply with the
 Windows CP1252 console policy (PP-34).
 
 ---
@@ -595,7 +595,7 @@ and the spec documents in `docs/specs/`.
 
 ### 5.1 Build index (`runs/X/index.json`)
 
-Written by `redist build` after each year completes. Updated atomically
+Written by `bisect build` after each year completes. Updated atomically
 (write to `.tmp`, rename).
 
 ```json
@@ -642,7 +642,7 @@ Written by `redist build` after each year completes. Updated atomically
 
 ### 5.2 Analysis index (`analysis/X/index.json`)
 
-Written by `redist analyze` after each year completes. References the run
+Written by `bisect analyze` after each year completes. References the run
 by label (not by path — the path is derived from the label by convention).
 
 ```json
@@ -761,7 +761,7 @@ analysis/
 reports/
 ```
 
-If `.redist` does not exist, `redist ls` prints an empty table and any command
+If `.redist` does not exist, `bisect ls` prints an empty table and any command
 that reads the registry (e.g., `analyze`) treats all labels as having no prior work.
 
 ---
@@ -769,7 +769,7 @@ that reads the registry (e.g., `analyze`) treats all labels as having no prior w
 ## 7. Algorithm Config File
 
 The config file is a YAML document the user edits and commits. It declares what to
-do when `redist build` is called with this label. It is separate from the registry
+do when `bisect build` is called with this label. It is separate from the registry
 (which records what was done) and separate from the index (which records how it went).
 
 ### 7.1 Schema
@@ -822,7 +822,7 @@ analysis_types: [demographic, political, compactness, contiguity, splits, summar
 
 ### 7.2 Rules
 
-- `name` must match the label used in `redist build` commands. If they differ,
+- `name` must match the label used in `bisect build` commands. If they differ,
   `build` exits with `[CONFIG] build: config name 'X' does not match label 'Y'`.
 - All `algorithm` fields are required except `convergence_threshold` (required only
   when `search: convergence`) and `alpha_county` (required only when
@@ -863,12 +863,12 @@ redist config validate configs/official_proposal.yml
 redist/crates/redist-cli/src/
   label.rs            ← label resolution: label → path convention
   registry.rs         ← .redist read/write, atomic update, file locking, invariant enforcement
-  build_cmd.rs        ← `redist build` dispatcher (replaces/wraps states runner)
+  build_cmd.rs        ← `bisect build` dispatcher (replaces/wraps states runner)
   import_cmd.rs       ← `redist import` — ingest external plan files into label system
   mv_cmd.rs           ← `redist mv` — atomic rename of label (dirs + indexes + registry)
-  verify_cmd.rs       ← `redist verify` — traverse and validate SHA chain
+  verify_cmd.rs       ← `bisect verify` — traverse and validate SHA chain
   config_cmd.rs       ← `redist config new/validate`
-  ls_cmd.rs           ← `redist ls` and `redist show` (with --json support)
+  ls_cmd.rs           ← `bisect ls` and `bisect show` (with --json support)
   rm_cmd.rs           ← `redist rm`
 
 configs/
@@ -1069,7 +1069,7 @@ pub struct BuildArgs {
 
 ### 8.7 Migration from existing commands
 
-The existing `redist state`, `redist states`, and `redist run` commands are
+The existing `bisect state`, `redist states`, and `redist run` commands are
 **unchanged**. No deprecations are introduced in this spec. Label-based commands
 are new top-level verbs that call the same internal runner functions:
 
@@ -1278,7 +1278,7 @@ point of decision.
 | `test_mv_force_overwrites_target` | `mv X Y --force` succeeds when Y exists |
 | `test_import_csv_creates_runs_dir` | `import X --from f.csv` → `runs/X/index.json` with `algorithm.structure: external` |
 | `test_import_sets_source_sha256` | imported plan records SHA of source file in `algorithm.source` |
-| `test_import_appears_in_ls_as_external` | `redist ls` shows imported label with `algorithm: external` |
+| `test_import_appears_in_ls_as_external` | `bisect ls` shows imported label with `algorithm: external` |
 | `test_verify_unbroken_chain_prints_ok` | all SHAs match → prints `VERIFIED` |
 | `test_verify_broken_config_sha_prints_fail` | config modified after build → `FAILED` |
 | `test_verify_missing_report_reports_missing` | report not generated → `MISSING` for report link |
@@ -1342,5 +1342,5 @@ point of decision.
    workflows.
 
 5. **Remote registry**: Should `.redist` be sharable (e.g., stored in S3 alongside
-   outputs) so a team member can run `redist ls` against a shared output tree without
+   outputs) so a team member can run `bisect ls` against a shared output tree without
    running `build` locally? Deferred: local-only for v1.

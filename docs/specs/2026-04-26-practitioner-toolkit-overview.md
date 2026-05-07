@@ -80,7 +80,7 @@ A key design principle: `redist` is an **open platform**, not a closed system.
 
 **Plugin analyzer hook** (Spec 6):
 ```bash
-redist analyze --label plan1 --types external \
+bisect analyze --label plan1 --types external \
   --external-analyzer "python my_org_analyzer.py {assignments_json} {output_dir}"
 ```
 Orgs with proprietary split-scoring methods or court-mandated tools can plug them in without modifying `redist`.
@@ -103,7 +103,7 @@ redist suite --state WA --year 2020 --version WA_Plans \
   --seed 42
 
 # Step 2: Run all analytics for each chamber
-redist analyze --suite wa_commission_v1 --types all
+bisect analyze --suite wa_commission_v1 --types all
 
 # Step 3: Compare house plan vs enacted house districts
 redist compare \
@@ -133,14 +133,14 @@ redist compare --plan-a wa_commission_v1_house --plan-b wa_dra_alternative
 
 | Command | Spec | Description |
 |---------|------|-------------|
-| `redist state --districts N --chamber X --label Y --population-source Z` | 1 | Custom chamber redistricting |
+| `bisect state --districts N --chamber X --label Y --population-source Z` | 1 | Custom chamber redistricting |
 | `redist suite` | 5 | Multi-chamber plan creation and validation |
 | `redist compare` | 2 | Plan-to-plan or plan-to-enacted comparison |
-| `redist analyze --types contiguity splits partisan` | 3, 4 | New analyzer types |
+| `bisect analyze --types contiguity splits partisan` | 3, 4 | New analyzer types |
 | `redist report` | 6 | Formal commission report (HTML/PDF/JSON) |
 | `redist export` | 6 | GeoJSON/shapefile/CSV export |
 | `redist import` | 6 | Import external plan for analysis |
-| `redist fetch --type enacted geography` | 2, 3 | Download enacted districts + geographic relationship files |
+| `bisect fetch --type enacted geography` | 2, 3 | Download enacted districts + geographic relationship files |
 
 ---
 
@@ -186,7 +186,7 @@ Normative analysis file table:
 | `analysis/partisan.json` | Spec 4 | Spec 2 (comparison), Spec 6 |
 | `analysis/summary.json` | Spec 1 | Spec 6 |
 
-Each file is written atomically to `outputs/{version}/{year}/plans/{label}/analysis/`. Consumers must not read a file that does not exist; they must check for presence and degrade gracefully (e.g., omit the report section with a note: "Analysis not available — run `redist analyze --types partisan` first").
+Each file is written atomically to `outputs/{version}/{year}/plans/{label}/analysis/`. Consumers must not read a file that does not exist; they must check for presence and degrade gracefully (e.g., omit the report section with a note: "Analysis not available — run `bisect analyze --types partisan` first").
 
 **[LEDGER] CRITICAL — Path convention migration (cross-spec)**
-`plans/{label}/` tree (Spec 1) vs legacy `states/{state_name}/` tree (existing CLI). Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `redist analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. See Spec 0 R3 amendments for full detail.
+`plans/{label}/` tree (Spec 1) vs legacy `states/{state_name}/` tree (existing CLI). Both trees are preserved. Unlabeled runs continue using `states/{state_name}/`. Labeled runs use `plans/{label}/`. `bisect analyze` and `redist map` accept either `--state` (legacy path) or `--label` (new path). A `redist migrate --state WA --label wa_congressional_2020` command copies a legacy plan into the new tree. See Spec 0 R3 amendments for full detail.

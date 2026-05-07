@@ -44,7 +44,7 @@ Other tools (GerryChain, MGGG-states, OpenPrecincts) target this audience first.
    - Outputs: percentile of the plan within the ensemble + plain-English flag ("Plan ranks at the 99th percentile for efficiency gap; visible-outlier candidate")
 
 5. **Reproducibility recipe** for academic publication — **AEA Data and Code Availability Policy compliant (v2 — DATUM/COVENANT)**
-   - `redist analyze --paper-mode` flag that produces an AEA-style replication package:
+   - `bisect analyze --paper-mode` flag that produces an AEA-style replication package:
      - **README.md** with: dataset list (each with citation + access date + DOI/URL), software requirements (`redist` version, `rustc` version, Python version, every PyPI dep with pinned version), step-by-step run instructions, expected output checksums per step
      - **All seeds** recorded (master seed + per-step derivations)
      - **All input file SHA-256s** as a JSON sidecar
@@ -153,7 +153,7 @@ outputs/{version}/ensembles/{label}/   # NEW per-ensemble outputs
 - L0: GerryChain ↔ redist roundtrip on synthetic 10-node graph
 - L0: `redist research check-compat` against the installed GerryChain version (skipped if GerryChain not installed); asserts round-trip exact match
 - L0 **kernel-state attestation**: notebook 01_quickstart.ipynb's final cell asserts `redist_py.__version__` matches a pinned value; CI fails on mismatch
-- L0 **paper-mode acceptance** (BENCHMARK): `redist analyze --paper-mode` on a synthetic VT plan produces a `REPRODUCE.sh` whose execution from a clean Python venv reproduces all headline numbers byte-identically
+- L0 **paper-mode acceptance** (BENCHMARK): `bisect analyze --paper-mode` on a synthetic VT plan produces a `REPRODUCE.sh` whose execution from a clean Python venv reproduces all headline numbers byte-identically
 - L0 **ensemble diagnostics**: synthetic 200-step ensemble has correct ESS, burn-in, and acceptance-rate JSON entries; assert numerical values against hand-computed truth
 - L1: small-state ensemble (N=100, VT or DE) generates + analyzes within 60s; diagnostics directory populated
 - L1 **runtime-budget enforcement**: a deliberately-slowed notebook (sleep 90s) with budget=60 fails CI with the budget-exceeded message
@@ -175,7 +175,7 @@ outputs/{version}/ensembles/{label}/   # NEW per-ensemble outputs
 - All 5 notebooks render + execute end-to-end without manual intervention, within their declared runtime budgets
 - `redist import --format gerrychain` round-trips a GerryChain plan; `redist research check-compat` passes against the pinned version
 - `redist validate-against-ensemble` produces percentile output that matches a hand-computed value within 0.5 percentile points
-- `redist analyze --paper-mode` produces an AEA-compliant replication package; `bash REPRODUCE.sh` reproduces headline numbers from clean checkout in ≤ 30 minutes on a 4-core laptop
+- `bisect analyze --paper-mode` produces an AEA-compliant replication package; `bash REPRODUCE.sh` reproduces headline numbers from clean checkout in ≤ 30 minutes on a 4-core laptop
 - Every ensemble emits `diagnostics/{trace.png, ess.json, burn_in.json, acceptance_rates.csv}`; report tools refuse to cite undiagnosed ensembles
 - One academic-style writeup template (paper_mode appendix) committed under `examples/`
 - Notebooks tested in CI on every PR; long-running notebooks tested in nightly CI

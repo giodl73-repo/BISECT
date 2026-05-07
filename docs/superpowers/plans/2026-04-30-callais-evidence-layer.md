@@ -5,7 +5,7 @@
 **Date:** 2026-04-30
 **Spec:** `docs/superpowers/specs/2026-04-30-callais-evidence-layer.md`
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
-**Goal:** Ship a defensible §2 within-party racial bloc voting analyzer behind `redist analyze --types bloc-voting`. The output JSON + summary must satisfy the *Callais* (608 U.S. ___, 2026-04-29) requirement that plaintiffs demonstrate within-party polarization that survives partisan controls — with full diagnostics, multiple-testing correction, cluster-aware uncertainty, and a chain-of-custody-grade race-of-candidate provenance pipeline that survives Daubert-style cross.
+**Goal:** Ship a defensible §2 within-party racial bloc voting analyzer behind `bisect analyze --types bloc-voting`. The output JSON + summary must satisfy the *Callais* (608 U.S. ___, 2026-04-29) requirement that plaintiffs demonstrate within-party polarization that survives partisan controls — with full diagnostics, multiple-testing correction, cluster-aware uncertainty, and a chain-of-custody-grade race-of-candidate provenance pipeline that survives Daubert-style cross.
 
 **Depends on:**
 - Onboarding plan landed (`bootstrap.sh` so the LA walkthrough is reachable from a clean machine)
@@ -26,7 +26,7 @@
 
 ## Pre-Conditions
 
-- `redist analyze --types <T>` dispatcher exists in `redist/crates/redist-cli/src/analyze.rs` and accepts new variants by extending the `AnalyzerType` enum in `redist/crates/redist-analysis/src/analyzer.rs`. No new dispatcher is needed.
+- `bisect analyze --types <T>` dispatcher exists in `redist/crates/redist-cli/src/analyze.rs` and accepts new variants by extending the `AnalyzerType` enum in `redist/crates/redist-analysis/src/analyzer.rs`. No new dispatcher is needed.
 - `redist-analysis` already depends on `csv`, `serde`, `serde_json`, `rand`. We will add a `linreg`-style WLS implementation in-tree (no external regression crate); SVD/Cholesky via `nalgebra` (already used elsewhere) is acceptable, but a from-scratch normal-equations solver for `p ≤ 5` predictors is sufficient and avoids adding a new dependency unless one is already present.
 - The Callais p.36 mutex (VRA + partisan-weighting cannot both be on) lives in `runner.rs` and is **not** affected by this plan: bloc-voting analysis is post-hoc on a finished plan, not a redistricting mode.
 
@@ -159,7 +159,7 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
 
 ---
 
-## Task 7: CLI surface — `redist analyze --types bloc-voting` + flags
+## Task 7: CLI surface — `bisect analyze --types bloc-voting` + flags
 
 **Files:** `redist/crates/redist-analysis/src/analyzer.rs`, `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/bloc_voting_cmd.rs`
 
@@ -176,13 +176,13 @@ The naive precinct bootstrap (already in `partisan::bootstrap_ci`) ignores spati
   - `--annotation-sensitivity <FLOAT>` (default `0.10`)
   - `--ci-level <FLOAT>` (default `0.95`)
   - `--min-precincts <N>` (default `50`; refuses with clear `[INPUT]` error below this count per spec risk row 4)
-  - **v2.1.1 P1 (M-01 alias)**: every flag in this analyze surface accepts `--plan-label` as a clap alias for `--label` (`#[arg(long, alias = "plan-label")]`) so workflows mixing `redist analyze --plan-label X` with `redist depo eval --plan-label X` are not flag-mismatched. Document the alias in `--help`.
+  - **v2.1.1 P1 (M-01 alias)**: every flag in this analyze surface accepts `--plan-label` as a clap alias for `--label` (`#[arg(long, alias = "plan-label")]`) so workflows mixing `bisect analyze --plan-label X` with `redist depo eval --plan-label X` are not flag-mismatched. Document the alias in `--help`.
 - [ ] **7.3** In `analyze.rs::run_analyze`, add the `AnalyzerType::BlocVoting` match arm. Delegates to `bloc_voting_cmd::run_bloc_voting_cmd(...)` which: loads precincts (via OpenElections per `sources.json` registry — `fetcher: null` rows surface a `[INPUT]` error directing the user to the registry doc), loads tract demographics (existing `data/{year}/demographics/{state}_demographics_{year}.csv`), loads partisan baseline (reuse `partisan_shares.rs` for the TSV path), loads the race-of-candidate CSV, computes precinct-level `pct_minority` via tract→precinct overlay (existing pipeline), runs the orchestrator, writes JSON + summary, runs Task 5's reproducibility-zip staging.
-- [ ] **7.4** Help text (`redist analyze --help`) lists `bloc-voting` with a one-line description and a `See: docs/file-formats/race-of-candidate.md` pointer.
+- [ ] **7.4** Help text (`bisect analyze --help`) lists `bloc-voting` with a one-line description and a `See: docs/file-formats/race-of-candidate.md` pointer.
 - [ ] **7.5** Help text states explicitly that `--types bloc-voting --stdout` is permitted (single-type rule; consistent with `analyze.rs` line 228 invariant).
 - [ ] **7.6** L1 integration test in `redist-cli/src/integration_pipeline_tests.rs`: end-to-end on a 100-precinct synthetic fixture under `tests/fixtures/bloc_voting_synthetic/`, asserting JSON exit 0 and B-02 anchor 1 (coefficient within ±0.02 of ground truth).
 
-**Exit:** `redist analyze --label la_2020 --types bloc-voting --candidate-race-csv data/elections/race_of_candidate/2020-presidential-primary.csv --party DEM` runs to completion on the synthetic L1 fixture.
+**Exit:** `bisect analyze --label la_2020 --types bloc-voting --candidate-race-csv data/elections/race_of_candidate/2020-presidential-primary.csv --party DEM` runs to completion on the synthetic L1 fixture.
 
 ---
 
@@ -213,7 +213,7 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
   - The disentanglement model in plain English, including why Holm is computed on the *combined* family per S-02
   - The `ecology_caveat` (verbatim) and the expert-witness liability disclaimer (output is `draft_interpretation`, not finished testimony)
   - Pointer to `docs/file-formats/race-of-candidate.md` and `docs/legal/CALLAIS_REFERENCE.md`
-- [ ] **9.2** Add the bloc-voting step to `examples/louisiana-callais-walkthrough/run.sh` (created by Onboarding plan Task 5.3 / DoD). Two-line addition: after `redist analyze --types all`, run `redist analyze --types bloc-voting --candidate-race-csv ...`. Update the walkthrough's `checksums.json` to include `analysis/bloc_voting.json` SHA. Note: the bloc-voting JSON contains build-commit-sensitive provenance; pin via `REDIST_BUILD_COMMIT` (B-07 lives in Deposition Prep plan but this walkthrough must work with it).
+- [ ] **9.2** Add the bloc-voting step to `examples/louisiana-callais-walkthrough/run.sh` (created by Onboarding plan Task 5.3 / DoD). Two-line addition: after `bisect analyze --types all`, run `bisect analyze --types bloc-voting --candidate-race-csv ...`. Update the walkthrough's `checksums.json` to include `analysis/bloc_voting.json` SHA. Note: the bloc-voting JSON contains build-commit-sensitive provenance; pin via `REDIST_BUILD_COMMIT` (B-07 lives in Deposition Prep plan but this walkthrough must work with it).
 - [ ] **9.3** `docs/CHANGELOG.md` entry citing Callais (608 U.S. ___, 2026-04-29) and v2.1 items addressed.
 - [ ] **9.4** `CLAUDE.md` "Recent Changes" entry; "Common Commands" gets one canonical bloc-voting invocation example.
 
@@ -224,7 +224,7 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
 ## Definition of Done
 
 - `cargo test -p redist-analysis bloc_voting` green; all four B-02 L0 anchors named exactly per Task 8 (`test_b02_anchor{1,2,3,4}_*`)
-- `redist analyze --types bloc-voting --candidate-race-csv <PATH>` runs end-to-end on the LA 2020 fixture in nightly CI
+- `bisect analyze --types bloc-voting --candidate-race-csv <PATH>` runs end-to-end on the LA 2020 fixture in nightly CI
 - `bloc_voting.json` validates against `schemas/bloc_voting.schema.json` and contains: `regression.specification` matching the spec's exact string; `regression.diagnostics` populated (VIF + flag + ci-divergence flag); `regression.p_values` containing both raw and Holm-corrected entries for every predictor
 - `bloc_voting_summary.md` reads as defensible §2 testimony, prefixed with the `[DRAFT — expert witness should rewrite]` marker, and includes the `ecology_caveat` verbatim
 - Race-of-candidate CSV + every attestation document is included in the `redist report --format zip` output, with SHA-256s in the manifest matching bytes on disk (BD-R2)
@@ -260,8 +260,8 @@ The four B-02 anchors must be present as named tests; they are the SCALE-block-l
 - Multi-cycle robustness across more than the four baselines specified (primary + 3 alternates) — Callais requires "current data" without bounding cycle count; we ship four
 - Causal inference — explicitly associational per spec §"Out of scope"
 - Survey-based race attribution / voter-file integration (Catalist, L2) — separate spec, not addressed here
-- Auto-fetching OpenElections data inside the bloc-voting command — fetcher is `redist fetch --source openelections`, run separately
+- Auto-fetching OpenElections data inside the bloc-voting command — fetcher is `bisect fetch --source openelections`, run separately
 - Fixing `fetcher: null` rows in `sources.json` — registry hygiene is owned by D-03 in the Court Reports plan
-- The `--label` rename to `--plan-label` (M-01) — owned by Plan Comparison + Deposition plans; this plan continues to accept `--label` consistent with other analyze subcommands. **v2.1.1 P1 patch**: `--plan-label` is added as a clap alias in Task 7.2 so a workflow mixing `redist analyze` with `redist depo eval` doesn't trip over flag drift. The full rename remains the responsibility of a future cross-cutting M-01 cleanup.
+- The `--label` rename to `--plan-label` (M-01) — owned by Plan Comparison + Deposition plans; this plan continues to accept `--label` consistent with other analyze subcommands. **v2.1.1 P1 patch**: `--plan-label` is added as a clap alias in Task 7.2 so a workflow mixing `bisect analyze` with `redist depo eval` doesn't trip over flag drift. The full rename remains the responsibility of a future cross-cutting M-01 cleanup.
 - Consuming Civic Bidirectional conflict-resolution outputs directly — this plan accepts LOO variants as an *input* (via repeated `--candidate-race-csv` invocations or a multi-curator CSV per Task 4.5); the upstream conflict-resolution pipeline that produces them is owned by the Civic Bidirectional plan
 - Daubert pre-flight — separate concern, owned by the Deposition Prep + Court Reports plans

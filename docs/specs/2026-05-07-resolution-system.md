@@ -70,16 +70,16 @@ Currently `--resolution block_group` only affects adjacency loading. After this 
 
 ```bash
 # Tract-level (current default — unchanged)
-redist state --state NC --year 2020
+bisect state --state NC --year 2020
 
 # Block-group level (finer spatial resolution)
-redist state --state NC --year 2020 --resolution block_group
+bisect state --state NC --year 2020 --resolution block_group
 
 # Multi-scale: fine=BG, coarse=tract (Option A)
-redist state --state NC --year 2020 --search multiscale --multiscale-fine bg --multiscale-coarse tract
+bisect state --state NC --year 2020 --search multiscale --multiscale-fine bg --multiscale-coarse tract
 
 # Multi-scale: fine=tract, coarse=county (Option B — no extra data)
-redist state --state NC --year 2020 --search multiscale --multiscale-fine tract --multiscale-coarse county
+bisect state --state NC --year 2020 --search multiscale --multiscale-fine tract --multiscale-coarse county
 ```
 
 ### 2.4 Multi-scale resolution options
@@ -149,7 +149,7 @@ Changes:
 - `run_single_state()`: when `plan_resolution == "bg"`, load `_bg_adjacency_` as primary graph
 - `build_bg_to_tract_partition()`: derive `fine_to_coarse` from BG vs tract GEOID prefixes
 - Analysis: BG-level Polsby-Popper (requires BG geometries — separate fetch), population balance at BG level
-- `redist analyze`: detect `plan_resolution == "bg"` and use BG geometries
+- `bisect analyze`: detect `plan_resolution == "bg"` and use BG geometries
 
 ---
 

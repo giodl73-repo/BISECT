@@ -165,7 +165,7 @@ redist import --file wa_house_external.geojson \
   --version WA_Plans
 
 # After import, run full analysis suite
-redist analyze --label wa_house_external --types all
+bisect analyze --label wa_house_external --types all
 redist report --label wa_house_external --format html
 ```
 
@@ -182,7 +182,7 @@ Once imported, the plan is treated identically to a generated plan for all analy
 For organizations with their own split-scoring or constraint methods, `redist` supports an **external analyzer hook**:
 
 ```bash
-redist analyze --label wa_house_draft1 --types external \
+bisect analyze --label wa_house_draft1 --types external \
   --external-analyzer "python my_org_splits.py {assignments_json} {output_dir}"
 ```
 
@@ -210,7 +210,7 @@ To reproduce this plan exactly:
    sha256sum data/2020/tiger/tracts/53/tl_2020_53_tract.shp
    # Expected: ghi789...
 3. Run:
-   redist state --state WA --year 2020 --version WA_Plans \
+   bisect state --state WA --year 2020 --version WA_Plans \
      --districts 98 --chamber house --label wa_house_draft1 \
      --balance-tolerance 5.0 --seed 42
 4. Verify output:

@@ -16,7 +16,7 @@ The three CI/CD gaps I flagged in Round 1 are all closed:
 
 **P1-2 resolved (--no-interactive).** The orthogonality note in §3.6 is exactly right: `--force` skips guards, `--no-interactive` skips prompts. These are genuinely different failure modes and deserved separate flags. The Terraform `--auto-approve` analogy holds here.
 
-**P1-3 resolved (mv verb).** `redist mv X Y` in §3.8a correctly distinguishes between the alias (`redist label X Y`, registry-only) and the full rename (directories + indexes + registry). The six-step procedure is complete. The `--force` behavior for the case where Y already exists is specified. Good.
+**P1-3 resolved (mv verb).** `redist mv X Y` in §3.8a correctly distinguishes between the alias (`bisect label X Y`, registry-only) and the full rename (directories + indexes + registry). The six-step procedure is complete. The `--force` behavior for the case where Y already exists is specified. Good.
 
 My former P2 (config search path) is still deferred in §12. That is fine — the note in §12 makes the intention explicit enough for implementors.
 
@@ -29,7 +29,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 **Score**: 3.5 / 4
 **Verdict**: Accept. Both P1 items resolved with correct design choices. One residual P2.
 
-**P1 (escape-hatch inconsistency) resolved.** The decision to prohibit `--out` on `redist build` and restrict it to `redist report` is the correct resolution. The spec now states the rationale explicitly: "allowing non-conventional paths would break the implicit contract that `analyze X` reads from `runs/X/`." The runtime error message is specified with the correct `[CONFIG]` prefix. The `redist mv X Y` escape hatch for power users who need relocation is a clean alternative. This eliminates the index schema inconsistency I flagged.
+**P1 (escape-hatch inconsistency) resolved.** The decision to prohibit `--out` on `bisect build` and restrict it to `redist report` is the correct resolution. The spec now states the rationale explicitly: "allowing non-conventional paths would break the implicit contract that `analyze X` reads from `runs/X/`." The runtime error message is specified with the correct `[CONFIG]` prefix. The `redist mv X Y` escape hatch for power users who need relocation is a clean alternative. This eliminates the index schema inconsistency I flagged.
 
 **P1 (concurrent registry writes) resolved.** The `with_exclusive_lock` wrapper in §8.5 is the right abstraction. All three mutating functions (`mark_built`, `mark_analyzed`, `mark_reported`) are documented as calling it internally. The `fs2::FileExt` cross-platform note is important — this crate works identically on Linux and Windows, which matters given the Windows CP1252 deployment environment. The new L0 tests (`test_registry_concurrent_mark_built_no_lost_update`, `test_registry_exclusive_lock_blocks_concurrent_write`) are the right tests, though "blocks concurrent write" is tricky to test without real threads; the implementation should use `std::thread::spawn` with a barrier to verify the lock actually serializes.
 
@@ -63,7 +63,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 
 **Cascade rule stated.** The cascade direction in `redist rm` is now implicit from the invariants in §6.2 (analyzed is a subset of built, reported is a subset of analyzed), which means deleting a stage removes all dependent stages. I would still prefer an explicit rule in §3.7 ("Removing a stage removes all stages that depend on it: `build` deletion cascades to analysis and report; `analyze` deletion cascades to report only"), but the invariants provide the logical foundation. P2.
 
-**Remaining P2**: The `redist ls` partial-build indicator is still absent. The spec shows `2020 2010 2000` in the Built column but does not show `2020(47/50)` when a partial build occurred. This is cosmetic for full builds but significant for partial runs, which are common during development and debugging. Suggest this as a P2 for the `ls_cmd.rs` implementation: read the `succeeded` count from `runs/X/index.json` and append it when less than the expected state count.
+**Remaining P2**: The `bisect ls` partial-build indicator is still absent. The spec shows `2020 2010 2000` in the Built column but does not show `2020(47/50)` when a partial build occurred. This is cosmetic for full builds but significant for partial runs, which are common during development and debugging. Suggest this as a P2 for the `ls_cmd.rs` implementation: read the `succeeded` count from `runs/X/index.json` and append it when less than the expected state count.
 
 ---
 
@@ -72,7 +72,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 **Score**: 3.5 / 4
 **Verdict**: Accept. The two blocking gaps are now closed. The spec is usable for the Wisconsin legislative redistricting workflow.
 
-**P1 (import verb) resolved.** `redist import commission_v3 --from commission_v3.csv --year 2020` is exactly the command my team needs. The CSV format matches the GEOID,district format we exchange with commission GIS staff. The Shapefile format covers submissions from outside consultants. The fact that imported plans are first-class labels — appearing in `redist ls`, analyzable with `redist analyze`, comparable with `redist compare` — means our existing workflow works without modification once a plan is imported. The `algorithm: external` marker is important for documentation: it makes clear in any audit trail that this plan was not produced by the redistricting algorithm.
+**P1 (import verb) resolved.** `redist import commission_v3 --from commission_v3.csv --year 2020` is exactly the command my team needs. The CSV format matches the GEOID,district format we exchange with commission GIS staff. The Shapefile format covers submissions from outside consultants. The fact that imported plans are first-class labels — appearing in `bisect ls`, analyzable with `bisect analyze`, comparable with `redist compare` — means our existing workflow works without modification once a plan is imported. The `algorithm: external` marker is important for documentation: it makes clear in any audit trail that this plan was not produced by the redistricting algorithm.
 
 **P1 (enacted map path) — partially addressed.** §3.4 still mentions `redist compare official_proposal --enacted --year 2020` without defining how enacted maps are stored or retrieved. The `redist import` verb provides the mechanism (import the enacted map as a label named `enacted_2020`), but the `--enacted` shorthand flag is still unexplained. I accept this as a P2: either define a reserved label naming convention for enacted maps (`enacted/{year}`) and a `redist fetch-enacted --year 2020` command, or remove the `--enacted` shorthand from §3.4 and require explicit comparison against an imported enacted label. Either resolution is acceptable.
 
@@ -89,7 +89,7 @@ My former P2 (config search path) is still deferred in §12. That is fine — th
 
 **P1 (audit chain documentation) — partially resolved.** §3.11 (`redist verify X`) provides the mechanical traversal command. The output format shows each link clearly: Config → Build → Analysis → Report, with SHA status and a final VERDICT. This is what a special master needs: a single command they can run to verify the chain, with output they can screenshot for an expert report. The ASCII-only output note (PP-34 compliance) is important for Windows deployments in state government offices.
 
-However, the "Verification Procedure" subsection I requested in §5 — documenting the four-step chain as a sequential procedure for manual auditors — is still absent. The `redist verify` command handles the automated case, but opposing counsel may want to manually verify by hashing files themselves. A one-paragraph procedure in §5.3 or §9 ("Audit Chain: Step 1 — hash `configs/X.yml`...") would close this gap. P2.
+However, the "Verification Procedure" subsection I requested in §5 — documenting the four-step chain as a sequential procedure for manual auditors — is still absent. The `bisect verify` command handles the automated case, but opposing counsel may want to manually verify by hashing files themselves. A one-paragraph procedure in §5.3 or §9 ("Audit Chain: Step 1 — hash `configs/X.yml`...") would close this gap. P2.
 
 **P1 (redist verify command) resolved.** §3.11 is exactly what I asked for. The broken-chain output format correctly shows both the stored and actual SHA values, which is the critical information for litigation: "stored: abc123, actual: fed321" tells the auditor not just that the chain is broken but which value was expected and which was found. This is forensically useful.
 
@@ -116,7 +116,7 @@ However, the "Verification Procedure" subsection I requested in §5 — document
 All seven P1 items from Round 1 are resolved. The panel's remaining concerns are P2 (implementation-level details, UX refinements, one missing subsection). None of the P2 items block implementation. The spec is ready to proceed to §8 implementation.
 
 **Top P2 items for the implementation backlog (ordered by impact):**
-1. `redist ls` partial-build indicator (`2020(47/50)`) — Duchin, Hendricks
+1. `bisect ls` partial-build indicator (`2020(47/50)`) — Duchin, Hendricks
 2. `--force` confirm-by-retyping on `redist rm` — Hendricks
 3. `redist show --json` envelope schema (exact key names) — Hashimoto
 4. Audit chain "Verification Procedure" subsection in §5/§9 — Rodden

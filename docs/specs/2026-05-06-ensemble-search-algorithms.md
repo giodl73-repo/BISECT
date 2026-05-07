@@ -124,7 +124,7 @@ The `burst_seeds` must record the *actual 64-bit values* derived from `chain_see
 
 **Concept** (Imai, Kane, Fifield 2020 — the R `redist` package): generates a *weighted* sample of valid plans via sequential importance resampling. More statistically correct than MCMC for inference; produces calibrated posteriors.
 
-**Architecture**: SMC is **not** a `SeedCompositor` variant. It is a standalone ensemble method accessed via `redist ensemble --method smc`, not via `redist state --search smc`. The reason: SMC doesn't produce a single plan — it produces a population of weighted plans. Integration into the single-plan compositor would require choosing one plan from the weighted population, which is semantically equivalent to a PercentileSweep on a weighted ensemble (deferred to a follow-on spec).
+**Architecture**: SMC is **not** a `SeedCompositor` variant. It is a standalone ensemble method accessed via `bisect ensemble --method smc`, not via `bisect state --search smc`. The reason: SMC doesn't produce a single plan — it produces a population of weighted plans. Integration into the single-plan compositor would require choosing one plan from the weighted population, which is semantically equivalent to a PercentileSweep on a weighted ensemble (deferred to a follow-on spec).
 
 **Seeding specification**:
 ```
@@ -140,11 +140,11 @@ All internal seeds derived from `base_seed` via SHA-256. Fully reproducible give
 
 **CLI (standalone only)**:
 ```bash
-redist ensemble --method smc --particles 5000 --state NC --year 2020
+bisect ensemble --method smc --particles 5000 --state NC --year 2020
 # Produces: nc_smc_ensemble.json with weighted plan sample
 ```
 
-**Audit chain**: SMC results include `base_seed` and `n_particles` in the output JSON. `redist label-verify` does not verify SMC outputs.
+**Audit chain**: SMC results include `base_seed` and `n_particles` in the output JSON. `bisect label-verify` does not verify SMC outputs.
 
 **Why SMC is excluded from label-verify**: SMC produces a *weighted ensemble*, not a single plan. `label-verify` verifies a specific plan against the parameters that generated it. SMC has no "selected plan" — a user must make a separate selection decision (e.g., using `PercentileSweep` on the SMC output). The selection step would need its own provenance chain. Until a `SeedCompositor::SmcPercentile` variant is specified (deferred), the SMC output is an analysis artifact from which a user-chosen plan may be extracted. Any plan submitted from an SMC ensemble must record the selection method and index as a separate manifest entry; SMC itself is not a plan-submission workflow.
 
@@ -276,7 +276,7 @@ Every mode that produces a plan must record in `runs/{label}/{year}/index.json`:
 "search_seed_formula": "SHA-256('SHORT_BURST_CHAIN_' || i || '_' || base_seed)"
 ```
 
-This ensures `redist label-verify` can confirm the search parameters and seed derivation for any submitted plan.
+This ensures `bisect label-verify` can confirm the search parameters and seed derivation for any submitted plan.
 
 ---
 

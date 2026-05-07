@@ -1,7 +1,7 @@
 # RADJ Binary Adjacency Format (`.adj.bin`)
 
 **Status:** Format v2 (current)
-**Producer:** `redist fetch` (writes from TIGER), `redist-data::serialize_adjacency`
+**Producer:** `bisect fetch` (writes from TIGER), `redist-data::serialize_adjacency`
 **Consumer:** `redist-data::deserialize_adjacency`, PyO3 binding `redist_py.deserialize_adjacency`
 
 A compact binary format for adjacency graphs with vertex weights and per-edge weights. Designed for fast Rust-to-Rust I/O; the `redist` pipeline reads `.adj.bin` directly.

@@ -123,7 +123,7 @@ SeedCompositor::MultiScaleAdaptive {
 
 **CLI**:
 ```bash
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
   --search multiscale-adaptive \
   --multiscale-steps 2000 \
   --ms-target-accept 0.30 \
@@ -152,7 +152,7 @@ algorithm:
 If the block-group adjacency file is missing, the CLI must error with the same instructional message as MultiScaleChain:
 ```
 Error: multi-scale MCMC requires block-group adjacency for {state} {year}.
-Run: redist fetch --year {year} --resolution block_group
+Run: bisect fetch --year {year} --resolution block_group
 ```
 
 ---
@@ -182,7 +182,7 @@ Every run with `--search multiscale-adaptive` records in `runs/{label}/{year}/in
 
 `final_alpha` is the last entry of `alpha_trace`. `fine_acceptance_rate` and `coarse_acceptance_rate` are computed over all steps (not just the last adaptation window). `selected_step` is the 0-based index into the EC-sorted list of accepted plans, matching the MultiScaleChain convention.
 
-This ensures `redist label-verify` can confirm the search parameters and seed derivation for any submitted plan. A verifier can independently reproduce the alpha_trace from base_seed by replaying the step seeds and acceptance events.
+This ensures `bisect label-verify` can confirm the search parameters and seed derivation for any submitted plan. A verifier can independently reproduce the alpha_trace from base_seed by replaying the step seeds and acceptance events.
 
 ---
 

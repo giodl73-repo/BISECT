@@ -28,19 +28,19 @@ archive/python-pipeline-final/  # Sealed forensic reference — do not touch
 redist build <label> --year 2020 --workers 8
 
 # Analysis + report + verify SHA chain
-redist label-analyze <label> --year 2020 --types all
-redist label-report  <label> --year 2020 --format html json
-redist label-verify  <label> --year 2020
+bisect label-analyze <label> --year 2020 --types all
+bisect label-report  <label> --year 2020 --format html json
+bisect label-verify  <label> --year 2020
 
 # List / inspect
 redist ls
 redist show <label>
 
 # Single state (for development)
-redist state --state VT --year 2020 --version v_test
+bisect state --state VT --year 2020 --version v_test
 
 # Fetch census data
-redist fetch --year 2020 --workers 8
+bisect fetch --year 2020 --workers 8
 ```
 
 ## Three-layer compositor

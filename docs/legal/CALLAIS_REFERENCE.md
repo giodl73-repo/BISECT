@@ -24,7 +24,7 @@ This case is the legal grounding for the partisan-edge-weighting feature that li
 
 Callais (p. 23 majority) describes the strong-inference framework that a §2 challenger uses to demonstrate intentional discrimination: showing that the State's stated political goals could have been achieved with better minority outcomes. The partisan-weighting feature lets the same algorithm be invoked by both sides — a state hits its partisan target with maximally compact districts; a challenger uses the same engine, with the same partisan target as a constraint, to produce an alternative map that improves minority outcomes.
 
-Callais (p. 36 majority) requires that race-conscious and partisan signals not be mixed in a production map run. The partisan-weighting code in `redist-core` and the existing VRA code in `redist-core/src/vra.rs` are mutually exclusive at the CLI level — a single `redist state` invocation can use one or the other, never both. See Plan 03 Task 4.
+Callais (p. 36 majority) requires that race-conscious and partisan signals not be mixed in a production map run. The partisan-weighting code in `redist-core` and the existing VRA code in `redist-core/src/vra.rs` are mutually exclusive at the CLI level — a single `bisect state` invocation can use one or the other, never both. See Plan 03 Task 4.
 
 ## PDF storage
 

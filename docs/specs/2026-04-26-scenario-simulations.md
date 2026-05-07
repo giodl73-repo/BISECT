@@ -7,14 +7,14 @@
 
 ## Scenario 1: WA house redistricting end-to-end
 
-**Input**: `redist state --state WA --year 2020 --districts 98 --chamber house --label wa_house_draft1 --seed 42`
+**Input**: `bisect state --state WA --year 2020 --districts 98 --chamber house --label wa_house_draft1 --seed 42`
 
 **Spec trace**:
 - Spec 1: `--districts 98` overrides config (config has 10 congressional) → num_districts=98 in StateConfig
 - Spec 1: `--chamber house` → balance_tolerance defaults to 5.0% (chamber-aware, not 0.5%)
 - Spec 1: manifest records `chamber: "house"`, `num_districts: 98`, `balance_tolerance_pct: 5.0`
 - Spec 0: RPLAN written — `rplan_version: "0.1"` at top level ONLY (not in metadata)
-- Spec 3: `redist analyze --types splits` uses WA constitutional standard, not generic preservation score
+- Spec 3: `bisect analyze --types splits` uses WA constitutional standard, not generic preservation score
 - Spec 6: report section 1 shows `chamber: house`, section 3 shows WA-specific split standard
 
 **L0 test assertions**:
@@ -148,7 +148,7 @@ test_balance_and_nesting_exit_code() {
 
 ## Scenario 5: Small-chamber partisan metrics
 
-**Input**: Vermont (1 congressional district), `redist analyze --types partisan`
+**Input**: Vermont (1 congressional district), `bisect analyze --types partisan`
 
 **Spec trace**:
 - Spec 4: `num_districts = 1 < 10` → CI suppressed, `ci_available: false`
@@ -177,7 +177,7 @@ test_single_district_metrics_still_computed() {
 
 ## Scenario 6: Label collision protection
 
-**Input**: `redist state --state WA --chamber house --year 2020` run twice (same default label)
+**Input**: `bisect state --state WA --chamber house --year 2020` run twice (same default label)
 
 **Spec trace**:
 - First run: creates `plans/washington_house_2020/manifest.json` → exit 0

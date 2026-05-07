@@ -28,7 +28,7 @@ Today the project has the infrastructure (race-blind illustrative maps, partisan
    ```
    Where `candidate_minority_pref_share` is the share for the minority-preferred candidate, `pct_minority` is the racial composition, `pct_dem_baseline` is a partisan baseline from prior cycles. The Callais standard requires the `pct_minority` coefficient remain significant after controlling for partisan baseline.
 
-4. **CLI surface** — New subcommand `redist analyze --types bloc-voting` that:
+4. **CLI surface** — New subcommand `bisect analyze --types bloc-voting` that:
    - Loads precinct-level primary results + tract demographics + race-of-candidate file
    - Runs the disentanglement regression
    - Returns coefficients, standard errors, and bootstrap CIs
@@ -153,7 +153,7 @@ All CIs in this spec are **95% percentile bootstrap CIs** unless explicitly note
 ## CLI surface
 
 ```
-redist analyze --label vt_test --types bloc-voting [options]
+bisect analyze --label vt_test --types bloc-voting [options]
 
 Options:
   --party <DEM|REP>             which party's primary to analyze (default: DEM)
@@ -216,7 +216,7 @@ When two curators disagree on an annotation, the file format supports multiple r
 
 ## Definition of done
 
-- `redist analyze --types bloc-voting` runs end-to-end on Louisiana 2020 with real data
+- `bisect analyze --types bloc-voting` runs end-to-end on Louisiana 2020 with real data
 - Output JSON validates against schema
 - Plain-English summary reads as defensible §2 testimony language
 - L0/L1 tests passing

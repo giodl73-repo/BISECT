@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `redist analyze --types partisan` with efficiency gap, mean-median, and partisan bias (plus bootstrap CI), and `redist suite` for drawing and validating multi-chamber nested plans. Together these enable a practitioner to quantify partisan fairness and enforce constitutional nesting constraints (e.g., WA senate-in-house) from a single CLI.
+**Goal:** Implement `bisect analyze --types partisan` with efficiency gap, mean-median, and partisan bias (plus bootstrap CI), and `redist suite` for drawing and validating multi-chamber nested plans. Together these enable a practitioner to quantify partisan fairness and enforce constitutional nesting constraints (e.g., WA senate-in-house) from a single CLI.
 
 **Specs:** Spec 4 (Partisan Metrics) + Spec 5 (Multi-Chamber/Nested Plans), board amendments through R3.
 
@@ -90,7 +90,7 @@ When election file is absent:
 ```json
 {
   "available": false,
-  "unavailable_reason": "Election data not found. Run: redist fetch --type elections --year 2020",
+  "unavailable_reason": "Election data not found. Run: bisect fetch --type elections --year 2020",
   "required_file": "data/2020/elections/presidential_by_tract.csv"
 }
 ```
@@ -475,7 +475,7 @@ fn test_load_election_csv_missing_file_returns_unavailable() {
     assert!(result.is_err());
     // Error message must guide user to fetch command
     let msg = result.unwrap_err().to_string();
-    assert!(msg.contains("redist fetch --type elections"));
+    assert!(msg.contains("bisect fetch --type elections"));
 }
 
 #[test]
@@ -946,7 +946,7 @@ def test_partisan_missing_election_returns_unavailable(tmp_plan_no_election):
     assert result.returncode == 0, "missing election must not fail — exit 0"
     data = json.loads(...)
     assert data["available"] is False
-    assert "redist fetch --type elections" in data["unavailable_reason"]
+    assert "bisect fetch --type elections" in data["unavailable_reason"]
     assert "required_file" in data
 
 def test_partisan_with_custom_election_file(wa_plan_fixture, tmp_election_csv):

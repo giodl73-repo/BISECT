@@ -189,23 +189,23 @@ impl RecomChain {
 
 ```bash
 # Run 10,000-step ensemble for NC, 4 chains
-redist ensemble --state NC --year 2020 --steps 10000 --chains 4 \
+bisect ensemble --state NC --year 2020 --steps 10000 --chains 4 \
   --output nc_ensemble.json
 
 # Run all 6 key states
-redist ensemble --states NC WI GA PA TX CA --steps 10000 --chains 4 \
+bisect ensemble --states NC WI GA PA TX CA --steps 10000 --chains 4 \
   --output-dir research/G.1+gerrychain-congressional-comparison/data/
 
 # Compute diagnostics on an existing ensemble
 redist ensemble-diagnostics --input nc_ensemble.json
 
 # Audit an enacted plan: compute its percentile in the ensemble
-redist ensemble --state NC --year 2020 --steps 10000 --chains 4 \
+bisect ensemble --state NC --year 2020 --steps 10000 --chains 4 \
   --compare-plan runs/official_2020/2020/north_carolina/final_assignments.json \
   --output nc_ensemble.json
 ```
 
-The `--compare-plan` flag loads a specific plan (by path to a `final_assignments.json`) and computes its edge-cut fraction and percentile position within the ensemble. This is the correct workflow for auditing enacted maps. The default (no `--compare-plan`) audits the `redist build` plan for the same state/year/version.
+The `--compare-plan` flag loads a specific plan (by path to a `final_assignments.json`) and computes its edge-cut fraction and percentile position within the ensemble. This is the correct workflow for auditing enacted maps. The default (no `--compare-plan`) audits the `bisect build` plan for the same state/year/version.
 
 Output JSON format:
 ```json
@@ -229,7 +229,7 @@ Output JSON format:
 
 ## 5.1 The Compactness Extremum and Ensemble Position
 
-METIS minimises edge cuts by design. As a result, bisection plans produced by `redist build` are expected to sit at the **low end** of the ReCom cut-fraction distribution — i.e., more compact than most valid plans that ReCom samples.
+METIS minimises edge cuts by design. As a result, bisection plans produced by `bisect build` are expected to sit at the **low end** of the ReCom cut-fraction distribution — i.e., more compact than most valid plans that ReCom samples.
 
 Empirical results from the G-series:
 
@@ -275,7 +275,7 @@ Empirical results from the G-series:
 - [ ] Unit tests: spanning tree is a valid tree; partition stays contiguous and balanced
 
 ### Phase 2 — CLI + Output (3 days)
-- [ ] `redist ensemble` command in `redist-cli/src/args.rs`
+- [ ] `bisect ensemble` command in `redist-cli/src/args.rs`
 - [ ] JSON output format
 - [ ] Parallel chains (Rayon): each chain on its own thread
 
@@ -295,8 +295,8 @@ Empirical results from the G-series:
 
 - `redist-metis` already has `CsrGraph` — reuse directly
 - `redist-analysis::ensemble_diagnostics` already has R-hat, ESS, Hamming — import these
-- The `redist build` → `redist ensemble` pipeline: build the plan first, then characterise its position in the ensemble space
-- `redist label-verify` + ensemble: the SHA chain certifies the plan; the ensemble certifies the plan's position in the feasible space
+- The `bisect build` → `bisect ensemble` pipeline: build the plan first, then characterise its position in the ensemble space
+- `bisect label-verify` + ensemble: the SHA chain certifies the plan; the ensemble certifies the plan's position in the feasible space
 
 ---
 

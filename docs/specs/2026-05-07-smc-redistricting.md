@@ -6,7 +6,7 @@
 **Date**: 2026-05-07  
 **Related paper**: G.7 (SMC for calibrated redistricting ensembles)  
 **Depends on**: `redist-ensemble` (RecomChain, SpanningTree), `redist-core` (adjacency, population)  
-**Implements**: `redist ensemble --method smc`
+**Implements**: `bisect ensemble --method smc`
 
 ---
 
@@ -233,11 +233,11 @@ The `log_weight` values in the output are normalised (log-sum-exp = 0). Consumer
 
 ## 4. CLI interface
 
-SMC is a subcommand of `redist ensemble`, not of `redist state` or `redist build`:
+SMC is a subcommand of `bisect ensemble`, not of `bisect state` or `bisect build`:
 
 ```bash
 # Generate 5000-particle SMC ensemble for NC congressional (k=14)
-redist ensemble --method smc \
+bisect ensemble --method smc \
   --state NC --year 2020 \
   --particles 5000 \
   --resample-threshold 0.5 \
@@ -246,7 +246,7 @@ redist ensemble --method smc \
   --output nc_smc_2020.ndjson
 
 # With more particles for publication-quality inference
-redist ensemble --method smc \
+bisect ensemble --method smc \
   --state NC --year 2020 \
   --particles 50000 \
   --base-seed 42 \
@@ -287,9 +287,9 @@ SMC produces N weighted plans, not one plan. It cannot be integrated into the si
 
 Both are Phase 2. For now, SMC is analysis-only.
 
-### 5.2 `redist label-verify` exclusion and file-level integrity
+### 5.2 `bisect label-verify` exclusion and file-level integrity
 
-`redist label-verify` does not verify SMC outputs because there is no single "submitted plan" — SMC produces a weighted ensemble. However, the NDJSON output file includes a `file_sha256` field (see §6) that allows any consumer to verify the file has not been modified after generation. Any plan extracted from an SMC ensemble and submitted to a redistricting body must:
+`bisect label-verify` does not verify SMC outputs because there is no single "submitted plan" — SMC produces a weighted ensemble. However, the NDJSON output file includes a `file_sha256` field (see §6) that allows any consumer to verify the file has not been modified after generation. Any plan extracted from an SMC ensemble and submitted to a redistricting body must:
 1. Record the extraction method (percentile rank, maximum-weight, etc.) and particle index
 2. Record the `file_sha256` of the source NDJSON file
 3. Record the `base_seed` and `n_particles` from the metadata line
@@ -390,7 +390,7 @@ The `file_sha256` field is the SHA-256 of all bytes in the file preceding the fi
 1. **Week 1**: `PartialPlan`, `seeds.rs`, L0 tests for seeding and ESS
 2. **Week 2**: `proposal.rs` — spanning tree growth + balanced cut + weight increment
 3. **Week 3**: `algorithm.rs` — full SMC loop, resampling, output NDJSON
-4. **Week 4**: L1 integration tests; CLI wiring in `redist ensemble`
+4. **Week 4**: L1 integration tests; CLI wiring in `bisect ensemble`
 5. **Week 5–6**: Performance optimisation (Rayon per-particle parallelism within a stage); L2 NC test
 
 ### Phase 2 (follow-on spec): `SeedCompositor::SmcPercentile`

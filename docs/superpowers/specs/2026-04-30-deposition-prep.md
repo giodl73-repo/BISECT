@@ -9,7 +9,7 @@
 
 The most stressful moments in a redistricting case are not the report-writing months — they are the deposition hours. Opposing counsel asks: *"Dr. Smith, if you set the leaning threshold to 0.53 instead of 0.55, do you still find a Section 2 violation?"* The expert needs the answer in seconds, not the next morning, and it needs to be derivable from the same record their report was built on.
 
-Today, re-running with a parameter tweak means re-running `redist state` (~2 min for VT, much longer for AL/LA), re-running `redist analyze`, and re-running `redist report`. That is too slow for a deposition rhythm and too disconnected from the original record (a fresh build commit might disagree with the published report). Experts work around this by avoiding sensitivity questions or hand-waving — both bad for credibility.
+Today, re-running with a parameter tweak means re-running `bisect state` (~2 min for VT, much longer for AL/LA), re-running `bisect analyze`, and re-running `redist report`. That is too slow for a deposition rhythm and too disconnected from the original record (a fresh build commit might disagree with the published report). Experts work around this by avoiding sensitivity questions or hand-waving — both bad for credibility.
 
 This spec adds a "what-if" mode where the expert (or special master) keeps the bisection result fixed, varies a single analysis parameter, and gets sub-second turnaround with a manifest tying the answer back to the original record.
 
@@ -66,7 +66,7 @@ This spec adds a "what-if" mode where the expert (or special master) keeps the b
 
 ### Out of scope
 
-- Re-running the *bisection* itself (different plan, not deposition territory — that's a fresh `redist state` run)
+- Re-running the *bisection* itself (different plan, not deposition territory — that's a fresh `bisect state` run)
 - Live courtroom display ("Mr. Chairman, here is the new map") — that's the State Staff Interop / Districtr loop
 - Audio transcription of the deposition into parameter changes (out of scope; Otter.ai, etc.)
 - Multi-user shared depo server (single expert per session is the realistic mode)
@@ -75,7 +75,7 @@ This spec adds a "what-if" mode where the expert (or special master) keeps the b
 
 ### Why a daemon rather than just a faster CLI
 
-Cold-start cost of `redist analyze` is dominated by:
+Cold-start cost of `bisect analyze` is dominated by:
 - Loading the adjacency graph (1-30s depending on state resolution)
 - Loading per-tract attribute tables (Census + election data, 1-5s)
 - JIT warmup for analysis routines
@@ -94,7 +94,7 @@ The set of parameters exposed to `recompute-if` is a curated whitelist, not arbi
 - `compactness_metric` (default `pp`; alternative `reock`, `convex_hull`)
 - `partisan_efficiency_threshold` (default 0.07)
 
-Anything outside the whitelist requires a fresh `redist analyze` run with explicit CLI flags — and a corresponding new manifest. The whitelist is precisely the set of parameters most likely to be probed in cross-examination.
+Anything outside the whitelist requires a fresh `bisect analyze` run with explicit CLI flags — and a corresponding new manifest. The whitelist is precisely the set of parameters most likely to be probed in cross-examination.
 
 ### Daemon protocol
 

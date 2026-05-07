@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `redist compare` and `redist analyze --types contiguity splits`. `redist compare` computes Jaccard similarity, population equality, and compactness between two plans or a plan vs enacted districts. Enacted districts are downloaded via `redist fetch --type enacted`, converted from polygon boundaries to tract assignments using centroid point-in-polygon with nearest-polygon fallback (100% coverage enforced). `redist analyze --types contiguity splits` runs BFS contiguity checks and county/municipal split counts. Exit codes use composable bitfields (1=balance, 2=contiguity, 4=nesting, 8=missing-data). `--allow-noncontiguous` suppresses bit 1. State-specific split standards are looked up from a built-in table (WA, CA, TX, CO minimum).
+**Goal:** Implement `redist compare` and `bisect analyze --types contiguity splits`. `redist compare` computes Jaccard similarity, population equality, and compactness between two plans or a plan vs enacted districts. Enacted districts are downloaded via `bisect fetch --type enacted`, converted from polygon boundaries to tract assignments using centroid point-in-polygon with nearest-polygon fallback (100% coverage enforced). `bisect analyze --types contiguity splits` runs BFS contiguity checks and county/municipal split counts. Exit codes use composable bitfields (1=balance, 2=contiguity, 4=nesting, 8=missing-data). `--allow-noncontiguous` suppresses bit 1. State-specific split standards are looked up from a built-in table (WA, CA, TX, CO minimum).
 
 **Specs:** Spec 2 (Plan Comparison), Spec 3 (Constraint Analysis) + R3 board amendments
 
@@ -854,13 +854,13 @@ pub fn compute_exit_code_with_flags(
 }
 ```
 
-- [ ] **Update `redist analyze` dispatcher** to return bitfield exit code from process
+- [ ] **Update `bisect analyze` dispatcher** to return bitfield exit code from process
 - [ ] **Run tests** — expect PASS
 - [ ] **Commit:** `git commit -m "feat(analysis): composable bitfield exit codes (1=balance, 2=contiguity, 4=nesting, 8=missing-data)"`
 
 ---
 
-## Task 7: `redist fetch --type enacted` and `--type geography`
+## Task 7: `bisect fetch --type enacted` and `--type geography`
 
 **Files:** `redist/crates/redist-cli/src/fetch.rs`, `redist/crates/redist-cli/src/args.rs`
 
@@ -908,7 +908,7 @@ fn test_enacted_fetch_args_parsed() {
 - [ ] **Implement `enacted_url()` and `geography_url()` URL constructors** using Census TIGER URL patterns
 - [ ] **Implement download handlers** for enacted shapefiles and place-tract relationship files
 - [ ] **Run tests** — expect PASS
-- [ ] **Commit:** `git commit -m "feat(cli): redist fetch --type enacted + --type geography with Census TIGER URLs"`
+- [ ] **Commit:** `git commit -m "feat(cli): bisect fetch --type enacted + --type geography with Census TIGER URLs"`
 
 ---
 
@@ -1003,7 +1003,7 @@ pub enum CompareFormat { Table, Json, Csv }
 
 ---
 
-## Task 9: Wire `contiguity` and `splits` into `redist analyze`
+## Task 9: Wire `contiguity` and `splits` into `bisect analyze`
 
 **Files:** `redist/crates/redist-cli/src/analyze.rs`
 
@@ -1392,9 +1392,9 @@ fn test_balance_and_nesting_exit_code() {
 4. Task 4 — Split analysis (no deps)
 5. Task 5 — Split standards table (no deps)
 6. Task 6 — Exit codes (depends on Tasks 3+4)
-7. Task 7 — `redist fetch --type enacted/geography` (depends on Task 2)
+7. Task 7 — `bisect fetch --type enacted/geography` (depends on Task 2)
 8. Task 8 — `redist compare` command (depends on Tasks 1+2+7)
-9. Task 9 — Wire contiguity + splits into `redist analyze` (depends on Tasks 3+4+5+6)
+9. Task 9 — Wire contiguity + splits into `bisect analyze` (depends on Tasks 3+4+5+6)
 10. Task 10 — L2 acceptance tests (depends on all above)
 
 Tasks 1, 2, 3, 4, 5 are all independent and can run in parallel. Task 6 depends on 3+4. Tasks 7 and 8 are sequential. Tasks 9 and 10 must wait for everything upstream.

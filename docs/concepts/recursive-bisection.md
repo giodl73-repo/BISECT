@@ -110,19 +110,19 @@ These are features, not bugs. The algorithm's neutrality is the point.
 Download pre-built adjacency files from GitHub Releases (fastest — no local geometry processing needed):
 
 ```bash
-redist fetch --year 2020 --release
+bisect fetch --year 2020 --release
 ```
 
 Or build adjacency from raw TIGER data you have locally (requires TIGER shapefiles already downloaded):
 
 ```bash
-redist fetch --year 2020
+bisect fetch --year 2020
 ```
 
 ### Run redistricting for a single state
 
 ```bash
-redist state --state NC --year 2020 --version v1
+bisect state --state NC --year 2020 --version v1
 ```
 
 ### Run all 50 states
@@ -150,7 +150,7 @@ redist build nc_2020 --structure apportion-regions
 ### Check a state's bisection tree
 
 ```bash
-redist analyze --state NC --year 2020 --types contiguity
+bisect analyze --state NC --year 2020 --types contiguity
 ```
 
 ## Further reading

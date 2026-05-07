@@ -6,7 +6,7 @@
 **Spec:** `docs/superpowers/specs/2026-04-30-callais-evidence-layer.md`
 **Plan:** `docs/superpowers/plans/2026-04-30-callais-evidence-layer.md` Task 4
 
-This document is the source of truth for the curator-attested race-of-candidate annotation file consumed by `redist analyze --types bloc-voting`. Without this protocol, *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36 evidence is not Daubert-defensible — the analysis cannot rest on race classifications a court cannot trace to a named, credentialed curator with a signed attestation.
+This document is the source of truth for the curator-attested race-of-candidate annotation file consumed by `bisect analyze --types bloc-voting`. Without this protocol, *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36 evidence is not Daubert-defensible — the analysis cannot rest on race classifications a court cannot trace to a named, credentialed curator with a signed attestation.
 
 ## CSV columns (all required, case-sensitive headers)
 
@@ -40,11 +40,11 @@ The v2.1.1 patches reconciled a prior mismatch between Callais and Civic Bidirec
 
 ## Court-mode strictness (BD-R1)
 
-Court Submission Reports (when the plan ships) gate non-PDF attestation docs behind an explicit `--allow-non-strict-civic` flag. Image scans (`png|jpg|tiff`) are accepted by `redist analyze` (we don't lose the data) but the court-PDF generator refuses to embed them in a court submission unless the operator opts in. Civic groups can still use the analyses internally; expert witnesses producing court evidence should re-attest in PDF form before signing.
+Court Submission Reports (when the plan ships) gate non-PDF attestation docs behind an explicit `--allow-non-strict-civic` flag. Image scans (`png|jpg|tiff`) are accepted by `bisect analyze` (we don't lose the data) but the court-PDF generator refuses to embed them in a court submission unless the operator opts in. Civic groups can still use the analyses internally; expert witnesses producing court evidence should re-attest in PDF form before signing.
 
 ## SHA-256 chain of custody (BD-R2)
 
-At parse time, `redist analyze --types bloc-voting`:
+At parse time, `bisect analyze --types bloc-voting`:
 
 1. Computes SHA-256 of the CSV file → recorded as `race_of_candidate_provenance.source_sha256` in `bloc_voting.json`.
 2. Computes SHA-256 of every referenced attestation document → recorded as `attestation_documents[].sha256` in the same JSON.

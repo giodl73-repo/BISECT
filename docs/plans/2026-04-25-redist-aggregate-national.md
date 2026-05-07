@@ -548,7 +548,7 @@ class TestAggregateAcceptance(unittest.TestCase):
         if len(states_with_analysis) < 2:
             raise unittest.SkipTest(
                 "Need at least 2 states with analysis. "
-                "Run: redist analyze --state VT --types all && redist analyze --state AL --types all"
+                "Run: bisect analyze --state VT --types all && bisect analyze --state AL --types all"
             )
         cls.binary = find_redist_binary()
         cls.n_states = len(states_with_analysis)
@@ -657,9 +657,9 @@ redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 # Step 2: Run all analytics for all states
 for state in AL AK AZ ...; do
-  redist analyze --state $state --year 2020 --version V3 --types all
+  bisect analyze --state $state --year 2020 --version V3 --types all
 done
-# Or: run all at once (future: redist analyze --states all)
+# Or: run all at once (future: bisect analyze --states all)
 
 # Step 3: Aggregate into national datasets
 redist aggregate --version V3 --types all --csv

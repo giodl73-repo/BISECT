@@ -34,7 +34,7 @@ Key outputs per state:
 
 On completion, a SHA-256 hash of the config file is recorded in `runs/<label>/index.json`. This anchors the audit chain: any subsequent change to the config file will break chain verification.
 
-**Resumability**: `redist build` skips states that already have a valid `final_assignments.json`. Re-run a specific state without disturbing others:
+**Resumability**: `bisect build` skips states that already have a valid `final_assignments.json`. Re-run a specific state without disturbing others:
 
 ```bash
 redist build my_plan --states NC
@@ -46,7 +46,7 @@ Force a complete rebuild of all states:
 redist build my_plan --force
 ```
 
-**Parallel execution**: By default, `redist build` runs all states concurrently using Rayon. Set `--workers` to limit parallelism:
+**Parallel execution**: By default, `bisect build` runs all states concurrently using Rayon. Set `--workers` to limit parallelism:
 
 ```bash
 redist build my_plan --workers 8
@@ -90,7 +90,7 @@ search:
 
 ## Stage 2: Analyze
 
-**Command**: `redist label-analyze <label> --types all`
+**Command**: `bisect label-analyze <label> --types all`
 
 Reads `runs/<label>/index.json` (including its SHA-256 of the build config) and the per-state assignment files. Computes metrics across five dimensions and writes results to `analysis/<label>/<year>/`.
 
@@ -109,17 +109,17 @@ On completion, the SHA-256 of `runs/<label>/index.json` is recorded in `analysis
 
 ```bash
 # Run all metric types
-redist label-analyze nc_2020 --types all
+bisect label-analyze nc_2020 --types all
 
 # Run only compactness and contiguity
-redist label-analyze nc_2020 --types compactness contiguity
+bisect label-analyze nc_2020 --types compactness contiguity
 ```
 
 ---
 
 ## Stage 3: Report
 
-**Command**: `redist label-report <label> --format html json pdf`
+**Command**: `bisect label-report <label> --format html json pdf`
 
 Reads `analysis/<label>/index.json` and renders reports. Outputs land in `reports/<label>/<year>/`.
 
@@ -135,16 +135,16 @@ The PDF format requires Typst to be installed; see `redist-report/typst-template
 
 ```bash
 # Generate all formats
-redist label-report nc_2020 --format html json pdf
+bisect label-report nc_2020 --format html json pdf
 
 # HTML only (no Typst required)
-redist label-report nc_2020 --format html
+bisect label-report nc_2020 --format html
 ```
 
 For court-submission reports, additional flags supply required metadata:
 
 ```bash
-redist label-report nc_2020 --format pdf \
+bisect label-report nc_2020 --format pdf \
   --expert-name "Dr. Jane Smith" \
   --jurisdiction "North Carolina" \
   --citation-style bluebook
@@ -154,7 +154,7 @@ redist label-report nc_2020 --format pdf \
 
 ## Stage 4: Verify
 
-**Command**: `redist label-verify <label>`
+**Command**: `bisect label-verify <label>`
 
 Traverses the full SHA-256 chain from config through build, analysis, and report. Reports pass/fail for each link:
 
@@ -169,7 +169,7 @@ Chain: VALID
 Any modification to pipeline outputs — even a single byte — breaks the corresponding link and produces a `TAMPERED` result. This makes the chain suitable for evidentiary use: a passing verification attests that the reported outputs are exactly those produced by the declared config.
 
 ```bash
-redist label-verify nc_2020
+bisect label-verify nc_2020
 ```
 
 ---
@@ -192,7 +192,7 @@ This design means:
 
 - **Reproducibility**: given the config file, anyone with the same census data can reproduce the run and verify the chain matches.
 - **Tamper evidence**: post-hoc edits to district assignments or metric outputs break the chain at the modified stage.
-- **Court admissibility**: `redist label-verify` provides a single command that an opposing expert or special master can run to confirm outputs have not been altered since generation.
+- **Court admissibility**: `bisect label-verify` provides a single command that an opposing expert or special master can run to confirm outputs have not been altered since generation.
 
 ---
 
@@ -201,9 +201,9 @@ This design means:
 ```bash
 # Full pipeline for a named plan, all stages
 redist build nc_2020 --workers 8
-redist label-analyze nc_2020 --types all
-redist label-report nc_2020 --format html json pdf
-redist label-verify nc_2020
+bisect label-analyze nc_2020 --types all
+bisect label-report nc_2020 --format html json pdf
+bisect label-verify nc_2020
 ```
 
 For rapid iteration during research, omit the report and verify steps until results are ready for submission.

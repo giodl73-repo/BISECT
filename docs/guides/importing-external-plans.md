@@ -38,7 +38,7 @@ redist import \
   --version WA_Plans
 
 # Now analyze it like any other plan
-redist analyze --label wa_house_dra_v1 --year 2020 --version WA_Plans --types all
+bisect analyze --label wa_house_dra_v1 --year 2020 --version WA_Plans --types all
 redist compare --plan-a wa_house_dra_v1 --plan-b wa_house_draft1 --year 2020 --version WA_Plans
 ```
 
@@ -156,10 +156,10 @@ After import, a `manifest.json` is written noting `"source": "imported"` and the
 redist validate --file external_plan.rplan
 
 # After import, run contiguity check
-redist analyze --label wa_house_dra_v1 --types contiguity
+bisect analyze --label wa_house_dra_v1 --types contiguity
 
 # Check population balance
-redist analyze --label wa_house_dra_v1 --types summary
+bisect analyze --label wa_house_dra_v1 --types summary
 ```
 
 ---
@@ -167,5 +167,5 @@ redist analyze --label wa_house_dra_v1 --types summary
 ## Limitations
 
 - **Centroid assignment** for GeoJSON/shapefile import may misassign tracts whose centroid falls in a different district than their majority area. This is noted in the import metadata as `"pip_method_note"` and `"fallback_count"`. Check the fallback count — a high number suggests many tracts on district boundaries.
-- **External plans break the reproducibility guarantee**. The `manifest.json` for imported plans marks `"source": "imported"` and does not have a `verification_command`. The plan is verifiable by re-importing the same source file, but not by running a `redist state` command.
-- **RPLAN format only** guarantees independent verification. If you need a fully court-verifiable plan, generate it with `redist state` rather than importing.
+- **External plans break the reproducibility guarantee**. The `manifest.json` for imported plans marks `"source": "imported"` and does not have a `verification_command`. The plan is verifiable by re-importing the same source file, but not by running a `bisect state` command.
+- **RPLAN format only** guarantees independent verification. If you need a fully court-verifiable plan, generate it with `bisect state` rather than importing.

@@ -40,7 +40,7 @@ Every plan has a `manifest.json` in its plan directory. This is the chain of cus
   "adjacency_file": "wa_adjacency_2020.adj.bin",
   "adjacency_sha256": "ghi789...",
   "population_balance_valid": true,
-  "verification_command": "redist state --state WA --year 2020 ..."
+  "verification_command": "bisect state --state WA --year 2020 ..."
 }
 ```
 
@@ -62,7 +62,7 @@ Every plan has a `manifest.json` in its plan directory. This is the chain of cus
 ### 1. Generate the plan with a fixed seed
 
 ```bash
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house \
   --label wa_house_submission \
   --balance-tolerance 5.0 \
@@ -72,7 +72,7 @@ redist state --state WA --year 2020 --version WA_Plans \
 ### 2. Run full analysis
 
 ```bash
-redist analyze --label wa_house_submission --year 2020 --version WA_Plans \
+bisect analyze --label wa_house_submission --year 2020 --version WA_Plans \
   --types all
 ```
 

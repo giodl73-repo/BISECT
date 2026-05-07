@@ -34,10 +34,10 @@ conda install -c conda-forge metis
 
 ```bash
 # Download Vermont data (small state, good for testing)
-redist fetch --states VT --year 2020
+bisect fetch --states VT --year 2020
 
 # Run Vermont redistricting
-redist state --state VT --year 2020 --version V3
+bisect state --state VT --year 2020 --version V3
 
 # Run all 50 states (8 workers, ~15 seconds with .adj.bin files)
 redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
@@ -47,12 +47,12 @@ redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
 
 ## Commands
 
-### `redist state` — Single state
+### `bisect state` — Single state
 
 Runs redistricting for one state and writes outputs to `outputs/{version}/`.
 
 ```
-redist state --state <CODE> [OPTIONS]
+bisect state --state <CODE> [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -79,22 +79,22 @@ redist state --state <CODE> [OPTIONS]
 
 ```bash
 # Vermont (1 district) — fast smoke test
-redist state --state VT --year 2020 --version V3
+bisect state --state VT --year 2020 --version V3
 
 # Alabama with VRA mode (7 districts)
-redist state --state AL --year 2020 --version V3 --partition-mode metis-vra
+bisect state --state AL --year 2020 --version V3 --partition-mode metis-vra
 
 # Partisan-weighted bisection (Plan 03; Callais 2026-04-29)
 # Preserves D-D and R-R clusters via edge-weighting; uses recursive bisection.
-redist state --state LA --year 2020 --version V3 \
+bisect state --state LA --year 2020 --version V3 \
     --partition-mode partisan-weighted \
     --partisan-shares outputs/data/2020/partisan/la/dem_shares.tsv
 
 # Reproducible run with fixed seed
-redist state --state CA --year 2020 --version V3 --seed 42
+bisect state --state CA --year 2020 --version V3 --seed 42
 
 # Fresh re-run (delete previous output first)
-redist state --state TX --year 2020 --version V3 --reset
+bisect state --state TX --year 2020 --version V3 --reset
 ```
 
 **Output files** (under `outputs/{version}/{year}/{state_name}/`):
@@ -120,7 +120,7 @@ redist states --year <YEAR> --version <VERSION> --output-dir <DIR> [OPTIONS]
 | `--states <CODES>` | *(all 50)* | Space-separated state codes to include |
 | `-m`, `--partition-mode` | `edge-weighted` | `unweighted`, `edge-weighted`, `metis-vra`, `geosection`, `areasection`, `compact-bisect` |
 | `--geosection-seeds` | `50` | Seeds per ratio for GeoSection/AreaSection |
-| `--area-swing` | `1.10` | **AreaSection only.** Area imbalance tolerance `ubvec[1]`. See `redist state --help`. |
+| `--area-swing` | `1.10` | **AreaSection only.** Area imbalance tolerance `ubvec[1]`. See `bisect state --help`. |
 | `--balance-tolerance` | `0.5` | Max deviation per district in percent |
 | `--reprocess` | false | Re-run states that already have outputs |
 | `-d`, `--debug` | false | Extra diagnostic output |
@@ -184,7 +184,7 @@ redist run --year 2020 --version test --states VT DE --workers 2
 
 ---
 
-### `redist fetch` — Download census data
+### `bisect fetch` — Download census data
 
 Downloads TIGER shapefiles and PL 94-171 redistricting data from Census.gov, and
 optionally pulls pre-built adjacency files from GitHub Releases.
@@ -208,22 +208,22 @@ redist fetch [OPTIONS]
 
 ```bash
 # Check what's missing without downloading anything
-redist fetch --year 2020 --check-only
+bisect fetch --year 2020 --check-only
 
 # Download TIGER + redistricting data for Vermont only
-redist fetch --year 2020 --states VT --type tiger redistricting
+bisect fetch --year 2020 --states VT --type tiger redistricting
 
 # Download all 2020 data (TIGER + redistricting)
-redist fetch --year 2020 --workers 8
+bisect fetch --year 2020 --workers 8
 
 # Pull pre-built adjacency pkl files from GitHub Releases
 # (requires: gh auth login)
-redist fetch --year 2020 --release
+bisect fetch --year 2020 --release
 ```
 
-#### Election data (separate from `redist fetch`)
+#### Election data (separate from `bisect fetch`)
 
-`redist fetch --type elections` is declared as a CLI option but not yet implemented in `fetch.rs` — running it emits a WARNING. Election sources live in their own registry under `scripts/data/elections/sources.json` and are fetched via a Python dispatcher:
+`bisect fetch --type elections` is declared as a CLI option but not yet implemented in `fetch.rs` — running it emits a WARNING. Election sources live in their own registry under `scripts/data/elections/sources.json` and are fetched via a Python dispatcher:
 
 ```bash
 # List all known election-data sources
@@ -263,14 +263,14 @@ The canonical 3-step partisan-lean flow:
 python scripts/data/elections/fetch_elections.py fetch --year 2020
 
 # 2. Run redistricting (Rust)
-redist state --state VT --year 2020 --label vt_test
+bisect state --state VT --year 2020 --label vt_test
 
 # 3. Compute partisan metrics + render colored map (Rust)
-redist analyze --label vt_test --types political
+bisect analyze --label vt_test --types political
 redist map --label vt_test --types political
 
 # Download all 3 years
-redist fetch --year all --workers 8
+bisect fetch --year all --workers 8
 ```
 
 **What gets downloaded**:
@@ -336,7 +336,7 @@ redist aggregate --version V3 --types demographic
 
 # After running all 50 states + analyze:
 redist states --year 2020 --version V3 --output-dir outputs/V3 --workers 8
-# (then for each state: redist analyze --state XX --types all)
+# (then for each state: bisect analyze --state XX --types all)
 redist aggregate --version V3 --types all --csv
 ```
 
@@ -382,12 +382,12 @@ redist map --scope national --version V3 --types districts political demographic
 
 ---
 
-## `redist analyze` — Per-district analytics
+## `bisect analyze` — Per-district analytics
 
 Computes analytics for each district and writes JSON to `outputs/{version}/states/{state}/analysis/`.
 
 ```
-redist analyze --state <CODE> [OPTIONS]
+bisect analyze --state <CODE> [OPTIONS]
 ```
 
 | Flag | Default | Description |
@@ -400,22 +400,22 @@ redist analyze --state <CODE> [OPTIONS]
 | `--force` | false | Re-run even if output exists |
 | `--allow-imbalance` | false | Don't exit non-zero on population balance failure (research use) |
 
-**Requires**: `redist state` must have been run first to produce `final_assignments.json`.
+**Requires**: `bisect state` must have been run first to produce `final_assignments.json`.
 
 **Examples**:
 
 ```bash
 # All analyzers for Vermont
-redist analyze --state VT --year 2020 --version V3 --types all
+bisect analyze --state VT --year 2020 --version V3 --types all
 
 # Just demographic + political
-redist analyze --state AL --year 2020 --version V3 --types demographic political
+bisect analyze --state AL --year 2020 --version V3 --types demographic political
 
 # Compactness metrics (PP, Reock, CHR)
-redist analyze --state TX --year 2020 --version V3 --types compactness
+bisect analyze --state TX --year 2020 --version V3 --types compactness
 
 # Allow imbalanced results without exiting non-zero
-redist analyze --state VT --year 2020 --version V3 --allow-imbalance
+bisect analyze --state VT --year 2020 --version V3 --allow-imbalance
 ```
 
 **Output files** (under `outputs/{version}/states/{state}/analysis/`):
@@ -454,7 +454,7 @@ redist map --state <CODE> [OPTIONS]
 | `--dpi` | `150` | Output DPI: `72`, `100`, `150`, `200`, `300` |
 | `--force` | false | Re-render even if output exists |
 
-**Requires**: `redist state` for all map types. `redist analyze` for choropleth types (political, demographic, compactness).
+**Requires**: `bisect state` for all map types. `bisect analyze` for choropleth types (political, demographic, compactness).
 
 **Examples**:
 
@@ -499,7 +499,7 @@ redist map --state AL --year 2020 --version V3 --types rounds
 
 **Example** — point to a specific Python environment:
 ```bash
-REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" redist state --state VT --year 2020 --version V3
+REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" bisect state --state VT --year 2020 --version V3
 ```
 
 ---
@@ -517,13 +517,13 @@ REDIST_PYTHON="C:/miniconda3/envs/redist/python.exe" redist state --state VT --y
 
 `partisan-weighted` requires `--partisan-shares <PATH>` pointing at a per-tract D-share TSV (see `docs/file-formats/partisan-shares.md` once written; format is header `geoid<TAB>dem_share`, GEOIDs are 11-char TIGER FIPS, share is float in `[0.0, 1.0]`).
 
-**Disentanglement guard:** `--partition-mode metis-vra` and `--partisan-shares` cannot be used in the same `redist state` invocation. The runner returns an error if both are specified. This is structural enforcement of *Louisiana v. Callais* p.36 (race-conscious and partisan signals must not be mixed in production map runs). See `docs/legal/CALLAIS_REFERENCE.md`.
+**Disentanglement guard:** `--partition-mode metis-vra` and `--partisan-shares` cannot be used in the same `bisect state` invocation. The runner returns an error if both are specified. This is structural enforcement of *Louisiana v. Callais* p.36 (race-conscious and partisan signals must not be mixed in production map runs). See `docs/legal/CALLAIS_REFERENCE.md`.
 
 ---
 
 ## Provenance and `redist doctor --verify-manifest`
 
-Every `redist state` run writes a `provenance.json` sidecar in the output `data/` directory containing the binary's `redist_version`, `redist_build_commit` (with `-dirty` suffix when the working tree had uncommitted changes), `redist_build_date`, and `rustc_version`. This is written atomically alongside `final_assignments.json` regardless of whether `--manifest` is set, so every plan has an audit trail to the binary that produced it.
+Every `bisect state` run writes a `provenance.json` sidecar in the output `data/` directory containing the binary's `redist_version`, `redist_build_commit` (with `-dirty` suffix when the working tree had uncommitted changes), `redist_build_date`, and `rustc_version`. This is written atomically alongside `final_assignments.json` regardless of whether `--manifest` is set, so every plan has an audit trail to the binary that produced it.
 
 When `--manifest` is set, `manifest.json` additionally records the binary version, input adjacency hash, and other run parameters. The `redist doctor --verify-manifest <PATH>` subcommand reads the manifest and:
 
@@ -554,7 +554,7 @@ The Researcher Toolkit plan is partial. Today (2026-04-30):
 - **`redist-analysis::ensemble_diagnostics`** (Task 7 / S-03): pure-Rust math for the three load-bearing convergence diagnostics — Gelman-Rubin R-hat across ≥4 chains, Effective Sample Size (Geyer 1992 initial monotone sequence) on summary statistics, Hamming-distance autocorrelation on the partition trajectory with integrated `tau_int`. JSON-shape structs mirror the spec's `rhat.json` / `ess.json` / `hamming_autocorr.json`. 21 L0 tests.
 - **`notebooks/`** (Task 1): 5 notebook stubs (`01_quickstart`, `02_parameter_sweep`, `03_callais_evidence`, `04_gerrychain_interop`, `05_mcmc_ensemble`) with cell-1 metadata declaring `runtime_budget_secs` (60 / 120 / 300 / 120 / 1800), cell-2 kernel-state attestation header against compatible RANGES (Task 2 / B-06: `redist_py >=0.4,<0.5`, `gerrychain >=0.3.2,<0.4`), and final-cell completion sentinel. Notebook bodies are TODO; scaffolding + conventions shipped.
 - **`scripts/research/paper_mode_template/REPRODUCE.sh`** (Task 8 / D-05): AEA-compliant replication-script template with platform check (target `linux-x86_64-glibc-2.35`), Cargo.lock + rust-toolchain.toml + requirements.lock SHA verification, locked cargo build, output-checksum verification via jq, cross-platform reviewer note (use WSL / Docker `ubuntu:22.04`).
-- **`redist analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `redist_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `redist-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
+- **`bisect analyze --paper-mode`** (Task 8.1) — emits a `paper_mode/` subdirectory containing 9 files: `REPRODUCE.sh` (template substituted with the recorded `redist_build_commit` + lockfile SHAs + verbatim analyze invocation), `inputs.sha256.json` + `expected_outputs.sha256.json` (deterministic file-walks + canonical BTreeMap key ordering), `environment.json` (rustc + target_platform + OS), `seeds.json`, `CITATION.bib` + `CITATION.apa.txt` + `CITATION.chicago.txt` (per `docs/file-formats/citation-strings.md` §3.3), and a `README.md` walkthrough. `--paper-mode-citation-style {bluebook|apa|chicago}` defaults to `apa` per citation-strings.md §1. Implementation in `redist-cli/src/paper_mode.rs`; 8 module unit tests + 4 args-parse tests.
 
 - **`redist research validate-ensemble`** (Task 5 / M-02): consumes per-chain JSONL files (one chain per file, lines are `{step, metrics: {name: value}}`), computes Gelman-Rubin R-hat + pooled Effective Sample Size per metric using `redist-analysis::ensemble_diagnostics`. Emits `validate-ensemble v1` JSON report with per-metric pass/fail against `--rhat-threshold` (default 1.05) + `--ess-min` (default 100). Optional `--enacted <metrics.json>` records per-metric `enacted_percentile_rank` against the pooled ensemble distribution. `--strict` propagates convergence failures as non-zero exit. Input validation rejects fewer than 4 chains (S-03), unequal chain lengths, and missing-metric-in-some-chain with `[INPUT]` actionable errors. 8 unit tests including well-mixed pass / unmixed flag-failure / enacted percentile-rank position / `*.jsonl` extension filter.
 
@@ -643,7 +643,7 @@ The State Staff Interop plan is partial. Today (2026-04-30):
 
 **Shipped:**
 - `redist-report::manifest::PlanDirGuard` (PP-22): atomic-import infrastructure. Builds plans into `{label}.tmp/`, renames to `{label}/` on `commit()`, deletes tmp on drop without commit. Refuses to overwrite without `force=true` (label-collision check). 6 L0 tests covering commit/drop/collision/force/stale-cleanup/mid-run-race.
-- `redist-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `redist analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `redist import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
+- `redist-report::manifest::callais_preflight` (BOUNDARY): inspects a `PlanManifest` for the simultaneous presence of VRA-aware (`metis-vra` OR `cvap` population source) AND partisan-weighted markers; returns `[BOUNDARY]` error when both. Wired into `bisect analyze` so any plan whose manifest carries both markers refuses analysis. Wired into `redist import` as a forward guard. 5 L0 tests covering clean/VRA-only/partisan-only/blocked/error-message.
 - `redist-report::canonical` (spec §6 round-trip equality): `canonicalize_assignments()` re-numbers districts by ascending min-GEOID; `diff_assignments()` returns a structured `AssignmentDiff`; `assert_canonical_equal()` returns `[INPUT]`-categorized error with the offending GEOIDs. 10 L0 tests including label-permutation collapse, three-way permutation, distinguishes-different-partitions.
 - `redist import --as-civic-counter-proposal --submitted-by "<org>"` (Task 7, COMMONS): tags the imported plan's manifest with `submission_type = "civic_counter_proposal"`. `--submitted-by` required. `--submitted-at` defaults to import time. Downstream comparison reports surface the civic framing instead of treating it as authoritative.
 - `PlanManifest` extended with: `submission_type` (default `"authoritative"`), `submitted_by`, `submitted_at`, `source_tool`, `source_tool_version`, `source_format_fingerprint`, `import_compat_sha256`. All optional / serde-default for backward compat with legacy manifests.
@@ -678,7 +678,7 @@ The Court Submission Reports plan is partially implemented. Today (2026-04-30):
 
 ## Within-Party Bloc Voting (Callais Evidence Layer)
 
-`redist analyze --types bloc-voting` runs a per-precinct WLS regression of candidate share on racial composition AND a partisan baseline, producing the disentangled bloc-voting evidence required by *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36. It is opt-in (NOT included in `--types all`) because it requires a curator-attested race-of-candidate annotation file.
+`bisect analyze --types bloc-voting` runs a per-precinct WLS regression of candidate share on racial composition AND a partisan baseline, producing the disentangled bloc-voting evidence required by *Louisiana v. Callais* (608 U.S. ___, 2026-04-29) p.36. It is opt-in (NOT included in `--types all`) because it requires a curator-attested race-of-candidate annotation file.
 
 ### What it does
 
@@ -783,7 +783,7 @@ bash bootstrap.sh --with-api-key             # prompt + validate Dataverse key
 bootstrap.bat                                # Windows mirror
 ```
 
-Steps: rustup install if missing → `cargo build --release --locked` → PATH preflight (PP-18: verify binary at expected path before mutating PATH) → optional Python wheel + API-key round-trip validation (PP-19: validate before write) → real smoke test (PP-20: not `--print-only`; runs `redist state --state VT --year 2020`).
+Steps: rustup install if missing → `cargo build --release --locked` → PATH preflight (PP-18: verify binary at expected path before mutating PATH) → optional Python wheel + API-key round-trip validation (PP-19: validate before write) → real smoke test (PP-20: not `--print-only`; runs `bisect state --state VT --year 2020`).
 
 Target wall-clock: ≤ 10 minutes on a clean Ubuntu 22.04 container or Windows 11 VM.
 
@@ -825,7 +825,7 @@ count matches adjacency graph, population balance ≤ 0.5%.
 : The state code is not recognized. Use two-letter USPS codes: `VT`, `CA`, `TX`.
 
 **`ERROR: adjacency file not found`**
-: Run `redist fetch --release` to download adjacency files, then
+: Run `bisect fetch --release` to download adjacency files, then
   `python scripts/data/generate_adj_bin.py` to convert them.
 
 **`gpmetis: command not found`**

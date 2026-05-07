@@ -221,7 +221,7 @@ Two-panel layout: plan list (65%) + selected plan detail (35%).
 │  ⚠  Granularity: 98D at tract resolution may hit balance floor             │
 │     → switch resolution to block_group above to fix                        │
 │                                                                              │
-│  Command: redist state --state WA --chamber house --year 2020 --seed 42   │
+│  Command: bisect state --state WA --chamber house --year 2020 --seed 42   │
 │                                                                              │
 │  [Enter] Run    [Tab] next field    [Esc] back                              │
 └───────────────────────────────────────────────────────────────────────────── ┘

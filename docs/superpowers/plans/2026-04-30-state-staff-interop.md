@@ -5,7 +5,7 @@
 **Date:** 2026-04-30
 **Spec:** `docs/superpowers/specs/2026-04-30-state-staff-interop.md`
 **v2.1 tracking ref:** `docs/superpowers/specs/2026-04-30-v21-tracking.md`
-**Goal:** Make the redist CLI a first-class backend for Districtr, Dave's Redistricting App (DRA), and QGIS, so a state legislative staffer's loop is "draw in Districtr → `redist import` → `redist analyze` → `redist report` → iterate," with a parallel civic-bypass entry point for community-submitted counter-proposals.
+**Goal:** Make the redist CLI a first-class backend for Districtr, Dave's Redistricting App (DRA), and QGIS, so a state legislative staffer's loop is "draw in Districtr → `redist import` → `bisect analyze` → `redist report` → iterate," with a parallel civic-bypass entry point for community-submitted counter-proposals.
 
 **Depends on:** `redist-report` import infrastructure (`import_geojson_plan`, `import_gerrychain_to_assignments`), the existing partial `redist import --format districtr` shell, `write_manifest_atomic` already in `redist-report::manifest`, and the Callais p.36 mutex centralised in `runner.rs::validate_partisan_config`.
 **Blocks:** quickstart-state-staff.md (Onboarding plan Task 5.4 cross-references the artifacts delivered here); Plan Comparison and Civic Bidirectional pipelines need civic-bypass-tagged plans to flow through.
@@ -22,7 +22,7 @@
 
 - `redist-cli` builds clean from `cargo build --release --locked` on Windows + Linux.
 - `redist-report::manifest` exposes `write_manifest_atomic` and `check_incomplete_plan` (already in tree).
-- `redist-core::validate_partisan_config` (in `runner.rs`) enforces the Callais p.36 mutex at the `redist state` gate; this plan extends the same guard to `redist import` and `redist analyze`.
+- `redist-core::validate_partisan_config` (in `runner.rs`) enforces the Callais p.36 mutex at the `bisect state` gate; this plan extends the same guard to `redist import` and `bisect analyze`.
 - A small synthetic Vermont-shape adjacency + tract-centroid fixture exists for L0/L1 tests (already used by Onboarding plan Task 1; reuse, do not duplicate).
 
 ---
@@ -59,7 +59,7 @@ The current `run_import` writes `final_assignments.json` directly into `plan_dir
 - [ ] **2.7** L0 test `test_districtr_tract_import_round_trips`: a 5-tract synthetic Districtr JSON imports to assignments matching a hand-written expected map.
 - [ ] **2.8** L0 test `test_districtr_block_import_majority_vote`: a synthetic plan with 3 blocks per tract (2:1 split) assigns each tract to the majority district and logs the split in `translation_log.txt`.
 
-**Exit:** `redist import --format districtr <PATH>` produces a plan label that `redist analyze` can consume; `redist export --format districtr` produces JSON whose top-level keys match Districtr's expected shape.
+**Exit:** `redist import --format districtr <PATH>` produces a plan label that `bisect analyze` can consume; `redist export --format districtr` produces JSON whose top-level keys match Districtr's expected shape.
 
 ---
 
@@ -143,16 +143,16 @@ The handshake is what keeps state staff from silently feeding us a Districtr bui
 
 **Files:** `redist/crates/redist-cli/src/import_cmd.rs`, `redist/crates/redist-cli/src/analyze.rs`, `redist/crates/redist-cli/src/runner.rs` (extract preflight)
 
-The mutex is enforced at `redist state` via `validate_partisan_config(cfg)`. State staff who import a plan from Districtr never touch `redist state` — so they can skip the guard. This task fires the same check at every entry point that consumes a plan.
+The mutex is enforced at `bisect state` via `validate_partisan_config(cfg)`. State staff who import a plan from Districtr never touch `bisect state` — so they can skip the guard. This task fires the same check at every entry point that consumes a plan.
 
 - [ ] **6.1** Extract `redist_report::manifest::callais_preflight(manifest: &PlanManifest) -> Result<()>` from `runner.rs::validate_partisan_config`. The function inspects: (a) `partition_mode`; (b) any `vra_aware` marker (e.g., `population_source == "cvap"` combined with `metis-vra`); (c) any `partisan_weighted` marker (`partition_mode == "partisan-weighted"` or non-empty partisan-shares fingerprint). If both classes appear, return the same error string the state-runner uses ("partisan-weighted and metis-vra are mutually exclusive per Callais p.36 disentanglement").
 - [ ] **6.2** Call `callais_preflight(&manifest)` in `run_import` after the manifest is built but BEFORE the atomic-guard `commit()`. Failure deletes the tmp directory and exits non-zero with the named error.
 - [ ] **6.3** Call `callais_preflight(&manifest)` at the top of `run_analyze`, after the manifest is loaded but before any analyzer runs. Failure exits non-zero before any output is touched.
 - [ ] **6.4** L0 test `test_callais_preflight_blocks_import`: an imported manifest with both VRA + partisan markers exits non-zero with the named error; no plan label is created (relies on Task 1's atomic guard).
-- [ ] **6.5** L0 test `test_callais_preflight_blocks_analyze`: with a pre-existing tampered manifest (both markers), `redist analyze --label X` exits non-zero before any `analysis/*.json` is written.
+- [ ] **6.5** L0 test `test_callais_preflight_blocks_analyze`: with a pre-existing tampered manifest (both markers), `bisect analyze --label X` exits non-zero before any `analysis/*.json` is written.
 - [ ] **6.6** L0 test `test_callais_preflight_passes_clean_manifest`: a manifest with only `partition_mode == "partisan-weighted"` (no VRA marker) passes; a manifest with only `metis-vra` passes.
 
-**Exit:** Callais disentanglement holds at three gates (`redist state`, `redist import`, `redist analyze`) and is centralised in one function.
+**Exit:** Callais disentanglement holds at three gates (`bisect state`, `redist import`, `bisect analyze`) and is centralised in one function.
 
 ---
 
@@ -204,7 +204,7 @@ The Onboarding plan creates the file at Task 5.4; this plan supplies the actual 
 - [ ] **9.1** `quickstart-state-staff.md` follows the spec's persona-template (Who you are / What you'll have / Time / Steps / Expected output / Where to go next). Steps:
     1. Draw a 5-district map in Districtr against Vermont 2020 tracts; "Save Plan" → JSON.
     2. `redist import --format districtr senate_v3.json --plan-label vt_senate_v3 --state VT`.
-    3. `redist analyze --plan-label vt_senate_v3 --types all`.
+    3. `bisect analyze --plan-label vt_senate_v3 --types all`.
     4. `redist report --plan-label vt_senate_v3 --format pdf`.
     5. Iterate in Districtr; bump the label suffix.
 - [ ] **9.2** Annotate each step with expected wall-clock time (step 2 ≤ 3s, step 3 ≤ 30s on Vermont, step 4 ≤ 10s).
@@ -221,11 +221,11 @@ The Onboarding plan creates the file at Task 5.4; this plan supplies the actual 
 
 ## Definition of Done
 
-- `redist import --format districtr`, `--format dra`, `--format shapefile`, `--format geojson` all produce a plan label that `redist analyze` consumes
+- `redist import --format districtr`, `--format dra`, `--format shapefile`, `--format geojson` all produce a plan label that `bisect analyze` consumes
 - `redist export --format districtr` produces JSON loadable in Districtr's web app (manual UAT against a real Districtr instance)
 - DRA round-trip + Districtr round-trip both pass canonical-form equality on committed in-repo fixtures (B-05 — no CDN fetch)
 - Atomic-import guard: a forced validation failure leaves no `{label}/` directory and no `{label}.tmp/` directory; tested
-- Callais p.36 preflight fires at `redist import` AND `redist analyze`; tested at both gates
+- Callais p.36 preflight fires at `redist import` AND `bisect analyze`; tested at both gates
 - Schema-version handshake uses a multi-attribute fingerprint (PP-33); manifest pins `import_compat_sha256` (C-05); both tested
 - `--as-civic-counter-proposal --submitted-by <X>` produces a manifest with `submission_type=civic_counter_proposal` and the submitter recorded; tested
 - `quickstart-state-staff.md` walks end-to-end; `docs/file-formats/state-staff-interop.md` and `docs/file-formats/districtr.md` exist

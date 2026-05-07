@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `redist state`/`redist states`/`redist run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `redist-report` crate handles RPLAN read/write/validate. `redist validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `redist migrate --state X --label Y` copies legacy plans into the new tree.
+**Goal:** Implement the RPLAN v0.1 interchange format and custom redistricting parameters. `bisect state`/`redist states`/`redist run` gain `--districts`, `--chamber`, `--label`, `--population-source`, `--balance-tolerance` flags. A new `redist-report` crate handles RPLAN read/write/validate. `redist validate --file plan.rplan` verifies format and coverage. `PlanManifest` provides a full audit chain. `plans/{label}/` output trees coexist with legacy `states/{state}/` paths. Label collision exits non-zero without `--force`. `redist migrate --state X --label Y` copies legacy plans into the new tree.
 
 **Specs:** Spec 0 (RPLAN Format), Spec 1 (Custom Parameters) + R3 board amendments
 
@@ -657,7 +657,7 @@ pub struct ValidateArgs {
 
 ---
 
-## Task 7: New CLI flags on `redist state`/`redist states`/`redist run`
+## Task 7: New CLI flags on `bisect state`/`redist states`/`redist run`
 
 **Files:** `redist/crates/redist-cli/src/args.rs`, `redist/crates/redist-cli/src/main.rs`
 
@@ -895,7 +895,7 @@ from pathlib import Path
 # --- Spec 1 acceptance ---
 
 def test_wa_house_98_districts_produces_manifest(tmp_redist_output):
-    """redist state --state VT --districts 1 --chamber house produces manifest.json with correct fields."""
+    """bisect state --state VT --districts 1 --chamber house produces manifest.json with correct fields."""
     # Use VT (1 district) with house chamber for fast acceptance run
     result = subprocess.run([
         "redist", "state",

@@ -55,16 +55,16 @@ First time? Run **`bash bootstrap.sh`** (Linux/macOS) or **`bootstrap.bat`** (Wi
 cargo build --release --manifest-path redist/Cargo.toml
 
 # Download 2020 census data
-redist fetch --year 2020
+bisect fetch --year 2020
 
 # Draw all 50 congressional maps (~15 seconds)
 redist build official_2020 --year 2020 --workers 8
 
 # Analyze: compactness, VRA, partisan lean, splits
-redist label-analyze official_2020 --year 2020 --types all
+bisect label-analyze official_2020 --year 2020 --types all
 
 # Generate a report
-redist label-report official_2020 --year 2020 --format html json
+bisect label-report official_2020 --year 2020 --format html json
 ```
 
 ---
@@ -74,33 +74,33 @@ redist label-report official_2020 --year 2020 --format html json
 **Draw districts** — any chamber, any district count, any census year:
 
 ```bash
-redist state --state WA --districts 98 --chamber house    # 98-seat state house
-redist state --state WA --chamber congressional           # congressional (from config)
+bisect state --state WA --districts 98 --chamber house    # 98-seat state house
+bisect state --state WA --chamber congressional           # congressional (from config)
 redist states --year 2020 --workers 8                     # all 50 states in parallel
 ```
 
 **Analyse plans** — compactness, VRA compliance, partisan lean, county splits, contiguity:
 
 ```bash
-redist label-analyze my_plan --year 2020 --types all
+bisect label-analyze my_plan --year 2020 --types all
 ```
 
 **Compare plans** — side-by-side metrics, Jaccard similarity, partisan differences:
 
 ```bash
-redist label-compare plan_v1 plan_v2 --year 2020
+bisect label-compare plan_v1 plan_v2 --year 2020
 ```
 
 **Verify integrity** — SHA-256 audit chain from config → build → analysis → report:
 
 ```bash
-redist label-verify official_2020 --year 2020
+bisect label-verify official_2020 --year 2020
 ```
 
 **Generate reports** — HTML, JSON, or PDF with full provenance:
 
 ```bash
-redist label-report official_2020 --year 2020 --format html json pdf
+bisect label-report official_2020 --year 2020 --format html json pdf
 ```
 
 ---
@@ -212,13 +212,13 @@ Plans are referenced by **labels** (short names like `official_2020`) that resol
 
 ```bash
 redist build <label>              # draw districts
-redist label-analyze <label>      # run metrics
-redist label-report  <label>      # generate report
-redist label-verify  <label>      # verify SHA chain
+bisect label-analyze <label>      # run metrics
+bisect label-report  <label>      # generate report
+bisect label-verify  <label>      # verify SHA chain
 redist ls                         # list all plans
 redist show <label>               # plan details
 redist mv <old> <new>             # rename
-redist label-compare <a> <b>      # side-by-side diff
+bisect label-compare <a> <b>      # side-by-side diff
 ```
 
 Config file (`configs/<label>.yml`):
@@ -256,9 +256,9 @@ See [`docs/REDIST_CLI.md`](docs/REDIST_CLI.md) for the complete flag reference.
 ## Getting the data
 
 ```bash
-redist fetch --year 2020 --workers 8    # download census data
-redist fetch --year all                  # all three census years
-redist fetch --year 2020 --release       # pre-built adjacency files (requires gh auth login)
+bisect fetch --year 2020 --workers 8    # download census data
+bisect fetch --year all                  # all three census years
+bisect fetch --year 2020 --release       # pre-built adjacency files (requires gh auth login)
 ```
 
 ---

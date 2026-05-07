@@ -42,8 +42,8 @@ This project uses a **feature branch + pull request** workflow for all changes.
 3. **Download data files** (not in git):
    ```bash
    # Recommended: use the Rust CLI to download all census data
-   redist fetch --year 2020           # TIGER + redistricting data
-   redist fetch --year 2020 --release # Also pull pre-built adjacency files from GitHub Releases
+   bisect fetch --year 2020           # TIGER + redistricting data
+   bisect fetch --year 2020 --release # Also pull pre-built adjacency files from GitHub Releases
 
    # Convert adjacency pkl files to fast native format (after --release download)
    python scripts/data/generate_adj_bin.py --year 2020
@@ -333,8 +333,8 @@ Anyone can regenerate data files:
 
 ```bash
 # Download from Census Bureau (Rust CLI — recommended)
-redist fetch --year 2020
-redist fetch --year 2020 --release          # includes adjacency files
+bisect fetch --year 2020
+bisect fetch --year 2020 --release          # includes adjacency files
 python scripts/data/generate_adj_bin.py --year 2020  # convert to fast format
 
 # Alternative: Python download orchestrator

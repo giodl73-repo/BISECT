@@ -130,19 +130,19 @@ All output paths are relative to `{output_base}/{version}/`:
 
 ### Class A: Plan-creating commands
 Resolve metadata from args + registry. Write manifest.json.
-- `redist state`, `redist states`, `redist run`, `redist suite draw`, `redist import`, `redist migrate`
+- `bisect state`, `redist states`, `redist run`, `redist suite draw`, `redist import`, `redist migrate`
 
 **Obligation:** Write a complete, correct `manifest.json` before writing any other outputs.
 
 ### Class B: Plan-operating commands
 Load `PlanContext` from manifest. Never re-resolve metadata from global sources.
-- `redist analyze`, `redist report`, `redist map`, `redist export`, `redist compare`, `redist verify`
+- `bisect analyze`, `redist report`, `redist map`, `redist export`, `redist compare`, `bisect verify`
 
 **Obligation:** Use `PlanContext.from_label()` at entry. Fail with clear error if manifest missing.
 
 ### Class C: Metadata-only commands
 Don't operate on plans. Read from registry or global sources.
-- `redist doctor`, `redist policy`, `redist fetch`, `redist validate`, `redist tui`
+- `redist doctor`, `redist policy`, `bisect fetch`, `redist validate`, `redist tui`
 
 ---
 

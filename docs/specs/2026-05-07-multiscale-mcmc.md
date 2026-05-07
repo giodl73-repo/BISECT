@@ -204,7 +204,7 @@ SeedCompositor::MultiScale {
 
 **CLI**:
 ```bash
-redist state --state TX --year 2020 \
+bisect state --state TX --year 2020 \
   --search multiscale \
   --multiscale-steps 2000 \
   --multiscale-alpha 0.3 \
@@ -229,7 +229,7 @@ algorithm:
 The CLI must detect `--search multiscale` and load both files before constructing the chain. If the block-group adjacency file is missing, the CLI must error with a clear message:
 ```
 Error: multi-scale MCMC requires block-group adjacency for {state} {year}.
-Run: redist fetch --year {year} --resolution block_group
+Run: bisect fetch --year {year} --resolution block_group
 ```
 
 ---
@@ -255,7 +255,7 @@ Every run with `--search multiscale` records in `runs/{label}/{year}/index.json`
 
 All fields are named and typed so a verifier can independently reproduce the fine/coarse selection sequence from `base_seed` using the SHA-256 formula. `chain_idx` is 0 for single-chain use and must be recorded. The `selected_step` records which step's plan was returned — it is the 0-based index into the EC-sorted list of ACCEPTED plans (plans where at least one district changed from the previous step). Rejected steps (where all districts are unchanged) do not enter the selection pool. This matches the Forest ReCom and Merge-Split convention. `fine_steps_taken + coarse_steps_taken` must equal `multiscale_steps` exactly.
 
-This ensures `redist label-verify` can confirm the search parameters and seed derivation for any submitted plan.
+This ensures `bisect label-verify` can confirm the search parameters and seed derivation for any submitted plan.
 
 ---
 
@@ -294,7 +294,7 @@ This ensures `redist label-verify` can confirm the search parameters and seed de
 
 1. **Three levels**: should the spec support three levels (tract + block-group + county) or fix at two? Defer to Phase 2; this spec covers two-level only.
 2. **Coarse balance tolerance**: should coarse balance tolerance be the same as fine or looser? Looser (2×) is recommended since coarse moves are corrected by the projection step; this is the default but not enforced.
-3. **Coarse adjacency data availability**: block-group adjacency files must exist (`redist fetch --resolution block_group`). The CLI must check and error with an actionable message if missing (see §Compositor integration).
+3. **Coarse adjacency data availability**: block-group adjacency files must exist (`bisect fetch --resolution block_group`). The CLI must check and error with an actionable message if missing (see §Compositor integration).
 4. **Projection rebalancing**: when a coarse move violates fine-level balance, boundary swaps are needed. This spec defers to the same boundary-swap logic in `split_subgraph`. The exact implementation is left to the `redist-multiscale` crate author; the invariant (fine-level balance after every coarse step) is testable regardless of implementation.
 5. **`--output-all-steps`**: should the CLI support writing all visited plans to disk for diagnostics? Deferred — large output for T=2000 steps.
 6. **SMC integration**: could the multi-scale chain serve as the proposal kernel for SMC? Deferred to G.12 or later.

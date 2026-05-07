@@ -79,7 +79,7 @@ The full error audit (every `unwrap()`, `expect()`, and bare `?` in `redist-cli/
 - New code (post-2026-04-30) uses categorized prefixes by default
 - Existing user-facing error paths are migrated as they're touched in unrelated work
 - `redist doctor`'s `--check-tutorial-data` (the first new entry point) demonstrates the conventions
-- High-priority paths to migrate next (in order): `redist state` failure modes, `redist fetch` HTTP errors, `redist analyze` missing-input errors
+- High-priority paths to migrate next (in order): `bisect state` failure modes, `bisect fetch` HTTP errors, `bisect analyze` missing-input errors
 
 Track migration coverage in `docs/superpowers/plans/2026-04-30-onboarding-and-tutorials.md` Task 6.
 

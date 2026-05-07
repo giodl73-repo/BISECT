@@ -4,7 +4,7 @@
 
 **Goal:** Build `redist-tui`, a pure ratatui TUI binary that lets redistricting practitioners run the full redist workflow — plan generation, analysis, comparison, verification — through interactive menus without memorising CLI flags.
 
-**Architecture:** New binary crate `redist/crates/redist-tui/` added to the workspace. Uses ratatui + crossterm for terminal rendering. Reads redist output files directly for browse/compare/verify; spawns `redist state` subprocess only for the Run screen, consuming STATUS: lines to drive live progress bars. Zero changes to `redist-cli` or its existing tests.
+**Architecture:** New binary crate `redist/crates/redist-tui/` added to the workspace. Uses ratatui + crossterm for terminal rendering. Reads redist output files directly for browse/compare/verify; spawns `bisect state` subprocess only for the Run screen, consuming STATUS: lines to drive live progress bars. Zero changes to `redist-cli` or its existing tests.
 
 **Tech Stack:** Rust, ratatui 0.28+, crossterm 0.28+, toml 0.8, serde (for session config), redist-cli (lib), redist-report (lib), serde_json.
 
@@ -1451,7 +1451,7 @@ fn render_form(f: &mut Frame, state: &RunState, area: Rect) {
 
 fn build_command_preview(form: &crate::app::RunForm) -> String {
     let mut cmd = format!(
-        "redist state --state {} --chamber {} --year {}",
+        "bisect state --state {} --chamber {} --year {}",
         form.location, form.chamber, form.year
     );
     if !form.seed.is_empty() {
@@ -1676,7 +1676,7 @@ git commit -m "feat(tui): run screen — form, live progress, completion card"
 - Create: `redist/crates/redist-tui/src/runner.rs`
 - Modify: `redist/crates/redist-tui/src/main.rs`
 
-This task makes the Run screen actually launch `redist state` and pipe STATUS: output back to update progress bars.
+This task makes the Run screen actually launch `bisect state` and pipe STATUS: output back to update progress bars.
 
 - [ ] **Step 8.1: Write failing tests**
 
@@ -1773,7 +1773,7 @@ use std::process::{Command, Stdio};
 use std::sync::{Arc, Mutex};
 use std::io::{BufRead, BufReader};
 
-/// Launch `redist state` with the given parameters.
+/// Launch `bisect state` with the given parameters.
 /// Spawns a thread that reads stdout/stderr and appends to `log_lines`.
 /// Returns a handle that can be joined; sets `done` flag when complete.
 pub fn launch_redist_state(

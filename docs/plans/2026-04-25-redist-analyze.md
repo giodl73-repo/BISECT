@@ -1,8 +1,8 @@
-# `redist analyze` + `redist map` Implementation Plan
+# `bisect analyze` + `redist map` Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add `redist analyze` and `redist map` subcommands to the CLI, with an extension model that makes adding new analyzers a one-file addition.
+**Goal:** Add `bisect analyze` and `redist map` subcommands to the CLI, with an extension model that makes adding new analyzers a one-file addition.
 
 **Architecture:** An `Analyzer` trait in `redist-analysis` defines the contract. Each analyzer is a self-contained module implementing the trait. The CLI dispatcher loads final assignments + data files then runs requested analyzers, writing results to `{state}/analysis/{type}.json`. Maps stay Python — `redist map` is a thin subprocess shim around the existing `visualize_*.py` scripts.
 
@@ -433,7 +433,7 @@ fn test_summary_merge() {
 
 ---
 
-## Task 6: `redist analyze` CLI subcommand
+## Task 6: `bisect analyze` CLI subcommand
 
 **Files:** Create `redist/crates/redist-cli/src/analyze.rs`, modify `args.rs` and `main.rs`
 
@@ -512,7 +512,7 @@ fn write_json<T: serde::Serialize>(path: &Path, value: T) -> anyhow::Result<()> 
 }
 ```
 
-Note on compactness: the existing `redist-analysis` `all_metrics()` takes WKB geometry per district. The geometry comes from TIGER shapefiles and requires dissolving tract polygons. For now, compactness via `redist analyze` calls a Python shim to dissolve + export WKB, then calls `all_metrics()`. Add `// TODO: native geometry dissolve once redist-data has tract WKB` comment.
+Note on compactness: the existing `redist-analysis` `all_metrics()` takes WKB geometry per district. The geometry comes from TIGER shapefiles and requires dissolving tract polygons. For now, compactness via `bisect analyze` calls a Python shim to dissolve + export WKB, then calls `all_metrics()`. Add `// TODO: native geometry dissolve once redist-data has tract WKB` comment.
 
 - [ ] **Wire into `main.rs`**
 
@@ -523,7 +523,7 @@ Commands::Analyze(args) => {
 }
 ```
 
-- [ ] **Run:** `redist analyze --state VT --year 2020 --version V3 --types demographic political` against existing VT outputs — expect JSON written to `outputs/V3/2020/vermont/analysis/`
+- [ ] **Run:** `bisect analyze --state VT --year 2020 --version V3 --types demographic political` against existing VT outputs — expect JSON written to `outputs/V3/2020/vermont/analysis/`
 
 - [ ] **Commit:** `git commit -m "feat(cli): redist analyze subcommand"`
 

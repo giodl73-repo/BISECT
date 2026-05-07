@@ -1,0 +1,54 @@
+[workspace]
+members = [
+    "crates/bisect-core",
+    "crates/bisect-data",
+    "crates/bisect-apportion",
+    "crates/bisect-cli",
+    "crates/bisect-analysis",
+    "crates/bisect-map",
+    "crates/bisect-report",
+    "crates/bisect-web",
+    "crates/bisect-tui",
+    "crates/bisect-ensemble",
+    "crates/bisect-smc",
+    "crates/bisect-ilp",
+    "crates/bisect-multiscale",
+    "python/redist_py",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Gio Della-Libera"]
+license = "MIT"
+
+[workspace.dependencies]
+# Partitioning
+metis-core = { git = "https://github.com/giodl73-repo/METIS-CORE.git", branch = "master" }
+metis = "0.2.2"
+
+# Algorithm / data structures
+rayon = "1.10"
+rand  = { version = "0.8", features = ["small_rng"] }
+sha2  = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+csv = "1"
+
+# Geometry (Phase 2+)
+geo = "0.28"
+geo-types = "0.7"
+rstar = "0.12"
+
+# CLI (Phase 3)
+clap = { version = "4", features = ["derive"] }
+
+# PyO3 bindings
+pyo3 = { version = "0.22", features = ["abi3-py311"] }
+numpy = "0.22"
+
+# Utilities
+thiserror = { version = "2" }
+anyhow = "1"
+tempfile = "3"

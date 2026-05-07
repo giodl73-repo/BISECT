@@ -28,7 +28,7 @@
 
 4. **Run analysis:**
    ```bash
-   redist analyze --plan-label senate_proposal_v3 --year 2020 --types all
+   bisect analyze --plan-label senate_proposal_v3 --year 2020 --types all
    ```
    Wall-clock: under 30 s for VT, under 5 min for the largest states.
 
@@ -48,7 +48,7 @@ Congressional maps use census tracts as the unit of geography. For **state legis
 
 ```bash
 # Washington State House: 98 districts at block-group resolution
-redist state --state WA --year 2020 \
+bisect state --state WA --year 2020 \
     --districts 98 \
     --chamber house \
     --resolution block_group \
@@ -68,7 +68,7 @@ The `--chamber` flag tags the output manifest so reports and comparisons can dis
 
 **Senate districts** (fewer seats, looser resolution requirement):
 ```bash
-redist state --state WA --year 2020 \
+bisect state --state WA --year 2020 \
     --districts 49 \
     --chamber senate \
     --label wa_senate_v1
@@ -81,7 +81,7 @@ redist state --state WA --year 2020 \
 Washington's constitution requires each senate district to be composed of exactly two whole house districts. The `--structure nestsection` flag draws both chambers in a single pipeline run, guaranteeing nesting by construction.
 
 ```bash
-redist state --state WA --year 2020 \
+bisect state --state WA --year 2020 \
     --structure nestsection \
     --label wa_bicameral_v1
 ```
@@ -120,7 +120,7 @@ Output confirms nesting or lists violations:
 
 For variable-ratio states (Illinois, New York, Minnesota), add `--nest-ratio 2:1`:
 ```bash
-redist state --state IL --year 2020 \
+bisect state --state IL --year 2020 \
     --structure nestsection \
     --nest-ratio 2:1 \
     --label il_bicameral_v1

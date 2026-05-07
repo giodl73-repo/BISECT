@@ -13,7 +13,7 @@ This guide walks a redistricting commission or state legislature through using `
 cargo build --release --manifest-path redist/Cargo.toml
 
 # Download 2020 census data (TIGER shapefiles + population data)
-redist fetch --year 2020
+bisect fetch --year 2020
 
 # Convert adjacency files to fast native format (one-time)
 python scripts/data/generate_adj_bin.py --year 2020
@@ -49,12 +49,12 @@ This produces:
 
 ```bash
 # House only
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house --label wa_house_v1 \
   --balance-tolerance 5.0 --seed 42
 
 # Congressional (uses official district count from census config)
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --chamber congressional --label wa_congress_v1 \
   --balance-tolerance 0.5 --seed 42
 ```
@@ -65,7 +65,7 @@ The `--seed` flag makes every run exactly reproducible. Same seed + same data = 
 
 ```bash
 # Run with a specific seed
-redist state --state WA --districts 98 --chamber house \
+bisect state --state WA --districts 98 --chamber house \
   --label wa_house_final --seed 7823461 --year 2020 --version WA_Plans
 ```
 
@@ -75,11 +75,11 @@ By default, districts are equalized by **total population** (required for congre
 
 ```bash
 # Citizen voting-age population (CVAP) — some states require this
-redist state --state WA --districts 98 --chamber house \
+bisect state --state WA --districts 98 --chamber house \
   --population-source cvap --label wa_house_cvap_v1
 
 # Voting-age population (VAP)
-redist state --state WA --districts 98 --chamber house \
+bisect state --state WA --districts 98 --chamber house \
   --population-source vap --label wa_house_vap_v1
 ```
 
@@ -89,10 +89,10 @@ redist state --state WA --districts 98 --chamber house \
 
 ```bash
 # Run all analyses (demographic, political, compactness, contiguity, splits, VRA)
-redist analyze --label wa_house_v1 --year 2020 --version WA_Plans --types all
+bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans --types all
 
 # Or specific types
-redist analyze --label wa_house_v1 --year 2020 --version WA_Plans \
+bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans \
   --types contiguity splits compactness
 ```
 
@@ -112,7 +112,7 @@ redist analyze --label wa_house_v1 --year 2020 --version WA_Plans \
 
 ```bash
 # Download the current enacted WA house districts from Census
-redist fetch --type enacted --year 2020 --states WA
+bisect fetch --type enacted --year 2020 --states WA
 
 # Compare your plan to enacted
 redist compare --plan-a wa_house_v1 --enacted \
@@ -187,9 +187,9 @@ To reproduce the plan on any machine:
 
 ```bash
 # The manifest shows you exactly what to run:
-# "verification_command": "redist state --state WA --year 2020 --version WA_Plans --districts 98 --chamber house --label wa_house_v1 --seed 42 --balance-tolerance 5.0"
+# "verification_command": "bisect state --state WA --year 2020 --version WA_Plans --districts 98 --chamber house --label wa_house_v1 --seed 42 --balance-tolerance 5.0"
 
-redist state --state WA --year 2020 --version WA_Plans \
+bisect state --state WA --year 2020 --version WA_Plans \
   --districts 98 --chamber house --label wa_house_v1_verify \
   --seed 42 --balance-tolerance 5.0
 ```
@@ -202,11 +202,11 @@ The output assignments should be identical to the original.
 
 ```bash
 # Draft 1
-redist state --state WA --districts 98 --chamber house \
+bisect state --state WA --districts 98 --chamber house \
   --label wa_house_draft1 --seed 42 --version WA_Plans
 
 # Draft 2 (different seed)
-redist state --state WA --districts 98 --chamber house \
+bisect state --state WA --districts 98 --chamber house \
   --label wa_house_draft2 --seed 7823 --version WA_Plans
 
 # Compare the two drafts
@@ -214,8 +214,8 @@ redist compare --plan-a wa_house_draft1 --plan-b wa_house_draft2 \
   --year 2020 --version WA_Plans
 
 # Analyze both
-redist analyze --label wa_house_draft1 --types all
-redist analyze --label wa_house_draft2 --types all
+bisect analyze --label wa_house_draft1 --types all
+bisect analyze --label wa_house_draft2 --types all
 
 # Side-by-side report
 redist report --label wa_house_draft1 wa_house_draft2 --format html

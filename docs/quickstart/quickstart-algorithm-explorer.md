@@ -28,42 +28,42 @@ The commands below run six labeled plans for North Carolina (k=14 districts). Ea
 
 ```bash
 # 1. Default (statutory choice: apportion-regions + geographic + convergence)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode apportion-regions \
     --weights geographic \
     --search convergence \
     --label nc_default
 
 # 2. Structure: standard binary bisection (no prime factorisation)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode standard-bisect \
     --weights geographic \
     --search convergence \
     --label nc_standard_bisect
 
 # 3. Structure: ratio-optimal (searches binary ratios, no prime anchoring)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode ratio-optimal \
     --weights geographic \
     --search convergence \
     --label nc_ratio_optimal
 
 # 4. Structure: ratio-optimal-area (adds land-area balance constraint)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode ratio-optimal-area \
     --weights geographic \
     --search convergence \
     --label nc_ratio_optimal_area
 
 # 5. Weights: county-sticky (rewards keeping tracts inside their county)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode apportion-regions \
     --weights county \
     --search convergence \
     --label nc_county_weights
 
 # 6. Search: percentile 0.5 instead of convergence (explores off-optimal solutions)
-redist state --state NC --year 2020 \
+bisect state --state NC --year 2020 \
     --partition-mode apportion-regions \
     --weights geographic \
     --search percentile \
@@ -75,10 +75,10 @@ redist state --state NC --year 2020 \
 
 ## Comparing variants
 
-After all six runs complete, use `redist label-compare` to produce a side-by-side table:
+After all six runs complete, use `bisect label-compare` to produce a side-by-side table:
 
 ```bash
-redist label-compare \
+bisect label-compare \
     nc_default nc_standard_bisect nc_ratio_optimal \
     nc_ratio_optimal_area nc_county_weights nc_percentile_50 \
     --year 2020 \
@@ -117,7 +117,7 @@ This runs 4 structures x 2 weight modes x 2 search modes = 16 labeled plans and 
 
 ## Where to go next
 
-- Full list of `--partition-mode` options: `redist state --help`
+- Full list of `--partition-mode` options: `bisect state --help`
 - Percentile sweep (compactness-partisan tradeoff): see `quickstart-researcher.md`
 - Understanding the prime-factorisation structure: `docs/RECURSIVE_BISECTION.md`
 - National 50-state bakeoff results: `docs/PAPERS.md` (B.11 paper)

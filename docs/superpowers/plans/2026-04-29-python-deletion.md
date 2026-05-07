@@ -60,7 +60,7 @@ scripts/utils/status_protocol.py
 scripts/utils/terminal_utils.py
 ```
 
-These are replaced by `redist run` / `redist state` / `redist states` but retain forensic value. **Move via `git mv`, do not delete.**
+These are replaced by `redist run` / `bisect state` / `redist states` but retain forensic value. **Move via `git mv`, do not delete.**
 
 - [ ] **2.1** Confirm Plan 01 has been live for the full soak-time signal (≥ 5 days, ≥ 10 runs, ≥ 3 flag combinations). Document the soak data in this plan's appendix.
 - [ ] **2.2** Create `archive/python-pipeline-final/` directory.

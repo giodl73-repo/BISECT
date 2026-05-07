@@ -79,7 +79,7 @@ The Rust CLI's flag surface is a self-described mirror of the Python argparse su
 **Files:** `.github/workflows/*.yml`, `tests/acceptance/`
 
 - [ ] **5.1** Check that CI runs both `pytest tests/acceptance/` and the Rust test suite. Confirm green.
-- [ ] **5.2** Add a test at `tests/acceptance/test_redist_invariants.py` that invokes `redist run -p -y 2020 -v ci_test -st VT` (dry run for CI speed) and a separate slower test that does a real `redist state --state VT --year 2020` and asserts:
+- [ ] **5.2** Add a test at `tests/acceptance/test_redist_invariants.py` that invokes `redist run -p -y 2020 -v ci_test -st VT` (dry run for CI speed) and a separate slower test that does a real `bisect state --state VT --year 2020` and asserts:
    - Exit code 0
    - `final_assignments.json` exists and parses
    - District count exactly equals 1 (VT)

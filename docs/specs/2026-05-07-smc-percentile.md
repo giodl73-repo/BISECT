@@ -10,7 +10,7 @@
 
 ## Overview
 
-The SMC crate (`redist ensemble --method smc`) produces a **weighted ensemble** of N plans — it cannot be used directly via the three-layer compositor which expects a single plan output. SmcPercentile bridges this gap: it runs SMC internally and selects one plan from the weighted ensemble at the p-th quantile of the weighted EC distribution.
+The SMC crate (`bisect ensemble --method smc`) produces a **weighted ensemble** of N plans — it cannot be used directly via the three-layer compositor which expects a single plan output. SmcPercentile bridges this gap: it runs SMC internally and selects one plan from the weighted ensemble at the p-th quantile of the weighted EC distribution.
 
 This closes the SMC→compositor loop and gives practitioners a way to say "run SMC and return the median-weight plan" or "run SMC and return the minimum-EC plan among its weighted sample."
 

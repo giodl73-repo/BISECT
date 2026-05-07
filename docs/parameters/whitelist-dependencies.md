@@ -91,7 +91,7 @@ Per the table:
    - The depo recompute output's `draft_interpretation` field
 
 2. **`bloc_robust_se_type=hc1` AND `n_clusters < 30`** triggers a one-line stderr warning at:
-   - `redist analyze --types bloc-voting` invocation
+   - `bisect analyze --types bloc-voting` invocation
    - `redist depo eval` (when daemon ships)
 
 These guardrails are not auto-enforced today (the bloc-voting analyzer doesn't yet read these whitelist parameters as overrides — that wiring is the depo daemon's Task 4/5). The doc + machine-readable map are the contract; the enforcement code lands when the daemon does.

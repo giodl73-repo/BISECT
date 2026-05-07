@@ -15,14 +15,14 @@ Most state constitutions require redistricting plans to avoid splitting counties
 ## Running the analysis
 
 ```bash
-redist analyze --label wa_house_v1 --year 2020 --version WA_Plans --types splits
+bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans --types splits
 ```
 
 For municipal splits, you also need to download the Census geographic relationship files first:
 
 ```bash
-redist fetch --type geography --year 2020 --states WA
-redist analyze --label wa_house_v1 --types splits
+bisect fetch --type geography --year 2020 --states WA
+bisect analyze --label wa_house_v1 --types splits
 ```
 
 ---
@@ -113,7 +113,7 @@ Municipal splits are computed from the Census Bureau's Place-to-Tract relationsh
 
 **Important**: Census-designated places include unincorporated areas that may not be legally considered "municipalities" under your state's constitution. Verify which entities your state's constitution covers before relying on `redist`'s municipal split count.
 
-**Data availability**: Municipal split data requires `redist fetch --type geography`. If this data is unavailable and your state's constitution requires municipal preservation, `redist analyze --types splits` exits with an error rather than silently omitting municipal splits.
+**Data availability**: Municipal split data requires `bisect fetch --type geography`. If this data is unavailable and your state's constitution requires municipal preservation, `bisect analyze --types splits` exits with an error rather than silently omitting municipal splits.
 
 ---
 

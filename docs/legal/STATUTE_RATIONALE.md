@@ -147,12 +147,12 @@ By 2026, this project (`redist`) has:
 
 - Validated 50-state output for 2000 / 2010 / 2020 census years.
 - Per-plan `manifest.json` with input SHA-256s and parameter records.
-- AEA-compliant replication packages (`redist analyze --paper-mode`).
+- AEA-compliant replication packages (`bisect analyze --paper-mode`).
 - Civic-input pipeline with URL snapshotting (`redist civic ingest --snapshot-urls`).
 - Court-submission report scaffolding (`redist report --format pdf`).
 - Plan-comparison narrative generator with provenance manifest (`redist compare --format html`).
 - Ensemble diagnostics for convergence claims (`redist-analysis::ensemble_diagnostics`).
-- Bloc-voting analysis for VRA § 2 (`redist analyze --types bloc-voting`).
+- Bloc-voting analysis for VRA § 2 (`bisect analyze --types bloc-voting`).
 - Atomic plan import with Callais p.36 mutex (`PlanDirGuard` + `callais_preflight`).
 
 The algorithmic and infrastructure work that the model bill assumes has already been done. § 107(a) of the bill can designate this implementation directly; § 107(c)'s parameter table is straightforward to populate from the existing parameter set; § 105(b)'s schema is the schema this project already publishes. There is no implementation risk that "Congress mandates X but X cannot be built." X is built.

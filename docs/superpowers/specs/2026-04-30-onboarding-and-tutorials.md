@@ -25,7 +25,7 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
    - Adds `redist/target/release` to PATH; verifies the next shell can find the binary via `which redist` / `where redist`
    - Optionally installs maturin + builds the `redist_py` wheel; verifies via `python -c "import redist_py"` before claiming success
    - Optionally prompts for `DATAVERSE_API_KEY`. **Validates the key with one Dataverse API round-trip** before writing it to local config (TRENCH PP-19 prevention). Writes to `~/.config/redist/credentials.toml` (Linux/macOS) or `%APPDATA%\redist\credentials.toml` (Windows) — explicit path, not hidden in a project dir.
-   - **Runs a real smoke test, not `--print-only`** (TRENCH PP-20): `redist state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke`. Verifies the bisection actually completed and final_assignments.json has 193 tract entries.
+   - **Runs a real smoke test, not `--print-only`** (TRENCH PP-20): `bisect state --state VT --year 2020 --label bootstrap_test --output-dir /tmp/bootstrap_smoke`. Verifies the bisection actually completed and final_assignments.json has 193 tract entries.
    - Reports success with next-step pointers
 
 2. **Persona-specific quickstart docs** under `docs/quickstart/`:
@@ -38,8 +38,8 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
 3. **End-to-end Vermont walkthrough** (the canonical "complete example", **changed from Louisiana per SURVEY**)
    - Vermont is the canonical because: 1 district = trivial population balance, fully-public Fekrazad data, no live §2 litigation that might color the project as advocacy-aligned to a special master. Louisiana remains as a separately-documented "advanced post-Callais walkthrough".
    - Fetch Census + adjacency + election data
-   - Run `redist state --state VT --year 2020`
-   - Run `redist analyze --types all`
+   - Run `bisect state --state VT --year 2020`
+   - Run `bisect analyze --types all`
    - Generate the PDF expert report
    - Verify with `redist doctor --verify-manifest`
    - Each step shows expected output + how long it should take
@@ -61,7 +61,7 @@ This spec gets onboarding to ≤ 5 minutes for the happy path and provides one w
 
 3b. **Advanced Louisiana / Callais walkthrough** (separate doc; not the canonical example)
     - Fetch primary-election data via the registry
-    - Run `redist analyze --types bloc-voting` with the Callais Evidence Layer
+    - Run `bisect analyze --types bloc-voting` with the Callais Evidence Layer
     - Generate court-formatted PDF
     - Explicitly framed as "the post-Callais §2 evidence kit" not as the project's default workflow.
 
@@ -111,7 +111,7 @@ step 4 "Adding to PATH..."
 # ... (platform-specific shell config)
 
 step 5 "Smoke test (real run, not --print-only — TRENCH PP-20)..."
-./target/release/redist state --state VT --year 2020 --label bootstrap_test \
+./target/release/bisect state --state VT --year 2020 --label bootstrap_test \
     --output-dir /tmp/bootstrap_smoke
 # Verify the bisection actually completed
 test -f /tmp/bootstrap_smoke/bootstrap_test/final_assignments.json
@@ -120,7 +120,7 @@ TRACT_COUNT=$(jq 'length' /tmp/bootstrap_smoke/bootstrap_test/final_assignments.
 echo "[OK] smoke test completed: $TRACT_COUNT tracts assigned"
 
 step 6 "Done!"
-echo "Try: redist state --state VT --year 2020"
+echo "Try: bisect state --state VT --year 2020"
 ```
 
 Plus `bootstrap.bat` mirroring for Windows (use `%TEMP%\bootstrap_smoke` and `where redist` instead of `which`).

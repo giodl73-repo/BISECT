@@ -35,12 +35,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: redist
+          workspaces: .
           key: kani
 
       - name: Run Kani harnesses (redist-apportion)
-        run: cargo kani -p redist-apportion --no-default-features
-        working-directory: redist
+        run: cargo kani -p bisect-apportion --no-default-features
+        working-directory: .
 
   # ---------------------------------------------------------------------------
   # Prusti — static verifier / postcondition checker for Rust
@@ -71,10 +71,10 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: redist
+          workspaces: .
           key: prusti
 
       - name: Run Prusti (redist-apportion)
         if: env.PRUSTI_AVAILABLE == 'true'
-        run: cargo prusti -p redist-apportion --no-default-features
-        working-directory: redist
+        run: cargo prusti -p bisect-apportion --no-default-features
+        working-directory: .

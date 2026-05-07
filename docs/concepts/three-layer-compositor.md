@@ -171,15 +171,15 @@ analysis_types:
 redist build official_proposal --year 2020
 
 # Multi-seed search: 50 seeds, return minimum
-redist state --state NC --year 2020 --label nc_multi \
+bisect state --state NC --year 2020 --label nc_multi \
   --partition-mode ratio-optimal --search multi --seeds 50
 
 # Single deterministic run (for statutory certification)
-redist state --state WI --year 2020 --label wi_statutory \
+bisect state --state WI --year 2020 --label wi_statutory \
   --partition-mode prime-factor --search single
 
 # Convergence sweep with T=600
-redist state --state TX --year 2020 --label tx_convergence \
+bisect state --state TX --year 2020 --label tx_convergence \
   --partition-mode standard-bisect --search convergence \
   --convergence-threshold 600
 ```

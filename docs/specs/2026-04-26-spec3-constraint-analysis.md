@@ -16,23 +16,23 @@ Redistricting plans must satisfy legal constraints beyond population balance:
 3. **Municipal preservation** — minimize city/town splits
 4. **Community of interest preservation** — tracks of demographic/geographic cohesion (harder to automate; addressed partially)
 
-Today `redist analyze` checks none of these. A practitioner submitting a plan to a commission needs a machine-verifiable constraint report as part of the plan record.
+Today `bisect analyze` checks none of these. A practitioner submitting a plan to a commission needs a machine-verifiable constraint report as part of the plan record.
 
 ---
 
 ## New analyzer types
 
-Extends `redist analyze --types` with:
+Extends `bisect analyze --types` with:
 - `contiguity` — per-district connectivity check
 - `splits` — county and municipal split counts and enumeration
 - (future) `communities` — community of interest scoring
 
 ```bash
-redist analyze --state WA --year 2020 --version WA_Plans \
+bisect analyze --state WA --year 2020 --version WA_Plans \
   --label wa_house_draft1 --types contiguity splits compactness
 
 # Or with all:
-redist analyze --state WA --year 2020 --version WA_Plans \
+bisect analyze --state WA --year 2020 --version WA_Plans \
   --label wa_house_draft1 --types all
 ```
 
@@ -74,7 +74,7 @@ For each district:
 }
 ```
 
-`all_contiguous: false` causes `redist analyze` to exit with code 3 (separate from balance failure code 2) unless `--allow-noncontiguous` is passed.
+`all_contiguous: false` causes `bisect analyze` to exit with code 3 (separate from balance failure code 2) unless `--allow-noncontiguous` is passed.
 
 ### Implementation
 
@@ -103,7 +103,7 @@ County and municipal boundaries need to be matched to census tracts. Two sources
 
 **County → tract**: Census tract GEOIDs encode county FIPS directly. Tract GEOID `530330001001` → state 53, county 033, tract 0001001. Parse directly from GEOID — no extra data file needed.
 
-**Municipality → tract**: Requires Census Place-to-Tract relationship file (`data/{year}/geography/place_tract_{year}.csv`). Download via `redist fetch --type geography`. If absent, municipal splits are skipped with a warning.
+**Municipality → tract**: Requires Census Place-to-Tract relationship file (`data/{year}/geography/place_tract_{year}.csv`). Download via `bisect fetch --type geography`. If absent, municipal splits are skipped with a warning.
 
 ### Metrics
 
@@ -177,12 +177,12 @@ County FIPS extraction from GEOID requires no data file — it's embedded in the
 
 ---
 
-## `redist fetch --type geography`
+## `bisect fetch --type geography`
 
 New fetch type for geographic relationship files:
 
 ```bash
-redist fetch --type geography --year 2020 --states WA
+bisect fetch --type geography --year 2020 --states WA
 # Downloads: data/2020/geography/wa_place_tract_2020.csv
 ```
 
@@ -287,7 +287,7 @@ Fix: Add `--state-splits-standard <STATE>` lookup (or auto-detect from `--state`
 
 **[LEDGER] CONCERN — Missing municipal data must be an error for required jurisdictions**
 Silently skipping municipal splits when the geography file is absent could constitute a legal deficiency if municipal preservation is constitutionally required in that state.
-Fix: `redist analyze --types splits` checks if the state has a municipal preservation requirement (lookup table). If yes and the geography file is absent, exit with error code 6 and message: `ERROR: Municipal preservation is constitutionally required for WA but place-tract data is absent. Run: redist fetch --type geography --states WA`. Add `--require-municipal` flag to force this behavior in any state.
+Fix: `bisect analyze --types splits` checks if the state has a municipal preservation requirement (lookup table). If yes and the geography file is absent, exit with error code 6 and message: `ERROR: Municipal preservation is constitutionally required for WA but place-tract data is absent. Run: bisect fetch --type geography --states WA`. Add `--require-municipal` flag to force this behavior in any state.
 
 **[BENCHMARK] CONCERN — Finding 5: Adopt bitfield exit codes**
 The current exit code table (0, 2, 3, 4) has gaps and does not compose when multiple violations occur simultaneously. Exit code 4 means "both violations" but this cannot scale to additional constraint types.
@@ -298,7 +298,7 @@ Fix: Adopt bitfield exit codes. Each constraint type owns one bit:
 - 4 = nesting violation (bit 2)
 - 8 = missing required data (bit 3)
 
-Combinations OR the bits: balance+contiguity=3, balance+nesting=5, contiguity+nesting=6, all three=7, etc. Remove the old codes 2, 3, 4, 5, 6 and replace with this table. `redist analyze` returns the OR of all active violation bits across all constraint types checked in a single invocation.
+Combinations OR the bits: balance+contiguity=3, balance+nesting=5, contiguity+nesting=6, all three=7, etc. Remove the old codes 2, 3, 4, 5, 6 and replace with this table. `bisect analyze` returns the OR of all active violation bits across all constraint types checked in a single invocation.
 
 Updated exit code table:
 | Code | Meaning |

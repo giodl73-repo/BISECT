@@ -15,13 +15,13 @@ Redistricting plans affect which party wins seats. A plan can be geographically 
 ## Running the analysis
 
 ```bash
-redist analyze --label wa_house_v1 --year 2020 --version WA_Plans --types partisan
+bisect analyze --label wa_house_v1 --year 2020 --version WA_Plans --types partisan
 ```
 
 This produces `analysis/partisan.json`. For state legislative chambers, `redist` uses 2020 presidential election results as a proxy (see Limitations below). To use state legislative election data, supply it directly:
 
 ```bash
-redist analyze --label wa_house_v1 --types partisan \
+bisect analyze --label wa_house_v1 --types partisan \
   --election-file data/custom/wa_2022_house_by_tract.csv
 ```
 

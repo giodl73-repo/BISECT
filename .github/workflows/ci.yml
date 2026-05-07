@@ -24,7 +24,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: redist
+          workspaces: .
           key: c-ffi
 
       - name: Install METIS (Linux)
@@ -36,35 +36,35 @@ jobs:
         run: brew install metis
 
       # All crates except redist-cli run in parallel (no CWD issue).
-      - name: Test redist-core
-        run: cargo test -p redist-core --lib --tests
-        working-directory: redist
+      - name: Test bisect-core
+        run: cargo test -p bisect-core --lib --tests
+        working-directory: .
 
-      - name: Test redist-data
-        run: cargo test -p redist-data --lib --tests
-        working-directory: redist
+      - name: Test bisect-data
+        run: cargo test -p bisect-data --lib --tests
+        working-directory: .
 
-      - name: Test redist-analysis
-        run: cargo test -p redist-analysis --lib --tests
-        working-directory: redist
+      - name: Test bisect-analysis
+        run: cargo test -p bisect-analysis --lib --tests
+        working-directory: .
 
-      - name: Test redist-apportion (c-ffi engine — requires libmetis)
-        run: cargo test -p redist-apportion --lib --tests
-        working-directory: redist
+      - name: Test bisect-apportion (c-ffi engine — requires libmetis)
+        run: cargo test -p bisect-apportion --lib --tests
+        working-directory: .
 
-      - name: Test redist-map
-        run: cargo test -p redist-map --lib --tests
-        working-directory: redist
+      - name: Test bisect-map
+        run: cargo test -p bisect-map --lib --tests
+        working-directory: .
 
-      - name: Test redist-report
-        run: cargo test -p redist-report --lib --tests
-        working-directory: redist
+      - name: Test bisect-report
+        run: cargo test -p bisect-report --lib --tests
+        working-directory: .
 
       # redist-cli runs last with --test-threads=1: set_current_dir() is
       # process-global; parallel tests race on CWD → ENOENT.
-      - name: Test redist-cli (c-ffi engine, serialised)
-        run: cargo test -p redist-cli --lib --tests -- --test-threads=1
-        working-directory: redist
+      - name: Test bisect-cli (c-ffi engine, serialised)
+        run: cargo test -p bisect-cli --lib --tests -- --test-threads=1
+        working-directory: .
 
   # ---------------------------------------------------------------------------
   # Engine: metis-core  (pure-Rust multilevel partitioning — no C dependency)
@@ -84,44 +84,44 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: redist
+          workspaces: .
           key: metis-core
 
       # No METIS install step — that is the whole point of this job.
 
       # metis-core unit tests run in its own repo CI.
-      - name: Test redist-core
-        run: cargo test -p redist-core --lib --tests
-        working-directory: redist
+      - name: Test bisect-core
+        run: cargo test -p bisect-core --lib --tests
+        working-directory: .
 
-      - name: Test redist-data
-        run: cargo test -p redist-data --lib --tests
-        working-directory: redist
+      - name: Test bisect-data
+        run: cargo test -p bisect-data --lib --tests
+        working-directory: .
 
-      - name: Test redist-analysis
-        run: cargo test -p redist-analysis --lib --tests
-        working-directory: redist
+      - name: Test bisect-analysis
+        run: cargo test -p bisect-analysis --lib --tests
+        working-directory: .
 
       # --no-default-features disables c-ffi on all crates:
       # redist-apportion skips the metis crate entirely (pure-Rust paths only).
       # redist-cli uses the metis-core fallback in bisection_runner.rs for
       # all bisect/nway paths; AreaSection returns a clear [CONFIG] error.
 
-      - name: Test redist-apportion (metis-core engine — no C dep)
-        run: cargo test -p redist-apportion --lib --tests --no-default-features
-        working-directory: redist
+      - name: Test bisect-apportion (metis-core engine — no C dep)
+        run: cargo test -p bisect-apportion --lib --tests --no-default-features
+        working-directory: .
 
-      - name: Test redist-map
-        run: cargo test -p redist-map --lib --tests
-        working-directory: redist
+      - name: Test bisect-map
+        run: cargo test -p bisect-map --lib --tests
+        working-directory: .
 
-      - name: Test redist-report
-        run: cargo test -p redist-report --lib --tests
-        working-directory: redist
+      - name: Test bisect-report
+        run: cargo test -p bisect-report --lib --tests
+        working-directory: .
 
-      - name: Test redist-cli (metis-core engine — no C dep, serialised)
-        run: cargo test -p redist-cli --lib --tests --no-default-features -- --test-threads=1
-        working-directory: redist
+      - name: Test bisect-cli (metis-core engine — no C dep, serialised)
+        run: cargo test -p bisect-cli --lib --tests --no-default-features -- --test-threads=1
+        working-directory: .
 
   # ---------------------------------------------------------------------------
   # Release builds (tag-triggered only)
@@ -153,7 +153,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: redist
+          workspaces: .
 
       - name: Install METIS (Linux)
         if: runner.os == 'Linux'
@@ -164,8 +164,8 @@ jobs:
         run: brew install metis
 
       - name: Build release binaries
-        run: cargo build --release -p redist-cli -p redist-tui
-        working-directory: redist
+        run: cargo build --release -p bisect-cli -p redist-tui
+        working-directory: .
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
