@@ -54,9 +54,11 @@ Reduction                   & $-27\%$\est & $-22\%$\est \\
 The multi-scale chain explores plan space more broadly: county-level
 proposals make district swaps that would require many sequential tract-level
 steps to achieve, reducing the correlation between consecutive plans.
-The lag-100 reduction of $\approx 27\%$ is consistent with results reported
+The lag-100 reduction of $\approx 27\%$\est\ is consistent with results reported
 by Autry et al.~\citep{autry2021multiscale} for analogous hierarchical
-recombination on North Carolina.
+recombination on North Carolina\footnote{\est Estimated value from a single
+2000-step run, seed $s=42$. Phase~2 will provide multi-run validation with
+\texttt{criterion.rs} benchmarks.}.
 
 \paragraph{Computational overhead.}
 Building $\ec$ from the TX tract graph (5{,}265 nodes, $\approx$14{,}000
@@ -106,8 +108,8 @@ The finer spatial resolution has two anticipated effects:
         features (BG boundaries track block boundaries rather than the coarser
         tract boundaries), reducing unnecessary boundary convolutions.
         Polsby-Popper~\citep{polsby1991third} scores are expected to improve
-        by 3--8\%\est\ based on analogy with block-group vs.\ tract comparison
-        in \citet{herschlag2020quantifying}.
+        by 3--8\% (projected by analogy from \citet{herschlag2020quantifying};
+        empirical validation deferred to Phase~2).
 \end{enumerate}
 
 Quantification of BG-level compactness improvements requires BG geometry

@@ -1,7 +1,8 @@
 # Spec: Adaptive Multi-scale MCMC — Self-Tuning Alpha via Robbins-Monro Approximation
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P0+P1 fixes applied)  
 **Date**: 2026-05-07  
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 2/4, SURVEY 3/4, COVENANT 3/4 → avg 2.75/4  
 **Extends**: `redist-multiscale` crate (extends MultiScaleChain)  
 **Related paper**: B.21  
 **Depends on**: `redist-multiscale` (MultiScaleChain, HierarchyLevel)
@@ -24,7 +25,7 @@ Multi-scale MCMC (G.11) requires the user to set alpha (P(coarse move per step))
 
 Adaptive Multi-scale automatically tunes alpha using Robbins-Monro stochastic approximation (Robbins & Monro 1951): if the coarse acceptance rate exceeds the target (0.30), alpha increases; if below, alpha decreases. This converges to the optimal alpha without manual tuning.
 
-The Robbins-Monro approach is appropriate here because: (1) the expected coarse acceptance rate is a monotone function of alpha (higher alpha → more coarse proposals → the chain spends more effort on harder proposals → acceptance rate adjusts), and (2) the step-size decay schedule gamma_t = gamma_0/sqrt(t) satisfies the classical conditions (Σγ_t = ∞, Σγ_t² < ∞) guaranteeing convergence to the root of E[accept_rate − target] = 0.
+The Robbins-Monro approach is appropriate here because: (1) We assume the expected coarse acceptance rate is approximately monotone in alpha over the typical operating range [0.05, 0.95] — an assumption justified empirically for typical redistricting county graphs, though not formally proved for discrete MCMC. The Robbins-Monro convergence guarantee applies when this monotonicity holds. (2) The step-size decay schedule gamma_t = gamma_0/sqrt(t) satisfies the classical conditions (Σγ_t = ∞, Σγ_t² < ∞) guaranteeing convergence to the root of E[accept_rate − target] = 0.
 
 ---
 
@@ -130,6 +131,8 @@ redist state --state TX --year 2020 \
   --percentile 0.0
 ```
 
+**Advanced parameters** (not exposed by default): `--ms-gamma0 F` (Robbins-Monro step size, default 0.10) and `--ms-initial-alpha F` (starting alpha, default 0.30) are available as expert flags for debugging slow convergence. They default to sensible values for most states.
+
 **YAML**:
 ```yaml
 algorithm:
@@ -165,12 +168,15 @@ Every run with `--search multiscale-adaptive` records in `runs/{label}/{year}/in
 "initial_alpha": 0.30,
 "final_alpha": 0.28,
 "adapt_interval": 50,
+"gamma_0": 0.10,
 "alpha_trace": [0.30, 0.31, 0.29, 0.28, ...],
 "fine_acceptance_rate": 0.73,
 "coarse_acceptance_rate": 0.29,
 "selected_step": 1204,
 "step_seed_formula": "SHA-256('MSC_STEP_' || step:u64le || '_' || chain_idx:u32le || '_' || base_seed:u64le)"
 ```
+
+**Note**: `gamma_0` must be recorded in the manifest because `alpha_trace` cannot be reproduced without knowing the step size schedule. If `gamma_0` is always 0.10 (the default), record it anyway so verifiers do not need to consult source code.
 
 `alpha_trace` records alpha after each adaptation round (length = total_steps / adapt_interval). Enables diagnosis of convergence speed and final alpha value without re-running.
 
@@ -188,9 +194,11 @@ This ensures `redist label-verify` can confirm the search parameters and seed de
 - If `coarse_accept > target_accept`: alpha increases (positive update)
 - If `coarse_accept < target_accept`: alpha decreases (negative update)
 - Deterministic: same `base_seed` → same `alpha_trace` (acceptance events are determined by step seeds)
-- `final_alpha` convergence: |final_alpha − target_accept| < |initial_alpha − target_accept| after 500+ steps (monotone approach not guaranteed but expected in expectation)
+- `final_alpha` convergence diagnostic: after T≥500 adaptation steps, `|final_alpha - target_accept|` is checked as a diagnostic (not a hard assertion), since convergence is stochastic. Record the value and warn if it exceeds 0.15: `NOTE: alpha has not converged (|final - target| = {:.3}); consider more steps or a larger gamma_0.`
 - `coarse_tol == 3.0 × pop_tolerance` when constructed with default parameters
 - Step seed prefix version-lock: assert prefix constant in source equals `"MSC_STEP_"` and `step_seed(0, 0, 0)` equals the hard-coded expected value from MultiScaleChain (shared formula — must not diverge)
+- `adapt_interval > total_steps` (zero adaptation rounds): `alpha_trace` is empty, `final_alpha == initial_alpha`, no panic.
+- After each adaptation round, `coarse_accept_window.len() == 0` (window is cleared). Test by running 2 adaptation rounds and confirming the window starts fresh each time.
 
 ---
 

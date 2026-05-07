@@ -1,7 +1,8 @@
 # Spec: VRA-Aware MCMC — Markov Chain Sampling Over VRA-Compliant Redistricting Plans
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.25/4  
 **Extends**: `redist-ensemble` crate (new `vra_recom.rs`)  
 **Related paper**: G.13  
 **Depends on**: `redist-ensemble::forest_recom` (ForestRecomChain)
@@ -88,6 +89,8 @@ reverse_seed(base_seed, step, chain=0) =
 The chain uses the same seed derivation as ForestRecomChain so that VRA-aware and non-VRA-aware chains produce identical proposals — the only difference is whether VRA-violating proposals are accepted. This means a verifier can replay the chain with VRA checking disabled and confirm that every accepted plan in the VRA-aware run also appears in the unconstrained run.
 
 **Version-lock**: The prefixes `"FR_FORWARD_"` and `"FR_REVERSE_"` are inherited from ForestRecomChain and must not change. If VRA-Aware MCMC is ever given its own seed derivation (e.g., to allow per-chain VRA threshold variation), the prefixes must change and a separate version flag must be recorded in the audit chain.
+
+**Prefix inheritance version-lock**: VraRecomChain inherits `FR_FORWARD_` and `FR_REVERSE_` seed prefixes from ForestRecomChain. An L0 test asserts that the prefix constants in `VraRecomChain` equal the constants in `ForestRecomChain` — any rename in the parent will fail this test, preventing silent divergence.
 
 ---
 
@@ -185,6 +188,8 @@ algorithm:
 
 When `protected_districts` is large (>= 5), `vra_rejection_rate` is typically high (>0.40). Increase `forest_steps` proportionally to maintain effective sample size (`steps_accepted` target: >= 200).
 
+If `protected_districts` is empty after chain construction (no district in the initial plan has minority VAP ≥ vap_threshold), the CLI emits a warning: `WARNING: VRA-aware chain constructed with 0 protected districts — VRA enforcement is a no-op. Check --vra-threshold or use --weights-override vra-aligned to produce an initial VRA-compliant plan.`
+
 ---
 
 ## 6. Audit chain
@@ -239,6 +244,7 @@ An auditor who knows `base_seed` and `protected_districts` can re-derive all see
 - `steps_accepted <= steps_taken` always holds
 - `selected_step` is in `[0, steps_accepted)` when `steps_accepted > 0`
 - Determinism: same seed + same `minority_vap` -> same `steps_accepted`, same `selected_step`, same final plan
+- **Cross-chain replay invariant**: construct an unconstrained `ForestRecomChain` with the same base_seed. For every step, the unconstrained chain makes the same proposal as the VRA-aware chain (identical seeds → identical proposals). Confirm that every plan accepted by the VRA-aware chain also has minority_vap ≥ vap_threshold for all protected districts when the unconstrained plan is checked.
 
 ### L2 (#[ignore], real data)
 

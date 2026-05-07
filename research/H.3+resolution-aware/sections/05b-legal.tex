@@ -1,0 +1,31 @@
+\section{Legal Implications of Resolution Choice}
+\label{sec:legal}
+
+The choice of geographic resolution carries legal implications that practitioners must consider.
+
+\paragraph{County-preservation requirements.}
+Option~B (tract$\to$county) uses county adjacency as a computational coarsening tool,
+but this should not be conflated with legal county-preservation requirements.
+Many state constitutions explicitly require minimizing county splits:
+California Article~XXI~\S2(d), Colorado Article~V~\S47, Florida Article~III~\S21.
+The multi-scale algorithm treats counties as computational units during coarse moves
+but does not enforce county-preservation as a hard constraint.
+Practitioners in county-preservation states must verify compliance separately using
+\texttt{redist analyze --types splits} after plan generation.
+
+\paragraph{VRA implications of resolution choice.}
+The choice of block group (BG) vs.\ census tract resolution can affect minority
+population percentages in near-threshold majority-minority districts.
+A district that barely satisfies a 50\% minority VAP threshold at the tract level
+may fall below threshold when redrawn at the BG level due to finer boundary placement.
+Practitioners deploying Option~A (BG$\to$tract) should recompute minority VAP
+percentages at the BG level and verify VRA compliance using
+\texttt{redist analyze --types bloc-voting} with BG-level assignments.
+
+\paragraph{Resolution and the uniform distribution.}
+Different resolution choices produce plans over different state spaces
+(block-group partitions vs.\ tract partitions are distinct mathematical objects).
+An ensemble produced at tract resolution and an ensemble produced at BG resolution
+are not comparable distributions --- they answer different questions.
+Expert witnesses should clearly specify the resolution level in any testimony
+about ensemble distributions.

@@ -25,7 +25,9 @@ from the tract level up.
 Option B (tract$\to$county multi-scale) is fully deployed, requires no
 additional data, and reduces lag-100 Hamming autocorrelation by
 approximately 27\%\est\ on Texas $k=38$ relative to single-scale ReCom
-at tract resolution.
+at tract resolution\footnote{\est Estimated value from a single 2000-step run,
+seed $s=42$. Phase~2 will provide multi-run validation with \texttt{criterion.rs}
+benchmarks.}.
 Every plan manifest now records \texttt{plan\_resolution}, \texttt{n\_units},
 and \texttt{unit\_type}; multi-scale manifests additionally record
 \texttt{fine\_to\_coarse\_formula}, enabling independent partition

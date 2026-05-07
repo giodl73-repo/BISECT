@@ -1,7 +1,8 @@
 # Spec: Parallel Tempering — Multi-Chain Replica Exchange MCMC for Redistricting
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P1 fixes applied)  
 **Date**: 2026-05-07  
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 4/4, SURVEY 3/4, COVENANT 3/4 → avg 3.25/4  
 **Extends**: `redist-ensemble` crate (new `parallel_tempering.rs`)  
 **Related paper**: B.20  
 **Depends on**: `redist-ensemble::forest_recom` (ForestRecomChain), `redist-ensemble::recom` (RecomChain)
@@ -31,7 +32,7 @@ Parallel Tempering (Swendsen & Wang 1986; Geyer 1991) runs `n_replicas` chains s
 
 ## 1. Temperature ladder design
 
-The geometric ladder `ε_i = ε_cold × (ε_hot/ε_cold)^(i/(N-1))` ensures equal expected swap acceptance rates between adjacent replicas (approximately 23% for typical redistricting chains, matching the optimal swap rate from statistical physics).
+The geometric ladder `ε_i = ε_cold × (ε_hot/ε_cold)^(i/(N-1))` ensures equal expected swap acceptance rates between adjacent replicas (approximately 23% for typical redistricting chains, matching the empirical target: ~23% swap acceptance is optimal for Gaussian continuous systems (Kone & Kofke 2005); this may differ for discrete combinatorial chains. We use this as an empirical starting point, not a derived guarantee).
 
 - `tolerances[0] = cold_tolerance` (cold chain — distribution-correct)
 - `tolerances[n-1] = hot_tolerance` (hot chain — rapidly mixing)
@@ -46,6 +47,8 @@ The geometric ladder `ε_i = ε_cold × (ε_hot/ε_cold)^(i/(N-1))` ensures equa
 | Small (k<=5) | 2 | 0.005 | 0.02 | 5 | <1 min |
 | Medium (k=8-14) | 4 | 0.005 | 0.05 | 10 | 5-15 min |
 | Large (k>=30) | 6 | 0.005 | 0.10 | 20 | 30-90 min |
+
+**Note**: Wall-clock estimates assume serial chain execution (one chain per step). Parallelism via Rayon (one thread per replica) is a Phase 2 improvement that would reduce wall time by approximately 1/n_replicas; see Open Question 5.
 
 ---
 
@@ -221,6 +224,8 @@ Every run appends to `runs/{label}/{year}/index.json`:
 ```
 
 `selected_step` is the step index (0-based, from the cold chain's record list sorted by EC ascending) at rank `floor(p * (steps+1))`. An auditor who knows `base_seed` can re-derive all seeds, replay the full chain, and verify that the plan at `selected_step` matches the submitted plan.
+
+**Note**: `selected_step` is a **rank** in the EC-sorted cold chain record list (0 = minimum EC), not a temporal step index. An auditor who re-runs the chain collects all cold-chain records, sorts by (EC ASC, step ASC), and confirms the plan at position `selected_step` matches the submitted plan.
 
 `cold_chain_acceptance_rate` is the fraction of steps where the cold chain's internal Forest ReCom proposal was accepted (distinct from `swap_acceptance_rate`). Recording both rates allows detection of pathological conditions: a very low `cold_chain_acceptance_rate` with a normal `swap_acceptance_rate` suggests the cold tolerance is too tight for this state.
 

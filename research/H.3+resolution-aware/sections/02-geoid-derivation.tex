@@ -167,6 +167,18 @@ Users requiring strict land-only county adjacency should verify the
 tract graph was built with land-only boundaries.
 \end{remark}
 
+\begin{remark}[TIGER/Line adjacency convention]
+\label{rem:tiger}
+The adjacency graph uses the shared-boundary convention from the
+TIGER/Line adjacency builder: two tracts are adjacent if and only if
+their common boundary has positive length (a shared boundary edge in the
+planar graph).
+County adjacency inherits this convention via the tract graph.
+Water-only boundaries produce zero-length common boundaries and are
+excluded per the TIGER/Line convention; see the \texttt{redist fetch}
+documentation for details on boundary length filtering.
+\end{remark}
+
 \paragraph{Output of \buildc{}.}
 The function returns a triple $(\ec, \mathbf{p}_C, \mathbf{f})$ where:
 \begin{itemize}

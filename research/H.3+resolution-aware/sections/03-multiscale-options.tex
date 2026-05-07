@@ -21,7 +21,7 @@ combined with \texttt{--search multiscale}:
 \centering
 \caption{Multi-scale option summary}
 \label{tab:options}
-\begin{tabular}{clllll}
+\begin{tabular}{cllllll}
 \toprule
 Option & Fine & Coarse & Extra data & GEOID prefix & Output level & Status \\
 \midrule
@@ -91,6 +91,13 @@ At each chain step, the multi-scale algorithm proceeds as follows:
         to restore tract-level population balance.
 \end{enumerate}
 
+\paragraph{Acceptance ratio.}
+The coarse-level accept/reject decision uses the same standard \recom{} proposal
+(Wilson's UST, accept all valid balanced splits).
+This is not an exact Metropolis-Hastings ratio --- it is the same approximation
+as standard \recom{} applied to the county-level graph.
+Exact MH correction at the county level (via Forest \recom{}) is a Phase~2 extension.
+
 \paragraph{Coarse tolerance rationale.}
 The coarse tolerance is set to $3\times$ the fine tolerance.
 Formally, if the fine-level tolerance is $\varepsilon_f = 0.005$
@@ -107,6 +114,13 @@ be fine-corrected; a looser tolerance risks proposals the fine
 perturbation cannot fix.
 This is a practical heuristic, not a formal guarantee; the Phase 2
 empirical study (Section~\ref{sec:empirical}) validates it on TX.
+
+For Texas: $n_T / n_C \approx 5{,}265 / 254 \approx 20.7$ tracts per county,
+comparable to North Carolina ($2{,}195 / 100 = 21.95$), so the $3\times$
+heuristic transfers with similar justification.
+For states with highly unequal county populations (e.g., California, where
+Los Angeles County holds $\sim$25\% of the state population), practitioners
+should increase the coarse tolerance factor or switch to Option~A.
 
 \paragraph{Output.}
 The output plan is recorded at the fine (tract) level.

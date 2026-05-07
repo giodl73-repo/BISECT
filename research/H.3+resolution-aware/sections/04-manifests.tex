@@ -138,6 +138,22 @@ and \texttt{fine\_to\_coarse\_comment} are absent from the manifest.
 The core resolution fields (\texttt{plan\_resolution}, \texttt{n\_units},
 \texttt{unit\_type}) are always present regardless of whether multi-scale
 was used.
+The \texttt{index\_to\_geoid\_file} field is included even for
+single-resolution (non-multiscale) runs:
+
+\begin{lstlisting}[language=json]
+{
+  "plan_resolution": "tract",
+  "n_units": 2195,
+  "unit_type": "census tract",
+  "index_to_geoid_file": "nc_adjacency_2020_geoids.json"
+}
+\end{lstlisting}
+
+\noindent
+This enables verifiers to confirm the unit count and check for orphaned GEOIDs
+without running any pipeline code --- the GEOID file alone is sufficient to
+validate \texttt{n\_units} and confirm every GEOID is well-formed.
 
 \subsection{Downstream Pipeline Behavior}
 
