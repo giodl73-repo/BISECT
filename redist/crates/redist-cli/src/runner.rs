@@ -118,6 +118,10 @@ pub enum SeedCompositor {
         p: f64,              // percentile of EC distribution (default: 0.0)
         vap_threshold: f64,  // minority VAP fraction threshold (default: 0.50)
     },
+    /// SMC weighted ensemble — runs redist-smc and selects plan at p-th weighted EC quantile.
+    /// The only compositor mode with a calibrated (importance-weighted) stationary distribution.
+    /// (SmcPercentile spec accepted 3.88/4)
+    SmcPercentile { n_particles: usize, p: f64 },
 }
 
 impl SeedCompositor {
@@ -139,6 +143,7 @@ impl SeedCompositor {
             Self::MultiScaleAdaptive { total_steps, .. } => *total_steps,
             Self::ParallelTempering { steps, .. } => *steps,
             Self::VraRecom { steps, .. } => *steps,
+            Self::SmcPercentile { n_particles, .. } => *n_particles,
         }
     }
 
@@ -185,7 +190,11 @@ pub enum SplitStrategy {
     /// Centroidal Voronoi Districts — geometric packing via graph-distance Voronoi (B.22 spec).
     /// Seeds placed by k-farthest spread, iteratively moved to medoid of each Voronoi region.
     /// n_iter: max CVD iterations before returning (default: 20).
-    CentroidalVoronoi { n_iter: usize },
+    /// Centroidal Voronoi Districts -- geometric packing via graph-distance or geographic Voronoi (B.22 spec).
+    /// Seeds placed by k-farthest spread, iteratively moved to medoid/centroid of each Voronoi region.
+    /// n_iter: max CVD iterations before returning (default: 20).
+    /// metric: GraphDistance (Phase 1, default) or Geographic (Phase 2, requires tract_centroids).
+    CentroidalVoronoi { n_iter: usize, metric: crate::bisection_runner::VoronoiMetric },
     /// BFS Region-Growing — greedy geographic packing from k-farthest seeds (B.23 spec 4.0/4).
     /// Seeds placed by maximum BFS spread; tracts assigned to most population-deficient district.
     BfsGrowth,
@@ -443,7 +452,7 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::CentroidalVoronoi => Self {
-                split: SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters },
+                split: SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters, metric: args.cvd_metric.parse::<crate::bisection_runner::VoronoiMetric>().unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance) },
                 seeds: SeedCompositor::Single,
                 weights: base_weights,
                 vertex_constraints: pop_only,
@@ -477,7 +486,7 @@ impl AlgorithmConfig {
                 SM::RatioOptimalVra      => (SplitStrategy::VraSection { w_vra: args.w_vra }, pop_only),
                 SM::PrimeFactor          => (SplitStrategy::ApportionRegions, pop_only),
                 SM::CompactPolsby        => (SplitStrategy::CompactBisect { epsilon: 0.05 }, pop_only),
-                SM::CentroidalVoronoi    => (SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters }, pop_only),
+                SM::CentroidalVoronoi    => (SplitStrategy::CentroidalVoronoi { n_iter: args.cvd_iters, metric: args.cvd_metric.parse::<crate::bisection_runner::VoronoiMetric>().unwrap_or(crate::bisection_runner::VoronoiMetric::GraphDistance) }, pop_only),
                 SM::BfsGrowth            => (SplitStrategy::BfsGrowth, pop_only),
             };
             algo.split = new_split;
@@ -560,6 +569,10 @@ impl AlgorithmConfig {
                     steps: args.seeds.unwrap_or(1000),
                     p: args.percentile.clamp(0.0, 1.0),
                     vap_threshold: args.vra_threshold,
+                },
+                SeM::SmcPercentile => SeedCompositor::SmcPercentile {
+                    n_particles: args.particles.unwrap_or(5000),
+                    p: args.percentile.clamp(0.0, 1.0),
                 },
             };
         }
@@ -680,7 +693,7 @@ impl AlgorithmConfig {
                 mode_label: None,
             },
             PM::CentroidalVoronoi => Self {
-                split: SplitStrategy::CentroidalVoronoi { n_iter: 20 },
+                split: SplitStrategy::CentroidalVoronoi { n_iter: 20, metric: crate::bisection_runner::VoronoiMetric::GraphDistance },
                 seeds: SeedCompositor::Single,
                 weights: WeightSpec::default(),
                 vertex_constraints: pop,
@@ -766,6 +779,9 @@ pub struct StateConfig {
     /// Coarse resolution level for --search multiscale (default: "county").
     /// Valid pairs: (tract,county), (bg,tract), (bg,county).
     pub multiscale_coarse: String,
+    /// SMC resample threshold for --search smc-percentile (default: 0.5).
+    /// Resample when ESS < threshold × n_particles.
+    pub smc_resample_threshold: f64,
 }
 
 impl StateConfig {
@@ -824,6 +840,7 @@ impl StateConfig {
             coi_weights: None,
             multiscale_fine: "tract".to_string(),
             multiscale_coarse: "county".to_string(),
+            smc_resample_threshold: 0.5,
         }
     }
 
@@ -1589,16 +1606,27 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                 base_seed_val,
             ).map_err(|e| format!("bfs-growth: {e}"))?
         }
-        SplitStrategy::CentroidalVoronoi { n_iter } => {
+        SplitStrategy::CentroidalVoronoi { n_iter, metric } => {
+            use crate::bisection_runner::VoronoiMetric;
             let base_seed_val = seed.unwrap_or(0);
+            let metric_name = match metric {
+                VoronoiMetric::GraphDistance => "graph-distance",
+                VoronoiMetric::Geographic    => "geographic",
+            };
+            if *metric == VoronoiMetric::Geographic && graph.tract_centroids.is_empty() {
+                return Err("[CONFIG] --cvd-metric geographic requires centroid data. \
+                            Run: redist fetch --type centroids".to_string());
+            }
             status(cfg.position, &format!(
-                "{}: centroidal-voronoi {} iters into {} districts",
-                cfg.state_code, n_iter, num_districts));
+                "{}: centroidal-voronoi ({}) {} iters into {} districts",
+                cfg.state_code, metric_name, n_iter, num_districts));
             crate::bisection_runner::run_all_splits_cvd(
                 &graph.adjacency, &vwgt,
                 num_districts, balance_tolerance_frac,
                 Some(&intermediate_dir),
                 *n_iter, base_seed_val,
+                *metric,
+                &graph.tract_centroids,
             ).map_err(|e| format!("centroidal-voronoi: {e}"))?
         }
         _ => {
@@ -1829,6 +1857,18 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                         num_districts, niter, base,
                         *steps, *p, *vap_threshold, &minority_vap,
                     ).map_err(|e| format!("vra-recom: {e}"))?
+                }
+                SeedCompositor::SmcPercentile { n_particles, p } => {
+                    let base = seed.unwrap_or(0);
+                    let resample_threshold = cfg.smc_resample_threshold;
+                    status(cfg.position, &format!(
+                        "{}: smc-percentile p={:.2} {} particles into {} districts",
+                        cfg.state_code, p, n_particles, num_districts
+                    ));
+                    crate::bisection_runner::run_smc_percentile(
+                        &graph.adjacency, &vwgt,
+                        num_districts, base, *n_particles, *p, resample_threshold,
+                    ).map_err(|e| format!("smc-percentile: {e}"))?
                 }
                 _ => {
                     status(cfg.position, &format!("{}: recursive bisection into {} districts",
@@ -2355,6 +2395,7 @@ mod tests {
             coi_weights: None,
             multiscale_fine: "tract".to_string(),
             multiscale_coarse: "county".to_string(),
+            smc_resample_threshold: 0.5,
         }
     }
 

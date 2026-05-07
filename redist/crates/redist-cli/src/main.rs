@@ -211,6 +211,7 @@ fn main() {
                 coi_weights: args.coi_weights.as_ref().map(std::path::PathBuf::from),
                 multiscale_fine: args.multiscale_fine.clone(),
                 multiscale_coarse: args.multiscale_coarse.clone(),
+                smc_resample_threshold: args.smc_resample_threshold,
             }], 1);
             for r in &results {
                 if !r.success {
@@ -311,8 +312,13 @@ fn main() {
                                 p: args.percentile.clamp(0.0, 1.0),
                                 vap_threshold: args.vra_threshold,
                             },
+                            SeM::SmcPercentile => SeedCompositor::SmcPercentile {
+                                n_particles: args.particles.unwrap_or(5000),
+                                p: args.percentile.clamp(0.0, 1.0),
+                            },
                         };
                     }
+                    cfg.smc_resample_threshold = args.smc_resample_threshold;
                     cfg
                 })
                 .collect();

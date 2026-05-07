@@ -23,6 +23,9 @@ pub struct LoadedGraph {
     pub index_to_geoid: HashMap<usize, String>,
     pub n_vertices: usize,
     pub n_edges: usize,
+    /// Population-weighted centroid of each tract polygon (WGS84 lon/lat).
+    /// Empty when the centroid companion file ({stem}_centroids.json) is absent.
+    pub tract_centroids: Vec<(f64, f64)>,
 }
 
 /// Load adjacency graph from either a `.adj.bin` path or a `.pkl` path.
@@ -57,7 +60,48 @@ pub fn load_adjacency_pkl(path: &Path) -> Result<LoadedGraph, String> {
     }
 }
 
-/// Load from native .adj.bin + _geoids.json — zero Python, sub-millisecond.
+/// Try to load population-weighted tract centroids from a companion JSON file.
+///
+/// Looks for  alongside the adjacency file.
+/// Format:  -- one entry per tract in adjacency order.
+/// Returns an empty vec if the file is absent; returns Err if the file is present but
+/// malformed or has a different length than n_vertices.
+fn try_load_centroids(stem: &str, n_vertices: usize) -> Result<Vec<(f64, f64)>, String> {
+    let path = std::path::PathBuf::from(format!("{stem}_centroids.json"));
+    if !path.exists() {
+        return Ok(vec![]);
+    }
+    let text = std::fs::read_to_string(&path)
+        .map_err(|e| format!("read {}: {e}", path.display()))?;
+    let v: serde_json::Value = serde_json::from_str(&text)
+        .map_err(|e| format!("parse {}: {e}", path.display()))?;
+    let arr = v["centroids"].as_array()
+        .ok_or_else(|| format!("centroids file {} missing 'centroids' array key", path.display()))?;
+    let centroids: Vec<(f64, f64)> = arr
+        .iter()
+        .enumerate()
+        .map(|(i, c)| {
+            let inner = c.as_array()
+                .ok_or_else(|| format!("centroids[{i}] is not an array"))?;
+            let lon = inner.first()
+                .and_then(|x| x.as_f64())
+                .ok_or_else(|| format!("centroids[{i}][0] is not a number (lon)"))?;
+            let lat = inner.get(1)
+                .and_then(|x| x.as_f64())
+                .ok_or_else(|| format!("centroids[{i}][1] is not a number (lat)"))?;
+            Ok((lon, lat))
+        })
+        .collect::<Result<Vec<_>, String>>()?;
+    if n_vertices > 0 && centroids.len() != n_vertices {
+        return Err(format!(
+            "centroids length mismatch: file {} has {} entries but adjacency has {} vertices",
+            path.display(), centroids.len(), n_vertices
+        ));
+    }
+    Ok(centroids)
+}
+
+/// Load from native .adj.bin + _geoids.json -- zero Python, sub-millisecond.
 fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, String> {
     if !bin_path.exists() {
         return Err(format!("adjacency .adj.bin not found: {}", bin_path.display()));
@@ -85,6 +129,11 @@ fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, Stri
     let n_vertices = graph.n_vertices;
     let n_edges = graph.n_edges;
 
+    // Load centroid companion file if present (optional -- no error if absent)
+    let stem = bin_path.to_string_lossy();
+    let stem = stem.strip_suffix(".adj.bin").unwrap_or(&stem);
+    let tract_centroids = try_load_centroids(stem, n_vertices)?;
+
     Ok(LoadedGraph {
         adjacency: graph.adjacency,
         vertex_weights: graph.vertex_weights,
@@ -92,6 +141,7 @@ fn load_from_bin(bin_path: &Path, geoid_path: &Path) -> Result<LoadedGraph, Stri
         index_to_geoid,
         n_vertices,
         n_edges,
+        tract_centroids,
     })
 }
 
@@ -170,6 +220,7 @@ print(json.dumps({'adjacency': adj, 'vertex_weights': vw,
         index_to_geoid,
         n_vertices,
         n_edges,
+        tract_centroids: vec![],  // pkl shim does not provide centroids
     })
 }
 

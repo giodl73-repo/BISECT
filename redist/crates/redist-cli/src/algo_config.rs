@@ -519,6 +519,9 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::VraRecom { steps, p, vap_threshold } => {
             format!("vra-recom (p={p:.2}, steps={steps}, vap_threshold={vap_threshold:.2})")
         }
+        crate::runner::SeedCompositor::SmcPercentile { n_particles, p } => {
+            format!("smc-percentile (p={p:.2}, n_particles={n_particles})")
+        }
     };
 
     let years = yaml.resolved_years().join(", ");

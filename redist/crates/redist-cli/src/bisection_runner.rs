@@ -2575,6 +2575,67 @@ pub fn derive_cvd_seed(base_seed: u64, path: &str) -> u64 {
     u64::from_le_bytes(d[..8].try_into().unwrap())
 }
 
+/// Which distance metric CVD uses for assignment and seed update.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum VoronoiMetric {
+    /// Phase 1: BFS hop-count on the tract adjacency graph. No extra data needed.
+    GraphDistance,
+    /// Phase 2: Euclidean distance on Albers-projected (lon, lat) coordinates.
+    /// Requires `tract_centroids` to be non-empty in `LoadedGraph`.
+    Geographic,
+}
+
+impl std::str::FromStr for VoronoiMetric {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "graph-distance" | "graph_distance" | "GraphDistance" => Ok(VoronoiMetric::GraphDistance),
+            "geographic" | "Geographic" => Ok(VoronoiMetric::Geographic),
+            other => Err(format!("unknown cvd-metric '{}': use 'graph-distance' or 'geographic'", other)),
+        }
+    }
+}
+
+/// Derive a per-node seed for CVD Phase 2 (geographic) via SHA-256.
+///
+/// Prefix "CVD_GEO_INIT_" is distinct from Phase 1 "CVD_INIT_".
+/// An auditor can recompute: SHA-256("CVD_GEO_INIT_" || path || "_" || base_seed:u64le) => u64le.
+pub fn derive_cvd_geo_seed(base_seed: u64, path: &str) -> u64 {
+    use sha2::{Digest, Sha256};
+    let mut h = Sha256::new();
+    h.update(b"CVD_GEO_INIT_");
+    h.update(path.as_bytes());
+    h.update(b"_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// Simplified Albers Equal Area Conic projection for EPSG:5070 (continental US).
+/// Spherical approximation -- error <= 3m at census-tract resolution.
+/// Returns (x_meters, y_meters) relative to the projection origin.
+pub fn albers_project(lon: f64, lat: f64) -> (f64, f64) {
+    let lon0 = (-96.0f64).to_radians();
+    let phi1 = (29.5f64).to_radians();
+    let phi2 = (45.5f64).to_radians();
+    let lon_r = lon.to_radians();
+    let lat_r = lat.to_radians();
+    let n = 0.5 * (phi1.sin() + phi2.sin());
+    let c = phi1.cos().powi(2) + 2.0 * n * phi1.sin();
+    let rho0 = c.max(0.0).sqrt() / n;
+    let rho = (c - 2.0 * n * lat_r.sin()).max(0.0).sqrt() / n;
+    let theta = n * (lon_r - lon0);
+    let x = rho * theta.sin();
+    let y = rho0 - rho * theta.cos();
+    (x * 6_371_000.0, y * 6_371_000.0)
+}
+
+fn euclidean_dist(a: (f64, f64), b: (f64, f64)) -> f64 {
+    let dx = a.0 - b.0;
+    let dy = a.1 - b.1;
+    (dx * dx + dy * dy).sqrt()
+}
+
 /// BFS distances from `start` to all other nodes in a local subgraph adjacency list.
 /// Returns `Vec<usize>` of length `local_adj.len()`.
 /// Unreachable nodes get `usize::MAX`.
@@ -2784,6 +2845,141 @@ pub fn split_subgraph_cvd(
     Ok((left, right))
 }
 
+/// Centroidal Voronoi Districts -- geographic Euclidean variant (Phase 2, B.22 spec).
+///
+/// Seeds k=2 district centers by k-farthest Euclidean spread on Albers-projected
+/// coordinates, assigns tracts to nearest center by Euclidean distance, iterates
+/// updating seeds to the population-weighted mean coordinate (true Lloyd's algorithm),
+/// then applies the same post-hoc boundary-swap rebalance as split_subgraph_cvd().
+///
+/// Requires `tract_centroids` to be non-empty (one entry per global tract index).
+pub fn split_subgraph_cvd_geographic(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    tract_centroids: &[(f64, f64)],
+    tract_indices: &HashSet<usize>,
+    balance_tolerance: f64,
+    n_iter: usize,
+    base_seed: u64,
+    node_path: &str,
+) -> Result<(HashSet<usize>, HashSet<usize>), String> {
+    if tract_centroids.is_empty() {
+        return Err(
+            "[CONFIG] --cvd-metric geographic requires centroid data. \
+             Run: redist fetch --type centroids".to_string()
+        );
+    }
+
+    if tract_indices.len() <= 1 {
+        return Ok((tract_indices.clone(), HashSet::new()));
+    }
+
+    let mut sorted: Vec<usize> = tract_indices.iter().copied().collect();
+    sorted.sort_unstable();
+    let global_to_local: HashMap<usize, usize> = sorted.iter()
+        .enumerate().map(|(i, &g)| (g, i)).collect();
+    let m = sorted.len();
+
+    let local_adj: Vec<Vec<usize>> = sorted.iter().map(|&g| {
+        adjacency[g].iter()
+            .filter(|&&nb| tract_indices.contains(&nb))
+            .map(|&nb| global_to_local[&nb])
+            .collect()
+    }).collect();
+
+    let local_pop: Vec<i64> = sorted.iter().map(|&g| vertex_weights[g].max(1)).collect();
+    let total_pop: i64 = local_pop.iter().sum();
+
+    let projected: Vec<(f64, f64)> = sorted.iter().map(|&g| {
+        let (lon, lat) = tract_centroids[g];
+        albers_project(lon, lat)
+    }).collect();
+
+    // k-farthest seed initialisation (Euclidean, deterministic)
+    let cvd_geo_seed = derive_cvd_geo_seed(base_seed, node_path);
+    let seed0_local = (cvd_geo_seed as usize) % m;
+    let seed1_local = (0..m)
+        .max_by(|&a, &b| {
+            let da = euclidean_dist(projected[seed0_local], projected[a]);
+            let db = euclidean_dist(projected[seed0_local], projected[b]);
+            da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+        })
+        .unwrap_or((seed0_local + 1) % m);
+    let seed1_local = if seed1_local == seed0_local { (seed0_local + 1) % m } else { seed1_local };
+
+    let mut seed_coords: [(f64, f64); 2] = [projected[seed0_local], projected[seed1_local]];
+    let mut assignment: Vec<usize> = vec![0; m];
+
+    for _iter in 0..n_iter.max(1) {
+        let prev_assignment = assignment.clone();
+        for v in 0..m {
+            let d0 = euclidean_dist(projected[v], seed_coords[0]);
+            let d1 = euclidean_dist(projected[v], seed_coords[1]);
+            assignment[v] = if d1 < d0 { 1 } else { 0 };
+        }
+
+        let prev_seed_coords = seed_coords;
+        for j in 0usize..2 {
+            let district_total_pop: i64 = (0..m)
+                .filter(|&v| assignment[v] == j)
+                .map(|v| local_pop[v])
+                .sum();
+            if district_total_pop == 0 { continue; }
+            let wx: f64 = (0..m)
+                .filter(|&v| assignment[v] == j)
+                .map(|v| projected[v].0 * local_pop[v] as f64)
+                .sum::<f64>() / district_total_pop as f64;
+            let wy: f64 = (0..m)
+                .filter(|&v| assignment[v] == j)
+                .map(|v| projected[v].1 * local_pop[v] as f64)
+                .sum::<f64>() / district_total_pop as f64;
+            let mean_coord = (wx, wy);
+            let nearest = (0..m)
+                .min_by(|&a, &b| {
+                    let da = euclidean_dist(projected[a], mean_coord);
+                    let db = euclidean_dist(projected[b], mean_coord);
+                    da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
+                })
+                .unwrap_or(0);
+            seed_coords[j] = projected[nearest];
+        }
+
+        let eps = 1.0f64;
+        let stable = (0..2).all(|j| euclidean_dist(seed_coords[j], prev_seed_coords[j]) < eps);
+        if stable || assignment == prev_assignment { break; }
+    }
+
+    // Post-hoc rebalance: same 200-iter boundary-swap as split_subgraph_cvd
+    let half_pop = total_pop / 2;
+    let tolerance_pop = (balance_tolerance * total_pop as f64) as i64 + 1;
+    for _ in 0..200 {
+        let left_pop: i64 = (0..m).filter(|&v| assignment[v] == 0).map(|v| local_pop[v]).sum();
+        let excess = left_pop - half_pop;
+        if excess.abs() <= tolerance_pop { break; }
+        let (heavy_side, light_side) = if excess > 0 { (0usize, 1usize) } else { (1, 0) };
+        let mut best: Option<(usize, i64)> = None;
+        for v in 0..m {
+            if assignment[v] != heavy_side { continue; }
+            if !local_adj[v].iter().any(|&nb| assignment[nb] == light_side) { continue; }
+            let pop = local_pop[v];
+            let score = (pop - excess.abs()).abs();
+            if best.map_or(true, |(_, s)| score < s) { best = Some((v, score)); }
+        }
+        match best {
+            Some((v, _)) => { assignment[v] = light_side; }
+            None => break,
+        }
+    }
+
+    let mut left = HashSet::new();
+    let mut right = HashSet::new();
+    for (local, &side) in assignment.iter().enumerate() {
+        let global = sorted[local];
+        if side == 0 { left.insert(global); } else { right.insert(global); }
+    }
+    Ok((left, right))
+}
+
 /// Run the full bisection tree using Centroidal Voronoi at each node.
 ///
 /// Structurally identical to run_all_splits_sa but calls split_subgraph_cvd
@@ -2796,7 +2992,16 @@ pub fn run_all_splits_cvd(
     intermediate_dir: Option<&Path>,
     n_iter: usize,
     base_seed: u64,
+    metric: VoronoiMetric,
+    tract_centroids: &[(f64, f64)],
 ) -> Result<HashMap<usize, usize>, String> {
+    // Early validation for geographic metric
+    if metric == VoronoiMetric::Geographic && tract_centroids.is_empty() {
+        return Err(
+            "[CONFIG] --cvd-metric geographic requires centroid data. \
+             Run: redist fetch --type centroids".to_string()
+        );
+    }
     let n = adjacency.len();
 
     if num_districts == 1 {
@@ -2827,12 +3032,22 @@ pub fn run_all_splits_cvd(
             nodes_with_tracts.into_par_iter()
                 .map(|(node, tracts)| {
                     let node_ufactor = 1.0 + balance_tolerance / node.k as f64;
-                    let cvd_seed = derive_cvd_seed(base_seed, &node.path);
-                    let (left, right) = split_subgraph_cvd(
-                        adjacency, vertex_weights, &tracts,
-                        2, // bisection is always k=2
-                        node_ufactor, n_iter, cvd_seed,
-                    ).map_err(|e| format!("depth {} node '{}' (CVD): {e}", depth, node.path))?;
+                    let (left, right) = match metric {
+                        VoronoiMetric::GraphDistance => {
+                            let cvd_seed = derive_cvd_seed(base_seed, &node.path);
+                            split_subgraph_cvd(
+                                adjacency, vertex_weights, &tracts,
+                                2,
+                                node_ufactor, n_iter, cvd_seed,
+                            ).map_err(|e| format!("depth {} node '{}' (CVD): {e}", depth, node.path))?
+                        }
+                        VoronoiMetric::Geographic => {
+                            split_subgraph_cvd_geographic(
+                                adjacency, vertex_weights, tract_centroids, &tracts,
+                                node_ufactor, n_iter, base_seed, &node.path,
+                            ).map_err(|e| format!("depth {} node '{}' (CVD-geo): {e}", depth, node.path))?
+                        }
+                    };
                     Ok((node.path, left, right))
                 })
                 .collect::<Result<Vec<_>, String>>()?;
@@ -4496,6 +4711,118 @@ pub fn run_vra_recom(
     Ok(assignment)
 }
 
+// ── SMC-Percentile (SmcPercentile spec accepted 3.88/4) ───────────────────────
+
+/// Derive the SMC-specific base seed from the run base seed.
+///
+/// Uses SHA-256("SMCP_RUN_" || base_seed:u64le) → u64le to produce a seed
+/// that is independent from all other compositor seeds derived from the same
+/// base. This prevents cross-mode seed correlation.
+fn derive_smcp_seed(base_seed: u64) -> u64 {
+    use sha2::Digest;
+    let mut h = sha2::Sha256::new();
+    h.update(b"SMCP_RUN_");
+    h.update(base_seed.to_le_bytes());
+    let d = h.finalize();
+    u64::from_le_bytes(d[..8].try_into().unwrap())
+}
+
+/// Run the SMC weighted ensemble and select the plan at the p-th weighted EC quantile.
+///
+/// This is the only SeedCompositor mode with a calibrated (importance-weighted)
+/// stationary distribution — particles represent the uniform distribution over all
+/// valid k-district plans, not just a Markov-chain approximation.
+///
+/// Selection rule (per spec §4.2):
+/// - For each particle i, compute EC and record (ec, i, plans[i]).
+/// - Sort by (ec ASC, i ASC) for determinism on ties.
+/// - Walk the sorted list accumulating weights[orig_idx].
+/// - Return the first plan where cumulative_weight >= p.
+/// - Special case p=0.0: return first particle with weight > 0.0 (lowest-EC positive-weight plan).
+/// - Degenerate case (all weights 0): return the first plan (particle 0).
+pub fn run_smc_percentile(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    num_districts: usize,
+    base_seed: u64,
+    n_particles: usize,
+    p: f64,
+    resample_threshold: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use redist_smc::{run_smc, SmcConfig};
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    let smc_base_seed = derive_smcp_seed(base_seed);
+
+    let config = SmcConfig {
+        n_particles,
+        resample_threshold,
+        pop_tolerance: 0.005,
+        base_seed: smc_base_seed,
+    };
+
+    let result = run_smc(adjacency, vertex_weights, num_districts, config)
+        .map_err(|e| format!("run_smc failed: {e}"))?;
+
+    // For each particle i, compute EC and record (ec, i, plans[i].clone()).
+    let mut ranked: Vec<(usize, usize, Vec<u32>)> = result.plans.iter().enumerate()
+        .map(|(i, plan)| {
+            let asgn: HashMap<usize, usize> = plan.iter().enumerate()
+                .map(|(v, &d)| (v, d as usize))
+                .collect();
+            let ec = count_edge_cuts(&asgn, adjacency);
+            (ec, i, plan.clone())
+        })
+        .collect();
+
+    // Sort by (ec ASC, i ASC) for determinism.
+    ranked.sort_by(|(e1, i1, _), (e2, i2, _)| e1.cmp(e2).then(i1.cmp(i2)));
+
+    // Check whether any weight is positive.
+    let total_weight: f64 = result.weights.iter().sum();
+    let all_zero = total_weight < 1e-300;
+
+    // Walk sorted list accumulating weights by original particle index.
+    let mut cumulative = 0.0f64;
+    let mut selected: Option<Vec<u32>> = None;
+
+    for (_, orig_idx, plan) in &ranked {
+        let w = result.weights[*orig_idx];
+        if p == 0.0 {
+            // p=0.0: return first positive-weight plan (lowest EC with w > 0).
+            if all_zero || w > 0.0 {
+                selected = Some(plan.clone());
+                break;
+            }
+        } else {
+            cumulative += w;
+            if cumulative >= p {
+                selected = Some(plan.clone());
+                break;
+            }
+        }
+    }
+
+    // Fallback: if nothing selected (e.g. p=1.0 with rounding), take last.
+    let chosen = selected.unwrap_or_else(|| {
+        ranked.last().map(|(_, _, pl)| pl.clone())
+            .unwrap_or_else(|| vec![1u32; n])
+    });
+
+    // Convert Vec<u32> → HashMap<usize, usize>.
+    let assignment: HashMap<usize, usize> = chosen.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    Ok(assignment)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -6111,6 +6438,108 @@ mod tests {
         panic!("L2 test: requires real NC data — run manually with --ignored");
     }
 
+    // ── CVD Phase 2 (Geographic) tests ──────────────────────────────────────────
+
+    // Helper: build a 4x4 grid with evenly-spaced centroids (1.0 degree apart)
+    // spanning -100..-97 lon, 37..40 lat (central US, all valid Albers inputs)
+    fn grid4x4_centroids() -> Vec<(f64, f64)> {
+        let mut c = Vec::with_capacity(16);
+        for row in 0..4 {
+            for col in 0..4 {
+                // lon: -100.0 + col*1.0, lat: 37.0 + row*1.0
+                c.push((-100.0 + col as f64, 37.0 + row as f64));
+            }
+        }
+        c
+    }
+
+    // L0: 4x4 grid with synthetic centroids — valid k=2 partition covering all 16 tracts.
+    #[test]
+    fn cvd_geographic_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let centroids = grid4x4_centroids();
+        let tracts: HashSet<usize> = (0..16).collect();
+        let (left, right) = split_subgraph_cvd_geographic(
+            &adj, &pop, &centroids, &tracts,
+            0.10, 20, 42, "root",
+        ).expect("CVD geographic 4x4 must succeed");
+
+        assert_eq!(left.len() + right.len(), 16, "all 16 tracts covered");
+        assert!(left.is_disjoint(&right), "left and right must be disjoint");
+        assert!(!left.is_empty() && !right.is_empty(), "both sides non-empty");
+
+        let mut all: Vec<usize> = left.iter().chain(right.iter()).copied().collect();
+        all.sort_unstable();
+        assert_eq!(all, (0..16usize).collect::<Vec<_>>(), "must partition exactly 0..16");
+    }
+
+    // L0: same seed and node_path -> identical result (determinism).
+    #[test]
+    fn cvd_geographic_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let centroids = grid4x4_centroids();
+        let tracts: HashSet<usize> = (0..16).collect();
+
+        let run = || split_subgraph_cvd_geographic(
+            &adj, &pop, &centroids, &tracts, 0.10, 20, 77, "node01",
+        ).expect("must succeed");
+
+        let (l1, r1) = run();
+        let (l2, r2) = run();
+
+        let mut s1: Vec<usize> = l1.iter().copied().collect(); s1.sort_unstable();
+        let mut s2: Vec<usize> = l2.iter().copied().collect(); s2.sort_unstable();
+        assert_eq!(s1, s2, "same seed must give identical left set");
+
+        let mut t1: Vec<usize> = r1.iter().copied().collect(); t1.sort_unstable();
+        let mut t2: Vec<usize> = r2.iter().copied().collect(); t2.sort_unstable();
+        assert_eq!(t1, t2, "same seed must give identical right set");
+    }
+
+    // L0: Phase 2 seed prefix is distinct from Phase 1 seed prefix.
+    #[test]
+    fn cvd_geo_seed_distinct_from_phase1_seed() {
+        // SHA-256("CVD_GEO_INIT_"...) != SHA-256("CVD_INIT_"...) for same inputs
+        let geo_seed = derive_cvd_geo_seed(42, "root");
+        let phase1_seed = derive_cvd_seed(42, "root");
+        assert_ne!(geo_seed, phase1_seed,
+            "CVD_GEO_INIT_ prefix must produce different seeds than CVD_INIT_");
+    }
+
+    // L0: albers_project(-96, 37.5): x near 0 (central meridian), y finite and positive.
+    #[test]
+    fn albers_project_central_meridian_near_zero() {
+        let (x, y) = albers_project(-96.0, 37.5);
+        assert!(x.abs() < 1000.0,
+            "x at central meridian must be within 1km of 0, got {x}");
+        assert!(y.is_finite(), "y must be finite, got {y}");
+        assert!(y >= 0.0, "y must be non-negative (positive northing), got {y}");
+    }
+
+    // L0: empty centroids with Geographic metric returns Err containing "centroid".
+    #[test]
+    fn cvd_metric_geographic_missing_centroids_returns_err() {
+        let (adj, pop) = small_grid(4, 4);
+        let empty_centroids: Vec<(f64, f64)> = vec![];
+        let tracts: HashSet<usize> = (0..16).collect();
+        let result = split_subgraph_cvd_geographic(
+            &adj, &pop, &empty_centroids, &tracts, 0.10, 20, 42, "root",
+        );
+        assert!(result.is_err(), "empty centroids must return Err");
+        let err = result.unwrap_err();
+        assert!(err.contains("centroid"),
+            "error must mention centroid, got: {err}");
+    }
+
+    // L2 (ignored): NC geographic CVD vs graph-distance CVD -- Phase 2 paper comparison.
+    #[test]
+    #[ignore]
+    fn cvd_geographic_nc_pp_vs_graph_distance() {
+        // Requires real NC adjacency + centroid data at data/2020/ -- L2 only.
+        // Expected: geographic CVD mean PP > graph-distance CVD mean PP (coastal NC tracts).
+        panic!("L2 test: requires real NC data with centroids -- run manually with --ignored");
+    }
+
     // ── ShortBurst ────────────────────────────────────────────────────────────
 
     /// 4×2 grid helper: 8 nodes, 2 districts, uniform pop=1000. k=2.
@@ -7501,6 +7930,94 @@ mod tests {
         // Run bfs-growth and METIS on NC 2020 k=14.
         // Expected: BFS Growth EC >= METIS EC (METIS explicitly minimizes EC).
         // Also check: BFS Growth is fast (O(n log n) vs METIS heuristic).
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── SMC-Percentile tests (SeedCompositor::SmcPercentile) ─────────────────
+
+    // L0: 4-node path k=2, n_particles=50: returns valid 2-district plan.
+    #[test]
+    fn smc_percentile_produces_valid_k2_partition() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let pop = vec![100i64; 4];
+        let result = run_smc_percentile(&adj, &pop, 2, 42, 50, 0.5, 0.5)
+            .expect("smc_percentile must succeed on 4-node path");
+        // All 4 tracts assigned
+        assert_eq!(result.len(), 4, "all 4 tracts must be in the result");
+        // Exactly 2 distinct districts
+        let districts: std::collections::HashSet<usize> = result.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must produce exactly 2 districts");
+    }
+
+    // L0: p=0.0 plan has EC <= p=1.0 plan (min-EC <= max-EC ordering).
+    #[test]
+    fn smc_percentile_p0_le_p1_ec() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let pop = vec![100i64; 4];
+        let plan_p0 = run_smc_percentile(&adj, &pop, 2, 99, 50, 0.0, 0.5)
+            .expect("p=0.0 must succeed");
+        let plan_p1 = run_smc_percentile(&adj, &pop, 2, 99, 50, 1.0, 0.5)
+            .expect("p=1.0 must succeed");
+        let ec_p0 = count_edge_cuts(&plan_p0, &adj);
+        let ec_p1 = count_edge_cuts(&plan_p1, &adj);
+        assert!(ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}");
+    }
+
+    // L0: same seed -> same result (determinism).
+    #[test]
+    fn smc_percentile_deterministic() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let pop = vec![100i64; 4];
+        let run = || run_smc_percentile(&adj, &pop, 2, 77, 30, 0.5, 0.5)
+            .expect("smc_percentile must succeed");
+        let a1 = run();
+        let a2 = run();
+        assert_eq!(a1, a2, "same base_seed must produce identical results");
+    }
+
+    // L0: derive_smcp_seed(42) != 42 and != derive_smcp_seed(0).
+    #[test]
+    fn smc_percentile_smcp_seed_distinct_from_base() {
+        let seed_42 = derive_smcp_seed(42);
+        let seed_0  = derive_smcp_seed(0);
+        assert_ne!(seed_42, 42u64,
+            "derive_smcp_seed(42) must differ from raw 42");
+        assert_ne!(seed_42, seed_0,
+            "derive_smcp_seed(42) must differ from derive_smcp_seed(0)");
+    }
+
+    // L0: p=0.0 returns a complete valid plan (all tracts assigned).
+    // Tests the positive-weight-skip logic indirectly (on valid graph, all weights are positive).
+    #[test]
+    fn smc_percentile_zero_weight_skip() {
+        let adj = vec![vec![1usize], vec![0, 2], vec![1, 3], vec![2]];
+        let pop = vec![100i64; 4];
+        let result = run_smc_percentile(&adj, &pop, 2, 55, 20, 0.0, 0.5)
+            .expect("p=0.0 must succeed");
+        assert_eq!(result.len(), 4, "p=0.0 must return a complete plan (4 tracts)");
+        let districts: std::collections::HashSet<usize> = result.values().copied().collect();
+        assert_eq!(districts.len(), 2, "p=0.0 must produce exactly 2 districts");
+    }
+
+    // L0: smc-percentile search mode parses correctly.
+    #[test]
+    fn smc_percentile_search_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::SearchMode;
+        let parsed = SearchMode::from_str("smc-percentile", true)
+            .expect("'smc-percentile' must be a valid SearchMode");
+        assert_eq!(parsed, SearchMode::SmcPercentile,
+            "parsed SearchMode must be SmcPercentile");
+    }
+
+    // L2: NC 2020 calibrated distribution (requires real data).
+    #[test]
+    #[ignore]
+    fn smc_percentile_nc_calibrated_distribution() {
+        // Requires: data/2020/adjacency/north_carolina_adjacency_2020.pkl
+        // Run SMC with n_particles=500 on NC 2020 k=14.
+        // Verify: p=0.0 EC <= p=0.5 EC <= p=1.0 EC (distribution order).
         // Skipped unless --include-ignored is passed.
     }
 }

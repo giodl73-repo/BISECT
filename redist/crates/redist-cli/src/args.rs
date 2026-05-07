@@ -1301,6 +1301,10 @@ pub enum SearchMode {
     /// Requires minority VAP data (--weights-override vra-aligned).
     #[value(name = "vra-recom")]
     VraRecom,
+    /// SMC weighted ensemble — selects plan at p-th weighted EC quantile.
+    /// Requires --particles N (default 5000). Only calibrated compositor mode.
+    #[value(name = "smc-percentile")]
+    SmcPercentile,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1671,6 +1675,24 @@ pub struct StateArgs {
     /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
     #[arg(long, default_value_t = 20)]
     pub cvd_iters: usize,
+
+    /// Distance metric for --structure centroidal-voronoi (default: graph-distance).
+    /// graph-distance: BFS hop-count (Phase 1, no extra data required).
+    /// geographic: Euclidean on Albers-projected coordinates (Phase 2, requires centroids).
+    #[arg(long, default_value = "graph-distance")]
+    pub cvd_metric: String,
+
+    // ── SMC-Percentile parameters ─────────────────────────────────────────────
+
+    /// Number of SMC particles for --search smc-percentile (default: 5000).
+    /// Use 1000 for quick checks, 50000+ for publication-quality inference.
+    #[arg(long)]
+    pub particles: Option<usize>,
+
+    /// SMC resample threshold for --search smc-percentile (default: 0.5).
+    /// Lower (0.3) for irregular geometries or VRA-heavy states.
+    #[arg(long, default_value_t = 0.5)]
+    pub smc_resample_threshold: f64,
 }
 
 // ---------------------------------------------------------------------------
@@ -1853,6 +1875,23 @@ pub struct StatesArgs {
     /// Requires --partition-mode centroidal-voronoi or --structure centroidal-voronoi.
     #[arg(long, default_value_t = 20)]
     pub cvd_iters: usize,
+
+    /// Distance metric for --structure centroidal-voronoi (default: graph-distance).
+    /// graph-distance: BFS hop-count (Phase 1, no extra data required).
+    /// geographic: Euclidean on Albers-projected coordinates (Phase 2, requires centroids).
+    #[arg(long, default_value = "graph-distance")]
+    pub cvd_metric: String,
+
+    // ── SMC-Percentile parameters ─────────────────────────────────────────────
+
+    /// Number of SMC particles for --search smc-percentile (default: 5000).
+    #[arg(long)]
+    pub particles: Option<usize>,
+
+    /// SMC resample threshold for --search smc-percentile (default: 0.5).
+    /// Lower (0.3) for irregular geometries or VRA-heavy states.
+    #[arg(long, default_value_t = 0.5)]
+    pub smc_resample_threshold: f64,
 }
 
 #[cfg(test)]
@@ -2555,6 +2594,7 @@ mod tests {
             ("multiscale-adaptive",     SearchMode::MultiScaleAdaptive),
             ("parallel-tempering",      SearchMode::ParallelTempering),
             ("vra-recom",               SearchMode::VraRecom),
+            ("smc-percentile",          SearchMode::SmcPercentile),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)
