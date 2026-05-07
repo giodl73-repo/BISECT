@@ -1,0 +1,132 @@
+\section{The SMC Audit Chain}
+\label{sec:audit}
+
+\subsection{Output Format}
+
+Every \smc{} run writes NDJSON (newline-delimited JSON) to the output stream.
+Each line is one of three record types:
+
+\paragraph{Particle records.}
+One record per finalised particle, written in order of particle index:
+\begin{verbatim}
+{
+  "type": "particle",
+  "particle_id": <usize>,
+  "stage": <u32>,
+  "district_assignments": [<u8>; n],
+  "log_weight": <f64>
+}
+\end{verbatim}
+
+\paragraph{Resample records.}
+One record per systematic resampling event:
+\begin{verbatim}
+{
+  "type": "resample",
+  "round": <u32>,
+  "stage": <u32>,
+  "ess_before": <f64>,
+  "resample_seed": <u64>,
+  "index_map": [<usize>; N]
+}
+\end{verbatim}
+The \texttt{index\_map} field records which pre-resample particle each
+post-resample particle derives from: after resampling,
+$\mathbf{p}_{\rm new}[j] = \mathbf{p}_{\rm old}[\texttt{index\_map}[j]]$.
+This enables complete trajectory reconstruction.
+
+\paragraph{Metadata record.}
+One record at the end of the output:
+\begin{verbatim}
+{
+  "type": "metadata",
+  "base_seed": <u64>,
+  "particles": <usize>,
+  "districts": <u32>,
+  "tolerance": <f64>,
+  "resample_threshold": <f64>,
+  "resample_count": <u32>,
+  "file_sha256": "<hex string>"
+}
+\end{verbatim}
+The \texttt{file\_sha256} field is the SHA-256 hash of all preceding lines
+(particle and resample records), with line endings normalised to LF.
+This binds the metadata to the output file: any modification to a particle
+record or resample record invalidates the hash.
+
+\subsection{The Five-Step Verification Protocol}
+
+A verifier who wishes to confirm that an \smc{} output file is authentic
+proceeds as follows.
+
+\begin{enumerate}
+  \item \textbf{File integrity.}
+        Compute the SHA-256 of all particle and resample lines (LF-normalised)
+        and compare to the \texttt{file\_sha256} field in the metadata record.
+        A mismatch indicates the file has been altered.
+
+  \item \textbf{Seed spot-check.}
+        For a randomly chosen particle $i$ and stage $t$, derive
+        $\mathrm{particle\_seed}(s, t, i)$ from the recorded
+        \texttt{base\_seed} $s$ using the SHA-256 schedule (Section~2.2),
+        and confirm it matches the deterministic seed that would be used by
+        \texttt{SmallRng::seed\_from\_u64} at that stage.
+
+  \item \textbf{Resample replay.}
+        For each resample record, re-derive \texttt{resample\_seed} from
+        \texttt{base\_seed} and \texttt{round} using the SHA-256 schedule,
+        re-run \texttt{systematic\_resample} on the pre-resample weights,
+        and confirm the resulting \texttt{index\_map} matches the recorded one.
+
+  \item \textbf{Trajectory trace.}
+        For a randomly chosen particle $i$, trace its full construction
+        history: starting from the post-resample lineage given by the
+        \texttt{index\_map} records, identify which pre-resample particles
+        contributed to particle $i$ at each stage, and confirm that the
+        district assignment recorded in the particle record is consistent
+        with re-running the proposal at each stage using the deterministic
+        per-particle seed.
+
+  \item \textbf{Weight validation.}
+        For a randomly chosen particle $i$, recompute the log-weight by
+        summing $\log|\mathcal{V}(T_i^{(t)})|$ over all stages $t$ for
+        which particle $i$ was not resampled, and confirm it matches the
+        recorded \texttt{log\_weight}.
+\end{enumerate}
+
+This 5-step protocol is stronger than the \flip{} audit chain~\citep{g8paper}:
+a verifier can reconstruct not just the final plan, but the complete
+construction history (which component was chosen, which spanning tree, which
+cut edge) for any specific particle, from \texttt{base\_seed} alone plus the
+\texttt{index\_map} records.
+
+\subsection{Why the Index Map Makes Resampling Auditable}
+
+Systematic resampling is the only non-deterministic step in the \smc{}
+algorithm after conditioning on the seeds.
+Without recording \texttt{index\_map}, a verifier could confirm that the
+pre-resample weights were correct and that the resampling seed was derived
+correctly, but could not confirm which post-resample particles correspond to
+which pre-resample particles --- opening a manipulation window where an operator
+swaps particles at resample time.
+
+With \texttt{index\_map} recorded, the verifier re-runs systematic resampling
+from the pre-resample weights and the recorded seed, confirms the derived
+\texttt{index\_map} matches, and then traces each post-resample particle's
+lineage exactly.
+This closes the manipulation window.
+
+\subsection{Integration with the SHA-256 Plan Manifest}
+
+The \texttt{base\_seed} used for \smc{} is embedded in the broader plan
+manifest SHA-256 chain~\citep{b11paper}, which links:
+\begin{itemize}
+  \item the \smc{} run (via \texttt{base\_seed}) to the ensemble output file;
+  \item the output file (via \texttt{file\_sha256}) to the individual particle
+        and resample records;
+  \item the particle records (via \texttt{district\_assignments}) to the
+        submitted plan.
+\end{itemize}
+This end-to-end chain makes it impossible to selectively manipulate any single
+output particle without breaking either the \texttt{file\_sha256} binding or
+the \texttt{base\_seed} derivation.

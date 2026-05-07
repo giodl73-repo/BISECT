@@ -1,0 +1,152 @@
+\section{Comparison with Other Ensemble Methods}
+\label{sec:comparison}
+
+\subsection{The Five-Method Landscape}
+
+The redistricting toolkit now contains five distinct search and sampling
+methods.
+Two are optimisation tools (they find good plans, not representative plans);
+two are perturbation/exploration tools (they explore the neighbourhood of a
+reference plan); and one --- \smc{} --- is a calibrated sampler (it draws
+plans from a known distribution).
+Table~\ref{tab:comparison} summarises the key dimensions.
+
+\begin{table}[ht]
+\centering
+\caption{Comparison of redistricting ensemble and search methods.
+  All empirical values are approximate and state-dependent.
+  $n$ = census tracts, $k$ = districts, $T$ = convergence threshold
+  (default 600 for \cs{}), $N$ = particle count (default 5{,}000 for \smc{}).
+  ``Target distribution'' is what the method samples from, if anything.}
+\label{tab:comparison}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{@{}p{2.5cm}p{2.8cm}p{1.6cm}p{2.4cm}p{3.5cm}@{}}
+\toprule
+Method & Target distribution & Mixing req.? & Per-plan cost & Primary use case \\
+\midrule
+\smc{}
+  & Uniform over $\Pi$ (calibrated)
+  & No
+  & $O(k \cdot n \log n)$
+  & Statistical inference ($p$-values) \\
+\recom{}
+  & Approx.\ uniform (Markov)
+  & Yes
+  & $O(T_{\rm mix} \cdot n/k \cdot \log n/k)$
+  & Ensemble exploration \\
+\textsc{ShortBurst}~\citep{cannon2022,g6paper}
+  & None (optimisation)
+  & N/A
+  & $O(B \cdot L \cdot n/k \cdot \log n/k)$
+  & Seat-outcome optimisation \\
+\be{}~\citep{h1paper}
+  & Conditional on structure
+  & Within-node
+  & $O({\rm nodes} \times n/k \cdot \log n/k)$
+  & Hierarchical structure audit \\
+\cs{}~\citep{b11paper}
+  & None (deterministic)
+  & N/A
+  & $O(T \cdot n \log n / k)$
+  & Certification / plan generation \\
+\flip{}~\citep{g8paper}
+  & None (local walk)
+  & N/A
+  & $O(F \cdot \deg_{\max})$
+  & Local sensitivity analysis \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{SMC vs.\ ReCom: The Calibration Distinction}
+
+Both \smc{} and \recom{} are designed to approximate the uniform distribution
+over valid plans, but they differ fundamentally in how they achieve this.
+
+\recom{} is a Markov chain: it defines a transition kernel $P(\pi, \pi')$ and
+relies on $P$ having the uniform distribution as its stationary distribution.
+Under this design, after a sufficient number of steps $T_{\rm mix}$, the
+distribution of the current plan approximates the uniform distribution.
+The difficulty is certifying that $T_{\rm mix}$ has been reached.
+For redistricting chains on large state graphs, mixing is not guaranteed and
+is rarely verified empirically before making inferential claims.
+
+\smc{} is an importance sampler: it assigns weights $w_i$ to each generated
+plan such that the weighted sample correctly represents the uniform distribution
+by construction (Proposition~\ref{prop:weight-correct}).
+No mixing assumption is required; the correction is analytic.
+
+\begin{remark}[When ReCom claims are valid]
+\recom{}-based $p$-value claims are statistically valid \emph{if} the chain
+has mixed.
+The practical challenge is that mixing time grows with state size and district
+count; for California ($k = 52$) or Texas ($k = 38$), no published analysis
+has demonstrated mixing for chain lengths feasible in practice.
+\smc{} provides a valid alternative: for the same computational budget,
+$N$ particles from \smc{} give a correct (though approximate) sample from the
+uniform distribution, while $N$ steps of \recom{} from a fixed starting plan
+give a walk of unknown distributional accuracy.
+\end{remark}
+
+\subsection{SMC vs.\ ConvergenceSweep: Inference vs.\ Certification}
+
+\cs{}~\citep{b11paper} runs $T = 600$ independent METIS seeds and selects the
+minimum-edge-cut plan.
+The plans it generates are biased toward compact plans by design; the goal is
+to find the best plan, not a representative sample.
+
+\smc{} is designed for the opposite purpose: to generate a sample from which
+inferential conclusions about the full plan space can be drawn.
+The two methods are complementary, not competing:
+
+\begin{itemize}
+  \item Use \cs{} to generate the submitted plan.
+  \item Use \smc{} to compute the $p$-value of the submitted plan relative to
+        the uniform distribution.
+\end{itemize}
+
+The combination is powerful: \cs{} guarantees a good plan, and \smc{}
+provides the court-facing statement that ``the submitted plan is at the
+$X$th percentile of all valid plans by partisan outcome.''
+
+\subsection{SMC vs.\ BisectionEnsemble: Global vs.\ Conditional}
+
+\be{}~\citep{h1paper} samples plans that share the same hierarchical
+bisection structure as the reference plan, varying only the sub-district
+assignments within each node of the bisection tree.
+This makes \be{} a \emph{conditional} ensemble: the distribution it samples
+from is the uniform distribution over plans with a fixed hierarchical structure.
+
+\smc{} samples from the \emph{unconditional} uniform distribution over all
+valid plans, without fixing any hierarchical structure.
+These serve different inferential purposes:
+\begin{itemize}
+  \item \be{} answers: ``Is there another way to draw districts with this
+        general shape that produces a different partisan outcome?''
+  \item \smc{} answers: ``What fraction of \emph{all} valid plans produce
+        a given partisan outcome?''
+\end{itemize}
+
+For a full evidentiary picture, a practitioner may wish to report both: the
+\smc{} global percentile establishes the plan's position in the full space,
+while the \be{} conditional ensemble shows that the hierarchical structure
+itself is not uniquely favourable.
+
+\subsection{Computational Cost Comparison}
+
+For North Carolina ($n \approx 2{,}200$, $k = 14$), approximate wall-clock
+times on an 8-core workstation are:
+\begin{itemize}
+  \item \smc{} ($N = 5{,}000$ particles, Rayon): approximately 3--8 minutes.
+  \item \recom{} ($T = 10{,}000$ steps): approximately 10--30 minutes
+        (chain length is typically insufficient for mixing at $k = 14$).
+  \item \cs{} ($T = 600$ seeds): approximately 3--8 minutes.
+  \item \flip{} ($F = 10{,}000$ steps): approximately 1--3 seconds.
+\end{itemize}
+
+For inference, \smc{} is the correct choice regardless of cost: \recom{} at
+any chain length does not provide a calibration guarantee, so spending more
+time on \recom{} does not improve the validity of $p$-value claims.
+\smc{} at $N = 5{,}000$ provides a valid (if approximate) inference with
+an \ess{} of at least $\tau \cdot N = 2{,}500$ effective particles after
+resampling.

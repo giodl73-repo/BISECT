@@ -1,0 +1,114 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{The Calibration Problem in Redistricting Ensembles}
+
+The algorithmic redistricting toolkit has matured to the point where
+practitioners can generate thousands of valid redistricting plans in minutes.
+But generating plans is not the same as sampling from the correct
+distribution.
+For statistical inference --- answering questions like ``what fraction of all
+valid North Carolina plans produce at least 7 Democratic congressional seats?''
+--- the distribution of the generated ensemble matters as much as its size.
+
+Two failure modes are common in practice.
+First, optimisation methods such as \cs{}~\citep{b11paper} and
+\textsc{ShortBurst}~\citep{cannon2022,g6paper} do not target any
+distribution: they search for plans that optimise an objective (edge-cut
+minimality, seat outcome), not plans drawn uniformly at random.
+An optimisation ensemble answers ``what are the best plans?'', not ``what
+fraction of all plans are Democratic-leaning?''
+
+Second, Markov chain methods such as \recom{}~\citep{deford2021} target a
+specific stationary distribution, but the chain must \emph{mix} before the
+sample approximates that distribution.
+For large states with many districts, mixing is not guaranteed in
+practically feasible chain lengths.
+\recom{}-based $p$-value claims require that the chain has mixed, which is
+difficult to certify and is often left unverified in published analyses.
+
+Sequential Monte Carlo (\smc{}) circumvents both failure modes.
+\smc{} constructs each plan sequentially, one district at a time, and
+importance-weights each plan by the product of the inverse proposal densities
+at each stage~\citep{fifield2020}.
+The result is a weighted sample that is \emph{asymptotically correct} for the
+uniform distribution over valid $k$-district plans, without any Markov chain
+mixing assumption.
+
+\subsection{Three Contributions}
+
+This paper makes three contributions.
+
+\paragraph{Contribution 1: The \texttt{redist-smc} Rust implementation.}
+We implement \smc{} as a Rust crate (\texttt{redist-smc}) with 48 tests,
+Rayon parallelism at the per-stage particle-proposal step, and a full SHA-256
+audit chain.
+The implementation is exposed to the CLI as
+\texttt{redist ensemble --method smc --state NC --year 2020 --particles 5000}.
+
+\paragraph{Contribution 2: The importance-weighting derivation.}
+We derive the weight increment formula $\Delta\log w_i = \log|{\rm
+valid\_cuts}(T)|$ from first principles (Section~\ref{sec:algorithm}), making
+explicit why the uniform spanning tree proposal requires this correction to
+recover the uniform distribution over valid plans.
+
+\paragraph{Contribution 3: The largest-component seeding rule.}
+We prove that seeding each stage from the largest connected component of
+unassigned tracts --- rather than from an arbitrary tract --- is necessary to
+maintain the connectivity invariant that the unassigned subgraph remains
+connected after each district assignment
+(Section~\ref{subsec:connectivity-invariant}).
+Without this rule, the algorithm may paint itself into a corner where
+remaining tracts are isolated, making it impossible to form the final $k$-th
+district.
+
+\subsection{Why Calibration Matters for Redistricting}
+
+The canonical inference question in redistricting is the percentile claim:
+``the enacted plan falls at the Xth percentile of valid plans by partisan
+outcome.''
+This claim has legal traction --- courts can assess whether the enacted plan
+is an extreme outlier or a typical member of the valid-plan space --- but only
+if ``the Xth percentile'' refers to the correct distribution.
+
+If the ensemble is biased toward compact plans (because \recom{} oversamples
+compact configurations relative to the uniform distribution), a plan at the
+90th percentile of that biased ensemble may be at the 60th percentile of the
+true uniform distribution.
+This is not a theoretical concern: \citet{fifield2020} demonstrate empirically
+that ReCom-based ensembles for small synthetic graphs deviate significantly from
+the uniform distribution, even after chains that appear to have mixed by
+conventional diagnostics.
+
+\smc{} eliminates this concern by construction.
+The importance weights are exact: for any function $f$ of redistricting plans,
+the \smc{} estimator $\hat{f}_N = \sum_i w_i f(\pi_i)$ converges to
+$\mathrm{E}_\pi[f]$ (the expectation under the uniform distribution) as $N \to
+\infty$, without Markov chain assumptions.
+
+\subsection{Scope and Limitations}
+
+This paper describes \smc{} as implemented in \texttt{redist-smc} and
+validated on synthetic graphs (L1 tests) and North Carolina 2020 census data
+(L2 test, Section~\ref{sec:implementation}).
+All empirical claims are single-run results and should not be over-interpreted
+without replication.
+
+Phase 2 (future work) will add \texttt{SeedCompositor::SmcPercentile} to
+enable plan selection from the weighted ensemble and validate against the R
+\texttt{redist::redist\_smc()} reference implementation~\citep{mccartan2023}.
+Until that validation is complete, we treat \smc{} as a calibrated sampler for
+research purposes, not a production certification tool.
+
+\subsection{Paper Structure}
+
+Section~\ref{sec:algorithm} gives the formal \smc{} algorithm, including the
+seed schedule, importance weights, and systematic resampling step.
+Section~\ref{sec:comparison} compares \smc{} with the four other redistricting
+methods in the toolkit.
+Section~\ref{sec:audit} describes the audit chain and 5-step verification
+protocol.
+Section~\ref{sec:implementation} covers the Rust implementation details:
+Rayon parallelism, Kahan summation, and memory layout.
+Section~\ref{sec:conclusion} concludes with deployment guidance and open
+questions.

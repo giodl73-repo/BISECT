@@ -1,0 +1,106 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Summary}
+
+Sequential Monte Carlo is the correct tool for statistical inference about the
+space of valid redistricting plans.
+Its three defining properties are:
+
+\paragraph{Calibrated.}
+The importance weights correct for the spanning-tree proposal's non-uniformity
+by construction (Proposition~\ref{prop:weight-correct}).
+No Markov chain mixing assumption is required.
+For any inferential claim of the form ``the enacted plan is at the $X$th
+percentile of all valid plans by partisan outcome,'' only \smc{} provides a
+statistically valid answer from a feasibly sized sample.
+
+\paragraph{Parallelisable.}
+Particle proposals at each stage are independent.
+Rayon \texttt{par\_iter()} gives approximately linear speedup in the number
+of cores, making \smc{} with $N = 5{,}000$ particles practical on an 8-core
+workstation within 3--8 minutes for mid-size states.
+
+\paragraph{Auditable.}
+The \texttt{file\_sha256} binding and per-resample \texttt{index\_map} records
+allow a verifier to trace any particle's complete construction history from
+\texttt{base\_seed} alone, with stronger guarantees than seed-only recording.
+
+\subsection{Deployment Guidance}
+
+The standard workflow for a redistricting practitioner is:
+\begin{center}
+  \cs{} (generate plan) $\to$ \smc{} (calibrated ensemble) $\to$
+  percentile claim (court filing).
+\end{center}
+
+Concretely:
+\begin{enumerate}
+  \item Run \cs{} to generate the submitted plan from the
+        minimum-edge-cut seed over $T = 600$ METIS seeds.
+  \item Run \smc{} with $N = 5{,}000$ particles (for $k = 8$--$14$) to
+        generate a calibrated ensemble of valid plans.
+  \item Compute the percentile of the submitted plan's partisan seat outcome
+        in the weighted \smc{} ensemble.
+  \item Report the percentile, the \ess{}, and the \texttt{base\_seed} in
+        the legislative findings.
+  \item Store the full NDJSON output file with its \texttt{file\_sha256} for
+        verifier access.
+\end{enumerate}
+
+\subsection{Open Questions}
+
+\begin{enumerate}
+  \item \textbf{Validation against R \texttt{redist}.}
+        The reference implementation is \texttt{redist::redist\_smc()} in
+        the R \texttt{redist} package~\citep{mccartan2023}.
+        Phase 2 will run both implementations on the same census-tract graph
+        and base seed and compare the marginal distributions of partisan seat
+        outcomes, confirming that the Rust implementation is algorithmically
+        equivalent.
+
+  \item \textbf{SeedCompositor::SmcPercentile.}
+        The current CLI supports ensemble generation but not plan selection
+        from the weighted ensemble.
+        Phase 2 will add \texttt{SeedCompositor::SmcPercentile}, enabling
+        \texttt{redist ensemble --method smc --select-percentile 0.5} to
+        return the plan at the weighted median of the ensemble.
+
+  \item \textbf{Adaptive particle count.}
+        The particle count $N$ is currently fixed before the run.
+        An adaptive scheme that increases $N$ when the \ess{} falls below
+        a target would provide automatic quality control without user-set
+        parameters.
+
+  \item \textbf{Large-$k$ scaling.}
+        For California ($k = 52$) and Texas ($k = 38$), the ESS degradation
+        model (Proposition~\ref{prop:ess-degrade}) predicts that $N = 20{,}000$
+        particles will be needed to maintain $\ess \geq 10{,}000$.
+        This has not been tested empirically; the memory requirement ($\approx
+        2$ GB for CA) is within reach but has not been validated.
+
+  \item \textbf{Connection to Polsby-Popper weighting.}
+        The current implementation targets the uniform distribution over
+        valid plans.
+        A natural extension is to target a distribution that upweights compact
+        plans (e.g., by the Polsby-Popper score), which would produce an
+        ensemble representative of ``geographically realistic'' plans rather
+        than the fully uniform distribution.
+        This requires modifying the importance weights to include the
+        compactness ratio.
+\end{enumerate}
+
+\subsection{Position in the Toolkit}
+
+The redistricting toolkit is now complete at all five method levels.
+Table~\ref{tab:comparison} (Section~\ref{sec:comparison}) summarises when
+to use each method.
+The full workflow for evidentiary redistricting is:
+\begin{center}
+  \cs{} (certify plan quality) $\to$ \flip{} (local sensitivity)
+  $\to$ \be{} (conditional structure audit)
+  $\to$ \smc{} (global calibrated inference).
+\end{center}
+Each layer adds a different type of evidence.
+\smc{} is the final layer: the one that converts the ensemble into a
+statistically valid court-facing percentile claim.

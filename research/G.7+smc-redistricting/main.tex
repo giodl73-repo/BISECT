@@ -1,0 +1,103 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% algorithmicx extension: parallel for
+\algnewcommand\algorithmicparfor{\textbf{par for}}
+\algdef{SE}[PARFOR]{ParFor}{EndParFor}[1]{\algorithmicparfor\ #1\ \textbf{do}}{\textbf{end par for}}
+
+%% Style
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+\setstretch{1.4}
+
+%% Macros
+\newcommand{\smc}{\textsc{SMC}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\flip}{\textsc{Flip}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\ess}{\ensuremath{\mathrm{ESS}}}
+\newcommand{\rhat}{\ensuremath{\hat{R}}}
+
+\title{%
+  \textbf{Sequential Monte Carlo for Calibrated}\\
+  \textbf{Redistricting Ensembles}\\[0.8em]
+  \normalsize\textit{G.7 --- Ensemble Methods / Calibrated Sampling}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Sequential Monte Carlo (\smc{}) produces a calibrated weighted sample from the
+space of valid redistricting plans.
+Unlike \recom{} --- a Markov chain with unknown stationary distribution ---
+\smc{} importance-weights each plan by the product of the proposal densities at
+each construction stage, recovering the true uniform distribution over valid
+plans without mixing assumptions.
+We implement \smc{} in the \texttt{redist-smc} Rust crate (48 tests,
+Rayon-parallelised per stage) as \texttt{redist ensemble --method smc}.
+The key algorithmic innovations are: (1)~importance weights equal to
+$\log|\mathrm{valid\_cuts}(T)|$, which corrects for the spanning-tree
+proposal's non-uniformity; and (2)~largest-component seeding, which preserves
+the connectivity invariant that the unassigned subgraph remains connected after
+each district assignment.
+For any inferential claim about the redistricting plan space --- ``what fraction
+of valid NC plans have at least 7 Democratic seats?'' --- only \smc{} provides
+a statistically valid answer without requiring Markov chain mixing to be
+demonstrated.
+We derive the weight-correctness guarantee (Proposition~1), the connectivity
+invariant (Proposition~2), and a practical \ess{} degradation model
+(Proposition~3) that drives the particle-count scaling guidance.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-algorithm}
+\input{sections/03-comparison}
+\input{sections/04-audit-chain}
+\input{sections/05-implementation}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

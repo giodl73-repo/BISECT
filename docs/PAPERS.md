@@ -64,7 +64,7 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.4 | Ensemble Diagnostics — R-hat, ESS, Hamming | [PDF](papers/G.4+ensemble-diagnostics-paper.pdf) | |
 | G.5 | Convergence and Mixing Time Analysis | [PDF](papers/G.5+convergence-mixing-analysis.pdf) | |
 | G.6 | Short-Burst Optimization for Minimum-Edge-Cut Redistricting | [PDF](papers/G.6+short-burst.pdf) | **Accepted** 3.0/4 — `--search short-burst` |
-| G.7 | Sequential Monte Carlo for Calibrated Plan Sampling | — | Implementation deferred (redist-smc crate) |
+| G.7 | Sequential Monte Carlo for Calibrated Redistricting Ensembles | [PDF](papers/G.7+smc-redistricting.pdf) | First draft — `redist-smc` crate implemented |
 | G.8 | Flip Proposals for Local Sensitivity Analysis | [PDF](papers/G.8+flip-proposals.pdf) | **Accepted** 3.4/4 — `--search flip` |
 
 **Key finding (G.1, real data):** The bisection plan sits at the compactness extremum — 0.1–0.7th percentile in WI/GA/PA/CA. NC is 50th percentile: geographic constraint makes the minimum-cut plan coincide with the ensemble median.
