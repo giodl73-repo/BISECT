@@ -1,0 +1,120 @@
+\section{Introduction}
+\label{sec:introduction}
+
+\subsection{Why Graph Distance Diverges from Geographic Distance}
+
+Phase~1 Centroidal Voronoi Districts (\cvd{}, B.22~\citep{dellaLibera2026cvd})
+assigns each census tract to its nearest seed by BFS hop-count on the
+adjacency graph and moves seeds to the graph-distance medoid of their district.
+BFS hop-count is a practical proxy for geographic proximity in most inland
+states: tracts are roughly uniform in area, and one adjacency hop corresponds
+to roughly one tract width of geographic distance.
+
+This approximation breaks down in three state archetypes.
+
+\paragraph{Coastal states.}
+Maine, Washington, Florida, and Louisiana have census tracts arranged along
+long coastlines with few cross-water adjacencies.
+Two tracts on opposite shores of a bay may be 3 miles apart in Euclidean
+distance but 80 BFS hops apart along the land corridor.
+Phase~1 Voronoi assignment in such states forces coastal tracts into ``wrong''
+districts based on graph topology rather than actual geographic nearness.
+The result is elongated peninsular districts that cross geographic intuition:
+a tract on the eastern shore of Puget Sound is assigned to a Cascade-slope
+seed rather than to the geographically closer western-shore seed, because
+the land route around the sound is shorter in hop-count than the water
+crossing.
+
+\paragraph{Panhandle and elongated states.}
+Florida's panhandle extends 200 miles westward from the main peninsula.
+In BFS space, panhandle tracts in Escambia County (Pensacola) are far from
+panhandle tracts in Jefferson County (Tallahassee) only because the land
+corridor runs through many small urban tracts.
+Geographic distance along the east-west axis is accurately captured by
+Euclidean coordinates; hop-count distance misrepresents it because urban
+tracts contribute only 1 hop regardless of geographic span.
+Texas presents the same geometry on a larger scale: tracts in El Paso are
+geographically 800 miles from Beaumont but the hop-count path through
+sparse West Texas rural tracts may undercount the true distance.
+
+\paragraph{Sparse interior states.}
+Alaska is the extreme case: vast tundra census tracts are geographically
+enormous but each contributes 1 hop in the adjacency graph.
+An Alaskan census tract covering 10{,}000 square miles is treated identically
+to an Anchorage urban tract covering 2 square miles in hop-count space.
+Phase~1 Voronoi seeds placed by BFS in Alaska produce geographic nonsense:
+the geometric centre of a district in BFS space may be at the corner of a
+city, far from the physical centre of the district's territory.
+
+\subsection{What Phase~2 Fixes}
+
+Phase~2 \cvdgeo{} replaces the BFS hop-count metric with Euclidean distance
+on projected census-tract centroids.
+The projection is EPSG:5070 Albers Equal Area Conic (continental US), which
+maps WGS84 (longitude, latitude) pairs to (x, y) in meters, preserving area
+and minimising shape distortion for the redistricting domain~\citep{snyder1987,epsg5070}.
+
+Three consequences follow from this metric change:
+
+\begin{enumerate}
+\item \textbf{True centroid update.}
+  In Phase~1, the ``centroid'' of a district must be the graph-distance
+  medoid --- an actual tract, found by evaluating BFS sums over a probe set.
+  In Phase~2, the population-weighted mean of projected (x, y) coordinates
+  is a valid Euclidean centroid; the nearest real tract is used as the
+  updated seed.
+  This is exact Lloyd's algorithm on the projected point set, without
+  approximation.
+
+\item \textbf{Faster convergence.}
+  The Euclidean energy surface is smoother than the BFS hop-count surface.
+  Empirically, Phase~2 converges in 7--12 iterations on the test states,
+  versus 11--15 iterations for Phase~1.
+
+\item \textbf{No BFS evaluations for medoid.}
+  Phase~1 requires $2 \times 50$ single-source BFS evaluations per iteration
+  to compute the approximate medoid.
+  Phase~2 replaces this with $O(m)$ arithmetic for the weighted mean
+  and a nearest-neighbour scan.
+  Runtime is strictly faster than Phase~1 for the same iteration count.
+\end{enumerate}
+
+\subsection{Scope and Main Results}
+
+This paper is structured as a companion to B.22~\citep{dellaLibera2026cvd}.
+Section~\ref{sec:comparison-overview} gives a direct Phase~1 vs.\ Phase~2
+property comparison.
+Section~\ref{sec:algorithm} gives the full Phase~2 algorithm with pseudocode,
+including the Albers projection formula, population-weighted centroid computation,
+nearest-tract snap, and $\varepsilon$-convergence.
+Section~\ref{sec:results} presents empirical Polsby-Popper comparisons on
+NC ($k=14$), FL ($k=28$), and WA ($k=10$) --- spanning the spectrum from
+regular geometry to severely coastal.
+Section~\ref{sec:data-pipeline} describes the centroid companion file format
+and the \texttt{redist fetch --type centroids} pipeline step.
+Section~\ref{sec:conclusion} gives recommendations for when to use
+\texttt{--cvd-metric geographic} vs.\ the Phase~1 default.
+
+\paragraph{Main result.}
+Phase~2 \cvdgeo{} is a strict improvement over Phase~1 \cvd{} for coastal and
+elongated states: Florida gains $\approx +6\%$ Polsby-Popper; Washington gains
+$\approx +4\%$; North Carolina (regular geometry) gains $\approx +2\%$.
+The improvement comes at no runtime cost --- Phase~2 is faster per iteration
+than Phase~1 because the medoid computation is replaced by a single
+population-weighted mean.
+
+\subsection{Relation to Prior Work}
+
+The continuous CVT framework of Du, Faber, and Gunzburger~\citeyear{du1999}
+applies Lloyd's algorithm in Euclidean space.
+Phase~2 \cvdgeo{} is the direct discretisation of that framework to
+census-tract redistricting: the Euclidean metric is realised via EPSG:5070
+projection, and the continuous centroid is approximated by the nearest real tract.
+Phase~1 \cvd{} is the graph-distance adaptation; Phase~2 \cvdgeo{} is the
+Euclidean adaptation.
+
+Snyder~\citeyear{snyder1987} provides the definitive reference for the Albers
+Equal-Area Conic projection used here.
+The spherical-Albers formula (our implementation) introduces at most 0.3\%
+geometric error versus the full GRS80 ellipsoidal formula; at census-tract
+resolution this is $\le 3$\,m per tract, negligible for redistricting purposes.

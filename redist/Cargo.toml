@@ -11,6 +11,7 @@ members = [
     "crates/redist-tui",
     "crates/redist-ensemble",
     "crates/redist-smc",
+    "crates/redist-ilp",
     "crates/redist-multiscale",
     "python/redist_py",
 ]

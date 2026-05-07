@@ -2472,6 +2472,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "redist-ilp"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "redist-map"
 version = "0.1.0"
 dependencies = [

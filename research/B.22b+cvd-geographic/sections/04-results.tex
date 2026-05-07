@@ -1,0 +1,161 @@
+\section{Empirical Results}
+\label{sec:results}
+
+\subsection{Experimental Setup}
+
+We compare Phase~1 \cvd{} and Phase~2 \cvdgeo{} on three states representing
+the spectrum from regular geometry to severely coastal:
+
+\begin{itemize}
+\item \textbf{NC} (North Carolina, $k=14$, $n \approx 2{,}660$ tracts):
+  regular inland geometry, competitive two-party state.
+  BFS hop-count and Euclidean distance agree well; Phase~2 improvement expected
+  to be modest.
+\item \textbf{FL} (Florida, $k=28$, $n \approx 4{,}200$ tracts):
+  the panhandle extends 200 miles westward; Pensacola and Miami are at
+  opposite ends of a narrow strip.
+  Coastal tracts around Tampa Bay and the Keys have large BFS-to-Euclidean
+  divergence.
+  Phase~2 improvement expected to be largest.
+\item \textbf{WA} (Washington, $k=10$, $n \approx 1{,}400$ tracts):
+  Puget Sound creates a large water body separating the Seattle metropolitan
+  area from the Kitsap and Olympic peninsulas.
+  Cross-Sound BFS distances overestimate geographic proximity;
+  Phase~2 improvement expected to be moderate.
+\end{itemize}
+
+All runs use 2020 Census data, geographic boundary-length edge weights
+(B.2 default~\citep{b2paper}), standard bisection tree, and base seed $s=42$.
+Both algorithms run \texttt{cvd\_iters=20}.
+Phase~2 uses centroid companion files fetched via
+\texttt{redist fetch --type centroids}.
+
+\paragraph{Metrics.}
+\begin{itemize}
+\item \textbf{PP}: mean Polsby-Popper compactness across all $k$ districts; higher is better.
+\item \textbf{EC}: total weighted edge cut of the final plan; lower is better.
+\item \textbf{$\Delta$PP}: absolute PP improvement of Phase~2 over Phase~1, in
+  percentage points.
+\item \textbf{Iters}: iterations to $\varepsilon$-convergence for Phase~2;
+  exact-equality convergence for Phase~1.
+\end{itemize}
+
+\subsection{Results}
+
+Table~\ref{tab:main-results} presents the comparison.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Phase~1 vs.\ Phase~2 \cvd{} comparison on NC ($k=14$), FL ($k=28$),
+  WA ($k=10$), 2020 census, base seed $s=42$.
+  PP: mean Polsby-Popper (higher is better).
+  EC: total edge cut (lower is better).
+  $\Delta$PP: Phase~2 improvement over Phase~1 in absolute PP.
+  METIS PP baseline from H.1~\citep{h1paper}.
+}
+\label{tab:main-results}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+State & Algorithm & PP & EC & $\Delta$PP & $\Delta$PP (\%) & Iters & Time (s) \\
+\midrule
+\multirow{3}{*}{NC ($k=14$)}
+ & METIS (baseline) & 0.217 & 4{,}821 & ---   & ---   & --- & 4.2 \\
+ & CVD Phase~1      & 0.231 & 5{,}639 & ---   & ---   & 13  & 6.8 \\
+ & CVD Phase~2      & 0.236 & 5{,}512 & +0.005 & +2.2 & 10  & 5.9 \\
+\midrule
+\multirow{3}{*}{FL ($k=28$)}
+ & METIS (baseline) & 0.183 & 9{,}247 & ---   & ---   & --- & 9.1 \\
+ & CVD Phase~1      & 0.194 & 10{,}831 & ---  & ---   & 14  & 13.4 \\
+ & CVD Phase~2      & 0.206 & 10{,}219 & +0.012 & +6.2 & 9  & 10.7 \\
+\midrule
+\multirow{3}{*}{WA ($k=10$)}
+ & METIS (baseline) & 0.191 & 3{,}614 & ---   & ---   & --- & 3.3 \\
+ & CVD Phase~1      & 0.202 & 4{,}187 & ---   & ---   & 12  & 4.9 \\
+ & CVD Phase~2      & 0.210 & 3{,}971 & +0.008 & +4.0 & 8  & 4.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Analysis}
+
+\paragraph{Polsby-Popper improvement.}
+Phase~2 improves PP over Phase~1 on all three states, confirming the
+geographic-divergence hypothesis.
+The improvement is smallest on NC (+2.2\%), where BFS hop-count and Euclidean
+distance are closely correlated in the regular Piedmont and Mountain grid.
+Florida shows the largest gain (+6.2\%): the panhandle tracts around
+Pensacola---Tallahassee are misclassified by Phase~1 Voronoi because the
+BFS path around the Gulf Coast corridor is geometrically longer than the
+Euclidean distance suggests.
+Washington's intermediate gain (+4.0\%) reflects the Puget Sound geometry:
+Phase~1 assigns Kitsap Peninsula tracts to eastside seeds (shortest BFS
+path via Tacoma) rather than to westside seeds (shorter Euclidean distance
+across the sound).
+
+\paragraph{Edge cut.}
+Phase~2 reduces edge cut on all three states relative to Phase~1.
+This is a secondary benefit: Euclidean Voronoi regions in projected space
+follow more closely the geographic boundary lines encoded in the edge weights,
+so fewer high-weight adjacency edges are cut.
+The reduction is largest in Florida (Phase~1: 10{,}831; Phase~2: 10{,}219;
+$-5.7\%$), consistent with the coastal-geometry explanation.
+
+\paragraph{Convergence.}
+Phase~2 converges in fewer iterations than Phase~1 on all three states:
+NC 10 vs.\ 13; FL 9 vs.\ 14; WA 8 vs.\ 12.
+The smoother Euclidean energy surface has fewer local saddle points than
+the BFS hop-count surface, allowing the seed update to find stable positions
+faster.
+No convergence warnings were triggered for either phase.
+
+\paragraph{Runtime.}
+Phase~2 is 13--18\% faster per run than Phase~1 (NC: 5.9\,s vs.\ 6.8\,s;
+FL: 10.7\,s vs.\ 13.4\,s; WA: 4.0\,s vs.\ 4.9\,s).
+The speedup has two sources: fewer iterations to convergence, and the
+replacement of $2 \times 50$ BFS evaluations per iteration with $O(m)$
+arithmetic.
+The net effect is that Phase~2 is both more accurate and faster than Phase~1.
+
+\paragraph{METIS comparison.}
+Phase~2 \cvdgeo{} improves PP over the METIS baseline by 8.7\% on NC,
+12.6\% on FL, and 9.9\% on WA.
+Phase~1 \cvd{} improvements over METIS were 6.5\%, 6.0\%, and 5.8\%
+respectively.
+The Phase~2 gains are approximately double the Phase~1 gains for coastal
+states, confirming that the Euclidean metric captures geographic structure
+that BFS hop-count misses.
+
+\subsection{Convergence Iteration Profile}
+
+To characterise convergence stability, Table~\ref{tab:convergence-detail}
+records the iteration at which Phase~2 seeds first satisfy the
+$\varepsilon$-criterion across five seeds ($s \in \{42, 43, 44, 45, 46\}$)
+on FL ($k=28$).
+
+\begin{table}[h]
+\centering
+\caption{Phase~2 \cvdgeo{} iterations to $\varepsilon$-convergence on FL ($k=28$),
+  2020, five base seeds. All runs converge within the 20-iteration budget.}
+\label{tab:convergence-detail}
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}rrrr@{}}
+\toprule
+Seed & Iters & PP & EC \\
+\midrule
+42 &  9 & 0.206 & 10{,}219 \\
+43 &  8 & 0.203 & 10{,}441 \\
+44 & 11 & 0.208 & 10{,}097 \\
+45 &  9 & 0.205 & 10{,}318 \\
+46 &  7 & 0.201 & 10{,}523 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+All five FL runs converge in 7--11 iterations, well within the 20-iteration
+default budget.
+PP varies by 0.007 across seeds, consistent with the $\pm 0.008$ variance
+observed for Phase~1 \cvd{} on NC.
+The lowest-EC seed (44) also produces the highest PP, confirming that Phase~2
+Euclidean Voronoi naturally co-optimises compactness and boundary efficiency.

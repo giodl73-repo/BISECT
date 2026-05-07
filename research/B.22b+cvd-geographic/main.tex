@@ -1,0 +1,114 @@
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath, amssymb, amsthm}
+\newtheorem{theorem}{Theorem}
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{remark}{Remark}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+
+%% SIAM-adjacent style: numbered sections, upright headings
+\titleformat{\section}{\normalfont\large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection.}{0.5em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\itshape}{\thesubsubsection.}{0.5em}{}
+
+%% Spacing
+\setstretch{1.4}
+
+%% Algorithm macros
+\newcommand{\cvdgeo}{\textsc{CVD-Geo}}
+\newcommand{\cvd}{\textsc{CVD}}
+\newcommand{\metis}{\textsc{Metis}}
+\newcommand{\sa}{\textsc{SimulatedAnnealing}}
+\newcommand{\ec}{\ensuremath{\mathrm{EC}}}
+\newcommand{\pp}{\ensuremath{\mathrm{PP}}}
+\newcommand{\be}{\textsc{BisectionEnsemble}}
+\newcommand{\ar}{\textsc{ApportionRegions}}
+\newcommand{\geosec}{\textsc{GeoSection}}
+\newcommand{\areasec}{\textsc{AreaSection}}
+\newcommand{\recom}{\textsc{ReCom}}
+\newcommand{\cs}{\textsc{ConvergenceSweep}}
+\newcommand{\bfsgrowth}{\textsc{BfsGrowth}}
+\newcommand{\dia}{\textsc{Districting Integrity Act}}
+
+%% Math shorthands
+\newcommand{\ECnorm}{\mathrm{EC}_{\mathrm{norm}}}
+\newcommand{\EC}{\mathrm{EC}}
+
+%% -----------------------------------------------------------------------
+
+\title{%
+  \textbf{Geographic Centroidal Voronoi Districts: True Euclidean}\\
+  \textbf{Proximity via Albers Projection}\\[0.8em]
+  \normalsize\textit{B.22b --- Algorithm Design / Geometric Structure Phase~2}%
+}
+
+\author{%
+  Gio Della-Libera\\
+  \textit{Apportionment Research Group}\\
+  \small\texttt{giodl@microsoft.com}
+}
+
+\date{May 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\noindent
+Phase~1 Centroidal Voronoi Districts (\cvd{}, B.22) uses BFS hop-count as the
+distance metric --- appropriate for connected redistricting graphs but divergent
+from true geographic distance in coastal, elongated, or geometrically irregular
+states.
+We introduce Phase~2 \cvdgeo{}, which projects census-tract centroids to
+EPSG:5070 Albers Equal Area Conic and uses Euclidean distance in projected
+coordinates.
+The key changes over Phase~1 are: (1) the centroid update uses the true
+population-weighted mean coordinate rather than the graph-distance medoid
+approximation; (2) convergence is $\varepsilon$-tolerance-based ($\varepsilon = 1.0$\,m)
+rather than exact equality, preventing oscillation from discrete snap;
+(3) the seed prefix is \texttt{"CVD\_GEO\_INIT\_"}, isolating Phase~2
+seeds from Phase~1 in the audit chain.
+
+Empirically, \cvdgeo{} improves mean Polsby-Popper compactness by
+approximately 6\,\% on Florida ($k=28$), 4\,\% on Washington ($k=10$),
+and 2\,\% on North Carolina ($k=14$) relative to Phase~1 \cvd{}.
+For regular-geometry states, Phase~1 is adequate and requires no centroid data;
+\texttt{--cvd-metric geographic} is recommended for Florida, Alaska, Washington,
+and Maine.
+Runtime is $O(n_{\mathrm{iter}} \times m)$ --- strictly faster than Phase~1
+because projection is $O(1)$ per tract and eliminates 50 BFS evaluations per
+medoid update.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-comparison-overview}
+\input{sections/03-algorithm}
+\input{sections/04-results}
+\input{sections/05-data-pipeline}
+\input{sections/06-conclusion}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

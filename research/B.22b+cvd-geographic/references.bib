@@ -1,0 +1,175 @@
+%% B.22b --- Geographic Centroidal Voronoi Districts
+%% References
+
+%% ===================================================================
+%% CENTROIDAL VORONOI TESSELLATIONS
+%% ===================================================================
+
+@article{lloyd1982,
+  author  = {Lloyd, Stuart P.},
+  title   = {Least Squares Quantization in {PCM}},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {28},
+  number  = {2},
+  pages   = {129--137},
+  year    = {1982},
+  doi     = {10.1109/TIT.1982.1056489},
+  note    = {Foundational paper on optimal quantisation via iterative
+             centroid update. Introduces what is now called Lloyd's
+             algorithm: assign each point to its nearest centre, move
+             each centre to the centroid of its cluster, repeat.
+             B.22b Phase 2 realises the true Lloyd update in Euclidean
+             projected coordinates, replacing the Phase 1 graph-distance
+             medoid approximation.},
+}
+
+@article{du1999,
+  author  = {Du, Qiang and Faber, Vance and Gunzburger, Max},
+  title   = {Centroidal {Voronoi} Tessellations: Applications and Algorithms},
+  journal = {SIAM Review},
+  volume  = {41},
+  number  = {4},
+  pages   = {637--676},
+  year    = {1999},
+  doi     = {10.1137/S0036144599352836},
+  note    = {Comprehensive analysis of CVTs: existence, uniqueness,
+             convergence, and applications. Proves convergence of
+             Lloyd's algorithm under mild regularity conditions.
+             B.22b Phase 2 is the direct discretisation of the Du et al.\
+             continuous CVT in projected geographic coordinates.},
+}
+
+%% ===================================================================
+%% MAP PROJECTIONS
+%% ===================================================================
+
+@book{snyder1987,
+  author    = {Snyder, John P.},
+  title     = {Map Projections---{A} Working Manual},
+  publisher = {United States Geological Survey},
+  series    = {USGS Professional Paper 1395},
+  year      = {1987},
+  note      = {Authoritative reference for Albers Equal-Area Conic
+               projection (Chapter 14). Provides the spherical-Earth
+               formulae used in B.22b's \texttt{albers\_project} function.
+               Spherical approximation introduces $\le 0.3\%$ maximum
+               error for continental US coordinates vs.\ the full
+               GRS80 ellipsoid; at census-tract resolution this
+               is $\le 3$\,m and negligible for redistricting.},
+}
+
+@misc{epsg5070,
+  author = {{EPSG Geodetic Parameter Dataset}},
+  title  = {{NAD83} / {Conus Albers} ({EPSG:5070})},
+  year   = {2023},
+  url    = {https://epsg.io/5070},
+  note   = {Albers Equal Area Conic projection for the conterminous
+            United States. Standard parallels 29.5\,N and 45.5\,N,
+            central meridian $-96^{\circ}$.
+            Used in B.22b for all continental US states.
+            Alaska uses EPSG:3338; Hawaii uses EPSG:102007;
+            Puerto Rico uses EPSG:32161.},
+}
+
+%% ===================================================================
+%% GRAPH PARTITIONING
+%% ===================================================================
+
+@article{karypis1998,
+  author  = {Karypis, George and Kumar, Vipin},
+  title   = {A Fast and High Quality Multilevel Scheme for Partitioning
+             Irregular Graphs},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {20},
+  number  = {1},
+  pages   = {359--392},
+  year    = {1998},
+  doi     = {10.1137/S1064827595287997},
+  note    = {Original METIS paper. Establishes $O(m \log n)$ complexity
+             of multilevel Kernighan-Lin partitioning. Used as comparison
+             algorithm in B.22b empirical results.},
+}
+
+%% ===================================================================
+%% B-SERIES AND G-SERIES SELF-CITATIONS
+%% ===================================================================
+
+@misc{dellaLibera2026cvd,
+  author = {Della-Libera, Gio},
+  title  = {Centroidal {Voronoi} Districts: Geometric Packing via
+            Graph-Medoid Iteration},
+  year   = {2026},
+  note   = {B.22 in Algorithmic Redistricting series. Introduces
+            Phase 1 \cvd{} using BFS hop-count distance and the
+            graph-distance medoid approximation. This paper (B.22b)
+            is the Phase 2 extension to Euclidean geographic distance.},
+}
+
+@misc{dellaLibera2026comparison,
+  author = {Della-Libera, Gio},
+  title  = {Ensemble Comparison of Structure-Layer Algorithms for
+            Congressional Redistricting},
+  year   = {2026},
+  note   = {G.14 in Algorithmic Redistricting series.
+            Comprehensive 50-state ensemble comparison providing
+            definitive algorithm ranking; B.22b \cvdgeo{} results
+            to be integrated in a revised G.14/G.15.},
+}
+
+@misc{b2paper,
+  author = {Della-Libera, Gio},
+  title  = {Edge-Weighted Bisection for Compact Congressional Districts:
+            Geographic Boundary Lengths as Compactness Signal},
+  year   = {2026},
+  note   = {B.2 in Algorithmic Redistricting series.
+            Geographic boundary-length edge weights used as default
+            configuration in empirical experiments of B.22b.},
+}
+
+@misc{b8paper,
+  author = {Della-Libera, Gio},
+  title  = {{GeoSection}: Isoperimetrically-Normalised Ratio-Optimal Bisection
+            for Congressional Redistricting},
+  year   = {2026},
+  note   = {B.8 in Algorithmic Redistricting series.
+            PP baselines for NC ($k=14$) used as reference in B.22b
+            Table~2.},
+}
+
+@misc{b19paper,
+  author = {Della-Libera, Gio},
+  title  = {Simulated Annealing Bisection: Cooling the Edge-Cut Objective
+            in the Redistricting Tree},
+  year   = {2026},
+  note   = {B.19 in Algorithmic Redistricting series. Introduces
+            \textsc{SimulatedAnnealing} bisection; runtime and PP
+            benchmarks used as comparison in B.22b.},
+}
+
+@misc{h1paper,
+  author = {Della-Libera, Gio},
+  title  = {{BisectionEnsemble}: Parallel Seed Search for
+            Minimum-Edge-Cut Redistricting},
+  year   = {2026},
+  note   = {H.1 in Algorithmic Redistricting series. Provides 50-state
+            PP baselines (NC 0.217, FL 0.183, WA 0.191) used as METIS
+            benchmark in B.22b Table~2.},
+}
+
+%% ===================================================================
+%% CRYPTOGRAPHY
+%% ===================================================================
+
+@techreport{sha256nist,
+  author      = {{National Institute of Standards and Technology}},
+  title       = {Secure Hash Standard ({SHS})},
+  institution = {NIST},
+  number      = {FIPS 180-4},
+  year        = {2015},
+  url         = {https://doi.org/10.6028/NIST.FIPS.180-4},
+  note        = {SHA-256 specification used in the B.22b \cvdgeo{} seed
+                 derivation. The domain-separation prefix
+                 \texttt{"CVD\_GEO\_INIT\_"} ensures independence from
+                 Phase~1 \texttt{"CVD\_INIT\_"} and all other SHA-256
+                 applications in the platform.},
+}

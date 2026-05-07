@@ -1,0 +1,90 @@
+\section{Phase~1 vs.\ Phase~2: Property Comparison}
+\label{sec:comparison-overview}
+
+Table~\ref{tab:phase-compare} gives a direct property-by-property comparison
+of Phase~1 graph-distance \cvd{} and Phase~2 geographic \cvdgeo{}.
+The rows span algorithmic, data, convergence, and implementation properties.
+
+\begin{table}[t]
+\centering
+\caption{%
+  Phase~1 \cvd{} vs.\ Phase~2 \cvdgeo{}: property comparison.
+  Phase~2 is a strict improvement for states with geographic--graph-distance
+  divergence (coastal, panhandle); for regular-geometry states Phase~1 is adequate.
+}
+\label{tab:phase-compare}
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Property & Phase~1 (GraphDistance) & Phase~2 (Geographic) \\
+\midrule
+Distance metric        & BFS hop-count on adjacency & Euclidean on projected (m) \\
+Seed update            & Graph-distance medoid       & Pop-weighted mean coord \\
+                       & (approximate, probe 50)     & (exact, nearest-snap) \\
+Convergence criterion  & Exact seed equality         & $|\Delta\mathrm{seed}| < 1.0$\,m \\
+Data needed            & Adjacency only              & Adjacency + centroids \\
+Centroid companion     & Not required                & \texttt{\{state\}\_centroids\_\{year\}.json} \\
+Seed prefix            & \texttt{"CVD\_INIT\_"}      & \texttt{"CVD\_GEO\_INIT\_"} \\
+CLI flag               & \texttt{--cvd-metric graph-distance} & \texttt{--cvd-metric geographic} \\
+\midrule
+BFS per medoid update  & $2 \times 50$               & 0 (arithmetic only) \\
+Runtime per iteration  & $O(100m)$                   & $O(m)$ \\
+Typical convergence    & 11--15 iterations           & 7--12 iterations \\
+\midrule
+Best for               & Regular-geometry inland states & Coastal, elongated, Alaska \\
+PP improvement (FL)    & Baseline                    & $\approx +6\%$ PP \\
+PP improvement (WA)    & Baseline                    & $\approx +4\%$ PP \\
+PP improvement (NC)    & Baseline                    & $\approx +2\%$ PP \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Design Rationale for Each Difference}
+
+\paragraph{Distance metric.}
+The BFS hop-count metric requires no coordinate data and is correct for
+connected graphs with roughly uniform-area tracts.
+The Euclidean metric on Albers-projected coordinates requires centroid data
+but accurately represents geographic proximity regardless of tract size
+variation, coastal connectivity, or state shape.
+Phase~1 and Phase~2 are additive: the CLI defaults to graph-distance;
+geographic is an opt-in upgrade.
+
+\paragraph{Centroid update.}
+Phase~1 uses the approximate graph-distance medoid because the ``centroid'' of
+a cluster in hop-count space has no natural real-valued form: the mean of
+tract indices is not a valid graph node.
+Phase~2 uses the population-weighted mean of projected $(x, y)$ coordinates
+because the Euclidean centroid is well-defined and computable in $O(m)$ time.
+The nearest real tract to the computed centroid (by Euclidean distance) is
+used as the updated seed; this discrete rounding is the only approximation
+in Phase~2.
+
+\paragraph{Convergence criterion.}
+Phase~1 checks for exact seed equality between consecutive iterations: the
+same tract index must be the medoid in two successive rounds.
+Phase~2 checks that the Euclidean displacement of the projected seed is
+below $\varepsilon = 1.0$\,m between iterations.
+The $\varepsilon$-criterion is necessary because the nearest-tract snap can
+oscillate: if two tracts are equidistant from the computed centroid, the
+snap alternates between them without the seed ever ``converging'' in the
+exact-equality sense.
+A tolerance of 1\,m resolves all practical oscillations at census-tract
+resolution (typical tract widths are 200--2{,}000\,m).
+
+\paragraph{Seed prefix.}
+The Phase~2 prefix \texttt{"CVD\_GEO\_INIT\_"} is distinct from the Phase~1
+prefix \texttt{"CVD\_INIT\_"} by design.
+This ensures that the same \texttt{base\_seed} and \texttt{node\_path}
+produce different CVD node seeds for Phase~1 and Phase~2, preventing
+cross-phase seed collision in the audit chain.
+A platform invariant test asserts both constants are present in source
+and are not equal.
+
+\paragraph{Data requirement and fallback behaviour.}
+Phase~2 requires a centroid companion file
+(\texttt{\{state\}\_centroids\_\{year\}.json}) alongside the adjacency file.
+If the file is absent and \texttt{--cvd-metric geographic} is requested,
+the CLI returns an error with the fetch command to use.
+The Phase~1 graph-distance path is unaffected: it requires no centroid data
+and remains the default.

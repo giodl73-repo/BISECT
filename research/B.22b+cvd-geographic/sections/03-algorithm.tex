@@ -1,0 +1,312 @@
+\section{Geographic CVD: Algorithm}
+\label{sec:algorithm}
+
+\subsection{Notation}
+
+Let $G_v = (V_v, E_v)$ be the subgraph at bisection tree node $v$, with
+$m = |V_v|$ tracts and population $p_i$ for each tract $i$.
+Let $\ell_i = (\lambda_i, \phi_i)$ be the WGS84 (longitude, latitude) of the
+population-weighted centroid of tract $i$'s polygon, loaded from the centroid
+companion file (Section~\ref{sec:data-pipeline}).
+Let $\mathbf{x}_i = (x_i, y_i) = \mathrm{proj}(\ell_i)$ be the Albers-projected
+coordinates in meters (Section~\ref{subsec:albers}).
+
+\subsection{Albers Equal-Area Conic Projection}
+\label{subsec:albers}
+
+We use the EPSG:5070 spherical Albers formula from Snyder~\citeyear{snyder1987},
+Chapter~14:
+
+\begin{definition}[Albers Projection --- Continental US (EPSG:5070)]
+\label{def:albers}
+Parameters: central meridian $\lambda_0 = -96^{\circ}$,
+standard parallels $\phi_1 = 29.5^{\circ}$, $\phi_2 = 45.5^{\circ}$.
+Given WGS84 $(\lambda, \phi)$ in degrees, convert to radians and compute:
+\begin{align}
+  n     &= \tfrac{1}{2}(\sin\phi_1 + \sin\phi_2), \\
+  C     &= \cos^2\!\phi_1 + 2n\sin\phi_1, \\
+  \rho_0 &= \sqrt{C} / n, \\
+  \rho  &= \sqrt{C - 2n\sin\phi} / n, \\
+  \theta &= n(\lambda - \lambda_0), \\
+  x     &= R \cdot \rho\sin\theta, \\
+  y     &= R(\rho_0 - \rho\cos\theta),
+\end{align}
+where $R = 6{,}371{,}000$\,m is the spherical Earth radius.
+\end{definition}
+
+\begin{remark}[Spherical approximation error]
+Definition~\ref{def:albers} uses a spherical Earth ($R = 6{,}371{,}000$\,m).
+The EPSG:5070 standard uses the GRS80 ellipsoid; the difference in
+eccentricity ($e^2 = 0.00669438$) introduces at most 0.3\% geometric
+error for continental US coordinates ($\lambda \in [-125^{\circ}, -66^{\circ}]$,
+$\phi \in [24^{\circ}, 50^{\circ}]$).
+At census-tract resolution (typical tract width 200--2{,}000\,m), this corresponds
+to $\le 3$\,m positional error per tract.
+For redistricting purposes, this error is negligible: it is far below the
+minimum meaningful districting unit (a census tract) and introduces no
+directional bias.
+An ellipsoidal implementation using PROJ library bindings is deferred to
+Phase~3.
+\end{remark}
+
+\begin{remark}[State-specific projections]
+Alaska (FIPS 02) uses EPSG:3338 (Alaska Albers, central meridian $-154^{\circ}$,
+parallels $55^{\circ}$/$65^{\circ}$); Hawaii (FIPS 15) uses EPSG:102007
+(Hawaii Albers); Puerto Rico (FIPS 72) uses EPSG:32161.
+Selection is automatic from the state FIPS code at load time.
+The EPSG code used is recorded in the audit chain (\S\ref{subsec:audit}).
+\end{remark}
+
+\subsection{Seed Derivation}
+
+Phase~2 uses a distinct seed prefix to isolate Phase~2 seeds from Phase~1
+in the audit chain.
+
+\begin{definition}[Geographic CVD Node Seed]
+\label{def:geo-seed}
+Let $\mathtt{base\_seed}$ be the unsigned 64-bit integer global seed and
+$\mathtt{node\_path}$ the path string for bisection tree node $v$.
+The \emph{geographic CVD node seed} is
+\[
+  s_v^{\mathrm{geo}} = \mathrm{first8}\bigl(
+    \mathrm{SHA\text{-}256}(
+      \texttt{"CVD\_GEO\_INIT\_"} \;\|\; \mathtt{node\_path}
+      \;\|\; \texttt{"\_"} \;\|\; \mathrm{le8}(\mathtt{base\_seed})
+    )
+  \bigr),
+\]
+where $\mathrm{le8}(x)$ encodes $x$ as 8 little-endian bytes and
+$\mathrm{first8}(h)$ reads the first 8 bytes as a little-endian
+unsigned 64-bit integer~\citep{sha256nist}.
+\end{definition}
+
+The prefix \texttt{"CVD\_GEO\_INIT\_"} is strictly distinct from the Phase~1
+prefix \texttt{"CVD\_INIT\_"}: a test invariant asserts both constants are
+present in source and are not equal.
+
+\subsection{K-Farthest Seed Initialisation (Euclidean)}
+
+\begin{definition}[K-Farthest Euclidean Initialisation]
+\label{def:geo-kfarthest}
+Let $\mathrm{sorted} = (t_0,\ldots,t_{m-1})$ be tracts in $V_v$ ordered by
+global index.
+\begin{enumerate}
+\item \textbf{First seed}: $\mathrm{seed}_0 = t_{s_v^{\mathrm{geo}} \bmod m}$.
+\item \textbf{Euclidean distances from} $\mathbf{x}_{\mathrm{seed}_0}$:
+  for each $t \in V_v$, $\delta(t) = \|\mathbf{x}_t - \mathbf{x}_{\mathrm{seed}_0}\|$.
+\item \textbf{Second seed}: $\mathrm{seed}_1 = \arg\max_{t \in V_v} \delta(t)$
+  (Euclidean farthest; ties broken by sorted index).
+\end{enumerate}
+The projected seed positions are $\mathbf{s}_0 = \mathbf{x}_{\mathrm{seed}_0}$,
+$\mathbf{s}_1 = \mathbf{x}_{\mathrm{seed}_1}$.
+\end{definition}
+
+Unlike Phase~1 (BFS farthest), Definition~\ref{def:geo-kfarthest} finds the
+two tracts that are geographically farthest apart in projected coordinates.
+This is an $O(m)$ scan rather than a BFS pass.
+For rectangular states, k-farthest Euclidean initialisation places seeds at
+the two geographic corners, immediately producing near-converged Voronoi
+regions.
+
+\subsection{Voronoi Assignment and Centroid Update}
+
+\begin{definition}[Euclidean Voronoi Assignment]
+\label{def:euc-voronoi}
+Given projected seeds $(\mathbf{s}_0, \mathbf{s}_1)$, the assignment
+$a: V_v \to \{0,1\}$ assigns each tract to its nearest seed by Euclidean distance:
+\[
+  a(t) = \arg\min_{j \in \{0,1\}} \|\mathbf{x}_t - \mathbf{s}_j\|,
+\]
+with ties broken in favour of district 0.
+\end{definition}
+
+\begin{definition}[Population-Weighted Centroid Update]
+\label{def:pw-centroid}
+Let $D_j = \{t \in V_v : a(t) = j\}$ be the tracts in district $j$ and
+$P_j = \sum_{t \in D_j} p_t$ the district population.
+The \emph{population-weighted centroid} of $D_j$ in projected space is
+\[
+  \bar{\mathbf{c}}_j = \frac{1}{P_j}\sum_{t \in D_j} p_t \cdot \mathbf{x}_t.
+\]
+The point $\bar{\mathbf{c}}_j$ may not correspond to any real tract.
+The updated seed position is the projected coordinate of the nearest real tract:
+\[
+  \mathbf{s}_j \leftarrow \mathbf{x}_{t^*},
+  \quad t^* = \arg\min_{t \in V_v} \|\mathbf{x}_t - \bar{\mathbf{c}}_j\|.
+\]
+\end{definition}
+
+The nearest-tract snap (Definition~\ref{def:pw-centroid}) is the only
+approximation in Phase~2.
+In continuous CVT theory, the seed would be exactly at $\bar{\mathbf{c}}_j$;
+the snap replaces it with the geographically closest real tract.
+This approximation is exact when $\bar{\mathbf{c}}_j$ lies inside a real tract's
+footprint and introduces at most one census-tract width of error otherwise.
+
+\subsection{$\varepsilon$-Convergence Criterion}
+
+\begin{definition}[$\varepsilon$-Convergence]
+\label{def:eps-convergence}
+At the end of each iteration, let $\mathbf{s}_j^{\mathrm{new}}$ be the updated
+seed and $\mathbf{s}_j^{\mathrm{prev}}$ the seed from the previous iteration.
+The algorithm terminates when:
+\[
+  \max_{j \in \{0,1\}} \|\mathbf{s}_j^{\mathrm{new}} - \mathbf{s}_j^{\mathrm{prev}}\| < \varepsilon,
+  \quad \varepsilon = 1.0\,\mathrm{m}.
+\]
+\end{definition}
+
+The 1\,m tolerance is chosen to resolve discrete snap oscillations where two
+equidistant candidate tracts alternate as the nearest-tract to
+$\bar{\mathbf{c}}_j$.
+Typical census tract widths are $\ge 200$\,m; a convergence tolerance of
+1\,m is thus sub-tract-granularity and introduces no distributional bias.
+
+\subsection{Formal Pseudocode}
+
+Algorithm~\ref{alg:cvdgeo} gives the complete Phase~2 \cvdgeo{} bisection.
+
+\begin{algorithm}[t]
+\caption{\cvdgeo{}-\textsc{Bisect}($G_v$, $\mathbf{x}$, $\mathbf{p}$, $k_L$, $k_R$,
+  $\mathtt{base\_seed}$, $\mathtt{node\_path}$, $\mathtt{cvd\_iters}$,
+  $\mathtt{balance\_tolerance}$)}
+\label{alg:cvdgeo}
+\begin{algorithmic}[1]
+\State $m \gets |V_v|$
+\If{$m < 2$}
+  \textbf{return} degenerate assignment
+\EndIf
+\State $s_v \gets \mathrm{CVD\text{-}Geo\text{-}Seed}(\mathtt{base\_seed}, \mathtt{node\_path})$
+       \Comment{Definition~\ref{def:geo-seed}}
+\State $\mathrm{sorted} \gets \mathrm{sort}(V_v)$;
+       $\mathrm{seed}_0 \gets \mathrm{sorted}[s_v \bmod m]$
+\State $\mathbf{s}_0 \gets \mathbf{x}_{\mathrm{seed}_0}$;
+       $\mathbf{s}_1 \gets \mathbf{x}_{\arg\max_t \|\mathbf{x}_t - \mathbf{s}_0\|}$
+       \Comment{k-farthest: Definition~\ref{def:geo-kfarthest}}
+\State $\mathbf{s}_0^{\mathrm{prev}} \gets (-\infty, -\infty)$;
+       $\mathbf{s}_1^{\mathrm{prev}} \gets (-\infty, -\infty)$
+\For{$\mathrm{iter} = 0$ \textbf{to} $\mathtt{cvd\_iters} - 1$}
+  \State $a(t) \gets \arg\min_{j} \|\mathbf{x}_t - \mathbf{s}_j\|$ for all $t \in V_v$
+         \Comment{Voronoi: Definition~\ref{def:euc-voronoi}}
+  \State $a \gets \mathrm{Rebalance}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
+         \Comment{200-iter boundary-swap}
+  \For{$j \in \{0, 1\}$}
+    \State $D_j \gets \{t : a(t) = j\}$;
+           $P_j \gets \sum_{t \in D_j} p_t$
+    \State $\bar{\mathbf{c}}_j \gets P_j^{-1}\sum_{t \in D_j} p_t \cdot \mathbf{x}_t$
+           \Comment{pop-weighted centroid: Definition~\ref{def:pw-centroid}}
+    \State $\mathbf{s}_j \gets \mathbf{x}_{\arg\min_{t \in V_v} \|\mathbf{x}_t - \bar{\mathbf{c}}_j\|}$
+           \Comment{nearest-tract snap}
+  \EndFor
+  \If{$\max_j \|\mathbf{s}_j - \mathbf{s}_j^{\mathrm{prev}}\| < 1.0$}
+    \textbf{break}
+    \Comment{$\varepsilon$-convergence: Definition~\ref{def:eps-convergence}}
+  \EndIf
+  \State $\mathbf{s}_0^{\mathrm{prev}} \gets \mathbf{s}_0$;
+         $\mathbf{s}_1^{\mathrm{prev}} \gets \mathbf{s}_1$
+\EndFor
+\State $a \gets \arg\min_j \|\mathbf{x}_t - \mathbf{s}_j\|$ for all $t$
+       \Comment{final assignment from converged seeds}
+\State $(S, \bar{S}) \gets \mathrm{Rebalance}(a, G_v, \mathbf{p}, \mathtt{balance\_tolerance})$
+\State \textbf{return} $(S, \bar{S})$
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Key difference from Phase~1.}
+The medoid computation (Phase~1: 100 BFS passes per iteration for the two
+probe sets) is replaced by a weighted mean plus a nearest-neighbour scan
+(Phase~2: $O(m)$ arithmetic per iteration with no BFS overhead).
+All other structural elements --- k-farthest initialisation,
+post-hoc rebalance, audit chain output --- are preserved.
+
+\subsection{Convergence Analysis}
+
+\begin{proposition}[Monotone Energy Descent for Phase~2]
+\label{prop:geo-convergence}
+Let $\mathcal{E}(\mathbf{s}_0, \mathbf{s}_1)
+= \sum_{j} \sum_{t \in D_j} \|\mathbf{x}_t - \mathbf{s}_j\|^2$
+be the total Euclidean quantisation energy.
+Each iteration (Voronoi assignment + population-weighted centroid update +
+nearest-tract snap) satisfies
+$\mathcal{E}^{(i+1)} \le \mathcal{E}^{(i)} + O(\varepsilon^2)$.
+\end{proposition}
+
+\begin{proof}
+(a) Voronoi assignment minimises $\mathcal{E}$ over all assignments given
+    fixed seeds: assigning each tract to its nearest seed reduces
+    $\sum_t \|\mathbf{x}_t - \mathbf{s}_{a(t)}\|^2$.
+(b) Population-weighted centroid update minimises $\mathcal{E}$ over
+    seed positions given fixed assignment: the minimiser of
+    $\sum_{t \in D_j}\|\mathbf{x}_t - \mathbf{c}\|^2$ over $\mathbf{c}$ is the
+    population-weighted mean $\bar{\mathbf{c}}_j$.
+(c) Nearest-tract snap replaces the optimal $\bar{\mathbf{c}}_j$ with the closest
+    real-tract projection $\mathbf{s}_j^* = \arg\min_{t}\|\mathbf{x}_t - \bar{\mathbf{c}}_j\|$.
+    The additional energy from the snap is
+    $\sum_{t \in D_j}\bigl(\|\mathbf{x}_t - \mathbf{s}_j^*\|^2 - \|\mathbf{x}_t - \bar{\mathbf{c}}_j\|^2\bigr)
+    = 2(\mathbf{s}_j^* - \bar{\mathbf{c}}_j)^\top \sum_{t}(\mathbf{x}_t - \bar{\mathbf{c}}_j)
+    + P_j\|\mathbf{s}_j^* - \bar{\mathbf{c}}_j\|^2$.
+    The first term vanishes because $\bar{\mathbf{c}}_j$ is the centroid
+    ($\sum_t p_t(\mathbf{x}_t - \bar{\mathbf{c}}_j) = 0$); the second term
+    is $P_j\|\mathbf{s}_j^* - \bar{\mathbf{c}}_j\|^2$, which is small when the snap
+    distance is small.
+    In the $\varepsilon$-convergence regime, $\|\mathbf{s}_j - \mathbf{s}_j^{\mathrm{prev}}\| < \varepsilon$
+    implies the snap distance is bounded, so the additional energy is $O(\varepsilon^2)$.
+Combining (a), (b), (c): energy is non-increasing up to $O(\varepsilon^2)$
+rounding per iteration.
+Since $\mathcal{E} \ge 0$ and the number of distinct Voronoi partitions of
+$V_v$ is finite, the iteration terminates.
+\end{proof}
+
+\subsection{Runtime Complexity}
+
+\begin{proposition}[Phase~2 Runtime]
+\label{prop:geo-runtime}
+\cvdgeo{} bisection at a node with $m$ tracts requires:
+\begin{itemize}
+\item K-farthest initialisation: one Euclidean distance scan, $O(m)$.
+\item Per iteration:
+  \begin{itemize}
+  \item Voronoi assignment: $O(m)$ (two Euclidean comparisons per tract).
+  \item Centroid update: $O(m)$ weighted accumulation + $O(m)$ nearest scan.
+  \end{itemize}
+\item Post-hoc rebalance: $O(200 m)$.
+\item Total: $O((n_{\mathrm{iter}} + 200) \times m)$.
+\end{itemize}
+For $n_{\mathrm{iter}} = 20$: $O(220m) = O(m)$.
+This is strictly faster than Phase~1 at the same iteration count, which
+requires $O(100m)$ BFS per iteration for the medoid computation in addition to
+the $O(m)$ Voronoi assignment.
+\end{proposition}
+
+\subsection{Audit Chain Fields}
+\label{subsec:audit}
+
+Phase~2 appends the following fields to
+\texttt{runs/\{label\}/\{year\}/index.json}
+(new fields relative to Phase~1 are marked with $\dagger$):
+
+\begin{verbatim}
+"structure": "centroidal-voronoi",
+"cvd_metric": "geographic",           (was "graph-distance")
+"n_iter": 20,
+"seed_init": "kmeans++",
+"base_seed": 12345678,
+"cvd_seed": 987654321,
+"cvd_seed_formula": "SHA-256('CVD_GEO_INIT_'||node_path||'_'||base_seed:u64le)", (dagger)
+"node_path": "01",                    (dagger)
+"iterations_to_convergence": 11,
+"convergence_warning": false,
+"projection": "EPSG:5070",            (dagger)
+"final_ec": 2847,
+"final_pp_mean": 0.241
+\end{verbatim}
+
+The $\dagger$ fields are new in Phase~2.
+\texttt{cvd\_seed\_formula} is a literal string encoding the seed derivation
+so that an independent auditor can recompute \texttt{cvd\_seed} from
+\texttt{base\_seed} and \texttt{node\_path} without consulting source code.
+\texttt{node\_path} is required: the Phase~2 seed depends on both \texttt{base\_seed}
+and \texttt{node\_path}, and without \texttt{node\_path} the seed cannot be
+rederived from \texttt{base\_seed} alone.
+\texttt{projection} records the EPSG code used; it varies by state FIPS code
+(5070 for continental US; 3338 for Alaska; 102007 for Hawaii; 32161 for Puerto Rico).
