@@ -1,8 +1,9 @@
 # Spec: ILP Redistricting — Exact Optimization via Integer Linear Programming
 
-**Status**: Proposed  
+**Status**: Proposed (R1 reviewed, P0+P1 fixes applied)  
 **Date**: 2026-05-07  
 **Layer**: Structure (SplitStrategy) — alternative to METIS for small instances  
+**Reviewed R1**: MERIDIAN 2/4, BENCHMARK 3/4, SURVEY 2/4, COVENANT 3/4 → avg 2.5/4  
 **Related paper**: B.24  
 **New crate**: `redist-ilp` (Rust ILP formulation; output MPS format for external solver)
 
@@ -35,11 +36,11 @@ Tractable only for small instances (n ≤ 500 tracts). Primary use cases:
 
 **Binary decision variables**:
 - $x_{t,d} \in \{0,1\}$: equals 1 iff tract $t$ is assigned to district $d$
-- $y_{t,t',d} \in \{0,1\}$: equals 1 iff edge $(t,t')$ is cut (the two endpoint tracts are in different districts)
+- $z_{t,t'} \in \{0,1\}$: equals 1 iff undirected edge $\{t,t'\}$ is cut (endpoints in different districts)
 
-**Objective** (minimize total edge cuts):
+**Objective** (minimize total edge cuts, counting each cut edge exactly once):
 
-$$\min \sum_{(t,t') \in E} \sum_{d} y_{t,t',d}$$
+$$\min \sum_{\{t,t'\} \in E,\; t < t'} z_{t,t'}$$
 
 **Constraints**:
 
@@ -51,21 +52,25 @@ $$\sum_d x_{t,d} = 1 \quad \forall t$$
 
 $$\left|\sum_t \text{pop}(t) \cdot x_{t,d} - \text{ideal\_pop}\right| \le \varepsilon \cdot \text{ideal\_pop} \quad \forall d$$
 
-3. **Edge cut linearization** — $y_{t,t',d}$ captures whether edge $(t,t')$ is a cut for district $d$:
+3. **Cut edge linearization** — $z_{t,t'}$ is forced to 1 whenever the two endpoints are in different districts:
 
-$$y_{t,t',d} \ge x_{t,d} - x_{t',d} \quad \forall (t,t') \in E, \forall d$$
-$$y_{t,t',d} \ge x_{t',d} - x_{t,d} \quad \forall (t,t') \in E, \forall d$$
+$$z_{t,t'} \ge x_{t,d} - x_{t',d} \quad \forall \{t,t'\} \in E, \forall d$$
+$$z_{t,t'} \ge x_{t',d} - x_{t,d} \quad \forall \{t,t'\} \in E, \forall d$$
 
-4. **Contiguity** — Miller-Tucker-Zemlin (MTZ) flow-based constraints. For each district $d$, designate an arbitrary root $r_d$. For each non-root tract $t$, introduce flow variables $f_{t,t',d}$ on directed edges:
+Each cut edge is counted once in the objective (indexed $t < t'$). The previous $y_{t,t',d}$ auxiliary variables (one per district per edge) are replaced by the single $z_{t,t'}$ cut indicator; the original formulation over-counted each cut edge $k$ times.
 
+4. **Contiguity** — Miller-Tucker-Zemlin (MTZ) flow-based constraints. For each district $d$, designate an arbitrary root $r_d$. Introduce flow variables $f_{t,t',d} \ge 0$ on directed edges:
+
+$$f_{t,t',d} \ge 0 \quad \forall (t,t') \in E_{\text{directed}}, \forall d$$
+$$f_{t,t',d} \le (n-1) \cdot \min(x_{t,d},\, x_{t',d}) \quad \forall (t,t') \in E_{\text{directed}}, \forall d$$
 $$\sum_{t': (t,t') \in E} f_{t,t',d} - \sum_{t': (t',t) \in E} f_{t',t,d} = x_{t,d} \quad \forall t \ne r_d, \forall d$$
-$$0 \le f_{t,t',d} \le n \cdot x_{t,d} \quad \forall (t,t') \in E, \forall d$$
+$$\sum_{t: (r_d,t) \in E} f_{r_d,t,d} = \sum_t x_{t,d} - 1 \quad \forall d$$
 
-This enforces that each district forms a connected spanning tree rooted at $r_d$.
+The $\min(x_{t,d}, x_{t',d})$ upper bound ensures flow is zero whenever either endpoint is outside district $d$, preventing cross-district flow paths. The root $r_d$ supplies $n_d - 1$ units of flow (one per non-root tract in district $d$), enforcing that the district forms a connected subtree.
 
 **Variable counts** (order of magnitude for reference):
 - Binary $x$: $n \times k$
-- Binary $y$: $|E| \times k$
+- Binary $z$: $|E|$ (one per undirected edge, shared across districts)
 - Continuous $f$: $2|E| \times k$ (directed)
 - Constraints: $O(n \times k + |E| \times k)$
 
@@ -140,6 +145,8 @@ SplitStrategy::Ilp {
 }
 ```
 
+**Calibration note**: the 300s default is calibrated for n ≤ 200 tract instances with `good_lp`/GLPK. For n = 300–500 (NH-sized instances with k=2), branch-and-bound with MTZ contiguity constraints may require 600–900s on commodity hardware. Increase `--ilp-time-limit` to 900 for NH-sized instances. The size-guard fallback at n > 500 prevents timeouts for larger states.
+
 **Size guard**: if the subgraph at a bisection node exceeds `max_tracts` tracts, fall back to METIS:
 
 ```
@@ -189,8 +196,11 @@ Every run appends to `runs/{label}/{year}/index.json`:
 "achieved_gap": 0.0,
 "n_variables": 2418,
 "n_constraints": 8931,
-"solver_used": "glpk"
+"solver_used": "glpk",
+"solver_version": "GLPK 5.0"
 ```
+
+**Note on `solver_version`**: recorded because numerical tolerances and branching decisions differ across versions; two runs with different solver versions may produce different optimal solutions in the presence of ties. The `solver_version` field enables auditors to reproduce the exact solution rather than merely an equivalent-cost one.
 
 **`solver_status` semantics**:
 - `"optimal"` — gold standard. Certifies that no valid plan achieves lower edge cuts.
@@ -218,6 +228,7 @@ The MPS file is retained at `runs/{label}/{year}/ilp/{node_id}.mps` for external
 - 4x4 grid k=2: ILP optimal EC = known value (verifiable by exhaustive enumeration for this graph size)
 - VT synthetic k=1: trivial — single district, EC=0, `solver_status: "optimal"`, solve time < 1s
 - Population balance constraint enforced: all districts within tolerance for every solved instance
+- **MPS round-trip**: write MPS for 4-node path k=2 instance, re-parse with `good_lp`, resolve, confirm objective value = 1 (single cut). This validates that the retained MPS file can be independently solved by an auditor.
 
 ### L2 (`#[ignore]`, real data)
 

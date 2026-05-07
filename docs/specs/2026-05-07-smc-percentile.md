@@ -1,7 +1,8 @@
 # Spec: SmcPercentile — Single-Plan Selection from SMC Weighted Ensemble
 
-**Status**: Proposed
+**Status**: Proposed (R1 reviewed, P1 fixes applied)
 **Date**: 2026-05-07
+**Reviewed R1**: MERIDIAN 3/4, BENCHMARK 3/4, SURVEY 3/4, COVENANT 4/4 → avg 3.25/4
 **Extends**: `SeedCompositor` (new `SmcPercentile` variant); depends on `redist-smc` crate
 **Related**: G.7 (SMC paper), docs/specs/2026-05-07-smc-redistricting.md (SMC spec)
 
@@ -48,7 +49,7 @@ SmcPercentile(adj, pop, k, n_particles, p, base_seed):
   return ec_plans[selected_idx].plan
 ```
 
-**p=0.0**: returns the minimum-EC plan (the plan with the smallest edge cut in the weighted sample).
+**p=0.0**: uses the **weighted 0th quantile** (not the absolute minimum EC): the algorithm finds the first particle in EC-sorted order where cumulative weight ≥ 0.0, which is always the minimum-EC particle with positive weight. If the minimum-EC particle has weight exactly zero (possible after SMC resampling where that particle was not selected), the weighted 0th quantile skips it and returns the lowest-EC particle with positive weight. This is the correct behavior for a weighted quantile — plans with zero weight are not part of the effective ensemble.
 **p=0.5**: returns the median-weight plan (the plan at the 50th percentile of the weighted EC distribution).
 **p=1.0**: returns the maximum-EC plan.
 
@@ -68,6 +69,8 @@ SeedCompositor::SmcPercentile {
 `seed_count()` = n_particles. `is_single()` = false.
 
 **CLI**: `--search smc-percentile --particles 5000 --percentile 0.0`
+
+**Advanced flag**: `--smc-resample-threshold` (default: 0.5). When SMC's effective sample size drops below this fraction × n_particles, resampling occurs. For states with irregular geometry or many protected VRA districts, lower values (0.3) reduce premature collapse. The default 0.5 is appropriate for most states.
 
 **YAML**:
 ```yaml
@@ -129,7 +132,7 @@ The `"SMCP_RUN_"` prefix distinguishes SmcPercentile runs from standalone SMC ru
 
 ## Test invariants (L0)
 
-- `p=0.0` returns the minimum-EC plan from the weighted sample (lowest EC among all particles)
+- `p=0.0` returns the minimum-EC plan from the weighted sample (lowest EC among all particles with positive weight); L0 test: when one particle has EC=1 (minimum) and weight=0.0, and all others have EC=2 and weight=1/N, `p=0.0` returns an EC=2 plan (not EC=1)
 - `p=1.0` returns the maximum-EC plan (ascending sort — tests both ends to catch inverted sort)
 - Same `base_seed` → identical `selected_particle_idx` (deterministic)
 - `selected_particle_weight > 0` (selected particle has positive weight)
@@ -150,7 +153,7 @@ The `"SMCP_RUN_"` prefix distinguishes SmcPercentile runs from standalone SMC ru
 
 ## Test invariants (L2, #[ignore])
 
-- NC 2020 k=14, n_particles=1000: `smc-percentile p=0.0` EC ≤ `forest-recom p=0.0` EC (SMC samples from calibrated distribution; min-EC from calibrated sample may differ from MCMC minimum)
+- NC 2020 k=14, n_particles=1000: the **median** EC (p=0.5) from `smc-percentile` is within ±5% of the median EC from a `forest-recom` p=0.5 run for 1000 steps. This distributional comparison (medians) is more stable than a point-estimate minimum comparison, since both methods sample from distributions over plans and minimum values depend heavily on sample size.
 - Weighted vs uniform quantile comparison: for n_particles=1000 on NC, the `p=0.5` plan from weighted quantile differs from the uniform median in at most 3% of cases (weights are approximately uniform after many resamples)
 
 ---
