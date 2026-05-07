@@ -82,7 +82,7 @@ impl MetisEngine {
     pub fn from_str(s: &str) -> Option<Self> {
         match s {
             "c-ffi" | "c" | "metis-rs" => Some(MetisEngine::CFfi),
-            "redist-metis" | "rust"    => Some(MetisEngine::RedistMetis),
+            "metis-core" | "rust"      => Some(MetisEngine::RedistMetis),
             "gpmetis" | "subprocess"   => Some(MetisEngine::Gpmetis),
             _                          => None,
         }
@@ -252,9 +252,9 @@ impl MetisPartitioner {
         Ok(part.iter().map(|&p| p as u32).collect())
     }
 
-    // ── redist-metis pure-Rust path ───────────────────────────────────────────
+    // ── metis-core pure-Rust path ─────────────────────────────────────────────
 
-    /// Equal-weight k-way split via the `redist-metis` pure-Rust engine.
+    /// Equal-weight k-way split via the `metis-core` pure-Rust engine.
     fn split_metis_core(
         &self,
         g: &CsrGraph,
@@ -272,10 +272,10 @@ impl MetisPartitioner {
         RustMetisPartitioner::with_params(params, k)
             .split(g, k, seed)
             .map(|r| r.assignment)
-            .map_err(|e| SplitError::Metis(format!("redist-metis k={k}: {e}")))
+            .map_err(|e| SplitError::Metis(format!("metis-core k={k}: {e}")))
     }
 
-    /// Asymmetric-weight k-way split via `redist-metis`.
+    /// Asymmetric-weight k-way split via `metis-core`.
     /// Falls back to equal-weight split (v1 does not support tpwgts).
     fn split_metis_core_weighted(
         &self,
@@ -295,7 +295,7 @@ impl MetisPartitioner {
         RustMetisPartitioner::with_params(params, k)
             .split_weighted(g, fracs_u32, seed)
             .map(|r| r.assignment)
-            .map_err(|e| SplitError::Metis(format!("redist-metis weighted k={k}: {e}")))
+            .map_err(|e| SplitError::Metis(format!("metis-core weighted k={k}: {e}")))
     }
 }
 
@@ -319,7 +319,7 @@ impl Partitioner for MetisPartitioner {
                 #[cfg(not(feature = "c-ffi"))]
                 return Err(SplitError::Metis(
                     "redist-apportion was compiled without the c-ffi feature; \
-                     rebuild with --features c-ffi or use --metis-engine redist-metis".into()
+                     rebuild with --features c-ffi or use --metis-engine metis-core".into()
                 ));
                 #[cfg(feature = "c-ffi")]
                 {
@@ -333,7 +333,7 @@ impl Partitioner for MetisPartitioner {
                             let rust_cut = compute_cut(&g, &rust_assignment);
                             if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                                 eprintln!(
-                                    "[shadow-metis] k={k}: c-ffi cut {c_cut} > redist-metis \
+                                    "[shadow-metis] k={k}: c-ffi cut {c_cut} > metis-core \
                                      cut {rust_cut} ({:.0}% over)",
                                     (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
                                 );
@@ -352,7 +352,7 @@ impl Partitioner for MetisPartitioner {
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(
                 "gpmetis subprocess engine is not yet implemented; \
-                 use c-ffi (default) or redist-metis".into()
+                 use c-ffi (default) or metis-core".into()
             )),
         }
     }
@@ -373,7 +373,7 @@ impl Partitioner for MetisPartitioner {
                 #[cfg(not(feature = "c-ffi"))]
                 return Err(SplitError::Metis(
                     "redist-apportion was compiled without the c-ffi feature; \
-                     rebuild with --features c-ffi or use --metis-engine redist-metis".into()
+                     rebuild with --features c-ffi or use --metis-engine metis-core".into()
                 ));
                 #[cfg(feature = "c-ffi")]
                 {
@@ -394,7 +394,7 @@ impl Partitioner for MetisPartitioner {
                             if rust_cut > 0 && c_cut > rust_cut * 12 / 10 {
                                 eprintln!(
                                     "[shadow-metis] weighted k={k}: c-ffi cut {c_cut} > \
-                                     redist-metis cut {rust_cut} ({:.0}% over)",
+                                     metis-core cut {rust_cut} ({:.0}% over)",
                                     (c_cut as f64 / rust_cut as f64 - 1.0) * 100.0
                                 );
                             }
@@ -416,7 +416,7 @@ impl Partitioner for MetisPartitioner {
 
             MetisEngine::Gpmetis => Err(SplitError::Metis(
                 "gpmetis subprocess engine is not yet implemented; \
-                 use c-ffi (default) or redist-metis".into()
+                 use c-ffi (default) or metis-core".into()
             )),
         }
     }

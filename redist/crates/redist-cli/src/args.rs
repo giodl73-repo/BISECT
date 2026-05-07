@@ -1489,7 +1489,7 @@ pub struct StateArgs {
 
     /// METIS backend engine.
     /// c-ffi (default): links libmetis.so/dll — battle-tested, handles all k.
-    /// redist-metis: pure Rust, no C dependency — portable standalone binary.
+    /// metis-core: pure Rust, no C dependency — portable standalone binary.
     /// gpmetis: external gpmetis subprocess (reserved, not yet implemented).
     #[arg(long, value_enum)]
     pub metis_engine: Option<MetisEngineArg>,

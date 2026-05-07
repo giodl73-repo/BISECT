@@ -268,7 +268,7 @@ pub fn split_subgraph(
         }
         #[cfg(not(feature = "c-ffi-engine"))]
         {
-            // Pure-Rust fallback via redist-metis.
+            // Pure-Rust fallback via metis-core.
             // ncon=2 (AreaSection dual constraint) is not supported without c-ffi-engine.
             if ncon > 1 {
                 return Err(
@@ -303,7 +303,7 @@ pub fn split_subgraph(
             } else {
                 RustBisectPartitioner::with_params(params, 2)
                     .split(&g, 2, seed)
-            }.map_err(|e| format!("redist-metis bisection: {e}"))?;
+            }.map_err(|e| format!("metis-core bisection: {e}"))?;
             partition.assignment.iter().map(|&p| p as i32).collect()
         }
     };
@@ -553,7 +553,7 @@ pub fn run_nway_partition(
             let k = num_districts as u32;
             let partition = RustNwayPartitioner::with_params(params, k)
                 .split(&g, k, seed)
-                .map_err(|e| format!("redist-metis n-way k={num_districts}: {e}"))?;
+                .map_err(|e| format!("metis-core n-way k={num_districts}: {e}"))?;
             partition.assignment.iter().map(|&p| p as i32).collect()
         }
     };
@@ -1664,7 +1664,7 @@ pub fn run_all_splits_percentile(
     // Run all seeds sequentially. par_iter() would call the C METIS library from
     // multiple threads simultaneously; METIS shares global/TLS RNG state and is
     // not thread-safe, producing non-deterministic results under concurrent calls.
-    // The pure-Rust redist-metis engine is thread-safe, but we use sequential
+    // The pure-Rust metis-core engine is thread-safe, but we use sequential
     // iteration unconditionally so both engine paths produce identical output.
     let n = adjacency.len();
     let results: Vec<(usize, usize, HashMap<usize, usize>)> = seeds.iter()
@@ -3523,7 +3523,7 @@ mod tests {
     }
 
     // Balance quality for n-way is only guaranteed by C METIS (c-ffi-engine).
-    // redist-metis produces correct assignments but with looser balance on small
+    // metis-core produces correct assignments but with looser balance on small
     // graphs — this is a documented known gap.
     #[test]
     #[cfg(feature = "c-ffi-engine")]
