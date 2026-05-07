@@ -84,6 +84,9 @@ the chain's stationary distribution on $\Pi_{\mathrm{vra}}$ is the
 conditional uniform distribution restricted to the VRA-compliant sub-space,
 in the expected-detailed-balance sense.
 
+\paragraph{Conditional distributional correctness.}
+Proposition~\ref{prop:vra-invariant} establishes that the VRA check preserves the $\Pi_{\mathrm{vra}}$ invariant. We now show this does not distort the expected detailed balance property of \fr{} on $\Pi_{\mathrm{vra}}$. Let $\pi, \pi' \in \Pi_{\mathrm{vra}}$ be two VRA-compliant plans. The VRA-Aware chain proposes the move $\pi \to \pi'$ with the same probability as unconstrained \fr{}: $Q_{\mathrm{vra}}(\pi, \pi') = Q_{\mathrm{FR}}(\pi, \pi')$. It accepts with probability $\min(1, c_{\mathrm{fwd}}/c_{\mathrm{rev}})$ when VRA-compliant, and 0 otherwise. For moves within $\Pi_{\mathrm{vra}}$, the acceptance probability and proposal probability are identical to constrained FR, so the expected detailed balance with respect to the uniform distribution on $\Pi_{\mathrm{vra}}$ follows from the FR result (\citet{mccartan2020} \S3.2). The VRA hard-rejection on moves leaving $\Pi_{\mathrm{vra}}$ reduces the effective step rate but does not introduce bias on compliant plans.
+
 \paragraph{Reference plan matching.}
 The protected set $\Prot$ is derived from the \emph{initial plan} $\pi_0$,
 not from the current chain state.

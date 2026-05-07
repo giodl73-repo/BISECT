@@ -294,6 +294,18 @@ An auditor who re-runs the chain with the same \texttt{base\_seed} collects all
 cold chain records, sorts by (EC ASC, step ASC), and confirms that the plan at
 rank \texttt{selected\_step} matches the submitted plan.
 
+\paragraph{Legal provenance of parallel chains.}
+A special master or opposing expert may ask: does using $N$ replicas change the
+distributional properties of the submitted plan compared to a single-chain
+\fr{} run?
+The answer is no: the submitted plan is drawn from the cold chain
+($\varepsilon = \varepsilon_{\text{cold}}$, the same tolerance as single-chain
+\fr{}), and the cold chain's stationary distribution is the same \fr{} target.
+The hot replicas serve as exploration aids; they do not affect the cold chain's
+targeting.
+The audit chain records all $N$ chains' seeds, swap events, and the cold-chain
+\texttt{selected\_step}, enabling full independent verification.
+
 \subsection{Computational Cost}
 
 \pt{} costs $N_{\mathrm{replicas}} \times T$ \fr{} steps plus

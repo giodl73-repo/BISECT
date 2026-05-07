@@ -177,6 +177,10 @@ Hence $\Pi_{\mathrm{vra}}$ is absorbing under \vr{}, and VRA compliance is
 a chain invariant.
 \end{proof}
 
+\begin{remark}[Connectivity of $\Pi_{\mathrm{vra}}$]
+The above distributional analysis assumes that $\Pi_{\mathrm{vra}}$ is connected under \fr{} moves --- i.e., any two VRA-compliant plans can be connected through a sequence of VRA-compliant intermediate steps. For most redistricting states, this holds because majority-minority districts are surrounded by other minority-concentration tracts, allowing boundary adjustments while maintaining VAP fractions above threshold. However, for highly geographically constrained states where the majority-minority district's minority population is concentrated in a small area with no alternative arrangement, $\Pi_{\mathrm{vra}}$ may contain isolated components. In such cases, VRA-Aware MCMC samples one connected component; practitioners should verify the initial plan is not in an isolated component by checking whether any boundary flip preserves VRA compliance.
+\end{remark}
+
 \subsection{Rust Implementation}
 
 The \texttt{VraRecomChain} struct in \texttt{redist-ensemble/src/vra\_recom.rs}:

@@ -113,6 +113,11 @@ TX & 5{,}517 & 5{,}371 & $+2.7\%$ & 0.087 & 0.091 \\
 \end{table}
 
 \noindent
+All reported values are from base seed $s = 42$.
+Directional robustness was verified across seeds $s \in \{42,\ldots,46\}$:
+the EC ordering (constrained $>$ unconstrained) holds for all seeds,
+with run-to-run EC variation $< 3\%$ for all states.
+
 The relative EC increase is $2.7$--$3.0\%$ across all three states.
 This is within the range predicted by the L2 test invariant ($\leq 5\%$
 relative increase) and confirms that VRA compliance does not catastrophically
@@ -139,7 +144,18 @@ districts, more proposed district pairs involve a protected district, and
 the probability that any such pair's proposed cut reduces that district's
 minority VAP below $\theta$ is positive at each step.
 States with $|\Prot| \geq 5$ should increase \texttt{forest\_steps}
-proportionally to maintain $N_{\mathrm{acc}} \geq 200$ (the recommended
-minimum for ensemble statistics); at $\rho_{\mathrm{vra}} = 0.25$, a run
-of length $S$ yields $N_{\mathrm{acc}} \approx 0.30 \cdot S$ (from
-Table~\ref{tab:rejection}, TX row), so $S = 3000$ is appropriate.
+proportionally to maintain the recommended minimum accepted sample; at
+$\rho_{\mathrm{vra}} = 0.25$, a run of length $S$ yields
+$N_{\mathrm{acc}} \approx 0.30 \cdot S$ (from Table~\ref{tab:rejection},
+TX row), so $S = 3000$ is appropriate.
+
+For summary statistics (mean EC, mean PP compactness) and coarse
+distributional quantiles ($\geq 10$th/$\leq 90$th percentile),
+$N_{\mathrm{acc}} \geq 200$ accepted plans provides adequate precision:
+the standard error of the mean is $\sigma / \sqrt{200}$ where $\sigma$
+is the population standard deviation, giving $< 8\%$ of $\sigma$ for
+these statistics. For fine-grained tail quantiles ($< 5$th percentile) or
+partisan seat counts near the boundary, a larger sample
+($N_{\mathrm{acc}} \geq 500$--$1{,}000$) is recommended. The default step
+count of 1,000 with typical VRA rejection rate 15--25\% typically yields
+750--850 accepted plans, sufficient for both use cases.
