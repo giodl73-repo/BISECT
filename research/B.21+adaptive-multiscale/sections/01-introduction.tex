@@ -83,10 +83,10 @@ The Robbins-Monro update rule is:
   \alpha_{t+1} = \alpha_t + \gamma_t \bigl(\hat{h}_t(\alpha_t) - 0\bigr),
 \]
 where $\hat{h}_t$ is the observed excess acceptance rate in the current window
-and $\gamma_t = \gamma_0 / \sqrt{t}$ is a decaying step size.
-This step-size schedule satisfies the classical conditions:
-$\sum_{t=1}^\infty \gamma_t = \infty$ (sufficient exploratory power) and
-$\sum_{t=1}^\infty \gamma_t^2 < \infty$ (convergence of variance to zero).
+and $\gamma_t = \gamma_0 / t^{3/4}$ is a decaying step size.
+This step-size schedule satisfies both Robbins--Monro conditions:
+$\sum_{t=1}^\infty \gamma_t = \infty$ (since $3/4 < 1$, the series diverges) and
+$\sum_{t=1}^\infty \gamma_t^2 < \infty$ (since $3/2 > 1$, the series converges).
 Under the monotonicity assumption, the iterate converges to $\alpha^*$
 with probability one.
 
@@ -99,7 +99,7 @@ This paper makes the following contributions:
     We define \ams{} (Section~\ref{sec:algorithm}), which wraps \ms{} with
     a Robbins-Monro adaptation loop that updates $\alpha$ every
     $\Delta = 50$ steps.
-    Three design choices are analysed: the $\gamma_0/\sqrt{t}$ step-size
+    Three design choices are analysed: the $\gamma_0/t^{3/4}$ step-size
     schedule, the $\Delta = 50$ adaptation interval, and the $[0.05, 0.95]$
     clip to prevent degenerate fixed-point collapse.
 

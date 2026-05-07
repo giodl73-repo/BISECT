@@ -70,6 +70,8 @@ Ensemble methods: GerryChain/ReCom comparison, diagnostics, mixing time. How doe
 | G.10 | Merge-Split MCMC: Explicit Reversibility via Two-Tree Acceptance Ratio | [PDF](papers/G.10+merge-split.pdf) | **Accepted** 3.2/4 — `--search merge-split` |
 | G.11 | Multi-scale MCMC: Hierarchical Mixing for Large-k Redistricting | [PDF](papers/G.11+multiscale-mcmc.pdf) | **Accepted** 3.0/4 — `--search multiscale` |
 | G.12 | Short-Burst with Calibrated Chains | — | Spec accepted; `--search short-burst-forest/merge-split` implemented |
+| G.13 | VRA-Aware Ensemble — chains preserving majority-minority districts | — | Spec **Accepted** 3.75/4; implementation done |
+| G.14 | A Practitioner's Comparison of Redistricting Ensemble Algorithms | [PDF](papers/G.14+ensemble-comparison.pdf) | **Accepted** 4.0/4 |
 
 **Key finding (G.1, real data):** The bisection plan sits at the compactness extremum — 0.1–0.7th percentile in WI/GA/PA/CA. NC is 50th percentile: geographic constraint makes the minimum-cut plan coincide with the ensemble median.
 
@@ -91,6 +93,10 @@ Validation: does the algorithm produce robust results across resolutions, census
 | C.7 | Uncertainty Quantification — 95% CI for +22% improvement: [+15%, +29%] | [PDF](papers/C.7+uncertainty-quantification.pdf) |
 | B.18 | Multi-Reapportionment Stability — what happens when states gain/lose seats | [PDF](papers/B.18+multi-reapportionment-stability.pdf) |
 | B.19 | Simulated Annealing Bisection — cooling the edge-cut objective in the bisection tree | [PDF](papers/B.19+simulated-annealing.pdf) | **Accepted** 3.6/4 — `--structure simulated-annealing` |
+| B.20 | Parallel Tempering — multi-chain replica exchange MCMC | — | Spec **Accepted** 4.0/4; implementation done |
+| B.21 | Adaptive Multi-scale MCMC — self-tuning alpha via Robbins-Monro | [PDF](papers/B.21+adaptive-multiscale.pdf) | **Accepted** 3.5/4 — `--search multiscale-adaptive` |
+| B.22 | Centroidal Voronoi Districts — geometric district construction | — | Spec **Accepted** 3.75/4 |
+| B.23 | BFS Region-Growing — greedy geographic district packing | — | Spec **Accepted** 4.0/4 |
 
 ---
 
