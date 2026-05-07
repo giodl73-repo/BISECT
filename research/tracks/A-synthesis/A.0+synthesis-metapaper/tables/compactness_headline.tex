@@ -1,0 +1,15 @@
+\begin{table}[h]
+\centering
+\caption{Compactness improvement figures by algorithm variant and baseline. All figures refer to mean Polsby-Popper score across 50 states, 2020 census.}
+\label{tab:compactness-headline}
+\begin{tabular}{llrrr}
+\toprule
+Variant & Baseline & Improvement & PP Score & Source \\
+\midrule
+Unweighted bisection & — & — & $\approx 0.235$ & B.1 \\
+Edge-weighted (B.2) & Unweighted baseline & $+56\%$ & $\approx 0.367$ & B.2 \\
+Edge-weighted (B.1/B.2) & Enacted 2020 maps & $+20$--$22\%$ & $0.367$ vs.\ $0.305$ & B.1, B.2 \\
+B.1 + B.2 combined & Unweighted baseline & $+44\%$ & — & B.1, B.2 \\
+\bottomrule
+\end{tabular}
+\end{table}

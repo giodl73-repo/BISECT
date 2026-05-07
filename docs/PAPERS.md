@@ -1,6 +1,6 @@
 # Research Papers
 
-66 papers across eight tracks (A–H). PDFs open directly from the links below. LaTeX sources in [`research/`](../research/).
+66 papers across eight tracks (A–H). PDFs open directly from the links below. LaTeX sources in [`research/tracks/`](../research/tracks/) — each series in its own track subdirectory.
 
 Papers are organised by the question they answer. Each paper's series code (A–H) is shown for cross-reference. To recompile: `cd research && make docs`
 

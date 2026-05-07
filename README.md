@@ -275,8 +275,11 @@ redist/crates/
   redist-map/       # SVG→PNG map rendering
   redist-metis/     # Pure-Rust METIS (portable engine)
 configs/            # YAML plan configs
-docs/papers/        # 34 compiled PDFs (committed)
-research/           # LaTeX sources for all papers
+docs/papers/        # 100+ compiled PDFs (committed)
+research/tracks/    # LaTeX sources organised by series:
+                    #   A-synthesis/  B-algorithm/  C-validation/
+                    #   D-vra-legal/  E-experimental/ F-legislative/
+                    #   G-ensemble/   H-search/
 docs/legal/         # Model federal statute, fairness doctrine
 docs/quickstart/    # Persona-specific quickstart guides
 ```

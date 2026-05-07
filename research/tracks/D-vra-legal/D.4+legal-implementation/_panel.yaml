@@ -1,0 +1,54 @@
+paper: gerry-legal-implementation
+title: "Adopting Algorithmic Congressional Redistricting: Legal Pathways, Constitutional Constraints, and Model Legislation"
+venue: Harvard Law Review
+stage: ready
+round: 2
+reviews_completed: 10
+round2_avg_score: 4.0
+gate_passed: true
+created: "2026-02-08"
+updated: "2026-05-07"
+
+reviewers:
+  - name: George Karypis
+    affiliation: University of Minnesota
+    category: Graph Algorithms
+    expertise: METIS, technical accuracy
+  - name: Jonathan Rodden
+    affiliation: Stanford
+    category: Political Science
+    expertise: Partisan implications, geographic sorting
+  - name: Moon Duchin
+    affiliation: Rutgers
+    category: Mathematics
+    expertise: Algorithm-law interface
+  - name: Nicholas Stephanopoulos
+    affiliation: Harvard Law
+    category: Election Law
+    expertise: Constitutional doctrine, Elections Clause
+  - name: Albert Liang
+    affiliation: MIT
+    category: Systems
+    expertise: Reproducibility, statute implementability
+
+pp_items:
+  - id: PP-D4-1
+    title: "Arizona AIRC engagement"
+    status: open
+  - id: PP-D4-2
+    title: "Geographic sorting footnote to main text"
+    status: open
+  - id: PP-D4-3
+    title: "69-district disaggregation by state partisan control"
+    status: open
+  - id: PP-D4-4
+    title: "Originalist defense paragraph"
+    status: open
+
+history:
+  - date: "2026-02-08"
+    stage: panel
+    note: "R1 review completed. Avg 3.0/4. All five reviewers recommend accept with minor revisions."
+  - date: "2026-02-08"
+    stage: ready
+    note: "R2 review completed. Avg 4.0/4. All five reviewers accept unconditionally. PP items remain for HLR submission."
