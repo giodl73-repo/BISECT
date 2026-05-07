@@ -38,6 +38,14 @@ A practitioner submitting a \metis{}-based plan can claim only that it is
 statistical argument subject to challenge.
 The ILP certificate is a mathematical proof.
 
+\textbf{Important:} this certificate applies only when
+\texttt{achieved\_gap = 0.0} (\texttt{solver\_status: Optimal}).
+A \texttt{GapReached} result (e.g., gap $\leq 1\%$) supports only a
+bounded-suboptimality claim: ``no valid plan has edge cut lower than the
+submitted plan's EC $-$ achieved\_gap $\times$ EC''.
+Practitioners must verify \texttt{solver\_status} before citing the
+zero-gap certificate.
+
 \subsection{Scope and Limitations of the Certificate}
 
 The ILP certificate is precisely scoped and practitioners must represent
@@ -86,6 +94,17 @@ outside the scope of this tool.
 Practitioners should consult legal counsel before representing the ILP
 certificate in litigation or regulatory proceedings.
 
+\paragraph{Compactness versus partisan gerrymandering.}
+Edge-cut optimality and partisan neutrality are orthogonal properties.
+The ILP certificate asserts that no valid plan achieves lower edge cuts;
+it does not certify that the plan is not a partisan gerrymander.
+For 2-district states (NH $k=2$, RI $k=2$), the binary partition structure
+means that the most compact plan by edge cut may systematically favour one
+party's geography.
+Practitioners should report partisan outcomes alongside the compactness
+certificate and consult the full G.14 decision framework for multi-metric
+evaluation.
+
 \subsection{Independent Auditor Verification}
 
 The retained MPS file enables a fully independent verification path:
@@ -103,6 +122,18 @@ The retained MPS file enables a fully independent verification path:
 This verification requires no access to the platform source code,
 no Rust toolchain, and no proprietary infrastructure.
 Any solver that can read the standard MPS format can verify the certificate.
+
+\textbf{Note (Phase~1 limitation):} MPS files are currently stored as loose
+files under \texttt{runs/\{label\}/\{year\}/ilp/}.
+They are \emph{not} included in the \texttt{label-verify} SHA audit chain
+in Phase~1.
+This means that MPS files can be modified after generation without detection
+by the platform's integrity checks.
+Phase~2 will add MPS file hashes to the \texttt{index.json} manifest,
+enabling tamper-evident chain-of-custody.
+Until then, practitioners submitting ILP certificates in legal proceedings
+should independently hash the MPS file at time of generation and include
+the hash in any expert report.
 
 \subsection{Comparison with Ensemble-Based Expert Reports}
 
@@ -126,6 +157,15 @@ arguments:
   optimal; no valid plan is more compact by this metric'' (exact).
 \end{itemize}
 
-Used together, these provide a stronger legal argument than either
-alone: the plan cannot be challenged as gerrymandered by compactness
-(ILP certificate) or by partisan outcome (ensemble analysis).
+Used together, these provide a stronger legal argument than either alone.
+
+The ILP certificate certifies edge-cut compactness optimality under the
+adjacency-graph model.
+This is a necessary but not sufficient condition for legal compactness:
+courts in most jurisdictions apply Polsby-Popper, Reock, or convex-hull
+compactness --- none of which equals edge cut.
+The plan may still be challenged on other compactness grounds.
+Expert witnesses should qualify the certificate's scope precisely:
+``this plan is provably optimal among all valid plans by the edge-cut
+measure; compliance with Polsby-Popper or other legal compactness
+standards requires separate analysis.''
