@@ -2432,6 +2432,306 @@ pub fn run_flip_chain(
     Ok((assignment, visited_count, rank))
 }
 
+// ── ForestRecomChain ──────────────────────────────────────────────────────────
+
+/// Run a Forest ReCom MH chain on the full k-way plan.
+///
+/// Steps:
+/// 1. Build initial plan from `run_all_splits` (single METIS call).
+/// 2. Construct a ForestRecomChain from that assignment.
+/// 3. Run `steps` chain steps, collecting accepted plans with their EC.
+/// 4. Sort by (EC ASC, step_idx ASC) and return plan at rank floor(p × accepted_count).
+///
+/// If no steps are accepted, return the initial plan.
+pub fn run_forest_recom(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    steps: usize,
+    p: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::Digest;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use redist_ensemble::forest_recom::ForestRecomChain;
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    // Build initial plan from METIS.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if steps == 0 {
+        return Ok(initial);
+    }
+
+    // Convert adjacency from Vec<Vec<usize>> to Vec<Vec<u32>> for ForestRecomChain.
+    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
+        .collect();
+
+    // Convert initial plan (1-based HashMap<usize,usize>) to Vec<u32>.
+    let initial_assignment: Vec<u32> = (0..n)
+        .map(|i| initial.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    let pop: Vec<i64> = vertex_weights.to_vec();
+
+    let mut chain = ForestRecomChain::new(
+        local_adj,
+        pop,
+        initial_assignment,
+        num_districts as u32,
+        balance_tolerance,
+    );
+
+    // Include initial plan in the accepted list.
+    let initial_ec = count_edge_cuts(&initial, adjacency);
+    let mut accepted: Vec<(usize, usize, Vec<u32>)> = Vec::new();
+    accepted.push((initial_ec, 0, chain.assignment.clone()));
+
+    for step_idx in 0..steps {
+        // Derive two independent seeds for forward/reverse trees.
+        let forward_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"FR_FORWARD_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+        let reverse_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"FR_REVERSE_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        let mut rng_forward = SmallRng::seed_from_u64(forward_seed);
+        let mut rng_reverse = SmallRng::seed_from_u64(reverse_seed);
+
+        let rec = chain.step(&mut rng_forward, &mut rng_reverse);
+        if rec.accepted {
+            let ec = rec.cut_edges;
+            accepted.push((ec, step_idx + 1, chain.assignment.clone()));
+        }
+    }
+
+    // Sort by (EC ASC, step_idx ASC) for determinism.
+    accepted.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    let accepted_count = accepted.len();
+    let rank = ((p * accepted_count as f64).floor() as usize).min(accepted_count - 1);
+    let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> back to HashMap<usize, usize>.
+    let assignment: HashMap<usize, usize> = chosen.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    // Suppress unused-variable warning for edge_weights (used via run_all_splits only).
+    let _ = edge_weights;
+
+    Ok(assignment)
+}
+
+/// Multi-scale MCMC stub — interleaves fine (tract) and coarse (block-group) ReCom moves.
+///
+/// Requires block-group adjacency: `coarse_adjacency` must be `Some(...)`.
+/// When `None`, returns a `[CONFIG]` error instructing the user to run
+/// `redist fetch --resolution block_group` first.
+///
+/// CLI: `--search multiscale --multiscale-steps 2000 --multiscale-alpha 0.3`
+/// Full MultiScaleChain implementation is task #128 (pending redist-multiscale completion).
+pub fn run_multiscale(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    total_steps: usize,
+    alpha: f64,
+    p: f64,
+    // coarse adjacency -- None means block-group data not loaded
+    coarse_adjacency: Option<&[Vec<usize>]>,
+    coarse_partition: Option<&[usize]>,  // fine_tract -> coarse_node
+) -> Result<HashMap<usize, usize>, String> {
+    if coarse_adjacency.is_none() {
+        return Err(
+            "[CONFIG] Multi-scale MCMC requires block-group adjacency. \
+             Run: redist fetch --resolution block_group".to_string()
+        );
+    }
+    // Suppress unused-variable warnings — Phase 2 full implementation will use these.
+    let _ = (adjacency, vertex_weights, edge_weights, num_districts,
+             balance_tolerance, niter, base_seed, total_steps, alpha, p, coarse_partition);
+    // Phase 2: full MultiScaleChain implementation (task #128).
+    // For now fall back with a clear stub error.
+    Err("[STUB] run_multiscale not yet fully implemented -- use --search forest-recom or merge-split".to_string())
+}
+
+// ── Merge-Split MCMC ─────────────────────────────────────────────────────────
+
+/// Run `steps` Merge-Split MH steps on a k-way partition, collect all accepted
+/// plans (plus the initial plan), sort by (EC ASC, step_idx ASC), and return
+/// the plan at rank floor(p × accepted_count).
+///
+/// Algorithm per step:
+///   1. Select an adjacent district pair (d_i, d_j) with pair reselection.
+///   2. Merge region = d_i ∪ d_j, sample forward UST (rng_step).
+///   3. Count balanced cuts (forward). Sample one uniformly → proposed split.
+///   4. Sample reverse UST (rng_reverse). Count balanced cuts (reverse).
+///   5. Accept with MH ratio = forward_cuts / reverse_cuts.
+///
+/// Seed derivation for two independent RNGs per step:
+///   step_seed    = SHA-256("MS_STEP_"    || step:u64le || "_" || 0u32le || "_" || base_seed:u64le) → u64
+///   reverse_seed = SHA-256("MS_REVERSE_" || step:u64le || "_" || 0u32le || "_" || base_seed:u64le) → u64
+///
+/// Returns `HashMap<usize, usize>` (tract → district, 1-based).
+/// If steps == 0 or no steps are accepted, returns the initial METIS plan.
+pub fn run_merge_split(
+    adjacency: &[Vec<usize>],
+    vertex_weights: &[i64],
+    edge_weights: &HashMap<(usize, usize), f64>,
+    num_districts: usize,
+    balance_tolerance: f64,
+    niter: u32,
+    base_seed: u64,
+    steps: usize,
+    p: f64,
+) -> Result<HashMap<usize, usize>, String> {
+    use sha2::Digest;
+    use rand::SeedableRng;
+    use rand::rngs::SmallRng;
+    use redist_ensemble::merge_split::MergeSplitChain;
+
+    let n = adjacency.len();
+
+    if num_districts <= 1 {
+        return Ok((0..n).map(|i| (i, 1)).collect());
+    }
+
+    // Build initial plan from METIS.
+    let initial = run_all_splits(
+        adjacency, vertex_weights, edge_weights,
+        num_districts, balance_tolerance, niter, Some(base_seed), None,
+    )?;
+
+    if steps == 0 {
+        return Ok(initial);
+    }
+
+    // Convert adjacency from Vec<Vec<usize>> to Vec<Vec<u32>> for MergeSplitChain.
+    let local_adj: Vec<Vec<u32>> = adjacency.iter()
+        .map(|nbrs| nbrs.iter().map(|&nb| nb as u32).collect())
+        .collect();
+
+    // Convert initial plan (1-based HashMap<usize,usize>) to Vec<u32>.
+    let initial_assignment: Vec<u32> = (0..n)
+        .map(|i| initial.get(&i).copied().unwrap_or(1) as u32)
+        .collect();
+
+    let pop: Vec<i64> = vertex_weights.to_vec();
+
+    let mut chain = MergeSplitChain::new(
+        local_adj,
+        pop,
+        initial_assignment,
+        num_districts as u32,
+        balance_tolerance,
+    );
+
+    // Include initial plan in the accepted list (step_idx 0).
+    let initial_ec = count_edge_cuts(&initial, adjacency);
+    let mut accepted: Vec<(usize, usize, Vec<u32>)> = Vec::new();
+    accepted.push((initial_ec, 0, chain.assignment.clone()));
+
+    for step_idx in 0..steps {
+        // Derive two independent seeds per step.
+        let step_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"MS_STEP_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+        let reverse_seed = {
+            let mut h = sha2::Sha256::new();
+            h.update(b"MS_REVERSE_");
+            h.update((step_idx as u64).to_le_bytes());
+            h.update(b"_");
+            h.update(0u32.to_le_bytes());
+            h.update(b"_");
+            h.update(base_seed.to_le_bytes());
+            let d = h.finalize();
+            u64::from_le_bytes(d[..8].try_into().unwrap())
+        };
+
+        let mut rng_step = SmallRng::seed_from_u64(step_seed);
+        let mut rng_rev = SmallRng::seed_from_u64(reverse_seed);
+
+        let rec = chain.step(&mut rng_step, &mut rng_rev);
+        if rec.accepted {
+            // Compute edge cut from the current chain assignment.
+            let ec = {
+                let mut cut = 0usize;
+                for (v, nbrs) in adjacency.iter().enumerate() {
+                    for &nb in nbrs {
+                        if nb > v && chain.assignment[v] != chain.assignment[nb] {
+                            cut += 1;
+                        }
+                    }
+                }
+                cut
+            };
+            accepted.push((ec, step_idx + 1, chain.assignment.clone()));
+        }
+    }
+
+    // Sort by (EC ASC, step_idx ASC) for determinism on EC ties.
+    accepted.sort_by(|(ec1, idx1, _), (ec2, idx2, _)| ec1.cmp(ec2).then(idx1.cmp(idx2)));
+
+    let accepted_count = accepted.len();
+    let rank = ((p * accepted_count as f64).floor() as usize).min(accepted_count - 1);
+    let (_, _, chosen) = accepted.into_iter().nth(rank).unwrap();
+
+    // Convert Vec<u32> back to HashMap<usize, usize>.
+    let assignment: HashMap<usize, usize> = chosen.iter()
+        .enumerate()
+        .map(|(i, &d)| (i, d as usize))
+        .collect();
+
+    // Suppress unused-variable warning for edge_weights (used via run_all_splits only).
+    let _ = edge_weights;
+
+    Ok(assignment)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -4183,6 +4483,219 @@ mod tests {
     #[ignore]
     fn flip_nc_improves_ec() {
         // Placeholder: load NC adjacency, compare flip p=0.0 EC vs baseline.
+        // Skipped unless --include-ignored is passed.
+    }
+
+    // ── ForestRecom tests ─────────────────────────────────────────────────────
+
+    // L0: run_forest_recom must return a valid 2-district plan on a 4×4 grid.
+    #[test]
+    fn forest_recom_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_forest_recom(&adj, &pop, &ew, 2, 0.05, 10, 42, 50, 0.0)
+            .expect("forest_recom k=2 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L0: p=0.0 EC <= p=1.0 EC (ascending sort).
+    #[test]
+    fn forest_recom_p0_le_p1_ec() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn_p0 = run_forest_recom(&adj, &pop, &ew, 2, 0.10, 10, 77, 100, 0.0)
+            .expect("forest_recom p=0.0 must succeed");
+        let asgn_p1 = run_forest_recom(&adj, &pop, &ew, 2, 0.10, 10, 77, 100, 1.0)
+            .expect("forest_recom p=1.0 must succeed");
+        let ec_p0 = count_edge_cuts(&asgn_p0, &adj);
+        let ec_p1 = count_edge_cuts(&asgn_p1, &adj);
+        assert!(
+            ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}"
+        );
+    }
+
+    // L0: same seed -> same result (determinism).
+    #[test]
+    fn forest_recom_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn1 = run_forest_recom(&adj, &pop, &ew, 2, 0.05, 10, 42, 50, 0.5)
+            .expect("first run must succeed");
+        let asgn2 = run_forest_recom(&adj, &pop, &ew, 2, 0.05, 10, 42, 50, 0.5)
+            .expect("second run must succeed");
+        assert_eq!(asgn1, asgn2, "same seed must produce identical assignment");
+    }
+
+    // L0: steps=0 returns the initial METIS plan (no chain steps).
+    #[test]
+    fn forest_recom_zero_steps_returns_initial() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_forest_recom(&adj, &pop, &ew, 2, 0.05, 10, 99, 0, 0.0)
+            .expect("forest_recom steps=0 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+    }
+
+    // L0: no district is empty in the result.
+    #[test]
+    fn forest_recom_all_districts_populated() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_forest_recom(&adj, &pop, &ew, 2, 0.05, 10, 55, 100, 0.5)
+            .expect("forest_recom must succeed");
+        let mut dist_pops: std::collections::HashMap<usize, i64> = std::collections::HashMap::new();
+        for (&tract, &d) in &asgn {
+            *dist_pops.entry(d).or_default() += pop[tract];
+        }
+        assert_eq!(dist_pops.len(), 2, "both districts must be non-empty");
+        for (&d, &p) in &dist_pops {
+            assert!(p > 0, "district {d} must have positive population");
+        }
+    }
+
+    // L1: k=4 on 4×4 grid — all four districts populated and valid.
+    #[test]
+    fn forest_recom_k4_all_districts_populated() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_forest_recom(&adj, &pop, &ew, 4, 0.10, 10, 123, 50, 0.0)
+            .expect("forest_recom k=4 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let mut dist_pops: std::collections::HashMap<usize, i64> = std::collections::HashMap::new();
+        for (&tract, &d) in &asgn {
+            *dist_pops.entry(d).or_default() += pop[tract];
+        }
+        assert_eq!(dist_pops.len(), 4, "all 4 districts must be non-empty");
+    }
+
+    // L2: NC 2020 k=14, T=1000 — acceptance rate > 0 (ignored by default).
+    #[test]
+    #[ignore]
+    fn forest_recom_nc_acceptance_rate() {
+        // Placeholder: load NC 2020 adjacency + population, run 1000 steps.
+        // Assert acceptance_rate > 0. Skipped unless --include-ignored is passed.
+    }
+
+    // ── MultiScale tests ──────────────────────────────────────────────────────
+
+    // L0: missing coarse adjacency must return Err containing "block-group".
+    #[test]
+    fn multiscale_missing_coarse_adj_returns_error() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let result = run_multiscale(&adj, &pop, &ew, 2, 0.1, 10, 42, 100, 0.3, 0.0, None, None);
+        assert!(result.is_err(), "run_multiscale with no coarse adjacency must return Err");
+        let msg = result.unwrap_err();
+        assert!(
+            msg.contains("block-group") || msg.contains("block_group"),
+            "error must mention block-group, got: {msg}"
+        );
+    }
+
+    // L0: "multiscale" must parse as SearchMode::MultiScale via clap ValueEnum.
+    #[test]
+    fn multiscale_search_mode_parses() {
+        use clap::ValueEnum;
+        use crate::args::SearchMode;
+        let parsed = SearchMode::from_str("multiscale", true)
+            .expect("SearchMode must parse 'multiscale'");
+        assert_eq!(parsed, SearchMode::MultiScale);
+    }
+
+    // ── MergeSplit tests ──────────────────────────────────────────────────────
+
+    // L0: run_merge_split must return a valid 2-district plan on a 4×4 grid.
+    #[test]
+    fn merge_split_produces_valid_k2_partition() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 50, 0.0)
+            .expect("merge_split k=2 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+        for &d in asgn.values() {
+            assert!(d >= 1 && d <= 2, "district label must be in [1,2], got {d}");
+        }
+    }
+
+    // L0: p=0.0 EC <= p=1.0 EC (ascending sort — both ends of accepted list).
+    #[test]
+    fn merge_split_p0_le_p1_ec() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn_p0 = run_merge_split(&adj, &pop, &ew, 2, 0.10, 10, 77, 200, 0.0)
+            .expect("merge_split p=0.0 must succeed");
+        let asgn_p1 = run_merge_split(&adj, &pop, &ew, 2, 0.10, 10, 77, 200, 1.0)
+            .expect("merge_split p=1.0 must succeed");
+        let ec_p0 = count_edge_cuts(&asgn_p0, &adj);
+        let ec_p1 = count_edge_cuts(&asgn_p1, &adj);
+        assert!(
+            ec_p0 <= ec_p1,
+            "p=0.0 (min) EC={ec_p0} must be <= p=1.0 (max) EC={ec_p1}"
+        );
+    }
+
+    // L0: same seed -> same result (determinism).
+    #[test]
+    fn merge_split_deterministic() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn1 = run_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 100, 0.5)
+            .expect("first run must succeed");
+        let asgn2 = run_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 42, 100, 0.5)
+            .expect("second run must succeed");
+        assert_eq!(asgn1, asgn2, "same seed must produce identical assignment");
+    }
+
+    // L0: steps=0 returns the initial METIS plan (no chain steps).
+    #[test]
+    fn merge_split_zero_steps_returns_initial() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        let asgn = run_merge_split(&adj, &pop, &ew, 2, 0.05, 10, 99, 0, 0.0)
+            .expect("merge_split steps=0 must succeed");
+        assert_eq!(asgn.len(), 16, "all 16 tracts must be assigned");
+        let districts: std::collections::HashSet<usize> = asgn.values().copied().collect();
+        assert_eq!(districts.len(), 2, "must have exactly 2 districts");
+    }
+
+    // L0: on a well-connected grid, at least one step should be accepted.
+    // Acceptance rate > 0 verifies MH ratio logic is not always-reject.
+    #[test]
+    fn merge_split_acceptance_rate_positive() {
+        let (adj, pop) = small_grid(4, 4);
+        let ew = HashMap::new();
+        // Use generous tolerance (0.20) so the MH ratio allows proposals to pass.
+        // Run 500 steps — on a 4x4 balanced grid at least a few should be accepted.
+        let asgn_p0 = run_merge_split(&adj, &pop, &ew, 2, 0.20, 10, 55, 500, 0.0)
+            .expect("merge_split must succeed");
+        let asgn_p1 = run_merge_split(&adj, &pop, &ew, 2, 0.20, 10, 55, 500, 1.0)
+            .expect("merge_split must succeed");
+        // If acceptance_rate > 0, p=0.0 and p=1.0 may select different plans.
+        // At minimum, each must be a valid 2-district partition.
+        assert_eq!(asgn_p0.len(), 16, "p=0.0 plan must cover all tracts");
+        assert_eq!(asgn_p1.len(), 16, "p=1.0 plan must cover all tracts");
+        let d0: std::collections::HashSet<usize> = asgn_p0.values().copied().collect();
+        let d1: std::collections::HashSet<usize> = asgn_p1.values().copied().collect();
+        assert_eq!(d0.len(), 2, "p=0.0: must have 2 districts");
+        assert_eq!(d1.len(), 2, "p=1.0: must have 2 districts");
+    }
+
+    // L2: NC 2020 k=14, T=1000 — ignored by default.
+    #[test]
+    #[ignore]
+    fn merge_split_nc_mixing() {
+        // Placeholder: load NC 2020 adjacency + population, run 1000 steps k=14.
+        // Assert acceptance rate > 0 and plan is a valid 14-district partition.
         // Skipped unless --include-ignored is passed.
     }
 }

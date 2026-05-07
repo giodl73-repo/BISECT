@@ -482,6 +482,15 @@ pub fn validate_config(path: &Path) -> Result<String, String> {
         crate::runner::SeedCompositor::ShortBurst { burst_length, n_bursts, p } => {
             format!("short-burst (p={p:.2}, bursts={n_bursts}, length={burst_length})")
         }
+        crate::runner::SeedCompositor::ForestRecom { steps, p } => {
+            format!("forest-recom (p={p:.2}, steps={steps})")
+        }
+        crate::runner::SeedCompositor::MultiScale { total_steps, p, alpha } => {
+            format!("multiscale (p={p:.2}, steps={total_steps}, alpha={alpha:.2})")
+        }
+        crate::runner::SeedCompositor::MergeSplit { steps, p } => {
+            format!("merge-split (p={p:.2}, steps={steps})")
+        }
     };
 
     let years = yaml.resolved_years().join(", ");

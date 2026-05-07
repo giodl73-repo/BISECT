@@ -10,7 +10,7 @@ use rayon::prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use crate::adjacency_loader::load_adjacency_pkl;
-use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, CompactBisectOpts};
+use crate::bisection_runner::{run_all_splits, run_all_splits_with_search, run_all_splits_compact, run_all_splits_percentile, run_geosection, run_nway_partition, run_flip_chain, run_short_burst, run_forest_recom, run_multiscale, run_merge_split, CompactBisectOpts};
 use crate::demographics::{load_demographics, align_demographics_to_adjacency};
 use crate::partisan_shares::load_partisan_shares;
 use crate::fetch::load_manifest;
@@ -75,6 +75,17 @@ pub enum SeedCompositor {
     /// minimum). Chain restarts from the previous burst's endpoint. Sort endpoints by
     /// EC ASC; return the plan at rank floor(p * n_bursts). (G.6)
     ShortBurst { burst_length: usize, n_bursts: usize, p: f64 },
+    /// Run `steps` Forest ReCom MH steps; collect accepted plans; return at percentile p of EC.
+    /// Two-tree Metropolis-Hastings — targets uniform distribution (G.9 spec accepted 3.0/4).
+    ForestRecom { steps: usize, p: f64 },
+    /// Multi-scale MCMC — interleaves fine (tract) and coarse (block-group) ReCom moves.
+    /// Requires block-group adjacency (run: redist fetch --resolution block_group).
+    /// CLI: --search multiscale --multiscale-steps 2000 --multiscale-alpha 0.3
+    /// (G.11 spec accepted 3.0/4; full implementation pending redist-multiscale crate completion)
+    MultiScale { total_steps: usize, p: f64, alpha: f64 },
+    /// Run `steps` Merge-Split MH steps; collect accepted plans; return at percentile p.
+    /// Two-tree MH with explicit ratio — O(m log m) per step (G.10 spec accepted 3.0/4).
+    MergeSplit { steps: usize, p: f64 },
 }
 
 impl SeedCompositor {
@@ -88,10 +99,15 @@ impl SeedCompositor {
             Self::BisectionEnsemble { ensemble_steps, .. } => *ensemble_steps,
             Self::Flip { flip_steps, .. } => *flip_steps,
             Self::ShortBurst { n_bursts, .. } => *n_bursts,
+            Self::ForestRecom { steps, .. } => *steps,
+            Self::MultiScale { total_steps, .. } => *total_steps,
+            Self::MergeSplit { steps, .. } => *steps,
         }
     }
 
-    pub fn is_single(&self) -> bool { matches!(self, Self::Single) }
+    pub fn is_single(&self) -> bool {
+        matches!(self, Self::Single)
+    }
 }
 
 impl Default for SeedCompositor {
@@ -437,6 +453,19 @@ impl AlgorithmConfig {
                 SeM::ShortBurst => SeedCompositor::ShortBurst {
                     burst_length: args.burst_length,
                     n_bursts: args.n_bursts,
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::ForestRecom => SeedCompositor::ForestRecom {
+                    steps: args.forest_steps,
+                    p: args.percentile.clamp(0.0, 1.0),
+                },
+                SeM::MultiScale => SeedCompositor::MultiScale {
+                    total_steps: args.multiscale_steps,
+                    p: args.percentile.clamp(0.0, 1.0),
+                    alpha: args.multiscale_alpha,
+                },
+                SeM::MergeSplit => SeedCompositor::MergeSplit {
+                    steps: args.merge_split_steps,
                     p: args.percentile.clamp(0.0, 1.0),
                 },
             };
@@ -1448,6 +1477,36 @@ fn run_single_state(cfg: &StateConfig) -> Result<(), String> {
                     short_burst_burst_seeds = Some(b_seeds);
                     short_burst_selected_burst_idx = Some(b_idx);
                     result
+                }
+                SeedCompositor::ForestRecom { steps, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: forest-recom p={:.2} {} steps into {} districts",
+                           cfg.state_code, p, steps, num_districts));
+                    run_forest_recom(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *steps, *p,
+                    ).map_err(|e| format!("forest-recom failed: {e}"))?
+                }
+                SeedCompositor::MultiScale { total_steps, p, alpha } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: multiscale p={:.2} {} steps alpha={:.2} into {} districts",
+                           cfg.state_code, p, total_steps, alpha, num_districts));
+                    run_multiscale(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *total_steps, *alpha, *p, None, None,
+                    ).map_err(|e| format!("multiscale: {e}"))?
+                }
+                SeedCompositor::MergeSplit { steps, p } => {
+                    let base = seed.unwrap_or(0);
+                    status(cfg.position, &format!("{}: merge-split p={:.2} {} steps into {} districts",
+                           cfg.state_code, p, steps, num_districts));
+                    run_merge_split(
+                        &graph.adjacency, &vwgt, &edge_weights,
+                        num_districts, balance_tolerance_frac, niter,
+                        base, *steps, *p,
+                    ).map_err(|e| format!("merge-split failed: {e}"))?
                 }
                 _ => {
                     status(cfg.position, &format!("{}: recursive bisection into {} districts",

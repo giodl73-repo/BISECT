@@ -265,6 +265,16 @@ fn main() {
                             SeM::BisectionEnsemble  => SeedCompositor::BisectionEnsemble { p: args.percentile.clamp(0.0, 1.0), ensemble_steps: args.ensemble_steps },
                             SeM::ShortBurst         => SeedCompositor::ShortBurst { burst_length: args.burst_length, n_bursts: args.n_bursts, p: args.percentile.clamp(0.0, 1.0) },
                             SeM::Flip               => SeedCompositor::Flip { flip_steps: args.flip_steps, p: args.percentile.clamp(0.0, 1.0) },
+                            SeM::ForestRecom        => SeedCompositor::ForestRecom { steps: args.forest_steps, p: args.percentile.clamp(0.0, 1.0) },
+                            SeM::MultiScale         => SeedCompositor::MultiScale {
+                                total_steps: args.multiscale_steps,
+                                p: args.percentile.clamp(0.0, 1.0),
+                                alpha: args.multiscale_alpha,
+                            },
+                            SeM::MergeSplit => SeedCompositor::MergeSplit {
+                                steps: args.merge_split_steps,
+                                p: args.percentile.clamp(0.0, 1.0),
+                            },
                         };
                     }
                     cfg

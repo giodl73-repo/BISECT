@@ -1250,6 +1250,18 @@ pub enum SearchMode {
     /// Use --flip-steps for total proposals (default 10000).
     #[value(name = "flip")]
     Flip,
+    /// Forest ReCom MH chain — reversible, targets uniform distribution.
+    /// Use --forest-steps N for total steps (default 1000).
+    #[value(name = "forest-recom")]
+    ForestRecom,
+    /// Multi-scale MCMC -- requires block-group adjacency file.
+    /// Use --multiscale-steps N --multiscale-alpha A (defaults: 2000, 0.3).
+    #[value(name = "multiscale")]
+    MultiScale,
+    /// Merge-Split MH chain — reversible, two-tree acceptance ratio.
+    /// Use --merge-split-steps N (default 1000).
+    #[value(name = "merge-split")]
+    MergeSplit,
 }
 
 /// Which METIS backend to use for graph partitioning.
@@ -1450,6 +1462,22 @@ pub struct StateArgs {
     /// Total flip proposals for --search flip. Default: 10000.
     #[arg(long, default_value_t = 10000)]
     pub flip_steps: usize,
+
+    /// Total Forest ReCom MH steps for --search forest-recom. Default: 1000.
+    #[arg(long, default_value_t = 1000)]
+    pub forest_steps: usize,
+
+    /// Total steps for --search multiscale. Default: 2000.
+    #[arg(long, default_value_t = 2000)]
+    pub multiscale_steps: usize,
+
+    /// P(coarse move) for --search multiscale. Default: 0.3.
+    #[arg(long, default_value_t = 0.3)]
+    pub multiscale_alpha: f64,
+
+    /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
+    #[arg(long, default_value_t = 1000)]
+    pub merge_split_steps: usize,
 
     /// METIS backend engine.
     /// c-ffi (default): links libmetis.so/dll — battle-tested, handles all k.
@@ -1671,6 +1699,22 @@ pub struct StatesArgs {
     /// Total flip proposals for --search flip. Default: 10000.
     #[arg(long, default_value_t = 10000)]
     pub flip_steps: usize,
+
+    /// Total Forest ReCom MH steps for --search forest-recom. Default: 1000.
+    #[arg(long, default_value_t = 1000)]
+    pub forest_steps: usize,
+
+    /// Total steps for --search multiscale. Default: 2000.
+    #[arg(long, default_value_t = 2000)]
+    pub multiscale_steps: usize,
+
+    /// P(coarse move) for --search multiscale. Default: 0.3.
+    #[arg(long, default_value_t = 0.3)]
+    pub multiscale_alpha: f64,
+
+    /// Total Merge-Split MH steps for --search merge-split. Default: 1000.
+    #[arg(long, default_value_t = 1000)]
+    pub merge_split_steps: usize,
 }
 
 #[cfg(test)]
@@ -2363,6 +2407,10 @@ mod tests {
             ("percentile",         SearchMode::Percentile),
             ("bisection-ensemble", SearchMode::BisectionEnsemble),
             ("short-burst",        SearchMode::ShortBurst),
+            ("flip",               SearchMode::Flip),
+            ("forest-recom",       SearchMode::ForestRecom),
+            ("multiscale",         SearchMode::MultiScale),
+            ("merge-split",        SearchMode::MergeSplit),
         ];
         for (s, expected) in cases {
             let parsed = SearchMode::from_str(s, true)
