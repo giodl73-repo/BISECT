@@ -51,8 +51,3 @@ numpy = "0.22"
 thiserror = { version = "2" }
 anyhow = "1"
 tempfile = "3"
-
-# Local dev override: use the sibling checkout instead of fetching from GitHub.
-# Remove or comment this out to test against the published git dependency.
-[patch."https://github.com/giodl73-repo/METIS-CORE.git"]
-metis-core = { path = "../../metis-core" }
